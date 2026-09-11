@@ -1,6 +1,9 @@
-import { readFile } from 'node:fs/promises';
-import { basename } from 'node:path';
+import { createHash } from 'node:crypto';
+import { readFile, realpath } from 'node:fs/promises';
+import { basename, dirname } from 'node:path';
 import { pathToFileURL } from 'node:url';
+
+import { validateContract } from '../../explainer-kit/scripts/lib/contracts.mjs';
 
 const TERMINAL_OUTCOMES = new Set([
   'built',
@@ -9,6 +12,7 @@ const TERMINAL_OUTCOMES = new Set([
   'incomplete',
 ]);
 const SATISFIED_OUTCOMES = new Set(['built', 'built-needs-review']);
+const FLOW_FAILURE_STAGES = new Set(['bundle', 'authoring', 'verify', 'core']);
 
 /**
  * A skip reason is the recorded `source` of the skip decision, so the guard
@@ -24,8 +28,9 @@ export function checkTerminalOutcome({
   intent,
   outcome,
   reason,
-  manifestProvided = false,
+  manifest = null,
   failure = null,
+  failureRootHash = null,
 }) {
   if (reason !== undefined && !SKIP_REASONS.has(reason)) {
     throw recapOutcomeError(
@@ -35,10 +40,7 @@ export function checkTerminalOutcome({
   if (intent === 'skip') {
     if (
       reason === 'failed_attempt' &&
-      !(
-        (manifestProvided && ['failed', 'incomplete'].includes(outcome)) ||
-        isFlowFailure(failure)
-      )
+      !(isFailedManifest(manifest) || isFlowFailure(failure, failureRootHash))
     ) {
       throw recapOutcomeError(
         'failed_attempt requires a failed or incomplete manifest or failure.json.',
@@ -70,9 +72,10 @@ async function main(argv) {
     );
   }
   let outcome;
+  let manifest;
   let failure;
+  let failureRootHash;
   if (manifestPath !== undefined) {
-    let manifest;
     try {
       manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
     } catch (error) {
@@ -90,6 +93,7 @@ async function main(argv) {
     }
     try {
       failure = JSON.parse(await readFile(failurePath, 'utf8'));
+      failureRootHash = hashText(await realpath(dirname(failurePath)));
     } catch (error) {
       throw recapOutcomeError(
         `Recap failure evidence could not be read: ${error.message}`,
@@ -99,8 +103,9 @@ async function main(argv) {
   return checkTerminalOutcome({
     intent,
     outcome,
-    manifestProvided: manifestPath !== undefined,
+    manifest,
     failure,
+    failureRootHash,
     ...(reason !== undefined && { reason }),
   });
 }
@@ -131,19 +136,35 @@ function parseArguments(argv) {
   return { intent, manifestPath, failurePath, reason };
 }
 
-function isFlowFailure(value) {
+function isFailedManifest(value) {
+  if (!value || !validateContract('manifest', value).valid) return false;
+  return (
+    ['failed', 'incomplete'].includes(value.outcome) &&
+    value.artifacts.length > 0 &&
+    value.artifacts.every(({ status }) => status === 'failed')
+  );
+}
+
+function isFlowFailure(value, expectedRootHash) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
   const keys = Object.keys(value);
   return (
-    keys.length === 3 &&
-    keys.every((key) => ['stage', 'cause', 'at'].includes(key)) &&
-    typeof value.stage === 'string' &&
-    value.stage.length > 0 &&
+    keys.length === 5 &&
+    keys.every((key) =>
+      ['schemaVersion', 'runRootHash', 'stage', 'cause', 'at'].includes(key),
+    ) &&
+    value.schemaVersion === 'explainer-kit.failure/v1' &&
+    value.runRootHash === expectedRootHash &&
+    FLOW_FAILURE_STAGES.has(value.stage) &&
     typeof value.cause === 'string' &&
     value.cause.length > 0 &&
     typeof value.at === 'string' &&
     !Number.isNaN(Date.parse(value.at))
   );
+}
+
+function hashText(value) {
+  return `sha256:${createHash('sha256').update(value).digest('hex')}`;
 }
 
 function recapOutcomeError(message) {

@@ -5,6 +5,7 @@ import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
+import { writeFailure } from './bundle.mjs';
 import { RUNTIME_UNAVAILABLE_REASONS } from './lib/browser-runtime.mjs';
 import { validateHtmlSafety } from './lib/html-safety.mjs';
 import {
@@ -294,22 +295,6 @@ function parseArgs(argv) {
 
 async function readJson(path) {
   return JSON.parse(await readFile(path, 'utf8'));
-}
-
-async function writeFailure(runRoot, stage, cause) {
-  await mkdir(runRoot, { recursive: true });
-  await writeFile(
-    join(runRoot, 'failure.json'),
-    `${JSON.stringify(
-      {
-        stage,
-        cause: sanitize(cause),
-        at: new Date().toISOString(),
-      },
-      null,
-      2,
-    )}\n`,
-  );
 }
 
 function sanitize(value) {

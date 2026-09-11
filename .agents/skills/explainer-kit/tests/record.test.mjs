@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import {
   cp,
+  mkdir,
   mkdtemp,
   readFile,
   readdir,
@@ -37,6 +38,15 @@ const fixed = {
   runId: 'run-p01-t06-fixture',
   createdAt: '2026-09-11T03:45:00.000Z',
 };
+const REQUIRED_CHECKS = [
+  'parse',
+  'requiredNarrative',
+  'structure',
+  'sourceDumping',
+  'shellScripts',
+  'ledgerToPage',
+  'pageToLedger',
+];
 
 async function copyFixture({ manifest = false } = {}) {
   const root = await mkdtemp(join(tmpdir(), 'explainer-record-'));
@@ -56,6 +66,12 @@ async function currentArtifactHash(root) {
   return `sha256:${createHash('sha256')
     .update(await readFile(join(root, 'site', 'index.html')))
     .digest('hex')}`;
+}
+
+function checks(overrides = {}) {
+  return Object.fromEntries(
+    REQUIRED_CHECKS.map((id) => [id, overrides[id] ?? { status: 'pass' }]),
+  );
 }
 
 function recordArgs(root, overrides = {}) {
@@ -110,8 +126,9 @@ test('record maps QA evidence to the four terminal outcomes', async () => {
       name: 'inspected host pass',
       qa: {
         rung: 'host',
-        checks: [{ id: 'structure', status: 'pass' }],
-        visual: { verdict: 'pass' },
+        checks: checks(),
+        screenshots: ['qa/320.png', 'qa/768.png', 'qa/1440.png'],
+        visual: { verdict: 'pass', notes: 'inspected at all three widths' },
       },
       outcome: 'built',
     },
@@ -119,8 +136,12 @@ test('record maps QA evidence to the four terminal outcomes', async () => {
       name: 'browser findings',
       qa: {
         rung: 'playwright',
-        checks: [{ id: 'structure', status: 'pass' }],
-        visual: { verdict: 'findings', findings: ['viewport-overflow'] },
+        checks: checks(),
+        screenshots: ['qa/320.png', 'qa/768.png', 'qa/1440.png'],
+        visual: {
+          verdict: 'findings',
+          findings: ['viewport-overflow'],
+        },
       },
       outcome: 'built-needs-review',
     },
@@ -129,7 +150,8 @@ test('record maps QA evidence to the four terminal outcomes', async () => {
       qa: {
         rung: 'none',
         reason: 'runtime-unavailable',
-        checks: [{ id: 'structure', status: 'pass' }],
+        checks: checks(),
+        visual: { verdict: 'none' },
       },
       outcome: 'built-needs-review',
     },
@@ -137,13 +159,14 @@ test('record maps QA evidence to the four terminal outcomes', async () => {
       name: 'failed check',
       qa: {
         rung: 'none',
-        checks: [
-          {
-            id: 'structure',
+        reason: 'browser-free-check-failed',
+        checks: checks({
+          structure: {
             status: 'fail',
             cause: `/Users/alice/${process.env.RECORD_TEST_SECRET}`,
           },
-        ],
+        }),
+        visual: { verdict: 'none' },
       },
       outcome: 'failed',
     },
@@ -151,6 +174,12 @@ test('record maps QA evidence to the four terminal outcomes', async () => {
 
   for (const scenario of scenarios) {
     const root = await copyFixture();
+    if (scenario.qa.screenshots) {
+      await mkdir(join(root, 'qa'), { recursive: true });
+      for (const screenshot of scenario.qa.screenshots) {
+        await writeFile(join(root, screenshot), 'png fixture');
+      }
+    }
     await writeQa(root, {
       artifactSha256: await currentArtifactHash(root),
       ...scenario.qa,
@@ -171,6 +200,60 @@ test('record maps QA evidence to the four terminal outcomes', async () => {
     (await runRecord(recordArgs(root), { log() {} })).outcome,
     'incomplete',
   );
+});
+
+test('record requires the exact verify check set and consistent QA metadata', async () => {
+  for (const missing of REQUIRED_CHECKS) {
+    const root = await copyFixture();
+    const exactChecks = checks();
+    delete exactChecks[missing];
+    await writeQa(root, {
+      artifactSha256: await currentArtifactHash(root),
+      checks: exactChecks,
+      rung: 'none',
+      reason: 'browser-free',
+      visual: { verdict: 'none' },
+    });
+    await assert.rejects(runRecord(recordArgs(root), { log() {} }), {
+      code: 'record-qa-invalid',
+    });
+  }
+
+  for (const qa of [
+    {
+      checks: { ...checks(), invented: { status: 'pass' } },
+      rung: 'none',
+      reason: 'browser-free',
+      visual: { verdict: 'none' },
+    },
+    {
+      checks: checks(),
+      rung: 'none',
+      visual: { verdict: 'pass' },
+    },
+    {
+      checks: checks(),
+      rung: 'host',
+      visual: { verdict: 'pass', notes: 'inspected' },
+    },
+  ]) {
+    const root = await copyFixture();
+    await writeQa(root, {
+      artifactSha256: await currentArtifactHash(root),
+      ...qa,
+    });
+    await assert.rejects(runRecord(recordArgs(root), { log() {} }), {
+      code: 'record-qa-invalid',
+    });
+  }
+});
+
+test('record rejects a pre-existing file outside the canonical package', async () => {
+  const root = await copyFixture();
+  await writeFile(join(root, 'self-authorized.txt'), 'must be rejected');
+  await assert.rejects(runRecord(recordArgs(root), { log() {} }), {
+    code: 'record-package-unexpected',
+  });
 });
 
 test('record rejects stale QA and a pre-recording failure', async () => {

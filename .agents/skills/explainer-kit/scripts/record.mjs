@@ -7,9 +7,11 @@ import { pathToFileURL } from 'node:url';
 
 import { validateContract } from './lib/contracts.mjs';
 import {
+  permissibleRunPackagePaths,
   requiredImmutablePackagePaths,
   validateImmutablePackageEvidence,
 } from './lib/package-coverage.mjs';
+import { validateQaResult } from './lib/qa-result.mjs';
 import { loadRecipe } from './lib/recipes.mjs';
 
 const HASH_PREFIX = 'sha256:';
@@ -62,6 +64,16 @@ export async function recordRun({
   } catch (error) {
     if (error.code !== 'ENOENT') throw error;
   }
+  if (qa) {
+    try {
+      validateQaResult(qa);
+    } catch (error) {
+      throw recordError(
+        'record-qa-invalid',
+        `qa/result.json is invalid: ${error.message}`,
+      );
+    }
+  }
   if (qa && qa.artifactSha256 !== artifactHash) {
     throw recordError(
       'record-qa-stale',
@@ -71,7 +83,23 @@ export async function recordRun({
 
   const { outcome, warnings } = outcomeFromQa(qa);
   const immutableHashes = await hashRunFiles(runRoot);
+  const screenshotPaths = ['qa/320.png', 'qa/768.png', 'qa/1440.png'].filter(
+    (path) => path in immutableHashes,
+  );
+  if (
+    JSON.stringify(screenshotPaths) !== JSON.stringify(qa?.screenshots ?? [])
+  ) {
+    throw recordError(
+      'record-qa-invalid',
+      'QA screenshot claims do not match the canonical screenshot files.',
+    );
+  }
   const factBase = JSON.parse(factBaseBytes.toString('utf8'));
+  const bundleInputs = (factBase.sources ?? []).filter(
+    ({ role }) => role === 'bundle-input',
+  );
+  const manifestInputs =
+    bundleInputs.length > 0 ? bundleInputs : (factBase.sources ?? []);
   const manifest = {
     schemaVersion: 'explainer-kit.manifest/v2',
     runId,
@@ -83,7 +111,7 @@ export async function recordRun({
       factBasePath,
       factBaseHash: hashBytes(factBaseBytes),
       inputHashes: Object.fromEntries(
-        (factBase.sources ?? [])
+        manifestInputs
           .filter(
             ({ locator, hash }) =>
               typeof locator === 'string' && typeof hash === 'string',
@@ -120,8 +148,26 @@ export async function recordRun({
         .join(', ')}`,
     );
   }
+  const permissible = new Set(
+    permissibleRunPackagePaths(manifest).filter(
+      (path) => path !== 'manifest.json',
+    ),
+  );
+  const unexpected = Object.keys(immutableHashes).filter(
+    (path) => !permissible.has(path),
+  );
+  if (unexpected.length > 0) {
+    throw recordError(
+      'record-package-unexpected',
+      `Run package contains unexpected files: ${unexpected.join(', ')}`,
+    );
+  }
   if (qa) {
-    validateImmutablePackageEvidence(manifest);
+    try {
+      validateImmutablePackageEvidence(manifest);
+    } catch (error) {
+      throw recordError('record-package-incomplete', error.message);
+    }
     const expected = requiredImmutablePackagePaths(manifest).sort();
     const missing = expected.filter((path) => !(path in immutableHashes));
     if (missing.length > 0) {
@@ -157,14 +203,10 @@ function outcomeFromQa(qa) {
       warnings: ['record-incomplete:qa-missing'],
     };
   }
-  const checks = Array.isArray(qa.checks)
-    ? qa.checks
-    : Object.entries(qa.checks ?? {}).map(([id, check]) => ({
-        id,
-        ...(typeof check === 'object' && check !== null
-          ? check
-          : { status: check }),
-      }));
+  const checks = Object.entries(qa.checks).map(([id, check]) => ({
+    id,
+    ...check,
+  }));
   const failures = checks.filter(({ status }) => status !== 'pass');
   if (failures.length > 0) {
     const failureSummary = failures

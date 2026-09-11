@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import {
   access,
   cp,
@@ -1798,6 +1799,39 @@ describe('archive utils', () => {
       ),
     ).rejects.toThrow(/manifest|immutable/i);
 
+    await expect(access(projectPath)).resolves.toBeUndefined();
+  });
+
+  it('rejects an extra archive file even when its immutable hash matches', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+    await mkdir(projectPath, { recursive: true });
+    const recap = await createRecapPackage(projectPath);
+    const bytes = Buffer.from('self-authorized archive file');
+    await writeFile(join(recap.runRoot, 'self-authorized.txt'), bytes);
+    const manifest = JSON.parse(await readFile(recap.manifestPath, 'utf8')) as {
+      immutableHashes: Record<string, string>;
+    };
+    manifest.immutableHashes['self-authorized.txt'] =
+      `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
+    await writeFile(
+      recap.manifestPath,
+      `${JSON.stringify(manifest, null, 2)}\n`,
+    );
+
+    await expect(
+      archiveProjectOnCompletion(
+        {
+          repoRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          projectRecapRun: recap.relativeRunPath,
+          s3SyncOnComplete: false,
+        },
+        { timestamp: () => '2026-04-01T12:34:56Z' },
+      ),
+    ).rejects.toThrow(/package|inventory|immutable/i);
     await expect(access(projectPath)).resolves.toBeUndefined();
   });
 

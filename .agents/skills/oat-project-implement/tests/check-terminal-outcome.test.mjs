@@ -1,11 +1,14 @@
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
+import { writeFailure } from '../../explainer-kit/scripts/bundle.mjs';
+import { runRecord } from '../../explainer-kit/scripts/record.mjs';
 import { checkTerminalOutcome } from '../../oat-explainer-kit/scripts/check-terminal-outcome.mjs';
 
 const route = new URL(
@@ -17,6 +20,41 @@ const guardScript = new URL(
   import.meta.url,
 );
 const execFileAsync = promisify(execFile);
+const here = dirname(fileURLToPath(import.meta.url));
+const packageFixture = join(
+  here,
+  '..',
+  '..',
+  '..',
+  '..',
+  'packages',
+  'cli',
+  'src',
+  'commands',
+  'project',
+  'archive',
+  'fixtures',
+  'v2-package',
+);
+
+function recordArgs(root) {
+  return [
+    '--run-root',
+    root,
+    '--recipe',
+    'project-recap',
+    '--slug',
+    'failed-recap',
+    '--mode',
+    'unattended',
+    '--theme',
+    join(root, 'theme.resolved.json'),
+    '--run-id',
+    'failed-recap',
+    '--created-at',
+    '2026-09-11T14:45:00.000Z',
+  ];
+}
 
 test('implementation closeout accepts only terminal generated recap outcomes', () => {
   for (const outcome of ['built', 'built-needs-review']) {
@@ -67,20 +105,66 @@ test('implementation closeout accepts only terminal generated recap outcomes', (
   }
 });
 
+test('implementation closeout rejects partial failed-attempt objects', async () => {
+  const root = await mkdtemp(
+    join(tmpdir(), 'recap-outcome-partial-implement-'),
+  );
+  try {
+    const partialManifest = join(root, 'partial-manifest.json');
+    const partialFailure = join(root, 'failure.json');
+    await writeFile(partialManifest, '{"outcome":"failed"}\n');
+    await writeFile(
+      partialFailure,
+      '{"stage":"verify","cause":"interrupted","at":"2026-09-11T14:45:00.000Z"}\n',
+    );
+    for (const evidenceArgs of [
+      ['--manifest', partialManifest],
+      ['--failure', partialFailure],
+    ]) {
+      await assert.rejects(
+        execFileAsync(process.execPath, [
+          guardScript.pathname,
+          '--intent',
+          'skip',
+          '--skip-reason',
+          'failed_attempt',
+          ...evidenceArgs,
+        ]),
+      );
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test('implementation closeout requires evidence for skip failed_attempt', async () => {
   const root = await mkdtemp(join(tmpdir(), 'recap-outcome-implement-'));
   try {
-    const failedManifest = join(root, 'failed.json');
-    const incompleteManifest = join(root, 'incomplete.json');
-    const builtManifest = join(root, 'built.json');
-    const failure = join(root, 'failure.json');
-    await writeFile(failedManifest, '{"outcome":"failed"}\n');
-    await writeFile(incompleteManifest, '{"outcome":"incomplete"}\n');
-    await writeFile(builtManifest, '{"outcome":"built"}\n');
-    await writeFile(
-      failure,
-      '{"stage":"verify","cause":"interrupted","at":"2026-09-11T14:45:00.000Z"}\n',
+    const failedRoot = join(root, 'failed');
+    const incompleteRoot = join(root, 'incomplete');
+    const failureRoot = join(root, 'flow-failure');
+    await cp(packageFixture, failedRoot, { recursive: true });
+    await rm(join(failedRoot, 'manifest.json'));
+    const qa = JSON.parse(
+      await readFile(join(failedRoot, 'qa/result.json'), 'utf8'),
     );
+    qa.checks.structure = { status: 'fail', cause: 'interrupted' };
+    await writeFile(
+      join(failedRoot, 'qa/result.json'),
+      `${JSON.stringify(qa)}\n`,
+    );
+    await runRecord(recordArgs(failedRoot), { log() {} });
+
+    await cp(packageFixture, incompleteRoot, { recursive: true });
+    await rm(join(incompleteRoot, 'manifest.json'));
+    await rm(join(incompleteRoot, 'qa/result.json'));
+    await runRecord(recordArgs(incompleteRoot), { log() {} });
+
+    await writeFailure(failureRoot, 'verify', 'interrupted');
+    const failedManifest = join(failedRoot, 'manifest.json');
+    const incompleteManifest = join(incompleteRoot, 'manifest.json');
+    const builtManifest = join(packageFixture, 'manifest.json');
+    const failure = join(failureRoot, 'failure.json');
 
     for (const evidenceArgs of [
       ['--manifest', failedManifest],
@@ -103,7 +187,19 @@ test('implementation closeout requires evidence for skip failed_attempt', async 
       });
     }
 
-    for (const evidenceArgs of [[], ['--manifest', builtManifest]]) {
+    const partialManifest = join(root, 'partial-manifest.json');
+    const partialFailure = join(root, 'failure.json');
+    await writeFile(partialManifest, '{"outcome":"failed"}\n');
+    await writeFile(
+      partialFailure,
+      '{"stage":"verify","cause":"interrupted","at":"2026-09-11T14:45:00.000Z"}\n',
+    );
+    for (const evidenceArgs of [
+      [],
+      ['--manifest', builtManifest],
+      ['--manifest', partialManifest],
+      ['--failure', partialFailure],
+    ]) {
       await assert.rejects(
         execFileAsync(process.execPath, [
           guardScript.pathname,

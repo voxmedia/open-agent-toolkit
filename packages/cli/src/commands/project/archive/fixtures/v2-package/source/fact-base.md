@@ -7,5 +7,4 @@
 - | Task | Status |
 - | p01-t01 | complete |
 - | p01-t02 | complete |
-- Status: complete
-- Progress: 17 of 17 tasks.
+- The p01 implementation run completed without phase recovery.

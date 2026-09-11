@@ -29,10 +29,10 @@
       "hash": "sha256:d750277c6635106a8b2b856163d2d32686363fc0a3ac8380fe5ddf1d7fc9d2a1"
     },
     {
-      "id": "source-3b1445640016",
+      "id": "source-0d25ac6ba6c8",
       "kind": "file",
-      "locator": "state.md",
-      "hash": "sha256:e31b2c86438b2c2e5b8eb725bda13e96dbbeab52c3113d766f87bddfa3dc5f59"
+      "locator": "orchestration-log.md",
+      "hash": "sha256:a5295057df463bcb04bd21a9f13d6ac7a3c4dcbba0ebc011336368dfab5ce480"
     }
   ],
   "claims": [
@@ -114,24 +114,13 @@
       ]
     },
     {
-      "id": "claim-305c63b384f3ebb4",
-      "text": "Status: complete",
+      "id": "claim-2316643dda5e1d34",
+      "text": "The p01 implementation run completed without phase recovery.",
       "status": "confirmed",
       "citations": [
         {
-          "sourceId": "source-3b1445640016",
-          "locator": "state.md:3-3"
-        }
-      ]
-    },
-    {
-      "id": "claim-801c3d72c99aafef",
-      "text": "Progress: 17 of 17 tasks.",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-3b1445640016",
-          "locator": "state.md:5-5"
+          "sourceId": "source-0d25ac6ba6c8",
+          "locator": "orchestration-log.md:3-3"
         }
       ]
     }

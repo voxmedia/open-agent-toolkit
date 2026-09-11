@@ -8,6 +8,7 @@ import {
   enforceRunPackageInventory,
   permissibleRunPackagePaths,
   requiredImmutablePackagePaths,
+  validateImmutablePackageEvidence,
 } from '../scripts/lib/package-coverage.mjs';
 
 const HASH = `sha256:${'a'.repeat(64)}`;
@@ -75,5 +76,51 @@ test('exact inventory rejects an extra or missing file', async () => {
   await assert.rejects(
     enforceRunPackageInventory(root, manifest()),
     /exact permissible tree/,
+  );
+});
+
+test('a self-declared extra hash cannot expand the canonical inventory', async () => {
+  const value = manifest();
+  value.immutableHashes['PROVENANCE.md'] = HASH;
+
+  assert.deepEqual(
+    permissibleRunPackagePaths(value),
+    permissibleRunPackagePaths(manifest()),
+  );
+  assert.throws(
+    () => validateImmutablePackageEvidence(value),
+    /canonical package/i,
+  );
+
+  const root = await mkdtemp(join(tmpdir(), 'explainer-package-declared-'));
+  tempDirs.push(root);
+  for (const path of permissibleRunPackagePaths(manifest())) {
+    await mkdir(dirname(join(root, path)), { recursive: true });
+    await writeFile(join(root, path), '{}\n');
+  }
+  await writeFile(join(root, 'PROVENANCE.md'), 'self-declared');
+  await assert.rejects(
+    enforceRunPackageInventory(root, value),
+    /canonical package|exact permissible tree/,
+  );
+});
+
+test('only the three modeled screenshot paths may be conditional', () => {
+  const value = manifest();
+  value.immutableHashes['qa/320.png'] = HASH;
+  value.immutableHashes['qa/768.png'] = HASH;
+  value.immutableHashes['qa/1440.png'] = HASH;
+  validateImmutablePackageEvidence(value);
+  assert.deepEqual(permissibleRunPackagePaths(value).slice(-3), [
+    'source/fact-base.md',
+    'source/ledger.json',
+    'theme.resolved.json',
+  ]);
+  assert.ok(permissibleRunPackagePaths(value).includes('qa/320.png'));
+
+  value.immutableHashes['qa/desktop.png'] = HASH;
+  assert.throws(
+    () => validateImmutablePackageEvidence(value),
+    /canonical package/i,
   );
 });

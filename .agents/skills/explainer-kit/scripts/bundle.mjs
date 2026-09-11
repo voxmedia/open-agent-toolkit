@@ -24,6 +24,11 @@ import {
 import { pathToFileURL } from 'node:url';
 
 import { validateContract } from './lib/contracts.mjs';
+import {
+  enforceRunPackageInventory,
+  validateImmutablePackageEvidence,
+} from './lib/package-coverage.mjs';
+import { validateQaResult } from './lib/qa-result.mjs';
 import { loadRecipe, recipeRequiredNarrative } from './lib/recipes.mjs';
 
 const HASH_PREFIX = 'sha256:';
@@ -37,7 +42,7 @@ const PROJECT_INPUTS = [
   'discovery.md',
   'spec.md',
   'design.md',
-  'state.md',
+  'orchestration-log.md',
 ];
 const PROJECT_EXPLAINER_INPUTS = [
   'plan.md',
@@ -60,6 +65,7 @@ const STATUS_VALUES = new Set([
   'incomplete',
   'skipped',
 ]);
+const FLOW_FAILURE_STAGES = new Set(['bundle', 'authoring', 'verify', 'core']);
 
 export async function collectInputs(recipe, inputs) {
   const recipeId = typeof recipe === 'string' ? recipe : recipe?.id;
@@ -237,13 +243,33 @@ export async function findReusableRun(outputRoot, recipe, inputHashes) {
         await readFile(join(runRoot, 'manifest.json'), 'utf8'),
       );
       if (
-        manifest.recipe?.id === recipeId &&
-        manifest.recipe?.version === recipe.version &&
-        SATISFIED_OUTCOMES.has(manifest.outcome) &&
-        deepEqual(manifest.source?.inputHashes, inputHashes)
+        manifest.recipe?.id !== recipeId ||
+        manifest.recipe?.version !== recipe.version ||
+        !SATISFIED_OUTCOMES.has(manifest.outcome) ||
+        !deepEqual(manifest.source?.inputHashes, inputHashes) ||
+        !validateContract('manifest', manifest).valid ||
+        manifest.artifacts?.length !== 1 ||
+        manifest.artifacts[0].id !== recipe.floor[0].id ||
+        manifest.artifacts[0].type !== recipe.floor[0].type ||
+        manifest.artifacts[0].contentPath !== 'site/index.html' ||
+        manifest.artifacts[0].status !== 'built'
       ) {
-        return runRoot;
+        continue;
       }
+      validateImmutablePackageEvidence(manifest);
+      await verifyImmutableBytes(runRoot, manifest.immutableHashes);
+      await enforceRunPackageInventory(runRoot, manifest);
+      const qa = validateQaResult(
+        JSON.parse(await readFile(join(runRoot, 'qa/result.json'), 'utf8')),
+      );
+      if (
+        qa.artifactSha256 !== manifest.artifacts[0].hash ||
+        Object.values(qa.checks).some(({ status }) => status !== 'pass') ||
+        outcomeFromQa(qa) !== manifest.outcome
+      ) {
+        continue;
+      }
+      return runRoot;
     } catch (error) {
       if (!['ENOENT', 'ENOTDIR'].includes(error.code)) continue;
     }
@@ -252,12 +278,17 @@ export async function findReusableRun(outputRoot, recipe, inputHashes) {
 }
 
 export async function writeFailure(runRoot, stage, cause) {
+  if (!FLOW_FAILURE_STAGES.has(stage)) {
+    throw bundleError(`Unsupported failure stage: ${stage}`);
+  }
   await mkdir(runRoot, { recursive: true });
   const message = cause instanceof Error ? cause.message : String(cause);
   const sanitized = message
     .replaceAll(process.cwd(), '<repo>')
     .replace(/\/Users\/[^/\s]+/g, '<user>');
   await writeJson(join(runRoot, 'failure.json'), {
+    schemaVersion: 'explainer-kit.failure/v1',
+    runRootHash: hashBytes(await realpath(runRoot)),
     stage,
     cause: sanitized,
     at: new Date().toISOString(),
@@ -301,7 +332,40 @@ export async function runBundle(argv, io = console) {
       if (!validation.valid) {
         throw bundleError('Supplied fact base is invalid.');
       }
-      ledger = selectAnchorLedger([], recipe);
+      const existingInput = factBase.sources.find(
+        ({ locator, hash }) =>
+          locator === supplied.locator && hash === supplied.hash,
+      );
+      if (existingInput) {
+        existingInput.role = 'bundle-input';
+      } else {
+        factBase.sources.push({
+          id: `bundle-input-${createHash('sha256')
+            .update(`${supplied.locator}\0${supplied.hash}`)
+            .digest('hex')
+            .slice(0, 12)}`,
+          kind: 'file',
+          locator: supplied.locator,
+          hash: supplied.hash,
+          role: 'bundle-input',
+        });
+      }
+      const suppliedClaims = factBase.claims.map((claim) => {
+        const section =
+          claim.sections?.[0] ??
+          claim.citations?.[0]?.locator?.split(':')[0] ??
+          recipe.id;
+        return {
+          ...claim,
+          _subject: subjectFor(claim.text, section),
+          _section: section,
+        };
+      });
+      const updatedValidation = validateContract('fact-base', factBase);
+      if (!updatedValidation.valid) {
+        throw bundleError('Supplied fact base input identity is invalid.');
+      }
+      ledger = selectAnchorLedger(suppliedClaims, recipe);
     } else {
       const extracted = collected.map(extractClaims);
       const internalClaims = extracted.flatMap(({ claims }) => claims);
@@ -393,13 +457,27 @@ async function collectProgramInputs({ program, summaries, archive }) {
   }
   if (archive) {
     try {
+      const selected = new Map();
       for (const entry of await readdir(archive, { withFileTypes: true })) {
-        if (!entry.isDirectory() || !/^wave-\d+-execution$/.test(entry.name)) {
-          continue;
+        if (!entry.isDirectory()) continue;
+        const dated = entry.name.match(/^(\d{8})-(wave-\d+-execution)$/);
+        const direct = entry.name.match(/^(wave-\d+-execution)$/);
+        const wave = dated?.[2] ?? direct?.[1];
+        if (!wave) continue;
+        const date = dated?.[1] ?? '';
+        const prior = selected.get(wave);
+        if (!prior || date > prior.date) {
+          selected.set(wave, { date, entry: entry.name });
         }
-        const path = join(archive, entry.name, 'implementation.md');
+      }
+      for (const { entry } of [...selected.values()].sort((left, right) =>
+        left.entry.localeCompare(right.entry),
+      )) {
+        const path = join(archive, entry, 'implementation.md');
         try {
-          files.push(await readConfinedFile(archive, path));
+          const input = await readConfinedFile(archive, path);
+          const summary = finalSummaryInput(input);
+          if (summary) files.push(summary);
         } catch (error) {
           if (error.code !== 'ENOENT') throw error;
         }
@@ -551,6 +629,41 @@ function parseArgs(argv) {
 
 function hashBytes(bytes) {
   return `${HASH_PREFIX}${createHash('sha256').update(bytes).digest('hex')}`;
+}
+
+async function verifyImmutableBytes(runRoot, immutableHashes) {
+  for (const [path, expected] of Object.entries(immutableHashes)) {
+    if (hashBytes(await readFile(join(runRoot, path))) !== expected) {
+      throw bundleError(`Reusable package hash mismatch: ${path}`);
+    }
+  }
+}
+
+function outcomeFromQa(qa) {
+  if (Object.values(qa.checks).some(({ status }) => status !== 'pass')) {
+    return 'failed';
+  }
+  return qa.rung !== 'none' && qa.visual.verdict === 'pass'
+    ? 'built'
+    : 'built-needs-review';
+}
+
+function finalSummaryInput(input) {
+  const lines = input.text.split(/\r?\n/);
+  const start = lines.findIndex((line) =>
+    /^#{1,6}\s+Final Summary\s*$/i.test(line.trim()),
+  );
+  if (start === -1) return null;
+  let end = lines.length;
+  for (let index = start + 1; index < lines.length; index += 1) {
+    if (/^#{1,2}\s+/.test(lines[index].trim())) {
+      end = index;
+      break;
+    }
+  }
+  const text = `${lines.slice(start, end).join('\n').trim()}\n`;
+  const bytes = Buffer.from(text);
+  return { ...input, bytes, text, hash: hashBytes(bytes) };
 }
 
 async function writeJson(path, value) {

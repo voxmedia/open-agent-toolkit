@@ -2,6 +2,11 @@ import { lstat, readdir, realpath, rm } from 'node:fs/promises';
 import { dirname, isAbsolute, join, relative, sep } from 'node:path';
 
 export const PACKAGE_COVERAGE_VERSION = 'explainer-kit.package-coverage/v3';
+const CONDITIONAL_SCREENSHOT_PATHS = [
+  'qa/320.png',
+  'qa/768.png',
+  'qa/1440.png',
+];
 
 export function requiredImmutablePackagePaths(manifest) {
   if (!isObject(manifest)) {
@@ -28,7 +33,10 @@ export function permissibleRunPackagePaths(manifest) {
     );
   }
   const paths = new Set([
-    ...Object.keys(manifest.immutableHashes),
+    ...requiredImmutablePackagePaths(manifest),
+    ...CONDITIONAL_SCREENSHOT_PATHS.filter(
+      (path) => path in manifest.immutableHashes,
+    ),
     'manifest.json',
   ]);
   for (const path of paths) assertInventoryPath(path);
@@ -36,12 +44,24 @@ export function permissibleRunPackagePaths(manifest) {
 }
 
 export function validateImmutablePackageEvidence(manifest) {
-  const missing = requiredImmutablePackagePaths(manifest).filter(
-    (path) => !(path in (manifest?.immutableHashes ?? {})),
+  if (!isObject(manifest) || !isObject(manifest.immutableHashes)) {
+    throw new TypeError(
+      'Manifest package coverage requires immutable hash evidence.',
+    );
+  }
+  const expected = new Set(
+    permissibleRunPackagePaths(manifest).filter(
+      (path) => path !== 'manifest.json',
+    ),
   );
-  if (missing.length > 0) {
+  const actual = Object.keys(manifest.immutableHashes);
+  const missing = [...expected].filter(
+    (path) => !(path in manifest.immutableHashes),
+  );
+  const unexpected = actual.filter((path) => !expected.has(path));
+  if (missing.length > 0 || unexpected.length > 0) {
     throw new Error(
-      `Manifest immutable hashes do not cover the canonical package: ${missing.join(', ')}.`,
+      `Manifest immutable hashes do not match the canonical package: missing [${missing.join(', ')}]; unexpected [${unexpected.join(', ')}].`,
     );
   }
 }
@@ -60,6 +80,7 @@ export async function enforceRunPackageInventory(
     throw new Error('Run package inventory root is not a real directory.');
   }
 
+  validateImmutablePackageEvidence(manifest);
   const allowedFiles = new Set(permissibleRunPackagePaths(manifest));
   const allowedDirectories = new Set();
   for (const path of allowedFiles) {

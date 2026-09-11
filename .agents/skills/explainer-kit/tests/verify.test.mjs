@@ -34,7 +34,6 @@ async function runRoot(page = 'valid.html') {
   const root = await mkdtemp(join(tmpdir(), 'explainer-verify-'));
   await cp(packageFixture, root, { recursive: true });
   await rm(join(root, 'manifest.json'));
-  await rm(join(root, 'PROVENANCE.md'));
   await writeFile(
     join(root, 'site/index.html'),
     await readFile(join(fixtures, page)),
