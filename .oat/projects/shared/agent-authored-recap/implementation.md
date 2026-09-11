@@ -1064,6 +1064,26 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Dispatch: scope=p03-review-r2-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
 - Disposition: `fixes_completed`; governance-final root-owned review round 3 is required and p03 is not marked passed
 
+#### Phase Review Round 3 — Governance Final
+
+- Request ID: `dispatch-agent-authored-recap-p03-review-r3-20260911T2254Z`
+- Launch status: `accepted`
+- Terminal outcome: `completed`
+- Review artifact: `reviews/p03-review-2026-09-11T225420Z.md`
+- Reviewed range: `ab4785bf510ea737961a9431da4376a461be930e..afd4a9e970200bdb2c1cc35fdf13df1912e6b12f`
+- Reviewed head: `afd4a9e970200bdb2c1cc35fdf13df1912e6b12f`
+- Prior closure: the fresh-resume evidence defect and all earlier Phase 3 findings closed
+- Findings: 0 Critical, 1 Important, 0 Medium, 0 Minor
+- Disposition: `CHANGES REQUESTED`; governance retry budget exhausted at round 3 of 3
+- Reconnaissance: `not-attempted`; no Review Orchestration section
+- Blocking finding: control-plane coerces a non-string `failed_attempt_evidence` array that CLI rejects, while both typed readers reject the lifecycle contract's read-only legacy `skip/capability_probe` pair
+- Protected-boundary result: all eleven plan-declared slices remained byte-identical
+- Selection reason: `gate-target`
+- Candidates considered: `gpt-5.6-sol-high`
+- Dispatch target: `oat-reviewer-gpt-5-6-sol-high`
+- Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
+- Stop: operator direction is required before any further fix or Phase 4 work
+
 <!-- orchestration-runs-end -->
 
 ---

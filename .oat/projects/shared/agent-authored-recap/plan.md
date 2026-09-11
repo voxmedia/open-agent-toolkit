@@ -586,6 +586,7 @@ Deliverable: the recap for the 2026-08-31 execution program exists, verifies, an
 | ----- | ----- | ------- | ------------------------------------------------------------------------------------------------------------------- |
 | p01   | phase | passed | Independent verification passed with 0 Critical, 0 Important, and 3 deferred Medium findings. |
 | p02   | phase | passed | Fresh re-review closed all three blocking findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings. |
+| p03   | phase | fixes_added | Governance-final round 3 found 1 Important typed-state compatibility defect; automatic review/fix budget exhausted and operator direction required. |
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
@@ -599,6 +600,7 @@ Deliverable: the recap for the 2026-08-31 execution program exists, verifies, an
 | p02    | code     | passed          | 2026-09-11 | reviews/p02-review-2026-09-11T202150Z.md                      | 77681847a6755d0628a2c1f707804d783d04e2ae | manual     | -           |
 | p03    | code     | fixes_completed | 2026-09-11 | reviews/p03-review-2026-09-11T213626Z.md                      | 6619ca123ba6fdbbf6bdeeef00e6c613de1eb695 | manual     | -           |
 | p03    | code     | fixes_completed | 2026-09-11 | reviews/p03-review-2026-09-11T221353Z.md                      | 3ed763cd88714a6e68bd7c2c41157994b7a28c0a | manual     | -           |
+| p03    | code     | fixes_added     | 2026-09-11 | reviews/p03-review-2026-09-11T225420Z.md                      | afd4a9e970200bdb2c1cc35fdf13df1912e6b12f | manual     | -           |
 | p04    | code     | pending         | -          | -                                                             | -             | -          | -           |
 | p05    | code     | pending         | -          | -                                                             | -             | -          | -           |
 | final  | code     | pending         | -          | -                                                             | -             | -          | -           |
