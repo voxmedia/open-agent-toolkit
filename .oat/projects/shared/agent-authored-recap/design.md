@@ -146,30 +146,30 @@ The Explainer Kit becomes one agent-authored flow for every caller. Three small 
 
 ### `qa/result.json`
 
-No schema: its readers (`record.mjs`, `oat-project-summary`, `oat-project-complete`, a human) parse it structurally, so it carries no `schemaVersion`.
+No schema: its readers (`record.mjs`, `oat-project-summary`, `oat-project-complete`, a human) parse it structurally through `scripts/lib/qa-result.mjs`, so it carries no `schemaVersion`. The root object requires exactly `artifactSha256`, `checks`, `rung`, and `visual`, with `reason`, `screenshots`, and `deferredBrowserRequest` present only in the cases below. `checks` has exactly the seven named checks, each as `{ status: 'pass' }` or `{ status: 'fail', cause: '<non-empty string>' }`.
 
 ```json
 {
   "checks": {
-    "parse": "pass",
-    "sections": "pass",
-    "structure": "pass",
-    "sourceDumping": "pass",
-    "shellScripts": "pass",
-    "ledgerToPage": "pass",
-    "pageToLedger": "pass"
+    "parse": { "status": "pass" },
+    "requiredNarrative": { "status": "pass" },
+    "structure": { "status": "pass" },
+    "sourceDumping": { "status": "pass" },
+    "shellScripts": { "status": "pass" },
+    "ledgerToPage": { "status": "pass" },
+    "pageToLedger": { "status": "pass" }
   },
-  "rung": "host | playwright | none",
+  "rung": "host",
   "visual": {
-    "verdict": "pass | findings | none",
-    "findings": [{ "code": "viewport-overflow", "width": 320, "details": "…" }],
-    "notes": "the agent's inspection notes on the host rung, or null"
+    "verdict": "pass",
+    "notes": "the agent's non-empty inspection notes"
   },
   "artifactSha256": "…",
-  "screenshots": [{ "width": 320, "path": "qa/320.png" }],
-  "reason": "sanitized, actionable, or null"
+  "screenshots": ["qa/320.png", "qa/768.png", "qa/1440.png"]
 }
 ```
+
+For `rung: none`, `visual` is exactly `{ "verdict": "none" }`, `reason` is a required non-empty string, and `screenshots` is omitted. For `rung: host` or `playwright`, `reason` is omitted and `screenshots` is exactly the three canonical string paths shown above. A browser result with `verdict: pass` requires non-empty `notes`; `verdict: findings` requires a non-empty string array `findings` and may include non-empty `notes`. A none-rung result may also carry `deferredBrowserRequest` with exactly `rung: "host"`, `screenshots`, `artifactSha256`, `visualVerdict`, and optional `visualNotes`; every present value is a non-empty string. Optional fields are omitted, never encoded as `null`.
 
 ### `state.md` recap record (unchanged shape)
 
@@ -188,7 +188,7 @@ oat_project_recap:
 
 ## Error Handling
 
-- Core missing or below the minimum → the flow stops before bundling and writes `<run-root>/failure.json` `{ stage: 'core', cause: 'Explainer Kit core missing or too old; run oat tools install utility --scope user', at }`, then the normal retry-or-skip decision. Every stop before `record.mjs` (core, bundle, authoring absent, verify crash) writes the same record with its stage; a run root holds either a manifest or a `failure.json`, never both: `bundle.mjs` deletes a stale `failure.json` when it starts a new attempt in the same run root, and `record.mjs` refuses to record while one exists (`record-failure-present`), so a successful retry leaves no stray file for the exact-inventory rule to reject and the archive never selects a failed root.
+- Core missing or below the minimum → the flow stops before bundling and writes `<run-root>/failure.json` with exactly `{ schemaVersion: 'explainer-kit.failure/v1', runRootHash, stage, cause, at }`. `runRootHash` is the SHA-256-prefixed hash of the canonical realpath string for that run root, binding the evidence to the same root that `check-terminal-outcome.mjs` validates. `stage` is one of `bundle`, `authoring`, `verify`, `core`, or `interrupted`; `cause` is a non-empty sanitized diagnostic; `at` is a parseable timestamp. For a missing or old core the actionable cause names `oat tools install utility --scope user`. Every stop before `record.mjs` writes the same exact record with its stage; a run root holds either a manifest or a `failure.json`, never both: `bundle.mjs` deletes a stale `failure.json` when it starts a new attempt in the same run root, and `record.mjs` refuses to record while one exists (`record-failure-present`), so a successful retry leaves no stray file for the exact-inventory rule to reject and the archive never selects a failed root.
 - Bundle refuses (allowlist miss, containment, unparseable required input) → the flow stops before authoring with the cause in `failure.json` (`stage: bundle`); the run directory is written to a temp dir and renamed on success, so nothing is half-written.
 - Authoring absent (no `site/index.html`) → `verify.mjs` writes `failure.json` (`stage: authoring`) and exits without a `qa/result.json`, so no manifest is recorded. Authoring malformed (the file exists but fails the parse or section check) → `verify.mjs` records the failing checks → `record.mjs` writes a `failed` manifest, artifact retained. The two cases never coexist in one run root.
 - Browser absent, probe throws, or host screenshots fail binding → `rung: none`, `built-needs-review`, reason recorded.
