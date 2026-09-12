@@ -13,7 +13,7 @@ labels:
   - routing
 assignee: null
 created: 2026-09-08T16:54:21.407Z
-updated: 2026-09-11T16:05:00.000Z
+updated: 2026-09-12T00:30:00.000Z
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/274
@@ -33,3 +33,20 @@ GitHub issue #274. Recon's intent is inexpensive, high-volume evidence gathering
 - [x] `references/packet-contract.md` defines manifest v2 per-wave `classFloor` and complete `target`; `scripts/lib/contracts.mjs` validates per-wave targets, below-floor routing, target drift, profile modes and caps, singleton cardinality, conditional escalation, and packet publication; fixtures, contract tests, public docs, and the bundled asset mirror follow. Legacy manifest v1 support is intentionally removed while evidence formats remain independently versioned
 - [x] `DR-260910-restore-economical-recon` supersedes the homogeneous run-wide selection rule and restores `DR-260719`'s separate task-class floors; `DR-260911-use-session-local-recon` records the simplified approval contract and partially supersedes the remaining legacy approval clauses
 - [x] The `quick` profile is documented as an evidence packet for an intelligent consumer (no independent semantic pass by design)
+
+## Closeout Status
+
+All 31 tasks through `p-rev8` are complete. Exact wave/lane outcome identity
+preserves mixed-lane partial publication at the achieved profile and rejects
+same-lane contradictions. The final lifecycle review passed with
+0 Critical / 0 Important / 0 Medium / 1 Minor, and configured exit-gate run
+`965e9704-ba33-443b-adca-e494b6692fbc` was durably received as allowed at the
+Important threshold with 0 Critical / 0 Important / 0 Medium / 2 Minor findings.
+Final repository verification passed all ten required gates, including the
+281/281 recon suite.
+
+The accepted Minors are deferred post-release diagnostic cleanup only: affected
+packets already remain invalid and unpublishable. They are not part of the
+shipped capability claim. Summary refresh is complete; documentation and PR
+refresh remain before final approval. Keep this item open until PR #285 merges,
+then archive it and close GitHub issue #274 through their owning workflows.
