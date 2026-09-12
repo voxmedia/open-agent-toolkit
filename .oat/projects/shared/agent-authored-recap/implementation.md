@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-12
-oat_current_task_id: p06-t09
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 17    | 17/17     |
-| Phase 2 | completed   | 4     | 4/4       |
-| Phase 3 | completed   | 8     | 8/8       |
-| Phase 4 | completed   | 2     | 2/2       |
-| Phase 5 | completed   | 1     | 1/1       |
-| Phase 6 | in progress | 9     | 8/9       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 17    | 17/17     |
+| Phase 2 | completed | 4     | 4/4       |
+| Phase 3 | completed | 8     | 8/8       |
+| Phase 4 | completed | 2     | 2/2       |
+| Phase 5 | completed | 1     | 1/1       |
+| Phase 6 | completed | 9     | 9/9       |
 
-**Total:** 40/41 tasks completed
+**Total:** 41/41 tasks completed
 
 ---
 
@@ -964,7 +964,7 @@ fresh Phase 6 review and final re-review.
 
 ## Phase 6: Final review fixes
 
-**Status:** final-review fix in progress; `p06-t09` remains.
+**Status:** sanitizer fix completed; Phase 6 re-review pending.
 
 ### Phase Summary
 
@@ -993,6 +993,7 @@ fresh Phase 6 review and final re-review.
 - `p06-t06`: `f5b0c5e545fdab0180a6132dcc95659f0b040891`
 - `p06-t07`: `a7d8377f563703aaf41d71ba3ef7dbf42b6dfb57`
 - `p06-t08`: `0fd007abe7a5a2254d13fb02f0d30cb44161fd11`
+- `p06-t09`: `927ba10f1a09ec36755dedf411183372b4703691`
 
 **Verification:**
 
@@ -1072,8 +1073,14 @@ Medium, or Minor findings.
 
 **Review cycle:** 2 of 3.
 
-**Next:** Resume the Phase 6 implementation handle for `p06-t09`, then run
-Phase 6 and final re-reviews.
+**Review fix result:** `p06-t09` now redacts sensitivity-named short
+environment values and bracketed/file-URL POSIX, Windows-drive, and UNC paths
+through bundle, verify, and record diagnostics. All four neutralizations failed
+their producer controls; focused tests, the complete core/lifecycle suites,
+every ordered repository gate, uncached Turbo, standalone suites, lint, and
+format passed on the committed head.
+
+**Next:** Run Phase 6 and final re-reviews.
 
 ---
 
