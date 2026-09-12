@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p06-t16
 oat_last_commit: 1a5ed9b037a46bb14b66e03f69c1675523c2782e
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -93,20 +93,20 @@ oat_generated: false
 
 # Project State: agent-authored-recap
 
-**Status:** Phase 6 passed; current-basis final review pending
+**Status:** Current-basis final-review fix queued
 **Started:** 2026-09-09
 **Last Updated:** 2026-09-12
 
 ## Current Phase
 
-Implementation — Final review pending
+Implementation — Phase 6 final-review fix
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** `spec.md` (complete — authored inline by the design phase)
 - **Design:** `design.md` (complete — HiLL approved 2026-09-10 after four review rounds)
-- **Plan:** `plan.md` (complete — 47 tasks, 6 phases)
+- **Plan:** `plan.md` (complete — 48 tasks, 6 phases)
 - **Implementation:** `implementation.md` (in progress)
 
 ## Progress
@@ -120,10 +120,9 @@ Implementation — Final review pending
 - ✓ Phase 3 complete and independently verified (8/8 tasks)
 - ✓ Phase 4 complete and independently verified (2/2 tasks)
 - ✓ Phase 5 complete and independently verified (1/1 task)
-- ✓ Phase 6 implementation complete (15/15 tasks)
-- ✓ Phase 6 independently reviewed
-- ✓ Implementation tasks complete (47/47 tasks)
-- ⧗ Current-basis final review pending
+- ⧗ Phase 6 implementation in progress (15/16 tasks)
+- ⧗ Implementation in progress (47/48 tasks)
+- ⧗ Composite residual-label fix pending
 
 ## Blockers
 
@@ -131,4 +130,4 @@ None.
 
 ## Next Milestone
 
-Run the mandatory current-basis final lifecycle review.
+Execute `p06-t16`, then re-review the current implementation basis.

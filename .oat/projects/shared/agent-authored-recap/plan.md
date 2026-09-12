@@ -914,6 +914,34 @@ gate generation, receive provenance, and recovery accounting.
 focused diff check without formatting `state.md`, then
 `git commit -m "fix(p06-t15): correct state plan inventory"`.
 
+### Task p06-t16: (review) Trace facts inside residual labels
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/verify.mjs`,
+  `.agents/skills/explainer-kit/tests/verify.test.mjs`
+
+**Step 1: Write tests (RED)** — Through the real `verifyRun` path, prove
+composite residual labels in at least `<strong>` and `<dt>` cannot hide
+fabricated number, ISO-date, or closed-status facts when they also contain a
+closed identifier. Keep bare residual controls and both tracked-package
+controls.
+
+**Step 2: Implement (GREEN)** — Preserve subject propagation from the closed
+identifier while also harvesting factual tokens from that label text under the
+resolved subject. Do not emit the identifier's own numeric suffix as a fact
+unless source indexing applies the same rule; retain unique claim keys.
+
+**Step 3: Negative control** — Restore subject-only composite-label handling
+and confirm the new controls pass verification incorrectly, then restore the
+fix and confirm they fail `pageToLedger`. Both tracked packages must still pass
+fresh verification and bare unlabeled residual facts must remain rejected.
+
+**Step 4: Verify and commit** — Run focused and complete core tests,
+tracked-package validation, lifecycle suites, lint, format, and all Phase 6
+gates, then
+`git commit -m "fix(p06-t16): trace composite label facts"`.
+
 **Phase 6 gates:** Run the complete ordered repository gate list, isolated-HOME
 forced Turbo, standalone smoke/skills/scripts/skill validation, focused core
 and lifecycle suites, `pnpm lint`, and `pnpm format`.
@@ -922,14 +950,14 @@ and lifecycle suites, `pnpm lint`, and `pnpm format`.
 
 ## Reviews
 
-| Scope | Type  | Status | Notes                                                                                                                                 |
-| ----- | ----- | ------ | ------------------------------------------------------------------------------------------------------------------------------------- |
-| p01   | phase | passed | Independent verification passed with 0 Critical, 0 Important, and 3 deferred Medium findings.                                         |
-| p02   | phase | passed | Fresh re-review closed all three blocking findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                      |
-| p03   | phase | passed | Final operator-authorized verification passed with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                           |
-| p04   | phase | passed | Re-review closed the executable front-door and visual-evidence findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings. |
-| p05   | phase | passed | Independent review passed the program recap and both bounded recoveries with 0 findings.                                              |
-| p06   | phase | passed | Gate-remediation re-review closed all findings with both tracked packages passing fresh verification.                                 |
+| Scope | Type  | Status  | Notes                                                                                                                                 |
+| ----- | ----- | ------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| p01   | phase | passed  | Independent verification passed with 0 Critical, 0 Important, and 3 deferred Medium findings.                                         |
+| p02   | phase | passed  | Fresh re-review closed all three blocking findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                      |
+| p03   | phase | passed  | Final operator-authorized verification passed with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                           |
+| p04   | phase | passed  | Re-review closed the executable front-door and visual-evidence findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings. |
+| p05   | phase | passed  | Independent review passed the program recap and both bounded recoveries with 0 findings.                                              |
+| p06   | phase | pending | One composite residual-label tracing fix remains before re-review.                                                                    |
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
@@ -960,6 +988,7 @@ and lifecycle suites, `pnpm lint`, and `pnpm format`.
 | final  | code     | fixes_added     | 2026-09-12 | reviews/archived/final-review-2026-09-12T140439Z.md           | 367bb6217c8d2c502ca395d04bf8f35b14ac43b5 | manual     | -                     |
 | final  | code     | passed          | 2026-09-12 | reviews/final-review-2026-09-12T201509Z.md                    | 2ebc4ec4d42accaf576a840cfa6ba3823246b9fb | manual     | -                     |
 | final  | code     | fixes_completed | 2026-09-12 | reviews/archived/final-review-2026-09-12T203608Z.md           | 1b041801417814f39f337837a0cba245fc11c020 | gate       | cursor-fable-5-1-high |
+| final  | code     | fixes_added     | 2026-09-12 | reviews/archived/final-review-2026-09-12T231453Z.md           | f2b92c515c23f0d9b4b9bab714951a785b56afbd | manual     | -                     |
 | spec   | artifact | pending         | -          | -                                                             | -                                        | -          | -                     |
 | design | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-design-review-2026-09-09T225646Z.md | -                                        | -          | -                     |
 | design | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-design-review-2026-09-09T232532Z.md | -                                        | manual     | -                     |
@@ -995,9 +1024,9 @@ cell; never truncate a widened row back to five columns.
 - Phase 3: 8 tasks - Adapter, core skill prose, lifecycle consumers, and docs
 - Phase 4: 2 tasks - The front door and the project explainer
 - Phase 5: 1 task - The program recap
-- Phase 6: 15 tasks - Final review fixes
+- Phase 6: 16 tasks - Final review fixes
 
-**Total:** 47 tasks
+**Total:** 48 tasks
 
 ## References
 

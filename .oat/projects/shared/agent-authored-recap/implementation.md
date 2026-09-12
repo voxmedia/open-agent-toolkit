@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-12
-oat_current_task_id: null
+oat_current_task_id: p06-t16
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 17    | 17/17     |
-| Phase 2 | completed | 4     | 4/4       |
-| Phase 3 | completed | 8     | 8/8       |
-| Phase 4 | completed | 2     | 2/2       |
-| Phase 5 | completed | 1     | 1/1       |
-| Phase 6 | completed | 15    | 15/15     |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 17    | 17/17     |
+| Phase 2 | completed   | 4     | 4/4       |
+| Phase 3 | completed   | 8     | 8/8       |
+| Phase 4 | completed   | 2     | 2/2       |
+| Phase 5 | completed   | 1     | 1/1       |
+| Phase 6 | in progress | 16    | 15/16     |
 
-**Total:** 47/47 tasks completed
+**Total:** 47/48 tasks completed
 
 ---
 
@@ -964,7 +964,7 @@ fresh Phase 6 review and final re-review.
 
 ## Phase 6: Final review fixes
 
-**Status:** implementation complete; current-basis final review pending.
+**Status:** in progress; current-basis final-review fix queued.
 
 ### Phase Summary
 
@@ -1388,6 +1388,39 @@ passed.
 
 **Next:** Run the mandatory current-basis final lifecycle review before
 restarting the configured exit gate.
+
+### Review Received: current-basis final
+
+**Date:** 2026-09-12
+**Review artifact:**
+`reviews/archived/final-review-2026-09-12T231453Z.md`
+**Reviewed head:** `f2b92c515c23f0d9b4b9bab714951a785b56afbd`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 0
+- Minor: 1
+
+**New task added:** `p06-t16`
+
+**Finding dispositions:**
+
+- I1 → `p06-t16`: preserve closed-identifier subject propagation while
+  harvesting number, ISO-date, and status facts from the same composite
+  residual label; avoid treating the identifier suffix as a fact.
+- m1 → approved deferral retained. The four immutable program-HTML whitespace
+  warnings remain unchanged until substantive package regeneration.
+
+**Deferred Critical/Important/Medium:** none.
+
+**Gate context:** This bounded fix remains inside configured exit-gate
+remediation attempt 1 of 2. It neither consumes a second gate attempt nor a
+Phase 6 recovery attempt.
+
+**Next:** Execute `p06-t16`, then run the narrow Phase 6 and current-basis final
+reviews before restarting the configured gate.
 
 ---
 
