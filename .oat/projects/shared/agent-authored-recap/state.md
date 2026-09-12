@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p06-t09
 oat_last_commit: 0fd007abe7a5a2254d13fb02f0d30cb44161fd11
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -87,26 +87,26 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-09T16:39:02.165Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-12T13:21:00Z'
+oat_project_state_updated: '2026-09-12T13:29:00Z'
 oat_generated: false
 ---
 
 # Project State: agent-authored-recap
 
-**Status:** Implementation tasks complete; awaiting final re-review
+**Status:** Final review fix ready (41 tasks, 6 phases)
 **Started:** 2026-09-09
 **Last Updated:** 2026-09-12
 
 ## Current Phase
 
-Implementation — All phases reviewed; awaiting final re-review
+Implementation — Phase 6 final-review fix ready (`p06-t09`)
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** `spec.md` (complete — authored inline by the design phase)
 - **Design:** `design.md` (complete — HiLL approved 2026-09-10 after four review rounds)
-- **Plan:** `plan.md` (complete — 40 tasks, 6 phases)
+- **Plan:** `plan.md` (complete — 41 tasks, 6 phases)
 - **Implementation:** `implementation.md` (in progress)
 
 ## Progress
@@ -120,10 +120,9 @@ Implementation — All phases reviewed; awaiting final re-review
 - ✓ Phase 3 complete and independently verified (8/8 tasks)
 - ✓ Phase 4 complete and independently verified (2/2 tasks)
 - ✓ Phase 5 complete and independently verified (1/1 task)
-- ✓ Phase 6 implementation complete (8/8 tasks)
-- ✓ Phase 6 independently reviewed
-- ✓ Implementation tasks complete (40/40 tasks)
-- ⧗ Awaiting final re-review
+- ✓ Phase 6 prior implementation complete (8/9 tasks)
+- ⧗ Phase 6 sanitizer review fix ready (40/41 tasks complete)
+- ⧗ Awaiting Phase 6 and final re-reviews
 
 ## Blockers
 
@@ -131,4 +130,4 @@ None.
 
 ## Next Milestone
 
-Re-review the complete implementation.
+Implement `p06-t09`, then re-review Phase 6 and the complete implementation.

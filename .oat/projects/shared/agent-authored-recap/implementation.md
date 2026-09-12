@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-12
-oat_current_task_id: null
+oat_current_task_id: p06-t09
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 17    | 17/17     |
-| Phase 2 | completed | 4     | 4/4       |
-| Phase 3 | completed | 8     | 8/8       |
-| Phase 4 | completed | 2     | 2/2       |
-| Phase 5 | completed | 1     | 1/1       |
-| Phase 6 | completed | 8     | 8/8       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 17    | 17/17     |
+| Phase 2 | completed   | 4     | 4/4       |
+| Phase 3 | completed   | 8     | 8/8       |
+| Phase 4 | completed   | 2     | 2/2       |
+| Phase 5 | completed   | 1     | 1/1       |
+| Phase 6 | in progress | 9     | 8/9       |
 
-**Total:** 40/40 tasks completed
+**Total:** 40/41 tasks completed
 
 ---
 
@@ -964,7 +964,7 @@ fresh Phase 6 review and final re-review.
 
 ## Phase 6: Final review fixes
 
-**Status:** completed; narrow re-review passed with 0 findings.
+**Status:** final-review fix in progress; `p06-t09` remains.
 
 ### Phase Summary
 
@@ -1045,7 +1045,35 @@ checking, and the committed file-boundary check passed.
 `de2393c3fa337bc7f33d9813a583dbc41ec5fbda` with 0 Critical, Important,
 Medium, or Minor findings.
 
-**Next:** Run the mandatory whole-project final re-review.
+### Review Received: final (round 2)
+
+**Date:** 2026-09-12
+**Review artifact:**
+`reviews/archived/final-review-2026-09-12T132520Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 1
+- Minor: 1
+
+**New task added:** `p06-t09`
+
+**Finding dispositions:**
+
+- M1 → `p06-t09`: complete sensitive environment-value and common encoded or
+  bracketed absolute-path redaction through all three diagnostic producers.
+- m1 → approved deferral retained. The immutable program HTML remains
+  untouched until substantive package regeneration; this round found no new
+  reason to incur QA/manifest churn for whitespace only.
+
+**Deferred Medium ledger:** none. The sole Medium is converted to `p06-t09`.
+
+**Review cycle:** 2 of 3.
+
+**Next:** Resume the Phase 6 implementation handle for `p06-t09`, then run
+Phase 6 and final re-reviews.
 
 ---
 

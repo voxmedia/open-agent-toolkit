@@ -748,6 +748,33 @@ advances them.
 task/phase totals without formatting `state.md`, then
 `git commit -m "fix(p06-t08): correct state plan inventory"`.
 
+### Task p06-t09: (review) Complete sensitive diagnostic redaction
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/lib/sanitize.mjs`,
+  `.agents/skills/explainer-kit/tests/{bundle,verify,record}.test.mjs`
+
+**Step 1: Write tests (RED)** — Through `writeFailure`, Playwright downgrade
+reasons, and record warnings, prove redaction of short values from
+sensitivity-named environment variables plus bracketed and `file://` POSIX,
+Windows-drive, and UNC absolute paths. Retain a safe diagnostic control that
+must remain readable.
+
+**Step 2: Implement (GREEN)** — Replace the unconditional environment-value
+length cutoff with a deterministic sensitivity-aware policy that catches short
+secrets without globally replacing ordinary one-character or structural
+values. Extend absolute-path recognition to bracketed and file-URL forms while
+preserving useful non-sensitive diagnostics.
+
+**Step 3: Negative controls** — Neutralize short-sensitive-value, bracketed
+path, file-URL, and Windows/UNC handling independently and confirm the
+corresponding producer-level tests fail.
+
+**Step 4: Verify and commit** — Run focused sanitizer carriers, the complete
+core suite, lint, and format, then
+`git commit -m "fix(p06-t09): complete diagnostic redaction"`.
+
 **Phase 6 gates:** Run the complete ordered repository gate list, isolated-HOME
 forced Turbo, standalone smoke/skills/scripts/skill validation, focused core
 and lifecycle suites, `pnpm lint`, and `pnpm format`.
@@ -756,14 +783,14 @@ and lifecycle suites, `pnpm lint`, and `pnpm format`.
 
 ## Reviews
 
-| Scope | Type  | Status | Notes                                                                                                                                 |
-| ----- | ----- | ------ | ------------------------------------------------------------------------------------------------------------------------------------- |
-| p01   | phase | passed | Independent verification passed with 0 Critical, 0 Important, and 3 deferred Medium findings.                                         |
-| p02   | phase | passed | Fresh re-review closed all three blocking findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                      |
-| p03   | phase | passed | Final operator-authorized verification passed with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                           |
-| p04   | phase | passed | Re-review closed the executable front-door and visual-evidence findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings. |
-| p05   | phase | passed | Independent review passed the program recap and both bounded recoveries with 0 findings.                                              |
-| p06   | phase | passed | Narrow re-review closed the state-inventory finding with 0 Critical, Important, Medium, or Minor findings.                            |
+| Scope | Type  | Status  | Notes                                                                                                                                 |
+| ----- | ----- | ------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| p01   | phase | passed  | Independent verification passed with 0 Critical, 0 Important, and 3 deferred Medium findings.                                         |
+| p02   | phase | passed  | Fresh re-review closed all three blocking findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                      |
+| p03   | phase | passed  | Final operator-authorized verification passed with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                           |
+| p04   | phase | passed  | Re-review closed the executable front-door and visual-evidence findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings. |
+| p05   | phase | passed  | Independent review passed the program recap and both bounded recoveries with 0 findings.                                              |
+| p06   | phase | pending | Final re-review added one sanitizer task; implementation and re-review are pending.                                                   |
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
@@ -785,7 +812,8 @@ and lifecycle suites, `pnpm lint`, and `pnpm format`.
 | p05    | code     | passed          | 2026-09-12 | reviews/p05-review-2026-09-12T030832Z.md                      | 22fbe809f3410ae95f75e5dccb16a664020122d8 | manual     | -           |
 | p06    | code     | fixes_completed | 2026-09-12 | reviews/archived/p06-review-2026-09-12T130841Z.md             | afd969f946ce774ad1e2bcaa03741177a4f865bd | manual     | -           |
 | p06    | code     | passed          | 2026-09-12 | reviews/p06-review-2026-09-12T131816Z.md                      | de2393c3fa337bc7f33d9813a583dbc41ec5fbda | manual     | -           |
-| final  | code     | fixes_added     | 2026-09-12 | reviews/archived/final-review-2026-09-12T032129Z.md           | ed5f9f19d777989fe6095be14b1bb12e14583359 | manual     | -           |
+| final  | code     | fixes_completed | 2026-09-12 | reviews/archived/final-review-2026-09-12T032129Z.md           | ed5f9f19d777989fe6095be14b1bb12e14583359 | manual     | -           |
+| final  | code     | fixes_added     | 2026-09-12 | reviews/archived/final-review-2026-09-12T132520Z.md           | 03dd32006306615858d39f68da7425b083f95780 | manual     | -           |
 | spec   | artifact | pending         | -          | -                                                             | -                                        | -          | -           |
 | design | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-design-review-2026-09-09T225646Z.md | -                                        | -          | -           |
 | design | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-design-review-2026-09-09T232532Z.md | -                                        | manual     | -           |
@@ -821,9 +849,9 @@ cell; never truncate a widened row back to five columns.
 - Phase 3: 8 tasks - Adapter, core skill prose, lifecycle consumers, and docs
 - Phase 4: 2 tasks - The front door and the project explainer
 - Phase 5: 1 task - The program recap
-- Phase 6: 8 tasks - Final review fixes
+- Phase 6: 9 tasks - Final review fixes
 
-**Total:** 40 tasks
+**Total:** 41 tasks
 
 ## References
 
