@@ -44,7 +44,34 @@ export function extractRenderedClaims(html) {
   const numericClaims = {};
   const statuses = {};
   const claims = [];
+  const seenClaims = new Set();
   const sections = extractSections(html);
+
+  function harvestValues(valuesText, subject) {
+    const addClaim = (value, kind) => {
+      const key = `${subject}\0${value}\0${kind}`;
+      if (seenClaims.has(key)) return;
+      seenClaims.add(key);
+      if (kind === 'status') {
+        statuses[subject] = value;
+      } else {
+        numericClaims[subject] = value;
+      }
+      claims.push({ subject, value, kind });
+    };
+
+    for (const value of valuesText.match(/\b\d{4}-\d{2}-\d{2}\b/g) ?? []) {
+      addClaim(value, 'date');
+    }
+    const withoutDates = valuesText.replace(/\b\d{4}-\d{2}-\d{2}\b/g, '');
+    for (const value of withoutDates.match(/\b\d+(?:\.\d+)?%?\b/g) ?? []) {
+      addClaim(value, 'number');
+    }
+    for (const token of valuesText.toLowerCase().match(/[a-z][a-z_-]*/g) ??
+      []) {
+      if (STATUS_VALUES.has(token)) addClaim(token, 'status');
+    }
+  }
 
   for (const section of sections) {
     const blockPattern = /<(h[1-6]|tr|li|p)\b[^>]*>([\s\S]*?)<\/\1>/gi;
@@ -69,22 +96,11 @@ export function extractRenderedClaims(html) {
       });
       const valuesText =
         rowCells.length > 1 ? rowCells.slice(1).join(' ') : text;
-      for (const value of valuesText.match(/\b\d{4}-\d{2}-\d{2}\b/g) ?? []) {
-        numericClaims[subject] = value;
-        claims.push({ subject, value, kind: 'date' });
-      }
-      const withoutDates = valuesText.replace(/\b\d{4}-\d{2}-\d{2}\b/g, '');
-      for (const value of withoutDates.match(/\b\d+(?:\.\d+)?%?\b/g) ?? []) {
-        numericClaims[subject] = value;
-        claims.push({ subject, value, kind: 'number' });
-      }
-      for (const token of valuesText.toLowerCase().match(/[a-z][a-z_-]*/g) ??
-        []) {
-        if (!STATUS_VALUES.has(token)) continue;
-        statuses[subject] = token;
-        claims.push({ subject, value: token, kind: 'status' });
-      }
+      harvestValues(valuesText, subject);
     }
+
+    const residualText = htmlText(section.html.replace(blockPattern, ' '));
+    if (residualText) harvestValues(residualText, section.id);
   }
   return { terminology, numericClaims, statuses, claims };
 }

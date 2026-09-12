@@ -138,7 +138,58 @@ test('extractRenderedClaims keys terms and normalized facts by subject', async (
         kind === 'date',
     ),
   );
+  assert.equal(
+    new Set(
+      claims.claims.map(
+        ({ subject, value, kind }) => `${subject}\0${value}\0${kind}`,
+      ),
+    ).size,
+    claims.claims.length,
+  );
 });
+
+for (const { name, markup, value } of [
+  {
+    name: 'number in a stat div',
+    markup: '<div class="stat"><strong>9999</strong> tasks</div>',
+    value: '9999',
+  },
+  {
+    name: 'ISO date in a description detail',
+    markup: '<dl><dt>Ship date</dt><dd>2031-01-01</dd></dl>',
+    value: '2031-01-01',
+  },
+  {
+    name: 'closed status in a description detail',
+    markup: '<dl><dt>Release state</dt><dd>failed</dd></dl>',
+    value: 'failed',
+  },
+]) {
+  test(`residual section tracing rejects a fabricated ${name}`, async () => {
+    const root = await runRoot();
+    const pagePath = join(root, 'site/index.html');
+    const page = await readFile(pagePath, 'utf8');
+    await writeFile(
+      pagePath,
+      page.replace(
+        '<h2>Validation evidence</h2>',
+        `<h2>Validation evidence</h2>${markup}`,
+      ),
+    );
+
+    const result = await verifyRun({
+      runRoot: root,
+      recipe: 'project-recap',
+      rung: 'none',
+    });
+
+    assert.equal(result.checks.pageToLedger.status, 'fail');
+    assert.match(
+      result.checks.pageToLedger.cause,
+      new RegExp(`verify-claim-untraced:validation-evidence:${value}`),
+    );
+  });
+}
 
 test('source and rendered factual headings trace symmetrically', async () => {
   const root = await runRoot();
