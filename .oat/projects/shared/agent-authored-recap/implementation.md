@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-12
-oat_current_task_id: p06-t08
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 17    | 17/17     |
-| Phase 2 | completed   | 4     | 4/4       |
-| Phase 3 | completed   | 8     | 8/8       |
-| Phase 4 | completed   | 2     | 2/2       |
-| Phase 5 | completed   | 1     | 1/1       |
-| Phase 6 | in progress | 8     | 7/8       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 17    | 17/17     |
+| Phase 2 | completed | 4     | 4/4       |
+| Phase 3 | completed | 8     | 8/8       |
+| Phase 4 | completed | 2     | 2/2       |
+| Phase 5 | completed | 1     | 1/1       |
+| Phase 6 | completed | 8     | 8/8       |
 
-**Total:** 39/40 tasks completed
+**Total:** 40/40 tasks completed
 
 ---
 
@@ -964,7 +964,7 @@ fresh Phase 6 review and final re-review.
 
 ## Phase 6: Final review fixes
 
-**Status:** changes requested; one bookkeeping fix remains.
+**Status:** fixes completed; narrow re-review pending.
 
 ### Phase Summary
 
@@ -992,6 +992,7 @@ fresh Phase 6 review and final re-review.
 - `p06-t05`: `0e6488ec90948f56008452d6eeb3152dbdb90b91`
 - `p06-t06`: `f5b0c5e545fdab0180a6132dcc95659f0b040891`
 - `p06-t07`: `a7d8377f563703aaf41d71ba3ef7dbf42b6dfb57`
+- `p06-t08`: `0fd007abe7a5a2254d13fb02f0d30cb44161fd11`
 
 **Verification:**
 
@@ -1036,8 +1037,11 @@ fresh Phase 6 review and final re-review.
 - I1 → `p06-t08`: correct the root-owned state Artifacts description from the
   stale pre-Phase-6 inventory to the authoritative 40-task, 6-phase plan.
 
-**Next:** Resume the original Phase 6 implementation handle for `p06-t08`, then
-run a narrow Phase 6 re-review before final re-review.
+**Review fix result:** `p06-t08` corrected the stale state inventory to 40
+tasks across 6 phases. Plan validation, the 58-test state validator, diff
+checking, and the committed file-boundary check passed.
+
+**Next:** Run a narrow Phase 6 re-review before final re-review.
 
 ---
 
