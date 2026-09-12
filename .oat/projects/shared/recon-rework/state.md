@@ -43,17 +43,17 @@ oat_implement_exit_gate:
   reviewed_head: 216ea4a9ff0b9aecb7b7e92e4feea1c710b7eab0
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:fa62febf1f0a0f5904cab7849c64ea223dd7cf802e13ce06b1b3936d1c6d7ea3'
-  freshness_head: e72ee58e4905515893df16740cf514f109319475
-  freshness_fingerprint: 'sha256:effective-delta-v1:0a517551257ba62b2912c5c0edc08d065a38c75c8a93d23d5568d8f188c7f2c8'
-  launch_state: intent_persisted
+  freshness_head: 6084bde18d4c23735abab4e6378136ea102da1e0
+  freshness_fingerprint: 'sha256:effective-delta-v1:d0f7daad723e943744be6ae93f68ba90db3ae9479d24ce21065942b327bfe8e4'
+  launch_state: result_persisted
   launch_attempt_id: 'recon-exit-gate-20260912T000329Z'
   launch_started_at: '2026-09-12T00:03:29Z'
   launch_result_receipt: '/private/tmp/recon-exit-gate-20260912T000329Z.receipt.json'
-  gate_run_marker: null
-  gate_run_id: null
-  envelope_status: null
-  artifact: null
-  handoff: null
+  gate_run_marker: '/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/965e9704-ba33-443b-adca-e494b6692fbc.json'
+  gate_run_id: 965e9704-ba33-443b-adca-e494b6692fbc
+  envelope_status: ok
+  artifact: '.oat/projects/shared/recon-rework/reviews/final-review-2026-09-12T001359Z.md'
+  handoff: 'Gate passed at the important threshold, but the final review still contains non-blocking findings (minor=2). Run oat-project-review-receive for .oat/projects/shared/recon-rework/reviews/final-review-2026-09-12T001359Z.md to disposition them before marking the final review row passed.'
   receive_state: not_started
   receive_correlation: null
   receive_source_artifact: null
@@ -61,10 +61,10 @@ oat_implement_exit_gate:
   receive_event_identity: null
   receive_pre_head: null
   receive_commit: null
-  receive_eligible: false
+  receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-09-12T00:03:29Z'
+  updated_at: '2026-09-12T00:16:45Z'
 oat_post_implement_sequence:
   status: complete
   source: configured
@@ -88,7 +88,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/285'
 oat_project_created: '2026-09-08T17:25:15.784Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-09-12T00:03:29Z'
+oat_project_state_updated: '2026-09-12T00:16:45Z'
 oat_generated: false
 oat_project_recap:
   decision: skip
