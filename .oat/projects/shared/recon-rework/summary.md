@@ -4,9 +4,10 @@ oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-11
 oat_generated: true
-oat_summary_last_task: prev3-t03
-oat_summary_revision_count: 3
-oat_summary_includes_revisions: [p-rev1, p-rev2, p-rev3]
+oat_summary_last_task: prev8-t03
+oat_summary_revision_count: 8
+oat_summary_includes_revisions:
+  [p-rev1, p-rev2, p-rev3, p-rev4, p-rev5, p-rev6, p-rev7, p-rev8]
 ---
 
 # Summary: Recon rework
@@ -42,9 +43,17 @@ interpretation, evidence sufficiency, and final conclusions.
 - Consolidated condition semantics and same-run attribution, and replaced encoded
   conditional-gap strings with structured wave/lane identity. These changes closed
   every retrospective follow-up directly in the project.
+- Required same-run condition evidence, gather-before-compile provenance, and exact
+  approved-wave ownership for primary and redundant gather passes. Pass outcomes
+  now reconcile at exact lane granularity, preserving honest mixed-lane partials
+  while rejecting same-lane contradictions.
+- Published categorical contracts for lane-outcome and same-run evidence failures,
+  and bounded derivative-diagnostic suppression so independent defects stay
+  visible without avoidable cascades.
 - Aligned the recon controller, worker role, shared orchestration guidance,
   packet renderer, public docs, bundled runtime, provider projections, and bundle
-  consistency tests. All five public packages advanced in lockstep to `0.2.73`.
+  consistency tests. Recon remains at skill version `1.1.2`; all five public
+  packages remain in lockstep at `0.2.73`.
 
 ## Key Decisions
 
@@ -81,6 +90,10 @@ interpretation, evidence sufficiency, and final conclusions.
   quick topology and admitted foreign modes, plus hostile object-valued collection
   paths. Revisions 2 and 3 replaced that rule with explicit allowed modes, adaptive
   caps, and exact singleton bounds at both preview and packet boundaries.
+- Later review cycles made provenance and outcome ownership explicit: condition
+  evidence must belong to the same run, thorough compilation must consume both
+  gather waves, each derived pass belongs to its approved wave, and material gaps
+  identify the exact lane before they affect assurance.
 
 ## Notable Challenges
 
@@ -95,6 +108,10 @@ interpretation, evidence sufficiency, and final conclusions.
 - Verification-note whitespace triggered the phase recovery protocol once. The
   recovery commit changed only tracked evidence formatting, reran the scoped
   checks, and preserved the original task commit.
+- Five late review rounds found increasingly narrow provenance, ownership, and
+  outcome-reconciliation defects. Each blocking defect received a bounded revision
+  and a passing phase review; the final diagnostic-only edge stayed fail-closed
+  and was explicitly deferred instead of extending implementation again.
 
 ## Tradeoffs Made
 
@@ -119,6 +136,22 @@ interpretation, evidence sufficiency, and final conclusions.
 - **p-rev3:** Fixed the configured gate's remaining singleton-lane bound, aligned
   the adaptive-cap references, and made preview output distinguish counted adaptive
   lanes from total lanes. The terminal gate then passed with 0 findings.
+- **p-rev4:** Required conditional predicate evidence to belong to the current run,
+  then suppressed only the derivative predecessor and predicate diagnostics when a
+  primary evidence-ownership check fails. The narrowed phase review passed cleanly.
+- **p-rev5:** Moved thorough redundant gathering before compilation and required
+  the candidate ledger to bind both independent dossiers by exact provenance
+  before review briefs are built. The focused and full recon suites passed.
+- **p-rev6:** Bound primary and redundant gather pass derivation to the approved
+  wave that owns each lane, preventing cross-wave impersonation while retaining
+  honest partial outcomes. The narrowed review passed with no findings.
+- **p-rev7:** Reconciled complete artifacts with material failed or omitted pass
+  outcomes before profile derivation, so contradictory evidence cannot preserve
+  assurance or publication. The authorized review cycle passed cleanly.
+- **p-rev8:** Refined that reconciliation to exact lane identity, documented the
+  public categorical contract, and bounded derivative thorough-ledger diagnostics.
+  Mixed-lane partials remain publishable at their achieved profile; same-lane
+  contradictions remain invalid.
 
 ## Integration Notes
 
@@ -131,17 +164,31 @@ interpretation, evidence sufficiency, and final conclusions.
   no independent semantic pass. Standard/thorough assurance still depends on their
   required typed evidence and single terminal reconciliation.
 - Final verification passed all eight CI-equivalent gates in order plus `pnpm lint`
-  and `pnpm format`; the full workspace test command executed all package test tasks
-  and the terminal recon suite passed 270/270. Release validation packed all five
-  public packages at `0.2.73`, docs built, and targeted negative controls proved the
-  assurance guards can fail. Earlier repeatable evidence is in
+  and `pnpm format`, for ten required repository gates total; the terminal recon
+  suite passed 281/281. Release validation packed all five public packages at
+  `0.2.73`, docs built, and targeted negative controls proved the assurance guards
+  can fail. Earlier repeatable evidence is in
   [phase-4-validation.md](references/verification/phase-4-validation.md).
+- Final lifecycle review
+  [`final-review-2026-09-11T230845Z.md`](reviews/archived/final-review-2026-09-11T230845Z.md)
+  passed with 0C/0I/0M/1m; Thomas explicitly deferred its fail-closed,
+  diagnostic-only Minor.
+- Configured exit-gate run `965e9704-ba33-443b-adca-e494b6692fbc` passed at the
+  Important threshold with 0C/0I/0M/2m and was durably received as allowed. Its
+  second Minor joins the same post-release diagnostic cleanup.
+
+## Follow-up Items
+
+- **Post-release recon diagnostic cleanup:** suppress the derivative thorough
+  gather-input diagnostic when terminal reconciliation is absent, and share the
+  singleton-qualified legacy gap predicate across all pass-outcome consumers.
+  Both accepted Minors are diagnostic-only; affected packets already remain
+  invalid and unpublishable.
 
 ## Explainer Outcome
 
-- Skipped by interactive lifecycle decision. No unattended provider was
-  configured for the author, fact critic, browser session, visual critic, or
-  set planner seams, so no project-recap run or run path was created.
+- **project-recap:** skipped — recorded interactive decision; no recap run or run
+  path was created.
 
 ## Workflow Observations
 
@@ -248,3 +295,71 @@ target=cursor-fable-5-1-high threshold=important findings=critical:0,important:0
 ### 2026-09-11 · structural · oat-project-review-receive · final
 
 run-3-exit-gate-pass-receive-20260911T155617Z Configured gate run e9a3a038-dc02-4f62-affe-c3d5cfb2c4dc passed at the Important threshold with 0C/0I/0M/0m; the exact run-bound artifact is archived with no remediation tasks, deferrals, or product changes.
+
+### 2026-09-11 · structural · oat-project-implement · p-rev4
+
+Phase p-rev4 passed after one bounded fix loop; tasks prev4-t01 and prev4-t02 completed, root-owned re-review reported 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.
+
+### 2026-09-11 · structural · oat-project-review-receive · final
+
+run-4-final-important-20260911 Fresh final review found one Important thorough-ordering defect; p-rev5 task prev5-t01 records the accepted fix to compile both independent gather dossiers before review.
+
+### 2026-09-11 · structural · oat-project-implement · p-rev5
+
+run-4-p-rev5-pass-20260911 Phase p-rev5 passed with task prev5-t01 complete at 26c8357d081ced7047379140c5353ab5993a7f46; narrowed review reported 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.
+
+### 2026-09-11 · structural · oat-project-review-receive · final
+
+run-4-final-gather-ownership-20260911 Fresh final review found one Important gather-pass ownership bypass; p-rev6 task prev6-t01 records the accepted fix to derive primary and redundant gather passes from approved wave ownership.
+
+### 2026-09-11 · structural · oat-project-implement · p-rev6
+
+run-4-p-rev6-pass-20260911 Phase p-rev6 passed with task prev6-t01 complete at 52c21ca6b065b95907887459770b3d38ac8cb105; narrowed review reported 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.
+
+### 2026-09-11 · structural · oat-project-review-receive · final
+
+run-4-final-cap-pass-outcome-20260911 Cycle-cap final review found one Important artifact/failure contradiction; p-rev7 task prev7-t01 records the accepted fix, but another bounded implementation and review cycle requires explicit user authorization.
+
+### 2026-09-11 · structural · oat-project-implement · p-rev7
+
+implement-cycle-cap-20260911T184033Z stopped before prev7-t01 because the three-cycle final-review cap requires explicit user authorization; source reviews/archived/final-review-2026-09-11T183428Z.md.
+
+### 2026-09-11 · structural · oat-project-implement · p-rev7
+
+run-4-p-rev7-pass-20260911 Phase p-rev7 completed task prev7-t01 at 914e9fde6d67f6a3d1c88f2ff2b573b955503822; narrowed review reviews/archived/p-rev7-review-2026-09-11T200317Z.md reported 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.
+
+### 2026-09-11 · structural · oat-project-review-receive · final
+
+run-4-final-rereview-pass-20260911T202308Z The authorized narrowed final lifecycle review passed with 0C/0I/0M/0m, closed prev7-t01, and dispositioned the carried deferred ledger to zero remaining items; source reviews/archived/final-review-2026-09-11T202308Z.md.
+
+### 2026-09-11 · structural · oat gate review · final
+
+target=cursor-fable-5-1-high threshold=important findings=critical:0,important:1,medium:1,minor:1 exit=1 status=blocked artifact=.oat/projects/shared/recon-rework/reviews/final-review-2026-09-11T204246Z.md run=e54ba2dd-6df7-468d-9984-638aa95ea3c6
+
+### 2026-09-11 · structural · oat-project-review-receive · final
+
+run-4-exit-gate-receive-20260911T204246Z Configured gate e54ba2dd-6df7-468d-9984-638aa95ea3c6 blocked with 0C/1I/1M/1m; all findings became prev8-t01 through prev8-t03 for remediation attempt 1 of 2.
+
+### 2026-09-11 · structural · oat-project-implement · p-rev8
+
+run-4-p-rev8-pass-20260911 Phase p-rev8 completed prev8-t01 through prev8-t03 at 016f7aade4e91fdcf7323d81ed4c2a5dc7374106; review reviews/archived/p-rev8-review-2026-09-11T210626Z.md reported 0C/0I/0M/1m, with its fail-closed diagnostic-only edge deferred to final disposition.
+
+### 2026-09-11 · structural · oat-project-implement · final
+
+final-review-cap-p-rev8-20260911T222247Z paused after p-rev8 final verification because the prior one-cycle override is exhausted; one fresh final lifecycle review is required before configured gate attempt 2.
+
+### 2026-09-11 · structural · oat-project-implement · final
+
+final-review-cap-p-rev8-authorized-20260911T230742Z Thomas authorized exactly one additional final lifecycle review cycle for completed p-rev8 and configured gate attempt 2 if it passes.
+
+### 2026-09-12 · structural · oat-project-review-receive · final
+
+run-4-final-rereview-p-rev8-pass-20260911T230845Z The authorized final review passed with 0C/0I/0M/1m; Thomas explicitly deferred the fail-closed diagnostic-only Minor to the next validator cleanup, leaving no blocking deferred findings.
+
+### 2026-09-12 · structural · oat gate review · final
+
+target=cursor-fable-5-1-high threshold=important findings=critical:0,important:0,medium:0,minor:2 exit=0 status=ok artifact=.oat/projects/shared/recon-rework/reviews/final-review-2026-09-12T001359Z.md run=965e9704-ba33-443b-adca-e494b6692fbc
+
+### 2026-09-12 · structural · oat-project-review-receive · final
+
+run-4-exit-gate-pass-receive-20260912T001359Z Gate 965e9704-ba33-443b-adca-e494b6692fbc passed at Important with 0C/0I/0M/2m; m1 preserves the user-approved diagnostic deferral and m2 is deferred to the same cleanup with no publication effect.
