@@ -72,6 +72,13 @@ phase-outcome-p03-20260912T0021Z: PASS; 0 Critical, 0 Important, 0 Medium, 0 Min
 
 phase-p04-outcome-20260912T020833Z: Phase p04 passed after one bounded review-fix round; see reviews/p04-review-2026-09-12T020833Z.md.
 
+### 2026-09-12 · structural · oat-project-implement · final
+
+final-review-round3-override-20260912: round 3 found one Medium
+`SECRET_?KEY` sanitizer gap; the operator authorized one bounded `p06-t10`
+fix, a fresh Phase 6 review, and exactly one fourth final review. This is not
+an unlimited retry extension and does not consume Phase 6 recovery attempts.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

@@ -775,6 +775,30 @@ corresponding producer-level tests fail.
 core suite, lint, and format, then
 `git commit -m "fix(p06-t09): complete diagnostic redaction"`.
 
+### Task p06-t10: (review) Cover short secret-key environment names
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/lib/sanitize.mjs`,
+  `.agents/skills/explainer-kit/tests/{bundle,verify,record}.test.mjs`
+
+**Step 1: Write tests (RED)** — Through bundle, verify, and record producers,
+prove a short `REVIEW_SECRET_KEY=abcd` value is redacted. Preserve controls for
+`TOKEN_STORAGE=file`, one-character diagnostics, universal long values, and
+the previously covered sensitive suffixes.
+
+**Step 2: Implement (GREEN)** — Extend the explicit terminal sensitive-name
+policy to cover `SECRET_?KEY`; audit the adjacent explicit key forms for
+equivalent separator handling without broad substring matching.
+
+**Step 3: Negative control** — Remove only the `SECRET_?KEY` form and confirm
+all three producer controls fail, then restore it and rerun the complete
+sanitizer carrier suite.
+
+**Step 4: Verify and commit** — Run focused producer tests, complete core and
+lifecycle suites, lint, format, and the ordered repository gates, then
+`git commit -m "fix(p06-t10): redact short secret-key values"`.
+
 **Phase 6 gates:** Run the complete ordered repository gate list, isolated-HOME
 forced Turbo, standalone smoke/skills/scripts/skill validation, focused core
 and lifecycle suites, `pnpm lint`, and `pnpm format`.
@@ -783,14 +807,14 @@ and lifecycle suites, `pnpm lint`, and `pnpm format`.
 
 ## Reviews
 
-| Scope | Type  | Status | Notes                                                                                                                                 |
-| ----- | ----- | ------ | ------------------------------------------------------------------------------------------------------------------------------------- |
-| p01   | phase | passed | Independent verification passed with 0 Critical, 0 Important, and 3 deferred Medium findings.                                         |
-| p02   | phase | passed | Fresh re-review closed all three blocking findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                      |
-| p03   | phase | passed | Final operator-authorized verification passed with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                           |
-| p04   | phase | passed | Re-review closed the executable front-door and visual-evidence findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings. |
-| p05   | phase | passed | Independent review passed the program recap and both bounded recoveries with 0 findings.                                              |
-| p06   | phase | passed | Sanitizer re-review passed all producer controls and repository gates with 0 findings.                                                |
+| Scope | Type  | Status  | Notes                                                                                                                                 |
+| ----- | ----- | ------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| p01   | phase | passed  | Independent verification passed with 0 Critical, 0 Important, and 3 deferred Medium findings.                                         |
+| p02   | phase | passed  | Fresh re-review closed all three blocking findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                      |
+| p03   | phase | passed  | Final operator-authorized verification passed with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                           |
+| p04   | phase | passed  | Re-review closed the executable front-door and visual-evidence findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings. |
+| p05   | phase | passed  | Independent review passed the program recap and both bounded recoveries with 0 findings.                                              |
+| p06   | phase | pending | One operator-authorized secret-key sanitizer task remains before re-review.                                                           |
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
@@ -815,6 +839,7 @@ and lifecycle suites, `pnpm lint`, and `pnpm format`.
 | p06    | code     | passed          | 2026-09-12 | reviews/p06-review-2026-09-12T135600Z.md                      | 7ba61d84fee87d3e9217f8c1431ba34eb658471a | manual     | -           |
 | final  | code     | fixes_completed | 2026-09-12 | reviews/archived/final-review-2026-09-12T032129Z.md           | ed5f9f19d777989fe6095be14b1bb12e14583359 | manual     | -           |
 | final  | code     | fixes_completed | 2026-09-12 | reviews/archived/final-review-2026-09-12T132520Z.md           | 03dd32006306615858d39f68da7425b083f95780 | manual     | -           |
+| final  | code     | fixes_added     | 2026-09-12 | reviews/archived/final-review-2026-09-12T140439Z.md           | 367bb6217c8d2c502ca395d04bf8f35b14ac43b5 | manual     | -           |
 | spec   | artifact | pending         | -          | -                                                             | -                                        | -          | -           |
 | design | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-design-review-2026-09-09T225646Z.md | -                                        | -          | -           |
 | design | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-design-review-2026-09-09T232532Z.md | -                                        | manual     | -           |
@@ -850,9 +875,9 @@ cell; never truncate a widened row back to five columns.
 - Phase 3: 8 tasks - Adapter, core skill prose, lifecycle consumers, and docs
 - Phase 4: 2 tasks - The front door and the project explainer
 - Phase 5: 1 task - The program recap
-- Phase 6: 9 tasks - Final review fixes
+- Phase 6: 10 tasks - Final review fixes
 
-**Total:** 41 tasks
+**Total:** 42 tasks
 
 ## References
 

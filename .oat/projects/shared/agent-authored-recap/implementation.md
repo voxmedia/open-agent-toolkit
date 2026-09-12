@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-12
-oat_current_task_id: null
+oat_current_task_id: p06-t10
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 17    | 17/17     |
-| Phase 2 | completed | 4     | 4/4       |
-| Phase 3 | completed | 8     | 8/8       |
-| Phase 4 | completed | 2     | 2/2       |
-| Phase 5 | completed | 1     | 1/1       |
-| Phase 6 | completed | 9     | 9/9       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 17    | 17/17     |
+| Phase 2 | completed   | 4     | 4/4       |
+| Phase 3 | completed   | 8     | 8/8       |
+| Phase 4 | completed   | 2     | 2/2       |
+| Phase 5 | completed   | 1     | 1/1       |
+| Phase 6 | in progress | 10    | 9/10      |
 
-**Total:** 41/41 tasks completed
+**Total:** 41/42 tasks completed
 
 ---
 
@@ -964,7 +964,7 @@ fresh Phase 6 review and final re-review.
 
 ## Phase 6: Final review fixes
 
-**Status:** completed; sanitizer re-review passed with 0 findings.
+**Status:** in progress; one operator-authorized sanitizer task remains.
 
 ### Phase Summary
 
@@ -994,6 +994,7 @@ fresh Phase 6 review and final re-review.
 - `p06-t07`: `a7d8377f563703aaf41d71ba3ef7dbf42b6dfb57`
 - `p06-t08`: `0fd007abe7a5a2254d13fb02f0d30cb44161fd11`
 - `p06-t09`: `927ba10f1a09ec36755dedf411183372b4703691`
+- `p06-t10`: pending
 
 **Verification:**
 
@@ -1085,7 +1086,45 @@ format passed on the committed head.
 Medium, or Minor findings. All twelve producer/neutralization combinations
 failed when their guard was removed.
 
-**Next:** Run the mandatory whole-project final re-review.
+### Review Received: final (round 3)
+
+**Date:** 2026-09-12
+**Review artifact:**
+`reviews/archived/final-review-2026-09-12T140439Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 1
+- Minor: 1
+
+**New task added:** `p06-t10`
+
+**Finding dispositions:**
+
+- M1 → `p06-t10`: cover the terminal `SECRET_?KEY` sensitivity-name family
+  with short-value controls through bundle, verify, and record producers while
+  preserving safe structural diagnostics.
+- m1 → approved deferral retained. The immutable program HTML remains
+  untouched until substantive package regeneration.
+
+**Deferred Medium ledger:** none. The sole Medium is converted to `p06-t10`.
+
+**Review cycle:** 3 of 3. The operator explicitly authorized one additional
+bounded fix and final re-review cycle. This is not an unlimited retry-budget
+extension.
+
+**Cause:** the explicit sensitive-name policy added for `p06-t09` covered
+`SECRET` and key forms but omitted the common compound `SECRET_KEY` terminal
+name.
+
+**Authorization:** Resume the existing Phase 6 implementer for `p06-t10`,
+perform a fresh narrow Phase 6 review, then perform exactly one fourth
+whole-project final review. Review-fix continuation does not consume phase
+recovery attempts.
+
+**Next:** Implement `p06-t10`.
 
 ---
 
