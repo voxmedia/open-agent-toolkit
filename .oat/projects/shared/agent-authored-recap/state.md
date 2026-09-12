@@ -93,13 +93,13 @@ oat_generated: false
 
 # Project State: agent-authored-recap
 
-**Status:** Phase 6 passed; current-basis final review pending
+**Status:** Current-basis final review passed; exit gate restart pending
 **Started:** 2026-09-09
 **Last Updated:** 2026-09-12
 
 ## Current Phase
 
-Implementation — Final review pending
+Implementation — Exit gate restart pending
 
 ## Artifacts
 
@@ -123,7 +123,8 @@ Implementation — Final review pending
 - ✓ Phase 6 implementation complete (16/16 tasks)
 - ✓ Phase 6 independently reviewed
 - ✓ Implementation tasks complete (48/48 tasks)
-- ⧗ Current-basis final review pending
+- ✓ Current-basis final review passed
+- ⧗ Configured implementation exit gate restart pending
 
 ## Blockers
 
@@ -131,4 +132,4 @@ None.
 
 ## Next Milestone
 
-Run the required current-basis final lifecycle review.
+Restart the configured implementation exit gate on the reviewed basis.

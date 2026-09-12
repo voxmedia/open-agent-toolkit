@@ -964,7 +964,7 @@ fresh Phase 6 review and final re-review.
 
 ## Phase 6: Final review fixes
 
-**Status:** implementation complete; current-basis final review pending.
+**Status:** current-basis final review passed; exit gate restart pending.
 
 ### Phase Summary
 
@@ -1458,6 +1458,23 @@ commands. Gate remediation remains stale at 1/2 consumed and Phase 6 recovery
 remains zero.
 
 **Next:** Run the required current-basis final lifecycle review.
+
+### Current-Basis Final Lifecycle Re-review
+
+**Review artifact:** `reviews/final-review-2026-09-12T235655Z.md`
+**Reviewed head:** `9c6d83fe16f8120bd585ff5d76925e19e1d1ca3a`
+**Verdict:** PASS — 0 Critical, 0 Important, 0 Medium, 1 approved deferred
+Minor
+
+The composite-label Important is closed with independent old/new real-verifier
+evidence. Whole-project closure reconciles at 48/48 tasks, 16/16 Phase 6,
+fresh passing checks for both immutable packages, stale configured-gate
+remediation at 1/2 consumed, completed receive provenance, zero Phase 6
+recovery, and all 22 repository/focused commands passing. The immutable
+program-HTML whitespace item remains the sole approved deferral.
+
+**Next:** Start a fresh configured exit-gate generation on this reviewed
+implementation basis, preserving one consumed remediation attempt.
 
 ---
 
