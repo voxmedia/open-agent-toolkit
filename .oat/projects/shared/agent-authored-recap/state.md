@@ -33,7 +33,7 @@ oat_phase_recovery_policy:
         discovered_by: p05-t01 live program-recap bundle transition over .oat/projects/archived
         dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
         reservation_head: a56fe7c3b7c45a4a150dd135e607f800e9cf7aa2
-        status: active
+        status: completed
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit

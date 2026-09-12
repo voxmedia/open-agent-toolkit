@@ -113,20 +113,27 @@ test('collectInputs selects only the newest program summary per wave', async () 
   );
 });
 
-test('collectInputs selects latest canonical archive wrappers and only Final Summary', async () => {
+// Provenance: the seven archived execution-program wrappers use the lifecycle
+// template heading `## Final Summary (for PR/docs)`.
+test('program bundles select canonical wrapper Final Summary sections', async () => {
   const { root, path } = await temporaryFixture('program');
   const archive = join(root, 'archive');
-  for (const [name, summary] of [
-    ['20260908-wave-1-execution', 'old wave one'],
-    ['20260910-wave-1-execution', 'latest wave one'],
-    ['20260909-wave-2-execution', 'latest wave two'],
-    ['20260911-project-other', 'not a wave wrapper'],
+  for (const [name, heading, summary] of [
+    ['20260908-wave-1-execution', 'Final Summary', 'old wave one'],
+    [
+      '20260910-wave-1-execution',
+      'Final Summary (for PR/docs)',
+      'latest wave one',
+    ],
+    ['20260909-wave-2-execution', 'Final Summary', 'latest wave two'],
+    ['20260909-wave-4-execution', 'Phase Summary', 'not a final summary'],
+    ['20260911-project-other', 'Final Summary', 'not a wave wrapper'],
   ]) {
     const wrapper = join(archive, name);
     await mkdir(wrapper, { recursive: true });
     await writeFile(
       join(wrapper, 'implementation.md'),
-      `# Implementation\n\nSecret preamble for ${name}.\n\n## Final Summary\n\n${summary}.\n\n## Afterword\n\nSecret trailer.\n`,
+      `# Implementation\n\nSecret preamble for ${name}.\n\n## ${heading}\n\n${summary}.\n\n## Afterword\n\nSecret trailer.\n`,
     );
   }
   await mkdir(join(archive, '20260912-wave-3-execution'));
@@ -139,17 +146,64 @@ test('collectInputs selects latest canonical archive wrappers and only Final Sum
     locator.endsWith('/implementation.md'),
   );
   assert.deepEqual(
-    wrappers.map(({ locator }) => locator),
+    wrappers
+      .filter(({ unresolvedOnly }) => !unresolvedOnly)
+      .map(({ locator }) => locator),
     [
       '20260909-wave-2-execution/implementation.md',
       '20260910-wave-1-execution/implementation.md',
     ],
   );
   assert.deepEqual(
-    wrappers.map(({ text }) => text.trim()),
+    wrappers
+      .filter(({ unresolvedOnly }) => !unresolvedOnly)
+      .map(({ text }) => text.trim()),
     [
       '## Final Summary\n\nlatest wave two.',
-      '## Final Summary\n\nlatest wave one.',
+      '## Final Summary (for PR/docs)\n\nlatest wave one.',
+    ],
+  );
+});
+
+test('program bundles report selected unreachable wrappers', async () => {
+  const { root, path } = await temporaryFixture('program');
+  const archive = join(root, 'archive');
+  await mkdir(join(archive, 'wave-1-execution'), { recursive: true });
+  await writeFile(
+    join(archive, 'wave-1-execution', 'implementation.md'),
+    '# Implementation\n\n## Final Summary\n\nReachable summary.\n',
+  );
+  await mkdir(join(archive, 'wave-2-execution'), { recursive: true });
+  await mkdir(join(archive, 'wave-3-execution'), { recursive: true });
+  await writeFile(
+    join(archive, 'wave-3-execution', 'implementation.md'),
+    '# Implementation\n\n## Phase Summary\n\nNo final summary.\n',
+  );
+  const out = join(root, 'run');
+  await runBundle(
+    [
+      '--recipe',
+      'program-recap',
+      '--program',
+      join(path, '2026-08-31-execution-program.md'),
+      '--archive',
+      archive,
+      '--theme',
+      await themeFile(root),
+      '--out',
+      out,
+    ],
+    { log() {} },
+  );
+  const factBase = JSON.parse(
+    await readFile(join(out, 'source', 'fact-base.json'), 'utf8'),
+  );
+  assert.equal(validateContract('fact-base', factBase).valid, true);
+  assert.deepEqual(
+    factBase.unresolvedClaims.map(({ text }) => text),
+    [
+      'Archived wrapper input wave-2-execution/implementation.md is unreachable because implementation.md is missing.',
+      'Archived wrapper input wave-3-execution/implementation.md is unreachable because it has no Final Summary section.',
     ],
   );
 });

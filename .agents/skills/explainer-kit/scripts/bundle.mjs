@@ -64,13 +64,21 @@ const STATUS_VALUES = new Set([
 ]);
 
 export async function collectInputs(recipe, inputs) {
+  const { files } = await collectInputsWithUnresolved(recipe, inputs);
+  return files;
+}
+
+async function collectInputsWithUnresolved(recipe, inputs) {
   const recipeId = typeof recipe === 'string' ? recipe : recipe?.id;
   if (inputs.project) {
     const names =
       recipeId === 'project-explainer'
         ? PROJECT_EXPLAINER_INPUTS
         : PROJECT_INPUTS;
-    return collectAllowlistedFiles(inputs.project, names);
+    return {
+      files: await collectAllowlistedFiles(inputs.project, names),
+      unresolvedClaims: [],
+    };
   }
   if (inputs.program) {
     return collectProgramInputs(inputs);
@@ -80,12 +88,15 @@ export async function collectInputs(recipe, inputs) {
     for (const input of inputs.documents) {
       files.push(...(await collectDocumentRoot(input)));
     }
-    return uniqueByLocator(files);
+    return { files: uniqueByLocator(files), unresolvedClaims: [] };
   }
   if (inputs.factBasePath) {
     const root = dirname(inputs.factBasePath);
     const file = await readConfinedFile(root, inputs.factBasePath);
-    return [{ ...file, suppliedFactBase: true }];
+    return {
+      files: [{ ...file, suppliedFactBase: true }],
+      unresolvedClaims: [],
+    };
   }
   throw bundleError('Exactly one input mode is required.');
 }
@@ -93,6 +104,9 @@ export async function collectInputs(recipe, inputs) {
 export function extractClaims(input) {
   if (input.suppliedFactBase) {
     return { claims: [], unresolvedClaims: [] };
+  }
+  if (input.unresolvedOnly) {
+    return { claims: [], unresolvedClaims: [input.unresolvedClaim] };
   }
   if (input.bytes.includes(0)) {
     return {
@@ -272,14 +286,15 @@ export async function runBundle(argv, io = console) {
   await rm(join(options.out, 'failure.json'), { force: true });
 
   try {
-    const collected = await collectInputs(recipe, {
-      project: options.project,
-      program: options.program,
-      summaries: options.summaries,
-      archive: options.archive,
-      documents: options.inputs,
-      factBasePath: options.factBase,
-    });
+    const { files: collected, unresolvedClaims: collectionUnresolvedClaims } =
+      await collectInputsWithUnresolved(recipe, {
+        project: options.project,
+        program: options.program,
+        summaries: options.summaries,
+        archive: options.archive,
+        documents: options.inputs,
+        factBasePath: options.factBase,
+      });
     const inputHashes = Object.fromEntries(
       collected.map(({ locator, hash }) => [locator, hash]),
     );
@@ -358,9 +373,10 @@ export async function runBundle(argv, io = console) {
             ...claim
           }) => claim,
         ),
-        unresolvedClaims: extracted.flatMap(
-          ({ unresolvedClaims }) => unresolvedClaims,
-        ),
+        unresolvedClaims: [
+          ...collectionUnresolvedClaims,
+          ...extracted.flatMap(({ unresolvedClaims }) => unresolvedClaims),
+        ],
         overrides: [],
       };
       const validation = validateContract('fact-base', factBase);
@@ -410,6 +426,7 @@ async function collectAllowlistedFiles(root, names) {
 
 async function collectProgramInputs({ program, summaries, archive }) {
   const files = [await readConfinedFile(dirname(program), program)];
+  const unresolvedClaims = [];
   if (summaries) {
     const selected = new Map();
     for (const entry of await readdir(summaries)) {
@@ -448,16 +465,32 @@ async function collectProgramInputs({ program, summaries, archive }) {
         try {
           const input = await readConfinedFile(archive, path);
           const summary = finalSummaryInput(input);
-          if (summary) files.push(summary);
+          if (summary) {
+            files.push(summary);
+          } else {
+            files.push({
+              ...input,
+              unresolvedOnly: true,
+              unresolvedClaim: unreachableWrapperClaim(
+                input.locator,
+                'it has no Final Summary section',
+                input.id,
+              ),
+            });
+          }
         } catch (error) {
           if (error.code !== 'ENOENT') throw error;
+          const locator = `${entry}/implementation.md`;
+          unresolvedClaims.push(
+            unreachableWrapperClaim(locator, 'implementation.md is missing'),
+          );
         }
       }
     } catch (error) {
       if (error.code !== 'ENOENT') throw error;
     }
   }
-  return uniqueByLocator(files);
+  return { files: uniqueByLocator(files), unresolvedClaims };
 }
 
 async function collectDocumentRoot(root) {
@@ -591,7 +624,7 @@ function hashBytes(bytes) {
 function finalSummaryInput(input) {
   const lines = input.text.split(/\r?\n/);
   const start = lines.findIndex((line) =>
-    /^#{1,6}\s+Final Summary\s*$/i.test(line.trim()),
+    /^#{1,6}\s+Final Summary(?:\s+\(for PR\/docs\))?\s*$/i.test(line.trim()),
   );
   if (start === -1) return null;
   let end = lines.length;
@@ -604,6 +637,15 @@ function finalSummaryInput(input) {
   const text = `${lines.slice(start, end).join('\n').trim()}\n`;
   const bytes = Buffer.from(text);
   return { ...input, bytes, text, hash: hashBytes(bytes) };
+}
+
+function unreachableWrapperClaim(locator, detail, sourceId) {
+  return {
+    id: claimId(locator, 1, detail),
+    text: `Archived wrapper input ${locator} is unreachable because ${detail}.`,
+    reason: 'missing-evidence',
+    citations: sourceId ? [{ sourceId, locator: `${locator}:1-1` }] : [],
+  };
 }
 
 async function writeJson(path, value) {
