@@ -869,6 +869,51 @@ complete producer controls.
 lifecycle suites, lint, format, and the Phase 6 gates, then
 `git commit -m "fix(p06-t13): preserve structural diagnostics"`.
 
+### Task p06-t14: (review) Preserve subjects in residual fact cards
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/verify.mjs`,
+  `.agents/skills/explainer-kit/tests/verify.test.mjs`
+
+**Step 1: Write tests (RED)** — Run fresh real `verifyRun` controls over copies
+of both tracked packages. The unchanged project explainer and program recap
+must pass, while fabricated bare residual number/date/status values in `<div>`
+and `<dd>` must still fail.
+
+**Step 2: Implement (GREEN)** — For residual text inside a labeled container,
+preserve the nearest closed-set heading or label subject; use the enclosing
+section ID only when no such subject exists. Do not weaken the residual
+fallback or duplicate claims already harvested from heading/row/list/paragraph
+blocks.
+
+**Step 3: Negative control** — Restore the section-only residual subject and
+confirm the unchanged program-recap control fails on its legitimate W1–W7
+statuses; then restore the fix and confirm both tracked-package controls pass
+while fabricated residual controls still fail.
+
+**Step 4: Verify and commit** — Run the complete verify and core suites,
+tracked-package contract/hash/inventory checks, lifecycle suites, lint, and
+format, then
+`git commit -m "fix(p06-t14): preserve residual claim subjects"`.
+
+### Task p06-t15: (review) Correct the terminal state plan inventory
+
+**Files:**
+
+- Modify: `.oat/projects/shared/agent-authored-recap/state.md`
+
+**Step 1: Reconcile inventory** — Confirm the amended plan contains 47 unique
+tasks across six phases and implementation progress reflects the same count.
+
+**Step 2: Correct the artifact** — Update only the state Artifacts description
+to `47 tasks, 6 phases`, preserving review-pending status, task pointer, stale
+gate generation, receive provenance, and recovery accounting.
+
+**Step 3: Verify and commit** — Run plan validation, project-state tests, and a
+focused diff check without formatting `state.md`, then
+`git commit -m "fix(p06-t15): correct state plan inventory"`.
+
 **Phase 6 gates:** Run the complete ordered repository gate list, isolated-HOME
 forced Turbo, standalone smoke/skills/scripts/skill validation, focused core
 and lifecycle suites, `pnpm lint`, and `pnpm format`.
@@ -908,6 +953,7 @@ and lifecycle suites, `pnpm lint`, and `pnpm format`.
 | p06    | code     | passed          | 2026-09-12 | reviews/p06-review-2026-09-12T131816Z.md                      | de2393c3fa337bc7f33d9813a583dbc41ec5fbda | manual     | -                     |
 | p06    | code     | passed          | 2026-09-12 | reviews/p06-review-2026-09-12T135600Z.md                      | 7ba61d84fee87d3e9217f8c1431ba34eb658471a | manual     | -                     |
 | p06    | code     | passed          | 2026-09-12 | reviews/p06-review-2026-09-12T200228Z.md                      | 688226b0c1431d23624ee0bd30fd5d307c2b5dd8 | manual     | -                     |
+| p06    | code     | fixes_added     | 2026-09-12 | reviews/archived/p06-review-2026-09-12T223410Z.md             | 06da0d40112052eb4a3bfd5760d5aa2ca1867bff | manual     | -                     |
 | final  | code     | fixes_completed | 2026-09-12 | reviews/archived/final-review-2026-09-12T032129Z.md           | ed5f9f19d777989fe6095be14b1bb12e14583359 | manual     | -                     |
 | final  | code     | fixes_completed | 2026-09-12 | reviews/archived/final-review-2026-09-12T132520Z.md           | 03dd32006306615858d39f68da7425b083f95780 | manual     | -                     |
 | final  | code     | fixes_added     | 2026-09-12 | reviews/archived/final-review-2026-09-12T140439Z.md           | 367bb6217c8d2c502ca395d04bf8f35b14ac43b5 | manual     | -                     |
@@ -948,9 +994,9 @@ cell; never truncate a widened row back to five columns.
 - Phase 3: 8 tasks - Adapter, core skill prose, lifecycle consumers, and docs
 - Phase 4: 2 tasks - The front door and the project explainer
 - Phase 5: 1 task - The program recap
-- Phase 6: 13 tasks - Final review fixes
+- Phase 6: 15 tasks - Final review fixes
 
-**Total:** 45 tasks
+**Total:** 47 tasks
 
 ## References
 

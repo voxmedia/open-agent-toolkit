@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-12
-oat_current_task_id: null
+oat_current_task_id: p06-t14
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 17    | 17/17     |
-| Phase 2 | completed | 4     | 4/4       |
-| Phase 3 | completed | 8     | 8/8       |
-| Phase 4 | completed | 2     | 2/2       |
-| Phase 5 | completed | 1     | 1/1       |
-| Phase 6 | completed | 13    | 13/13     |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 17    | 17/17     |
+| Phase 2 | completed   | 4     | 4/4       |
+| Phase 3 | completed   | 8     | 8/8       |
+| Phase 4 | completed   | 2     | 2/2       |
+| Phase 5 | completed   | 1     | 1/1       |
+| Phase 6 | in progress | 15    | 13/15     |
 
-**Total:** 45/45 tasks completed
+**Total:** 45/47 tasks completed
 
 ---
 
@@ -964,7 +964,7 @@ fresh Phase 6 review and final re-review.
 
 ## Phase 6: Final review fixes
 
-**Status:** implementation complete; gate-remediation re-review pending.
+**Status:** in progress; gate-remediation review fixes queued.
 
 ### Phase Summary
 
@@ -1314,6 +1314,38 @@ unchanged. Phase 6 recovery remains zero.
 
 **Next:** Run the narrow Phase 6 review, then the mandatory current-basis final
 lifecycle review before restarting the configured exit gate.
+
+### Review Received: p06 gate-remediation round
+
+**Date:** 2026-09-12
+**Review artifact:** `reviews/archived/p06-review-2026-09-12T223410Z.md`
+**Reviewed head:** `06da0d40112052eb4a3bfd5760d5aa2ca1867bff`
+
+**Findings:**
+
+- Critical: 0
+- Important: 2
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** `p06-t14`, `p06-t15`
+
+**Finding dispositions:**
+
+- I1 → `p06-t14`: preserve nearby wave subjects for legitimate residual
+  status cards while retaining the section fallback for unlabeled fabricated
+  residual facts. Add real controls over copies of both tracked packages.
+- I2 → `p06-t15`: correct the state Artifacts inventory to the amended
+  47-task, six-phase plan without altering stale gate or recovery provenance.
+
+**Review context:** Both earlier behavioral guards remain load-bearing and all
+repository gates passed, but the unchanged program recap fails a fresh
+`verifyRun` under the section-only residual subject. This review-fix
+continuation belongs to configured gate remediation attempt 1 and does not
+consume Phase 6 recovery.
+
+**Next:** Execute `p06-t14` and `p06-t15`, then re-run the narrow Phase 6
+review.
 
 ---
 
