@@ -799,6 +799,76 @@ sanitizer carrier suite.
 lifecycle suites, lint, format, and the ordered repository gates, then
 `git commit -m "fix(p06-t10): redact short secret-key values"`.
 
+### Task p06-t11: (review) Trace residual section facts fail-closed
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/verify.mjs`,
+  `.agents/skills/explainer-kit/tests/verify.test.mjs`
+
+**Step 1: Write tests (RED)** — Through the real `verifyRun` path, prove
+fabricated number, ISO-date, and closed-status tokens in residual section
+content such as `<div class="stat">` and `<dd>` fail `pageToLedger` with the
+enclosing section ID as subject. Keep the shipped package fixtures passing.
+
+**Step 2: Implement (GREEN)** — After harvesting the existing
+heading/row/list/paragraph blocks, remove those matched blocks from each
+section and harvest the same machine-checkable token classes from the remaining
+rendered text. Use the enclosing section ID as the design-declared fallback
+subject, avoid duplicate claims, and preserve the existing nearest-label
+subjects for covered blocks.
+
+**Step 3: Negative control** — Neutralize only residual-section harvesting and
+confirm the new `<div>` and `<dd>` controls fail while unchanged-package
+controls remain valid; restore and rerun.
+
+**Step 4: Verify and commit** — Run the focused verify suite, complete core and
+lifecycle suites, lint, and format, then
+`git commit -m "fix(p06-t11): trace residual section facts"`.
+
+### Task p06-t12: (review) Align the documented date-token contract
+
+**Files:**
+
+- Modify: `.oat/projects/shared/agent-authored-recap/design.md`
+
+**Step 1: Verify the implemented boundary** — Confirm bundle indexing and
+rendered-claim extraction intentionally share the ISO `YYYY-MM-DD` date token
+form.
+
+**Step 2: Align the artifact** — Replace the stale “ISO and long form” wording
+with the exact ISO `YYYY-MM-DD` contract without widening implementation
+behavior.
+
+**Step 3: Verify and commit** — Run plan validation and the focused core claim
+tests, then
+`git commit -m "docs(p06-t12): align date tracing contract"`.
+
+### Task p06-t13: (review) Preserve safe structural environment diagnostics
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/lib/sanitize.mjs`,
+  `.agents/skills/explainer-kit/tests/bundle.test.mjs`
+
+**Step 1: Write tests (RED)** — Prove a diagnostic containing a long,
+non-secret structural package value such as `npm_package_name` remains
+actionable while sensitivity-named short values and ordinary distinctive long
+values still redact.
+
+**Step 2: Implement (GREEN)** — Add only a narrow exact-name structural
+exception for demonstrably non-secret package metadata; do not exempt
+`npm_lifecycle_script`, paths, or broad `npm_*`/`PWD`/`SHELL` families. Preserve
+the terminal sensitivity-name policy and cross-platform path sanitization.
+
+**Step 3: Negative control** — Remove only the structural exception and confirm
+the new actionable-diagnostic control fails, then restore it and rerun the
+complete producer controls.
+
+**Step 4: Verify and commit** — Run focused producer tests, complete core and
+lifecycle suites, lint, format, and the Phase 6 gates, then
+`git commit -m "fix(p06-t13): preserve structural diagnostics"`.
+
 **Phase 6 gates:** Run the complete ordered repository gate list, isolated-HOME
 forced Turbo, standalone smoke/skills/scripts/skill validation, focused core
 and lifecycle suites, `pnpm lint`, and `pnpm format`.
@@ -807,14 +877,14 @@ and lifecycle suites, `pnpm lint`, and `pnpm format`.
 
 ## Reviews
 
-| Scope | Type  | Status | Notes                                                                                                                                 |
-| ----- | ----- | ------ | ------------------------------------------------------------------------------------------------------------------------------------- |
-| p01   | phase | passed | Independent verification passed with 0 Critical, 0 Important, and 3 deferred Medium findings.                                         |
-| p02   | phase | passed | Fresh re-review closed all three blocking findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                      |
-| p03   | phase | passed | Final operator-authorized verification passed with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                           |
-| p04   | phase | passed | Re-review closed the executable front-door and visual-evidence findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings. |
-| p05   | phase | passed | Independent review passed the program recap and both bounded recoveries with 0 findings.                                              |
-| p06   | phase | passed | Operator-authorized re-review closed the secret-key sanitizer finding with 0 findings.                                                |
+| Scope | Type  | Status  | Notes                                                                                                                                 |
+| ----- | ----- | ------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| p01   | phase | passed  | Independent verification passed with 0 Critical, 0 Important, and 3 deferred Medium findings.                                         |
+| p02   | phase | passed  | Fresh re-review closed all three blocking findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                      |
+| p03   | phase | passed  | Final operator-authorized verification passed with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                           |
+| p04   | phase | passed  | Re-review closed the executable front-door and visual-evidence findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings. |
+| p05   | phase | passed  | Independent review passed the program recap and both bounded recoveries with 0 findings.                                              |
+| p06   | phase | pending | Configured exit-gate findings added as p06-t11 through p06-t13.                                                                       |
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
@@ -842,7 +912,7 @@ and lifecycle suites, `pnpm lint`, and `pnpm format`.
 | final  | code     | fixes_completed | 2026-09-12 | reviews/archived/final-review-2026-09-12T132520Z.md           | 03dd32006306615858d39f68da7425b083f95780 | manual     | -                     |
 | final  | code     | fixes_added     | 2026-09-12 | reviews/archived/final-review-2026-09-12T140439Z.md           | 367bb6217c8d2c502ca395d04bf8f35b14ac43b5 | manual     | -                     |
 | final  | code     | passed          | 2026-09-12 | reviews/final-review-2026-09-12T201509Z.md                    | 2ebc4ec4d42accaf576a840cfa6ba3823246b9fb | manual     | -                     |
-| final  | code     | received        | 2026-09-12 | reviews/final-review-2026-09-12T203608Z.md                    | 1b041801417814f39f337837a0cba245fc11c020 | gate       | cursor-fable-5-1-high |
+| final  | code     | fixes_added     | 2026-09-12 | reviews/archived/final-review-2026-09-12T203608Z.md           | 1b041801417814f39f337837a0cba245fc11c020 | gate       | cursor-fable-5-1-high |
 | spec   | artifact | pending         | -          | -                                                             | -                                        | -          | -                     |
 | design | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-design-review-2026-09-09T225646Z.md | -                                        | -          | -                     |
 | design | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-design-review-2026-09-09T232532Z.md | -                                        | manual     | -                     |
@@ -878,9 +948,9 @@ cell; never truncate a widened row back to five columns.
 - Phase 3: 8 tasks - Adapter, core skill prose, lifecycle consumers, and docs
 - Phase 4: 2 tasks - The front door and the project explainer
 - Phase 5: 1 task - The program recap
-- Phase 6: 10 tasks - Final review fixes
+- Phase 6: 13 tasks - Final review fixes
 
-**Total:** 42 tasks
+**Total:** 45 tasks
 
 ## References
 

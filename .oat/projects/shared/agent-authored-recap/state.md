@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p06-t11
 oat_last_commit: 7b40d8835c7060a2596f2aec58a24e316565c734
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -93,13 +93,13 @@ oat_generated: false
 
 # Project State: agent-authored-recap
 
-**Status:** Final review passed; implementation exit gate pending
+**Status:** Configured exit-gate fixes queued
 **Started:** 2026-09-09
 **Last Updated:** 2026-09-12
 
 ## Current Phase
 
-Implementation — Exit gate pending
+Implementation — Phase 6 gate remediation
 
 ## Artifacts
 
@@ -120,11 +120,9 @@ Implementation — Exit gate pending
 - ✓ Phase 3 complete and independently verified (8/8 tasks)
 - ✓ Phase 4 complete and independently verified (2/2 tasks)
 - ✓ Phase 5 complete and independently verified (1/1 task)
-- ✓ Phase 6 implementation complete (10/10 tasks)
-- ✓ Phase 6 independently reviewed
-- ✓ Implementation tasks complete (42/42 tasks)
-- ✓ Final review passed
-- ⧗ Configured implementation exit gate pending
+- ⧗ Phase 6 implementation in progress (10/13 tasks)
+- ⧗ Implementation in progress (42/45 tasks)
+- ⧗ Configured exit-gate remediation pending
 
 ## Blockers
 
@@ -132,4 +130,4 @@ None.
 
 ## Next Milestone
 
-Resolve and run the configured implementation exit gate.
+Execute `p06-t11` through `p06-t13`, then re-review the changed basis.

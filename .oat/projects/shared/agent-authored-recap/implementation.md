@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-12
-oat_current_task_id: null
+oat_current_task_id: p06-t11
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 17    | 17/17     |
-| Phase 2 | completed | 4     | 4/4       |
-| Phase 3 | completed | 8     | 8/8       |
-| Phase 4 | completed | 2     | 2/2       |
-| Phase 5 | completed | 1     | 1/1       |
-| Phase 6 | completed | 10    | 10/10     |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 17    | 17/17     |
+| Phase 2 | completed   | 4     | 4/4       |
+| Phase 3 | completed   | 8     | 8/8       |
+| Phase 4 | completed   | 2     | 2/2       |
+| Phase 5 | completed   | 1     | 1/1       |
+| Phase 6 | in progress | 13    | 10/13     |
 
-**Total:** 42/42 tasks completed
+**Total:** 42/45 tasks completed
 
 ---
 
@@ -964,7 +964,7 @@ fresh Phase 6 review and final re-review.
 
 ## Phase 6: Final review fixes
 
-**Status:** completed; final review passed and implementation exit gate pending.
+**Status:** in progress; configured exit-gate fixes queued.
 
 ### Phase Summary
 
@@ -1240,6 +1240,45 @@ before the `onFailure=block` remediation policy can run.
 `reviews/final-review-2026-09-12T203608Z.md`, collision-free destination
 `reviews/archived/final-review-2026-09-12T203608Z.md`, and pre-receive head
 `214fb9ac11a1185ee8f3ed66964df58431def5cd`.
+
+### Review Received: final configured exit gate
+
+**Date:** 2026-09-12
+**Review artifact:**
+`reviews/archived/final-review-2026-09-12T203608Z.md`
+**Gate run:** `6cf37a1e-a33f-40af-9b33-75937b421ac5`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 0
+- Minor: 2
+
+**New tasks added:** `p06-t11`, `p06-t12`, `p06-t13`
+
+**Finding dispositions:**
+
+- I1 → `p06-t11`: close the FR4 fail-open by harvesting machine-checkable
+  tokens from residual section text with the section ID fallback subject.
+- m1 → `p06-t12`: align stale design wording from “ISO and long form” to the
+  implemented ISO `YYYY-MM-DD` contract. The implementation remains the
+  accepted source of truth for this bounded date-token shape.
+- m2 → `p06-t13`: preserve actionable structural package metadata with a
+  narrow exact-name exception while retaining conservative secret and path
+  redaction.
+
+**Deferred findings:** none. Blocking gate auto-disposition converted all
+three findings while context is fresh.
+
+**Gate policy:** First valid blocked result; remediation attempt 1 of 2 becomes
+consumed only after the eligible review receive is durably reconciled. Phase 6
+recovery usage remains zero because configured-gate remediation has separate
+accounting.
+
+**Next:** Execute `p06-t11` through `p06-t13`, then re-run final verification,
+the standard final lifecycle review for the changed basis, and this configured
+gate generation.
 
 ---
 
