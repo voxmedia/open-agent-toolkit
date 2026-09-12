@@ -6,6 +6,7 @@ const WINDOWS_UNC_ABSOLUTE_PATH =
   /(^|[\s"'([{=])\\\\[^\\/\s"'()[\]{}<>;,:]+[\\/][^\s"'()[\]{}<>;,:]*/g;
 const SENSITIVE_ENVIRONMENT_NAME =
   /(?:^|_)(?:ACCESS_?KEY|API_?KEY|AUTH|BEARER|CREDENTIALS?|PASSWORD|PASSWD|PAT|PRIVATE_?KEY|SECRET_?KEY|SECRET|SESSION|TOKEN)$/i;
+const NON_SECRET_STRUCTURAL_ENVIRONMENT_NAMES = new Set(['npm_package_name']);
 const DISTINCTIVE_ENVIRONMENT_VALUE_LENGTH = 12;
 const SENSITIVE_ENVIRONMENT_VALUE_LENGTH = 4;
 
@@ -16,9 +17,10 @@ function environmentValuesForRedaction(env) {
         .filter(
           ([name, entry]) =>
             typeof entry === 'string' &&
-            (entry.length >= DISTINCTIVE_ENVIRONMENT_VALUE_LENGTH ||
-              (entry.length >= SENSITIVE_ENVIRONMENT_VALUE_LENGTH &&
-                SENSITIVE_ENVIRONMENT_NAME.test(name))),
+            ((entry.length >= SENSITIVE_ENVIRONMENT_VALUE_LENGTH &&
+              SENSITIVE_ENVIRONMENT_NAME.test(name)) ||
+              (entry.length >= DISTINCTIVE_ENVIRONMENT_VALUE_LENGTH &&
+                !NON_SECRET_STRUCTURAL_ENVIRONMENT_NAMES.has(name))),
         )
         .map(([_name, entry]) => entry),
     ),

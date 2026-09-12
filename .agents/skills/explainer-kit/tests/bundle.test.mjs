@@ -686,6 +686,8 @@ test('changed-input rebundle and interruption cannot retain a satisfied manifest
 test('failure recording removes an existing manifest before writing evidence', async (t) => {
   const root = await mkdtemp(join(tmpdir(), 'explainer-failure-exclusive-'));
   await cp(checkedPackage, root, { recursive: true });
+  const originalPackageName = process.env.npm_package_name;
+  const originalLifecycleScript = process.env.npm_lifecycle_script;
   process.env.EXPLAINER_SANITIZER_PREFIX = 'phase-six-secret-prefix';
   process.env.EXPLAINER_SANITIZER_DETAIL =
     'phase-six-secret-prefix-with-detail';
@@ -693,6 +695,8 @@ test('failure recording removes an existing manifest before writing evidence', a
   process.env.EXPLAINER_SANITIZER_MODE = '1';
   process.env.REVIEW_SECRET_KEY = 'abcd';
   process.env.REVIEW_TOKEN_STORAGE = 'file';
+  process.env.npm_package_name = 'open-agent-toolkit';
+  process.env.npm_lifecycle_script = 'node scripts/private-build.mjs';
   t.after(() => {
     delete process.env.EXPLAINER_SANITIZER_PREFIX;
     delete process.env.EXPLAINER_SANITIZER_DETAIL;
@@ -700,12 +704,22 @@ test('failure recording removes an existing manifest before writing evidence', a
     delete process.env.EXPLAINER_SANITIZER_MODE;
     delete process.env.REVIEW_SECRET_KEY;
     delete process.env.REVIEW_TOKEN_STORAGE;
+    if (originalPackageName === undefined) {
+      delete process.env.npm_package_name;
+    } else {
+      process.env.npm_package_name = originalPackageName;
+    }
+    if (originalLifecycleScript === undefined) {
+      delete process.env.npm_lifecycle_script;
+    } else {
+      process.env.npm_lifecycle_script = originalLifecycleScript;
+    }
   });
 
   await writeFailure(
     root,
     'interrupted',
-    `E_INTERRUPTED: failure token=${process.env.EXPLAINER_SANITIZER_API_TOKEN}; credential=${process.env.REVIEW_SECRET_KEY}; storage=${process.env.REVIEW_TOKEN_STORAGE}; exit=${process.env.EXPLAINER_SANITIZER_MODE}; paths [/Users/alice/private/key.pem], file:///Users/alice/private/key.pem, [C:\\Users\\alice\\private\\key.pem], file:///C:/Users/alice/private/key.pem, [\\\\server\\share\\private\\key.pem], file://server/share/private/key.pem; carried ${process.env.EXPLAINER_SANITIZER_DETAIL}; retry remains available`,
+    `E_INTERRUPTED: failure token=${process.env.EXPLAINER_SANITIZER_API_TOKEN}; credential=${process.env.REVIEW_SECRET_KEY}; package=${process.env.npm_package_name}; lifecycle=${process.env.npm_lifecycle_script}; storage=${process.env.REVIEW_TOKEN_STORAGE}; exit=${process.env.EXPLAINER_SANITIZER_MODE}; paths [/Users/alice/private/key.pem], file:///Users/alice/private/key.pem, [C:\\Users\\alice\\private\\key.pem], file:///C:/Users/alice/private/key.pem, [\\\\server\\share\\private\\key.pem], file://server/share/private/key.pem; carried ${process.env.EXPLAINER_SANITIZER_DETAIL}; retry remains available`,
   );
 
   assert.ok(await lstat(join(root, 'failure.json')));
@@ -718,11 +732,13 @@ test('failure recording removes an existing manifest before writing evidence', a
     /abcd|secret|Users|private|server|share|file:\/\//,
   );
   assert.match(failure.cause, /E_INTERRUPTED/);
+  assert.match(failure.cause, /package=open-agent-toolkit/);
+  assert.match(failure.cause, /lifecycle=<env>/);
   assert.match(failure.cause, /storage=file/);
   assert.match(failure.cause, /exit=1/);
   assert.match(failure.cause, /carried <env>; retry remains available/);
   assert.match(failure.cause, /retry remains available/);
-  assert.equal(failure.cause.match(/<env>/g)?.length, 3);
+  assert.equal(failure.cause.match(/<env>/g)?.length, 4);
   assert.equal(failure.cause.match(/<path>/g)?.length, 6);
 });
 
