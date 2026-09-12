@@ -204,6 +204,10 @@ final-review-cap-p-rev8-authorized-20260911T230742Z Thomas authorized exactly on
 
 run-4-final-rereview-p-rev8-pass-20260911T230845Z The authorized final review passed with 0C/0I/0M/1m; Thomas explicitly deferred the fail-closed diagnostic-only Minor to the next validator cleanup, leaving no blocking deferred findings.
 
+### 2026-09-12 · structural · oat gate review · final
+
+target=cursor-fable-5-1-high threshold=important findings=critical:0,important:0,medium:0,minor:2 exit=0 status=ok artifact=.oat/projects/shared/recon-rework/reviews/final-review-2026-09-12T001359Z.md run=965e9704-ba33-443b-adca-e494b6692fbc
+
 ## End-of-run synthesis
 
 Run 2 removed unnecessary approval-fingerprint and manifest-v1 compatibility
