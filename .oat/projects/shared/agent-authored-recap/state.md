@@ -1,6 +1,6 @@
 ---
-oat_current_task: p06-t14
-oat_last_commit: 3f137e92a5e4c013f5e498648e1827bd9bf2da1f
+oat_current_task: null
+oat_last_commit: 1a5ed9b037a46bb14b66e03f69c1675523c2782e
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -93,13 +93,13 @@ oat_generated: false
 
 # Project State: agent-authored-recap
 
-**Status:** Gate-remediation review fixes queued
+**Status:** Gate-remediation fixes complete; Phase 6 re-review pending
 **Started:** 2026-09-09
 **Last Updated:** 2026-09-12
 
 ## Current Phase
 
-Implementation — Phase 6 review fixes
+Implementation — Phase 6 re-review pending
 
 ## Artifacts
 
@@ -120,9 +120,9 @@ Implementation — Phase 6 review fixes
 - ✓ Phase 3 complete and independently verified (8/8 tasks)
 - ✓ Phase 4 complete and independently verified (2/2 tasks)
 - ✓ Phase 5 complete and independently verified (1/1 task)
-- ⧗ Phase 6 implementation in progress (13/15 tasks)
-- ⧗ Implementation in progress (45/47 tasks)
-- ⧗ Gate-remediation review fixes pending
+- ✓ Phase 6 implementation complete (15/15 tasks)
+- ✓ Implementation tasks complete (47/47 tasks)
+- ⧗ Gate-remediation Phase 6 re-review pending
 
 ## Blockers
 
@@ -130,4 +130,4 @@ None.
 
 ## Next Milestone
 
-Execute `p06-t14` and `p06-t15`, then re-review Phase 6.
+Re-review the completed Phase 6 gate remediation.

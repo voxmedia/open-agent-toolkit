@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-12
-oat_current_task_id: p06-t14
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 17    | 17/17     |
-| Phase 2 | completed   | 4     | 4/4       |
-| Phase 3 | completed   | 8     | 8/8       |
-| Phase 4 | completed   | 2     | 2/2       |
-| Phase 5 | completed   | 1     | 1/1       |
-| Phase 6 | in progress | 15    | 13/15     |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 17    | 17/17     |
+| Phase 2 | completed | 4     | 4/4       |
+| Phase 3 | completed | 8     | 8/8       |
+| Phase 4 | completed | 2     | 2/2       |
+| Phase 5 | completed | 1     | 1/1       |
+| Phase 6 | completed | 15    | 15/15     |
 
-**Total:** 45/47 tasks completed
+**Total:** 47/47 tasks completed
 
 ---
 
@@ -964,7 +964,7 @@ fresh Phase 6 review and final re-review.
 
 ## Phase 6: Final review fixes
 
-**Status:** in progress; gate-remediation review fixes queued.
+**Status:** implementation complete; remediation re-review pending.
 
 ### Phase Summary
 
@@ -998,6 +998,8 @@ fresh Phase 6 review and final re-review.
 - `p06-t11`: `48abe113af3ac66d6dc0b4dae74decda89d38c41`
 - `p06-t12`: `feeee094ec7ca5ec3b418f8fe2c79a2b9662ec84`
 - `p06-t13`: `3f137e92a5e4c013f5e498648e1827bd9bf2da1f`
+- `p06-t14`: `1cc4c9d9e14d250835b3f551edceeac49b94e34e`
+- `p06-t15`: `1a5ed9b037a46bb14b66e03f69c1675523c2782e`
 
 **Verification:**
 
@@ -1346,6 +1348,30 @@ consume Phase 6 recovery.
 
 **Next:** Execute `p06-t14` and `p06-t15`, then re-run the narrow Phase 6
 review.
+
+### Gate-Remediation Review Fixes
+
+**Status:** completed
+
+- `p06-t14` preserves nearby wave subjects for residual fact cards, uses the
+  section fallback only when no local subject exists, and adds fresh real
+  `verifyRun` controls for both tracked packages. The pre-fix and neutralized
+  implementations reject the unchanged program recap on `merged`, `parked`,
+  and `complete`; restored behavior passes both packages while fabricated
+  residual controls still fail.
+- `p06-t15` changes only the state Artifacts inventory from 42 to 47 tasks.
+
+**Verification:** Focused verify 19/19, core 116/116, lifecycle 84/84, state
+58/58, retirement/parity 10/10, standalone smoke 158/158, skills 439/439,
+scripts 1/1, all ordered repository gates, forced uncached Turbo 10/10, final
+isolated lint, and format passed. One concurrent lint run observed the smoke
+suite's temporary seeded violations; the isolated unchanged-tree rerun passed.
+
+**Boundary:** Two commits changed only `verify.mjs`, `verify.test.mjs`, and the
+single state inventory line. Package trees are unchanged; configured
+remediation usage remains 1/2 and Phase 6 recovery remains zero.
+
+**Next:** Re-run the narrow Phase 6 review.
 
 ---
 
