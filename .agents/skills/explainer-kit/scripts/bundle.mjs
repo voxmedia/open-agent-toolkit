@@ -28,6 +28,7 @@ import { validateContract } from './lib/contracts.mjs';
 import { isFlowFailureStage } from './lib/failure.mjs';
 import { loadRecipe, recipeRequiredNarrative } from './lib/recipes.mjs';
 import { validateSatisfiedRunPackage } from './lib/run-package.mjs';
+import { sanitizeDiagnostic } from './lib/sanitize.mjs';
 
 const HASH_PREFIX = 'sha256:';
 const DOCUMENT_EXTENSIONS = new Set(['.md', '.txt', '.html', '.json']);
@@ -263,15 +264,11 @@ export async function writeFailure(runRoot, stage, cause) {
   }
   await mkdir(runRoot, { recursive: true });
   await rm(join(runRoot, 'manifest.json'), { force: true });
-  const message = cause instanceof Error ? cause.message : String(cause);
-  const sanitized = message
-    .replaceAll(process.cwd(), '<repo>')
-    .replace(/\/Users\/[^/\s]+/g, '<user>');
   await writeJson(join(runRoot, 'failure.json'), {
     schemaVersion: 'explainer-kit.failure/v1',
     runRootHash: hashBytes(await realpath(runRoot)),
     stage,
-    cause: sanitized,
+    cause: sanitizeDiagnostic(cause),
     at: new Date().toISOString(),
   });
 }

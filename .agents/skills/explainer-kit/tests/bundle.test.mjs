@@ -643,11 +643,29 @@ test('changed-input rebundle and interruption cannot retain a satisfied manifest
 test('failure recording removes an existing manifest before writing evidence', async () => {
   const root = await mkdtemp(join(tmpdir(), 'explainer-failure-exclusive-'));
   await cp(checkedPackage, root, { recursive: true });
+  process.env.EXPLAINER_SANITIZER_PREFIX = 'phase-six-secret-prefix';
+  process.env.EXPLAINER_SANITIZER_DETAIL =
+    'phase-six-secret-prefix-with-detail';
 
-  await writeFailure(root, 'interrupted', 'operator stopped the flow');
+  await writeFailure(
+    root,
+    'interrupted',
+    `E_INTERRUPTED: input /private/tmp/recap/source.md and C:\\Users\\alice\\recap\\source.md carried ${process.env.EXPLAINER_SANITIZER_DETAIL}; retry remains available`,
+  );
 
   assert.ok(await lstat(join(root, 'failure.json')));
   await assert.rejects(lstat(join(root, 'manifest.json')), { code: 'ENOENT' });
+  const failure = JSON.parse(
+    await readFile(join(root, 'failure.json'), 'utf8'),
+  );
+  assert.doesNotMatch(failure.cause, /private\/tmp|Users\\alice/);
+  assert.doesNotMatch(failure.cause, /phase-six-secret/);
+  assert.match(failure.cause, /E_INTERRUPTED/);
+  assert.match(failure.cause, /carried <env>; retry remains available/);
+  assert.match(failure.cause, /retry remains available/);
+  assert.equal(failure.cause.match(/<env>/g)?.length, 1);
+  delete process.env.EXPLAINER_SANITIZER_PREFIX;
+  delete process.env.EXPLAINER_SANITIZER_DETAIL;
 });
 
 test('script source does not import a browser runtime', async () => {

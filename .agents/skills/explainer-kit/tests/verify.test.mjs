@@ -326,6 +326,7 @@ test('playwright rung records disabled and launch-failure reasons', async () => 
   assert.equal(allPass(disabled), true);
 
   const failureRoot = await runRoot();
+  process.env.EXPLAINER_VERIFY_SECRET = 'verify-secret-environment-value';
   const launchFailure = await verifyRun({
     runRoot: failureRoot,
     recipe: 'project-recap',
@@ -335,7 +336,9 @@ test('playwright rung records disabled and launch-failure reasons', async () => 
         chromium: {
           executablePath: () => '/fixture/non-executable',
           launch: async () => {
-            throw new Error('spawn EACCES /fixture/non-executable');
+            throw new Error(
+              `spawn EACCES /private/tmp/browser/chromium C:\\browser\\chromium ${process.env.EXPLAINER_VERIFY_SECRET}`,
+            );
           },
         },
       }),
@@ -345,8 +348,12 @@ test('playwright rung records disabled and launch-failure reasons', async () => 
   });
   assert.equal(launchFailure.rung, 'none');
   assert.match(launchFailure.reason, /^playwright-launch-failed:/);
+  assert.match(launchFailure.reason, /spawn EACCES/);
+  assert.doesNotMatch(launchFailure.reason, /private\/tmp|C:\\browser/);
+  assert.doesNotMatch(launchFailure.reason, /verify-secret/);
   assert.notEqual(launchFailure.reason, RUNTIME_UNAVAILABLE_REASONS.disabled);
   assert.equal(allPass(launchFailure), true);
+  delete process.env.EXPLAINER_VERIFY_SECRET;
 });
 
 test('every none downgrade clears canonical screenshots and remains recordable', async () => {

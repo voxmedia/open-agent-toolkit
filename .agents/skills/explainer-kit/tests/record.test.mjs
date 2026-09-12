@@ -163,7 +163,7 @@ test('record maps QA evidence to the four terminal outcomes', async () => {
         checks: checks({
           structure: {
             status: 'fail',
-            cause: `/Users/alice/${process.env.RECORD_TEST_SECRET}`,
+            cause: `E_STRUCTURE at /private/tmp/recap/page.html and C:\\Users\\alice\\recap\\page.html with ${process.env.RECORD_TEST_SECRET}; inspect structure`,
           },
         }),
         visual: { verdict: 'none' },
@@ -186,11 +186,18 @@ test('record maps QA evidence to the four terminal outcomes', async () => {
     });
     const manifest = await runRecord(recordArgs(root), { log() {} });
     assert.equal(manifest.outcome, scenario.outcome, scenario.name);
-    assert.doesNotMatch(manifest.warnings.join(' '), /\/Users\//);
+    assert.doesNotMatch(
+      manifest.warnings.join(' '),
+      /private\/tmp|Users\\alice/,
+    );
     assert.doesNotMatch(
       manifest.warnings.join(' '),
       /record-test-secret-value/,
     );
+    if (scenario.outcome === 'failed') {
+      assert.match(manifest.warnings.join(' '), /E_STRUCTURE/);
+      assert.match(manifest.warnings.join(' '), /inspect structure/);
+    }
   }
   delete process.env.RECORD_TEST_SECRET;
 

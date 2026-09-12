@@ -22,6 +22,7 @@ import {
   runBrowserProbes,
 } from './lib/qa.mjs';
 import { loadRecipe, recipeRequiredNarrative } from './lib/recipes.mjs';
+import { sanitizeDiagnostic } from './lib/sanitize.mjs';
 
 const STATUS_VALUES = new Set([
   'complete',
@@ -242,7 +243,7 @@ export async function verifyRun({
     return result;
   } catch (error) {
     if (error.code?.startsWith('verify-')) throw error;
-    await writeFailure(runRoot, 'verify', sanitize(error));
+    await writeFailure(runRoot, 'verify', error);
     throw error;
   }
 }
@@ -346,7 +347,7 @@ async function verifyPlaywrightRung({
   } catch (error) {
     return downgradeToNone(
       runRoot,
-      `playwright-launch-failed:${sanitize(error)}`,
+      `playwright-launch-failed:${sanitizeDiagnostic(error)}`,
     );
   }
   if (!session.available) return downgradeToNone(runRoot, session.reason);
@@ -380,7 +381,7 @@ async function verifyPlaywrightRung({
   } catch (error) {
     return downgradeToNone(
       runRoot,
-      `playwright-probe-failed:${sanitize(error)}`,
+      `playwright-probe-failed:${sanitizeDiagnostic(error)}`,
     );
   } finally {
     await session.close();
@@ -452,13 +453,6 @@ function parseArgs(argv) {
 
 async function readJson(path) {
   return JSON.parse(await readFile(path, 'utf8'));
-}
-
-function sanitize(value) {
-  const message = value instanceof Error ? value.message : String(value);
-  return message
-    .replaceAll(process.cwd(), '<repo>')
-    .replace(/\/Users\/[^/\s]+/g, '<user>');
 }
 
 function hashText(text) {

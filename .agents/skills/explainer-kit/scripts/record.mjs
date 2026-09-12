@@ -13,6 +13,7 @@ import {
 } from './lib/package-coverage.mjs';
 import { validateQaResult } from './lib/qa-result.mjs';
 import { loadRecipe } from './lib/recipes.mjs';
+import { sanitizeDiagnostic } from './lib/sanitize.mjs';
 
 const HASH_PREFIX = 'sha256:';
 const MODES = new Set(['unattended', 'interactive']);
@@ -214,7 +215,7 @@ function outcomeFromQa(qa) {
       .join('; ');
     return {
       outcome: 'failed',
-      warnings: [`record-failed:${sanitize(failureSummary)}`],
+      warnings: [`record-failed:${sanitizeDiagnostic(failureSummary)}`],
     };
   }
   if (BROWSER_RUNGS.has(qa.rung) && qa.visual?.verdict === 'pass') {
@@ -227,7 +228,7 @@ function outcomeFromQa(qa) {
       : 'visual-review-unavailable');
   return {
     outcome: 'built-needs-review',
-    warnings: [`record-needs-review:${sanitize(reason)}`],
+    warnings: [`record-needs-review:${sanitizeDiagnostic(reason)}`],
   };
 }
 
@@ -289,19 +290,6 @@ function parseArgs(argv) {
     throw usageError();
   }
   return options;
-}
-
-function sanitize(value) {
-  let sanitized = String(value)
-    .replaceAll(process.cwd(), '<repo>')
-    .replace(/\/Users\/[^/\s]+/g, '<user>');
-  const environmentValues = [...new Set(Object.values(process.env))]
-    .filter((entry) => typeof entry === 'string' && entry.length >= 12)
-    .sort((left, right) => right.length - left.length);
-  for (const secret of environmentValues) {
-    sanitized = sanitized.replaceAll(secret, '<env>');
-  }
-  return sanitized;
 }
 
 function hashBytes(bytes) {
