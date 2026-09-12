@@ -950,53 +950,54 @@ and lifecycle suites, `pnpm lint`, and `pnpm format`.
 
 ## Reviews
 
-| Scope | Type  | Status  | Notes                                                                                                                                 |
-| ----- | ----- | ------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| p01   | phase | passed  | Independent verification passed with 0 Critical, 0 Important, and 3 deferred Medium findings.                                         |
-| p02   | phase | passed  | Fresh re-review closed all three blocking findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                      |
-| p03   | phase | passed  | Final operator-authorized verification passed with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                           |
-| p04   | phase | passed  | Re-review closed the executable front-door and visual-evidence findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings. |
-| p05   | phase | passed  | Independent review passed the program recap and both bounded recoveries with 0 findings.                                              |
-| p06   | phase | pending | One composite residual-label tracing fix remains before re-review.                                                                    |
+| Scope | Type  | Status | Notes                                                                                                                                 |
+| ----- | ----- | ------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| p01   | phase | passed | Independent verification passed with 0 Critical, 0 Important, and 3 deferred Medium findings.                                         |
+| p02   | phase | passed | Fresh re-review closed all three blocking findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                      |
+| p03   | phase | passed | Final operator-authorized verification passed with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                           |
+| p04   | phase | passed | Re-review closed the executable front-door and visual-evidence findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings. |
+| p05   | phase | passed | Independent review passed the program recap and both bounded recoveries with 0 findings.                                              |
+| p06   | phase | passed | Composite-label re-review passed all behavioral, package, bookkeeping, and repository gates.                                          |
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status          | Date       | Artifact                                                      | Reviewed Head                            | Invocation | Gate Target           |
-| ------ | -------- | --------------- | ---------- | ------------------------------------------------------------- | ---------------------------------------- | ---------- | --------------------- |
-| p01    | code     | fixes_completed | 2026-09-11 | reviews/p01-review-2026-09-11T155532Z.md                      | f1cff54c0e364e858f9e36fb820e9f95b1e5b578 | manual     | -                     |
-| p01    | code     | fixes_completed | 2026-09-11 | reviews/p01-review-2026-09-11T165150Z.md                      | 3f29035c2588bc590cfd361e88e5632e084238f5 | manual     | -                     |
-| p01    | code     | fixes_completed | 2026-09-11 | reviews/p01-review-2026-09-11T173707Z.md                      | 5e8694abbb7f7740970bd69e5feea64ddf9df316 | manual     | -                     |
-| p01    | code     | passed          | 2026-09-11 | reviews/p01-review-2026-09-11T185739Z.md                      | 285673119c8493c99ea0c0208e18779a8e9a142c | manual     | -                     |
-| p02    | code     | fixes_completed | 2026-09-11 | reviews/p02-review-2026-09-11T194856Z.md                      | ecdce3e38ad6b86c8583ba115cfe27bc5faf0caa | manual     | -                     |
-| p02    | code     | passed          | 2026-09-11 | reviews/p02-review-2026-09-11T202150Z.md                      | 77681847a6755d0628a2c1f707804d783d04e2ae | manual     | -                     |
-| p03    | code     | fixes_completed | 2026-09-11 | reviews/p03-review-2026-09-11T213626Z.md                      | 6619ca123ba6fdbbf6bdeeef00e6c613de1eb695 | manual     | -                     |
-| p03    | code     | fixes_completed | 2026-09-11 | reviews/p03-review-2026-09-11T221353Z.md                      | 3ed763cd88714a6e68bd7c2c41157994b7a28c0a | manual     | -                     |
-| p03    | code     | fixes_completed | 2026-09-11 | reviews/p03-review-2026-09-11T225420Z.md                      | afd4a9e970200bdb2c1cc35fdf13df1912e6b12f | manual     | -                     |
-| p03    | code     | fixes_completed | 2026-09-11 | reviews/p03-review-2026-09-11T232506Z.md                      | 2c8c56093651748e389da61d3c055be713ebc99e | manual     | -                     |
-| p03    | code     | passed          | 2026-09-12 | reviews/p03-review-2026-09-12T001522Z.md                      | ce2898e1dca37becc2d59ce8f97d7340d0f0bf4d | manual     | -                     |
-| p04    | code     | fixes_completed | 2026-09-12 | reviews/p04-review-2026-09-12T015208Z.md                      | 4292290aecc74b769edc1c47b6ee3cbc2d3761dd | manual     | -                     |
-| p04    | code     | passed          | 2026-09-12 | reviews/p04-review-2026-09-12T020833Z.md                      | c9d977aa90d2990145e500c2035b1a2c67198278 | manual     | -                     |
-| p05    | code     | passed          | 2026-09-12 | reviews/p05-review-2026-09-12T030832Z.md                      | 22fbe809f3410ae95f75e5dccb16a664020122d8 | manual     | -                     |
-| p06    | code     | fixes_completed | 2026-09-12 | reviews/archived/p06-review-2026-09-12T130841Z.md             | afd969f946ce774ad1e2bcaa03741177a4f865bd | manual     | -                     |
-| p06    | code     | passed          | 2026-09-12 | reviews/p06-review-2026-09-12T131816Z.md                      | de2393c3fa337bc7f33d9813a583dbc41ec5fbda | manual     | -                     |
-| p06    | code     | passed          | 2026-09-12 | reviews/p06-review-2026-09-12T135600Z.md                      | 7ba61d84fee87d3e9217f8c1431ba34eb658471a | manual     | -                     |
-| p06    | code     | passed          | 2026-09-12 | reviews/p06-review-2026-09-12T200228Z.md                      | 688226b0c1431d23624ee0bd30fd5d307c2b5dd8 | manual     | -                     |
-| p06    | code     | fixes_completed | 2026-09-12 | reviews/archived/p06-review-2026-09-12T223410Z.md             | 06da0d40112052eb4a3bfd5760d5aa2ca1867bff | manual     | -                     |
-| p06    | code     | passed          | 2026-09-12 | reviews/p06-review-2026-09-12T230247Z.md                      | 35a68fbe6f292573eb9ca9a28cfdcb57e79a541b | manual     | -                     |
-| final  | code     | fixes_completed | 2026-09-12 | reviews/archived/final-review-2026-09-12T032129Z.md           | ed5f9f19d777989fe6095be14b1bb12e14583359 | manual     | -                     |
-| final  | code     | fixes_completed | 2026-09-12 | reviews/archived/final-review-2026-09-12T132520Z.md           | 03dd32006306615858d39f68da7425b083f95780 | manual     | -                     |
-| final  | code     | fixes_added     | 2026-09-12 | reviews/archived/final-review-2026-09-12T140439Z.md           | 367bb6217c8d2c502ca395d04bf8f35b14ac43b5 | manual     | -                     |
-| final  | code     | passed          | 2026-09-12 | reviews/final-review-2026-09-12T201509Z.md                    | 2ebc4ec4d42accaf576a840cfa6ba3823246b9fb | manual     | -                     |
-| final  | code     | fixes_completed | 2026-09-12 | reviews/archived/final-review-2026-09-12T203608Z.md           | 1b041801417814f39f337837a0cba245fc11c020 | gate       | cursor-fable-5-1-high |
-| final  | code     | fixes_completed | 2026-09-12 | reviews/archived/final-review-2026-09-12T231453Z.md           | f2b92c515c23f0d9b4b9bab714951a785b56afbd | manual     | -                     |
-| spec   | artifact | pending         | -          | -                                                             | -                                        | -          | -                     |
-| design | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-design-review-2026-09-09T225646Z.md | -                                        | -          | -                     |
-| design | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-design-review-2026-09-09T232532Z.md | -                                        | manual     | -                     |
-| design | artifact | fixes_completed | 2026-09-10 | reviews/archived/artifact-design-review-2026-09-10T010926Z.md | -                                        | manual     | -                     |
-| design | artifact | fixes_completed | 2026-09-10 | reviews/archived/artifact-design-review-2026-09-10T013018Z.md | -                                        | manual     | -                     |
-| plan   | artifact | fixes_completed | 2026-09-10 | - (structured, in-memory, round 1)                            | -                                        | manual     | -                     |
-| plan   | artifact | fixes_completed | 2026-09-10 | - (structured, in-memory, round 2)                            | -                                        | manual     | -                     |
-| plan   | artifact | fixes_completed | 2026-09-10 | - (structured, in-memory, round 3; retry bound exhausted)     | -                                        | manual     | -                     |
+| Scope   | Type     | Status          | Date       | Artifact                                                      | Reviewed Head                            | Invocation | Gate Target           |
+| ------- | -------- | --------------- | ---------- | ------------------------------------------------------------- | ---------------------------------------- | ---------- | --------------------- |
+| p01     | code     | fixes_completed | 2026-09-11 | reviews/p01-review-2026-09-11T155532Z.md                      | f1cff54c0e364e858f9e36fb820e9f95b1e5b578 | manual     | -                     |
+| p01     | code     | fixes_completed | 2026-09-11 | reviews/p01-review-2026-09-11T165150Z.md                      | 3f29035c2588bc590cfd361e88e5632e084238f5 | manual     | -                     |
+| p01     | code     | fixes_completed | 2026-09-11 | reviews/p01-review-2026-09-11T173707Z.md                      | 5e8694abbb7f7740970bd69e5feea64ddf9df316 | manual     | -                     |
+| p01     | code     | passed          | 2026-09-11 | reviews/p01-review-2026-09-11T185739Z.md                      | 285673119c8493c99ea0c0208e18779a8e9a142c | manual     | -                     |
+| p02     | code     | fixes_completed | 2026-09-11 | reviews/p02-review-2026-09-11T194856Z.md                      | ecdce3e38ad6b86c8583ba115cfe27bc5faf0caa | manual     | -                     |
+| p02     | code     | passed          | 2026-09-11 | reviews/p02-review-2026-09-11T202150Z.md                      | 77681847a6755d0628a2c1f707804d783d04e2ae | manual     | -                     |
+| p03     | code     | fixes_completed | 2026-09-11 | reviews/p03-review-2026-09-11T213626Z.md                      | 6619ca123ba6fdbbf6bdeeef00e6c613de1eb695 | manual     | -                     |
+| p03     | code     | fixes_completed | 2026-09-11 | reviews/p03-review-2026-09-11T221353Z.md                      | 3ed763cd88714a6e68bd7c2c41157994b7a28c0a | manual     | -                     |
+| p03     | code     | fixes_completed | 2026-09-11 | reviews/p03-review-2026-09-11T225420Z.md                      | afd4a9e970200bdb2c1cc35fdf13df1912e6b12f | manual     | -                     |
+| p03     | code     | fixes_completed | 2026-09-11 | reviews/p03-review-2026-09-11T232506Z.md                      | 2c8c56093651748e389da61d3c055be713ebc99e | manual     | -                     |
+| p03     | code     | passed          | 2026-09-12 | reviews/p03-review-2026-09-12T001522Z.md                      | ce2898e1dca37becc2d59ce8f97d7340d0f0bf4d | manual     | -                     |
+| p04     | code     | fixes_completed | 2026-09-12 | reviews/p04-review-2026-09-12T015208Z.md                      | 4292290aecc74b769edc1c47b6ee3cbc2d3761dd | manual     | -                     |
+| p04     | code     | passed          | 2026-09-12 | reviews/p04-review-2026-09-12T020833Z.md                      | c9d977aa90d2990145e500c2035b1a2c67198278 | manual     | -                     |
+| p05     | code     | passed          | 2026-09-12 | reviews/p05-review-2026-09-12T030832Z.md                      | 22fbe809f3410ae95f75e5dccb16a664020122d8 | manual     | -                     |
+| p06     | code     | fixes_completed | 2026-09-12 | reviews/archived/p06-review-2026-09-12T130841Z.md             | afd969f946ce774ad1e2bcaa03741177a4f865bd | manual     | -                     |
+| p06     | code     | passed          | 2026-09-12 | reviews/p06-review-2026-09-12T131816Z.md                      | de2393c3fa337bc7f33d9813a583dbc41ec5fbda | manual     | -                     |
+| p06     | code     | passed          | 2026-09-12 | reviews/p06-review-2026-09-12T135600Z.md                      | 7ba61d84fee87d3e9217f8c1431ba34eb658471a | manual     | -                     |
+| p06     | code     | passed          | 2026-09-12 | reviews/p06-review-2026-09-12T200228Z.md                      | 688226b0c1431d23624ee0bd30fd5d307c2b5dd8 | manual     | -                     |
+| p06     | code     | fixes_completed | 2026-09-12 | reviews/archived/p06-review-2026-09-12T223410Z.md             | 06da0d40112052eb4a3bfd5760d5aa2ca1867bff | manual     | -                     |
+| p06     | code     | passed          | 2026-09-12 | reviews/p06-review-2026-09-12T230247Z.md                      | 35a68fbe6f292573eb9ca9a28cfdcb57e79a541b | manual     | -                     |
+| p06-t16 | code     | passed          | 2026-09-12 | reviews/p06-t16-review-2026-09-12T234414Z.md                  | 811fa6a0d9bdf122fe2e18463558bdb046ccc9e1 | manual     | -                     |
+| final   | code     | fixes_completed | 2026-09-12 | reviews/archived/final-review-2026-09-12T032129Z.md           | ed5f9f19d777989fe6095be14b1bb12e14583359 | manual     | -                     |
+| final   | code     | fixes_completed | 2026-09-12 | reviews/archived/final-review-2026-09-12T132520Z.md           | 03dd32006306615858d39f68da7425b083f95780 | manual     | -                     |
+| final   | code     | fixes_added     | 2026-09-12 | reviews/archived/final-review-2026-09-12T140439Z.md           | 367bb6217c8d2c502ca395d04bf8f35b14ac43b5 | manual     | -                     |
+| final   | code     | passed          | 2026-09-12 | reviews/final-review-2026-09-12T201509Z.md                    | 2ebc4ec4d42accaf576a840cfa6ba3823246b9fb | manual     | -                     |
+| final   | code     | fixes_completed | 2026-09-12 | reviews/archived/final-review-2026-09-12T203608Z.md           | 1b041801417814f39f337837a0cba245fc11c020 | gate       | cursor-fable-5-1-high |
+| final   | code     | fixes_completed | 2026-09-12 | reviews/archived/final-review-2026-09-12T231453Z.md           | f2b92c515c23f0d9b4b9bab714951a785b56afbd | manual     | -                     |
+| spec    | artifact | pending         | -          | -                                                             | -                                        | -          | -                     |
+| design  | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-design-review-2026-09-09T225646Z.md | -                                        | -          | -                     |
+| design  | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-design-review-2026-09-09T232532Z.md | -                                        | manual     | -                     |
+| design  | artifact | fixes_completed | 2026-09-10 | reviews/archived/artifact-design-review-2026-09-10T010926Z.md | -                                        | manual     | -                     |
+| design  | artifact | fixes_completed | 2026-09-10 | reviews/archived/artifact-design-review-2026-09-10T013018Z.md | -                                        | manual     | -                     |
+| plan    | artifact | fixes_completed | 2026-09-10 | - (structured, in-memory, round 1)                            | -                                        | manual     | -                     |
+| plan    | artifact | fixes_completed | 2026-09-10 | - (structured, in-memory, round 2)                            | -                                        | manual     | -                     |
+| plan    | artifact | fixes_completed | 2026-09-10 | - (structured, in-memory, round 3; retry bound exhausted)     | -                                        | manual     | -                     |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;

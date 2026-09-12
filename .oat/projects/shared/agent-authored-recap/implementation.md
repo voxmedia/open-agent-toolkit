@@ -964,7 +964,7 @@ fresh Phase 6 review and final re-review.
 
 ## Phase 6: Final review fixes
 
-**Status:** implementation complete; p06-t16 re-review pending.
+**Status:** implementation complete; current-basis final review pending.
 
 ### Phase Summary
 
@@ -1443,6 +1443,21 @@ gate/recovery records remain unchanged.
 
 **Next:** Run the narrow Phase 6 re-review, then the current-basis final
 lifecycle review.
+
+### Phase 6 p06-t16 Re-review
+
+**Review artifact:** `reviews/p06-t16-review-2026-09-12T234414Z.md`
+**Reviewed head:** `811fa6a0d9bdf122fe2e18463558bdb046ccc9e1`
+**Verdict:** PASS — 0 Critical, 0 Important, 0 Medium, 0 Minor
+
+The reviewer independently reproduced the subject-only fail-open, confirmed
+the restored verifier rejects all six composite-label facts without emitting
+the identifier suffix, retained unique claim keys and existing subjects, and
+passed both tracked packages plus all 22 focused and repository verification
+commands. Gate remediation remains stale at 1/2 consumed and Phase 6 recovery
+remains zero.
+
+**Next:** Run the required current-basis final lifecycle review.
 
 ---
 

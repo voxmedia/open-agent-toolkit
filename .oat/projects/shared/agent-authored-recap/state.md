@@ -93,13 +93,13 @@ oat_generated: false
 
 # Project State: agent-authored-recap
 
-**Status:** Composite-label fix complete; Phase 6 re-review pending
+**Status:** Phase 6 passed; current-basis final review pending
 **Started:** 2026-09-09
 **Last Updated:** 2026-09-12
 
 ## Current Phase
 
-Implementation — Phase 6 re-review pending
+Implementation — Final review pending
 
 ## Artifacts
 
@@ -121,8 +121,9 @@ Implementation — Phase 6 re-review pending
 - ✓ Phase 4 complete and independently verified (2/2 tasks)
 - ✓ Phase 5 complete and independently verified (1/1 task)
 - ✓ Phase 6 implementation complete (16/16 tasks)
+- ✓ Phase 6 independently reviewed
 - ✓ Implementation tasks complete (48/48 tasks)
-- ⧗ Composite residual-label re-review pending
+- ⧗ Current-basis final review pending
 
 ## Blockers
 
@@ -130,4 +131,4 @@ None.
 
 ## Next Milestone
 
-Re-review p06-t16, then run the current-basis final lifecycle review.
+Run the required current-basis final lifecycle review.
