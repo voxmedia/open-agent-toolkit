@@ -1646,6 +1646,21 @@ is durably accepted post-release.
 **Disposition:** passed. Configured exit-gate attempt 2 may proceed against the
 new reviewed basis.
 
+### Configured implementation exit gate attempt 2
+
+**Prepared:** 2026-09-12T00:02:26Z
+**Reviewed head:** `216ea4a9ff0b9aecb7b7e92e4feea1c710b7eab0`
+**Implementation fingerprint:**
+`sha256:effective-delta-v1:fa62febf1f0a0f5904cab7849c64ea223dd7cf802e13ce06b1b3936d1c6d7ea3`
+**Freshness checkpoint:** `39894ae7bc0bbd4f9e77884b8f2852c27f2f4890`,
+`sha256:effective-delta-v1:e6a7f29f8f2b3c449c5031b4e0db0821441bf43d2d566a34ed8955aa42a86d78`
+**Attempt accounting:** 1 of 2 remediation attempts consumed
+**Status:** pending; attempt 2 launch not started.
+
+The configured command, project override, `onFailure=block`, maximum attempts,
+and configuration fingerprint remain unchanged. The passing final review and
+its receive bookkeeping establish the new substantive basis.
+
 ## References
 
 - [Plan](plan.md)
