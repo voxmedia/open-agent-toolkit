@@ -23,8 +23,17 @@ oat_phase_recovery_policy:
       used_attempts: 0
       pending_attempt: null
     p05:
-      used_attempts: 1
-      pending_attempt: null
+      used_attempts: 2
+      pending_attempt:
+        attempt: 2
+        event_id: recovery-agent-authored-recap-p05-02
+        original_request_id: dispatch-agent-authored-recap-p05-20260912T0215Z
+        original_task_id: p05-t01
+        original_commit: 3e8bf412ad2d1d846d9bb6e0eae21ccb7263a220
+        discovered_by: committed-HEAD pnpm release:check-versions after successful git fetch origin main
+        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
+        reservation_head: 6100b9883752a31d05b14820ace377abd1830b10
+        status: active
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
