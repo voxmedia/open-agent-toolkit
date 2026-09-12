@@ -964,7 +964,7 @@ fresh Phase 6 review and final re-review.
 
 ## Phase 6: Final review fixes
 
-**Status:** sanitizer fix completed; Phase 6 re-review pending.
+**Status:** completed; sanitizer re-review passed with 0 findings.
 
 ### Phase Summary
 
@@ -1080,7 +1080,12 @@ their producer controls; focused tests, the complete core/lifecycle suites,
 every ordered repository gate, uncached Turbo, standalone suites, lint, and
 format passed on the committed head.
 
-**Next:** Run Phase 6 and final re-reviews.
+**Re-review:** `reviews/p06-review-2026-09-12T135600Z.md` passed at
+`7ba61d84fee87d3e9217f8c1431ba34eb658471a` with 0 Critical, Important,
+Medium, or Minor findings. All twelve producer/neutralization combinations
+failed when their guard was removed.
+
+**Next:** Run the mandatory whole-project final re-review.
 
 ---
 
