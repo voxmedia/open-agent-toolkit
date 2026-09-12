@@ -1580,8 +1580,8 @@ Track test execution during implementation.
 - Project lifecycle callers routed through a thin OAT adapter with persisted
   intent and truthful `built`, `built-needs-review`, `failed`, and `incomplete`
   outcomes.
-- Generated, validated recap packages for this project and the 2026-08-31
-  execution program.
+- Generated and validated this project's `project-explainer` package and the
+  2026-08-31 execution program's `program-recap` package.
 
 **Behavioral changes (user-facing):**
 
@@ -1604,8 +1604,10 @@ Track test execution during implementation.
   `.agents/skills/oat-project-implement/` - lifecycle Generate consumers.
 - `apps/oat-docs/docs/workflows/skills/explainer-kit.md` - public workflow
   documentation.
-- `.oat/repo/reference/explainers/` - validated project and program explainer
-  packages.
+- `.oat/projects/shared/agent-authored-recap/explainers/agent-authored-recap-explainer/`
+  - active-project `project-explainer` package.
+- `.oat/repo/reference/explainers/2026-08-31-execution-program-recap/` -
+  repository-level `program-recap` package.
 
 **Verification performed:**
 
