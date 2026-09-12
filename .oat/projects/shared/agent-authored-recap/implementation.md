@@ -1206,6 +1206,17 @@ run marker, no reviewer launch, and no review artifact corroborate
 **Next:** Repair or bypass only the broken launcher resolution while preserving
 the exact configured command, persist a new launch intent, and retry.
 
+**Launcher recovery:** Built the branch-local 0.2.74 CLI and exposed its
+executable through a temporary `PATH` shim. The configured `oat --json gate
+review ...` command and arguments remain byte-for-byte unchanged; `oat
+--version` resolves to 0.2.74.
+
+**Retry attempt:** `aar-exit-gate-20260912T202337Z`
+**Retry launch intent:** persisted at 2026-09-12T20:23:37Z
+**Retry result receipt:**
+`/private/tmp/oat-agent-authored-recap/aar-exit-gate-20260912T202337Z.receipt.json`
+**Retry status:** pending; zero remediation attempts consumed
+
 ---
 
 ## Orchestration Runs
