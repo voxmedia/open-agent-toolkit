@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-12
-oat_current_task_id: p06-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -31,9 +31,9 @@ oat_generated: false
 | Phase 3 | completed | 8     | 8/8       |
 | Phase 4 | completed | 2     | 2/2       |
 | Phase 5 | completed | 1     | 1/1       |
-| Phase 6 | pending   | 7     | 0/7       |
+| Phase 6 | completed | 7     | 7/7       |
 
-**Total:** 32/39 tasks completed
+**Total:** 39/39 tasks completed
 
 ---
 
@@ -962,6 +962,61 @@ described below.
 **Next:** Execute Phase 6 fix tasks through `oat-project-implement`, then run a
 fresh Phase 6 review and final re-review.
 
+## Phase 6: Final review fixes
+
+**Status:** implemented; awaiting the root-owned Phase 6 review.
+
+### Phase Summary
+
+**Outcome:**
+
+- Unchanged multi-file inputs now reuse a recorded package regardless of object
+  key insertion order, while changed hashes still reject reuse.
+- The specification and design now describe the shipped retirement, QA, and
+  failure contracts exactly.
+- Bundle, verify, and record share complete failure sanitization for environment
+  values and cross-platform absolute paths.
+- Multi-root document locator collisions fail closed instead of silently
+  dropping an input.
+- Source and rendered factual headings use symmetric claim tracing without
+  weakening changed-fact rejection.
+- The final summary now distinguishes the active-project `project-explainer`
+  from the repository-level `program-recap`.
+
+**Task commits:**
+
+- `p06-t01`: `fc6423e2769a7e13e2b3137831db2a79e045e54e`
+- `p06-t02`: `b562ae710e2a8c13ea2034471621dc807ef3dd0f`
+- `p06-t03`: `a19c15e0190c537206a3646b62169040dedace54`
+- `p06-t04`: `7fecd332973a97b29030cac974ecd6adf210cf26`
+- `p06-t05`: `0e6488ec90948f56008452d6eeb3152dbdb90b91`
+- `p06-t06`: `f5b0c5e545fdab0180a6132dcc95659f0b040891`
+- `p06-t07`: `a7d8377f563703aaf41d71ba3ef7dbf42b6dfb57`
+
+**Verification:**
+
+- Every ordered repository gate exited 0.
+- Isolated-HOME forced Turbo ran 10/10 tasks with `Cached: 0`.
+- Standalone smoke, skill, script, and skill-validation suites passed.
+- Core passed 112/112 and focused lifecycle coverage passed 55/55.
+- Failure-sanitization, locator-collision, heading-symmetry, and changed-hash
+  negative controls each failed when their guard was neutralized and passed
+  after restoration.
+- `pnpm lint` and `pnpm format` passed.
+
+**Notes / deviations:**
+
+- The existing changed-input reuse test had not actually changed its input and
+  passed only because the former key-order bug forced a miss. `p06-t01`
+  mechanically corrected the test to mutate `summary.md`.
+- Manifest evidence established the active project package at
+  `.oat/projects/shared/agent-authored-recap/explainers/agent-authored-recap-explainer/`;
+  the singular `explainer/` path in the dispatch brief did not exist, so
+  `p06-t07` records the verified path.
+- Recovery usage remained 0/10 with no p06 ledger entry or pending attempt.
+- The deferred immutable-HTML whitespace item and the Effective HTML backlog
+  remained unchanged.
+
 ---
 
 ## Orchestration Runs
@@ -1568,6 +1623,7 @@ Track test execution during implementation.
 | 3     | Ordered CI gates; forced Turbo; standalone suites; docs; PJM CLI; focused consumer and sweep negative controls           | All final commands | 0 final | Lifecycle Generate consumers, persisted skip suppression, docs, repository sweep, version parity   |
 | 4     | Ordered CI gates; uncached Turbo; standalone suites; focused front-door and project-explainer controls; lint/format      | All final commands | 0 final | Interactive inputs, package generation, generic package validation, visual-evidence truthfulness   |
 | 5     | Ordered CI gates before and after recovery commits; focused bundle/core/archive suites; two negative controls            | All final commands | 0 final | Program recap, canonical wrapper summaries, unresolved inputs, recovery accounting, release parity |
+| 6     | Ordered CI gates; uncached Turbo; standalone suites; core/lifecycle controls; four negative controls; lint/format        | All final commands | 0 final | Reuse, sanitizer, locator collisions, heading symmetry, and artifact alignment                     |
 
 ## Final Summary (for PR/docs)
 
