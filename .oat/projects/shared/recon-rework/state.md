@@ -14,7 +14,7 @@ oat_hill_completed:
   - p04
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: in_progress
+oat_phase_status: pr_open
 oat_phase_recovery_policy:
   default_attempt_limit: 10
   phase_attempt_limits: {}
@@ -87,7 +87,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/285'
 oat_project_created: '2026-09-08T17:25:15.784Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-09-12T00:37:11Z'
+oat_project_state_updated: '2026-09-12T00:39:56Z'
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -103,9 +103,7 @@ oat_project_recap:
 
 ## Current Phase
 
-Implementation — all 31 tasks, the `p-rev8` phase review, and final verification
-are complete. The authorized final lifecycle review and configured exit-gate
-attempt 2 passed and are durably received.
+Implementation — PR open; completion may run before or after merge.
 
 ## Artifacts
 
@@ -134,8 +132,8 @@ No existing project was absorbed or retired.
 - ✓ Narrowed lifecycle re-review passed
 - ✓ Configured implementation exit-gate attempt 2 passed with no findings
 - ✓ Configured implementation exit-gate review received and archived
-- ✓ Final HiLL and configured closeout sequence completed
-- ✓ PR #285 updated and open as a draft
+- ✓ Earlier HiLL completed; refreshed configured closeout remains pre-approval
+- ✓ PR #285 is open for review
 - ✓ Post-retro RP-01, RP-02, UP-01, and UP-02 implemented directly
 - ✓ Run 2 focused and repository verification passed
 - ✓ Fresh final review received and all seven findings fixed
@@ -158,8 +156,8 @@ No existing project was absorbed or retired.
 - ✓ Final Minor explicitly deferred to post-release diagnostic cleanup
 - ✓ Configured exit-gate attempt 2 passed with 0C/0I/0M/2m
 - ✓ Passing gate receipt reconciled; exit gate allowed
-- ⧗ Refresh summary, documentation, and PR description
-- ⧗ Summary, documentation, and PR description refresh pending
+- ✓ Refreshed summary and documentation committed
+- ✓ Final PR artifact refreshed
 - ✓ Final repository release-verification sequence passed
 - ✓ PR created
 - ⧗ Awaiting human review
@@ -170,8 +168,11 @@ No active blocker.
 
 ## Next Milestone
 
-Refresh summary, documentation, and the existing PR description, then finalize
-implementation completion.
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- Complete before merge: run `oat-project-complete` now, then merge the PR.
+- Merge before completion: merge the PR, then run `oat-project-complete`.
 
 ## Authorization and Scope
 
@@ -180,10 +181,11 @@ Thomas authorized the corrected plan, changed the dispatch ceiling from managed
 pushing this branch for cloud execution. Implementation is complete locally; no
 live-provider launch, triage change, merge, or issue closure has been performed.
 Thomas subsequently authorized publishing the implementation and updating the
-existing planning PR; PR #285 carries the Run 1 title and body. Thomas then
-approved the final HiLL checkpoint and implementation closeout. After the
-terminal final review reached the three-cycle cap, Thomas authorized exactly one
-additional bounded `prev7-t01` fix and review cycle.
+existing planning PR; PR #285 remains open for review with the final closeout
+title and body. Thomas approved the earlier pre-`p-rev7` HiLL and closeout, which
+was later restarted after substantive revisions. After the terminal final review
+reached the three-cycle cap, Thomas authorized exactly one additional bounded
+`prev7-t01` fix and review cycle.
 
 Source issue: https://github.com/voxmedia/open-agent-toolkit/issues/274.
 Canonical backlog item `BL-260908-restore-recon-s-cheap-fan-out` remains open and
