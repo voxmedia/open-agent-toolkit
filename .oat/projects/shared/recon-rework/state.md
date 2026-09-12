@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 64af472cf6c4de7b7fba7d7169ce5481d2e5539a
+oat_last_commit: 85b1e7dabaf9b34f8ff1c0e806e989027984fd20
 oat_blockers: []
 associated_issues: []
 oat_kind: implementation
@@ -43,8 +43,8 @@ oat_implement_exit_gate:
   reviewed_head: 216ea4a9ff0b9aecb7b7e92e4feea1c710b7eab0
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:fa62febf1f0a0f5904cab7849c64ea223dd7cf802e13ce06b1b3936d1c6d7ea3'
-  freshness_head: b91d221dbab57bec80a9db3df4447b0d96a10476
-  freshness_fingerprint: 'sha256:effective-delta-v1:2d5f96c2872fd51a97183604565164a572fc8403167512bd743d57257d6a84c6'
+  freshness_head: 85b1e7dabaf9b34f8ff1c0e806e989027984fd20
+  freshness_fingerprint: 'sha256:effective-delta-v1:f407d41899a9292a649dc7050c242b9b918e919160450066c4f877481752d4a6'
   launch_state: result_persisted
   launch_attempt_id: 'recon-exit-gate-20260912T000329Z'
   launch_started_at: '2026-09-12T00:03:29Z'
@@ -88,7 +88,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/285'
 oat_project_created: '2026-09-08T17:25:15.784Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-09-12T01:47:02Z'
+oat_project_state_updated: '2026-09-12T01:49:00Z'
 oat_generated: false
 oat_project_recap:
   decision: skip
