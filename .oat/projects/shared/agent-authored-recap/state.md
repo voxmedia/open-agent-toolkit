@@ -106,7 +106,7 @@ Implementation — Phase 6 review fixes
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** `spec.md` (complete — authored inline by the design phase)
 - **Design:** `design.md` (complete — HiLL approved 2026-09-10 after four review rounds)
-- **Plan:** `plan.md` (complete — 42 tasks, 6 phases)
+- **Plan:** `plan.md` (complete — 47 tasks, 6 phases)
 - **Implementation:** `implementation.md` (in progress)
 
 ## Progress
