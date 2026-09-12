@@ -1,0 +1,36 @@
+{
+  "artifactSha256": "sha256:1951343874ecebba50d66663f473f3f5c9ebe3235bc113300287b8e45cb7b723",
+  "checks": {
+    "parse": {
+      "status": "pass"
+    },
+    "requiredNarrative": {
+      "status": "pass"
+    },
+    "structure": {
+      "status": "pass"
+    },
+    "sourceDumping": {
+      "status": "pass"
+    },
+    "shellScripts": {
+      "status": "pass"
+    },
+    "ledgerToPage": {
+      "status": "pass"
+    },
+    "pageToLedger": {
+      "status": "pass"
+    }
+  },
+  "rung": "playwright",
+  "screenshots": [
+    "qa/320.png",
+    "qa/768.png",
+    "qa/1440.png"
+  ],
+  "visual": {
+    "verdict": "pass",
+    "notes": "Playwright probes passed at all representative widths."
+  }
+}

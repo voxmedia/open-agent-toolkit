@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "explainer-kit.manifest/v2",
+  "runId": "40b9a35e-8f2a-419c-be2a-9f28eae4215a",
+  "slug": "agent-authored-recap-explainer",
+  "recipe": {
+    "id": "project-explainer",
+    "version": "1"
+  },
+  "createdAt": "2026-09-12T00:34:25.659Z",
+  "mode": "unattended",
+  "source": {
+    "factBasePath": "source/fact-base.json",
+    "factBaseHash": "sha256:2854a3d6cde947901b5fa2f53fa63e59fc0a6b6f75988e247d76a9f5813beeba",
+    "inputHashes": {
+      "design.md": "sha256:de8adee04aa6de446a9fc1f4258bbd077c1b7b3e3357ff2c335fd89f4d891830",
+      "discovery.md": "sha256:09a001d8aa6dbe4f0a5121785308ba95207dc6dee2497d238b4213cca188f3b5",
+      "plan.md": "sha256:4f7bb8e78d331ae65eda4b3b94069820158fab25c064a9bc83d2811dd0500edd",
+      "spec.md": "sha256:73b5c25930b0446eda74c023bc23683986d34a83d0a9ba0106ab5170efcf30f3"
+    }
+  },
+  "theme": {
+    "path": "theme.resolved.json",
+    "hash": "sha256:82c4bf82ac817bb8c04c83bb971d2c2b22aa621384689fb4e0d0fa3a62498f27"
+  },
+  "artifacts": [
+    {
+      "id": "project-explainer",
+      "type": "hub",
+      "contentPath": "site/index.html",
+      "hash": "sha256:1951343874ecebba50d66663f473f3f5c9ebe3235bc113300287b8e45cb7b723",
+      "status": "built"
+    }
+  ],
+  "immutableHashes": {
+    "qa/1440.png": "sha256:5d7fe59465674b8395b6f92afb0712c44a46dd1ac964f5bd86cae24a45dd6161",
+    "qa/320.png": "sha256:2556fcc749783e93f8352d0b469ae6d5f568d9be197c8f69e8650acb58b497b8",
+    "qa/768.png": "sha256:5a38bbe984a172af66f39b0870143b090e8c33c71bfc195d4b418b238c234e9f",
+    "qa/result.json": "sha256:1507de8171d19ea50d371b23434a865eefb227bbff3ff012051233500b1f5f4a",
+    "site/index.html": "sha256:1951343874ecebba50d66663f473f3f5c9ebe3235bc113300287b8e45cb7b723",
+    "source/fact-base.json": "sha256:2854a3d6cde947901b5fa2f53fa63e59fc0a6b6f75988e247d76a9f5813beeba",
+    "source/fact-base.md": "sha256:cd6474b115377eec7c34c5cf12f897013fc002241aecf713cd20c2ee9a433c18",
+    "source/ledger.json": "sha256:d1c96ac3742eafa659e3d9311d81e652dcc2f339e0e1e97a4d157cfc3356f174",
+    "theme.resolved.json": "sha256:82c4bf82ac817bb8c04c83bb971d2c2b22aa621384689fb4e0d0fa3a62498f27"
+  },
+  "outcome": "built",
+  "warnings": []
+}

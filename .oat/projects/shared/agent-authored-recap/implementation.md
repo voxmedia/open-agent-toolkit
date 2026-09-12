@@ -676,6 +676,28 @@ Phase Summary passed.
 
 ---
 
+## Project explainer
+
+- Run ID: `40b9a35e-8f2a-419c-be2a-9f28eae4215a`
+- Outcome: `built`
+- Browser rung: `playwright`
+- Run path:
+  `.oat/projects/shared/agent-authored-recap/explainers/agent-authored-recap-explainer`
+- Visual verdict: `pass`
+- Visual notes: `Playwright probes passed at all representative widths.`
+- Visual evidence: the runtime exposed image reading but no host browser-control
+  capability, so the bundled Playwright rung captured `qa/320.png`,
+  `qa/768.png`, and `qa/1440.png`. Direct inspection found no page-width
+  overflow, unreadable heading, or overlapping text; the mobile navigation is
+  intentionally horizontally scrollable. Required-section presence and
+  viewport clipping also passed the recorded automated probes.
+- Package evidence: direct `validateContract('manifest')`, byte verification of
+  every immutable hash, and `enforceRunPackageInventory` passed. A disposable
+  copy with corrupted `site/index.html` failed immutable byte verification
+  while the tracked package remained accepted.
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -1263,10 +1285,10 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review                  | Source Artifact        | Planned / Documented                                                     | Actual / Accepted                                                                                                                               | Reason                                                                      | Source of Truth                                                     | Follow-up                   |
-| ------------------------------ | ---------------------- | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------- | --------------------------- |
-| p01-t09, p04-t02, p05-t01, FR9 | `plan.md`, `design.md` | Non-project recap packages passed `verifySelectedProjectRecapForArchive` | Compose `validateContract('manifest')`, immutable byte-hash checks, and `enforceRunPackageInventory` directly; keep the project-only pin strict | The archive check was added post-review without re-checking the recipe pin. | Operator decision `cont-agent-authored-recap-p01-plan-correction-1` | Applied before p01-t09 code |
-| p03 review round 2             | `design.md`            | Persisted intent contains only decision, source, and decision timestamp  | `skip/failed_attempt` may additionally persist one validated project-relative `failed_attempt_evidence` locator                                 | A fresh process otherwise cannot satisfy the mandatory terminal guard without reopening general discovery. | Review fix `b697cb725b278d6b185a4a2c02b5ac7fb352f0cb` | Lifecycle contract, typed consumers, and tests updated; this log preserves the accepted design delta |
+| Task / Review                  | Source Artifact        | Planned / Documented                                                     | Actual / Accepted                                                                                                                               | Reason                                                                                                     | Source of Truth                                                     | Follow-up                                                                                            |
+| ------------------------------ | ---------------------- | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| p01-t09, p04-t02, p05-t01, FR9 | `plan.md`, `design.md` | Non-project recap packages passed `verifySelectedProjectRecapForArchive` | Compose `validateContract('manifest')`, immutable byte-hash checks, and `enforceRunPackageInventory` directly; keep the project-only pin strict | The archive check was added post-review without re-checking the recipe pin.                                | Operator decision `cont-agent-authored-recap-p01-plan-correction-1` | Applied before p01-t09 code                                                                          |
+| p03 review round 2             | `design.md`            | Persisted intent contains only decision, source, and decision timestamp  | `skip/failed_attempt` may additionally persist one validated project-relative `failed_attempt_evidence` locator                                 | A fresh process otherwise cannot satisfy the mandatory terminal guard without reopening general discovery. | Review fix `b697cb725b278d6b185a4a2c02b5ac7fb352f0cb`               | Lifecycle contract, typed consumers, and tests updated; this log preserves the accepted design delta |
 
 ## Test Results
 
