@@ -964,7 +964,7 @@ fresh Phase 6 review and final re-review.
 
 ## Phase 6: Final review fixes
 
-**Status:** implementation complete; awaiting operator-authorized re-review.
+**Status:** completed; operator-authorized re-review passed with 0 findings.
 
 ### Phase Summary
 
@@ -1148,7 +1148,21 @@ tasks with `Cached: 0`.
 tracked explainer packages, project artifacts, versions, reviews, and
 `state.md` remained unchanged. Phase 6 recovery usage remains zero.
 
-**Next:** Run the operator-authorized narrow Phase 6 re-review.
+### Phase 6 Operator-Authorized Re-review
+
+**Review artifact:** `reviews/p06-review-2026-09-12T200228Z.md`
+**Reviewed head:** `688226b0c1431d23624ee0bd30fd5d307c2b5dd8`
+**Verdict:** PASS — 0 Critical, 0 Important, 0 Medium, 0 Minor
+
+The reviewer independently passed `APP_SECRET_KEY=abcd` through all three
+production carriers, preserved structural and non-terminal controls, and
+confirmed the guard is load-bearing by reproducing exactly three failures
+after removing only `SECRET_?KEY`. Complete core and lifecycle suites passed,
+both tracked packages remained byte-identical, the task inventory is 42/42,
+and Phase 6 recovery usage remains zero.
+
+**Next:** Run exactly one operator-authorized fourth whole-project final
+review.
 
 ---
 
