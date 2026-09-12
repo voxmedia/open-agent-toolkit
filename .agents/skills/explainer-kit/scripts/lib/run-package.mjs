@@ -44,7 +44,7 @@ export async function validateSatisfiedRunPackage(
   }
   if (
     inputHashes !== undefined &&
-    JSON.stringify(manifest.source.inputHashes) !== JSON.stringify(inputHashes)
+    !equalInputHashes(manifest.source.inputHashes, inputHashes)
   ) {
     throw packageError('input-hashes');
   }
@@ -78,6 +78,22 @@ export async function validateSatisfiedRunPackage(
     throw packageError('qa-artifact-outcome-bindings');
   }
   return manifest;
+}
+
+function equalInputHashes(left, right) {
+  const leftEntries = Object.entries(left).sort(([a], [b]) =>
+    a.localeCompare(b),
+  );
+  const rightEntries = Object.entries(right).sort(([a], [b]) =>
+    a.localeCompare(b),
+  );
+  return (
+    leftEntries.length === rightEntries.length &&
+    leftEntries.every(
+      ([key, value], index) =>
+        key === rightEntries[index][0] && value === rightEntries[index][1],
+    )
+  );
 }
 
 async function verifyImmutableBytes(runRoot, immutableHashes) {

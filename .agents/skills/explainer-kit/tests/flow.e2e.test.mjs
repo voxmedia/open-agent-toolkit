@@ -1,12 +1,14 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import {
+  cp,
   copyFile,
   mkdir,
   mkdtemp,
   readFile,
   readdir,
   rm,
+  stat,
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -29,6 +31,8 @@ const programPath = join(
 );
 const summariesRoot = join(repoRoot, '.oat/repo/reference/project-summaries');
 const authoredPage = join(here, 'fixtures', 'flow', 'program-recap.html');
+const projectFixture = join(here, 'fixtures', 'bundle', 'project');
+const projectPage = join(here, 'fixtures', 'verify', 'valid.html');
 const expectedSummaries = [
   '20260909-wave-7-execution.md',
   '20260909-wave-6-execution.md',
@@ -70,6 +74,75 @@ async function prepareRun(name) {
   await mkdir(join(runRoot, 'site'));
   await copyFile(authoredPage, join(runRoot, 'site/index.html'));
   return { root, runRoot, themePath, bundleArgs };
+}
+
+async function prepareProjectRun(name) {
+  const root = await mkdtemp(join(tmpdir(), `explainer-project-${name}-`));
+  const project = join(root, 'project');
+  const runRoot = join(root, 'run');
+  const themePath = join(root, 'theme.json');
+  await cp(projectFixture, project, { recursive: true });
+  const { theme } = await resolveTheme({ style: 'clean-neutral' });
+  await writeFile(themePath, `${JSON.stringify(theme, null, 2)}\n`);
+  const bundleArgs = [
+    '--recipe',
+    'project-recap',
+    '--project',
+    project,
+    '--theme',
+    themePath,
+    '--out',
+    runRoot,
+  ];
+  await runBundle(bundleArgs, { log() {} });
+  await mkdir(join(runRoot, 'site'));
+  await copyFile(projectPage, join(runRoot, 'site/index.html'));
+  await runVerify(
+    ['--run-root', runRoot, '--recipe', 'project-recap', '--rung', 'none'],
+    { log() {} },
+  );
+  await runRecord(
+    [
+      '--run-root',
+      runRoot,
+      '--recipe',
+      'project-recap',
+      '--slug',
+      'multi-file-project',
+      '--mode',
+      'unattended',
+      '--theme',
+      themePath,
+      '--run-id',
+      'p06-t01-multi-file-project',
+      '--created-at',
+      '2026-09-12T12:45:00.000Z',
+    ],
+    { log() {} },
+  );
+  return { root, project, runRoot, bundleArgs };
+}
+
+async function packageSnapshot(root, relativeRoot = '') {
+  const snapshot = {};
+  for (const entry of await readdir(join(root, relativeRoot), {
+    withFileTypes: true,
+  })) {
+    const path = relativeRoot ? `${relativeRoot}/${entry.name}` : entry.name;
+    if (entry.isDirectory()) {
+      Object.assign(snapshot, await packageSnapshot(root, path));
+      continue;
+    }
+    const [bytes, metadata] = await Promise.all([
+      readFile(join(root, path)),
+      stat(join(root, path), { bigint: true }),
+    ]);
+    snapshot[path] = {
+      bytes: bytes.toString('base64'),
+      mtimeNs: metadata.mtimeNs.toString(),
+    };
+  }
+  return snapshot;
 }
 
 function allChecksPass(result) {
@@ -139,6 +212,34 @@ test('real program material passes bundle, verify, record, package, and reuse', 
     const reuse = await runBundle(fixture.bundleArgs, { log() {} });
     assert.equal(reuse.reuse, true);
     assert.equal(reuse.runRoot, fixture.runRoot);
+  } finally {
+    await rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test('recorded multi-file project reuse ignores hash key order without touching the package', async () => {
+  const fixture = await prepareProjectRun('reuse');
+  try {
+    const manifestPath = join(fixture.runRoot, 'manifest.json');
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+    manifest.source.inputHashes = Object.fromEntries(
+      Object.entries(manifest.source.inputHashes).reverse(),
+    );
+    await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+    const before = await packageSnapshot(fixture.runRoot);
+
+    const reuse = await runBundle(fixture.bundleArgs, { log() {} });
+
+    assert.equal(reuse.reuse, true);
+    assert.equal(reuse.runRoot, fixture.runRoot);
+    assert.deepEqual(await packageSnapshot(fixture.runRoot), before);
+
+    await writeFile(
+      join(fixture.project, 'summary.md'),
+      '# Alpha migration\n\nThe Alpha migration changed.\n',
+    );
+    const changed = await runBundle(fixture.bundleArgs, { log() {} });
+    assert.equal(changed.reuse, false);
   } finally {
     await rm(fixture.root, { recursive: true, force: true });
   }

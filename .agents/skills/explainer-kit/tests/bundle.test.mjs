@@ -614,6 +614,10 @@ test('changed-input rebundle and interruption cannot retain a satisfied manifest
   const out = join(root, 'run');
   const theme = await themeFile(root);
   await cp(checkedPackage, out, { recursive: true });
+  await writeFile(
+    join(path, 'summary.md'),
+    '# Changed project\n\nThe package input is no longer current.\n',
+  );
 
   const bundle = await runBundle(
     [
