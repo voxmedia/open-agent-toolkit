@@ -696,6 +696,34 @@ Phase Summary passed.
   copy with corrupted `site/index.html` failed immutable byte verification
   while the tracked package remained accepted.
 
+### Phase 4 Review Round 1
+
+- Request ID: `dispatch-agent-authored-recap-p04-review-r1-20260912T0145Z`
+- Launch status: `accepted`
+- Terminal outcome: `completed`
+- Review artifact: `reviews/p04-review-2026-09-12T015208Z.md`
+- Reviewed range:
+  `303fafd35b328cd457167b5e1b36822cf6ed8e02..4292290aecc74b769edc1c47b6ee3cbc2d3761dd`
+- Reviewed head: `4292290aecc74b769edc1c47b6ee3cbc2d3761dd`
+- Findings: 0 Critical, 2 Important, 1 Medium, 0 Minor
+- Disposition: `CHANGES REQUESTED`; review row advanced to `fixes_added`
+- Root disposition: the stale Phase 4 progress pointer is the root-owned
+  post-review bookkeeping transition and must remain pending until a review
+  passes; it is not routed to the phase fix child.
+- Bounded fix scope: complete the executable interactive front-door contract
+  and its direct-project/mode assertions, and narrow the screenshot-inspection
+  claim to the visible regions while attributing whole-page properties to the
+  recorded automated probes. Preserve the recorded package byte-for-byte.
+- Reconnaissance: `not-attempted`; no Review Orchestration section or
+  project-log entry.
+- Selection reason: `review-target`
+- Candidates considered: `gpt-5.6-sol-high`
+- Dispatch target: `oat-reviewer-gpt-5-6-sol-high`
+- Dispatch: scope=p04 action=review role=reviewer producer=unknown
+  provenance=unknown model_axis=selected:gpt-5.6-sol-high
+  effort_axis=not-applicable dispatch_policy=high
+  dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
+
 ---
 
 ## Orchestration Runs

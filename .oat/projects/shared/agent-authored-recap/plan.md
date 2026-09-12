@@ -582,16 +582,16 @@ Deliverable: the recap for the 2026-08-31 execution program exists, verifies, an
 
 ## Reviews
 
-| Scope | Type  | Status  | Notes                                                                                                               |
-| ----- | ----- | ------- | ------------------------------------------------------------------------------------------------------------------- |
-| p01   | phase | passed | Independent verification passed with 0 Critical, 0 Important, and 3 deferred Medium findings. |
+| Scope | Type  | Status | Notes                                                                                                            |
+| ----- | ----- | ------ | ---------------------------------------------------------------------------------------------------------------- |
+| p01   | phase | passed | Independent verification passed with 0 Critical, 0 Important, and 3 deferred Medium findings.                    |
 | p02   | phase | passed | Fresh re-review closed all three blocking findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings. |
-| p03   | phase | passed | Final operator-authorized verification passed with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings. |
+| p03   | phase | passed | Final operator-authorized verification passed with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.      |
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status          | Date       | Artifact                                                      | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | --------------- | ---------- | ------------------------------------------------------------- | ------------- | ---------- | ----------- |
+| Scope  | Type     | Status          | Date       | Artifact                                                      | Reviewed Head                            | Invocation | Gate Target |
+| ------ | -------- | --------------- | ---------- | ------------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
 | p01    | code     | fixes_completed | 2026-09-11 | reviews/p01-review-2026-09-11T155532Z.md                      | f1cff54c0e364e858f9e36fb820e9f95b1e5b578 | manual     | -           |
 | p01    | code     | fixes_completed | 2026-09-11 | reviews/p01-review-2026-09-11T165150Z.md                      | 3f29035c2588bc590cfd361e88e5632e084238f5 | manual     | -           |
 | p01    | code     | fixes_completed | 2026-09-11 | reviews/p01-review-2026-09-11T173707Z.md                      | 5e8694abbb7f7740970bd69e5feea64ddf9df316 | manual     | -           |
@@ -603,17 +603,17 @@ Deliverable: the recap for the 2026-08-31 execution program exists, verifies, an
 | p03    | code     | fixes_completed | 2026-09-11 | reviews/p03-review-2026-09-11T225420Z.md                      | afd4a9e970200bdb2c1cc35fdf13df1912e6b12f | manual     | -           |
 | p03    | code     | fixes_completed | 2026-09-11 | reviews/p03-review-2026-09-11T232506Z.md                      | 2c8c56093651748e389da61d3c055be713ebc99e | manual     | -           |
 | p03    | code     | passed          | 2026-09-12 | reviews/p03-review-2026-09-12T001522Z.md                      | ce2898e1dca37becc2d59ce8f97d7340d0f0bf4d | manual     | -           |
-| p04    | code     | pending         | -          | -                                                             | -             | -          | -           |
-| p05    | code     | pending         | -          | -                                                             | -             | -          | -           |
-| final  | code     | pending         | -          | -                                                             | -             | -          | -           |
-| spec   | artifact | pending         | -          | -                                                             | -             | -          | -           |
-| design | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-design-review-2026-09-09T225646Z.md | -             | -          | -           |
-| design | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-design-review-2026-09-09T232532Z.md | -             | manual     | -           |
-| design | artifact | fixes_completed | 2026-09-10 | reviews/archived/artifact-design-review-2026-09-10T010926Z.md | -             | manual     | -           |
-| design | artifact | fixes_completed | 2026-09-10 | reviews/archived/artifact-design-review-2026-09-10T013018Z.md | -             | manual     | -           |
-| plan   | artifact | fixes_completed | 2026-09-10 | - (structured, in-memory, round 1)                            | -             | manual     | -           |
-| plan   | artifact | fixes_completed | 2026-09-10 | - (structured, in-memory, round 2)                            | -             | manual     | -           |
-| plan   | artifact | fixes_completed | 2026-09-10 | - (structured, in-memory, round 3; retry bound exhausted)     | -             | manual     | -           |
+| p04    | code     | fixes_added     | 2026-09-12 | reviews/p04-review-2026-09-12T015208Z.md                      | 4292290aecc74b769edc1c47b6ee3cbc2d3761dd | manual     | -           |
+| p05    | code     | pending         | -          | -                                                             | -                                        | -          | -           |
+| final  | code     | pending         | -          | -                                                             | -                                        | -          | -           |
+| spec   | artifact | pending         | -          | -                                                             | -                                        | -          | -           |
+| design | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-design-review-2026-09-09T225646Z.md | -                                        | -          | -           |
+| design | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-design-review-2026-09-09T232532Z.md | -                                        | manual     | -           |
+| design | artifact | fixes_completed | 2026-09-10 | reviews/archived/artifact-design-review-2026-09-10T010926Z.md | -                                        | manual     | -           |
+| design | artifact | fixes_completed | 2026-09-10 | reviews/archived/artifact-design-review-2026-09-10T013018Z.md | -                                        | manual     | -           |
+| plan   | artifact | fixes_completed | 2026-09-10 | - (structured, in-memory, round 1)                            | -                                        | manual     | -           |
+| plan   | artifact | fixes_completed | 2026-09-10 | - (structured, in-memory, round 2)                            | -                                        | manual     | -           |
+| plan   | artifact | fixes_completed | 2026-09-10 | - (structured, in-memory, round 3; retry bound exhausted)     | -                                        | manual     | -           |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
