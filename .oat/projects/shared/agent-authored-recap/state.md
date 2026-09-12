@@ -1,6 +1,6 @@
 ---
-oat_current_task: p06-t16
-oat_last_commit: 1a5ed9b037a46bb14b66e03f69c1675523c2782e
+oat_current_task: null
+oat_last_commit: 3a47b0e32872345020fe28d7aa07b75928abc835
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -93,13 +93,13 @@ oat_generated: false
 
 # Project State: agent-authored-recap
 
-**Status:** Current-basis final-review fix queued
+**Status:** Composite-label fix complete; Phase 6 re-review pending
 **Started:** 2026-09-09
 **Last Updated:** 2026-09-12
 
 ## Current Phase
 
-Implementation — Phase 6 final-review fix
+Implementation — Phase 6 re-review pending
 
 ## Artifacts
 
@@ -120,9 +120,9 @@ Implementation — Phase 6 final-review fix
 - ✓ Phase 3 complete and independently verified (8/8 tasks)
 - ✓ Phase 4 complete and independently verified (2/2 tasks)
 - ✓ Phase 5 complete and independently verified (1/1 task)
-- ⧗ Phase 6 implementation in progress (15/16 tasks)
-- ⧗ Implementation in progress (47/48 tasks)
-- ⧗ Composite residual-label fix pending
+- ✓ Phase 6 implementation complete (16/16 tasks)
+- ✓ Implementation tasks complete (48/48 tasks)
+- ⧗ Composite residual-label re-review pending
 
 ## Blockers
 
@@ -130,4 +130,4 @@ None.
 
 ## Next Milestone
 
-Execute `p06-t16`, then re-review the current implementation basis.
+Re-review p06-t16, then run the current-basis final lifecycle review.

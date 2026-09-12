@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-12
-oat_current_task_id: p06-t16
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 17    | 17/17     |
-| Phase 2 | completed   | 4     | 4/4       |
-| Phase 3 | completed   | 8     | 8/8       |
-| Phase 4 | completed   | 2     | 2/2       |
-| Phase 5 | completed   | 1     | 1/1       |
-| Phase 6 | in progress | 16    | 15/16     |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 17    | 17/17     |
+| Phase 2 | completed | 4     | 4/4       |
+| Phase 3 | completed | 8     | 8/8       |
+| Phase 4 | completed | 2     | 2/2       |
+| Phase 5 | completed | 1     | 1/1       |
+| Phase 6 | completed | 16    | 16/16     |
 
-**Total:** 47/48 tasks completed
+**Total:** 48/48 tasks completed
 
 ---
 
@@ -964,7 +964,7 @@ fresh Phase 6 review and final re-review.
 
 ## Phase 6: Final review fixes
 
-**Status:** in progress; current-basis final-review fix queued.
+**Status:** implementation complete; p06-t16 re-review pending.
 
 ### Phase Summary
 
@@ -1000,6 +1000,7 @@ fresh Phase 6 review and final re-review.
 - `p06-t13`: `3f137e92a5e4c013f5e498648e1827bd9bf2da1f`
 - `p06-t14`: `1cc4c9d9e14d250835b3f551edceeac49b94e34e`
 - `p06-t15`: `1a5ed9b037a46bb14b66e03f69c1675523c2782e`
+- `p06-t16`: `3a47b0e32872345020fe28d7aa07b75928abc835`
 
 **Verification:**
 
@@ -1421,6 +1422,27 @@ Phase 6 recovery attempt.
 
 **Next:** Execute `p06-t16`, then run the narrow Phase 6 and current-basis final
 reviews before restarting the configured gate.
+
+### Task p06-t16: Trace facts inside residual labels
+
+**Status:** completed
+**Commit:** `3a47b0e32872345020fe28d7aa07b75928abc835`
+
+Composite `strong` and `dt` labels now propagate the closed identifier as
+subject and also emit their number, ISO-date, and closed-status facts without
+emitting the identifier's numeric suffix. The RED and subject-only
+neutralization controls both incorrectly accepted 2/2 fabricated labels;
+restored behavior rejects all six facts, preserves unique keys, passes both
+tracked packages, and retains the three bare residual failures.
+
+Focused verify passed 21/21, core 118/118, lifecycle 84/84, state 58/58,
+retirement/parity 10/10, standalone smoke 158/158, skills 441/441, scripts
+1/1, all ordered gates, isolated-HOME Turbo 10/10 with `Cached: 0`, lint, and
+format. Only the two declared verifier files changed; package trees and all
+gate/recovery records remain unchanged.
+
+**Next:** Run the narrow Phase 6 re-review, then the current-basis final
+lifecycle review.
 
 ---
 
