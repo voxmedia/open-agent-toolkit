@@ -130,6 +130,11 @@ timeout, or missing output cannot trigger a replacement. Triggered,
 not-triggered, and unresolved dispositions remain visible. Both branches feed
 the same single mandatory terminal reconciliation.
 
+A triggered condition must cite complete, digest-bound evidence from an approved
+predecessor in the same run. Evidence copied from another run cannot activate
+the destination wave and fails packet validation with
+`CONDITION_EVIDENCE_RUN_MISMATCH`.
+
 If a need for stronger reconciliation judgment is foreseeable, select that one
 terminal target before approval. If it appears only after approval, recon
 preserves completed evidence and returns an unresolved, out-of-envelope gap for
@@ -184,6 +189,14 @@ as approved intent, not proof of the native process that ran, launcher receipts,
 token or billing totals, or universal correctness. A valid packet continues to
 reference version 1 evidence artifacts. Evidence, claims, contradictions, and
 gaps remain the packet's main consumer context.
+
+Every dossier and review result identifies the approved wave and lane that wrote
+it. Primary and redundant gather artifacts therefore satisfy only their owning
+waves; lanes from one gather wave cannot impersonate the other pass. In a
+thorough run, redundant gathering finishes before compilation, and the compiled
+ledger must reference every completed primary and redundant gather dossier by
+exact path and digest before review briefs are created. Missing provenance fails
+with `MISSING_THOROUGH_GATHER_LEDGER_INPUT`.
 
 The ledger compiler and packet validator enforce categorical referential
 integrity on `synthesis.keyClaimIds` and `synthesis.unresolvedQuestionIds`. Any
@@ -257,7 +270,17 @@ omitted passes, material gaps, affected claims, and required assurance
 downgrades. A run may be partial even when it achieved the requested profile if
 a material evidence gap remains. The achieved profile is derived from the
 complete typed artifacts in the packet; each required pass without a complete
-result needs a material `PASS_FAILED` or `PASS_OMITTED` gap naming it.
+result needs a material `PASS_FAILED` or `PASS_OMITTED` gap. Each approved lane
+must likewise have a complete artifact or a material outcome gap carrying its
+exact `waveId` and `laneId`; legacy mode-only gaps remain valid only when the mode
+unambiguously identifies one single-lane wave.
+
+A complete artifact and material failure or omission for the same exact wave and
+lane are contradictory, so validation fails closed with
+`CONTRADICTORY_PASS_OUTCOME`. Complete evidence from one lane and exact failure
+evidence from a different lane are not contradictory: the completed lane can
+preserve the achieved pass while the failed lane makes the published run an
+honest `partial` packet at that achieved profile.
 
 Status updates and the final handoff label each failure as `worker`,
 `provider/dispatch`, `contract validation`, or `source availability`, and
