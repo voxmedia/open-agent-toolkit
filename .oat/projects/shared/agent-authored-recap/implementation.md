@@ -964,7 +964,7 @@ fresh Phase 6 review and final re-review.
 
 ## Phase 6: Final review fixes
 
-**Status:** completed; operator-authorized re-review passed with 0 findings.
+**Status:** completed; final review passed and implementation exit gate pending.
 
 ### Phase Summary
 
@@ -1161,8 +1161,25 @@ after removing only `SECRET_?KEY`. Complete core and lifecycle suites passed,
 both tracked packages remained byte-identical, the task inventory is 42/42,
 and Phase 6 recovery usage remains zero.
 
-**Next:** Run exactly one operator-authorized fourth whole-project final
-review.
+### Final Review Round 4 — Operator-Authorized Closure
+
+**Review artifact:** `reviews/final-review-2026-09-12T201509Z.md`
+**Reviewed head:** `2ebc4ec4d42accaf576a840cfa6ba3823246b9fb`
+**Verdict:** PASS — 0 Critical, 0 Important, 0 Medium, 1 approved deferred
+Minor
+
+All 42 tasks and six phase reviews passed. The reviewer independently closed
+the `SECRET_?KEY` finding through all three production carriers, revalidated
+both immutable explainer packages, confirmed the strict project-recap archive
+boundary, and passed all eight ordered repository gates plus uncached Turbo,
+standalone suites, lint, and format. The four immutable program-HTML
+whitespace warnings remain the sole approved deferral until substantive
+package regeneration.
+
+**Review cycle:** 4, consuming the single operator-authorized cycle beyond the
+configured three-cycle cap. No further review-cycle extension remains.
+
+**Next:** Run the configured implementation exit gate.
 
 ---
 
