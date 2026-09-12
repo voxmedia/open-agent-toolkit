@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p06-t08
 oat_last_commit: a7d8377f563703aaf41d71ba3ef7dbf42b6dfb57
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -87,19 +87,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-09T16:39:02.165Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-12T13:02:00Z'
+oat_project_state_updated: '2026-09-12T13:11:00Z'
 oat_generated: false
 ---
 
 # Project State: agent-authored-recap
 
-**Status:** Implementation tasks complete; awaiting Phase 6 review
+**Status:** Phase 6 review fix ready (40 tasks, 6 phases)
 **Started:** 2026-09-09
 **Last Updated:** 2026-09-12
 
 ## Current Phase
 
-Implementation — Phase 6 implemented; awaiting independent review
+Implementation — Phase 6 review fix ready (`p06-t08`)
 
 ## Artifacts
 
@@ -120,9 +120,9 @@ Implementation — Phase 6 implemented; awaiting independent review
 - ✓ Phase 3 complete and independently verified (8/8 tasks)
 - ✓ Phase 4 complete and independently verified (2/2 tasks)
 - ✓ Phase 5 complete and independently verified (1/1 task)
-- ✓ Phase 6 implementation complete (7/7 tasks)
-- ✓ Implementation tasks complete (39/39 tasks)
-- ⧗ Awaiting Phase 6 review and final re-review
+- ✓ Phase 6 initial implementation complete (7/8 tasks)
+- ⧗ Phase 6 bookkeeping review fix ready (39/40 tasks complete)
+- ⧗ Awaiting Phase 6 re-review and final re-review
 
 ## Blockers
 
@@ -130,4 +130,4 @@ None.
 
 ## Next Milestone
 
-Review Phase 6, then re-run the mandatory final review.
+Implement `p06-t08`, then re-review Phase 6 and the complete implementation.

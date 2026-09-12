@@ -729,6 +729,25 @@ from the repository-level execution-program recap path.
 file-scoped formatter, then
 `git commit -m "docs(p06-t07): correct final explainer paths"`.
 
+### Task p06-t08: (review) Correct the state plan inventory
+
+**Files:**
+
+- Modify: `.oat/projects/shared/agent-authored-recap/state.md`
+
+**Step 1: Correct inventory** — Change only the Artifacts-section plan
+description from `32 tasks, 5 phases` to `40 tasks, 6 phases`, reflecting this
+review-fix task and the authoritative plan.
+
+**Step 2: Preserve state** — Keep `oat_current_task`, the last implementation
+commit pointer, 39/40 progress before completion, awaiting-review status, and
+zero p06 recovery usage semantically unchanged until normal task bookkeeping
+advances them.
+
+**Step 3: Verify and commit** — Cross-check plan, implementation, and state
+task/phase totals without formatting `state.md`, then
+`git commit -m "fix(p06-t08): correct state plan inventory"`.
+
 **Phase 6 gates:** Run the complete ordered repository gate list, isolated-HOME
 forced Turbo, standalone smoke/skills/scripts/skill validation, focused core
 and lifecycle suites, `pnpm lint`, and `pnpm format`.
@@ -744,7 +763,7 @@ and lifecycle suites, `pnpm lint`, and `pnpm format`.
 | p03   | phase | passed  | Final operator-authorized verification passed with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                           |
 | p04   | phase | passed  | Re-review closed the executable front-door and visual-evidence findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings. |
 | p05   | phase | passed  | Independent review passed the program recap and both bounded recoveries with 0 findings.                                              |
-| p06   | phase | pending | Final review fixes not yet implemented or reviewed.                                                                                   |
+| p06   | phase | pending | One root-bookkeeping review fix remains before narrow re-review.                                                                      |
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
@@ -764,7 +783,7 @@ and lifecycle suites, `pnpm lint`, and `pnpm format`.
 | p04    | code     | fixes_completed | 2026-09-12 | reviews/p04-review-2026-09-12T015208Z.md                      | 4292290aecc74b769edc1c47b6ee3cbc2d3761dd | manual     | -           |
 | p04    | code     | passed          | 2026-09-12 | reviews/p04-review-2026-09-12T020833Z.md                      | c9d977aa90d2990145e500c2035b1a2c67198278 | manual     | -           |
 | p05    | code     | passed          | 2026-09-12 | reviews/p05-review-2026-09-12T030832Z.md                      | 22fbe809f3410ae95f75e5dccb16a664020122d8 | manual     | -           |
-| p06    | code     | pending         | -          | -                                                             | -                                        | -          | -           |
+| p06    | code     | fixes_added     | 2026-09-12 | reviews/archived/p06-review-2026-09-12T130841Z.md             | afd969f946ce774ad1e2bcaa03741177a4f865bd | manual     | -           |
 | final  | code     | fixes_added     | 2026-09-12 | reviews/archived/final-review-2026-09-12T032129Z.md           | ed5f9f19d777989fe6095be14b1bb12e14583359 | manual     | -           |
 | spec   | artifact | pending         | -          | -                                                             | -                                        | -          | -           |
 | design | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-design-review-2026-09-09T225646Z.md | -                                        | -          | -           |
@@ -801,9 +820,9 @@ cell; never truncate a widened row back to five columns.
 - Phase 3: 8 tasks - Adapter, core skill prose, lifecycle consumers, and docs
 - Phase 4: 2 tasks - The front door and the project explainer
 - Phase 5: 1 task - The program recap
-- Phase 6: 7 tasks - Final review fixes
+- Phase 6: 8 tasks - Final review fixes
 
-**Total:** 39 tasks
+**Total:** 40 tasks
 
 ## References
 

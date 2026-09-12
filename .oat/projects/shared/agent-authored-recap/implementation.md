@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-12
-oat_current_task_id: null
+oat_current_task_id: p06-t08
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 17    | 17/17     |
-| Phase 2 | completed | 4     | 4/4       |
-| Phase 3 | completed | 8     | 8/8       |
-| Phase 4 | completed | 2     | 2/2       |
-| Phase 5 | completed | 1     | 1/1       |
-| Phase 6 | completed | 7     | 7/7       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 17    | 17/17     |
+| Phase 2 | completed   | 4     | 4/4       |
+| Phase 3 | completed   | 8     | 8/8       |
+| Phase 4 | completed   | 2     | 2/2       |
+| Phase 5 | completed   | 1     | 1/1       |
+| Phase 6 | in progress | 8     | 7/8       |
 
-**Total:** 39/39 tasks completed
+**Total:** 39/40 tasks completed
 
 ---
 
@@ -964,7 +964,7 @@ fresh Phase 6 review and final re-review.
 
 ## Phase 6: Final review fixes
 
-**Status:** implemented; awaiting the root-owned Phase 6 review.
+**Status:** changes requested; one bookkeeping fix remains.
 
 ### Phase Summary
 
@@ -1016,6 +1016,28 @@ fresh Phase 6 review and final re-review.
 - Recovery usage remained 0/10 with no p06 ledger entry or pending attempt.
 - The deferred immutable-HTML whitespace item and the Effective HTML backlog
   remained unchanged.
+
+### Review Received: p06
+
+**Date:** 2026-09-12
+**Review artifact:** `reviews/archived/p06-review-2026-09-12T130841Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 0
+- Minor: 0
+
+**New task added:** `p06-t08`
+
+**Finding disposition:**
+
+- I1 → `p06-t08`: correct the root-owned state Artifacts description from the
+  stale pre-Phase-6 inventory to the authoritative 40-task, 6-phase plan.
+
+**Next:** Resume the original Phase 6 implementation handle for `p06-t08`, then
+run a narrow Phase 6 re-review before final re-review.
 
 ---
 
