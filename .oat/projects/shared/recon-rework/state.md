@@ -54,17 +54,17 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: '.oat/projects/shared/recon-rework/reviews/final-review-2026-09-12T001359Z.md'
   handoff: 'Gate passed at the important threshold, but the final review still contains non-blocking findings (minor=2). Run oat-project-review-receive for .oat/projects/shared/recon-rework/reviews/final-review-2026-09-12T001359Z.md to disposition them before marking the final review row passed.'
-  receive_state: not_started
-  receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
+  receive_state: intent_persisted
+  receive_correlation: 'run=965e9704-ba33-443b-adca-e494b6692fbc; handoff=receive; source=reviews/final-review-2026-09-12T001359Z.md; scope=final; type=code'
+  receive_source_artifact: '.oat/projects/shared/recon-rework/reviews/final-review-2026-09-12T001359Z.md'
+  receive_archived_artifact: '.oat/projects/shared/recon-rework/reviews/archived/final-review-2026-09-12T001359Z.md'
+  receive_event_identity: 'final | code | final-review-2026-09-12T001359Z.md'
+  receive_pre_head: e62472479ddc8effeb5b3f1a731db2f66fb1b4a4
   receive_commit: null
   receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-09-12T00:16:45Z'
+  updated_at: '2026-09-12T00:17:41Z'
 oat_post_implement_sequence:
   status: complete
   source: configured
@@ -88,7 +88,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/285'
 oat_project_created: '2026-09-08T17:25:15.784Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-09-12T00:16:45Z'
+oat_project_state_updated: '2026-09-12T00:17:41Z'
 oat_generated: false
 oat_project_recap:
   decision: skip
