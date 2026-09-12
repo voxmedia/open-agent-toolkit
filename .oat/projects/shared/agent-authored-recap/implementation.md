@@ -860,6 +860,42 @@ described below.
   outcome, rung, browser reason, and run path. The four historical per-wave
   `recap: not run` rows remain unchanged.
 
+### Recovery Event recovery-agent-authored-recap-p05-01
+
+- Phase/task: p05 / p01-t05
+- Original request: `dispatch-agent-authored-recap-p05-20260912T0215Z`
+- Original commit: `0adf7ddf690e713c57d099a12b3d131e31eef748`
+- Defect class: composition
+- Discovered by: p05-t01 live program-recap bundle transition over
+  `.oat/projects/archived`
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Recovery commit: `f1afbb68587eb9654ac946de66b36be472a58622`
+- Verification: focused and complete core suites, lint, and format passed
+  before and after the recovery commit.
+- Reason: canonical wrapper headings now parse, while missing or section-less
+  wrappers produce schema-valid unresolved claims.
+
+### Recovery Event recovery-agent-authored-recap-p05-02-direction
+
+- Phase/task: p05 / p05-t01
+- Original request: `dispatch-agent-authored-recap-p05-20260912T0215Z`
+- Original commit: `3e8bf412ad2d1d846d9bb6e0eae21ccb7263a220`
+- Defect class: build
+- Discovered by: `pnpm release:check-versions`
+- Disposition: direction-required
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Recovery commit: -
+- Verification: every other declared gate passed; forced Turbo reported
+  `Cached: 0`.
+- Reason: `origin/main` advanced to public-package version `0.2.73`; root
+  settled attempt one before attempt two could reserve the required lockstep
+  version bump.
+
 ---
 
 ## Orchestration Runs
