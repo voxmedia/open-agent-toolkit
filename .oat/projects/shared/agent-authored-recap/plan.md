@@ -601,7 +601,7 @@ Deliverable: the recap for the 2026-08-31 execution program exists, verifies, an
 | p03    | code     | fixes_completed | 2026-09-11 | reviews/p03-review-2026-09-11T213626Z.md                      | 6619ca123ba6fdbbf6bdeeef00e6c613de1eb695 | manual     | -           |
 | p03    | code     | fixes_completed | 2026-09-11 | reviews/p03-review-2026-09-11T221353Z.md                      | 3ed763cd88714a6e68bd7c2c41157994b7a28c0a | manual     | -           |
 | p03    | code     | fixes_completed | 2026-09-11 | reviews/p03-review-2026-09-11T225420Z.md                      | afd4a9e970200bdb2c1cc35fdf13df1912e6b12f | manual     | -           |
-| p03    | code     | fixes_added     | 2026-09-11 | reviews/p03-review-2026-09-11T232506Z.md                      | 2c8c56093651748e389da61d3c055be713ebc99e | manual     | -           |
+| p03    | code     | fixes_completed | 2026-09-11 | reviews/p03-review-2026-09-11T232506Z.md                      | 2c8c56093651748e389da61d3c055be713ebc99e | manual     | -           |
 | p04    | code     | pending         | -          | -                                                             | -             | -          | -           |
 | p05    | code     | pending         | -          | -                                                             | -             | -          | -           |
 | final  | code     | pending         | -          | -                                                             | -             | -          | -           |

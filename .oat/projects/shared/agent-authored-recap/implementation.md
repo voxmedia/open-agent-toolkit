@@ -1144,6 +1144,22 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Recovery accounting: outside all automatic and prior operator review/fix budgets; not phase recovery; usage remains `0/10`
 - Boundary: control-plane raw-string validation and matching cross-reader controls only; no Phase 4 or closed-finding work
 
+#### Second Operator-Authorized Governance Remediation
+
+- Continuation: `cont-agent-authored-recap-p03-governance-manual-fix-2`
+- Original request: `dispatch-agent-authored-recap-p03-20260911T202900Z`
+- Source review: `reviews/p03-review-2026-09-11T232506Z.md`
+- Fix base: `171096b7462efd973388e4564fc1ac5395d25d49`
+- Fix commit: `f29b6748a9d81b65c7a9c37c1e70357147af5b13`
+- Fixed: control-plane validates and returns raw `failed_attempt_evidence` without trimming; one fourteen-case raw-YAML corpus now exercises both production readers
+- Negative controls: at the pre-fix state, CLI rejected all three leading/trailing-whitespace variants while control-plane accepted them; post-fix both readers reject all three and agree on every valid, malformed, non-string, optional, and legacy-read case
+- Verification: shared corpus (58/58), lifecycle/fresh-process regressions (72/72), control-plane package (151/151), sweep/parity (10/10), both package type checks, all sixteen gates, and isolated-HOME uncached Turbo passed
+- Protected boundaries: all eleven Phase 3 slices remained byte-identical; autonomy mirrors remain coherent
+- Recovery accounting: operator-scoped governance remediation; p03 recovery usage remains `0/10`
+- Dispatch target and axes: unchanged (`oat-phase-implementer-gpt-5-6-sol-high`, `selected:gpt-5.6-sol-high`, effort not applicable)
+- Dispatch: scope=p03-governance-manual-fix-2 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
+- Disposition: `fixes_completed`; the final operator-authorized independent verification review remains before Phase 4
+
 <!-- orchestration-runs-end -->
 
 ---
