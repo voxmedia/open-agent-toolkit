@@ -208,6 +208,10 @@ run-4-final-rereview-p-rev8-pass-20260911T230845Z The authorized final review pa
 
 target=cursor-fable-5-1-high threshold=important findings=critical:0,important:0,medium:0,minor:2 exit=0 status=ok artifact=.oat/projects/shared/recon-rework/reviews/final-review-2026-09-12T001359Z.md run=965e9704-ba33-443b-adca-e494b6692fbc
 
+### 2026-09-12 · structural · oat-project-review-receive · final
+
+run-4-exit-gate-pass-receive-20260912T001359Z Gate 965e9704-ba33-443b-adca-e494b6692fbc passed at Important with 0C/0I/0M/2m; m1 preserves the user-approved diagnostic deferral and m2 is deferred to the same cleanup with no publication effect.
+
 ## End-of-run synthesis
 
 Run 2 removed unnecessary approval-fingerprint and manifest-v1 compatibility

@@ -1655,11 +1655,30 @@ new reviewed basis.
 **Freshness checkpoint:** `39894ae7bc0bbd4f9e77884b8f2852c27f2f4890`,
 `sha256:effective-delta-v1:e6a7f29f8f2b3c449c5031b4e0db0821441bf43d2d566a34ed8955aa42a86d78`
 **Attempt accounting:** 1 of 2 remediation attempts consumed
-**Status:** pending; attempt 2 launch not started.
+**Status:** passed; result received and archived.
 
 The configured command, project override, `onFailure=block`, maximum attempts,
 and configuration fingerprint remain unchanged. The passing final review and
 its receive bookkeeping establish the new substantive basis.
+
+Gate run `965e9704-ba33-443b-adca-e494b6692fbc` passed the Important threshold
+with 0 Critical, 0 Important, 0 Medium, and 2 Minor findings. Its
+receive-eligible artifact is archived at
+`reviews/archived/final-review-2026-09-12T001359Z.md`.
+
+**Judgment-sweep dispositions:**
+
+- m1, absent-terminal derivative thorough gather-input diagnostic -> preserve
+  Thomas's explicit post-release deferral. The packet remains invalid and
+  unpublishable; fix alongside the next recon diagnostic-contract cleanup.
+- m2, coarse legacy mode-only fallback in `validatePassOutcomes` -> defer to the
+  same diagnostic cleanup. Lane validation already rejects the multi-lane
+  packet with `MISSING_LANE_OUTCOME`, so this creates no assurance or
+  publication path; the follow-up should share
+  `legacyGapNamesSingletonWave` across all three consumers.
+
+**Disposition:** passing gate sweep durably received. No blocking findings or
+new implementation tasks remain; the configured exit gate is allowed.
 
 ## References
 
