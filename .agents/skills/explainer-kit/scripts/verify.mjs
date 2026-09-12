@@ -165,10 +165,10 @@ function extractResidualClaimSegments(html, sectionId) {
 
   const nearestSubject = () =>
     stack.findLast((frame) => frame.subject)?.subject ?? sectionId;
-  const addSegment = (text) => {
+  const addSegment = (text, subject = nearestSubject()) => {
     const normalized = htmlText(text);
     if (normalized) {
-      segments.push({ text: normalized, subject: nearestSubject() });
+      segments.push({ text: normalized, subject });
     }
   };
   const closeFrame = () => {
@@ -183,6 +183,9 @@ function extractResidualClaimSegments(html, sectionId) {
       });
       if (subject) {
         stack.at(-1).subject = subject;
+        if (!frame.coveredContext && ignoredDepth === 0) {
+          addSegment(frame.labelText, subject);
+        }
       } else if (!frame.coveredContext && ignoredDepth === 0) {
         addSegment(frame.labelText);
       }

@@ -226,6 +226,59 @@ for (const { name, markup, value } of [
   });
 }
 
+for (const { element, markup } of [
+  {
+    element: 'strong',
+    markup:
+      '<div class="stat"><strong>W99 · 9999 tasks failed on 2031-01-01</strong></div>',
+  },
+  {
+    element: 'dt',
+    markup:
+      '<dl><dt>W99 · 9999 tasks failed on 2031-01-01</dt><dd>Composite label facts</dd></dl>',
+  },
+]) {
+  test(`composite ${element} labels cannot hide residual facts`, async () => {
+    const root = await runRoot();
+    const pagePath = join(root, 'site/index.html');
+    const page = (await readFile(pagePath, 'utf8')).replace(
+      '<h2>Validation evidence</h2>',
+      `<h2>Validation evidence</h2>${markup}`,
+    );
+    await writeFile(pagePath, page);
+
+    const result = await verifyRun({
+      runRoot: root,
+      recipe: 'project-recap',
+      rung: 'none',
+    });
+
+    assert.equal(result.checks.pageToLedger.status, 'fail');
+    for (const value of ['9999', '2031-01-01', 'failed']) {
+      assert.match(
+        result.checks.pageToLedger.cause,
+        new RegExp(`verify-claim-untraced:W99:${value}`),
+      );
+    }
+
+    const rendered = extractRenderedClaims(page);
+    assert.equal(
+      rendered.claims.some(
+        ({ subject, value }) => subject === 'W99' && value === '99',
+      ),
+      false,
+    );
+    assert.equal(
+      new Set(
+        rendered.claims.map(
+          ({ subject, value, kind }) => `${subject}\0${value}\0${kind}`,
+        ),
+      ).size,
+      rendered.claims.length,
+    );
+  });
+}
+
 test('source and rendered factual headings trace symmetrically', async () => {
   const root = await runRoot();
   const heading = 'W9 release 2026-09-12';
