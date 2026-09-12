@@ -66,19 +66,16 @@ oat_implement_exit_gate:
   failure: null
   updated_at: '2026-09-12T00:20:27Z'
 oat_post_implement_sequence:
-  status: complete
+  status: pre_approval
   source: configured
-  final_phase: p04
+  final_phase: p-rev8
   pre_approval:
     - summary
     - document
     - pr
-  pre_approval_completed:
-    - summary
-    - document
-    - pr
-  approval: approved
-  approval_source: user
+  pre_approval_completed: []
+  approval: pending
+  approval_source: null
   post_approval: []
   post_approval_completed: []
   failure: null
@@ -88,7 +85,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/285'
 oat_project_created: '2026-09-08T17:25:15.784Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-09-12T00:20:27Z'
+oat_project_state_updated: '2026-09-12T00:21:42Z'
 oat_generated: false
 oat_project_recap:
   decision: skip

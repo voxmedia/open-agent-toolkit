@@ -1680,6 +1680,19 @@ receive-eligible artifact is archived at
 **Disposition:** passing gate sweep durably received. No blocking findings or
 new implementation tasks remain; the configured exit gate is allowed.
 
+### Refreshed closeout sequence
+
+**Started:** 2026-09-12T00:21:42Z
+**Final phase:** `p-rev8`
+**Pre-approval:** `summary`, `document`, `pr`
+**Approval:** pending
+**Post-approval:** none
+
+The earlier completed closeout snapshot predated the substantive `p-rev7` and
+`p-rev8` remediation. The configured sequence is restarted against the final
+reviewed and gate-allowed basis; each refreshed artifact step must commit before
+the final HiLL approval checkpoint.
+
 ## References
 
 - [Plan](plan.md)
