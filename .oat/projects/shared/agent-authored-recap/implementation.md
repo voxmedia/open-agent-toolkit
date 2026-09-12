@@ -687,10 +687,12 @@ Phase Summary passed.
 - Visual notes: `Playwright probes passed at all representative widths.`
 - Visual evidence: the runtime exposed image reading but no host browser-control
   capability, so the bundled Playwright rung captured `qa/320.png`,
-  `qa/768.png`, and `qa/1440.png`. Direct inspection found no page-width
-  overflow, unreadable heading, or overlapping text; the mobile navigation is
-  intentionally horizontally scrollable. Required-section presence and
-  viewport clipping also passed the recorded automated probes.
+  `qa/768.png`, and `qa/1440.png`. Direct inspection found no clipped or
+  overlapping text in the visible captured regions, and the visible headings
+  remained readable; the mobile navigation is intentionally horizontally
+  scrollable. The recorded Playwright probes established whole-page overflow
+  and viewport-clipping results, while the static checks established required
+  section presence.
 - Package evidence: direct `validateContract('manifest')`, byte verification of
   every immutable hash, and `enforceRunPackageInventory` passed. A disposable
   copy with corrupted `site/index.html` failed immutable byte verification
@@ -723,6 +725,26 @@ Phase Summary passed.
   provenance=unknown model_axis=selected:gpt-5.6-sol-high
   effort_axis=not-applicable dispatch_policy=high
   dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
+
+#### Phase 4 Review Round 1 Fix
+
+- Continuation: `cont-agent-authored-recap-p04-review-fix-1`
+- Original request: `dispatch-agent-authored-recap-p04-20260912T002300Z`
+- Source review: `reviews/p04-review-2026-09-12T015208Z.md`
+- Fix commit: `<pending-this-commit>`; subject
+  `fix(p04): complete the interactive front-door contract`
+- Addressed: the direct front door now covers project, document, and supplied
+  fact-base inputs; materializes the deterministic default theme; records
+  interactive provenance; and distinguishes unattended lifecycle callers.
+  The visual note now limits direct inspection to captured regions.
+- Intentionally excluded: stale Phase 4 progress bookkeeping remains root-owned
+  until the phase review passes.
+- Verification: focused front-door tests, skill validation, retired-seam
+  exclusions, relevant phase gates, lint, and format passed.
+- Package preservation: the tracked project-explainer tree remains
+  byte-for-byte identical to the original Phase 4 tree
+  `a14f37b71fd2043e02179c055162cb099eb16579`.
+- Recovery accounting: review-fix continuation; no phase recovery attempt.
 
 ---
 

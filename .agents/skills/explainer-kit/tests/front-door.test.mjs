@@ -30,15 +30,21 @@ const suppliedFactBaseFixture = join(
   'bundle',
   'fact-base.json',
 );
+const projectFixture = join(here, 'fixtures', 'bundle', 'project');
 
 async function prepareFrontDoor(t, name) {
   const root = await mkdtemp(join(tmpdir(), `explainer-front-door-${name}-`));
   t.after(() => rm(root, { recursive: true, force: true }));
   const runRoot = join(root, 'run');
   const themePath = join(root, 'theme.json');
+  await materializeDefaultTheme(themePath);
+  return { root, runRoot, themePath };
+}
+
+async function materializeDefaultTheme(themePath) {
   const { theme } = await resolveTheme({ style: 'clean-neutral' });
   await writeFile(themePath, `${JSON.stringify(theme, null, 2)}\n`);
-  return { root, runRoot, themePath };
+  assert.equal((await readJson(themePath)).name, 'clean-neutral');
 }
 
 async function authorFromBundle(runRoot, recipeId) {
@@ -87,12 +93,17 @@ async function authorFromBundle(runRoot, recipeId) {
   await writeFile(join(runRoot, 'site/index.html'), page);
 }
 
-async function completeFrontDoorRun({ runRoot, bundleArgs, slug }) {
+async function completeFrontDoorRun({
+  runRoot,
+  bundleArgs,
+  slug,
+  recipeId = 'project-recap',
+}) {
   const bundle = await runBundle(bundleArgs, { log() {} });
   assert.equal(bundle.reuse, false);
-  await authorFromBundle(runRoot, 'project-recap');
+  await authorFromBundle(runRoot, recipeId);
   const qa = await runVerify(
-    ['--run-root', runRoot, '--recipe', 'project-recap', '--rung', 'none'],
+    ['--run-root', runRoot, '--recipe', recipeId, '--rung', 'none'],
     { log() {} },
   );
   assert.equal(
@@ -105,7 +116,7 @@ async function completeFrontDoorRun({ runRoot, bundleArgs, slug }) {
       '--run-root',
       runRoot,
       '--recipe',
-      'project-recap',
+      recipeId,
       '--slug',
       slug,
       '--mode',
@@ -116,6 +127,7 @@ async function completeFrontDoorRun({ runRoot, bundleArgs, slug }) {
     { log() {} },
   );
   assert.equal(manifest.outcome, 'built-needs-review');
+  assert.equal(manifest.mode, 'interactive');
   await verifyGenericPackage(runRoot, manifest);
   return manifest;
 }
@@ -196,6 +208,26 @@ test('a supplied fact base completes the interactive front-door flow', async (t)
       fixture.runRoot,
     ],
   });
+});
+
+test('a project completes the interactive front-door flow', async (t) => {
+  const fixture = await prepareFrontDoor(t, 'project');
+  const manifest = await completeFrontDoorRun({
+    ...fixture,
+    slug: 'project',
+    recipeId: 'project-explainer',
+    bundleArgs: [
+      '--recipe',
+      'project-explainer',
+      '--project',
+      projectFixture,
+      '--theme',
+      fixture.themePath,
+      '--out',
+      fixture.runRoot,
+    ],
+  });
+  assert.equal(manifest.recipe.id, 'project-explainer');
 });
 
 test('front-door bundle refuses a missing --out with usage guidance', async (t) => {
