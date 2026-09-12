@@ -1215,7 +1215,13 @@ review ...` command and arguments remain byte-for-byte unchanged; `oat
 **Retry launch intent:** persisted at 2026-09-12T20:23:37Z
 **Retry result receipt:**
 `/private/tmp/oat-agent-authored-recap/aar-exit-gate-20260912T202337Z.receipt.json`
-**Retry status:** pending; zero remediation attempts consumed
+**Retry status:** accepted; zero remediation attempts consumed
+**Gate run:** `6cf37a1e-a33f-40af-9b33-75937b421ac5`
+**Gate target:** `cursor-fable-5-1-high`
+**Gate runtime:** Cursor
+**Acceptance evidence:** matching run marker written at
+`/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/6cf37a1e-a33f-40af-9b33-75937b421ac5.json`
+before reviewer launch.
 
 ---
 
