@@ -30,9 +30,9 @@ oat_dispatch_policy:
 oat_skill_gate_overrides:
   oat-project-quick-start: disabled
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: 'sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324'
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
@@ -43,8 +43,8 @@ oat_implement_exit_gate:
   reviewed_head: 216ea4a9ff0b9aecb7b7e92e4feea1c710b7eab0
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:fa62febf1f0a0f5904cab7849c64ea223dd7cf802e13ce06b1b3936d1c6d7ea3'
-  freshness_head: 6084bde18d4c23735abab4e6378136ea102da1e0
-  freshness_fingerprint: 'sha256:effective-delta-v1:d0f7daad723e943744be6ae93f68ba90db3ae9479d24ce21065942b327bfe8e4'
+  freshness_head: f576b53620bef6cc5b57f645257d9d6eeef967c5
+  freshness_fingerprint: 'sha256:effective-delta-v1:cda707ffc7519dd2a45c2d448a893a407a58c6c4f781dd79edc4e94d006a33bf'
   launch_state: result_persisted
   launch_attempt_id: 'recon-exit-gate-20260912T000329Z'
   launch_started_at: '2026-09-12T00:03:29Z'
@@ -54,17 +54,17 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: '.oat/projects/shared/recon-rework/reviews/final-review-2026-09-12T001359Z.md'
   handoff: 'Gate passed at the important threshold, but the final review still contains non-blocking findings (minor=2). Run oat-project-review-receive for .oat/projects/shared/recon-rework/reviews/final-review-2026-09-12T001359Z.md to disposition them before marking the final review row passed.'
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation: 'run=965e9704-ba33-443b-adca-e494b6692fbc; handoff=receive; source=reviews/final-review-2026-09-12T001359Z.md; scope=final; type=code'
   receive_source_artifact: '.oat/projects/shared/recon-rework/reviews/final-review-2026-09-12T001359Z.md'
   receive_archived_artifact: '.oat/projects/shared/recon-rework/reviews/archived/final-review-2026-09-12T001359Z.md'
   receive_event_identity: 'final | code | final-review-2026-09-12T001359Z.md'
   receive_pre_head: e62472479ddc8effeb5b3f1a731db2f66fb1b4a4
-  receive_commit: null
+  receive_commit: f576b53620bef6cc5b57f645257d9d6eeef967c5
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: '2026-09-12T00:17:41Z'
+  updated_at: '2026-09-12T00:20:27Z'
 oat_post_implement_sequence:
   status: complete
   source: configured
@@ -88,7 +88,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/285'
 oat_project_created: '2026-09-08T17:25:15.784Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-09-12T00:19:25Z'
+oat_project_state_updated: '2026-09-12T00:20:27Z'
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -106,7 +106,7 @@ oat_project_recap:
 
 Implementation — all 31 tasks, the `p-rev8` phase review, and final verification
 are complete. The authorized final lifecycle review and configured exit-gate
-attempt 2 passed; gate receipt reconciliation is pending.
+attempt 2 passed and are durably received.
 
 ## Artifacts
 
@@ -158,7 +158,8 @@ No existing project was absorbed or retired.
 - ✓ Authorized final lifecycle review passed with 0C/0I/0M/1m
 - ✓ Final Minor explicitly deferred to post-release diagnostic cleanup
 - ✓ Configured exit-gate attempt 2 passed with 0C/0I/0M/2m
-- ⧗ Reconcile the passing gate receipt
+- ✓ Passing gate receipt reconciled; exit gate allowed
+- ⧗ Refresh summary, documentation, and PR description
 - ⧗ Summary, documentation, and PR description refresh pending
 - ✓ Final repository release-verification sequence passed
 - ✓ PR created
@@ -170,8 +171,8 @@ No active blocker.
 
 ## Next Milestone
 
-Reconcile the passing configured-gate receipt, then resume the approved closeout
-sequence.
+Refresh summary, documentation, and the existing PR description, then finalize
+implementation completion.
 
 ## Authorization and Scope
 
