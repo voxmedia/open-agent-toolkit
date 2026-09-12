@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-12
-oat_current_task_id: p06-t11
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 17    | 17/17     |
-| Phase 2 | completed   | 4     | 4/4       |
-| Phase 3 | completed   | 8     | 8/8       |
-| Phase 4 | completed   | 2     | 2/2       |
-| Phase 5 | completed   | 1     | 1/1       |
-| Phase 6 | in progress | 13    | 10/13     |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 17    | 17/17     |
+| Phase 2 | completed | 4     | 4/4       |
+| Phase 3 | completed | 8     | 8/8       |
+| Phase 4 | completed | 2     | 2/2       |
+| Phase 5 | completed | 1     | 1/1       |
+| Phase 6 | completed | 13    | 13/13     |
 
-**Total:** 42/45 tasks completed
+**Total:** 45/45 tasks completed
 
 ---
 
@@ -964,7 +964,7 @@ fresh Phase 6 review and final re-review.
 
 ## Phase 6: Final review fixes
 
-**Status:** in progress; configured exit-gate fixes queued.
+**Status:** implementation complete; gate-remediation re-review pending.
 
 ### Phase Summary
 
@@ -995,6 +995,9 @@ fresh Phase 6 review and final re-review.
 - `p06-t08`: `0fd007abe7a5a2254d13fb02f0d30cb44161fd11`
 - `p06-t09`: `927ba10f1a09ec36755dedf411183372b4703691`
 - `p06-t10`: `7b40d8835c7060a2596f2aec58a24e316565c734`
+- `p06-t11`: `48abe113af3ac66d6dc0b4dae74decda89d38c41`
+- `p06-t12`: `feeee094ec7ca5ec3b418f8fe2c79a2b9662ec84`
+- `p06-t13`: `3f137e92a5e4c013f5e498648e1827bd9bf2da1f`
 
 **Verification:**
 
@@ -1282,9 +1285,35 @@ matching `fixes_added` event, plan tasks, and tracking updates bound by the
 persisted correlation. The configured gate now records remediation attempt 1
 of 2 consumed; Phase 6 recovery usage remains zero.
 
-**Next:** Execute `p06-t11` through `p06-t13`, then re-run final verification,
-the standard final lifecycle review for the changed basis, and this configured
-gate generation.
+### Configured Gate Remediation Attempt 1
+
+**Status:** completed
+**Range:**
+`86bdda6beeb6981ab76c1783ee6f9431665bce3d..3f137e92a5e4c013f5e498648e1827bd9bf2da1f`
+
+- `p06-t11` harvests residual rendered-section number, ISO-date, and
+  closed-status tokens with the section ID fallback subject. Initial and
+  neutralized runs each failed exactly the three new controls; restored verify
+  passed 18/18.
+- `p06-t12` aligns design wording to the implemented ISO `YYYY-MM-DD` date
+  token contract.
+- `p06-t13` exempts only exact `npm_package_name` from length-only redaction.
+  Initial and neutralized runs failed its one control; restored bundle passed
+  19/19 while lifecycle scripts, secrets, ordinary long values, and paths
+  remained redacted.
+
+**Verification:** Core 115/115, lifecycle 84/84, state 58/58,
+retirement/parity 10/10, strict package/hash/inventory validation, all ordered
+repository gates, isolated-HOME forced Turbo 10/10 with `Cached: 0`,
+standalone smoke 158/158, skills 438/438, scripts 1/1, skill validation, lint,
+and format passed.
+
+**Boundary:** Three commits changed exactly five declared files. Tracked
+explainer packages, versions, state, review artifacts, and gate receipts were
+unchanged. Phase 6 recovery remains zero.
+
+**Next:** Run the narrow Phase 6 review, then the mandatory current-basis final
+lifecycle review before restarting the configured exit gate.
 
 ---
 

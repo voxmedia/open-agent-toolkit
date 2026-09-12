@@ -1,6 +1,6 @@
 ---
-oat_current_task: p06-t11
-oat_last_commit: 7b40d8835c7060a2596f2aec58a24e316565c734
+oat_current_task: null
+oat_last_commit: 3f137e92a5e4c013f5e498648e1827bd9bf2da1f
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -47,7 +47,7 @@ oat_workflow_origin: native # native | imported
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
 oat_implement_exit_gate:
-  status: blocked
+  status: stale
   resolution: configured
   disposition: null
   config_fingerprint: sha256:94671d8d5f24560ccaac19595added0c71a89defa8b2a3f4be1d1027b96581e5
@@ -80,26 +80,26 @@ oat_implement_exit_gate:
   receive_commit: b384a4edfb4ad22d1e4fda2c9bc95445e4853615
   receive_eligible: true
   receive_completed: true
-  failure: configured gate found 1 Important FR4 page-to-ledger fail-open outside h/tr/li/p blocks; policy blocks at important
-  updated_at: '2026-09-12T20:43:55Z'
+  failure: implementation basis changed by configured-gate remediation p06-t11 through p06-t13; fresh Phase 6 and final lifecycle reviews are required before a new gate launch
+  updated_at: '2026-09-12T20:58:00Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-09T16:39:02.165Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-12T20:43:55Z'
+oat_project_state_updated: '2026-09-12T20:58:00Z'
 oat_generated: false
 ---
 
 # Project State: agent-authored-recap
 
-**Status:** Configured exit-gate fixes queued
+**Status:** Gate remediation complete; re-review pending
 **Started:** 2026-09-09
 **Last Updated:** 2026-09-12
 
 ## Current Phase
 
-Implementation — Phase 6 gate remediation
+Implementation — Gate-remediation review pending
 
 ## Artifacts
 
@@ -120,9 +120,9 @@ Implementation — Phase 6 gate remediation
 - ✓ Phase 3 complete and independently verified (8/8 tasks)
 - ✓ Phase 4 complete and independently verified (2/2 tasks)
 - ✓ Phase 5 complete and independently verified (1/1 task)
-- ⧗ Phase 6 implementation in progress (10/13 tasks)
-- ⧗ Implementation in progress (42/45 tasks)
-- ⧗ Configured exit-gate remediation pending
+- ✓ Phase 6 implementation complete (13/13 tasks)
+- ✓ Implementation tasks complete (45/45 tasks)
+- ⧗ Gate-remediation Phase 6 and final reviews pending
 
 ## Blockers
 
@@ -130,4 +130,4 @@ None.
 
 ## Next Milestone
 
-Execute `p06-t11` through `p06-t13`, then re-review the changed basis.
+Review the configured-gate remediation on the changed implementation basis.
