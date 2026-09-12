@@ -43,8 +43,8 @@ oat_implement_exit_gate:
   reviewed_head: 216ea4a9ff0b9aecb7b7e92e4feea1c710b7eab0
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:fa62febf1f0a0f5904cab7849c64ea223dd7cf802e13ce06b1b3936d1c6d7ea3'
-  freshness_head: a9d3fb1ced50aae5d4c2b7921831038c3b1de658
-  freshness_fingerprint: 'sha256:effective-delta-v1:f7d739f7466eacb1e5a353ed42b94aab69280a6cf091196b4ad3e845b9484d10'
+  freshness_head: ef25e1539c187dde84726969ff82bfee5cfbc4f3
+  freshness_fingerprint: 'sha256:effective-delta-v1:6f60914000c4a8ed3785c10ea2e4d6174573c148f5995ab650f2189aa6f0a65c'
   launch_state: result_persisted
   launch_attempt_id: 'recon-exit-gate-20260912T000329Z'
   launch_started_at: '2026-09-12T00:03:29Z'
@@ -73,7 +73,8 @@ oat_post_implement_sequence:
     - summary
     - document
     - pr
-  pre_approval_completed: []
+  pre_approval_completed:
+    - summary
   approval: pending
   approval_source: null
   post_approval: []
@@ -85,7 +86,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/285'
 oat_project_created: '2026-09-08T17:25:15.784Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-09-12T00:22:41Z'
+oat_project_state_updated: '2026-09-12T00:29:12Z'
 oat_generated: false
 oat_project_recap:
   decision: skip
