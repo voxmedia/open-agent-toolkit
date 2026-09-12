@@ -683,17 +683,25 @@ test('changed-input rebundle and interruption cannot retain a satisfied manifest
   await assert.rejects(lstat(join(out, 'manifest.json')), { code: 'ENOENT' });
 });
 
-test('failure recording removes an existing manifest before writing evidence', async () => {
+test('failure recording removes an existing manifest before writing evidence', async (t) => {
   const root = await mkdtemp(join(tmpdir(), 'explainer-failure-exclusive-'));
   await cp(checkedPackage, root, { recursive: true });
   process.env.EXPLAINER_SANITIZER_PREFIX = 'phase-six-secret-prefix';
   process.env.EXPLAINER_SANITIZER_DETAIL =
     'phase-six-secret-prefix-with-detail';
+  process.env.EXPLAINER_SANITIZER_API_TOKEN = 'secret';
+  process.env.EXPLAINER_SANITIZER_MODE = '1';
+  t.after(() => {
+    delete process.env.EXPLAINER_SANITIZER_PREFIX;
+    delete process.env.EXPLAINER_SANITIZER_DETAIL;
+    delete process.env.EXPLAINER_SANITIZER_API_TOKEN;
+    delete process.env.EXPLAINER_SANITIZER_MODE;
+  });
 
   await writeFailure(
     root,
     'interrupted',
-    `E_INTERRUPTED: input /private/tmp/recap/source.md and C:\\Users\\alice\\recap\\source.md carried ${process.env.EXPLAINER_SANITIZER_DETAIL}; retry remains available`,
+    `E_INTERRUPTED: failure token=${process.env.EXPLAINER_SANITIZER_API_TOKEN}; exit=${process.env.EXPLAINER_SANITIZER_MODE}; paths [/Users/alice/private/key.pem], file:///Users/alice/private/key.pem, [C:\\Users\\alice\\private\\key.pem], file:///C:/Users/alice/private/key.pem, [\\\\server\\share\\private\\key.pem], file://server/share/private/key.pem; carried ${process.env.EXPLAINER_SANITIZER_DETAIL}; retry remains available`,
   );
 
   assert.ok(await lstat(join(root, 'failure.json')));
@@ -701,14 +709,16 @@ test('failure recording removes an existing manifest before writing evidence', a
   const failure = JSON.parse(
     await readFile(join(root, 'failure.json'), 'utf8'),
   );
-  assert.doesNotMatch(failure.cause, /private\/tmp|Users\\alice/);
-  assert.doesNotMatch(failure.cause, /phase-six-secret/);
+  assert.doesNotMatch(
+    failure.cause,
+    /secret|Users|private|server|share|file:\/\//,
+  );
   assert.match(failure.cause, /E_INTERRUPTED/);
+  assert.match(failure.cause, /exit=1/);
   assert.match(failure.cause, /carried <env>; retry remains available/);
   assert.match(failure.cause, /retry remains available/);
-  assert.equal(failure.cause.match(/<env>/g)?.length, 1);
-  delete process.env.EXPLAINER_SANITIZER_PREFIX;
-  delete process.env.EXPLAINER_SANITIZER_DETAIL;
+  assert.equal(failure.cause.match(/<env>/g)?.length, 2);
+  assert.equal(failure.cause.match(/<path>/g)?.length, 6);
 });
 
 test('script source does not import a browser runtime', async () => {

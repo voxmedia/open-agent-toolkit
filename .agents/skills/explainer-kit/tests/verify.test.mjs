@@ -351,7 +351,7 @@ test('playwright rung captures three probes and consumes layout findings', async
   }
 });
 
-test('playwright rung records disabled and launch-failure reasons', async () => {
+test('playwright rung records disabled and launch-failure reasons', async (t) => {
   const disabledRoot = await runRoot();
   const disabled = await verifyRun({
     runRoot: disabledRoot,
@@ -369,7 +369,12 @@ test('playwright rung records disabled and launch-failure reasons', async () => 
   assert.equal(allPass(disabled), true);
 
   const failureRoot = await runRoot();
-  process.env.EXPLAINER_VERIFY_SECRET = 'verify-secret-environment-value';
+  process.env.EXPLAINER_VERIFY_CLIENT_SECRET = 'secret';
+  process.env.EXPLAINER_VERIFY_MODE = '1';
+  t.after(() => {
+    delete process.env.EXPLAINER_VERIFY_CLIENT_SECRET;
+    delete process.env.EXPLAINER_VERIFY_MODE;
+  });
   const launchFailure = await verifyRun({
     runRoot: failureRoot,
     recipe: 'project-recap',
@@ -380,7 +385,7 @@ test('playwright rung records disabled and launch-failure reasons', async () => 
           executablePath: () => '/fixture/non-executable',
           launch: async () => {
             throw new Error(
-              `spawn EACCES /private/tmp/browser/chromium C:\\browser\\chromium ${process.env.EXPLAINER_VERIFY_SECRET}`,
+              `spawn EACCES: failure token=${process.env.EXPLAINER_VERIFY_CLIENT_SECRET}; exit=${process.env.EXPLAINER_VERIFY_MODE}; paths [/Users/alice/private/key.pem], file:///Users/alice/private/key.pem, [C:\\Users\\alice\\private\\key.pem], file:///C:/Users/alice/private/key.pem, [\\\\server\\share\\private\\key.pem], file://server/share/private/key.pem; retry remains available`,
             );
           },
         },
@@ -392,11 +397,16 @@ test('playwright rung records disabled and launch-failure reasons', async () => 
   assert.equal(launchFailure.rung, 'none');
   assert.match(launchFailure.reason, /^playwright-launch-failed:/);
   assert.match(launchFailure.reason, /spawn EACCES/);
-  assert.doesNotMatch(launchFailure.reason, /private\/tmp|C:\\browser/);
-  assert.doesNotMatch(launchFailure.reason, /verify-secret/);
+  assert.doesNotMatch(
+    launchFailure.reason,
+    /secret|Users|private|server|share|file:\/\//,
+  );
+  assert.match(launchFailure.reason, /exit=1/);
+  assert.match(launchFailure.reason, /retry remains available/);
+  assert.equal(launchFailure.reason.match(/<env>/g)?.length, 1);
+  assert.equal(launchFailure.reason.match(/<path>/g)?.length, 6);
   assert.notEqual(launchFailure.reason, RUNTIME_UNAVAILABLE_REASONS.disabled);
   assert.equal(allPass(launchFailure), true);
-  delete process.env.EXPLAINER_VERIFY_SECRET;
 });
 
 test('every none downgrade clears canonical screenshots and remains recordable', async () => {

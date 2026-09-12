@@ -119,8 +119,13 @@ test('record writes a schema-valid manifest with exact immutable coverage', asyn
   await enforceRunPackageInventory(root, manifest);
 });
 
-test('record maps QA evidence to the four terminal outcomes', async () => {
-  process.env.RECORD_TEST_SECRET = 'record-test-secret-value';
+test('record maps QA evidence to the four terminal outcomes', async (t) => {
+  process.env.RECORD_TEST_PASSWORD = 'secret';
+  process.env.RECORD_TEST_MODE = '1';
+  t.after(() => {
+    delete process.env.RECORD_TEST_PASSWORD;
+    delete process.env.RECORD_TEST_MODE;
+  });
   const scenarios = [
     {
       name: 'inspected host pass',
@@ -163,7 +168,7 @@ test('record maps QA evidence to the four terminal outcomes', async () => {
         checks: checks({
           structure: {
             status: 'fail',
-            cause: `E_STRUCTURE at /private/tmp/recap/page.html and C:\\Users\\alice\\recap\\page.html with ${process.env.RECORD_TEST_SECRET}; inspect structure`,
+            cause: `E_STRUCTURE: failure token=${process.env.RECORD_TEST_PASSWORD}; exit=${process.env.RECORD_TEST_MODE}; paths [/Users/alice/private/key.pem], file:///Users/alice/private/key.pem, [C:\\Users\\alice\\private\\key.pem], file:///C:/Users/alice/private/key.pem, [\\\\server\\share\\private\\key.pem], file://server/share/private/key.pem; inspect structure`,
           },
         }),
         visual: { verdict: 'none' },
@@ -188,18 +193,16 @@ test('record maps QA evidence to the four terminal outcomes', async () => {
     assert.equal(manifest.outcome, scenario.outcome, scenario.name);
     assert.doesNotMatch(
       manifest.warnings.join(' '),
-      /private\/tmp|Users\\alice/,
-    );
-    assert.doesNotMatch(
-      manifest.warnings.join(' '),
-      /record-test-secret-value/,
+      /secret|Users|private|server|share|file:\/\//,
     );
     if (scenario.outcome === 'failed') {
       assert.match(manifest.warnings.join(' '), /E_STRUCTURE/);
+      assert.match(manifest.warnings.join(' '), /exit=1/);
       assert.match(manifest.warnings.join(' '), /inspect structure/);
+      assert.equal(manifest.warnings.join(' ').match(/<env>/g)?.length, 1);
+      assert.equal(manifest.warnings.join(' ').match(/<path>/g)?.length, 6);
     }
   }
-  delete process.env.RECORD_TEST_SECRET;
 
   const root = await copyFixture();
   await rm(join(root, 'qa', 'result.json'));
