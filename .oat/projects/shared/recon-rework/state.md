@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 016f7aade4e91fdcf7323d81ed4c2a5dc7374106
+oat_last_commit: 64af472cf6c4de7b7fba7d7169ce5481d2e5539a
 oat_blockers: []
 associated_issues: []
 oat_kind: implementation
@@ -14,7 +14,7 @@ oat_hill_completed:
   - p04
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: pr_open
+oat_phase_status: complete
 oat_phase_recovery_policy:
   default_attempt_limit: 10
   phase_attempt_limits: {}
@@ -88,7 +88,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/285'
 oat_project_created: '2026-09-08T17:25:15.784Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-09-12T01:46:09Z'
+oat_project_state_updated: '2026-09-12T01:47:02Z'
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -98,13 +98,13 @@ oat_project_recap:
 
 # Project State: Recon rework
 
-**Status:** Implementation tasks complete; refreshed final closeout is in progress.
+**Status:** Implementation complete; PR open for human review.
 **Started:** 2026-09-08
 **Last Updated:** 2026-09-11
 
 ## Current Phase
 
-Implementation — PR open; completion may run before or after merge.
+Implementation — complete. PR open for human review.
 
 ## Artifacts
 
@@ -161,7 +161,8 @@ No existing project was absorbed or retired.
 - ✓ Final PR artifact refreshed
 - ✓ Configured pre-approval closeout sequence complete
 - ✓ Final HiLL approval received
-- ⧗ Finalizing implementation completion
+- ✓ Refreshed closeout sequence complete
+- ✓ Implementation marked complete
 - ✓ Final repository release-verification sequence passed
 - ✓ PR created
 - ⧗ Awaiting human review
@@ -172,8 +173,12 @@ No active blocker.
 
 ## Next Milestone
 
-Finalize the approved implementation completion and synchronize PR
-[#285](https://github.com/voxmedia/open-agent-toolkit/pull/285).
+PR [#285](https://github.com/voxmedia/open-agent-toolkit/pull/285) is open for
+review.
+
+- To incorporate feedback: run `oat-project-revise`.
+- Complete before merge: run `oat-project-complete`, then merge the PR.
+- Merge before completion: merge the PR, then run `oat-project-complete`.
 
 ## Authorization and Scope
 
