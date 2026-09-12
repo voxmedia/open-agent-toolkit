@@ -220,6 +220,30 @@ test('collectInputs follows document trees but refuses a symlink escape', async 
   );
 });
 
+test('document roots reject ambiguous locators and deduplicate identical identity', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'explainer-document-roots-'));
+  const first = join(root, 'first');
+  const second = join(root, 'second');
+  await Promise.all([mkdir(first), mkdir(second)]);
+  await writeFile(join(first, 'shared.md'), 'first root bytes\n');
+  await writeFile(join(second, 'shared.md'), 'second root bytes\n');
+  const recipe = loadRecipe('engineer-tour', '1');
+
+  await assert.rejects(
+    collectInputs(recipe, { documents: [first, second] }),
+    /Ambiguous document locator collision: shared\.md/,
+  );
+
+  await writeFile(join(second, 'shared.md'), 'first root bytes\n');
+  const forward = await collectInputs(recipe, { documents: [first, second] });
+  const reverse = await collectInputs(recipe, { documents: [second, first] });
+  assert.equal(forward.length, 1);
+  assert.deepEqual(
+    forward.map(({ id, locator, hash }) => ({ id, locator, hash })),
+    reverse.map(({ id, locator, hash }) => ({ id, locator, hash })),
+  );
+});
+
 test('extractClaims emits schema citations and unresolved parse failures', async () => {
   const [input] = await collectInputs(loadRecipe('engineer-tour', '1'), {
     documents: [join(fixtures, 'documents', 'overview.md')],

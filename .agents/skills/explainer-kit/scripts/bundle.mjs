@@ -651,7 +651,19 @@ async function writeJson(path, value) {
 }
 
 function uniqueByLocator(files) {
-  return [...new Map(files.map((file) => [file.locator, file])).values()];
+  const unique = new Map();
+  for (const file of files) {
+    const existing = unique.get(file.locator);
+    if (!existing) {
+      unique.set(file.locator, file);
+      continue;
+    }
+    if (existing.id === file.id && existing.hash === file.hash) continue;
+    throw bundleError(
+      `Ambiguous document locator collision: ${file.locator} resolves to different input identities.`,
+    );
+  }
+  return [...unique.values()];
 }
 
 function usageError() {
