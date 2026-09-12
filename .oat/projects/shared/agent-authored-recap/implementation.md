@@ -1196,10 +1196,15 @@ configured three-cycle cap. No further review-cycle extension remains.
 **Launch intent:** persisted at 2026-09-12T20:20:19Z
 **Result receipt:**
 `/private/tmp/oat-agent-authored-recap/aar-exit-gate-20260912T202019Z.receipt.json`
-**Status:** pending; launch intent persisted
+**Status:** blocked; launch not accepted
 
-**Next:** Execute the configured command unchanged and reconcile its marker
-and structured receipt.
+**Launch result:** The global `oat` shim failed before CLI startup because its
+installed package has no `dist/index.js`. Exit code 1, an empty receipt, no gate
+run marker, no reviewer launch, and no review artifact corroborate
+`not_accepted`. The failure consumed zero configured remediation attempts.
+
+**Next:** Repair or bypass only the broken launcher resolution while preserving
+the exact configured command, persist a new launch intent, and retry.
 
 ---
 
