@@ -691,17 +691,21 @@ test('failure recording removes an existing manifest before writing evidence', a
     'phase-six-secret-prefix-with-detail';
   process.env.EXPLAINER_SANITIZER_API_TOKEN = 'secret';
   process.env.EXPLAINER_SANITIZER_MODE = '1';
+  process.env.REVIEW_SECRET_KEY = 'abcd';
+  process.env.REVIEW_TOKEN_STORAGE = 'file';
   t.after(() => {
     delete process.env.EXPLAINER_SANITIZER_PREFIX;
     delete process.env.EXPLAINER_SANITIZER_DETAIL;
     delete process.env.EXPLAINER_SANITIZER_API_TOKEN;
     delete process.env.EXPLAINER_SANITIZER_MODE;
+    delete process.env.REVIEW_SECRET_KEY;
+    delete process.env.REVIEW_TOKEN_STORAGE;
   });
 
   await writeFailure(
     root,
     'interrupted',
-    `E_INTERRUPTED: failure token=${process.env.EXPLAINER_SANITIZER_API_TOKEN}; exit=${process.env.EXPLAINER_SANITIZER_MODE}; paths [/Users/alice/private/key.pem], file:///Users/alice/private/key.pem, [C:\\Users\\alice\\private\\key.pem], file:///C:/Users/alice/private/key.pem, [\\\\server\\share\\private\\key.pem], file://server/share/private/key.pem; carried ${process.env.EXPLAINER_SANITIZER_DETAIL}; retry remains available`,
+    `E_INTERRUPTED: failure token=${process.env.EXPLAINER_SANITIZER_API_TOKEN}; credential=${process.env.REVIEW_SECRET_KEY}; storage=${process.env.REVIEW_TOKEN_STORAGE}; exit=${process.env.EXPLAINER_SANITIZER_MODE}; paths [/Users/alice/private/key.pem], file:///Users/alice/private/key.pem, [C:\\Users\\alice\\private\\key.pem], file:///C:/Users/alice/private/key.pem, [\\\\server\\share\\private\\key.pem], file://server/share/private/key.pem; carried ${process.env.EXPLAINER_SANITIZER_DETAIL}; retry remains available`,
   );
 
   assert.ok(await lstat(join(root, 'failure.json')));
@@ -711,13 +715,14 @@ test('failure recording removes an existing manifest before writing evidence', a
   );
   assert.doesNotMatch(
     failure.cause,
-    /secret|Users|private|server|share|file:\/\//,
+    /abcd|secret|Users|private|server|share|file:\/\//,
   );
   assert.match(failure.cause, /E_INTERRUPTED/);
+  assert.match(failure.cause, /storage=file/);
   assert.match(failure.cause, /exit=1/);
   assert.match(failure.cause, /carried <env>; retry remains available/);
   assert.match(failure.cause, /retry remains available/);
-  assert.equal(failure.cause.match(/<env>/g)?.length, 2);
+  assert.equal(failure.cause.match(/<env>/g)?.length, 3);
   assert.equal(failure.cause.match(/<path>/g)?.length, 6);
 });
 

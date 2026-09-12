@@ -371,9 +371,13 @@ test('playwright rung records disabled and launch-failure reasons', async (t) =>
   const failureRoot = await runRoot();
   process.env.EXPLAINER_VERIFY_CLIENT_SECRET = 'secret';
   process.env.EXPLAINER_VERIFY_MODE = '1';
+  process.env.REVIEW_SECRET_KEY = 'abcd';
+  process.env.REVIEW_TOKEN_STORAGE = 'file';
   t.after(() => {
     delete process.env.EXPLAINER_VERIFY_CLIENT_SECRET;
     delete process.env.EXPLAINER_VERIFY_MODE;
+    delete process.env.REVIEW_SECRET_KEY;
+    delete process.env.REVIEW_TOKEN_STORAGE;
   });
   const launchFailure = await verifyRun({
     runRoot: failureRoot,
@@ -385,7 +389,7 @@ test('playwright rung records disabled and launch-failure reasons', async (t) =>
           executablePath: () => '/fixture/non-executable',
           launch: async () => {
             throw new Error(
-              `spawn EACCES: failure token=${process.env.EXPLAINER_VERIFY_CLIENT_SECRET}; exit=${process.env.EXPLAINER_VERIFY_MODE}; paths [/Users/alice/private/key.pem], file:///Users/alice/private/key.pem, [C:\\Users\\alice\\private\\key.pem], file:///C:/Users/alice/private/key.pem, [\\\\server\\share\\private\\key.pem], file://server/share/private/key.pem; retry remains available`,
+              `spawn EACCES: failure token=${process.env.EXPLAINER_VERIFY_CLIENT_SECRET}; credential=${process.env.REVIEW_SECRET_KEY}; storage=${process.env.REVIEW_TOKEN_STORAGE}; exit=${process.env.EXPLAINER_VERIFY_MODE}; paths [/Users/alice/private/key.pem], file:///Users/alice/private/key.pem, [C:\\Users\\alice\\private\\key.pem], file:///C:/Users/alice/private/key.pem, [\\\\server\\share\\private\\key.pem], file://server/share/private/key.pem; retry remains available`,
             );
           },
         },
@@ -399,11 +403,12 @@ test('playwright rung records disabled and launch-failure reasons', async (t) =>
   assert.match(launchFailure.reason, /spawn EACCES/);
   assert.doesNotMatch(
     launchFailure.reason,
-    /secret|Users|private|server|share|file:\/\//,
+    /abcd|secret|Users|private|server|share|file:\/\//,
   );
+  assert.match(launchFailure.reason, /storage=file/);
   assert.match(launchFailure.reason, /exit=1/);
   assert.match(launchFailure.reason, /retry remains available/);
-  assert.equal(launchFailure.reason.match(/<env>/g)?.length, 1);
+  assert.equal(launchFailure.reason.match(/<env>/g)?.length, 2);
   assert.equal(launchFailure.reason.match(/<path>/g)?.length, 6);
   assert.notEqual(launchFailure.reason, RUNTIME_UNAVAILABLE_REASONS.disabled);
   assert.equal(allPass(launchFailure), true);

@@ -122,9 +122,13 @@ test('record writes a schema-valid manifest with exact immutable coverage', asyn
 test('record maps QA evidence to the four terminal outcomes', async (t) => {
   process.env.RECORD_TEST_PASSWORD = 'secret';
   process.env.RECORD_TEST_MODE = '1';
+  process.env.REVIEW_SECRET_KEY = 'abcd';
+  process.env.REVIEW_TOKEN_STORAGE = 'file';
   t.after(() => {
     delete process.env.RECORD_TEST_PASSWORD;
     delete process.env.RECORD_TEST_MODE;
+    delete process.env.REVIEW_SECRET_KEY;
+    delete process.env.REVIEW_TOKEN_STORAGE;
   });
   const scenarios = [
     {
@@ -168,7 +172,7 @@ test('record maps QA evidence to the four terminal outcomes', async (t) => {
         checks: checks({
           structure: {
             status: 'fail',
-            cause: `E_STRUCTURE: failure token=${process.env.RECORD_TEST_PASSWORD}; exit=${process.env.RECORD_TEST_MODE}; paths [/Users/alice/private/key.pem], file:///Users/alice/private/key.pem, [C:\\Users\\alice\\private\\key.pem], file:///C:/Users/alice/private/key.pem, [\\\\server\\share\\private\\key.pem], file://server/share/private/key.pem; inspect structure`,
+            cause: `E_STRUCTURE: failure token=${process.env.RECORD_TEST_PASSWORD}; credential=${process.env.REVIEW_SECRET_KEY}; storage=${process.env.REVIEW_TOKEN_STORAGE}; exit=${process.env.RECORD_TEST_MODE}; paths [/Users/alice/private/key.pem], file:///Users/alice/private/key.pem, [C:\\Users\\alice\\private\\key.pem], file:///C:/Users/alice/private/key.pem, [\\\\server\\share\\private\\key.pem], file://server/share/private/key.pem; inspect structure`,
           },
         }),
         visual: { verdict: 'none' },
@@ -193,13 +197,14 @@ test('record maps QA evidence to the four terminal outcomes', async (t) => {
     assert.equal(manifest.outcome, scenario.outcome, scenario.name);
     assert.doesNotMatch(
       manifest.warnings.join(' '),
-      /secret|Users|private|server|share|file:\/\//,
+      /abcd|secret|Users|private|server|share|file:\/\//,
     );
     if (scenario.outcome === 'failed') {
       assert.match(manifest.warnings.join(' '), /E_STRUCTURE/);
+      assert.match(manifest.warnings.join(' '), /storage=file/);
       assert.match(manifest.warnings.join(' '), /exit=1/);
       assert.match(manifest.warnings.join(' '), /inspect structure/);
-      assert.equal(manifest.warnings.join(' ').match(/<env>/g)?.length, 1);
+      assert.equal(manifest.warnings.join(' ').match(/<env>/g)?.length, 2);
       assert.equal(manifest.warnings.join(' ').match(/<path>/g)?.length, 6);
     }
   }
