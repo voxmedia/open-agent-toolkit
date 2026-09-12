@@ -756,14 +756,14 @@ and lifecycle suites, `pnpm lint`, and `pnpm format`.
 
 ## Reviews
 
-| Scope | Type  | Status  | Notes                                                                                                                                 |
-| ----- | ----- | ------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| p01   | phase | passed  | Independent verification passed with 0 Critical, 0 Important, and 3 deferred Medium findings.                                         |
-| p02   | phase | passed  | Fresh re-review closed all three blocking findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                      |
-| p03   | phase | passed  | Final operator-authorized verification passed with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                           |
-| p04   | phase | passed  | Re-review closed the executable front-door and visual-evidence findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings. |
-| p05   | phase | passed  | Independent review passed the program recap and both bounded recoveries with 0 findings.                                              |
-| p06   | phase | pending | All eight tasks are implemented; narrow re-review is pending.                                                                         |
+| Scope | Type  | Status | Notes                                                                                                                                 |
+| ----- | ----- | ------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| p01   | phase | passed | Independent verification passed with 0 Critical, 0 Important, and 3 deferred Medium findings.                                         |
+| p02   | phase | passed | Fresh re-review closed all three blocking findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                      |
+| p03   | phase | passed | Final operator-authorized verification passed with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                           |
+| p04   | phase | passed | Re-review closed the executable front-door and visual-evidence findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings. |
+| p05   | phase | passed | Independent review passed the program recap and both bounded recoveries with 0 findings.                                              |
+| p06   | phase | passed | Narrow re-review closed the state-inventory finding with 0 Critical, Important, Medium, or Minor findings.                            |
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
@@ -784,6 +784,7 @@ and lifecycle suites, `pnpm lint`, and `pnpm format`.
 | p04    | code     | passed          | 2026-09-12 | reviews/p04-review-2026-09-12T020833Z.md                      | c9d977aa90d2990145e500c2035b1a2c67198278 | manual     | -           |
 | p05    | code     | passed          | 2026-09-12 | reviews/p05-review-2026-09-12T030832Z.md                      | 22fbe809f3410ae95f75e5dccb16a664020122d8 | manual     | -           |
 | p06    | code     | fixes_completed | 2026-09-12 | reviews/archived/p06-review-2026-09-12T130841Z.md             | afd969f946ce774ad1e2bcaa03741177a4f865bd | manual     | -           |
+| p06    | code     | passed          | 2026-09-12 | reviews/p06-review-2026-09-12T131816Z.md                      | de2393c3fa337bc7f33d9813a583dbc41ec5fbda | manual     | -           |
 | final  | code     | fixes_added     | 2026-09-12 | reviews/archived/final-review-2026-09-12T032129Z.md           | ed5f9f19d777989fe6095be14b1bb12e14583359 | manual     | -           |
 | spec   | artifact | pending         | -          | -                                                             | -                                        | -          | -           |
 | design | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-design-review-2026-09-09T225646Z.md | -                                        | -          | -           |

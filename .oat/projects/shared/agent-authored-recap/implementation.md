@@ -964,7 +964,7 @@ fresh Phase 6 review and final re-review.
 
 ## Phase 6: Final review fixes
 
-**Status:** fixes completed; narrow re-review pending.
+**Status:** completed; narrow re-review passed with 0 findings.
 
 ### Phase Summary
 
@@ -1041,7 +1041,11 @@ fresh Phase 6 review and final re-review.
 tasks across 6 phases. Plan validation, the 58-test state validator, diff
 checking, and the committed file-boundary check passed.
 
-**Next:** Run a narrow Phase 6 re-review before final re-review.
+**Re-review:** `reviews/p06-review-2026-09-12T131816Z.md` passed at
+`de2393c3fa337bc7f33d9813a583dbc41ec5fbda` with 0 Critical, Important,
+Medium, or Minor findings.
+
+**Next:** Run the mandatory whole-project final re-review.
 
 ---
 
