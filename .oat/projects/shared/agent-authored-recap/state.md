@@ -33,7 +33,7 @@ oat_phase_recovery_policy:
         discovered_by: committed-HEAD pnpm release:check-versions after successful git fetch origin main
         dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
         reservation_head: 6100b9883752a31d05b14820ace377abd1830b10
-        status: active
+        status: completed
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
