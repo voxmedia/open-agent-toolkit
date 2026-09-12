@@ -1192,9 +1192,14 @@ configured three-cycle cap. No further review-cycle extension remains.
 `sha256:effective-delta-v1:923970695e589fd5d178a98bff4d1d9dd1cd4f479a5697e061adf63f1e849873`
 **Configuration fingerprint:**
 `sha256:94671d8d5f24560ccaac19595added0c71a89defa8b2a3f4be1d1027b96581e5`
-**Status:** pending; launch not started
+**Attempt:** `aar-exit-gate-20260912T202019Z`
+**Launch intent:** persisted at 2026-09-12T20:20:19Z
+**Result receipt:**
+`/private/tmp/oat-agent-authored-recap/aar-exit-gate-20260912T202019Z.receipt.json`
+**Status:** pending; launch intent persisted
 
-**Next:** Persist launch intent and execute the configured command unchanged.
+**Next:** Execute the configured command unchanged and reconcile its marker
+and structured receipt.
 
 ---
 
