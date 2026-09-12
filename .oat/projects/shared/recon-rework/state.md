@@ -88,7 +88,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/285'
 oat_project_created: '2026-09-08T17:25:15.784Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-09-11T23:07:42Z'
+oat_project_state_updated: '2026-09-12T00:01:01Z'
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -105,8 +105,8 @@ oat_project_recap:
 ## Current Phase
 
 Implementation — all 31 tasks, the `p-rev8` phase review, and final verification
-are complete. Thomas authorized one additional final lifecycle review cycle for
-the `p-rev8` remediation before configured exit-gate attempt 2.
+are complete. The authorized final lifecycle review passed; Thomas explicitly
+deferred its diagnostic-only Minor, and configured exit-gate attempt 2 is next.
 
 ## Artifacts
 
@@ -155,7 +155,9 @@ No existing project was absorbed or retired.
 - ✓ `p-rev8` implemented and phase review passed without blocking findings
 - ✓ Refreshed final repository verification passed after `p-rev8`
 - ✓ One additional final-review cycle authorized for `p-rev8`
-- ⧗ Run the authorized final lifecycle review
+- ✓ Authorized final lifecycle review passed with 0C/0I/0M/1m
+- ✓ Final Minor explicitly deferred to post-release diagnostic cleanup
+- ⧗ Run configured exit-gate attempt 2
 - ⧗ Summary, documentation, and PR description refresh pending
 - ✓ Final repository release-verification sequence passed
 - ✓ PR created
@@ -167,8 +169,8 @@ No active blocker.
 
 ## Next Milestone
 
-Run the authorized final lifecycle review for `p-rev8`, then continue to
-configured exit-gate attempt 2 if it passes.
+Run configured implementation exit-gate attempt 2 against the passing final
+lifecycle review.
 
 ## Authorization and Scope
 

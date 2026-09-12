@@ -200,6 +200,10 @@ final-review-cap-p-rev8-20260911T222247Z paused after p-rev8 final verification 
 
 final-review-cap-p-rev8-authorized-20260911T230742Z Thomas authorized exactly one additional final lifecycle review cycle for completed p-rev8 and configured gate attempt 2 if it passes.
 
+### 2026-09-12 · structural · oat-project-review-receive · final
+
+run-4-final-rereview-p-rev8-pass-20260911T230845Z The authorized final review passed with 0C/0I/0M/1m; Thomas explicitly deferred the fail-closed diagnostic-only Minor to the next validator cleanup, leaving no blocking deferred findings.
+
 ## End-of-run synthesis
 
 Run 2 removed unnecessary approval-fingerprint and manifest-v1 compatibility

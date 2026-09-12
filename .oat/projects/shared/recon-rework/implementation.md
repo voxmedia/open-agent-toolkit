@@ -1622,6 +1622,30 @@ final lifecycle review cycle for the completed `p-rev8` remediation, followed
 by configured exit-gate attempt 2 if that review passes. This does not authorize
 another standard lifecycle review cycle.
 
+### Final lifecycle re-review received after p-rev8
+
+**Date:** 2026-09-11
+**Review artifact:**
+`reviews/archived/final-review-2026-09-11T230845Z.md`
+**Reviewed range:**
+`16ad8b120a90d625372302b2f4ed2a0d6ade1373..216ea4a9ff0b9aecb7b7e92e4feea1c710b7eab0`
+**Findings:** 0 Critical, 0 Important, 0 Medium, 1 Minor
+
+The authorized review passed and confirmed exact lane-granular outcome
+reconciliation, mixed-lane partial publication, same-lane contradiction
+rejection, conditional compatibility, and public contract alignment. The
+configured gate's prior Important and Medium findings are closed.
+
+Thomas explicitly deferred Minor m1 to the next recon validator diagnostic
+cleanup. A genuinely absent terminal reconciliation may still emit derivative
+`MISSING_THOROUGH_GATHER_LEDGER_INPUT` beside
+`MISSING_RECONCILIATION_RESULT`, but the packet remains invalid and
+unpublishable. No blocking deferred findings remain; the one non-blocking Minor
+is durably accepted post-release.
+
+**Disposition:** passed. Configured exit-gate attempt 2 may proceed against the
+new reviewed basis.
+
 ## References
 
 - [Plan](plan.md)
