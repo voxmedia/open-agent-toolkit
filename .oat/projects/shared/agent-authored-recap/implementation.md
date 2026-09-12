@@ -964,7 +964,7 @@ fresh Phase 6 review and final re-review.
 
 ## Phase 6: Final review fixes
 
-**Status:** implementation complete; remediation re-review pending.
+**Status:** implementation complete; current-basis final review pending.
 
 ### Phase Summary
 
@@ -1372,6 +1372,22 @@ single state inventory line. Package trees are unchanged; configured
 remediation usage remains 1/2 and Phase 6 recovery remains zero.
 
 **Next:** Re-run the narrow Phase 6 review.
+
+### Phase 6 Gate-Remediation Re-review
+
+**Review artifact:** `reviews/p06-review-2026-09-12T230247Z.md`
+**Reviewed head:** `35a68fbe6f292573eb9ca9a28cfdcb57e79a541b`
+**Verdict:** PASS — 0 Critical, 0 Important, 0 Medium, 0 Minor
+
+Both tracked package copies pass fresh `verifyRun`; the section-only negative
+control reproduces the program-recap status failure; fabricated unlabeled
+residual facts still fail; all claim keys are unique; and the 47-task
+inventory, stale gate generation, remediation usage 1/2, and zero Phase 6
+recovery state are consistent. All ordered gates and the uncached test run
+passed.
+
+**Next:** Run the mandatory current-basis final lifecycle review before
+restarting the configured exit gate.
 
 ---
 
