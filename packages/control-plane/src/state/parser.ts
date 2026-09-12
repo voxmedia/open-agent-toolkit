@@ -204,7 +204,7 @@ function parseExplainerDecision(
   const rawFailedAttemptEvidence = record.failed_attempt_evidence;
   const failedAttemptEvidence =
     typeof rawFailedAttemptEvidence === 'string'
-      ? normalizeNullableString(rawFailedAttemptEvidence)
+      ? rawFailedAttemptEvidence
       : null;
   const isFailedAttempt =
     product === 'projectRecap' &&
