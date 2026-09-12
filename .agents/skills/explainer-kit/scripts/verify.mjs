@@ -52,7 +52,8 @@ export function extractRenderedClaims(html) {
       const [, tag, blockHtml] = match;
       const text = htmlText(blockHtml);
       if (!text) continue;
-      if (tag.toLowerCase().startsWith('h')) {
+      const isHeading = tag.toLowerCase().startsWith('h');
+      if (isHeading) {
         terminology[text] = text;
       }
       const rowCells =
@@ -63,7 +64,7 @@ export function extractRenderedClaims(html) {
           : [];
       const subject = normalizeClaimSubject({
         text,
-        rowSubject: rowCells[0],
+        rowSubject: isHeading ? text : rowCells[0],
         sectionId: section.id,
       });
       const valuesText =

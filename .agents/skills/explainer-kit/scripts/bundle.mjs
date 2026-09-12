@@ -132,6 +132,19 @@ export function extractClaims(input) {
     const headingMatch = text.match(/^#{1,6}\s+(.+)$/);
     if (headingMatch) {
       heading = headingMatch[1].trim();
+      if (hasMachineCheckableValue(heading)) {
+        const line = index + 1;
+        claims.push({
+          id: claimId(input.locator, line, heading),
+          text: heading,
+          status: 'confirmed',
+          citations: [
+            { sourceId: input.id, locator: `${input.locator}:${line}-${line}` },
+          ],
+          _subject: heading,
+          _section: heading,
+        });
+      }
       continue;
     }
     if (/^(?:---|\|[\s:|-]+\|)$/.test(text)) continue;
@@ -555,6 +568,16 @@ function addIndexed(indexed, seen, entry) {
   if (seen.has(key)) return;
   seen.add(key);
   indexed.push(entry);
+}
+
+function hasMachineCheckableValue(text) {
+  if (/\b\d+(?:\.\d+)?%?\b/.test(text)) return true;
+  return (
+    text
+      .toLowerCase()
+      .match(/[a-z][a-z_-]*/g)
+      ?.some((token) => STATUS_VALUES.has(token)) ?? false
+  );
 }
 
 function claimId(locator, line, text) {

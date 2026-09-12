@@ -283,6 +283,25 @@ test('anchor ledger uses row and heading subjects and bounds groups', () => {
   assert.ok(ledger.claims.length > ledger.numbers.length);
 });
 
+test('machine-checkable source headings enter the claim index', () => {
+  const text = '# W9 release 2026-09-12\n\nNarrative without new facts.\n';
+  const extracted = extractClaims({
+    id: 'heading-source',
+    locator: 'heading.md',
+    bytes: Buffer.from(text),
+    text,
+  });
+
+  assert.ok(
+    indexClaims(extracted.claims).some(
+      ({ subject, value, kind }) =>
+        subject === 'W9 release 2026-09-12' &&
+        value === '2026-09-12' &&
+        kind === 'date',
+    ),
+  );
+});
+
 test('all four input modes produce valid deterministic bundle sources', async () => {
   const project = await temporaryFixture('project');
   const program = await temporaryFixture('program');

@@ -6,6 +6,7 @@ import { dirname, join } from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
+import { extractClaims, indexClaims } from '../scripts/bundle.mjs';
 import {
   createBrowserProbeSession,
   RUNTIME_UNAVAILABLE_REASONS,
@@ -137,6 +138,48 @@ test('extractRenderedClaims keys terms and normalized facts by subject', async (
         kind === 'date',
     ),
   );
+});
+
+test('source and rendered factual headings trace symmetrically', async () => {
+  const root = await runRoot();
+  const heading = 'W9 release 2026-09-12';
+  const sourceText = `# ${heading}\n\nNarrative without new facts.\n`;
+  const sourceClaims = extractClaims({
+    id: 'heading-source',
+    locator: 'heading.md',
+    bytes: Buffer.from(sourceText),
+    text: sourceText,
+  });
+  const ledgerPath = join(root, 'source/ledger.json');
+  const ledger = JSON.parse(await readFile(ledgerPath, 'utf8'));
+  ledger.claims.push(...indexClaims(sourceClaims.claims));
+  await writeFile(ledgerPath, `${JSON.stringify(ledger, null, 2)}\n`);
+  const pagePath = join(root, 'site/index.html');
+  const page = await readFile(pagePath, 'utf8');
+  await writeFile(
+    pagePath,
+    page.replace(
+      '<h2>Validation evidence</h2>',
+      `<h2>Validation evidence</h2><h3>${heading}</h3>`,
+    ),
+  );
+
+  const faithful = await verifyRun({
+    runRoot: root,
+    recipe: 'project-recap',
+  });
+  assert.equal(faithful.checks.pageToLedger.status, 'pass');
+
+  await writeFile(
+    pagePath,
+    (await readFile(pagePath, 'utf8')).replace('2026-09-12', '2026-09-13'),
+  );
+  const changed = await verifyRun({
+    runRoot: root,
+    recipe: 'project-recap',
+  });
+  assert.equal(changed.checks.pageToLedger.status, 'fail');
+  assert.match(changed.checks.pageToLedger.cause, /2026-09-13/);
 });
 
 test('none rung writes passing browser-free checks without externalRequests', async () => {
