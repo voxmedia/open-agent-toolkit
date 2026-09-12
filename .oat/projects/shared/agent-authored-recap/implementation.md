@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-12
-oat_current_task_id: p06-t10
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 17    | 17/17     |
-| Phase 2 | completed   | 4     | 4/4       |
-| Phase 3 | completed   | 8     | 8/8       |
-| Phase 4 | completed   | 2     | 2/2       |
-| Phase 5 | completed   | 1     | 1/1       |
-| Phase 6 | in progress | 10    | 9/10      |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 17    | 17/17     |
+| Phase 2 | completed | 4     | 4/4       |
+| Phase 3 | completed | 8     | 8/8       |
+| Phase 4 | completed | 2     | 2/2       |
+| Phase 5 | completed | 1     | 1/1       |
+| Phase 6 | completed | 10    | 10/10     |
 
-**Total:** 41/42 tasks completed
+**Total:** 42/42 tasks completed
 
 ---
 
@@ -964,7 +964,7 @@ fresh Phase 6 review and final re-review.
 
 ## Phase 6: Final review fixes
 
-**Status:** in progress; one operator-authorized sanitizer task remains.
+**Status:** implementation complete; awaiting operator-authorized re-review.
 
 ### Phase Summary
 
@@ -994,7 +994,7 @@ fresh Phase 6 review and final re-review.
 - `p06-t07`: `a7d8377f563703aaf41d71ba3ef7dbf42b6dfb57`
 - `p06-t08`: `0fd007abe7a5a2254d13fb02f0d30cb44161fd11`
 - `p06-t09`: `927ba10f1a09ec36755dedf411183372b4703691`
-- `p06-t10`: pending
+- `p06-t10`: `7b40d8835c7060a2596f2aec58a24e316565c734`
 
 **Verification:**
 
@@ -1124,7 +1124,31 @@ perform a fresh narrow Phase 6 review, then perform exactly one fourth
 whole-project final review. Review-fix continuation does not consume phase
 recovery attempts.
 
-**Next:** Implement `p06-t10`.
+### Task p06-t10: Cover short secret-key environment names
+
+**Status:** completed
+**Commit:** `7b40d8835c7060a2596f2aec58a24e316565c734`
+
+**Outcome:** Bundle, verify, and record now redact short values from terminal
+`SECRET_KEY` and `SECRETKEY` environment names without broad substring
+matching. Structural `TOKEN_STORAGE=file` and `MODE=1` diagnostics remain
+visible.
+
+**Negative control:** Removing only `SECRET_?KEY` made exactly the three new
+producer controls fail (37/40 passed); restoring it returned all 40/40 to
+green. The initial pre-fix run failed the same three controls.
+
+**Verification:** Complete core 112/112, lifecycle 84/84, state/lifecycle
+contracts 268/268, retirement/parity 10/10, standalone smoke 158/158, skills
+435/435, scripts 1/1, and skill validation passed. Every ordered repository
+gate, lint, and format exited 0. Isolated-HOME forced Turbo executed 10/10
+tasks with `Cached: 0`.
+
+**Boundary:** Only the sanitizer and its three producer tests changed. Both
+tracked explainer packages, project artifacts, versions, reviews, and
+`state.md` remained unchanged. Phase 6 recovery usage remains zero.
+
+**Next:** Run the operator-authorized narrow Phase 6 re-review.
 
 ---
 
