@@ -6,15 +6,18 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Glob, Grep, Bash, AskUserQuestion, Agent, mcp__*
 metadata:
-  version: 1.1.1
+  version: 1.1.2
 ---
 
 # Recon
 
 Compile a bounded investigation into a durable, validated evidence-packet
-directory. `recon` is a provider-neutral controller: it owns decomposition,
-artifact boundaries, assurance, and user interaction while installed dispatch
-dependencies own live catalogs, target selection, and launch mechanics.
+directory. `recon` is a provider-neutral controller: it owns profile topology,
+routing proposals, evidence flow, artifact boundaries, and assurance.
+`subagent-orchestration` owns task-class and qualification guidance;
+`oat-dispatch-subagents` owns live target resolution and launch mechanics. The
+calling agent owns scope, approval dialogue, evidence-sufficiency judgment, and
+all downstream conclusions.
 
 ## When to Use
 
@@ -115,12 +118,19 @@ Initialize `manifest.json` and the directory skeleton, but do not create
 
 Read `references/profiles.md`. Partition the scope into non-overlapping,
 adaptive lanes within the profile's hard caps. Classify every required and
-conditionally allowed wave before selection. Record each wave's task class and
-floor, then compute the run-wide maximum model-class floor.
+conditionally allowed wave from its concrete bounded assignment, not its phase
+label. Start with the economical provider-qualified route for the actual work;
+narrow the assignment before escalating, and preserve stronger capability when
+the work itself requires judgment.
 
-All lanes within a launch are a homogeneous wave. All waves use the same
-approved model and effort. Profiles change topology, redundancy, and
-concurrency—not the target tier.
+Use the complete mode policy from `references/profiles.md` and
+`scripts/lib/routing.mjs`. Map manifest wave modes to the worker's closed
+assignment vocabulary: `redundant-gather` to `gather`;
+`semantic-verification` and `redundant-verification` to `verify`; `adversarial`
+and `contradiction-resolution` to `adversary`; and only `reconciliation` to
+`reconcile`. The remaining modes keep their same-named assignment. All lanes
+within one launch are a homogeneous wave. Select each wave independently; a
+stronger wave never raises unrelated waves' targets or effort.
 
 ### Step 4: Prepare One Exact Dispatch Manifest
 
@@ -141,34 +151,55 @@ pack is already installed, `oat tools update --pack utility --scope
 
 Read `${UTILITY_SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md` and perform
 only the selection steps of its Full-Information Selection: observe the
-catalog, resolve one exact target, and record the selection. Stop before its
-launch step; nothing launches until Step 5 runs after approval. From the same
-root, read
+catalog, resolve each wave's exact target, and record each selection. Stop
+before its launch step; nothing launches until Step 5 runs after approval. From
+the same root, read
 `subagent-orchestration/references/model-selection-principles.md`, exactly one
 active-provider selection reference, and the matching
 `oat-dispatch-subagents` provider mechanics reference. Do not copy provider
 catalogs or exact launch construction into this skill.
 
-Resolve every planned and conditional wave against one exact target satisfying
-the run-wide floor. Prefer the canonical `recon-worker` role. If that role is
-unavailable, plan the generic role with the complete worker contract as a
-visible generic role fallback before approval. A fallback after approval is
-forbidden.
+Resolve every planned and conditional wave independently against its recorded
+task class and class floor. Preserve provider, route, role, model, effort,
+reasoning mode, and service tier as separate provider-native axes. A null axis
+means the adapter exposes no independently requested control; never translate
+effort between harnesses or normalize an opaque selector. Prefer the canonical
+`recon-worker` role. If that role is unavailable, plan the generic role with the
+complete worker contract as a visible generic role fallback before approval. A
+fallback after approval is forbidden.
 
-Write the approval envelope into `manifest.execution`. It binds:
+Prepare a `schemaVersion: 2` draft manifest. Its execution object contains a
+complete inherited `target`, limits, waves, conditions, and later the approval.
+Every wave records `taskClass`, `classFloor`, a substantive
+`selectionReason`, its lanes and conditional flag, and an optional complete
+replacement `target`. Partial target overrides are invalid. Use the production
+proposal helper rather than manually reinterpreting the manifest:
 
-- provider, route, role, model, effort, reasoning mode, and service tier;
+```bash
+node scripts/prepare-routing.mjs --manifest manifest.json --format markdown
+```
+
+The proposal shown for approval includes:
+
+- every wave's exact effective provider, route, role, model, effort, reasoning
+  mode, and service tier;
 - authority level, maximum concurrency, per-lane deadline, and retry limit; and
-- every wave with its mode, task class, and conditional flag, and every lane
-  with its identity, read scope, and worker-owned write root.
+- every wave with its mode, task class, class floor, selection reason, target,
+  and conditional flag; every condition with its predecessor, destination,
+  predicate, and single-activation cap; and every lane with its identity, read
+  scope, and worker-owned write root.
 
-Its canonical fingerprint covers every field above.
-
-Present the exact provider, model and effort for explicit approval before any
-worker launch, together with the full topology and hard execution limits. Named model examples are
-illustrative and non-normative; never route from an example. Declining approval
-leaves the run at `awaiting-approval` and launches nothing. Approval records
-`explicit-user-approval`, the approval time, and the fingerprint.
+Present every wave's exact supported target axes, class/floor, lane count,
+selection rationale, conditions, and finite worst-case concurrency, deadline,
+retry, lane, and condition limits for explicit approval before any worker
+launch. Name unsupported controls as null instead of inventing them. Named
+model examples are illustrative and non-normative; never route from an example.
+Declining approval leaves the run at `awaiting-approval` and launches nothing.
+Approval records `explicit-user-approval` and the approval time. Approval is
+session-local: it authorizes only the exact proposal shown in the same
+uninterrupted control flow. If the run is resumed, reloaded, or changed before
+launch, remove the approval, return to `awaiting-approval`, render the current
+proposal again, and obtain fresh approval.
 
 **Deadlines.** Choose the per-lane deadline from the expected task class and
 scope, and show it in the approval envelope; it is an approved execution limit,
@@ -187,18 +218,30 @@ result. If any approved axis cannot be satisfied, stop with a
 launch nothing. Never substitute a different axis to make the launch fit.
 
 Launch each wave through the dispatch dependency with exactly the approved
-axes. Immediately before each launch, compare the axes that will actually run
-against the approval fingerprint. Any drift returns the complete manifest for
-renewed approval. Launch acceptance is distinct from worker completion. After
-acceptance there is no replacement child, alternate route, target
-substitution, or no silent retry. If an accepted lane fails, is cancelled, or
-times out, record that pass as failed with a material `PASS_FAILED` gap
-naming the pass.
+axes. Immediately before each launch, check the constructed target through the
+same production helper used by preview:
+
+```bash
+node scripts/prepare-routing.mjs --manifest manifest.json --wave <wave-id> --check-target <candidate-target.json>
+```
+
+Any constructed-target mismatch returns the complete manifest for renewed
+approval. This check proves invocation intent, not actual runtime
+identity. Launch acceptance is distinct from worker completion. After
+acceptance there is no replacement child, alternate route, target substitution,
+and no silent retry. If an accepted lane fails, is cancelled, or times out,
+record that lane as failed with a material `PASS_FAILED` gap carrying its exact
+approved `waveId` and `laneId`. This structured identity is required for
+conditional and non-conditional lanes alike; prose is descriptive, not
+identity.
 
 Run the passes in this order:
 
 1. `map` and `gather` workers write unique dossiers under `raw/dossiers/`.
-2. `compile` writes a candidate canonical claim ledger.
+   Thorough runs complete their independent `redundant-gather` wave here too.
+2. `compile` writes a candidate canonical claim ledger. A thorough candidate
+   directly references a complete dossier from every approved primary and
+   redundant gather lane before any review brief is created.
 3. Source preflight: run `scripts/validate-artifact.mjs` on the candidate
    manifest and ledger, then reopen every declared source and evidence locator
    with the checks in `scripts/validate-packet.mjs`. Resolve source roots to
@@ -206,10 +249,26 @@ Run the passes in this order:
    mark them unavailable, and add a material gap for every ineligible source
    and each affected claim. Do not create review briefs until the candidate
    manifest and ledger pair validates.
-4. profile-required `verify`, `adversary`, and `coverage` workers consume only
+4. Profile-required `verify`, `adversary`, and `coverage` workers consume only
    immutable selectively blind briefs created by
    `scripts/create-review-brief.mjs` at unique paths.
-5. `reconcile` writes a new candidate ledger without mutating the prior ledger.
+5. Evaluate each predeclared evidence condition only after its completed
+   predecessor artifacts exist. Record exactly one root-authored condition
+   outcome. A triggered `contradiction-resolution` wave runs once as an
+   `adversary` evidence assignment; a not-triggered or unresolved wave supplies
+   no artifact. Accepted failure, cancellation, timeout, or missing output never
+   authorizes replacement work.
+6. Standard and thorough execute exactly one terminal `reconciliation` wave,
+   mapped to `reconcile`, after required review evidence and any triggered
+   contradiction investigation. It writes a new candidate ledger without
+   mutating the prior ledger.
+
+If `reconciliation-needs-judgment` is foreseeable, select an adequate target
+for that one terminal wave before approval. If it appears after approval and
+the approved target is inadequate, preserve completed evidence and return an
+explicit unresolved, out-of-envelope gap for renewed approval or a new run.
+Never mutate the target, launch a second reconciliation, or substitute a
+contradiction search for synthesis.
 
 Use `references/worker-contract.md` for every assignment. Never allow two
 workers to share a write path. Every dossier records its approved wave and lane;
@@ -247,6 +306,10 @@ refer to a different canonical generation.
 Derive the achieved profile from complete, typed, digest-bound same-run
 artifacts written by approved lanes. Do not accept a worker or manifest
 assertion of achievement. A `quick` run can reach `supported` but never `verified`.
+Quick is deliberately an evidence packet for an intelligent consumer and has
+no independent semantic pass. Its consumer, not the packet, judges sufficiency
+and conclusions. Standard and thorough retain their independent typed semantic,
+adversarial, coverage, and single-terminal reconciliation requirements.
 `verified` claims require unique complete semantic, adversarial, and coverage
 results bound to immutable briefs and correct claim dispositions. Unresolved
 material challenge prevents verification. A run with contested claims may

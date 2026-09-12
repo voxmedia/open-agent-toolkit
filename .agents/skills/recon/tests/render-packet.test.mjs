@@ -20,10 +20,14 @@ import {
   renderValidatedPacket,
 } from '../scripts/render-packet.mjs';
 import { compileValidatedRun } from '../scripts/validate-packet.mjs';
-import { createPacketFixture } from './fixtures/packet-fixture.mjs';
+import {
+  approveExecution,
+  configureConditionalContradiction,
+  createPacketFixture,
+  fixtureTarget,
+} from './fixtures/packet-fixture.mjs';
 
 const tempRoots = [];
-
 afterEach(async () => {
   await Promise.all(
     tempRoots
@@ -120,6 +124,9 @@ test('packet rendering is deterministic and contains the complete consumer view'
   assert.equal(first, second);
   for (const heading of [
     '# Recon Evidence Packet',
+    '## Intended Routing',
+    '### Waves',
+    '### Conditional Outcomes',
     '## Synthesis',
     '## Key Claims',
     '## Contradictions and Qualifications',
@@ -133,6 +140,44 @@ test('packet rendering is deterministic and contains the complete consumer view'
   assert.match(first, /\*\*verified\*\*/i);
   assert.match(first, /source\.txt:1/i);
   assert.doesNotMatch(first, /raw\/dossiers|gather\.json|compiler reasoning/i);
+});
+
+test('v2 rendering shows normalized intended targets and conditional outcomes without runtime claims', async () => {
+  const fixture = await createPacketFixture({
+    profile: 'standard',
+  });
+  tempRoots.push(fixture.tempRoot);
+  await configureConditionalContradiction(fixture, {
+    disposition: 'not-triggered',
+  });
+  const terminalWave = fixture.manifest.execution.waves.find(
+    (wave) => wave.mode === 'reconciliation',
+  );
+  terminalWave.target = {
+    ...fixtureTarget,
+    model: 'fixture-terminal-model',
+    effort: 'fixture-terminal-effort',
+  };
+  fixture.manifest.execution = approveExecution(fixture.manifest.execution);
+  await fixture.persist();
+
+  const validation = await compileValidatedRun(fixture.packetRoot);
+  assert.equal(validation.valid, true, JSON.stringify(validation, null, 2));
+  const document = renderPacketDocument(validation.validatedRun);
+  assert.match(document, /Manifest routing version:\*\* 2/i);
+  assert.match(
+    document,
+    /wave-reconciliation[\s\S]{0,500}model=fixture-terminal-model[\s\S]{0,200}effort=fixture-terminal-effort/i,
+  );
+  assert.match(
+    document,
+    /condition-contradiction-resolution[\s\S]{0,300}\*\*not-triggered\*\*[\s\S]{0,300}pass-map\.json/i,
+  );
+  assert.match(document, /normalized approved intended targets/i);
+  assert.doesNotMatch(
+    document,
+    /actual-launch target|observed runtime target|total cost|correctness guaranteed/i,
+  );
 });
 
 test('render core rejects raw or partially validated packet data', async () => {
@@ -552,6 +597,7 @@ test('renderValidatedPacket throws categorical error on non-publishable run stat
       ]),
     ),
     manifest: runningManifest,
+    routing: validation.validatedRun.routing,
     ledger: validation.validatedRun.ledger,
     artifactsById: new Map(
       validation.validatedRun.artifacts.map((a) => [a.id, a]),

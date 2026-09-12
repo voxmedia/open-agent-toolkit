@@ -48,8 +48,75 @@ function bulletLines(values, empty = 'None.') {
     : [`- ${empty}`];
 }
 
+const targetAxisLabels = [
+  ['provider', 'provider'],
+  ['route', 'route'],
+  ['role', 'role'],
+  ['model', 'model'],
+  ['effort', 'effort'],
+  ['reasoningMode', 'reasoning mode'],
+  ['serviceTier', 'service tier'],
+];
+
+function formatIntendedTarget(target) {
+  return targetAxisLabels
+    .map(([field, label]) => {
+      const value =
+        target[field] === null
+          ? 'unsupported / not independently requested'
+          : target[field];
+      return `${label}=${escapeInline(value)}`;
+    })
+    .join('; ');
+}
+
+function intendedRoutingLines(routing) {
+  return routing.waves.map((wave) => {
+    return `- **${escapeInline(wave.waveId)}** — mode=${escapeInline(wave.mode)}; class/floor=${escapeInline(wave.taskClass)}/${escapeInline(wave.classFloor)}; lanes=${wave.lanes.length}; conditional=${wave.conditional ? 'yes' : 'no'}; ${formatIntendedTarget(wave.target)}; rationale=${escapeInline(wave.selectionReason)}`;
+  });
+}
+
+function conditionalOutcomeLines(manifest, routing) {
+  const outcomesById = new Map(
+    (manifest.conditionOutcomes ?? []).map((outcome) => [
+      outcome.conditionId,
+      outcome,
+    ]),
+  );
+  return routing.conditions.map((condition) => {
+    const outcome = outcomesById.get(condition.conditionId);
+    const evidence = outcome.evidence
+      .map((reference) => escapeInline(reference.path))
+      .join(', ');
+    return `- **${escapeInline(condition.conditionId)}** — ${escapeInline(condition.predicate)} → ${escapeInline(condition.destinationWaveId)}: **${escapeInline(outcome.disposition)}** — ${escapeInline(outcome.reason)}; predecessor evidence: ${evidence || 'none'}`;
+  });
+}
+
+function intendedRoutingSection(manifest, routing) {
+  return [
+    '',
+    '## Intended Routing',
+    '',
+    `- **Manifest routing version:** ${routing.sourceSchemaVersion}`,
+    `- **Approved authority:** ${escapeInline(routing.authority)}`,
+    `- **Approved limits:** ${routing.waves.length} waves; ${routing.waves.reduce((count, wave) => count + wave.lanes.length, 0)} lanes; concurrency ${routing.maxConcurrency}; deadline ${routing.deadlineSeconds}s; retries ${routing.retryLimit}`,
+    '- **Evidence boundary:** These are normalized approved intended targets and root-recorded condition dispositions. They are not launcher receipts or observations of native runtime identity, usage, cost, or conclusion correctness.',
+    '',
+    '### Waves',
+    '',
+    ...intendedRoutingLines(routing),
+    '',
+    '### Conditional Outcomes',
+    '',
+    ...bulletLines(
+      conditionalOutcomeLines(manifest, routing),
+      'None declared.',
+    ),
+  ];
+}
+
 export function renderPacketDocument(validatedRun) {
-  const { manifest, ledger } = assertValidatedRun(validatedRun);
+  const { manifest, ledger, routing } = assertValidatedRun(validatedRun);
   const evidenceById = new Map(
     ledger.evidence.map((evidence) => [evidence.id, evidence]),
   );
@@ -143,6 +210,7 @@ export function renderPacketDocument(validatedRun) {
         (gap) => `**${escapeInline(gap.code)}:** ${escapeInline(gap.message)}`,
       ),
     ),
+    ...intendedRoutingSection(manifest, routing),
     '',
     '## Provenance',
     '',

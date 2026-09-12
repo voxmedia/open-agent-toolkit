@@ -27,6 +27,7 @@ export function createValidatedRun({
   filesystemIdentities,
   canonicalByteDigests,
   manifest,
+  routing,
   ledger,
   artifactsById,
   exactEvidence,
@@ -44,6 +45,7 @@ export function createValidatedRun({
       .map(([path, digest]) => ({ path, digest }))
       .sort((left, right) => left.path.localeCompare(right.path)),
     manifest: clone(manifest),
+    routing: clone(routing),
     ledger: clone(ledger),
     artifacts: [...artifactsById.entries()]
       .map(([id, artifact]) => ({

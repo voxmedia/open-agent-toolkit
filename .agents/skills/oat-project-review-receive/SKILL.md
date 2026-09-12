@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(oat:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.6.4
+  version: 1.6.6
 ---
 
 # Receive Review
@@ -81,6 +81,19 @@ When executing this skill, provide lightweight progress feedback so the user can
 - Updating implementation.md
 - Routing to oat-project-implement
 - For `artifact` reviews: updating reviewed artifact files directly after user confirmation
+
+## Review Artifact Ownership
+
+The receiving/root agent reads the selected review artifact completely and
+interprets every finding. Do not delegate review-artifact reading, parsing,
+finding analysis, disposition judgment, or artifact edits to an explorer or
+reconnaissance worker.
+
+After the root has read the artifact, it may delegate a bounded inspection of
+explicitly scoped related code or evidence when corroboration is useful. That
+assignment must exclude the review artifact, return exact `file:line` evidence,
+and leave finding analysis, disposition, and all lifecycle mutations with the
+receiving/root agent.
 
 ## Artifact Hygiene
 

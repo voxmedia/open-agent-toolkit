@@ -55,4 +55,3 @@ Replace the implementation-tail project recap path with one dependable agent-aut
 ## Amendment 2026-09-09 (rescope, project `agent-authored-recap`)
 
 The operator rescoped the project after design round 2: the adapter's and the core's callback-driven orchestration cannot be run by anyone (author/critic/planner/browser/visual-critic seams need JavaScript callbacks; no host configures one; zero non-test runs since the seams shipped; the plan-time project explainer was declined 3 of 3 times), so the project now restores agent authoring for every caller — project recap, program recap, project explainer at plan approval, and a person invoking `explainer-kit` on any inputs — and retires the seam machinery, the durability/S3-publish path (one August 27 attestation, zero publishes), and the explainer release-candidate tooling. Manifest moves to v2 (`built` replaces the durability outcomes). Discovery § Amendment and spec FR10–FR12 carry the detail.
-

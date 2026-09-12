@@ -37,13 +37,13 @@ Classify in this order: deterministic verifiability, silent-miss risk,
 dispersed-context reconciliation, ambiguity or novelty, then consequence.
 File count and duration alone never justify escalation.
 
-| Task class               | Qualification contract                                                                                                          |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
-| `mechanical-recon`       | Deterministic inventories, parity checks, exact extraction, or command execution whose misses are visible and cheaply verified. |
-| `intelligent-recon`      | Interpretation of unfamiliar code, policy, semantics, or evidence where a plausible miss could survive mechanical validation.   |
-| `default-implementation` | Independently bounded implementation or dossier work that must retain and reconcile dispersed context.                          |
-| `hard-reasoning`         | Ambiguity, novelty, architecture, difficult diagnosis, or competing interpretations dominates.                                  |
-| `consequential`          | Security, release safety, irreversible effects, adversarial analysis, foundational decisions, or expensive failure dominates.   |
+| Task class               | Qualification contract                                                                                                                                           |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mechanical-recon`       | Deterministic inventories, parity checks, exact extraction, bounded counterexample searches, or command execution whose misses are visible and cheaply verified. |
+| `intelligent-recon`      | Interpretation of unfamiliar code, policy, semantics, or evidence where a plausible miss could survive mechanical validation.                                    |
+| `default-implementation` | Independently bounded implementation that must retain and reconcile dispersed context.                                                                           |
+| `hard-reasoning`         | Ambiguity, novelty, architecture, difficult diagnosis, or competing interpretations dominates.                                                                   |
+| `consequential`          | Security, release safety, irreversible effects, judgment-bearing adversarial analysis, foundational decisions, or expensive failure dominates.                   |
 
 When uncertain, use the stronger class. Never select below a supplied floor.
 
@@ -78,12 +78,21 @@ single entry cannot express a choice, only a default.
 - Default implementation to hard reasoning when ambiguity, novelty, or
   reasoning difficulty dominates.
 - Any class to consequential when security, production impact, irreversibility,
-  adversarial behavior, or expensive failure dominates.
+  judgment-bearing adversarial analysis, or expensive failure dominates.
 
 Narrow a poorly decomposed task before escalating its model. Model capability
 never repairs an over-broad objective. A consequential classification does not
 by itself justify top effort; raise effort only when deeper reasoning is also a
 bottleneck.
+
+For reconnaissance, classify the concrete assignment rather than the wave
+name. Reopening named citations, comparing an explicit inventory, seeking
+counterexamples to a specified claim, and mechanically grouping or
+deduplicating dossiers can remain `mechanical-recon`. A worker that must infer
+what counts as a material finding, reconcile ambiguous explanations, or issue a
+security or final-review judgment needs the corresponding stronger class. Cheap
+evidence acquisition never transfers sufficiency or conclusion ownership away
+from the caller.
 
 ## Eligibility
 

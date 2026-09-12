@@ -1,4 +1,11 @@
-import { cp, mkdir, mkdtemp, realpath, writeFile } from 'node:fs/promises';
+import {
+  cp,
+  mkdir,
+  mkdtemp,
+  readFile,
+  realpath,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 
@@ -7,7 +14,16 @@ import {
   hashCanonicalJson,
   hashFile,
 } from '../../scripts/lib/canonical-json.mjs';
-import { approvalFingerprintInput } from '../../scripts/lib/contracts.mjs';
+
+export const fixtureTarget = Object.freeze({
+  provider: 'fixture-provider',
+  route: 'fake',
+  role: 'recon-worker',
+  model: 'fixture-model',
+  effort: 'high',
+  reasoningMode: 'fixture-reasoning',
+  serviceTier: 'fixture',
+});
 
 export function approveExecution(
   execution,
@@ -19,7 +35,6 @@ export function approveExecution(
     approval: {
       type: 'explicit-user-approval',
       approvedAt,
-      fingerprint: hashCanonicalJson(approvalFingerprintInput(approved)),
     },
   };
 }
@@ -39,17 +54,11 @@ export function createExecutionApproval({
   laneIdForMode,
   writeRoot = writeRootForMode,
   concurrency = 2,
-  role = 'recon-worker',
+  target = fixtureTarget,
   authority = 'contract-enforced',
 }) {
   return approveExecution({
-    provider: 'fixture-provider',
-    route: 'fake',
-    role,
-    model: 'fixture-model',
-    effort: 'high',
-    reasoningMode: 'fixture-reasoning',
-    serviceTier: 'fixture',
+    target: structuredClone(target),
     authority,
     maxConcurrency: concurrency,
     deadlineSeconds: 60,
@@ -58,6 +67,9 @@ export function createExecutionApproval({
       waveId: `wave-${mode}`,
       mode,
       taskClass: 'intelligent-recon',
+      classFloor: 'mechanical-recon',
+      selectionReason:
+        'Synthetic fixture target for a bounded contract-validation assignment.',
       lanes: [
         {
           laneId: laneIdForMode(mode),
@@ -67,7 +79,108 @@ export function createExecutionApproval({
       ],
       conditional: false,
     })),
+    conditions: [],
   });
+}
+
+export function createV2ExecutionApproval({
+  modes,
+  laneIdForMode,
+  writeRoot = writeRootForMode,
+  concurrency = 2,
+  target = fixtureTarget,
+  authority = 'contract-enforced',
+}) {
+  return createExecutionApproval({
+    modes,
+    laneIdForMode,
+    writeRoot,
+    concurrency,
+    target,
+    authority,
+  });
+}
+
+export async function configureConditionalContradiction(
+  packet,
+  { disposition = 'not-triggered', predicate = 'insufficient-evidence' } = {},
+) {
+  if (packet.manifest.schemaVersion !== 2) {
+    throw new TypeError('Conditional routing fixtures require manifest v2');
+  }
+  const execution = packet.manifest.execution;
+  let destination = execution.waves.find(
+    (wave) => wave.mode === 'contradiction-resolution',
+  );
+  if (!destination) {
+    destination = {
+      waveId: 'wave-contradiction-resolution',
+      mode: 'contradiction-resolution',
+      taskClass: 'mechanical-recon',
+      classFloor: 'mechanical-recon',
+      selectionReason:
+        'Synthetic preservation fixture for bounded contradiction evidence.',
+      lanes: [
+        {
+          laneId: 'lane-contradiction-resolution',
+          scope: 'packet/contradiction-resolution',
+          writeRoot: 'reviews/contradiction-resolution.json',
+        },
+      ],
+      conditional: true,
+    };
+    const terminalIndex = execution.waves.findIndex(
+      (wave) => wave.mode === 'reconciliation',
+    );
+    execution.waves.splice(terminalIndex, 0, destination);
+  } else {
+    destination.conditional = true;
+    execution.waves = execution.waves.filter((wave) => wave !== destination);
+    const terminalIndex = execution.waves.findIndex(
+      (wave) => wave.mode === 'reconciliation',
+    );
+    execution.waves.splice(terminalIndex, 0, destination);
+  }
+  execution.conditions = [
+    {
+      conditionId: 'condition-contradiction-resolution',
+      destinationWaveId: destination.waveId,
+      afterWaveIds: ['wave-map'],
+      predicate,
+      maxActivations: 1,
+    },
+  ];
+  const mapPath = join(packet.packetRoot, 'raw/dossiers/pass-map.json');
+  const mapArtifact = JSON.parse(await readFile(mapPath, 'utf8'));
+  if (disposition === 'triggered') {
+    mapArtifact.gaps = [
+      {
+        code: 'INSUFFICIENT_EVIDENCE',
+        message: 'Synthetic predicate evidence for conditional routing tests.',
+      },
+    ];
+    await writeJson(mapPath, mapArtifact);
+    packet.manifest.artifacts.find(
+      (reference) => reference.path === 'raw/dossiers/pass-map.json',
+    ).digest = await hashFile(mapPath);
+  }
+  const evidence = packet.manifest.artifacts.find(
+    (reference) => reference.path === 'raw/dossiers/pass-map.json',
+  );
+  packet.manifest.conditionOutcomes = [
+    {
+      conditionId: 'condition-contradiction-resolution',
+      disposition,
+      reason:
+        disposition === 'triggered'
+          ? 'Completed mapping exposed a concrete evidence gap.'
+          : 'Completed mapping exposed no evidence gap.',
+      evidence: [{ ...evidence }],
+    },
+  ];
+  packet.manifest.execution = approveExecution(execution);
+  await writeJson(packet.manifestPath, packet.manifest);
+  return packet;
 }
 
 async function writeJson(path, value) {
@@ -81,6 +194,7 @@ export async function createPacketFixture({
   achievedProfile = profile,
   sourceKind = 'file',
   failedPassMode,
+  includeContradictionResolution = false,
   roots,
 } = {}) {
   const tempRoot = roots
@@ -120,6 +234,35 @@ export async function createPacketFixture({
     path: 'raw/dossiers/gather.json',
     digest: await hashFile(dossierPath),
   };
+  let redundantGatherRef = null;
+  if (achievedProfile === 'thorough') {
+    const redundantGatherPath = join(
+      packetRoot,
+      'raw',
+      'dossiers',
+      'pass-redundant-gather.json',
+    );
+    await writeJson(redundantGatherPath, {
+      kind: 'recon.raw-dossier',
+      schemaVersion: 1,
+      id: 'dossier-redundant-gather',
+      runId: 'run-render',
+      waveId: 'wave-redundant-gather',
+      laneId: 'lane-redundant-gather',
+      mode: 'gather',
+      outcome: 'complete',
+      allowedInputs: ['source-1'],
+      excludedInputs: [],
+      findings: [],
+      uncertainty: [],
+      contradictions: [],
+      gaps: [],
+    });
+    redundantGatherRef = {
+      path: 'raw/dossiers/pass-redundant-gather.json',
+      digest: await hashFile(redundantGatherPath),
+    };
+  }
 
   const sourceBase = {
     id: 'source-1',
@@ -226,7 +369,10 @@ export async function createPacketFixture({
     schemaVersion: 1,
     runId: 'run-render',
     revision: achievedProfile === 'quick' ? 1 : 2,
-    inputArtifacts: [dossierRef],
+    inputArtifacts: [
+      dossierRef,
+      ...(redundantGatherRef ? [redundantGatherRef] : []),
+    ],
     synthesis: {
       answer: 'The source contains alpha evidence.',
       keyClaimIds: ['claim-1'],
@@ -277,7 +423,7 @@ export async function createPacketFixture({
         qualifications: ['Needs another source.'],
         reviewIds: [
           'review-adversarial',
-          ...(achievedProfile === 'thorough'
+          ...(includeContradictionResolution
             ? ['review-contradiction-resolution']
             : []),
         ],
@@ -305,7 +451,7 @@ export async function createPacketFixture({
     priorLedger.revision = 1;
     priorLedger.claims[0].status = 'supported';
     priorLedger.claims[0].reviewIds = [];
-    if (achievedProfile === 'thorough') {
+    if (includeContradictionResolution) {
       priorLedger.claims[1].reviewIds = ['review-adversarial'];
     }
     priorLedger.transitions[0] = {
@@ -356,6 +502,8 @@ export async function createPacketFixture({
         ledger: priorLedger,
         claimIds: ['claim-1'],
       });
+    }
+    if (includeContradictionResolution) {
       briefs['contradiction-resolution'] = createReviewBrief({
         id: 'brief-contradiction-resolution',
         mode: 'adversary',
@@ -387,6 +535,10 @@ export async function createPacketFixture({
               'redundant-verify',
               'affirmed',
             ],
+          ]
+        : []),
+      ...(includeContradictionResolution
+        ? [
             [
               'review-contradiction-resolution',
               'contradiction-resolution',
@@ -449,7 +601,10 @@ export async function createPacketFixture({
         'review-adversarial',
         'review-coverage',
         ...(achievedProfile === 'thorough'
-          ? ['review-redundant-verification', 'review-contradiction-resolution']
+          ? ['review-redundant-verification']
+          : []),
+        ...(includeContradictionResolution
+          ? ['review-contradiction-resolution']
           : []),
       ],
       transitions: structuredClone(ledger.transitions),
@@ -477,26 +632,42 @@ export async function createPacketFixture({
   const claimsRef = { path: 'claims.json', digest: await hashFile(claimsPath) };
 
   const quickPasses = ['map', 'gather', 'compile'];
-  const standardPasses = [
+  const standardEvidencePasses = [
     ...quickPasses,
     'semantic-verification',
     'adversarial',
     'coverage',
-    'reconciliation',
   ];
+  const standardPasses = [...standardEvidencePasses, 'reconciliation'];
   const thoroughPasses = [
-    ...standardPasses,
+    'map',
+    'gather',
     'redundant-gather',
+    'compile',
+    'semantic-verification',
+    'adversarial',
+    'coverage',
     'redundant-verification',
-    'contradiction-resolution',
+    ...(includeContradictionResolution ? ['contradiction-resolution'] : []),
+    'reconciliation',
   ];
   const passesByProfile = {
     quick: quickPasses,
     standard: standardPasses,
     thorough: thoroughPasses,
   };
-  const passModes = passesByProfile[requestedProfile];
-  const completedModes = new Set(passesByProfile[achievedProfile] ?? []);
+  const passModes = [
+    ...passesByProfile[requestedProfile],
+    ...(requestedProfile !== 'thorough' && includeContradictionResolution
+      ? ['contradiction-resolution']
+      : []),
+  ];
+  const completedModes = new Set([
+    ...(passesByProfile[achievedProfile] ?? []),
+    ...(achievedProfile !== 'quick' && includeContradictionResolution
+      ? ['contradiction-resolution']
+      : []),
+  ]);
   const passLaneId = (mode) =>
     mode === 'semantic-verification' ? 'lane-semantic' : `lane-${mode}`;
   const execution = createExecutionApproval({
@@ -522,6 +693,10 @@ export async function createPacketFixture({
       continue;
     }
     if (!['map', 'gather', 'redundant-gather'].includes(mode)) continue;
+    if (mode === 'redundant-gather' && redundantGatherRef) {
+      passArtifacts.push(redundantGatherRef);
+      continue;
+    }
     const artifactPath = join(
       packetRoot,
       'raw',
@@ -551,7 +726,7 @@ export async function createPacketFixture({
   }
   const manifest = {
     kind: 'recon.packet-manifest',
-    schemaVersion: 1,
+    schemaVersion: 2,
     run: {
       id: 'run-render',
       topic: 'render fixture',
@@ -584,6 +759,7 @@ export async function createPacketFixture({
       },
       ...incompletePassGaps,
     ],
+    conditionOutcomes: [],
   };
   const manifestPath = join(packetRoot, 'manifest.json');
   await writeJson(manifestPath, manifest);

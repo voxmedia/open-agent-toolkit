@@ -80,6 +80,64 @@ test('later ledger revisions reject final transitions that mismatch claim status
   );
 });
 
+test('manifest shape validation returns stable errors for object-valued waves', async () => {
+  const packet = await fixture();
+  packet.manifest.execution.waves = {};
+  const validation = validateArtifactShape(packet.manifest);
+  assert.equal(validation.valid, false, JSON.stringify(validation, null, 2));
+  assert.ok(
+    validation.errors.some(
+      (error) =>
+        error.code === 'MISSING_REQUIRED_FIELD' &&
+        error.path === '$.execution.waves',
+    ),
+    JSON.stringify(validation, null, 2),
+  );
+});
+
+test('ledger collection shape validation is categorical for objects and numbers', async () => {
+  const packet = await fixture();
+  for (const field of [
+    'inputArtifacts',
+    'evidence',
+    'claims',
+    'unresolvedQuestions',
+    'transitions',
+  ]) {
+    for (const hostileValue of [{}, 7]) {
+      const ledger = structuredClone(packet.ledger);
+      ledger[field] = hostileValue;
+      const validation = validateArtifactShape(ledger);
+      assert.equal(validation.valid, false);
+      assert.ok(
+        validation.errors.some(
+          (error) =>
+            error.code === 'MISSING_REQUIRED_FIELD' &&
+            error.path === `$.${field}`,
+        ),
+        JSON.stringify(validation, null, 2),
+      );
+    }
+  }
+
+  for (const field of ['evidence', 'derivedFrom']) {
+    for (const hostileValue of [{}, 7]) {
+      const ledger = structuredClone(packet.ledger);
+      ledger.claims[0][field] = hostileValue;
+      const validation = validateArtifactShape(ledger);
+      assert.equal(validation.valid, false);
+      assert.ok(
+        validation.errors.some(
+          (error) =>
+            error.code === 'MISSING_REQUIRED_FIELD' &&
+            error.path === `$.claims[0].${field}`,
+        ),
+        JSON.stringify(validation, null, 2),
+      );
+    }
+  }
+});
+
 test('ValidatedRun retains exact digests for canonical and referenced packet bytes', async () => {
   const packet = await fixture();
   const validation = await compileValidatedRun(packet.packetRoot);
@@ -109,26 +167,72 @@ test('ValidatedRun retains exact digests for canonical and referenced packet byt
   }
 });
 
-test('approval fingerprint binds every approved execution axis', async () => {
-  for (const [axis, value] of [
-    ['model', 'other-model'],
-    ['effort', 'low'],
-    ['role', 'generic'],
-    ['authority', 'provider-enforced'],
-    ['maxConcurrency', 9],
-    ['deadlineSeconds', 5],
+test('hostile repeated condition entries return structured errors instead of throwing', async () => {
+  const packet = await createPacketFixture({
+    profile: 'standard',
+  });
+  roots.push(packet.tempRoot);
+  for (const conditions of [
+    [null, null],
+    [false, false],
+    ['condition', 1],
   ]) {
-    const packet = await fixture('quick');
-    packet.manifest.execution[axis] = value;
-    await writeJson(packet.manifestPath, packet.manifest);
-    const validation = await validatePacket(packet.packetRoot);
+    const candidate = structuredClone(packet.manifest);
+    candidate.execution.conditions = conditions;
+    candidate.execution = approveExecution(candidate.execution);
+    const result = validateArtifactShape(candidate);
+    assert.equal(result.valid, false, JSON.stringify(result, null, 2));
     assert.ok(
-      validation.errors.some(
-        (error) => error.code === 'APPROVAL_FINGERPRINT_MISMATCH',
-      ),
-      `${axis} drift was not rejected: ${JSON.stringify(validation, null, 2)}`,
+      result.errors.every((error) => typeof error.code === 'string'),
+      JSON.stringify(result, null, 2),
+    );
+    assert.ok(
+      result.errors.some((error) => error.code === 'INVALID_ROUTING_CONDITION'),
+      JSON.stringify(result, null, 2),
     );
   }
+});
+
+test('condition predecessor IDs must all be non-empty strings', async () => {
+  const packet = await createPacketFixture({
+    profile: 'standard',
+  });
+  roots.push(packet.tempRoot);
+  const destination = {
+    waveId: 'wave-conditional',
+    mode: 'contradiction-resolution',
+    taskClass: 'mechanical-recon',
+    classFloor: 'mechanical-recon',
+    selectionReason: 'Synthetic hostile-input regression fixture.',
+    lanes: [
+      {
+        laneId: 'lane-conditional',
+        scope: 'packet/conditional',
+        writeRoot: 'reviews/conditional.json',
+      },
+    ],
+    conditional: true,
+  };
+  packet.manifest.execution.waves.splice(-1, 0, destination);
+  packet.manifest.execution.conditions = [
+    {
+      conditionId: 'condition-invalid-after',
+      destinationWaveId: destination.waveId,
+      afterWaveIds: ['', null, 1],
+      predicate: 'insufficient-evidence',
+      maxActivations: 1,
+    },
+  ];
+  packet.manifest.execution = approveExecution(packet.manifest.execution);
+  const result = validateArtifactShape(packet.manifest);
+  assert.equal(result.valid, false, JSON.stringify(result, null, 2));
+  assert.equal(
+    result.errors.filter(
+      (error) => error.code === 'INVALID_CONDITION_DEPENDENCY',
+    ).length,
+    3,
+    JSON.stringify(result, null, 2),
+  );
 });
 
 test('approved execution rejects unknown axes and unapproved lanes', async () => {
@@ -294,7 +398,7 @@ test('approved lanes bind wave mode, write root, and per-lane outcomes', async (
   silentLane.manifest.gaps.pop();
 
   silentLane.manifest.gaps.push({
-    id: 'gap-lane-gather-2',
+    id: 'gap-mode-only-gather',
     code: 'PASS_FAILED',
     message: 'gather lane lane-gather-2 was cancelled before writing.',
     material: true,
@@ -303,9 +407,44 @@ test('approved lanes bind wave mode, write root, and per-lane outcomes', async (
     coverageFindingIds: [],
   });
   await writeJson(silentLane.manifestPath, silentLane.manifest);
-  const honest = await validatePacket(silentLane.packetRoot);
-  assert.equal(honest.valid, true, JSON.stringify(honest, null, 2));
-  assert.equal(honest.achievedProfile, 'quick');
+  const ambiguousLegacyGap = await validatePacket(silentLane.packetRoot);
+  assert.ok(
+    ambiguousLegacyGap.errors.some(
+      ({ code, path }) =>
+        code === 'MISSING_LANE_OUTCOME' && path === 'lane:lane-gather-2',
+    ),
+    'a mode-only legacy gap must not cover one lane of a multi-lane wave',
+  );
+  silentLane.manifest.gaps.pop();
+
+  silentLane.manifest.gaps.push({
+    id: 'gap-lane-gather-2',
+    code: 'PASS_FAILED',
+    message: 'gather lane lane-gather-2 was cancelled before writing.',
+    material: true,
+    waveId: gatherWave.waveId,
+    laneId: 'lane-gather-2',
+    sourceIds: [],
+    claimIds: [],
+    coverageFindingIds: [],
+  });
+  await writeJson(silentLane.manifestPath, silentLane.manifest);
+  const honestPartial = await validatePacket(silentLane.packetRoot);
+  assert.equal(
+    honestPartial.valid,
+    true,
+    JSON.stringify(honestPartial, null, 2),
+  );
+  assert.equal(honestPartial.achievedProfile, 'quick');
+  assert.equal(honestPartial.publishable, true);
+  assert.equal(honestPartial.status, 'partial');
+  assert.equal(
+    honestPartial.errors.some(
+      ({ code }) => code === 'CONTRADICTORY_PASS_OUTCOME',
+    ),
+    false,
+    JSON.stringify(honestPartial, null, 2),
+  );
 });
 
 test('a cancelled lane without a typed result downgrades the achieved profile', async () => {
@@ -1304,10 +1443,7 @@ test('claim assurance and reconciliation reject a review from an unapproved lane
 
 test('thorough-only assurance passes use claim-bearing typed results', async () => {
   const packet = await fixture('thorough');
-  for (const reviewKind of [
-    'redundant-verification',
-    'contradiction-resolution',
-  ]) {
+  for (const reviewKind of ['redundant-verification']) {
     const reference = packet.manifest.artifacts.find(
       (item) => item.path === `reviews/${reviewKind}.json`,
     );

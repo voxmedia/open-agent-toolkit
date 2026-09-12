@@ -14,8 +14,12 @@ The recon packet validator required prepared, approved, accepted, and completed 
 
 ## Decision
 
-Remove the receipt chain and stage topology from the recon packet contract and revert the prepare/execute operations and approval-bound prepared record from oat-dispatch-subagents. Keep explicit user approval of one exact provider, model, effort, role, authority, limits, and wave/lane topology as a compact manifest execution envelope bound by a canonical fingerprint. Derive the achieved profile from complete typed same-run artifacts written by approved lanes; honest partials name each missing required pass with a material PASS_FAILED or PASS_OMITTED gap.
+Remove the receipt chain and stage topology from the recon packet contract and revert the prepare/execute operations and approval-bound prepared record from oat-dispatch-subagents. Keep explicit user approval of every wave's independently selected exact provider, model, effort, role, authority, limits, and wave/lane topology in one compact manifest execution envelope bound by a canonical fingerprint. Derive the achieved profile from complete typed same-run artifacts written by approved lanes; honest partials name each missing required pass with a material PASS_FAILED or PASS_OMITTED gap.
 
 ## Consequences
 
-Recon publishes on launchers that only spawn workers and return results. The packet still rejects approval-axis drift, unapproved lanes, missing pass outcomes, malformed claim evidence links, and every source, locator, review, and reconciliation invariant. This supersedes DR-260831-canonical-validated-run; DR-260831-approval-bound-homogeneous remains in force. Reintroduce launcher-emitted receipts only when a launcher exists that produces them itself.
+Recon publishes on launchers that only spawn workers and return results. The packet still rejects approval-axis drift, unapproved lanes, missing pass outcomes, malformed claim evidence links, and every source, locator, review, and reconciliation invariant. This supersedes DR-260831-canonical-validated-run. Its receipt-removal boundary remains in force, while DR-260910-restore-economical-recon supersedes the former homogeneous-selection requirement in DR-260831-approval-bound-homogeneous. Reintroduce launcher-emitted receipts only when a launcher exists that produces them itself.
+
+`DR-260911-use-session-local-recon` partially supersedes this decision's
+canonical-fingerprint and approval-axis-drift clauses. Its receipt-removal
+boundary remains in force.

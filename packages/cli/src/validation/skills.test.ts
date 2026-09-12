@@ -1588,6 +1588,25 @@ describe('validateOatSkills', () => {
     expect(content).toMatch(/judgment-sweep mode/i);
   });
 
+  it('keeps review artifact intake and disposition in the receiving root', async () => {
+    const content = await readRepoFile(
+      '.agents/skills/oat-project-review-receive/SKILL.md',
+    );
+
+    expect(content).toMatch(
+      /receiving\/root agent reads the selected review artifact completely/i,
+    );
+    expect(content).toMatch(
+      /do not delegate review-artifact reading[\s\S]{0,180}disposition judgment[\s\S]{0,120}artifact edits/i,
+    );
+    expect(content).toMatch(
+      /bounded inspection[\s\S]{0,160}related code or evidence[\s\S]{0,180}exclude the review artifact/i,
+    );
+    expect(content).toMatch(
+      /exact `file:line` evidence[\s\S]{0,180}receiving\/root agent/i,
+    );
+  });
+
   it('requires reviewer artifacts to expose gate-parseable findings counts or sections', async () => {
     const content = await readRepoFile('.agents/agents/oat-reviewer.md');
 
@@ -1605,7 +1624,7 @@ describe('validateOatSkills', () => {
     const content = await readRepoFile('.agents/agents/oat-reviewer.md');
     const tools = content.match(/^tools:\s*(.+)$/m)?.[1] ?? '';
 
-    expect(readDeclaredVersion(content)).toBe('1.2.4');
+    expect(readDeclaredVersion(content)).toBe('1.2.5');
     expect(tools).toContain('Task');
     for (const broadReview of [
       'final code reviews',
@@ -1652,6 +1671,30 @@ describe('validateOatSkills', () => {
     );
     expect(content).toMatch(
       /must not (?:read|load)[\s\S]{0,160}`oat-project-dispatch-subagents`[\s\S]{0,200}project lifecycle phase\/task policy/i,
+    );
+    expect(content).toMatch(
+      /canonical `recon-worker`[\s\S]{0,100}complete Assignment Gate envelope before launch/i,
+    );
+    for (const assignmentField of [
+      'run, wave, and lane IDs',
+      'approved manifest wave mode',
+      'worker assignment mode',
+      'bounded objective',
+      'included and excluded scope',
+      'allowed and excluded inputs',
+      'source-read authority and read-only tools',
+      'sole write path',
+      'artifact kind, schema version, and closed output schema',
+      'enforcement',
+      'deadline',
+      'escalation path',
+    ]) {
+      expect(content, `recon assignment ${assignmentField}`).toContain(
+        assignmentField,
+      );
+    }
+    expect(content).toMatch(
+      /complete envelope cannot be constructed[\s\S]{0,120}do not launch[\s\S]{0,180}cover the lane inline/i,
     );
 
     expect(content).toMatch(
@@ -3178,9 +3221,9 @@ describe('validateOatSkills', () => {
   it('keeps the complete artifact hygiene block equivalent at every runtime boundary', async () => {
     const runtimeSurfaces = [
       ['.agents/agents/oat-phase-implementer.md', '1.1.5'],
-      ['.agents/agents/oat-reviewer.md', '1.2.4'],
+      ['.agents/agents/oat-reviewer.md', '1.2.5'],
       ['.agents/skills/oat-project-review-provide/SKILL.md', '1.5.8'],
-      ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.4'],
+      ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.6'],
       ['.agents/skills/oat-project-summary/SKILL.md', '1.5.5'],
       ['.agents/skills/oat-project-document/SKILL.md', '1.8.3'],
       ['.agents/skills/oat-project-pr-final/SKILL.md', '1.6.4'],
@@ -4696,7 +4739,7 @@ describe('validateOatSkills', () => {
     const expectedVersions = [
       ['oat-project-plan-writing', '1.2.25'],
       ['oat-project-review-provide', '1.5.8'],
-      ['oat-project-review-receive', '1.6.4'],
+      ['oat-project-review-receive', '1.6.6'],
       ['oat-project-review-receive-remote', '1.5.2'],
       ['oat-project-implement', '2.3.8'],
       ['oat-project-pr-final', '1.6.4'],
@@ -4777,7 +4820,7 @@ describe('validateOatSkills', () => {
       receive.indexOf('### Step 2: Parse Findings into Buckets'),
     );
 
-    expect(readDeclaredVersion(receive)).toBe('1.6.4');
+    expect(readDeclaredVersion(receive)).toBe('1.6.6');
     expect(resolver).toContain(
       'oat review latest --project "$PROJECT_PATH" --actionable-project --json',
     );
@@ -6169,7 +6212,7 @@ describe('validateOatSkills', () => {
   it('pins portable user-default agents to installed-root sibling reads', async () => {
     const agents = [
       ['.agents/agents/oat-phase-implementer.md', '1.1.5'],
-      ['.agents/agents/oat-reviewer.md', '1.2.4'],
+      ['.agents/agents/oat-reviewer.md', '1.2.5'],
       ['.agents/agents/oat-codebase-mapper.md', '1.0.1'],
     ] as const;
 
@@ -8410,11 +8453,17 @@ describe('recon canonical contracts', () => {
     ]);
 
     expect(skill).toMatch(/^name:\s*recon$/m);
-    expect(readDeclaredVersion(skill)).toBe('1.1.1');
+    expect(readDeclaredVersion(skill)).toBe('1.1.2');
     expect(skill).toMatch(/provider-neutral/i);
-    expect(skill).toMatch(/exact (?:provider, )?model and effort/i);
+    expect(skill).toMatch(/select each wave independently/i);
+    expect(skill).toMatch(/schemaVersion: 2/i);
+    expect(skill).toMatch(
+      /taskClass[\s\S]{0,120}classFloor[\s\S]{0,160}selectionReason/i,
+    );
     expect(skill).toMatch(/before\s+(?:any\s+)?(?:worker\s+)?launch/i);
-    expect(skill).toMatch(/same\s+approved model and effort/i);
+    expect(skill).not.toMatch(/same\s+approved model and effort/i);
+    expect(skill).toMatch(/exactly one terminal `reconciliation` wave/i);
+    expect(skill).toMatch(/quick[\s\S]{0,1000}no independent semantic pass/i);
     expect(skill).toMatch(/packet directory/i);
     expect(worker).toMatch(/never interact with the user/i);
     expect(worker).toMatch(/never dispatch/i);

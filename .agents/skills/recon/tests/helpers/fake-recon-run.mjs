@@ -2,12 +2,12 @@ import { mkdir, readFile, realpath, rm, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 
 import { createReviewBrief } from '../../scripts/create-review-brief.mjs';
+import { canonicalJson, hashFile } from '../../scripts/lib/canonical-json.mjs';
 import {
-  canonicalJson,
-  hashCanonicalJson,
-  hashFile,
-} from '../../scripts/lib/canonical-json.mjs';
-import { approvalFingerprintInput } from '../../scripts/lib/contracts.mjs';
+  checkApprovedWaveTarget,
+  createRoutingPreview,
+  RoutingContractError,
+} from '../../scripts/lib/routing.mjs';
 import { reconcileLedger } from '../../scripts/reconcile-ledger.mjs';
 import { renderPacket } from '../../scripts/render-packet.mjs';
 import {
@@ -16,6 +16,7 @@ import {
 } from '../../scripts/validate-artifact.mjs';
 import {
   approveExecution,
+  configureConditionalContradiction,
   createPacketFixture,
 } from '../fixtures/packet-fixture.mjs';
 
@@ -33,6 +34,7 @@ const failureCategoryByCode = {
   STRICT_AUTHORITY_UNAVAILABLE: failureCategories.dispatch,
   LAUNCHER_CAPABILITY_UNAVAILABLE: failureCategories.dispatch,
   DISPATCH_AXIS_DRIFT: failureCategories.dispatch,
+  UNSUPPORTED_TARGET_CONTROL: failureCategories.dispatch,
   STRUCTURAL_VALIDATION_FAILED: failureCategories.contract,
 };
 
@@ -84,6 +86,20 @@ async function writeFailure(packetRoot, code, message) {
   return path;
 }
 
+async function writeFixtureRunLog(packetRoot, invocation, preview, output) {
+  const path = join(packetRoot, 'raw', 'fixture-run-log.json');
+  await mkdir(join(packetRoot, 'raw'), { recursive: true });
+  await writeJson(path, {
+    kind: 'recon.synthetic-fixture-log',
+    schemaVersion: 1,
+    evidenceClass:
+      'Synthetic production-helper and control-flow evidence; not native runtime launch identity.',
+    invocation,
+    preview,
+    output,
+  });
+}
+
 export async function runFakeRecon(options = {}) {
   let roots = validateRoots(options.roots);
   await Promise.all(
@@ -121,35 +137,113 @@ export async function runFakeRecon(options = {}) {
   }
 
   const requestedProfile = options.profile ?? 'standard';
+  const conditionalDisposition = options.conditionalDisposition;
+  if (requestedProfile === 'quick' && conditionalDisposition !== undefined) {
+    throw new Error('Quick fixture routing does not permit conditional waves');
+  }
   const degraded = Boolean(options.workerFailure || options.invalidOutput);
   const achievedProfile = degraded ? 'quick' : requestedProfile;
   const status = degraded ? 'partial' : 'complete';
+  const includeContradictionResolution =
+    !degraded &&
+    (conditionalDisposition === 'triggered' ||
+      (conditionalDisposition === undefined &&
+        requestedProfile === 'thorough'));
+  const effectiveConditionalDisposition =
+    conditionalDisposition ??
+    (includeContradictionResolution ? 'triggered' : undefined);
   const fixture = await createPacketFixture({
     profile: requestedProfile,
     requestedProfile,
     achievedProfile,
     status,
     failedPassMode: options.workerFailure,
+    includeContradictionResolution,
     roots,
   });
   fixture.manifest.sources[0].authority = authorityLevel;
+
+  if (effectiveConditionalDisposition !== undefined) {
+    await configureConditionalContradiction(fixture, {
+      disposition: effectiveConditionalDisposition,
+    });
+  }
 
   const role =
     options.workerRoleAvailable === false ? 'generic' : 'recon-worker';
   // The generic-role fallback is fixed before approval: the approved envelope
   // names the role that will actually run.
-  const execution = approveExecution({
-    ...fixture.manifest.execution,
-    role,
-    authority: authorityLevel,
-  });
-  fixture.manifest.execution = execution;
+  const draftExecution = structuredClone(fixture.manifest.execution);
+  delete draftExecution.approval;
+  draftExecution.authority = authorityLevel;
+  draftExecution.target = structuredClone(
+    options.target ?? draftExecution.target,
+  );
+  draftExecution.target.role = role;
+  for (const wave of draftExecution.waves) {
+    const override = options.waveTargets?.[wave.mode];
+    if (override) wave.target = structuredClone(override);
+  }
+  fixture.manifest.execution = draftExecution;
 
-  // Launch-capability preflight. Before any worker launches, the controller
-  // confirms the live launch surface can satisfy the approved envelope. When
-  // it cannot, the run stays at awaiting-approval with nothing launched.
+  const invocation = {
+    profile: requestedProfile,
+    manifestVersion: 2,
+    conditionalDisposition: effectiveConditionalDisposition ?? null,
+    authorityLevel,
+    strict: options.strict === true,
+    target: structuredClone(draftExecution.target),
+  };
+  let routingPreview;
+  try {
+    routingPreview = createRoutingPreview(fixture.manifest);
+  } catch (error) {
+    const code =
+      error instanceof RoutingContractError
+        ? error.code
+        : 'LAUNCHER_CAPABILITY_UNAVAILABLE';
+    fixture.manifest.run.status = 'awaiting-approval';
+    fixture.manifest.run.achievedProfile = null;
+    await fixture.persist();
+    await writeFailure(roots.packetRoot, code, error.message);
+    const output = stopped(roots.packetRoot, 'awaiting-approval', code);
+    await writeFixtureRunLog(roots.packetRoot, invocation, null, output);
+    return output;
+  }
+  if (options.userApproval === false) {
+    fixture.manifest.run.status = 'awaiting-approval';
+    fixture.manifest.run.achievedProfile = null;
+    await fixture.persist();
+    const output = stopped(
+      roots.packetRoot,
+      'awaiting-approval',
+      'USER_DECLINED_ROUTING',
+    );
+    await writeFixtureRunLog(
+      roots.packetRoot,
+      invocation,
+      routingPreview,
+      output,
+    );
+    return output;
+  }
+
+  // Launch-capability preflight happens against the draft envelope before
+  // approveExecution can record accepted approval evidence.
   if (options.launcherCapabilities) {
-    const missing = ['role', 'model', 'effort', 'authority'].filter(
+    const requiredAxes = new Set([
+      'provider',
+      'route',
+      'role',
+      'model',
+      'authority',
+    ]);
+    for (const wave of routingPreview.waves) {
+      for (const axis of ['effort', 'reasoningMode', 'serviceTier']) {
+        if (wave.target[axis] !== null) requiredAxes.add(axis);
+      }
+    }
+    const missing = [...requiredAxes].filter(
       (axis) => options.launcherCapabilities[axis] === false,
     );
     if (missing.length > 0) {
@@ -159,23 +253,52 @@ export async function runFakeRecon(options = {}) {
       await writeFailure(
         roots.packetRoot,
         'LAUNCHER_CAPABILITY_UNAVAILABLE',
-        `The launch surface cannot satisfy the approved ${missing.join(', ')}; no worker was launched.`,
+        `The launch surface cannot satisfy the proposed ${missing.join(', ')}; no approval was accepted and no worker was launched.`,
       );
-      return stopped(
+      const output = stopped(
         roots.packetRoot,
         'awaiting-approval',
         'LAUNCHER_CAPABILITY_UNAVAILABLE',
       );
+      await writeFixtureRunLog(
+        roots.packetRoot,
+        invocation,
+        routingPreview,
+        output,
+      );
+      return output;
     }
   }
 
-  // Drift check: the axes actually launched must match the approved
-  // fingerprint byte-for-byte; otherwise renewed approval is required.
-  const launched = structuredClone(approvalFingerprintInput(execution));
-  if (options.dispatchDrift?.effort) {
-    launched.effort = options.dispatchDrift.effort;
+  const execution = approveExecution(draftExecution);
+  fixture.manifest.execution = execution;
+
+  // The fixture uses the same production exact-target check the controller
+  // invokes immediately before each launch. These synthetic calls prove helper
+  // and control-flow behavior, not native runtime identity.
+  let targetMismatch = false;
+  for (const wave of routingPreview.waves) {
+    const candidate = {
+      ...structuredClone(wave.target),
+      ...(options.dispatchDrift ?? {}),
+    };
+    try {
+      checkApprovedWaveTarget(
+        {
+          schemaVersion: 2,
+          run: fixture.manifest.run,
+          execution,
+        },
+        wave.waveId,
+        candidate,
+      );
+    } catch (error) {
+      if (!(error instanceof RoutingContractError)) throw error;
+      targetMismatch = true;
+      break;
+    }
   }
-  if (hashCanonicalJson(launched) !== execution.approval.fingerprint) {
+  if (targetMismatch) {
     fixture.manifest.run.status = 'awaiting-approval';
     fixture.manifest.run.achievedProfile = null;
     await fixture.persist();
@@ -184,11 +307,18 @@ export async function runFakeRecon(options = {}) {
       'DISPATCH_AXIS_DRIFT',
       'The launched dispatch axes differ from the approved envelope.',
     );
-    return stopped(
+    const output = stopped(
       roots.packetRoot,
       'awaiting-approval',
       'DISPATCH_AXIS_DRIFT',
     );
+    await writeFixtureRunLog(
+      roots.packetRoot,
+      invocation,
+      routingPreview,
+      output,
+    );
+    return output;
   }
 
   if (requestedProfile !== 'quick' && !degraded) {
@@ -202,10 +332,10 @@ export async function runFakeRecon(options = {}) {
       ['adversarial', 'adversary', 'unchallenged'],
       ['coverage', 'coverage', 'covered'],
       ...(requestedProfile === 'thorough'
-        ? [
-            ['redundant-verification', 'verify', 'affirmed'],
-            ['contradiction-resolution', 'adversary', 'unresolved'],
-          ]
+        ? [['redundant-verification', 'verify', 'affirmed']]
+        : []),
+      ...(includeContradictionResolution
+        ? [['contradiction-resolution', 'adversary', 'unresolved']]
         : []),
     ];
     const results = [];
@@ -308,8 +438,12 @@ export async function runFakeRecon(options = {}) {
       ...(requestedProfile === 'thorough'
         ? [
             'reviews/briefs/redundant-verify.json',
-            'reviews/briefs/contradiction-resolution.json',
             'reviews/redundant-verification.json',
+          ]
+        : []),
+      ...(includeContradictionResolution
+        ? [
+            'reviews/briefs/contradiction-resolution.json',
             'reviews/contradiction-resolution.json',
           ]
         : []),
@@ -375,12 +509,19 @@ export async function runFakeRecon(options = {}) {
         'STRUCTURAL_VALIDATION_FAILED',
         'The final packet failed deterministic structural validation.',
       );
-      return stopped(
+      const output = stopped(
         roots.packetRoot,
         'failed',
         'STRUCTURAL_VALIDATION_FAILED',
         { launched: true },
       );
+      await writeFixtureRunLog(
+        roots.packetRoot,
+        invocation,
+        routingPreview,
+        output,
+      );
+      return output;
     }
     throw new Error('Structural failure fixture unexpectedly rendered');
   }
@@ -411,12 +552,19 @@ export async function runFakeRecon(options = {}) {
         'STRUCTURAL_VALIDATION_FAILED',
         'The review result set failed integrity validation.',
       );
-      return stopped(
+      const output = stopped(
         roots.packetRoot,
         'failed',
         'STRUCTURAL_VALIDATION_FAILED',
         { launched: true },
       );
+      await writeFixtureRunLog(
+        roots.packetRoot,
+        invocation,
+        routingPreview,
+        output,
+      );
+      return output;
     }
     throw error;
   }
@@ -434,13 +582,27 @@ export async function runFakeRecon(options = {}) {
       pass: 'compile',
       laneOutcome: 'completed',
     });
-    return {
+    const output = {
       ...result,
       launched: true,
       failures,
       quarantinedPath,
       ledgerPreserved,
     };
+    await writeFixtureRunLog(
+      roots.packetRoot,
+      invocation,
+      routingPreview,
+      output,
+    );
+    return output;
   }
-  return { ...result, launched: true, failures };
+  const output = { ...result, launched: true, failures };
+  await writeFixtureRunLog(
+    roots.packetRoot,
+    invocation,
+    routingPreview,
+    output,
+  );
+  return output;
 }

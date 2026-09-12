@@ -37,6 +37,28 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- CLI `0.2.73` (`recon-rework`, all 31 implementation tasks, independent reviews,
+  and final verification complete; refreshed pre-approval closeout in progress;
+  draft PR #285 published) restores recon's inexpensive evidence fan-out with
+  independently approved per-wave targets, a v2 manifest, session-local explicit
+  approval, bounded conditional evidence passes, exactly one terminal
+  reconciliation for standard/thorough profiles, and caller-owned interpretation.
+  Shared routing helpers drive preview, exact target checks, and final packet
+  topology validation; profile-specific adaptive caps and fixed singleton bounds
+  prevent cross-profile or unbounded topologies, while malformed collections fail
+  with structured diagnostics and stale-output withdrawal. Exact wave/lane outcome
+  identity preserves honest mixed-lane partials at their achieved profile and
+  rejects same-lane contradictions. The runtime, recon worker contract, shared
+  orchestration guidance, public docs, bundle assets, provider projections, and
+  lockstep package versions are aligned. Current `main` is merged locally, the
+  complete ten-command release gate sequence passed, and configured exit-gate run
+  `965e9704-ba33-443b-adca-e494b6692fbc` was durably received as allowed at the
+  Important threshold with 0 Critical, 0 Important, 0 Medium, and 2 diagnostic-only
+  Minor findings. Summary refresh is complete; documentation and PR refresh precede
+  the pending final approval. GitHub issue #274 and
+  `BL-260908-restore-recon-s-cheap-fan-out` remain open until the authorized
+  shipping boundary.
+
 - CLI `0.2.66` (`remote-project-management`, original implementation and
   closeout reviews complete; Wave 6 integration awaiting a fresh final gate,
   publication, and release) adds local-first remote PJM

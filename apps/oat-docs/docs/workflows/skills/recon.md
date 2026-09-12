@@ -10,6 +10,12 @@ It gathers source-grounded findings through approved worker waves, validates
 their locators and assurance state, and gives the next consumer one compact
 entry point instead of every worker transcript.
 
+Recon controls the profile, routing proposal, and evidence flow. Shared
+orchestration guidance classifies the concrete assignments, the dispatch skill
+resolves and launches exact targets supported by the active harness, and the
+calling agent owns scope, approval dialogue, sufficiency judgment, and final
+conclusions.
+
 The first release is standalone. It does not automatically run from project
 discovery, quick start, `analyze`, or `deep-research`. Those workflows can
 consume an explicitly supplied packet path without changing their own
@@ -45,10 +51,11 @@ oat tools update --pack research --scope project
 
 The research pack acquires its two dispatch dependencies from the utility pack
 at the same scope. You do not need to select a named model during installation.
-At run time, OAT resolves a currently available target that meets the planned
-work's task-class floor and asks you to approve the exact provider, model,
-effort, role, topology, authority, and execution limits before any worker
-launches.
+At run time, OAT resolves each wave independently against its task class and
+floor, then asks you to approve every wave's exact supported provider-native
+axes, role, topology, rationale, conditions, authority, and finite execution
+limits before any worker launches. Active provider guidance and the live
+catalog own current qualification; recon does not maintain a second model list.
 
 ## Run a Recon
 
@@ -59,21 +66,31 @@ context source, output directory, or strict authority:
 /recon "How is provider sync materialized?" --profile standard --scope packages/cli/src/providers
 ```
 
-The default profile is `standard`. Every run uses one approved model and effort
-for every pass. Profiles change pass topology, redundancy, lane caps, and
-maximum concurrency; they do not silently choose a different model tier.
+The default profile is `standard`. Each homogeneous wave has an independently
+selected and approved exact target. Bounded mapping, extraction, citation
+reopening, counterexample search, and mechanical dossier compilation start with
+economical qualified routes. A wave that genuinely requires interpretation or
+reconciliation judgment can use a stronger approved target without raising the
+cost of unrelated evidence waves.
 
-| Profile    | Use it for                                  | Required assurance work                                                                  | Claim ceiling |
-| ---------- | ------------------------------------------- | ---------------------------------------------------------------------------------------- | ------------- |
-| `quick`    | Bounded orientation                         | Mapping, gathering, compilation, schema validation, and locator validation               | `supported`   |
-| `standard` | Load-bearing evidence                       | Quick work plus blind semantic verification, adversarial review, coverage, and reconcile | `verified`    |
-| `thorough` | Expensive failure or correlated blind spots | Standard work plus redundant gathering and verification and contradiction resolution     | `verified`    |
+| Profile    | Use it for                                  | Required assurance work                                                                                            | Claim ceiling |
+| ---------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------- |
+| `quick`    | Bounded orientation                         | Mapping, gathering, compilation, schema validation, and locator validation; no independent semantic pass by design | `supported`   |
+| `standard` | Load-bearing evidence                       | Quick work plus blind semantic verification, adversarial review, coverage, and reconcile                           | `verified`    |
+| `thorough` | Expensive failure or correlated blind spots | Standard work plus required redundant gathering and redundant verification                                         | `verified`    |
 
-The approval manifest shows the exact adaptive lane count, concurrency, pass
-topology, deadlines, retries, and source/write authority. Declining approval
-launches nothing. A change to a provider, model, effort, route, role, service
-tier, or execution cap requires renewed approval; there is no silent
-substitution after approval.
+A thorough run may additionally predeclare an optional, condition-bound
+`contradiction-resolution` evidence wave. It runs only when its approved
+predicate triggers and is not required when that branch is not triggered.
+
+The approval manifest shows each wave's exact target, task class, class floor,
+selection rationale, adaptive lane count, conditional rule, concurrency,
+deadlines, retries, and source/write authority. An unsupported provider-native
+control is shown explicitly as unavailable or null; recon never translates an
+effort label across harnesses or infers capability from an opaque selector.
+Declining approval launches nothing. Any target, topology, condition, or limit
+change requires renewed approval; there is no silent substitution after
+approval.
 
 Before any worker launches, recon confirms that the live launch surface can run
 the approved role, model, effort, and authority level. If it cannot, the run
@@ -81,6 +98,48 @@ stays at `awaiting-approval` with a provider/dispatch diagnostic and nothing is
 launched. Deadlines are approved execution limits chosen for the task class,
 not short watchdogs; an accepted lane is never interrupted by hand because a
 displayed deadline elapsed.
+
+### Preview and Check Routing
+
+The installed proposal helper renders the complete envelope in Markdown or
+JSON without recording approval or launching work. From a project-scoped
+installation:
+
+```bash
+node .agents/skills/recon/scripts/prepare-routing.mjs --manifest draft-manifest.json --format markdown
+node .agents/skills/recon/scripts/prepare-routing.mjs --manifest draft-manifest.json --format json
+```
+
+Immediately before a launch, the controller uses the same production logic to
+compare the constructed target with that wave's approved exact target:
+
+```bash
+node .agents/skills/recon/scripts/prepare-routing.mjs --manifest manifest.json --wave gather-1 --check-target candidate-target.json
+```
+
+These commands validate structure, approval integrity, and exact identity. They
+do not launch a worker, rank model names, attest actual runtime identity, or
+measure cost.
+
+### Bounded Conditional Evidence
+
+Standard and thorough may predeclare finite conditional
+`contradiction-resolution` evidence waves. A completed predecessor can trigger
+one such wave to seek discriminating evidence; accepted failure, cancellation,
+timeout, or missing output cannot trigger a replacement. Triggered,
+not-triggered, and unresolved dispositions remain visible. Both branches feed
+the same single mandatory terminal reconciliation.
+
+A triggered condition must cite complete, digest-bound evidence from an approved
+predecessor in the same run. Evidence copied from another run cannot activate
+the destination wave and fails packet validation with
+`CONDITION_EVIDENCE_RUN_MISMATCH`.
+
+If a need for stronger reconciliation judgment is foreseeable, select that one
+terminal target before approval. If it appears only after approval, recon
+preserves completed evidence and returns an unresolved, out-of-envelope gap for
+renewed approval or a new run. It never mutates the target, silently retries,
+or launches a second reconciliation.
 
 ## Destination Precedence
 
@@ -119,6 +178,26 @@ non-publishable candidate generation withdraws any existing `packet.md`:
 - `raw/` contains worker dossiers, candidate artifacts, and safe failure
   diagnostics. It is not normal consumer input.
 
+The `recon.packet-manifest` contract accepts version 2 only. Evidence artifact
+kinds remain independently versioned at version 1. Approval is session-local
+and records only `{ type, approvedAt }`: resuming, reloading, or changing the
+proposal requires a fresh preview and explicit approval before launch.
+
+Every valid packet renders a compact Intended Routing section from the already
+validated normalized view. It labels exact targets and condition dispositions
+as approved intent, not proof of the native process that ran, launcher receipts,
+token or billing totals, or universal correctness. A valid packet continues to
+reference version 1 evidence artifacts. Evidence, claims, contradictions, and
+gaps remain the packet's main consumer context.
+
+Every dossier and review result identifies the approved wave and lane that wrote
+it. Primary and redundant gather artifacts therefore satisfy only their owning
+waves; lanes from one gather wave cannot impersonate the other pass. In a
+thorough run, redundant gathering finishes before compilation, and the compiled
+ledger must reference every completed primary and redundant gather dossier by
+exact path and digest before review briefs are created. Missing provenance fails
+with `MISSING_THOROUGH_GATHER_LEDGER_INPUT`.
+
 The ledger compiler and packet validator enforce categorical referential
 integrity on `synthesis.keyClaimIds` and `synthesis.unresolvedQuestionIds`. Any
 reference to an unknown claim or question ID fails validation with
@@ -143,9 +222,11 @@ percentages:
 - `unresolved`: available evidence cannot settle the claim; and
 - `unsupported`: valid supporting evidence is absent or verification failed.
 
-A quick packet never promotes a claim to `verified`. Stronger profiles can do
-so only when their required review artifacts validate and were written by
-approved lanes.
+A quick packet is an evidence packet for an intelligent consumer and has no
+independent semantic pass by design. It never promotes a claim to `verified`;
+the caller assesses sufficiency and conclusions. Stronger profiles can promote
+claims only when their required independent review artifacts validate and were
+written by approved lanes.
 
 When an independent semantic review rejects a proposed claim, the reconciler
 transitions it to `unsupported` rather than deleting it. This preserves the
@@ -189,7 +270,17 @@ omitted passes, material gaps, affected claims, and required assurance
 downgrades. A run may be partial even when it achieved the requested profile if
 a material evidence gap remains. The achieved profile is derived from the
 complete typed artifacts in the packet; each required pass without a complete
-result needs a material `PASS_FAILED` or `PASS_OMITTED` gap naming it.
+result needs a material `PASS_FAILED` or `PASS_OMITTED` gap. Each approved lane
+must likewise have a complete artifact or a material outcome gap carrying its
+exact `waveId` and `laneId`; legacy mode-only gaps remain valid only when the mode
+unambiguously identifies one single-lane wave.
+
+A complete artifact and material failure or omission for the same exact wave and
+lane are contradictory, so validation fails closed with
+`CONTRADICTORY_PASS_OUTCOME`. Complete evidence from one lane and exact failure
+evidence from a different lane are not contradictory: the completed lane can
+preserve the achieved pass while the failed lane makes the published run an
+honest `partial` packet at that achieved profile.
 
 Status updates and the final handoff label each failure as `worker`,
 `provider/dispatch`, `contract validation`, or `source availability`, and

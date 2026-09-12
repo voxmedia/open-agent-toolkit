@@ -1,4 +1,5 @@
 export const SCHEMA_VERSION = 1;
+export const MANIFEST_SCHEMA_VERSION = 2;
 
 export const artifactKinds = new Set([
   'recon.packet-manifest',
@@ -60,6 +61,110 @@ export const taskClasses = [
   'hard-reasoning',
   'consequential',
 ];
+
+export const conditionPredicates = [
+  'insufficient-evidence',
+  'unresolved-material-challenge',
+];
+
+function profilePolicy(
+  orderedSingletonWaveModes,
+  allowedWaveModes,
+  countedLaneModes,
+  caps,
+) {
+  return Object.freeze({
+    orderedSingletonWaveModes: Object.freeze(orderedSingletonWaveModes),
+    allowedWaveModes: Object.freeze(allowedWaveModes),
+    countedLaneModes: Object.freeze(countedLaneModes),
+    ...caps,
+  });
+}
+
+export const profileRoutingPolicy = Object.freeze({
+  quick: profilePolicy(
+    ['map', 'gather', 'compile'],
+    ['map', 'gather', 'compile'],
+    ['gather'],
+    {
+      lanes: 4,
+      concurrency: 4,
+      conditions: 0,
+    },
+  ),
+  standard: profilePolicy(
+    [
+      'map',
+      'gather',
+      'compile',
+      'semantic-verification',
+      'adversarial',
+      'coverage',
+      'reconciliation',
+    ],
+    [
+      'map',
+      'gather',
+      'compile',
+      'semantic-verification',
+      'adversarial',
+      'coverage',
+      'reconciliation',
+      'contradiction-resolution',
+    ],
+    [
+      'gather',
+      'semantic-verification',
+      'adversarial',
+      'coverage',
+      'contradiction-resolution',
+    ],
+    { lanes: 10, concurrency: 6, conditions: 1 },
+  ),
+  thorough: profilePolicy(
+    [
+      'map',
+      'gather',
+      'redundant-gather',
+      'compile',
+      'semantic-verification',
+      'adversarial',
+      'coverage',
+      'redundant-verification',
+      'reconciliation',
+    ],
+    [
+      'map',
+      'gather',
+      'compile',
+      'semantic-verification',
+      'adversarial',
+      'coverage',
+      'redundant-gather',
+      'redundant-verification',
+      'reconciliation',
+      'contradiction-resolution',
+    ],
+    [
+      'gather',
+      'semantic-verification',
+      'adversarial',
+      'coverage',
+      'redundant-gather',
+      'redundant-verification',
+      'contradiction-resolution',
+    ],
+    { lanes: 20, concurrency: 8, conditions: 2 },
+  ),
+});
+
+const supportedSchemaVersions = new Map([
+  ['recon.packet-manifest', new Set([MANIFEST_SCHEMA_VERSION])],
+  ['recon.claim-ledger', new Set([SCHEMA_VERSION])],
+  ['recon.raw-dossier', new Set([SCHEMA_VERSION])],
+  ['recon.review-brief', new Set([SCHEMA_VERSION])],
+  ['recon.review-result', new Set([SCHEMA_VERSION])],
+]);
 
 const legalTransitions = new Set([
   'provisional:supported',
@@ -192,6 +297,22 @@ function requiredObject(value, key, errors, path = '$') {
   }
 }
 
+function requiredNullableString(value, key, errors, path = '$') {
+  if (
+    !Object.hasOwn(value ?? {}, key) ||
+    (value[key] !== null &&
+      (typeof value[key] !== 'string' || value[key].length === 0))
+  ) {
+    errors.push(
+      issue(
+        'MISSING_REQUIRED_FIELD',
+        `${key} must be a non-empty string or null`,
+        `${path}.${key}`,
+      ),
+    );
+  }
+}
+
 function closedObject(value, allowed, errors, path = '$') {
   if (!isObject(value)) return;
   for (const key of Object.keys(value)) {
@@ -220,7 +341,7 @@ function duplicateIds(values, path, errors) {
   }
 }
 
-const executionKeys = new Set([
+const exactTargetKeys = new Set([
   'provider',
   'route',
   'role',
@@ -228,27 +349,22 @@ const executionKeys = new Set([
   'effort',
   'reasoningMode',
   'serviceTier',
+]);
+
+const executionV2Keys = new Set([
+  'target',
   'authority',
   'maxConcurrency',
   'deadlineSeconds',
   'retryLimit',
   'waves',
+  'conditions',
   'approval',
 ]);
 
-export function approvalFingerprintInput(execution) {
-  const { approval: _approval, ...approved } = execution;
-  return approved;
-}
-
 function validateApprovalEvidence(value, errors, path) {
   if (!isObject(value)) return;
-  closedObject(
-    value,
-    new Set(['type', 'approvedAt', 'fingerprint']),
-    errors,
-    path,
-  );
+  closedObject(value, new Set(['type', 'approvedAt']), errors, path);
   if (value.type !== 'explicit-user-approval') {
     errors.push(
       issue(
@@ -259,34 +375,24 @@ function validateApprovalEvidence(value, errors, path) {
     );
   }
   requiredTimestamp(value, 'approvedAt', errors, path);
-  if (!isDigest(value.fingerprint)) {
-    errors.push(
-      issue(
-        'INVALID_APPROVAL_FINGERPRINT',
-        'Approval evidence fingerprint must be sha256',
-        `${path}.fingerprint`,
-      ),
-    );
+}
+
+function validateExactTarget(value, errors, path) {
+  if (!isObject(value)) return;
+  closedObject(value, exactTargetKeys, errors, path);
+  for (const key of ['provider', 'route', 'role', 'model']) {
+    requiredString(value, key, errors, path);
+  }
+  for (const key of ['effort', 'reasoningMode', 'serviceTier']) {
+    requiredNullableString(value, key, errors, path);
   }
 }
 
-export function validateExecution(value, errors, path = '$.execution') {
+function validateExecutionV2(value, errors, path) {
   if (!isObject(value)) return;
-  closedObject(value, executionKeys, errors, path);
-  for (const key of ['provider', 'route', 'role', 'model', 'effort']) {
-    requiredString(value, key, errors, path);
-  }
-  for (const key of ['reasoningMode', 'serviceTier']) {
-    if (value[key] !== null && typeof value[key] !== 'string') {
-      errors.push(
-        issue(
-          'MISSING_REQUIRED_FIELD',
-          `${key} must be a string or null`,
-          `${path}.${key}`,
-        ),
-      );
-    }
-  }
+  closedObject(value, executionV2Keys, errors, path);
+  requiredObject(value, 'target', errors, path);
+  validateExactTarget(value.target, errors, `${path}.target`);
   if (!authorityLevels.includes(value.authority)) {
     errors.push(
       issue(
@@ -300,20 +406,47 @@ export function validateExecution(value, errors, path = '$.execution') {
   requiredInteger(value, 'deadlineSeconds', errors, path, 1);
   requiredInteger(value, 'retryLimit', errors, path, 0);
   requiredArray(value, 'waves', errors, path);
+  requiredArray(value, 'conditions', errors, path);
   requiredObject(value, 'approval', errors, path);
   validateApprovalEvidence(value.approval, errors, `${path}.approval`);
+
+  const waves = Array.isArray(value.waves) ? value.waves : [];
   const waveIds = new Set();
   const laneIds = new Set();
-  for (const [waveIndex, wave] of (value.waves ?? []).entries()) {
+  const writeRoots = new Set();
+  for (const [waveIndex, wave] of waves.entries()) {
     const wavePath = `${path}.waves[${waveIndex}]`;
     closedObject(
       wave,
-      new Set(['waveId', 'mode', 'taskClass', 'lanes', 'conditional']),
+      new Set([
+        'waveId',
+        'mode',
+        'taskClass',
+        'classFloor',
+        'selectionReason',
+        'target',
+        'lanes',
+        'conditional',
+      ]),
       errors,
       wavePath,
     );
     requiredString(wave, 'waveId', errors, wavePath);
+    requiredString(wave, 'selectionReason', errors, wavePath);
     requiredArray(wave, 'lanes', errors, wavePath);
+    if (Object.hasOwn(wave ?? {}, 'target')) {
+      if (!isObject(wave.target)) {
+        errors.push(
+          issue(
+            'MISSING_REQUIRED_FIELD',
+            'target must be a complete exact target object',
+            `${wavePath}.target`,
+          ),
+        );
+      } else {
+        validateExactTarget(wave.target, errors, `${wavePath}.target`);
+      }
+    }
     if (Array.isArray(wave?.lanes) && wave.lanes.length === 0) {
       errors.push(
         issue(
@@ -328,11 +461,30 @@ export function validateExecution(value, errors, path = '$.execution') {
         issue('INVALID_WAVE_MODE', 'Unknown wave mode', `${wavePath}.mode`),
       );
     }
-    if (!taskClasses.includes(wave?.taskClass)) {
+    const taskClassIndex = taskClasses.indexOf(wave?.taskClass);
+    const classFloorIndex = taskClasses.indexOf(wave?.classFloor);
+    if (taskClassIndex === -1) {
       errors.push(
         issue(
           'INVALID_TASK_CLASS',
           'Unknown wave task class',
+          `${wavePath}.taskClass`,
+        ),
+      );
+    }
+    if (classFloorIndex === -1) {
+      errors.push(
+        issue(
+          'INVALID_TASK_CLASS',
+          'Unknown wave class floor',
+          `${wavePath}.classFloor`,
+        ),
+      );
+    } else if (taskClassIndex !== -1 && taskClassIndex < classFloorIndex) {
+      errors.push(
+        issue(
+          'TASK_CLASS_BELOW_FLOOR',
+          'Wave task class must meet or exceed its declared class floor',
           `${wavePath}.taskClass`,
         ),
       );
@@ -393,8 +545,423 @@ export function validateExecution(value, errors, path = '$.execution') {
         );
       }
       laneIds.add(lane?.laneId);
+      if (
+        typeof lane?.writeRoot === 'string' &&
+        writeRoots.has(lane.writeRoot)
+      ) {
+        errors.push(
+          issue(
+            'DUPLICATE_WAVE_OUTPUT',
+            `Wave output ${lane.writeRoot} is assigned more than once`,
+            `${lanePath}.writeRoot`,
+          ),
+        );
+      }
+      if (typeof lane?.writeRoot === 'string') writeRoots.add(lane.writeRoot);
     }
   }
+}
+
+export function validateV2ProfileTopology(
+  manifest,
+  execution = manifest?.execution,
+  path = '$.execution',
+) {
+  const errors = [];
+  if (manifest?.schemaVersion !== MANIFEST_SCHEMA_VERSION) return errors;
+  const requestedProfile = manifest.run?.requestedProfile;
+  const policy = profileRoutingPolicy[requestedProfile];
+  if (!policy) {
+    return [
+      issue(
+        'INVALID_ROUTING_PROFILE',
+        'A v2 routing proposal requires a supported requested profile',
+        '$.run.requestedProfile',
+      ),
+    ];
+  }
+  if (!isObject(execution)) return errors;
+  if (!Array.isArray(execution.waves)) {
+    return [
+      issue(
+        'MISSING_ROUTING_WAVES',
+        'execution.waves must be an array',
+        `${path}.waves`,
+      ),
+    ];
+  }
+  if (!Array.isArray(execution.conditions)) {
+    return [
+      issue(
+        'MISSING_ROUTING_CONDITIONS',
+        'execution.conditions must be an array',
+        `${path}.conditions`,
+      ),
+    ];
+  }
+  const waves = Array.isArray(execution.waves) ? execution.waves : [];
+  const conditions = Array.isArray(execution.conditions)
+    ? execution.conditions
+    : [];
+  const forbiddenModes = waves
+    .filter(
+      (wave) =>
+        typeof wave?.mode === 'string' &&
+        !policy.allowedWaveModes.includes(wave.mode),
+    )
+    .map((wave) => wave.mode);
+  if (forbiddenModes.length > 0) {
+    errors.push(
+      issue(
+        'WAVE_MODE_NOT_ALLOWED_FOR_PROFILE',
+        `${requestedProfile} routing does not permit wave modes: ${[
+          ...new Set(forbiddenModes),
+        ].join(', ')}`,
+        `${path}.waves`,
+      ),
+    );
+  }
+  for (const [waveIndex, wave] of waves.entries()) {
+    if (
+      policy.allowedWaveModes.includes(wave?.mode) &&
+      !policy.countedLaneModes.includes(wave.mode) &&
+      Array.isArray(wave?.lanes) &&
+      wave.lanes.length !== 1
+    ) {
+      errors.push(
+        issue(
+          'INVALID_PROFILE_SINGLETON_LANE_COUNT',
+          `${requestedProfile} ${wave.mode} waves require exactly one lane`,
+          `${path}.waves[${waveIndex}].lanes`,
+        ),
+      );
+    }
+  }
+  const laneCount = waves.reduce(
+    (count, wave) =>
+      count +
+      (policy.countedLaneModes.includes(wave?.mode) &&
+      Array.isArray(wave?.lanes)
+        ? wave.lanes.length
+        : 0),
+    0,
+  );
+  if (laneCount > policy.lanes) {
+    errors.push(
+      issue(
+        'PROFILE_LANE_CAP_EXCEEDED',
+        `${requestedProfile} routing permits at most ${policy.lanes} adaptive evidence lanes`,
+        `${path}.waves`,
+      ),
+    );
+  }
+  if (execution.maxConcurrency > policy.concurrency) {
+    errors.push(
+      issue(
+        'PROFILE_CONCURRENCY_CAP_EXCEEDED',
+        `${requestedProfile} routing permits concurrency at most ${policy.concurrency}`,
+        `${path}.maxConcurrency`,
+      ),
+    );
+  }
+  if (conditions.length > policy.conditions) {
+    errors.push(
+      issue(
+        'PROFILE_CONDITION_CAP_EXCEEDED',
+        `${requestedProfile} routing permits at most ${policy.conditions} conditional waves`,
+        `${path}.conditions`,
+      ),
+    );
+  }
+  const reconciliationIndexes = waves
+    .map((wave, index) => (wave?.mode === 'reconciliation' ? index : -1))
+    .filter((index) => index !== -1);
+  const requiresReconciliation = ['standard', 'thorough'].includes(
+    requestedProfile,
+  );
+  if (
+    reconciliationIndexes.length > 1 ||
+    (requiresReconciliation && reconciliationIndexes.length !== 1) ||
+    reconciliationIndexes.some((index) => index !== waves.length - 1) ||
+    reconciliationIndexes.some((index) => waves[index]?.conditional === true)
+  ) {
+    errors.push(
+      issue(
+        'INVALID_TERMINAL_TOPOLOGY',
+        'Standard and thorough routing require exactly one non-conditional terminal reconciliation wave',
+        `${path}.waves`,
+      ),
+    );
+  }
+
+  const waveIndexes = new Map(
+    waves
+      .map((wave, index) => (isObject(wave) ? [wave.waveId, index] : null))
+      .filter(Boolean),
+  );
+  const conditionIds = new Set();
+  const conditionDestinations = new Set();
+  const conditionFields = new Set([
+    'conditionId',
+    'destinationWaveId',
+    'afterWaveIds',
+    'predicate',
+    'maxActivations',
+  ]);
+  const terminalIndex = reconciliationIndexes[0] ?? -1;
+  for (const [index, condition] of conditions.entries()) {
+    const conditionPath = `${path}.conditions[${index}]`;
+    if (
+      !isObject(condition) ||
+      Object.keys(condition).some((key) => !conditionFields.has(key))
+    ) {
+      errors.push(
+        issue(
+          'INVALID_ROUTING_CONDITION',
+          'Routing condition must be a closed object',
+          conditionPath,
+        ),
+      );
+      continue;
+    }
+    if (
+      typeof condition.conditionId !== 'string' ||
+      condition.conditionId.length === 0 ||
+      typeof condition.destinationWaveId !== 'string' ||
+      condition.destinationWaveId.length === 0
+    ) {
+      errors.push(
+        issue(
+          'INVALID_ROUTING_CONDITION',
+          'Condition and destination IDs must be non-empty strings',
+          conditionPath,
+        ),
+      );
+      continue;
+    }
+    if (
+      !Array.isArray(condition.afterWaveIds) ||
+      condition.afterWaveIds.length === 0
+    ) {
+      errors.push(
+        issue(
+          'INVALID_CONDITION_DEPENDENCY',
+          'Condition dependencies must contain at least one predecessor wave',
+          `${conditionPath}.afterWaveIds`,
+        ),
+      );
+    }
+    if (!conditionPredicates.includes(condition.predicate)) {
+      errors.push(
+        issue(
+          'INVALID_CONDITION_PREDICATE',
+          'Unknown routing condition predicate',
+          `${conditionPath}.predicate`,
+        ),
+      );
+    }
+    if (condition.maxActivations !== 1) {
+      errors.push(
+        issue(
+          'INVALID_CONDITION_LIMIT',
+          'Routing conditions must allow exactly one activation',
+          `${conditionPath}.maxActivations`,
+        ),
+      );
+    }
+    if (conditionIds.has(condition.conditionId)) {
+      errors.push(
+        issue(
+          'DUPLICATE_ROUTING_ID',
+          `Duplicate condition ${condition.conditionId}`,
+          `${conditionPath}.conditionId`,
+        ),
+      );
+    }
+    conditionIds.add(condition.conditionId);
+    if (conditionDestinations.has(condition.destinationWaveId)) {
+      errors.push(
+        issue(
+          'DUPLICATE_CONDITION_DESTINATION',
+          `Conditional wave ${condition.destinationWaveId} has more than one activating condition`,
+          `${conditionPath}.destinationWaveId`,
+        ),
+      );
+    }
+    conditionDestinations.add(condition.destinationWaveId);
+
+    const destinationIndex = waveIndexes.get(condition.destinationWaveId);
+    const destination =
+      destinationIndex === undefined ? null : waves[destinationIndex];
+    if (
+      !destination ||
+      destination.conditional !== true ||
+      destination.mode !== 'contradiction-resolution'
+    ) {
+      errors.push(
+        issue(
+          'INVALID_CONDITION_DESTINATION',
+          'Condition destination must name a conditional contradiction-resolution wave',
+          `${conditionPath}.destinationWaveId`,
+        ),
+      );
+    }
+    const afterIds = new Set();
+    for (const afterWaveId of Array.isArray(condition.afterWaveIds)
+      ? condition.afterWaveIds
+      : []) {
+      if (typeof afterWaveId !== 'string' || afterWaveId.length === 0) {
+        errors.push(
+          issue(
+            'INVALID_CONDITION_DEPENDENCY',
+            'Condition dependencies must be non-empty wave ID strings',
+            `${conditionPath}.afterWaveIds`,
+          ),
+        );
+        continue;
+      }
+      if (afterIds.has(afterWaveId)) {
+        errors.push(
+          issue(
+            'DUPLICATE_CONDITION_DEPENDENCY',
+            `Condition repeats predecessor ${afterWaveId}`,
+            `${conditionPath}.afterWaveIds`,
+          ),
+        );
+      }
+      afterIds.add(afterWaveId);
+      const predecessorIndex = waveIndexes.get(afterWaveId);
+      if (predecessorIndex === undefined) {
+        errors.push(
+          issue(
+            'UNKNOWN_CONDITION_WAVE',
+            `Unknown predecessor wave ${afterWaveId}`,
+            `${conditionPath}.afterWaveIds`,
+          ),
+        );
+      } else if (
+        destinationIndex !== undefined &&
+        predecessorIndex >= destinationIndex
+      ) {
+        errors.push(
+          issue(
+            'NON_FORWARD_CONDITION',
+            `Condition predecessor ${afterWaveId} must appear before ${condition.destinationWaveId}`,
+            `${conditionPath}.afterWaveIds`,
+          ),
+        );
+      }
+    }
+    if (
+      terminalIndex !== -1 &&
+      destinationIndex !== undefined &&
+      destinationIndex >= terminalIndex
+    ) {
+      errors.push(
+        issue(
+          'INVALID_TERMINAL_TOPOLOGY',
+          'Conditional evidence waves must complete before the one terminal reconciliation',
+          `${conditionPath}.destinationWaveId`,
+        ),
+      );
+    }
+  }
+  for (const wave of waves) {
+    if (
+      wave?.conditional === true &&
+      wave.mode !== 'reconciliation' &&
+      !policy.orderedSingletonWaveModes.includes(wave.mode) &&
+      !conditionDestinations.has(wave.waveId)
+    ) {
+      errors.push(
+        issue(
+          'MISSING_WAVE_CONDITION',
+          `Conditional wave ${wave.waveId} must be bound to exactly one activating condition`,
+          `${path}.waves`,
+        ),
+      );
+    }
+  }
+  const unconditionalContradiction = waves.find(
+    (wave) =>
+      wave?.mode === 'contradiction-resolution' && wave.conditional !== true,
+  );
+  if (unconditionalContradiction) {
+    errors.push(
+      issue(
+        'UNCONDITIONAL_CONTRADICTION_RESOLUTION',
+        `Contradiction-resolution wave ${unconditionalContradiction.waveId} must be conditional and condition-bound`,
+        `${path}.waves`,
+      ),
+    );
+  }
+
+  const stageIndexes = policy.orderedSingletonWaveModes.map((mode) => ({
+    mode,
+    indexes: waves
+      .map((wave, index) => (wave?.mode === mode ? index : -1))
+      .filter((index) => index !== -1),
+  }));
+  const duplicateModes = stageIndexes
+    .filter(({ indexes }) => indexes.length > 1)
+    .map(({ mode }) => mode);
+  if (duplicateModes.length > 0) {
+    errors.push(
+      issue(
+        'DUPLICATE_PROFILE_WAVE_MODE',
+        `${requestedProfile} routing requires one wave for singleton modes: ${duplicateModes.join(', ')}`,
+        `${path}.waves`,
+      ),
+    );
+  }
+  const missingModes = stageIndexes
+    .filter(({ indexes }) => indexes.length === 0)
+    .map(({ mode }) => mode);
+  if (missingModes.length > 0) {
+    errors.push(
+      issue(
+        'INCOMPLETE_PROFILE_TOPOLOGY',
+        `${requestedProfile} routing is missing required non-conditional wave modes: ${missingModes.join(', ')}`,
+        `${path}.waves`,
+      ),
+    );
+  }
+  const conditionalRequired = stageIndexes.find(
+    ({ mode, indexes }) =>
+      mode !== 'reconciliation' &&
+      indexes.length === 1 &&
+      waves[indexes[0]]?.conditional,
+  );
+  if (conditionalRequired) {
+    errors.push(
+      issue(
+        'INCOMPLETE_PROFILE_TOPOLOGY',
+        `${requestedProfile} required wave mode ${conditionalRequired.mode} must be non-conditional`,
+        `${path}.waves`,
+      ),
+    );
+  }
+  const orderedIndexes = stageIndexes.map(({ indexes }) => indexes[0]);
+  if (
+    orderedIndexes.every((index) => index !== undefined) &&
+    orderedIndexes.some(
+      (index, position) =>
+        position > 0 && index <= orderedIndexes[position - 1],
+    )
+  ) {
+    errors.push(
+      issue(
+        'OUT_OF_ORDER_PROFILE_TOPOLOGY',
+        `${requestedProfile} routing must order singleton modes as: ${policy.orderedSingletonWaveModes.join(', ')}`,
+        `${path}.waves`,
+      ),
+    );
+  }
+  return errors;
+}
+
+export function validateExecution(value, errors, path = '$.execution') {
+  validateExecutionV2(value, errors, path);
 }
 
 function validateManifest(value, errors) {
@@ -409,6 +976,7 @@ function validateManifest(value, errors) {
       'execution',
       'artifacts',
       'gaps',
+      'conditionOutcomes',
     ]),
     errors,
   );
@@ -500,13 +1068,76 @@ function validateManifest(value, errors) {
     }
   }
   validateExecution(value.execution, errors, '$.execution');
-  if (Array.isArray(value.sources))
-    duplicateIds(value.sources, '$.sources', errors);
-  if (Array.isArray(value.gaps)) duplicateIds(value.gaps, '$.gaps', errors);
-  for (const [index, reference] of (value.artifacts ?? []).entries()) {
+  errors.push(...validateV2ProfileTopology(value));
+  requiredArray(value, 'conditionOutcomes', errors);
+  const sources = Array.isArray(value.sources) ? value.sources : [];
+  const artifacts = Array.isArray(value.artifacts) ? value.artifacts : [];
+  const gaps = Array.isArray(value.gaps) ? value.gaps : [];
+  const outcomeIds = new Set();
+  for (const [index, outcome] of (Array.isArray(value.conditionOutcomes)
+    ? value.conditionOutcomes
+    : []
+  ).entries()) {
+    const outcomePath = `$.conditionOutcomes[${index}]`;
+    if (!isObject(outcome)) {
+      errors.push(
+        issue(
+          'INVALID_CONDITION_OUTCOME',
+          'Condition outcome must be an object',
+          outcomePath,
+        ),
+      );
+      continue;
+    }
+    closedObject(
+      outcome,
+      new Set(['conditionId', 'disposition', 'reason', 'evidence']),
+      errors,
+      outcomePath,
+    );
+    requiredString(outcome, 'conditionId', errors, outcomePath);
+    requiredString(outcome, 'reason', errors, outcomePath);
+    requiredArray(outcome, 'evidence', errors, outcomePath);
+    if (
+      !['triggered', 'not-triggered', 'unresolved'].includes(
+        outcome.disposition,
+      )
+    ) {
+      errors.push(
+        issue(
+          'INVALID_CONDITION_DISPOSITION',
+          'Condition disposition must be triggered, not-triggered, or unresolved',
+          `${outcomePath}.disposition`,
+        ),
+      );
+    }
+    for (const [evidenceIndex, reference] of (Array.isArray(outcome.evidence)
+      ? outcome.evidence
+      : []
+    ).entries()) {
+      validateExactReference(
+        reference,
+        `${outcomePath}.evidence[${evidenceIndex}]`,
+        errors,
+      );
+    }
+    if (outcomeIds.has(outcome.conditionId)) {
+      errors.push(
+        issue(
+          'DUPLICATE_CONDITION_OUTCOME',
+          `Condition ${outcome.conditionId} has more than one disposition`,
+          `${outcomePath}.conditionId`,
+        ),
+      );
+    }
+    outcomeIds.add(outcome.conditionId);
+  }
+  duplicateIds(sources, '$.sources', errors);
+  duplicateIds(gaps, '$.gaps', errors);
+  for (const [index, reference] of artifacts.entries()) {
     validateExactReference(reference, `$.artifacts[${index}]`, errors);
   }
-  for (const [index, source] of (value.sources ?? []).entries()) {
+  for (const [index, source] of sources.entries()) {
     for (const key of [
       'kind',
       'id',
@@ -615,7 +1246,7 @@ function validateManifest(value, errors) {
       }
     }
   }
-  for (const [index, gap] of (value.gaps ?? []).entries()) {
+  for (const [index, gap] of gaps.entries()) {
     requiredString(gap, 'id', errors, `$.gaps[${index}]`);
     requiredString(gap, 'code', errors, `$.gaps[${index}]`);
     requiredString(gap, 'message', errors, `$.gaps[${index}]`);
@@ -635,6 +1266,8 @@ function validateManifest(value, errors) {
         'code',
         'message',
         'material',
+        'waveId',
+        'laneId',
         'sourceIds',
         'claimIds',
         'coverageFindingIds',
@@ -642,6 +1275,10 @@ function validateManifest(value, errors) {
       errors,
       `$.gaps[${index}]`,
     );
+    if (Object.hasOwn(gap, 'waveId') || Object.hasOwn(gap, 'laneId')) {
+      requiredString(gap, 'waveId', errors, `$.gaps[${index}]`);
+      requiredString(gap, 'laneId', errors, `$.gaps[${index}]`);
+    }
   }
 }
 
@@ -757,10 +1394,16 @@ function validateLedger(value, errors) {
       ? value.evidence.map((item) => item?.id).filter(Boolean)
       : [],
   );
-  for (const [index, reference] of (value.inputArtifacts ?? []).entries()) {
+  const inputArtifacts = Array.isArray(value.inputArtifacts)
+    ? value.inputArtifacts
+    : [];
+  const evidenceItems = Array.isArray(value.evidence) ? value.evidence : [];
+  const claims = Array.isArray(value.claims) ? value.claims : [];
+  const transitions = Array.isArray(value.transitions) ? value.transitions : [];
+  for (const [index, reference] of inputArtifacts.entries()) {
     validateExactReference(reference, `$.inputArtifacts[${index}]`, errors);
   }
-  for (const [index, evidence] of (value.evidence ?? []).entries()) {
+  for (const [index, evidence] of evidenceItems.entries()) {
     closedObject(
       evidence,
       new Set([
@@ -857,7 +1500,7 @@ function validateLedger(value, errors) {
       errors,
     );
   }
-  for (const [index, claim] of (value.claims ?? []).entries()) {
+  for (const [index, claim] of claims.entries()) {
     closedObject(
       claim,
       new Set([
@@ -894,7 +1537,10 @@ function validateLedger(value, errors) {
       requiredArray(claim, key, errors, `$.claims[${index}]`);
     }
     const linkedEvidenceIds = new Set();
-    for (const [linkIndex, link] of (claim.evidence ?? []).entries()) {
+    for (const [linkIndex, link] of (Array.isArray(claim.evidence)
+      ? claim.evidence
+      : []
+    ).entries()) {
       const linkPath = `$.claims[${index}].evidence[${linkIndex}]`;
       if (!isObject(link)) {
         errors.push(
@@ -940,8 +1586,9 @@ function validateLedger(value, errors) {
       }
       linkedEvidenceIds.add(link.evidenceId);
     }
-    for (const [referenceIndex, reference] of (
-      claim.derivedFrom ?? []
+    for (const [referenceIndex, reference] of (Array.isArray(claim.derivedFrom)
+      ? claim.derivedFrom
+      : []
     ).entries()) {
       validateExactReference(
         reference,
@@ -950,7 +1597,7 @@ function validateLedger(value, errors) {
       );
     }
   }
-  for (const [index, transition] of (value.transitions ?? []).entries()) {
+  for (const [index, transition] of transitions.entries()) {
     closedObject(
       transition,
       new Set(['claimId', 'from', 'to']),
@@ -967,9 +1614,9 @@ function validateLedger(value, errors) {
       );
     }
   }
-  const claimIds = new Set((value.claims ?? []).map((claim) => claim.id));
+  const claimIds = new Set(claims.map((claim) => claim.id));
   const lastTransitionByClaim = new Map();
-  for (const transition of value.transitions ?? []) {
+  for (const transition of transitions) {
     if (!claimIds.has(transition.claimId)) {
       errors.push(
         issue(
@@ -981,7 +1628,7 @@ function validateLedger(value, errors) {
     }
     lastTransitionByClaim.set(transition.claimId, transition);
   }
-  for (const claim of value.claims ?? []) {
+  for (const claim of claims) {
     const lastTransition = lastTransitionByClaim.get(claim.id);
     if (value.revision === 1 && claim.status === 'provisional') {
       if (lastTransition) {
@@ -1950,11 +2597,12 @@ export function validateArtifactShape(value) {
       ),
     );
   }
-  if (value.schemaVersion !== SCHEMA_VERSION) {
+  const versions = supportedSchemaVersions.get(value.kind);
+  if (versions && !versions.has(value.schemaVersion)) {
     errors.push(
       issue(
         'UNSUPPORTED_SCHEMA_VERSION',
-        `Expected schemaVersion ${SCHEMA_VERSION}`,
+        `Unsupported schemaVersion ${value.schemaVersion} for ${value.kind}`,
         '$.schemaVersion',
       ),
     );
