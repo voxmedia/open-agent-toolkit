@@ -22,12 +22,9 @@ import { png } from './fixtures/png.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const fixtures = join(here, 'fixtures', 'verify');
+const repositoryRoot = join(here, '..', '..', '..', '..');
 const packageFixture = join(
-  here,
-  '..',
-  '..',
-  '..',
-  '..',
+  repositoryRoot,
   'packages',
   'cli',
   'src',
@@ -37,6 +34,24 @@ const packageFixture = join(
   'fixtures',
   'v2-package',
 );
+const trackedPackages = [
+  {
+    name: 'project explainer',
+    recipe: 'project-explainer',
+    root: join(
+      repositoryRoot,
+      '.oat/projects/shared/agent-authored-recap/explainers/agent-authored-recap-explainer',
+    ),
+  },
+  {
+    name: 'program recap',
+    recipe: 'program-recap',
+    root: join(
+      repositoryRoot,
+      '.oat/repo/reference/explainers/2026-08-31-execution-program-recap',
+    ),
+  },
+];
 
 async function runRoot(page = 'valid.html') {
   const root = await mkdtemp(join(tmpdir(), 'explainer-verify-'));
@@ -146,6 +161,26 @@ test('extractRenderedClaims keys terms and normalized facts by subject', async (
     ).size,
     claims.claims.length,
   );
+});
+
+test('tracked packages pass fresh browser-free verification', async () => {
+  for (const trackedPackage of trackedPackages) {
+    const root = await mkdtemp(join(tmpdir(), 'explainer-tracked-verify-'));
+    await cp(trackedPackage.root, root, { recursive: true });
+    await rm(join(root, 'manifest.json'));
+
+    const result = await verifyRun({
+      runRoot: root,
+      recipe: trackedPackage.recipe,
+      rung: 'none',
+    });
+
+    assert.equal(
+      allPass(result),
+      true,
+      `${trackedPackage.name}: ${JSON.stringify(result.checks)}`,
+    );
+  }
 });
 
 for (const { name, markup, value } of [

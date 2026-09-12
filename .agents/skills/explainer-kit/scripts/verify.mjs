@@ -39,6 +39,47 @@ const STATUS_VALUES = new Set([
   'incomplete',
   'skipped',
 ]);
+const COVERED_CLAIM_BLOCKS = new Set([
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
+  'tr',
+  'li',
+  'p',
+]);
+const CLAIM_LABEL_ELEMENTS = new Set([
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
+  'dt',
+  'label',
+  'b',
+  'strong',
+]);
+const IGNORED_RESIDUAL_ELEMENTS = new Set(['script', 'style']);
+const VOID_HTML_ELEMENTS = new Set([
+  'area',
+  'base',
+  'br',
+  'col',
+  'embed',
+  'hr',
+  'img',
+  'input',
+  'link',
+  'meta',
+  'param',
+  'source',
+  'track',
+  'wbr',
+]);
+
 export function extractRenderedClaims(html) {
   const terminology = {};
   const numericClaims = {};
@@ -99,10 +140,100 @@ export function extractRenderedClaims(html) {
       harvestValues(valuesText, subject);
     }
 
-    const residualText = htmlText(section.html.replace(blockPattern, ' '));
-    if (residualText) harvestValues(residualText, section.id);
+    for (const residual of extractResidualClaimSegments(
+      section.html,
+      section.id,
+    )) {
+      harvestValues(residual.text, residual.subject);
+    }
   }
   return { terminology, numericClaims, statuses, claims };
+}
+
+function extractResidualClaimSegments(html, sectionId) {
+  const segments = [];
+  const stack = [
+    {
+      tag: '#section',
+      subject: null,
+      labelText: null,
+      coveredContext: false,
+    },
+  ];
+  let coveredDepth = 0;
+  let ignoredDepth = 0;
+
+  const nearestSubject = () =>
+    stack.findLast((frame) => frame.subject)?.subject ?? sectionId;
+  const addSegment = (text) => {
+    const normalized = htmlText(text);
+    if (normalized) {
+      segments.push({ text: normalized, subject: nearestSubject() });
+    }
+  };
+  const closeFrame = () => {
+    const frame = stack.pop();
+    if (!frame || frame.tag === '#section') return;
+
+    if (frame.labelText !== null) {
+      const labelText = htmlText(frame.labelText);
+      const subject = normalizeClaimSubject({
+        text: labelText,
+        sectionId: null,
+      });
+      if (subject) {
+        stack.at(-1).subject = subject;
+      } else if (!frame.coveredContext && ignoredDepth === 0) {
+        addSegment(frame.labelText);
+      }
+    }
+    if (frame.covered) coveredDepth -= 1;
+    if (frame.ignored) ignoredDepth -= 1;
+  };
+
+  for (const match of String(html).matchAll(
+    /<!--[\s\S]*?-->|<![^>]*>|<\/?[a-z][^>]*>|[^<]+/gi,
+  )) {
+    const token = match[0];
+    const close = token.match(/^<\/([a-z][\w:-]*)\s*>/i);
+    if (close) {
+      while (stack.length > 1 && stack.at(-1).tag !== close[1].toLowerCase()) {
+        closeFrame();
+      }
+      if (stack.length > 1) closeFrame();
+      continue;
+    }
+
+    const open = token.match(/^<([a-z][\w:-]*)\b/i);
+    if (open) {
+      const tag = open[1].toLowerCase();
+      const covered = COVERED_CLAIM_BLOCKS.has(tag);
+      const ignored = IGNORED_RESIDUAL_ELEMENTS.has(tag);
+      stack.push({
+        tag,
+        subject: null,
+        labelText: CLAIM_LABEL_ELEMENTS.has(tag) ? '' : null,
+        covered,
+        ignored,
+        coveredContext: coveredDepth > 0 || covered,
+      });
+      if (covered) coveredDepth += 1;
+      if (ignored) ignoredDepth += 1;
+      if (VOID_HTML_ELEMENTS.has(tag) || /\/\s*>$/.test(token)) closeFrame();
+      continue;
+    }
+
+    if (ignoredDepth > 0) continue;
+    const labels = stack.filter((frame) => frame.labelText !== null);
+    if (labels.length > 0) {
+      for (const label of labels) label.labelText += token;
+    } else if (coveredDepth === 0) {
+      addSegment(token);
+    }
+  }
+
+  while (stack.length > 1) closeFrame();
+  return segments;
 }
 
 export async function verifyRun({
