@@ -896,6 +896,23 @@ described below.
   settled attempt one before attempt two could reserve the required lockstep
   version bump.
 
+### Recovery Event recovery-agent-authored-recap-p05-02
+
+- Phase/task: p05 / p05-t01
+- Original request: `dispatch-agent-authored-recap-p05-20260912T0215Z`
+- Original commit: `3e8bf412ad2d1d846d9bb6e0eae21ccb7263a220`
+- Defect class: build
+- Discovered by: committed-HEAD `pnpm release:check-versions`
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 2/10
+- Dispatch target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Recovery commit: `e427819ec77b001f5bc87c7aa37ee1a711fb7118`
+- Verification: the complete ordered Phase 5 gate suite passed before and
+  after the recovery commit; forced Turbo reported `Cached: 0`.
+- Reason: all five lockstep public packages and the canonical public-version
+  map now use `0.2.74`, strictly above current `origin/main` at `0.2.73`.
+
 ---
 
 ## Orchestration Runs
