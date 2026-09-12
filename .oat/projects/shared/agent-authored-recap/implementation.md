@@ -1235,6 +1235,11 @@ aggregated producer-avoid family OpenAI
 common residual section elements such as `div` and `dd` pass silently.
 **Disposition:** Valid blocked envelope; eligible review receipt is required
 before the `onFailure=block` remediation policy can run.
+**Receive intent:** persisted at 2026-09-12T20:40:52Z for run
+`6cf37a1e-a33f-40af-9b33-75937b421ac5`, source
+`reviews/final-review-2026-09-12T203608Z.md`, collision-free destination
+`reviews/archived/final-review-2026-09-12T203608Z.md`, and pre-receive head
+`214fb9ac11a1185ee8f3ed66964df58431def5cd`.
 
 ---
 
