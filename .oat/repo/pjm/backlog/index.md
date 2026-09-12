@@ -4,6 +4,11 @@
 
 ## Curated Overview
 
+- 2026-09-12: `BL-260912-evaluate-replacing-explainer` follows the
+  `agent-authored-recap` simplification with a paired prototype and measured
+  decision on replacing only the authoring layer with a pinned, attributed
+  Effective HTML subset; the OAT wrapper/router and assurance contracts remain
+  the stable boundary.
 - 2026-09-07: `BL-260907-replace-the-default-project` proposes a simpler,
   direct agent-authored visual recap after another implementation-tail run produced
   no visual artifact. It should reconcile or supersede the capability-probe and seam
@@ -255,6 +260,7 @@
 | BL-260818-distinguish-operator-directed  | Distinguish operator-directed review rounds from failed fix cycles in the review-cycle cap            | open   | medium   | task       | M        |
 | BL-260718-document-execution-program     | Document execution-program artifact as stable OAT contract                                            | open   | medium   | feature    | M        |
 | BL-260817-drop-explainer-kit-publish     | Drop explainer-kit publish-request/v1 in a future minor                                               | open   | medium   | task       | S        |
+| BL-260912-evaluate-replacing-explainer   | Evaluate replacing Explainer Kit authoring guidance with a pinned Effective HTML subset               | open   | medium   | task       | M        |
 | BL-260902-file-deferred-repository       | File deferred repository follow-ups from a passing receive                                            | open   | medium   | feature    | M        |
 | BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs                                     | open   | medium   | feature    | L        |
 | BL-260909-give-packages-control-plane    | Give packages/control-plane a check script so its formatting is CI-gated                              | open   | medium   | task       | XS       |
