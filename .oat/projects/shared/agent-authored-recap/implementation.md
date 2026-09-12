@@ -1276,6 +1276,12 @@ consumed only after the eligible review receive is durably reconciled. Phase 6
 recovery usage remains zero because configured-gate remediation has separate
 accounting.
 
+**Receive reconciliation:** Completed. Commit
+`b384a4edfb4ad22d1e4fda2c9bc95445e4853615` contains the exact archive move,
+matching `fixes_added` event, plan tasks, and tracking updates bound by the
+persisted correlation. The configured gate now records remediation attempt 1
+of 2 consumed; Phase 6 recovery usage remains zero.
+
 **Next:** Execute `p06-t11` through `p06-t13`, then re-run final verification,
 the standard final lifecycle review for the changed basis, and this configured
 gate generation.
