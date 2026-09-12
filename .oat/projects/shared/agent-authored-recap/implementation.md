@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-12
-oat_current_task_id: p05-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -30,9 +30,9 @@ oat_generated: false
 | Phase 2 | completed | 4     | 4/4       |
 | Phase 3 | completed | 8     | 8/8       |
 | Phase 4 | completed | 2     | 2/2       |
-| Phase 5 | pending   | 1     | 0/1       |
+| Phase 5 | completed | 1     | 1/1       |
 
-**Total:** 31/32 tasks completed
+**Total:** 32/32 tasks completed
 
 ---
 
@@ -816,11 +816,16 @@ described below.
 
 ## Phase 5: The program recap
 
-**Status:** in progress; implementation awaits the root-owned phase review.
+**Status:** completed; independent review passed with 0 findings.
 
 ### Task p05-t01: Generate the program recap
 
-**Status:** implemented; awaiting phase review and closeout bookkeeping.
+**Status:** completed.
+**Task commit:** `3e8bf412ad2d1d846d9bb6e0eae21ccb7263a220`
+**Recovery commits:** `f1afbb68587eb9654ac946de66b36be472a58622`,
+`e427819ec77b001f5bc87c7aa37ee1a711fb7118`
+**Review:** `reviews/p05-review-2026-09-12T030832Z.md` — passed at
+`22fbe809f3410ae95f75e5dccb16a664020122d8` with 0 findings.
 
 **Recovery evidence:**
 
@@ -1516,29 +1521,67 @@ Track test execution during implementation.
 | 1     | Ordered CI gates; forced Turbo; standalone smoke/skills/scripts/skill validation; lint/format; focused negative controls | All final commands | 0 final | Browser-free flow, archive/package contract, terminal outcomes, retired references, version parity |
 | 2     | Ordered CI gates; forced Turbo; standalone smoke/skills/scripts; fresh-host controls; lint/format                        | All final commands | 0 final | Host and Playwright rungs, authoring contract, fresh-host completion and failure evidence          |
 | 3     | Ordered CI gates; forced Turbo; standalone suites; docs; PJM CLI; focused consumer and sweep negative controls           | All final commands | 0 final | Lifecycle Generate consumers, persisted skip suppression, docs, repository sweep, version parity   |
+| 4     | Ordered CI gates; uncached Turbo; standalone suites; focused front-door and project-explainer controls; lint/format      | All final commands | 0 final | Interactive inputs, package generation, generic package validation, visual-evidence truthfulness   |
+| 5     | Ordered CI gates before and after recovery commits; focused bundle/core/archive suites; two negative controls            | All final commands | 0 final | Program recap, canonical wrapper summaries, unresolved inputs, recovery accounting, release parity |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- A destination-neutral Explainer Kit core built around the small
+  `bundle → host-agent author → verify → record` flow.
+- Project recap, program recap, project-explainer, and arbitrary-input recipes
+  with manifest-v2 packages, exact immutable hashes, and bounded claim checks.
+- Project lifecycle callers routed through a thin OAT adapter with persisted
+  intent and truthful `built`, `built-needs-review`, `failed`, and `incomplete`
+  outcomes.
+- Generated, validated recap packages for this project and the 2026-08-31
+  execution program.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- Host agents author the final HTML directly from a validated fact base and
+  bundled recipe brief; callback orchestration, durability attestation, and S3
+  publication are retired.
+- Browser verification now records the highest rung actually reached. Runs
+  without an available driver remain successful as `built-needs-review` and
+  do not claim screenshot inspection.
+- Completion and planning workflows consume one shared Generate contract, and
+  the archive command remains strictly limited to project-recap packages.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `.agents/skills/explainer-kit/` - core recipes, scripts, contracts, tests,
+  templates, and authoring guidance.
+- `.agents/skills/oat-explainer-kit/` - OAT input, intent, theme, and outcome
+  adapter.
+- `.agents/skills/oat-project-complete/` and
+  `.agents/skills/oat-project-implement/` - lifecycle Generate consumers.
+- `apps/oat-docs/docs/workflows/skills/explainer-kit.md` - public workflow
+  documentation.
+- `.oat/repo/reference/explainers/` - validated project and program explainer
+  packages.
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- Every ordered CI gate passed on the committed Phase 5 head: check,
+  type-check, tests, build, skill/version gates, release validation, and docs
+  build.
+- Isolated-HOME forced Turbo executed uncached; standalone smoke, skill,
+  script, and skill-validation suites passed.
+- Core bundle/verify/record, strict archive, adapter, lifecycle, fresh-host,
+  and negative-control suites passed, together with lint and format.
+- Independent phase reviews passed after fixes; Phase 5 passed with 0 Critical,
+  Important, Medium, or Minor findings.
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- Non-project recap checks compose the generic manifest/hash/inventory contract
+  directly; the project-only archive validator remains strict. The original
+  archive check had been added post-review without re-checking its recipe pin.
+- Persisted `skip/failed_attempt` intent may carry one validated
+  project-relative evidence locator so a fresh process can satisfy the terminal
+  guard without reopening discovery.
 
 ## References
 

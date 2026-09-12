@@ -588,6 +588,7 @@ Deliverable: the recap for the 2026-08-31 execution program exists, verifies, an
 | p02   | phase | passed | Fresh re-review closed all three blocking findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                      |
 | p03   | phase | passed | Final operator-authorized verification passed with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                           |
 | p04   | phase | passed | Re-review closed the executable front-door and visual-evidence findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings. |
+| p05   | phase | passed | Independent review passed the program recap and both bounded recoveries with 0 findings.                                              |
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
@@ -606,7 +607,7 @@ Deliverable: the recap for the 2026-08-31 execution program exists, verifies, an
 | p03    | code     | passed          | 2026-09-12 | reviews/p03-review-2026-09-12T001522Z.md                      | ce2898e1dca37becc2d59ce8f97d7340d0f0bf4d | manual     | -           |
 | p04    | code     | fixes_completed | 2026-09-12 | reviews/p04-review-2026-09-12T015208Z.md                      | 4292290aecc74b769edc1c47b6ee3cbc2d3761dd | manual     | -           |
 | p04    | code     | passed          | 2026-09-12 | reviews/p04-review-2026-09-12T020833Z.md                      | c9d977aa90d2990145e500c2035b1a2c67198278 | manual     | -           |
-| p05    | code     | pending         | -          | -                                                             | -                                        | -          | -           |
+| p05    | code     | passed          | 2026-09-12 | reviews/p05-review-2026-09-12T030832Z.md                      | 22fbe809f3410ae95f75e5dccb16a664020122d8 | manual     | -           |
 | final  | code     | pending         | -          | -                                                             | -                                        | -          | -           |
 | spec   | artifact | pending         | -          | -                                                             | -                                        | -          | -           |
 | design | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-design-review-2026-09-09T225646Z.md | -                                        | -          | -           |
