@@ -814,6 +814,54 @@ described below.
 
 ---
 
+## Phase 5: The program recap
+
+**Status:** in progress; implementation awaits the root-owned phase review.
+
+### Task p05-t01: Generate the program recap
+
+**Status:** implemented; awaiting phase review and closeout bookkeeping.
+
+**Recovery evidence:**
+
+- Recovery attempt `recovery-agent-authored-recap-p05-01` corrected the
+  program-input parser to accept the repository's canonical
+  `Final Summary (for PR/docs)` heading while retaining the exact
+  `Final Summary` form.
+- The provenance-grounded regression proves canonical-heading summaries include
+  only their final-summary section and missing/section-less selected wrappers
+  produce schema-valid `unresolvedClaims`.
+- Focused bundle tests, the complete core test suite, lint, and format passed
+  before and after the append-only recovery commit.
+
+**Program recap validation evidence:**
+
+- Run ID: `c07644cf-a5f3-4e88-8993-124ff83fa7d1`
+- Outcome: `built-needs-review`
+- Browser rung: `none`
+- Browser reason: `browser-driver-not-installed`
+- Run path:
+  `.oat/repo/reference/explainers/2026-08-31-execution-program-recap`
+- Capability evidence: the effective runtime exposed image reading but no host
+  browser-control tool. The installed Playwright rung was attempted once and
+  downgraded to `none` because its browser driver was not installed; therefore
+  no screenshots or direct screenshot-inspection claim is recorded.
+- QA checks: `parse`, `requiredNarrative`, `structure`, `sourceDumping`,
+  `shellScripts`, `ledgerToPage`, and `pageToLedger` all passed.
+- Generic package checks: direct `validateContract('manifest')`, byte
+  verification of all six `immutableHashes` entries, and
+  `enforceRunPackageInventory` over the exact seven-file package passed.
+- Input evidence: the newest exported summary for each of W1–W7 and all seven
+  archived wrapper `implementation.md` final-summary sections are present.
+  `unresolvedClaims` is empty because every selected live wrapper input was
+  reachable; the regression test proves missing and section-less wrappers are
+  named rather than dropped.
+- Program ledger: only the program-level checkpoint now records the run ID,
+  outcome, rung, browser reason, and run path. The four historical per-wave
+  `recap: not run` rows remain unchanged.
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_

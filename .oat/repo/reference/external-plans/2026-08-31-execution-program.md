@@ -420,12 +420,12 @@ unset`; its optional seam keys live in `BL-260904-add-recap-seam-config-keys`.
   `.oat/repo/reference/reviews/2026-09-04-external-plan-independent-review.md`.
 
 - **2026-09-08 (program-close dispositions)** — Per the program contract's
-  two program-close checkpoints: (1) **Program recap: not run —** the default
-  `program-recap` path depends on the explainer-kit seam machinery that issue
-  #230 shows cannot be relied on (`BL-260907-replace-the-default-project`,
-  high, runs as its own spec-driven project); the program recap (W1–W6, and
-  W7 once it lands) is generated after that project ships. Recorded here so
-  discretion is distinguishable from oversight. (2) **Completion tail:
+  two program-close checkpoints: (1) **Program recap: run
+  `c07644cf-a5f3-4e88-8993-124ff83fa7d1`; outcome `built-needs-review`; rung
+  `none` (`browser-driver-not-installed`); run path
+  `.oat/repo/reference/explainers/2026-08-31-execution-program-recap` —**
+  generated from the reconciled W1–W7 program record after the replacement
+  explainer flow shipped. (2) **Completion tail:
   standing deferral** — the operator decided on 2026-09-08 not to run
   `oat-project-complete`'s tail (archive, pointer clear) across the six wave
   wrapper projects now; owner: the wave-7 close, which runs the tail for all

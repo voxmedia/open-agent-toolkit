@@ -1,0 +1,55 @@
+{
+  "schemaVersion": "explainer-kit.manifest/v2",
+  "runId": "c07644cf-a5f3-4e88-8993-124ff83fa7d1",
+  "slug": "2026-08-31-execution-program-recap",
+  "recipe": {
+    "id": "program-recap",
+    "version": "1"
+  },
+  "createdAt": "2026-09-12T02:30:23.959Z",
+  "mode": "unattended",
+  "source": {
+    "factBasePath": "source/fact-base.json",
+    "factBaseHash": "sha256:fe77048e0671af4b931525e5f01b55082b83c021e7a116bb78ee28f4ddd15037",
+    "inputHashes": {
+      "2026-08-31-execution-program.md": "sha256:4bed4fecf5f164e024d0cbb897bc51300a586442a55d9d1befd4e17dcf134dc8",
+      "20260909-wave-1-execution.md": "sha256:1053e9e9b5198fc2177464867532334d7feff6165bf2f2ad62bb71ada1d6d56c",
+      "20260909-wave-2-execution.md": "sha256:9166b53b7760909b63c21d9d065faef8d9033641e9217b82f50fdc2eab0d135d",
+      "20260909-wave-3-execution.md": "sha256:88318c36febdd30a7888fbb4233487ccf851cc6101cc6111d07b0c177e3776ca",
+      "20260909-wave-4-execution.md": "sha256:f2cc81a592c30d30161021d3a426604bfdb62d9c3d0e1dd6a5a176581d666cf3",
+      "20260909-wave-5-execution.md": "sha256:2a41ed8996deaead70476455d19928034a563f75d218ea9f1bab73d2da12bb83",
+      "20260909-wave-6-execution.md": "sha256:76ad240f2377e0133986e304b22531bb85210551e3e1dc87358aef50bdceb605",
+      "20260909-wave-7-execution.md": "sha256:e338301a9d6cb8fc11489262971212c556b7b535ca9018012343d481e9896ac0",
+      "wave-1-execution/implementation.md": "sha256:00a9155afeb60a69258c0aeee7c26219454b9366da9e557e9ed02c91ae2bb0f3",
+      "wave-2-execution/implementation.md": "sha256:861e169c4b99d343797e7d8c25639de0f20d43eb39c38418a4367b34ea7c0113",
+      "wave-3-execution/implementation.md": "sha256:65ad86b4b28475c42ab6defd5401114f1cb76029bc0428e9895f70c7c9884336",
+      "wave-4-execution/implementation.md": "sha256:1c017f332ad0e897f65fae8f6fb2fa3e3b6580be5c8d926b2a043f290f6547d8",
+      "wave-5-execution/implementation.md": "sha256:b325e7878d783d188875d9116ce5571b13c811c56f89644385bf6dab091a0ff1",
+      "wave-6-execution/implementation.md": "sha256:0c248e3681ae2c3bf44aac9fe0d19e52619639667eef087a93384dcfe1da987d",
+      "wave-7-execution/implementation.md": "sha256:c81a8ddc887c850cbec70dfcacc557886c9bbade6da5ece7df817ca9f03577fd"
+    }
+  },
+  "theme": {
+    "path": "theme.resolved.json",
+    "hash": "sha256:82c4bf82ac817bb8c04c83bb971d2c2b22aa621384689fb4e0d0fa3a62498f27"
+  },
+  "artifacts": [
+    {
+      "id": "program-recap",
+      "type": "hub",
+      "contentPath": "site/index.html",
+      "hash": "sha256:87cc063ba19d68381b74c90021e2a950974f51048da1ebf6c110479a50494298",
+      "status": "built"
+    }
+  ],
+  "immutableHashes": {
+    "qa/result.json": "sha256:c551bace08361a059d87ba3f12f0b6beac5b777dd6524f4b5e9893fc2ade0f1a",
+    "site/index.html": "sha256:87cc063ba19d68381b74c90021e2a950974f51048da1ebf6c110479a50494298",
+    "source/fact-base.json": "sha256:fe77048e0671af4b931525e5f01b55082b83c021e7a116bb78ee28f4ddd15037",
+    "source/fact-base.md": "sha256:fd31b038b88e9328cd16391091c0648917eaaa8c48bf632a627cd89b8bdc1bfd",
+    "source/ledger.json": "sha256:6c4a6100e7f76a7fed64b0dc95409f66a2e9cf9ad63cf4983257cf68d7730795",
+    "theme.resolved.json": "sha256:82c4bf82ac817bb8c04c83bb971d2c2b22aa621384689fb4e0d0fa3a62498f27"
+  },
+  "outcome": "built-needs-review",
+  "warnings": ["record-needs-review:browser-driver-not-installed"]
+}
