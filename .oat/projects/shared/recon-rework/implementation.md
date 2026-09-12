@@ -1693,6 +1693,22 @@ The earlier completed closeout snapshot predated the substantive `p-rev7` and
 reviewed and gate-allowed basis; each refreshed artifact step must commit before
 the final HiLL approval checkpoint.
 
+### Refreshed pre-approval closeout complete
+
+**Completed:** 2026-09-12T00:45:18Z
+
+- Summary refreshed at `ef25e1539c187dde84726969ff82bfee5cfbc4f3`.
+- Repository references refreshed at
+  `051177c9482cba6ae53cc3ab5873fce8743064b6`.
+- Public recon documentation refreshed at
+  `69762805ac66f0a23c5dc92e3045bd65735db745`.
+- PR [#285](https://github.com/voxmedia/open-agent-toolkit/pull/285) refreshed
+  and synchronized at `5d79e314c9c4bad9cef92a8d6c1dd51e1a900f1e`.
+- The recorded interactive project-recap skip passed the terminal outcome
+  guard; no recap run exists or is required.
+
+The sequence is now `awaiting_approval`; no post-approval steps are configured.
+
 ## References
 
 - [Plan](plan.md)
