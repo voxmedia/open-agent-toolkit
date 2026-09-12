@@ -1179,7 +1179,22 @@ package regeneration.
 **Review cycle:** 4, consuming the single operator-authorized cycle beyond the
 configured three-cycle cap. No further review-cycle extension remains.
 
-**Next:** Run the configured implementation exit gate.
+### Configured Implementation Exit Gate
+
+**Generation started:** 2026-09-12T20:19:06Z
+**Resolution:** configured
+**Policy:** `onFailure=block`, `maxAttempts=2`
+**Description:** Semantic cross-family final implementation review before
+`oat-project-implement` exits.
+**Reviewed head:** `2ebc4ec4d42accaf576a840cfa6ba3823246b9fb`
+**Integration base:** `origin/main`
+**Implementation fingerprint:**
+`sha256:effective-delta-v1:923970695e589fd5d178a98bff4d1d9dd1cd4f479a5697e061adf63f1e849873`
+**Configuration fingerprint:**
+`sha256:94671d8d5f24560ccaac19595added0c71a89defa8b2a3f4be1d1027b96581e5`
+**Status:** pending; launch not started
+
+**Next:** Persist launch intent and execute the configured command unchanged.
 
 ---
 
