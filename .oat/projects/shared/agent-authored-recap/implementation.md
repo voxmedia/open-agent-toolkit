@@ -1215,13 +1215,26 @@ review ...` command and arguments remain byte-for-byte unchanged; `oat
 **Retry launch intent:** persisted at 2026-09-12T20:23:37Z
 **Retry result receipt:**
 `/private/tmp/oat-agent-authored-recap/aar-exit-gate-20260912T202337Z.receipt.json`
-**Retry status:** accepted; zero remediation attempts consumed
+**Retry status:** result persisted; zero remediation attempts consumed
 **Gate run:** `6cf37a1e-a33f-40af-9b33-75937b421ac5`
 **Gate target:** `cursor-fable-5-1-high`
 **Gate runtime:** Cursor
 **Acceptance evidence:** matching run marker written at
 `/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/6cf37a1e-a33f-40af-9b33-75937b421ac5.json`
 before reviewer launch.
+
+**Structured result:** `blocked`,
+`review_completed_blocking_findings`, `receiveEligible: true`
+**Gate artifact:** `reviews/final-review-2026-09-12T203608Z.md`
+**Findings:** 0 Critical, 1 Important, 0 Medium, 2 Minor
+**Threshold:** Important
+**Independence:** different-family achieved; gate reviewer family Claude,
+aggregated producer-avoid family OpenAI
+**Blocking finding:** FR4 page-to-ledger tracing harvests only
+`h1-h6`/`tr`/`li`/`p` blocks, so fabricated number/date/status tokens in
+common residual section elements such as `div` and `dd` pass silently.
+**Disposition:** Valid blocked envelope; eligible review receipt is required
+before the `onFailure=block` remediation policy can run.
 
 ---
 
