@@ -49,6 +49,15 @@ Use exactly one of the supported input modes:
 - `--inputs <file|dir>...` for documents; or
 - `--fact-base <path>` for a supplied fact base.
 
+### Front door
+
+When a person invokes this skill directly, ask them to name the recipe, provide
+`--inputs <file|dir>...` or `--fact-base <path>`, and choose `--out <dir>`.
+Before authoring, propose the bounded input scope and show a concise summary of
+the prepared fact base so the person can correct the scope or source facts.
+This is a lightweight interactive confirmation, not a project gate or approval
+workflow.
+
 Always pass `--recipe`, `--theme`, and `--out`. `bundle.mjs` writes
 `source/fact-base.json`, `source/fact-base.md`, `source/ledger.json`, and
 `theme.resolved.json`. If it reports `reuse: true`, return the existing
