@@ -580,15 +580,171 @@ Deliverable: the recap for the 2026-08-31 execution program exists, verifies, an
 
 ---
 
+## Phase 6: Final review fixes
+
+Deliverable: unchanged inputs reuse their recorded run, the remaining
+assurance gaps are closed, and governing artifacts describe the shipped
+contracts exactly.
+
+### Task p06-t01: (review) Make unchanged-input reuse order-insensitive
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/lib/run-package.mjs`,
+  `.agents/skills/explainer-kit/tests/flow.e2e.test.mjs`
+
+**Step 1: Write test (RED)** — Record a multi-file project run, invoke
+`runBundle` again with the same input hashes in collection order, assert
+`reuse: true`, and prove no package file bytes or timestamps changed.
+
+**Step 2: Implement (GREEN)** — Compare canonicalized input-hash entries rather
+than JSON object insertion order. Preserve exact key/value equality.
+
+**Step 3: Verify** — Run the focused end-to-end and complete core suites,
+including a negative control with one changed hash.
+
+**Step 4: Commit** —
+`git commit -m "fix(p06-t01): make run reuse hash-order independent"`
+
+### Task p06-t02: (review) Align the specification with retirement and FR10
+
+**Files:**
+
+- Modify: `.oat/projects/shared/agent-authored-recap/spec.md`
+
+**Step 1: Correct FR12** — State that callback orchestration and the
+durability/publish path are retired; name only the retained libraries and tests
+that must stay green.
+
+**Step 2: Restore FR10** — Replace the malformed Requirement Index entry with a
+complete FR10 row and its correct task coverage.
+
+**Step 3: Verify** — Cross-check FR10/FR12 against discovery, design, the
+retired-reference sweep, and the shipped tree; run the file-scoped formatter.
+
+**Step 4: Commit** —
+`git commit -m "docs(p06-t02): align spec retirement contracts"`
+
+### Task p06-t03: (review) Align the design's QA and failure formats
+
+**Files:**
+
+- Modify: `.oat/projects/shared/agent-authored-recap/design.md`,
+  `.oat/projects/shared/agent-authored-recap/implementation.md`
+
+**Step 1: Correct result shape** — Document `{ status, cause? }` checks,
+`requiredNarrative`, canonical string screenshot paths, and omission-based
+optional reason/visual fields exactly as `qa-result.mjs` validates them.
+
+**Step 2: Correct failure shape** — Document `failure.json` with
+`schemaVersion`, `runRootHash`, stage, sanitized cause, and timestamp, including
+the run-root binding.
+
+**Step 3: Record alignment** — Add the accepted result/failure contract
+alignment to the implementation design-delta ledger.
+
+**Step 4: Verify and commit** — Cross-check the design against production
+validators and tests, format both files, then
+`git commit -m "docs(p06-t03): align QA and failure contracts"`.
+
+### Task p06-t04: (review) Share complete failure sanitization
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/{bundle,verify,record}.mjs`,
+  `.agents/skills/explainer-kit/scripts/lib/` (one shared sanitizer),
+  `.agents/skills/explainer-kit/tests/{bundle,verify,record}.test.mjs`
+
+**Step 1: Write tests (RED)** — Prove pre-record failure evidence redacts
+environment values plus POSIX and Windows absolute paths without corrupting
+safe diagnostics.
+
+**Step 2: Implement (GREEN)** — Route bundle, verify, and record through one
+shared sanitizer with deterministic longest-value-first environment redaction.
+
+**Step 3: Negative controls** — Neutralize environment and cross-platform path
+redaction independently and confirm the corresponding tests fail.
+
+**Step 4: Verify and commit** — Run focused and complete core suites, lint, and
+format, then
+`git commit -m "fix(p06-t04): share complete failure sanitization"`.
+
+### Task p06-t05: (review) Reject ambiguous multi-root document locators
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/bundle.mjs`,
+  `.agents/skills/explainer-kit/tests/bundle.test.mjs`
+
+**Step 1: Write test (RED)** — Supply two declared roots containing the same
+relative locator with different bytes and prove the bundle must not silently
+discard either input.
+
+**Step 2: Implement (GREEN)** — Reject ambiguous locator collisions with a
+clear bundle error while retaining deterministic de-duplication of genuinely
+identical input identity.
+
+**Step 3: Verify** — Run the focused bundle and complete core suites plus a
+negative control that restores silent dropping.
+
+**Step 4: Commit** —
+`git commit -m "fix(p06-t05): reject document locator collisions"`
+
+### Task p06-t06: (review) Make heading claim tracing symmetric
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/bundle.mjs`,
+  `.agents/skills/explainer-kit/scripts/verify.mjs`,
+  `.agents/skills/explainer-kit/tests/{bundle,verify}.test.mjs`
+
+**Step 1: Write test (RED)** — Copy a factual source heading containing a
+machine-checkable number or date into rendered HTML and prove faithful output
+does not fail page-to-ledger tracing.
+
+**Step 2: Implement (GREEN)** — Index machine-checkable source-heading facts or
+apply an equivalent symmetric structural-heading rule without weakening
+non-heading claim checks.
+
+**Step 3: Negative controls** — A changed factual heading must remain untraced,
+while a faithful heading passes.
+
+**Step 4: Verify and commit** — Run focused bundle/verify and complete core
+suites, lint, and format, then
+`git commit -m "fix(p06-t06): align heading claim tracing"`.
+
+### Task p06-t07: (review) Correct final package summary paths
+
+**Files:**
+
+- Modify: `.oat/projects/shared/agent-authored-recap/implementation.md`
+
+**Step 1: Correct terminology** — Identify the active-project artifact as a
+`project-explainer`, not a project recap.
+
+**Step 2: Correct paths** — List the active project-explainer path separately
+from the repository-level execution-program recap path.
+
+**Step 3: Verify and commit** — Cross-check both manifests and paths, run the
+file-scoped formatter, then
+`git commit -m "docs(p06-t07): correct final explainer paths"`.
+
+**Phase 6 gates:** Run the complete ordered repository gate list, isolated-HOME
+forced Turbo, standalone smoke/skills/scripts/skill validation, focused core
+and lifecycle suites, `pnpm lint`, and `pnpm format`.
+
+---
+
 ## Reviews
 
-| Scope | Type  | Status | Notes                                                                                                                                 |
-| ----- | ----- | ------ | ------------------------------------------------------------------------------------------------------------------------------------- |
-| p01   | phase | passed | Independent verification passed with 0 Critical, 0 Important, and 3 deferred Medium findings.                                         |
-| p02   | phase | passed | Fresh re-review closed all three blocking findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                      |
-| p03   | phase | passed | Final operator-authorized verification passed with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                           |
-| p04   | phase | passed | Re-review closed the executable front-door and visual-evidence findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings. |
-| p05   | phase | passed | Independent review passed the program recap and both bounded recoveries with 0 findings.                                              |
+| Scope | Type  | Status  | Notes                                                                                                                                 |
+| ----- | ----- | ------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| p01   | phase | passed  | Independent verification passed with 0 Critical, 0 Important, and 3 deferred Medium findings.                                         |
+| p02   | phase | passed  | Fresh re-review closed all three blocking findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                      |
+| p03   | phase | passed  | Final operator-authorized verification passed with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                           |
+| p04   | phase | passed  | Re-review closed the executable front-door and visual-evidence findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings. |
+| p05   | phase | passed  | Independent review passed the program recap and both bounded recoveries with 0 findings.                                              |
+| p06   | phase | pending | Final review fixes not yet implemented or reviewed.                                                                                   |
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
@@ -608,7 +764,8 @@ Deliverable: the recap for the 2026-08-31 execution program exists, verifies, an
 | p04    | code     | fixes_completed | 2026-09-12 | reviews/p04-review-2026-09-12T015208Z.md                      | 4292290aecc74b769edc1c47b6ee3cbc2d3761dd | manual     | -           |
 | p04    | code     | passed          | 2026-09-12 | reviews/p04-review-2026-09-12T020833Z.md                      | c9d977aa90d2990145e500c2035b1a2c67198278 | manual     | -           |
 | p05    | code     | passed          | 2026-09-12 | reviews/p05-review-2026-09-12T030832Z.md                      | 22fbe809f3410ae95f75e5dccb16a664020122d8 | manual     | -           |
-| final  | code     | pending         | -          | -                                                             | -                                        | -          | -           |
+| p06    | code     | pending         | -          | -                                                             | -                                        | -          | -           |
+| final  | code     | fixes_added     | 2026-09-12 | reviews/archived/final-review-2026-09-12T032129Z.md           | ed5f9f19d777989fe6095be14b1bb12e14583359 | manual     | -           |
 | spec   | artifact | pending         | -          | -                                                             | -                                        | -          | -           |
 | design | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-design-review-2026-09-09T225646Z.md | -                                        | -          | -           |
 | design | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-design-review-2026-09-09T232532Z.md | -                                        | manual     | -           |
@@ -644,8 +801,9 @@ cell; never truncate a widened row back to five columns.
 - Phase 3: 8 tasks - Adapter, core skill prose, lifecycle consumers, and docs
 - Phase 4: 2 tasks - The front door and the project explainer
 - Phase 5: 1 task - The program recap
+- Phase 6: 7 tasks - Final review fixes
 
-**Total:** 32 tasks
+**Total:** 39 tasks
 
 ## References
 

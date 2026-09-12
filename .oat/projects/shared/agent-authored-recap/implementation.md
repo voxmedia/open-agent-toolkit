@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-12
-oat_current_task_id: null
+oat_current_task_id: p06-t01
 oat_generated: false
 ---
 
@@ -31,8 +31,9 @@ oat_generated: false
 | Phase 3 | completed | 8     | 8/8       |
 | Phase 4 | completed | 2     | 2/2       |
 | Phase 5 | completed | 1     | 1/1       |
+| Phase 6 | pending   | 7     | 0/7       |
 
-**Total:** 32/32 tasks completed
+**Total:** 32/39 tasks completed
 
 ---
 
@@ -917,6 +918,49 @@ described below.
   after the recovery commit; forced Turbo reported `Cached: 0`.
 - Reason: all five lockstep public packages and the canonical public-version
   map now use `0.2.74`, strictly above current `origin/main` at `0.2.73`.
+
+### Review Received: final
+
+**Date:** 2026-09-12
+**Review artifact:**
+`reviews/archived/final-review-2026-09-12T032129Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 3
+- Medium: 4
+- Minor: 1
+
+**New tasks added:** `p06-t01`, `p06-t02`, `p06-t03`, `p06-t04`,
+`p06-t05`, `p06-t06`, `p06-t07`
+
+**Finding dispositions:**
+
+- I1 → `p06-t01`: make unchanged-input reuse insensitive to input-hash key
+  order.
+- I2 → `p06-t02` (`artifact_alignment_required`): align FR12 and restore the
+  malformed FR10 index row; the shipped retirement behavior is authoritative.
+- I3 → `p06-t03` (`artifact_alignment_required`): align the design's QA and
+  failure contracts with the production validators and record the accepted
+  delta.
+- M1 → `p06-t04`: complete and share failure sanitization.
+- M2 → `p06-t05`: reject ambiguous multi-root locator collisions.
+- M3 → `p06-t06`: make factual heading claim tracing symmetric.
+- M4 → `p06-t07`: correct project-explainer terminology and package paths in
+  this final summary.
+- m1 → explicitly deferred until substantive program-package regeneration.
+  The four whitespace-only warnings have no behavior impact, while editing the
+  immutable HTML now would require regenerating QA and manifest hashes solely
+  for cosmetic churn.
+
+**Deferred Medium ledger:**
+
+- The three earlier Phase 1 Mediums resurfaced as M1, M2, and M3 and are now
+  converted to `p06-t04`, `p06-t05`, and `p06-t06`; none remains deferred.
+
+**Next:** Execute Phase 6 fix tasks through `oat-project-implement`, then run a
+fresh Phase 6 review and final re-review.
 
 ---
 
