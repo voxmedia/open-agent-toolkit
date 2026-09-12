@@ -2,8 +2,8 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-09-11
-oat_current_task_id: p04-t01
+oat_last_updated: 2026-09-12
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -29,10 +29,10 @@ oat_generated: false
 | Phase 1 | completed | 17    | 17/17     |
 | Phase 2 | completed | 4     | 4/4       |
 | Phase 3 | completed | 8     | 8/8       |
-| Phase 4 | pending   | 2     | 0/2       |
+| Phase 4 | completed | 2     | 2/2       |
 | Phase 5 | pending   | 1     | 0/1       |
 
-**Total:** 29/32 tasks completed
+**Total:** 31/32 tasks completed
 
 ---
 
@@ -676,6 +676,49 @@ Phase Summary passed.
 
 ---
 
+## Phase 4: The front door
+
+**Status:** completed
+**Started:** 2026-09-12
+**Completed:** 2026-09-12
+
+### Phase Summary
+
+**Outcome:**
+
+- Direct interactive use now supports project, document, and supplied
+  fact-base inputs with deterministic theme preparation and interactive
+  manifest provenance.
+- This project's approved planning artifacts produced a tracked
+  `project-explainer` package with a passing Playwright visual verdict and the
+  generic manifest/hash/inventory contract.
+- One bounded review-fix round closed the executable front-door gaps and
+  narrowed visual-evidence wording without changing the recorded package.
+
+**Verification:**
+
+- Front-door tests passed 4/4; the archive boundary suite passed 90/90.
+- All repository gates, isolated-HOME uncached Turbo tests, standalone
+  smoke/skills/scripts suites, lint, and format exited 0.
+- Independent re-review passed with 0 Critical, 0 Important, 0 Medium, and 0
+  Minor findings.
+
+### Task p04-t01: `explainer-kit/SKILL.md` front door
+
+**Status:** completed
+**Commit:** 52fcc7a6169267b1341eef268b801ec4021ef479
+
+**Outcome:** Added the direct interactive contract and end-to-end coverage for
+project, document, and supplied fact-base inputs.
+
+### Task p04-t02: Project explainer on this project
+
+**Status:** completed
+**Commit:** 4292290aecc74b769edc1c47b6ee3cbc2d3761dd
+
+**Outcome:** Generated and recorded the tracked project-explainer package
+described below.
+
 ## Project explainer
 
 - Run ID: `40b9a35e-8f2a-419c-be2a-9f28eae4215a`
@@ -745,6 +788,29 @@ Phase Summary passed.
   byte-for-byte identical to the original Phase 4 tree
   `a14f37b71fd2043e02179c055162cb099eb16579`.
 - Recovery accounting: review-fix continuation; no phase recovery attempt.
+
+#### Phase 4 Review Round 2
+
+- Request ID: `dispatch-agent-authored-recap-p04-review-r2-20260912T0205Z`
+- Launch status: `accepted`
+- Terminal outcome: `completed`
+- Review artifact: `reviews/p04-review-2026-09-12T020833Z.md`
+- Reviewed range:
+  `303fafd35b328cd457167b5e1b36822cf6ed8e02..c9d977aa90d2990145e500c2035b1a2c67198278`
+- Reviewed head: `c9d977aa90d2990145e500c2035b1a2c67198278`
+- Prior findings: all closed or correctly reclassified as root-owned
+  post-review bookkeeping.
+- Findings: 0 Critical, 0 Important, 0 Medium, 0 Minor
+- Disposition: `PASS`
+- Reconnaissance: `not-attempted`; no Review Orchestration section or
+  project-log orchestration entry.
+- Selection reason: `review-target`
+- Candidates considered: `gpt-5.6-sol-high`
+- Dispatch target: `oat-reviewer-gpt-5-6-sol-high`
+- Dispatch: scope=p04 action=review role=reviewer producer=unknown
+  provenance=unknown model_axis=selected:gpt-5.6-sol-high
+  effort_axis=not-applicable dispatch_policy=high
+  dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
 
 ---
 
