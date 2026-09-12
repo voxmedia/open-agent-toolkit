@@ -603,7 +603,7 @@ Deliverable: the recap for the 2026-08-31 execution program exists, verifies, an
 | p03    | code     | fixes_completed | 2026-09-11 | reviews/p03-review-2026-09-11T225420Z.md                      | afd4a9e970200bdb2c1cc35fdf13df1912e6b12f | manual     | -           |
 | p03    | code     | fixes_completed | 2026-09-11 | reviews/p03-review-2026-09-11T232506Z.md                      | 2c8c56093651748e389da61d3c055be713ebc99e | manual     | -           |
 | p03    | code     | passed          | 2026-09-12 | reviews/p03-review-2026-09-12T001522Z.md                      | ce2898e1dca37becc2d59ce8f97d7340d0f0bf4d | manual     | -           |
-| p04    | code     | fixes_added     | 2026-09-12 | reviews/p04-review-2026-09-12T015208Z.md                      | 4292290aecc74b769edc1c47b6ee3cbc2d3761dd | manual     | -           |
+| p04    | code     | fixes_completed | 2026-09-12 | reviews/p04-review-2026-09-12T015208Z.md                      | 4292290aecc74b769edc1c47b6ee3cbc2d3761dd | manual     | -           |
 | p05    | code     | pending         | -          | -                                                             | -                                        | -          | -           |
 | final  | code     | pending         | -          | -                                                             | -                                        | -          | -           |
 | spec   | artifact | pending         | -          | -                                                             | -                                        | -          | -           |

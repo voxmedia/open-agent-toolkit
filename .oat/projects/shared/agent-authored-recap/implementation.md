@@ -731,7 +731,7 @@ Phase Summary passed.
 - Continuation: `cont-agent-authored-recap-p04-review-fix-1`
 - Original request: `dispatch-agent-authored-recap-p04-20260912T002300Z`
 - Source review: `reviews/p04-review-2026-09-12T015208Z.md`
-- Fix commit: `<pending-this-commit>`; subject
+- Fix commit: `527bd48b2408ac8be6d94345b124ba33a1563055`; subject
   `fix(p04): complete the interactive front-door contract`
 - Addressed: the direct front door now covers project, document, and supplied
   fact-base inputs; materializes the deterministic default theme; records
