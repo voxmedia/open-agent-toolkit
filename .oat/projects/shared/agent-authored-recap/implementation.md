@@ -1132,6 +1132,18 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
 - Stop: operator direction is required before further remediation or Phase 4
 
+#### Operator Authorization — Second Governance Extension
+
+- Authorization time: `2026-09-11T23:35:00Z`
+- Scope: one final bounded remediation for the raw-string whitespace mismatch, followed by one independent verification review
+- Finding: control-plane must validate and return raw `failed_attempt_evidence` unchanged rather than trimming malformed leading/trailing whitespace into acceptance
+- Continuation: `cont-agent-authored-recap-p03-governance-manual-fix-2`
+- Authorization: `operator-scope`
+- Original request: `dispatch-agent-authored-recap-p03-20260911T202900Z`
+- Exact target: `oat-phase-implementer-gpt-5-6-sol-high` (unchanged)
+- Recovery accounting: outside all automatic and prior operator review/fix budgets; not phase recovery; usage remains `0/10`
+- Boundary: control-plane raw-string validation and matching cross-reader controls only; no Phase 4 or closed-finding work
+
 <!-- orchestration-runs-end -->
 
 ---

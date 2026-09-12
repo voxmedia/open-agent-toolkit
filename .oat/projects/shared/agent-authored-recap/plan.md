@@ -586,7 +586,7 @@ Deliverable: the recap for the 2026-08-31 execution program exists, verifies, an
 | ----- | ----- | ------- | ------------------------------------------------------------------------------------------------------------------- |
 | p01   | phase | passed | Independent verification passed with 0 Critical, 0 Important, and 3 deferred Medium findings. |
 | p02   | phase | passed | Fresh re-review closed all three blocking findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings. |
-| p03   | phase | fixes_added | Operator-authorized verification found 1 remaining Important raw-string normalization mismatch; authorization consumed and operator direction required. |
+| p03   | phase | fixes_added | Operator authorized one final bounded whitespace-validation fix and one independent verification review. |
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
