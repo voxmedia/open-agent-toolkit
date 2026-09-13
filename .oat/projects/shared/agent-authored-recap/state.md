@@ -47,7 +47,7 @@ oat_workflow_origin: native # native | imported
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
 oat_implement_exit_gate:
-  status: stale
+  status: pending
   resolution: configured
   disposition: null
   config_fingerprint: sha256:94671d8d5f24560ccaac19595added0c71a89defa8b2a3f4be1d1027b96581e5
@@ -57,49 +57,49 @@ oat_implement_exit_gate:
   on_failure: block
   max_attempts: 2
   attempts_completed: 1
-  reviewed_head: 2ebc4ec4d42accaf576a840cfa6ba3823246b9fb
+  reviewed_head: 9c6d83fe16f8120bd585ff5d76925e19e1d1ca3a
   implementation_base_ref: origin/main
-  implementation_fingerprint: sha256:effective-delta-v1:923970695e589fd5d178a98bff4d1d9dd1cd4f479a5697e061adf63f1e849873
-  freshness_head: 2ebc4ec4d42accaf576a840cfa6ba3823246b9fb
-  freshness_fingerprint: sha256:effective-delta-v1:923970695e589fd5d178a98bff4d1d9dd1cd4f479a5697e061adf63f1e849873
-  launch_state: result_persisted
-  launch_attempt_id: aar-exit-gate-20260912T202337Z
-  launch_started_at: '2026-09-12T20:23:37Z'
-  launch_result_receipt: /private/tmp/oat-agent-authored-recap/aar-exit-gate-20260912T202337Z.receipt.json
-  gate_run_marker: /var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/6cf37a1e-a33f-40af-9b33-75937b421ac5.json
-  gate_run_id: 6cf37a1e-a33f-40af-9b33-75937b421ac5
-  envelope_status: blocked
-  artifact: .oat/projects/shared/agent-authored-recap/reviews/archived/final-review-2026-09-12T203608Z.md
-  handoff: Run oat-project-review-receive for .oat/projects/shared/agent-authored-recap/reviews/final-review-2026-09-12T203608Z.md before treating this gate review as consumed.
-  receive_state: completed
-  receive_correlation: 'run=6cf37a1e-a33f-40af-9b33-75937b421ac5; handoff=receive; source=reviews/final-review-2026-09-12T203608Z.md; scope=final; type=code'
-  receive_source_artifact: .oat/projects/shared/agent-authored-recap/reviews/final-review-2026-09-12T203608Z.md
-  receive_archived_artifact: .oat/projects/shared/agent-authored-recap/reviews/archived/final-review-2026-09-12T203608Z.md
-  receive_event_identity: final | code | final-review-2026-09-12T203608Z.md
-  receive_pre_head: 214fb9ac11a1185ee8f3ed66964df58431def5cd
-  receive_commit: b384a4edfb4ad22d1e4fda2c9bc95445e4853615
-  receive_eligible: true
-  receive_completed: true
-  failure: implementation basis changed by configured-gate remediation p06-t11 through p06-t13; fresh Phase 6 and final lifecycle reviews are required before a new gate launch
-  updated_at: '2026-09-12T20:58:00Z'
+  implementation_fingerprint: sha256:effective-delta-v1:76645c43ae2963947cb36b59464530e1f8bfaaebee115fa936714dd4d856c658
+  freshness_head: 9c6d83fe16f8120bd585ff5d76925e19e1d1ca3a
+  freshness_fingerprint: sha256:effective-delta-v1:76645c43ae2963947cb36b59464530e1f8bfaaebee115fa936714dd4d856c658
+  launch_state: not_started
+  launch_attempt_id: null
+  launch_started_at: null
+  launch_result_receipt: null
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_state: not_started
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
+  failure: null
+  updated_at: '2026-09-12T23:59:46Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-09T16:39:02.165Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-12T20:58:00Z'
+oat_project_state_updated: '2026-09-12T23:59:46Z'
 oat_generated: false
 ---
 
 # Project State: agent-authored-recap
 
-**Status:** Current-basis final review passed; exit gate restart pending
+**Status:** Current-basis final review passed; exit gate pending
 **Started:** 2026-09-09
 **Last Updated:** 2026-09-12
 
 ## Current Phase
 
-Implementation — Exit gate restart pending
+Implementation — Exit gate pending
 
 ## Artifacts
 
@@ -124,7 +124,7 @@ Implementation — Exit gate restart pending
 - ✓ Phase 6 independently reviewed
 - ✓ Implementation tasks complete (48/48 tasks)
 - ✓ Current-basis final review passed
-- ⧗ Configured implementation exit gate restart pending
+- ⧗ Configured implementation exit gate pending
 
 ## Blockers
 
@@ -132,4 +132,4 @@ None.
 
 ## Next Milestone
 
-Restart the configured implementation exit gate on the reviewed basis.
+Run the configured implementation exit gate on the reviewed basis.

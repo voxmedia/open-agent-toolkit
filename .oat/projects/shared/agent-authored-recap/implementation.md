@@ -964,7 +964,7 @@ fresh Phase 6 review and final re-review.
 
 ## Phase 6: Final review fixes
 
-**Status:** current-basis final review passed; exit gate restart pending.
+**Status:** current-basis final review passed; exit gate pending.
 
 ### Phase Summary
 
@@ -1475,6 +1475,24 @@ program-HTML whitespace item remains the sole approved deferral.
 
 **Next:** Start a fresh configured exit-gate generation on this reviewed
 implementation basis, preserving one consumed remediation attempt.
+
+### Configured Implementation Exit Gate — Remediated Generation
+
+**Generation started:** 2026-09-12T23:59:46Z
+**Resolution:** configured; declaration unchanged
+**Policy:** `onFailure=block`, `maxAttempts=2`, `attemptsCompleted=1`
+**Reviewed head:** `9c6d83fe16f8120bd585ff5d76925e19e1d1ca3a`
+**Integration base:** `origin/main`
+**Implementation fingerprint:**
+`sha256:effective-delta-v1:76645c43ae2963947cb36b59464530e1f8bfaaebee115fa936714dd4d856c658`
+**Configuration fingerprint:**
+`sha256:94671d8d5f24560ccaac19595added0c71a89defa8b2a3f4be1d1027b96581e5`
+**Prior generation:** Blocked run
+`6cf37a1e-a33f-40af-9b33-75937b421ac5` is fully received and preserved above;
+its remediation changed the basis and consumed attempt 1.
+**Status:** pending; launch not started
+
+**Next:** Persist launch intent and execute the unchanged configured command.
 
 ---
 
