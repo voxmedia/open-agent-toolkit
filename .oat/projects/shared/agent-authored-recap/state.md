@@ -12,7 +12,7 @@ oat_hill_checkpoints: ['discovery', 'design'] # Configured: which phases require
 oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_phase_recovery_policy:
   default_attempt_limit: 10
@@ -87,7 +87,7 @@ oat_post_implement_sequence:
   source: configured
   final_phase: p06
   pre_approval: ['summary', 'document', 'pr']
-  pre_approval_completed: ['summary', 'document']
+  pre_approval_completed: ['summary', 'document', 'pr']
   approval: pending
   approval_source: null
   post_approval: []
@@ -98,23 +98,23 @@ oat_project_recap:
   source: interactive
   decided_at: '2026-09-13T16:32:42Z'
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: ready # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/299 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-09T16:39:02.165Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-13T16:56:22Z'
+oat_project_state_updated: '2026-09-13T16:58:04Z'
 oat_generated: false
 ---
 
 # Project State: agent-authored-recap
 
-**Status:** Final PR artifact ready
+**Status:** Final PR open
 **Started:** 2026-09-09
 **Last Updated:** 2026-09-13
 
 ## Current Phase
 
-Implementation — Final PR ready to open
+Implementation — PR open; completion may run before or after merge.
 
 ## Artifacts
 
@@ -143,6 +143,8 @@ Implementation — Final PR ready to open
 - ✓ Exceptional configured gate passed with 0 findings
 - ✓ Gate review durably received
 - ✓ Final PR artifact prepared and review ledger validated
+- ✓ PR created
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -152,4 +154,8 @@ configured gate review.
 
 ## Next Milestone
 
-Push the branch and open the final PR.
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- Complete before merge: run `oat-project-complete` now, then merge the PR.
+- Merge before completion: merge the PR, then run `oat-project-complete`.
