@@ -256,23 +256,8 @@ packaged `assets/` directory next to the installed CLI. Setting a non-empty
 This is primarily a test-isolation and packaging seam; day-to-day use of the CLI
 does not need it.
 
-`EXPLAINER_KIT_ALLOW_PRIVATE_PUBLIC_ROOT` disables an anti-SSRF control. Public
-verification issues an outbound GET against whatever `publicBaseUrl` names, so
-by default the connector refuses internal addresses — including the
-`169.254.169.254` instance-metadata endpoint. Enable it only for a genuinely
-internal mirror. When it is set and the root is in fact non-public, the run
-records `publicRootPolicy: "private-allowed"` in the publish receipt, so a
-publication made with the control disabled is distinguishable in durable
-evidence from one made without it. The policy is address-literal only: a
-hostname that resolves inward is not detected either way.
-
-`EXPLAINER_KIT_SUPPRESS_ROOT_DIVERGENCE_WARNING` only affects an advisory
-message. Divergent roots are never a publication failure — a CloudFront Origin
-Path deployment legitimately maps a bucket prefix to the distribution root — so
-this changes no validation outcome.
-
 See [Explainer Kit](../workflows/skills/explainer-kit.md) for recipes, artifact
-locations, lifecycle behavior, and durability.
+locations, lifecycle behavior, and archive/export behavior.
 
 Workflow gate objects are structured config and use their own command group
 instead of the scalar `oat config set` surface. See

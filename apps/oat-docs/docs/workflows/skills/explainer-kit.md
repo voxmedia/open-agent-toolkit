@@ -71,6 +71,9 @@ Supported input modes are:
 - `--inputs <file|dir>...` for ordinary documents; or
 - `--fact-base <path>` for an already-supplied fact base.
 
+Bundling fails before authoring if an input escapes its declared root or if
+different inputs resolve to the same document locator.
+
 After the host agent authors `site/index.html`, verify and record it:
 
 ```bash
@@ -82,9 +85,12 @@ node scripts/record.mjs \
   --run-root /path/to/run-root \
   --recipe project-recap \
   --slug project-recap \
-  --mode unattended \
+  --mode interactive \
   --theme /path/to/run-root/theme.resolved.json
 ```
+
+Direct front-door runs record as `interactive`; OAT lifecycle callers use
+`unattended`.
 
 Always pass `--recipe`, `--theme`, and `--out` to the bundle stage. Direct
 callers choose their output root; OAT callers use the adapter's canonical
@@ -147,12 +153,13 @@ Before recording, the run root contains:
 - `source/ledger.json`;
 - `theme.resolved.json`;
 - the authored `site/index.html`; and
-- verification output under `qa/`.
+- verification output under `qa/`, including `qa/result.json`, which records
+  the browser rung and visual-check results.
 
 Recording adds `manifest.json` with schema
 `explainer-kit.manifest/v2`. The manifest is an exact inventory of the
-completed package and carries the run ID, recipe, source hashes, browser rung,
-warnings, and outcome.
+completed package and carries the run ID, recipe, source hashes, warnings, and
+outcome.
 
 The project archive command may copy one selected satisfied project recap into
 the tracked reference export. That archive export is the durable completion
