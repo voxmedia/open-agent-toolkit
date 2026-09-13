@@ -1726,6 +1726,12 @@ event, and project-log event all correlate to the gate run.
 **Next:** Persist receive intent, consume the passing gate review, and
 reconcile its durable receipt before closeout.
 
+**Receive intent:** persisted for run
+`52787dbb-20c4-4fe7-b484-a72f0cd20c35`, source
+`reviews/final-review-2026-09-13T050025Z.md`, destination
+`reviews/archived/final-review-2026-09-13T050025Z.md`, and pre-receive head
+`1202699d15b7fb49437b67d6344b80d792cb9f2b`.
+
 ---
 
 ## Orchestration Runs

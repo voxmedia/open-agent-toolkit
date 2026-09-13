@@ -71,23 +71,23 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: .oat/projects/shared/agent-authored-recap/reviews/final-review-2026-09-13T050025Z.md
   handoff: Run oat-project-review-receive for .oat/projects/shared/agent-authored-recap/reviews/final-review-2026-09-13T050025Z.md before treating this gate review as consumed.
-  receive_state: not_started
-  receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
+  receive_state: intent_persisted
+  receive_correlation: 'run=52787dbb-20c4-4fe7-b484-a72f0cd20c35; handoff=receive; source=reviews/final-review-2026-09-13T050025Z.md; scope=final; type=code'
+  receive_source_artifact: .oat/projects/shared/agent-authored-recap/reviews/final-review-2026-09-13T050025Z.md
+  receive_archived_artifact: .oat/projects/shared/agent-authored-recap/reviews/archived/final-review-2026-09-13T050025Z.md
+  receive_event_identity: final | code | final-review-2026-09-13T050025Z.md
+  receive_pre_head: 1202699d15b7fb49437b67d6344b80d792cb9f2b
   receive_commit: null
   receive_eligible: true
   receive_completed: false
   failure: exceptional configured gate passed with 0 findings; eligible receive remains required
-  updated_at: '2026-09-13T14:55:33Z'
+  updated_at: '2026-09-13T14:56:29Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-09T16:39:02.165Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-13T14:55:33Z'
+oat_project_state_updated: '2026-09-13T14:56:29Z'
 oat_generated: false
 ---
 
