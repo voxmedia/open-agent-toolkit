@@ -128,6 +128,10 @@ phase-outcome-p06-exceptional-20260913: PASS; 0 Critical, 0 Important, 0 Medium,
 
 final-current-basis-pass-20260913: PASS; 0 Critical, 0 Important, 0 Medium, 2 Minor; corrected the Phase 6 progress label and retained the approved immutable-HTML whitespace deferral; exactly one exceptional configured exit-gate review remains authorized; see reviews/archived/final-review-2026-09-13T044417Z.md.
 
+### 2026-09-13 · structural · oat gate review · final
+
+target=cursor-fable-5-1-high threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/shared/agent-authored-recap/reviews/final-review-2026-09-13T050025Z.md run=52787dbb-20c4-4fe7-b484-a72f0cd20c35
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
