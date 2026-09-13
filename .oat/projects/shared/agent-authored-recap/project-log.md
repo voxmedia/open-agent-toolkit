@@ -108,6 +108,10 @@ reviews/p06-review-2026-09-12T230247Z.md. Phase 6 recovery remains zero.
 
 target=cursor-fable-5-1-high threshold=important findings=critical:0,important:1,medium:0,minor:1 exit=1 status=blocked artifact=.oat/projects/shared/agent-authored-recap/reviews/final-review-2026-09-13T001401Z.md run=756b124f-64ad-492b-96d8-2c8c9d22bbd3
 
+### 2026-09-13 · structural · oat-project-implement · final-gate-extension
+
+final-gate-exception-authorized-20260913: operator authorized only p06-t17 and p06-t18, current-basis lifecycle verification, and exactly one additional configured exit-gate review beyond the exhausted 2/2 budget; Phase 6 recovery remains zero, and another blocking gate must stop.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-09-12
+oat_last_updated: 2026-09-13
 oat_current_task_id: p06-t17
 oat_generated: false
 ---
@@ -10,7 +10,7 @@ oat_generated: false
 # Implementation: agent-authored-recap
 
 **Started:** 2026-09-09
-**Last Updated:** 2026-09-11
+**Last Updated:** 2026-09-13
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -24,14 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 17    | 17/17     |
-| Phase 2 | completed | 4     | 4/4       |
-| Phase 3 | completed | 8     | 8/8       |
-| Phase 4 | completed | 2     | 2/2       |
-| Phase 5 | completed | 1     | 1/1       |
-| Phase 6 | blocked   | 18    | 16/18     |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 17    | 17/17     |
+| Phase 2 | completed   | 4     | 4/4       |
+| Phase 3 | completed   | 8     | 8/8       |
+| Phase 4 | completed   | 2     | 2/2       |
+| Phase 5 | completed   | 1     | 1/1       |
+| Phase 6 | in_progress | 18    | 16/18     |
 
 **Total:** 48/50 tasks completed
 
@@ -1554,11 +1554,14 @@ receive reconciliation, `attemptsCompleted=2` equals `maxAttempts=2`; no fix
 execution or additional gate launch is authorized without explicit operator
 direction. Phase 6 recovery remains zero.
 
-**Receive reconciliation:** Completed. Commit
-`cbf42e74113f82f6982195cc43bcabc729c47291` contains the exact archive move,
-matching `fixes_added` ledger event, p06-t17/p06-t18 tasks, and tracking
-updates. The configured gate now records 2/2 remediation attempts consumed
-with complete receive provenance.
+**Receive reconciliation correction:** The initial receive commit added the
+archived artifact and matching tracking changes but omitted staging the source
+deletion. Commit `322791386ee9127c96b59f6c629a2a6e31663079` completed the
+exact move; the bounded diff from pre-receive head
+`ce6bf0936f7d749b1eece8b6a50284c64093f8ac` through that commit contains the
+artifact move, `fixes_added` ledger event, p06-t17/p06-t18 tasks, and tracking
+updates. The configured gate records 2/2 remediation attempts consumed with
+complete receive provenance.
 
 **Stop boundary:** The configured gate attempt budget is exhausted. Do not
 execute p06-t17/p06-t18 or launch another gate without explicit operator
@@ -1567,6 +1570,23 @@ authorization. Phase 6 recovery remains zero.
 **Next:** Ask the operator whether to authorize one additional bounded
 remediation plus gate re-review, proceed with the known Important unresolved,
 or stop.
+
+### Operator authorization: exceptional configured-gate continuation
+
+**Date:** 2026-09-13
+**Scope:** Execute only `p06-t17` and `p06-t18`, re-establish the Phase 6 and
+current-basis final lifecycle evidence, and launch exactly one additional
+configured gate review.
+
+**Accounting:** The configured `maxAttempts=2` remediation budget remains
+exhausted at 2/2. This is a single explicit operator exception, not an
+automatic retry, a Phase 6 recovery attempt, or an open-ended extension.
+Phase 6 recovery usage remains zero.
+
+**Stop boundary:** If the one additional gate review blocks, stop without
+another fix or review attempt unless the operator gives new direction.
+
+**Next:** Resume the existing Phase 6 implementer for the two queued tasks.
 
 ---
 

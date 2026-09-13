@@ -1,10 +1,7 @@
 ---
 oat_current_task: p06-t17
 oat_last_commit: 3a47b0e32872345020fe28d7aa07b75928abc835
-oat_blockers:
-  - task_id: p06-t17
-    reason: Configured implementation exit gate exhausted 2/2 remediation attempts; explicit operator authorization is required before executing queued fixes or launching another gate review.
-    since: 2026-09-13
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -50,7 +47,7 @@ oat_workflow_origin: native # native | imported
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
 oat_implement_exit_gate:
-  status: blocked
+  status: stale
   resolution: configured
   disposition: null
   config_fingerprint: sha256:94671d8d5f24560ccaac19595added0c71a89defa8b2a3f4be1d1027b96581e5
@@ -80,29 +77,29 @@ oat_implement_exit_gate:
   receive_archived_artifact: .oat/projects/shared/agent-authored-recap/reviews/archived/final-review-2026-09-13T001401Z.md
   receive_event_identity: final | code | final-review-2026-09-13T001401Z.md
   receive_pre_head: ce6bf0936f7d749b1eece8b6a50284c64093f8ac
-  receive_commit: cbf42e74113f82f6982195cc43bcabc729c47291
+  receive_commit: 322791386ee9127c96b59f6c629a2a6e31663079
   receive_eligible: true
   receive_completed: true
-  failure: configured gate attempt 2 found 1 Important lifecycle-transient fixture dependency; valid receive completed and maxAttempts=2 is exhausted
-  updated_at: '2026-09-13T00:28:00Z'
+  failure: operator authorized one exceptional bounded remediation for p06-t17/p06-t18 and exactly one additional configured gate review beyond the exhausted 2/2 budget
+  updated_at: '2026-09-13T00:43:00Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-09T16:39:02.165Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-13T00:28:00Z'
+oat_project_state_updated: '2026-09-13T00:43:00Z'
 oat_generated: false
 ---
 
 # Project State: agent-authored-recap
 
-**Status:** Exit-gate attempt limit reached; fixes queued
+**Status:** Operator-authorized exceptional gate remediation in progress
 **Started:** 2026-09-09
-**Last Updated:** 2026-09-12
+**Last Updated:** 2026-09-13
 
 ## Current Phase
 
-Implementation — Blocked at configured gate attempt limit
+Implementation — Completing the final two Phase 6 tasks
 
 ## Artifacts
 
@@ -123,16 +120,17 @@ Implementation — Blocked at configured gate attempt limit
 - ✓ Phase 3 complete and independently verified (8/8 tasks)
 - ✓ Phase 4 complete and independently verified (2/2 tasks)
 - ✓ Phase 5 complete and independently verified (1/1 task)
-- ⧗ Phase 6 blocked with 16/18 tasks complete
-- ⧗ Implementation blocked with 48/50 tasks complete
-- ⧗ Configured exit-gate attempt 2 awaiting durable receive
+- ⧗ Phase 6 in progress with 16/18 tasks complete
+- ⧗ Implementation in progress with 48/50 tasks complete
+- ✓ Configured exit-gate attempt 2 durably received
+- ⧗ One exceptional bounded remediation and one additional gate review authorized
 
 ## Blockers
 
-- Configured implementation exit gate remediation is exhausted at 2/2
-  attempts. `p06-t17` and `p06-t18` are queued but require explicit operator
-  authorization before execution or another gate launch.
+None. The configured 2/2 budget remains exhausted; the operator authorized
+only `p06-t17`/`p06-t18` plus one additional configured gate review.
 
 ## Next Milestone
 
-Obtain operator direction on the exhausted two-attempt gate budget.
+Complete `p06-t17` and `p06-t18`, re-verify Phase 6 and the current final
+lifecycle basis, then run exactly one additional configured gate review.
