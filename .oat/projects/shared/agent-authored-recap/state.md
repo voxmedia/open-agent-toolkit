@@ -47,9 +47,9 @@ oat_workflow_origin: native # native | imported
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: sha256:94671d8d5f24560ccaac19595added0c71a89defa8b2a3f4be1d1027b96581e5
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: Semantic cross-family final implementation review before oat-project-implement exits.
@@ -60,8 +60,8 @@ oat_implement_exit_gate:
   reviewed_head: d0df52f7c8c44522b59f99588903329a538a5a4c
   implementation_base_ref: origin/main
   implementation_fingerprint: sha256:effective-delta-v1:3f0a80e727c3936c2739325119f6f37a3c3dcabd1794bbb8c0e82f33969ee399
-  freshness_head: 92be8b0e7039a38f82ce0dd222515d96c6724cfe
-  freshness_fingerprint: sha256:effective-delta-v1:e8e6741b7f807cab05d1ad828e5255ff10658baf97244794b662359cf4383cfc
+  freshness_head: 71348e3d4c332bbc13b2de50b13536d38506aee5
+  freshness_fingerprint: sha256:effective-delta-v1:2a45c43813f78b6eee31ca5afb799b5eb550f42399bf82cb7fa585d62ded0b9c
   launch_state: result_persisted
   launch_attempt_id: aar-exit-gate-20260913T045415Z
   launch_started_at: '2026-09-13T04:54:15Z'
@@ -71,35 +71,35 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: .oat/projects/shared/agent-authored-recap/reviews/archived/final-review-2026-09-13T050025Z.md
   handoff: Run oat-project-review-receive for .oat/projects/shared/agent-authored-recap/reviews/final-review-2026-09-13T050025Z.md before treating this gate review as consumed.
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation: 'run=52787dbb-20c4-4fe7-b484-a72f0cd20c35; handoff=receive; source=reviews/final-review-2026-09-13T050025Z.md; scope=final; type=code'
   receive_source_artifact: .oat/projects/shared/agent-authored-recap/reviews/final-review-2026-09-13T050025Z.md
   receive_archived_artifact: .oat/projects/shared/agent-authored-recap/reviews/archived/final-review-2026-09-13T050025Z.md
   receive_event_identity: final | code | final-review-2026-09-13T050025Z.md
   receive_pre_head: 1202699d15b7fb49437b67d6344b80d792cb9f2b
-  receive_commit: null
+  receive_commit: 71348e3d4c332bbc13b2de50b13536d38506aee5
   receive_eligible: true
-  receive_completed: false
-  failure: passing gate receive applied; durable archive/event/commit reconciliation pending
-  updated_at: '2026-09-13T14:58:00Z'
+  receive_completed: true
+  failure: null
+  updated_at: '2026-09-13T14:58:21Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-09T16:39:02.165Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-13T14:58:00Z'
+oat_project_state_updated: '2026-09-13T14:58:21Z'
 oat_generated: false
 ---
 
 # Project State: agent-authored-recap
 
-**Status:** Exceptional gate receive applied; reconciliation pending
+**Status:** Exceptional configured exit gate passed
 **Started:** 2026-09-09
 **Last Updated:** 2026-09-13
 
 ## Current Phase
 
-Implementation — Reconcile passing configured exit gate
+Implementation — Closeout sequencing
 
 ## Artifacts
 
@@ -126,7 +126,7 @@ Implementation — Reconcile passing configured exit gate
 - ✓ Narrow Phase 6 review passed
 - ✓ Current-basis final lifecycle review passed
 - ✓ Exceptional configured gate passed with 0 findings
-- ⧗ Gate review receive reconciliation pending
+- ✓ Gate review durably received
 
 ## Blockers
 
@@ -136,4 +136,4 @@ configured gate review.
 
 ## Next Milestone
 
-Reconcile the passing gate receive commit and continue closeout sequencing.
+Continue the configured closeout sequence.
