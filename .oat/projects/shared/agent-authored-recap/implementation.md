@@ -1490,9 +1490,14 @@ implementation basis, preserving one consumed remediation attempt.
 **Prior generation:** Blocked run
 `6cf37a1e-a33f-40af-9b33-75937b421ac5` is fully received and preserved above;
 its remediation changed the basis and consumed attempt 1.
-**Status:** pending; launch not started
+**Attempt:** `aar-exit-gate-20260913T000105Z`
+**Launch intent:** persisted at 2026-09-13T00:01:05Z
+**Result receipt:**
+`/private/tmp/oat-agent-authored-recap/aar-exit-gate-20260913T000105Z.receipt.json`
+**Status:** pending; launch intent persisted
 
-**Next:** Persist launch intent and execute the unchanged configured command.
+**Next:** Execute the unchanged configured command and reconcile its marker
+and structured receipt.
 
 ---
 
