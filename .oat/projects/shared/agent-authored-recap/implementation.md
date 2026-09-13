@@ -1586,7 +1586,14 @@ Phase 6 recovery usage remains zero.
 **Stop boundary:** If the one additional gate review blocks, stop without
 another fix or review attempt unless the operator gives new direction.
 
-**Next:** Resume the existing Phase 6 implementer for the two queued tasks.
+**Plan correction:** `p06-t17`'s byte-exact historical snapshots exposed
+retired vocabulary to the live-source retirement sweep. The task boundary now
+includes `tools/smoke/explainer-kit/no-retired-references.test.mjs` solely to
+exclude the declared immutable snapshot subtree while preserving a negative
+control for live source paths. This is necessary integration work for
+`p06-t17`, not a third remediation task or a broader sweep exception.
+
+**Next:** Complete the corrected `p06-t17` boundary, then `p06-t18`.
 
 ---
 

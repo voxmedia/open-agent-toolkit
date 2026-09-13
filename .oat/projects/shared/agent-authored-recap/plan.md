@@ -947,6 +947,7 @@ gates, then
 **Files:**
 
 - Modify: `.agents/skills/explainer-kit/tests/verify.test.mjs`
+- Modify: `tools/smoke/explainer-kit/no-retired-references.test.mjs`
 - Add:
   `.agents/skills/explainer-kit/tests/fixtures/tracked-packages/{project-explainer,program-recap}/{site/index.html,source/ledger.json,source/fact-base.json}`,
   `.agents/skills/explainer-kit/tests/fixtures/tracked-packages/PROVENANCE.md`
@@ -962,7 +963,10 @@ the exact source path, run ID, and source commit in `PROVENANCE.md`; do not copy
 
 **Step 3: Implement (GREEN)** — Point both tracked-package controls at the
 archive-safe fixtures. Preserve fresh `verifyRun` coverage, all residual fact
-controls, and the immutable tracked package trees.
+controls, and the immutable tracked package trees. Exclude only the declared
+immutable historical fixture subtree from the live retired-reference sweep;
+add a focused control proving the exact fixture path is excluded without
+weakening detection for live source paths.
 
 **Step 4: Negative control** — Re-run the no-project-directory reproduction
 and require the tracked-package control to pass; temporarily restore the live

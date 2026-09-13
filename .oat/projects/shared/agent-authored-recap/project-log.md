@@ -112,6 +112,10 @@ target=cursor-fable-5-1-high threshold=important findings=critical:0,important:1
 
 final-gate-exception-authorized-20260913: operator authorized only p06-t17 and p06-t18, current-basis lifecycle verification, and exactly one additional configured exit-gate review beyond the exhausted 2/2 budget; Phase 6 recovery remains zero, and another blocking gate must stop.
 
+### 2026-09-13 · structural · oat-project-implement · p06-t17-plan-correction
+
+p06-t17-historical-fixture-sweep-correction-20260913: byte-exact archive-safe snapshots contain retired historical vocabulary, so p06-t17 now owns a narrowly tested exclusion for only its immutable fixture subtree; live-source detection remains required.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
