@@ -1494,14 +1494,26 @@ its remediation changed the basis and consumed attempt 1.
 **Launch intent:** persisted at 2026-09-13T00:01:05Z
 **Result receipt:**
 `/private/tmp/oat-agent-authored-recap/aar-exit-gate-20260913T000105Z.receipt.json`
-**Status:** accepted
+**Status:** result persisted; blocked
 **Gate run:** `756b124f-64ad-492b-96d8-2c8c9d22bbd3`
 **Gate target:** `cursor-fable-5-1-high`
 **Acceptance evidence:** matching run marker written at
 `/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/756b124f-64ad-492b-96d8-2c8c9d22bbd3.json`
 before reviewer launch.
 
-**Next:** Reconcile the structured result when the accepted run completes.
+**Structured result:** `blocked`,
+`review_completed_blocking_findings`, `receiveEligible: true`
+**Gate artifact:** `reviews/final-review-2026-09-13T001401Z.md`
+**Findings:** 0 Critical, 1 Important, 0 Medium, 1 Minor
+**Blocking finding:** The tracked-package verification test reads the
+project-explainer fixture from this shared project's live directory, which
+completion deletes; post-closeout `pnpm test` would fail with `ENOENT`.
+**Disposition:** Eligible receive required. This is configured gate attempt 2;
+after durable receipt, the `maxAttempts=2` budget is exhausted and no
+additional gate launch is authorized.
+
+**Next:** Persist receive intent, consume the review, and stop at the exhausted
+gate-attempt boundary.
 
 ---
 

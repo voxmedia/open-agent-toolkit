@@ -47,7 +47,7 @@ oat_workflow_origin: native # native | imported
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
 oat_implement_exit_gate:
-  status: pending
+  status: blocked
   resolution: configured
   disposition: null
   config_fingerprint: sha256:94671d8d5f24560ccaac19595added0c71a89defa8b2a3f4be1d1027b96581e5
@@ -62,15 +62,15 @@ oat_implement_exit_gate:
   implementation_fingerprint: sha256:effective-delta-v1:76645c43ae2963947cb36b59464530e1f8bfaaebee115fa936714dd4d856c658
   freshness_head: 9c6d83fe16f8120bd585ff5d76925e19e1d1ca3a
   freshness_fingerprint: sha256:effective-delta-v1:76645c43ae2963947cb36b59464530e1f8bfaaebee115fa936714dd4d856c658
-  launch_state: accepted
+  launch_state: result_persisted
   launch_attempt_id: aar-exit-gate-20260913T000105Z
   launch_started_at: '2026-09-13T00:01:05Z'
   launch_result_receipt: /private/tmp/oat-agent-authored-recap/aar-exit-gate-20260913T000105Z.receipt.json
   gate_run_marker: /var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/756b124f-64ad-492b-96d8-2c8c9d22bbd3.json
   gate_run_id: 756b124f-64ad-492b-96d8-2c8c9d22bbd3
-  envelope_status: null
-  artifact: null
-  handoff: null
+  envelope_status: blocked
+  artifact: .oat/projects/shared/agent-authored-recap/reviews/final-review-2026-09-13T001401Z.md
+  handoff: Run oat-project-review-receive for .oat/projects/shared/agent-authored-recap/reviews/final-review-2026-09-13T001401Z.md before treating this gate review as consumed.
   receive_state: not_started
   receive_correlation: null
   receive_source_artifact: null
@@ -78,16 +78,16 @@ oat_implement_exit_gate:
   receive_event_identity: null
   receive_pre_head: null
   receive_commit: null
-  receive_eligible: false
+  receive_eligible: true
   receive_completed: false
-  failure: null
-  updated_at: '2026-09-13T00:02:51Z'
+  failure: configured gate attempt 2 found 1 Important lifecycle-transient fixture dependency; policy blocks at important and reaches max attempts after receive
+  updated_at: '2026-09-13T00:14:01Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-09T16:39:02.165Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-13T00:02:51Z'
+oat_project_state_updated: '2026-09-13T00:14:01Z'
 oat_generated: false
 ---
 
