@@ -1,7 +1,7 @@
 ---
 id: BL-260817-drop-explainer-kit-publish
 title: Drop explainer-kit publish-request/v1 in a future minor
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: S
@@ -11,7 +11,7 @@ labels:
   - breaking
 assignee: null
 created: 2026-08-17T00:28:53.181Z
-updated: 2026-08-17T00:28:53.181Z
+updated: '2026-09-13T15:09:13Z'
 associated_issues: []
 external_plans: []
 ---

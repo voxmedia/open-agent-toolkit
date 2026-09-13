@@ -9,10 +9,11 @@
   decision on replacing only the authoring layer with a pinned, attributed
   Effective HTML subset; the OAT wrapper/router and assurance contracts remain
   the stable boundary.
-- 2026-09-07: `BL-260907-replace-the-default-project` proposes a simpler,
-  direct agent-authored visual recap after another implementation-tail run produced
-  no visual artifact. It should reconcile or supersede the capability-probe and seam
-  configuration direction tracked under issue #230 before implementation.
+- 2026-09-13: `BL-260907-replace-the-default-project` shipped through
+  `agent-authored-recap`: one manifest-v2 flow now serves project and program
+  recaps, plan-time project explainers, and direct input. The same closeout
+  archived the four active RC-browser and publication follow-ups that the
+  retired tooling made obsolete.
 - 2026-09-06: `BL-260906-re-evaluate-universal-plan` reopens the default-policy
   question in `DR-260714-flexible-plan-task-bodies`: objective,
   risk-proportionate proof should prevent both proof-free plans and low-value
@@ -240,7 +241,6 @@
 | BL-260718-harden-full-surface-gate       | Harden full-surface gate reviews against budget and recursive dispatch                                | open   | high     | feature    | M        |
 | BL-260729-implement-reviewplan-first     | Implement ReviewPlan-first reviewer workflow                                                          | open   | high     | feature    | L        |
 | BL-260829-order-phase-bookkeeping-before | Order phase bookkeeping before per-phase review dispatch                                              | open   | high     | task       | M        |
-| BL-260907-replace-the-default-project    | Replace the default project recap with a direct agent-authored visual flow                            | open   | high     | feature    | M        |
 | BL-260908-restore-recon-s-cheap-fan-out  | Restore recon's cheap-fan-out intent with per-wave routing under one approval envelope                | open   | high     | feature    | L        |
 | BL-260724-support-provider-directory     | Support provider directory symlinks as full collection sync                                           | open   | high     | feature    | M        |
 | BL-260820-track-pr-closeout-evidence     | Track PR-closeout evidence freshness against the current head                                         | open   | high     | feature    | L        |
@@ -254,12 +254,10 @@
 | BL-260819-classify-canonical-skills-by   | Classify canonical skills by distribution, lifecycle, and tenant scope                                | open   | medium   | feature    | M        |
 | BL-260903-close-manual-only-agents-md    | Close manual-only AGENTS.md refresh loop                                                              | open   | medium   | task       | M        |
 | BL-260830-complete-control-plane-backed  | Complete control-plane-backed lifecycle reads                                                         | open   | medium   | initiative | M        |
-| BL-260817-decide-and-pin-the-system      | Decide and pin the system-Chromium requirement introduced by test:skills on the merge path            | open   | medium   | task       | S        |
 | BL-260830-decide-generic-oat-ownership   | Decide generic OAT ownership of Jira backlog refinement                                               | open   | medium   | idea       | L        |
 | BL-260902-decide-test-only-freshness     | Decide test-only freshness exception for the implement exit gate                                      | open   | medium   | idea       | S        |
 | BL-260818-distinguish-operator-directed  | Distinguish operator-directed review rounds from failed fix cycles in the review-cycle cap            | open   | medium   | task       | M        |
 | BL-260718-document-execution-program     | Document execution-program artifact as stable OAT contract                                            | open   | medium   | feature    | M        |
-| BL-260817-drop-explainer-kit-publish     | Drop explainer-kit publish-request/v1 in a future minor                                               | open   | medium   | task       | S        |
 | BL-260912-evaluate-replacing-explainer   | Evaluate replacing Explainer Kit authoring guidance with a pinned Effective HTML subset               | open   | medium   | task       | M        |
 | BL-260902-file-deferred-repository       | File deferred repository follow-ups from a passing receive                                            | open   | medium   | feature    | M        |
 | BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs                                     | open   | medium   | feature    | L        |
@@ -283,7 +281,6 @@
 | BL-260908-retire-the-top-level-skill     | Retire the top-level skill version alias on the recorded schedule                                     | open   | medium   | task       | S        |
 | BL-260718-rewrite-worktree-bootstrap     | Rewrite worktree bootstrap-group as tested TypeScript command                                         | open   | medium   | feature    | M        |
 | BL-260713-root-agent-judgment-logging    | Root-agent judgment logging responsibility for project log                                            | open   | medium   | feature    | S        |
-| BL-260817-run-the-rc-explainer-end       | Run the RC explainer end-to-end test in CI with a provisioned browser                                 | open   | medium   | task       | M        |
 | BL-260827-span-based-prose-guards        | Span-based prose guards, anchored probe records, and a shared probe runner for skill contract tests   | open   | medium   | task       | S        |
 | BL-260718-support-fumadocs-in-oat-docs   | Support Fumadocs in oat docs nav sync (currently MkDocs-only)                                         | open   | medium   | task       |          |
 | BL-260909-surface-config-warnings        | Surface config warnings on every reader path and document the warnings field                          | open   | medium   | task       | M        |
@@ -292,7 +289,6 @@
 | BL-260726-validate-cursor-pin-effort     | Validate Cursor pin effort rungs at sync time                                                         | open   | medium   | task       | S        |
 | BL-260908-validate-the-catalog-refresh   | Validate the catalog-refresh policy state in normalizeSyncEvidence                                    | open   | medium   | task       | XS       |
 | BL-260708-verify-cursor-gpt-5-6-subagent | Verify Cursor GPT-5.6 subagent model slugs                                                            | open   | medium   | task       | S        |
-| BL-260817-verify-protected-mode-public   | Verify protected-mode public URLs with an authenticated end-to-end GET                                | open   | medium   | task       | M        |
 | BL-260830-wire-bounded-durable-reference | Wire bounded durable-reference reads into lifecycle skills                                            | open   | medium   | feature    | M        |
 | BL-260830-wire-provide-remote-skills     | Wire provide-remote skills to the review-remote helper CLI                                            | open   | medium   | feature    | L        |
 | BL-260909-add-a-grep-by-shape-control    | Add a grep-by-shape control for own-key sweeps keyed to variable names                                | open   | low      | task       | S        |

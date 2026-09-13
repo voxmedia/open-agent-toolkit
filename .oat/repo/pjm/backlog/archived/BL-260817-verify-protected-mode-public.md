@@ -1,7 +1,7 @@
 ---
 id: BL-260817-verify-protected-mode-public
 title: Verify protected-mode public URLs with an authenticated end-to-end GET
-status: open
+status: wont_do
 priority: medium
 scope: task
 scope_estimate: M
@@ -11,7 +11,7 @@ labels:
   - publication
 assignee: null
 created: 2026-08-17T04:21:20.540Z
-updated: 2026-08-17T04:21:20.540Z
+updated: '2026-09-13T15:09:14Z'
 associated_issues: []
 external_plans: []
 ---

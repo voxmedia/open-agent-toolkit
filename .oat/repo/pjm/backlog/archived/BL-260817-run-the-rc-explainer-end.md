@@ -1,7 +1,7 @@
 ---
 id: BL-260817-run-the-rc-explainer-end
 title: Run the RC explainer end-to-end test in CI with a provisioned browser
-status: open
+status: wont_do
 priority: medium
 scope: task
 scope_estimate: M
@@ -11,7 +11,7 @@ labels:
   - explainer-kit
 assignee: null
 created: 2026-08-17T12:38:19.416Z
-updated: 2026-08-17T12:38:19.416Z
+updated: '2026-09-13T15:09:13Z'
 associated_issues: []
 external_plans: []
 ---

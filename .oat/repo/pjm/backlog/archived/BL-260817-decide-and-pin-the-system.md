@@ -2,7 +2,7 @@
 id: BL-260817-decide-and-pin-the-system
 title: Decide and pin the system-Chromium requirement introduced by test:skills
   on the merge path
-status: open
+status: wont_do
 priority: medium
 scope: task
 scope_estimate: S
@@ -11,7 +11,7 @@ labels:
   - testing
 assignee: null
 created: 2026-08-17T12:38:19.590Z
-updated: 2026-08-17T12:38:19.590Z
+updated: '2026-09-13T15:09:13Z'
 associated_issues: []
 external_plans: []
 ---

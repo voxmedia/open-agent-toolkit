@@ -37,6 +37,19 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- CLI `0.2.74` (`agent-authored-recap`, implementation and configured exit
+  gate complete; pre-approval closeout in progress) replaces callback-driven
+  Explainer Kit orchestration with one
+  `bundle → host-agent author → verify → record` flow for project recaps,
+  program recaps, plan-time project explainers, and direct-input runs. The
+  flow records exact manifest-v2 packages, always runs browser-free safety and
+  claim checks, uses the host-browser → Playwright → browser-free ladder, and
+  preserves browser-less success as `built-needs-review`. Provider seams,
+  adaptive expansion, release-candidate tooling, durability attestation, and
+  external publication are retired; archive export is the durable copy.
+  `DR-260911-explainers-are-agent-authored` records the decision, and the
+  2026-08-31 execution program now has a validated program recap.
+
 - CLI `0.2.66` (`remote-project-management`, original implementation and
   closeout reviews complete; Wave 6 integration awaiting a fresh final gate,
   publication, and release) adds local-first remote PJM
