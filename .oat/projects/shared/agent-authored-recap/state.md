@@ -47,7 +47,7 @@ oat_workflow_origin: native # native | imported
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
 oat_implement_exit_gate:
-  status: stale
+  status: pending
   resolution: configured
   disposition: null
   config_fingerprint: sha256:94671d8d5f24560ccaac19595added0c71a89defa8b2a3f4be1d1027b96581e5
@@ -57,37 +57,37 @@ oat_implement_exit_gate:
   on_failure: block
   max_attempts: 2
   attempts_completed: 2
-  reviewed_head: 9c6d83fe16f8120bd585ff5d76925e19e1d1ca3a
+  reviewed_head: d0df52f7c8c44522b59f99588903329a538a5a4c
   implementation_base_ref: origin/main
-  implementation_fingerprint: sha256:effective-delta-v1:76645c43ae2963947cb36b59464530e1f8bfaaebee115fa936714dd4d856c658
-  freshness_head: 9c6d83fe16f8120bd585ff5d76925e19e1d1ca3a
-  freshness_fingerprint: sha256:effective-delta-v1:76645c43ae2963947cb36b59464530e1f8bfaaebee115fa936714dd4d856c658
-  launch_state: result_persisted
-  launch_attempt_id: aar-exit-gate-20260913T000105Z
-  launch_started_at: '2026-09-13T00:01:05Z'
-  launch_result_receipt: /private/tmp/oat-agent-authored-recap/aar-exit-gate-20260913T000105Z.receipt.json
-  gate_run_marker: /var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/756b124f-64ad-492b-96d8-2c8c9d22bbd3.json
-  gate_run_id: 756b124f-64ad-492b-96d8-2c8c9d22bbd3
-  envelope_status: blocked
-  artifact: .oat/projects/shared/agent-authored-recap/reviews/archived/final-review-2026-09-13T001401Z.md
-  handoff: Run oat-project-review-receive for .oat/projects/shared/agent-authored-recap/reviews/final-review-2026-09-13T001401Z.md before treating this gate review as consumed.
-  receive_state: completed
-  receive_correlation: 'run=756b124f-64ad-492b-96d8-2c8c9d22bbd3; handoff=receive; source=reviews/final-review-2026-09-13T001401Z.md; scope=final; type=code'
-  receive_source_artifact: .oat/projects/shared/agent-authored-recap/reviews/final-review-2026-09-13T001401Z.md
-  receive_archived_artifact: .oat/projects/shared/agent-authored-recap/reviews/archived/final-review-2026-09-13T001401Z.md
-  receive_event_identity: final | code | final-review-2026-09-13T001401Z.md
-  receive_pre_head: ce6bf0936f7d749b1eece8b6a50284c64093f8ac
-  receive_commit: 322791386ee9127c96b59f6c629a2a6e31663079
-  receive_eligible: true
-  receive_completed: true
-  failure: operator-authorized remediation and current-basis lifecycle reviews passed; exactly one exceptional configured gate review remains authorized
-  updated_at: '2026-09-13T04:53:00Z'
+  implementation_fingerprint: sha256:effective-delta-v1:3f0a80e727c3936c2739325119f6f37a3c3dcabd1794bbb8c0e82f33969ee399
+  freshness_head: 08b0fc9887c60e3aaa39df415e5ae4e32a6ab1be
+  freshness_fingerprint: sha256:effective-delta-v1:f578b6f6a3086030e0ba9f48d49596bceac86abf6e7aeeab3d5f5a4c4af7bca2
+  launch_state: intent_persisted
+  launch_attempt_id: aar-exit-gate-20260913T045415Z
+  launch_started_at: '2026-09-13T04:54:15Z'
+  launch_result_receipt: /private/tmp/oat-agent-authored-recap/aar-exit-gate-20260913T045415Z.receipt.json
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_state: not_started
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
+  failure: operator-authorized exceptional gate launch beyond the exhausted configured 2/2 remediation budget
+  updated_at: '2026-09-13T04:54:15Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-09T16:39:02.165Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-13T04:53:00Z'
+oat_project_state_updated: '2026-09-13T04:54:15Z'
 oat_generated: false
 ---
 

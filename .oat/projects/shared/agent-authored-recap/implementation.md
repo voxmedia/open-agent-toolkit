@@ -1684,8 +1684,30 @@ explicit exceptional continuation, and zero Phase 6 recovery.
 
 There are no deferred Critical, Important, or Medium findings.
 
-**Next:** Launch exactly one exceptional configured implementation exit-gate
-review. If it blocks, stop without another fix or review attempt.
+### Exceptional Configured Implementation Exit Gate
+
+**Generation started:** 2026-09-13T04:54:15Z
+**Resolution:** configured; declaration unchanged
+**Policy:** `onFailure=block`, configured `maxAttempts=2`,
+`attemptsCompleted=2`; one explicit exceptional launch authorized
+**Reviewed head:** `d0df52f7c8c44522b59f99588903329a538a5a4c`
+**Integration base:** `origin/main`
+**Implementation fingerprint:**
+`sha256:effective-delta-v1:3f0a80e727c3936c2739325119f6f37a3c3dcabd1794bbb8c0e82f33969ee399`
+**Freshness head:** `08b0fc9887c60e3aaa39df415e5ae4e32a6ab1be`
+**Freshness fingerprint:**
+`sha256:effective-delta-v1:f578b6f6a3086030e0ba9f48d49596bceac86abf6e7aeeab3d5f5a4c4af7bca2`
+**Configuration fingerprint:**
+`sha256:94671d8d5f24560ccaac19595added0c71a89defa8b2a3f4be1d1027b96581e5`
+**Attempt:** `aar-exit-gate-20260913T045415Z`
+**Launch intent:** persisted at 2026-09-13T04:54:15Z
+**Result receipt:**
+`/private/tmp/oat-agent-authored-recap/aar-exit-gate-20260913T045415Z.receipt.json`
+
+This launch is the entire remaining operator exception. If its validated,
+received result blocks, stop without remediation or another review launch.
+
+**Next:** Commit launch intent, then execute the configured command exactly.
 
 ---
 
