@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-13
@@ -964,7 +964,7 @@ fresh Phase 6 review and final re-review.
 
 ## Phase 6: Final review fixes
 
-**Status:** blocked at configured exit-gate attempt limit; fixes queued.
+**Status:** completed
 
 ### Phase Summary
 
@@ -1762,11 +1762,10 @@ is now `allowed/passed`.
 **Final phase:** `p06`
 **Final checkpoint:** absent (`oat_plan_hill_phases: ['p05']`)
 **Pre-approval sequence:** `summary` → `document` → `pr`
-**Approval:** pending; will become `not_required` after pre-approval because
-the final phase is not a HiLL checkpoint
+**Approval:** `not_required`; the final phase is not a HiLL checkpoint
 **Post-approval sequence:** empty
-**Status:** `pre_approval`
-**Completed:** `summary`, `document`
+**Status:** `complete`
+**Completed:** `summary`, `document`, `pr`
 **Project recap decision:** `generate` (`interactive`,
 2026-09-13T16:32:42Z)
 **Project recap outcome:** `built-needs-review`
@@ -1781,7 +1780,9 @@ The immutable sequence snapshot is persisted in `state.md`. Each completed
 step must commit before the next step and advance gate freshness through a
 separate state-only checkpoint.
 
-**Next:** Continue to `pr`.
+**Next:** Implementation is complete.
+[PR #299](https://github.com/voxmedia/open-agent-toolkit/pull/299) is open for
+review.
 
 ---
 
