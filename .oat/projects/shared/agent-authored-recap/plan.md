@@ -991,6 +991,7 @@ and lifecycle suites, `pnpm lint`, and `pnpm format`.
 | final   | code     | fixes_completed | 2026-09-12 | reviews/archived/final-review-2026-09-12T203608Z.md           | 1b041801417814f39f337837a0cba245fc11c020 | gate       | cursor-fable-5-1-high |
 | final   | code     | fixes_completed | 2026-09-12 | reviews/archived/final-review-2026-09-12T231453Z.md           | f2b92c515c23f0d9b4b9bab714951a785b56afbd | manual     | -                     |
 | final   | code     | passed          | 2026-09-12 | reviews/final-review-2026-09-12T235655Z.md                    | 9c6d83fe16f8120bd585ff5d76925e19e1d1ca3a | manual     | -                     |
+| final   | code     | received        | 2026-09-13 | reviews/final-review-2026-09-13T001401Z.md                    | da4059af5034afd6b55fc634ada4b260f5b71e5e | gate       | cursor-fable-5-1-high |
 | spec    | artifact | pending         | -          | -                                                             | -                                        | -          | -                     |
 | design  | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-design-review-2026-09-09T225646Z.md | -                                        | -          | -                     |
 | design  | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-design-review-2026-09-09T232532Z.md | -                                        | manual     | -                     |
