@@ -942,6 +942,52 @@ tracked-package validation, lifecycle suites, lint, format, and all Phase 6
 gates, then
 `git commit -m "fix(p06-t16): trace composite label facts"`.
 
+### Task p06-t17: (review) Make real-package controls archive-safe
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/tests/verify.test.mjs`
+- Add:
+  `.agents/skills/explainer-kit/tests/fixtures/tracked-packages/{project-explainer,program-recap}/{site/index.html,source/ledger.json,source/fact-base.json}`,
+  `.agents/skills/explainer-kit/tests/fixtures/tracked-packages/PROVENANCE.md`
+
+**Step 1: Reproduce (RED)** — Run the tracked-package verification test from a
+checkout fixture that omits `.oat/projects/`; confirm the live project path
+fails with `ENOENT`.
+
+**Step 2: Snapshot provenance-grounded fixtures** — Copy only the three files
+`verifyRun` reads from each tracked package into the skill fixture tree. Record
+the exact source path, run ID, and source commit in `PROVENANCE.md`; do not copy
+`manifest.json` or `source/fact-base.md`.
+
+**Step 3: Implement (GREEN)** — Point both tracked-package controls at the
+archive-safe fixtures. Preserve fresh `verifyRun` coverage, all residual fact
+controls, and the immutable tracked package trees.
+
+**Step 4: Negative control** — Re-run the no-project-directory reproduction
+and require the tracked-package control to pass; temporarily restore the live
+project path and confirm it fails before restoring the fixture path.
+
+**Step 5: Verify and commit** — Run focused and complete core tests, the
+post-archive reproduction, fixture provenance checks, package integrity,
+lifecycle suites, lint, format, and all Phase 6 gates, then
+`git commit -m "test(p06-t17): snapshot archive-safe package fixtures"`.
+
+### Task p06-t18: (review) Document residual fact subject rules
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/references/recap-authoring.md`
+
+**Step 1: Align author guidance** — Add one concise sentence explaining that
+cards, definition lists, and other non-paragraph elements are verified using
+the nearest bold/definition label or preceding heading as subject, with the
+section ID as fallback.
+
+**Step 2: Verify and commit** — Run focused core tests, skill validation,
+retired-reference checks, lint, and format, then
+`git commit -m "docs(p06-t18): document residual fact tracing"`.
+
 **Phase 6 gates:** Run the complete ordered repository gate list, isolated-HOME
 forced Turbo, standalone smoke/skills/scripts/skill validation, focused core
 and lifecycle suites, `pnpm lint`, and `pnpm format`.
@@ -950,14 +996,14 @@ and lifecycle suites, `pnpm lint`, and `pnpm format`.
 
 ## Reviews
 
-| Scope | Type  | Status | Notes                                                                                                                                 |
-| ----- | ----- | ------ | ------------------------------------------------------------------------------------------------------------------------------------- |
-| p01   | phase | passed | Independent verification passed with 0 Critical, 0 Important, and 3 deferred Medium findings.                                         |
-| p02   | phase | passed | Fresh re-review closed all three blocking findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                      |
-| p03   | phase | passed | Final operator-authorized verification passed with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                           |
-| p04   | phase | passed | Re-review closed the executable front-door and visual-evidence findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings. |
-| p05   | phase | passed | Independent review passed the program recap and both bounded recoveries with 0 findings.                                              |
-| p06   | phase | passed | Composite-label re-review passed all behavioral, package, bookkeeping, and repository gates.                                          |
+| Scope | Type  | Status  | Notes                                                                                                                                 |
+| ----- | ----- | ------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| p01   | phase | passed  | Independent verification passed with 0 Critical, 0 Important, and 3 deferred Medium findings.                                         |
+| p02   | phase | passed  | Fresh re-review closed all three blocking findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                      |
+| p03   | phase | passed  | Final operator-authorized verification passed with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                           |
+| p04   | phase | passed  | Re-review closed the executable front-door and visual-evidence findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings. |
+| p05   | phase | passed  | Independent review passed the program recap and both bounded recoveries with 0 findings.                                              |
+| p06   | phase | pending | Second configured-gate findings queued; gate-attempt budget exhausted pending operator direction.                                     |
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
@@ -991,7 +1037,7 @@ and lifecycle suites, `pnpm lint`, and `pnpm format`.
 | final   | code     | fixes_completed | 2026-09-12 | reviews/archived/final-review-2026-09-12T203608Z.md           | 1b041801417814f39f337837a0cba245fc11c020 | gate       | cursor-fable-5-1-high |
 | final   | code     | fixes_completed | 2026-09-12 | reviews/archived/final-review-2026-09-12T231453Z.md           | f2b92c515c23f0d9b4b9bab714951a785b56afbd | manual     | -                     |
 | final   | code     | passed          | 2026-09-12 | reviews/final-review-2026-09-12T235655Z.md                    | 9c6d83fe16f8120bd585ff5d76925e19e1d1ca3a | manual     | -                     |
-| final   | code     | received        | 2026-09-13 | reviews/final-review-2026-09-13T001401Z.md                    | da4059af5034afd6b55fc634ada4b260f5b71e5e | gate       | cursor-fable-5-1-high |
+| final   | code     | fixes_added     | 2026-09-13 | reviews/archived/final-review-2026-09-13T001401Z.md           | da4059af5034afd6b55fc634ada4b260f5b71e5e | gate       | cursor-fable-5-1-high |
 | spec    | artifact | pending         | -          | -                                                             | -                                        | -          | -                     |
 | design  | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-design-review-2026-09-09T225646Z.md | -                                        | -          | -                     |
 | design  | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-design-review-2026-09-09T232532Z.md | -                                        | manual     | -                     |
@@ -1027,9 +1073,9 @@ cell; never truncate a widened row back to five columns.
 - Phase 3: 8 tasks - Adapter, core skill prose, lifecycle consumers, and docs
 - Phase 4: 2 tasks - The front door and the project explainer
 - Phase 5: 1 task - The program recap
-- Phase 6: 16 tasks - Final review fixes
+- Phase 6: 18 tasks - Final review fixes
 
-**Total:** 48 tasks
+**Total:** 50 tasks
 
 ## References
 

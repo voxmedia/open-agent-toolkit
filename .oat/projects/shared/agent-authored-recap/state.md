@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p06-t17
 oat_last_commit: 3a47b0e32872345020fe28d7aa07b75928abc835
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -93,20 +93,20 @@ oat_generated: false
 
 # Project State: agent-authored-recap
 
-**Status:** Current-basis final review passed; exit gate pending
+**Status:** Exit-gate attempt limit reached; fixes queued
 **Started:** 2026-09-09
 **Last Updated:** 2026-09-12
 
 ## Current Phase
 
-Implementation — Exit gate pending
+Implementation — Blocked at configured gate attempt limit
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** `spec.md` (complete — authored inline by the design phase)
 - **Design:** `design.md` (complete — HiLL approved 2026-09-10 after four review rounds)
-- **Plan:** `plan.md` (complete — 48 tasks, 6 phases)
+- **Plan:** `plan.md` (complete — 50 tasks, 6 phases)
 - **Implementation:** `implementation.md` (in progress)
 
 ## Progress
@@ -120,11 +120,9 @@ Implementation — Exit gate pending
 - ✓ Phase 3 complete and independently verified (8/8 tasks)
 - ✓ Phase 4 complete and independently verified (2/2 tasks)
 - ✓ Phase 5 complete and independently verified (1/1 task)
-- ✓ Phase 6 implementation complete (16/16 tasks)
-- ✓ Phase 6 independently reviewed
-- ✓ Implementation tasks complete (48/48 tasks)
-- ✓ Current-basis final review passed
-- ⧗ Configured implementation exit gate pending
+- ⧗ Phase 6 blocked with 16/18 tasks complete
+- ⧗ Implementation blocked with 48/50 tasks complete
+- ⧗ Configured exit-gate attempt 2 awaiting durable receive
 
 ## Blockers
 
@@ -132,4 +130,5 @@ None.
 
 ## Next Milestone
 
-Run the configured implementation exit gate on the reviewed basis.
+Reconcile gate attempt 2, then obtain operator direction on the exhausted
+two-attempt budget.

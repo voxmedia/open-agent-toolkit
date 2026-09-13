@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-12
-oat_current_task_id: null
+oat_current_task_id: p06-t17
 oat_generated: false
 ---
 
@@ -31,9 +31,9 @@ oat_generated: false
 | Phase 3 | completed | 8     | 8/8       |
 | Phase 4 | completed | 2     | 2/2       |
 | Phase 5 | completed | 1     | 1/1       |
-| Phase 6 | completed | 16    | 16/16     |
+| Phase 6 | blocked   | 18    | 16/18     |
 
-**Total:** 48/48 tasks completed
+**Total:** 48/50 tasks completed
 
 ---
 
@@ -964,7 +964,7 @@ fresh Phase 6 review and final re-review.
 
 ## Phase 6: Final review fixes
 
-**Status:** current-basis final review passed; exit gate pending.
+**Status:** blocked at configured exit-gate attempt limit; fixes queued.
 
 ### Phase Summary
 
@@ -1520,6 +1520,42 @@ gate-attempt boundary.
 `reviews/final-review-2026-09-13T001401Z.md`, destination
 `reviews/archived/final-review-2026-09-13T001401Z.md`, and pre-receive head
 `ce6bf0936f7d749b1eece8b6a50284c64093f8ac`.
+
+### Review Received: configured exit gate attempt 2
+
+**Date:** 2026-09-13
+**Review artifact:**
+`reviews/archived/final-review-2026-09-13T001401Z.md`
+**Gate run:** `756b124f-64ad-492b-96d8-2c8c9d22bbd3`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 0
+- Minor: 1
+
+**New tasks added:** `p06-t17`, `p06-t18`
+
+**Finding dispositions:**
+
+- I1 → `p06-t17`: snapshot the real-package verification inputs into
+  provenance-recorded, archive-safe skill fixtures and prove the control passes
+  without `.oat/projects/`.
+- m1 → `p06-t18`: align the authoring brief with residual card/definition-list
+  subject selection and section fallback.
+
+**Behavioral result:** The FR4 remediation itself passed 18 adversarial
+real-verifier probes and both tracked packages. The blocker is lifecycle
+durability of the test evidence after this shared project is archived.
+
+**Gate policy:** This is the second valid blocking gate result. After durable
+receive reconciliation, `attemptsCompleted=2` equals `maxAttempts=2`; no fix
+execution or additional gate launch is authorized without explicit operator
+direction. Phase 6 recovery remains zero.
+
+**Next:** Reconcile the eligible receive and stop at the exhausted configured
+gate boundary.
 
 ---
 
