@@ -1694,9 +1694,9 @@ There are no deferred Critical, Important, or Medium findings.
 **Integration base:** `origin/main`
 **Implementation fingerprint:**
 `sha256:effective-delta-v1:3f0a80e727c3936c2739325119f6f37a3c3dcabd1794bbb8c0e82f33969ee399`
-**Freshness head:** `08b0fc9887c60e3aaa39df415e5ae4e32a6ab1be`
+**Freshness head:** `92be8b0e7039a38f82ce0dd222515d96c6724cfe`
 **Freshness fingerprint:**
-`sha256:effective-delta-v1:f578b6f6a3086030e0ba9f48d49596bceac86abf6e7aeeab3d5f5a4c4af7bca2`
+`sha256:effective-delta-v1:e8e6741b7f807cab05d1ad828e5255ff10658baf97244794b662359cf4383cfc`
 **Configuration fingerprint:**
 `sha256:94671d8d5f24560ccaac19595added0c71a89defa8b2a3f4be1d1027b96581e5`
 **Attempt:** `aar-exit-gate-20260913T045415Z`
@@ -1704,10 +1704,27 @@ There are no deferred Critical, Important, or Medium findings.
 **Result receipt:**
 `/private/tmp/oat-agent-authored-recap/aar-exit-gate-20260913T045415Z.receipt.json`
 
-This launch is the entire remaining operator exception. If its validated,
-received result blocks, stop without remediation or another review launch.
+**Status:** result persisted; passed
+**Gate run:** `52787dbb-20c4-4fe7-b484-a72f0cd20c35`
+**Gate marker:**
+`/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/52787dbb-20c4-4fe7-b484-a72f0cd20c35.json`
+**Gate target:** `cursor-fable-5-1-high`
+**Gate runtime/model:** Cursor / `claude-fable-5-1-high`
+**Structured result:** `ok`, `review_completed_gate_passed`,
+`receiveEligible: true`
+**Gate artifact:** `reviews/final-review-2026-09-13T050025Z.md`
+**Findings:** 0 Critical, 0 Important, 0 Medium, 0 Minor
+**Threshold:** Important
+**Independence:** different-family achieved; gate reviewer family Claude,
+aggregated producer-avoid family OpenAI
 
-**Next:** Commit launch intent, then execute the configured command exactly.
+The gate independently reproduced the archive-free package controls, exact
+six-blob provenance, narrow live-source sweep protection, strict archive
+boundary, and release/skill validation. Its structured receipt, artifact, plan
+event, and project-log event all correlate to the gate run.
+
+**Next:** Persist receive intent, consume the passing gate review, and
+reconcile its durable receipt before closeout.
 
 ---
 

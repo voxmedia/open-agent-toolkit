@@ -60,17 +60,17 @@ oat_implement_exit_gate:
   reviewed_head: d0df52f7c8c44522b59f99588903329a538a5a4c
   implementation_base_ref: origin/main
   implementation_fingerprint: sha256:effective-delta-v1:3f0a80e727c3936c2739325119f6f37a3c3dcabd1794bbb8c0e82f33969ee399
-  freshness_head: 08b0fc9887c60e3aaa39df415e5ae4e32a6ab1be
-  freshness_fingerprint: sha256:effective-delta-v1:f578b6f6a3086030e0ba9f48d49596bceac86abf6e7aeeab3d5f5a4c4af7bca2
-  launch_state: intent_persisted
+  freshness_head: 92be8b0e7039a38f82ce0dd222515d96c6724cfe
+  freshness_fingerprint: sha256:effective-delta-v1:e8e6741b7f807cab05d1ad828e5255ff10658baf97244794b662359cf4383cfc
+  launch_state: result_persisted
   launch_attempt_id: aar-exit-gate-20260913T045415Z
   launch_started_at: '2026-09-13T04:54:15Z'
   launch_result_receipt: /private/tmp/oat-agent-authored-recap/aar-exit-gate-20260913T045415Z.receipt.json
-  gate_run_marker: null
-  gate_run_id: null
-  envelope_status: null
-  artifact: null
-  handoff: null
+  gate_run_marker: /var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/52787dbb-20c4-4fe7-b484-a72f0cd20c35.json
+  gate_run_id: 52787dbb-20c4-4fe7-b484-a72f0cd20c35
+  envelope_status: ok
+  artifact: .oat/projects/shared/agent-authored-recap/reviews/final-review-2026-09-13T050025Z.md
+  handoff: Run oat-project-review-receive for .oat/projects/shared/agent-authored-recap/reviews/final-review-2026-09-13T050025Z.md before treating this gate review as consumed.
   receive_state: not_started
   receive_correlation: null
   receive_source_artifact: null
@@ -78,28 +78,28 @@ oat_implement_exit_gate:
   receive_event_identity: null
   receive_pre_head: null
   receive_commit: null
-  receive_eligible: false
+  receive_eligible: true
   receive_completed: false
-  failure: operator-authorized exceptional gate launch beyond the exhausted configured 2/2 remediation budget
-  updated_at: '2026-09-13T04:54:15Z'
+  failure: exceptional configured gate passed with 0 findings; eligible receive remains required
+  updated_at: '2026-09-13T14:55:33Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-09T16:39:02.165Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-13T04:54:15Z'
+oat_project_state_updated: '2026-09-13T14:55:33Z'
 oat_generated: false
 ---
 
 # Project State: agent-authored-recap
 
-**Status:** Current basis passed; exceptional configured gate pending
+**Status:** Exceptional configured gate passed; receive pending
 **Started:** 2026-09-09
 **Last Updated:** 2026-09-13
 
 ## Current Phase
 
-Implementation — Exceptional configured exit gate
+Implementation — Receive passing configured exit gate
 
 ## Artifacts
 
@@ -125,7 +125,8 @@ Implementation — Exceptional configured exit gate
 - ✓ Configured exit-gate attempt 2 durably received
 - ✓ Narrow Phase 6 review passed
 - ✓ Current-basis final lifecycle review passed
-- ⧗ One additional configured gate review remains authorized
+- ✓ Exceptional configured gate passed with 0 findings
+- ⧗ Gate review receive pending
 
 ## Blockers
 
@@ -135,5 +136,4 @@ configured gate review.
 
 ## Next Milestone
 
-Run exactly one additional configured gate review. If it blocks, stop without
-another fix or review attempt.
+Receive the passing configured gate review and continue closeout sequencing.
