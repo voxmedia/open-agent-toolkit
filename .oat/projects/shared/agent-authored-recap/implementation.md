@@ -1753,8 +1753,25 @@ was re-evaluated and remains accepted; the gate introduced no new finding.
 consumed. Its eligible passing result permits `allowed/passed` only after the
 archive move, Reviews event, and receive commit reconcile durably.
 
-**Next:** Reconcile the receive commit, then continue the configured closeout
-sequence.
+The receive commit was reconciled in `state.md`; the implementation exit gate
+is now `allowed/passed`.
+
+### Configured Closeout Sequence
+
+**Resolution:** configured structured preference
+**Final phase:** `p06`
+**Final checkpoint:** absent (`oat_plan_hill_phases: ['p05']`)
+**Pre-approval sequence:** `summary` → `document` → `pr`
+**Approval:** pending; will become `not_required` after pre-approval because
+the final phase is not a HiLL checkpoint
+**Post-approval sequence:** empty
+**Status:** `pre_approval`
+
+The immutable sequence snapshot is persisted in `state.md`. Each completed
+step must commit before the next step and advance gate freshness through a
+separate state-only checkpoint.
+
+**Next:** Generate the project summary.
 
 ---
 

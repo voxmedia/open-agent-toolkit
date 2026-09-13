@@ -81,13 +81,24 @@ oat_implement_exit_gate:
   receive_eligible: true
   receive_completed: true
   failure: null
-  updated_at: '2026-09-13T14:58:21Z'
+  updated_at: '2026-09-13T15:00:45Z'
+oat_post_implement_sequence:
+  status: pre_approval
+  source: configured
+  final_phase: p06
+  pre_approval: ['summary', 'document', 'pr']
+  pre_approval_completed: []
+  approval: pending
+  approval_source: null
+  post_approval: []
+  post_approval_completed: []
+  failure: null
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-09T16:39:02.165Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-13T14:58:21Z'
+oat_project_state_updated: '2026-09-13T15:00:45Z'
 oat_generated: false
 ---
 
