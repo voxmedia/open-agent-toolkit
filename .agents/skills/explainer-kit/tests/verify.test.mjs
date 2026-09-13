@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  cp,
+  mkdtemp,
+  readFile,
+  readdir,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import test from 'node:test';
@@ -22,6 +29,7 @@ import { png } from './fixtures/png.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const fixtures = join(here, 'fixtures', 'verify');
+const trackedPackageFixtures = join(here, 'fixtures', 'tracked-packages');
 const repositoryRoot = join(here, '..', '..', '..', '..');
 const packageFixture = join(
   repositoryRoot,
@@ -38,18 +46,18 @@ const trackedPackages = [
   {
     name: 'project explainer',
     recipe: 'project-explainer',
-    root: join(
-      repositoryRoot,
-      '.oat/projects/shared/agent-authored-recap/explainers/agent-authored-recap-explainer',
-    ),
+    root: join(trackedPackageFixtures, 'project-explainer'),
+    source:
+      '.oat/projects/shared/agent-authored-recap/explainers/agent-authored-recap-explainer/',
+    runId: '40b9a35e-8f2a-419c-be2a-9f28eae4215a',
   },
   {
     name: 'program recap',
     recipe: 'program-recap',
-    root: join(
-      repositoryRoot,
-      '.oat/repo/reference/explainers/2026-08-31-execution-program-recap',
-    ),
+    root: join(trackedPackageFixtures, 'program-recap'),
+    source:
+      '.oat/repo/reference/explainers/2026-08-31-execution-program-recap/',
+    runId: 'c07644cf-a5f3-4e88-8993-124ff83fa7d1',
   },
 ];
 
@@ -167,7 +175,6 @@ test('tracked packages pass fresh browser-free verification', async () => {
   for (const trackedPackage of trackedPackages) {
     const root = await mkdtemp(join(tmpdir(), 'explainer-tracked-verify-'));
     await cp(trackedPackage.root, root, { recursive: true });
-    await rm(join(root, 'manifest.json'));
 
     const result = await verifyRun({
       runRoot: root,
@@ -179,6 +186,42 @@ test('tracked packages pass fresh browser-free verification', async () => {
       allPass(result),
       true,
       `${trackedPackage.name}: ${JSON.stringify(result.checks)}`,
+    );
+  }
+});
+
+test('tracked package snapshots retain exact provenance-bound inventory', async () => {
+  assert.deepEqual((await readdir(trackedPackageFixtures)).sort(), [
+    'PROVENANCE.md',
+    'program-recap',
+    'project-explainer',
+  ]);
+  const provenance = await readFile(
+    join(trackedPackageFixtures, 'PROVENANCE.md'),
+    'utf8',
+  );
+
+  for (const trackedPackage of trackedPackages) {
+    assert.deepEqual(
+      (await readdir(trackedPackage.root)).sort(),
+      ['site', 'source'],
+      trackedPackage.name,
+    );
+    assert.deepEqual(
+      await readdir(join(trackedPackage.root, 'site')),
+      ['index.html'],
+      trackedPackage.name,
+    );
+    assert.deepEqual(
+      (await readdir(join(trackedPackage.root, 'source'))).sort(),
+      ['fact-base.json', 'ledger.json'],
+      trackedPackage.name,
+    );
+    assert.ok(provenance.includes(trackedPackage.source), trackedPackage.name);
+    assert.ok(provenance.includes(trackedPackage.runId), trackedPackage.name);
+    assert.ok(
+      provenance.includes('4febb8634ab14afeba12dfa5863de5b3464a2e75'),
+      trackedPackage.name,
     );
   }
 });
