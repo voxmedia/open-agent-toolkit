@@ -338,9 +338,9 @@ selected and archived.
 
 Inspect:
 
-1. `manifest.json` for the selected browser rung, warning, and exact package
-   inventory.
-2. `qa/result.json` for browser availability and visual findings.
+1. `qa/result.json` for the selected browser rung, browser availability, and
+   visual findings.
+2. `manifest.json` for warnings, outcome, and the exact package inventory.
 3. `site/index.html` at 320, 768, and 1440 pixels when visual inspection is
    available.
 4. Adapter logs for a browser launch or capture failure.
