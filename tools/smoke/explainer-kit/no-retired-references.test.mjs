@@ -22,6 +22,8 @@ const repoRoot = resolve(
   '..',
 );
 const selfPath = 'tools/smoke/explainer-kit/no-retired-references.test.mjs';
+const historicalTrackedPackageFixturePrefix =
+  '.agents/skills/explainer-kit/tests/fixtures/tracked-packages/';
 
 const RETIRED_PATTERNS = [
   ...[
@@ -109,6 +111,7 @@ export async function scanRetiredReferences({ root = repoRoot, files } = {}) {
     const path = candidate.split(sep).join('/');
     if (
       path === selfPath ||
+      path.startsWith(historicalTrackedPackageFixturePrefix) ||
       path.startsWith('.oat/projects/') ||
       path.startsWith('.oat/repo/reference/') ||
       path.startsWith('.oat/repo/pjm/')
@@ -206,6 +209,30 @@ test('accepts retired semantic wording in declared historical records', async ()
     '.oat/repo/pjm/backlog/archived/historical.md',
   ];
   assert.deepEqual(await scanRetiredReferences({ files }), []);
+});
+
+test('excludes tracked package snapshots without excluding live source', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'retired-snapshot-scope-'));
+  try {
+    const snapshotPath =
+      '.agents/skills/explainer-kit/tests/fixtures/tracked-packages/project-explainer/source/fact-base.json';
+    const livePath =
+      '.agents/skills/explainer-kit/tests/fixtures/live-package/source/fact-base.json';
+    for (const path of [snapshotPath, livePath]) {
+      await mkdir(dirname(join(root, path)), { recursive: true });
+      await writeFile(join(root, path), 'runExplainer\n');
+    }
+
+    assert.deepEqual(
+      await scanRetiredReferences({
+        root,
+        files: [snapshotPath, livePath],
+      }),
+      [{ path: livePath, pattern: 'runExplainer' }],
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });
 
 test('keeps the tracked repository free of retired references', async () => {
