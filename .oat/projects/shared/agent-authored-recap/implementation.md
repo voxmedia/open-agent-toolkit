@@ -747,7 +747,7 @@ described below.
 - Request ID: `dispatch-agent-authored-recap-p04-review-r1-20260912T0145Z`
 - Launch status: `accepted`
 - Terminal outcome: `completed`
-- Review artifact: `reviews/p04-review-2026-09-12T015208Z.md`
+- Review artifact: `reviews/archived/p04-review-2026-09-12T015208Z.md`
 - Reviewed range:
   `303fafd35b328cd457167b5e1b36822cf6ed8e02..4292290aecc74b769edc1c47b6ee3cbc2d3761dd`
 - Reviewed head: `4292290aecc74b769edc1c47b6ee3cbc2d3761dd`
@@ -774,7 +774,7 @@ described below.
 
 - Continuation: `cont-agent-authored-recap-p04-review-fix-1`
 - Original request: `dispatch-agent-authored-recap-p04-20260912T002300Z`
-- Source review: `reviews/p04-review-2026-09-12T015208Z.md`
+- Source review: `reviews/archived/p04-review-2026-09-12T015208Z.md`
 - Fix commit: `527bd48b2408ac8be6d94345b124ba33a1563055`; subject
   `fix(p04): complete the interactive front-door contract`
 - Addressed: the direct front door now covers project, document, and supplied
@@ -795,7 +795,7 @@ described below.
 - Request ID: `dispatch-agent-authored-recap-p04-review-r2-20260912T0205Z`
 - Launch status: `accepted`
 - Terminal outcome: `completed`
-- Review artifact: `reviews/p04-review-2026-09-12T020833Z.md`
+- Review artifact: `reviews/archived/p04-review-2026-09-12T020833Z.md`
 - Reviewed range:
   `303fafd35b328cd457167b5e1b36822cf6ed8e02..c9d977aa90d2990145e500c2035b1a2c67198278`
 - Reviewed head: `c9d977aa90d2990145e500c2035b1a2c67198278`
@@ -825,7 +825,7 @@ described below.
 **Task commit:** `3e8bf412ad2d1d846d9bb6e0eae21ccb7263a220`
 **Recovery commits:** `f1afbb68587eb9654ac946de66b36be472a58622`,
 `e427819ec77b001f5bc87c7aa37ee1a711fb7118`
-**Review:** `reviews/p05-review-2026-09-12T030832Z.md` — passed at
+**Review:** `reviews/archived/p05-review-2026-09-12T030832Z.md` — passed at
 `22fbe809f3410ae95f75e5dccb16a664020122d8` with 0 findings.
 
 **Recovery evidence:**
@@ -1049,7 +1049,7 @@ fresh Phase 6 review and final re-review.
 tasks across 6 phases. Plan validation, the 58-test state validator, diff
 checking, and the committed file-boundary check passed.
 
-**Re-review:** `reviews/p06-review-2026-09-12T131816Z.md` passed at
+**Re-review:** `reviews/archived/p06-review-2026-09-12T131816Z.md` passed at
 `de2393c3fa337bc7f33d9813a583dbc41ec5fbda` with 0 Critical, Important,
 Medium, or Minor findings.
 
@@ -1087,7 +1087,7 @@ their producer controls; focused tests, the complete core/lifecycle suites,
 every ordered repository gate, uncached Turbo, standalone suites, lint, and
 format passed on the committed head.
 
-**Re-review:** `reviews/p06-review-2026-09-12T135600Z.md` passed at
+**Re-review:** `reviews/archived/p06-review-2026-09-12T135600Z.md` passed at
 `7ba61d84fee87d3e9217f8c1431ba34eb658471a` with 0 Critical, Important,
 Medium, or Minor findings. All twelve producer/neutralization combinations
 failed when their guard was removed.
@@ -1156,7 +1156,7 @@ tracked explainer packages, project artifacts, versions, reviews, and
 
 ### Phase 6 Operator-Authorized Re-review
 
-**Review artifact:** `reviews/p06-review-2026-09-12T200228Z.md`
+**Review artifact:** `reviews/archived/p06-review-2026-09-12T200228Z.md`
 **Reviewed head:** `688226b0c1431d23624ee0bd30fd5d307c2b5dd8`
 **Verdict:** PASS — 0 Critical, 0 Important, 0 Medium, 0 Minor
 
@@ -1169,7 +1169,7 @@ and Phase 6 recovery usage remains zero.
 
 ### Final Review Round 4 — Operator-Authorized Closure
 
-**Review artifact:** `reviews/final-review-2026-09-12T201509Z.md`
+**Review artifact:** `reviews/archived/final-review-2026-09-12T201509Z.md`
 **Reviewed head:** `2ebc4ec4d42accaf576a840cfa6ba3823246b9fb`
 **Verdict:** PASS — 0 Critical, 0 Important, 0 Medium, 1 approved deferred
 Minor
@@ -1376,7 +1376,7 @@ remediation usage remains 1/2 and Phase 6 recovery remains zero.
 
 ### Phase 6 Gate-Remediation Re-review
 
-**Review artifact:** `reviews/p06-review-2026-09-12T230247Z.md`
+**Review artifact:** `reviews/archived/p06-review-2026-09-12T230247Z.md`
 **Reviewed head:** `35a68fbe6f292573eb9ca9a28cfdcb57e79a541b`
 **Verdict:** PASS — 0 Critical, 0 Important, 0 Medium, 0 Minor
 
@@ -1446,7 +1446,7 @@ lifecycle review.
 
 ### Phase 6 p06-t16 Re-review
 
-**Review artifact:** `reviews/p06-t16-review-2026-09-12T234414Z.md`
+**Review artifact:** `reviews/archived/p06-t16-review-2026-09-12T234414Z.md`
 **Reviewed head:** `811fa6a0d9bdf122fe2e18463558bdb046ccc9e1`
 **Verdict:** PASS — 0 Critical, 0 Important, 0 Medium, 0 Minor
 
@@ -1461,7 +1461,7 @@ remains zero.
 
 ### Current-Basis Final Lifecycle Re-review
 
-**Review artifact:** `reviews/final-review-2026-09-12T235655Z.md`
+**Review artifact:** `reviews/archived/final-review-2026-09-12T235655Z.md`
 **Reviewed head:** `9c6d83fe16f8120bd585ff5d76925e19e1d1ca3a`
 **Verdict:** PASS — 0 Critical, 0 Important, 0 Medium, 1 approved deferred
 Minor
@@ -1837,7 +1837,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Request ID: `dispatch-agent-authored-recap-p01-review-r1-20260911T1549Z`
 - Launch status: `accepted`
 - Terminal outcome: `completed`
-- Review artifact: `reviews/p01-review-2026-09-11T155532Z.md`
+- Review artifact: `reviews/archived/p01-review-2026-09-11T155532Z.md`
 - Reviewed range: `79f359957fabe4cbe042b39379523887b816cbff..f1cff54c0e364e858f9e36fb820e9f95b1e5b578`
 - Reviewed head: `f1cff54c0e364e858f9e36fb820e9f95b1e5b578`
 - Findings: 2 Critical, 5 Important, 3 Medium, 0 Minor
@@ -1853,7 +1853,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - Continuation: `cont-agent-authored-recap-p01-review-r1-fix-1`
 - Original request: `dispatch-agent-authored-recap-p01-20260911T0308Z`
-- Review artifact: `reviews/p01-review-2026-09-11T155532Z.md`
+- Review artifact: `reviews/archived/p01-review-2026-09-11T155532Z.md`
 - Fix range: `4b58a8dc1a13ca81c28f96b13c249605be1d411e..fd809a53820a6907f07b039a2b840d9fa31a26b5`
 - Fix commit: `fd809a53820a6907f07b039a2b840d9fa31a26b5`
 - Fixed: all 2 Critical and 5 Important findings with red/green negative controls
@@ -1869,7 +1869,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Request ID: `dispatch-agent-authored-recap-p01-review-r2-20260911T1635Z`
 - Launch status: `accepted`
 - Terminal outcome: `completed`
-- Review artifact: `reviews/p01-review-2026-09-11T165150Z.md`
+- Review artifact: `reviews/archived/p01-review-2026-09-11T165150Z.md`
 - Reviewed range: `79f359957fabe4cbe042b39379523887b816cbff..3f29035c2588bc590cfd361e88e5632e084238f5`
 - Reviewed head: `3f29035c2588bc590cfd361e88e5632e084238f5`
 - Prior dispositions: 2 Critical closed; 3 Important closed; 2 Important partial
@@ -1886,7 +1886,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - Continuation: `cont-agent-authored-recap-p01-review-r2-fix-2`
 - Original request: `dispatch-agent-authored-recap-p01-20260911T0308Z`
-- Review artifact: `reviews/p01-review-2026-09-11T165150Z.md`
+- Review artifact: `reviews/archived/p01-review-2026-09-11T165150Z.md`
 - Fix range: `8219e29adcbf161c7092c2bbce9e605463cdc6c2..ca185f1c629892c1616f136cfe9c15aa8c0bddcc`
 - Fix commit: `ca185f1c629892c1616f136cfe9c15aa8c0bddcc`
 - Fixed: all 3 Important findings with pre-fix controls and post-fix verification
@@ -1902,7 +1902,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Request ID: `dispatch-agent-authored-recap-p01-review-r3-20260911T1726Z`
 - Launch status: `accepted`
 - Terminal outcome: `completed`
-- Review artifact: `reviews/p01-review-2026-09-11T173707Z.md`
+- Review artifact: `reviews/archived/p01-review-2026-09-11T173707Z.md`
 - Reviewed range: `79f359957fabe4cbe042b39379523887b816cbff..5e8694abbb7f7740970bd69e5feea64ddf9df316`
 - Reviewed head: `5e8694abbb7f7740970bd69e5feea64ddf9df316`
 - Prior closure: all earlier Critical and Important findings closed without regression
@@ -1932,7 +1932,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - Continuation: `cont-agent-authored-recap-p01-governance-manual-fix-1`
 - Original request: `dispatch-agent-authored-recap-p01-20260911T0308Z`
-- Source review: `reviews/p01-review-2026-09-11T173707Z.md`
+- Source review: `reviews/archived/p01-review-2026-09-11T173707Z.md`
 - Fix range: `4d971b476fac42e3d9cb95829b23a417a55bb132..5844547c524f09f700027691bd7c1148b536b2e4`
 - Fix commit: `5844547c524f09f700027691bd7c1148b536b2e4`
 - Fixed: terminal `generate` now requires a complete assured project-recap package; changed-input rebundles and failure recording invalidate stale manifests
@@ -1950,7 +1950,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Request ID: `dispatch-agent-authored-recap-p01-independent-verification-20260911T1857Z`
 - Launch status: `accepted`
 - Terminal outcome: `completed`
-- Review artifact: `reviews/p01-review-2026-09-11T185739Z.md`
+- Review artifact: `reviews/archived/p01-review-2026-09-11T185739Z.md`
 - Reviewed range: `79f359957fabe4cbe042b39379523887b816cbff..285673119c8493c99ea0c0208e18779a8e9a142c`
 - Reviewed head: `285673119c8493c99ea0c0208e18779a8e9a142c`
 - Findings: 0 Critical, 0 Important, 3 deferred Medium, 0 Minor
@@ -2014,7 +2014,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Request ID: `dispatch-agent-authored-recap-p02-review-r1-20260911T1948Z`
 - Launch status: `accepted`
 - Terminal outcome: `completed`
-- Review artifact: `reviews/p02-review-2026-09-11T194856Z.md`
+- Review artifact: `reviews/archived/p02-review-2026-09-11T194856Z.md`
 - Reviewed range: `37989f49bf1b6a07e297444a8d51f1d0d7b33b02..ecdce3e38ad6b86c8583ba115cfe27bc5faf0caa`
 - Reviewed head: `ecdce3e38ad6b86c8583ba115cfe27bc5faf0caa`
 - Findings: 1 Critical, 2 Important, 0 Medium, 0 Minor
@@ -2031,7 +2031,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - Continuation: `cont-agent-authored-recap-p02-review-r1-fix-1`
 - Original request: `dispatch-agent-authored-recap-p02-20260911T190604Z`
-- Source review: `reviews/p02-review-2026-09-11T194856Z.md`
+- Source review: `reviews/archived/p02-review-2026-09-11T194856Z.md`
 - Fix base: `59669e1bcc506b473fb5804be924dab6f222310d`
 - Fix commit: `d6f34511e8235221a562a971383b67fed67ed79e`
 - Fixed: browser launch is blocked after failed parse, structure, or
@@ -2065,7 +2065,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Request ID: `dispatch-agent-authored-recap-p02-review-r2-20260911T2021Z`
 - Launch status: `accepted`
 - Terminal outcome: `completed`
-- Review artifact: `reviews/p02-review-2026-09-11T202150Z.md`
+- Review artifact: `reviews/archived/p02-review-2026-09-11T202150Z.md`
 - Reviewed range: `37989f49bf1b6a07e297444a8d51f1d0d7b33b02..77681847a6755d0628a2c1f707804d783d04e2ae`
 - Reviewed head: `77681847a6755d0628a2c1f707804d783d04e2ae`
 - Prior closure: all 1 Critical and 2 Important findings closed
@@ -2104,7 +2104,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Request ID: `dispatch-agent-authored-recap-p03-review-r1-20260911T2136Z`
 - Launch status: `accepted`
 - Terminal outcome: `completed`
-- Review artifact: `reviews/p03-review-2026-09-11T213626Z.md`
+- Review artifact: `reviews/archived/p03-review-2026-09-11T213626Z.md`
 - Reviewed range: `ab4785bf510ea737961a9431da4376a461be930e..6619ca123ba6fdbbf6bdeeef00e6c613de1eb695`
 - Reviewed head: `6619ca123ba6fdbbf6bdeeef00e6c613de1eb695`
 - Findings: 0 Critical, 2 Important, 0 Medium, 1 Minor
@@ -2123,7 +2123,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - Continuation: `cont-agent-authored-recap-p03-review-r1-fix-1`
 - Original request: `dispatch-agent-authored-recap-p03-20260911T202900Z`
-- Source review: `reviews/p03-review-2026-09-11T213626Z.md`
+- Source review: `reviews/archived/p03-review-2026-09-11T213626Z.md`
 - Fix base: `92be283f43e7f036a090c695c53e31f01a6819c6`
 - Fix commit: `7f842e2feeb19352c1f4c5f5c11dcf4c50742f04`
 - Fixed: the deployed completion boundary now gates real manifest discovery and host-authoring permission on persisted intent; all reviewed live semantic residue is removed and pinned by the authoritative sweep; named-skill inventory comments now match the measured 202 direct plus 6 symlink-only paths and floor 207
@@ -2140,7 +2140,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Request ID: `dispatch-agent-authored-recap-p03-review-r2-20260911T2213Z`
 - Launch status: `accepted`
 - Terminal outcome: `completed`
-- Review artifact: `reviews/p03-review-2026-09-11T221353Z.md`
+- Review artifact: `reviews/archived/p03-review-2026-09-11T221353Z.md`
 - Reviewed range: `ab4785bf510ea737961a9431da4376a461be930e..3ed763cd88714a6e68bd7c2c41157994b7a28c0a`
 - Reviewed head: `3ed763cd88714a6e68bd7c2c41157994b7a28c0a`
 - Prior closure: all 2 Important and 1 Minor round 1 findings closed
@@ -2159,7 +2159,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - Continuation: `cont-agent-authored-recap-p03-review-r2-fix-2`
 - Original request: `dispatch-agent-authored-recap-p03-20260911T202900Z`
-- Source review: `reviews/p03-review-2026-09-11T221353Z.md`
+- Source review: `reviews/archived/p03-review-2026-09-11T221353Z.md`
 - Fix base: `d5d843f2bab14c0b8453206802da52372b027ef6`
 - Fix commit: `b697cb725b278d6b185a4a2c02b5ac7fb352f0cb`
 - Fixed: persisted `skip/failed_attempt` now carries one validated project-relative `failed_attempt_evidence` locator through the deployed consumer to the real terminal guard without general explainer discovery or authoring
@@ -2178,7 +2178,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Request ID: `dispatch-agent-authored-recap-p03-review-r3-20260911T2254Z`
 - Launch status: `accepted`
 - Terminal outcome: `completed`
-- Review artifact: `reviews/p03-review-2026-09-11T225420Z.md`
+- Review artifact: `reviews/archived/p03-review-2026-09-11T225420Z.md`
 - Reviewed range: `ab4785bf510ea737961a9431da4376a461be930e..afd4a9e970200bdb2c1cc35fdf13df1912e6b12f`
 - Reviewed head: `afd4a9e970200bdb2c1cc35fdf13df1912e6b12f`
 - Prior closure: the fresh-resume evidence defect and all earlier Phase 3 findings closed
@@ -2209,7 +2209,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - Continuation: `cont-agent-authored-recap-p03-governance-manual-fix-1`
 - Original request: `dispatch-agent-authored-recap-p03-20260911T202900Z`
-- Source review: `reviews/p03-review-2026-09-11T225420Z.md`
+- Source review: `reviews/archived/p03-review-2026-09-11T225420Z.md`
 - Fix base: `bf8b69ccc94a5d800d14999c1f3fdb33b0dac393`
 - Fix commit: `e8ab4ec5bf7abb5ab862a250ff00f2d5d6181d5e`
 - Fixed: CLI and control-plane typed readers now reject non-string raw `failed_attempt_evidence` consistently and accept read-only legacy `skip/capability_probe`; active lifecycle write entry points reject creating the legacy pair
@@ -2226,7 +2226,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Request ID: `dispatch-agent-authored-recap-p03-independent-verification-20260911T2325Z`
 - Launch status: `accepted`
 - Terminal outcome: `completed`
-- Review artifact: `reviews/p03-review-2026-09-11T232506Z.md`
+- Review artifact: `reviews/archived/p03-review-2026-09-11T232506Z.md`
 - Reviewed range: `ab4785bf510ea737961a9431da4376a461be930e..2c8c56093651748e389da61d3c055be713ebc99e`
 - Reviewed head: `2c8c56093651748e389da61d3c055be713ebc99e`
 - Prior closure: original non-string coercion, legacy-read compatibility, active-write rejection, and all earlier Phase 3 findings closed
@@ -2257,7 +2257,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - Continuation: `cont-agent-authored-recap-p03-governance-manual-fix-2`
 - Original request: `dispatch-agent-authored-recap-p03-20260911T202900Z`
-- Source review: `reviews/p03-review-2026-09-11T232506Z.md`
+- Source review: `reviews/archived/p03-review-2026-09-11T232506Z.md`
 - Fix base: `171096b7462efd973388e4564fc1ac5395d25d49`
 - Fix commit: `f29b6748a9d81b65c7a9c37c1e70357147af5b13`
 - Fixed: control-plane validates and returns raw `failed_attempt_evidence` without trimming; one fourteen-case raw-YAML corpus now exercises both production readers
@@ -2274,7 +2274,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Request ID: `dispatch-agent-authored-recap-p03-final-verification-20260912T0015Z`
 - Launch status: `accepted`
 - Terminal outcome: `completed`
-- Review artifact: `reviews/p03-review-2026-09-12T001522Z.md`
+- Review artifact: `reviews/archived/p03-review-2026-09-12T001522Z.md`
 - Reviewed range: `ab4785bf510ea737961a9431da4376a461be930e..ce2898e1dca37becc2d59ce8f97d7340d0f0bf4d`
 - Reviewed head: `ce2898e1dca37becc2d59ce8f97d7340d0f0bf4d`
 - Prior closure: all governance and earlier Phase 3 findings closed
