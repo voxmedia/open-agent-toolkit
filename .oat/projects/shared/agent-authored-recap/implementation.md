@@ -1732,6 +1732,30 @@ reconcile its durable receipt before closeout.
 `reviews/archived/final-review-2026-09-13T050025Z.md`, and pre-receive head
 `1202699d15b7fb49437b67d6344b80d792cb9f2b`.
 
+### Review Received: exceptional configured exit gate
+
+**Date:** 2026-09-13
+**Review artifact:**
+`reviews/archived/final-review-2026-09-13T050025Z.md`
+**Gate run:** `52787dbb-20c4-4fe7-b484-a72f0cd20c35`
+**Verdict:** PASS — 0 Critical, 0 Important, 0 Medium, 0 Minor
+
+The gate used the configured `cursor-fable-5-1-high` target, achieved
+different-family review, and independently closed the prior archive-lifecycle
+finding. Its exact six-blob provenance, archive-free verification, narrow
+retired-reference exception, authoring guidance, strict archive boundary,
+skill/version gates, lint, and format all passed.
+
+**Finding dispositions:** none. The prior immutable-HTML whitespace deferral
+was re-evaluated and remains accepted; the gate introduced no new finding.
+
+**Gate policy:** The single operator-authorized exceptional launch is
+consumed. Its eligible passing result permits `allowed/passed` only after the
+archive move, Reviews event, and receive commit reconcile durably.
+
+**Next:** Reconcile the receive commit, then continue the configured closeout
+sequence.
+
 ---
 
 ## Orchestration Runs
