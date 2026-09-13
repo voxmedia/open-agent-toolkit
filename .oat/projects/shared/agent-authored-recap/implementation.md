@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-13
-oat_current_task_id: p06-t17
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 17    | 17/17     |
-| Phase 2 | completed   | 4     | 4/4       |
-| Phase 3 | completed   | 8     | 8/8       |
-| Phase 4 | completed   | 2     | 2/2       |
-| Phase 5 | completed   | 1     | 1/1       |
-| Phase 6 | in_progress | 18    | 16/18     |
+| Phase   | Status         | Tasks | Completed |
+| ------- | -------------- | ----- | --------- |
+| Phase 1 | completed      | 17    | 17/17     |
+| Phase 2 | completed      | 4     | 4/4       |
+| Phase 3 | completed      | 8     | 8/8       |
+| Phase 4 | completed      | 2     | 2/2       |
+| Phase 5 | completed      | 1     | 1/1       |
+| Phase 6 | review_pending | 18    | 18/18     |
 
-**Total:** 48/50 tasks completed
+**Total:** 50/50 tasks completed
 
 ---
 
@@ -1593,7 +1593,50 @@ exclude the declared immutable snapshot subtree while preserving a negative
 control for live source paths. This is necessary integration work for
 `p06-t17`, not a third remediation task or a broader sweep exception.
 
-**Next:** Complete the corrected `p06-t17` boundary, then `p06-t18`.
+### Task p06-t17: Make real-package controls archive-safe
+
+**Status:** completed
+**Commits:** `5eb05c8197f93279c264d355bb1b2ffffe354a38`,
+`df2015fa518565ff7d6872efd91a28f41a17e41d`
+
+The two fresh real-package controls now read provenance-recorded, byte-exact
+fixtures containing only `site/index.html`, `source/ledger.json`, and
+`source/fact-base.json`. The fixture inventory records both original source
+paths, run IDs, and source commit. The retirement sweep excludes only this
+declared historical snapshot subtree and retains a live-source negative
+control.
+
+The pre-fix archive-free reproduction failed with the expected
+`.oat/projects/...` `ENOENT`; the restored test passed 2/2 with
+`.oat/projects/` absent. Focused verification passed 28/28. The sweep
+neutralization reported both historical and live paths; restored behavior
+ignored only the snapshot and still rejected the live path.
+
+### Task p06-t18: Document residual fact subject rules
+
+**Status:** completed
+**Commit:** `31200a40835bc4cd15ffa047862e1adbd75edd09`
+
+The authoring reference now states that cards, definition lists, and other
+non-paragraph elements use the nearest bold/definition label or preceding
+heading as subject, with the enclosing section ID as fallback.
+
+### Exceptional remediation verification
+
+Core passed 119/119, lifecycle 84/84, project state 58/58,
+archive/lifecycle contracts 210/210, retirement/parity 11/11, standalone smoke
+159/159, skills 442/442, and scripts 1/1. Isolated-HOME Turbo ran 10/10 tasks
+with `Cached: 0`. Every ordered repository gate, plan and skill validation,
+lint, and format exited 0.
+
+The strict project-recap archive boundary passed unchanged. Independent diff
+verification found no changes to either tracked explainer package tree;
+recorded package identities remain project
+`a14f37b71fd2043e02179c055162cb099eb16579` and program
+`819951a507a9ca4e74483e9bcad4a56ade43a3d2`. Phase 6 recovery remains zero.
+
+**Next:** Run the narrow Phase 6 review and current-basis final lifecycle
+review before the one authorized configured gate review.
 
 ---
 

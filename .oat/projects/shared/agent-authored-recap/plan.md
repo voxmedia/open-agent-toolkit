@@ -1007,7 +1007,7 @@ and lifecycle suites, `pnpm lint`, and `pnpm format`.
 | p03   | phase | passed  | Final operator-authorized verification passed with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                           |
 | p04   | phase | passed  | Re-review closed the executable front-door and visual-evidence findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings. |
 | p05   | phase | passed  | Independent review passed the program recap and both bounded recoveries with 0 findings.                                              |
-| p06   | phase | pending | Second configured-gate findings queued; gate-attempt budget exhausted pending operator direction.                                     |
+| p06   | phase | pending | All 18 tasks complete; narrow Phase 6 review pending before the authorized exceptional configured-gate review.                        |
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
@@ -1041,7 +1041,7 @@ and lifecycle suites, `pnpm lint`, and `pnpm format`.
 | final   | code     | fixes_completed | 2026-09-12 | reviews/archived/final-review-2026-09-12T203608Z.md           | 1b041801417814f39f337837a0cba245fc11c020 | gate       | cursor-fable-5-1-high |
 | final   | code     | fixes_completed | 2026-09-12 | reviews/archived/final-review-2026-09-12T231453Z.md           | f2b92c515c23f0d9b4b9bab714951a785b56afbd | manual     | -                     |
 | final   | code     | passed          | 2026-09-12 | reviews/final-review-2026-09-12T235655Z.md                    | 9c6d83fe16f8120bd585ff5d76925e19e1d1ca3a | manual     | -                     |
-| final   | code     | fixes_added     | 2026-09-13 | reviews/archived/final-review-2026-09-13T001401Z.md           | da4059af5034afd6b55fc634ada4b260f5b71e5e | gate       | cursor-fable-5-1-high |
+| final   | code     | fixes_completed | 2026-09-13 | reviews/archived/final-review-2026-09-13T001401Z.md           | da4059af5034afd6b55fc634ada4b260f5b71e5e | gate       | cursor-fable-5-1-high |
 | spec    | artifact | pending         | -          | -                                                             | -                                        | -          | -                     |
 | design  | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-design-review-2026-09-09T225646Z.md | -                                        | -          | -                     |
 | design  | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-design-review-2026-09-09T232532Z.md | -                                        | manual     | -                     |

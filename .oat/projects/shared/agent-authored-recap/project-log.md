@@ -116,6 +116,10 @@ final-gate-exception-authorized-20260913: operator authorized only p06-t17 and p
 
 p06-t17-historical-fixture-sweep-correction-20260913: byte-exact archive-safe snapshots contain retired historical vocabulary, so p06-t17 now owns a narrowly tested exclusion for only its immutable fixture subtree; live-source detection remains required.
 
+### 2026-09-13 · structural · oat-project-implement · p06-final-tasks
+
+phase-p06-exceptional-remediation-complete-20260913: p06-t17 and p06-t18 completed at 50/50 total tasks; archive-free controls, narrow historical-fixture sweep exclusion, all repository gates, and immutable package checks passed; Phase 6 recovery remains zero and reviews are pending.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
