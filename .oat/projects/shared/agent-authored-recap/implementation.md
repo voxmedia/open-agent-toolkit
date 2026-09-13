@@ -1635,8 +1635,31 @@ recorded package identities remain project
 `a14f37b71fd2043e02179c055162cb099eb16579` and program
 `819951a507a9ca4e74483e9bcad4a56ade43a3d2`. Phase 6 recovery remains zero.
 
-**Next:** Run the narrow Phase 6 review and current-basis final lifecycle
-review before the one authorized configured gate review.
+### Review Received: exceptional Phase 6 remediation
+
+**Date:** 2026-09-13
+**Review artifact:**
+`reviews/archived/p06-review-2026-09-13T043549Z.md`
+**Reviewed head:** `4a46095abdd2b195eb2a79a510071fcf96f1d28c`
+**Verdict:** PASS — 0 Critical, 0 Important, 0 Medium, 1 Minor
+
+The reviewer independently matched all six fixture blobs to their recorded
+source commit, reproduced the archive-free pass and pre-fix `ENOENT`, confirmed
+the sweep exclusion remains exact and load-bearing, preserved the strict
+project-recap archive boundary, and verified both source package tree IDs were
+unchanged.
+
+**Minor disposition:** The stale `oat_last_commit` pointer is corrected during
+review receipt to the final implementation task commit
+`31200a40835bc4cd15ffa047862e1adbd75edd09`. No new task is created because
+this is a negligible correction to the receive-owned state bookkeeping; a
+separate third remediation task would widen the operator's explicit
+`p06-t17`/`p06-t18` scope without changing implementation behavior.
+
+Phase 6 passes with 18/18 tasks complete. Recovery usage remains zero.
+
+**Next:** Run the current-basis final lifecycle review before the one
+authorized configured gate review.
 
 ---
 

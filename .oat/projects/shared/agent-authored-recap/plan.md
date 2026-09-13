@@ -1000,14 +1000,14 @@ and lifecycle suites, `pnpm lint`, and `pnpm format`.
 
 ## Reviews
 
-| Scope | Type  | Status  | Notes                                                                                                                                 |
-| ----- | ----- | ------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| p01   | phase | passed  | Independent verification passed with 0 Critical, 0 Important, and 3 deferred Medium findings.                                         |
-| p02   | phase | passed  | Fresh re-review closed all three blocking findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                      |
-| p03   | phase | passed  | Final operator-authorized verification passed with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                           |
-| p04   | phase | passed  | Re-review closed the executable front-door and visual-evidence findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings. |
-| p05   | phase | passed  | Independent review passed the program recap and both bounded recoveries with 0 findings.                                              |
-| p06   | phase | pending | All 18 tasks complete; narrow Phase 6 review pending before the authorized exceptional configured-gate review.                        |
+| Scope | Type  | Status | Notes                                                                                                                                 |
+| ----- | ----- | ------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| p01   | phase | passed | Independent verification passed with 0 Critical, 0 Important, and 3 deferred Medium findings.                                         |
+| p02   | phase | passed | Fresh re-review closed all three blocking findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                      |
+| p03   | phase | passed | Final operator-authorized verification passed with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                           |
+| p04   | phase | passed | Re-review closed the executable front-door and visual-evidence findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings. |
+| p05   | phase | passed | Independent review passed the program recap and both bounded recoveries with 0 findings.                                              |
+| p06   | phase | passed | Exceptional remediation review passed; one Minor stale state pointer was corrected during receive with no additional task.            |
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
@@ -1034,7 +1034,7 @@ and lifecycle suites, `pnpm lint`, and `pnpm format`.
 | p06     | code     | fixes_completed | 2026-09-12 | reviews/archived/p06-review-2026-09-12T223410Z.md             | 06da0d40112052eb4a3bfd5760d5aa2ca1867bff | manual     | -                     |
 | p06     | code     | passed          | 2026-09-12 | reviews/p06-review-2026-09-12T230247Z.md                      | 35a68fbe6f292573eb9ca9a28cfdcb57e79a541b | manual     | -                     |
 | p06-t16 | code     | passed          | 2026-09-12 | reviews/p06-t16-review-2026-09-12T234414Z.md                  | 811fa6a0d9bdf122fe2e18463558bdb046ccc9e1 | manual     | -                     |
-| p06     | code     | received        | 2026-09-13 | reviews/p06-review-2026-09-13T043549Z.md                      | 4a46095abdd2b195eb2a79a510071fcf96f1d28c | manual     | -                     |
+| p06     | code     | passed          | 2026-09-13 | reviews/archived/p06-review-2026-09-13T043549Z.md             | 4a46095abdd2b195eb2a79a510071fcf96f1d28c | manual     | -                     |
 | final   | code     | fixes_completed | 2026-09-12 | reviews/archived/final-review-2026-09-12T032129Z.md           | ed5f9f19d777989fe6095be14b1bb12e14583359 | manual     | -                     |
 | final   | code     | fixes_completed | 2026-09-12 | reviews/archived/final-review-2026-09-12T132520Z.md           | 03dd32006306615858d39f68da7425b083f95780 | manual     | -                     |
 | final   | code     | fixes_added     | 2026-09-12 | reviews/archived/final-review-2026-09-12T140439Z.md           | 367bb6217c8d2c502ca395d04bf8f35b14ac43b5 | manual     | -                     |

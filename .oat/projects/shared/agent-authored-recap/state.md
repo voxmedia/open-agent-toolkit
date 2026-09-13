@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 3a47b0e32872345020fe28d7aa07b75928abc835
+oat_last_commit: 31200a40835bc4cd15ffa047862e1adbd75edd09
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -80,26 +80,26 @@ oat_implement_exit_gate:
   receive_commit: 322791386ee9127c96b59f6c629a2a6e31663079
   receive_eligible: true
   receive_completed: true
-  failure: operator-authorized p06-t17/p06-t18 remediation completed; narrow Phase 6 and current-basis final lifecycle reviews are required before the one exceptional configured gate review
-  updated_at: '2026-09-13T04:35:00Z'
+  failure: operator-authorized p06-t17/p06-t18 remediation and narrow Phase 6 review completed; current-basis final lifecycle review is required before the one exceptional configured gate review
+  updated_at: '2026-09-13T04:43:00Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-09T16:39:02.165Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-13T04:35:00Z'
+oat_project_state_updated: '2026-09-13T04:43:00Z'
 oat_generated: false
 ---
 
 # Project State: agent-authored-recap
 
-**Status:** Exceptional gate remediation complete; reviews pending
+**Status:** Phase 6 passed; final lifecycle review pending
 **Started:** 2026-09-09
 **Last Updated:** 2026-09-13
 
 ## Current Phase
 
-Implementation — Phase 6 and final lifecycle review
+Implementation — Current-basis final lifecycle review
 
 ## Artifacts
 
@@ -120,10 +120,11 @@ Implementation — Phase 6 and final lifecycle review
 - ✓ Phase 3 complete and independently verified (8/8 tasks)
 - ✓ Phase 4 complete and independently verified (2/2 tasks)
 - ✓ Phase 5 complete and independently verified (1/1 task)
-- ✓ All Phase 6 tasks complete (18/18)
+- ✓ Phase 6 complete and independently verified (18/18)
 - ✓ All implementation tasks complete (50/50)
 - ✓ Configured exit-gate attempt 2 durably received
-- ⧗ Narrow Phase 6 and current-basis final lifecycle reviews pending
+- ✓ Narrow Phase 6 review passed
+- ⧗ Current-basis final lifecycle review pending
 - ⧗ One additional configured gate review remains authorized
 
 ## Blockers
@@ -134,5 +135,5 @@ configured gate review.
 
 ## Next Milestone
 
-Run the narrow Phase 6 and current-basis final lifecycle reviews, then exactly
-one additional configured gate review.
+Run the current-basis final lifecycle review, then exactly one additional
+configured gate review.

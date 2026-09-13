@@ -120,6 +120,10 @@ p06-t17-historical-fixture-sweep-correction-20260913: byte-exact archive-safe sn
 
 phase-p06-exceptional-remediation-complete-20260913: p06-t17 and p06-t18 completed at 50/50 total tasks; archive-free controls, narrow historical-fixture sweep exclusion, all repository gates, and immutable package checks passed; Phase 6 recovery remains zero and reviews are pending.
 
+### 2026-09-13 · structural · oat-project-implement · p06
+
+phase-outcome-p06-exceptional-20260913: PASS; 0 Critical, 0 Important, 0 Medium, 1 Minor state-pointer correction resolved during receive; 18/18 tasks complete, packages unchanged, and Phase 6 recovery remains zero; see reviews/archived/p06-review-2026-09-13T043549Z.md.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
