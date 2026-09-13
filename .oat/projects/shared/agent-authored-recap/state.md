@@ -80,26 +80,26 @@ oat_implement_exit_gate:
   receive_commit: 322791386ee9127c96b59f6c629a2a6e31663079
   receive_eligible: true
   receive_completed: true
-  failure: operator-authorized p06-t17/p06-t18 remediation and narrow Phase 6 review completed; current-basis final lifecycle review is required before the one exceptional configured gate review
-  updated_at: '2026-09-13T04:43:00Z'
+  failure: operator-authorized remediation and current-basis lifecycle reviews passed; exactly one exceptional configured gate review remains authorized
+  updated_at: '2026-09-13T04:53:00Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-09T16:39:02.165Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-13T04:43:00Z'
+oat_project_state_updated: '2026-09-13T04:53:00Z'
 oat_generated: false
 ---
 
 # Project State: agent-authored-recap
 
-**Status:** Phase 6 passed; final lifecycle review pending
+**Status:** Current basis passed; exceptional configured gate pending
 **Started:** 2026-09-09
 **Last Updated:** 2026-09-13
 
 ## Current Phase
 
-Implementation — Current-basis final lifecycle review
+Implementation — Exceptional configured exit gate
 
 ## Artifacts
 
@@ -124,7 +124,7 @@ Implementation — Current-basis final lifecycle review
 - ✓ All implementation tasks complete (50/50)
 - ✓ Configured exit-gate attempt 2 durably received
 - ✓ Narrow Phase 6 review passed
-- ⧗ Current-basis final lifecycle review pending
+- ✓ Current-basis final lifecycle review passed
 - ⧗ One additional configured gate review remains authorized
 
 ## Blockers
@@ -135,5 +135,5 @@ configured gate review.
 
 ## Next Milestone
 
-Run the current-basis final lifecycle review, then exactly one additional
-configured gate review.
+Run exactly one additional configured gate review. If it blocks, stop without
+another fix or review attempt.
