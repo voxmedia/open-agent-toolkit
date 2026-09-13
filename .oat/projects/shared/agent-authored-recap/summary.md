@@ -58,6 +58,10 @@ The project replaced an implementation-tail recap path that depended on five pro
 
 - Regenerate the immutable 2026-08-31 program recap package when a substantive content change is needed; that regeneration may also remove its four whitespace-only diagnostics.
 
+## Explainer Outcome
+
+- **project-recap:** generated — needs review — `explainers/agent-authored-recap-recap` — browser driver unavailable; all browser-free and traceability checks passed.
+
 ## Workflow Observations
 
 ### 2026-09-11 · structural · oat-project-implement · p01-review-round-3

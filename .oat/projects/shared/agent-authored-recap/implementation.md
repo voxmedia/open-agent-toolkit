@@ -1769,13 +1769,19 @@ the final phase is not a HiLL checkpoint
 **Completed:** `summary`, `document`
 **Project recap decision:** `generate` (`interactive`,
 2026-09-13T16:32:42Z)
+**Project recap outcome:** `built-needs-review`
+**Project recap run:** `explainers/agent-authored-recap-recap`
+**Project recap run ID:** `2c450643-d40e-4f72-828d-fb04160fd254`
+**Project recap QA:** browser rung `none`,
+`browser-driver-not-installed`; parse, required narrative, structure, source
+dumping, shell-script safety, ledger-to-page, and page-to-ledger checks passed
+**Terminal guard:** passed with `generate/built-needs-review`
 
 The immutable sequence snapshot is persisted in `state.md`. Each completed
 step must commit before the next step and advance gate freshness through a
 separate state-only checkpoint.
 
-**Next:** Generate and validate the implementation-tail project recap, then
-continue to `pr`.
+**Next:** Continue to `pr`.
 
 ---
 
