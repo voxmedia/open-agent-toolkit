@@ -63,6 +63,9 @@ Spell terms, identifiers, numbers, dates, and closed-vocabulary statuses
 exactly as the fact base spells them. Keep each number, date, or status in the
 same sentence, list item, or table row as its subject so verification can match
 the `(subject, value)` pair in `source/ledger.json`.
+For cards, definition lists, and other non-paragraph elements, verification
+uses the nearest bold or definition label or preceding heading as the subject,
+with the enclosing section ID as fallback.
 
 Treat `unresolvedClaims` as unresolved. Label uncertainty as
 `needs confirmation`; do not turn it into a confirmed narrative bridge.
