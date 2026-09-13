@@ -71,23 +71,23 @@ oat_implement_exit_gate:
   envelope_status: blocked
   artifact: .oat/projects/shared/agent-authored-recap/reviews/final-review-2026-09-13T001401Z.md
   handoff: Run oat-project-review-receive for .oat/projects/shared/agent-authored-recap/reviews/final-review-2026-09-13T001401Z.md before treating this gate review as consumed.
-  receive_state: not_started
-  receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
+  receive_state: intent_persisted
+  receive_correlation: 'run=756b124f-64ad-492b-96d8-2c8c9d22bbd3; handoff=receive; source=reviews/final-review-2026-09-13T001401Z.md; scope=final; type=code'
+  receive_source_artifact: .oat/projects/shared/agent-authored-recap/reviews/final-review-2026-09-13T001401Z.md
+  receive_archived_artifact: .oat/projects/shared/agent-authored-recap/reviews/archived/final-review-2026-09-13T001401Z.md
+  receive_event_identity: final | code | final-review-2026-09-13T001401Z.md
+  receive_pre_head: ce6bf0936f7d749b1eece8b6a50284c64093f8ac
   receive_commit: null
   receive_eligible: true
   receive_completed: false
   failure: configured gate attempt 2 found 1 Important lifecycle-transient fixture dependency; policy blocks at important and reaches max attempts after receive
-  updated_at: '2026-09-13T00:14:01Z'
+  updated_at: '2026-09-13T00:21:30Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-09T16:39:02.165Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-13T00:14:01Z'
+oat_project_state_updated: '2026-09-13T00:21:30Z'
 oat_generated: false
 ---
 

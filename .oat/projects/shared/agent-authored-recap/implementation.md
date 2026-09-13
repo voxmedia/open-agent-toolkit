@@ -1515,6 +1515,12 @@ additional gate launch is authorized.
 **Next:** Persist receive intent, consume the review, and stop at the exhausted
 gate-attempt boundary.
 
+**Receive intent:** persisted for run
+`756b124f-64ad-492b-96d8-2c8c9d22bbd3`, source
+`reviews/final-review-2026-09-13T001401Z.md`, destination
+`reviews/archived/final-review-2026-09-13T001401Z.md`, and pre-receive head
+`ce6bf0936f7d749b1eece8b6a50284c64093f8ac`.
+
 ---
 
 ## Orchestration Runs
