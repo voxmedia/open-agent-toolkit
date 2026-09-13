@@ -98,23 +98,23 @@ oat_project_recap:
   source: interactive
   decided_at: '2026-09-13T16:32:42Z'
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_status: ready # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-09T16:39:02.165Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-13T16:52:34Z'
+oat_project_state_updated: '2026-09-13T16:56:22Z'
 oat_generated: false
 ---
 
 # Project State: agent-authored-recap
 
-**Status:** Exceptional configured exit gate passed
+**Status:** Final PR artifact ready
 **Started:** 2026-09-09
 **Last Updated:** 2026-09-13
 
 ## Current Phase
 
-Implementation — Closeout sequencing
+Implementation — Final PR ready to open
 
 ## Artifacts
 
@@ -142,6 +142,7 @@ Implementation — Closeout sequencing
 - ✓ Current-basis final lifecycle review passed
 - ✓ Exceptional configured gate passed with 0 findings
 - ✓ Gate review durably received
+- ✓ Final PR artifact prepared and review ledger validated
 
 ## Blockers
 
@@ -151,4 +152,4 @@ configured gate review.
 
 ## Next Milestone
 
-Continue the configured closeout sequence.
+Push the branch and open the final PR.
