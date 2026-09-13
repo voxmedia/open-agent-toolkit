@@ -1,7 +1,10 @@
 ---
 oat_current_task: p06-t17
 oat_last_commit: 3a47b0e32872345020fe28d7aa07b75928abc835
-oat_blockers: []
+oat_blockers:
+  - task_id: p06-t17
+    reason: Configured implementation exit gate exhausted 2/2 remediation attempts; explicit operator authorization is required before executing queued fixes or launching another gate review.
+    since: 2026-09-13
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -56,7 +59,7 @@ oat_implement_exit_gate:
   project_override: null
   on_failure: block
   max_attempts: 2
-  attempts_completed: 1
+  attempts_completed: 2
   reviewed_head: 9c6d83fe16f8120bd585ff5d76925e19e1d1ca3a
   implementation_base_ref: origin/main
   implementation_fingerprint: sha256:effective-delta-v1:76645c43ae2963947cb36b59464530e1f8bfaaebee115fa936714dd4d856c658
@@ -69,25 +72,25 @@ oat_implement_exit_gate:
   gate_run_marker: /var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/756b124f-64ad-492b-96d8-2c8c9d22bbd3.json
   gate_run_id: 756b124f-64ad-492b-96d8-2c8c9d22bbd3
   envelope_status: blocked
-  artifact: .oat/projects/shared/agent-authored-recap/reviews/final-review-2026-09-13T001401Z.md
+  artifact: .oat/projects/shared/agent-authored-recap/reviews/archived/final-review-2026-09-13T001401Z.md
   handoff: Run oat-project-review-receive for .oat/projects/shared/agent-authored-recap/reviews/final-review-2026-09-13T001401Z.md before treating this gate review as consumed.
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation: 'run=756b124f-64ad-492b-96d8-2c8c9d22bbd3; handoff=receive; source=reviews/final-review-2026-09-13T001401Z.md; scope=final; type=code'
   receive_source_artifact: .oat/projects/shared/agent-authored-recap/reviews/final-review-2026-09-13T001401Z.md
   receive_archived_artifact: .oat/projects/shared/agent-authored-recap/reviews/archived/final-review-2026-09-13T001401Z.md
   receive_event_identity: final | code | final-review-2026-09-13T001401Z.md
   receive_pre_head: ce6bf0936f7d749b1eece8b6a50284c64093f8ac
-  receive_commit: null
+  receive_commit: cbf42e74113f82f6982195cc43bcabc729c47291
   receive_eligible: true
-  receive_completed: false
-  failure: configured gate attempt 2 found 1 Important lifecycle-transient fixture dependency; policy blocks at important and reaches max attempts after receive
-  updated_at: '2026-09-13T00:21:30Z'
+  receive_completed: true
+  failure: configured gate attempt 2 found 1 Important lifecycle-transient fixture dependency; valid receive completed and maxAttempts=2 is exhausted
+  updated_at: '2026-09-13T00:28:00Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-09T16:39:02.165Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-13T00:21:30Z'
+oat_project_state_updated: '2026-09-13T00:28:00Z'
 oat_generated: false
 ---
 
@@ -126,9 +129,10 @@ Implementation — Blocked at configured gate attempt limit
 
 ## Blockers
 
-None.
+- Configured implementation exit gate remediation is exhausted at 2/2
+  attempts. `p06-t17` and `p06-t18` are queued but require explicit operator
+  authorization before execution or another gate launch.
 
 ## Next Milestone
 
-Reconcile gate attempt 2, then obtain operator direction on the exhausted
-two-attempt budget.
+Obtain operator direction on the exhausted two-attempt gate budget.

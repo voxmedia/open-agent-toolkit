@@ -1554,8 +1554,19 @@ receive reconciliation, `attemptsCompleted=2` equals `maxAttempts=2`; no fix
 execution or additional gate launch is authorized without explicit operator
 direction. Phase 6 recovery remains zero.
 
-**Next:** Reconcile the eligible receive and stop at the exhausted configured
-gate boundary.
+**Receive reconciliation:** Completed. Commit
+`cbf42e74113f82f6982195cc43bcabc729c47291` contains the exact archive move,
+matching `fixes_added` ledger event, p06-t17/p06-t18 tasks, and tracking
+updates. The configured gate now records 2/2 remediation attempts consumed
+with complete receive provenance.
+
+**Stop boundary:** The configured gate attempt budget is exhausted. Do not
+execute p06-t17/p06-t18 or launch another gate without explicit operator
+authorization. Phase 6 recovery remains zero.
+
+**Next:** Ask the operator whether to authorize one additional bounded
+remediation plus gate re-review, proceed with the known Important unresolved,
+or stop.
 
 ---
 
