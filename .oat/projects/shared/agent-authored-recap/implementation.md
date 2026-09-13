@@ -1766,12 +1766,16 @@ is now `allowed/passed`.
 the final phase is not a HiLL checkpoint
 **Post-approval sequence:** empty
 **Status:** `pre_approval`
+**Completed:** `summary`, `document`
+**Project recap decision:** `generate` (`interactive`,
+2026-09-13T16:32:42Z)
 
 The immutable sequence snapshot is persisted in `state.md`. Each completed
 step must commit before the next step and advance gate freshness through a
 separate state-only checkpoint.
 
-**Next:** Generate the project summary.
+**Next:** Generate and validate the implementation-tail project recap, then
+continue to `pr`.
 
 ---
 
