@@ -356,7 +356,7 @@ describe('review skill contracts', () => {
 
     // The `oat-reviewer` AGENT role is out of scope for the skill version
     // migration and keeps its top-level declaration, so this read stays direct.
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.4');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.5');
     expect(content).toContain(
       'must represent the same instant from the same `date -u` capture',
     );

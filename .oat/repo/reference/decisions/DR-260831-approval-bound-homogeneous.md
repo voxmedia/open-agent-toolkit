@@ -2,7 +2,7 @@
 id: DR-260831-approval-bound-homogeneous
 title: Approval-bound homogeneous dispatch
 date: 2026-08-31
-status: accepted
+status: superseded
 legacy_id: null
 ---
 
@@ -19,3 +19,10 @@ Keep recon provider-neutral and require explicit approval of one exact model and
 ## Consequences
 
 The run's cost and concurrence envelope is auditable without baking a dated model into the skill. Independence comes from blind or separately scoped passes rather than heterogeneous model selection.
+
+## Superseded
+
+Superseded on 2026-09-10 by DR-260910-restore-economical-recon. Approval now
+binds independently selected exact targets for every wave in one complete
+envelope, so a harder assignment does not raise unrelated evidence workers to a
+run-wide maximum.

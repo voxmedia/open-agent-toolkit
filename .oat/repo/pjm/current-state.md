@@ -37,9 +37,8 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
-- CLI `0.2.74` (`agent-authored-recap`, implementation and configured exit
-  gate complete; pre-approval closeout in progress) replaces callback-driven
-  Explainer Kit orchestration with one
+- CLI `0.2.74` (`agent-authored-recap`, lifecycle complete and archived; PR
+  #299 open) replaces callback-driven Explainer Kit orchestration with one
   `bundle → host-agent author → verify → record` flow for project recaps,
   program recaps, plan-time project explainers, and direct-input runs. The
   flow records exact manifest-v2 packages, always runs browser-free safety and
@@ -49,6 +48,21 @@ copying their content here. -->
   external publication are retired; archive export is the durable copy.
   `DR-260911-explainers-are-agent-authored` records the decision, and the
   2026-08-31 execution program now has a validated program recap.
+- CLI `0.2.73` (`recon-rework`, merged as PR #285) restores recon's inexpensive
+  evidence fan-out with independently approved per-wave targets, a v2 manifest,
+  session-local explicit approval, bounded conditional evidence passes, exactly
+  one terminal reconciliation for standard/thorough profiles, and caller-owned
+  interpretation. Shared routing helpers drive preview, exact target checks, and
+  final packet topology validation; profile-specific adaptive caps and fixed
+  singleton bounds prevent cross-profile or unbounded topologies, while
+  malformed collections fail with structured diagnostics and stale-output
+  withdrawal. Exact wave/lane outcome identity preserves honest mixed-lane
+  partials at their achieved profile and rejects same-lane contradictions. The
+  runtime, recon worker contract, shared orchestration guidance, public docs,
+  bundle assets, provider projections, and lockstep package versions are
+  aligned. Configured exit-gate run `965e9704-ba33-443b-adca-e494b6692fbc` was
+  durably received as allowed at the Important threshold with 0 Critical, 0
+  Important, 0 Medium, and 2 diagnostic-only Minor findings.
 
 - CLI `0.2.66` (`remote-project-management`, original implementation and
   closeout reviews complete; Wave 6 integration awaiting a fresh final gate,

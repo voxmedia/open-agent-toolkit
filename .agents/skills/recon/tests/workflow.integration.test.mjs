@@ -38,10 +38,34 @@ async function writeJson(path, value) {
   await writeFile(path, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
 }
 
+const cheapTarget = {
+  provider: 'synthetic-codex',
+  route: 'agent-role',
+  role: 'recon-worker',
+  model: 'synthetic-economical-worker',
+  effort: 'low',
+  reasoningMode: null,
+  serviceTier: 'priority',
+};
+
+const strongerTerminalTarget = {
+  ...cheapTarget,
+  model: 'synthetic-judgment-worker',
+  effort: 'high',
+};
+
+const contradictionEvidenceTarget = {
+  ...cheapTarget,
+  route: 'agent-role:counterexample-search',
+};
+
 for (const profile of ['quick', 'standard', 'thorough']) {
   test(`fake ${profile} run drives the complete deterministic pipeline`, async () => {
     const injectedRoots = await roots();
-    const result = await runFakeRecon({ profile, roots: injectedRoots });
+    const result = await runFakeRecon({
+      profile,
+      roots: injectedRoots,
+    });
     assert.equal(result.status, 'complete');
     assert.equal(result.requestedProfile, profile);
     assert.equal(result.achievedProfile, profile);
@@ -53,12 +77,363 @@ for (const profile of ['quick', 'standard', 'thorough']) {
       await readFile(join(injectedRoots.packetRoot, 'manifest.json'), 'utf8'),
     );
     assert.equal(manifest.execution.approval.type, 'explicit-user-approval');
-    assert.equal(manifest.execution.model, 'fixture-model');
+    assert.equal(manifest.execution.target.model, 'fixture-model');
+    const validation = await validatePacket(injectedRoots.packetRoot);
+    assert.equal(validation.valid, true, JSON.stringify(validation, null, 2));
+    const log = JSON.parse(
+      await readFile(
+        join(injectedRoots.packetRoot, 'raw', 'fixture-run-log.json'),
+        'utf8',
+      ),
+    );
+    assert.match(log.evidenceClass, /Synthetic/);
+    assert.equal(log.invocation.manifestVersion, 2);
+    assert.equal(log.output.status, 'complete');
     await assert.rejects(
       readFile(join(injectedRoots.packetRoot, 'raw', 'dispatch')),
     );
   });
 }
+
+test('thorough compilation incorporates both gather waves before review briefs', async () => {
+  const injectedRoots = await roots();
+  const result = await runFakeRecon({
+    profile: 'thorough',
+    roots: injectedRoots,
+  });
+  assert.equal(result.status, 'complete');
+
+  const manifest = JSON.parse(
+    await readFile(join(injectedRoots.packetRoot, 'manifest.json'), 'utf8'),
+  );
+  const modes = manifest.execution.waves.map(({ mode }) => mode);
+  assert.ok(modes.indexOf('redundant-gather') < modes.indexOf('compile'));
+
+  const candidateLedger = JSON.parse(
+    await readFile(
+      join(injectedRoots.packetRoot, 'raw/drafts/claims-v1.json'),
+      'utf8',
+    ),
+  );
+  const redundantReference = manifest.artifacts.find(
+    ({ path }) => path === 'raw/dossiers/pass-redundant-gather.json',
+  );
+  assert.ok(redundantReference);
+  assert.ok(
+    candidateLedger.inputArtifacts.some(
+      ({ path, digest }) =>
+        path === redundantReference.path &&
+        digest === redundantReference.digest,
+    ),
+  );
+
+  const review = JSON.parse(
+    await readFile(
+      join(injectedRoots.packetRoot, 'reviews/semantic.json'),
+      'utf8',
+    ),
+  );
+  assert.equal(review.brief.path, 'reviews/briefs/verify.json');
+});
+
+for (const profile of ['standard', 'thorough']) {
+  for (const conditionalDisposition of ['triggered', 'not-triggered']) {
+    test(`v2 ${profile} ${conditionalDisposition} condition feeds one terminal reconciliation`, async () => {
+      const injectedRoots = await roots();
+      const result = await runFakeRecon({
+        profile,
+        conditionalDisposition,
+        roots: injectedRoots,
+      });
+      assert.equal(result.status, 'complete');
+      const validation = await validatePacket(injectedRoots.packetRoot);
+      assert.equal(validation.valid, true, JSON.stringify(validation, null, 2));
+      const manifest = JSON.parse(
+        await readFile(join(injectedRoots.packetRoot, 'manifest.json'), 'utf8'),
+      );
+      assert.equal(
+        manifest.conditionOutcomes[0].disposition,
+        conditionalDisposition,
+      );
+      assert.equal(
+        manifest.execution.waves.filter(
+          (wave) => wave.mode === 'reconciliation',
+        ).length,
+        1,
+      );
+      const reconciliation = JSON.parse(
+        await readFile(
+          join(injectedRoots.packetRoot, 'reviews/reconciliation.json'),
+          'utf8',
+        ),
+      );
+      assert.equal(
+        reconciliation.incorporatedReviewIds.includes(
+          'review-contradiction-resolution',
+        ),
+        conditionalDisposition === 'triggered',
+      );
+    });
+  }
+}
+
+for (const conditionalDisposition of ['triggered', 'not-triggered']) {
+  test(`stronger terminal selection leaves ${conditionalDisposition} evidence targets economical`, async () => {
+    const injectedRoots = await roots();
+    const result = await runFakeRecon({
+      profile: 'standard',
+      conditionalDisposition,
+      target: cheapTarget,
+      waveTargets: {
+        reconciliation: strongerTerminalTarget,
+        'contradiction-resolution': contradictionEvidenceTarget,
+      },
+      roots: injectedRoots,
+    });
+    assert.equal(result.status, 'complete');
+    const manifest = JSON.parse(
+      await readFile(join(injectedRoots.packetRoot, 'manifest.json'), 'utf8'),
+    );
+    const targetFor = (mode) => {
+      const wave = manifest.execution.waves.find((item) => item.mode === mode);
+      return wave.target ?? manifest.execution.target;
+    };
+    for (const mode of [
+      'map',
+      'gather',
+      'compile',
+      'semantic-verification',
+      'adversarial',
+      'coverage',
+    ]) {
+      assert.deepEqual(targetFor(mode), cheapTarget, mode);
+    }
+    assert.deepEqual(targetFor('reconciliation'), strongerTerminalTarget);
+    assert.deepEqual(
+      targetFor('contradiction-resolution'),
+      contradictionEvidenceTarget,
+    );
+  });
+}
+
+test('provider-shaped controls preserve absent, independent, and opaque axes', async () => {
+  const shapes = [
+    {
+      name: 'claude',
+      target: {
+        provider: 'synthetic-claude',
+        route: 'agent-role',
+        role: 'recon-worker',
+        model: 'synthetic-haiku',
+        effort: null,
+        reasoningMode: null,
+        serviceTier: null,
+      },
+      capabilities: { effort: false },
+    },
+    {
+      name: 'codex',
+      target: {
+        provider: 'synthetic-codex',
+        route: 'agent-role',
+        role: 'recon-worker',
+        model: 'synthetic-luna',
+        effort: 'high',
+        reasoningMode: null,
+        serviceTier: 'priority',
+      },
+      capabilities: { effort: true, serviceTier: true },
+    },
+    {
+      name: 'cursor',
+      target: {
+        provider: 'synthetic-cursor',
+        route: 'opaque://composer/%2FCaseSensitive',
+        role: 'recon-worker',
+        model: 'opaque:model:selector',
+        effort: null,
+        reasoningMode: 'opaque-mode',
+        serviceTier: null,
+      },
+      capabilities: { reasoningMode: true },
+    },
+  ];
+  for (const shape of shapes) {
+    const injectedRoots = await roots();
+    const result = await runFakeRecon({
+      profile: 'quick',
+      target: shape.target,
+      launcherCapabilities: shape.capabilities,
+      roots: injectedRoots,
+    });
+    assert.equal(result.status, 'complete', shape.name);
+    const manifest = JSON.parse(
+      await readFile(join(injectedRoots.packetRoot, 'manifest.json'), 'utf8'),
+    );
+    assert.deepEqual(manifest.execution.target, shape.target, shape.name);
+  }
+});
+
+test('unsupported target controls stop before approval acceptance or launch', async () => {
+  const injectedRoots = await roots();
+  const result = await runFakeRecon({
+    profile: 'quick',
+    target: {
+      provider: 'synthetic-provider',
+      route: 'fixture',
+      role: 'recon-worker',
+      model: 'synthetic-model',
+      effort: null,
+      reasoningMode: null,
+      serviceTier: null,
+      temperature: 0,
+    },
+    roots: injectedRoots,
+  });
+  assert.equal(result.status, 'awaiting-approval');
+  assert.equal(result.launched, false);
+  assert.equal(result.reason, 'UNSUPPORTED_TARGET_CONTROL');
+  const manifest = JSON.parse(
+    await readFile(join(injectedRoots.packetRoot, 'manifest.json'), 'utf8'),
+  );
+  assert.equal(Object.hasOwn(manifest.execution, 'approval'), false);
+  const log = JSON.parse(
+    await readFile(
+      join(injectedRoots.packetRoot, 'raw', 'fixture-run-log.json'),
+      'utf8',
+    ),
+  );
+  assert.equal(log.preview, null);
+  assert.equal(log.output.launched, false);
+  await assert.rejects(readFile(join(injectedRoots.packetRoot, 'packet.md')));
+  await assert.rejects(
+    readFile(join(injectedRoots.packetRoot, 'raw', 'dispatch')),
+  );
+});
+
+test('user refusal after one envelope preview produces zero launches', async () => {
+  const injectedRoots = await roots();
+  const result = await runFakeRecon({
+    profile: 'standard',
+    conditionalDisposition: 'not-triggered',
+    userApproval: false,
+    roots: injectedRoots,
+  });
+  assert.equal(result.status, 'awaiting-approval');
+  assert.equal(result.launched, false);
+  assert.equal(result.reason, 'USER_DECLINED_ROUTING');
+  const log = JSON.parse(
+    await readFile(
+      join(injectedRoots.packetRoot, 'raw', 'fixture-run-log.json'),
+      'utf8',
+    ),
+  );
+  assert.equal(log.preview.approvalState, 'draft');
+  assert.equal(log.output.launched, false);
+  await assert.rejects(
+    readFile(join(injectedRoots.packetRoot, 'raw', 'dispatch')),
+  );
+});
+
+test('constructed-target drift refuses work', async () => {
+  const injectedRoots = await roots();
+  const result = await runFakeRecon({
+    profile: 'quick',
+    dispatchDrift: { route: 'constructed-target-mismatch' },
+    roots: injectedRoots,
+  });
+  assert.equal(result.status, 'awaiting-approval');
+  assert.equal(result.launched, false);
+  assert.equal(result.reason, 'DISPATCH_AXIS_DRIFT');
+});
+
+test('triggered contradiction work uses the adversary brief and feeds only reconcile', async () => {
+  const injectedRoots = await roots();
+  await runFakeRecon({
+    profile: 'standard',
+    conditionalDisposition: 'triggered',
+    roots: injectedRoots,
+  });
+  const manifest = JSON.parse(
+    await readFile(join(injectedRoots.packetRoot, 'manifest.json'), 'utf8'),
+  );
+  const result = JSON.parse(
+    await readFile(
+      join(injectedRoots.packetRoot, 'reviews/contradiction-resolution.json'),
+      'utf8',
+    ),
+  );
+  const brief = JSON.parse(
+    await readFile(join(injectedRoots.packetRoot, result.brief.path), 'utf8'),
+  );
+  assert.equal(brief.mode, 'adversary');
+  assert.deepEqual(result.permittedInputs, [result.brief]);
+  assert.deepEqual(result.excludedInputs, ['prior_reasoning']);
+  assert.equal(
+    manifest.execution.waves.find(
+      (wave) => wave.mode === 'contradiction-resolution',
+    ).conditional,
+    true,
+  );
+  assert.equal(
+    manifest.execution.waves.filter((wave) => wave.mode === 'reconciliation')
+      .length,
+    1,
+  );
+});
+
+test('production validation rejects a shadow reconciliation in a complete v2 branch', async () => {
+  const injectedRoots = await roots();
+  await runFakeRecon({
+    profile: 'standard',
+    conditionalDisposition: 'triggered',
+    roots: injectedRoots,
+  });
+  const manifestPath = join(injectedRoots.packetRoot, 'manifest.json');
+  const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+  const terminalPath = join(
+    injectedRoots.packetRoot,
+    'reviews/reconciliation.json',
+  );
+  const shadow = JSON.parse(await readFile(terminalPath, 'utf8'));
+  shadow.id = 'review-reconciliation-shadow-v2';
+  const shadowPath = join(
+    injectedRoots.packetRoot,
+    'reviews/reconciliation-shadow-v2.json',
+  );
+  await writeJson(shadowPath, shadow);
+  manifest.artifacts.push({
+    path: 'reviews/reconciliation-shadow-v2.json',
+    digest: await hashFile(shadowPath),
+  });
+  await writeJson(manifestPath, manifest);
+  const validation = await validatePacket(injectedRoots.packetRoot);
+  assert.ok(
+    validation.errors.some((error) => error.code === 'SHADOW_RECONCILIATION'),
+    JSON.stringify(validation, null, 2),
+  );
+});
+
+test('representative v2 partial run preserves an exact synthetic invocation/output log', async () => {
+  const injectedRoots = await roots();
+  const result = await runFakeRecon({
+    profile: 'standard',
+    workerFailure: 'semantic-verification',
+    roots: injectedRoots,
+  });
+  assert.equal(result.status, 'partial');
+  const log = JSON.parse(
+    await readFile(
+      join(injectedRoots.packetRoot, 'raw/fixture-run-log.json'),
+      'utf8',
+    ),
+  );
+  assert.equal(log.invocation.profile, 'standard');
+  assert.equal(log.invocation.manifestVersion, 2);
+  assert.equal(log.output.status, 'partial');
+  assert.equal(log.output.failures[0].pass, 'semantic-verification');
+  assert.match(log.evidenceClass, /not native runtime launch identity/);
+});
 
 test('worker failure publishes an honest lower-assurance partial', async () => {
   const injectedRoots = await roots();
@@ -88,6 +463,15 @@ test('worker failure publishes an honest lower-assurance partial', async () => {
     await readFile(join(injectedRoots.packetRoot, 'packet.md'), 'utf8'),
     /semantic-verification/i,
   );
+  const log = JSON.parse(
+    await readFile(
+      join(injectedRoots.packetRoot, 'raw/fixture-run-log.json'),
+      'utf8',
+    ),
+  );
+  assert.equal(log.invocation.manifestVersion, 2);
+  assert.equal(log.output.status, 'partial');
+  assert.match(log.evidenceClass, /not native runtime launch identity/);
 });
 
 test('a cancelled accepted lane publishes an honest partial labelled as a worker outcome', async () => {
@@ -139,6 +523,18 @@ test('an unsupported launch surface stops before any worker launch', async () =>
     await readFile(join(injectedRoots.packetRoot, 'manifest.json'), 'utf8'),
   );
   assert.equal(manifest.run.status, 'awaiting-approval');
+  assert.equal(Object.hasOwn(manifest.execution, 'approval'), false);
+  const log = JSON.parse(
+    await readFile(
+      join(injectedRoots.packetRoot, 'raw', 'fixture-run-log.json'),
+      'utf8',
+    ),
+  );
+  assert.equal(log.preview.approvalState, 'draft');
+  assert.equal(log.output.launched, false);
+  await assert.rejects(
+    readFile(join(injectedRoots.packetRoot, 'raw', 'dispatch')),
+  );
 });
 
 test('generic worker-role fallback is fixed before approval', async () => {
@@ -152,7 +548,7 @@ test('generic worker-role fallback is fixed before approval', async () => {
   const manifest = JSON.parse(
     await readFile(join(injectedRoots.packetRoot, 'manifest.json'), 'utf8'),
   );
-  assert.equal(manifest.execution.role, 'generic');
+  assert.equal(manifest.execution.target.role, 'generic');
   assert.equal(manifest.execution.approval.type, 'explicit-user-approval');
 });
 
@@ -263,7 +659,7 @@ test('documented candidate validation withdraws the consumer view until successf
   await assert.rejects(renderPacket(fixture.packetRoot));
   await assert.rejects(readFile(join(fixture.packetRoot, 'packet.md'), 'utf8'));
 
-  fixture.manifest.schemaVersion = 1;
+  fixture.manifest.schemaVersion = 2;
   fixture.ledger.synthesis.answer = 'A successfully promoted replacement.';
   await fixture.persist();
   const validCandidate = await validatePacket(fixture.packetRoot);

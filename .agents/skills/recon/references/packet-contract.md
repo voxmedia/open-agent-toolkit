@@ -1,8 +1,10 @@
-# Recon Packet Contract v1
+# Recon Packet Contract
 
 Every JSON artifact carries a `kind` discriminator and integer
-`schemaVersion`. Version 1 rejects unknown versions; extend the contract through
-a new version rather than accepting untyped fields.
+`schemaVersion`. Versions are dispatched by artifact kind: packet manifests
+accept version 2, while claim ledgers, raw dossiers, review briefs, and review
+results remain version 1. Unknown kind/version combinations fail closed; extend
+a kind through a new version rather than accepting untyped fields.
 
 ## Directory
 
@@ -28,29 +30,30 @@ a new version rather than accepting untyped fields.
 consumer view. Each worker owns one unique path; candidates are immutable and
 never promoted over the last valid canonical artifact in place.
 
-## Artifact References and Canonical JSON
+## Artifact References
 
 An artifact reference is `{ "path": "packet-relative/path", "digest":
 "sha256:<64 lowercase hex>" }`. Paths must remain inside the packet directory.
 Digests cover the exact bytes on disk.
 
-Fingerprints use canonical JSON: UTF-8, object keys sorted lexicographically,
-array order preserved, no insignificant whitespace, and SHA-256 with the
-`sha256:` prefix.
-
 ## One Validation Boundary
 
-Version 1 compiles persisted packet inputs exactly once into one non-persisted,
+Validation compiles persisted packet inputs exactly once into one non-persisted,
 deeply immutable `ValidatedRun`. This value is an internal normalized graph,
 not an artifact kind, schema version, file, cache, or caller-selectable profile.
 Assurance derivation and rendering accept only `ValidatedRun`; they never
 reopen or independently reinterpret raw manifest, ledger, review, or
 reconciliation artifacts.
 
+The validator checks the original wire shape before it creates the normalized
+routing view. A wave inherits the complete execution target unless it supplies
+a complete replacement target. The
+`ValidatedRun` retains both the original manifest and its exact byte digest plus
+the immutable effective routing view. Consumers do not reparse raw routing data.
+
 Construction is all-or-nothing. A valid graph contains:
 
-- one approved execution envelope whose canonical fingerprint matches the
-  recorded explicit user approval;
+- one execution envelope with recorded explicit user approval;
 - complete typed same-run artifacts, each written by an approved wave and lane,
   from which the achieved profile is derived;
 - exactly one terminal reconciliation for standard or thorough runs and one
@@ -68,7 +71,7 @@ Construction is all-or-nothing. A valid graph contains:
 - derived claim assurance, achieved profile, material gaps, and publication
   status.
 
-Reject approval fingerprint drift, unknown execution fields, artifacts from
+Reject unsupported manifest versions, unknown execution fields, artifacts from
 unapproved lanes, duplicate or shadow reconciliation results, symlink root
 aliases, retargeted roots, raw secret-bearing stale excerpts, and
 caller-downgraded gap materiality. Equivalent-looking inputs do not excuse a
@@ -76,7 +79,7 @@ failed invariant.
 
 ## Manifest
 
-`recon.packet-manifest` version 1 contains:
+`recon.packet-manifest` version 2 contains:
 
 - `run`: stable ID, topic, status, requested and achieved profile, timestamps;
 - `request`: objective, questions, included/excluded scope, stable context
@@ -88,32 +91,84 @@ failed invariant.
   explicit boolean `material` classification and affected source, claim, and
   coverage-finding IDs when applicable.
 
+The manifest also carries root-recorded `conditionOutcomes`. They are
+control dispositions, not launcher receipts. Every declared condition has one
+closed `triggered`, `not-triggered`, or `unresolved` outcome with a non-empty
+reason and exact digest-bound predecessor artifact references.
+
+The manifest records approved routing intent. Effective targets, selection
+rationales, and condition outcomes do not attest which native process ran, its
+runtime identity, token usage, cost, or the correctness of its conclusions.
+Those claims require evidence from an actual producer outside this contract.
+
 ### Execution Envelope
 
-`execution` is a closed object binding exactly what the user approved:
+Execution uses a required closed `target` object:
+`provider`, `route`, `role`, and `model` are non-empty strings; `effort`,
+`reasoningMode`, and `serviceTier` are each explicitly a non-empty string or
+`null`. A null axis means the adapter exposes no independently requested control;
+it is not an unknown-value fallback.
 
-- `provider`, `route`, `role`, `model`, `effort`: non-empty strings;
-- `reasoningMode`, `serviceTier`: string or `null`;
-- `authority`: `provider-enforced` or `contract-enforced`;
-- `maxConcurrency`, `deadlineSeconds`: integers of at least 1; `retryLimit`:
-  integer of at least 0;
-- `waves`: closed `{ waveId, mode, taskClass, lanes, conditional }` records
-  with a unique wave identity, a mode from the wave-mode set, a task class from
-  the durable task-class order, and at least one closed
-  `{ laneId, scope, writeRoot }` lane whose identity is unique across the run
-  and whose write root is a packet-relative path; and
-- `approval`: `{ type: "explicit-user-approval", approvedAt, fingerprint }`.
+The other execution fields include `authority` as `provider-enforced` or
+`contract-enforced`; integer `maxConcurrency` and `deadlineSeconds` values of
+at least 1; and an integer `retryLimit` of at least 0. Each closed wave adds:
 
-The fingerprint is the canonical SHA-256 of `execution` with `approval`
-removed. Validation recomputes it; any difference is
-`APPROVAL_FINGERPRINT_MISMATCH`. The envelope records what will run, not proof
-that a launcher ran it. Launch acceptance and per-lane terminal outcomes are
-reported in the controller's status and as `PASS_FAILED` gaps, not as packet
-artifacts.
+- `classFloor`, from the same durable task-class order and not above
+  `taskClass`;
+- a non-empty `selectionReason`; and
+- optional `target`, which must be a complete exact-target replacement. If it
+  is absent, the complete execution target is inherited without partial-axis
+  merging.
 
-Wave modes are `map`, `gather`, `compile`, `semantic-verification`,
-`adversarial`, `coverage`, `reconciliation`, `redundant-gather`,
-`redundant-verification`, and `contradiction-resolution`.
+The execution object also requires a closed `conditions` array. Each structural
+condition contains `conditionId`, `destinationWaveId`, `afterWaveIds`, one of
+`insufficient-evidence` or `unresolved-material-challenge`, and
+`maxActivations: 1`. Each conditional destination is a uniquely identified
+`contradiction-resolution` evidence wave, has exactly one condition, appears
+after every named predecessor and before the one terminal reconciliation, and
+owns unique lane IDs and write roots. Conversely, every wave marked
+`conditional: true` must be the destination of exactly one activating condition;
+dead conditional waves are invalid. Quick permits no conditional wave;
+standard permits one and thorough two. The profile's 4/10/20 adaptive-lane cap
+counts `gather`, `semantic-verification`, `adversarial`, `coverage`,
+`redundant-gather`, `redundant-verification`, and
+`contradiction-resolution` when those modes are permitted by the profile.
+Every permitted mode outside that counted set is fixed at exactly one lane:
+`map` and `compile` for quick, plus terminal `reconciliation` for standard and
+thorough. The resulting total lane maxima are 6/13/23, and concurrency remains
+capped at 4/6/8.
+
+Triggered dispositions require exact complete same-run artifacts from every
+approved predecessor and concrete typed predicate evidence from those same-run
+artifacts. Evidence from another run fails with
+`CONDITION_EVIDENCE_RUN_MISMATCH`. A triggered destination must produce its
+approved output or a material `PASS_FAILED`/`PASS_OMITTED` gap with exact
+`waveId` and `laneId` fields. The gap message is explanatory prose and is never
+parsed for identity.
+Not-triggered and unresolved destinations publish no artifacts and contribute
+no achieved pass. Accepted failed, cancelled, timed-out, or missing predecessor
+work cannot activate replacement work. Required profile passes remain required
+regardless of conditional annotations.
+
+`reconciliation-needs-judgment` is a controller escalation outcome, never a
+condition predicate. Foreseeable judgment changes the one terminal target before
+approval. A need discovered later preserves completed work and records an
+unresolved out-of-envelope gap until renewed approval or a new run; it never
+mutates the approved target or launches a second reconciliation.
+
+The controller maps the ten manifest wave modes onto the worker contract's
+seven assignment modes: redundant gathering uses `gather`; semantic and
+redundant verification use `verify`; adversarial and contradiction-resolution
+use `adversary`; and only terminal reconciliation uses `reconcile`. This mapping
+does not change the approved manifest mode used for artifact and pass checks.
+
+Approval is `{ type: "explicit-user-approval", approvedAt }`. It is valid only
+for the exact proposal shown in the same uninterrupted controller flow. Resume,
+reload, or any pre-launch proposal change returns the run to
+`awaiting-approval`, removes the recorded approval, and requires a fresh preview
+and explicit approval. The exact-target check immediately before launch still
+refuses a candidate whose provider-native axes differ from the current wave.
+The manifest may reference version 1 evidence artifacts.
 
 ### Passes and Achieved Profile
 
@@ -121,24 +176,33 @@ Run status is `preparing`, `awaiting-approval`, `running`, `complete`, `partial`
 or `failed`. The validator, not a worker, derives the achieved profile from
 complete typed artifacts of the same run:
 
-| Pass                       | Complete artifact                                            |
-| -------------------------- | ------------------------------------------------------------ |
-| `map`                      | a `recon.raw-dossier` with mode `map`                        |
-| `gather`                   | a `recon.raw-dossier` with mode `gather`                     |
-| `semantic-verification`    | a `recon.review-result` with kind `semantic`                 |
-| `adversarial`              | a `recon.review-result` with kind `adversarial`              |
-| `coverage`                 | a `recon.review-result` with kind `coverage`                 |
-| `reconciliation`           | a `recon.review-result` with kind `reconciliation`           |
-| `redundant-gather`         | complete `gather` dossiers from at least two distinct lanes  |
-| `redundant-verification`   | a `recon.review-result` with kind `redundant-verification`   |
-| `contradiction-resolution` | a `recon.review-result` with kind `contradiction-resolution` |
+| Pass                       | Complete artifact                                                         |
+| -------------------------- | ------------------------------------------------------------------------- |
+| `map`                      | a `recon.raw-dossier` with mode `map`                                     |
+| `gather`                   | a complete `gather` dossier owned by the approved primary `gather` wave   |
+| `semantic-verification`    | a `recon.review-result` with kind `semantic`                              |
+| `adversarial`              | a `recon.review-result` with kind `adversarial`                           |
+| `coverage`                 | a `recon.review-result` with kind `coverage`                              |
+| `reconciliation`           | a `recon.review-result` with kind `reconciliation`                        |
+| `redundant-gather`         | a complete `gather` dossier owned by the approved `redundant-gather` wave |
+| `redundant-verification`   | a `recon.review-result` with kind `redundant-verification`                |
+| `contradiction-resolution` | a `recon.review-result` with kind `contradiction-resolution`              |
 
 `quick` requires `map` and `gather`; the canonical ledger itself is the
 compile result, so an approved `compile` lane needs no separate artifact, and
 locator validation is performed by the validator.
 `standard` adds `semantic-verification`, `adversarial`, `coverage`, and
-`reconciliation`. `thorough` adds `redundant-gather`,
-`redundant-verification`, and `contradiction-resolution`.
+`reconciliation`. `thorough` adds `redundant-gather` and
+`redundant-verification`. A predeclared conditional
+`contradiction-resolution` evidence pass may feed the same mandatory terminal
+reconciliation when its predicate triggers; it is not a second terminal pass.
+
+Thorough routing completes `redundant-gather` before `compile`. The compiled
+ledger must directly reference by exact path and digest at least one complete
+dossier from every approved primary and redundant gather lane. This makes both
+independent gathering outputs part of the immutable ledger consumed to create
+review briefs. Omitting one fails with
+`MISSING_THOROUGH_GATHER_LEDGER_INPUT`.
 
 Every dossier records the approved `waveId` and `laneId` that wrote it; every
 review result records its approved `reviewerLane`. The lane must belong to a
@@ -147,12 +211,22 @@ wave whose mode matches the artifact (a semantic result to a
 `redundant-gather` wave, and so on); otherwise the artifact is
 `UNAPPROVED_LANE`. The artifact path must equal or sit under the lane's
 approved `writeRoot`; otherwise it is `LANE_WRITE_PATH_VIOLATION`. Every
-non-conditional approved lane must either have written an artifact or be
-covered by a material `PASS_FAILED` or `PASS_OMITTED` gap naming its wave
-mode; otherwise the packet fails with `MISSING_LANE_OUTCOME`. Each required
-pass of the requested profile that has no complete artifact must likewise be
-named by such a gap, or the packet fails with
-`MISSING_PASS_OUTCOME_EVIDENCE`.
+primary and redundant gathering pass is derived from this exact approved wave
+ownership, not from aggregate dossier mode or lane cardinality. Multiple
+complete lanes from one gathering wave cannot satisfy the other wave's pass.
+Every non-conditional approved lane must either have written an artifact or be
+covered by a material `PASS_FAILED` or `PASS_OMITTED` gap carrying its exact
+`waveId` and `laneId`; otherwise the packet fails with
+`MISSING_LANE_OUTCOME`. A legacy mode-only gap is accepted only when that mode
+unambiguously identifies one wave containing exactly one lane. A complete
+artifact contradicts material failed or omitted outcome evidence only when both
+identify the same exact wave and lane, or when an accepted legacy mode-only gap
+unambiguously identifies that singleton lane; validation then fails with
+`CONTRADICTORY_PASS_OUTCOME`. Complete evidence from one lane and exact material
+failure evidence from another lane preserve the achieved pass while making the
+run an honest partial. Each required pass of the requested profile that has no
+complete artifact must likewise be named by such a gap, or the packet fails
+with `MISSING_PASS_OUTCOME_EVIDENCE`.
 
 ## Source Descriptors and Locators
 
@@ -301,7 +375,7 @@ record under `raw/quarantine/`. Never promote invalid output.
 Run `scripts/validate-packet.mjs <packet-dir>` before rendering or publication.
 It delegates to the single validation boundary, which validates schemas, IDs,
 references, containment, hashes, source reopening, locators, the approval
-fingerprint, approved lanes, pass outcomes, the one terminal reconciliation,
+presence, approved lanes, pass outcomes, the one terminal reconciliation,
 legal transitions, secret-safe persistence, derived gaps, assurance, and
 requested vs achieved profile. Candidate validation is non-destructive for
 canonical diagnostic artifacts, but a non-publishable candidate withdraws any
@@ -315,12 +389,20 @@ declared, including honest same-profile partials.
 
 Use `scripts/render-packet.mjs <packet-dir>` to generate the deterministic
 consumer view. Its public path entry point first obtains `ValidatedRun`; the
-render core accepts only that graph. It writes an exclusive unpredictable
-temporary sibling, retains that file's identity through hashing and atomic
-promotion, and verifies the promoted digest. Immediately before and after
-promotion it also verifies that the canonical manifest, ledger, and validated
-referenced artifacts still match the byte digests retained by `ValidatedRun`.
-A mismatch is a categorical integrity failure and withdraws `packet.md`.
+render core accepts only that graph. The document
+includes a compact Intended Routing summary from the normalized view: approved
+authority and limits, each wave's effective exact target/class/floor/rationale,
+and every root-recorded conditional disposition. It labels those values as
+approved intent rather than launch receipts or observations of runtime identity,
+usage, cost, or correctness. Evidence, claims, contradictions, and gaps remain
+the primary consumer context.
+
+The renderer writes an exclusive unpredictable temporary sibling, retains that
+file's identity through hashing and atomic promotion, and verifies the promoted
+digest. Immediately before and after promotion it also verifies that the
+canonical manifest, ledger, and validated referenced artifacts still match the
+byte digests retained by `ValidatedRun`. A mismatch is a categorical integrity
+failure and withdraws `packet.md`.
 Withdrawal first proves the retained packet-root identity; if the root changed,
 the renderer preserves that identity failure and does not follow or unlink the
 replacement path. Rendering or promotion failure on an unchanged root likewise
@@ -328,11 +410,12 @@ withdraws `packet.md` while leaving canonical diagnostics available. Its result
 is the directory path plus a compact status summary and digest, never raw
 dossier content.
 
-## Version 1 Non-Goals
+## Compatibility and Non-Goals
 
-This boundary does not add another schema version, review pass, persisted
-intermediate, generalized plugin artifact kind, saved validation profile,
-provider behavior, or integration surface. It does not require launcher-emitted
+Legacy manifest compatibility is intentionally out of scope. This boundary does
+not add another review pass, persisted intermediate, generalized plugin
+artifact kind, saved validation profile, provider behavior, or integration
+surface. It does not require launcher-emitted
 dispatch receipts; reintroduce those only when a launcher exists that produces
 them itself. It does not change research-pack distribution, documentation,
 backlog integrations, `quick`/`standard`/`thorough`, selective blindness,

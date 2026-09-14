@@ -4,7 +4,7 @@ description: Use when delegating work to subagents or choosing a model for a tas
 compatibility: Self-contained; no OAT installation required.
 user-invocable: true
 metadata:
-  version: 1.0.3
+  version: 1.0.4
 ---
 
 # Subagent Orchestration
@@ -49,13 +49,13 @@ Classify in order: deterministic verifiability, silent-miss risk,
 dispersed-context reconciliation, ambiguity or novelty, then consequence.
 File count and duration alone never justify escalation.
 
-| Task class               | Contract                                                                                                                               |
-| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `mechanical-recon`       | Deterministic inventories, parity checks, enumeration, lint/test/build runs. Misses are visible. Optimize for cost and throughput.     |
-| `intelligent-recon`      | Interpreting unfamiliar code, semantics, or policy; auditing API usage. A miss could be silent. Needs reliable judgment and tool use.  |
-| `default-implementation` | Normal multi-file coding, debugging, and reconciliation of dispersed context in one bounded scope.                                     |
-| `hard-reasoning`         | Ambiguous debugging, architecture analysis, novel problems, competing interpretations.                                                 |
-| `consequential`          | Security, release safety, incidents, irreversible operations, adversarial analysis, foundational decisions, final load-bearing review. |
+| Task class               | Contract                                                                                                                                                                   |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mechanical-recon`       | Deterministic inventories, parity checks, bounded extraction/counterexample searches, and command runs whose misses are cheaply checked. Optimize for cost and throughput. |
+| `intelligent-recon`      | Interpreting unfamiliar code, semantics, or policy; auditing API usage. A miss could be silent. Needs reliable judgment and tool use.                                      |
+| `default-implementation` | Normal multi-file coding, debugging, and context-dependent implementation in one bounded scope.                                                                            |
+| `hard-reasoning`         | Ambiguous debugging, architecture analysis, novel problems, competing interpretations.                                                                                     |
+| `consequential`          | Security, release safety, incidents, irreversible operations, judgment-bearing adversarial analysis, foundational decisions, final load-bearing review.                    |
 
 Escalation boundaries:
 
@@ -66,7 +66,16 @@ Escalation boundaries:
 - Default → hard reasoning when ambiguity, novelty, or reasoning difficulty
   dominates. Large context alone is not a reason.
 - Any class → consequential when security, production impact,
-  irreversibility, adversarial behavior, or expensive failure dominates.
+  irreversibility, judgment-bearing adversarial analysis, or expensive failure
+  dominates.
+
+Recon wave names do not determine task class. Bounded citation reopening,
+inventory comparison, counterexample search, and mechanical dossier
+grouping/deduplication may remain `mechanical-recon` when their misses are
+visible and cheaply checked. Interpreting ambiguous evidence, deciding between
+competing explanations, or making a consequential final review remains at the
+class required by that judgment. Narrow an over-broad assignment before
+escalating it, and keep sufficiency judgment in the caller.
 
 **Never route below a class floor.** When uncertain between two classes, use
 the stronger one.

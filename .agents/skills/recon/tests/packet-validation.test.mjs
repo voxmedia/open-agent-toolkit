@@ -16,8 +16,17 @@ import { afterEach, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import { hashCanonicalJson, hashFile } from '../scripts/lib/canonical-json.mjs';
-import { validatePacket } from '../scripts/validate-packet.mjs';
-import { createExecutionApproval } from './fixtures/packet-fixture.mjs';
+import { validateArtifactShape } from '../scripts/lib/contracts.mjs';
+import {
+  compileValidatedRun,
+  validatePacket,
+} from '../scripts/validate-packet.mjs';
+import {
+  approveExecution,
+  configureConditionalContradiction,
+  createExecutionApproval,
+  createPacketFixture,
+} from './fixtures/packet-fixture.mjs';
 
 const fixtureRoot = new URL('./fixtures/', import.meta.url);
 const tempRoots = [];
@@ -31,22 +40,16 @@ afterEach(async () => {
 });
 
 function passesFor(profile) {
-  const modes = ['map', 'gather', 'compile'];
+  const modes = ['map', 'gather'];
+  if (profile === 'thorough') modes.push('redundant-gather');
+  modes.push('compile');
   if (profile === 'standard' || profile === 'thorough') {
-    modes.push(
-      'semantic-verification',
-      'adversarial',
-      'coverage',
-      'reconciliation',
-    );
+    modes.push('semantic-verification', 'adversarial', 'coverage');
   }
   if (profile === 'thorough') {
-    modes.push(
-      'redundant-gather',
-      'redundant-verification',
-      'contradiction-resolution',
-    );
+    modes.push('redundant-verification');
   }
+  if (profile !== 'quick') modes.push('reconciliation');
   return modes;
 }
 
@@ -93,6 +96,35 @@ async function makePacket({
     path: 'raw/dossiers/dossier-1.json',
     digest: await hashFile(dossierPath),
   };
+  let redundantGatherRef = null;
+  if (profile === 'thorough') {
+    const redundantGatherPath = join(
+      packetRoot,
+      'raw',
+      'dossiers',
+      'pass-redundant-gather.json',
+    );
+    await writeJson(redundantGatherPath, {
+      kind: 'recon.raw-dossier',
+      schemaVersion: 1,
+      id: 'pass-artifact-redundant-gather',
+      runId: 'run-1',
+      waveId: 'wave-redundant-gather',
+      laneId: 'lane-redundant-gather',
+      mode: 'gather',
+      outcome: 'complete',
+      allowedInputs: ['source-1'],
+      excludedInputs: [],
+      findings: [],
+      uncertainty: [],
+      contradictions: [],
+      gaps: [],
+    });
+    redundantGatherRef = {
+      path: 'raw/dossiers/pass-redundant-gather.json',
+      digest: await hashFile(redundantGatherPath),
+    };
+  }
 
   let source;
   let locator;
@@ -215,7 +247,10 @@ async function makePacket({
     schemaVersion: 1,
     runId: 'run-1',
     revision: profile === 'quick' ? 1 : 2,
-    inputArtifacts: [dossierRef],
+    inputArtifacts: [
+      dossierRef,
+      ...(redundantGatherRef ? [redundantGatherRef] : []),
+    ],
     synthesis: {
       answer: 'The fixture contains alpha evidence.',
       keyClaimIds: ['claim-1'],
@@ -237,10 +272,7 @@ async function makePacket({
                 'review-adversarial',
                 'review-coverage',
                 ...(profile === 'thorough'
-                  ? [
-                      'review-redundant-verification',
-                      'review-contradiction-resolution',
-                    ]
+                  ? ['review-redundant-verification']
                   : []),
               ]
             : [],
@@ -347,13 +379,6 @@ async function makePacket({
               'redundant-verify',
               { ...structuredClone(verifyBrief), id: 'brief-redundant-verify' },
             ],
-            [
-              'contradiction-resolution',
-              {
-                ...structuredClone(adversaryBrief),
-                id: 'brief-contradiction-resolution',
-              },
-            ],
           ]
         : []),
     ];
@@ -379,12 +404,6 @@ async function makePacket({
               'redundant-verification',
               'brief-redundant-verify',
               'affirmed',
-            ],
-            [
-              'review-contradiction-resolution',
-              'contradiction-resolution',
-              'brief-contradiction-resolution',
-              'resolved',
             ],
           ]
         : []),
@@ -442,9 +461,7 @@ async function makePacket({
         'review-semantic',
         'review-adversarial',
         'review-coverage',
-        ...(profile === 'thorough'
-          ? ['review-redundant-verification', 'review-contradiction-resolution']
-          : []),
+        ...(profile === 'thorough' ? ['review-redundant-verification'] : []),
       ],
       transitions: structuredClone(ledger.transitions),
       additions: [],
@@ -496,6 +513,10 @@ async function makePacket({
   const passArtifacts = [];
   for (const mode of passModes) {
     if (!['map', 'gather', 'redundant-gather'].includes(mode)) continue;
+    if (mode === 'redundant-gather' && redundantGatherRef) {
+      passArtifacts.push(redundantGatherRef);
+      continue;
+    }
     const path = join(packetRoot, 'raw', 'dossiers', `pass-${mode}.json`);
     await writeJson(path, {
       kind: 'recon.raw-dossier',
@@ -520,7 +541,7 @@ async function makePacket({
   }
   const manifest = {
     kind: 'recon.packet-manifest',
-    schemaVersion: 1,
+    schemaVersion: 2,
     run: {
       id: 'run-1',
       topic: 'fixture',
@@ -542,6 +563,7 @@ async function makePacket({
     execution,
     artifacts: [claimsRef, dossierRef, ...reviewArtifacts, ...passArtifacts],
     gaps: [],
+    conditionOutcomes: [],
   };
   const manifestPath = join(packetRoot, 'manifest.json');
   await writeJson(manifestPath, manifest);
@@ -574,8 +596,62 @@ async function persistReview(packet, id, { updateManifest = true } = {}) {
   await writeJson(packet.manifestPath, packet.manifest);
 }
 
+function replaceReferenceDigest(value, path, digest) {
+  if (Array.isArray(value)) {
+    for (const entry of value) replaceReferenceDigest(entry, path, digest);
+    return;
+  }
+  if (!value || typeof value !== 'object') return;
+  if (value.path === path && typeof value.digest === 'string') {
+    value.digest = digest;
+  }
+  for (const entry of Object.values(value)) {
+    replaceReferenceDigest(entry, path, digest);
+  }
+}
+
+async function rewriteGatherDossier(packet, path, updates) {
+  const reference = packet.manifest.artifacts.find(
+    (artifact) => artifact.path === path,
+  );
+  assert.ok(reference, `missing fixture artifact ${path}`);
+  const artifactPath = join(packet.packetRoot, path);
+  const artifact = JSON.parse(await readFile(artifactPath, 'utf8'));
+  Object.assign(artifact, updates);
+  await writeJson(artifactPath, artifact);
+  reference.digest = await hashFile(artifactPath);
+  replaceReferenceDigest(packet.ledger, path, reference.digest);
+
+  const priorReference = packet.manifest.artifacts.find(
+    (artifactRef) => artifactRef.path === 'raw/drafts/claims-v1.json',
+  );
+  if (priorReference) {
+    const priorPath = join(packet.packetRoot, priorReference.path);
+    const priorLedger = JSON.parse(await readFile(priorPath, 'utf8'));
+    replaceReferenceDigest(priorLedger, path, reference.digest);
+    await writeJson(priorPath, priorLedger);
+    priorReference.digest = await hashFile(priorPath);
+    replaceReferenceDigest(
+      packet.ledger,
+      priorReference.path,
+      priorReference.digest,
+    );
+    for (const review of packet.reviewPaths.values()) {
+      replaceReferenceDigest(review.value, path, reference.digest);
+      replaceReferenceDigest(
+        review.value,
+        priorReference.path,
+        priorReference.digest,
+      );
+      await writeJson(review.path, review.value);
+      review.ref.digest = await hashFile(review.path);
+    }
+  }
+  await persist(packet);
+}
+
 async function expectInvalid(packet, code) {
-  const result = await validatePacket(packet.packetRoot);
+  const result = await compileValidatedRun(packet.packetRoot);
   assert.equal(result.valid, false, JSON.stringify(result, null, 2));
   assert.ok(
     result.errors.some((error) => error.code === code),
@@ -593,6 +669,233 @@ for (const profile of ['quick', 'standard', 'thorough']) {
     assert.equal(result.publishable, true);
   });
 }
+
+test('primary gather lanes cannot impersonate the approved redundant gather wave', async () => {
+  const packet = await makePacket({ profile: 'thorough', status: 'partial' });
+  const gatherWave = packet.manifest.execution.waves.find(
+    (wave) => wave.mode === 'gather',
+  );
+  const redundantWave = packet.manifest.execution.waves.find(
+    (wave) => wave.mode === 'redundant-gather',
+  );
+  redundantWave.lanes[0].writeRoot =
+    'raw/dossiers/expected-redundant-gather.json';
+  gatherWave.lanes.push({
+    laneId: 'lane-gather-secondary',
+    scope: 'packet/gather-secondary',
+    writeRoot: 'raw/dossiers/pass-redundant-gather.json',
+  });
+  await rewriteGatherDossier(
+    packet,
+    'raw/dossiers/pass-redundant-gather.json',
+    {
+      waveId: gatherWave.waveId,
+      laneId: 'lane-gather-secondary',
+    },
+  );
+  packet.manifest.gaps.push({
+    id: 'gap-redundant-gather-omitted',
+    code: 'PASS_OMITTED',
+    message: 'redundant-gather was omitted after its approved wave failed.',
+    material: true,
+  });
+  await persist(packet);
+
+  const result = await validatePacket(packet.packetRoot);
+  assert.equal(result.valid, false, JSON.stringify(result, null, 2));
+  assert.equal(result.publishable, false);
+  assert.equal(result.achievedProfile, 'standard');
+  assert.ok(
+    result.errors.some(
+      ({ code, path }) =>
+        code === 'ACHIEVED_PROFILE_MISMATCH' &&
+        path === '$.run.achievedProfile',
+    ),
+    JSON.stringify(result, null, 2),
+  );
+});
+
+test('redundant gather lanes cannot impersonate the approved primary gather wave', async () => {
+  const packet = await makePacket({ profile: 'thorough', status: 'partial' });
+  const gatherWave = packet.manifest.execution.waves.find(
+    (wave) => wave.mode === 'gather',
+  );
+  const redundantWave = packet.manifest.execution.waves.find(
+    (wave) => wave.mode === 'redundant-gather',
+  );
+  gatherWave.lanes[0].writeRoot = 'raw/dossiers/expected-primary-gather.json';
+  redundantWave.lanes.push({
+    laneId: 'lane-redundant-gather-secondary',
+    scope: 'packet/redundant-gather-secondary',
+    writeRoot: 'raw/dossiers',
+  });
+  for (const path of [
+    'raw/dossiers/dossier-1.json',
+    'raw/dossiers/pass-gather.json',
+  ]) {
+    await rewriteGatherDossier(packet, path, {
+      waveId: redundantWave.waveId,
+      laneId: 'lane-redundant-gather-secondary',
+    });
+  }
+  packet.manifest.gaps.push({
+    id: 'gap-primary-gather-omitted',
+    code: 'PASS_OMITTED',
+    message: 'gather was omitted after its approved wave failed.',
+    material: true,
+  });
+  await persist(packet);
+
+  const result = await validatePacket(packet.packetRoot);
+  assert.equal(result.valid, false, JSON.stringify(result, null, 2));
+  assert.equal(result.publishable, false);
+  assert.equal(result.achievedProfile, null);
+  assert.ok(
+    result.errors.some(
+      ({ code, path }) =>
+        code === 'ACHIEVED_PROFILE_MISMATCH' &&
+        path === '$.run.achievedProfile',
+    ),
+    JSON.stringify(result, null, 2),
+  );
+});
+
+test('rejects a complete primary gather contradicted by failed pass evidence', async () => {
+  const packet = await makePacket({ profile: 'thorough', status: 'partial' });
+  packet.manifest.gaps.push({
+    id: 'gap-primary-gather-failed',
+    code: 'PASS_FAILED',
+    message: 'gather failed after its approved lane was accepted.',
+    material: true,
+  });
+  await persist(packet);
+
+  const result = await validatePacket(packet.packetRoot);
+  assert.equal(result.valid, false, JSON.stringify(result, null, 2));
+  assert.equal(result.publishable, false);
+  assert.equal(result.achievedProfile, null);
+  assert.ok(
+    result.errors.some(
+      ({ code, path }) =>
+        code === 'CONTRADICTORY_PASS_OUTCOME' && path === 'pass:gather',
+    ),
+    JSON.stringify(result, null, 2),
+  );
+});
+
+test('rejects a complete redundant gather contradicted by omitted pass evidence', async () => {
+  const packet = await makePacket({ profile: 'thorough', status: 'partial' });
+  packet.manifest.gaps.push({
+    id: 'gap-redundant-gather-omitted',
+    code: 'PASS_OMITTED',
+    message: 'redundant-gather was omitted after its approved lane failed.',
+    material: true,
+  });
+  await persist(packet);
+
+  const result = await validatePacket(packet.packetRoot);
+  assert.equal(result.valid, false, JSON.stringify(result, null, 2));
+  assert.equal(result.publishable, false);
+  assert.equal(result.achievedProfile, 'standard');
+  assert.ok(
+    result.errors.some(
+      ({ code, path }) =>
+        code === 'CONTRADICTORY_PASS_OUTCOME' &&
+        path === 'pass:redundant-gather',
+    ),
+    JSON.stringify(result, null, 2),
+  );
+});
+
+test('rejects an exact same-lane contradiction in a multi-lane gather wave', async () => {
+  const packet = await makePacket({ profile: 'quick', status: 'partial' });
+  const gatherWave = packet.manifest.execution.waves.find(
+    (wave) => wave.mode === 'gather',
+  );
+  gatherWave.lanes.push({
+    laneId: 'lane-gather-failed',
+    scope: 'packet/gather-failed',
+    writeRoot: 'raw/dossiers/gather-failed.json',
+  });
+  packet.manifest.gaps.push(
+    {
+      id: 'gap-gather-failed-lane',
+      code: 'PASS_FAILED',
+      message: 'The second gather lane failed before writing.',
+      material: true,
+      waveId: gatherWave.waveId,
+      laneId: 'lane-gather-failed',
+    },
+    {
+      id: 'gap-gather-complete-lane',
+      code: 'PASS_OMITTED',
+      message: 'The completed gather lane was also reported omitted.',
+      material: true,
+      waveId: gatherWave.waveId,
+      laneId: gatherWave.lanes[0].laneId,
+    },
+  );
+  await persist(packet);
+
+  const result = await validatePacket(packet.packetRoot);
+  assert.equal(result.valid, false, JSON.stringify(result, null, 2));
+  assert.equal(result.publishable, false);
+  assert.equal(result.achievedProfile, null);
+  assert.ok(
+    result.errors.some(
+      ({ code, path }) =>
+        code === 'CONTRADICTORY_PASS_OUTCOME' && path === 'pass:gather',
+    ),
+    JSON.stringify(result, null, 2),
+  );
+});
+
+test('accepts a partial packet with failed redundant gather evidence and no complete artifact', async () => {
+  const packet = await makePacket({ profile: 'thorough', status: 'partial' });
+  await rewriteGatherDossier(
+    packet,
+    'raw/dossiers/pass-redundant-gather.json',
+    { outcome: 'partial' },
+  );
+  packet.manifest.run.achievedProfile = 'standard';
+  packet.ledger.claims[0].reviewIds = packet.ledger.claims[0].reviewIds.filter(
+    (id) => id !== 'review-redundant-verification',
+  );
+  packet.manifest.artifacts = packet.manifest.artifacts.filter(
+    ({ path }) => path !== 'reviews/redundant-verification.json',
+  );
+  const reconciliation = packet.reviewPaths.get('review-reconciliation');
+  reconciliation.value.incorporatedReviewIds =
+    reconciliation.value.incorporatedReviewIds.filter(
+      (id) => id !== 'review-redundant-verification',
+    );
+  reconciliation.value.permittedInputs =
+    reconciliation.value.permittedInputs.filter(
+      ({ path }) => path !== 'reviews/redundant-verification.json',
+    );
+  await persistReview(packet, 'review-reconciliation');
+  packet.manifest.gaps.push(
+    {
+      id: 'gap-redundant-gather-failed',
+      code: 'PASS_FAILED',
+      message: 'redundant-gather failed after returning a partial artifact.',
+      material: true,
+    },
+    {
+      id: 'gap-redundant-verification-omitted',
+      code: 'PASS_OMITTED',
+      message: 'redundant-verification was omitted after gathering failed.',
+      material: true,
+    },
+  );
+  await persist(packet);
+
+  const result = await validatePacket(packet.packetRoot);
+  assert.equal(result.valid, true, JSON.stringify(result, null, 2));
+  assert.equal(result.publishable, true);
+  assert.equal(result.achievedProfile, 'standard');
+  assert.equal(result.status, 'partial');
+});
 
 for (const status of ['failed', 'running', 'preparing', 'awaiting-approval']) {
   test(`valid ${status} generation is diagnosed and withdraws the prior packet`, async () => {
@@ -689,6 +992,528 @@ test('rejects invalid schema versions and duplicate identifiers', async () => {
   duplicate.ledger.claims.push(structuredClone(duplicate.ledger.claims[0]));
   await persist(duplicate);
   await expectInvalid(duplicate, 'DUPLICATE_ID');
+});
+
+test('accepts the current manifest with version 1 evidence artifacts', async () => {
+  const packet = await createPacketFixture();
+  tempRoots.push(packet.tempRoot);
+  const result = await compileValidatedRun(packet.packetRoot);
+  assert.equal(result.valid, true, JSON.stringify(result, null, 2));
+  assert.equal(result.validatedRun.routing.sourceSchemaVersion, 2);
+  assert.equal(result.validatedRun.ledger.schemaVersion, 1);
+  assert.ok(
+    result.validatedRun.artifacts.every(
+      ({ value }) => value.schemaVersion === 1,
+    ),
+  );
+});
+
+test('rejects a thorough ledger that omits its redundant gather dossier input', async () => {
+  const packet = await makePacket({ profile: 'thorough' });
+  const priorReference = packet.manifest.artifacts.find(
+    ({ path }) => path === 'raw/drafts/claims-v1.json',
+  );
+  const priorPath = join(packet.packetRoot, priorReference.path);
+  const priorLedger = JSON.parse(await readFile(priorPath, 'utf8'));
+  priorLedger.inputArtifacts = priorLedger.inputArtifacts.filter(
+    ({ path }) => path !== 'raw/dossiers/pass-redundant-gather.json',
+  );
+  await writeJson(priorPath, priorLedger);
+  priorReference.digest = await hashFile(priorPath);
+  packet.ledger.inputArtifacts.find(
+    ({ path }) => path === priorReference.path,
+  ).digest = priorReference.digest;
+
+  const reconciliation = packet.reviewPaths.get('review-reconciliation');
+  reconciliation.value.inputLedger.digest = priorReference.digest;
+  const permittedPrior = reconciliation.value.permittedInputs.find(
+    ({ path }) => path === priorReference.path,
+  );
+  permittedPrior.digest = priorReference.digest;
+  await persistReview(packet, 'review-reconciliation');
+  await persist(packet);
+
+  const result = await expectInvalid(
+    packet,
+    'MISSING_THOROUGH_GATHER_LEDGER_INPUT',
+  );
+  assert.deepEqual(
+    result.errors
+      .filter(({ code }) => code === 'MISSING_THOROUGH_GATHER_LEDGER_INPUT')
+      .map(({ path }) => path),
+    ['$.inputArtifacts'],
+  );
+});
+
+test('missing terminal prior ledger does not cascade into thorough gather diagnostics', async () => {
+  const packet = await makePacket({ profile: 'thorough' });
+  const priorReference = packet.manifest.artifacts.find(
+    ({ path }) => path === 'raw/drafts/claims-v1.json',
+  );
+  const dossierReference = packet.manifest.artifacts.find(
+    ({ path }) => path === 'raw/dossiers/dossier-1.json',
+  );
+  packet.ledger.inputArtifacts = [{ ...priorReference }];
+
+  const reconciliation = packet.reviewPaths.get('review-reconciliation');
+  reconciliation.value.inputLedger = {
+    ...dossierReference,
+    revision: 1,
+  };
+  const permittedPriorIndex = reconciliation.value.permittedInputs.findIndex(
+    ({ path }) => path === priorReference.path,
+  );
+  reconciliation.value.permittedInputs[permittedPriorIndex] = {
+    ...dossierReference,
+  };
+  await persistReview(packet, 'review-reconciliation');
+  await persist(packet);
+
+  const result = await validatePacket(packet.packetRoot);
+  assert.equal(result.valid, false, JSON.stringify(result, null, 2));
+  assert.deepEqual(
+    result.errors
+      .filter(({ code }) =>
+        [
+          'RECONCILIATION_REVISION_MISMATCH',
+          'MISSING_THOROUGH_GATHER_LEDGER_INPUT',
+        ].includes(code),
+      )
+      .map(({ code }) => code),
+    ['RECONCILIATION_REVISION_MISMATCH'],
+    JSON.stringify(result, null, 2),
+  );
+});
+
+test('production validation enforces approved profile topology', async () => {
+  const cases = [
+    {
+      profile: 'quick',
+      code: 'INVALID_PROFILE_SINGLETON_LANE_COUNT',
+      mutate(execution) {
+        const map = execution.waves.find((wave) => wave.mode === 'map');
+        const template = map.lanes[0];
+        for (let index = 2; index <= 40; index += 1) {
+          map.lanes.push({
+            ...template,
+            laneId: `${template.laneId}-${index}`,
+            writeRoot: `${template.writeRoot}.${index}`,
+          });
+        }
+      },
+    },
+    {
+      profile: 'quick',
+      code: 'INVALID_PROFILE_SINGLETON_LANE_COUNT',
+      mutate(execution) {
+        const compile = execution.waves.find((wave) => wave.mode === 'compile');
+        compile.lanes.push({
+          ...compile.lanes[0],
+          laneId: 'lane-compile-second',
+          writeRoot: 'raw/drafts/compile-second.json',
+        });
+      },
+    },
+    {
+      profile: 'standard',
+      code: 'INVALID_PROFILE_SINGLETON_LANE_COUNT',
+      mutate(execution) {
+        const reconciliation = execution.waves.find(
+          (wave) => wave.mode === 'reconciliation',
+        );
+        reconciliation.lanes.push({
+          ...reconciliation.lanes[0],
+          laneId: 'lane-reconciliation-second',
+          writeRoot: 'reviews/reconciliation-second.json',
+        });
+      },
+    },
+    {
+      code: 'OUT_OF_ORDER_PROFILE_TOPOLOGY',
+      mutate(execution) {
+        [execution.waves[3], execution.waves[4]] = [
+          execution.waves[4],
+          execution.waves[3],
+        ];
+      },
+    },
+    {
+      code: 'INVALID_TERMINAL_TOPOLOGY',
+      mutate(execution) {
+        const terminal = execution.waves.pop();
+        execution.waves.splice(3, 0, terminal);
+      },
+    },
+    {
+      code: 'INCOMPLETE_PROFILE_TOPOLOGY',
+      mutate(execution) {
+        execution.waves = execution.waves.filter(
+          (wave) => wave.mode !== 'coverage',
+        );
+      },
+    },
+    {
+      code: 'DUPLICATE_PROFILE_WAVE_MODE',
+      mutate(execution) {
+        const duplicate = structuredClone(
+          execution.waves.find((wave) => wave.mode === 'coverage'),
+        );
+        duplicate.waveId = 'wave-coverage-duplicate';
+        duplicate.lanes[0].laneId = 'lane-coverage-duplicate';
+        duplicate.lanes[0].writeRoot = 'reviews/coverage-duplicate.json';
+        execution.waves.splice(execution.waves.length - 1, 0, duplicate);
+      },
+    },
+  ];
+
+  for (const { code, mutate, profile = 'standard' } of cases) {
+    const packet = await createPacketFixture({
+      profile,
+    });
+    tempRoots.push(packet.tempRoot);
+    mutate(packet.manifest.execution);
+    packet.manifest.execution = approveExecution(packet.manifest.execution);
+    await packet.persist();
+    const result = await validatePacket(packet.packetRoot);
+    assert.equal(result.valid, false, `${code}: ${JSON.stringify(result)}`);
+    assert.ok(
+      result.errors.some((error) => error.code === code),
+      `${code}: ${JSON.stringify(result)}`,
+    );
+  }
+});
+
+test('production validation rejects unconditional contradiction resolution and accepts both dispositions', async () => {
+  for (const [disposition, profile] of [
+    ['triggered', 'thorough'],
+    ['not-triggered', 'standard'],
+  ]) {
+    const valid = await createPacketFixture({
+      profile,
+      includeContradictionResolution: disposition === 'triggered',
+    });
+    tempRoots.push(valid.tempRoot);
+    await configureConditionalContradiction(valid, { disposition });
+    const result = await validatePacket(valid.packetRoot);
+    assert.equal(result.valid, true, JSON.stringify(result, null, 2));
+  }
+
+  const invalid = await createPacketFixture({
+    profile: 'standard',
+  });
+  tempRoots.push(invalid.tempRoot);
+  await configureConditionalContradiction(invalid);
+  invalid.manifest.execution.waves.find(
+    (wave) => wave.mode === 'contradiction-resolution',
+  ).conditional = false;
+  invalid.manifest.execution = approveExecution(invalid.manifest.execution);
+  await invalid.persist();
+  const result = await validatePacket(invalid.packetRoot);
+  assert.equal(result.valid, false, JSON.stringify(result, null, 2));
+  assert.ok(
+    result.errors.some(
+      (error) => error.code === 'UNCONDITIONAL_CONTRADICTION_RESOLUTION',
+    ),
+    JSON.stringify(result, null, 2),
+  );
+});
+
+test('dispatches schema versions by artifact kind and rejects legacy manifests', async () => {
+  const unknownVersion = await makePacket();
+  unknownVersion.manifest.schemaVersion = 99;
+  await writeJson(unknownVersion.manifestPath, unknownVersion.manifest);
+  await expectInvalid(unknownVersion, 'UNSUPPORTED_SCHEMA_VERSION');
+
+  const unknownKind = validateArtifactShape({
+    kind: 'recon.unknown',
+    schemaVersion: 1,
+  });
+  assert.ok(
+    unknownKind.errors.some((error) => error.code === 'UNKNOWN_ARTIFACT_KIND'),
+  );
+
+  const legacyManifest = await makePacket();
+  legacyManifest.manifest.schemaVersion = 1;
+  await writeJson(legacyManifest.manifestPath, legacyManifest.manifest);
+  await expectInvalid(legacyManifest, 'UNSUPPORTED_SCHEMA_VERSION');
+});
+
+test('one manifest shape defect does not cascade into routing diagnostics', async () => {
+  const packet = await createPacketFixture({ profile: 'standard' });
+  tempRoots.push(packet.tempRoot);
+  packet.manifest.request.unexpected = true;
+  await packet.persist();
+
+  const result = await validatePacket(packet.packetRoot);
+  assert.equal(result.valid, false, JSON.stringify(result, null, 2));
+  assert.deepEqual(
+    result.errors.map(({ code }) => code),
+    ['UNKNOWN_FIELD'],
+  );
+});
+
+test('routing-unavailable diagnostics retain independent source drift', async () => {
+  const packet = await createPacketFixture({ profile: 'standard' });
+  tempRoots.push(packet.tempRoot);
+  packet.manifest.request.unexpected = true;
+  await writeFile(packet.sourcePath, 'changed source bytes\n', 'utf8');
+  await packet.persist();
+
+  const result = await validatePacket(packet.packetRoot);
+  const errorCodes = result.errors.map(({ code }) => code);
+  assert.equal(result.valid, false, JSON.stringify(result, null, 2));
+  assert.ok(
+    errorCodes.includes('UNKNOWN_FIELD'),
+    JSON.stringify(result, null, 2),
+  );
+  assert.ok(
+    errorCodes.includes('SOURCE_DRIFT'),
+    JSON.stringify(result, null, 2),
+  );
+  assert.equal(errorCodes.includes('UNAPPROVED_LANE'), false);
+  assert.equal(errorCodes.includes('UNKNOWN_CONDITION_OUTCOME'), false);
+});
+
+test('missing approval has one schema diagnostic owner', async () => {
+  const packet = await createPacketFixture({ profile: 'standard' });
+  tempRoots.push(packet.tempRoot);
+  delete packet.manifest.execution.approval;
+  await packet.persist();
+
+  const result = await validatePacket(packet.packetRoot);
+  assert.equal(result.valid, false, JSON.stringify(result, null, 2));
+  assert.deepEqual(
+    result.errors.map(({ code }) => code),
+    ['MISSING_REQUIRED_FIELD'],
+  );
+});
+
+test('non-array manifest collections return structured shape diagnostics', async () => {
+  const packet = await createPacketFixture({ profile: 'standard' });
+  tempRoots.push(packet.tempRoot);
+
+  for (const field of ['sources', 'artifacts', 'gaps']) {
+    const manifest = structuredClone(packet.manifest);
+    manifest[field] = 'not-an-array';
+    const result = validateArtifactShape(manifest);
+    assert.equal(result.valid, false);
+    assert.deepEqual(
+      result.errors.map(({ code }) => code),
+      ['MISSING_REQUIRED_FIELD'],
+    );
+  }
+});
+
+test('public CLI rejects hostile manifest collections and withdraws stale output', async () => {
+  const cliPath = fileURLToPath(
+    new URL('../scripts/validate-packet.mjs', import.meta.url),
+  );
+  for (const field of ['sources', 'artifacts', 'gaps', 'conditionOutcomes']) {
+    for (const hostileValue of [{}, 7]) {
+      const packet = await createPacketFixture({ profile: 'standard' });
+      tempRoots.push(packet.tempRoot);
+      await writeFile(
+        join(packet.packetRoot, 'packet.md'),
+        '# last known good\n',
+        'utf8',
+      );
+      packet.manifest[field] = hostileValue;
+      await writeJson(packet.manifestPath, packet.manifest);
+
+      const cli = spawnSync(process.execPath, [cliPath, packet.packetRoot], {
+        encoding: 'utf8',
+      });
+      assert.equal(cli.status, 1, cli.stderr || cli.stdout);
+      assert.equal(cli.stderr, '');
+      const result = JSON.parse(cli.stdout);
+      const errorCodes = result.errors.map(({ code }) => code);
+      assert.equal(result.valid, false, JSON.stringify(result, null, 2));
+      assert.equal(result.publishable, false, JSON.stringify(result, null, 2));
+      assert.ok(
+        errorCodes.includes('MISSING_REQUIRED_FIELD'),
+        JSON.stringify(result, null, 2),
+      );
+      for (const forbiddenCode of [
+        'MISSING_PASS_OUTCOME_EVIDENCE',
+        'SHADOW_RECONCILIATION',
+      ]) {
+        assert.equal(
+          errorCodes.includes(forbiddenCode),
+          false,
+          JSON.stringify(result, null, 2),
+        );
+      }
+      await assert.rejects(
+        readFile(join(packet.packetRoot, 'packet.md'), 'utf8'),
+      );
+    }
+  }
+});
+
+for (const [name, mutate, forbiddenCodes] of [
+  [
+    'sources',
+    (manifest) => delete manifest.sources,
+    ['MISSING_PASS_OUTCOME_EVIDENCE', 'SHADOW_RECONCILIATION'],
+  ],
+  [
+    'run',
+    (manifest) => delete manifest.run,
+    ['MISSING_PASS_OUTCOME_EVIDENCE', 'SHADOW_RECONCILIATION'],
+  ],
+  [
+    'run id',
+    (manifest) => delete manifest.run.id,
+    ['MISSING_PASS_OUTCOME_EVIDENCE', 'SHADOW_RECONCILIATION'],
+  ],
+  [
+    'artifacts array',
+    (manifest) => {
+      manifest.artifacts = 'not-an-array';
+    },
+    ['MISSING_PASS_OUTCOME_EVIDENCE', 'SHADOW_RECONCILIATION'],
+  ],
+  [
+    'gaps array',
+    (manifest) => {
+      manifest.gaps = 'not-an-array';
+    },
+    ['MISSING_PASS_OUTCOME_EVIDENCE', 'SHADOW_RECONCILIATION'],
+  ],
+]) {
+  test(`missing manifest ${name} returns diagnostics and withdraws stale output`, async () => {
+    const packet = await createPacketFixture({ profile: 'standard' });
+    tempRoots.push(packet.tempRoot);
+    await writeFile(
+      join(packet.packetRoot, 'packet.md'),
+      '# last known good\n',
+      'utf8',
+    );
+    mutate(packet.manifest);
+    await writeJson(packet.manifestPath, packet.manifest);
+
+    const result = await validatePacket(packet.packetRoot);
+    const errorCodes = result.errors.map(({ code }) => code);
+    assert.equal(result.valid, false, JSON.stringify(result, null, 2));
+    assert.ok(
+      errorCodes.includes('MISSING_REQUIRED_FIELD'),
+      JSON.stringify(result, null, 2),
+    );
+    for (const code of forbiddenCodes) {
+      assert.equal(
+        errorCodes.includes(code),
+        false,
+        JSON.stringify(result, null, 2),
+      );
+    }
+    await assert.rejects(
+      readFile(join(packet.packetRoot, 'packet.md'), 'utf8'),
+    );
+  });
+}
+
+test('packet validation rejects a conditional wave without an activating condition', async () => {
+  const packet = await createPacketFixture({ profile: 'standard' });
+  tempRoots.push(packet.tempRoot);
+  packet.manifest.execution.waves.splice(-1, 0, {
+    waveId: 'wave-dead-conditional',
+    mode: 'contradiction-resolution',
+    taskClass: 'mechanical-recon',
+    classFloor: 'mechanical-recon',
+    selectionReason: 'Dead conditional wave regression fixture.',
+    lanes: [
+      {
+        laneId: 'lane-dead-conditional',
+        scope: 'packet/dead-conditional',
+        writeRoot: 'raw/dossiers/dead-conditional.json',
+      },
+    ],
+    conditional: true,
+  });
+  packet.manifest.execution = approveExecution(packet.manifest.execution);
+  await packet.persist();
+
+  const result = await validatePacket(packet.packetRoot);
+  assert.equal(result.valid, false, JSON.stringify(result, null, 2));
+  assert.deepEqual(
+    result.errors.map(({ code }) => code),
+    ['MISSING_WAVE_CONDITION'],
+  );
+});
+
+test('public validation returns categorical JSON for object-valued waves', async () => {
+  const cliPath = fileURLToPath(
+    new URL('../scripts/validate-packet.mjs', import.meta.url),
+  );
+  const packet = await createPacketFixture();
+  tempRoots.push(packet.tempRoot);
+  packet.manifest.execution.waves = {};
+  await packet.persist();
+
+  const cli = spawnSync(process.execPath, [cliPath, packet.packetRoot], {
+    encoding: 'utf8',
+  });
+  assert.equal(cli.status, 1, cli.stderr || cli.stdout);
+  assert.doesNotMatch(cli.stderr, /TypeError/);
+  const result = JSON.parse(cli.stdout);
+  assert.equal(result.valid, false, JSON.stringify(result, null, 2));
+  assert.ok(
+    result.errors.some(
+      (error) =>
+        error.code === 'MISSING_REQUIRED_FIELD' &&
+        error.path === '$.execution.waves',
+    ),
+    JSON.stringify(result, null, 2),
+  );
+});
+
+test('worker artifacts use existing closed identity fields and reject invented mode fields', async () => {
+  const packet = await makePacket({ profile: 'standard' });
+  const dossier = JSON.parse(
+    await readFile(
+      join(packet.packetRoot, 'raw', 'dossiers', 'dossier-1.json'),
+      'utf8',
+    ),
+  );
+  const reviewResult = packet.reviewPaths.get('review-semantic').value;
+
+  assert.equal(validateArtifactShape(dossier).valid, true);
+  assert.equal(validateArtifactShape(reviewResult).valid, true);
+  const approvedPacket = await validatePacket(packet.packetRoot);
+  assert.equal(
+    approvedPacket.valid,
+    true,
+    JSON.stringify(approvedPacket, null, 2),
+  );
+
+  for (const artifact of [dossier, reviewResult]) {
+    const rejected = validateArtifactShape({
+      ...artifact,
+      manifestWaveMode: 'semantic-verification',
+      workerAssignmentMode: 'verify',
+    });
+    assert.equal(rejected.valid, false);
+    assert.deepEqual(
+      rejected.errors
+        .filter((error) => error.code === 'UNKNOWN_FIELD')
+        .map((error) => error.path)
+        .sort(),
+      ['$.manifestWaveMode', '$.workerAssignmentMode'],
+    );
+  }
+});
+
+test('exact targets preserve explicit nullable controls', async () => {
+  const packet = await createPacketFixture();
+  tempRoots.push(packet.tempRoot);
+  packet.manifest.execution.target.effort = null;
+  packet.manifest.execution.target.reasoningMode = null;
+  packet.manifest.execution.target.serviceTier = null;
+  packet.manifest.execution = approveExecution(packet.manifest.execution);
+  await packet.persist();
+  const accepted = await compileValidatedRun(packet.packetRoot);
+  assert.equal(accepted.valid, true, JSON.stringify(accepted, null, 2));
+  assert.equal(accepted.validatedRun.routing.target.effort, null);
 });
 
 test('rejects illegal claim state transitions and quick verification', async () => {
@@ -791,12 +1616,7 @@ test('rejects connected-resource version drift and insufficient provenance', asy
   await expectInvalid(provenance, 'INSUFFICIENT_PROVENANCE');
 });
 
-test('rejects approval fingerprint drift and unresolved verification challenge', async () => {
-  const approval = await makePacket();
-  approval.manifest.execution.effort = 'low';
-  await writeJson(approval.manifestPath, approval.manifest);
-  await expectInvalid(approval, 'APPROVAL_FINGERPRINT_MISMATCH');
-
+test('rejects an unresolved verification challenge', async () => {
   const challenged = await makePacket({ profile: 'standard' });
   challenged.ledger.claims[0].challenges.push({
     id: 'challenge-1',

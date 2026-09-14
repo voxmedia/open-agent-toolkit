@@ -469,8 +469,10 @@ describe('bundle asset inventory consistency', () => {
         for (const path of [
           ['skills', 'recon', 'SKILL.md'],
           ['skills', 'recon', 'references', 'packet-contract.md'],
+          ['skills', 'recon', 'scripts', 'prepare-routing.mjs'],
           ['skills', 'recon', 'scripts', 'validate-packet.mjs'],
           ['skills', 'recon', 'scripts', 'lib', 'contracts.mjs'],
+          ['skills', 'recon', 'scripts', 'lib', 'routing.mjs'],
           ['agents', 'recon-worker.md'],
         ]) {
           expect(existsSync(join(assetsRoot, ...path)), path.join('/')).toBe(
