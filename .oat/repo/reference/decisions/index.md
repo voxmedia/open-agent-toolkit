@@ -10,6 +10,8 @@
 
 | ID                                       | Date       | Status     | Title                                                                                                  | Legacy  |
 | ---------------------------------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------ | ------- |
+| DR-260911-use-session-local-recon        | 2026-09-11 | accepted   | Use session-local recon approval                                                                       | -       |
+| DR-260910-restore-economical-recon       | 2026-09-10 | accepted   | Restore economical recon routing and caller-owned judgment                                             | -       |
 | DR-260908-a-stop-whose-remedy-lies       | 2026-09-08 | accepted   | A STOP whose remedy lies inside the plan's own file scope is closed by a dated refresh, not a park     | -       |
 | DR-260908-bundled-skills-declare         | 2026-09-08 | accepted   | Bundled skills declare metadata.version only; the top-level alias retires on a fixed schedule          | -       |
 | DR-260907-additive-post-selection        | 2026-09-07 | accepted   | Additive post-selection recovery envelopes                                                             | -       |
@@ -41,7 +43,7 @@
 | DR-260906-use-a-three-artifact-lite      | 2026-09-06 | accepted   | Use a three-artifact Lite project shape                                                                | -       |
 | DR-260906-use-proportionate-proof        | 2026-09-06 | accepted   | Use proportionate proof instead of universal TDD                                                       | -       |
 | DR-260904-remove-dispatch-receipt-chain  | 2026-09-04 | accepted   | Remove dispatch receipt chain from recon packet validation                                             | -       |
-| DR-260831-approval-bound-homogeneous     | 2026-08-31 | accepted   | Approval-bound homogeneous dispatch                                                                    | -       |
+| DR-260831-approval-bound-homogeneous     | 2026-08-31 | superseded | Approval-bound homogeneous dispatch                                                                    | -       |
 | DR-260831-canonical-validated-run        | 2026-08-31 | superseded | Canonical validated-run boundary                                                                       | -       |
 | DR-260831-cause-specific-fail-closed     | 2026-08-31 | accepted   | Cause-specific fail-closed runtime terminal                                                            | -       |
 | DR-260831-completed-ref-authority        | 2026-08-31 | accepted   | Completed-ref authority                                                                                | -       |
