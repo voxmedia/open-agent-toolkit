@@ -1,9 +1,10 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-quick-start
 oat_blockers: []
 oat_last_updated: 2026-09-14
 oat_generated: false
+oat_template: false
 ---
 
 # Discovery: oat-doctor-router
@@ -17,126 +18,119 @@ Discovery is for requirements and decisions, not implementation details.
 
 ## Initial Request
 
-{Copy of user's initial request}
+Backlog item `BL-260911-make-oat-doctor` (high), from the operator's 2026-09-11 ask: one doctor that looks at everything, presents potential issues, and asks where to dive deeper; in the config area it teaches rather than flags — what a missing setting does, why you might or might not want it, how to set it, and what belongs at project versus user level. Someone who has not initialized PJM, whose PJM tree drifted, whose root agent instructions lack the OAT context sections, or whose config carries a legacy value should learn it from one place. The operator's own framing: "maybe this should all just be one thing, and we just surface the different things we can run doctor on", and "basically it's just a collaborative thing."
 
 ## Clarifying Questions
 
-### Question 1: {Topic}
+### Question 1: One skill or a family?
 
-**Q:** {Question}
-**A:** {User's answer}
-**Decision:** {What this means for the project}
+**Q:** `oat-doctor` plus `oat-doctor-config`, `oat-doctor-docs`, and so on, or one router?
+**A:** One router with dives (operator, 2026-09-11; recorded in the backlog item's Out of scope).
+**Decision:** One skill, `oat-doctor`, rewritten. Areas are dives inside it; a dive that needs its own apply machinery routes to the skill that owns it.
+
+### Question 2: Where does the knowledge come from?
+
+**Q:** Should the doctor carry its own descriptions of config keys and legacy values?
+**A:** No. The current skill carries an eleven-key fallback list and a hard-coded pack manifest, both of which drift from the CLI. The CLI already exposes what the doctor needs: `oat config describe --json` returns 109 entries with group, file, scope, type, default, mutability, owning command, and description, and six of those descriptions already say "Deprecated" or "Legacy"; `oat pjm doctor --json` returns twelve `pjm:*` checks with status and message; `oat instructions validate --json` returns per-file sync status; `oat doctor --json` returns the environment checks; the bundled docs under `~/.oat/docs/cli-utilities/` carry the five-surface model and the per-key guidance.
+**Decision:** The doctor reads, it does not restate. Legacy detection is sourced from the CLI (design decides how, see Open Questions). The fallback description list and the hard-coded pack manifest are removed.
+
+### Question 3: What does "collaborative" mean under automation?
+
+**Q:** The doctor runs from `oat-docs` ("want me to check your setup?") and could run unattended.
+**A:** Unattended, the sweep report is the whole output. Interactively, every dive ends in an offered fix and applies nothing itself.
+**Decision:** Read-only invariant kept from today's skill; fixes are the exact CLI command or the owning skill, run only on the person's approval.
 
 ## Solution Space
 
-_Include this section only when the request is exploratory or multiple viable approaches exist. For well-understood requests with an obvious approach, omit or replace with a single sentence stating the chosen direction._
+### Approach 1: One router skill over existing CLI signals _(Recommended, chosen)_
 
-{Divergent exploration of the problem space before converging on an approach. Capture genuinely distinct strategies, not minor variations. Include 2-3 approaches as needed.}
+**Description:** Rewrite `oat-doctor` as a five-area sweep (config, PJM, agent instructions, docs, tools) composed from the CLI's existing `--json` commands, followed by a grouped report and a "where do you want to dive?" prompt. Each dive is a conversation that teaches from the bundled docs and the `describe` output and offers fixes.
+**When this is the right choice:** The signals already exist as machine-readable output and only the routing and the teaching are missing. That is the case today.
+**Tradeoffs:** The skill grows in prose; it depends on the CLI's JSON shapes staying stable (pinned by contract tests).
 
-### Approach 1: {Strategy Name} _(Recommended)_
+### Approach 2: A new `oat doctor --deep` CLI diagnostic
 
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
+**Description:** Move the sweep into the CLI as one command that aggregates the other doctors and emits one report; the skill becomes a thin presenter.
+**When this is the right choice:** When the same aggregate is needed by CI or by non-agent consumers.
+**Tradeoffs:** New CLI surface, lockstep bump, docs, tests, for an aggregation an agent can do by calling four commands; the teaching half cannot live in the CLI anyway. Rejected; noted as a follow-up trigger.
 
-### Approach 2: {Strategy Name}
+### Approach 3: A skill family (`oat-doctor-config`, `oat-doctor-docs`, ...)
 
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
+**Description:** One skill per area, each installable separately.
+**When this is the right choice:** When areas have independent owners and lifecycles.
+**Tradeoffs:** Discovery is worse (the person must know which doctor to run), and the cross-area "here is everything wrong" view disappears. Rejected by the operator.
 
 ### Chosen Direction
 
-**Approach:** {Which approach was selected}
-**Rationale:** {Why this approach over the alternatives}
-**User validated:** {Yes/No — explicit buy-in before proceeding}
+**Approach:** Approach 1.
+**Rationale:** Every signal the sweep needs exists; the missing pieces are routing and teaching, both prose.
+**User validated:** Yes (2026-09-11, the backlog item; 2026-09-14, quick workflow chosen).
 
 ## Options Considered
 
-{Specific implementation options within the chosen approach. More granular than Solution Space — captures decisions about libraries, patterns, data formats, etc.}
+### Option A: Source legacy detection by scanning `describe` descriptions for "deprecated" / "legacy" _(considered)_
 
-### Option A: {Option Name}
+Works today with no CLI change (six keys match), but is a string match on prose and would silently miss a new deprecation worded differently.
 
-**Description:** {What this option involves}
+### Option B: Add a structured deprecation field to `oat config describe` entries _(chosen for design)_
 
-**Pros:**
+A small change to an existing command's output (`deprecated: { supersededBy }` on the six entries and any future one), with a CLI test that ties the field to the config module's legacy tables. The doctor then reads a field, not prose. This is not a new diagnostic; it is the existing describe command carrying a fact it already states in words. Design confirms the exact shape.
 
-- {Benefit 1}
-- {Benefit 2}
+### Option C: Detect "missing OAT context sections" by heading presence
 
-**Cons:**
-
-- {Drawback 1}
-- {Drawback 2}
-
-**Chosen:** {A/B/Neither}
-
-**Summary:** {1-2 sentence summary of the chosen option and why}
+The CLI writes known headings into the root instructions (`## Tool Packs` from tools install with project guidance, `### Project Management` and `### Decision Records` from PJM init, `## Documentation` from docs bootstrap). Presence checks against what is installed or adopted are enough; content quality routes to `oat-agent-instructions-analyze`. Chosen.
 
 ## Key Decisions
 
-1. **{Decision Category}:** {Decision made and why}
-2. **{Decision Category}:** {Decision made and why}
+- One `oat-doctor` skill; areas are dives; unattended runs report only.
+- Read-only: the doctor never edits config, PJM, instructions, docs, or skills; it offers the exact command or the owning skill.
+- Knowledge is sourced from the CLI (`describe`, the doctors, `instructions validate`) and the bundled docs; the eleven-key fallback list and the hand-maintained pack manifest go.
+- Legacy detection is a structured field on `describe` entries, backed by a CLI contract test (Option B).
+- The docs dive detects and routes to `oat-docs-bootstrap`; it carries no docs logic. The bootstrap front door itself is `BL-260911-make-docs-bootstrap-a-front` and is not blocked by this project.
+- `--summary` keeps today's dashboard so existing callers and docs stay true.
 
 ## Constraints
 
-- {Constraint 1}
-- {Constraint 2}
+- No new CLI diagnostic command; the one CLI change is the deprecation field on an existing command's JSON output (lockstep bump).
+- Bundled skill changes take one `metadata.version` bump per changed skill and the lockstep bump; `pnpm check`, `pnpm test`, `pnpm test:skills`, `pnpm lint`, `pnpm format` green.
+- The skill stays `disable-model-invocation: true`, `user-invocable: true`, and read-only (`allowed-tools` unchanged).
+- Nothing in the doctor duplicates a record an existing consumer already reads (repository rule).
 
 ## Success Criteria
 
-- {Criterion 1}
-- {Criterion 2}
+- `oat-doctor` with no arguments prints one grouped report across five areas (finding, severity, evidence, fix path) and asks which area to dive into; `--summary` keeps the dashboard.
+- A dive explains findings and unset keys from the bundled docs and `describe`, answers questions, and offers the exact fix; nothing is applied without approval.
+- Legacy config values are reported from the CLI's structured field; adding a deprecation in the CLI surfaces in the doctor with no skill edit (pinned by a contract test).
+- Under `OAT_NON_INTERACTIVE=1` or with no response channel, the sweep report is the whole output.
+- Verified on this repository (adoption declared, checks passing), on `~/code/vox/pntr` (no `documentation` config), and on a scratch repo with no `.oat/` (every area offers its bootstrap).
 
 ## Out of Scope
 
-- {Thing we explicitly decided not to do}
-- {Thing we explicitly decided not to include in this phase}
+- A doctor skill family; auto-fixing; a new CLI diagnostic.
+- The docs bootstrap front door and docs-directory shape (`BL-260911-make-docs-bootstrap-a-front`).
+- Per-tool scope migration (`BL-260911-support-per-tool-scope`).
 
 ## Deferred Ideas
 
-{Ideas that came up during discovery but are intentionally out of scope for now}
-
-- {Idea 1} - {Why deferred}
-- {Idea 2} - {Why deferred}
+- An aggregate `oat doctor --deep` CLI command, if CI or a non-agent consumer ever needs the combined report.
+- A `describe`-driven "explain this key" subcommand in the CLI, if people want the teaching without a skill.
 
 ## Open Questions
 
-{Questions that need resolution before or during specification (and later design)}
-
-- **{Question Category}:** {Question that needs answering}
-- **{Question Category}:** {Question that needs answering}
+- Exact shape of the deprecation field on `describe` entries and which CLI test pins it to the legacy tables (design).
+- How the sweep orders and severity-rates findings across areas so the report stays short on a healthy repo (design).
+- Which bundled docs pages each dive reads, so the teaching is grounded and the skill does not restate them (design).
 
 ## Assumptions
 
-{Assumptions we're making that need validation}
-
-- {Assumption 1}
-- {Assumption 2}
+- `oat config describe --json`, `oat pjm doctor --json`, `oat instructions validate --json`, and `oat doctor --json` keep their current shapes (verified 2026-09-14 on CLI 0.2.74).
+- The bundled docs are installed at `~/.oat/docs/` whenever the core pack is; when absent the doctor says so and points at `oat tools install core`.
 
 ## Risks
 
-{Potential risks identified during discovery}
-
-- **{Risk Name}:** {Description}
-  - **Likelihood:** Low / Medium / High
-  - **Impact:** Low / Medium / High
-  - **Mitigation Ideas:** {How to address}
+- The skill grows long; mitigated by keeping each dive to the findings, the docs pointer, and the fix, and by not restating docs.
+- JSON shape drift in the CLI; mitigated by contract tests over the fields the skill names.
 
 ## Next Steps
 
-Use this discovery artifact to drive the next workflow step:
-
-- **Spec-driven mode:** continue to `oat-project-design` (which confirms
-  requirements and produces both `spec.md` and `design.md`).
-- **Spec-driven mode → formalize-only:** use `oat-project-spec` standalone
-  if you want a formalized requirements artifact but aren't ready to
-  design yet.
-- **Quick mode → straight to plan:** proceed directly to `plan.md` when
-  scope is clear and no architecture decisions remain.
-- **Quick mode → optional lightweight design:** produce a focused
-  `design.md` (architecture, components, data flow, testing) before
-  planning. Choose this when discovery surfaced architecture choices
-  or component boundaries.
-- **Quick mode → promote:** escalate to spec-driven if discovery revealed
-  the scope is larger or more complex than expected.
+- Lightweight design (draft-and-review), then plan, plan gate, implement.
