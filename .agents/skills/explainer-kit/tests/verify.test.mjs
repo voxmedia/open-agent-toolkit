@@ -21,6 +21,7 @@ import {
 } from '../scripts/lib/browser-runtime.mjs';
 import { recordRun } from '../scripts/record.mjs';
 import {
+  containsLedgerTerm,
   extractRenderedClaims,
   runVerify,
   verifyRun,
@@ -144,6 +145,26 @@ function browserRuntimeOptions(layout = {}) {
     env: {},
   };
 }
+
+test('containsLedgerTerm requires token boundaries, not substrings', () => {
+  assert.equal(
+    containsLedgerTerm('Alpha migration shipped', 'Alpha migration'),
+    true,
+  );
+  assert.equal(
+    containsLedgerTerm('Explainer Kit recap', 'Explainer Kit'),
+    true,
+  );
+  assert.equal(
+    containsLedgerTerm('agent-authored-recap', 'agent-authored-recap'),
+    true,
+  );
+  assert.equal(containsLedgerTerm('agent-authored-recap', 'recap'), false);
+  assert.equal(containsLedgerTerm('p01-t08 completed', 'p01'), false);
+  assert.equal(containsLedgerTerm('120 tasks', '12'), false);
+  assert.equal(containsLedgerTerm('2012-09-14', '12'), false);
+  assert.equal(containsLedgerTerm('recapture the flow', 'recap'), false);
+});
 
 test('extractRenderedClaims keys terms and normalized facts by subject', async () => {
   const html = await readFile(join(fixtures, 'valid.html'), 'utf8');

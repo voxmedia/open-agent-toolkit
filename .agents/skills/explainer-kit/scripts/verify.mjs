@@ -150,6 +150,18 @@ export function extractRenderedClaims(html) {
   return { terminology, numericClaims, statuses, claims };
 }
 
+export function containsLedgerTerm(text, term) {
+  if (
+    typeof text !== 'string' ||
+    typeof term !== 'string' ||
+    term.length === 0
+  ) {
+    return false;
+  }
+  const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`(?<![A-Za-z0-9_-])${escaped}(?![A-Za-z0-9_-])`).test(text);
+}
+
 function extractResidualClaimSegments(html, sectionId) {
   const segments = [];
   const stack = [
@@ -309,7 +321,9 @@ export async function verifyRun({
     const renderedClaims = extractRenderedClaims(html);
     const plainText = htmlText(html);
     for (const { term } of ledger.terminology ?? []) {
-      if (plainText.includes(term)) renderedClaims.terminology[term] = term;
+      if (containsLedgerTerm(plainText, term)) {
+        renderedClaims.terminology[term] = term;
+      }
     }
     const cohesion = checkArtifactCohesion(
       [{ id: artifact.id, cohesion: renderedClaims }],

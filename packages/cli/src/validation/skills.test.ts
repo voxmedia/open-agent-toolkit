@@ -1488,7 +1488,7 @@ describe('validateOatSkills', () => {
 
   it('tracks the current explainer skill family versions', async () => {
     for (const [skillName, expectedVersion] of [
-      ['explainer-kit', '3.0.0'],
+      ['explainer-kit', '3.0.1'],
       ['oat-explainer-kit', '1.0.9'],
     ]) {
       const content = await readRepoFile(

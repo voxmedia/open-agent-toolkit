@@ -4,7 +4,7 @@ description: Use when building destination-neutral visual explainer artifacts fr
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Agent, mcp__*
 metadata:
-  version: 3.0.0
+  version: 3.0.1
 ---
 
 # Explainer Kit
@@ -116,7 +116,7 @@ visual checks passed. `built-needs-review` is a usable artifact whose browser
 rung was unavailable or found issues. `failed` and `incomplete` do not satisfy
 generation. Do not write into the run root after recording.
 
-## Progress Indicators
+## Progress Indicators (User-Facing)
 
 For interactive runs, show a concise banner and stage updates:
 
