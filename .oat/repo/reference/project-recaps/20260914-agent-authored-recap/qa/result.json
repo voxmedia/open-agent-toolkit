@@ -1,5 +1,5 @@
 {
-  "artifactSha256": "sha256:1951343874ecebba50d66663f473f3f5c9ebe3235bc113300287b8e45cb7b723",
+  "artifactSha256": "sha256:e09bd84b8350c2e61a70011e74cc44f53b4bc48b3ceef58a5733692d1ab7708d",
   "checks": {
     "parse": {
       "status": "pass"
@@ -23,14 +23,9 @@
       "status": "pass"
     }
   },
-  "rung": "playwright",
-  "screenshots": [
-    "qa/320.png",
-    "qa/768.png",
-    "qa/1440.png"
-  ],
+  "rung": "none",
+  "reason": "browser-driver-not-installed",
   "visual": {
-    "verdict": "pass",
-    "notes": "Playwright probes passed at all representative widths."
+    "verdict": "none"
   }
 }

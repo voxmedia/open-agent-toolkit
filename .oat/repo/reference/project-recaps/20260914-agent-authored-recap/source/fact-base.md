@@ -1,0 +1,2797 @@
+# Fact base
+
+- oat_status: complete
+- oat_ready_for: null
+- oat_blockers: []
+- oat_last_updated: 2026-09-14
+- oat_generated: true
+- oat_summary_last_task: p06-t18
+- oat_summary_revision_count: 0
+- oat_summary_includes_revisions: []
+- The project replaced an implementation-tail recap path that depended on five provider seams, adaptive expansion, and separate publication and durability machinery but produced no recap on normally configured hosts. It delivered one agent-authored HTML flow for project recaps, program recaps, plan-time project explainers, and direct use, while preserving bounded facts, mechanical verification, and archive-safe evidence.
+- - Rebuilt Explainer Kit around `bundle → host-agent author → verify → record`: allowlisted inputs become a canonical fact base and claims ledger, the host agent authors one recipe-guided HTML page, and the flow writes an exact manifest-v2 package with immutable hashes.
+- - Added browser-free structure, safety, source-dumping, and bidirectional claim checks, followed by a host-browser → Playwright → browser-free verification ladder. Outcomes now truthfully distinguish `built`, `built-needs-review`, `failed`, and `incomplete`.
+- - Retired callback orchestration, critic and planner seams, multi-artifact expansion, durability attestation, S3 publication, release-candidate tooling, obsolete schemas, and their tests and configuration.
+- - Routed project completion, implementation closeout, autonomous runs, planning, summaries, and both wave program-close callers through the shared Generate contract and documented the new workflow.
+- - Added persisted retry-or-skip evidence, strict manifest-v2 archive validation for project recaps, generic package validation for other recipes, fresh-host and negative-control coverage, and a repository-wide retired-reference guard.
+- - Generated this project's Playwright-verified `project-explainer` and the 2026-08-31 execution program's complete `program-recap`; the latter passed every browser-free and package check as `built-needs-review` because no browser driver was installed.
+- - **Explainers are agent-authored; the provider seams and durability path are retired** — The host agent owns prose and page composition while the core owns allowlisted evidence, safety, traceability, verification, and immutable recording. One recipe-selected flow serves every caller; the archive export is the durable copy, a browser-less verified artifact remains usable as `built-needs-review`, failures require explicit retry or skip, and no new CLI command was added for skill-owned mechanics.
+- - Non-project recap packages compose generic manifest, immutable-hash, and exact-inventory validation directly; the project archive validator remains strictly pinned to the `project-recap` recipe.
+- - Persisted `skip/failed_attempt` intent may carry one validated project-relative evidence locator so a fresh process can satisfy the terminal guard without reopening discovery.
+- - The documented QA and failure records were aligned to the defensible shipped validators: exact structural fields, canonical run-root binding, and mutually exclusive manifest or failure evidence.
+- - Final review exposed several fail-open edges in reuse ordering, diagnostic sanitization, multi-root locators, and subject-aware claim tracing. Phase 6 closed them with reproduction-grade controls, including real tracked-package verification and neutralized-guard failures.
+- - The configured exit gate then found that a test depended on this shared project's live package and would fail after archival. An explicitly authorized bounded remediation replaced that dependency with provenance-recorded byte-exact fixtures and preserved a load-bearing live-source sweep.
+- - The program recap host lacked browser control and its Playwright driver was unavailable. The ladder downgraded honestly to browser-free verification, retained the usable artifact, and recorded the reason instead of claiming visual inspection.
+- - Browser-free success is accepted as `built-needs-review` rather than blocking lifecycle completion, preserving availability while carrying an explicit human-review signal.
+- - The archive command stays recipe-specific instead of becoming a generic explainer validator; other recipes use the same underlying contracts without widening the archive boundary.
+- - Deterministic generation mechanics remain in skill scripts rather than a new CLI surface, avoiding lockstep API expansion while all current consumers remain skill-driven.
+- - Four whitespace-only diagnostics in immutable program recap HTML were left unchanged because cosmetic edits would require regenerating QA and manifest hashes without behavioral benefit.
+- - New runs use `explainer-kit.manifest/v2`; the v1 package shape and retired durability outcomes are not compatibility surfaces.
+- - Lifecycle consumers should invoke the shared Generate flow and read persisted intent plus `manifest.json` and `qa/result.json`. Existing `skip/capability_probe` records remain readable but are no longer written.
+- - `verifySelectedProjectRecapForArchive` remains project-recap-only. Program recaps, project explainers, and direct-input runs validate through the generic manifest/hash/inventory contract.
+- - The canonical repository decision is `DR-260911-explainers-are-agent-authored`; `BL-260727-make-explainer-run-durability` was archived `wont_do` because archive export now owns durability.
+- - Regenerate the immutable 2026-08-31 program recap package when a substantive content change is needed; that regeneration may also remove its four whitespace-only diagnostics.
+- - **project-recap:** generated — needs review — `explainers/agent-authored-recap-recap` — browser driver unavailable; all browser-free and traceability checks passed.
+- p01-r3-governance-exhausted-20260911: review round 3 requested changes; one Important terminal-guard assurance gap remains and automatic retries are exhausted; see reviews/p01-review-2026-09-11T173707Z.md.
+- p01-governance-manual-fix-authorized-20260911: operator authorized one bounded terminal-guard remediation and one independent verification review; automatic retry accounting remains exhausted and unchanged.
+- phase-outcome-p01-20260911T1902Z: PASS; 0 Critical, 0 Important, 3 deferred Medium; 2 automatic fix iterations plus 1 operator-authorized remediation; independent verification artifact reviews/p01-review-2026-09-11T185739Z.md.
+- phase-outcome-p02-20260911T2027Z: PASS; 0 Critical, 0 Important, 0 Medium; 1 automatic fix iteration; independent re-review artifact reviews/p02-review-2026-09-11T202150Z.md.
+- stop-p03-governance-review-20260911T2304Z: governance-final round 3 found 1 Important typed-state compatibility defect; automatic review/fix budget exhausted; operator direction required; see reviews/p03-review-2026-09-11T225420Z.md.
+- stop-p03-independent-verification-20260911T2332Z: operator-authorized verification found 1 Important raw-string normalization mismatch; authorization consumed; operator direction required; see reviews/p03-review-2026-09-11T232506Z.md.
+- phase-outcome-p03-20260912T0021Z: PASS; 0 Critical, 0 Important, 0 Medium, 0 Minor; 2 automatic fix iterations plus 2 operator-authorized remediations; final verification artifact reviews/p03-review-2026-09-12T001522Z.md.
+- phase-p04-outcome-20260912T020833Z: Phase p04 passed after one bounded review-fix round; see reviews/p04-review-2026-09-12T020833Z.md.
+- final-review-round3-override-20260912: round 3 found one Medium
+- `SECRET_?KEY` sanitizer gap; the operator authorized one bounded `p06-t10`
+- fix, a fresh Phase 6 review, and exactly one fourth final review. This is not
+- an unlimited retry extension and does not consume Phase 6 recovery attempts.
+- phase-outcome-p06-20260912T200228Z: PASS; the operator-authorized re-review
+- closed the `SECRET_?KEY` finding with 0 Critical, 0 Important, 0 Medium, and 0
+- Minor; see reviews/p06-review-2026-09-12T200228Z.md. Phase 6 recovery usage
+- remains zero.
+- final-review-round4-20260912T201509Z: PASS; 0 Critical, 0 Important, 0 Medium,
+- and the sole approved immutable-HTML whitespace Minor; see
+- reviews/final-review-2026-09-12T201509Z.md. The one-cycle operator override is
+- consumed; continue to the configured implementation exit gate.
+- target=cursor-fable-5-1-high threshold=important findings=critical:0,important:1,medium:0,minor:2 exit=1 status=blocked artifact=.oat/projects/shared/agent-authored-recap/reviews/final-review-2026-09-12T203608Z.md run=6cf37a1e-a33f-40af-9b33-75937b421ac5
+- phase-outcome-p06-gate-remediation-20260912T230247Z: PASS; configured-gate
+- remediation attempt 1 completed with 47/47 tasks, both tracked packages passing
+- fresh verification, and 0 Critical, Important, Medium, or Minor findings; see
+- reviews/p06-review-2026-09-12T230247Z.md. Phase 6 recovery remains zero.
+- target=cursor-fable-5-1-high threshold=important findings=critical:0,important:1,medium:0,minor:1 exit=1 status=blocked artifact=.oat/projects/shared/agent-authored-recap/reviews/final-review-2026-09-13T001401Z.md run=756b124f-64ad-492b-96d8-2c8c9d22bbd3
+- final-gate-exception-authorized-20260913: operator authorized only p06-t17 and p06-t18, current-basis lifecycle verification, and exactly one additional configured exit-gate review beyond the exhausted 2/2 budget; Phase 6 recovery remains zero, and another blocking gate must stop.
+- p06-t17-historical-fixture-sweep-correction-20260913: byte-exact archive-safe snapshots contain retired historical vocabulary, so p06-t17 now owns a narrowly tested exclusion for only its immutable fixture subtree; live-source detection remains required.
+- phase-p06-exceptional-remediation-complete-20260913: p06-t17 and p06-t18 completed at 50/50 total tasks; archive-free controls, narrow historical-fixture sweep exclusion, all repository gates, and immutable package checks passed; Phase 6 recovery remains zero and reviews are pending.
+- phase-outcome-p06-exceptional-20260913: PASS; 0 Critical, 0 Important, 0 Medium, 1 Minor state-pointer correction resolved during receive; 18/18 tasks complete, packages unchanged, and Phase 6 recovery remains zero; see reviews/archived/p06-review-2026-09-13T043549Z.md.
+- final-current-basis-pass-20260913: PASS; 0 Critical, 0 Important, 0 Medium, 2 Minor; corrected the Phase 6 progress label and retained the approved immutable-HTML whitespace deferral; exactly one exceptional configured exit-gate review remains authorized; see reviews/archived/final-review-2026-09-13T044417Z.md.
+- target=cursor-fable-5-1-high threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/shared/agent-authored-recap/reviews/final-review-2026-09-13T050025Z.md run=52787dbb-20c4-4fe7-b484-a72f0cd20c35
+- retro artifact=.oat/projects/shared/agent-authored-recap/references/project-retro.md evidence_used=archived-review-markdown,gate-receipts,git-history,lifecycle-artifacts,project-log,recap-package-receipts,session-transcript evidence_unavailable=oat-execution-learnings promotions=2 upstream=2 apply=deferred filing=deferred
+- oat_status: complete
+- oat_ready_for: null
+- oat_blockers: []
+- oat_last_updated: 2026-09-13
+- oat_current_task_id: null
+- oat_generated: false
+- **Started:** 2026-09-09
+- **Last Updated:** 2026-09-13
+- > This document is used to resume interrupted implementation sessions.
+- >
+- > Conventions:
+- >
+- > - `oat_current_task_id` always points at the **next plan task to do** (not the last completed task).
+- > - When all plan tasks are complete, set `oat_current_task_id: null`.
+- > - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews` (e.g., `| final | code | passed | ... |`).
+- > - Keep phase/task statuses consistent with the Progress Overview table so restarts resume correctly.
+- > - Before running the `oat-project-pr-final` skill, ensure `## Final Summary (for PR/docs)` is filled with what was actually implemented.
+- | Phase   | Status    | Tasks | Completed |
+- | Phase 1 | completed | 17    | 17/17     |
+- | Phase 2 | completed | 4     | 4/4       |
+- | Phase 3 | completed | 8     | 8/8       |
+- | Phase 4 | completed | 2     | 2/2       |
+- | Phase 5 | completed | 1     | 1/1       |
+- | Phase 6 | completed | 18    | 18/18     |
+- **Total:** 50/50 tasks completed
+- **Status:** completed
+- **Started:** 2026-09-09
+- **Outcome (what changed):**
+- - Added the browser-free `bundle → author → verify → record` flow with manifest-v2 packages and direct generic package validation.
+- - Replaced project recap archive validation with the strict v2 package contract while preserving the exact project-recap recipe boundary.
+- - Proved the flow over tracked program material before deleting callback orchestration, durability/publishing, release-candidate, smoke, and adapter tooling.
+- - Removed explainer publish configuration and migrated completion-transaction fixtures to the new outcome/package vocabulary.
+- - Added a code-scope retired-reference sweep; bumped the core to 3.0.0, adapter to 1.0.9, and public packages to 0.2.73.
+- **Key files touched:**
+- - `.agents/skills/explainer-kit/scripts/{bundle,verify,record}.mjs` - replacement core flow.
+- - `.agents/skills/explainer-kit/tests/flow.e2e.test.mjs` - real-material proof and negative controls.
+- - `packages/cli/src/commands/project/archive/archive-utils.ts` - strict project-recap manifest-v2 archive boundary.
+- - `.agents/skills/oat-explainer-kit/scripts/check-terminal-outcome.mjs` - new outcomes and guarded `skip/failed_attempt`.
+- - `tools/smoke/explainer-kit/no-retired-references.test.mjs` - executable retired-reference invariant.
+- **Verification:**
+- - Run: full ordered CI gate list; forced uncached Turbo tests; standalone smoke/skill/script/skill-validation suites; lint; format; focused package and negative-control suites.
+- - Result: all final gates passed. Forced Turbo reported `Cached: 0`; one unrelated visual-companion five-second startup timeout passed independently and on the immediate full retry.
+- **Notes / Decisions:**
+- - Operator correction `cont-agent-authored-recap-p01-plan-correction-1` kept `verifySelectedProjectRecapForArchive` project-only and changed non-project recap checks to direct generic package validation.
+- - Recovery usage remained `0/10`; no automatic phase recovery was opened.
+- **Status:** completed
+- **Commit:** cd6314c6eeadf512dc5d0077a080c37587b3abbb
+- **Outcome (required when completed):**
+- - Contract validation now loads only fact-base, manifest, and theme schemas.
+- - Retired publication, authoring, planning, review, and evidence validation branches and exports are gone.
+- **Files changed:**
+- - `.agents/skills/explainer-kit/scripts/lib/contracts.mjs` - retained schema validation and canonical serialization only.
+- - `.agents/skills/explainer-kit/tests/contracts.test.mjs` - bounded tests for the three retained contract surfaces.
+- **Verification:**
+- - Run: `node --test .agents/skills/explainer-kit/tests/contracts.test.mjs`; retired-symbol `rg`; `pnpm lint`; `pnpm format`.
+- - Result: pass; five contract tests green and retired-symbol search empty.
+- **Notes / Decisions:**
+- - The fact-base schema still permits legacy backlink tuple keys, so the retained validator explicitly rejects those keys on citations to enforce the new `{ sourceId, locator }` contract without changing the frozen fact-base schema.
+- **Issues Encountered:**
+- - RED correctly failed for both the retired contract kind and a citation carrying `path`; the retained implementation made both cases pass.
+- **Status:** completed
+- **Commit:** e092ba547525262a70c456773c4650981731898c
+- **Outcome:**
+- - The recipe registry now exposes four retained recipes whose policy is limited to source roles and required floor artifacts.
+- - Legacy v1 recap replay, optional expansion policy, fallback policy, discovery limits, and unused briefs are removed.
+- **Files changed:**
+- - `.agents/skills/explainer-kit/recipes/` - four trimmed retained recipes; v1 recap recipe deleted.
+- - `.agents/skills/explainer-kit/briefs/` - only the four recipe briefs remain.
+- - `.agents/skills/explainer-kit/scripts/lib/recipes.mjs` - retained recipe loader and floor/narrative accessors.
+- - `.agents/skills/explainer-kit/tests/recipes.test.mjs` - retained recipe contract tests.
+- **Verification:**
+- - Run: `node --test .agents/skills/explainer-kit/tests/recipes.test.mjs`; retained brief listing; recipe registry import; `pnpm lint`; `pnpm format`.
+- - Result: pass; three tests green, four expected registry keys printed, and only four briefs remain.
+- **Notes / Decisions:**
+- - `validateRecipe` remains internal. Its retired-key behavior is tested by importing a scratch copy of the real module against a mutated recipe.
+- **Status:** completed
+- **Commit:** c34b07113206e8c07d1b55c08f4ba4066d8b7ff9
+- **Outcome:**
+- - QA now retains only structural, source-dumping, cohesion, browser-probe, and PNG checks.
+- - The cohesion ledger accepts an empty individual group and fails only when all three groups are empty.
+- - Theme, HTML safety, visual matrix, and schema tests no longer execute retired rendering or record paths.
+- **Files changed:**
+- - `.agents/skills/explainer-kit/scripts/lib/qa.mjs` - retained QA primitives and browser finding rules.
+- - `.agents/skills/explainer-kit/tests/{qa,html-safety,theme,visual-matrix,schemas}.test.mjs` - retained browser-free test surface.
+- **Verification:**
+- - Run: retained five-file Node test suite; retired-symbol search; `pnpm lint`; `pnpm format`.
+- - Result: pass; 35 tests green and the retired QA imports/symbols are absent.
+- **Negative control:**
+- - Restoring the old any-group-empty cohesion rule made `qa.test.mjs` exit 1; restoring the all-groups-empty rule returned it to green.
+- **Issues encountered:**
+- - The first commit attempt was rejected by commitlint for a long body line before history changed; the wrapped retry produced the sole task commit.
+- **Status:** completed
+- **Commit:** c96741c987b2b4c6873cd633910b65d073be1549
+- **Outcome:**
+- - Manifest validation now pins `explainer-kit.manifest/v2`, the four terminal outcomes, and the small run-package shape.
+- - Package coverage v3 requires the fact base, ledger, theme, QA result, and authored content while enforcing exact inventory.
+- - Retired run-request and build-record schemas are removed.
+- **Files changed:**
+- - `.agents/skills/explainer-kit/schemas/{manifest,build-record,run-request}.schema.json` - v2 replacement and retired schema deletions.
+- - `.agents/skills/explainer-kit/scripts/lib/{contracts,package-coverage}.mjs` - manifest hash bindings and v3 package rule.
+- - `.agents/skills/explainer-kit/tests/{contracts,package-coverage,schemas}.test.mjs` - v2 contract and exact-inventory coverage.
+- **Verification:**
+- - Run: focused 10-test Node suite; retired-package-symbol search; `pnpm lint`; `pnpm format`.
+- - Result: pass.
+- **Negative controls:**
+- - Allowing manifest v1 made `contracts.test.mjs` exit 1.
+- - Ignoring unexpected package files made `package-coverage.test.mjs` exit 1.
+- **Mechanical boundary addition:**
+- - `.agents/skills/explainer-kit/tests/schemas.test.mjs` was advanced from manifest v1 to v2; it was a completed p01-t03 consumer discovered by the repository-wide symbol sweep.
+- **Status:** completed
+- **Commit:** 0adf7ddf690e713c57d099a12b3d131e31eef748
+- **Notes:**
+- - Added all four input modes with recipe-specific allowlists, newest-per-wave program summaries, deterministic SHA-256 input hashes, schema-valid fact-base generation, and unresolved claims for unparseable inputs.
+- - Added realpath containment for every selected input, atomic source-directory writes, pre-authoring theme output, stale-failure cleanup, satisfied-manifest reuse, and mandatory `--out`.
+- - Added the bounded terminology/numbers/status anchor ledger plus the full numeric/date/status claims index keyed by row, sentence identifier, or heading subject.
+- - Added provenance-marked fixtures derived from the execution program and two wave summaries.
+- - Focused suite: `pnpm exec node --test .agents/skills/explainer-kit/tests/bundle.test.mjs` (9/9 passed).
+- - Required negative control: bypassing `assertContained` made the symlink-escape case fail with `Missing expected rejection`; restoring realpath containment returned the suite to 9/9.
+- - Skill gates: `pnpm lint` and `pnpm format` passed.
+- **Status:** completed
+- **Commit:** 0528fbfc54edb518478c79a4cc09e2529dbb14c7
+- **Notes:**
+- - Added deterministic manifest recording with explicit run-id and creation-time seams, exact immutable hashes, fact-base input hashes, recipe floor metadata, and all four terminal outcomes.
+- - Rejected stale QA evidence and pre-recording `failure.json`, and sanitized failed-check causes against absolute user paths and environment values.
+- - Added a checked-in v2 package with generating-task provenance, independently validated manifest, exact package inventory, and byte-for-byte regeneration parity.
+- - Focused suite: `node --test .agents/skills/explainer-kit/tests/record.test.mjs` (4/4 passed).
+- - Required negative control: omitting `source/ledger.json` from `record.mjs` hashing made 3/4 tests fail with `Manifest immutable hashes do not cover the canonical package`; restoring coverage returned the suite to 4/4.
+- - Skill gates: `pnpm lint` and `pnpm format` passed.
+- **Status:** completed
+- **Commit:** 6bbde384d318e1558178814929bbe94890da7d27
+- **Notes:**
+- - Added required-section, structure, source-dumping, shell-script, ledger-to-page, and bounded page-to-ledger checks with no separate `externalRequests` result.
+- - Added rendered term, number, date, and closed-status extraction keyed by table-row, sentence identifier, or section/heading subject.
+- - Added the none rung, distinct authoring/verify failure records, malformed-page QA output, and program fixtures derived from real execution material.
+- - Focused suite: `node --test .agents/skills/explainer-kit/tests/verify.test.mjs` (6/6 passed).
+- - Required negative controls: bypassing page-to-ledger matching made the untraced-number and swapped-wave tests fail; bypassing shell-script errors made the foreign-script test fail. Restoring both guards returned the suite to 6/6.
+- - Skill gates: `pnpm lint` and `pnpm format` passed.
+- **Status:** completed
+- **Commit:** d7b4606e109466220d4e33a290f96b801d1a6502
+- **Notes:**
+- - Archive validation now accepts exact manifest v2 packages with package-coverage/v3 for both retained successful outcomes and both run modes.
+- - Fact-base, theme, authored artifact, and exact immutable inventory bindings are validated before export and revalidated from the staged copy.
+- - Retired terminal-evidence and source-backlink archive loaders, legacy coverage branches, and browser-chain checks are removed.
+- - Required suite: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive src/release src/validation/skills.test.ts` (450/450 passed).
+- - Required negative controls: allowing manifest v1 failed the wrong-schema test; bypassing exact inventory failed the extra-file test; allowing `failed` and `incomplete` failed their rejection tests.
+- - Retired-symbol sweep was empty; package type-check, `pnpm lint`, and `pnpm format` passed.
+- **Status:** completed
+- **Commit:** c4a95b5fa1be33586dd001dff08410d3651ff585
+- **Operator-approved plan correction:**
+- - Corrected p01-t09 (`program-recap`), p04-t02 (`project-explainer`), p05-t01 (`program-recap`), and the design's FR9 test row to compose the generic package contract directly: manifest validation, every immutable hash checked against file bytes, and exact inventory enforcement.
+- - The project-only `verifySelectedProjectRecapForArchive` recipe pin remains strict.
+- - Cause: the archive check was added post-review without re-checking the recipe pin.
+- **Outcome:**
+- - A hand-authored program recap over the execution program and the two newest wave summaries passes all browser-free checks, records `built-needs-review`, passes direct generic manifest/hash/inventory validation, and is reused on identical inputs.
+- - Swapping the W6/W7 task counts produces `verify-claim-untraced`; recording QA against changed HTML bytes produces `record-qa-stale`.
+- - The project-only archive validator remained unchanged and its 89-test suite passed.
+- **Verification:**
+- - `node --test .agents/skills/explainer-kit/tests/flow.e2e.test.mjs` (3/3 passed).
+- - `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive/archive-utils.test.ts` (89/89 passed).
+- - `pnpm lint` and `pnpm format` passed.
+- **Deletion gate:** open. p01-t10 may proceed.
+- **Status:** completed
+- **Commit:** f3b0c6dbc160d2f690b838e66545c04e6d1dc293
+- **Outcome:**
+- - `generate` is satisfied only by `built` or `built-needs-review`; failed, incomplete, and retired durability outcomes are rejected.
+- - `skip/failed_attempt` requires a failed/incomplete manifest or a well-formed `failure.json`; `capability_probe` remains readable.
+- - Intent validation permits `skip/failed_attempt` only for project recaps.
+- **Verification:**
+- - Focused guard/intent suite passed 17/17.
+- - Bypassing the missing-evidence guard made both lifecycle tests fail with `Missing expected rejection`; restoring it returned the suite to green.
+- - `pnpm lint` and `pnpm format` passed.
+- **Status:** completed
+- **Commit:** 72312063bc5a4edc979e6bbc386a50a76f8c1b5e
+- **Outcome:**
+- - Removed the explainer RC build/run/acceptance/visual tooling and its immutable acceptance snapshot.
+- - Removed `release:validate:visual` and `test:release` from root scripts and contributor/testing instructions.
+- - Retired-reference sweep found only the explicitly deferred skill/docs references and durable repository history.
+- **Verification:**
+- - Root-script absence probe passed with exit 0; `pnpm format` passed.
+- - `pnpm release:validate` validated all five tarballs, then exited 1 only on the lockstep version bump deliberately owned by p01-t17.
+- - `pnpm test:smoke` ran 161 tests: 156 passed and the five explainer smoke tests scheduled for deletion in p01-t12 failed as expected.
+- **Status:** completed
+- **Commit:** aeed93c29c791b5a19f4b09b0f6d6bf9af15d2e2
+- **Outcome:**
+- - Removed obsolete package-consumer, packaged-layout, publishing, wrapper-compatibility, and duplicated skill-reader smoke coverage.
+- - Removed the stale package-layout cross-reference from the CLI test helper.
+- - Retained `check-core-version-parity.test.mjs` as the sole explainer smoke test.
+- **Verification:**
+- - `pnpm build` and `pnpm test:smoke` passed; smoke ran 153/153 tests.
+- - `pnpm format` passed.
+- - Retired-file sweep found only p01-t13/p03-t01 deferred references and durable project/repository history.
+- **Status:** completed
+- **Commit:** e47be8859204bfc959350fd05cbfedf00537a799
+- **Outcome:**
+- - Removed the retired core orchestrator, render/publish/durability modules, schemas, references, examples, golden fixtures, and obsolete tests.
+- - Retained exactly three entry scripts, ten library modules, three schemas, two references, and fourteen test files.
+- **Verification:**
+- - All 80 retained core tests passed.
+- - Every retained core library module imported successfully.
+- - `pnpm lint` and `pnpm format` passed.
+- **Status:** completed
+- **Commit:** f9b6fa6a0a450e8773d57f63e49e7e74e86fc1a6
+- **Outcome:**
+- - Removed the adapter orchestrator, destination, finalizer, and seam-probe scripts plus their runtime tests.
+- - Reduced config resolution to theme defaults and workflow preferences; moved `MINIMUM_CORE_VERSION` to `check-core.mjs`.
+- - Rewrote project/program allowlists and retained the supplied-fact-base path without repository bindings.
+- - Removed runtime assertions from the completion integration test while retaining lifecycle prose assertions.
+- **Verification:**
+- - All 43 retained adapter tests passed, including new replacement-allowlist coverage.
+- - `pnpm lint` and `pnpm format` passed.
+- - The only retired-symbol matches in adapter tests are the lifecycle prose assertions explicitly deferred and allowlisted until Phase 3.
+- **Status:** completed
+- **Commit:** 0a8450c6d2c4413a62e7aa133d12a7e882984777
+- **Outcome:**
+- - Removed all six `explainers.publish.*` keys from CLI config types, catalogs, validation, normalization, defaults, writes, and tests.
+- - Retained four `explainers.defaults.*` keys and the two explainer workflow preferences.
+- - Collapsed the explainer write and surface-selection branches to defaults-only behavior.
+- **Verification:**
+- - The new retired-key test failed before implementation and passed after removal.
+- - Affected config suites passed 481/481; CLI type-check, `pnpm lint`, and `pnpm format` passed.
+- - Retired key/type sweep is empty; the sole `publish` hit in `oat-config.ts` is unrelated documentation-exclusion prose.
+- **Status:** completed
+- **Commit:** bd444a3ea44c1d990ddab448dc72e2f91de86d4b
+- **Outcome:**
+- - Replaced two-file durability evidence fixtures with a single manifest-v2 recap fixture and the `built` outcome.
+- - Kept completion-transaction behavior unchanged while moving receipt evidence lists and contamination controls to the one-file contract.
+- **Verification:**
+- - Completion-transaction suite passed 31/31 before and after the fixture migration.
+- - Retired build-record and durability-outcome sweep is empty under the push command sources.
+- - CLI type-check, lint, and formatting checks passed.
+- **Status:** completed
+- **Commit:** 853462ffd53b2d347ad6495c5829abd18091cab0
+- **Outcome:**
+- - Added the Phase 1 code-scope retired-reference scanner with three named transitional prose exclusions and two outcome-only negative-control allowlists.
+- - Bumped `explainer-kit` to 3.0.0, `oat-explainer-kit` to 1.0.9, the adapter minimum core to 3.0.0, and all five public packages to 0.2.73.
+- - Updated canonical version pins and the packaged public-version map.
+- **Verification:**
+- - Sweep red control found seeded `built-durable`; the named guard-test allowlist control stayed green; the tracked tree stayed green.
+- - Ordered phase gates all exited 0: check, type-check, test, build, skill bumps, origin fetch, release versions, release validation, and docs build.
+- - Final forced Turbo run passed all ten tasks with `Cached: 0`; standalone smoke (156/156), skills, scripts, canonical skill validation, lint, and format passed.
+- - One unrelated forced-run visual-companion startup timeout passed 5/5 independently and the immediate full uncached retry passed 390/390 CLI files.
+- **Status:** completed
+- **Started:** 2026-09-11
+- **Outcome:**
+- - Added host screenshot verification bound to the exact authored-page hash,
+- canonical PNG widths, and an explicit inspection verdict.
+- - Added Playwright probing with retained screenshots, consumed layout
+- findings, runtime downgrade reasons, and real Chromium coverage.
+- - Added the agent authoring mechanics and replaced the retired fact-base
+- callback reference with the bundle, ledger, and consumer contract.
+- - Proved the browser-less fresh-host flow, archive acceptance, failed-section
+- evidence, persisted-intent reload and resolution, missing-core stop, and
+- browser-launch fallback.
+- - Review fixes now prevent statically rejected active content from reaching
+- Chromium and remove canonical screenshots on every downgrade to no browser
+- evidence.
+- **Verification:**
+- - Both fresh-host runs passed without Turbo caching.
+- - All ordered repository gates, the isolated-HOME forced Turbo run
+- (`Cached: 0`), standalone smoke/skill/script validation, lint, and format
+- passed.
+- - Review-fix controls passed with real Chromium `152.0.7977.84`; the rejected
+- script payload mutated an isolated control page but the verifier never
+- loaded it, and host, Playwright, and explicit-none retries all recorded
+- `built-needs-review` without stale screenshots.
+- - Recovery usage remained `0/10`; no recovery attempt or event was opened.
+- **Status:** completed
+- **Commit:** a670b8e8955ccd31c9ff9508e9ccdac04ae6e5cb
+- **Files changed:**
+- - `.agents/skills/explainer-kit/scripts/verify.mjs`
+- - `.agents/skills/explainer-kit/tests/verify.test.mjs`
+- **Verification:** focused host-rung suite, lint, and format passed. Bypassing
+- the hash comparison made the mismatch control fail; restoring it returned the
+- suite to green.
+- **Status:** completed
+- **Commit:** 18d13671e8a7fc4b1a45aeefabdf7e441bbafe4b
+- **Files changed:**
+- - `.agents/skills/explainer-kit/scripts/verify.mjs`
+- - `.agents/skills/explainer-kit/tests/verify.test.mjs`
+- **Verification:** focused verify and unchanged browser-runtime suites passed
+- with installed Chromium `152.0.7977.84`. Suppressing probe findings made the
+- fixed-width layout control fail; restoring findings returned the suite to
+- green.
+- **Status:** completed
+- **Commit:** 43ab318281970d2c51ba3ab09101a0639b8e5889
+- **Files changed:**
+- - `.agents/skills/explainer-kit/references/recap-authoring.md`
+- - `.agents/skills/explainer-kit/references/fact-base-contract.md`
+- **Verification:** the new reference shares no headings with the project-recap
+- brief; reference formatting, skill validation, lint, and format passed.
+- **Status:** completed
+- **Commit:** 38a46c85653ae8630465518e25aad053f92a088a
+- **Files changed:**
+- - `.agents/skills/explainer-kit/tests/fresh-host.test.mjs`
+- **Verification:** two uncached fresh-host runs and every phase-boundary gate
+- passed. Neutralizing required-section validation, browser-failure distinction,
+- or the missing-core prerequisite made its focused assurance control fail;
+- restoring each guard returned the suite to green.
+- **Review-fix correction:** the missing-core control now reloads the persisted
+- record through the production adapter reader before intent resolution. Phase 2
+- does not claim executable completion-orchestrator suppression: no such
+- consumer exists yet, so downstream bundle/author suppression remains a Phase 3
+- consumer assurance obligation.
+- **Status:** completed
+- **Started:** 2026-09-11
+- **Outcome:**
+- - Reframed both public skills around one `bundle → host-agent author → verify →
+- record` flow and manifest-v2 outcomes.
+- - Moved project completion, implementation closeout, planning, autonomous
+- closeout, summaries, and both wave callers onto the shared Generate contract.
+- - Closed the Phase 2 deferred consumer assurance: completion re-reads persisted
+- intent, and a persisted skip suppresses discovery, bundling, and authoring.
+- - Rewrote the public docs, recorded the accepted repository decision, archived
+- superseded backlog item `BL-260727-make-explainer-run-durability`, widened the
+- retired-reference invariant to the tracked repository, and bumped all eleven
+- changed lifecycle skills once.
+- **Verification:**
+- - Every ordered CI gate passed with explicit exit 0: `pnpm check`,
+- `pnpm type-check`, `pnpm test`, `pnpm build`,
+- `pnpm run check:skill-bumps`, `pnpm release:check-versions`,
+- `pnpm release:validate`, and `pnpm build:docs`; `git fetch origin main`
+- also exited 0 before the version gate.
+- - Isolated-HOME `pnpm exec turbo run test --force` passed with
+- `10 successful`, `0 cached`, including 390 CLI files / 7,364 tests.
+- - `pnpm test:smoke`, `pnpm test:skills`, `pnpm test:scripts`,
+- `pnpm oat:validate-skills`, `pnpm lint`, and `pnpm format` all exited 0.
+- - The authoritative retired-reference sweep failed on transitional vocabulary
+- before cleanup and passed afterward; its synthetic retired-outcome control
+- remained red-capable.
+- - Neutralizing either the production persisted-intent reader or its skip
+- suppression guard made the completion integration test fail; restoring each
+- returned the suite to green.
+- - All eleven plan-declared protected slices remained byte-identical to phase
+- base `ab4785bf510ea737961a9431da4376a461be930e`; all six autonomy-contract
+- paths resolved to one SHA-256.
+- **Recovery accounting:** p03 used no dedicated recovery attempt. The p03 usage
+- entry remains absent, equivalent to `used_attempts: 0` and
+- `pending_attempt: null`; no recovery event occurred.
+- **Status:** completed
+- **Commit:** eb5e806dda362b5ed277a8dc2eb710d9f6546825
+- **Files changed:** `.agents/skills/{explainer-kit,oat-explainer-kit}/SKILL.md`,
+- adapter lifecycle reference, and CLI prose/version contract tests.
+- **Verification:** focused skill contracts, adapter integration, validation,
+- lint, and format passed.
+- **Status:** completed
+- **Commit:** fef534776121a698597658284e2fc42203f6cb46
+- **Files changed:** `oat-project-complete` skill, persisted-intent consumer,
+- completion retry/archive-resume scripts and tests, and synced bookkeeping
+- inventory.
+- **Verification:** completion tests passed; the executable persisted-intent
+- reader and suppression guard each failed their negative control when
+- neutralized.
+- **Status:** completed
+- **Commit:** 7378bb43b306a457af4ba7055a37c5824b969d8a
+- **Files changed:** implementation closeout reference,
+- `oat-project-autonomous`, `oat-project-summary`, and their terminal-outcome
+- tests.
+- **Verification:** focused outcome and closeout tests, skill validation, lint,
+- and format passed.
+- **Status:** completed
+- **Commit:** 8d18c4df00bc42ada879f2b58629901c543815ba
+- **Files changed:** `oat-project-plan`, `oat-wave-program`,
+- `oat-wave-execute`, and completion integration.
+- **Verification:** plan/wave caller contracts and completion integration passed.
+- **Status:** completed
+- **Commit:** c0088a0d69a7aff7ca7e301f570ff1b349d2d328
+- **Files changed:** canonical autonomy contract and linked mirrors, plus
+- `review-skill-contracts.test.ts`.
+- **Verification:** 87 focused Vitest cases and completion integration passed;
+- the six contract paths resolved byte-identically.
+- **Status:** completed
+- **Commit:** 55d334d8ecfd68b4049bc426fb26504a813f4098
+- **Files changed:** Explainer Kit guide, lifecycle/artifact/config/tool-pack/CLI
+- and troubleshooting pages, two navigation indexes, two retired pages, and the
+- generated docs index.
+- **Verification:** retired docs vocabulary was empty; `pnpm check` and
+- `pnpm build:docs` exited 0.
+- **Status:** completed
+- **Commit:** 7721cf9cef93fbf3fead5fe7be5bce286965da1c
+- **Files changed:** decision
+- `DR-260911-explainers-are-agent-authored`, generated decision index, archived
+- backlog item, completed ledger, and generated backlog index.
+- **Verification:** `oat pjm doctor --json` reported
+- `adoption.state: declared`; `oat decision new`, decision-index regeneration,
+- and `oat backlog archive ... --wont-do` completed through CLI-owned surfaces.
+- Project scope resolved to `shared`, so no synced-project push was applicable.
+- **Status:** completed
+- **Commit:** e349ae0028eff05ff510946e041d231edc0f7c8d
+- **Files changed:** repository-wide retired-reference sweep, eleven lifecycle
+- skill versions and their pins, completion integration and transaction cleanup,
+- and the named-skill corpus floor adjusted for the three intentional skill
+- reference deletions.
+- **Verification:** all complete phase gates and uncached evidence listed in the
+- Phase Summary passed.
+- **Status:** completed
+- **Started:** 2026-09-12
+- **Completed:** 2026-09-12
+- **Outcome:**
+- - Direct interactive use now supports project, document, and supplied
+- fact-base inputs with deterministic theme preparation and interactive
+- manifest provenance.
+- - This project's approved planning artifacts produced a tracked
+- `project-explainer` package with a passing Playwright visual verdict and the
+- generic manifest/hash/inventory contract.
+- - One bounded review-fix round closed the executable front-door gaps and
+- narrowed visual-evidence wording without changing the recorded package.
+- **Verification:**
+- - Front-door tests passed 4/4; the archive boundary suite passed 90/90.
+- - All repository gates, isolated-HOME uncached Turbo tests, standalone
+- smoke/skills/scripts suites, lint, and format exited 0.
+- - Independent re-review passed with 0 Critical, 0 Important, 0 Medium, and 0
+- Minor findings.
+- **Status:** completed
+- **Commit:** 52fcc7a6169267b1341eef268b801ec4021ef479
+- **Outcome:** Added the direct interactive contract and end-to-end coverage for
+- project, document, and supplied fact-base inputs.
+- **Status:** completed
+- **Commit:** 4292290aecc74b769edc1c47b6ee3cbc2d3761dd
+- **Outcome:** Generated and recorded the tracked project-explainer package
+- described below.
+- - Run ID: `40b9a35e-8f2a-419c-be2a-9f28eae4215a`
+- - Outcome: `built`
+- - Browser rung: `playwright`
+- - Run path:
+- `.oat/projects/shared/agent-authored-recap/explainers/agent-authored-recap-explainer`
+- - Visual verdict: `pass`
+- - Visual notes: `Playwright probes passed at all representative widths.`
+- - Visual evidence: the runtime exposed image reading but no host browser-control
+- capability, so the bundled Playwright rung captured `qa/320.png`,
+- `qa/768.png`, and `qa/1440.png`. Direct inspection found no clipped or
+- overlapping text in the visible captured regions, and the visible headings
+- remained readable; the mobile navigation is intentionally horizontally
+- scrollable. The recorded Playwright probes established whole-page overflow
+- and viewport-clipping results, while the static checks established required
+- section presence.
+- - Package evidence: direct `validateContract('manifest')`, byte verification of
+- every immutable hash, and `enforceRunPackageInventory` passed. A disposable
+- copy with corrupted `site/index.html` failed immutable byte verification
+- while the tracked package remained accepted.
+- - Request ID: `dispatch-agent-authored-recap-p04-review-r1-20260912T0145Z`
+- - Launch status: `accepted`
+- - Terminal outcome: `completed`
+- - Review artifact: `reviews/archived/p04-review-2026-09-12T015208Z.md`
+- - Reviewed range:
+- `303fafd35b328cd457167b5e1b36822cf6ed8e02..4292290aecc74b769edc1c47b6ee3cbc2d3761dd`
+- - Reviewed head: `4292290aecc74b769edc1c47b6ee3cbc2d3761dd`
+- - Findings: 0 Critical, 2 Important, 1 Medium, 0 Minor
+- - Disposition: `CHANGES REQUESTED`; review row advanced to `fixes_added`
+- - Root disposition: the stale Phase 4 progress pointer is the root-owned
+- post-review bookkeeping transition and must remain pending until a review
+- passes; it is not routed to the phase fix child.
+- - Bounded fix scope: complete the executable interactive front-door contract
+- and its direct-project/mode assertions, and narrow the screenshot-inspection
+- claim to the visible regions while attributing whole-page properties to the
+- recorded automated probes. Preserve the recorded package byte-for-byte.
+- - Reconnaissance: `not-attempted`; no Review Orchestration section or
+- project-log entry.
+- - Selection reason: `review-target`
+- - Candidates considered: `gpt-5.6-sol-high`
+- - Dispatch target: `oat-reviewer-gpt-5-6-sol-high`
+- - Dispatch: scope=p04 action=review role=reviewer producer=unknown
+- provenance=unknown model_axis=selected:gpt-5.6-sol-high
+- effort_axis=not-applicable dispatch_policy=high
+- dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
+- - Continuation: `cont-agent-authored-recap-p04-review-fix-1`
+- - Original request: `dispatch-agent-authored-recap-p04-20260912T002300Z`
+- - Source review: `reviews/archived/p04-review-2026-09-12T015208Z.md`
+- - Fix commit: `527bd48b2408ac8be6d94345b124ba33a1563055`; subject
+- `fix(p04): complete the interactive front-door contract`
+- - Addressed: the direct front door now covers project, document, and supplied
+- fact-base inputs; materializes the deterministic default theme; records
+- interactive provenance; and distinguishes unattended lifecycle callers.
+- The visual note now limits direct inspection to captured regions.
+- - Intentionally excluded: stale Phase 4 progress bookkeeping remains root-owned
+- until the phase review passes.
+- - Verification: focused front-door tests, skill validation, retired-seam
+- exclusions, relevant phase gates, lint, and format passed.
+- - Package preservation: the tracked project-explainer tree remains
+- byte-for-byte identical to the original Phase 4 tree
+- `a14f37b71fd2043e02179c055162cb099eb16579`.
+- - Recovery accounting: review-fix continuation; no phase recovery attempt.
+- - Request ID: `dispatch-agent-authored-recap-p04-review-r2-20260912T0205Z`
+- - Launch status: `accepted`
+- - Terminal outcome: `completed`
+- - Review artifact: `reviews/archived/p04-review-2026-09-12T020833Z.md`
+- - Reviewed range:
+- `303fafd35b328cd457167b5e1b36822cf6ed8e02..c9d977aa90d2990145e500c2035b1a2c67198278`
+- - Reviewed head: `c9d977aa90d2990145e500c2035b1a2c67198278`
+- - Prior findings: all closed or correctly reclassified as root-owned
+- post-review bookkeeping.
+- - Findings: 0 Critical, 0 Important, 0 Medium, 0 Minor
+- - Disposition: `PASS`
+- - Reconnaissance: `not-attempted`; no Review Orchestration section or
+- project-log orchestration entry.
+- - Selection reason: `review-target`
+- - Candidates considered: `gpt-5.6-sol-high`
+- - Dispatch target: `oat-reviewer-gpt-5-6-sol-high`
+- - Dispatch: scope=p04 action=review role=reviewer producer=unknown
+- provenance=unknown model_axis=selected:gpt-5.6-sol-high
+- effort_axis=not-applicable dispatch_policy=high
+- dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
+- **Status:** completed; independent review passed with 0 findings.
+- **Status:** completed.
+- **Task commit:** `3e8bf412ad2d1d846d9bb6e0eae21ccb7263a220`
+- **Recovery commits:** `f1afbb68587eb9654ac946de66b36be472a58622`,
+- `e427819ec77b001f5bc87c7aa37ee1a711fb7118`
+- **Review:** `reviews/archived/p05-review-2026-09-12T030832Z.md` — passed at
+- `22fbe809f3410ae95f75e5dccb16a664020122d8` with 0 findings.
+- **Recovery evidence:**
+- - Recovery attempt `recovery-agent-authored-recap-p05-01` corrected the
+- program-input parser to accept the repository's canonical
+- `Final Summary (for PR/docs)` heading while retaining the exact
+- `Final Summary` form.
+- - The provenance-grounded regression proves canonical-heading summaries include
+- only their final-summary section and missing/section-less selected wrappers
+- produce schema-valid `unresolvedClaims`.
+- - Focused bundle tests, the complete core test suite, lint, and format passed
+- before and after the append-only recovery commit.
+- **Program recap validation evidence:**
+- - Run ID: `c07644cf-a5f3-4e88-8993-124ff83fa7d1`
+- - Outcome: `built-needs-review`
+- - Browser rung: `none`
+- - Browser reason: `browser-driver-not-installed`
+- - Run path:
+- `.oat/repo/reference/explainers/2026-08-31-execution-program-recap`
+- - Capability evidence: the effective runtime exposed image reading but no host
+- browser-control tool. The installed Playwright rung was attempted once and
+- downgraded to `none` because its browser driver was not installed; therefore
+- no screenshots or direct screenshot-inspection claim is recorded.
+- - QA checks: `parse`, `requiredNarrative`, `structure`, `sourceDumping`,
+- `shellScripts`, `ledgerToPage`, and `pageToLedger` all passed.
+- - Generic package checks: direct `validateContract('manifest')`, byte
+- verification of all six `immutableHashes` entries, and
+- `enforceRunPackageInventory` over the exact seven-file package passed.
+- - Input evidence: the newest exported summary for each of W1–W7 and all seven
+- archived wrapper `implementation.md` final-summary sections are present.
+- `unresolvedClaims` is empty because every selected live wrapper input was
+- reachable; the regression test proves missing and section-less wrappers are
+- named rather than dropped.
+- - Program ledger: only the program-level checkpoint now records the run ID,
+- outcome, rung, browser reason, and run path. The four historical per-wave
+- `recap: not run` rows remain unchanged.
+- - Phase/task: p05 / p01-t05
+- - Original request: `dispatch-agent-authored-recap-p05-20260912T0215Z`
+- - Original commit: `0adf7ddf690e713c57d099a12b3d131e31eef748`
+- - Defect class: composition
+- - Discovered by: p05-t01 live program-recap bundle transition over
+- `.oat/projects/archived`
+- - Disposition: recovered
+- - Authorization: phase-standing
+- - Attempt: 1/10
+- - Dispatch target: `oat-phase-implementer-gpt-5-6-sol-high`
+- - Recovery commit: `f1afbb68587eb9654ac946de66b36be472a58622`
+- - Verification: focused and complete core suites, lint, and format passed
+- before and after the recovery commit.
+- - Reason: canonical wrapper headings now parse, while missing or section-less
+- wrappers produce schema-valid unresolved claims.
+- - Phase/task: p05 / p05-t01
+- - Original request: `dispatch-agent-authored-recap-p05-20260912T0215Z`
+- - Original commit: `3e8bf412ad2d1d846d9bb6e0eae21ccb7263a220`
+- - Defect class: build
+- - Discovered by: `pnpm release:check-versions`
+- - Disposition: direction-required
+- - Authorization: phase-standing
+- - Attempt: 1/10
+- - Dispatch target: `oat-phase-implementer-gpt-5-6-sol-high`
+- - Recovery commit: -
+- - Verification: every other declared gate passed; forced Turbo reported
+- `Cached: 0`.
+- - Reason: `origin/main` advanced to public-package version `0.2.73`; root
+- settled attempt one before attempt two could reserve the required lockstep
+- version bump.
+- - Phase/task: p05 / p05-t01
+- - Original request: `dispatch-agent-authored-recap-p05-20260912T0215Z`
+- - Original commit: `3e8bf412ad2d1d846d9bb6e0eae21ccb7263a220`
+- - Defect class: build
+- - Discovered by: committed-HEAD `pnpm release:check-versions`
+- - Disposition: recovered
+- - Authorization: phase-standing
+- - Attempt: 2/10
+- - Dispatch target: `oat-phase-implementer-gpt-5-6-sol-high`
+- - Recovery commit: `e427819ec77b001f5bc87c7aa37ee1a711fb7118`
+- - Verification: the complete ordered Phase 5 gate suite passed before and
+- after the recovery commit; forced Turbo reported `Cached: 0`.
+- - Reason: all five lockstep public packages and the canonical public-version
+- map now use `0.2.74`, strictly above current `origin/main` at `0.2.73`.
+- **Date:** 2026-09-12
+- **Review artifact:**
+- `reviews/archived/final-review-2026-09-12T032129Z.md`
+- **Findings:**
+- - Critical: 0
+- - Important: 3
+- - Medium: 4
+- - Minor: 1
+- **New tasks added:** `p06-t01`, `p06-t02`, `p06-t03`, `p06-t04`,
+- `p06-t05`, `p06-t06`, `p06-t07`
+- **Finding dispositions:**
+- - I1 → `p06-t01`: make unchanged-input reuse insensitive to input-hash key
+- order.
+- - I2 → `p06-t02` (`artifact_alignment_required`): align FR12 and restore the
+- malformed FR10 index row; the shipped retirement behavior is authoritative.
+- - I3 → `p06-t03` (`artifact_alignment_required`): align the design's QA and
+- failure contracts with the production validators and record the accepted
+- delta.
+- - M1 → `p06-t04`: complete and share failure sanitization.
+- - M2 → `p06-t05`: reject ambiguous multi-root locator collisions.
+- - M3 → `p06-t06`: make factual heading claim tracing symmetric.
+- - M4 → `p06-t07`: correct project-explainer terminology and package paths in
+- this final summary.
+- - m1 → explicitly deferred until substantive program-package regeneration.
+- The four whitespace-only warnings have no behavior impact, while editing the
+- immutable HTML now would require regenerating QA and manifest hashes solely
+- for cosmetic churn.
+- **Deferred Medium ledger:**
+- - The three earlier Phase 1 Mediums resurfaced as M1, M2, and M3 and are now
+- converted to `p06-t04`, `p06-t05`, and `p06-t06`; none remains deferred.
+- **Next:** Execute Phase 6 fix tasks through `oat-project-implement`, then run a
+- fresh Phase 6 review and final re-review.
+- **Status:** completed
+- **Outcome:**
+- - Unchanged multi-file inputs now reuse a recorded package regardless of object
+- key insertion order, while changed hashes still reject reuse.
+- - The specification and design now describe the shipped retirement, QA, and
+- failure contracts exactly.
+- - Bundle, verify, and record share complete failure sanitization for environment
+- values and cross-platform absolute paths.
+- - Multi-root document locator collisions fail closed instead of silently
+- dropping an input.
+- - Source and rendered factual headings use symmetric claim tracing without
+- weakening changed-fact rejection.
+- - The final summary now distinguishes the active-project `project-explainer`
+- from the repository-level `program-recap`.
+- **Task commits:**
+- - `p06-t01`: `fc6423e2769a7e13e2b3137831db2a79e045e54e`
+- - `p06-t02`: `b562ae710e2a8c13ea2034471621dc807ef3dd0f`
+- - `p06-t03`: `a19c15e0190c537206a3646b62169040dedace54`
+- - `p06-t04`: `7fecd332973a97b29030cac974ecd6adf210cf26`
+- - `p06-t05`: `0e6488ec90948f56008452d6eeb3152dbdb90b91`
+- - `p06-t06`: `f5b0c5e545fdab0180a6132dcc95659f0b040891`
+- - `p06-t07`: `a7d8377f563703aaf41d71ba3ef7dbf42b6dfb57`
+- - `p06-t08`: `0fd007abe7a5a2254d13fb02f0d30cb44161fd11`
+- - `p06-t09`: `927ba10f1a09ec36755dedf411183372b4703691`
+- - `p06-t10`: `7b40d8835c7060a2596f2aec58a24e316565c734`
+- - `p06-t11`: `48abe113af3ac66d6dc0b4dae74decda89d38c41`
+- - `p06-t12`: `feeee094ec7ca5ec3b418f8fe2c79a2b9662ec84`
+- - `p06-t13`: `3f137e92a5e4c013f5e498648e1827bd9bf2da1f`
+- - `p06-t14`: `1cc4c9d9e14d250835b3f551edceeac49b94e34e`
+- - `p06-t15`: `1a5ed9b037a46bb14b66e03f69c1675523c2782e`
+- - `p06-t16`: `3a47b0e32872345020fe28d7aa07b75928abc835`
+- **Verification:**
+- - Every ordered repository gate exited 0.
+- - Isolated-HOME forced Turbo ran 10/10 tasks with `Cached: 0`.
+- - Standalone smoke, skill, script, and skill-validation suites passed.
+- - Core passed 112/112 and focused lifecycle coverage passed 55/55.
+- - Failure-sanitization, locator-collision, heading-symmetry, and changed-hash
+- negative controls each failed when their guard was neutralized and passed
+- after restoration.
+- - `pnpm lint` and `pnpm format` passed.
+- **Notes / deviations:**
+- - The existing changed-input reuse test had not actually changed its input and
+- passed only because the former key-order bug forced a miss. `p06-t01`
+- mechanically corrected the test to mutate `summary.md`.
+- - Manifest evidence established the active project package at
+- `.oat/projects/shared/agent-authored-recap/explainers/agent-authored-recap-explainer/`;
+- the singular `explainer/` path in the dispatch brief did not exist, so
+- `p06-t07` records the verified path.
+- - Recovery usage remained 0/10 with no p06 ledger entry or pending attempt.
+- - The deferred immutable-HTML whitespace item and the Effective HTML backlog
+- remained unchanged.
+- **Date:** 2026-09-12
+- **Review artifact:** `reviews/archived/p06-review-2026-09-12T130841Z.md`
+- **Findings:**
+- - Critical: 0
+- - Important: 1
+- - Medium: 0
+- - Minor: 0
+- **New task added:** `p06-t08`
+- **Finding disposition:**
+- - I1 → `p06-t08`: correct the root-owned state Artifacts description from the
+- stale pre-Phase-6 inventory to the authoritative 40-task, 6-phase plan.
+- **Review fix result:** `p06-t08` corrected the stale state inventory to 40
+- tasks across 6 phases. Plan validation, the 58-test state validator, diff
+- checking, and the committed file-boundary check passed.
+- **Re-review:** `reviews/archived/p06-review-2026-09-12T131816Z.md` passed at
+- `de2393c3fa337bc7f33d9813a583dbc41ec5fbda` with 0 Critical, Important,
+- Medium, or Minor findings.
+- **Date:** 2026-09-12
+- **Review artifact:**
+- `reviews/archived/final-review-2026-09-12T132520Z.md`
+- **Findings:**
+- - Critical: 0
+- - Important: 0
+- - Medium: 1
+- - Minor: 1
+- **New task added:** `p06-t09`
+- **Finding dispositions:**
+- - M1 → `p06-t09`: complete sensitive environment-value and common encoded or
+- bracketed absolute-path redaction through all three diagnostic producers.
+- - m1 → approved deferral retained. The immutable program HTML remains
+- untouched until substantive package regeneration; this round found no new
+- reason to incur QA/manifest churn for whitespace only.
+- **Deferred Medium ledger:** none. The sole Medium is converted to `p06-t09`.
+- **Review cycle:** 2 of 3.
+- **Review fix result:** `p06-t09` now redacts sensitivity-named short
+- environment values and bracketed/file-URL POSIX, Windows-drive, and UNC paths
+- through bundle, verify, and record diagnostics. All four neutralizations failed
+- their producer controls; focused tests, the complete core/lifecycle suites,
+- every ordered repository gate, uncached Turbo, standalone suites, lint, and
+- format passed on the committed head.
+- **Re-review:** `reviews/archived/p06-review-2026-09-12T135600Z.md` passed at
+- `7ba61d84fee87d3e9217f8c1431ba34eb658471a` with 0 Critical, Important,
+- Medium, or Minor findings. All twelve producer/neutralization combinations
+- failed when their guard was removed.
+- **Date:** 2026-09-12
+- **Review artifact:**
+- `reviews/archived/final-review-2026-09-12T140439Z.md`
+- **Findings:**
+- - Critical: 0
+- - Important: 0
+- - Medium: 1
+- - Minor: 1
+- **New task added:** `p06-t10`
+- **Finding dispositions:**
+- - M1 → `p06-t10`: cover the terminal `SECRET_?KEY` sensitivity-name family
+- with short-value controls through bundle, verify, and record producers while
+- preserving safe structural diagnostics.
+- - m1 → approved deferral retained. The immutable program HTML remains
+- untouched until substantive package regeneration.
+- **Deferred Medium ledger:** none. The sole Medium is converted to `p06-t10`.
+- **Review cycle:** 3 of 3. The operator explicitly authorized one additional
+- bounded fix and final re-review cycle. This is not an unlimited retry-budget
+- extension.
+- **Cause:** the explicit sensitive-name policy added for `p06-t09` covered
+- `SECRET` and key forms but omitted the common compound `SECRET_KEY` terminal
+- name.
+- **Authorization:** Resume the existing Phase 6 implementer for `p06-t10`,
+- perform a fresh narrow Phase 6 review, then perform exactly one fourth
+- whole-project final review. Review-fix continuation does not consume phase
+- recovery attempts.
+- **Status:** completed
+- **Commit:** `7b40d8835c7060a2596f2aec58a24e316565c734`
+- **Outcome:** Bundle, verify, and record now redact short values from terminal
+- `SECRET_KEY` and `SECRETKEY` environment names without broad substring
+- matching. Structural `TOKEN_STORAGE=file` and `MODE=1` diagnostics remain
+- visible.
+- **Negative control:** Removing only `SECRET_?KEY` made exactly the three new
+- producer controls fail (37/40 passed); restoring it returned all 40/40 to
+- green. The initial pre-fix run failed the same three controls.
+- **Verification:** Complete core 112/112, lifecycle 84/84, state/lifecycle
+- contracts 268/268, retirement/parity 10/10, standalone smoke 158/158, skills
+- 435/435, scripts 1/1, and skill validation passed. Every ordered repository
+- gate, lint, and format exited 0. Isolated-HOME forced Turbo executed 10/10
+- tasks with `Cached: 0`.
+- **Boundary:** Only the sanitizer and its three producer tests changed. Both
+- tracked explainer packages, project artifacts, versions, reviews, and
+- `state.md` remained unchanged. Phase 6 recovery usage remains zero.
+- **Review artifact:** `reviews/archived/p06-review-2026-09-12T200228Z.md`
+- **Reviewed head:** `688226b0c1431d23624ee0bd30fd5d307c2b5dd8`
+- **Verdict:** PASS — 0 Critical, 0 Important, 0 Medium, 0 Minor
+- The reviewer independently passed `APP_SECRET_KEY=abcd` through all three
+- production carriers, preserved structural and non-terminal controls, and
+- confirmed the guard is load-bearing by reproducing exactly three failures
+- after removing only `SECRET_?KEY`. Complete core and lifecycle suites passed,
+- both tracked packages remained byte-identical, the task inventory is 42/42,
+- and Phase 6 recovery usage remains zero.
+- **Review artifact:** `reviews/archived/final-review-2026-09-12T201509Z.md`
+- **Reviewed head:** `2ebc4ec4d42accaf576a840cfa6ba3823246b9fb`
+- **Verdict:** PASS — 0 Critical, 0 Important, 0 Medium, 1 approved deferred
+- Minor
+- All 42 tasks and six phase reviews passed. The reviewer independently closed
+- the `SECRET_?KEY` finding through all three production carriers, revalidated
+- both immutable explainer packages, confirmed the strict project-recap archive
+- boundary, and passed all eight ordered repository gates plus uncached Turbo,
+- standalone suites, lint, and format. The four immutable program-HTML
+- whitespace warnings remain the sole approved deferral until substantive
+- package regeneration.
+- **Review cycle:** 4, consuming the single operator-authorized cycle beyond the
+- configured three-cycle cap. No further review-cycle extension remains.
+- **Generation started:** 2026-09-12T20:19:06Z
+- **Resolution:** configured
+- **Policy:** `onFailure=block`, `maxAttempts=2`
+- **Description:** Semantic cross-family final implementation review before
+- `oat-project-implement` exits.
+- **Reviewed head:** `2ebc4ec4d42accaf576a840cfa6ba3823246b9fb`
+- **Integration base:** `origin/main`
+- **Implementation fingerprint:**
+- `sha256:effective-delta-v1:923970695e589fd5d178a98bff4d1d9dd1cd4f479a5697e061adf63f1e849873`
+- **Configuration fingerprint:**
+- `sha256:94671d8d5f24560ccaac19595added0c71a89defa8b2a3f4be1d1027b96581e5`
+- **Attempt:** `aar-exit-gate-20260912T202019Z`
+- **Launch intent:** persisted at 2026-09-12T20:20:19Z
+- **Result receipt:**
+- `/private/tmp/oat-agent-authored-recap/aar-exit-gate-20260912T202019Z.receipt.json`
+- **Status:** blocked; launch not accepted
+- **Launch result:** The global `oat` shim failed before CLI startup because its
+- installed package has no `dist/index.js`. Exit code 1, an empty receipt, no gate
+- run marker, no reviewer launch, and no review artifact corroborate
+- `not_accepted`. The failure consumed zero configured remediation attempts.
+- **Next:** Repair or bypass only the broken launcher resolution while preserving
+- the exact configured command, persist a new launch intent, and retry.
+- **Launcher recovery:** Built the branch-local 0.2.74 CLI and exposed its
+- executable through a temporary `PATH` shim. The configured `oat --json gate
+- review ...` command and arguments remain byte-for-byte unchanged; `oat
+- --version` resolves to 0.2.74.
+- **Retry attempt:** `aar-exit-gate-20260912T202337Z`
+- **Retry launch intent:** persisted at 2026-09-12T20:23:37Z
+- **Retry result receipt:**
+- `/private/tmp/oat-agent-authored-recap/aar-exit-gate-20260912T202337Z.receipt.json`
+- **Retry status:** result persisted; zero remediation attempts consumed
+- **Gate run:** `6cf37a1e-a33f-40af-9b33-75937b421ac5`
+- **Gate target:** `cursor-fable-5-1-high`
+- **Gate runtime:** Cursor
+- **Acceptance evidence:** matching run marker written at
+- `/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/6cf37a1e-a33f-40af-9b33-75937b421ac5.json`
+- before reviewer launch.
+- **Structured result:** `blocked`,
+- `review_completed_blocking_findings`, `receiveEligible: true`
+- **Gate artifact:** `reviews/final-review-2026-09-12T203608Z.md`
+- **Findings:** 0 Critical, 1 Important, 0 Medium, 2 Minor
+- **Threshold:** Important
+- **Independence:** different-family achieved; gate reviewer family Claude,
+- aggregated producer-avoid family OpenAI
+- **Blocking finding:** FR4 page-to-ledger tracing harvests only
+- `h1-h6`/`tr`/`li`/`p` blocks, so fabricated number/date/status tokens in
+- common residual section elements such as `div` and `dd` pass silently.
+- **Disposition:** Valid blocked envelope; eligible review receipt is required
+- before the `onFailure=block` remediation policy can run.
+- **Receive intent:** persisted at 2026-09-12T20:40:52Z for run
+- `6cf37a1e-a33f-40af-9b33-75937b421ac5`, source
+- `reviews/final-review-2026-09-12T203608Z.md`, collision-free destination
+- `reviews/archived/final-review-2026-09-12T203608Z.md`, and pre-receive head
+- `214fb9ac11a1185ee8f3ed66964df58431def5cd`.
+- **Date:** 2026-09-12
+- **Review artifact:**
+- `reviews/archived/final-review-2026-09-12T203608Z.md`
+- **Gate run:** `6cf37a1e-a33f-40af-9b33-75937b421ac5`
+- **Findings:**
+- - Critical: 0
+- - Important: 1
+- - Medium: 0
+- - Minor: 2
+- **New tasks added:** `p06-t11`, `p06-t12`, `p06-t13`
+- **Finding dispositions:**
+- - I1 → `p06-t11`: close the FR4 fail-open by harvesting machine-checkable
+- tokens from residual section text with the section ID fallback subject.
+- - m1 → `p06-t12`: align stale design wording from “ISO and long form” to the
+- implemented ISO `YYYY-MM-DD` contract. The implementation remains the
+- accepted source of truth for this bounded date-token shape.
+- - m2 → `p06-t13`: preserve actionable structural package metadata with a
+- narrow exact-name exception while retaining conservative secret and path
+- redaction.
+- **Deferred findings:** none. Blocking gate auto-disposition converted all
+- three findings while context is fresh.
+- **Gate policy:** First valid blocked result; remediation attempt 1 of 2 becomes
+- consumed only after the eligible review receive is durably reconciled. Phase 6
+- recovery usage remains zero because configured-gate remediation has separate
+- accounting.
+- **Receive reconciliation:** Completed. Commit
+- `b384a4edfb4ad22d1e4fda2c9bc95445e4853615` contains the exact archive move,
+- matching `fixes_added` event, plan tasks, and tracking updates bound by the
+- persisted correlation. The configured gate now records remediation attempt 1
+- of 2 consumed; Phase 6 recovery usage remains zero.
+- **Status:** completed
+- **Range:**
+- `86bdda6beeb6981ab76c1783ee6f9431665bce3d..3f137e92a5e4c013f5e498648e1827bd9bf2da1f`
+- - `p06-t11` harvests residual rendered-section number, ISO-date, and
+- closed-status tokens with the section ID fallback subject. Initial and
+- neutralized runs each failed exactly the three new controls; restored verify
+- passed 18/18.
+- - `p06-t12` aligns design wording to the implemented ISO `YYYY-MM-DD` date
+- token contract.
+- - `p06-t13` exempts only exact `npm_package_name` from length-only redaction.
+- Initial and neutralized runs failed its one control; restored bundle passed
+- 19/19 while lifecycle scripts, secrets, ordinary long values, and paths
+- remained redacted.
+- **Verification:** Core 115/115, lifecycle 84/84, state 58/58,
+- retirement/parity 10/10, strict package/hash/inventory validation, all ordered
+- repository gates, isolated-HOME forced Turbo 10/10 with `Cached: 0`,
+- standalone smoke 158/158, skills 438/438, scripts 1/1, skill validation, lint,
+- and format passed.
+- **Boundary:** Three commits changed exactly five declared files. Tracked
+- explainer packages, versions, state, review artifacts, and gate receipts were
+- unchanged. Phase 6 recovery remains zero.
+- **Next:** Run the narrow Phase 6 review, then the mandatory current-basis final
+- lifecycle review before restarting the configured exit gate.
+- **Date:** 2026-09-12
+- **Review artifact:** `reviews/archived/p06-review-2026-09-12T223410Z.md`
+- **Reviewed head:** `06da0d40112052eb4a3bfd5760d5aa2ca1867bff`
+- **Findings:**
+- - Critical: 0
+- - Important: 2
+- - Medium: 0
+- - Minor: 0
+- **New tasks added:** `p06-t14`, `p06-t15`
+- **Finding dispositions:**
+- - I1 → `p06-t14`: preserve nearby wave subjects for legitimate residual
+- status cards while retaining the section fallback for unlabeled fabricated
+- residual facts. Add real controls over copies of both tracked packages.
+- - I2 → `p06-t15`: correct the state Artifacts inventory to the amended
+- 47-task, six-phase plan without altering stale gate or recovery provenance.
+- **Review context:** Both earlier behavioral guards remain load-bearing and all
+- repository gates passed, but the unchanged program recap fails a fresh
+- `verifyRun` under the section-only residual subject. This review-fix
+- continuation belongs to configured gate remediation attempt 1 and does not
+- consume Phase 6 recovery.
+- **Next:** Execute `p06-t14` and `p06-t15`, then re-run the narrow Phase 6
+- review.
+- **Status:** completed
+- - `p06-t14` preserves nearby wave subjects for residual fact cards, uses the
+- section fallback only when no local subject exists, and adds fresh real
+- `verifyRun` controls for both tracked packages. The pre-fix and neutralized
+- implementations reject the unchanged program recap on `merged`, `parked`,
+- and `complete`; restored behavior passes both packages while fabricated
+- residual controls still fail.
+- - `p06-t15` changes only the state Artifacts inventory from 42 to 47 tasks.
+- **Verification:** Focused verify 19/19, core 116/116, lifecycle 84/84, state
+- 58/58, retirement/parity 10/10, standalone smoke 158/158, skills 439/439,
+- scripts 1/1, all ordered repository gates, forced uncached Turbo 10/10, final
+- isolated lint, and format passed. One concurrent lint run observed the smoke
+- suite's temporary seeded violations; the isolated unchanged-tree rerun passed.
+- **Boundary:** Two commits changed only `verify.mjs`, `verify.test.mjs`, and the
+- single state inventory line. Package trees are unchanged; configured
+- remediation usage remains 1/2 and Phase 6 recovery remains zero.
+- **Next:** Re-run the narrow Phase 6 review.
+- **Review artifact:** `reviews/archived/p06-review-2026-09-12T230247Z.md`
+- **Reviewed head:** `35a68fbe6f292573eb9ca9a28cfdcb57e79a541b`
+- **Verdict:** PASS — 0 Critical, 0 Important, 0 Medium, 0 Minor
+- Both tracked package copies pass fresh `verifyRun`; the section-only negative
+- control reproduces the program-recap status failure; fabricated unlabeled
+- residual facts still fail; all claim keys are unique; and the 47-task
+- inventory, stale gate generation, remediation usage 1/2, and zero Phase 6
+- recovery state are consistent. All ordered gates and the uncached test run
+- passed.
+- **Next:** Run the mandatory current-basis final lifecycle review before
+- restarting the configured exit gate.
+- **Date:** 2026-09-12
+- **Review artifact:**
+- `reviews/archived/final-review-2026-09-12T231453Z.md`
+- **Reviewed head:** `f2b92c515c23f0d9b4b9bab714951a785b56afbd`
+- **Findings:**
+- - Critical: 0
+- - Important: 1
+- - Medium: 0
+- - Minor: 1
+- **New task added:** `p06-t16`
+- **Finding dispositions:**
+- - I1 → `p06-t16`: preserve closed-identifier subject propagation while
+- harvesting number, ISO-date, and status facts from the same composite
+- residual label; avoid treating the identifier suffix as a fact.
+- - m1 → approved deferral retained. The four immutable program-HTML whitespace
+- warnings remain unchanged until substantive package regeneration.
+- **Deferred Critical/Important/Medium:** none.
+- **Gate context:** This bounded fix remains inside configured exit-gate
+- remediation attempt 1 of 2. It neither consumes a second gate attempt nor a
+- Phase 6 recovery attempt.
+- **Next:** Execute `p06-t16`, then run the narrow Phase 6 and current-basis final
+- reviews before restarting the configured gate.
+- **Status:** completed
+- **Commit:** `3a47b0e32872345020fe28d7aa07b75928abc835`
+- Composite `strong` and `dt` labels now propagate the closed identifier as
+- subject and also emit their number, ISO-date, and closed-status facts without
+- emitting the identifier's numeric suffix. The RED and subject-only
+- neutralization controls both incorrectly accepted 2/2 fabricated labels;
+- restored behavior rejects all six facts, preserves unique keys, passes both
+- tracked packages, and retains the three bare residual failures.
+- Focused verify passed 21/21, core 118/118, lifecycle 84/84, state 58/58,
+- retirement/parity 10/10, standalone smoke 158/158, skills 441/441, scripts
+- 1/1, all ordered gates, isolated-HOME Turbo 10/10 with `Cached: 0`, lint, and
+- format. Only the two declared verifier files changed; package trees and all
+- gate/recovery records remain unchanged.
+- **Next:** Run the narrow Phase 6 re-review, then the current-basis final
+- lifecycle review.
+- **Review artifact:** `reviews/archived/p06-t16-review-2026-09-12T234414Z.md`
+- **Reviewed head:** `811fa6a0d9bdf122fe2e18463558bdb046ccc9e1`
+- **Verdict:** PASS — 0 Critical, 0 Important, 0 Medium, 0 Minor
+- The reviewer independently reproduced the subject-only fail-open, confirmed
+- the restored verifier rejects all six composite-label facts without emitting
+- the identifier suffix, retained unique claim keys and existing subjects, and
+- passed both tracked packages plus all 22 focused and repository verification
+- commands. Gate remediation remains stale at 1/2 consumed and Phase 6 recovery
+- remains zero.
+- **Next:** Run the required current-basis final lifecycle review.
+- **Review artifact:** `reviews/archived/final-review-2026-09-12T235655Z.md`
+- **Reviewed head:** `9c6d83fe16f8120bd585ff5d76925e19e1d1ca3a`
+- **Verdict:** PASS — 0 Critical, 0 Important, 0 Medium, 1 approved deferred
+- Minor
+- The composite-label Important is closed with independent old/new real-verifier
+- evidence. Whole-project closure reconciles at 48/48 tasks, 16/16 Phase 6,
+- fresh passing checks for both immutable packages, stale configured-gate
+- remediation at 1/2 consumed, completed receive provenance, zero Phase 6
+- recovery, and all 22 repository/focused commands passing. The immutable
+- program-HTML whitespace item remains the sole approved deferral.
+- **Next:** Start a fresh configured exit-gate generation on this reviewed
+- implementation basis, preserving one consumed remediation attempt.
+- **Generation started:** 2026-09-12T23:59:46Z
+- **Resolution:** configured; declaration unchanged
+- **Policy:** `onFailure=block`, `maxAttempts=2`, `attemptsCompleted=1`
+- **Reviewed head:** `9c6d83fe16f8120bd585ff5d76925e19e1d1ca3a`
+- **Integration base:** `origin/main`
+- **Implementation fingerprint:**
+- `sha256:effective-delta-v1:76645c43ae2963947cb36b59464530e1f8bfaaebee115fa936714dd4d856c658`
+- **Configuration fingerprint:**
+- `sha256:94671d8d5f24560ccaac19595added0c71a89defa8b2a3f4be1d1027b96581e5`
+- **Prior generation:** Blocked run
+- `6cf37a1e-a33f-40af-9b33-75937b421ac5` is fully received and preserved above;
+- its remediation changed the basis and consumed attempt 1.
+- **Attempt:** `aar-exit-gate-20260913T000105Z`
+- **Launch intent:** persisted at 2026-09-13T00:01:05Z
+- **Result receipt:**
+- `/private/tmp/oat-agent-authored-recap/aar-exit-gate-20260913T000105Z.receipt.json`
+- **Status:** result persisted; blocked
+- **Gate run:** `756b124f-64ad-492b-96d8-2c8c9d22bbd3`
+- **Gate target:** `cursor-fable-5-1-high`
+- **Acceptance evidence:** matching run marker written at
+- `/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/756b124f-64ad-492b-96d8-2c8c9d22bbd3.json`
+- before reviewer launch.
+- **Structured result:** `blocked`,
+- `review_completed_blocking_findings`, `receiveEligible: true`
+- **Gate artifact:** `reviews/final-review-2026-09-13T001401Z.md`
+- **Findings:** 0 Critical, 1 Important, 0 Medium, 1 Minor
+- **Blocking finding:** The tracked-package verification test reads the
+- project-explainer fixture from this shared project's live directory, which
+- completion deletes; post-closeout `pnpm test` would fail with `ENOENT`.
+- **Disposition:** Eligible receive required. This is configured gate attempt 2;
+- after durable receipt, the `maxAttempts=2` budget is exhausted and no
+- additional gate launch is authorized.
+- **Next:** Persist receive intent, consume the review, and stop at the exhausted
+- gate-attempt boundary.
+- **Receive intent:** persisted for run
+- `756b124f-64ad-492b-96d8-2c8c9d22bbd3`, source
+- `reviews/final-review-2026-09-13T001401Z.md`, destination
+- `reviews/archived/final-review-2026-09-13T001401Z.md`, and pre-receive head
+- `ce6bf0936f7d749b1eece8b6a50284c64093f8ac`.
+- **Date:** 2026-09-13
+- **Review artifact:**
+- `reviews/archived/final-review-2026-09-13T001401Z.md`
+- **Gate run:** `756b124f-64ad-492b-96d8-2c8c9d22bbd3`
+- **Findings:**
+- - Critical: 0
+- - Important: 1
+- - Medium: 0
+- - Minor: 1
+- **New tasks added:** `p06-t17`, `p06-t18`
+- **Finding dispositions:**
+- - I1 → `p06-t17`: snapshot the real-package verification inputs into
+- provenance-recorded, archive-safe skill fixtures and prove the control passes
+- without `.oat/projects/`.
+- - m1 → `p06-t18`: align the authoring brief with residual card/definition-list
+- subject selection and section fallback.
+- **Behavioral result:** The FR4 remediation itself passed 18 adversarial
+- real-verifier probes and both tracked packages. The blocker is lifecycle
+- durability of the test evidence after this shared project is archived.
+- **Gate policy:** This is the second valid blocking gate result. After durable
+- receive reconciliation, `attemptsCompleted=2` equals `maxAttempts=2`; no fix
+- execution or additional gate launch is authorized without explicit operator
+- direction. Phase 6 recovery remains zero.
+- **Receive reconciliation correction:** The initial receive commit added the
+- archived artifact and matching tracking changes but omitted staging the source
+- deletion. Commit `322791386ee9127c96b59f6c629a2a6e31663079` completed the
+- exact move; the bounded diff from pre-receive head
+- `ce6bf0936f7d749b1eece8b6a50284c64093f8ac` through that commit contains the
+- artifact move, `fixes_added` ledger event, p06-t17/p06-t18 tasks, and tracking
+- updates. The configured gate records 2/2 remediation attempts consumed with
+- complete receive provenance.
+- **Stop boundary:** The configured gate attempt budget is exhausted. Do not
+- execute p06-t17/p06-t18 or launch another gate without explicit operator
+- authorization. Phase 6 recovery remains zero.
+- **Next:** Ask the operator whether to authorize one additional bounded
+- remediation plus gate re-review, proceed with the known Important unresolved,
+- or stop.
+- **Date:** 2026-09-13
+- **Scope:** Execute only `p06-t17` and `p06-t18`, re-establish the Phase 6 and
+- current-basis final lifecycle evidence, and launch exactly one additional
+- configured gate review.
+- **Accounting:** The configured `maxAttempts=2` remediation budget remains
+- exhausted at 2/2. This is a single explicit operator exception, not an
+- automatic retry, a Phase 6 recovery attempt, or an open-ended extension.
+- Phase 6 recovery usage remains zero.
+- **Stop boundary:** If the one additional gate review blocks, stop without
+- another fix or review attempt unless the operator gives new direction.
+- **Plan correction:** `p06-t17`'s byte-exact historical snapshots exposed
+- retired vocabulary to the live-source retirement sweep. The task boundary now
+- includes `tools/smoke/explainer-kit/no-retired-references.test.mjs` solely to
+- exclude the declared immutable snapshot subtree while preserving a negative
+- control for live source paths. This is necessary integration work for
+- `p06-t17`, not a third remediation task or a broader sweep exception.
+- **Status:** completed
+- **Commits:** `5eb05c8197f93279c264d355bb1b2ffffe354a38`,
+- `df2015fa518565ff7d6872efd91a28f41a17e41d`
+- The two fresh real-package controls now read provenance-recorded, byte-exact
+- fixtures containing only `site/index.html`, `source/ledger.json`, and
+- `source/fact-base.json`. The fixture inventory records both original source
+- paths, run IDs, and source commit. The retirement sweep excludes only this
+- declared historical snapshot subtree and retains a live-source negative
+- control.
+- The pre-fix archive-free reproduction failed with the expected
+- `.oat/projects/...` `ENOENT`; the restored test passed 2/2 with
+- `.oat/projects/` absent. Focused verification passed 28/28. The sweep
+- neutralization reported both historical and live paths; restored behavior
+- ignored only the snapshot and still rejected the live path.
+- **Status:** completed
+- **Commit:** `31200a40835bc4cd15ffa047862e1adbd75edd09`
+- The authoring reference now states that cards, definition lists, and other
+- non-paragraph elements use the nearest bold/definition label or preceding
+- heading as subject, with the enclosing section ID as fallback.
+- Core passed 119/119, lifecycle 84/84, project state 58/58,
+- archive/lifecycle contracts 210/210, retirement/parity 11/11, standalone smoke
+- 159/159, skills 442/442, and scripts 1/1. Isolated-HOME Turbo ran 10/10 tasks
+- with `Cached: 0`. Every ordered repository gate, plan and skill validation,
+- lint, and format exited 0.
+- The strict project-recap archive boundary passed unchanged. Independent diff
+- verification found no changes to either tracked explainer package tree;
+- recorded package identities remain project
+- `a14f37b71fd2043e02179c055162cb099eb16579` and program
+- `819951a507a9ca4e74483e9bcad4a56ade43a3d2`. Phase 6 recovery remains zero.
+- **Date:** 2026-09-13
+- **Review artifact:**
+- `reviews/archived/p06-review-2026-09-13T043549Z.md`
+- **Reviewed head:** `4a46095abdd2b195eb2a79a510071fcf96f1d28c`
+- **Verdict:** PASS — 0 Critical, 0 Important, 0 Medium, 1 Minor
+- The reviewer independently matched all six fixture blobs to their recorded
+- source commit, reproduced the archive-free pass and pre-fix `ENOENT`, confirmed
+- the sweep exclusion remains exact and load-bearing, preserved the strict
+- project-recap archive boundary, and verified both source package tree IDs were
+- unchanged.
+- **Minor disposition:** The stale `oat_last_commit` pointer is corrected during
+- review receipt to the final implementation task commit
+- `31200a40835bc4cd15ffa047862e1adbd75edd09`. No new task is created because
+- this is a negligible correction to the receive-owned state bookkeeping; a
+- separate third remediation task would widen the operator's explicit
+- `p06-t17`/`p06-t18` scope without changing implementation behavior.
+- Phase 6 passes with 18/18 tasks complete. Recovery usage remains zero.
+- **Date:** 2026-09-13
+- **Review artifact:**
+- `reviews/archived/final-review-2026-09-13T044417Z.md`
+- **Reviewed head:** `d0df52f7c8c44522b59f99588903329a538a5a4c`
+- **Verdict:** PASS — 0 Critical, 0 Important, 0 Medium, 2 Minor
+- The narrowed final review independently closed the configured-gate Important,
+- matched all six fixture blobs to provenance, preserved both source package
+- trees and the strict project-recap archive boundary, and reconciled closure at
+- 50/50 tasks, six passed phases, configured attempts exhausted at 2/2, one
+- explicit exceptional continuation, and zero Phase 6 recovery.
+- **Minor dispositions:**
+- - The stale Phase 6 `review_pending` progress label is corrected during this
+- receipt to `completed`. No task is warranted for a receive-owned
+- bookkeeping-only edit.
+- - The four trailing-whitespace diagnostics in immutable program recap HTML
+- remain explicitly deferred until substantive package regeneration. This
+- preserves the prior operator-approved disposition and byte identity of both
+- the source package and provenance fixture.
+- There are no deferred Critical, Important, or Medium findings.
+- **Generation started:** 2026-09-13T04:54:15Z
+- **Resolution:** configured; declaration unchanged
+- **Policy:** `onFailure=block`, configured `maxAttempts=2`,
+- `attemptsCompleted=2`; one explicit exceptional launch authorized
+- **Reviewed head:** `d0df52f7c8c44522b59f99588903329a538a5a4c`
+- **Integration base:** `origin/main`
+- **Implementation fingerprint:**
+- `sha256:effective-delta-v1:3f0a80e727c3936c2739325119f6f37a3c3dcabd1794bbb8c0e82f33969ee399`
+- **Freshness head:** `92be8b0e7039a38f82ce0dd222515d96c6724cfe`
+- **Freshness fingerprint:**
+- `sha256:effective-delta-v1:e8e6741b7f807cab05d1ad828e5255ff10658baf97244794b662359cf4383cfc`
+- **Configuration fingerprint:**
+- `sha256:94671d8d5f24560ccaac19595added0c71a89defa8b2a3f4be1d1027b96581e5`
+- **Attempt:** `aar-exit-gate-20260913T045415Z`
+- **Launch intent:** persisted at 2026-09-13T04:54:15Z
+- **Result receipt:**
+- `/private/tmp/oat-agent-authored-recap/aar-exit-gate-20260913T045415Z.receipt.json`
+- **Status:** result persisted; passed
+- **Gate run:** `52787dbb-20c4-4fe7-b484-a72f0cd20c35`
+- **Gate marker:**
+- `/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/52787dbb-20c4-4fe7-b484-a72f0cd20c35.json`
+- **Gate target:** `cursor-fable-5-1-high`
+- **Gate runtime/model:** Cursor / `claude-fable-5-1-high`
+- **Structured result:** `ok`, `review_completed_gate_passed`,
+- `receiveEligible: true`
+- **Gate artifact:** `reviews/final-review-2026-09-13T050025Z.md`
+- **Findings:** 0 Critical, 0 Important, 0 Medium, 0 Minor
+- **Threshold:** Important
+- **Independence:** different-family achieved; gate reviewer family Claude,
+- aggregated producer-avoid family OpenAI
+- The gate independently reproduced the archive-free package controls, exact
+- six-blob provenance, narrow live-source sweep protection, strict archive
+- boundary, and release/skill validation. Its structured receipt, artifact, plan
+- event, and project-log event all correlate to the gate run.
+- **Next:** Persist receive intent, consume the passing gate review, and
+- reconcile its durable receipt before closeout.
+- **Receive intent:** persisted for run
+- `52787dbb-20c4-4fe7-b484-a72f0cd20c35`, source
+- `reviews/final-review-2026-09-13T050025Z.md`, destination
+- `reviews/archived/final-review-2026-09-13T050025Z.md`, and pre-receive head
+- `1202699d15b7fb49437b67d6344b80d792cb9f2b`.
+- **Date:** 2026-09-13
+- **Review artifact:**
+- `reviews/archived/final-review-2026-09-13T050025Z.md`
+- **Gate run:** `52787dbb-20c4-4fe7-b484-a72f0cd20c35`
+- **Verdict:** PASS — 0 Critical, 0 Important, 0 Medium, 0 Minor
+- The gate used the configured `cursor-fable-5-1-high` target, achieved
+- different-family review, and independently closed the prior archive-lifecycle
+- finding. Its exact six-blob provenance, archive-free verification, narrow
+- retired-reference exception, authoring guidance, strict archive boundary,
+- skill/version gates, lint, and format all passed.
+- **Finding dispositions:** none. The prior immutable-HTML whitespace deferral
+- was re-evaluated and remains accepted; the gate introduced no new finding.
+- **Gate policy:** The single operator-authorized exceptional launch is
+- consumed. Its eligible passing result permits `allowed/passed` only after the
+- archive move, Reviews event, and receive commit reconcile durably.
+- The receive commit was reconciled in `state.md`; the implementation exit gate
+- is now `allowed/passed`.
+- **Resolution:** configured structured preference
+- **Final phase:** `p06`
+- **Final checkpoint:** absent (`oat_plan_hill_phases: ['p05']`)
+- **Pre-approval sequence:** `summary` → `document` → `pr`
+- **Approval:** `not_required`; the final phase is not a HiLL checkpoint
+- **Post-approval sequence:** empty
+- **Status:** `complete`
+- **Completed:** `summary`, `document`, `pr`
+- **Project recap decision:** `generate` (`interactive`,
+- 2026-09-13T16:32:42Z)
+- **Project recap outcome:** `built-needs-review`
+- **Project recap run:** `explainers/agent-authored-recap-recap`
+- **Project recap run ID:** `2c450643-d40e-4f72-828d-fb04160fd254`
+- **Project recap QA:** browser rung `none`,
+- `browser-driver-not-installed`; parse, required narrative, structure, source
+- dumping, shell-script safety, ledger-to-page, and page-to-ledger checks passed
+- **Terminal guard:** passed with `generate/built-needs-review`
+- The immutable sequence snapshot is persisted in `state.md`. Each completed
+- step must commit before the next step and advance gate freshness through a
+- separate state-only checkpoint.
+- **Next:** Implementation is complete.
+- [PR #299](https://github.com/voxmedia/open-agent-toolkit/pull/299) is open for
+- review.
+- _Each run from `oat-project-implement` appends an entry below with:_
+- _- Run header (number, timestamp, branch, tier, policy, phase counts)_
+- _- Phase Outcomes table_
+- _- Parallel Groups list_
+- _- Outstanding Items_
+- <!-- orchestration-runs-start -->
+- _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
+- - Request ID: `dispatch-agent-authored-recap-p01-20260911T0308Z`
+- - Launch status: `accepted`
+- - Authorization scope: this OAT implementation run
+- - Role selector: `oat-phase-implementer-gpt-5-6-sol-high`
+- - Model selector: `gpt-5.6-sol-high`
+- - Model selector granularity: `opaque-materialized-role`
+- - Effort selector: `null`
+- - Reasoning mode selector: `null`
+- - Service tier selector: `standard`
+- - Guidance reference: `subagent-orchestration/references/provider-cursor.md`
+- - Guidance version: `2026-07-25`
+- - Guidance verified at: `2026-07-25`
+- - Guidance status: `review-required`
+- - Selection source: `native-default`
+- - Selection reason: `native-catalog`
+- - Floor satisfaction: `satisfied`
+- - Fallback: `caller-inline` (`allow_below_task_class_floor=false`)
+- - Runtime confirmation: `not-reported`
+- - Dispatch target: `oat-phase-implementer-gpt-5-6-sol-high`
+- - Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
+- | Phase | Status    | Tasks | Base                                       | Code Head                                  | Review                          |
+- | p01   | completed | 17/17 | `79f359957fabe4cbe042b39379523887b816cbff` | `5844547c524f09f700027691bd7c1148b536b2e4` | independent verification passed |
+- - Recovery ledger: `used_attempts: 0`, `pending_attempt: null`; no recovery events.
+- - File boundary: only p01-declared files, the operator-approved plan/design correction, p01 bookkeeping, and mechanically derived in-phase symbol consumers were changed.
+- - Completion time: `2026-09-11T15:44:08Z`.
+- - Task p01-t17 bookkeeping: `dd203b3aacdfdd9642fbe95d74855059b2711819`.
+- - Phase completion disposition: implementation complete; review round 1 fixes required; p02 not started.
+- - Request ID: `dispatch-agent-authored-recap-p01-review-r1-20260911T1549Z`
+- - Launch status: `accepted`
+- - Terminal outcome: `completed`
+- - Review artifact: `reviews/archived/p01-review-2026-09-11T155532Z.md`
+- - Reviewed range: `79f359957fabe4cbe042b39379523887b816cbff..f1cff54c0e364e858f9e36fb820e9f95b1e5b578`
+- - Reviewed head: `f1cff54c0e364e858f9e36fb820e9f95b1e5b578`
+- - Findings: 2 Critical, 5 Important, 3 Medium, 0 Minor
+- - Disposition: `CHANGES REQUESTED`; review row advanced to `fixes_added`
+- - Reconnaissance: `not-attempted`; no Review Orchestration section or project-log entry
+- - Selection reason: `gate-target`
+- - Candidates considered: `gpt-5.6-sol-high`
+- - Dispatch target: `oat-reviewer-gpt-5-6-sol-high`
+- - Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
+- - Next: resume the original Phase 1 handle for the bounded review findings, then run a fresh root-owned review round.
+- - Continuation: `cont-agent-authored-recap-p01-review-r1-fix-1`
+- - Original request: `dispatch-agent-authored-recap-p01-20260911T0308Z`
+- - Review artifact: `reviews/archived/p01-review-2026-09-11T155532Z.md`
+- - Fix range: `4b58a8dc1a13ca81c28f96b13c249605be1d411e..fd809a53820a6907f07b039a2b840d9fa31a26b5`
+- - Fix commit: `fd809a53820a6907f07b039a2b840d9fa31a26b5`
+- - Fixed: all 2 Critical and 5 Important findings with red/green negative controls
+- - Deferred unchanged: 3 Medium findings
+- - Verification: focused core, lifecycle, archive, CLI, smoke, skills, scripts, all eight phase gates, lint, format, and uncached Turbo passed
+- - Recovery accounting: review-fix continuation; phase recovery usage remains `0/10` with `pending_attempt: null`
+- - Dispatch target and axes: unchanged (`oat-phase-implementer-gpt-5-6-sol-high`, `selected:gpt-5.6-sol-high`, effort not applicable)
+- - Dispatch: scope=p01-review-r1-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
+- - Disposition: `fixes_completed`; root-owned re-review required before p02
+- - Request ID: `dispatch-agent-authored-recap-p01-review-r2-20260911T1635Z`
+- - Launch status: `accepted`
+- - Terminal outcome: `completed`
+- - Review artifact: `reviews/archived/p01-review-2026-09-11T165150Z.md`
+- - Reviewed range: `79f359957fabe4cbe042b39379523887b816cbff..3f29035c2588bc590cfd361e88e5632e084238f5`
+- - Reviewed head: `3f29035c2588bc590cfd361e88e5632e084238f5`
+- - Prior dispositions: 2 Critical closed; 3 Important closed; 2 Important partial
+- - Findings: 0 Critical, 3 Important, 3 Medium, 0 Minor
+- - Disposition: `CHANGES REQUESTED`; new review row advanced to `fixes_added`
+- - Reconnaissance: `not-attempted`; no Review Orchestration section or project-log entry
+- - Selection reason: `gate-target`
+- - Candidates considered: `gpt-5.6-sol-high`
+- - Dispatch target: `oat-reviewer-gpt-5-6-sol-high`
+- - Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
+- - Next: final allowed bounded fix iteration for the three Important findings, then fresh root-owned review round 3
+- - Continuation: `cont-agent-authored-recap-p01-review-r2-fix-2`
+- - Original request: `dispatch-agent-authored-recap-p01-20260911T0308Z`
+- - Review artifact: `reviews/archived/p01-review-2026-09-11T165150Z.md`
+- - Fix range: `8219e29adcbf161c7092c2bbce9e605463cdc6c2..ca185f1c629892c1616f136cfe9c15aa8c0bddcc`
+- - Fix commit: `ca185f1c629892c1616f136cfe9c15aa8c0bddcc`
+- - Fixed: all 3 Important findings with pre-fix controls and post-fix verification
+- - Deferred unchanged: failure sanitization, duplicate relative-locator handling, and heading-fact asymmetry
+- - Verification: focused core, lifecycle, archive/CLI, all eight phase gates, uncached Turbo, smoke, skills, scripts, lint, and format passed
+- - Recovery accounting: final review-fix iteration; phase recovery usage remains `0/10`
+- - Dispatch target and axes: unchanged (`oat-phase-implementer-gpt-5-6-sol-high`, `selected:gpt-5.6-sol-high`, effort not applicable)
+- - Dispatch: scope=p01-review-r2-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
+- - Disposition: `fixes_completed`; governance-final root-owned review round 3 required before p02
+- - Request ID: `dispatch-agent-authored-recap-p01-review-r3-20260911T1726Z`
+- - Launch status: `accepted`
+- - Terminal outcome: `completed`
+- - Review artifact: `reviews/archived/p01-review-2026-09-11T173707Z.md`
+- - Reviewed range: `79f359957fabe4cbe042b39379523887b816cbff..5e8694abbb7f7740970bd69e5feea64ddf9df316`
+- - Reviewed head: `5e8694abbb7f7740970bd69e5feea64ddf9df316`
+- - Prior closure: all earlier Critical and Important findings closed without regression
+- - Findings: 0 Critical, 1 Important, 3 Medium, 0 Minor
+- - Disposition: `CHANGES REQUESTED`; governance retry budget exhausted at round 3 of 3
+- - Reconnaissance: `not-attempted`; no Review Orchestration section
+- - Blocking finding: terminal `generate` guard accepts a partial or stale satisfied manifest, and interrupted rebundling can leave that stale manifest beside failure evidence
+- - Selection reason: `gate-target`
+- - Candidates considered: `gpt-5.6-sol-high`
+- - Dispatch target: `oat-reviewer-gpt-5-6-sol-high`
+- - Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
+- - Stop: operator direction is required before any further fix or Phase 2 work
+- - Authorization time: `2026-09-11T18:27:00Z`
+- - Scope: one bounded manual remediation for the governance-final terminal-guard finding, followed by one independent verification review
+- - Finding: validate the complete satisfied project-recap package before `generate` succeeds, and prevent stale manifest/failure coexistence during changed-input rebundle interruption
+- - Continuation: `cont-agent-authored-recap-p01-governance-manual-fix-1`
+- - Authorization: `operator-scope`
+- - Original request: `dispatch-agent-authored-recap-p01-20260911T0308Z`
+- - Exact target: `oat-phase-implementer-gpt-5-6-sol-high` (unchanged)
+- - Recovery accounting: outside the automatic review-fix budget and not phase recovery; usage remains `0/10`
+- - Boundary: no Medium findings, p02 work, archive recipe widening, or unrelated cleanup
+- - Continuation: `cont-agent-authored-recap-p01-governance-manual-fix-1`
+- - Original request: `dispatch-agent-authored-recap-p01-20260911T0308Z`
+- - Source review: `reviews/archived/p01-review-2026-09-11T173707Z.md`
+- - Fix range: `4d971b476fac42e3d9cb95829b23a417a55bb132..5844547c524f09f700027691bd7c1148b536b2e4`
+- - Fix commit: `5844547c524f09f700027691bd7c1148b536b2e4`
+- - Fixed: terminal `generate` now requires a complete assured project-recap package; changed-input rebundles and failure recording invalidate stale manifests
+- - Negative controls: partial built manifest, corrupted package bytes, changed-input interruption, and failure/manifest coexistence all failed before the fix and pass after it
+- - Positive control: checked-in recorded project-recap package remains accepted
+- - Verification: focused core, lifecycle, archive/CLI, ordered phase gates, uncached Turbo, smoke, skills, scripts, lint, and format passed
+- - Recovery accounting: operator-scoped governance remediation; automatic retry budget remains exhausted and phase recovery usage remains `0/10`
+- - Dispatch target and axes: unchanged (`oat-phase-implementer-gpt-5-6-sol-high`, `selected:gpt-5.6-sol-high`, effort not applicable)
+- - Dispatch: scope=p01-governance-manual-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
+- - Deferred unchanged: failure sanitization, duplicate relative-locator handling, and heading-fact asymmetry
+- - Disposition: `fixes_completed`; one operator-authorized independent verification review remains before p02
+- - Request ID: `dispatch-agent-authored-recap-p01-independent-verification-20260911T1857Z`
+- - Launch status: `accepted`
+- - Terminal outcome: `completed`
+- - Review artifact: `reviews/archived/p01-review-2026-09-11T185739Z.md`
+- - Reviewed range: `79f359957fabe4cbe042b39379523887b816cbff..285673119c8493c99ea0c0208e18779a8e9a142c`
+- - Reviewed head: `285673119c8493c99ea0c0208e18779a8e9a142c`
+- - Findings: 0 Critical, 0 Important, 3 deferred Medium, 0 Minor
+- - Disposition: `PASS`
+- - Reconnaissance: `not-attempted`; no Review Orchestration section or project-log orchestration entry
+- - Verification: 154 focused tests passed, including positive and negative remediation controls and the strict project-recap archive boundary
+- - Selection reason: `gate-target`
+- - Candidates considered: `gpt-5.6-sol-high`
+- - Dispatch target: `oat-reviewer-gpt-5-6-sol-high`
+- - Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
+- - Phase outcome: p01 passed after 2 automatic fix iterations and 1 operator-authorized remediation; p02 is now ready
+- - Recovery accounting: phase recovery usage remains `0/10`, `pending_attempt: null`
+- - Original request: `dispatch-agent-authored-recap-p01-20260911T0308Z`
+- - Disposition: `operator-scope`
+- - Dispatch target: `oat-phase-implementer-gpt-5-6-sol-high` (unchanged)
+- - Decision: preserve the strict project-only archive validator and replace the non-project-recap checks in p01-t09, p04-t02, p05-t01, and the FR9 test row with direct generic package-contract composition.
+- - Cause: the archive check was added post-review without re-checking the recipe pin.
+- - Recovery accounting: not an automatic phase-recovery attempt; usage remains `0/10`, `pending_attempt: null`.
+- - Request ID: `dispatch-agent-authored-recap-p02-20260911T190604Z`
+- - Launch status: `accepted`
+- - Authorization scope: this OAT implementation run
+- - Role selector: `oat-phase-implementer-gpt-5-6-sol-high`
+- - Model selector: `gpt-5.6-sol-high`
+- - Model selector granularity: `opaque-materialized-role`
+- - Effort selector: `null`
+- - Service tier selector: `standard`
+- - Selection source: `phase scope analysis`
+- - Selection reason: `candidate-requested`
+- - Task class: `default-implementation`
+- - Classification rationale: bounded four-task implementation combining hash-bound screenshot verification, Playwright runtime integration, an authoring reference, and a fresh-host end-to-end assurance suite
+- - Candidates considered: `gpt-5.6-sol-high`
+- - Floor satisfaction: `satisfied`
+- - Fallback: none
+- - Runtime confirmation: Chromium `152.0.7977.84`; model identity not observable
+- - Dispatch target: `oat-phase-implementer-gpt-5-6-sol-high`
+- - Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
+- | Phase | Status    | Tasks | Base                                       | Code Head                                  | Review |
+- | p02   | completed | 4/4   | `37989f49bf1b6a07e297444a8d51f1d0d7b33b02` | `d6f34511e8235221a562a971383b67fed67ed79e` | passed |
+- - Task commits: `a670b8e8955ccd31c9ff9508e9ccdac04ae6e5cb`, `18d13671e8a7fc4b1a45aeefabdf7e441bbafe4b`, `43ab318281970d2c51ba3ab09101a0639b8e5889`, `38a46c85653ae8630465518e25aad053f92a088a`
+- - Bookkeeping commit: `413d93adaa946348ebdf0bb3ee056d1cd9713331`
+- - Recovery ledger: absent for p02, equivalent to `used_attempts: 0`, `pending_attempt: null`; no recovery events
+- - File boundary: only p02-declared files and phase bookkeeping changed
+- - Negative controls: all five declared guard-neutralization probes exited 1 and passed after restoration
+- - Verification: all focused suites, ordered phase gates, isolated-HOME uncached Turbo, standalone smoke/skills/scripts, canonical skill validation, lint, and format exited 0
+- - Manual/visual boundary: no manual visual result claimed; installed Chromium supplied automated Playwright proof
+- - Terminal outcome: `completed`; root-owned Phase 2 review required before p03
+- - Request ID: `dispatch-agent-authored-recap-p02-review-r1-20260911T1948Z`
+- - Launch status: `accepted`
+- - Terminal outcome: `completed`
+- - Review artifact: `reviews/archived/p02-review-2026-09-11T194856Z.md`
+- - Reviewed range: `37989f49bf1b6a07e297444a8d51f1d0d7b33b02..ecdce3e38ad6b86c8583ba115cfe27bc5faf0caa`
+- - Reviewed head: `ecdce3e38ad6b86c8583ba115cfe27bc5faf0caa`
+- - Findings: 1 Critical, 2 Important, 0 Medium, 0 Minor
+- - Disposition: `CHANGES REQUESTED`; review row advanced to `fixes_added`
+- - Reconnaissance: `not-attempted`; no Review Orchestration section or project-log entry
+- - Blocking findings: rejected active content still reaches Chromium; none/unavailable fallback retains stale screenshots; lifecycle-resume assurance bypasses persisted-state reading
+- - Selection reason: `gate-target`
+- - Candidates considered: `gpt-5.6-sol-high`
+- - Dispatch target: `oat-reviewer-gpt-5-6-sol-high`
+- - Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
+- - Next: resume the original Phase 2 implementation handle for the first bounded review-fix iteration, then run a fresh root-owned review
+- - Continuation: `cont-agent-authored-recap-p02-review-r1-fix-1`
+- - Original request: `dispatch-agent-authored-recap-p02-20260911T190604Z`
+- - Source review: `reviews/archived/p02-review-2026-09-11T194856Z.md`
+- - Fix base: `59669e1bcc506b473fb5804be924dab6f222310d`
+- - Fix commit: `d6f34511e8235221a562a971383b67fed67ed79e`
+- - Fixed: browser launch is blocked after failed parse, structure, or
+- shell-script checks; every none/unavailable downgrade clears canonical
+- screenshots; persisted recap intent is re-read before resolution.
+- - Negative controls: the pre-fix ladder suite failed on retained screenshots
+- and returned `playwright` for a rejected script; the pre-fix fresh-host suite
+- failed because no persisted-state reader existed. After the fix, the
+- rejected payload's real-Chromium capability control passed while verifier
+- driver loads stayed zero, all three downgrade retries recorded
+- `built-needs-review`, and persisted read/resolution passed with valid
+- controls.
+- - Assurance boundary: Phase 2 proves persisted write, production adapter read,
+- and intent resolution. It does not claim downstream completion suppression;
+- the executable completion consumer does not exist before Phase 3.
+- - Verification: focused ladder/runtime (19/19), Explainer Kit (103/103),
+- adapter (43/43), and two fresh-host runs (4/4 each) passed; all eight ordered
+- gates, isolated-HOME forced Turbo (`Cached: 0`), standalone smoke, skills,
+- scripts, skill validation, lint, and format exited 0.
+- - Verification deviation: the first lint invocation overlapped the standalone
+- lint-enrollment test's temporary seeded violations and exited 1; after that
+- test cleaned up, the unchanged-tree lint retry exited 0.
+- - Recovery accounting: review-fix continuation, not phase recovery; p02 remains
+- `used_attempts: 0`, `pending_attempt: null`, with no recovery events.
+- - Dispatch: scope=p02-review-r1-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
+- - Disposition: `fixes_completed`; root-owned re-review is required and p02 is
+- not marked passed.
+- - Request ID: `dispatch-agent-authored-recap-p02-review-r2-20260911T2021Z`
+- - Launch status: `accepted`
+- - Terminal outcome: `completed`
+- - Review artifact: `reviews/archived/p02-review-2026-09-11T202150Z.md`
+- - Reviewed range: `37989f49bf1b6a07e297444a8d51f1d0d7b33b02..77681847a6755d0628a2c1f707804d783d04e2ae`
+- - Reviewed head: `77681847a6755d0628a2c1f707804d783d04e2ae`
+- - Prior closure: all 1 Critical and 2 Important findings closed
+- - Findings: 0 Critical, 0 Important, 0 Medium, 0 Minor
+- - Disposition: `PASS`
+- - Reconnaissance: `not-attempted`; no Review Orchestration section or project-log orchestration entry
+- - Verification: 103 retained core and 43 adapter tests passed; real Chromium and the pre-fix negative controls independently verified
+- - Selection reason: `gate-target`
+- - Candidates considered: `gpt-5.6-sol-high`
+- - Dispatch target: `oat-reviewer-gpt-5-6-sol-high`
+- - Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
+- - Phase outcome: p02 passed after 1 automatic fix iteration; p03 is now ready
+- - Recovery accounting: p02 remains `used_attempts: 0`, `pending_attempt: null`, with no recovery events
+- - Request ID: `dispatch-agent-authored-recap-p03-20260911T202900Z`
+- - Original request ID: `dispatch-agent-authored-recap-p03-20260911T202900Z`
+- - Launch status: `accepted`
+- - Authorization scope: Phase 3 implementation only
+- - Role selector: `oat-phase-implementer-gpt-5-6-sol-high`
+- - Configured runtime: Cursor
+- - Runtime identity: exact executing model not independently observable
+- - Base: `ab4785bf510ea737961a9431da4376a461be930e`
+- - Task outcome: p03-t01 through p03-t08 completed in strict dependency order
+- - Task commits: `eb5e806`, `fef5347`, `7378bb4`, `8d18c4d`,
+- `c0088a0`, `55d334d`, `7721cf9`, `e349ae0`
+- - Verification: all ordered gates, isolated-HOME uncached Turbo, standalone
+- suites, lint, format, protected-region checks, and negative controls passed
+- - Recovery accounting: p03 usage entry remains absent/zero; no recovery event
+- - Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
+- - Phase outcome: p03 implementation complete; p04-t01 is next
+- - Request ID: `dispatch-agent-authored-recap-p03-review-r1-20260911T2136Z`
+- - Launch status: `accepted`
+- - Terminal outcome: `completed`
+- - Review artifact: `reviews/archived/p03-review-2026-09-11T213626Z.md`
+- - Reviewed range: `ab4785bf510ea737961a9431da4376a461be930e..6619ca123ba6fdbbf6bdeeef00e6c613de1eb695`
+- - Reviewed head: `6619ca123ba6fdbbf6bdeeef00e6c613de1eb695`
+- - Findings: 0 Critical, 2 Important, 0 Medium, 1 Minor
+- - Disposition: `CHANGES REQUESTED`; review row advanced to `fixes_added`
+- - Reconnaissance: `not-attempted`; no Review Orchestration section or project-log entry
+- - Blocking findings: persisted-intent suppression is tested only through an injected callback not composed into deployed completion work; live lifecycle/docs prose retains retired seam, build-record, publish-gate, and recap-attestation semantics that the authoritative sweep misses
+- - Minor finding: named-skill fence-floor comments retain obsolete inventory counts
+- - Protected-boundary result: all eleven plan-declared slices remained byte-identical
+- - Selection reason: `gate-target`
+- - Candidates considered: `gpt-5.6-sol-high`
+- - Dispatch target: `oat-reviewer-gpt-5-6-sol-high`
+- - Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
+- - Next: resume the original Phase 3 implementation handle for bounded review-fix iteration 1, then run a fresh root-owned review
+- - Continuation: `cont-agent-authored-recap-p03-review-r1-fix-1`
+- - Original request: `dispatch-agent-authored-recap-p03-20260911T202900Z`
+- - Source review: `reviews/archived/p03-review-2026-09-11T213626Z.md`
+- - Fix base: `92be283f43e7f036a090c695c53e31f01a6819c6`
+- - Fix commit: `7f842e2feeb19352c1f4c5f5c11dcf4c50742f04`
+- - Fixed: the deployed completion boundary now gates real manifest discovery and host-authoring permission on persisted intent; all reviewed live semantic residue is removed and pinned by the authoritative sweep; named-skill inventory comments now match the measured 202 direct plus 6 symlink-only paths and floor 207
+- - Negative controls: the pre-fix production-boundary control failed; neutralizing either the production reader or suppression guard failed; the pre-fix semantic sweep found all four live residues; valid generate and declared historical/negative-control allowlist cases remained accepted
+- - Protected boundaries: all eleven Phase 3 slices remained byte-identical to base `ab4785bf510ea737961a9431da4376a461be930e`
+- - Verification: committed cross-consumer suite (53/53), semantic sweep, complete CI gates, isolated-HOME uncached Turbo, standalone smoke/skills/scripts, canonical skill validation, lint, format, and final diff check exited 0
+- - Recovery accounting: review-fix continuation, not phase recovery; p03 remains `used_attempts: 0`, `pending_attempt: null`, with no recovery events
+- - Dispatch target and axes: unchanged (`oat-phase-implementer-gpt-5-6-sol-high`, `selected:gpt-5.6-sol-high`, effort not applicable)
+- - Dispatch: scope=p03-review-r1-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
+- - Disposition: `fixes_completed`; root-owned re-review is required and p03 is not marked passed
+- - Request ID: `dispatch-agent-authored-recap-p03-review-r2-20260911T2213Z`
+- - Launch status: `accepted`
+- - Terminal outcome: `completed`
+- - Review artifact: `reviews/archived/p03-review-2026-09-11T221353Z.md`
+- - Reviewed range: `ab4785bf510ea737961a9431da4376a461be930e..3ed763cd88714a6e68bd7c2c41157994b7a28c0a`
+- - Reviewed head: `3ed763cd88714a6e68bd7c2c41157994b7a28c0a`
+- - Prior closure: all 2 Important and 1 Minor round 1 findings closed
+- - Findings: 0 Critical, 1 Important, 0 Medium, 0 Minor
+- - Disposition: `CHANGES REQUESTED`; new review row advanced to `fixes_added`
+- - Reconnaissance: `not-attempted`; no Review Orchestration section or project-log entry
+- - Blocking finding: after a fresh resume, persisted `skip/failed_attempt` suppresses general explainer discovery but carries no narrowly trusted failure-evidence path into the terminal guard
+- - Protected-boundary result: all eleven plan-declared slices remained byte-identical
+- - Selection reason: `gate-target`
+- - Candidates considered: `gpt-5.6-sol-high`
+- - Dispatch target: `oat-reviewer-gpt-5-6-sol-high`
+- - Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
+- - Next: final automatic review-fix iteration for the new Important finding, followed by governance-final root-owned review round 3
+- - Continuation: `cont-agent-authored-recap-p03-review-r2-fix-2`
+- - Original request: `dispatch-agent-authored-recap-p03-20260911T202900Z`
+- - Source review: `reviews/archived/p03-review-2026-09-11T221353Z.md`
+- - Fix base: `d5d843f2bab14c0b8453206802da52372b027ef6`
+- - Fix commit: `b697cb725b278d6b185a4a2c02b5ac7fb352f0cb`
+- - Fixed: persisted `skip/failed_attempt` now carries one validated project-relative `failed_attempt_evidence` locator through the deployed consumer to the real terminal guard without general explainer discovery or authoring
+- - Locator contract: only `explainers/<run-slug>/{manifest,failure}.json`; project, run, and evidence paths are canonicalized; absolute paths, traversal, symlink escapes, missing paths, directories, wrong-kind evidence, and semantically invalid evidence are rejected
+- - Negative controls: the pre-fix fresh-process composition failed; neutralizing propagation or containment failed; valid failed/incomplete manifest and `failure.json` controls passed; interactive skip and generate expose no failed-attempt evidence
+- - Typed consumers: CLI and control-plane state parsers accept the bounded optional field and reject invalid shapes
+- - Protected boundaries: all eleven Phase 3 slices remained byte-identical to base `ab4785bf510ea737961a9431da4376a461be930e`; all six autonomy copies share SHA-256 `3fb4b5ec02ef118edb3d20456baf830c22104329a2cb0c8ca070508c647ab5a8`
+- - Verification: focused adapter/completion/terminal suites (71/71), CLI lifecycle contracts (418/418), control-plane (142/142), sweep/parity (10/10), complete CI gates, isolated-HOME uncached Turbo, standalone suites, lint, format, and final diff check exited 0
+- - Recovery accounting: final review-fix iteration, not phase recovery; p03 remains `used_attempts: 0`, `pending_attempt: null`, with no recovery events
+- - Dispatch target and axes: unchanged (`oat-phase-implementer-gpt-5-6-sol-high`, `selected:gpt-5.6-sol-high`, effort not applicable)
+- - Dispatch: scope=p03-review-r2-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
+- - Disposition: `fixes_completed`; governance-final root-owned review round 3 is required and p03 is not marked passed
+- - Request ID: `dispatch-agent-authored-recap-p03-review-r3-20260911T2254Z`
+- - Launch status: `accepted`
+- - Terminal outcome: `completed`
+- - Review artifact: `reviews/archived/p03-review-2026-09-11T225420Z.md`
+- - Reviewed range: `ab4785bf510ea737961a9431da4376a461be930e..afd4a9e970200bdb2c1cc35fdf13df1912e6b12f`
+- - Reviewed head: `afd4a9e970200bdb2c1cc35fdf13df1912e6b12f`
+- - Prior closure: the fresh-resume evidence defect and all earlier Phase 3 findings closed
+- - Findings: 0 Critical, 1 Important, 0 Medium, 0 Minor
+- - Disposition: `CHANGES REQUESTED`; governance retry budget exhausted at round 3 of 3
+- - Reconnaissance: `not-attempted`; no Review Orchestration section
+- - Blocking finding: control-plane coerces a non-string `failed_attempt_evidence` array that CLI rejects, while both typed readers reject the lifecycle contract's read-only legacy `skip/capability_probe` pair
+- - Protected-boundary result: all eleven plan-declared slices remained byte-identical
+- - Selection reason: `gate-target`
+- - Candidates considered: `gpt-5.6-sol-high`
+- - Dispatch target: `oat-reviewer-gpt-5-6-sol-high`
+- - Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
+- - Stop: operator direction is required before any further fix or Phase 4 work
+- - Authorization time: `2026-09-11T23:07:00Z`
+- - Scope: one bounded manual remediation for the governance-final typed-state compatibility finding, followed by one independent verification review
+- - Finding: require raw-string `failed_attempt_evidence` consistently across CLI/control-plane readers and preserve read-only legacy `skip/capability_probe` compatibility without permitting new writes
+- - Continuation: `cont-agent-authored-recap-p03-governance-manual-fix-1`
+- - Authorization: `operator-scope`
+- - Original request: `dispatch-agent-authored-recap-p03-20260911T202900Z`
+- - Exact target: `oat-phase-implementer-gpt-5-6-sol-high` (unchanged)
+- - Recovery accounting: outside the automatic review-fix budget and not phase recovery; usage remains `0/10`
+- - Boundary: no Phase 4 work, no closed Phase 3 findings, and no Phase 1 deferred Medium findings
+- - Continuation: `cont-agent-authored-recap-p03-governance-manual-fix-1`
+- - Original request: `dispatch-agent-authored-recap-p03-20260911T202900Z`
+- - Source review: `reviews/archived/p03-review-2026-09-11T225420Z.md`
+- - Fix base: `bf8b69ccc94a5d800d14999c1f3fdb33b0dac393`
+- - Fix commit: `e8ab4ec5bf7abb5ab862a250ff00f2d5d6181d5e`
+- - Fixed: CLI and control-plane typed readers now reject non-string raw `failed_attempt_evidence` consistently and accept read-only legacy `skip/capability_probe`; active lifecycle write entry points reject creating the legacy pair
+- - Negative controls: pre-fix control-plane accepted an array that CLI rejected; both readers rejected the valid legacy pair; the lifecycle writer accepted a new legacy record. Post-fix raw array/object/number/boolean and malformed values fail consistently, legacy reads pass, and both active writers reject new legacy records
+- - Verification: focused control-plane (35/35), CLI (44/44), writer (11/11), lifecycle/containment (72/72), CLI contracts (131/131), control-plane package (151/151), sweep/parity (10/10), all sixteen gates, and isolated-HOME uncached Turbo passed
+- - Protected boundaries: all eleven Phase 3 slices remained byte-identical; all autonomy mirrors remain coherent
+- - Recovery accounting: operator-scoped governance remediation; automatic retry budget remains exhausted and p03 recovery usage remains `0/10`
+- - Dispatch target and axes: unchanged (`oat-phase-implementer-gpt-5-6-sol-high`, `selected:gpt-5.6-sol-high`, effort not applicable)
+- - Dispatch: scope=p03-governance-manual-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
+- - Disposition: `fixes_completed`; one operator-authorized independent verification review remains before Phase 4
+- - Request ID: `dispatch-agent-authored-recap-p03-independent-verification-20260911T2325Z`
+- - Launch status: `accepted`
+- - Terminal outcome: `completed`
+- - Review artifact: `reviews/archived/p03-review-2026-09-11T232506Z.md`
+- - Reviewed range: `ab4785bf510ea737961a9431da4376a461be930e..2c8c56093651748e389da61d3c055be713ebc99e`
+- - Reviewed head: `2c8c56093651748e389da61d3c055be713ebc99e`
+- - Prior closure: original non-string coercion, legacy-read compatibility, active-write rejection, and all earlier Phase 3 findings closed
+- - Findings: 0 Critical, 1 Important, 0 Medium, 0 Minor
+- - Disposition: `CHANGES REQUESTED`; operator-scoped authorization consumed
+- - Reconnaissance: `not-attempted`; no Review Orchestration section
+- - Blocking finding: control-plane trims leading/trailing whitespace before locator validation, accepting malformed raw strings that CLI rejects
+- - Protected-boundary result: all eleven slices remained byte-identical; autonomy mirrors remain coherent
+- - Selection reason: `gate-target`
+- - Candidates considered: `gpt-5.6-sol-high`
+- - Dispatch target: `oat-reviewer-gpt-5-6-sol-high`
+- - Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
+- - Stop: operator direction is required before further remediation or Phase 4
+- - Authorization time: `2026-09-11T23:35:00Z`
+- - Scope: one final bounded remediation for the raw-string whitespace mismatch, followed by one independent verification review
+- - Finding: control-plane must validate and return raw `failed_attempt_evidence` unchanged rather than trimming malformed leading/trailing whitespace into acceptance
+- - Continuation: `cont-agent-authored-recap-p03-governance-manual-fix-2`
+- - Authorization: `operator-scope`
+- - Original request: `dispatch-agent-authored-recap-p03-20260911T202900Z`
+- - Exact target: `oat-phase-implementer-gpt-5-6-sol-high` (unchanged)
+- - Recovery accounting: outside all automatic and prior operator review/fix budgets; not phase recovery; usage remains `0/10`
+- - Boundary: control-plane raw-string validation and matching cross-reader controls only; no Phase 4 or closed-finding work
+- - Continuation: `cont-agent-authored-recap-p03-governance-manual-fix-2`
+- - Original request: `dispatch-agent-authored-recap-p03-20260911T202900Z`
+- - Source review: `reviews/archived/p03-review-2026-09-11T232506Z.md`
+- - Fix base: `171096b7462efd973388e4564fc1ac5395d25d49`
+- - Fix commit: `f29b6748a9d81b65c7a9c37c1e70357147af5b13`
+- - Fixed: control-plane validates and returns raw `failed_attempt_evidence` without trimming; one fourteen-case raw-YAML corpus now exercises both production readers
+- - Negative controls: at the pre-fix state, CLI rejected all three leading/trailing-whitespace variants while control-plane accepted them; post-fix both readers reject all three and agree on every valid, malformed, non-string, optional, and legacy-read case
+- - Verification: shared corpus (58/58), lifecycle/fresh-process regressions (72/72), control-plane package (151/151), sweep/parity (10/10), both package type checks, all sixteen gates, and isolated-HOME uncached Turbo passed
+- - Protected boundaries: all eleven Phase 3 slices remained byte-identical; autonomy mirrors remain coherent
+- - Recovery accounting: operator-scoped governance remediation; p03 recovery usage remains `0/10`
+- - Dispatch target and axes: unchanged (`oat-phase-implementer-gpt-5-6-sol-high`, `selected:gpt-5.6-sol-high`, effort not applicable)
+- - Dispatch: scope=p03-governance-manual-fix-2 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
+- - Disposition: `fixes_completed`; the final operator-authorized independent verification review remains before Phase 4
+- - Request ID: `dispatch-agent-authored-recap-p03-final-verification-20260912T0015Z`
+- - Launch status: `accepted`
+- - Terminal outcome: `completed`
+- - Review artifact: `reviews/archived/p03-review-2026-09-12T001522Z.md`
+- - Reviewed range: `ab4785bf510ea737961a9431da4376a461be930e..ce2898e1dca37becc2d59ce8f97d7340d0f0bf4d`
+- - Reviewed head: `ce2898e1dca37becc2d59ce8f97d7340d0f0bf4d`
+- - Prior closure: all governance and earlier Phase 3 findings closed
+- - Findings: 0 Critical, 0 Important, 0 Medium, 0 Minor
+- - Disposition: `PASS`
+- - Reconnaissance: `not-attempted`; no Review Orchestration section or project-log orchestration entry
+- - Verification: shared production-reader corpus 14/14; all three padded strings rejected; preserved pre-fix reader failed exactly those three; lifecycle/fresh-process 72/72; control-plane 151/151; CLI contracts 383/383; sweep/parity 10/10
+- - Protected-boundary result: all eleven slices remained byte-identical; autonomy mirrors remain coherent
+- - Selection reason: `gate-target`
+- - Candidates considered: `gpt-5.6-sol-high`
+- - Dispatch target: `oat-reviewer-gpt-5-6-sol-high`
+- - Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
+- - Phase outcome: p03 passed after 2 automatic fix iterations and 2 operator-authorized remediations; p04 is now ready
+- - Recovery accounting: p03 remains `used_attempts: 0`, `pending_attempt: null`, with no recovery events
+- <!-- orchestration-runs-end -->
+- Chronological log of implementation progress.
+- **Session Start:** 2026-09-11T03:08:00Z
+- - [x] p01-t01: Trim `contracts.mjs` to the three kept contract kinds - cd6314c6eeadf512dc5d0077a080c37587b3abbb
+- - [x] p01-t02: Trim the recipes, the recipe loader, and the briefs - e092ba547525262a70c456773c4650981731898c
+- - [x] p01-t03: Trim `qa.mjs` and rewrite the kept core tests - c34b07113206e8c07d1b55c08f4ba4066d8b7ff9
+- - [x] p01-t04: Manifest v2 schema and package rule v3 - c96741c987b2b4c6873cd633910b65d073be1549
+- - [x] p01-t05: Add `bundle.mjs` with anchor ledger - 0adf7ddf690e713c57d099a12b3d131e31eef748
+- - [x] p01-t06: Add deterministic `record.mjs` and checked-in archive fixture - 0528fbfc54edb518478c79a4cc09e2529dbb14c7
+- - [x] p01-t07: Add browser-free `verify.mjs` checks and the none rung - 6bbde384d318e1558178814929bbe94890da7d27
+- - [x] p01-t08: Replace archive validation with the v2 package contract - d7b4606e109466220d4e33a290f96b801d1a6502
+- - [x] p01-t09: Prove one real path end to end before any deletion - c4a95b5fa1be33586dd001dff08410d3651ff585
+- - [x] p01-t10: Rewrite the terminal-outcome guard and add `skip/failed_attempt` - f3b0c6dbc160d2f690b838e66545c04e6d1dc293
+- - [x] p01-t11: Retire the explainer release-candidate tooling - 72312063bc5a4edc979e6bbc386a50a76f8c1b5e
+- - [x] p01-t12: Retire the explainer smoke tests - aeed93c29c791b5a19f4b09b0f6d6bf9af15d2e2
+- - [x] p01-t13: Retire the core orchestrator and obsolete modules - e47be8859204bfc959350fd05cbfedf00537a799
+- - [x] p01-t14: Cut the adapter callback path, seam probe, and finalizer - f9b6fa6a0a450e8773d57f63e49e7e74e86fc1a6
+- - [x] p01-t15: Remove the `explainers.publish.*` CLI config keys - 0a8450c6d2c4413a62e7aa133d12a7e882984777
+- - [x] p01-t16: Move completion-transaction recap fixtures to v2 - bd444a3ea44c1d990ddab448dc72e2f91de86d4b
+- - [x] p01-t17: Add retired-reference sweep and bump shipped versions - 853462ffd53b2d347ad6495c5829abd18091cab0
+- **What changed (high level):**
+- - Reduced the core contract registry and validator to the three retained contract kinds.
+- - Reduced the recipe registry to four floor-and-brief contracts.
+- - Reduced QA to the retained browser-free and browser-probe primitives.
+- - Replaced manifest/package contracts with v2/v3.
+- - Added the replacement bundle intake, fact-base extraction, anchor ledger, and reuse flow.
+- - Added deterministic terminal recording and a parity-checked v2 archive package fixture.
+- - Added browser-free authoring verification and both mechanical claim-tracing directions.
+- - Replaced archive validation with the exact manifest v2/package-coverage v3 contract.
+- **Decisions:**
+- - Enforce citation `{ sourceId, locator }` in the validator because the unchanged fact-base schema retains legacy backlink fields.
+- - Operator correction `cont-agent-authored-recap-p01-plan-correction-1` preserves the strict project-recap archive boundary and composes generic package validation directly for p01-t09, p04-t02, p05-t01, and the FR9 test row.
+- - Cause: the archive check was added post-review without re-checking the recipe pin.
+- **Follow-ups / TODO:**
+- - Root-owned Phase p01 review; do not start p02 from this implementation handle.
+- **Blockers:**
+- - None.
+- **Session End:** 2026-09-11T15:44:08Z
+- **Session Start:** 2026-09-11T20:29:00Z
+- - [x] p03-t01: Reframe adapter and core skill - eb5e806dda362b5ed277a8dc2eb710d9f6546825
+- - [x] p03-t02: Completion Generate flow and persisted-intent assurance - fef534776121a698597658284e2fc42203f6cb46
+- - [x] p03-t03: Closeout, autonomy, and summary consumers - 7378bb43b306a457af4ba7055a37c5824b969d8a
+- - [x] p03-t04: Plan and wave callers - 8d18c4df00bc42ada879f2b58629901c543815ba
+- - [x] p03-t05: Autonomy mirrors and prose pins - c0088a0d69a7aff7ca7e301f570ff1b349d2d328
+- - [x] p03-t06: Public documentation rewrite - 55d334d8ecfd68b4049bc426fb26504a813f4098
+- - [x] p03-t07: Decision and backlog reconciliation - 7721cf9cef93fbf3fead5fe7be5bce286965da1c
+- - [x] p03-t08: Repository sweep and skill bumps - e349ae0028eff05ff510946e041d231edc0f7c8d
+- **Blockers:** None.
+- **Session End:** 2026-09-11T21:31:28Z
+- Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
+- | Task / Review                  | Source Artifact        | Planned / Documented                                                                                               | Actual / Accepted                                                                                                                                             | Reason                                                                                                     | Source of Truth                                                                            | Follow-up                                                                                            |
+- | p01-t09, p04-t02, p05-t01, FR9 | `plan.md`, `design.md` | Non-project recap packages passed `verifySelectedProjectRecapForArchive`                                           | Compose `validateContract('manifest')`, immutable byte-hash checks, and `enforceRunPackageInventory` directly; keep the project-only pin strict               | The archive check was added post-review without re-checking the recipe pin.                                | Operator decision `cont-agent-authored-recap-p01-plan-correction-1`                        | Applied before p01-t09 code                                                                          |
+- | p03 review round 2             | `design.md`            | Persisted intent contains only decision, source, and decision timestamp                                            | `skip/failed_attempt` may additionally persist one validated project-relative `failed_attempt_evidence` locator                                               | A fresh process otherwise cannot satisfy the mandatory terminal guard without reopening general discovery. | Review fix `b697cb725b278d6b185a4a2c02b5ac7fb352f0cb`                                      | Lifecycle contract, typed consumers, and tests updated; this log preserves the accepted design delta |
+- | p06-t03                        | `design.md`            | QA checks and screenshot evidence used an obsolete shorthand; failure evidence omitted its schema and root binding | `qa/result.json` now documents the exact structural validator contract, and `failure.json` documents its five exact keys plus canonical run-root hash binding | Final review I3 required artifact alignment to the defensible shipped validators, not a product redesign.  | `qa-result.mjs`, `bundle.mjs#writeFailure`, and `check-terminal-outcome.mjs#isFlowFailure` | Design aligned; production behavior unchanged                                                        |
+- Track test execution during implementation.
+- | Phase | Tests Run                                                                                                                | Passed             | Failed  | Coverage                                                                                           |
+- | 1     | Ordered CI gates; forced Turbo; standalone smoke/skills/scripts/skill validation; lint/format; focused negative controls | All final commands | 0 final | Browser-free flow, archive/package contract, terminal outcomes, retired references, version parity |
+- | 2     | Ordered CI gates; forced Turbo; standalone smoke/skills/scripts; fresh-host controls; lint/format                        | All final commands | 0 final | Host and Playwright rungs, authoring contract, fresh-host completion and failure evidence          |
+- | 3     | Ordered CI gates; forced Turbo; standalone suites; docs; PJM CLI; focused consumer and sweep negative controls           | All final commands | 0 final | Lifecycle Generate consumers, persisted skip suppression, docs, repository sweep, version parity   |
+- | 4     | Ordered CI gates; uncached Turbo; standalone suites; focused front-door and project-explainer controls; lint/format      | All final commands | 0 final | Interactive inputs, package generation, generic package validation, visual-evidence truthfulness   |
+- | 5     | Ordered CI gates before and after recovery commits; focused bundle/core/archive suites; two negative controls            | All final commands | 0 final | Program recap, canonical wrapper summaries, unresolved inputs, recovery accounting, release parity |
+- | 6     | Ordered CI gates; uncached Turbo; standalone suites; core/lifecycle controls; four negative controls; lint/format        | All final commands | 0 final | Reuse, sanitizer, locator collisions, heading symmetry, and artifact alignment                     |
+- **What shipped:**
+- - A destination-neutral Explainer Kit core built around the small
+- `bundle → host-agent author → verify → record` flow.
+- - Project recap, program recap, project-explainer, and arbitrary-input recipes
+- with manifest-v2 packages, exact immutable hashes, and bounded claim checks.
+- - Project lifecycle callers routed through a thin OAT adapter with persisted
+- intent and truthful `built`, `built-needs-review`, `failed`, and `incomplete`
+- outcomes.
+- - Generated and validated this project's `project-explainer` package and the
+- 2026-08-31 execution program's `program-recap` package.
+- **Behavioral changes (user-facing):**
+- - Host agents author the final HTML directly from a validated fact base and
+- bundled recipe brief; callback orchestration, durability attestation, and S3
+- publication are retired.
+- - Browser verification now records the highest rung actually reached. Runs
+- without an available driver remain successful as `built-needs-review` and
+- do not claim screenshot inspection.
+- - Completion and planning workflows consume one shared Generate contract, and
+- the archive command remains strictly limited to project-recap packages.
+- **Key files / modules:**
+- - `.agents/skills/explainer-kit/` - core recipes, scripts, contracts, tests,
+- templates, and authoring guidance.
+- - `.agents/skills/oat-explainer-kit/` - OAT input, intent, theme, and outcome
+- adapter.
+- - `.agents/skills/oat-project-complete/` and
+- `.agents/skills/oat-project-implement/` - lifecycle Generate consumers.
+- - `apps/oat-docs/docs/workflows/skills/explainer-kit.md` - public workflow
+- documentation.
+- - `.oat/projects/shared/agent-authored-recap/explainers/agent-authored-recap-explainer/`
+- - active-project `project-explainer` package.
+- - `.oat/repo/reference/explainers/2026-08-31-execution-program-recap/` -
+- repository-level `program-recap` package.
+- **Verification performed:**
+- - Every ordered CI gate passed on the committed Phase 5 head: check,
+- type-check, tests, build, skill/version gates, release validation, and docs
+- build.
+- - Isolated-HOME forced Turbo executed uncached; standalone smoke, skill,
+- script, and skill-validation suites passed.
+- - Core bundle/verify/record, strict archive, adapter, lifecycle, fresh-host,
+- and negative-control suites passed, together with lint and format.
+- - Independent phase reviews passed after fixes; Phase 5 passed with 0 Critical,
+- Important, Medium, or Minor findings.
+- **Design deltas (if any):**
+- - Non-project recap checks compose the generic manifest/hash/inventory contract
+- directly; the project-only archive validator remains strict. The original
+- archive check had been added post-review without re-checking its recipe pin.
+- - Persisted `skip/failed_attempt` intent may carry one validated
+- project-relative evidence locator so a fresh process can satisfy the terminal
+- guard without reopening discovery.
+- - Plan: `plan.md`
+- - Design: `design.md`
+- - Spec: `spec.md`
+- - `artifact-design-review-2026-09-09T225646Z.md`: 1 critical, 6 important, 7 medium, 3 minor — CHANGES REQUESTED. All 17 applied to `spec.md` / `design.md` (`resolve_in_artifact`): the archive package rule is replaced rather than branched (operator decision 2026-09-09, no backward compatibility); claims use the real fact-base schema and a derived `source/ledger.json`; a page→ledger extraction pass closes FR4; the intent record keeps three keys with `failed_attempt` added and `capability_probe` read-only; every vocabulary carrier incl. the CLI prose-pin test is listed; a missing core is a hard prerequisite failure; `built-durable` stays satisfied; `recap-result.json` and `inputs.json` dropped (consumers read `manifest.json` + `qa/result.json`); the host rung binds screenshots to the artifact hash; NFR4/NFR5 rows; `project-log.md` and the newest-export rule; recipe fields read are enumerated; the FR5 test names `verifySelectedProjectRecapForArchive`; the three Minors. Row → `fixes_completed`; re-review next.
+- - `artifact-design-review-2026-09-09T232532Z.md`: 1 critical, 5 important, 6 medium, 3 minor — CHANGES REQUESTED; 13 of 17 round-1 findings confirmed closed, 4 partial. All 15 applied to `design.md` / `spec.md` / `discovery.md` (`resolve_in_artifact`), received inline by the design author: the archive change inventory is now complete (`validateImmutablePackageEvidence`'s `project-recap` branch deleted; `verifyProjectRecapTerminalEvidence` and its three call sites deleted; `terminal-evidence.json` dropped for every outcome; `run-request.json` `mode` defined); the cohesion ledger uses the consumed array shape with `terminology` always non-empty and dates folded into `numbers`; `extractRenderedClaims` is named as a new `verify.mjs` helper feeding both claim passes; NFR2's acceptance list is complete at five items, each with its own negative control; the seam-probe removal list gains the four reference/test carriers and the `resolve-intent.mjs` import; the autonomy prompt-site hash table and its test are carriers with a Phase 3 recompute step; a retained/retired adapter-surface table keeps `run.mjs` and its dependents for the user-invoked advanced path (retirement is a separate decision, flagged at the HiLL checkpoint); `build-record.json` stays in the package as a minimal schema-valid record; citations carry `locator`; `source.backlinks` is omitted; `lifecycle-contract.md` is extended rather than replaced; two docs pages added; the bundled `briefRef` briefs are handed to the agent verbatim and the authoring brief adds only mechanics; discovery carries dated superseded notes for the 2026-09-09 no-backward-compatibility decision; `schemaVersion` and the artifact subkeys enumerated; the review path citations corrected. Both review artifacts moved to `reviews/archived/`.
+- - `artifact-design-review-2026-09-10T010926Z.md`: 2 critical, 8 important, 7 medium, 6 minor — CHANGES REQUESTED. All 23 applied (`resolve_in_artifact`), received inline by the design author: the kept `contracts.mjs` trim now deletes `validateSourceBacklinks` and its imports so no kept module imports a retired one, and citations are `{ sourceId, locator }`; the cohesion ledger is a bounded selection of anchor facts (≤12 per group) with per-group keying stated and `cohesion-ledger-empty` relaxed to all-groups-empty; the phase-boundary invariant is restated (executables/tests/config only; prose until Phase 3) and the adapter's scripts and tests move into the Phase 1 cut with the three cross-phase references named; the autonomy-contract mirrors (five, four pinned) and four more skill bumps; the enumerated `review-skill-contracts.test.ts` pins (`:446`, `:1501-1536`, `:2113`); the completion skill's archive-resume scripts and receipt parsers lose the recap evidence commit; the closeout range corrected to `:884-950`; the artifact-hash check rekeyed to `contentPath`; the sweep excludes `.oat/repo/pjm/` and the push-transaction fixtures are scoped to manifest+build-record; `BL-260727` closed `wont_do` in Phase 3; the fact base's eight required keys with `mode: supplied`; the Playwright call corrected to `viewport` + `BROWSER_PROBE_EVALUATE`; `RECIPE_FILES` drops v1; floor entries drop `authoring`/`required`; `checkTerminalOutcome --manifest` guards `skip/failed_attempt`; spec and discovery aligned on the durability retirement; the tracked (not untracked) legacy exports; the program ledger file named; kept test files and SKILL sections listed; `bind-project-sources` "rewritten"; `externalRequests` folded into `structure`; the ledger's post-run reader named. Artifact moved to `reviews/archived/`.
+- - `artifact-design-review-2026-09-10T013018Z.md`: 1 critical, 4 important, 4 medium, 5 minor — CHANGES REQUESTED; 21 of 23 round-3 findings verified closed, 2 closed on one half. All 14 applied (`resolve_in_artifact`), received inline: the page→ledger pass resolves against the fact base's claims (the bounded ledger serves ledger→page only); `intent.test.mjs`'s seam-probe import and cases and the `completion.integration.test.mjs` split (Phase 1 executables, Phase 3 prose) named; the `skills.test.ts` version pins enumerated; `reader-sameness.test.mjs` deleted with its premise; the v2 validator rejects non-satisfied outcomes (Migration Plan item 6); `qa/result.json` drops `schemaVersion` (structural readers); `sources[]` entry shape stated; `theme.hash` cross-checked and `theme.derived` dropped; the program ledger anchored at `:423`; `--artifact-sha256` named; the sweep excludes itself; `cli-reference.md:154` clauses and the regenerated docs index added. Artifact moved to `reviews/archived/`.
+- - Structured plan review (no artifact; `oat-reviewer`, opus, manual): 1 critical, 8 important, 6 medium, 6 minor — CHANGES REQUESTED. All 21 applied to `plan.md` (`resolve_in_artifact`), received inline: the Phase 1 sweep excludes the two prose-pin test files until p03-t08; the `oat-project-complete` / `oat-project-implement` bumps move to p03-t08 with the complete pin inventory under Conventions; `skills.test.ts:1501-1518` re-pinned in p03-t01; `MINIMUM_CORE_VERSION` relocated into `check-core.mjs` in p01-t08; p01-t10 names the config parser, defaults map, and their test with a symbol-based verify; p03-t04 covers the whole program-close sections; the core `explainer-kit/SKILL.md` § Run moves into p03-t01 and p01-t11 ships every input mode so p04-t01 is prose plus its test; the browser negative control uses `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` at a non-executable file; the guard tests' prose assertions are owned across the hand-off; FR12's task list completed; sweeps driven off `git ls-files`; the p01-t12 control regenerates the fixture with a parity check; sweep residues enumerated; p01-t09's `runMode` / `includeTerminalEvidence` bullets; anchors corrected; fixture-formatting note; `## Parallelism` added; parity-test wording; `:1406`/`:1442` pins; the `skill-version` category note. Design `:24` and `:94` corrected with it.
+- - Structured plan review round 2: 2 critical, 3 important, 5 medium, 6 minor — CHANGES REQUESTED; every round-1 disposition verified closed. All 16 applied (`resolve_in_artifact`), received inline: the Phase 1 sweep also excludes `completion.integration.test.mjs` until Phase 3 and carries a permanent two-file allowlist for the guard tests' retired-outcome negative controls (the v1-rejection archive fixture uses `built-needs-review`); `review-skill-contracts.test.ts` pins enumerated in full (six more blocks, incl. the `extractDurableDerivation` helper) in p03-t05 and the design; `record.mjs` gains `--run-id` / `--created-at` as the parity seam, plus a direct schema assertion and a fixture provenance note; p01-t10 names every `explainers.publish` region in `config/index.ts`; the pin inventory under Conventions covers every bumped skill and names the three with no pins; p04-t01 reframed as prose plus the end-to-end proof; p03-t02 names the camelCase evidence fields and the `EVIDENCE_MESSAGE` recovery path; p01-t03's range starts at the run-request branch; five anchors, the autonomous range, FR12's row, the import citation, the driver caveat, and the Phase 3 heading corrected.
+- - Structured plan review round 3: 1 critical, 1 important, 2 medium, 7 minor — CHANGES REQUESTED on the Critical only; every round-2 disposition verified closed and the Phase 1 survivor-set sweep re-simulated clean. All 11 applied (`resolve_in_artifact`), received inline: `IS_DURABLE_PROJECT` is the project-scope classifier (archive and pointer gates), not recap durability — p03-t02 now touches only `oat-project-complete/SKILL.md:610` and names the classifier and its eight gates as out of scope; p03-t05 keeps `:1913`, `extractDurableDerivation` with its two active-pointer tests, and the fixture preambles verbatim and re-pins only `:1523`, `:1533`, `:1536`; the design's completion paragraph and pin list corrected the same way; `resolve-intent.mjs`'s whole `seamProbe` closure (`:36`, `:51-52`, `:74`, `:175-189`, `assertSeamProbe`) and the camelCase sweep pattern; `intent.test.mjs` `:19-29` + `:157-489`; `qa.mjs` private helpers incl. `retainBrowserEvidence`; the `includeTerminalEvidence` attribution, two more `completion-transaction.test.ts` anchors, the stale `skill-version.ts:45` comment, six/six/five narratives, the nonexistent visual-review import, the summary range `:290-302`, one plan row per review round, design `:132-171` and the Phase 3 sentence, spec FR10/FR12 rows. The auto artifact-review retry bound (2) is exhausted: the plan row stays `fixes_completed`; the implementer should treat the round-3 residual notes as applied and re-verify at p01-t16 and p03-t08 boundaries.
+- - A peer review (Codex, relayed by the operator) of the artifacts at `b7d9d13d2` raised three substantive gaps in the replacement flow; each verified against the live tree and applied to `design.md`, `plan.md`, and `spec.md` as design deltas (the design stays HiLL-approved; these narrow, they do not widen): (1) the `(subject, value)` claims index cannot live in `fact-base.json` (`additionalProperties: false`, verified) — it moves to a fourth `claims` key in `source/ledger.json`, and the page→fact-base check is bounded to numeric, date, and closed-vocabulary status tokens with a row/sentence/section subject rule, proven on real material (a correct page passes, swapped wave counts fail); narrative fidelity is the author's under the brief, not a universal prose verifier (spec FR4 reworded). (2) Screenshot capture is not visual verification: `runBrowserProbes`' finding rules are retained (trimmed) and consumed on the Playwright rung, the host rung requires the agent's inspected `--visual-verdict`, `record.mjs` yields `built` only on a passing verdict, and a deliberately broken layout that captures successfully cannot earn `built` (spec FR3 reworded). (3) Failures before recording (core missing, bundle refusal, authoring absent, verify crash) write `<run-root>/failure.json`, which the skip guard accepts via `--failure` alongside `--manifest`; the fresh-host controls assert both evidence shapes. The fourth point and two smaller corrections arrived by reading the peer's session directly and are applied below.
+- - (4) The two real-run tasks re-ran `verify --rung none` after `record.mjs`, which rewrites `qa/result.json` under the manifest's immutable hashes: the post-record check is now read-only (`verifySelectedProjectRecapForArchive`), and `record.mjs` rejects a `qa/result.json` whose `artifactSha256` differs from the current page (`record-qa-stale`). (5) Freshness gets a real reuse test (`bundle` reports `reuse: true` and touches nothing when a satisfied manifest with equal input hashes and the same recipe exists). (6) `theme.resolved.json` is written by `bundle.mjs` before authoring, not by `record.mjs` afterwards. (7) Sequencing: Phase 1 is reordered so the flow lands first and a new task, p01-t09, proves one real `bundle → author → verify → record → archive-check` path on tracked real material before any deletion task starts (plan Conventions: prove before deleting). Interruption before recording writes `failure.json` (`stage: interrupted`) and the resume chain (pre-bundle failure → permitted skip → resumed completion honors it) is a named test. Phase 1 task renumbering (old → new): t03→t01, t04→t02, t05→t03, t06→t04, t11→t05, t12→t06, t13→t07, t09→t08, new t09, t14→t10, t01→t11, t02→t12, t07→t13, t08→t14, t10→t15, t15→t16, t16→t17; earlier receive notes cite the old ids. 32 tasks.
+- - Four threads (commits `b7d9d13d2`, `f4b7714df`, `dbb0287c1`). (1) Claims index in the fact base — already closed at `f4b7714df` (index in `source/ledger.json`). (2) High: a stale `failure.json` would survive a successful retry and fail the exact-inventory rule — a run root now holds either a manifest or a `failure.json`: `bundle.mjs` deletes a stale one on a new attempt and `record.mjs` refuses with `record-failure-present`. (3) Authoring-absent contradiction — absent page → `verify.mjs` writes `failure.json` (`stage: authoring`), no manifest; malformed page → failing checks → `failed` manifest; never both. (4) p01-t06 required the archive vitest before p01-t08 rewrote the validator — p01-t06 now produces the checked-in package and proves it at the library level; p01-t08 consumes that package with no temporary fixture.
+- oat_generated: false
+- purpose: project-observations
+- oat_last_updated: 2026-09-11
+- This append-only log serves two audiences: the project team learning from this project's execution, and maintainers improving the general OAT workflow and tooling.
+- Append when something breaks, surprises you, requires a workaround, or works notably well enough to preserve as do-not-regress evidence. Record evidence, not a running narrative. Prior entries are never edited or struck through; append corrections as a new judgment entry that references the original entry and explains the correction. Add a version note to tool-related observations. Create entries only with `oat project log append`; run `oat project log append --help` for the complete entry contract. Reference supporting artifacts by path instead of inlining them. Never record secret values such as tokens, keys, signed URLs, or credentials because this log rolls up into tracked surfaces; reference secrets by name or source, never by value.
+- Judgment entries default to 1–3 sentences covering what happened, the impact or workaround, and any follow-up. High-value entries may instead use this structured body:
+- ```text
+- Observation: What happened and the supporting evidence.
+- Impact: Why it mattered or what workaround was required.
+- Recommendation: What should change or be preserved.
+- ```
+- Shared tracked surfaces must be written only from the root checkout, never from parallel worktrees.
+- Judgment entries:
+- ```text
+- ```
+- Structural entries:
+- ```text
+- ```
+- Entries are chronological and append-only.
+- p01-r3-governance-exhausted-20260911: review round 3 requested changes; one Important terminal-guard assurance gap remains and automatic retries are exhausted; see reviews/p01-review-2026-09-11T173707Z.md.
+- p01-governance-manual-fix-authorized-20260911: operator authorized one bounded terminal-guard remediation and one independent verification review; automatic retry accounting remains exhausted and unchanged.
+- phase-outcome-p01-20260911T1902Z: PASS; 0 Critical, 0 Important, 3 deferred Medium; 2 automatic fix iterations plus 1 operator-authorized remediation; independent verification artifact reviews/p01-review-2026-09-11T185739Z.md.
+- phase-outcome-p02-20260911T2027Z: PASS; 0 Critical, 0 Important, 0 Medium; 1 automatic fix iteration; independent re-review artifact reviews/p02-review-2026-09-11T202150Z.md.
+- stop-p03-governance-review-20260911T2304Z: governance-final round 3 found 1 Important typed-state compatibility defect; automatic review/fix budget exhausted; operator direction required; see reviews/p03-review-2026-09-11T225420Z.md.
+- stop-p03-independent-verification-20260911T2332Z: operator-authorized verification found 1 Important raw-string normalization mismatch; authorization consumed; operator direction required; see reviews/p03-review-2026-09-11T232506Z.md.
+- phase-outcome-p03-20260912T0021Z: PASS; 0 Critical, 0 Important, 0 Medium, 0 Minor; 2 automatic fix iterations plus 2 operator-authorized remediations; final verification artifact reviews/p03-review-2026-09-12T001522Z.md.
+- phase-p04-outcome-20260912T020833Z: Phase p04 passed after one bounded review-fix round; see reviews/p04-review-2026-09-12T020833Z.md.
+- final-review-round3-override-20260912: round 3 found one Medium
+- `SECRET_?KEY` sanitizer gap; the operator authorized one bounded `p06-t10`
+- fix, a fresh Phase 6 review, and exactly one fourth final review. This is not
+- an unlimited retry extension and does not consume Phase 6 recovery attempts.
+- phase-outcome-p06-20260912T200228Z: PASS; the operator-authorized re-review
+- closed the `SECRET_?KEY` finding with 0 Critical, 0 Important, 0 Medium, and 0
+- Minor; see reviews/p06-review-2026-09-12T200228Z.md. Phase 6 recovery usage
+- remains zero.
+- final-review-round4-20260912T201509Z: PASS; 0 Critical, 0 Important, 0 Medium,
+- and the sole approved immutable-HTML whitespace Minor; see
+- reviews/final-review-2026-09-12T201509Z.md. The one-cycle operator override is
+- consumed; continue to the configured implementation exit gate.
+- target=cursor-fable-5-1-high threshold=important findings=critical:0,important:1,medium:0,minor:2 exit=1 status=blocked artifact=.oat/projects/shared/agent-authored-recap/reviews/final-review-2026-09-12T203608Z.md run=6cf37a1e-a33f-40af-9b33-75937b421ac5
+- phase-outcome-p06-gate-remediation-20260912T230247Z: PASS; configured-gate
+- remediation attempt 1 completed with 47/47 tasks, both tracked packages passing
+- fresh verification, and 0 Critical, Important, Medium, or Minor findings; see
+- reviews/p06-review-2026-09-12T230247Z.md. Phase 6 recovery remains zero.
+- target=cursor-fable-5-1-high threshold=important findings=critical:0,important:1,medium:0,minor:1 exit=1 status=blocked artifact=.oat/projects/shared/agent-authored-recap/reviews/final-review-2026-09-13T001401Z.md run=756b124f-64ad-492b-96d8-2c8c9d22bbd3
+- final-gate-exception-authorized-20260913: operator authorized only p06-t17 and p06-t18, current-basis lifecycle verification, and exactly one additional configured exit-gate review beyond the exhausted 2/2 budget; Phase 6 recovery remains zero, and another blocking gate must stop.
+- p06-t17-historical-fixture-sweep-correction-20260913: byte-exact archive-safe snapshots contain retired historical vocabulary, so p06-t17 now owns a narrowly tested exclusion for only its immutable fixture subtree; live-source detection remains required.
+- phase-p06-exceptional-remediation-complete-20260913: p06-t17 and p06-t18 completed at 50/50 total tasks; archive-free controls, narrow historical-fixture sweep exclusion, all repository gates, and immutable package checks passed; Phase 6 recovery remains zero and reviews are pending.
+- phase-outcome-p06-exceptional-20260913: PASS; 0 Critical, 0 Important, 0 Medium, 1 Minor state-pointer correction resolved during receive; 18/18 tasks complete, packages unchanged, and Phase 6 recovery remains zero; see reviews/archived/p06-review-2026-09-13T043549Z.md.
+- final-current-basis-pass-20260913: PASS; 0 Critical, 0 Important, 0 Medium, 2 Minor; corrected the Phase 6 progress label and retained the approved immutable-HTML whitespace deferral; exactly one exceptional configured exit-gate review remains authorized; see reviews/archived/final-review-2026-09-13T044417Z.md.
+- target=cursor-fable-5-1-high threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/shared/agent-authored-recap/reviews/final-review-2026-09-13T050025Z.md run=52787dbb-20c4-4fe7-b484-a72f0cd20c35
+- retro artifact=.oat/projects/shared/agent-authored-recap/references/project-retro.md evidence_used=archived-review-markdown,gate-receipts,git-history,lifecycle-artifacts,project-log,recap-package-receipts,session-transcript evidence_unavailable=oat-execution-learnings promotions=2 upstream=2 apply=deferred filing=deferred
+- Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
+- oat_status: complete
+- oat_ready_for: oat-project-implement
+- oat_blockers: []
+- oat_last_updated: 2026-09-11
+- oat_phase: plan
+- oat_phase_status: complete
+- oat_plan_parallel_groups: [] # fully sequential: every phase touches the explainer-kit tree or its consumers
+- oat_plan_hill_phases: ['p05']
+- oat_auto_review_at_hill_checkpoints: true
+- oat_plan_source: spec-driven # spec-driven | quick | imported | lite
+- oat_import_reference: null
+- oat_import_source_path: null
+- oat_import_provider: null
+- oat_generated: false
+- oat_template: false
+- > Execute this plan using `oat-project-implement` — sequential by default, parallel when `oat_plan_parallel_groups` is declared.
+- **Goal:** The Explainer Kit works again for every caller because the host agent authors the artifact: project recap at completion, program recap at program close, project explainer at plan approval, and a person invoking the core skill on any inputs. The callback orchestration, the durability/S3-publish path, and the explainer release-candidate tooling are retired with nothing left referencing them, and the last phase generates the recap for the 2026-08-31 execution program (spec FR1–FR12, NFR1–NFR5).
+- **Architecture:** Three core scripts (`.agents/skills/explainer-kit/scripts/{bundle,verify,record}.mjs`) around one authoring step by the host agent, a three-rung browser ladder, a small run package under a v2 manifest, and a thin adapter (`.agents/skills/oat-explainer-kit`) that resolves OAT inputs, theme, output root, and intent. Design § Retained and retired inventory is the authoritative partition; design § Migration Plan (six items) is the authoritative list of acceptance changes.
+- **Tech Stack:** Node 22 ESM (`.mjs` skill scripts, `node --test`), TypeScript CLI (`packages/cli`, vitest), markdown skills and docs, oxfmt/oxlint.
+- **Commit Convention:** `{type}({scope}): {description}` — e.g. `feat(p01-t05): add bundle.mjs`, `refactor(p01-t13): retire the core orchestrator`.
+- - [x] Defer HiLL checkpoint confirmation to oat-project-implement
+- - [x] Evaluated phases for parallelism opportunities (none: every phase edits the explainer-kit tree, its consumers, or files a previous phase created)
+- - [x] Set `oat_plan_parallel_groups` in frontmatter (`[]`)
+- - [x] Phase gate review: disabled (user declined); Phase gate review remains disabled. (Operator's standing preference: no phase gates; plan gate and final review only.)
+- - [x] Lifecycle gate posture: every configured gate kept; `oat_skill_gate_overrides` absent.
+- Fully sequential (`oat_plan_parallel_groups: []`): every phase edits the explainer-kit tree, its consumers, or files a previous phase created, so no two phases are file-disjoint.
+- - Work only in this worktree. Scratch under `mktemp -d`; never `rm -rf` a variable path.
+- - **Phase-boundary invariant** (design § Migration Plan): at the last task of each phase the full gate list is green (`pnpm check`, `pnpm type-check`, `pnpm test`, `pnpm build`, `pnpm run check:skill-bumps`, `pnpm release:check-versions`, `pnpm release:validate`, `pnpm build:docs`; capture each exit code; forced test run `HOME=$(mktemp -d) pnpm exec turbo run test --force` plus `pnpm test:smoke`, `pnpm test:skills`, `pnpm test:scripts` after `pnpm build`) and no executable, test, or configuration file references a missing module or symbol. Within a phase, task commits may be intermediate; each deletion task removes a module together with its last executable reference, wherever that reference lives.
+- - **Deletion tasks** are non-TDD: the "test" is the import sweep named in the task. Run `pnpm lint` and `pnpm format` for every task that touches `.agents/skills`, `tools/smoke`, or `packages/control-plane`.
+- - **Negative controls**: where a task says "prove it can fail", neutralize the guard, run the named test, confirm red, restore, and record the observation in the task's commit body.
+- - Never oxfmt `state.md`. Locate test pins by their old literal, not by line number; line numbers in this plan are anchors from the design at head `c6a40c58a` and shift as tasks land.
+- - **Prove before deleting:** Phase 1 lands the new flow first (p01-t01 to p01-t08) and proves one real `bundle → author → verify → record → archive-check` path on tracked real material (p01-t09) before any deletion task runs; no task from p01-t10 on starts until p01-t09 is green.
+- - Skill bumps are PR-scoped: bump each changed skill's `metadata.version` once, in the phase that first changes a non-test bundled file (p01-t17 for `explainer-kit` and `oat-explainer-kit`; p03-t08 for every other skill, since Phase 1 touches only their `tests/`, which the bump validator skips), and move the version pins with them. The complete pin inventory at head `c6a40c58a`: `explainer-kit` / `oat-explainer-kit` at `skills.test.ts:1491-1492`; `oat-project-implement` at `skills.test.ts:2122,2603,2912,3001,3493,4701,6024,8140`; `oat-project-complete` at `skills.test.ts:4704` and `review-skill-contracts.test.ts:1406`; `oat-project-lite` at `skills.test.ts:2114` (locate by the adjacent `skillName: 'oat-project-lite'`, since `'1.1.2'` also belongs to other skills); `oat-project-summary` at `:3184`, `:7925`; `oat-project-document` at `:3185`, `:7926`; `oat-project-pr-final` at `:3186`, `:4702`; `oat-project-quick-start` at `:2105`, `:3187`, `:6009`, `:7002`; `oat-project-plan` at `:2097`, `:6008`; `oat-wave-program`, `oat-wave-execute`, and `oat-project-autonomous` have no version pins (their old literals collide with other skills', so never locate a pin by literal alone).
+- Deliverable: the new core flow exists, is tested browser-free, and is proven end to end on real material before any deletion; the retired core, adapter scripts, CLI loaders, config keys, release tooling, smoke tests, and their tests are gone; the archive command validates the v2 package; gates green.
+- **Files:**
+- - Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`, `.agents/skills/explainer-kit/tests/contracts.test.mjs`
+- **Step 1: Write test (RED)** — rewrite `contracts.test.mjs` to cover only: `validateContract('fact-base')` accepts a fixture with the eight required keys, `mode: supplied`, `freshnessPolicy: live-wins`, `sources[] = { id, kind: 'file', locator, hash }`, citations `{ sourceId, locator }` (design § bundle.mjs), and rejects a citation carrying `path`; `validateContract('theme')`; `canonicalHash` / `canonicalStringify` determinism; `validateContract('run-request')` throws "unknown contract kind". (The `manifest` cases land in p01-t04.) Run `node --test .agents/skills/explainer-kit/tests/contracts.test.mjs` → red on the unknown-kind case.
+- **Step 2: Implement (GREEN)** — `SCHEMA_FILES` becomes `{ 'fact-base', manifest, theme }`; delete `validateSourceBacklinks` (the call at `:128`, the function `:132-171`) and the `source-backlinks.mjs` and `s3-roots.mjs` imports (`:4-7`, `:9-12`; the `safe-paths.mjs` import at `:8` stays); delete `validatePublicationRoots` (`:484-583`) and every run-request / set-plan / author / visual-review / terminal-evidence / publish / build-record validation branch (`:620-950`, the `run-request` branch starting at `:620`; the manifest cross-record block `:955-1139` is replaced in p01-t04); exports become `validateContract`, `canonicalHash`, `canonicalStringify`, `isVerifiablePublishReceipt` deleted. Run the test → green.
+- **Step 3: Verify** — `grep -n "source-backlinks\|s3-roots\|set-plan\|visual-review\|author-request\|terminal-evidence\|publish-\|run-request\|build-record" .agents/skills/explainer-kit/scripts/lib/contracts.mjs` → empty.
+- **Step 4: Commit** — `git commit -m "refactor(p01-t01): trim contracts.mjs to fact-base, manifest, theme"`
+- **Files:**
+- - Modify: `.agents/skills/explainer-kit/recipes/project-recap.v2.json`, `.agents/skills/explainer-kit/recipes/program-recap.json`, `.agents/skills/explainer-kit/recipes/project-explainer.json`, `.agents/skills/explainer-kit/recipes/engineer-tour.json` (each to `schemaVersion`, `id`, `version`, `sourceRoles`, `floor[]` with `id`, `type`, `template`, `requiredNarrative`, `briefRef` only; `authoring`, `required`, `expansion`, `discoveryLimits`, `fallback` removed), `.agents/skills/explainer-kit/scripts/lib/recipes.mjs` (`RECIPE_FILES` drops `project-recap.v1.json`; exports `RECIPES`, `loadRecipe`, `recipeFloor`, `recipeRequiredNarrative`; `validateRecipe` retained as an internal for the trimmed shape; delete `selectRecipeAuthoring`, `resolveDiagramRenderingRoute`, `recipeExpansion`, `evaluateExpansionProposals`, `validateSourceBindings`, `validateContentModel`, `validatePlannedPortfolio`, `shouldStopDiscovery`), `.agents/skills/explainer-kit/tests/recipes.test.mjs`
+- - Delete: `.agents/skills/explainer-kit/recipes/project-recap.v1.json`, `.agents/skills/explainer-kit/briefs/deep-dive.md`, `.agents/skills/explainer-kit/briefs/project-page.md`, `.agents/skills/explainer-kit/briefs/supporting-diagram.md`, `.agents/skills/explainer-kit/briefs/walkthrough-deck.md`
+- **Step 1: Write test (RED)** — `recipes.test.mjs` keeps only: the four recipes load; each `floor[0]` has `template` naming an existing `templates/*.html` and `briefRef` naming an existing brief; `recipeRequiredNarrative` reproduces the design's lists (`project-recap` six sections, `program-recap` six, `project-explainer` five); `validateRecipe` rejects an `authoring` key. Run → red.
+- **Step 2: Implement (GREEN)** → green.
+- **Step 3: Verify** — `ls .agents/skills/explainer-kit/briefs` = engineer-tour, program-recap, project-explainer, project-recap; `node -e "import('./.agents/skills/explainer-kit/scripts/lib/recipes.mjs').then(m=>console.log([...m.RECIPES.keys()]))"` prints four keys.
+- **Step 4: Commit** — `git commit -m "refactor(p01-t02): trim recipes to floors and briefs"`
+- **Files:**
+- - Modify: `.agents/skills/explainer-kit/scripts/lib/qa.mjs` (keep `REPRESENTATIVE_WIDTHS`, `BROWSER_PROBE_EVALUATE`, `checkSourceDumping`, `checkHtmlStructure`, `checkArtifactCohesion`, `pngDimensions`; keep `runBrowserProbes` trimmed to its probe loop and finding rules (`:527-790`: drop the `browserSession` / `requireEvidence` / evidence-retention branch, `retainBrowserEvidence` `:838-906` with its six `browserSession` references, `browserEvidenceId`, `viewportName`; keep `validateProbeResult`, `keyboardPassed`, `browserScenarios`, `representativeHeight` as its private helpers); delete `checkGuidelines`, `renderQaWarningIds`, `renderWarningIds`, `auditArtifactSet`, `addExpansionWarnings`, the `visual-review.mjs` import, and the warning-id tables only they used; `checkArtifactCohesion` emits `cohesion-ledger-empty` only when all three groups are empty), `.agents/skills/explainer-kit/tests/qa.test.mjs`, `.agents/skills/explainer-kit/tests/html-safety.test.mjs` (keeps `findUnpinnedResourceRefs`, `validateHtmlSafety`, `coreScriptHashes` cases against `templates/`), `.agents/skills/explainer-kit/tests/theme.test.mjs` (drop `initializeRun`), `.agents/skills/explainer-kit/tests/visual-matrix.test.mjs` (theme CSS across styles/palettes/profiles without `render.mjs`), `.agents/skills/explainer-kit/tests/schemas.test.mjs` (name map = fact-base, manifest, theme)
+- **Step 1: Write test (RED)** — `qa.test.mjs`: cohesion with a ledger whose `statuses` group is empty passes (`cohesion-ledger-empty` absent); all three empty fails; term keyed by term; `checkHtmlStructure` reports `external-asset`; `pngDimensions` on `fixtures/png.mjs`; `runBrowserProbes` with a fixture probe returning `clippedX` entries reports `inner-x-overflow` and with a clean result reports none. Run `node --test .agents/skills/explainer-kit/tests/qa.test.mjs` → red on the relaxed rule.
+- **Step 2: Implement (GREEN)** → green. **Prove it can fail:** restore the old any-group-empty rule, the new case goes red, restore.
+- **Step 3: Verify** — `grep -n "visual-review\|auditArtifactSet\|runBrowserProbes\|render.mjs\|browserSession\|visualCritic\|retainBrowserEvidence" .agents/skills/explainer-kit/scripts/lib/qa.mjs .agents/skills/explainer-kit/tests/theme.test.mjs .agents/skills/explainer-kit/tests/visual-matrix.test.mjs` → empty; `node --test .agents/skills/explainer-kit/tests/qa.test.mjs .agents/skills/explainer-kit/tests/html-safety.test.mjs .agents/skills/explainer-kit/tests/theme.test.mjs .agents/skills/explainer-kit/tests/visual-matrix.test.mjs .agents/skills/explainer-kit/tests/schemas.test.mjs` → green.
+- **Step 4: Commit** — `git commit -m "refactor(p01-t03): trim qa.mjs and the kept core tests"`
+- **Files:**
+- - Modify: `.agents/skills/explainer-kit/schemas/manifest.schema.json` (design § Data Models: `schemaVersion` const `explainer-kit.manifest/v2`; required `schemaVersion, runId, slug, recipe, createdAt, mode, source, theme, artifacts, immutableHashes, outcome, warnings`; `mode` enum `unattended | interactive`; `source` required `factBasePath, factBaseHash, inputHashes` and nothing else; `theme` `{ path, hash }` (no `derived`); `artifactEntry` required `id, type, contentPath, hash, status`, `status` enum `built | failed`, no `renderedPath`/`rebuildable`/`rebuild`/`durableEvidence`/`failure`; `outcome` enum `built | built-needs-review | failed | incomplete`; no `buildRecord`; `additionalProperties: false` throughout), `.agents/skills/explainer-kit/scripts/lib/contracts.mjs` (the manifest cross-record block becomes: every `immutableHashes` key must be a safe relative path; `theme.path` and every artifact `contentPath` must be `immutableHashes` keys; `artifacts[].hash === immutableHashes[contentPath]`; `theme.hash === immutableHashes['theme.resolved.json']`), `.agents/skills/explainer-kit/scripts/lib/package-coverage.mjs` (`PACKAGE_COVERAGE_VERSION = 'explainer-kit.package-coverage/v3'`; `requiredImmutablePackagePaths(manifest)` = `theme.resolved.json`, `source/fact-base.json`, `source/fact-base.md`, `source/ledger.json`, `qa/result.json`, each artifact `contentPath`; `permissibleRunPackagePaths(manifest)` = `immutableHashes` keys ∪ `manifest.json`; `validateImmutablePackageEvidence` keeps only the coverage check; `enforceRunPackageInventory` keeps the exact-inventory rule; delete `SUCCESSFUL_OUTCOMES`, `SET_PLAN_RECORD_PATHS`, the review-material predicates, and the `browser-runtime.mjs` import), `.agents/skills/explainer-kit/tests/contracts.test.mjs` (manifest cases), new `.agents/skills/explainer-kit/tests/package-coverage.test.mjs`
+- - Delete: `.agents/skills/explainer-kit/schemas/build-record.schema.json`, `.agents/skills/explainer-kit/schemas/run-request.schema.json`
+- **Step 1: Write test (RED)** — manifest v2 fixture accepted; v1 `schemaVersion` rejected; `buildRecord` key rejected; `theme.hash` mismatch rejected; artifact hash mismatch rejected; `requiredImmutablePackagePaths` equals the six paths for a one-artifact manifest; `enforceRunPackageInventory` rejects an extra file and a missing required file. Run → red.
+- **Step 2: Implement (GREEN)** → green. **Prove it can fail** for the v1-rejection and the extra-file cases.
+- **Step 3: Verify** — `grep -n "build-record\|run-request\|content-approval\|set-plan\|qa/browser\|visual-review\|built-durable\|built-not-durable" .agents/skills/explainer-kit/schemas/manifest.schema.json .agents/skills/explainer-kit/scripts/lib/package-coverage.mjs .agents/skills/explainer-kit/scripts/lib/contracts.mjs` → empty.
+- **Step 4: Commit** — `git commit -m "feat(p01-t04): manifest v2 and package rule v3"`
+- **Files:**
+- - Create: `.agents/skills/explainer-kit/scripts/bundle.mjs`, `.agents/skills/explainer-kit/tests/bundle.test.mjs`, `.agents/skills/explainer-kit/tests/fixtures/bundle/` (a minimal OAT project with `summary.md`, `implementation.md`, `plan.md`, `project-log.md`, `state.md`; a three-document directory; a supplied fact base). The fixture markdown sits inside `format:root`'s oxfmt glob, so author it oxfmt-clean and make sure the fixture `state.md` frontmatter survives `oxfmt --write` (the never-oxfmt rule protects the real project's `state.md`, not fixtures).
+- **Step 1: Write test (RED)** — allowlists per recipe (project, project-explainer, program with the newest-export rule over a fixture `project-summaries/` holding `20260830-w1.md` and `20260909-w1.md`, documents); containment refusal on a symlink escaping the root; the fact base validates through `validateContract('fact-base')` with `mode: supplied`, `freshnessPolicy: live-wins`, `overrides: []`, sources `{ id, kind: 'file', locator, hash }`, citations `{ sourceId, locator }`; an unparseable input lands in `unresolvedClaims`; `source/ledger.json` has the three groups, ≤ 12 entries each, terminology starting with the project name and phase ids, dates folded into `numbers`, statuses from the plan's phase statuses; the documents case yields an empty `statuses` group; identical inputs → identical `inputHashes`; `theme.resolved.json` written from `--theme <resolved-json>` before authoring; the reuse test: a second `bundle` over identical inputs with a satisfied manifest present reports `reuse: true` and touches no file, while a changed input, a different `--recipe`, or a `failed` manifest rebundles; a retry after a bundle refusal deletes the stale `failure.json` first, so the run root never holds a stray file; `source/ledger.json` carries the fourth key `claims: [{ subject, value, kind, claimId }]` built by the row/sentence/heading subject rule (design § bundle.mjs) over numeric, date, and closed-vocabulary status tokens, with a fixture derived from real material (`.oat/repo/reference/external-plans/2026-08-31-execution-program.md` and two wave summaries, provenance recorded in the fixture header) whose expected pairs are hand-checked; `fact-base.json` carries no index. Run `node --test .agents/skills/explainer-kit/tests/bundle.test.mjs` → red.
+- **Step 2: Implement (GREEN)** — CLI `node bundle.mjs --recipe <id> (--project <dir> | --program <artifact> --summaries <dir> --archive <dir> | --inputs <path>... | --fact-base <path>) --theme <resolved-json> --out <run-root>` — all four input modes land here with tests (the `--fact-base` end-to-end case and the missing `--out` usage refusal included), so p04-t01 touches no script; functions `collectInputs(recipe, inputs)`, `extractClaims(input)`, `indexClaims(claims)` (the subject rule), `selectAnchorLedger(claims, recipe)`, `writeBundle(runRoot, factBase, ledger, theme)`, `findReusableRun(outputRoot, recipe, inputHashes)`, `writeFailure(runRoot, stage, cause)` (shared with `verify.mjs`, used for `stage: core` by the adapter prose and `stage: bundle` here); writes to a temp dir and renames into `<run-root>/source/` (design § Error Handling). → green. **Prove it can fail:** disable the containment check → the symlink case goes red; restore.
+- **Step 3: Verify** — `node --test .agents/skills/explainer-kit/tests/bundle.test.mjs` green; `pnpm lint && pnpm format`.
+- **Step 4: Commit** — `git commit -m "feat(p01-t05): add bundle.mjs with the anchor-fact ledger"`
+- **Files:**
+- - Create: `.agents/skills/explainer-kit/scripts/record.mjs`, `.agents/skills/explainer-kit/tests/record.test.mjs`
+- - Create: `packages/cli/src/commands/project/archive/fixtures/v2-package/` (a package produced by `record.mjs` over the bundle fixture and a fixture `site/index.html` + `qa/result.json`, with `PROVENANCE.md`; p01-t08 consumes it — the archive command still rejects v2 at this task, so nothing here runs the archive vitest)
+- **Step 1: Write test (RED)** — `record.mjs --run-root <dir> --recipe <id> --slug <s> --mode unattended --theme <resolved> [--run-id <id> --created-at <iso>]` (the two optional flags are the determinism seam the parity check needs; omitted, they default to a fresh id and now) writes `manifest.json` that validates through `validateContract('manifest')` (hashing the `theme.resolved.json` `bundle.mjs` wrote); a `qa/result.json` whose `artifactSha256` differs from the current `site/index.html` hash is rejected with `record-qa-stale` (QA for different HTML bytes never records); a run root holding `failure.json` is rejected with `record-failure-present`; `immutableHashes` covers exactly the package table minus `manifest.json`; `outcome` follows `qa/result.json` (`checks` all pass + rung host|playwright + `visual.verdict === 'pass'` → `built`; rung none, or a browser rung with `visual.verdict === 'findings'` → `built-needs-review` with `reason`; any fail → `failed` with a sanitized cause containing no `/Users/` and no env value; missing `qa/result.json` → `incomplete`); the archive test accepts the checked-in package. Run → red.
+- **Step 2: Implement (GREEN)** → green. The test also includes a parity check that regenerates the package from the bundle fixture at test time with the checked-in `runId` / `createdAt` passed through `--run-id` / `--created-at` and asserts byte-equality with the checked-in copy, so the fixture cannot drift from `record.mjs`; a separate assertion validates the checked-in `manifest.json` through `validateContract('manifest')` directly, independent of `record.mjs`; and the fixture directory carries a `PROVENANCE.md` naming the generating task, the bundle fixture, and the `record.mjs` commit. **Prove it can fail:** make `record.mjs` omit `source/ledger.json` from `immutableHashes`, regenerate the fixture, run the archive test → red; restore `record.mjs`, regenerate, → green (a static fixture alone cannot fail).
+- **Step 3: Verify** — `node --test .agents/skills/explainer-kit/tests/record.test.mjs` green (the checked-in package validates through `validateContract('manifest')` and passes `enforceRunPackageInventory` at the library level; archive acceptance is p01-t08's).
+- **Step 4: Commit** — `git commit -m "feat(p01-t06): add record.mjs and the v2 archive fixture"`
+- **Files:**
+- - Create: `.agents/skills/explainer-kit/scripts/verify.mjs`, `.agents/skills/explainer-kit/tests/verify.test.mjs`, `.agents/skills/explainer-kit/tests/fixtures/verify/` (an authored page from `templates/house-style.html` over the bundle fixture; variants: missing section, foreign script, external `src`, a number absent from the fact base, a ledger anchor absent from the page)
+- **Step 1: Write test (RED)** — parse; required `<section id>` present and non-empty per `recipeRequiredNarrative`; `checkHtmlStructure` (reports `external-asset`); `checkSourceDumping`; `validateHtmlSafety` against the recipe's shell (foreign script → `shellScripts` fail); `extractRenderedClaims(html)` fixtures (terminology keyed term→term; numbers and statuses keyed by subject with normalized value; dates harvested as numbers); ledger→page via `checkArtifactCohesion` (`cohesion-claim-unobserved` on the missing anchor); page→fact-base (bounded): numeric, date, and closed-vocabulary status tokens only, each with its row/sentence/section subject, matched against `ledger.claims`; on the real-material fixture a correct page passes and a page with two wave task counts swapped fails with `verify-claim-untraced` naming the token and subject; `qa/result.json` carries `visual: { verdict: 'none' }` on `--rung none`; `--rung none` (or runtime unavailable) writes `qa/result.json` with `rung: none` and the `RUNTIME_UNAVAILABLE_REASONS` value; the checks object has no `externalRequests` key. Run → red.
+- **Step 2: Implement (GREEN)** — CLI `node verify.mjs --run-root <dir> --recipe <id> [--rung host --screenshots <dir> --artifact-sha256 <hex> --visual-verdict pass|findings [--visual-notes <text>] | --rung none]`; a missing `site/index.html` writes `<run-root>/failure.json` (`stage: authoring`) and exits without `qa/result.json`, a crash inside verify writes it with `stage: verify`, and a malformed page (present but failing parse or sections) records the failing checks so `record.mjs` yields `failed`; the host and Playwright rungs are p02. → green. **Prove it can fail** for the page→ledger and the shell-script checks.
+- **Step 3: Verify** — `node --test .agents/skills/explainer-kit/tests/verify.test.mjs` green.
+- **Step 4: Commit** — `git commit -m "feat(p01-t07): add verify.mjs with both claim passes"`
+- **Files:**
+- - Modify: `packages/cli/src/commands/project/archive/archive-utils.ts` (replace `isProjectRecapManifestV1` (~`:978-1056`) with a v2 key-set validator pinning `schemaVersion` to v2; delete `readVerifiedRunMode` (`:1342-1364`), `verifyProjectRecapTerminalEvidence` (`:1366-1389`) and its call sites (`:1471`, `:1564`, `:1628`), the `missingLegacyCoverage` / legacy-coverage branch (`:1428-1432`), the `qa/browser` and visual-review-chain checks; keep `verifyProjectRecapImmutableHashes`, the coverage call, `enforceRunPackageInventory`, the export re-verification (`:1538-1580`); drop the `runMode` threading that dies with `readVerifiedRunMode` (`:1420-1456` passes `{ runMode }` into `requiredImmutablePackagePaths` / `validateImmutablePackageEvidence`; read `manifest.mode` where mode still matters) and the `includeTerminalEvidence` option on `ExactRunPackageCoverage` (`:946`, `:952`) with its four call sites (`:1487`, `:1499`, `:1577`, `:1642`); rekey the artifact-hash check (`:1461-1467`) to `contentPath` and add the `theme.hash` cross-check; reject a selected run whose `outcome` is not `built` / `built-needs-review` or whose artifact `status !== 'built'` (Migration Plan item 6); `SUCCESSFUL_OUTCOMES`/`built-durable` strings gone), `packages/cli/src/commands/project/archive/explainer-package-coverage.ts` (`PACKAGE_COVERAGE_VERSION` v3; `runMode` dropped from its interface `:13`, `:18`), `packages/cli/src/commands/project/archive/archive-utils.test.ts` (recap fixture `:79-355` becomes a checked-in v2 package produced by p01-t06; every terminal-evidence and source-backlink case wherever it lives — the `loadExplainerTerminalEvidence` import `:46`, `:326`, `:1663`, `:2028`, `:2075`, `:2109`, `:2131`; `sourceBacklinks` at `:89`, `:102`, `:289`, `:2292`, `:2393` — deleted or rewritten; cases: accepted for `built` and `built-needs-review` in both modes; v1 fixture rejected (its outcome literal is `built-needs-review`, so the rejection is the `schemaVersion` and key set); `schemaVersion` v1 rejected; extra file rejected; `failed` outcome rejected; `theme.hash` mismatch rejected), `packages/cli/src/release/public-package-contract.ts` (`package-coverage.mjs` pin → v3 strings; delete the `source-backlinks.mjs` entries: the packed-file line `:98` and the whole packed-text object `:125-131`) and `public-package-contract.test.ts`, `packages/cli/src/validation/skills.test.ts` (`:1491-1509` v3 strings)
+- - Delete: `packages/cli/src/commands/project/archive/explainer-terminal-evidence.ts`, `packages/cli/src/commands/project/archive/explainer-source-backlinks.ts` (and their imports in `archive-utils.ts:56-60` and wherever `isCanonicalSourceBacklinks` was used, `:1026-1027`)
+- **Step 1: Write test (RED)** — the `archive-utils.test.ts` cases above against the checked-in package p01-t06 produced (`fixtures/v2-package/`; no temporary fixture). Run `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive/archive-utils.test.ts` → red.
+- **Step 2: Implement (GREEN)** → green. **Prove it can fail** for: v1 rejection, extra-file rejection, `failed`-outcome rejection (Migration Plan items 2, 1, 6).
+- **Step 3: Verify** — `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive src/release src/validation/skills.test.ts` → green; `grep -rn "terminal-evidence\|source-backlinks\|readVerifiedRunMode\|built-durable\|qa/browser" packages/cli/src/commands/project/archive packages/cli/src/release` → empty.
+- **Step 4: Commit** — `git commit -m "feat(p01-t08): archive validates the v2 explainer package"`
+- **Files:**
+- - Create: `.agents/skills/explainer-kit/tests/flow.e2e.test.mjs`, `.agents/skills/explainer-kit/tests/fixtures/flow/` (a page the implementing agent authors once, by hand, from `templates/house-style.html` and the program-recap brief over the real bundle below; provenance header names the inputs and their commit)
+- **Step 1: Write test** — over tracked real material only (`.oat/repo/reference/external-plans/2026-08-31-execution-program.md` and the two newest wave summaries under `.oat/repo/reference/project-summaries/`): `bundle --recipe program-recap --theme <defaults>` → the authored fixture page copied to `site/index.html` → `verify --rung none` (every check `pass`, the two claim passes on real claims) → `record` (`built-needs-review`) → compose the generic package contract directly in the test: `validateContract('manifest')`, verify every `immutableHashes` entry against the corresponding file bytes, and `enforceRunPackageInventory`; then `bundle` again over the same inputs reports `reuse: true`. Negative: the same page with two wave task counts swapped → `verify-claim-untraced`; `record` over a `qa/result.json` for different HTML bytes → `record-qa-stale`. Do not add a helper or loosen the project-only `verifySelectedProjectRecapForArchive` boundary.
+- **Step 2: Verify** — `node --test .agents/skills/explainer-kit/tests/flow.e2e.test.mjs` green; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive/archive-utils.test.ts` green. This is the gate for every deletion task that follows: do not start p01-t10 until it is green.
+- **Step 3: Commit** — `git commit -m "test(p01-t09): prove the flow end to end on real material"`
+- **Files:**
+- - Modify: `.agents/skills/oat-explainer-kit/scripts/check-terminal-outcome.mjs` (`TERMINAL_OUTCOMES` = `built`, `built-needs-review`, `failed`, `incomplete`; `generate` satisfied only by `built` / `built-needs-review`; `SKIP_REASONS` = `interactive`, `failed_attempt`, `capability_probe`; `--skip-reason failed_attempt` requires `--manifest` whose `outcome` is `failed` or `incomplete`, or `--failure <path>` naming a `failure.json` the flow wrote before recording, otherwise rejected), `.agents/skills/oat-explainer-kit/scripts/resolve-intent.mjs` (`SOURCES` + `failed_attempt`; `ALLOWED_PAIRS.projectRecap` + `skip:failed_attempt`; `capability_probe` retained), `.agents/skills/oat-explainer-kit/tests/intent.test.mjs`, `.agents/skills/oat-project-complete/tests/check-terminal-outcome.test.mjs`, `.agents/skills/oat-project-implement/tests/check-terminal-outcome.test.mjs`
+- **Step 1: Write test (RED)** — both guard tests: `built` satisfies, `built-needs-review` satisfies, `failed` / `incomplete` / `built-durable` / `built-not-durable` do not; `skip failed_attempt` accepted with a failed manifest or with a `failure.json`, rejected with neither, rejected with a `built` manifest; `skip capability_probe` still readable; `intent.test.mjs`: `skip/failed_attempt` allowed for `projectRecap`, not for `projectExplainer`. Each guard test's second case — the prose assertion over `oat-project-complete/SKILL.md` and `completion-and-closeout.md:946` (`/built-durable.*built-not-durable.*built-needs-review.*failed/s`) — is retained verbatim in this phase and re-pinned in p03-t02 / p03-t03. Run → red.
+- **Step 2: Implement (GREEN)** → green. **Prove it can fail** for the `failed_attempt`-without-manifest case (Migration Plan item 3).
+- **Step 3: Verify** — `node --test .agents/skills/oat-explainer-kit/tests/intent.test.mjs .agents/skills/oat-project-complete/tests/check-terminal-outcome.test.mjs .agents/skills/oat-project-implement/tests/check-terminal-outcome.test.mjs` green.
+- **Step 4: Commit** — `git commit -m "feat(p01-t10): rewrite the terminal-outcome guard and add skip/failed_attempt"`
+- **Files:**
+- - Delete: `tools/release/build-explainer-rc.mjs`, `tools/release/build-explainer-rc.test.mjs`, `tools/release/run-explainer-rc.mjs`, `tools/release/run-explainer-rc.test.mjs`, `tools/release/run-explainer-rc.integration.test.mjs`, `tools/release/explainer-rc-contract.mjs`, `tools/release/validate-explainer-acceptance.mjs`, `tools/release/validate-explainer-acceptance.test.mjs`, `tools/release/validate-explainer-visuals.mjs`, `tools/release/validate-explainer-visuals.test.mjs`, `.oat/repo/reference/explainer-kit-acceptance/` (whole directory)
+- - Modify: `package.json` (`release:validate` drops `&& pnpm release:validate:visual`; delete the `release:validate:visual` and `test:release` scripts; `test` chain drops `&& pnpm test:release`), `AGENTS.md:74`, `.oat/repo/knowledge/testing.md:35`, `apps/oat-docs/docs/contributing/code.md:60`
+- **Step 1: Sweep** — `grep -rn "explainer-rc\|validate-explainer\|test:release\|release:validate:visual\|explainer-kit-acceptance" --include='*.json' --include='*.ts' --include='*.mjs' --include='*.md' --include='*.yml' . | grep -v node_modules | grep -v "^./.oat/projects\|^./.oat/repo/pjm"` returns nothing outside the files above except this known, deliberately untouched residue: `.agents/skills/oat-explainer-kit/references/migration.md` (p03-t01), `.agents/skills/explainer-kit/references/extension-contract.md` (p01-t13), the docs page `workflows/skills/explainer-kit.md` (p03-t06), `.oat/repo/reference/decisions/DR-260908-bundled-skills-declare.md` and the records under `.oat/repo/reference/` (history), and the gitignored `packages/cli/assets/` mirror. Anchor exclusions on `.oat/` and `packages/cli/assets/` (not `./.oat/`; ugrep prints no `./` prefix).
+- **Step 2: Delete and edit** the files above.
+- **Step 3: Verify** — `pnpm release:validate > /tmp/x.log 2>&1; echo exit=$?` → 0; `node -e "const p=require('./package.json');if(/release:validate:visual|test:release/.test(JSON.stringify(p.scripts)))process.exit(1)"` → 0; `pnpm test:smoke` still runs (`tools/smoke/explainer-kit/*` failures are expected until p01-t12; note them).
+- **Step 4: Commit** — `git commit -m "refactor(p01-t11): retire the explainer release-candidate tooling"`
+- **Files:**
+- - Delete: `tools/smoke/explainer-kit/package-coverage-consumers.test.mjs`, `tools/smoke/explainer-kit/packaged-layout.test.mjs`, `tools/smoke/explainer-kit/publish-boundary.test.mjs`, `tools/smoke/explainer-kit/wrapper-compatibility.test.mjs`, `tools/smoke/explainer-kit/fixtures/package-root.mjs`, `tools/smoke/explainer-kit/fixtures/private-wrapper.mjs`, `tools/smoke/explainer-kit/fixtures/presets.example.json`, `tools/smoke/skill-version/reader-sameness.test.mjs`
+- - Keep: `tools/smoke/explainer-kit/check-core-version-parity.test.mjs`
+- **Step 1: Sweep** — `grep -rln "wrapper-compatibility\|reader-sameness\|package-root.mjs\|private-wrapper" tools packages .agents --include='*.mjs' --include='*.ts' --include='*.md'` returns nothing outside the files being deleted except `.agents/skills/explainer-kit/references/extension-contract.md` and `scripts/lib/catalog.mjs` (both p01-t13), `.agents/skills/oat-explainer-kit/references/migration.md` (p03-t01), and the gitignored `packages/cli/assets/` mirror; `.agents/skills/recon/tests/skill-contract.test.mjs` is NOT listed (it declares its own helper and nothing pins it). Also remove the stale comment naming `packaged-layout.test.mjs` at `packages/cli/src/__tests__/skills/skill-version.ts:45`. This task removes the `tools/smoke/skill-version/` category entirely; `check-core-version-parity.test.mjs` under `explainer-kit/` retains the reader-honesty coverage.
+- **Step 2: Delete.**
+- **Step 3: Verify** — `pnpm build && pnpm test:smoke > /tmp/x.log 2>&1; echo exit=$?` → 0; `ls tools/smoke/explainer-kit` shows only the parity test.
+- **Step 4: Commit** — `git commit -m "refactor(p01-t12): retire the explainer smoke tests"`
+- **Files:**
+- - Delete: `.agents/skills/explainer-kit/scripts/run.mjs`, `.agents/skills/explainer-kit/scripts/render-qa.mjs`, `.agents/skills/explainer-kit/scripts/record-durability.mjs`, `.agents/skills/explainer-kit/scripts/publish.mjs`, `.agents/skills/explainer-kit/scripts/validate.mjs`; `.agents/skills/explainer-kit/scripts/lib/{set-plan,content-approval,visual-review,terminal-evidence,internal-references,render,markdown,diagram,durability,catalog,s3-static,s3-roots,publication-policy,fact-base,records,source-backlinks}.mjs`; `.agents/skills/explainer-kit/schemas/{author-request.v2,author-request.v3,author-result.v2,set-plan.v1,visual-review-request.v1,visual-review-result.v1,visual-review-evidence.v1,terminal-evidence.v1,durability-evidence,publish-request.v1,publish-request.v2,publish-receipt.v1,publish-receipt.v2}.schema.json`; `.agents/skills/explainer-kit/references/{contracts,extension-contract,visual-review,destination-contract,golden-conformance}.md`; `.agents/skills/explainer-kit/examples/` (whole); `.agents/skills/explainer-kit/tests/{content-approval,diagram,e2e-recap,golden-conformance,link-validation,markdown,narrative-render,render,run.integration,templates,durability,s3-static,fact-base,records,rebuildability}.test.mjs`; `.agents/skills/explainer-kit/tests/fixtures/golden/`, `.agents/skills/explainer-kit/tests/fixtures/seeded-leak.html`
+- **Step 1: Sweep before deleting** — `grep -rn "from './\|from '../\|import(" .agents/skills/explainer-kit/scripts/lib/{qa,html-safety,browser-runtime,png,theme,contracts,recipes,package-coverage,fs-safe,safe-paths}.mjs | grep -o "'[^']*'" | sort -u` names only kept modules (the p01-t01/t05/t06 trims made that true; if not, fix the import before deleting).
+- **Step 2: Delete.**
+- **Step 3: Verify** — `ls .agents/skills/explainer-kit/scripts .agents/skills/explainer-kit/scripts/lib .agents/skills/explainer-kit/schemas .agents/skills/explainer-kit/references .agents/skills/explainer-kit/tests` matches design § Retained and retired inventory; `node --test .agents/skills/explainer-kit/tests/*.test.mjs > /tmp/x.log 2>&1; echo exit=$?` → 0; `for f in .agents/skills/explainer-kit/scripts/lib/*.mjs; do node -e "import('./$f')" || echo BROKEN $f; done` prints nothing.
+- **Step 4: Commit** — `git commit -m "refactor(p01-t13): retire the core orchestrator, seams, durability, and publish"`
+- **Files:**
+- - Delete: `.agents/skills/oat-explainer-kit/scripts/run.mjs`, `.agents/skills/oat-explainer-kit/scripts/derive-destination.mjs`, `.agents/skills/oat-explainer-kit/scripts/probe-recap-seams.mjs`, `.agents/skills/oat-explainer-kit/scripts/finalize-tracked-run.mjs`, `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`, `.agents/skills/oat-explainer-kit/tests/derive-destination.test.mjs`, `.agents/skills/oat-explainer-kit/tests/probe-recap-seams.test.mjs`, `.agents/skills/oat-explainer-kit/tests/finalize-tracked-run.test.mjs`
+- - Modify: `.agents/skills/oat-explainer-kit/scripts/resolve-intent.mjs` (delete the `probe-recap-seams.mjs` import at `:1`, the `seamProbe` parameter `:36`, its guard `:51-52`, its pass-through `:74`, the `seamProbe` branch in the resolve path `:175-189` (the capability-probe skip message, which carries no pinned token and would otherwise survive both sweeps), and `assertSeamProbe` `:256-320` — the whole symbol closure), `.agents/skills/oat-explainer-kit/scripts/resolve-config.mjs` (delete the `explainers.publish.*` keys `:14-19` and `resolvePublish`), `.agents/skills/oat-explainer-kit/scripts/bind-project-sources.mjs` (rewrite `RECIPE_ARTIFACTS` to design § bundle.mjs allowlists incl. `project-log.md`, `discovery.md`, conditional `orchestration-log.md`, `program`; delete `bindRepositorySources`' git/github bindings that only the run orchestrator used, keep the supplied-fact-base path), `.agents/skills/oat-explainer-kit/scripts/check-core.mjs` (gains `export const MINIMUM_CORE_VERSION`, relocated from `run.mjs:19`, its only definition today), `.agents/skills/oat-explainer-kit/tests/check-core.test.mjs` (the import at `:14` re-pointed at `check-core.mjs`; the `:70` assertion and the `:79` call kept; the `supportsAdaptiveSetPlanning` cases dropped), `.agents/skills/oat-explainer-kit/tests/config-paths.test.mjs` (drop the `run-request` validation case `:514` and the publish-key cases), `.agents/skills/oat-explainer-kit/tests/intent.test.mjs` (drop the `probe-recap-seams.mjs` import `:12`, the `allFiveSeams` helper `:19-29`, and every `seamProbe` / `probeRecapSeams` case `:157-489`), `.agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs` (drop the `run.mjs` import `:12` and every assertion that executes a retired module; keep the prose assertions)
+- **Step 1: Sweep** — `grep -rn "probe-recap-seams\|probeRecapSeams\|seamProbe\|RECAP_PROBE_CODES\|RECAP_SEAM_IDS\|finalize-tracked-run\|derive-destination\|scripts/run.mjs\|runOatExplainer\|explainers.publish" .agents/skills/oat-explainer-kit/scripts .agents/skills/oat-explainer-kit/tests` → after the edits, empty.
+- **Step 2: Edit and delete.**
+- **Step 3: Verify** — `node --test .agents/skills/oat-explainer-kit/tests/*.test.mjs > /tmp/x.log 2>&1; echo exit=$?` → 0; the sweep is empty.
+- **Step 4: Commit** — `git commit -m "refactor(p01-t14): cut the adapter's callback path, seam probe, and finalizer"`
+- **Files:**
+- - Modify: `packages/cli/src/commands/config/index.ts` (`:145-150`, `:312-317`, the `Explainer Publish (shared)` key-metadata group `:744-816`, the value-validation branches `:1451-1478`, the surface allowlist `:1583-1593`, and `defaultSurfaceForKey` `:1645-1662`; the surface and default branches must collapse cleanly for the four remaining `explainers.defaults.*` keys), `packages/cli/src/commands/config/index.test.ts` (`:1062-1248`, every publish-key case), `packages/cli/src/config/resolve.test.ts` (publish-key cases), `packages/cli/src/config/oat-config.ts` (`interface OatExplainerPublishConfig` `:96-104`, the `publish?:` field `:107`, the normalizer that reads `parsed.publish.*` `:620-655`), `packages/cli/src/config/resolve.ts:66-73` (the resolved publish defaults map that feeds `oat config dump`), `packages/cli/src/config/oat-config.test.ts:3368-3490`
+- **Step 1: Write test (RED)** — `oat config set explainers.publish.provider s3-static` is rejected as an unknown key; `explainers.defaults.style` still accepted. Run `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/config src/config/resolve.test.ts` → red.
+- **Step 2: Implement (GREEN)** → green.
+- **Step 3: Verify** — `grep -rn "explainers.publish\|OatExplainerPublishConfig" packages/cli/src` → empty; `grep -n "publish" packages/cli/src/config/oat-config.ts packages/cli/src/config/resolve.ts` → only unrelated hits (record them).
+- **Step 4: Commit** — `git commit -m "refactor(p01-t15): drop the explainers.publish config keys"`
+- **Files:**
+- - Modify: `packages/cli/src/commands/project/push/completion-transaction.test.ts` (`RECAP_BUILD_RECORD` `:28-29` and its write sites → a v2 `manifest.json` fixture only; the `built-durable` receipt strings `:561`, `:748`, `:1228` and the `built-not-durable` strings `:952`, `:1216` → `built`)
+- **Step 1: Run** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/push/completion-transaction.test.ts` → green before and after (fixtures only; the transaction code is recap-agnostic).
+- **Step 2: Verify** — `grep -n "build-record\|built-durable\|built-not-durable" packages/cli/src/commands/project/push/*.ts` → empty.
+- **Step 3: Commit** — `git commit -m "test(p01-t16): move the completion-transaction recap fixtures to v2"`
+- **Files:**
+- - Create: `tools/smoke/explainer-kit/no-retired-references.test.mjs` (pinned list: retired module paths, symbols `runExplainer`, `runOatExplainer`, `probeRecapSeams`, `planSet`, `visualCritic`, `browserSession`, `authorModulePath`, `criticModulePath`, `E_AUTHOR_REQUIRED`, `recordDurability`, schema ids for the deleted schemas, outcome strings `built-durable` / `built-not-durable`, config keys `explainers.publish.`, docs slugs `explainer-kit-providers` / `explainer-kit-verification`; the symbol `OatExplainerPublishConfig`; the file list comes from `git ls-files` so the gitignored `packages/cli/assets/` mirror and `dist/` never count; scope in this phase: `packages/`, `tools/`, `.agents/skills/*/scripts`, `.agents/skills/*/tests`, `scripts/`, minus itself, minus the three prose-pin files `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`, `packages/cli/src/validation/skills.test.ts`, and `.agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs` (listed in the pinned exclusion set with the reason: they quote lifecycle prose that Phase 3 rewrites; p03-t08 removes the exclusion after p03-t01 and p03-t05 re-pin them); and a permanent, named allowlist of negative-control sites that must keep the retired outcome strings forever: `.agents/skills/oat-project-complete/tests/check-terminal-outcome.test.mjs` and `.agents/skills/oat-project-implement/tests/check-terminal-outcome.test.mjs` (they assert that `built-durable` / `built-not-durable` no longer satisfy `generate`, design § Testing Strategy FR5/NFR2); no other file is allowlisted, and p01-t08's v1-rejection fixture uses `built-needs-review` as its outcome so the rejection comes from `schemaVersion` and the key set, not from an outcome literal; Phase 3 widens the scope)
+- - Modify: `.agents/skills/explainer-kit/SKILL.md` (`metadata.version` major bump), `.agents/skills/oat-explainer-kit/SKILL.md` (version bump only; prose is Phase 3), `.agents/skills/oat-explainer-kit/scripts/check-core.mjs` (`MINIMUM_CORE_VERSION`, relocated there in p01-t14, → the new core version; `check-core.test.mjs:70` asserts it), `packages/cli/src/validation/skills.test.ts` (the explainer family pins `:1491-1492`, by old literal; no other skill is bumped in this phase), the five lockstep `package.json` files + `packages/cli/assets/public-package-versions.json`
+- **Step 1: Write test (RED)** — seed `built-durable` into a scratch copy of a kept module under `mktemp -d` (outside the allowlist) and point the sweep at it → red; seed it into a scratch copy named like an allowlisted guard test → green (the allowlist is honored); against the tree → green.
+- **Step 2: Bump** the two skills and lockstep (`pnpm release:check-versions` requires strictly greater than `origin/main`; fetch first).
+- **Step 3: Verify (phase boundary)** — the full gate list with captured exit codes; `HOME=$(mktemp -d) pnpm exec turbo run test --force` shows `Cached: 0`; `pnpm test:smoke`, `pnpm test:skills`, `pnpm test:scripts` after `pnpm build`; `pnpm lint`, `pnpm format`; `tools/smoke/explainer-kit/check-core-version-parity.test.mjs` green after the bumps (it re-reads every bundled `SKILL.md` through both readers); the minimum-version assertion lives in `check-core.test.mjs`.
+- **Step 4: Commit** — `git commit -m "chore(p01-t17): add the retired-reference sweep and bump the explainer skills"`
+- Deliverable: the host and Playwright rungs work with the hash binding; the authoring brief exists; a fresh-host end-to-end test with negative controls passes.
+- **Files:**
+- - Modify: `.agents/skills/explainer-kit/scripts/verify.mjs`, `.agents/skills/explainer-kit/tests/verify.test.mjs`, `.agents/skills/explainer-kit/tests/fixtures/verify/` (three valid PNGs at 320/768/1440 via `fixtures/png.mjs`, one wrong-width PNG, one non-PNG)
+- **Step 1: Write test (RED)** — `--rung host --screenshots <dir> --artifact-sha256 <hex> --visual-verdict pass|findings [--visual-notes <text>]`: accepted when the hex equals the SHA-256 of `site/index.html` after the checks and all three PNGs pass magic bytes + `pngDimensions` at the declared width → `rung: host`, `screenshots[]` = `qa/320.png` etc., `visual.verdict` and `visual.notes` recorded (a missing verdict is rejected: capture without inspection is not verification); downgraded to `none` with reason `host-artifact-hash-mismatch` / `host-screenshot-invalid` otherwise; `record.mjs` yields `built` only on `pass`, `built-needs-review` on `findings`. Run → red.
+- **Step 2: Implement (GREEN)** → green. **Prove it can fail:** skip the hash recomputation → the mismatch case goes red; restore.
+- **Step 3: Verify** — `node --test .agents/skills/explainer-kit/tests/verify.test.mjs` green.
+- **Step 4: Commit** — `git commit -m "feat(p02-t01): bind host-rung screenshots to the artifact hash"`
+- **Files:**
+- - Modify: `.agents/skills/explainer-kit/scripts/verify.mjs`, `.agents/skills/explainer-kit/tests/verify.test.mjs`
+- **Step 1: Write test (RED)** — when `resolveHeadlessRuntime` resolves, `launchInstalledChromium` / `createBrowserProbeSession` then `probeRenderedPage(browser, fileUrl, { viewport: { width, height }, evaluate: BROWSER_PROBE_EVALUATE, screenshotPath })` for each of `REPRESENTATIVE_WIDTHS` → `rung: playwright`, three screenshots, and `runBrowserProbes`' findings consumed into `visual.findings` (`verdict: pass` when empty); a deliberately broken fixture layout (a fixed 1200px-wide table at 320) captures successfully but yields `viewport-overflow` → `verdict: findings` → `record.mjs` gives `built-needs-review`, never `built`; with `EXPLAINER_KIT_HEADLESS_PROBE` disabled (the runtime's own env switch, see `browser-runtime.mjs`) → `rung: none` with the `RUNTIME_UNAVAILABLE_REASONS` value; a probe that throws → `rung: none`, reason recorded, checks unaffected. Run → red.
+- **Step 2: Implement (GREEN)** → green (the Playwright case is skipped with a note when no Chromium is installed; the unavailable case always runs).
+- **Step 3: Verify** — `node --test .agents/skills/explainer-kit/tests/verify.test.mjs` green; `node --test .agents/skills/explainer-kit/tests/browser-runtime.test.mjs` unchanged and green.
+- **Step 4: Commit** — `git commit -m "feat(p02-t02): add the Playwright rung"`
+- **Files:**
+- - Create: `.agents/skills/explainer-kit/references/recap-authoring.md` (design § Authoring step: the input files; required sections by recipe as `<section id>` anchors; the shell to copy from `templates/` per `floor[0].template` and how to fill `THEME_CSS`, `TITLE`, `DESCRIPTION`, `EYEBROW`, `NAVIGATION`, `CONTENT`, `FOOTER` from `theme.resolved.json` and the fact base; one file / inline CSS / no external requests / no source dumping; the claim discipline; the pointer to `references/visual-authoring.md`; the host-rung instruction: open `file://<run-root>/site/index.html`, capture 320/768/1440 to `qa/`, then inspect the three screenshots against the checklist (no horizontal overflow, every required section visible, headings readable at 320, no overlapping text) and pass `--artifact-sha256`, `--visual-verdict`, `--visual-notes`); nothing that restates a bundled brief
+- - Modify: `.agents/skills/explainer-kit/references/fact-base-contract.md` (rewritten for the flow: the eight keys, sources, citations, the claims index, the anchor ledger)
+- **Step 1: Check** — `diff <(grep -o '^## .*' .agents/skills/explainer-kit/briefs/project-recap.md) <(grep -o '^## .*' .agents/skills/explainer-kit/references/recap-authoring.md)` shares no headings (no overlap with the bundled briefs).
+- **Step 2: Verify** — `pnpm exec oxfmt --check .agents/skills/explainer-kit/references/*.md`; `pnpm oat:validate-skills`.
+- **Step 3: Commit** — `git commit -m "docs(p02-t03): add the recap authoring brief"`
+- **Files:**
+- - Create: `.agents/skills/explainer-kit/tests/fresh-host.test.mjs`
+- **Step 1: Write test** — under `mktemp -d`: a scratch git repo with one OAT project fixture, `HOME` pointing at a temp home where the core is installed at user scope (copy the skill tree into `$HOME/.agents/skills/explainer-kit`), `EXPLAINER_KIT_HEADLESS_PROBE` disabled; run `bundle` → write a fixture page authored from the shell (the test stands in for the agent) → `verify --rung none` → `record`; expect `built-needs-review` with the runtime reason and a package the p01-t08 validator accepts (`verifySelectedProjectRecapForArchive` over the run root). Negative controls, each asserted visibly failed while the accepted control still passes: delete a required section → `failed` (sections) with a manifest the skip guard accepts via `--manifest`; remove the core → `failure.json` (`stage: core`) and the guard accepts it via `--failure`, then the resume chain: record `skip:failed_attempt` from that failure, re-run the completion resolution over the same project → the skip is honored with no prompt and no authoring; with the probe enabled, point `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` (`browser-runtime.mjs:106`, checked first and only for existence) at an existing, non-executable temp file → `launchInstalledChromium` throws → `rung: none` with `verify.mjs`'s launch-failure reason, distinct from `RUNTIME_UNAVAILABLE_REASONS.disabled` (`disabled-by-configuration`), still `built-needs-review` (deterministic on any host that has the repo's `@playwright/test` devDependency, which `resolveHeadlessRuntime` imports before reading the env var; without it the reason is `browser-driver-not-installed` and the control fails loudly — inject `loadDriver` / `fileExists`, both already injectable at `browser-runtime.mjs:71-75`, if the test must be host-independent); remove the core from `$HOME` → `check-core.mjs` reports the install command and the flow stops before bundling.
+- **Step 2: Verify** — `node --test .agents/skills/explainer-kit/tests/fresh-host.test.mjs` green; run twice, the second with `Cached: 0` semantics (it is a `node --test` file, no turbo cache).
+- **Step 3: Gates (phase boundary)** — the full list with exit codes; `pnpm lint`, `pnpm format`.
+- **Step 4: Commit** — `git commit -m "test(p02-t04): fresh-host end-to-end proof with negative controls"`
+- Deliverable: every skill, reference, contract test, docs page, and repository record speaks the new vocabulary; the sweep covers the whole repository; the decision record and backlog reconciliation exist.
+- **Files:**
+- - Modify: `.agents/skills/oat-explainer-kit/SKILL.md` (rewritten around § Generate: core prerequisite; intent; inputs by recipe via `bind-project-sources.mjs`; theme via `resolve-config.mjs`; output root via `resolve-paths.mjs`; `bundle` → author (the recipe brief + `recap-authoring.md`) → `verify` → `record`; the ladder instruction; retry/skip; the outcome vocabulary; § Responsibilities rewritten; no seam, callback, probe, durability, or publish sentence), `.agents/skills/oat-explainer-kit/references/lifecycle-contract.md` (intent record, allowed pairs incl. `skip/failed_attempt`, `skip/capability_probe` read-only legacy at `:73`, `:76-81`; the outcome vocabulary; no `:29` / `:154` probe text), `.agents/skills/oat-explainer-kit/references/config-contract.md` (`explainers.defaults.*` only; `:35` gone), `.agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs` (prose assertions rewritten to § Generate and the new ordering in every caller: complete, closeout, autonomous, both wave skills, plan Step 15.5 — this task lands the adapter half; p03-t02–t04 land the callers, so keep the test red-then-green across those tasks and green at the phase boundary)
+- - Modify (core): `.agents/skills/explainer-kit/SKILL.md` (§ Run replaces § Core Run, § Authoring, and § Review, Approval, and Warnings: `--recipe`, the four input modes p01-t05 shipped, `--out`; unattended never prompts; § Responsibilities rewritten; § Wrapper Extension Seam and § Dependency Direction deleted; § Asset Resolution and § Progress Indicators kept; no `run.mjs`, `E_AUTHOR_REQUIRED`, `author-request`, `extension-contract`, `visual-review.md`, `contracts.md`, or `built-not-durable` mention — p04-t01 adds only the interactive front-door posture), `packages/cli/src/validation/skills.test.ts:1501-1518` (the `trusted browser-session contract` case re-pinned to the § Generate contract: the core prerequisite sentence and `package-coverage/v3`; the three seam assertions deleted)
+- - Delete: `.agents/skills/oat-explainer-kit/references/author-callback.md`, `.agents/skills/oat-explainer-kit/references/visual-review-callback.md`, `.agents/skills/oat-explainer-kit/references/migration.md`
+- **Step 1: Verify** — `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts -t "explainer skill family"` green; `grep -n "probeRecapSeams\|authorModulePath\|visualCritic\|browserSession\|planSet\|runOatExplainer\|built-durable\|built-not-durable\|finalize-tracked-run\|explainers.publish" .agents/skills/oat-explainer-kit/SKILL.md .agents/skills/oat-explainer-kit/references/*.md .agents/skills/explainer-kit/SKILL.md` → empty; `pnpm oat:validate-skills`.
+- **Step 2: Commit** — `git commit -m "docs(p03-t01): rewrite the adapter and the core skill around the generate flow"`
+- **Files:**
+- - Modify: `.agents/skills/oat-project-complete/SKILL.md` (Step 3.6 `:531-611` rewritten per design § Skill prose and consumers; Steps 10.5 and 10.6 deleted; every `EVIDENCE_COMMIT` / attest / `built-not-durable` sentence in Steps 1, 2, 3.65, 5, 6, 8, 11.5, 12 rewritten so Step 8's export is the durable copy and completion is one bookkeeping push; `:608`'s project-explainer sentence kept. **Out of scope and unchanged:** `IS_DURABLE_PROJECT` is the project-scope classifier (`:133-136`, `shared || synced`), not recap durability; its archive and pointer gates at `:226-235`, `:247`, `:287`, `:903`, `:942`, `:1173`, `:1666`, `:1736` stay byte-identical. The only `IS_DURABLE_PROJECT` line this task touches is `:610`, rewritten to drop `built-not-durable` while keeping the local-scope prohibition on exporting a tracked recap or passing `--project-recap-run`), `.agents/skills/oat-project-complete/scripts/execute-synced-archive-entry.mjs` (drop `exportedBuildRecordPath`, the `recoverArchiveEvidence` call and its evidence paths, `evidenceCommit` / `evidencePushRequired`, and the `attestRecap` continuation), `.agents/skills/oat-project-complete/scripts/parse-synced-archive-resume-fields.mjs` (the `EVIDENCE_COMMIT` field `:62`), `.agents/skills/oat-project-complete/scripts/parse-completion-retry-fields.mjs` (the `evidenceCommit` / `evidencePushRequired` validation and contradiction block `:144-145`, `:180-187`, `:206-222`), `.agents/skills/oat-project-complete/scripts/recover-completion-receipts.mjs` (the recap-evidence recovery path: `EVIDENCE_MESSAGE` `:10`, its receipt-subject use `:397`, the `evidencePaths` parameter and validation `:531-559`, the `localSubject === EVIDENCE_MESSAGE` branch `:598-614`), `.agents/skills/oat-project-complete/tests/resolve-synced-archive-entry.test.mjs`, `.agents/skills/oat-project-complete/tests/check-terminal-outcome.test.mjs` (its prose assertion re-pinned to the rewritten Step 3.6 vocabulary)
+- **Step 1: Write test (RED)** — `resolve-synced-archive-entry.test.mjs`: the continuation runs `finalizeLinks → refreshDashboard → pushBookkeeping → closeoutPr → clearPointer → confirmCompletion` with no `attestRecap`; a resume record carrying `EVIDENCE_COMMIT` is rejected as unknown. Run `node --test .agents/skills/oat-project-complete/tests/*.test.mjs` → red.
+- **Step 2: Implement (GREEN)** → green.
+- **Step 3: Verify** — `grep -n "EVIDENCE_COMMIT\|EVIDENCE_MESSAGE\|evidencePaths\|evidenceCommit\|attest\|build-record\|built-durable\|built-not-durable\|finalize-tracked-run\|probeRecapSeams\|runOatExplainer\|authorModulePath" .agents/skills/oat-project-complete/SKILL.md .agents/skills/oat-project-complete/scripts/*.mjs` → empty; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/review-skill-contracts.test.ts` red on the pins this task moves (they are re-pinned in p03-t05; record the failing pin names in the commit body).
+- **Step 4: Commit** — `git commit -m "docs(p03-t02): route completion onto the generate flow and retire recap attestation"`
+- **Files:**
+- - Modify: `.agents/skills/oat-project-implement/references/completion-and-closeout.md` (`:884-950` only; `:432-517` and `:629-673` untouched), `.agents/skills/oat-project-autonomous/SKILL.md` (Step 2.5 `:260-285`: the forced `generate` intent stays; the capability-probe paragraph `:271-278` becomes the retry-then-`skip:failed_attempt` rule; the `projectExplainer` paragraph stays), `.agents/skills/oat-project-summary/SKILL.md` (`:290-302`: `generated` (`built`), `generated — needs review` (`built-needs-review`, reason), `skipped` (reason), `failed` (cause); source of truth `manifest.json` + `qa/result.json`), `.agents/skills/oat-project-implement/tests/check-terminal-outcome.test.mjs` (its prose assertion over `completion-and-closeout.md:946` re-pinned)
+- **Step 1: Test** — `node --test .agents/skills/oat-project-implement/tests/*.test.mjs .agents/skills/oat-project-complete/tests/check-terminal-outcome.test.mjs` red before the re-pin, green after.
+- **Step 2: Verify** — `grep -n "capability_probe\|probeRecapSeams\|built-durable\|built-not-durable\|build-record" .agents/skills/oat-project-implement/references/completion-and-closeout.md .agents/skills/oat-project-autonomous/SKILL.md .agents/skills/oat-project-summary/SKILL.md` → only the read-only-legacy mention of `capability_probe` in the autonomous skill, if any; `sed -n 432,517p` and `sed -n 629,673p` of the closeout file are byte-identical to `origin/main`'s.
+- **Step 3: Commit** — `git commit -m "docs(p03-t03): closeout, autonomous tail, and summary mapping on the new vocabulary"`
+- **Files:**
+- - Modify: `.agents/skills/oat-project-plan/SKILL.md` (Step 15.5 `:753-766`: call the adapter's § Generate with recipe `project-explainer` over the approved plan artifacts, report outcome and run path, continue on any outcome; the critic-callback sentence `:760` deleted; Step 4.5 untouched), `.agents/skills/oat-wave-program/SKILL.md` (the whole `### Program-close explainer caller` section `:135-171`: the caller-owns-fact-base paragraph, the `explainer-kit.run-request/v1` construction block with its required-key list, the `explainer-kit.manifest/v1` key list incl. `buildRecord`, and the publish-gate sentence are deleted; replaced by one paragraph invoking § Generate with `program-recap` and recording `runId` / `outcome` in the program ledger), `.agents/skills/oat-wave-execute/SKILL.md` (the mirrored section `:461-497`, the same)
+- **Step 1: Verify** — `grep -n "authorModulePath\|critic\|author seam\|author-request\|run-request\|manifest/v1\|buildRecord\|publish" .agents/skills/oat-project-plan/SKILL.md .agents/skills/oat-wave-program/SKILL.md .agents/skills/oat-wave-execute/SKILL.md` → empty.
+- **Step 2: Commit** — `git commit -m "docs(p03-t04): plan explainer and wave program-close callers use the flow"`
+- **Files:**
+- - Modify: `.agents/docs/autonomy-contract.md` (row IMPLEMENT-19; the § HEAD prompt-site coverage table `:255`: recompute the site keys for `oat-project-implement/references/completion-and-closeout.md` (old `acf05140d8f3`, `37d6705db801`, `de4bc19da5e2`) and `oat-project-complete/SKILL.md` (six old sites) with the test's rule `sha256(heading + "\n" + normalized line).slice(0,12)`), the byte-identical mirrors `.agents/skills/{oat-project-implement,oat-project-quick-start,oat-project-document,oat-project-pr-final,oat-project-lite}/references/docs/autonomy-contract.md`, `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts` (every recap and durability pin in the file, located by its old literal; at head `c6a40c58a` they are `:446`, `:468-635` incl. `:623-626`, `:1406` (the `oat-project-complete` version), `:1438-1479` (the author-seam sentence at `:1439` and the recap block), `:1501-1536`, `:2080-2113` (the `EVIDENCE_COMMIT` recovery shell, the `attest final project recap` commit line, and the Step 10.5 ordering, removed with the deleted steps); within `:1501-1536` only the recap-bearing lines `:1523` (re-attest), `:1533`, and `:1536` (`built-not-durable`) change. **Kept verbatim** because they pin the project-scope classifier, not the recap: `:1913` (the `SHOULD_ARCHIVE` / `IS_DURABLE_PROJECT` skip sentence), `extractDurableDerivation` `:4720-4735` and its two active-pointer tests at `:4848` and `:4881`, and the `IS_DURABLE_PROJECT=true` fixture preambles `:4950-4965`, `:5040-5055`; each other pin re-pinned to the rewritten sentence or removed with the deleted step), `.agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs` (now green end to end)
+- **Step 1: Run** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/autonomy-gate-inventory.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts` → red (stale keys and pins).
+- **Step 2: Implement** → green; `node --test .agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs` green.
+- **Step 3: Verify** — `shasum -a 256 .agents/docs/autonomy-contract.md .agents/skills/*/references/docs/autonomy-contract.md` shows one hash.
+- **Step 4: Commit** — `git commit -m "docs(p03-t05): recompute the prompt-site table and re-pin the recap prose"`
+- **Files:**
+- - Modify: `apps/oat-docs/docs/workflows/skills/explainer-kit.md` (rewritten around the flow: the four callers, the front door, the run package, the ladder, the outcome vocabulary; no seams, callbacks, expansion profiles, durability, publish), `apps/oat-docs/docs/workflows/projects/lifecycle.md:88-102`, `apps/oat-docs/docs/workflows/projects/artifacts.md:121-140`, `apps/oat-docs/docs/cli-utilities/configuration.md:178-230` (publish keys removed), `apps/oat-docs/docs/cli-utilities/tool-packs.md:159-187`, `apps/oat-docs/docs/reference/troubleshooting.md:331-368` (`built-needs-review` is a satisfied, archivable outcome needing a human look), `apps/oat-docs/docs/reference/cli-reference.md:154` (the two legacy clauses), `apps/oat-docs/docs/workflows/skills/index.md:15`, `apps/oat-docs/docs/contributing/index.md:20`, regenerated `apps/oat-docs/index.md`
+- - Delete: `apps/oat-docs/docs/workflows/skills/explainer-kit-providers.md`, `apps/oat-docs/docs/contributing/explainer-kit-verification.md`
+- **Step 1: Verify** — `pnpm build:docs > /tmp/x.log 2>&1; echo exit=$?` → 0; `pnpm check` (markdownlint) → 0; `git status --short apps/oat-docs/index.md` shows the regeneration is committed; `grep -rn "visualCritic\|planSet\|browserSession\|authorModulePath\|set-plan\|content-approval\|built-durable\|explainers.publish\|explainer-kit-providers\|explainer-kit-verification" apps/oat-docs/docs apps/oat-docs/index.md` → empty.
+- **Step 2: Commit** — `git commit -m "docs(p03-t06): rewrite the explainer docs for the agent-authored flow"`
+- **Files:**
+- - Create: one decision record via `oat decision new "Explainers are agent-authored; the provider seams and durability path are retired" --status accepted --context ... --decision ... --consequences ...` (supersedes `DR-260726-explainer-authoring-is-two`, `DR-260726-recipe-policy-owns-expansion`, `DR-260726-expansion-artifacts-get-id`, `DR-260726-explainer-render-qa-is-opt`, `DR-260817-version-agnostic-publication`, named in its body; the superseded records are not edited), then `oat decision regenerate-index`
+- - Modify (via CLI): `oat backlog archive BL-260727-make-explainer-run-durability --wont-do --summary "Superseded by agent-authored-recap: built-not-durable and the durability path are retired; the archive export is the durable copy"`
+- **Step 1: Precondition** — `oat pjm doctor --json` → `adoption.state` is `declared`.
+- **Step 2: Verify** — `git status --short .oat/repo/reference/decisions .oat/repo/pjm/backlog` shows the new record, the regenerated index, the archived item, and `completed.md`.
+- **Step 3: Commit** — `git commit -m "chore(p03-t07): record the explainer decision and close BL-260727"`
+- **Files:**
+- - Modify: `tools/smoke/explainer-kit/no-retired-references.test.mjs` (scope: every `git ls-files` path minus itself, `.oat/projects/`, `.oat/repo/reference/`, `.oat/repo/pjm/`; the Phase 1 exclusion of the three prose-pin files removed, which p03-t01 and p03-t05 already re-pinned; the two-file negative-control allowlist stays), the `metadata.version` of `oat-project-complete`, `oat-project-implement`, `oat-project-summary`, `oat-project-autonomous`, `oat-project-plan`, `oat-wave-program`, `oat-wave-execute`, `oat-project-quick-start`, `oat-project-document`, `oat-project-pr-final`, `oat-project-lite`, `packages/cli/src/validation/skills.test.ts` and `review-skill-contracts.test.ts` (the complete pin inventory under Conventions: `oat-project-implement` at `skills.test.ts:2122,2603,2912,3001,3493,4701,6024,8140`; `oat-project-complete` at `skills.test.ts:4704` and `review-skill-contracts.test.ts:1406`; the others by old literal)
+- **Step 1: Run** the sweep → red on any leftover; fix the leftover in its owning file; → green.
+- **Step 2: Gates (phase boundary)** — the full list with exit codes, forced test run, `pnpm test:smoke`, `pnpm test:skills`, `pnpm test:scripts`, `pnpm lint`, `pnpm format`, `pnpm run check:skill-bumps` green.
+- **Step 3: Commit** — `git commit -m "chore(p03-t08): repository-wide retired-reference sweep and skill bumps"`
+- Deliverable: a person can run the core skill on any inputs; the project explainer is proven on this project's own plan artifacts.
+- **Files:**
+- - Modify: `.agents/skills/explainer-kit/SKILL.md` (§ Front door added to the § Run p03-t01 wrote: a person names the recipe, `--inputs <file|dir>…` or `--fact-base <path>`, and `--out <dir>`; interactive posture: propose scope and show the fact-base summary before authoring, no gate machinery; no script changes — p01-t05 shipped every input mode)
+- - Create: `.agents/skills/explainer-kit/tests/front-door.test.mjs`
+- **Step 1: Write test** (no RED expectation: the scripts shipped in Phase 1; this test adds the end-to-end chain `bundle.test.mjs` does not exercise) — a scratch directory of three documents → `bundle --inputs` → fixture page → `verify --rung none` → `record` → `built-needs-review` and a package `verifySelectedProjectRecapForArchive` accepts; `--fact-base` with a supplied fact base → the same chain; a missing `--out` refused with a usage message. Run → green.
+- **Step 2: Write the prose** — § Front door in `explainer-kit/SKILL.md` as described.
+- **Step 3: Verify** — `pnpm oat:validate-skills`; `grep -n "E_AUTHOR_REQUIRED\|author callback\|runExplainer\|--author-module" .agents/skills/explainer-kit/SKILL.md` → empty (already true since p03-t01; this task must keep it so).
+- **Step 4: Commit** — `git commit -m "feat(p04-t01): the explainer-kit front door for any inputs"`
+- **Files:**
+- - Create: `.oat/projects/shared/agent-authored-recap/explainers/agent-authored-recap-explainer/` (a real run: `bundle --recipe project-explainer --project <this project>`, the implementing agent authors `site/index.html` from `templates/house-style.html` and the project-explainer brief, `verify` at the highest rung the host reaches, `record`)
+- - Modify: `.oat/projects/shared/agent-authored-recap/implementation.md` (record `runId`, `outcome`, rung, and the run path under a "Project explainer" note)
+- **Step 1: Run** the flow as the adapter's § Generate describes for `project-explainer`; expect `built` (host or Playwright rung) or `built-needs-review` (browser-less host) with every check passing.
+- **Step 2: Verify (read-only; never re-run `verify.mjs` after `record.mjs`, it would rewrite `qa/result.json` under the manifest's hashes)** — `qa/result.json` shows every check `pass`; compose the generic package contract directly in the check: `validateContract('manifest')`, verify every `immutableHashes` entry against the corresponding file bytes, and `enforceRunPackageInventory`; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive/archive-utils.test.ts` unchanged. Do not add a helper or loosen the project-only `verifySelectedProjectRecapForArchive` boundary.
+- **Step 3: Gates (phase boundary)** — the full list with exit codes.
+- **Step 4: Commit** — `git commit -m "feat(p04-t02): generate this project's explainer through the flow"`
+- Deliverable: the recap for the 2026-08-31 execution program exists, verifies, and its identity is in the program ledger.
+- **Files:**
+- - Create: `.oat/repo/reference/explainers/2026-08-31-execution-program-recap/` (the run: `bundle --recipe program-recap --program .oat/repo/reference/external-plans/2026-08-31-execution-program.md --summaries .oat/repo/reference/project-summaries --archive .oat/projects/archived` selecting one summary per wave by the newest-export rule and each archived wrapper's `implementation.md` § Final Summary when reachable; the agent authors `site/index.html` from the program-recap brief; `verify` at the highest rung the host reaches; `record --mode unattended`)
+- - Modify: `.oat/repo/reference/external-plans/2026-08-31-execution-program.md` (line `:423` "Program recap: not run" → the `runId`, `outcome`, rung, and run path; the four per-wave `recap: not run` rows stay as history), `.oat/projects/shared/agent-authored-recap/implementation.md` (the validation-evidence note: `qa/result.json` checks, manifest verification, the ledger row)
+- **Step 1: Run** the flow; expect every browser-free check to pass and `built` or `built-needs-review`.
+- **Step 2: Verify (read-only; never re-run `verify.mjs` after `record.mjs`)** — `qa/result.json` shows every check `pass`; compose the generic package contract directly in the check: `validateContract('manifest')`, verify every `immutableHashes` entry against the corresponding file bytes, and `enforceRunPackageInventory`; `unresolvedClaims` lists any unreachable wrapper input rather than dropping it. Do not add a helper or loosen the project-only `verifySelectedProjectRecapForArchive` boundary.
+- **Step 3: Gates (phase boundary)** — the full list with exit codes, forced test run, smoke/skills/scripts suites, `pnpm lint`, `pnpm format`.
+- **Step 4: Commit** — `git commit -m "feat(p05-t01): generate the execution-program recap"`
+- Deliverable: unchanged inputs reuse their recorded run, the remaining
+- assurance gaps are closed, and governing artifacts describe the shipped
+- contracts exactly.
+- **Files:**
+- - Modify: `.agents/skills/explainer-kit/scripts/lib/run-package.mjs`,
+- `.agents/skills/explainer-kit/tests/flow.e2e.test.mjs`
+- **Step 1: Write test (RED)** — Record a multi-file project run, invoke
+- `runBundle` again with the same input hashes in collection order, assert
+- `reuse: true`, and prove no package file bytes or timestamps changed.
+- **Step 2: Implement (GREEN)** — Compare canonicalized input-hash entries rather
+- than JSON object insertion order. Preserve exact key/value equality.
+- **Step 3: Verify** — Run the focused end-to-end and complete core suites,
+- including a negative control with one changed hash.
+- **Step 4: Commit** —
+- `git commit -m "fix(p06-t01): make run reuse hash-order independent"`
+- **Files:**
+- - Modify: `.oat/projects/shared/agent-authored-recap/spec.md`
+- **Step 1: Correct FR12** — State that callback orchestration and the
+- durability/publish path are retired; name only the retained libraries and tests
+- that must stay green.
+- **Step 2: Restore FR10** — Replace the malformed Requirement Index entry with a
+- complete FR10 row and its correct task coverage.
+- **Step 3: Verify** — Cross-check FR10/FR12 against discovery, design, the
+- retired-reference sweep, and the shipped tree; run the file-scoped formatter.
+- **Step 4: Commit** —
+- `git commit -m "docs(p06-t02): align spec retirement contracts"`
+- **Files:**
+- - Modify: `.oat/projects/shared/agent-authored-recap/design.md`,
+- `.oat/projects/shared/agent-authored-recap/implementation.md`
+- **Step 1: Correct result shape** — Document `{ status, cause? }` checks,
+- `requiredNarrative`, canonical string screenshot paths, and omission-based
+- optional reason/visual fields exactly as `qa-result.mjs` validates them.
+- **Step 2: Correct failure shape** — Document `failure.json` with
+- `schemaVersion`, `runRootHash`, stage, sanitized cause, and timestamp, including
+- the run-root binding.
+- **Step 3: Record alignment** — Add the accepted result/failure contract
+- alignment to the implementation design-delta ledger.
+- **Step 4: Verify and commit** — Cross-check the design against production
+- validators and tests, format both files, then
+- `git commit -m "docs(p06-t03): align QA and failure contracts"`.
+- **Files:**
+- - Modify: `.agents/skills/explainer-kit/scripts/{bundle,verify,record}.mjs`,
+- `.agents/skills/explainer-kit/scripts/lib/` (one shared sanitizer),
+- `.agents/skills/explainer-kit/tests/{bundle,verify,record}.test.mjs`
+- **Step 1: Write tests (RED)** — Prove pre-record failure evidence redacts
+- environment values plus POSIX and Windows absolute paths without corrupting
+- safe diagnostics.
+- **Step 2: Implement (GREEN)** — Route bundle, verify, and record through one
+- shared sanitizer with deterministic longest-value-first environment redaction.
+- **Step 3: Negative controls** — Neutralize environment and cross-platform path
+- redaction independently and confirm the corresponding tests fail.
+- **Step 4: Verify and commit** — Run focused and complete core suites, lint, and
+- format, then
+- `git commit -m "fix(p06-t04): share complete failure sanitization"`.
+- **Files:**
+- - Modify: `.agents/skills/explainer-kit/scripts/bundle.mjs`,
+- `.agents/skills/explainer-kit/tests/bundle.test.mjs`
+- **Step 1: Write test (RED)** — Supply two declared roots containing the same
+- relative locator with different bytes and prove the bundle must not silently
+- discard either input.
+- **Step 2: Implement (GREEN)** — Reject ambiguous locator collisions with a
+- clear bundle error while retaining deterministic de-duplication of genuinely
+- identical input identity.
+- **Step 3: Verify** — Run the focused bundle and complete core suites plus a
+- negative control that restores silent dropping.
+- **Step 4: Commit** —
+- `git commit -m "fix(p06-t05): reject document locator collisions"`
+- **Files:**
+- - Modify: `.agents/skills/explainer-kit/scripts/bundle.mjs`,
+- `.agents/skills/explainer-kit/scripts/verify.mjs`,
+- `.agents/skills/explainer-kit/tests/{bundle,verify}.test.mjs`
+- **Step 1: Write test (RED)** — Copy a factual source heading containing a
+- machine-checkable number or date into rendered HTML and prove faithful output
+- does not fail page-to-ledger tracing.
+- **Step 2: Implement (GREEN)** — Index machine-checkable source-heading facts or
+- apply an equivalent symmetric structural-heading rule without weakening
+- non-heading claim checks.
+- **Step 3: Negative controls** — A changed factual heading must remain untraced,
+- while a faithful heading passes.
+- **Step 4: Verify and commit** — Run focused bundle/verify and complete core
+- suites, lint, and format, then
+- `git commit -m "fix(p06-t06): align heading claim tracing"`.
+- **Files:**
+- - Modify: `.oat/projects/shared/agent-authored-recap/implementation.md`
+- **Step 1: Correct terminology** — Identify the active-project artifact as a
+- `project-explainer`, not a project recap.
+- **Step 2: Correct paths** — List the active project-explainer path separately
+- from the repository-level execution-program recap path.
+- **Step 3: Verify and commit** — Cross-check both manifests and paths, run the
+- file-scoped formatter, then
+- `git commit -m "docs(p06-t07): correct final explainer paths"`.
+- **Files:**
+- - Modify: `.oat/projects/shared/agent-authored-recap/state.md`
+- **Step 1: Correct inventory** — Change only the Artifacts-section plan
+- description from `32 tasks, 5 phases` to `40 tasks, 6 phases`, reflecting this
+- review-fix task and the authoritative plan.
+- **Step 2: Preserve state** — Keep `oat_current_task`, the last implementation
+- commit pointer, 39/40 progress before completion, awaiting-review status, and
+- zero p06 recovery usage semantically unchanged until normal task bookkeeping
+- advances them.
+- **Step 3: Verify and commit** — Cross-check plan, implementation, and state
+- task/phase totals without formatting `state.md`, then
+- `git commit -m "fix(p06-t08): correct state plan inventory"`.
+- **Files:**
+- - Modify: `.agents/skills/explainer-kit/scripts/lib/sanitize.mjs`,
+- `.agents/skills/explainer-kit/tests/{bundle,verify,record}.test.mjs`
+- **Step 1: Write tests (RED)** — Through `writeFailure`, Playwright downgrade
+- reasons, and record warnings, prove redaction of short values from
+- sensitivity-named environment variables plus bracketed and `file://` POSIX,
+- Windows-drive, and UNC absolute paths. Retain a safe diagnostic control that
+- must remain readable.
+- **Step 2: Implement (GREEN)** — Replace the unconditional environment-value
+- length cutoff with a deterministic sensitivity-aware policy that catches short
+- secrets without globally replacing ordinary one-character or structural
+- values. Extend absolute-path recognition to bracketed and file-URL forms while
+- preserving useful non-sensitive diagnostics.
+- **Step 3: Negative controls** — Neutralize short-sensitive-value, bracketed
+- path, file-URL, and Windows/UNC handling independently and confirm the
+- corresponding producer-level tests fail.
+- **Step 4: Verify and commit** — Run focused sanitizer carriers, the complete
+- core suite, lint, and format, then
+- `git commit -m "fix(p06-t09): complete diagnostic redaction"`.
+- **Files:**
+- - Modify: `.agents/skills/explainer-kit/scripts/lib/sanitize.mjs`,
+- `.agents/skills/explainer-kit/tests/{bundle,verify,record}.test.mjs`
+- **Step 1: Write tests (RED)** — Through bundle, verify, and record producers,
+- prove a short `REVIEW_SECRET_KEY=abcd` value is redacted. Preserve controls for
+- `TOKEN_STORAGE=file`, one-character diagnostics, universal long values, and
+- the previously covered sensitive suffixes.
+- **Step 2: Implement (GREEN)** — Extend the explicit terminal sensitive-name
+- policy to cover `SECRET_?KEY`; audit the adjacent explicit key forms for
+- equivalent separator handling without broad substring matching.
+- **Step 3: Negative control** — Remove only the `SECRET_?KEY` form and confirm
+- all three producer controls fail, then restore it and rerun the complete
+- sanitizer carrier suite.
+- **Step 4: Verify and commit** — Run focused producer tests, complete core and
+- lifecycle suites, lint, format, and the ordered repository gates, then
+- `git commit -m "fix(p06-t10): redact short secret-key values"`.
+- **Files:**
+- - Modify: `.agents/skills/explainer-kit/scripts/verify.mjs`,
+- `.agents/skills/explainer-kit/tests/verify.test.mjs`
+- **Step 1: Write tests (RED)** — Through the real `verifyRun` path, prove
+- fabricated number, ISO-date, and closed-status tokens in residual section
+- content such as `<div class="stat">` and `<dd>` fail `pageToLedger` with the
+- enclosing section ID as subject. Keep the shipped package fixtures passing.
+- **Step 2: Implement (GREEN)** — After harvesting the existing
+- heading/row/list/paragraph blocks, remove those matched blocks from each
+- section and harvest the same machine-checkable token classes from the remaining
+- rendered text. Use the enclosing section ID as the design-declared fallback
+- subject, avoid duplicate claims, and preserve the existing nearest-label
+- subjects for covered blocks.
+- **Step 3: Negative control** — Neutralize only residual-section harvesting and
+- confirm the new `<div>` and `<dd>` controls fail while unchanged-package
+- controls remain valid; restore and rerun.
+- **Step 4: Verify and commit** — Run the focused verify suite, complete core and
+- lifecycle suites, lint, and format, then
+- `git commit -m "fix(p06-t11): trace residual section facts"`.
+- **Files:**
+- - Modify: `.oat/projects/shared/agent-authored-recap/design.md`
+- **Step 1: Verify the implemented boundary** — Confirm bundle indexing and
+- rendered-claim extraction intentionally share the ISO `YYYY-MM-DD` date token
+- form.
+- **Step 2: Align the artifact** — Replace the stale “ISO and long form” wording
+- with the exact ISO `YYYY-MM-DD` contract without widening implementation
+- behavior.
+- **Step 3: Verify and commit** — Run plan validation and the focused core claim
+- tests, then
+- `git commit -m "docs(p06-t12): align date tracing contract"`.
+- **Files:**
+- - Modify: `.agents/skills/explainer-kit/scripts/lib/sanitize.mjs`,
+- `.agents/skills/explainer-kit/tests/bundle.test.mjs`
+- **Step 1: Write tests (RED)** — Prove a diagnostic containing a long,
+- non-secret structural package value such as `npm_package_name` remains
+- actionable while sensitivity-named short values and ordinary distinctive long
+- values still redact.
+- **Step 2: Implement (GREEN)** — Add only a narrow exact-name structural
+- exception for demonstrably non-secret package metadata; do not exempt
+- `npm_lifecycle_script`, paths, or broad `npm_*`/`PWD`/`SHELL` families. Preserve
+- the terminal sensitivity-name policy and cross-platform path sanitization.
+- **Step 3: Negative control** — Remove only the structural exception and confirm
+- the new actionable-diagnostic control fails, then restore it and rerun the
+- complete producer controls.
+- **Step 4: Verify and commit** — Run focused producer tests, complete core and
+- lifecycle suites, lint, format, and the Phase 6 gates, then
+- `git commit -m "fix(p06-t13): preserve structural diagnostics"`.
+- **Files:**
+- - Modify: `.agents/skills/explainer-kit/scripts/verify.mjs`,
+- `.agents/skills/explainer-kit/tests/verify.test.mjs`
+- **Step 1: Write tests (RED)** — Run fresh real `verifyRun` controls over copies
+- of both tracked packages. The unchanged project explainer and program recap
+- must pass, while fabricated bare residual number/date/status values in `<div>`
+- and `<dd>` must still fail.
+- **Step 2: Implement (GREEN)** — For residual text inside a labeled container,
+- preserve the nearest closed-set heading or label subject; use the enclosing
+- section ID only when no such subject exists. Do not weaken the residual
+- fallback or duplicate claims already harvested from heading/row/list/paragraph
+- blocks.
+- **Step 3: Negative control** — Restore the section-only residual subject and
+- confirm the unchanged program-recap control fails on its legitimate W1–W7
+- statuses; then restore the fix and confirm both tracked-package controls pass
+- while fabricated residual controls still fail.
+- **Step 4: Verify and commit** — Run the complete verify and core suites,
+- tracked-package contract/hash/inventory checks, lifecycle suites, lint, and
+- format, then
+- `git commit -m "fix(p06-t14): preserve residual claim subjects"`.
+- **Files:**
+- - Modify: `.oat/projects/shared/agent-authored-recap/state.md`
+- **Step 1: Reconcile inventory** — Confirm the amended plan contains 47 unique
+- tasks across six phases and implementation progress reflects the same count.
+- **Step 2: Correct the artifact** — Update only the state Artifacts description
+- to `47 tasks, 6 phases`, preserving review-pending status, task pointer, stale
+- gate generation, receive provenance, and recovery accounting.
+- **Step 3: Verify and commit** — Run plan validation, project-state tests, and a
+- focused diff check without formatting `state.md`, then
+- `git commit -m "fix(p06-t15): correct state plan inventory"`.
+- **Files:**
+- - Modify: `.agents/skills/explainer-kit/scripts/verify.mjs`,
+- `.agents/skills/explainer-kit/tests/verify.test.mjs`
+- **Step 1: Write tests (RED)** — Through the real `verifyRun` path, prove
+- composite residual labels in at least `<strong>` and `<dt>` cannot hide
+- fabricated number, ISO-date, or closed-status facts when they also contain a
+- closed identifier. Keep bare residual controls and both tracked-package
+- controls.
+- **Step 2: Implement (GREEN)** — Preserve subject propagation from the closed
+- identifier while also harvesting factual tokens from that label text under the
+- resolved subject. Do not emit the identifier's own numeric suffix as a fact
+- unless source indexing applies the same rule; retain unique claim keys.
+- **Step 3: Negative control** — Restore subject-only composite-label handling
+- and confirm the new controls pass verification incorrectly, then restore the
+- fix and confirm they fail `pageToLedger`. Both tracked packages must still pass
+- fresh verification and bare unlabeled residual facts must remain rejected.
+- **Step 4: Verify and commit** — Run focused and complete core tests,
+- tracked-package validation, lifecycle suites, lint, format, and all Phase 6
+- gates, then
+- `git commit -m "fix(p06-t16): trace composite label facts"`.
+- **Files:**
+- - Modify: `.agents/skills/explainer-kit/tests/verify.test.mjs`
+- - Modify: `tools/smoke/explainer-kit/no-retired-references.test.mjs`
+- - Add:
+- `.agents/skills/explainer-kit/tests/fixtures/tracked-packages/{project-explainer,program-recap}/{site/index.html,source/ledger.json,source/fact-base.json}`,
+- `.agents/skills/explainer-kit/tests/fixtures/tracked-packages/PROVENANCE.md`
+- **Step 1: Reproduce (RED)** — Run the tracked-package verification test from a
+- checkout fixture that omits `.oat/projects/`; confirm the live project path
+- fails with `ENOENT`.
+- **Step 2: Snapshot provenance-grounded fixtures** — Copy only the three files
+- `verifyRun` reads from each tracked package into the skill fixture tree. Record
+- the exact source path, run ID, and source commit in `PROVENANCE.md`; do not copy
+- `manifest.json` or `source/fact-base.md`.
+- **Step 3: Implement (GREEN)** — Point both tracked-package controls at the
+- archive-safe fixtures. Preserve fresh `verifyRun` coverage, all residual fact
+- controls, and the immutable tracked package trees. Exclude only the declared
+- immutable historical fixture subtree from the live retired-reference sweep;
+- add a focused control proving the exact fixture path is excluded without
+- weakening detection for live source paths.
+- **Step 4: Negative control** — Re-run the no-project-directory reproduction
+- and require the tracked-package control to pass; temporarily restore the live
+- project path and confirm it fails before restoring the fixture path.
+- **Step 5: Verify and commit** — Run focused and complete core tests, the
+- post-archive reproduction, fixture provenance checks, package integrity,
+- lifecycle suites, lint, format, and all Phase 6 gates, then
+- `git commit -m "test(p06-t17): snapshot archive-safe package fixtures"`.
+- **Files:**
+- - Modify: `.agents/skills/explainer-kit/references/recap-authoring.md`
+- **Step 1: Align author guidance** — Add one concise sentence explaining that
+- cards, definition lists, and other non-paragraph elements are verified using
+- the nearest bold/definition label or preceding heading as subject, with the
+- section ID as fallback.
+- **Step 2: Verify and commit** — Run focused core tests, skill validation,
+- retired-reference checks, lint, and format, then
+- `git commit -m "docs(p06-t18): document residual fact tracing"`.
+- **Phase 6 gates:** Run the complete ordered repository gate list, isolated-HOME
+- forced Turbo, standalone smoke/skills/scripts/skill validation, focused core
+- and lifecycle suites, `pnpm lint`, and `pnpm format`.
+- | Scope | Review Kind | Status | Notes                                                                                                                                 |
+- | p01   | phase       | passed | Independent verification passed with 0 Critical, 0 Important, and 3 deferred Medium findings.                                         |
+- | p02   | phase       | passed | Fresh re-review closed all three blocking findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                      |
+- | p03   | phase       | passed | Final operator-authorized verification passed with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.                           |
+- | p04   | phase       | passed | Re-review closed the executable front-door and visual-evidence findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings. |
+- | p05   | phase       | passed | Independent review passed the program recap and both bounded recoveries with 0 findings.                                              |
+- | p06   | phase       | passed | Exceptional remediation review passed; one Minor stale state pointer was corrected during receive with no additional task.            |
+- {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
+- | Scope   | Type     | Status          | Date       | Artifact                                              | Reviewed Head                            | Invocation | Gate Target           |
+- | p01     | code     | fixes_completed | 2026-09-11 | reviews/archived/p01-review-2026-09-11T155532Z.md     | f1cff54c0e364e858f9e36fb820e9f95b1e5b578 | manual     | -                     |
+- | p01     | code     | fixes_completed | 2026-09-11 | reviews/archived/p01-review-2026-09-11T165150Z.md     | 3f29035c2588bc590cfd361e88e5632e084238f5 | manual     | -                     |
+- | p01     | code     | fixes_completed | 2026-09-11 | reviews/archived/p01-review-2026-09-11T173707Z.md     | 5e8694abbb7f7740970bd69e5feea64ddf9df316 | manual     | -                     |
+- | p01     | code     | passed          | 2026-09-11 | reviews/archived/p01-review-2026-09-11T185739Z.md     | 285673119c8493c99ea0c0208e18779a8e9a142c | manual     | -                     |
+- | p02     | code     | fixes_completed | 2026-09-11 | reviews/archived/p02-review-2026-09-11T194856Z.md     | ecdce3e38ad6b86c8583ba115cfe27bc5faf0caa | manual     | -                     |
+- | p02     | code     | passed          | 2026-09-11 | reviews/archived/p02-review-2026-09-11T202150Z.md     | 77681847a6755d0628a2c1f707804d783d04e2ae | manual     | -                     |
+- | p03     | code     | fixes_completed | 2026-09-11 | reviews/archived/p03-review-2026-09-11T213626Z.md     | 6619ca123ba6fdbbf6bdeeef00e6c613de1eb695 | manual     | -                     |
+- | p03     | code     | fixes_completed | 2026-09-11 | reviews/archived/p03-review-2026-09-11T221353Z.md     | 3ed763cd88714a6e68bd7c2c41157994b7a28c0a | manual     | -                     |
+- | p03     | code     | fixes_completed | 2026-09-11 | reviews/archived/p03-review-2026-09-11T225420Z.md     | afd4a9e970200bdb2c1cc35fdf13df1912e6b12f | manual     | -                     |
+- | p03     | code     | fixes_completed | 2026-09-11 | reviews/archived/p03-review-2026-09-11T232506Z.md     | 2c8c56093651748e389da61d3c055be713ebc99e | manual     | -                     |
+- | p03     | code     | passed          | 2026-09-12 | reviews/archived/p03-review-2026-09-12T001522Z.md     | ce2898e1dca37becc2d59ce8f97d7340d0f0bf4d | manual     | -                     |
+- | p04     | code     | fixes_completed | 2026-09-12 | reviews/archived/p04-review-2026-09-12T015208Z.md     | 4292290aecc74b769edc1c47b6ee3cbc2d3761dd | manual     | -                     |
+- | p04     | code     | passed          | 2026-09-12 | reviews/archived/p04-review-2026-09-12T020833Z.md     | c9d977aa90d2990145e500c2035b1a2c67198278 | manual     | -                     |
+- | p05     | code     | passed          | 2026-09-12 | reviews/archived/p05-review-2026-09-12T030832Z.md     | 22fbe809f3410ae95f75e5dccb16a664020122d8 | manual     | -                     |
+- | p06     | code     | fixes_completed | 2026-09-12 | reviews/archived/p06-review-2026-09-12T130841Z.md     | afd969f946ce774ad1e2bcaa03741177a4f865bd | manual     | -                     |
+- | p06     | code     | passed          | 2026-09-12 | reviews/archived/p06-review-2026-09-12T131816Z.md     | de2393c3fa337bc7f33d9813a583dbc41ec5fbda | manual     | -                     |
+- | p06     | code     | passed          | 2026-09-12 | reviews/archived/p06-review-2026-09-12T135600Z.md     | 7ba61d84fee87d3e9217f8c1431ba34eb658471a | manual     | -                     |
+- | p06     | code     | passed          | 2026-09-12 | reviews/archived/p06-review-2026-09-12T200228Z.md     | 688226b0c1431d23624ee0bd30fd5d307c2b5dd8 | manual     | -                     |
+- | p06     | code     | fixes_completed | 2026-09-12 | reviews/archived/p06-review-2026-09-12T223410Z.md     | 06da0d40112052eb4a3bfd5760d5aa2ca1867bff | manual     | -                     |
+- | p06     | code     | passed          | 2026-09-12 | reviews/archived/p06-review-2026-09-12T230247Z.md     | 35a68fbe6f292573eb9ca9a28cfdcb57e79a541b | manual     | -                     |
+- | p06-t16 | code     | passed          | 2026-09-12 | reviews/archived/p06-t16-review-2026-09-12T234414Z.md | 811fa6a0d9bdf122fe2e18463558bdb046ccc9e1 | manual     | -                     |
+- | p06     | code     | passed          | 2026-09-13 | reviews/archived/p06-review-2026-09-13T043549Z.md     | 4a46095abdd2b195eb2a79a510071fcf96f1d28c | manual     | -                     |
+- | final   | code     | fixes_completed | 2026-09-12 | reviews/archived/final-review-2026-09-12T032129Z.md   | ed5f9f19d777989fe6095be14b1bb12e14583359 | manual     | -                     |
+- | final   | code     | fixes_completed | 2026-09-12 | reviews/archived/final-review-2026-09-12T132520Z.md   | 03dd32006306615858d39f68da7425b083f95780 | manual     | -                     |
+- | final   | code     | fixes_added     | 2026-09-12 | reviews/archived/final-review-2026-09-12T140439Z.md   | 367bb6217c8d2c502ca395d04bf8f35b14ac43b5 | manual     | -                     |
+- | final   | code     | passed          | 2026-09-12 | reviews/archived/final-review-2026-09-12T201509Z.md   | 2ebc4ec4d42accaf576a840cfa6ba3823246b9fb | manual     | -                     |
+- | final   | code     | fixes_completed | 2026-09-12 | reviews/archived/final-review-2026-09-12T203608Z.md   | 1b041801417814f39f337837a0cba245fc11c020 | gate       | cursor-fable-5-1-high |
+- | final   | code     | fixes_completed | 2026-09-12 | reviews/archived/final-review-2026-09-12T231453Z.md   | f2b92c515c23f0d9b4b9bab714951a785b56afbd | manual     | -                     |
+- | final   | code     | passed          | 2026-09-12 | reviews/archived/final-review-2026-09-12T235655Z.md   | 9c6d83fe16f8120bd585ff5d76925e19e1d1ca3a | manual     | -                     |
+- | final   | code     | fixes_completed | 2026-09-13 | reviews/archived/final-review-2026-09-13T001401Z.md   | da4059af5034afd6b55fc634ada4b260f5b71e5e | gate       | cursor-fable-5-1-high |
+- | final   | code     | passed          | 2026-09-13 | reviews/archived/final-review-2026-09-13T044417Z.md   | d0df52f7c8c44522b59f99588903329a538a5a4c | manual     | -                     |
+- | final   | code     | passed          | 2026-09-13 | reviews/archived/final-review-2026-09-13T050025Z.md   | 97b9d8972dbe9fa2fbfb8bccccfd45417ae55998 | gate       | cursor-fable-5-1-high |
+- | spec    | artifact | pending         | -          | -                                                     | -                                        | -          | -                     |
+- | design  | artifact | fixes_completed | 2026-09-09 | -                                                     | -                                        | -          | -                     |
+- | design  | artifact | fixes_completed | 2026-09-09 | -                                                     | -                                        | manual     | -                     |
+- | design  | artifact | fixes_completed | 2026-09-10 | -                                                     | -                                        | manual     | -                     |
+- | design  | artifact | fixes_completed | 2026-09-10 | -                                                     | -                                        | manual     | -                     |
+- | plan    | artifact | fixes_completed | 2026-09-10 | -                                                     | -                                        | manual     | -                     |
+- | plan    | artifact | fixes_completed | 2026-09-10 | -                                                     | -                                        | manual     | -                     |
+- | plan    | artifact | fixes_completed | 2026-09-10 | -                                                     | -                                        | manual     | -                     |
+- For code-review events, `Reviewed Head` is the full 40-character SHA at the
+- head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
+- `Gate Target` is populated only for gate events. Legacy five-column rows remain
+- valid. Writers must preserve every existing row and every unknown trailing
+- cell; never truncate a widened row back to five columns.
+- **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
+- The four design reviews were received inline and their local-only artifacts are
+- not materialized in this checkout; the three plan reviews were structured
+- in-memory reviews. `implementation.md` preserves the detailed outcome of every
+- round.
+- **Meaning:**
+- - `received`: review artifact exists (not yet converted into fix tasks)
+- - `fixes_added`: fix tasks were added to the plan (work queued)
+- - `fixes_completed`: fix tasks implemented, awaiting re-review
+- - `passed`: re-review run and recorded as passing (no Critical/Important)
+- **Summary:**
+- - Phase 1: 17 tasks - The cut: flow first, proof on real material, then retirement
+- - Phase 2: 4 tasks - Ladder and fresh-host proof
+- - Phase 3: 8 tasks - Adapter, core skill prose, lifecycle consumers, and docs
+- - Phase 4: 2 tasks - The front door and the project explainer
+- - Phase 5: 1 task - The program recap
+- - Phase 6: 18 tasks - Final review fixes
+- **Total:** 50 tasks
+- - Design: `design.md` (approved 2026-09-10 after four review rounds)
+- - Spec: `spec.md` (FR1–FR12, NFR1–NFR5)
+- - Discovery: `discovery.md` (incl. the 2026-09-09 amendment)
+- - Backlog: `.oat/repo/pjm/backlog/items/BL-260907-replace-the-default-project.md` (incl. the 2026-09-09 amendment)
+- - Reviews: `implementation.md` preserves the four received design-review
+- outcomes and three structured in-memory plan-review outcomes.
+- oat_status: complete
+- oat_ready_for: oat-project-design
+- oat_blockers: []
+- oat_last_updated: 2026-09-09
+- oat_generated: false
+- Discovery is for requirements and decisions, not implementation details.
+- - Prefer outcomes and constraints over concrete deliverables (no specific scripts, file paths, or function names).
+- - If an implementation detail comes up, capture it as an **Open Question** for design (or a constraint), not as a deliverable.
+- Backlog item `BL-260907-replace-the-default-project` (high priority; GitHub issue #230; triage amendments of 2026-09-08): replace the implementation-tail project recap with one dependable, agent-authored HTML recap plus browser-based visual verification. Keep the advanced Explainer Kit recipes available through their explicit workflow, but stop requiring adaptive portfolio planning, five injected provider seams (author, fact critic, browser session, visual critic, set planner), multi-artifact expansion, and publish/durability machinery for the ordinary lifecycle recap. The program-close recap (`program-recap`, the six required program sections) adopts the same single-artifact path. The operator asked on 2026-09-09 to run this as its own spec-driven project here, and to use it to produce the recap for the 2026-08-31 execution program (seven waves, all merged and archived; the program ledger records `recap: not run — pending` this item) once it lands.
+- **Q:** Which browser surface verifies the rendered recap at narrow, medium, and wide widths?
+- **A:** The active agent's own browser capability first (for example Claude-in-Chrome or computer use) when present; otherwise the bundled Playwright/Chromium probe the kit already carries; otherwise browser-free checks with the outcome recorded as `built-needs-review`, per the 2026-09-08 decision that an authored artifact is never discarded.
+- **Decision:** "Available browser surface" is a three-rung ladder resolved at run time and recorded in the result; the host-agent rung is a new integration surface (no skill wires a browser tool into recaps today), the Playwright rung is the existing probe kept as-is.
+- **Q:** How does the new recap's result record relate to `explainer-kit.manifest/v1`, which the archive command hashes and re-verifies?
+- **A:** Keep the manifest contract exactly; only the outcome semantics change. (Superseded 2026-09-09 by the amendment below: the manifest moves to v2 because the durability fields lose their producer; see `spec.md` FR5.)
+- **Decision:** The archive validator and its recap tests stay untouched (superseded 2026-09-09 by operator decision: no backward compatibility is needed, so the archive package rule is replaced and its recap tests rewritten; see `design.md` § Overview); the terminal-outcome guard is rewritten so `generate` is satisfied only by a usable artifact, and `failed` is never a satisfied generation.
+- **Q:** Do the deterministic parts (fact-bundle assembly from allowlisted artifacts, browser-free checks, result-record write, retry/skip decision) need a new CLI command?
+- **A:** No — the operator's concern is over-engineering; a CLI is acceptable only where it is clearly valuable.
+- **Decision:** No new CLI surface in this project. The archive-side validation already lives in the CLI and is unchanged, so a new command would add lockstep, docs, and test surface for logic only the skills invoke. The mechanical parts land as one small script set inside the OAT explainer adapter skill, tested by the skill's own test tier; promoting them to a command is a deferred idea if a second consumer ever appears.
+- **Description:** The host agent that is already running the lifecycle authors the single HTML recap directly from an allowlisted fact bundle, then verifies it through the browser ladder; the kit's fact-base schema, freshness/dedup by input hashes, subject-bound claim checking, run identity, and the manifest contract are kept, while set planning, provider seams, expansion, and publish/durability leave the default path.
+- **When this is the right choice:** The consumer is a normally configured host with an agent in the loop, and the archive contract must not move.
+- **Tradeoffs:** Prose quality depends on the host agent, not a critic seam; visual verification quality depends on which rung of the browser ladder the host reaches.
+- **Description:** Keep the kit's run orchestrator and make every seam optional with sensible defaults, so the default path degrades gracefully instead of being replaced.
+- **When this is the right choice:** If the advanced recipes and the default recap must share one code path.
+- **Tradeoffs:** Retains the five-seam surface area and its probe/skip machinery; the simplification the item asks for would be configuration, not removal.
+- **Description:** Drop HTML and browser verification; the recap is the exported summary Markdown.
+- **When this is the right choice:** Never for this item — the acceptance criteria require a standalone, navigable HTML artifact verified visually.
+- **Tradeoffs:** Fails the item's core requirement.
+- **Approach:** Approach 1.
+- **Rationale:** It removes exactly the machinery the item names, keeps exactly the contracts the triage says to keep, and matches how the wave program's own recap was produced in practice (an agent-authored hub with a fact base).
+- **User validated:** Yes — the three clarifying answers above (2026-09-09).
+- **Description:** The OAT explainer adapter skill exposes one generate flow with a recipe switch (project recap with its six narrative sections; program recap with its six program sections), and the completion, summary, wave-program, and wave-execute skills all call that one flow.
+- **Pros:** One implementation of the browser ladder, the checks, and the record; the duplicated program-recap caller in the two wave skills collapses to a reference.
+- **Cons:** The wave skills change in the same project.
+- **Chosen:** Yes.
+- **Description:** Project recap first; the program recap stays on the old caller until a later item.
+- **Pros:** Smaller first PR.
+- **Cons:** The triage amendment already put the program recap in scope, and the program's own recap is the first consumer this project must serve.
+- **Chosen:** No.
+- - **Direct agent authoring replaces the seam machinery on the default path** — the host agent authors one standalone HTML recap from an allowlisted fact bundle; the kit's author/critic/browser/visual-critic/set-planner seams, adaptive portfolio planning, multi-artifact expansion, and publish/durability are not required for the ordinary lifecycle recap and remain available only through the explicit advanced Explainer Kit workflow.
+- - **Keep the contracts the archive depends on** — the fact-base schema (canonical JSON, derived Markdown), freshness and dedup by project/recipe identity and input hashes, subject-bound claim checking, run identity and artifact/input hashes, and the manifest contract stay as they are; the terminal-outcome guard keeps its shape with rewritten semantics.
+- - **Browser ladder** — host browser tool, then the bundled Playwright probe, then browser-free checks recorded as `built-needs-review`; the authored artifact is never discarded.
+- - **No new CLI command** — the deterministic parts live in the skill with the skill's tests (operator decision 2026-09-09, to avoid over-engineering); promotion to a command is deferred until a second consumer needs it.
+- - **One generate flow for project and program recaps** — the program-close caller duplicated across the two wave skills collapses onto it; its run identity and outcome still land in the program ledger.
+- - **Generate/retry/skip semantics** — a `generate` decision is satisfied only by a usable artifact (visually verified, or usable-but-unverified with a recorded reason); a failure preserves a sanitized actionable cause and requires an explicit retry or skip, never a silent closeout warning.
+- - **Reconciliation is already done** — `BL-260902-make-autonomous-project-recap` shipped (wave 5) and its capability-probe skip contract is what this project's ladder replaces at the same lifecycle seams; `BL-260904-add-recap-seam-config-keys` is `wont_do`; no further backlog reconciliation is needed before implementation.
+- - The archive command's manifest validation and its existing recap tests must pass unchanged. (Superseded 2026-09-09 by operator decision: the manifest-key validation stays unchanged; the package rule and its tests are replaced.)
+- - The lifecycle consumers (completion gate and export path, summary outcome mapping, the two wave skills' program-close callers) hard-code today's outcome vocabulary and the generated/degraded/skipped mapping; they change together with the semantics, in one project.
+- - Bundled skill changes take one `metadata.version` bump per changed skill in the final PR and the lockstep public package bump; `pnpm test:skills`, `pnpm test:smoke`, `pnpm lint`, and `pnpm format` cover the skill tree.
+- - The advanced kit stays installed and its core-version parity smoke test must keep passing. (Amended 2026-09-09: the core stays installed and the parity smoke keeps passing; its callback orchestration is retired, see the amendment below.)
+- - Browser-less hosts must still complete the lifecycle: never block completion on a missing browser, never discard an authored artifact.
+- - Fact bundles are allowlisted from approved project artifacts only (summary, implementation record, orchestration log, plan, discovery/spec/design where present, the program artifact and wave summaries for the program recap); nothing outside the project or program record enters the bundle.
+- - Weaker-anywhere: nothing the archive or terminal-outcome guard rejects today becomes accepted unless enumerated in the design.
+- - A fresh, normally configured host produces one standalone, navigable HTML recap for a project without any custom provider module, and the archive command accepts and exports it.
+- - The recap is opened through the first available rung of the browser ladder and checked at representative narrow, medium, and wide widths, with artifact and screenshot paths retained in a small result record; on a browser-less host the browser-free checks run and the outcome is `built-needs-review` with the reason recorded.
+- - A `generate` decision is satisfied only when a usable visual artifact exists; generation failure surfaces a sanitized cause and an explicit retry-or-skip decision.
+- - Focused tests exercise the fresh-host success path and reproduction-grade negative controls for provider and browser failures, proving the failures stay visible while a valid accepted control still produces the recap.
+- - The program recap for the 2026-08-31 execution program is generated through the new path from the reconciled program artifact and the seven wave records, with the six required program sections, and its run identity and outcome are recorded in the program ledger.
+- - The completion, summary, wave-program, and wave-execute skills route on the new semantics; no lifecycle skill references a retired seam.
+- - Removing or rewriting the advanced Explainer Kit core, its recipes, publish/durability machinery, or its golden-conformance tests; they remain the explicit advanced workflow. (Superseded 2026-09-09 by the amendment below: the core's callback orchestration, provider seams, and the tests that exercise them are retired in this project; publish/durability and the retained libraries stay.)
+- - A new CLI command for recap generation (deferred idea).
+- - Publishing recaps to S3 or any external surface.
+- - Changing the fact-base schema or the manifest contract.
+- - The recon rework (`BL-260908-restore-recon-s-cheap-fan-out`), which runs as its own project.
+- - Promote the deterministic recap steps to an `oat project recap` command if a second consumer (for example a CI job or a non-agent host) needs them.
+- - A visual-diff baseline for recap screenshots across runs.
+- - Retiring the capability-probe skip vocabulary from the lifecycle contract once every consumer routes on the new ladder. (Pulled into scope 2026-09-09 by the amendment below.)
+- - Fact-bundle allowlist: exactly which artifacts, in which order of precedence, and how claims are bound to subject/value for the cohesion check (design).
+- - The browser-ladder rung detection: how the host advertises its browser tool to a skill, and what evidence each rung records (design).
+- - Outcome-vocabulary migration: whether `built-durable`/`built-not-durable` survive for the default path or collapse to `built` plus `built-needs-review` and `failed` (design; the manifest enum stays).
+- - Retry/skip persistence: where the explicit retry-or-skip decision is recorded so a resumed completion honors it (design).
+- - Program-recap section sourcing for aggregate numbers across seven waves (design).
+- - The kit's fact-base schema and cohesion checker can be reused as libraries by the new flow without pulling in the set planner.
+- - The archive command's manifest validation is the only CLI-side coupling; no CLI code change is required when the manifest is kept. (Superseded 2026-09-09: the package rule in `archive-utils.ts` and `package-coverage.mjs` changes in lockstep; `spec.md` § Assumptions carries the corrected list.)
+- - The host agents in use (Claude Code with a browser MCP, Cursor, Codex) can each reach at least one rung of the browser ladder.
+- - Prose quality without a critic seam: mitigated by subject-bound claim checking and the required-section checks.
+- - Browser-ladder detection is a new integration surface with host-specific behavior; the browser-less path must be proven first so nothing depends on the top rung.
+- - Outcome-semantics drift across four consumer skills: mitigated by changing them in one project with a shared contract test.
+- - The program recap is the first real consumer; its fact bundle spans seven archived wrappers whose records live in the archive tree and S3 export.
+- - Design: the fact-bundle allowlist, the browser ladder and its evidence, the rewritten outcome semantics, the retry/skip record, and the single generate flow with its two recipes.
+- **Trigger.** While dispositioning the adapter's advanced path during design round 2, the operator and the author established that the path nobody can run is not a use case: both the core (`explainer-kit`) and the adapter (`oat-explainer-kit`) require the caller to supply JavaScript provider callbacks or module paths (author, critic, set planner, browser session, visual critic), an agent following prose cannot supply one, no configuration on any host names a module, and the only things that have ever satisfied those seams are test fixtures. The five real runs on this repository (2026-07-21 to 2026-08-27) all predate the seams. The project explainer at plan time has three recorded decisions, all `skip`, and no run. The kit was intended as a port of the operator's `personal-explainer-kit`, in which the agent is the author.
+- **Operator decision.** One project rather than a recap project plus a follow-up: "we should just verify this all as one project"; the recap and the plan explainer are "only half of this".
+- **Amended goal.** The Explainer Kit works again for every caller because the host agent authors the artifact: the project recap at completion, the program recap at program close, the project explainer at plan approval, and a person invoking the core skill on any inputs (an OAT project, a directory or list of documents, or a supplied fact base). One flow, selected by recipe, with the browser ladder and browser-free checks of the original scope.
+- **Amended non-goals.** The "advanced kit stays untouched" constraint is dropped. The core's callback orchestration (its run orchestrator, the set planner, content approval, visual review, terminal evidence, the provider-seam contracts and the tests that exercise them) and the adapter's callback path (its run orchestrator, callback references, and seam probe) are retired. Retained: the fact-base schema and the manifest contract (at v2), the QA and browser libraries, theme resolution, the recipes' floors and briefs, and the authoring shells. Also retired (operator decision, later on 2026-09-09): the durability/S3-publish path and `built-durable`; the archive export is the durable copy. Still out of scope: a new CLI command, publishing recaps anywhere new, schema changes, the recon rework.
+- **Amended success criteria.** In addition to the original list: a person runs the core skill on a directory of documents on a fresh host and gets one verified page; the plan skill's project explainer produces a run through the flow; zero references to the retired seams remain anywhere in the repository, and the retained libraries keep their tests.
+- **Sequencing.** The program recap for the 2026-08-31 execution program stays the last phase.
+- oat_status: complete
+- oat_ready_for: oat-project-design
+- oat_blockers: []
+- oat_last_updated: 2026-09-09
+- oat_generated: false
+- oat_template: false
+- This document states what must be true, not how it is built. Mechanism choices live in `design.md`.
+- The implementation-tail project recap requires adaptive portfolio planning, five injected provider seams (author, fact critic, browser session, visual critic, set planner), multi-artifact expansion, and publish/durability machinery before it can produce one HTML page. On a normally configured host the tail either blocks on capability that is not present or records a capability-probe skip, so the ordinary lifecycle produces no recap at all; the 2026-08-31 execution program closed on 2026-09-09 with `recap: not run` in every ledger row. Backlog item `BL-260907-replace-the-default-project` (GitHub #230) asks for one dependable, agent-authored HTML recap with browser-based visual verification, keeping the advanced Explainer Kit available through its explicit workflow.
+- - A normally configured host produces one standalone, navigable HTML recap for a project without custom provider modules, and the archive command accepts it unchanged.
+- - The same flow produces the program recap for the 2026-08-31 execution program, and its run identity and outcome land in the program ledger.
+- - A `generate` decision is satisfied only by a usable artifact; failure is visible and decided, never a silent closeout warning.
+- - A person invokes the core skill on any inputs (an OAT project, a directory or list of documents, or a supplied fact base) on a fresh host and gets one verified page, and the plan skill's project explainer produces a run through the same flow.
+- - The duplicated program-close caller in the two wave skills collapses onto the one flow.
+- - The callback-driven orchestration is retired from both the core and the adapter, and nothing in the repository references it afterwards.
+- - Provider-module seams of any kind on any path, and any replacement for the retired durability/S3-publish path (amended 2026-09-09: the callback orchestration and the durability/publish path are retired, not kept; the archive export is the durable copy).
+- - A new CLI command for recap generation (deferred idea; skill scripts only).
+- - Publishing recaps to S3 or any external surface.
+- - Changing the fact-base schema. (The manifest moves to `explainer-kit.manifest/v2` under the 2026-09-09 amendment; the keys the retired durability path needed are dropped, nothing else changes.)
+- - The recon rework, which runs as its own project.
+- - **FR1 — Allowlisted fact bundle.** The flow assembles a fact base only from approved artifacts of the project (summary, implementation record, project log, orchestration log, plan, discovery, spec, design where present) or, for a program recap, the reconciled execution-program artifact plus every wave's summary and completion record. The bundle conforms to `explainer-kit.fact-base/v1` (canonical JSON, derived Markdown) and records input hashes so an unchanged input set is detected as fresh and never re-authored.
+- - **FR2 — Agent-authored single artifact.** The host agent authors one standalone HTML page from the bundle, carrying the recipe's required narrative sections: for a project, original request, key agent decisions, as-built architecture, implementation record, validation evidence, outcome; for a program, program overview, wave map, per-wave outcomes, convention evolution, aggregate numbers, follow-up ledger. No custom author, critic, or visual-critic module is required.
+- - **FR3 — Browser ladder.** Visual verification uses the first available rung: the host agent's own browser capability (capture and inspect; a screenshot alone is not verification), then the kit's bundled Playwright probe (its layout findings are the verdict), then browser-free checks. The rung used, the artifact path, and the screenshot paths (narrow, medium, wide) are retained in a small result record.
+- - **FR4 — Browser-free checks always run.** Regardless of rung: the page parses, every required section is present, and every number, date, and status the page states traces to the fact bundle by subject and value (token membership is not sufficient; narrative wording is the author's responsibility under the brief, not a machine check).
+- - **FR5 — Manifest v2; package rule replaced.** The run writes an `explainer-kit.manifest/v2` manifest (the v1 keys minus the retired durability fields, plus `mode`; recipe id and the outcome enum `built`, `built-needs-review`, `failed`, `incomplete`), and the archive command's package rule is replaced (no backward compatibility) so that exactly the new small run package is required and nothing else; the archive validator pins v2 and rejects every other `schemaVersion`; the terminal-outcome guard is rewritten so `generate` is satisfied only by `built` or `built-needs-review`.
+- - **FR6 — Generate, retry, or skip.** A `generate` decision is satisfied only by a usable artifact. On failure the flow preserves a sanitized actionable cause and requires an explicit retry or an explicit skip; the decision is persisted so a resumed completion honors it and never re-prompts or re-authors silently. An authored artifact is never discarded.
+- - **FR7 — One flow, two recipes.** Project and program recaps share one generate flow selected by recipe; the program-close callers in `oat-wave-program` and `oat-wave-execute` reference it instead of duplicating it.
+- - **FR8 — Lifecycle consumers route on the new semantics.** `oat-project-complete`'s recap gate and export path, `oat-project-summary`'s outcome mapping, and the two wave skills read the result record and outcome vocabulary; no lifecycle skill references a retired seam or the capability probe.
+- - **FR9 — The program recap ships.** The last phase generates the recap for the 2026-08-31 execution program from the reconciled program artifact and the seven wave records, and records the run identity and outcome in the program ledger.
+- - **FR10 — Any-input invocation.** A person invoking the core `explainer-kit` skill supplies an OAT project directory, a directory or list of documents, or a fact base, chooses the recipe and the output root, and gets the same flow: fact bundle, agent authoring against the recipe's brief, browser-free checks, the browser ladder, and the run package. Interactive invocation confirms scope and shows the fact base before authoring; unattended lifecycle invocation never prompts.
+- - **FR11 — Project explainer at plan approval.** `oat-project-plan`'s project-explainer step runs the flow with the `project-explainer` recipe over the approved plan artifacts when the persisted `oat_project_explainer` decision is `generate`; the intent record and its resolver are unchanged, the outcome and run path are reported, and an explainer failure never rolls back the committed plan.
+- - **FR12 — Seam and publication-path retirement.** The core's callback orchestration and provider seams, the adapter's callback path and seam probe, the durability/S3-publish path, and the contracts, references, docs, and tests that exercise only those surfaces are removed. The retained core libraries (`qa`, `html-safety`, `browser-runtime`, `png`, `theme`, `contracts`, `recipes`, `package-coverage`, `fs-safe`, and `safe-paths`) and the complete retained core test suite stay green. The tracked live repository surfaces contain no retired module, symbol, contract, outcome, configuration key, or semantic residue; repository project artifacts, durable historical records, PJM history, the sweep itself, and the two named terminal-outcome negative-control tests are excluded exactly as the shipped retired-reference sweep defines.
+- - **NFR1 — Fresh-host proof.** A test exercises successful generation on a fresh host with no custom modules and no browser, and reproduction-grade negative controls for authoring failure and browser failure, proving each failure stays visible while an accepted control still produces the recap.
+- - **NFR2 — Weaker-anywhere, enumerated.** Nothing the archive validator or the terminal-outcome guard rejects today becomes accepted except the acceptance changes `design.md` § Migration Plan enumerates, which is the one authoritative list (today: the v2 package accepted; the v1 shape and every other `schemaVersion` rejected; `skip/failed_attempt` accepted only with a failed or incomplete manifest; the retired package files and evidence chains no longer required; `built` replacing the two durability outcomes), each pinned by its own red-then-green negative control.
+- - **NFR3 — Browser-less hosts complete.** Completion never blocks on a missing browser; the outcome is recorded as needing review.
+- - **NFR4 — Bundled-asset discipline.** One `metadata.version` bump per changed skill, the lockstep public-package bump, and the skill, smoke, lint, and format tiers green; the advanced kit's core-version parity smoke test keeps passing.
+- - **NFR5 — Necessity.** Every persisted artifact this project adds names its consumer (an agent acting on a named instruction, a human reading a named surface, or code at a named call site); no record is written for a deferred reader, and no record duplicates one an existing consumer already reads.
+- - The archive command's manifest-key validation is not modified; its package-coverage rule, the loader that reads it, and the recap fixture tests change in the same phase as the record script, with no legacy branch.
+- - A missing or too-old Explainer Kit core is a hard prerequisite failure (`failed`, with the install command as the cause), never a silent skip.
+- - Bundled skills stay provider-neutral; the host-browser rung is detected at run time, never configured.
+- - Fact bundles contain nothing outside the project or program record.
+- - The archive command's export under `.oat/repo/reference/` (the durable copy of a recap; `finalize-tracked-run.mjs` and `built-durable` are retired).
+- - `BL-260907-replace-the-default-project` (source item); `BL-260902-make-autonomous-project-recap` (shipped; superseded at the same seams) and `BL-260904-add-recap-seam-config-keys` (`wont_do`) need no further reconciliation.
+- - The wave-7 close's archived wrapper records and exported summaries under `.oat/repo/reference/project-summaries/` for FR9.
+- The OAT explainer adapter skill gains a `generate` flow made of three small scripts (bundle, verify, record) around one authoring step performed by the host agent, with the browser ladder resolved at run time; the four lifecycle consumers call that flow. Details in `design.md`.
+- - The program recap for the execution program exists, passes the browser-free checks, and its manifest is accepted by the archive validator's parser.
+- - Zero references to the seam probe or the five seams remain in lifecycle skills.
+- - The fresh-host test and its negative controls pass with `Cached: 0`.
+- - A person runs the core skill on a directory of documents on a fresh host and gets one verified page; the project explainer produces a run through the flow.
+- - Zero references to the retired seams, contracts, or modules remain in the repository (code, tests, skills, docs).
+- | ID   | Summary                                  | Source                                | Planned Tasks                                                                                                                                                                      |
+- | FR1  | Allowlisted fact bundle, hashed          | Discovery decisions 1–2; item AC 2    | p01-t05, p01-t14                                                                                                                                                                   |
+- | FR2  | Agent-authored single artifact           | Item AC 2; recipe required narratives | p01-t07, p02-t03                                                                                                                                                                   |
+- | FR3  | Browser ladder with retained evidence    | Discovery Q1; item AC 3               | p02-t01, p02-t02                                                                                                                                                                   |
+- | FR4  | Browser-free checks always run           | Triage amendment (browser-less hosts) | p01-t05, p01-t07                                                                                                                                                                   |
+- | FR5  | Manifest v2; outcome semantics rewritten | Discovery Q2; triage amendment        | p01-t04, p01-t08, p01-t06, p01-t10                                                                                                                                                 |
+- | FR6  | Generate / retry / skip                  | Item AC 4                             | p01-t10, p03-t02, p03-t03                                                                                                                                                          |
+- | FR7  | One flow, two recipes                    | Discovery Option A; triage amendment  | p03-t01, p03-t04                                                                                                                                                                   |
+- | FR8  | Lifecycle consumers updated              | Triage amendment (migration scope)    | p03-t01, p03-t02, p03-t03, p03-t04, p03-t05                                                                                                                                        |
+- | FR9  | Program recap ships                      | Operator decision 2026-09-09          | p05-t01                                                                                                                                                                            |
+- | FR10 | Any-input invocation                     | Discovery amendment 2026-09-09        | p01-t05, p04-t01                                                                                                                                                                   |
+- | FR11 | Project explainer at plan approval       | Discovery amendment 2026-09-09        | p03-t04, p04-t02                                                                                                                                                                   |
+- | FR12 | Seam and publication-path retirement     | Discovery amendment 2026-09-09        | p01-t11, p01-t12, p01-t01, p01-t02, p01-t03, p01-t04, p01-t13, p01-t14, p01-t08, p01-t15, p01-t16, p01-t17, p03-t01, p03-t02, p03-t03, p03-t04, p03-t05, p03-t06, p03-t07, p03-t08 |
+- | NFR1 | Fresh-host proof with negative controls  | Item AC 5                             | p02-t04                                                                                                                                                                            |
+- | NFR2 | Weaker-anywhere                          | Repository convention                 | p01-t04, p01-t08, p01-t10                                                                                                                                                          |
+- | NFR3 | Browser-less hosts complete              | Operator decision 2026-09-08          | p01-t07, p02-t02                                                                                                                                                                   |
+- | NFR4 | Bundled-asset discipline                 | `AGENTS.md`                           | p01-t17, p03-t05, p03-t08                                                                                                                                                          |
+- | NFR5 | Necessity (no duplicate records)         | Operator decision 2026-09-09          | p01-t06, p04-t01                                                                                                                                                                   |
+- - None carried to design; the discovery open questions are answered in `design.md`.
+- - The kit's fact-base schema and cohesion checker are usable as libraries without the set planner (verified: `checkArtifactCohesion` and the schema are standalone exports).
+- - CLI-side couplings are exactly: the archive package-coverage rule, its loaders of core modules, and its tests (changed by design), the review-skill contract tests that pin the recap-gate prose of `oat-project-complete` and `oat-project-autonomous` (updated with the prose), and the autonomy gate-inventory prompt-site table (recomputed with the prose).
+- - Prose quality without a critic seam — mitigated by the subject-bound claim check and the required-section check.
+- - Host-browser detection is new — mitigated by proving the browser-free path first.
+- - Outcome-vocabulary drift across four consumers — mitigated by one shared contract test.
+- - `.oat/repo/pjm/backlog/items/BL-260907-replace-the-default-project.md`
+- - `discovery.md`
+- oat_status: complete
+- oat_ready_for: oat-project-plan
+- oat_blockers: []
+- oat_last_updated: 2026-09-10
+- oat_generated: false
+- The Explainer Kit becomes one agent-authored flow for every caller. Three small core scripts (bundle, verify, record) surround a single authoring step performed by the host agent; visual verification is resolved at run time through a three-rung browser ladder; the run package is small and every file in it names its reader. The flow serves four callers through one recipe switch: the project recap at completion, the program recap at program close, the project explainer at plan approval, and a person invoking the core skill on any inputs. The callback-driven orchestration in the core and the adapter (author, critic, set planner, browser session, visual critic), the durability and S3 publish path, the explainer release-candidate tooling, and every contract, schema, test, reference, and docs page that exists only for them are retired in this project. The archive command's export under `.oat/repo/reference/` is the durable copy of a recap. Operator decisions recorded here: no backward compatibility for the archive package rule (2026-09-09, "we don't need backward compatibility"); one project rather than a recap project plus a follow-up (2026-09-09, "we should just verify this all as one project"); the durability and publish path is retired rather than rewritten (2026-09-09).
+- - Callers of the flow: `oat-project-complete` Step 3.6 and its duplicate in `oat-project-implement/references/completion-and-closeout.md` (project recap, unattended); `oat-project-autonomous` (recap tail); `oat-project-plan` Step 15.5 (`project-explainer`, after plan approval); `oat-wave-program` and `oat-wave-execute` (program recap at program close); the `explainer-kit` skill's own front door (a person, any inputs, interactive).
+- - The flow lives in the core: `.agents/skills/explainer-kit/scripts/{bundle,verify,record}.mjs`, the authoring brief `references/recap-authoring.md` (mechanics only; the recipes' bundled briefs carry audience, voice, and narrative intent), orchestrated by prose in `explainer-kit/SKILL.md` § Run. The adapter `oat-explainer-kit` stays thin: it resolves the OAT project or program inputs, the theme from `explainers.defaults`, the output root, and the intent record, then calls the core scripts.
+- - Retained core libraries (edited where stated): `scripts/lib/qa.mjs` trimmed to `checkHtmlStructure`, `checkSourceDumping`, `checkArtifactCohesion` (with the ledger-empty rule relaxed as stated under `bundle.mjs`), `pngDimensions`, `REPRESENTATIVE_WIDTHS`, `BROWSER_PROBE_EVALUATE`, and `runBrowserProbes` trimmed to its probe loop and finding rules (`viewport-overflow`, `inner-x-overflow`, `viewport-clipping`, `heading-readability`, `animations-enabled`, `reduced-motion`, `keyboard-navigation`, `theme-toggle`, the deck layout rules; the `browserSession` / evidence-retention branch and `retainBrowserEvidence` deleted) — capturing a screenshot is not visual verification, the findings are; `scripts/lib/html-safety.mjs` whole (`validateHtmlSafety`, `coreScriptHashes`, `findUnpinnedResourceRefs`, used by `verify.mjs` to pin the authored page's scripts to the shell's); `scripts/lib/browser-runtime.mjs` and `scripts/lib/png.mjs` unchanged; `scripts/lib/theme.mjs` with `styles/`, `palettes/`, `profiles/` unchanged; `scripts/lib/contracts.mjs` trimmed to `validateContract` over `fact-base`, `manifest`, `theme` plus `canonicalHash` and `canonicalStringify`, with the internal `validateSourceBacklinks` gate (`:128`, `:132-171`) and its `source-backlinks.mjs` and `s3-roots.mjs` imports (`:4-12`) deleted in the same task that retires those modules, so no kept module imports a retired one; `scripts/lib/recipes.mjs` trimmed to `RECIPES`, `loadRecipe`, `recipeFloor`, `recipeRequiredNarrative`, with `validateRecipe` retained as an internal for the trimmed recipe shape and `RECIPE_FILES` (`:63-69`) dropping `project-recap.v1.json`; `scripts/lib/package-coverage.mjs` rewritten to the new rule (version `explainer-kit.package-coverage/v3`); `scripts/lib/fs-safe.mjs` and `safe-paths.mjs` unchanged; `schemas/{fact-base,manifest,theme}.schema.json` (manifest at v2, below); `recipes/{project-recap.v2,program-recap,project-explainer,engineer-tour}.json` trimmed to `schemaVersion`, `id`, `version`, `sourceRoles`, `floor`; `briefs/{project-recap,program-recap,project-explainer,engineer-tour}.md`; `templates/{house-style,deck-shell,diagram-shell,engineer-tour}.html` as authoring shells; `references/visual-authoring.md` (the agent's medium rules, pointed to by the brief) and `references/fact-base-contract.md` (rewritten for the flow).
+- - Retained adapter scripts: `check-core.mjs`, `resolve-paths.mjs#resolveExplainerOutputRoot`, `resolve-config.mjs` (the `explainers.defaults.*` keys only), `bind-project-sources.mjs` rewritten to the per-recipe allowlists under `bundle.mjs` (a `program` entry and `project-log.md` are new) and the supplied-fact-base path, `resolve-intent.mjs`, `persist-intent.mjs`, `check-terminal-outcome.mjs` (rewritten in place).
+- - Changed CLI surface (in lockstep): `packages/cli/src/commands/project/archive/archive-utils.ts` (manifest v2 validator, coverage and inventory calls, export re-verification; `readVerifiedRunMode`, `verifyProjectRecapTerminalEvidence`, and the legacy `qa/browser` and visual-review checks deleted) and its recap fixture in `archive-utils.test.ts:79-355`; `explainer-package-coverage.ts` (v3 loader); `explainer-terminal-evidence.ts` and `explainer-source-backlinks.ts` deleted; `release/public-package-contract.ts` packed-file pins (`package-coverage.mjs` content pin updated, `source-backlinks.mjs` pin removed) and its test; `commands/config/index.ts:145-150,312-315` and `config/resolve.test.ts` (the `explainers.publish.*` keys removed); `validation/skills.test.ts` version and content pins (`:1491-1509` package-coverage; the declared-version pins for the bumped skills at `:2603`, `:2912`, `:3001`, `:3183-3199`, `:4701-4704`, `:6008-6009`, `:6024`, each located by its old literal); `validation/autonomy-gate-inventory.test.ts` with the `## HEAD prompt-site coverage` table in `.agents/docs/autonomy-contract.md:255`; `commands/init/tools/shared/review-skill-contracts.test.ts` prose pins, every recap and durability pin in the file located by its old literal (at head: `:446` the plan skill's critic-callback sentence; `:468-635` incl. the `built-durable` mapping at `:623-626`; `:1406`; `:1438-1479`; `:1501-1536` archive/export and `IS_DURABLE_PROJECT` prose; `:2080-2113` the `EVIDENCE_COMMIT` recovery, the attest commit line, and the Step 10.5 ordering; the project-scope pins at `:1913`, `:4720-4735` (`extractDurableDerivation` and its active-pointer tests), `:4950-4965`, and `:5040-5055` are kept verbatim); `commands/project/push/completion-transaction.test.ts` fixtures (`RECAP_BUILD_RECORD` at `:28-29` and its ~20 write sites plus the `built-durable` receipts at `:561,748,1228`), rewritten to a v2 manifest with no build record.
+- - Core prerequisite: `oat-explainer-kit/scripts/check-core.mjs#checkCoreCompatibility` resolves the core from `~/.agents/skills/explainer-kit`; `MINIMUM_CORE_VERSION` (today declared only in the adapter's `run.mjs:19`) moves into `check-core.mjs` and advances to the version this project ships. A missing or too-old core is a hard prerequisite failure (Error Handling).
+- 1. The caller resolves the recipe (`project-recap` v2, `program-recap` v1, `project-explainer` v1, `engineer-tour` v1) and the inputs: an OAT project or program (adapter allowlists), a directory or list of documents, or a supplied fact base (front door). The adapter derives the output root (`<project>/explainers/<slug>/` or `.oat/repo/reference/explainers/<slug>/`); the front door takes `--out`.
+- 2. `bundle.mjs` reads the inputs and writes `source/fact-base.json` (schema-valid), `source/fact-base.md` (derived), and `source/ledger.json` (the cohesion ledger derived from the claims). It also writes `theme.resolved.json` (`theme.mjs#resolveTheme` over the theme the caller resolved) so the authoring step can read the palette. Freshness: `bundle.mjs` first looks for an existing run under the output root whose `manifest.recipe` matches and whose `manifest.source.inputHashes` equal the freshly computed hashes with a satisfied outcome; when found it reports `{ reuse: true, runRoot }` and writes nothing, and the caller neither re-authors nor re-records (the reuse test: a second bundle over identical inputs reuses and touches no file; a changed input, a different recipe, or a `failed` outcome rebundles).
+- 3. The host agent reads the recipe's bundled brief, the authoring brief, the fact base, and the resolved theme, copies the recipe's shell from `templates/`, and writes `site/index.html`: one file, inline CSS from the theme, no external requests, the recipe's required sections as `<section id="…">` anchors. Interactive front-door runs confirm scope and show the fact-base summary before authoring; unattended lifecycle runs never prompt.
+- 4. `verify.mjs` runs the browser-free checks (both claim-tracing directions, structure, source dumping, external requests, shell script pinning), then the ladder, and writes `qa/result.json` plus any screenshots under `qa/`.
+- 5. `record.mjs` hashes the package, rejects a `qa/result.json` whose `artifactSha256` differs from the current `site/index.html` (QA for different HTML bytes), writes `manifest.json` (v2), and returns the terminal outcome. Nothing runs after `record.mjs` that writes into the run root; any later check is read-only.
+- 6. The caller routes on the outcome: satisfied, or an explicit retry-or-skip decision persisted in `state.md` (project) or the program ledger (program). A project explainer reports its outcome and run path and never affects the committed plan.
+- | Path                                                      | Written by                                                     | Read by                                                                                                                            |
+- | `manifest.json` (v2, carries `mode`)                      | `record.mjs`                                                   | archive validator (keys, hashes, recipe id, mode enum), `oat-project-summary`, `oat-project-complete`, the wave ledgers            |
+- | `theme.resolved.json`                                     | `bundle.mjs` (from `theme.mjs#resolveTheme`, before authoring) | manifest `theme.path`/`hash`; the authoring step's palette                                                                         |
+- | `source/fact-base.json`, `source/fact-base.md`            | `bundle.mjs`                                                   | the host agent (authoring), `verify.mjs` (the page→ledger direction resolves against the claims), a human auditing a claim         |
+- | `source/ledger.json`                                      | `bundle.mjs`                                                   | `verify.mjs` (the ledger→page direction only); a human diagnosing a `cohesion-claim-unobserved` or `verify-claim-untraced` failure |
+- | `site/index.html`                                         | the host agent                                                 | the human reader; the archive export; `verify.mjs`                                                                                 |
+- | `qa/result.json`                                          | `verify.mjs`                                                   | `record.mjs`, `oat-project-summary` (state and reason), `oat-project-complete` (retry/skip), a human                               |
+- | `qa/320.png`, `qa/768.png`, `qa/1440.png` (when captured) | the agent (host rung) or `verify.mjs` (Playwright rung)        | a human; `verify.mjs` binding checks                                                                                               |
+- `immutableHashes` covers every path above except `manifest.json`. `permissibleRunPackagePaths` becomes exactly `immutableHashes` keys plus `manifest.json`; `requiredImmutablePackagePaths` becomes `theme.resolved.json`, `source/fact-base.json`, `source/fact-base.md`, `source/ledger.json`, `qa/result.json`, and each artifact's `contentPath` (`site/index.html`). `run-request.json`, `build-record.json`, `terminal-evidence.json`, `source/content-approval.json`, the set-plan records, `source/author/`, `source/content/`, `qa/browser/`, and `qa/visual-review/` no longer exist; `validateImmutablePackageEvidence` keeps only its coverage check and `enforceRunPackageInventory` keeps its exact-inventory rule over the new allowlist. `.oat/repo/reference/project-recaps/` holds two tracked legacy-shaped v1 exports (`20260721-explainer-kit`, `20260722-wave-skills-promotion`, 21 files); they stay in the repository as static v1 packages and are unaffected because the archive re-verifies only the export destination of the project being archived (`archive-utils.ts:1540-1570`, the same-slug retry case).
+- - Input: `{ recipe, inputs: { project | program | documents[] | factBasePath }, outputRoot }`.
+- - Allowlist (project, from the adapter): `summary.md`, `implementation.md`, `project-log.md`, `plan.md`, and `discovery.md` / `spec.md` / `design.md` when present; `orchestration-log.md` additionally for wave wrapper projects. Allowlist (project explainer): `plan.md`, `design.md`, `spec.md`, `discovery.md` when present. Allowlist (program): the execution-program artifact plus, per wave, exactly one exported summary under `.oat/repo/reference/project-summaries/` (the newest export by date prefix wins) and one archived wrapper's `implementation.md` § Final Summary when reachable. Documents (front door): every readable `.md`, `.txt`, `.html`, or `.json` file under the given roots. Any input whose realpath escapes its declared root is refused.
+- - Claims use the schema's real shape: `{ id, text, status: 'confirmed', citations: [{ sourceId, locator }] }` (exactly the two keys `fact-base.schema.json`'s `citation` requires; `locator` is written as `<path>:<start>-<end>`; `path`, `lineRange`, `repository`, and `url` are never written because today's validator treats them as GitHub backlink tuples), one claim per extracted fact, with `sources[]` entries in the schema's exact shape `{ id, kind: 'file', locator: '<root-relative path>', hash }`. Inputs that cannot be parsed land in `unresolvedClaims`, never dropped. The fact base carries the schema's eight required keys: `schemaVersion: explainer-kit.fact-base/v1`, `generatedAt`, `mode: supplied` (the agent-authored flow supplies the fact base itself; `federated` was the retired critic path), `freshnessPolicy: live-wins` (the schema's only value), `sources`, `claims`, `unresolvedClaims`, `overrides: []`. It is validated through `contracts.validateContract('fact-base')`; the retired `fact-base.mjs` is not reused.
+- - `source/ledger.json` is a bounded selection of anchor facts, not the whole claim set, in the shape `checkArtifactCohesion` consumes (`qa.mjs:431-455`): `{ terminology: [{ term }], numbers: [{ subject, value }], statuses: [{ subject, value }] }`. Selection rule: `terminology` = the project, program, or document-set name plus the identifiers the recipe's required sections must name (phase ids for a project, wave ids for a program, at most the first twelve); `numbers` = the counts and dates those sections must state (tasks, phases, waves, start and completion dates; at most twelve, dates as `{ subject, value: '<ISO date>' }`); `statuses` = the terminal status of each phase or wave (at most twelve). Every other claim stays in the fact base, so a run never fails because the page omitted an unanchored detail. `source/ledger.json` carries a fourth key, `claims: [{ subject, value, kind: number | date | status, claimId }]`, the index for the page→fact-base direction, derived by the same row/sentence/heading subject rule applied to the source text (a token with no identifiable subject is indexed under its source section and matches only by section); `checkArtifactCohesion` reads only the three groups and ignores the fourth key, and `fact-base.schema.json` stays untouched (`additionalProperties: false` forbids an index inside the fact base). Keying per group follows the checker: terminology entries match by term (the observation maps term → term); numbers and statuses match by subject with the normalized value. When an input set yields no entry for a group (a directory of plain documents, FR10), that group is written empty; `checkArtifactCohesion` is edited in the trim so `cohesion-ledger-empty` fires only when all three groups are empty (`qa.mjs:449-457`), a stated change to a retained library with its own negative control.
+- - The recipe's bundled brief (`floor[0].briefRef`) is handed to the agent verbatim. `references/recap-authoring.md` adds only what those briefs do not cover: the input files to read, the required sections by recipe (from `floor[].requiredNarrative`) as `<section id>` anchors, the shell to copy (`floor[0].template`, one of the four in `templates/`) and how to fill its placeholders with the theme CSS from `theme.resolved.json`, the one-file / inline-CSS / no-external-request / no-source-dumping rules, the claim discipline (every term, number, status, and date comes from the fact base, spelled as the fact base spells it), the pointer to `references/visual-authoring.md`, and the host-rung capture instruction. Nothing in it restates a bundled brief (NFR5).
+- - The flow reads `floor[].id`, `floor[].type`, `floor[].template`, `floor[].requiredNarrative`, and `floor[0].briefRef` from a recipe; the recipe files are trimmed to exactly `schemaVersion`, `id`, `version`, `sourceRoles`, `floor`, and each floor entry to `id`, `type`, `template`, `requiredNarrative`, `briefRef` (`authoring` and `required` are dropped: every artifact is authored as HTML and every floor entry is required), so nothing ignored remains. The program hub is authored as HTML like the project hub; the manifest's single artifact has `contentPath` = `site/index.html`.
+- - Browser-free checks (always): the HTML parses; every required `<section id>` is present and non-empty; `checkHtmlStructure` (which already reports external `src`/`href` as `external-asset` through `findUnpinnedResourceRefs`, so there is no separate external-requests check); `checkSourceDumping`; `validateHtmlSafety` with the recipe's shell (the page's scripts must match the shell's script hashes, no inline handlers); and the two claim passes, both fed by `extractRenderedClaims(html)`, a new helper owned by `verify.mjs` that harvests every term, number, date, and status token from the rendered text with its nearest heading or label as subject and returns the `{ terminology, numericClaims, statuses }` observation object. Ledger→page: that object is passed as the single artifact's `cohesion` to `checkArtifactCohesion` with `source/ledger.json`. Page→fact-base (bounded, mechanical): only the tokens a machine can identify reliably are checked — numeric tokens (integers, counts, percentages), dates (ISO `YYYY-MM-DD`), and status words from the closed OAT vocabulary (`complete`, `in_progress`, `merged`, `deferred`, `parked`, `wont_do`, `closed`, `open`, `built`, `built-needs-review`, `failed`, `incomplete`, `skipped`). Each token's subject is the nearest closed-set identifier (the ledger's terminology: phase ids, wave ids, backlog ids, the project or program name) in the same table row, list item, or sentence, else the enclosing `<section id>`. The `(subject, value)` pair must exist in `source/ledger.json`'s `claims` index; an unmatched pair fails the run with `verify-claim-untraced` naming the token and its subject. Narrative fidelity (terminology, phrasing, causal claims) is the author's responsibility under the authoring brief and is not machine-checked beyond the ledger→page anchors; this is deliberately not a universal prose verifier.
+- - Ladder: `--rung host --screenshots <dir>` accepts screenshots the agent captured with its own browser tool at 320 / 768 / 1440 (the skill tells the agent to open `file://…/site/index.html` and capture the three widths) and binds them: the agent records the SHA-256 of `site/index.html` at capture time and passes it as `--artifact-sha256 <hex>`; `verify.mjs` recomputes it after the checks, validates each PNG's magic bytes and dimensions (`pngDimensions`) against the declared width, and downgrades the rung to `none` with a named reason if any check fails. The host rung is a verification only when the agent has looked: after capturing, the agent inspects the three screenshots against the brief's checklist (no horizontal overflow, every section visible, headings readable at 320) and passes `--visual-verdict pass | findings --visual-notes <text>`; `verify.mjs` records the verdict and notes. Otherwise `resolveHeadlessRuntime` → `launchInstalledChromium` (or `createBrowserProbeSession`) → `runBrowserProbes` over `REPRESENTATIVE_WIDTHS` (it calls `probeRenderedPage(browser, url, { viewport: { width, height }, evaluate: BROWSER_PROBE_EVALUATE, screenshotPath })`; `browser-runtime.mjs:18-32` accepts `viewport`, not `width`) and its findings are the verdict; otherwise `rung: none` with the `RUNTIME_UNAVAILABLE_REASONS` value.
+- - Output: `qa/result.json` (Data Models).
+- - Hashes the package and writes `manifest.json` per the v2 schema (`theme.resolved.json` was written by `bundle.mjs` so the authoring step could read it) (Data Models): `schemaVersion: explainer-kit.manifest/v2`, `runId`, `slug`, `recipe {id, version}`, `createdAt`, `mode` (`unattended` from every lifecycle caller, `interactive` from the front door), `source {factBasePath, factBaseHash, inputHashes}`, `theme {path, hash}`, one artifact `{ id, type, contentPath: site/index.html, hash, status: built | failed }`, `immutableHashes` over the package table, `outcome`, `warnings`.
+- - Outcome semantics: checks pass, rung `host` or `playwright`, and `visual.verdict === 'pass'` (no probe findings, or the agent's inspected verdict) → `built`; checks pass with rung `none`, or with findings at either browser rung → `built-needs-review` with the reason (the findings or the runtime reason); any check fails → `failed` with a sanitized cause (no absolute paths, no environment values); an interrupted run → `incomplete`. `built-durable` and `built-not-durable` are retired with the durability path.
+- - `check-terminal-outcome.mjs` is rewritten in place: `generate` is satisfied by `built` or `built-needs-review`; `failed` and `incomplete` are never satisfied. `SKIP_REASONS` becomes `{ interactive, failed_attempt, capability_probe }`, the last read-only legacy. The skip path gains `--manifest <path>` and `--failure <path>`: `--skip-reason failed_attempt` is accepted only with a manifest whose `outcome` is `failed` or `incomplete`, or with a `failure.json` written by a stop before recording (neither, or a satisfied manifest → rejected), so the precondition under State record has a mechanical guard and a negative control for both evidence shapes; the completion prose passes whichever the newest run root holds. Readers of `failure.json`: the guard, `oat-project-summary` (`failed` with cause), `oat-project-complete` (retry/skip), a human.
+- - `SKILL.md` is rewritten around one section, § Generate: core prerequisite; resolve intent (`resolve-intent.mjs`, unchanged pairs plus `skip:failed_attempt`); resolve inputs by recipe (`bind-project-sources.mjs` allowlists), the theme (`resolve-config.mjs`, `explainers.defaults.*` only), and the output root (`resolve-paths.mjs`); call `bundle` → author → `verify` → `record`; the ladder instruction; the retry/skip rule; the outcome vocabulary. `references/lifecycle-contract.md` is rewritten to the intent record, the allowed pairs (extended with `skip/failed_attempt`; `skip/capability_probe` retained and marked read-only legacy), and the outcome vocabulary; `references/config-contract.md` to the `explainers.defaults.*` keys.
+- - Retired from the adapter (Phase 1 for scripts and tests, Phase 3 for references): `scripts/run.mjs`, `scripts/derive-destination.mjs`, `scripts/probe-recap-seams.mjs`, `scripts/finalize-tracked-run.mjs`, `references/{author-callback,visual-review-callback,migration}.md`, `tests/{run.integration,derive-destination,probe-recap-seams,finalize-tracked-run}.test.mjs`, the `seamProbe` argument and the module-scope import of `RECAP_PROBE_CODES` / `RECAP_SEAM_IDS` in `resolve-intent.mjs:1`, the `explainers.publish.*` keys in `resolve-config.mjs:14-19` and `tests/config-paths.test.mjs`, the `run.mjs` import in `tests/check-core.test.mjs:16`, and `tests/intent.test.mjs`'s `probe-recap-seams.mjs` import, `allFiveSeams` helper, and every `seamProbe` case (`:12`, `:19-29`, `:157-489`), all in Phase 1. `tests/completion.integration.test.mjs` is split across the phases: Phase 1 drops its `run.mjs` import (`:12`) and every assertion that executes a retired module, keeping the prose assertions (which the untouched Phase 1 prose still satisfies); Phase 3 rewrites those prose assertions to § Generate and the new ordering in every caller (`:200-260`).
+- - `explainer-kit/SKILL.md` § Run replaces § Core Run, § Authoring, and § Review, Approval, and Warnings: a person names the recipe, the inputs (`--project <dir>`, `--inputs <file|dir>…`, or `--fact-base <path>`), and `--out <dir>`; the agent proposes scope and shows the fact-base summary before authoring (the personal kit's draft-first posture, as prose, no gate machinery), authors, runs `verify` and `record`, and reports the outcome, the run path, and any `verify-claim-untraced` token. The § Wrapper Extension Seam and § Dependency Direction sections are deleted with the extension contract; § Responsibilities is rewritten to the flow, § Asset Resolution and § Progress Indicators are kept as they are.
+- - `oat-project-plan` Step 4.5 is unchanged (the `oat_project_explainer` intent record, `ALLOWED_PAIRS.projectExplainer`, and `persist-intent.mjs`). Step 15.5 is rewritten to call the adapter's § Generate with recipe `project-explainer` over the approved plan artifacts, report the outcome and run path, and continue to the summary on any outcome; its sentence requiring "the provider-neutral critic callback" is deleted. Project-explainer runs stay active-project working artifacts, never exported (`oat-project-complete/SKILL.md:608`, kept).
+- - The intent record keeps its three keys and `validateIntentRecord`'s arity; `resolve-intent.mjs` adds `failed_attempt` to `SOURCES` and `skip:failed_attempt` to `ALLOWED_PAIRS.projectRecap`; `capability_probe` stays in both so recorded skips remain valid on read but is never written again. `persist-intent.mjs` is unchanged.
+- - The last attempt is not stored in the intent record: the completion skill reads the newest run root under the project's `explainers/` root: `manifest.json` (`outcome`) with `qa/result.json` (`reason`), or `failure.json` when the run stopped before recording; `skip:failed_attempt` is valid only when that outcome is `failed` or `incomplete` or a `failure.json` exists.
+- - `oat-project-complete`: Step 3.6 rewritten (core check → reuse a fresh run → else § Generate → on `failed` / `incomplete`, present the sanitized cause and require retry or skip; autonomous: one retry, then `skip:failed_attempt` recorded with the reason, never silent); Steps 10.5 (Re-attest Final Project Recap) and 10.6 (Commit Evidence + Push) deleted, and every other recap-durability sentence (the `EVIDENCE_COMMIT` recovery in Step 3.65 and the attestation and `built-not-durable` sentences in Steps 1, 2, 5, 6, 8, 11.5, and 12) rewritten; the `IS_DURABLE_PROJECT` project-scope classifier (`:133-136`) and its archive and pointer gates are not recap machinery and stay unchanged, with `:610` rewritten only to drop `built-not-durable` so that the archive export in Step 8 is the durable copy and completion is one bookkeeping push. The recap evidence commit is retired with attestation: `oat-project-complete/scripts/execute-synced-archive-entry.mjs` drops `exportedBuildRecordPath`, the `recoverArchiveEvidence` call, `evidenceCommit` / `evidencePushRequired`, and the `attestRecap` continuation (`:69-75`, `:103`, `:125`); `parse-completion-retry-fields.mjs`, `parse-synced-archive-resume-fields.mjs`, and `recover-completion-receipts.mjs` drop their `EVIDENCE_COMMIT` fields; `tests/resolve-synced-archive-entry.test.mjs` is rewritten with them. `oat-project-implement/references/completion-and-closeout.md` (`:884-950`, the only recap range in the file; `:432-517` and `:629-673` are the review gate's durable receipts and are not touched) the same way.
+- - `oat-project-summary` Explainer Outcome mapping (`:290-300`): `generated` (`built`), `generated — needs review` (`built-needs-review`, with reason), `skipped` (with reason), `failed` (with cause), read from `manifest.json` + `qa/result.json`; the `build-record.json` sentence goes.
+- - `oat-project-autonomous/SKILL.md` (~`:274-278`), `oat-wave-program/SKILL.md:135-171` and `oat-wave-execute/SKILL.md:461-497` (the whole program-close explainer caller section in each: the caller-owns-fact-base paragraph, the `run-request/v1` construction block, the `manifest/v1` key list, and the publish-gate sentence are deleted and replaced by one paragraph invoking § Generate with `program-recap` and recording `runId` / `outcome`), `oat-project-plan` Step 15.5, `.agents/docs/autonomy-contract.md` row IMPLEMENT-19 and its § HEAD prompt-site coverage table (Phase 3 recomputes the site keys for `completion-and-closeout.md`, today `acf05140d8f3`, `37d6705db801`, `de4bc19da5e2`, and the six recap prompt sites in `oat-project-complete/SKILL.md`, in the same commit as the prose; the file is mirrored byte-identically into `oat-project-implement`, `oat-project-quick-start`, `oat-project-document`, `oat-project-pr-final`, and `oat-project-lite` under `references/docs/autonomy-contract.md`, four of them pinned to equality by `autonomy-gate-inventory.test.ts:359-368`, so all five mirrors change in that commit and those skills are bumped), the guard tests `oat-project-complete/tests/check-terminal-outcome.test.mjs` and `oat-project-implement/tests/check-terminal-outcome.test.mjs`, and the CLI prose pins named under System Context. One shared contract test over every carrier.
+- - Repository gates and instructions: `package.json` drops `release:validate:visual` from `release:validate` and the `test:release` script from the root `test` chain once `tools/release/*explainer*` is deleted; `AGENTS.md:74`, `.oat/repo/knowledge/testing.md:35`, and `apps/oat-docs/docs/contributing/code.md:60` drop the `test:release` mention; `tools/smoke/skill-version/reader-sameness.test.mjs` is deleted in the Phase 1 task that deletes the two smoke tests it reads (its premise, three duplicated `readSkillVersion` copies, no longer exists; the one surviving copy in `.agents/skills/recon/tests/skill-contract.test.mjs` is a local helper of a single test with nothing to drift from, and the bundled reader stays honest against the resolver through `check-core-version-parity.test.mjs`).
+- - Decision records: a new record supersedes `DR-260726-explainer-authoring-is-two`, `DR-260726-recipe-policy-owns-expansion`, `DR-260726-expansion-artifacts-get-id`, `DR-260726-explainer-render-qa-is-opt`, and `DR-260817-version-agnostic-publication` (recorded with `oat decision new` in Phase 3; the superseded records are not edited).
+- | Surface                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Disposition                                                                                                                                                                                  |
+- | Core `scripts/run.mjs`, `render-qa.mjs`, `record-durability.mjs`, `publish.mjs`, `validate.mjs`; `lib/{set-plan,content-approval,visual-review,terminal-evidence,internal-references,render,markdown,diagram,durability,catalog,s3-static,s3-roots,publication-policy,fact-base,records,source-backlinks}.mjs`                                                                                                                                                                                                                                       | retired (Phase 1)                                                                                                                                                                            |
+- | Core `schemas/{author-request.v2,author-request.v3,author-result.v2,set-plan.v1,visual-review-request.v1,visual-review-result.v1,visual-review-evidence.v1,terminal-evidence.v1,durability-evidence,publish-request.v1,publish-request.v2,publish-receipt.v1,publish-receipt.v2,build-record,run-request}.schema.json`; `recipes/project-recap.v1.json`; `briefs/{deep-dive,project-page,supporting-diagram,walkthrough-deck}.md`; `examples/`; `references/{contracts,extension-contract,visual-review,destination-contract,golden-conformance}.md` | retired (Phase 1)                                                                                                                                                                            |
+- | Core tests `{content-approval,diagram,e2e-recap,golden-conformance,link-validation,markdown,narrative-render,render,run.integration,templates,durability,s3-static,fact-base}.test.mjs` and `fixtures/{golden,seeded-leak.html}`                                                                                                                                                                                                                                                                                                                     | retired (Phase 1)                                                                                                                                                                            |
+- | Core tests `{contracts,qa,html-safety,recipes,records,rebuildability,schemas,theme,visual-matrix}.test.mjs`                                                                                                                                                                                                                                                                                                                                                                                                                                          | rewritten to the retained exports (`records` and `rebuildability` fold into `verify`/`record` tests and are deleted as files; `visual-matrix` becomes a theme-CSS test without `render.mjs`) |
+- | Core `lib/{qa,html-safety,browser-runtime,png,theme,contracts,recipes,package-coverage,fs-safe,safe-paths}.mjs`; `tests/{browser-runtime,png}.test.mjs` and `tests/fixtures/png.mjs`; `schemas/{fact-base,manifest,theme}.schema.json`; `styles/`, `palettes/`, `profiles/`; four recipes; four briefs; four shells; `references/{visual-authoring,fact-base-contract}.md`                                                                                                                                                                           | kept (edits as stated)                                                                                                                                                                       |
+- | Adapter `scripts/{run,derive-destination,probe-recap-seams,finalize-tracked-run}.mjs`; `references/{author-callback,visual-review-callback,migration}.md`; tests named under Adapter                                                                                                                                                                                                                                                                                                                                                                 | scripts and tests retired (Phase 1); references (Phase 3)                                                                                                                                    |
+- | `tools/release/{build-explainer-rc,run-explainer-rc,explainer-rc-contract,validate-explainer-acceptance,validate-explainer-visuals}.mjs` and their tests; `tools/smoke/explainer-kit/{package-coverage-consumers,packaged-layout,publish-boundary,wrapper-compatibility}.test.mjs` and `fixtures/{package-root,private-wrapper}.mjs`; `.oat/repo/reference/explainer-kit-acceptance/`                                                                                                                                                                | retired (Phase 1); `tools/smoke/explainer-kit/check-core-version-parity.test.mjs` kept                                                                                                       |
+- | CLI `explainer-terminal-evidence.ts`, `explainer-source-backlinks.ts`, the `explainers.publish.*` config keys                                                                                                                                                                                                                                                                                                                                                                                                                                        | retired (Phase 1)                                                                                                                                                                            |
+- | Docs `workflows/skills/explainer-kit-providers.md`; `contributing/explainer-kit-verification.md`                                                                                                                                                                                                                                                                                                                                                                                                                                                     | deleted with their index entries (`workflows/skills/index.md:15`, `contributing/index.md:20`)                                                                                                |
+- ```json
+- {
+- "schemaVersion": "explainer-kit.manifest/v2",
+- "runId": "…",
+- "slug": "…",
+- "recipe": { "id": "project-recap", "version": "2" },
+- "createdAt": "…",
+- "mode": "unattended | interactive",
+- "source": {
+- "factBasePath": "source/fact-base.json",
+- "factBaseHash": "…",
+- "inputHashes": { "…": "…" }
+- },
+- "theme": { "path": "theme.resolved.json", "hash": "…" },
+- "artifacts": [
+- {
+- "id": "project-recap",
+- "type": "hub",
+- "contentPath": "site/index.html",
+- "hash": "…",
+- "status": "built"
+- }
+- ],
+- "immutableHashes": { "…": "…" },
+- "outcome": "built | built-needs-review | failed | incomplete",
+- "warnings": []
+- }
+- ```
+- `additionalProperties: false` at every level; `archive-utils.ts` pins `schemaVersion` to v2 and rejects any other value (the v1 validator and its fixture are replaced, not kept); the artifact-hash cross-check at `:1461-1467` is rekeyed from `renderedPath` to `contentPath` so it keeps running under v2 (no acceptance change), and `theme.hash` is cross-checked against `immutableHashes['theme.resolved.json']` the same way (today only its shape is checked). v2 drops v1's `theme.derived` along with the durability fields.
+- No schema: its readers (`record.mjs`, `oat-project-summary`, `oat-project-complete`, a human) parse it structurally through `scripts/lib/qa-result.mjs`, so it carries no `schemaVersion`. The root object requires exactly `artifactSha256`, `checks`, `rung`, and `visual`, with `reason`, `screenshots`, and `deferredBrowserRequest` present only in the cases below. `checks` has exactly the seven named checks, each as `{ status: 'pass' }` or `{ status: 'fail', cause: '<non-empty string>' }`.
+- ```json
+- {
+- "checks": {
+- "parse": { "status": "pass" },
+- "requiredNarrative": { "status": "pass" },
+- "structure": { "status": "pass" },
+- "sourceDumping": { "status": "pass" },
+- "shellScripts": { "status": "pass" },
+- "ledgerToPage": { "status": "pass" },
+- "pageToLedger": { "status": "pass" }
+- },
+- "rung": "host",
+- "visual": {
+- "verdict": "pass",
+- "notes": "the agent's non-empty inspection notes"
+- },
+- "artifactSha256": "…",
+- "screenshots": ["qa/320.png", "qa/768.png", "qa/1440.png"]
+- }
+- ```
+- For `rung: none`, `visual` is exactly `{ "verdict": "none" }`, `reason` is a required non-empty string, and `screenshots` is omitted. For `rung: host` or `playwright`, `reason` is omitted and `screenshots` is exactly the three canonical string paths shown above. A browser result with `verdict: pass` requires non-empty `notes`; `verdict: findings` requires a non-empty string array `findings` and may include non-empty `notes`. A none-rung result may also carry `deferredBrowserRequest` with exactly `rung: "host"`, `screenshots`, `artifactSha256`, `visualVerdict`, and optional `visualNotes`; every present value is a non-empty string. Optional fields are omitted, never encoded as `null`.
+- ```yaml
+- oat_project_recap:
+- decision: generate | skip
+- source: interactive | autonomous_policy | failed_attempt # capability_probe read-only legacy
+- decided_at: '…'
+- ```
+- - Path containment: `bundle.mjs` refuses any input whose realpath escapes its declared root; symlinked inputs are read only when their target is inside those roots.
+- - The authored page makes no external requests and carries only the shell's scripts (`validateHtmlSafety`); screenshots are captured from a `file://` URL; the host rung's screenshots are bound to the artifact hash or rejected.
+- - Sanitized causes never carry absolute paths or environment values.
+- - Core missing or below the minimum → the flow stops before bundling and writes `<run-root>/failure.json` with exactly `{ schemaVersion: 'explainer-kit.failure/v1', runRootHash, stage, cause, at }`. `runRootHash` is the SHA-256-prefixed hash of the canonical realpath string for that run root, binding the evidence to the same root that `check-terminal-outcome.mjs` validates. `stage` is one of `bundle`, `authoring`, `verify`, `core`, or `interrupted`; `cause` is a non-empty sanitized diagnostic; `at` is a parseable timestamp. For a missing or old core the actionable cause names `oat tools install utility --scope user`. Every stop before `record.mjs` writes the same exact record with its stage; a run root holds either a manifest or a `failure.json`, never both: `bundle.mjs` deletes a stale `failure.json` when it starts a new attempt in the same run root, and `record.mjs` refuses to record while one exists (`record-failure-present`), so a successful retry leaves no stray file for the exact-inventory rule to reject and the archive never selects a failed root.
+- - Bundle refuses (allowlist miss, containment, unparseable required input) → the flow stops before authoring with the cause in `failure.json` (`stage: bundle`); the run directory is written to a temp dir and renamed on success, so nothing is half-written.
+- - Authoring absent (no `site/index.html`) → `verify.mjs` writes `failure.json` (`stage: authoring`) and exits without a `qa/result.json`, so no manifest is recorded. Authoring malformed (the file exists but fails the parse or section check) → `verify.mjs` records the failing checks → `record.mjs` writes a `failed` manifest, artifact retained. The two cases never coexist in one run root.
+- - Browser absent, probe throws, or host screenshots fail binding → `rung: none`, `built-needs-review`, reason recorded.
+- - Interrupted between steps → the caller writes `failure.json` (`stage: interrupted`) if it can, otherwise the bare run root with no manifest is treated as an interrupted attempt; either satisfies the skip guard and the next run rebundles (reuse requires a satisfied manifest).
+- | Requirement | Test                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+- | FR1         | `tests/bundle.test.mjs`: project, project-explainer, program, and document allowlists incl. the newest-export rule; containment refusal (symlink escape); schema-valid claims with `locator`; ledger derivation with non-empty terminology; identical inputs → identical hashes                                                                                                                                                                                                                                          |
+- | FR2, FR4    | `tests/verify.test.mjs`: required sections; `extractRenderedClaims` fixtures (numeric, date, status tokens with row/sentence/section subjects); ledger→page (`cohesion-claim-unobserved`); page→fact-base on representative real material (the 2026-08-31 program artifact and two wave summaries): a correct page passes, two wave task counts swapped fail with `verify-claim-untraced` naming the token and subject; source dumping, external requests, and a foreign script rejected                                 |
+- | FR3, NFR3   | `tests/verify.test.mjs`: host rung accepted with a bound hash, valid PNGs, and `--visual-verdict pass`, downgraded on hash mismatch or a bad PNG, `built-needs-review` on `--visual-verdict findings`; Playwright rung when the runtime resolves, with a deliberately broken layout (a fixed 1200px-wide table at 320) that captures successfully but yields `viewport-overflow` and cannot earn `built`; forced runtime-unavailable → `rung: none`, `built-needs-review`                                                |
+- | FR5, NFR2   | `tests/record.test.mjs` writes a v2 package; `archive-utils.test.ts` (the exported `verifySelectedProjectRecapForArchive` over a checked-in copy) accepts it for `built` and `built-needs-review` in both modes and rejects the legacy v1 fixture, a v1 `schemaVersion`, and a package with an extra file — each red-then-green; `checkTerminalOutcome` red-then-green on `failed`, `incomplete`, and the retired `built-durable` / `built-not-durable` strings; `skip/failed_attempt` accepted, `skip/<other>` rejected |
+- | FR6         | `oat-explainer-kit/tests/completion.integration.test.mjs`: failed attempt → retry produces a run; `skip:failed_attempt` accepted by `checkTerminalOutcome --manifest` only after a failed/incomplete run or by `--failure` after a pre-record stop (rejected with neither or with a satisfied manifest); the resume chain pre-bundle failure → permitted `skip:failed_attempt` → resumed completion honors the skip without re-prompting or re-authoring; `capability_probe` still readable; no silent skip              |
+- | FR7, FR8    | the shared contract test over all carriers (skills, reference docs, the autonomy row and table, both guard tests) and `review-skill-contracts.test.ts`                                                                                                                                                                                                                                                                                                                                                                   |
+- | FR9         | the program recap run: `qa/result.json` checks pass; the generic package contract is composed directly in the check with `validateContract('manifest')`, byte verification of every `immutableHashes` entry, and `enforceRunPackageInventory`; the ledger row carries `runId` / `outcome`; no helper is added and the project-only `verifySelectedProjectRecapForArchive` boundary stays strict                                                                                                                          |
+- | FR10        | `tests/front-door.test.mjs`: a scratch directory of three documents → bundle, an agent-authored fixture page, verify, record → `built-needs-review` with the runtime forced unavailable; a supplied fact base → the same; a missing `--out` refused                                                                                                                                                                                                                                                                      |
+- | FR11        | `review-skill-contracts.test.ts:446` re-pinned to the rewritten Step 15.5 (names § Generate and recipe `project-explainer`, no seam vocabulary); `tests/bundle.test.mjs` project-explainer allowlist; `intent.test.mjs` unchanged pairs                                                                                                                                                                                                                                                                                  |
+- | FR12        | a repository-wide sweep test (`tools/smoke/explainer-kit/no-retired-references.test.mjs`) that fails on any occurrence of the retired module paths, symbols, schema ids, outcome strings, config keys, or docs slugs (list pinned in the test, which excludes its own file) outside `.oat/projects/`, `.oat/repo/reference/`, and `.oat/repo/pjm/` (project artifacts, archived exports, and backlog history are records, not live references)                                                                           |
+- | NFR1        | fresh-host end-to-end in a scratch repo with the core installed at user scope and `EXPLAINER_KIT_HEADLESS_PROBE` disabled: generation succeeds as `built-needs-review`; negative controls (delete a section; point the runtime at a missing binary; remove the core) stay visible while the accepted control still generates                                                                                                                                                                                             |
+- | NFR4        | `pnpm run check:skill-bumps`, `pnpm release:check-versions`, `pnpm release:validate`, and `tools/smoke/explainer-kit/check-core-version-parity.test.mjs`                                                                                                                                                                                                                                                                                                                                                                 |
+- | NFR5        | the design review's necessity item over this document, and the package table above naming a reader for every path                                                                                                                                                                                                                                                                                                                                                                                                        |
+- Each guard is neutralized once (section check, both claim passes, shell script pinning, containment, the host-rung binding, the visual verdict gate on both browser rungs, the `failure.json` skip evidence, the terminal-outcome rule, the new package rule, the no-retired-references sweep) and the corresponding test must go red, then restored. Each acceptance change under Migration Plan gets its own pre-fix-rejects / post-fix-accepts control.
+- - Skill bumps: `explainer-kit` (major; the core minimum in `check-core.mjs` advances to it), `oat-explainer-kit`, `oat-project-complete`, `oat-project-summary`, `oat-project-autonomous`, `oat-project-implement`, `oat-project-plan`, `oat-wave-program`, `oat-wave-execute`; pins located by old literal; lockstep public-package bump.
+- - Docs: `workflows/skills/explainer-kit.md` rewritten around the flow; `workflows/projects/lifecycle.md:88-102` and `workflows/projects/artifacts.md:121-140` (recap gate, run package); `cli-utilities/configuration.md:178-230` (the publish keys removed); `cli-utilities/tool-packs.md:159-187` (the two-pack description); `reference/troubleshooting.md:331-368` (rewritten for `built-needs-review` as a satisfied outcome); `reference/cli-reference.md:154` (the `--project-recap-run` flag is unchanged; its "incomplete legacy hash coverage" and "legacy complete records receive a cleanup diagnosis" clauses describe deleted v1 branches and are rewritten); the regenerated `apps/oat-docs/index.md` (never hand-edited) committed in the same task as the two deletions; the two deleted pages and their index entries.
+- - Rollback: revert the project's PR; no data migration exists because no run on this repository was produced by the retired path after the seams shipped, and the two tracked legacy exports are never re-verified (only the same-slug destination is, `archive-utils.ts:1538-1580`).
+- - Existing `skip/capability_probe` state records stay valid on read.
+- - `BL-260727-make-explainer-run-durability` (open, high) is premised on `built-not-durable`; Phase 3 closes it `wont_do`, superseded by this project, alongside the decision record, so the backlog no longer directs contributors onto the retired path (the reconciliation `BL-260907` requires).
+- - The complete list of acceptance changes (NFR2), each pinned by a negative control: (1) the archive accepts the new v2 package; (2) it stops accepting the v1 package shape and any `schemaVersion` other than v2; (3) `check-terminal-outcome.mjs` accepts `skip/failed_attempt`; (4) the archive no longer requires `terminal-evidence.json`, `run-request.json`, `build-record.json`, `source/content-approval.json`, set-plan records, or the `qa/browser/` and `qa/visual-review/` chains; (5) `built` replaces `built-durable` and `built-not-durable` in every consumer; (6) the v2 validator rejects a selected run whose `outcome` is `failed` or `incomplete` or whose artifact `status` is not `built` outright (today such a run is archivable with valid terminal evidence; completion never selects one, so this is a tightening with its own control). Everything else the archive validator or the guard rejects today stays rejected.
+- - Invariant at every phase boundary: the full gate list is green and no executable, test, or configuration file references a missing module or symbol; prose carriers (skills, references, docs) may still name a retired symbol until Phase 3 rewrites them, which is why the sweep test is scoped to code in Phase 1 and widened to the whole repository in Phase 3. Within a phase, task commits may be intermediate; each deletion task removes a module together with its last executable reference wherever that reference lives (the adapter's `finalize-tracked-run.test.mjs:21-22` imports the core's `records.mjs` and `run.mjs`; `config-paths.test.mjs:514` validates a `run-request`; `packages/cli/src/commands/config/index.test.ts:1062-1248` pins the `explainers.publish.*` keys), and each phase's last task runs the sweep test and the gates.
+- Manifest v2 schema and package rule v3; `bundle.mjs`, `verify.mjs` (browser-free checks and the `none` rung), `record.mjs`; the trimmed `contracts`, `recipes`, `qa` libraries; the trimmed recipes and briefs; the retired core scripts, libraries, schemas, references, examples, and tests; the retired adapter scripts and their tests (`run`, `derive-destination`, `probe-recap-seams`, `finalize-tracked-run`; the `run.mjs` import in `check-core.test.mjs`; `config-paths.test.mjs`'s run-request case; the `explainers.publish.*` keys in `resolve-config.mjs`); the `archive-utils.ts` v2 validator with its loaders and fixture; the CLI config keys and their tests; the release-candidate tooling, its `package.json` scripts, and the smoke tests; the acceptance directory; the no-retired-references sweep test (scoped to code in this phase); the core's rewritten tests. Prose in the adapter and lifecycle skills is untouched until Phase 3.
+- `verify.mjs` host and Playwright rungs with the hash binding; `references/recap-authoring.md`; the fresh-host end-to-end test with its negative controls.
+- `oat-explainer-kit` § Generate and its rewritten references (the `resolve-intent.mjs` pairs and `check-terminal-outcome.mjs` rewrite are code and land in Phase 1); every lifecycle carrier (completion incl. the deleted durability steps, closeout, autonomous, summary, plan Step 15.5, both wave skills), the autonomy row and recomputed table, both guard tests, both CLI contract tests; the docs pages; the decision record and the `BL-260727` closure; the completion skill's archive-resume scripts and test; the sweep test widened to the whole repository; `AGENTS.md` and the knowledge file.
+- `explainer-kit/SKILL.md` § Run for documents and supplied fact bases; `tests/front-door.test.mjs`; the project explainer proven end to end on this project's own plan artifacts.
+- Generate the recap for the 2026-08-31 execution program through the flow (one summary per wave by the newest-export rule), record `runId` / `outcome` in the program ledger (`.oat/repo/reference/external-plans/2026-08-31-execution-program.md`, line `:423`, the program-level checkpoint; the four per-wave `recap: not run` rows stay as recorded history), and attach the result as the project's validation evidence.
+- - The Explainer Kit core libraries under System Context (user-scope install at the version this project ships); the archive command (changed in lockstep).
+- - Playwright/Chromium when present for the middle rung; tests run without it.
+- | Risk                                                                | Mitigation                                                                                                                                                  |
+- | The cut in Phase 1 is wide and intermediate commits are red         | Phase-boundary invariant with the sweep test; deletions are grouped per consumer so each task's commit removes a module and its last reference together     |
+- | Host-browser rung is host-specific                                  | Phase 2 proves `none` and `playwright` first; the host rung is additive input and is bound to the artifact hash                                             |
+- | Claim extraction misses a token the agent renders, or over-extracts | Both passes fail closed with the token named; the brief tells the agent to spell facts as the fact base does; the extraction rules are pinned with fixtures |
+- | Consumers drift on the outcome vocabulary                           | One contract test over every carrier incl. the CLI prose pins, plus the repository-wide sweep                                                               |
+- | Completion-skill durability prose is entangled across eight steps   | Phase 3 rewrites the skill from its step list with `review-skill-contracts.test.ts` and `autonomy-gate-inventory.test.ts` as the two machine checks         |
+- | Program recap inputs span archived wrappers and duplicate exports   | The newest-export rule binds one summary per wave; unreachable inputs land in `unresolvedClaims`                                                            |
+- - `spec.md`, `discovery.md` (incl. the 2026-09-09 amendment); the 2026-09-09 design reviews (`reviews/archived/artifact-design-review-2026-09-09T225646Z.md`, `reviews/archived/artifact-design-review-2026-09-09T232532Z.md`, `reviews/archived/artifact-design-review-2026-09-10T010926Z.md`, `reviews/archived/artifact-design-review-2026-09-10T013018Z.md`); the 2026-09-09 core disposition recon (module reachability, package requirements of the retired durability path, test coupling, vocabulary carriers).
+- - `.agents/skills/explainer-kit/recipes/*.json`; `scripts/lib/{qa,html-safety,package-coverage,contracts,recipes}.mjs`; `schemas/{manifest,fact-base,theme}.schema.json`; `templates/*.html`.
+- - `.agents/skills/oat-explainer-kit/scripts/{resolve-intent,persist-intent,check-core,check-terminal-outcome,bind-project-sources,resolve-config,resolve-paths}.mjs`; `~/.agents/skills/personal-explainer-kit/SKILL.md` (the original agent-authored workflow this restores).

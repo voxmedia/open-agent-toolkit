@@ -60,7 +60,7 @@ The project replaced an implementation-tail recap path that depended on five pro
 
 ## Explainer Outcome
 
-- **project-recap:** generated — needs review — `explainers/agent-authored-recap-recap` — browser driver unavailable; all browser-free and traceability checks passed.
+- **project-recap:** generated — needs review — [`.oat/repo/reference/project-recaps/20260914-agent-authored-recap/site/index.html`](https://github.com/voxmedia/open-agent-toolkit/blob/explainer-simplify/.oat/repo/reference/project-recaps/20260914-agent-authored-recap/site/index.html) — browser driver unavailable; all browser-free and traceability checks passed.
 
 ## Workflow Observations
 
@@ -159,3 +159,7 @@ target=cursor-fable-5-1-high threshold=important findings=critical:0,important:0
 ### 2026-09-14 · structural · oat-project-retro · project-retro
 
 retro artifact=.oat/projects/shared/agent-authored-recap/references/project-retro.md evidence_used=archived-review-markdown,gate-receipts,git-history,lifecycle-artifacts,project-log,recap-package-receipts,session-transcript evidence_unavailable=oat-execution-learnings promotions=2 upstream=2 apply=deferred filing=deferred
+
+### 2026-09-14 · structural · oat-project-complete · retirement-sweep
+
+Retirement sweep: no absorbed projects recorded.
