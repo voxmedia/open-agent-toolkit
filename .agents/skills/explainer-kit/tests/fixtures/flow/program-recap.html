@@ -1,0 +1,443 @@
+<!doctype html>
+<!--
+  Authored once for p01-t09 from:
+  .oat/repo/reference/external-plans/2026-08-31-execution-program.md
+  .oat/repo/reference/project-summaries/20260909-wave-6-execution.md
+  .oat/repo/reference/project-summaries/20260909-wave-7-execution.md
+  Source content commit: 8845103ec48625ce8a24f52e4d3986db8e52105d
+  Shell: templates/house-style.html
+  Brief: briefs/program-recap.md
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Execution program recap</title>
+    <meta
+      name="description"
+      content="A concise map of the execution program and its latest waves."
+    />
+    <style>
+      :root {
+        --canvas: #f4f6f9;
+        --panel: #ffffff;
+        --panel-muted: #eef1f5;
+        --border: #cbd2dc;
+        --ink: #16202e;
+        --muted: #4a5568;
+        --accent: #2f56c9;
+        --success: #157a54;
+        --warning: #965108;
+        --danger: #bd3a2c;
+        --sans: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        --serif: ui-serif, Georgia, serif;
+        --mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+        --radius: 0.5rem;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        color-scheme: light;
+        scroll-behavior: smooth;
+      }
+      body {
+        margin: 0;
+        background: var(--canvas);
+        color: var(--ink);
+        font-family: var(--sans);
+        line-height: 1.6;
+      }
+      a {
+        color: var(--accent);
+      }
+      .wrap {
+        display: grid;
+        grid-template-columns: minmax(10rem, 14rem) minmax(0, 1fr);
+        gap: 2rem;
+        max-width: 74rem;
+        margin: auto;
+        padding: 2rem;
+      }
+      .toc {
+        position: sticky;
+        top: 2rem;
+        align-self: start;
+      }
+      .toc-label,
+      .eyebrow {
+        color: var(--muted);
+        font: 0.72rem/1.4 var(--mono);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+      .toc a {
+        display: block;
+        border-inline-start: 2px solid transparent;
+        padding: 0.3rem 0.7rem;
+        text-decoration: none;
+      }
+      .toc a.active {
+        border-inline-start-color: var(--accent);
+        font-weight: 650;
+      }
+      main {
+        min-width: 0;
+      }
+      h1,
+      h2,
+      h3 {
+        font-family: var(--serif);
+        line-height: 1.2;
+        text-wrap: balance;
+      }
+      h1 {
+        font-size: clamp(2rem, 5vw, 3.4rem);
+        margin-block: 0.5rem 1rem;
+      }
+      h2 {
+        border-block-end: 1px solid var(--border);
+        padding-block-end: 0.45rem;
+        scroll-margin-top: 1rem;
+      }
+      section {
+        margin-block: 2.5rem;
+      }
+      .cards,
+      .lanes {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+        gap: 1rem;
+      }
+      .card,
+      .lane,
+      .callout {
+        min-width: 0;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--panel);
+        padding: 1rem;
+        overflow-wrap: anywhere;
+      }
+      .callout {
+        border-inline-start: 0.25rem solid var(--accent);
+      }
+      .callout__label {
+        color: var(--muted);
+        font: 0.72rem/1.4 var(--mono);
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .table-scroll {
+        max-width: 100%;
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        border-block-end: 1px solid var(--border);
+        padding: 0.6rem;
+        text-align: start;
+      }
+      code {
+        border-radius: calc(var(--radius) / 2);
+        background: var(--panel-muted);
+        padding: 0.1em 0.3em;
+        font-family: var(--mono);
+      }
+      footer {
+        border-block-start: 1px solid var(--border);
+        color: var(--muted);
+        margin-block-start: 3rem;
+        padding-block-start: 1rem;
+      }
+      @media (max-width: 46rem) {
+        .wrap {
+          grid-template-columns: 1fr;
+          padding: 1rem;
+        }
+        .toc {
+          position: sticky;
+          top: 0;
+          z-index: 2;
+          display: flex;
+          gap: 0.25rem;
+          overflow-x: auto;
+          background: var(--canvas);
+          border-block-end: 1px solid var(--border);
+          padding-block: 0.5rem;
+        }
+        .toc-label {
+          display: none;
+        }
+        .toc a {
+          flex: none;
+          white-space: nowrap;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <nav class="toc" aria-label="Page sections">
+        <div class="toc-label">Program recap</div>
+        <a href="#program-overview">Overview</a>
+        <a href="#wave-map">Wave map</a>
+        <a href="#per-wave-outcomes">Wave outcomes</a>
+        <a href="#convention-evolution">Convention evolution</a>
+        <a href="#aggregate-numbers">Aggregate numbers</a>
+        <a href="#follow-up-ledger">Follow-up ledger</a>
+      </nav>
+      <main>
+        <header>
+          <div class="eyebrow">Program recap</div>
+          <h1>Execution program: backlog-review delivery</h1>
+          <p>
+            A sponsor-level view of the program map, the latest wave evidence,
+            and the working agreements that shaped delivery.
+          </p>
+        </header>
+
+        <section id="program-overview">
+          <h2>Program overview</h2>
+          <p>
+            The program turned a reviewed plan corpus into coordinated delivery
+            waves. Each wrapper kept lane work reviewable while fan-in checks
+            guarded the shared release and skill surfaces.
+          </p>
+          <div class="callout">
+            <div class="callout__label">Current state</div>
+            <p>
+              Every composed wave has landed. One dispatch-baseline lane
+              returned to planning because its proposed seam conflicted with a
+              recorder guard.
+            </p>
+          </div>
+        </section>
+
+        <section id="wave-map">
+          <h2>Wave map</h2>
+          <div class="lanes" aria-label="Program dependency map">
+            <div class="lane">
+              <strong>W1 → W2 → W3</strong>
+              <p>Foundations, truthful contracts, then workflow containment.</p>
+            </div>
+            <div class="lane">
+              <strong>W4 → W5</strong>
+              <p>Delivered-project follow-ups and intake corrections.</p>
+            </div>
+            <div class="lane">
+              <strong>W6 → W7</strong>
+              <p>Truthfulness residue followed by corrective lanes.</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="per-wave-outcomes">
+          <h2>Per-wave outcomes</h2>
+          <p>
+            Early waves established reliable resolution, contracts, and
+            containment. Later waves repaired lifecycle edges, provider
+            evidence, configuration safety, and release gates.
+          </p>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Anchor</th>
+                  <th>Evidence</th>
+                  <th>Disposition</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>W1</td>
+                  <td>complete</td>
+                  <td>Foundation delivered</td>
+                </tr>
+                <tr>
+                  <td>W2</td>
+                  <td>complete</td>
+                  <td>Contracts aligned</td>
+                </tr>
+                <tr>
+                  <td>W3</td>
+                  <td>complete</td>
+                  <td>Containment strengthened</td>
+                </tr>
+                <tr>
+                  <td>W4</td>
+                  <td>complete</td>
+                  <td>Follow-ups delivered</td>
+                </tr>
+                <tr>
+                  <td>W5</td>
+                  <td>merged</td>
+                  <td>Intake work landed</td>
+                </tr>
+                <tr>
+                  <td>
+                    Execution Program: 2026-08-31 (revalidated backlog-review
+                    implementation corpus)
+                  </td>
+                  <td>deferred</td>
+                  <td>One decision seam returned to planning</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="convention-evolution">
+          <h2>Convention evolution</h2>
+          <div class="cards">
+            <article class="card">
+              <h3>Prove claims at the source</h3>
+              <p>
+                Reviews increasingly required runnable probes and failure
+                controls instead of inferred assurance.
+              </p>
+            </article>
+            <article class="card">
+              <h3>Stop on a false premise</h3>
+              <p>
+                A bounded refresh handled local premise errors; architectural
+                conflicts returned to planning.
+              </p>
+            </article>
+            <article class="card">
+              <h3>Protect shared seams</h3>
+              <p>
+                Fan-in owners coordinated release versions, skill pins, and
+                integration gates.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section id="aggregate-numbers">
+          <h2>Aggregate numbers</h2>
+          <p>
+            The trace table below keeps the selected source anchors visible
+            without replacing the program ledger.
+          </p>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Subject</th>
+                  <th>Source anchor</th>
+                  <th>Meaning</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>2026-08-31-execution-program.md</td>
+                  <td>2026-08-19</td>
+                  <td>Superseded composition map</td>
+                </tr>
+                <tr>
+                  <td>wave-1</td>
+                  <td>1</td>
+                  <td>First program index</td>
+                </tr>
+                <tr>
+                  <td>wave-2</td>
+                  <td>2</td>
+                  <td>Second program index</td>
+                </tr>
+                <tr>
+                  <td>wave-3</td>
+                  <td>3</td>
+                  <td>Third program index</td>
+                </tr>
+                <tr>
+                  <td>wave-4</td>
+                  <td>4</td>
+                  <td>Fourth program index</td>
+                </tr>
+                <tr>
+                  <td>wave-5</td>
+                  <td>5</td>
+                  <td>Fifth program index</td>
+                </tr>
+                <tr>
+                  <td>wave-7</td>
+                  <td>2026-09-08</td>
+                  <td>Corrective-wave index date</td>
+                </tr>
+                <tr>
+                  <td>W6</td>
+                  <td>5</td>
+                  <td>Latest truthfulness-residue task count</td>
+                </tr>
+                <tr>
+                  <td>W7</td>
+                  <td>20</td>
+                  <td>Latest corrective-lane task count</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="follow-up-ledger">
+          <h2>Follow-up ledger</h2>
+          <div class="cards">
+            <article class="card">
+              <h3>Dispatch baseline decision</h3>
+              <p>
+                Owner: repository planning. Next action: select a seam that
+                respects the recorder guard before returning to p09.
+              </p>
+            </article>
+            <article class="card">
+              <h3>Review polish</h3>
+              <p>
+                Owner: follow-up backlog. Next action: batch low-risk clarity
+                and diagnostics work separately from the delivered program.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <footer>
+          Source-backed recap authored from the execution program and the two
+          newest wave summaries.
+        </footer>
+      </main>
+    </div>
+    <script>
+      (() => {
+        const links = [...document.querySelectorAll('.toc a[href^="#"]')];
+        const targets = links
+          .map((link) => document.querySelector(link.getAttribute('href')))
+          .filter(Boolean);
+        const observer = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (!entry.isIntersecting) continue;
+              links.forEach((link) =>
+                link.classList.toggle(
+                  'active',
+                  link.getAttribute('href') === `#${entry.target.id}`,
+                ),
+              );
+            }
+          },
+          { rootMargin: '-15% 0px -70% 0px' },
+        );
+        targets.forEach((target) => observer.observe(target));
+      })();
+    </script>
+  </body>
+</html>

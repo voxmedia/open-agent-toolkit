@@ -8,57 +8,26 @@ const skillRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   '..',
 );
-
 const schemas = {
-  'run-request': 'explainer-kit.run-request/v1',
   'fact-base': 'explainer-kit.fact-base/v1',
+  manifest: 'explainer-kit.manifest/v2',
   theme: 'explainer-kit.theme/v1',
-  manifest: 'explainer-kit.manifest/v1',
-  'build-record': 'explainer-kit.build-record/v1',
-  'durability-evidence': 'explainer-kit.durability-evidence/v1',
-  'publish-request.v1': 'explainer-kit.publish-request/v1',
-  'publish-request.v2': 'explainer-kit.publish-request/v2',
-  'publish-receipt.v1': 'explainer-kit.publish-receipt/v1',
-  'publish-receipt.v2': 'explainer-kit.publish-receipt/v2',
-  'author-request.v2': 'explainer-kit.author-request/v2',
-  'author-request.v3': 'explainer-kit.author-request/v3',
-  'author-result.v2': 'explainer-kit.author-result/v2',
-  'set-plan.v1': 'explainer-kit.set-plan/v1',
-  'visual-review-request.v1': 'explainer-kit.visual-review-request/v1',
-  'visual-review-result.v1': 'explainer-kit.visual-review-result/v1',
-  'visual-review-evidence.v1': 'explainer-kit.visual-review-evidence/v1',
-  'terminal-evidence.v1': 'explainer-kit.terminal-evidence/v1',
 };
 
-async function loadSchema(name) {
-  return JSON.parse(
-    await readFile(
-      path.join(skillRoot, 'schemas', `${name}.schema.json`),
-      'utf8',
-    ),
-  );
-}
-
-function collectObjectSchemas(value, location = '#', found = []) {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return found;
-  if (value.type === 'object' && value.properties)
-    found.push([location, value]);
-  for (const [key, child] of Object.entries(value)) {
-    collectObjectSchemas(child, `${location}/${key}`, found);
-  }
-  return found;
-}
-
-test('every supported contract has the required identity and closed objects', async () => {
+test('every retained contract has its required identity and closed objects', async () => {
   for (const [name, id] of Object.entries(schemas)) {
-    const schema = await loadSchema(name);
+    const schema = JSON.parse(
+      await readFile(
+        path.join(skillRoot, 'schemas', `${name}.schema.json`),
+        'utf8',
+      ),
+    );
     assert.equal(
       schema.$schema,
       'https://json-schema.org/draft/2020-12/schema',
     );
     assert.equal(schema.$id, id);
-    assert.deepEqual(schema.properties.schemaVersion.const, id);
-
+    assert.equal(schema.properties.schemaVersion.const, id);
     for (const [location, objectSchema] of collectObjectSchemas(schema)) {
       assert.equal(
         objectSchema.additionalProperties,
@@ -69,271 +38,13 @@ test('every supported contract has the required identity and closed objects', as
   }
 });
 
-test('retained terminal and visual evidence schemas are code-only closed projections', async () => {
-  const terminal = await loadSchema('terminal-evidence.v1');
-  const visual = await loadSchema('visual-review-evidence.v1');
-
-  assert.deepEqual(terminal.required, [
-    'schemaVersion',
-    'runId',
-    'outcome',
-    'reasons',
-    'evidenceDisposition',
-  ]);
-  assert.deepEqual(Object.keys(terminal.properties), [
-    'schemaVersion',
-    'runId',
-    'outcome',
-    'manifestHash',
-    'reasons',
-    'evidenceDisposition',
-    'supersededBy',
-  ]);
-  assert.equal(terminal.properties.reasons.minItems, 1);
-  assert.equal(terminal.properties.reasons.maxItems, 50);
-
-  assert.deepEqual(visual.required, [
-    'schemaVersion',
-    'requestHash',
-    'attempt',
-    'disposition',
-    'reasons',
-  ]);
-  assert.deepEqual(Object.keys(visual.properties), visual.required);
-  assert.deepEqual(visual.properties.attempt.enum, [1, 2]);
-  assert.deepEqual(visual.properties.disposition.enum, [
-    'pass',
-    'correct',
-    'failed',
-  ]);
-  assert.equal(visual.properties.reasons.minItems, 0);
-  assert.equal(visual.properties.reasons.maxItems, 50);
-
-  for (const schema of [terminal, visual]) {
-    assert.deepEqual(schema.$defs.reason.required, ['stage', 'kind', 'count']);
-    assert.deepEqual(Object.keys(schema.$defs.reason.properties), [
-      'stage',
-      'kind',
-      'artifactId',
-      'count',
-    ]);
-    assert.equal(schema.$defs.reason.properties.count.minimum, 1);
-    assert.equal(schema.$defs.reason.properties.count.maximum, 50);
+function collectObjectSchemas(value, location = '#', found = []) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return found;
+  if (value.type === 'object' && value.properties) {
+    found.push([location, value]);
   }
-});
-
-test('run request persists render strategy and complete durability input', async () => {
-  const schema = await loadSchema('run-request');
-  const themeSelection = schema.$defs.themeSelection;
-  assert.deepEqual(themeSelection.properties.renderStrategy.enum, [
-    'default-only',
-    'user-switchable',
-  ]);
-  assert.equal(
-    themeSelection.properties.suppliedBundlePath.$ref,
-    '#/$defs/relativeOrAbsolutePath',
-  );
-  assert.deepEqual(schema.properties.durability.required, ['strategy']);
-  assert.deepEqual(schema.properties.durability.properties.strategy.enum, [
-    'none',
-    'commit',
-    'publish',
-  ]);
-  assert.deepEqual(schema.properties.durability.properties.publish.oneOf, [
-    { $ref: 'explainer-kit.publish-request/v1' },
-    { $ref: 'explainer-kit.publish-request/v2' },
-  ]);
-  assert.deepEqual(schema.properties.recapMode.enum, [
-    'artistic',
-    'deterministic-markdown',
-  ]);
-  assert.equal(schema.$defs.sourceBinding.properties.role.minLength, 1);
-  assert.equal(schema.$defs.sourceBinding.properties.sourceSetId.minLength, 1);
-});
-
-test('publish request v2 requires an explicit public access mode', async () => {
-  const schema = await loadSchema('publish-request.v2');
-  assert.ok(schema.required.includes('publicAccess'));
-  assert.deepEqual(schema.properties.publicAccess.enum, [
-    'public',
-    'protected',
-  ]);
-});
-
-test('theme identity excludes render strategy', async () => {
-  const schema = await loadSchema('theme');
-  assert.equal('renderStrategy' in schema.properties, false);
-  assert.equal('renderStrategy' in schema.$defs.provenance.properties, false);
-  assert.match(schema.properties.bundleHash.pattern, /^/);
-});
-
-test('manifest and build record share outcomes and evidence contracts', async () => {
-  const manifest = await loadSchema('manifest');
-  const buildRecord = await loadSchema('build-record');
-  const outcomes = [
-    'built-durable',
-    'built-not-durable',
-    'built-needs-review',
-    'failed',
-    'incomplete',
-  ];
-  assert.deepEqual(manifest.properties.outcome.enum, outcomes);
-  assert.deepEqual(buildRecord.properties.outcome.enum, outcomes);
-  assert.deepEqual(buildRecord.properties.renderStrategy.enum, [
-    'default-only',
-    'user-switchable',
-  ]);
-  assert.equal(
-    manifest.$defs.artifactEntry.properties.durableEvidence.uniqueItems,
-    true,
-  );
-  assert.equal(
-    manifest.$defs.artifactEntry.properties.renderedPath.pattern,
-    '^site/',
-  );
-  assert.ok(manifest.required.includes('immutableHashes'));
-  assert.equal(manifest.properties.immutableHashes.$ref, '#/$defs/hashMap');
-});
-
-test('durability request and publish receipt declare unique path evidence', async () => {
-  const durability = await loadSchema('durability-evidence');
-  const receipt = await loadSchema('publish-receipt.v2');
-  assert.deepEqual(durability.properties.evidence.oneOf[0].required, [
-    'kind',
-    'repoRoot',
-    'commit',
-    'paths',
-  ]);
-  assert.equal(
-    durability.properties.evidence.oneOf[0].properties.paths.uniqueItems,
-    true,
-  );
-  assert.equal(receipt.properties.artifacts.uniqueItems, true);
-  assert.equal(
-    receipt.$defs.artifact.properties.relativePath.$ref,
-    '#/$defs/safeRelativePath',
-  );
-  assert.ok(receipt.required.includes('publicAccess'));
-  assert.ok(receipt.$defs.artifact.required.includes('objectVerification'));
-  assert.ok(receipt.$defs.artifact.required.includes('publicVerification'));
-});
-
-test('author v2 contracts require authored content and provenance', async () => {
-  const request = await loadSchema('author-request.v2');
-  const result = await loadSchema('author-result.v2');
-
-  assert.deepEqual(request.required, [
-    'schemaVersion',
-    'artifactId',
-    'artifactType',
-    'authoring',
-    'brief',
-    'visualAuthoringGuidance',
-    'factBase',
-    'theme',
-    'setContext',
-    'plannedArtifact',
-  ]);
-  assert.deepEqual(request.properties.authoring.enum, ['markdown', 'html']);
-  assert.equal(request.properties.visualAuthoringGuidance.type, 'string');
-  assert.equal(request.properties.visualAuthoringGuidance.minLength, 1);
-  assert.equal(
-    request.properties.graphSemantics.items.$ref,
-    '#/$defs/graphSemantics',
-  );
-  assert.equal(request.$defs.graphSemantics.additionalProperties, false);
-  assert.deepEqual(request.$defs.graphSemantics.required, [
-    'direction',
-    'nodes',
-    'edges',
-    'topology',
-  ]);
-  assert.deepEqual(result.required, [
-    'schemaVersion',
-    'artifactId',
-    'content',
-    'provenance',
-  ]);
-  assert.equal(result.properties.content.oneOf.length, 2);
-  assert.deepEqual(result.properties.provenance.required, [
-    'authorId',
-    'generatedAt',
-  ]);
-  // The trust level is core-stamped on the retained record, so it is declared
-  // but never required of an incoming author result.
-  assert.deepEqual(result.properties.provenance.properties.trust.enum, [
-    'caller-bound',
-    'self-asserted',
-  ]);
-  assert.equal(result.properties.provenance.additionalProperties, false);
-});
-
-test('author v3 requires a closed canonical artifact link table', async () => {
-  const request = await loadSchema('author-request.v3');
-
-  assert.ok(request.required.includes('artifactLinks'));
-  assert.equal(request.properties.authoring.enum.includes('markdown'), true);
-  assert.equal(request.properties.authoring.enum.includes('html'), true);
-  assert.equal(request.properties.artifactLinks.minItems, 1);
-  assert.equal(request.properties.artifactLinks.uniqueItems, true);
-  assert.deepEqual(request.$defs.artifactLink.required, [
-    'artifactId',
-    'artifactType',
-    'sitePath',
-    'href',
-  ]);
-  assert.equal(request.$defs.artifactLink.additionalProperties, false);
-  assert.match(request.$defs.artifactLink.properties.sitePath.pattern, /index/);
-  assert.match(request.$defs.artifactLink.properties.href.pattern, /index/);
-});
-
-test('set and visual review schemas carry closed shared context', async () => {
-  const plan = await loadSchema('set-plan.v1');
-  const reviewRequest = await loadSchema('visual-review-request.v1');
-  const reviewResult = await loadSchema('visual-review-result.v1');
-
-  assert.deepEqual(plan.required, [
-    'schemaVersion',
-    'planId',
-    'recipe',
-    'sourceIds',
-    'ledger',
-    'portfolio',
-  ]);
-  assert.equal(plan.properties.portfolio.minItems, 1);
-  assert.deepEqual(plan.$defs.ledger.required, [
-    'terminology',
-    'statuses',
-    'numbers',
-  ]);
-  assert.deepEqual(reviewResult.properties.disposition.enum, [
-    'pass',
-    'correct',
-    'fail',
-  ]);
-  assert.ok(reviewRequest.required.includes('requestId'));
-  assert.ok(reviewRequest.required.includes('requestHash'));
-  assert.ok(reviewRequest.required.includes('renderedArtifacts'));
-  assert.equal(reviewRequest.properties.renderedArtifacts.uniqueItems, true);
-  assert.ok(
-    reviewRequest.$defs.renderedArtifact.required.includes('renderedHash'),
-  );
-  assert.ok(
-    reviewRequest.$defs.renderedArtifact.properties.cohesionObservations,
-  );
-  assert.equal(
-    reviewRequest.$defs.cohesionObservation.properties.group.enum.length,
-    3,
-  );
-  assert.equal(
-    reviewRequest.$defs.renderedArtifact.properties.evidence.uniqueItems,
-    true,
-  );
-  assert.ok(reviewRequest.$defs.evidence.required.includes('screenshotHash'));
-  assert.ok(reviewRequest.$defs.evidence.required.includes('metricsHash'));
-  assert.ok(reviewResult.required.includes('requestId'));
-  assert.ok(reviewResult.required.includes('requestHash'));
-  assert.ok(reviewResult.required.includes('artifactIds'));
-  assert.equal(reviewResult.properties.artifactIds.uniqueItems, true);
-  assert.equal(reviewResult.properties.findings.uniqueItems, true);
-});
+  for (const [key, child] of Object.entries(value)) {
+    collectObjectSchemas(child, `${location}/${key}`, found);
+  }
+  return found;
+}

@@ -1,0 +1,31 @@
+{
+  "artifactSha256": "sha256:87cc063ba19d68381b74c90021e2a950974f51048da1ebf6c110479a50494298",
+  "checks": {
+    "parse": {
+      "status": "pass"
+    },
+    "requiredNarrative": {
+      "status": "pass"
+    },
+    "structure": {
+      "status": "pass"
+    },
+    "sourceDumping": {
+      "status": "pass"
+    },
+    "shellScripts": {
+      "status": "pass"
+    },
+    "ledgerToPage": {
+      "status": "pass"
+    },
+    "pageToLedger": {
+      "status": "pass"
+    }
+  },
+  "rung": "none",
+  "reason": "browser-driver-not-installed",
+  "visual": {
+    "verdict": "none"
+  }
+}

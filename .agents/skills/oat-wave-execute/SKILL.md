@@ -6,7 +6,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Task
 metadata:
-  version: 1.9.3
+  version: 1.9.4
 ---
 
 # Execute a Wave of External Plans
@@ -460,41 +460,16 @@ archive anything first.
 
 #### Program-close recap explainer caller
 
-The orchestrator owns fact-base synthesis. At program close it synthesizes an
-`explainer-kit.fact-base/v1` document from the reconciled execution-program
-artifact, ALL wave summaries, and ALL completion records. Its required keys are
-exactly:
-`schemaVersion, generatedAt, mode, freshnessPolicy, sources, claims, unresolvedClaims, overrides`.
+At program close, invoke `oat-explainer-kit` § Generate with recipe
+`program-recap` over the reconciled execution-program artifact and the selected
+wave summaries and completion records. The adapter resolves approved inputs,
+theme, and the repository output root, then runs bundle, host-agent authoring,
+verification, and recording in unattended mode.
 
-The caller also owns CONTENT AUTHORING, exactly as it owns critic execution and
-fact-base synthesis: the kit validates structure and fact consistency, but
-nothing in it owns prose quality. Every recap run requires exactly one
-provider-neutral author seam — in-process callers supply an `author(request)`
-callback; JSON/CLI callers supply `authorModulePath` naming a module with an
-`author` function export. The core invokes it for every floor and accepted
-expansion artifact with `author-request/v2`: the artifact brief is inlined,
-the fact base is attached, and artistic requests include the resolved theme
-and hash-pinned shell. Authors may propose only recipe-declared expansion
-profiles and return `author-result/v2`; runs fail on absent or invalid author
-results or excessive verbatim source copying. Callbacks and module paths never
-enter persisted run requests.
-
-The mechanical caller constructs an `explainer-kit.run-request/v1` document whose
-required keys are exactly:
-`schemaVersion, recipe, slug, outputRoot, factBase, mode`. Set `recipe` to
-`{ "id": "program-recap", "version": "1" }`; this is an object with exactly
-`id` and `version`. Set `outputRoot` to
-`.oat/repo/reference/explainers/<slug>/`. Bind the
-synthesized fact-base file through `factBase` with the required keys
-`mode, freshnessPolicy`, set `mode` to `"supplied"`, set `freshnessPolicy` to
-`"live-wins"`, and set `path` to that file.
-
-After the run, read the `explainer-kit.manifest/v1` document. Its required keys
-are exactly:
-`schemaVersion, runId, slug, recipe, createdAt, source, theme, artifacts, immutableHashes, outcome, buildRecord, warnings`.
-Record the default program recap's manifest `runId` and `outcome` in the
-program ledger; use a wave ledger row only for an explicitly requested per-wave
-recap. Publishing is human-gated; this caller never invokes publish.
+Record the resulting manifest `runId` and `outcome` in the program ledger; use
+a wave ledger row only for an explicitly requested per-wave recap. If the flow
+fails before recording, preserve the sanitized cause and record the explicit
+retry or skip disposition.
 
 ## Success Criteria
 

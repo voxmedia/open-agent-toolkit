@@ -7,13 +7,13 @@ import {
   mkdtemp,
   readFile,
   readdir,
-  rename,
   rm,
   symlink,
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { basename, dirname, isAbsolute, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { ensureScopedRootGitignore } from '@commands/init/gitignore';
 import { defaultGitRunner } from '@commands/project/sync/git';
@@ -43,7 +43,6 @@ import {
   resolvePrimaryRepoRoot,
   verifySelectedProjectRecapForArchive,
 } from './archive-utils';
-import { loadExplainerTerminalEvidence } from './explainer-terminal-evidence';
 
 describe('archive utils', () => {
   const tempDirs: string[] = [];
@@ -80,26 +79,16 @@ describe('archive utils', () => {
     projectPath: string,
     {
       distinctCanonicalHashes = false,
-      includeReviewEvidence,
-      includeTerminalEvidence,
       mode = 'unattended',
-      outcome = 'built-not-durable',
+      outcome = 'built',
       recipeId = 'project-recap',
       runName = 'selected-run',
-      sourceBacklinks,
     }: {
       distinctCanonicalHashes?: boolean;
-      includeReviewEvidence?: boolean;
-      includeTerminalEvidence?: boolean;
       mode?: 'interactive' | 'unattended';
-      outcome?:
-        | 'built-not-durable'
-        | 'built-needs-review'
-        | 'failed'
-        | 'incomplete';
+      outcome?: 'built' | 'built-needs-review' | 'failed' | 'incomplete';
       recipeId?: string;
       runName?: string;
-      sourceBacklinks?: unknown;
     } = {},
   ): Promise<{
     relativeRunPath: string;
@@ -109,248 +98,34 @@ describe('archive utils', () => {
   }> {
     const relativeRunPath = join('explainers', 'project-recap', runName);
     const runRoot = join(projectPath, relativeRunPath);
-    const files: Record<string, string | Buffer> = {
-      'run-request.json': `${JSON.stringify({ mode })}\n`,
-      'source/fact-base.json': '{"claims":[]}\n',
-      'source/fact-base.md': '# Facts\n',
-      'source/content-approval.json': '{"status":"approved"}\n',
-      'source/author/recap.json': '{"author":{"id":"fixture"}}\n',
-      'source/content/recap.md': `# ${runName}\n`,
-      'theme.resolved.json': '{"name":"neutral"}\n',
-      'site/index.html': `<h1>${runName}</h1>\n`,
-    };
-    if (outcome === 'built-not-durable') {
-      for (const path of [
-        'source/set-plan/request.json',
-        'source/set-plan/result.json',
-        'source/set-plan/ledger.json',
-        'source/set-plan/portfolio.json',
-        'source/set-plan/drafts.json',
-      ]) {
-        files[path] = '{}\n';
-      }
-    }
-    const retainReviewEvidence =
-      includeReviewEvidence ??
-      (mode === 'unattended' && outcome === 'built-not-durable');
-    if (retainReviewEvidence) {
-      const runtime = {
-        kind: 'launched',
-        name: 'chromium',
-        version: '123.0.6312.0',
-      };
-      const capture = {
-        format: 'png',
-        fullPage: false,
-        reducedMotion: 'reduce',
-        animationsDisabled: true,
-      };
-      const captureIdentity = canonicalHash({ runtime, capture });
-      const renderedHash = hashContent(files['site/index.html']);
-      const plan = {
-        schemaVersion: 'explainer-kit.set-plan/v1',
-        planId: 'recap-plan',
-        recipe: { id: 'project-recap', version: '1' },
-        sourceIds: ['plan'],
-        ledger: {
-          terminology: [{ term: 'recap', meaning: 'The project recap.' }],
-          statuses: [{ subject: 'review', value: 'passed' }],
-          numbers: [{ subject: 'artifacts', value: 1, unit: 'artifact' }],
-        },
-        portfolio: [
-          {
-            artifactId: 'recap',
-            artifactType: 'hub',
-            profileId: 'recap-hub',
-            required: true,
-            sourceIds: ['plan'],
-            draft: 'Summarize the completed project.',
-            visualIntent: 'Lead with the reviewed outcome.',
-          },
-        ],
-      };
-      const evidence = [];
-      for (const viewport of ['mobile', 'tablet', 'desktop']) {
-        const screenshot = Buffer.from([
-          0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
-        ]);
-        const metrics = `${JSON.stringify({
-          schemaVersion: 'explainer-kit.browser-evidence/v2',
-          artifactId: 'recap',
-          viewport,
-          scenario: 'default',
-          runtime,
-          capture,
-          captureIdentity,
-          metrics: {
-            pageOverflowX: false,
-            clippedX: [],
-            viewportClipped: [],
-            unreadableHeadings: [],
-          },
-        })}\n`;
-        const screenshotPath = `qa/browser/recap/${viewport}.png`;
-        const metricsPath = `qa/browser/recap/${viewport}.json`;
-        files[screenshotPath] = screenshot;
-        files[metricsPath] = metrics;
-        files[`qa/visual-review/attempt-1/evidence/recap/${viewport}.png`] =
-          screenshot;
-        files[`qa/visual-review/attempt-1/evidence/recap/${viewport}.json`] =
-          metrics;
-        evidence.push({
-          viewport,
-          screenshotPath,
-          screenshotHash: hashContent(screenshot),
-          metricsPath,
-          metricsHash: hashContent(metrics),
-          captureIdentity,
-        });
-      }
-      const requestPayload = {
-        schemaVersion: 'explainer-kit.visual-review-request/v1',
-        browserRuntime: runtime,
-        captureIdentity,
-        plan,
-        renderedArtifacts: [
-          {
-            artifactId: 'recap',
-            renderedPath: 'site/index.html',
-            renderedHash,
-            cohesionObservations: [
-              {
-                artifactId: 'recap',
-                contentHash: renderedHash,
-                group: 'terminology',
-                claim: 'recap',
-                value: 'recap',
-              },
-              {
-                artifactId: 'recap',
-                contentHash: renderedHash,
-                group: 'statuses',
-                claim: 'review',
-                value: 'passed',
-              },
-              {
-                artifactId: 'recap',
-                contentHash: renderedHash,
-                group: 'numericClaims',
-                claim: 'artifacts',
-                value: 1,
-              },
-            ],
-            evidence,
-          },
-        ],
-      };
-      const requestHash = canonicalHash(requestPayload);
-      const reviewRequest = {
-        ...requestPayload,
-        requestId: `visual-review-${requestHash.replace(/^sha256:/, '')}`,
-        requestHash,
-      };
-      files['qa/visual-review/attempt-1/request.json'] =
-        `${JSON.stringify(reviewRequest)}\n`;
-      files['qa/visual-review/attempt-1/result.json'] = `${JSON.stringify({
-        schemaVersion: 'explainer-kit.visual-review-evidence/v1',
-        requestHash,
-        attempt: 1,
-        disposition: 'pass',
-        reasons: [],
-      })}\n`;
-    }
-
-    for (const [relativePath, contents] of Object.entries(files)) {
-      const target = join(runRoot, relativePath);
-      await mkdir(dirname(target), { recursive: true });
-      await writeFile(target, contents);
-    }
-
-    const immutableHashes = Object.fromEntries(
-      Object.entries(files).map(([relativePath, contents]) => [
-        relativePath,
-        hashContent(contents),
-      ]),
+    await mkdir(dirname(runRoot), { recursive: true });
+    await cp(
+      fileURLToPath(new URL('./fixtures/v2-package/', import.meta.url)),
+      runRoot,
+      { recursive: true },
     );
     const manifestPath = join(runRoot, 'manifest.json');
-    const manifest = {
-      schemaVersion: 'explainer-kit.manifest/v1',
-      runId: `run-${runName}`,
-      slug: runName,
-      recipe: { id: recipeId, version: '1' },
-      createdAt: '2026-04-01T12:34:56.000Z',
-      source: {
-        factBasePath: 'source/fact-base.json',
-        factBaseHash: distinctCanonicalHashes
-          ? `sha256:${'b'.repeat(64)}`
-          : immutableHashes['source/fact-base.json'],
-        inputHashes: {},
-        authorResultPaths: ['source/author/recap.json'],
-        ...(sourceBacklinks !== undefined && {
-          backlinks: sourceBacklinks,
-        }),
-      },
-      theme: {
-        path: 'theme.resolved.json',
-        hash: distinctCanonicalHashes
-          ? `sha256:${'c'.repeat(64)}`
-          : immutableHashes['theme.resolved.json'],
-        derived: false,
-      },
-      artifacts: [
-        {
-          id: 'recap',
-          type: 'explainer',
-          contentPath: 'source/content/recap.md',
-          renderedPath: 'site/index.html',
-          mediaType: 'text/html',
-          status: 'built',
-          hash: immutableHashes['site/index.html'],
-          rebuildable: false,
-        },
-      ],
-      outcome,
-      immutableHashes,
-      buildRecord: {
-        path: 'build-record.json',
-        hash: `sha256:${'a'.repeat(64)}`,
-      },
-      warnings: [],
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8')) as {
+      mode: 'interactive' | 'unattended';
+      outcome: 'built' | 'built-needs-review' | 'failed' | 'incomplete';
+      recipe: { id: string; version: string };
+      source: Record<string, unknown> & { factBaseHash: string };
+      theme: { hash: string };
+      immutableHashes: Record<string, string>;
     };
-    await writeFile(manifestPath, `${JSON.stringify(manifest)}\n`, 'utf8');
-    await writeFile(join(runRoot, 'build-record.json'), '{}\n', 'utf8');
-    if (
-      includeTerminalEvidence ??
-      ['built-needs-review', 'failed'].includes(outcome)
-    ) {
-      const terminalEvidence = await loadExplainerTerminalEvidence();
-      await terminalEvidence.writeTerminalEvidence(
-        {
-          runId: manifest.runId,
-          slug: manifest.slug,
-          runRoot,
-        },
-        {
-          outcome,
-          manifest,
-          reasons: [
-            {
-              stage: outcome === 'failed' ? 'durability' : 'visual-review',
-              kind: outcome === 'failed' ? 'provider-failure' : 'finding',
-              artifactId: 'recap',
-              count: 1,
-            },
-          ],
-          evidenceDisposition: 'retained',
-        },
-      );
+    manifest.mode = mode;
+    manifest.outcome = outcome;
+    manifest.recipe.id = recipeId;
+    if (distinctCanonicalHashes) {
+      manifest.source.factBaseHash = `sha256:${'b'.repeat(64)}`;
+      manifest.theme.hash = `sha256:${'c'.repeat(64)}`;
     }
-
+    await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
     return {
       relativeRunPath,
       runRoot,
       manifestPath,
-      immutableCount: Object.keys(immutableHashes).length,
+      immutableCount: Object.keys(manifest.immutableHashes).length,
     };
   }
 
@@ -1600,70 +1375,20 @@ describe('archive utils', () => {
   );
 
   it.each(['failed', 'incomplete'] as const)(
-    'exports only the selected %s recap package before deleting the active project',
+    'rejects a selected recap with the unsatisfied %s outcome',
     async (outcome) => {
       const repoRoot = await createRepoRoot();
-      const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+      const projectPath = join(repoRoot, '.oat', 'projects', 'shared', outcome);
       await mkdir(projectPath, { recursive: true });
-      const selected = await createRecapPackage(projectPath, { outcome });
-      await createRecapPackage(projectPath, { runName: 'unselected-run' });
-      const renamePath = vi.fn(async (source: string, destination: string) =>
-        rename(source, destination),
-      );
+      const recap = await createRecapPackage(projectPath, { outcome });
 
-      const result = await archiveProjectOnCompletion(
-        {
-          repoRoot,
+      await expect(
+        verifySelectedProjectRecapForArchive(
           projectPath,
-          projectName: 'demo',
-          projectsRoot: '.oat/projects/shared',
-          projectRecapRun: selected.relativeRunPath,
-          s3SyncOnComplete: false,
-        },
-        {
-          renamePath,
-          timestamp: () => '2026-04-01T12:34:56Z',
-        },
-      );
-
-      const exportRoot = join(
-        repoRoot,
-        '.oat',
-        'repo',
-        'reference',
-        'project-recaps',
-        '20260401-demo',
-      );
-      expect(result.projectRecapExport).toEqual({
-        sourceRunRoot: selected.runRoot,
-        exportRoot,
-        manifest: {
-          relativePath: 'manifest.json',
-          verifiedArtifactCount: selected.immutableCount,
-        },
-      });
-      await expect(
-        readFile(join(exportRoot, 'site', 'index.html'), 'utf8'),
-      ).resolves.toBe('<h1>selected-run</h1>\n');
-      await expect(
-        access(join(exportRoot, '..', 'unselected-run')),
-      ).rejects.toThrow();
-      await expect(access(projectPath)).rejects.toThrow();
-      expect(renamePath).toHaveBeenCalledWith(
-        expect.stringMatching(/20260401-demo\.tmp-/),
-        exportRoot,
-      );
-      const manifest = JSON.parse(
-        await readFile(join(exportRoot, 'manifest.json'), 'utf8'),
-      ) as { immutableHashes: Record<string, string> };
-      expect(await relativeFilePaths(exportRoot)).toEqual(
-        [
-          'build-record.json',
-          'manifest.json',
-          ...(outcome === 'failed' ? ['terminal-evidence.json'] : []),
-          ...Object.keys(manifest.immutableHashes),
-        ].sort(),
-      );
+          recap.relativeRunPath,
+        ),
+      ).rejects.toThrow(/satisfied outcome|built artifacts/i);
+      await expect(access(projectPath)).resolves.toBeUndefined();
     },
   );
 
@@ -1749,7 +1474,7 @@ describe('archive utils', () => {
     await expect(access(projectPath)).resolves.toBeUndefined();
   });
 
-  it('accepts distinct canonical object hashes while verifying complete file-byte coverage', async () => {
+  it('rejects fact-base and theme hashes that differ from immutable package bytes', async () => {
     const repoRoot = await createRepoRoot();
     const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
     await mkdir(projectPath, { recursive: true });
@@ -1757,25 +1482,35 @@ describe('archive utils', () => {
       distinctCanonicalHashes: true,
     });
 
-    const result = await archiveProjectOnCompletion(
-      {
-        repoRoot,
-        projectPath,
-        projectName: 'demo',
-        projectsRoot: '.oat/projects/shared',
-        projectRecapRun: recap.relativeRunPath,
-        s3SyncOnComplete: false,
-      },
-      { timestamp: () => '2026-04-01T12:34:56Z' },
-    );
-
-    expect(result.projectRecapExport?.manifest.verifiedArtifactCount).toBe(
-      recap.immutableCount,
-    );
-    await expect(access(projectPath)).rejects.toThrow();
+    await expect(
+      verifySelectedProjectRecapForArchive(projectPath, recap.relativeRunPath),
+    ).rejects.toThrow(/hashes do not match|immutable package/i);
+    await expect(access(projectPath)).resolves.toBeUndefined();
   });
 
-  it('archives a successful interactive recap without visual-review evidence', async () => {
+  it.each([
+    ['built', 'unattended'],
+    ['built', 'interactive'],
+    ['built-needs-review', 'unattended'],
+    ['built-needs-review', 'interactive'],
+  ] as const)('accepts the v2 %s outcome in %s mode', async (outcome, mode) => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(
+      repoRoot,
+      '.oat',
+      'projects',
+      'shared',
+      `${outcome}-${mode}`,
+    );
+    await mkdir(projectPath, { recursive: true });
+    const recap = await createRecapPackage(projectPath, { mode, outcome });
+
+    await expect(
+      verifySelectedProjectRecapForArchive(projectPath, recap.relativeRunPath),
+    ).resolves.toBeUndefined();
+  });
+
+  it('archives a successful interactive v2 recap', async () => {
     const repoRoot = await createRepoRoot();
     const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
     await mkdir(projectPath, { recursive: true });
@@ -1800,117 +1535,6 @@ describe('archive utils', () => {
     );
     await expect(access(projectPath)).rejects.toThrow();
   });
-
-  it('rejects partial interactive review evidence and an unverified mode change', async () => {
-    const repoRoot = await createRepoRoot();
-    const partialProject = join(
-      repoRoot,
-      '.oat',
-      'projects',
-      'shared',
-      'partial',
-    );
-    await mkdir(partialProject, { recursive: true });
-    const partial = await createRecapPackage(partialProject, {
-      mode: 'interactive',
-    });
-    const partialPath = 'qa/browser/recap/mobile.png';
-    const partialContents = 'partial\n';
-    await mkdir(dirname(join(partial.runRoot, partialPath)), {
-      recursive: true,
-    });
-    await writeFile(join(partial.runRoot, partialPath), partialContents);
-    const partialManifest = JSON.parse(
-      await readFile(partial.manifestPath, 'utf8'),
-    ) as { immutableHashes: Record<string, string> };
-    partialManifest.immutableHashes[partialPath] =
-      `sha256:${createHash('sha256').update(partialContents).digest('hex')}`;
-    await writeFile(
-      partial.manifestPath,
-      `${JSON.stringify(partialManifest)}\n`,
-    );
-
-    await expect(
-      archiveProjectOnCompletion({
-        repoRoot,
-        projectPath: partialProject,
-        projectName: 'partial',
-        projectsRoot: '.oat/projects/shared',
-        projectRecapRun: partial.relativeRunPath,
-        s3SyncOnComplete: false,
-      }),
-    ).rejects.toThrow(
-      /incomplete visual-review evidence chain|screenshot evidence.*missing.*metrics/i,
-    );
-
-    const mutatedProject = join(
-      repoRoot,
-      '.oat',
-      'projects',
-      'shared',
-      'mutated',
-    );
-    await mkdir(mutatedProject, { recursive: true });
-    const mutated = await createRecapPackage(mutatedProject);
-    await writeFile(
-      join(mutated.runRoot, 'run-request.json'),
-      '{"mode":"interactive"}\n',
-    );
-
-    await expect(
-      archiveProjectOnCompletion({
-        repoRoot,
-        projectPath: mutatedProject,
-        projectName: 'mutated',
-        projectsRoot: '.oat/projects/shared',
-        projectRecapRun: mutated.relativeRunPath,
-        s3SyncOnComplete: false,
-      }),
-    ).rejects.toThrow(/hash verification failed.*run-request\.json/i);
-  });
-
-  it.each(['built-needs-review', 'failed', 'incomplete'] as const)(
-    'rejects legacy diagnostic review evidence retained by a %s package',
-    async (outcome) => {
-      const repoRoot = await createRepoRoot();
-      const projectPath = join(repoRoot, '.oat', 'projects', 'shared', outcome);
-      await mkdir(projectPath, { recursive: true });
-      const recap = await createRecapPackage(projectPath, { outcome });
-      const partialPath = 'qa/review-gate/attempt-1-error.json';
-      const canary =
-        'ARCHIVE-CANARY {"pass\\\\u0077ord":"exact"} ? [yaml-complex] standalone';
-      const partialContents = `${JSON.stringify({
-        code: 'E_VISUAL_REVIEW',
-        message: canary,
-      })}\n`;
-      await mkdir(dirname(join(recap.runRoot, partialPath)), {
-        recursive: true,
-      });
-      await writeFile(join(recap.runRoot, partialPath), partialContents);
-      const manifest = JSON.parse(
-        await readFile(recap.manifestPath, 'utf8'),
-      ) as { immutableHashes: Record<string, string> };
-      manifest.immutableHashes[partialPath] =
-        `sha256:${createHash('sha256').update(partialContents).digest('hex')}`;
-      await writeFile(recap.manifestPath, `${JSON.stringify(manifest)}\n`);
-
-      await expect(
-        archiveProjectOnCompletion({
-          repoRoot,
-          projectPath,
-          projectName: outcome,
-          projectsRoot: '.oat/projects/shared',
-          projectRecapRun: recap.relativeRunPath,
-          s3SyncOnComplete: false,
-        }),
-      ).rejects.toThrow(
-        /review-gate|terminal evidence|incomplete visual-review evidence/i,
-      );
-      await expect(
-        access(join(repoRoot, '.oat/repo/reference/project-recaps')),
-      ).rejects.toMatchObject({ code: 'ENOENT' });
-    },
-  );
 
   it('preserves existing behavior when no recap run is selected', async () => {
     const repoRoot = await createRepoRoot();
@@ -2023,165 +1647,7 @@ describe('archive utils', () => {
     expect(result.projectRecapExport?.manifest.verifiedArtifactCount).toBe(
       recap.immutableCount,
     );
-    await expect(
-      readFile(
-        join(result.projectRecapExport!.exportRoot, 'terminal-evidence.json'),
-        'utf8',
-      ),
-    ).resolves.toContain('"evidenceDisposition": "retained"');
     await expect(access(projectPath)).rejects.toThrow();
-  });
-
-  it.each(['built-needs-review', 'failed'] as const)(
-    'requires terminal evidence before destructively archiving a %s recap',
-    async (outcome) => {
-      const repoRoot = await createRepoRoot();
-      const projectPath = join(repoRoot, '.oat', 'projects', 'shared', outcome);
-      await mkdir(projectPath, { recursive: true });
-      const recap = await createRecapPackage(projectPath, {
-        outcome,
-        includeTerminalEvidence: false,
-      });
-
-      await expect(
-        archiveProjectOnCompletion({
-          repoRoot,
-          projectPath,
-          projectName: outcome,
-          projectsRoot: '.oat/projects/shared',
-          projectRecapRun: recap.relativeRunPath,
-          s3SyncOnComplete: false,
-        }),
-      ).rejects.toThrow(/terminal evidence/i);
-      await expect(access(projectPath)).resolves.toBeUndefined();
-    },
-  );
-
-  it.each([
-    ['schemaVersion', 'future'],
-    ['runId', 'run-other'],
-    ['outcome', 'failed'],
-    ['manifestHash', `sha256:${'f'.repeat(64)}`],
-    ['evidenceDisposition', 'unknown'],
-  ] as const)(
-    'rejects tampered terminal evidence field %s before project removal',
-    async (field, value) => {
-      const repoRoot = await createRepoRoot();
-      const projectPath = join(repoRoot, '.oat', 'projects', 'shared', field);
-      await mkdir(projectPath, { recursive: true });
-      const recap = await createRecapPackage(projectPath, {
-        outcome: 'built-needs-review',
-      });
-      const evidencePath = join(recap.runRoot, 'terminal-evidence.json');
-      const evidence = JSON.parse(
-        await readFile(evidencePath, 'utf8'),
-      ) as Record<string, unknown>;
-      evidence[field] = value;
-      await writeFile(evidencePath, `${JSON.stringify(evidence)}\n`);
-
-      await expect(
-        archiveProjectOnCompletion({
-          repoRoot,
-          projectPath,
-          projectName: field,
-          projectsRoot: '.oat/projects/shared',
-          projectRecapRun: recap.relativeRunPath,
-          s3SyncOnComplete: false,
-        }),
-      ).rejects.toThrow(/terminal evidence/i);
-      await expect(access(projectPath)).resolves.toBeUndefined();
-    },
-  );
-
-  it('rejects terminal evidence symlinked outside the selected recap run', async () => {
-    const repoRoot = await createRepoRoot();
-    const projectPath = join(
-      repoRoot,
-      '.oat',
-      'projects',
-      'shared',
-      'symlinked',
-    );
-    await mkdir(projectPath, { recursive: true });
-    const recap = await createRecapPackage(projectPath, {
-      outcome: 'failed',
-    });
-    const evidencePath = join(recap.runRoot, 'terminal-evidence.json');
-    const externalEvidencePath = join(repoRoot, 'external-evidence.json');
-    await writeFile(externalEvidencePath, await readFile(evidencePath));
-    await rm(evidencePath);
-    await symlink(externalEvidencePath, evidencePath);
-
-    await expect(
-      verifySelectedProjectRecapForArchive(projectPath, recap.relativeRunPath),
-    ).rejects.toThrow(/terminal evidence|symbolic link|run root/i);
-  });
-
-  it('rejects schema-valid terminal evidence byte substitution while staging', async () => {
-    const repoRoot = await createRepoRoot();
-    const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'staged');
-    await mkdir(projectPath, { recursive: true });
-    const recap = await createRecapPackage(projectPath, {
-      outcome: 'failed',
-    });
-    const copySingleFile = vi.fn(
-      async (source: string, destination: string) => {
-        await mkdir(dirname(destination), { recursive: true });
-        await copyFile(source, destination);
-        if (destination.endsWith('terminal-evidence.json')) {
-          const evidencePath = destination;
-          const evidence = JSON.parse(
-            await readFile(evidencePath, 'utf8'),
-          ) as Record<string, unknown>;
-          evidence.error = {
-            code: 'E_RUN',
-            message: 'Schema-valid substituted failure evidence.',
-          };
-          await writeFile(evidencePath, `${JSON.stringify(evidence)}\n`);
-        }
-      },
-    );
-
-    await expect(
-      archiveProjectOnCompletion(
-        {
-          repoRoot,
-          projectPath,
-          projectName: 'staged',
-          projectsRoot: '.oat/projects/shared',
-          projectRecapRun: recap.relativeRunPath,
-          s3SyncOnComplete: false,
-        },
-        { copySingleFile },
-      ),
-    ).rejects.toThrow(/terminal evidence|changed while staging|byte/i);
-    await expect(access(projectPath)).resolves.toBeUndefined();
-  });
-
-  it('rejects an incomplete immutable visual-review evidence chain', async () => {
-    const repoRoot = await createRepoRoot();
-    const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
-    await mkdir(projectPath, { recursive: true });
-    const recap = await createRecapPackage(projectPath);
-    const manifest = JSON.parse(await readFile(recap.manifestPath, 'utf8')) as {
-      immutableHashes: Record<string, string>;
-    };
-    delete manifest.immutableHashes['qa/visual-review/attempt-1/result.json'];
-    await writeFile(recap.manifestPath, `${JSON.stringify(manifest)}\n`);
-
-    await expect(
-      archiveProjectOnCompletion(
-        {
-          repoRoot,
-          projectPath,
-          projectName: 'demo',
-          projectsRoot: '.oat/projects/shared',
-          projectRecapRun: recap.relativeRunPath,
-          s3SyncOnComplete: false,
-        },
-        { timestamp: () => '2026-04-01T12:34:56Z' },
-      ),
-    ).rejects.toThrow(/incomplete visual-review evidence chain/i);
   });
 
   it('fails without overwrite when the recap destination already exists', async () => {
@@ -2229,7 +1695,7 @@ describe('archive utils', () => {
       async (source: string, destination: string) => {
         await mkdir(dirname(destination), { recursive: true });
         await copyFile(source, destination);
-        if (destination.endsWith(join('source', 'content', 'recap.md'))) {
+        if (destination.endsWith(join('site', 'index.html'))) {
           await writeFile(destination, '# corrupted\n', 'utf8');
         }
       },
@@ -2284,125 +1750,11 @@ describe('archive utils', () => {
     ).resolves.toBeUndefined();
   });
 
-  it('accepts canonical immutable GitHub source backlinks', async () => {
-    const repoRoot = await createRepoRoot();
-    const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
-    await mkdir(projectPath, { recursive: true });
-    const recap = await createRecapPackage(projectPath, {
-      sourceBacklinks: [
-        {
-          sourceId: 'plan',
-          url: `https://github.com/acme/project/blob/${'1'.repeat(40)}/docs/phase%204/plan.md#L12-L19`,
-        },
-      ],
-    });
-
-    await expect(
-      verifySelectedProjectRecapForArchive(projectPath, recap.relativeRunPath),
-    ).resolves.toBeUndefined();
-  });
-
-  it.each([
-    {
-      name: 'an unknown backlink key',
-      backlinks: [
-        {
-          sourceId: 'plan',
-          url: `https://github.com/acme/project/blob/${'1'.repeat(40)}/plan.md#L1`,
-          branch: 'main',
-        },
-      ],
-    },
-    {
-      name: 'a moving branch revision',
-      backlinks: [
-        {
-          sourceId: 'plan',
-          url: 'https://github.com/acme/project/blob/main/plan.md#L1',
-        },
-      ],
-    },
-    {
-      name: 'a non-GitHub source URL',
-      backlinks: [
-        {
-          sourceId: 'plan',
-          url: `https://example.com/acme/project/blob/${'1'.repeat(40)}/plan.md#L1`,
-        },
-      ],
-    },
-    {
-      name: 'an invalid line range',
-      backlinks: [
-        {
-          sourceId: 'plan',
-          url: `https://github.com/acme/project/blob/${'1'.repeat(40)}/plan.md#L19-L12`,
-        },
-      ],
-    },
-    {
-      name: 'a literal dot segment that normalizes to a moving ref',
-      backlinks: [
-        {
-          sourceId: 'plan',
-          url: `https://github.com/acme/project/blob/${'1'.repeat(40)}/../main/plan.md#L1`,
-        },
-      ],
-    },
-    {
-      name: 'an encoded dot segment that normalizes to a moving ref',
-      backlinks: [
-        {
-          sourceId: 'plan',
-          url: `https://github.com/acme/project/blob/${'1'.repeat(40)}/%2e%2e/main/plan.md#L1`,
-        },
-      ],
-    },
-    {
-      name: 'an empty path segment',
-      backlinks: [
-        {
-          sourceId: 'plan',
-          url: `https://github.com/acme/project/blob/${'1'.repeat(40)}/docs//plan.md#L1`,
-        },
-      ],
-    },
-    {
-      name: 'a decoded slash path segment',
-      backlinks: [
-        {
-          sourceId: 'plan',
-          url: `https://github.com/acme/project/blob/${'1'.repeat(40)}/docs/%2Fplan.md#L1`,
-        },
-      ],
-    },
-    {
-      name: 'noncanonical encoding of an unreserved character',
-      backlinks: [
-        {
-          sourceId: 'plan',
-          url: `https://github.com/acme/project/blob/${'1'.repeat(40)}/docs/%70lan.md#L1`,
-        },
-      ],
-    },
-  ])('rejects source backlinks with $name', async ({ backlinks }) => {
-    const repoRoot = await createRepoRoot();
-    const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
-    await mkdir(projectPath, { recursive: true });
-    const recap = await createRecapPackage(projectPath, {
-      sourceBacklinks: backlinks,
-    });
-
-    await expect(
-      verifySelectedProjectRecapForArchive(projectPath, recap.relativeRunPath),
-    ).rejects.toThrow(/manifest contract/i);
-  });
-
   it.each([
     {
       name: 'wrong schema version',
       mutate: (manifest: Record<string, unknown>) => {
-        manifest.schemaVersion = 'explainer-kit.manifest/v2';
+        manifest.schemaVersion = 'explainer-kit.manifest/v1';
       },
     },
     {
@@ -2450,44 +1802,38 @@ describe('archive utils', () => {
     await expect(access(projectPath)).resolves.toBeUndefined();
   });
 
-  it.each(['run-request.json', 'source/content-approval.json'])(
-    'rejects legacy recap manifests that omit immutable %s coverage',
-    async (relativePath) => {
-      const repoRoot = await createRepoRoot();
-      const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
-      await mkdir(projectPath, { recursive: true });
-      const recap = await createRecapPackage(projectPath);
-      const manifest = JSON.parse(
-        await readFile(recap.manifestPath, 'utf8'),
-      ) as {
-        immutableHashes: Record<string, string>;
-      };
-      delete manifest.immutableHashes[relativePath];
-      await writeFile(
-        recap.manifestPath,
-        `${JSON.stringify(manifest)}\n`,
-        'utf8',
-      );
+  it('rejects an extra archive file even when its immutable hash matches', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+    await mkdir(projectPath, { recursive: true });
+    const recap = await createRecapPackage(projectPath);
+    const bytes = Buffer.from('self-authorized archive file');
+    await writeFile(join(recap.runRoot, 'self-authorized.txt'), bytes);
+    const manifest = JSON.parse(await readFile(recap.manifestPath, 'utf8')) as {
+      immutableHashes: Record<string, string>;
+    };
+    manifest.immutableHashes['self-authorized.txt'] =
+      `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
+    await writeFile(
+      recap.manifestPath,
+      `${JSON.stringify(manifest, null, 2)}\n`,
+    );
 
-      await expect(
-        archiveProjectOnCompletion(
-          {
-            repoRoot,
-            projectPath,
-            projectName: 'demo',
-            projectsRoot: '.oat/projects/shared',
-            projectRecapRun: recap.relativeRunPath,
-            s3SyncOnComplete: false,
-          },
-          { timestamp: () => '2026-04-01T12:34:56Z' },
-        ),
-      ).rejects.toThrow(
-        new RegExp(`legacy.*${relativePath.replaceAll('.', '\\.')}`, 'i'),
-      );
-
-      await expect(access(projectPath)).resolves.toBeUndefined();
-    },
-  );
+    await expect(
+      archiveProjectOnCompletion(
+        {
+          repoRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          projectRecapRun: recap.relativeRunPath,
+          s3SyncOnComplete: false,
+        },
+        { timestamp: () => '2026-04-01T12:34:56Z' },
+      ),
+    ).rejects.toThrow(/package|inventory|immutable/i);
+    await expect(access(projectPath)).resolves.toBeUndefined();
+  });
 
   it('rolls back only its recap export when the later archive copy fails', async () => {
     const repoRoot = await createRepoRoot();
@@ -3929,43 +3275,3 @@ describe('archive utils', () => {
     }
   }, 20_000);
 });
-
-function hashContent(value: string | Buffer): string {
-  return `sha256:${createHash('sha256').update(value).digest('hex')}`;
-}
-
-async function relativeFilePaths(
-  root: string,
-  relativeRoot = '',
-): Promise<string[]> {
-  const entries = await readdir(join(root, relativeRoot), {
-    withFileTypes: true,
-  });
-  const files = await Promise.all(
-    entries.map(async (entry) => {
-      const relativePath = relativeRoot
-        ? `${relativeRoot}/${entry.name}`
-        : entry.name;
-      return entry.isDirectory()
-        ? relativeFilePaths(root, relativePath)
-        : [relativePath];
-    }),
-  );
-  return files.flat().sort();
-}
-
-function canonicalHash(value: unknown): string {
-  return hashContent(JSON.stringify(canonicalize(value)));
-}
-
-function canonicalize(value: unknown): unknown {
-  if (Array.isArray(value)) return value.map(canonicalize);
-  if (value && typeof value === 'object') {
-    return Object.fromEntries(
-      Object.entries(value)
-        .sort(([left], [right]) => left.localeCompare(right))
-        .map(([key, entry]) => [key, canonicalize(entry)]),
-    );
-  }
-  return value;
-}

@@ -1,5 +1,3 @@
-import { RECAP_PROBE_CODES, RECAP_SEAM_IDS } from './probe-recap-seams.mjs';
-
 const PRODUCTS = new Set(['projectExplainer', 'projectRecap']);
 const MODES = new Set(['interactive', 'autonomous']);
 const PREFERENCES = new Set(['always', 'ask', 'never']);
@@ -9,6 +7,7 @@ const SOURCES = new Set([
   'kickoff_prompt',
   'autonomous_policy',
   'capability_probe',
+  'failed_attempt',
 ]);
 const ALLOWED_PAIRS = Object.freeze({
   projectExplainer: new Set([
@@ -21,10 +20,18 @@ const ALLOWED_PAIRS = Object.freeze({
     'skip:interactive',
     'generate:autonomous_policy',
     'skip:capability_probe',
+    'skip:failed_attempt',
   ]),
 });
 const ISO_TIMESTAMP_PATTERN =
   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
+const INTENT_RECORD_KEYS = new Set([
+  'decision',
+  'source',
+  'decided_at',
+  'failed_attempt_evidence',
+]);
+const RUN_SLUG_PATTERN = /^[a-z0-9][a-z0-9._-]*$/;
 
 export function resolveIntent({
   product,
@@ -33,7 +40,6 @@ export function resolveIntent({
   preference,
   kickoffRequest = false,
   answer,
-  seamProbe,
   now = new Date().toISOString(),
 }) {
   assertProduct(product);
@@ -48,20 +54,6 @@ export function resolveIntent({
   if (typeof kickoffRequest !== 'boolean') {
     throw new TypeError('kickoffRequest must be a boolean.');
   }
-  if (seamProbe !== undefined) {
-    assertSeamProbe(seamProbe);
-    if (product !== 'projectRecap') {
-      throw new Error(
-        'Seam probe results apply only to projectRecap resolution.',
-      );
-    }
-    if (mode !== 'autonomous') {
-      throw new Error(
-        'Seam probe results apply only to autonomous projectRecap resolution.',
-      );
-    }
-  }
-
   if (mode === 'autonomous') {
     if (answer !== undefined) {
       throw new Error('Autonomous lifecycle intent cannot use an answer.');
@@ -71,7 +63,6 @@ export function resolveIntent({
       state,
       preference,
       kickoffRequest,
-      seamProbe,
       now,
     });
   }
@@ -130,12 +121,9 @@ export function validateIntentRecord(product, record) {
     throw new TypeError(`${product} intent must be a decision record.`);
   }
   const keys = Object.keys(record);
-  if (
-    keys.length !== 3 ||
-    keys.some((key) => !['decision', 'source', 'decided_at'].includes(key))
-  ) {
+  if (keys.some((key) => !INTENT_RECORD_KEYS.has(key))) {
     throw new Error(
-      `${product} intent must contain only decision, source, and decided_at.`,
+      `${product} intent contains an unsupported lifecycle decision field.`,
     );
   }
   if (!DECISIONS.has(record.decision)) {
@@ -150,7 +138,52 @@ export function validateIntentRecord(product, record) {
     );
   }
   assertTimestamp(record.decided_at);
+  const isFailedAttempt =
+    product === 'projectRecap' &&
+    record.decision === 'skip' &&
+    record.source === 'failed_attempt';
+  if (isFailedAttempt) {
+    validateFailedAttemptEvidenceLocator(record.failed_attempt_evidence);
+  } else if (Object.hasOwn(record, 'failed_attempt_evidence')) {
+    throw new Error(
+      'failed_attempt_evidence is allowed only for projectRecap skip/failed_attempt.',
+    );
+  }
   return record;
+}
+
+export function validateWritableIntentRecord(product, record) {
+  validateIntentRecord(product, record);
+  if (
+    product === 'projectRecap' &&
+    record.decision === 'skip' &&
+    record.source === 'capability_probe'
+  ) {
+    throw new Error(
+      'projectRecap skip/capability_probe is a read-only legacy intent.',
+    );
+  }
+  return record;
+}
+
+export function validateFailedAttemptEvidenceLocator(value) {
+  if (typeof value !== 'string') {
+    throw new Error(
+      'projectRecap skip/failed_attempt requires failed_attempt_evidence.',
+    );
+  }
+  const parts = value.split('/');
+  if (
+    parts.length !== 3 ||
+    parts[0] !== 'explainers' ||
+    !RUN_SLUG_PATTERN.test(parts[1]) ||
+    !['manifest.json', 'failure.json'].includes(parts[2])
+  ) {
+    throw new Error(
+      'failed_attempt_evidence must be explainers/<run-slug>/manifest.json or explainers/<run-slug>/failure.json.',
+    );
+  }
+  return value;
 }
 
 export function explainerModeForIntent(intent) {
@@ -172,30 +205,10 @@ function resolveAutonomous({
   state,
   preference,
   kickoffRequest,
-  seamProbe,
   now,
 }) {
   if (product === 'projectRecap') {
     const warnings = [];
-    if (seamProbe !== undefined && seamProbe.ok !== true) {
-      if (seamProbe.code !== 'seams-unavailable') {
-        const error = new Error(
-          `Project recap seams are configured but invalid, so the recap fails closed rather than resolving a capability skip: ${seamProbe.message ?? seamProbe.code}`,
-        );
-        error.code = 'E_RECAP_SEAMS_INVALID';
-        throw error;
-      }
-      warnings.push(
-        `Autonomous project recap skipped: no provider is configured for ${formatSeams(seamProbe.missing)}.`,
-      );
-      return result(
-        product,
-        'skip',
-        'capability_probe',
-        createRecord(product, 'skip', 'capability_probe', now),
-        warnings,
-      );
-    }
     if (state?.decision === 'skip') {
       warnings.push(
         'Autonomous project recap policy overrode a lower-precedence skip decision.',
@@ -228,7 +241,7 @@ function resolveAutonomous({
 
 function createRecord(product, decision, source, now) {
   const record = { decision, source, decided_at: now };
-  validateIntentRecord(product, record);
+  validateWritableIntentRecord(product, record);
   return record;
 }
 
@@ -247,85 +260,6 @@ function result(
     record,
     warnings,
   };
-}
-
-/**
- * A seam probe result is a decision input, so a malformed one must fail rather
- * than silently degrade into either a skip or a forced generate.
- */
-function assertSeamProbe(seamProbe) {
-  if (
-    !seamProbe ||
-    typeof seamProbe !== 'object' ||
-    Array.isArray(seamProbe) ||
-    typeof seamProbe.ok !== 'boolean' ||
-    !RECAP_PROBE_CODES.includes(seamProbe.code)
-  ) {
-    throw new TypeError(
-      'seamProbe must be a probeRecapSeams result with ok and a known code.',
-    );
-  }
-  // A recap that runs from this decision runs unattended, so an interactive
-  // probe is the wrong evidence: it checks only the author and critic and would
-  // report a host with no set planner as fully available.
-  if (seamProbe.mode !== 'unattended') {
-    throw new TypeError(
-      'seamProbe must come from an unattended probe of the recap seams.',
-    );
-  }
-  if (
-    !Array.isArray(seamProbe.missing) ||
-    !Array.isArray(seamProbe.invalid) ||
-    !Array.isArray(seamProbe.resolved)
-  ) {
-    throw new TypeError(
-      'seamProbe must partition the canonical recap seams into missing, invalid, and resolved.',
-    );
-  }
-  // Enforce the partition this message promises: every canonical seam appears
-  // in exactly one bucket. Without the disjointness and coverage checks, a
-  // forged result can claim a seam is both missing and resolved (yielding a
-  // capability skip the probe would never emit), or pad `resolved` with
-  // duplicates of one seam to fake full availability and force a generate.
-  const claimed = [
-    ...seamProbe.missing,
-    ...seamProbe.invalid.map((entry) => entry?.seam),
-    ...seamProbe.resolved,
-  ];
-  const distinct = new Set(claimed);
-  if (
-    distinct.size !== claimed.length ||
-    distinct.size !== RECAP_SEAM_IDS.length ||
-    !RECAP_SEAM_IDS.every((seam) => distinct.has(seam))
-  ) {
-    throw new TypeError(
-      'seamProbe must partition the canonical recap seams into missing, invalid, and resolved.',
-    );
-  }
-  // The result is a discriminated union, so each code must carry exactly the
-  // evidence it claims. A half-populated object must never reach the skip
-  // branch and forge a capability skip out of an invalid seam.
-  const consistent =
-    seamProbe.code === 'seams-ok'
-      ? seamProbe.ok === true &&
-        seamProbe.missing.length === 0 &&
-        seamProbe.invalid.length === 0 &&
-        seamProbe.resolved.length === RECAP_SEAM_IDS.length
-      : seamProbe.ok === false &&
-        (seamProbe.code === 'seams-unavailable'
-          ? seamProbe.missing.length > 0 && seamProbe.invalid.length === 0
-          : seamProbe.invalid.length > 0);
-  if (!consistent) {
-    throw new TypeError(
-      'An unsatisfied seamProbe must list the seams its code claims.',
-    );
-  }
-}
-
-function formatSeams(seams) {
-  if (!Array.isArray(seams) || seams.length === 0) return 'a required seam';
-  if (seams.length === 1) return seams[0];
-  return `${seams.slice(0, -1).join(', ')} and ${seams.at(-1)}`;
 }
 
 function assertProduct(product) {

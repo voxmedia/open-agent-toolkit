@@ -1493,7 +1493,7 @@ describe('resolveEffectiveConfig', () => {
     });
   });
 
-  it('exposes all explainer defaults and publish keys with source attribution', async () => {
+  it('exposes all explainer defaults with source attribution', async () => {
     const result = await resolveEffectiveConfig(
       '/repo',
       '/tmp/user',
@@ -1508,13 +1508,6 @@ describe('resolveEffectiveConfig', () => {
                 palette: 'ocean',
                 themeBundlePath: 'themes/shared.json',
               },
-              publish: {
-                provider: 's3-static',
-                s3Uri: 's3://bucket/explainers',
-                publicBaseUrl: 'https://docs.example.com/explainers',
-                awsRegion: 'us-east-1',
-                publicAccess: 'protected',
-              },
             },
           }) satisfies OatConfig,
         readOatLocalConfig: async () =>
@@ -1525,7 +1518,6 @@ describe('resolveEffectiveConfig', () => {
                 style: 'navy-ocean',
                 visualProfile: 'technical',
               },
-              publish: { awsProfile: 'local-sso' },
             },
             workflow: {
               explainers: { projectExplainer: 'always' },
@@ -1540,7 +1532,6 @@ describe('resolveEffectiveConfig', () => {
                 palette: 'violet',
                 visualProfile: 'editorial',
               },
-              publish: { awsProfile: 'user-sso' },
             },
             workflow: {
               explainers: {
@@ -1565,30 +1556,6 @@ describe('resolveEffectiveConfig', () => {
       'explainers.defaults.themeBundlePath': {
         value: 'themes/shared.json',
         source: 'shared',
-      },
-      'explainers.publish.provider': {
-        value: 's3-static',
-        source: 'shared',
-      },
-      'explainers.publish.s3Uri': {
-        value: 's3://bucket/explainers',
-        source: 'shared',
-      },
-      'explainers.publish.publicBaseUrl': {
-        value: 'https://docs.example.com/explainers',
-        source: 'shared',
-      },
-      'explainers.publish.awsRegion': {
-        value: 'us-east-1',
-        source: 'shared',
-      },
-      'explainers.publish.publicAccess': {
-        value: 'protected',
-        source: 'shared',
-      },
-      'explainers.publish.awsProfile': {
-        value: 'local-sso',
-        source: 'local',
       },
       'workflow.explainers.projectExplainer': {
         value: 'always',
@@ -1620,18 +1587,6 @@ describe('resolveEffectiveConfig', () => {
         value: null,
         source: 'default',
       },
-      'explainers.publish.provider': { value: null, source: 'default' },
-      'explainers.publish.s3Uri': { value: null, source: 'default' },
-      'explainers.publish.publicBaseUrl': {
-        value: null,
-        source: 'default',
-      },
-      'explainers.publish.awsRegion': { value: null, source: 'default' },
-      'explainers.publish.publicAccess': {
-        value: 'public',
-        source: 'default',
-      },
-      'explainers.publish.awsProfile': { value: null, source: 'default' },
       'workflow.explainers.projectExplainer': {
         value: 'ask',
         source: 'default',

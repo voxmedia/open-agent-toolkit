@@ -53,11 +53,6 @@ import {
 } from '@fs/io';
 
 import { loadExplainerPackageCoverage } from './explainer-package-coverage';
-import {
-  type ExplainerSourceBacklinks,
-  loadExplainerSourceBacklinks,
-} from './explainer-source-backlinks';
-import { loadExplainerTerminalEvidence } from './explainer-terminal-evidence';
 
 const execFileAsync = promisify(execFileCallback);
 
@@ -903,9 +898,11 @@ async function exportProjectSummary(
 }
 
 interface ProjectRecapManifest {
-  schemaVersion: 'explainer-kit.manifest/v1';
+  schemaVersion: 'explainer-kit.manifest/v2';
   runId: string;
   slug: string;
+  createdAt: string;
+  mode: 'interactive' | 'unattended';
   recipe: {
     id: string;
     version: string;
@@ -914,11 +911,6 @@ interface ProjectRecapManifest {
     factBasePath: string;
     factBaseHash: string;
     inputHashes: Record<string, string>;
-    authorResultPaths?: string[];
-    backlinks?: Array<{
-      sourceId: string;
-      url: string;
-    }>;
   };
   theme: {
     path: string;
@@ -926,32 +918,22 @@ interface ProjectRecapManifest {
   };
   artifacts: Array<{
     id: string;
+    type: 'hub' | 'diagram' | 'explainer' | 'deck' | 'catalog';
     contentPath: string;
-    renderedPath?: string;
-    status: 'built' | 'failed' | 'skipped';
-    hash?: string;
+    status: 'built' | 'failed';
+    hash: string;
   }>;
   immutableHashes: Record<string, string>;
-  outcome:
-    | 'built-durable'
-    | 'built-not-durable'
-    | 'built-needs-review'
-    | 'failed'
-    | 'incomplete';
+  outcome: 'built' | 'built-needs-review' | 'failed' | 'incomplete';
+  warnings: string[];
 }
 
 interface ExactRunPackageCoverage {
-  permissibleRunPackagePaths: (
-    manifest: ProjectRecapManifest,
-    options?: { includeTerminalEvidence?: boolean },
-  ) => string[];
+  permissibleRunPackagePaths: (manifest: ProjectRecapManifest) => string[];
   enforceRunPackageInventory: (
     runRoot: string,
     manifest: ProjectRecapManifest,
-    options?: {
-      includeTerminalEvidence?: boolean;
-      removeUnexpected?: boolean;
-    },
+    options?: { removeUnexpected?: boolean },
   ) => Promise<string[]>;
 }
 
@@ -965,8 +947,7 @@ async function parseProjectRecapManifest(
     throw new CliError('Selected project recap has an invalid manifest.json.');
   }
 
-  const sourceBacklinks = await loadExplainerSourceBacklinks();
-  if (!isProjectRecapManifestV1(value, sourceBacklinks)) {
+  if (!isProjectRecapManifestV2(value)) {
     throw new CliError(
       'Selected project recap manifest does not match the explainer-kit manifest contract.',
     );
@@ -975,9 +956,8 @@ async function parseProjectRecapManifest(
   return value;
 }
 
-function isProjectRecapManifestV1(
+function isProjectRecapManifestV2(
   value: unknown,
-  sourceBacklinks: ExplainerSourceBacklinks,
 ): value is ProjectRecapManifest &
   Record<string, unknown> & {
     source: ProjectRecapManifest['source'] & Record<string, unknown>;
@@ -985,68 +965,51 @@ function isProjectRecapManifestV1(
   } {
   if (
     !isRecord(value) ||
-    !hasExactKeys(
-      value,
-      [
-        'schemaVersion',
-        'runId',
-        'slug',
-        'recipe',
-        'createdAt',
-        'source',
-        'theme',
-        'artifacts',
-        'immutableHashes',
-        'outcome',
-        'buildRecord',
-        'warnings',
-      ],
-      ['publishReceipt'],
-    ) ||
-    value.schemaVersion !== 'explainer-kit.manifest/v1' ||
+    !hasExactKeys(value, [
+      'schemaVersion',
+      'runId',
+      'slug',
+      'recipe',
+      'createdAt',
+      'mode',
+      'source',
+      'theme',
+      'artifacts',
+      'immutableHashes',
+      'outcome',
+      'warnings',
+    ]) ||
+    value.schemaVersion !== 'explainer-kit.manifest/v2' ||
     !isNonEmptyString(value.runId) ||
     typeof value.slug !== 'string' ||
     !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value.slug) ||
     !isDateTime(value.createdAt) ||
+    !['interactive', 'unattended'].includes(String(value.mode)) ||
     !isRecord(value.recipe) ||
     !hasExactKeys(value.recipe, ['id', 'version']) ||
     !isNonEmptyString(value.recipe.id) ||
     !isNonEmptyString(value.recipe.version) ||
     !isRecord(value.source) ||
-    !hasExactKeys(
-      value.source,
-      ['factBasePath', 'factBaseHash', 'inputHashes'],
-      ['sourceRevision', 'authorResultPaths', 'backlinks'],
-    ) ||
+    !hasExactKeys(value.source, [
+      'factBasePath',
+      'factBaseHash',
+      'inputHashes',
+    ]) ||
     !isSafeRelativePath(value.source.factBasePath) ||
     !isSha256(value.source.factBaseHash) ||
     !isHashMap(value.source.inputHashes) ||
-    (value.source.authorResultPaths !== undefined &&
-      !isUniqueSafePathArray(value.source.authorResultPaths)) ||
-    (value.source.backlinks !== undefined &&
-      !isCanonicalSourceBacklinks(value.source.backlinks, sourceBacklinks)) ||
-    (value.source.sourceRevision !== undefined &&
-      !isNonEmptyString(value.source.sourceRevision)) ||
     !isRecord(value.theme) ||
-    !hasExactKeys(value.theme, ['path', 'hash', 'derived']) ||
+    !hasExactKeys(value.theme, ['path', 'hash']) ||
     value.theme.path !== 'theme.resolved.json' ||
     !isSha256(value.theme.hash) ||
-    typeof value.theme.derived !== 'boolean' ||
     !Array.isArray(value.artifacts) ||
     !value.artifacts.every(isManifestArtifact) ||
     new Set(value.artifacts.map((artifact) => JSON.stringify(artifact)))
       .size !== value.artifacts.length ||
     !isHashMap(value.immutableHashes) ||
-    ![
-      'built-durable',
-      'built-not-durable',
-      'built-needs-review',
-      'failed',
-      'incomplete',
-    ].includes(String(value.outcome)) ||
-    !isPathHashRecord(value.buildRecord, 'build-record.json') ||
-    (value.publishReceipt !== undefined &&
-      !isPathHashRecord(value.publishReceipt, 'publish-receipt.json')) ||
+    !['built', 'built-needs-review', 'failed', 'incomplete'].includes(
+      String(value.outcome),
+    ) ||
     !Array.isArray(value.warnings) ||
     !value.warnings.every(isNonEmptyString)
   ) {
@@ -1060,94 +1023,18 @@ function isManifestArtifact(
 ): value is ProjectRecapManifest['artifacts'][number] {
   if (
     !isRecord(value) ||
-    !hasExactKeys(
-      value,
-      ['id', 'type', 'contentPath', 'status', 'rebuildable'],
-      [
-        'renderedPath',
-        'mediaType',
-        'hash',
-        'rebuild',
-        'durableEvidence',
-        'failure',
-      ],
-    ) ||
+    !hasExactKeys(value, ['id', 'type', 'contentPath', 'hash', 'status']) ||
     !isNonEmptyString(value.id) ||
     !['hub', 'diagram', 'explainer', 'deck', 'catalog'].includes(
       String(value.type),
     ) ||
     !isSafeRelativePath(value.contentPath) ||
-    !['built', 'failed', 'skipped'].includes(String(value.status)) ||
-    typeof value.rebuildable !== 'boolean' ||
-    (value.renderedPath !== undefined &&
-      (!isSafeRelativePath(value.renderedPath) ||
-        !value.renderedPath.startsWith('site/'))) ||
-    (value.mediaType !== undefined && !isNonEmptyString(value.mediaType)) ||
-    (value.hash !== undefined && !isSha256(value.hash)) ||
-    (value.status === 'built' && !isSha256(value.hash)) ||
-    (value.rebuildable === true && !isRebuildRecord(value.rebuild)) ||
-    (value.rebuild !== undefined && !isRebuildRecord(value.rebuild)) ||
-    (value.durableEvidence !== undefined &&
-      (!Array.isArray(value.durableEvidence) ||
-        !value.durableEvidence.every(isDurableEvidence))) ||
-    (value.failure !== undefined && !isFailureRecord(value.failure))
+    !isSha256(value.hash) ||
+    !['built', 'failed'].includes(String(value.status))
   ) {
     return false;
   }
   return true;
-}
-
-function isRebuildRecord(value: unknown): boolean {
-  return (
-    isRecord(value) &&
-    hasExactKeys(value, ['argv', 'cwd', 'inputHashes']) &&
-    Array.isArray(value.argv) &&
-    value.argv.length > 0 &&
-    value.argv.every((argument) => typeof argument === 'string') &&
-    isNonEmptyString(value.cwd) &&
-    isHashMap(value.inputHashes)
-  );
-}
-
-function isDurableEvidence(value: unknown): boolean {
-  return (
-    isRecord(value) &&
-    hasExactKeys(
-      value,
-      ['kind', 'ref', 'paths', 'attestedAt'],
-      ['supersedes'],
-    ) &&
-    ['commit', 'publish'].includes(String(value.kind)) &&
-    isNonEmptyString(value.ref) &&
-    isUniqueSafePathArray(value.paths) &&
-    isDateTime(value.attestedAt) &&
-    (value.supersedes === undefined ||
-      (isRecord(value.supersedes) &&
-        hasExactKeys(value.supersedes, ['ref', 'paths']) &&
-        isNonEmptyString(value.supersedes.ref) &&
-        isUniqueSafePathArray(value.supersedes.paths)))
-  );
-}
-
-function isFailureRecord(value: unknown): boolean {
-  return (
-    isRecord(value) &&
-    hasExactKeys(value, ['code', 'message', 'recovery']) &&
-    isNonEmptyString(value.code) &&
-    isNonEmptyString(value.message) &&
-    Array.isArray(value.recovery) &&
-    value.recovery.length > 0 &&
-    value.recovery.every(isNonEmptyString)
-  );
-}
-
-function isPathHashRecord(value: unknown, expectedPath: string): boolean {
-  return (
-    isRecord(value) &&
-    hasExactKeys(value, ['path', 'hash']) &&
-    value.path === expectedPath &&
-    isSha256(value.hash)
-  );
 }
 
 function isHashMap(value: unknown): value is Record<string, string> {
@@ -1157,46 +1044,6 @@ function isHashMap(value: unknown): value is Record<string, string> {
       ([relativePath, hash]) =>
         isSafeRelativePath(relativePath) && isSha256(hash),
     )
-  );
-}
-
-function isCanonicalSourceBacklinks(
-  value: unknown,
-  sourceBacklinks: ExplainerSourceBacklinks,
-): value is NonNullable<ProjectRecapManifest['source']['backlinks']> {
-  if (!Array.isArray(value)) {
-    return false;
-  }
-  const identities = new Set<string>();
-  for (const backlink of value) {
-    if (
-      !isRecord(backlink) ||
-      !hasExactKeys(backlink, ['sourceId', 'url']) ||
-      !isNonEmptyString(backlink.sourceId) ||
-      typeof backlink.url !== 'string'
-    ) {
-      return false;
-    }
-    try {
-      sourceBacklinks.parseCanonicalGithubBlobUrl(backlink.url);
-    } catch {
-      return false;
-    }
-    const identity = `${backlink.sourceId}\0${backlink.url}`;
-    if (identities.has(identity)) {
-      return false;
-    }
-    identities.add(identity);
-  }
-  return true;
-}
-
-function isUniqueSafePathArray(value: unknown): boolean {
-  return (
-    Array.isArray(value) &&
-    value.length > 0 &&
-    value.every(isSafeRelativePath) &&
-    new Set(value).size === value.length
   );
 }
 
@@ -1339,55 +1186,6 @@ async function verifyProjectRecapImmutableHashes(
   return entries.length;
 }
 
-async function readVerifiedRunMode(
-  runRoot: string,
-): Promise<'interactive' | 'unattended'> {
-  let request: unknown;
-  try {
-    request = JSON.parse(
-      await readFile(join(runRoot, 'run-request.json'), 'utf8'),
-    );
-  } catch {
-    throw new CliError(
-      'Hash-verified project recap run-request.json must contain valid JSON.',
-    );
-  }
-  if (
-    !isRecord(request) ||
-    (request.mode !== 'interactive' && request.mode !== 'unattended')
-  ) {
-    throw new CliError(
-      'Hash-verified project recap run-request.json must declare interactive or unattended mode.',
-    );
-  }
-  return request.mode;
-}
-
-async function verifyProjectRecapTerminalEvidence(
-  runRoot: string,
-  manifest: ProjectRecapManifest,
-  expected?: { bytes: Uint8Array; hash: string },
-): Promise<{ bytes: Buffer; hash: string } | null> {
-  if (!['built-needs-review', 'failed'].includes(manifest.outcome)) {
-    return null;
-  }
-  try {
-    const terminalEvidence = await loadExplainerTerminalEvidence();
-    const verified = await terminalEvidence.readTerminalEvidenceFile(runRoot, {
-      manifest,
-      ...(expected && {
-        expectedBytes: expected.bytes,
-        expectedHash: expected.hash,
-      }),
-    });
-    return { bytes: verified.bytes, hash: verified.hash };
-  } catch {
-    throw new CliError(
-      'Selected project recap requires valid confined terminal evidence before archival.',
-    );
-  }
-}
-
 async function loadVerifiedProjectRecap(
   projectPath: string,
   projectRecapRun: string,
@@ -1396,7 +1194,6 @@ async function loadVerifiedProjectRecap(
   manifestContents: string;
   manifest: ProjectRecapManifest;
   verifiedArtifactCount: number;
-  terminalEvidence: { bytes: Buffer; hash: string } | null;
   packagePaths: string[];
 }> {
   const sourceRunRoot = await resolveSelectedProjectRecapRun(
@@ -1413,65 +1210,47 @@ async function loadVerifiedProjectRecap(
       'Selected project recap manifest recipe must be exactly `project-recap`.',
     );
   }
+  if (
+    !['built', 'built-needs-review'].includes(manifest.outcome) ||
+    manifest.artifacts.some((artifact) => artifact.status !== 'built')
+  ) {
+    throw new CliError(
+      'Selected project recap must have a satisfied outcome and built artifacts.',
+    );
+  }
   const verifiedArtifactCount = await verifyProjectRecapImmutableHashes(
     sourceRunRoot,
     manifest,
   );
-  const runMode = await readVerifiedRunMode(sourceRunRoot);
   const packageCoverage = await loadExplainerPackageCoverage();
   const missingCoverage = packageCoverage
-    .requiredImmutablePackagePaths(manifest, { runMode })
+    .requiredImmutablePackagePaths(manifest)
     .filter((relativePath) => !(relativePath in manifest.immutableHashes));
-  const missingLegacyCoverage = missingCoverage.filter((relativePath) =>
-    ['run-request.json', 'source/content-approval.json'].includes(relativePath),
-  );
-  if (missingLegacyCoverage.length > 0) {
-    throw new CliError(
-      `Selected project recap uses a legacy manifest missing immutable coverage for ${missingLegacyCoverage.join(', ')}; regenerate the recap package before archival.`,
-    );
-  }
-  if (
-    missingCoverage.some(
-      (relativePath) =>
-        relativePath.startsWith('qa/browser/') ||
-        relativePath.startsWith('qa/visual-review/'),
-    )
-  ) {
-    throw new CliError(
-      'Selected project recap manifest has an incomplete visual-review evidence chain.',
-    );
-  }
   if (missingCoverage.length > 0) {
     throw new CliError(
       `Selected project recap manifest immutable hashes do not cover the complete v2 package: ${missingCoverage.join(', ')}.`,
     );
   }
   try {
-    await packageCoverage.validateImmutablePackageEvidence(manifest, {
-      runMode,
-      read: (relativePath) => readFile(join(sourceRunRoot, relativePath)),
-    });
+    await packageCoverage.validateImmutablePackageEvidence(manifest);
   } catch (error) {
     throw new CliError(
-      `Selected project recap browser evidence contract is invalid: ${error instanceof Error ? error.message : String(error)}`,
+      `Selected project recap package evidence contract is invalid: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
   if (
+    manifest.source.factBaseHash !==
+      manifest.immutableHashes[manifest.source.factBasePath] ||
+    manifest.theme.hash !== manifest.immutableHashes[manifest.theme.path] ||
     manifest.artifacts.some(
       (artifact) =>
-        artifact.status === 'built' &&
-        typeof artifact.renderedPath === 'string' &&
-        artifact.hash !== manifest.immutableHashes[artifact.renderedPath],
+        artifact.hash !== manifest.immutableHashes[artifact.contentPath],
     )
   ) {
     throw new CliError(
       'Selected project recap artifact hashes do not match the immutable package.',
     );
   }
-  const terminalEvidence = await verifyProjectRecapTerminalEvidence(
-    sourceRunRoot,
-    manifest,
-  );
   const exactCoverage = packageCoverage as typeof packageCoverage &
     ExactRunPackageCoverage;
   if (
@@ -1483,9 +1262,7 @@ async function loadVerifiedProjectRecap(
     );
   }
   try {
-    await exactCoverage.enforceRunPackageInventory(sourceRunRoot, manifest, {
-      includeTerminalEvidence: terminalEvidence !== null,
-    });
+    await exactCoverage.enforceRunPackageInventory(sourceRunRoot, manifest);
   } catch {
     throw new CliError('Selected project recap package inventory is invalid.');
   }
@@ -1494,10 +1271,7 @@ async function loadVerifiedProjectRecap(
     manifestContents,
     manifest,
     verifiedArtifactCount,
-    terminalEvidence,
-    packagePaths: exactCoverage.permissibleRunPackagePaths(manifest, {
-      includeTerminalEvidence: terminalEvidence !== null,
-    }),
+    packagePaths: exactCoverage.permissibleRunPackagePaths(manifest),
   };
 }
 
@@ -1525,7 +1299,6 @@ async function exportSelectedProjectRecap(
   const {
     sourceRunRoot,
     manifestContents: sourceManifestContents,
-    terminalEvidence: sourceTerminalEvidence,
     packagePaths,
   } = verified;
 
@@ -1561,11 +1334,6 @@ async function exportSelectedProjectRecap(
       exportRoot,
       exportedManifest,
     );
-    await verifyProjectRecapTerminalEvidence(
-      exportRoot,
-      exportedManifest,
-      sourceTerminalEvidence ?? undefined,
-    );
     const exactCoverage = (await loadExplainerPackageCoverage()) as Awaited<
       ReturnType<typeof loadExplainerPackageCoverage>
     > &
@@ -1574,7 +1342,6 @@ async function exportSelectedProjectRecap(
       await exactCoverage.enforceRunPackageInventory(
         exportRoot,
         exportedManifest,
-        { includeTerminalEvidence: sourceTerminalEvidence !== null },
       );
     } catch {
       throw new CliError(
@@ -1625,11 +1392,6 @@ async function exportSelectedProjectRecap(
       temporaryRoot,
       stagedManifest,
     );
-    const stagedTerminalEvidence = await verifyProjectRecapTerminalEvidence(
-      temporaryRoot,
-      stagedManifest,
-      sourceTerminalEvidence ?? undefined,
-    );
     const exactCoverage = (await loadExplainerPackageCoverage()) as Awaited<
       ReturnType<typeof loadExplainerPackageCoverage>
     > &
@@ -1638,9 +1400,6 @@ async function exportSelectedProjectRecap(
       await exactCoverage.enforceRunPackageInventory(
         temporaryRoot,
         stagedManifest,
-        {
-          includeTerminalEvidence: stagedTerminalEvidence !== null,
-        },
       );
     } catch {
       throw new CliError('Staged project recap package inventory is invalid.');

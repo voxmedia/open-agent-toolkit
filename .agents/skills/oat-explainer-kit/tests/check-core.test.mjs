@@ -7,13 +7,10 @@ import { afterEach, test } from 'node:test';
 import {
   CORE_INSTALL_COMMAND,
   CORE_UPDATE_COMMAND,
+  MINIMUM_CORE_VERSION,
   checkCoreCompatibility,
   readFrontmatterVersion,
 } from '../scripts/check-core.mjs';
-import {
-  MINIMUM_CORE_VERSION,
-  supportsAdaptiveSetPlanning,
-} from '../scripts/run.mjs';
 
 const tempDirs = [];
 
@@ -66,11 +63,11 @@ test('accepts a compatible installed canonical core', async () => {
   );
 });
 
-test('adapter requires the core release that supports publish request v2', async () => {
-  assert.equal(MINIMUM_CORE_VERSION, '2.1.0');
+test('adapter requires the core release with the replacement flow', async () => {
+  assert.equal(MINIMUM_CORE_VERSION, '3.0.0');
   for (const [version, ok] of [
-    ['2.0.3', false],
-    ['2.1.0', true],
+    ['2.1.1', false],
+    ['3.0.0', true],
   ]) {
     const { adapterRoot, skillsRoot } = await createInstalledLayout(version);
     const result = await checkCoreCompatibility({
@@ -79,7 +76,6 @@ test('adapter requires the core release that supports publish request v2', async
       minimumVersion: MINIMUM_CORE_VERSION,
     });
     assert.equal(result.ok, ok, version);
-    assert.equal(supportsAdaptiveSetPlanning(version), ok, version);
   }
 });
 

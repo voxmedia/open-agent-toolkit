@@ -90,21 +90,8 @@ export interface OatExplainerDefaultsConfig {
   themeBundlePath?: string;
 }
 
-export type OatExplainerPublishProvider = 's3-static';
-export type OatExplainerPublicAccess = 'public' | 'protected';
-
-export interface OatExplainerPublishConfig {
-  provider?: OatExplainerPublishProvider;
-  s3Uri?: string;
-  publicBaseUrl?: string;
-  awsRegion?: string;
-  publicAccess?: OatExplainerPublicAccess;
-  awsProfile?: string;
-}
-
 export interface OatExplainersConfig {
   defaults?: OatExplainerDefaultsConfig;
-  publish?: OatExplainerPublishConfig;
 }
 
 export type WorkflowHillCheckpointDefault = 'every' | 'final';
@@ -614,44 +601,6 @@ function normalizeExplainersConfig(
     }
     if (Object.keys(defaults).length > 0) {
       next.defaults = defaults;
-    }
-  }
-
-  if (isRecord(parsed.publish)) {
-    const publish: OatExplainerPublishConfig = {};
-    if (scope === 'shared') {
-      if (parsed.publish.provider === 's3-static') {
-        publish.provider = 's3-static';
-      }
-      const s3Uri = trimNonEmptyString(parsed.publish.s3Uri);
-      if (s3Uri !== undefined && /^s3:\/\/[^/\s]+(?:\/.*)?$/.test(s3Uri)) {
-        publish.s3Uri = s3Uri.replace(/\/+$/, '');
-      }
-      const publicBaseUrl = trimNonEmptyString(parsed.publish.publicBaseUrl);
-      if (
-        publicBaseUrl !== undefined &&
-        /^https:\/\/[^/\s]+(?:\/.*)?$/.test(publicBaseUrl)
-      ) {
-        publish.publicBaseUrl = publicBaseUrl.replace(/\/+$/, '');
-      }
-      const awsRegion = trimNonEmptyString(parsed.publish.awsRegion);
-      if (awsRegion !== undefined) {
-        publish.awsRegion = awsRegion;
-      }
-      if (
-        parsed.publish.publicAccess === 'public' ||
-        parsed.publish.publicAccess === 'protected'
-      ) {
-        publish.publicAccess = parsed.publish.publicAccess;
-      }
-    } else {
-      const awsProfile = trimNonEmptyString(parsed.publish.awsProfile);
-      if (awsProfile !== undefined) {
-        publish.awsProfile = awsProfile;
-      }
-    }
-    if (Object.keys(publish).length > 0) {
-      next.publish = publish;
     }
   }
 

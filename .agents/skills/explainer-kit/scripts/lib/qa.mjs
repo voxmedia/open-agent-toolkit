@@ -1,12 +1,5 @@
-import { readFile, stat } from 'node:fs/promises';
-import { join } from 'node:path';
-
-import { assertBrowserProbeSession } from './browser-runtime.mjs';
-import { writeJsonAtomic } from './fs-safe.mjs';
 import { findUnpinnedResourceRefs } from './html-safety.mjs';
 import { decodeBrowserPng } from './png.mjs';
-import { recipeFloor, recipeRequiredNarrative } from './recipes.mjs';
-import { cohesionEvidenceFromLedger } from './visual-review.mjs';
 
 const VOID_ELEMENTS = new Set([
   'area',
@@ -28,145 +21,8 @@ const INLINE_ASSET_VIOLATION_PATTERN =
   /<link\b|@import\b|url\(\s*["']?(?!data:|#)/i;
 const TOKEN_PATTERN = /{{\s*[A-Z][A-Z0-9_]*\s*}}/g;
 const ARROW_KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
-const MAX_SCREENSHOT_BYTES = 20 * 1024 * 1024;
-const INLINE_DIAGRAM_PATTERN =
-  /<svg\b(?=[^>]*(?:\bclass\s*=\s*["'][^"']*\bdiagram\b|\baria-label\s*=\s*["'][^"']*(?:architecture|diagram)))[^>]*>/i;
-const STRUCTURED_BLOCK_PATTERNS = [
-  /<table\b/i,
-  /<(?:ul|ol)\b/i,
-  /<aside\b[^>]*\bclass\s*=\s*["'][^"']*\bcallout\b/i,
-  /<blockquote\b/i,
-  /<figure\b/i,
-];
 
 export const REPRESENTATIVE_WIDTHS = Object.freeze([320, 768, 1440]);
-export const GUIDELINE_WARNING_IDS = Object.freeze({
-  narrativeCoverage: 'guideline-narrative-coverage-missing',
-  architectureDiagram: 'guideline-architecture-diagram-missing',
-  structuredDepth: 'guideline-structured-depth-missing',
-  expansionProfileLimit: 'expansion-profile-limit-exceeded',
-  expansionArtifactLimit: 'expansion-artifact-limit-exceeded',
-  expansionTypeLimit: 'expansion-type-limit-exceeded',
-});
-const EXPANSION_WARNING_BY_REJECTION_REASON = new Map([
-  ['profile-limit', GUIDELINE_WARNING_IDS.expansionProfileLimit],
-  ['recipe-limit', GUIDELINE_WARNING_IDS.expansionArtifactLimit],
-  ['type-limit', GUIDELINE_WARNING_IDS.expansionTypeLimit],
-]);
-export const RENDER_WARNING_IDS = Object.freeze({
-  unsupportedDiagram: 'render-unsupported-diagram',
-  headingDepthJump: 'render-heading-depth-jump',
-  timelineEntryShape: 'render-timeline-entry-shape',
-  legacyRawHtmlEscaped: 'render-legacy-raw-html-escaped',
-});
-export const RENDER_QA_WARNING_IDS = Object.freeze({
-  documentOverflow: 'render-qa-document-overflow',
-  innerContainerOverflow: 'render-qa-inner-container-overflow',
-  viewportClipping: 'render-qa-viewport-clipping',
-  headingReadability: 'render-qa-heading-unreadable',
-  animationsEnabled: 'render-qa-animations-enabled',
-  reducedMotion: 'render-qa-reduced-motion',
-  keyboardNavigation: 'render-qa-keyboard-navigation',
-  themeToggle: 'render-qa-theme-toggle',
-  deckNoJsLayout: 'render-qa-deck-no-js-layout',
-  deckPrintLayout: 'render-qa-deck-print-layout',
-  skippedNoProbe: 'render-qa-skipped-no-probe',
-});
-const RENDER_QA_WARNING_BY_CODE = new Map([
-  ['viewport-overflow', RENDER_QA_WARNING_IDS.documentOverflow],
-  ['inner-x-overflow', RENDER_QA_WARNING_IDS.innerContainerOverflow],
-  ['viewport-clipping', RENDER_QA_WARNING_IDS.viewportClipping],
-  ['heading-readability', RENDER_QA_WARNING_IDS.headingReadability],
-  ['animations-enabled', RENDER_QA_WARNING_IDS.animationsEnabled],
-  ['reduced-motion', RENDER_QA_WARNING_IDS.reducedMotion],
-  ['keyboard-navigation', RENDER_QA_WARNING_IDS.keyboardNavigation],
-  ['theme-toggle', RENDER_QA_WARNING_IDS.themeToggle],
-  ['deck-no-js-layout', RENDER_QA_WARNING_IDS.deckNoJsLayout],
-  ['deck-print-layout', RENDER_QA_WARNING_IDS.deckPrintLayout],
-]);
-
-export function renderQaWarningIds(issues) {
-  if (!Array.isArray(issues)) {
-    throw new TypeError('Render QA issues must be an array.');
-  }
-  return [
-    ...new Set(
-      issues
-        .map(({ code }) => RENDER_QA_WARNING_BY_CODE.get(code))
-        .filter(Boolean),
-    ),
-  ];
-}
-
-// Degradation findings are prefixed rather than looked up so a newly added
-// render warning code surfaces instead of being silently dropped.
-export function renderWarningIds(warnings) {
-  if (!Array.isArray(warnings)) {
-    throw new TypeError('Render warnings must be an array.');
-  }
-  if (warnings.some(({ code } = {}) => typeof code !== 'string' || !code)) {
-    throw new TypeError('Every render warning requires a string code.');
-  }
-  return [...new Set(warnings.map(({ code }) => `render-${code}`))];
-}
-
-export function checkGuidelines({ recipe, artifacts, expansion } = {}) {
-  if (!Array.isArray(artifacts)) {
-    throw new TypeError('Guideline checker artifacts must be an array.');
-  }
-  if (
-    artifacts.some(
-      (artifact) =>
-        !isPlainObject(artifact) ||
-        typeof artifactId(artifact) !== 'string' ||
-        typeof artifact.type !== 'string' ||
-        typeof artifact.html !== 'string',
-    )
-  ) {
-    throw new TypeError(
-      'Guideline checker artifacts require id, type, and HTML.',
-    );
-  }
-
-  const floor = recipeFloor(recipe);
-  const builtById = new Map(
-    artifacts.map((artifact) => [artifactId(artifact), artifact]),
-  );
-  const narrativeFloor = floor.filter(
-    (artifact) => recipeRequiredNarrative(recipe, artifact.id).length > 0,
-  );
-  const warnings = new Set();
-
-  const missesNarrative = narrativeFloor.some((floorArtifact) => {
-    const built = builtById.get(floorArtifact.id);
-    const required = recipeRequiredNarrative(recipe, floorArtifact.id);
-    return (
-      !built ||
-      required.some((sectionId) => !hasElementId(built.html, sectionId))
-    );
-  });
-  if (missesNarrative) {
-    warnings.add(GUIDELINE_WARNING_IDS.narrativeCoverage);
-  }
-
-  const hasDiagram =
-    artifacts.some(({ type }) => type === 'diagram') ||
-    artifacts.some(({ html }) => INLINE_DIAGRAM_PATTERN.test(html));
-  if (!hasDiagram) {
-    warnings.add(GUIDELINE_WARNING_IDS.architectureDiagram);
-  }
-
-  const hasStructuredDepth = narrativeFloor.some((floorArtifact) => {
-    const html = builtById.get(floorArtifact.id)?.html ?? '';
-    return STRUCTURED_BLOCK_PATTERNS.some((pattern) => pattern.test(html));
-  });
-  if (narrativeFloor.length > 0 && !hasStructuredDepth) {
-    warnings.add(GUIDELINE_WARNING_IDS.structuredDepth);
-  }
-
-  addExpansionWarnings(warnings, expansion);
-  return { valid: true, warnings: [...warnings] };
-}
 
 export function checkSourceDumping({
   authoredText,
@@ -243,10 +99,6 @@ export const BROWSER_PROBE_EVALUATE = `(() => {
       scrollWidth: element.scrollWidth
     }))
     .slice(0, 20);
-  // Ancestry inside a horizontal scroller is not reachability: scrollLeft only
-  // ranges over 0..scrollWidth-clientWidth, so content sitting at a negative
-  // content offset or past the scrollable extent can never be scrolled into
-  // view and stays a genuine clipping defect.
   const TOLERANCE = 2;
   const scrollReachable = (element) => {
     const rect = element.getBoundingClientRect();
@@ -279,9 +131,6 @@ export const BROWSER_PROBE_EVALUATE = `(() => {
       };
     })
     .slice(0, 20);
-  // A heading in a collapsed panel or an aria-hidden subtree is deliberately
-  // not presented, so it is out of scope rather than unreadable. Visually
-  // hidden accessibility text still renders a box and stays in scope.
   const presented = (element) => {
     const rendered = typeof element.checkVisibility === 'function'
       ? element.checkVisibility({
@@ -306,13 +155,6 @@ export const BROWSER_PROBE_EVALUATE = `(() => {
       fontSize: Number.parseFloat(getComputedStyle(heading).fontSize)
     }))
     .slice(0, 20);
-  // Reduced-motion styling conventionally collapses transitions to a token
-  // 0.01ms rather than 0s so transitionend still fires. That is suppressed
-  // motion, not active motion, so anything under a millisecond counts as
-  // disabled while a perceptible duration still reports.
-  // Motion is just as visible on a generated ::before/::after box as on the
-  // element itself, so all three are inspected. A pseudo-element that
-  // generates no content cannot animate and is skipped.
   const PERCEPTIBLE_SECONDS = 0.001;
   const motionless = (element, pseudo) => {
     const style = getComputedStyle(element, pseudo);
@@ -372,13 +214,9 @@ export function checkHtmlStructure({
 
   for (const denied of denylist.filter(Boolean)) {
     if (html.toLocaleLowerCase().includes(denied.toLocaleLowerCase())) {
-      add(
-        'denylisted-string',
-        'Artifact contains a configured denylisted string.',
-        {
-          value: denied,
-        },
-      );
+      add('denylisted-string', 'Artifact contains a denylisted string.', {
+        value: denied,
+      });
     }
   }
 
@@ -394,7 +232,6 @@ export function checkHtmlStructure({
   for (const imbalance of findTagImbalances(html)) {
     add('tag-balance', imbalance);
   }
-
   checkHeadings(html, add);
   checkLinks(html, add);
 
@@ -419,7 +256,7 @@ export function checkHtmlStructure({
     if (missing.length > 0) {
       add(
         'deck-keyboard',
-        'Deck keyboard navigation must support both horizontal and vertical arrow pairs.',
+        'Deck keyboard navigation must support both arrow pairs.',
         { missing },
       );
     }
@@ -436,23 +273,25 @@ export function checkArtifactCohesion(artifacts, { ledger = null } = {}) {
   const groups = ['terminology', 'numericClaims', 'statuses'];
   const expected = ledger
     ? {
-        terminology: new Map(
-          (ledger.terminology ?? []).map(({ term }) => [term, term]),
-        ),
-        numericClaims: new Map(
-          (ledger.numbers ?? []).map(({ subject, value }) => [subject, value]),
-        ),
-        statuses: new Map(
-          (ledger.statuses ?? []).map(({ subject, value }) => [subject, value]),
-        ),
+        terminology: (ledger.terminology ?? []).map(({ term }) => ({
+          claim: term,
+          value: term,
+        })),
+        numericClaims: (ledger.numbers ?? []).map(({ subject, value }) => ({
+          claim: subject,
+          value,
+        })),
+        statuses: (ledger.statuses ?? []).map(({ subject, value }) => ({
+          claim: subject,
+          value,
+        })),
       }
     : null;
 
-  if (expected && groups.some((group) => expected[group].size === 0)) {
+  if (expected && groups.every((group) => expected[group].length === 0)) {
     issues.push({
       code: 'cohesion-ledger-empty',
-      message:
-        'Adaptive recap cohesion requires non-empty terminology, numeric, and status ledger entries.',
+      message: 'Cohesion requires at least one ledger entry.',
     });
   }
 
@@ -466,34 +305,26 @@ export function checkArtifactCohesion(artifacts, { ledger = null } = {}) {
         );
       }
       for (const [claim, value] of Object.entries(values)) {
-        const normalized = normalizeClaim(value);
-        const prior = claims.get(claim);
-        if (!prior) {
-          claims.set(claim, {
-            normalized,
-            value,
-            artifactId: artifact.id,
-          });
-        } else if (prior.normalized !== normalized) {
-          issues.push({
-            code: `cohesion-${group}`,
-            message: `Artifact set disagrees on ${group}.${claim}.`,
-            claim,
-            values: [
-              { artifactId: prior.artifactId, value: prior.value },
-              { artifactId: artifact.id, value },
-            ],
-          });
-        }
+        addObservedValues(claims, issues, group, claim, value, artifact.id);
+      }
+      if (group === 'terminology') continue;
+      for (const entry of artifact?.cohesion?.claims ?? []) {
+        if (!claimKindMatchesGroup(entry?.kind, group)) continue;
+        if (typeof entry?.subject !== 'string') continue;
+        addObservedValues(
+          claims,
+          issues,
+          group,
+          entry.subject,
+          entry.value,
+          artifact.id,
+        );
       }
     }
     if (expected) {
-      for (const [claim, expectedValue] of expected[group]) {
+      for (const { claim, value: expectedValue } of expected[group]) {
         const observed = claims.get(claim);
-        if (
-          !observed ||
-          observed.normalized !== normalizeClaim(expectedValue)
-        ) {
+        if (!observed?.normalized.has(normalizeClaim(expectedValue))) {
           issues.push({
             code: 'cohesion-claim-unobserved',
             message: `Rendered artifacts do not observably support ${group}.${claim}.`,
@@ -527,32 +358,14 @@ export function checkArtifactCohesion(artifacts, { ledger = null } = {}) {
 export async function runBrowserProbes({
   artifacts,
   probe,
-  browserSession,
   widths = REPRESENTATIVE_WIDTHS,
-  evidenceRoot,
-  requireEvidence = false,
   onProbeResult,
 }) {
   if (!Array.isArray(artifacts) || artifacts.length === 0) {
     throw new TypeError('Browser QA requires at least one artifact.');
   }
-  if (browserSession !== undefined && probe !== undefined) {
-    throw new TypeError(
-      'Browser QA accepts either a trusted browser session or a bare non-retaining probe, not both.',
-    );
-  }
-  const session =
-    browserSession === undefined
-      ? null
-      : assertBrowserProbeSession(browserSession, { allowFixture: true });
-  const resolvedProbe = session?.probe ?? probe;
-  if (typeof resolvedProbe !== 'function') {
+  if (typeof probe !== 'function') {
     throw new TypeError('Browser QA requires a probe callback.');
-  }
-  if (evidenceRoot && !session) {
-    throw new TypeError(
-      'A trusted browser session is required for retained evidence.',
-    );
   }
   if (onProbeResult !== undefined && typeof onProbeResult !== 'function') {
     throw new TypeError('Browser QA probe observer must be a callback.');
@@ -566,21 +379,10 @@ export async function runBrowserProbes({
   }
 
   const issues = [];
-  const evidence = [];
   let probes = 0;
   for (const artifact of artifacts) {
-    const evidenceId = browserEvidenceId(artifact.id);
     for (const width of widths) {
       for (const scenario of browserScenarios(artifact)) {
-        const viewport = viewportName(width);
-        const screenshotPath =
-          evidenceRoot && scenario === 'default'
-            ? `qa/browser/${evidenceId}/${viewport}.png`
-            : undefined;
-        const metricsPath =
-          evidenceRoot && scenario === 'default'
-            ? `qa/browser/${evidenceId}/${viewport}.json`
-            : undefined;
         const request = {
           artifact,
           scenario,
@@ -594,9 +396,6 @@ export async function runBrowserProbes({
             artifact.type === 'deck' && scenario === 'default'
               ? { tab: true, arrows: [...ARROW_KEYS] }
               : { tab: true },
-          ...(screenshotPath && {
-            screenshotPath: join(evidenceRoot, screenshotPath),
-          }),
           ...(scenario === 'no-js' && { javascriptEnabled: false }),
           ...(scenario === 'print' && { media: 'print' }),
           ...(artifact.type === 'deck' &&
@@ -617,62 +416,22 @@ export async function runBrowserProbes({
               },
             }),
         };
-        let result;
-        try {
-          result = await resolvedProbe(request);
-        } catch (cause) {
-          const error = new Error(
-            `Browser evidence callback failed: ${cause?.message ?? String(cause)}`,
-            { cause },
-          );
-          error.code = 'E_VISUAL_REVIEW';
-          throw error;
-        }
+        const result = await probe(request);
         probes += 1;
         validateProbeResult(result, artifact.id, width, request);
         if (onProbeResult) {
-          try {
-            await onProbeResult(
-              structuredClone({
-                artifactId: artifact.id,
-                artifactType: artifact.type,
-                scenario,
-                viewport: request.viewport,
-                result,
-              }),
-            );
-          } catch (cause) {
-            const error = new Error(
-              `Browser evidence observer failed: ${cause?.message ?? String(cause)}`,
-              { cause },
-            );
-            error.code = 'E_VISUAL_REVIEW';
-            throw error;
-          }
+          await onProbeResult(
+            structuredClone({
+              artifactId: artifact.id,
+              artifactType: artifact.type,
+              scenario,
+              viewport: request.viewport,
+              result,
+            }),
+          );
         }
 
         const context = { artifactId: artifact.id, width, scenario };
-        if (screenshotPath && metricsPath) {
-          const retained = await retainBrowserEvidence({
-            evidenceRoot,
-            artifactId: artifact.id,
-            viewport,
-            viewportSize: request.viewport,
-            screenshotPath,
-            metricsPath,
-            result,
-            browserSession: session,
-          });
-          if (retained.valid) {
-            evidence.push(retained.evidence);
-          } else if (requireEvidence) {
-            issues.push({
-              ...context,
-              code: 'browser-evidence-missing',
-              message: retained.message,
-            });
-          }
-        }
         if (result.pageOverflowX) {
           issues.push({
             ...context,
@@ -742,8 +501,7 @@ export async function runBrowserProbes({
           issues.push({
             ...context,
             code: 'theme-toggle',
-            message:
-              'Switchable theme control must operate by keyboard and persist the alternate mode.',
+            message: 'Switchable theme control did not pass.',
           });
         }
         if (
@@ -754,8 +512,7 @@ export async function runBrowserProbes({
           issues.push({
             ...context,
             code: 'deck-no-js-layout',
-            message:
-              'No-JS deck must use vertical flow with x-axis auto containment.',
+            message: 'No-JS deck layout did not pass.',
           });
         }
         if (
@@ -766,175 +523,23 @@ export async function runBrowserProbes({
           issues.push({
             ...context,
             code: 'deck-print-layout',
-            message: 'Print deck must use its separate vertical print cascade.',
+            message: 'Print deck layout did not pass.',
           });
         }
       }
     }
   }
 
-  return {
-    valid: issues.length === 0,
-    issues,
-    probes,
-    ...(evidenceRoot && { evidence }),
-  };
-}
-
-export async function auditArtifactSet({
-  artifacts,
-  denylist = [],
-  browserProbe,
-  browserSession,
-  widths,
-  evidenceRoot,
-  requireBrowserEvidence = false,
-  onProbeResult,
-  setPlan,
-}) {
-  if (!Array.isArray(artifacts) || artifacts.length === 0) {
-    throw new TypeError('Render QA requires at least one artifact.');
-  }
-
-  const artifactsWithCohesion = cohesionEvidenceFromLedger(artifacts, setPlan);
-  const structural = artifactsWithCohesion.map((artifact) => ({
-    id: artifact.id,
-    ...checkHtmlStructure({ ...artifact, denylist }),
-  }));
-  const cohesion = checkArtifactCohesion(artifactsWithCohesion, {
-    ...(setPlan?.recipe?.id === 'project-recap' &&
-      Object.values(setPlan.ledger ?? {}).some(
-        (entries) => Array.isArray(entries) && entries.length > 0,
-      ) && {
-        ledger: setPlan.ledger,
-      }),
-  });
-  const browserProvider = browserSession ?? browserProbe;
-  const browser = browserProvider
-    ? await runBrowserProbes({
-        artifacts,
-        ...(browserSession ? { browserSession } : { probe: browserProbe }),
-        ...(widths && { widths }),
-        ...(evidenceRoot && { evidenceRoot }),
-        ...(requireBrowserEvidence && { requireEvidence: true }),
-        ...(onProbeResult !== undefined && { onProbeResult }),
-      })
-    : null;
-  const issues = [
-    ...structural.flatMap((artifact) => artifact.issues),
-    ...cohesion.issues,
-    ...(browser?.issues ?? []),
-  ];
-
-  return {
-    valid: issues.length === 0,
-    issues,
-    artifacts: structural,
-    cohesion,
-    browser,
-  };
-}
-
-async function retainBrowserEvidence({
-  evidenceRoot,
-  artifactId: artifactIdentifier,
-  viewport,
-  viewportSize,
-  screenshotPath,
-  metricsPath,
-  result,
-  browserSession,
-}) {
-  let screenshot;
-  try {
-    screenshot = await stat(join(evidenceRoot, screenshotPath));
-  } catch {
-    return {
-      valid: false,
-      message: `Browser screenshot evidence is missing for ${artifactIdentifier} at ${viewportSize.width}px.`,
-    };
-  }
-  if (
-    !screenshot.isFile() ||
-    screenshot.size === 0 ||
-    screenshot.size > MAX_SCREENSHOT_BYTES
-  ) {
-    return {
-      valid: false,
-      message: `Browser screenshot evidence for ${artifactIdentifier} at ${viewportSize.width}px is empty or exceeds ${MAX_SCREENSHOT_BYTES} bytes.`,
-    };
-  }
-  const screenshotBytes = await readFile(join(evidenceRoot, screenshotPath));
-  const decoded = decodedPng(screenshotBytes);
-  if (
-    !decoded ||
-    decoded.width !== viewportSize.width ||
-    decoded.height !== viewportSize.height
-  ) {
-    return {
-      valid: false,
-      message: `Browser screenshot evidence for ${artifactIdentifier} at ${viewportSize.width}px must be a viewport-matched PNG.`,
-    };
-  }
-  await writeJsonAtomic(evidenceRoot, metricsPath, {
-    schemaVersion: 'explainer-kit.browser-evidence/v2',
-    artifactId: artifactIdentifier,
-    viewport,
-    viewportSize,
-    scenario: 'default',
-    runtime: structuredClone(browserSession.runtime),
-    capture: structuredClone(browserSession.capture),
-    captureIdentity: browserSession.captureIdentity,
-    screenshotPath,
-    metrics: structuredClone(result),
-  });
-  return {
-    valid: true,
-    evidence: {
-      artifactId: artifactIdentifier,
-      viewport,
-      width: viewportSize.width,
-      height: viewportSize.height,
-      screenshotPath,
-      decodedScreenshotHash: decoded.decodedHash,
-      metricsPath,
-      runtime: structuredClone(browserSession.runtime),
-      captureIdentity: browserSession.captureIdentity,
-    },
-  };
+  return { valid: issues.length === 0, issues, probes };
 }
 
 export function pngDimensions(bytes) {
-  const decoded = decodedPng(bytes);
-  return decoded ? { width: decoded.width, height: decoded.height } : null;
-}
-
-function decodedPng(bytes) {
   try {
-    return decodeBrowserPng(bytes);
+    const decoded = decodeBrowserPng(bytes);
+    return { width: decoded.width, height: decoded.height };
   } catch {
     return null;
   }
-}
-
-function browserEvidenceId(value) {
-  if (
-    typeof value !== 'string' ||
-    !/^[a-z0-9]+(?:[._-][a-z0-9]+)*$/.test(value)
-  ) {
-    throw new TypeError('Browser evidence requires a safe artifact id.');
-  }
-  return value;
-}
-
-function viewportName(width) {
-  return (
-    {
-      320: 'mobile',
-      768: 'tablet',
-      1440: 'desktop',
-    }[width] ?? `viewport-${width}`
-  );
 }
 
 function checkHeadings(html, add) {
@@ -944,7 +549,6 @@ function checkHeadings(html, add) {
     level: Number(match[1]),
     text: visibleText(match[2]),
   }));
-
   if (
     headings.length === 0 ||
     headings.filter(({ level }) => level === 1).length > 1
@@ -1016,9 +620,7 @@ function findTagImbalances(html) {
       );
     }
   }
-  for (const tag of stack.reverse()) {
-    issues.push(`Tag <${tag}> is not closed.`);
-  }
+  for (const tag of stack.reverse()) issues.push(`Tag <${tag}> is not closed.`);
   return issues;
 }
 
@@ -1029,10 +631,47 @@ function visibleText(value) {
     .trim();
 }
 
+function addObservedValues(claims, issues, group, claim, value, artifactId) {
+  const items = Array.isArray(value) ? value : [value];
+  for (const item of items) {
+    const normalized = normalizeClaim(item);
+    const prior = claims.get(claim);
+    if (!prior) {
+      claims.set(claim, {
+        normalized: new Set([normalized]),
+        value: item,
+        artifactId,
+      });
+      continue;
+    }
+    if (group === 'terminology' && !prior.normalized.has(normalized)) {
+      issues.push({
+        code: `cohesion-${group}`,
+        message: `Artifact set disagrees on ${group}.${claim}.`,
+        claim,
+        values: [
+          { artifactId: prior.artifactId, value: prior.value },
+          { artifactId, value: item },
+        ],
+      });
+    }
+    prior.normalized.add(normalized);
+  }
+}
+
+function claimKindMatchesGroup(kind, group) {
+  if (group === 'statuses') return kind === 'status';
+  return kind === 'number' || kind === 'date';
+}
+
 function normalizeClaim(value) {
   if (typeof value === 'number') return `number:${value}`;
   if (typeof value === 'string') {
-    const compact = value.trim().replace(/\s+/g, ' ').toLocaleLowerCase();
+    const compact = value
+      .trim()
+      .replace(/\s+/g, ' ')
+      .replaceAll(',', '')
+      .toLocaleLowerCase();
     if (/^[+-]?(?:\d+\.?\d*|\.\d+)$/.test(compact)) {
       return `number:${Number(compact)}`;
     }
@@ -1095,43 +734,6 @@ function representativeHeight(width) {
   if (width <= 480) return 640;
   if (width <= 900) return 1024;
   return 900;
-}
-
-function artifactId(artifact) {
-  return artifact?.id ?? artifact?.artifactId;
-}
-
-function hasElementId(html, id) {
-  const escaped = id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  return new RegExp(`\\bid\\s*=\\s*["']${escaped}["']`, 'i').test(html);
-}
-
-function addExpansionWarnings(warnings, expansion) {
-  if (expansion === undefined) return;
-  if (
-    !isPlainObject(expansion) ||
-    !Array.isArray(expansion.errors) ||
-    !Array.isArray(expansion.rejected) ||
-    !Array.isArray(expansion.warnings)
-  ) {
-    throw new TypeError(
-      'Guideline checker expansion must be an evaluated proposal result.',
-    );
-  }
-  if (expansion.valid !== true || expansion.errors.length > 0) {
-    throw new TypeError(
-      'Guideline checker cannot convert expansion proposal errors into warnings.',
-    );
-  }
-
-  const knownWarnings = new Set(EXPANSION_WARNING_BY_REJECTION_REASON.values());
-  for (const warning of expansion.warnings) {
-    if (knownWarnings.has(warning)) warnings.add(warning);
-  }
-  for (const rejected of expansion.rejected) {
-    const warning = EXPANSION_WARNING_BY_REJECTION_REASON.get(rejected?.reason);
-    if (warning) warnings.add(warning);
-  }
 }
 
 function isPlainObject(value) {

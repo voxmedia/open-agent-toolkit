@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "explainer-kit.manifest/v2",
+  "runId": "run-p01-t06-fixture",
+  "slug": "fixture-recap",
+  "recipe": {
+    "id": "project-recap",
+    "version": "2"
+  },
+  "createdAt": "2026-09-11T03:45:00.000Z",
+  "mode": "unattended",
+  "source": {
+    "factBasePath": "source/fact-base.json",
+    "factBaseHash": "sha256:3ab3f85979c42a9f85f9d57871d5cc116f1826aa5a74906cfd8c0bf5866efb69",
+    "inputHashes": {
+      "implementation.md": "sha256:7cae3a8e1c1c24e07ed22ecf9f48cf1fa473def61ef16e89101f46ddf05fc246",
+      "orchestration-log.md": "sha256:a5295057df463bcb04bd21a9f13d6ac7a3c4dcbba0ebc011336368dfab5ce480",
+      "plan.md": "sha256:d750277c6635106a8b2b856163d2d32686363fc0a3ac8380fe5ddf1d7fc9d2a1",
+      "project-log.md": "sha256:bbff4d63b334b19c2c9dfc129d571326e4c3d5fcaa89d9b6030ed53957c7ddea",
+      "summary.md": "sha256:88281114e8057ec4feb189e4df6a6664962eae52fd22f9d8fa381525588ef7af"
+    }
+  },
+  "theme": {
+    "path": "theme.resolved.json",
+    "hash": "sha256:0cc7f3d5efe5a725ba2b06fc026e7e11fb117d5ef51157204403428f322d282c"
+  },
+  "artifacts": [
+    {
+      "id": "project-recap",
+      "type": "hub",
+      "contentPath": "site/index.html",
+      "hash": "sha256:84c9a4f32907614a3b7c6c47941ec2d95d63ddfd2a35922216a07168d3bd6187",
+      "status": "built"
+    }
+  ],
+  "immutableHashes": {
+    "qa/result.json": "sha256:e6984860fad740ada11767ce903cbd4f0ce5bb9037f326afff4f2437b9f3c825",
+    "site/index.html": "sha256:84c9a4f32907614a3b7c6c47941ec2d95d63ddfd2a35922216a07168d3bd6187",
+    "source/fact-base.json": "sha256:3ab3f85979c42a9f85f9d57871d5cc116f1826aa5a74906cfd8c0bf5866efb69",
+    "source/fact-base.md": "sha256:3b9c0082174595f6db7d7f1a35933e2739492a5b34742642b9835db74ac77389",
+    "source/ledger.json": "sha256:a4c72dd4b7d027b4edff907ab13336d338f309988c3cc0b8dcf928c170edc5d7",
+    "theme.resolved.json": "sha256:0cc7f3d5efe5a725ba2b06fc026e7e11fb117d5ef51157204403428f322d282c"
+  },
+  "outcome": "built-needs-review",
+  "warnings": ["record-needs-review:fixture-browser-not-run"]
+}

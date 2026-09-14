@@ -1,7 +1,7 @@
 # Lifecycle intent contract
 
-The OAT adapter resolves `projectExplainer` and `projectRecap` intent without
-reading or mutating project files. Lifecycle callers pass explicit inputs to
+The OAT adapter resolves `projectExplainer` and `projectRecap` intent before it
+prepares a bundle. Lifecycle callers pass explicit inputs to
 `resolveIntent(...)` and persist only the returned `record`, when present.
 
 ## Resolution
@@ -19,40 +19,20 @@ now })` is pure. Its result contains the effective `decision`, the
 warnings.
 
 In autonomous mode, `projectRecap` resolves to `generate` with source
-`autonomous_policy` on any host whose recap seams resolve. A lower-precedence
-skip or `never` preference is overridden and reported as a warning. Autonomous
-`projectExplainer` resolves to `generate` only when the kickoff prompt
-explicitly requested it; otherwise it resolves to `skip` without writing an
-invalid prompt-source skip record.
+`autonomous_policy`. Autonomous `projectExplainer` resolves to `generate` only
+when the kickoff prompt explicitly requested it; otherwise it resolves to
+`skip` without writing an invalid prompt-source record.
 
-Autonomous `projectRecap` resolution accepts an optional `seamProbe`, the
-result of `scripts/probe-recap-seams.mjs#probeRecapSeams`. It is a pre-flight
-capability input, never a post-hoc reaction to a failed run:
-
-- `ok: true` leaves resolution unchanged, so a configured host still forces
-  `generate / autonomous_policy`.
-- `seams-unavailable` — no callback and no module path is supplied for a seam
-  this mode requires — resolves `skip` with source `capability_probe` and a
-  warning naming the unavailable seams.
-- `seams-invalid` — a seam is supplied but violates a resolution rule — throws
-  `E_RECAP_SEAMS_INVALID` and fails closed exactly as the runtime would. A
-  configured-but-invalid seam is a configuration error, never a capability
-  skip.
-
-A seam probe is scoped to autonomous `projectRecap`; supplying one for
-`projectExplainer` or for interactive resolution is an error. A recap that
-fails after a passing probe stays `failed` and is never reinterpreted as a
-skip.
-
-In interactive mode, an existing valid project record prevents another prompt.
+In interactive mode, a valid project record prevents another prompt.
 Preferences `always` and `never` resolve directly but are not copied into
-project state: doing so would freeze a workflow preference snapshot.
-An unresolved `ask` prompts once. Either answer produces an `interactive`
-record, so a decision made at any lifecycle gate can be persisted and reused.
+project state. An unresolved `ask` prompts once. Either answer produces an
+`interactive` record that later lifecycle gates reuse.
 
 ## State records
 
-Records use the Phase 1 state contract:
+Records normally retain the three-field state contract. The sole extension is
+`projectRecap` `skip/failed_attempt`, which requires one project-relative
+`failed_attempt_evidence` locator:
 
 ```yaml
 oat_project_explainer:
@@ -60,29 +40,34 @@ oat_project_explainer:
   source: kickoff_prompt
   decided_at: '2026-07-18T02:30:00Z'
 oat_project_recap:
-  decision: generate
-  source: autonomous_policy
+  decision: skip
+  source: failed_attempt
   decided_at: '2026-07-18T02:30:00Z'
+  failed_attempt_evidence: explainers/failed-run/failure.json
 ```
 
 Allowed decision/source pairs are:
 
-| Product            | Allowed pairs                                                                                     |
-| ------------------ | ------------------------------------------------------------------------------------------------- |
-| `projectExplainer` | `generate/interactive`, `skip/interactive`, `generate/kickoff_prompt`                             |
-| `projectRecap`     | `generate/interactive`, `skip/interactive`, `generate/autonomous_policy`, `skip/capability_probe` |
+| Product            | Allowed pairs                                                                                                            |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| `projectExplainer` | `generate/interactive`, `skip/interactive`, `generate/kickoff_prompt`                                                    |
+| `projectRecap`     | `generate/interactive`, `skip/interactive`, `generate/autonomous_policy`, `skip/failed_attempt`, `skip/capability_probe` |
 
-In particular, `skip/autonomous_policy` is invalid: an autonomous skip is
-recordable only as the probe-driven `skip/capability_probe`, and that pair is
-product-scoped to `projectRecap`. `generate/capability_probe` is invalid too,
-because a probe can only withhold a run, never authorize one.
+`skip/capability_probe` is a read-only legacy pair. Readers continue to accept
+an already persisted record, but lifecycle callers must not write a new one.
+After an actual failed generation, persist `skip/failed_attempt` only when the
+terminal guard can read either a failed or incomplete `manifest.json` or the
+flow's `failure.json`. Store that proof only as
+`explainers/<run-slug>/manifest.json` or
+`explainers/<run-slug>/failure.json`; no other decision/source pair may carry
+the field.
 
-The pair is product-scoped but not mode-scoped, and that is deliberate. Only
-autonomous resolution can _produce_ a `skip/capability_probe`, but once one is
-persisted a later interactive resolution reads it back as a valid recorded
-decision and honors it, exactly as it honors `skip/interactive`. A resumed
-project therefore neither re-prompts nor fails validation on a legitimately
-recorded capability skip.
+The pair is product-scoped but not mode-scoped. A resumed completion honors any
+valid persisted skip without prompting, bundling, or authoring again. The
+deployed consumer resolves only an explicitly persisted failed-attempt locator,
+requires its canonical real path to remain inside the declared project run,
+requires a regular file, and validates it through the terminal guard's own
+failed-attempt contract. It never enumerates explainer runs for a skip.
 
 ## Safe persistence
 
@@ -97,191 +82,54 @@ that content hash with the chosen record. Persistence:
   frontmatter fields and the Markdown body; and
 - writes a same-directory temporary file and atomically renames it.
 
-On a stale-write conflict, the caller must re-read state, resolve precedence
-again, and decide whether a write is still required. It must not retry the old
-record blindly.
+On a stale-write conflict, re-read state and resolve precedence again. Do not
+retry the old record blindly.
 
-## Author execution
+## Generate and consume
 
-Every adapter run in both interactive and unattended modes must provide exactly
-one provider-neutral author seam. In-process callers pass `author`; JSON-only
-and official CLI callers put `authorModulePath` in the adapter context, naming
-a module whose `author` export is a function. Missing module files, invalid
-exports, and direct-plus-module conflicts fail at the adapter boundary. See
-`author-callback.md` for brief, fact-base, shell, theme, result, and expansion
-handling.
+After a `generate` decision, follow `oat-explainer-kit` § Generate:
 
-The resolved callback is passed only as the `author` option to
-`core.runExplainer`. It is never copied into `ExplainerRunRequestV1`,
-`run-request.json`, or another retained data contract. Interactive runs use the
-same author contract and differ only at the later approval gate.
+1. verify the installed core;
+2. resolve the approved input set, theme defaults, and output root;
+3. run `bundle.mjs`;
+4. let the host agent author `site/index.html` from the recipe brief and
+   `references/recap-authoring.md`;
+5. run `verify.mjs` at the highest available browser rung; and
+6. run `record.mjs`.
 
-## Repository invocation sources
+Read the terminal outcome from `manifest.json` and the rung and reason from
+`qa/result.json`. The vocabulary is:
 
-A repository invocation must provide `suppliedFactBasePath`. The adapter binds
-that validated fact-base input with provenance from the exact reviewed
-repository revision returned by `resolveReviewedRepository`; it never resolves
-or reads an active project for this invocation. Missing supplied input fails
-closed before core invocation with an actionable requirement.
+- `built`: generation is satisfied;
+- `built-needs-review`: generation is satisfied and the artifact needs a
+  human look;
+- `failed`: generation is not satisfied; show the sanitized cause and require
+  retry or skip; and
+- `incomplete`: generation is not satisfied; require retry or skip.
 
-Repository runs write beneath `.oat/repo/reference/explainers/<run-slug>/` and
-use repository-level publish roots unchanged. Project invocations retain their
-approved lifecycle-artifact binding and project-local output behavior.
+If the flow stops before recording, read `failure.json` instead. A completion
+resume must re-read the persisted intent before inspecting or creating a run.
+A persisted skip suppresses bundle and authoring work and reaches
+`check-terminal-outcome.mjs` with its recorded source as `--skip-reason`.
 
-When publish durability is explicitly selected, the adapter constructs the
-core `explainer-kit.publish-request/v2` with the per-invocation derived `s3Uri`,
-`publicBaseUrl`, and source-aware `publicAccess`. New adapter runs emit this v2
-shape atomically; the request carries no project/repository topology fields and
-no credential material. The human-gated publisher returns a complete
-`explainer-kit.publish-receipt/v2`, which the core validates against the
-finalized manifest and generated catalog before the adapter forwards the
-publication summary without destination reinterpretation. The immutable
-`publish-request/v1` and `publish-receipt/v1` contracts remain supported only
-for replay; v2 does not mutate either v1 contract in place. Configuration never
-bypasses the human publication gate.
+Project-recap lifecycle calls use `mode: unattended` and never prompt during
+generation. Project-explainer failures are reported with the run path and do not
+roll back an approved plan.
 
-The adapter forwards the immutable `explainer-kit.publish-summary/v2` lifecycle
-handoff without destination reinterpretation. Every v2 artifact entry retains
-its source identity, rendered path, S3 URI, canonical public URL, content hash,
-object verification, and public verification evidence. A
-`publish-receipt/v1` replay instead yields the reduced immutable
-`explainer-kit.publish-summary/v1` shape, whose artifact entries retain only
-the relative path and public URL. Neither summary contract is mutated in place.
+## Output roots and archive handoff
 
-## Browser and visual-review execution
+- Active project runs write below
+  `<resolved-project-path>/explainers/<slug>/`.
+- Program runs write below
+  `.oat/repo/reference/explainers/<slug>/`.
+- Direct core callers provide an explicit parent output root.
 
-Lifecycle callers probe seam availability before attempting an unattended
-`project-recap`. `scripts/probe-recap-seams.mjs#probeRecapSeams({ mode, ...
-seams })` is pure: it applies the same resolution and exclusivity rules this
-adapter applies at run time, but never imports a module, calls a callback,
-validates a session brand, or touches the filesystem. Unattended runs require
-all five seams — author, fact critic, browser session, visual critic, and set
-planner — and interactive runs require the author and fact critic. A probe that
-checks only four of the five passes on a host with no set planner and the
-adapter still throws `E_SET_PLANNER_REQUIRED`, so the planner is probed with
-the rest.
+At project completion, pass only a selected satisfied `project-recap` run to
+`oat project archive --project-recap-run`. Consume
+`projectRecapExport.sourceRunRoot`, `projectRecapExport.exportRoot`, and
+`projectRecapExport.manifest.relativePath` from the archive JSON response. Do
+not infer the dated export path. The archive export is the durable copy.
 
-The probe classifies each seam as resolved, `missing`, or `invalid` and never
-conflates them. Only `missing` may become a recorded skip. Requirements below
-are unchanged for every run that is actually attempted: the probe gates whether
-a run is attempted, and never weakens the evidence a run that happens must
-produce.
-
-Every unattended `project-recap` must provide exactly one browser-evidence
-session and exactly one whole-set visual critic through the adapter's
-first-class boundary. In-process callers pass `browserSession`, created by the
-compatible core's `createBrowserProbeSession()`, and `visualCritic`. JSON-only
-and official CLI callers pass `browserSessionModulePath` and
-`visualCriticModulePath`, naming modules whose matching exports are
-`browserSession` and `visualCritic`. Direct-plus-module conflicts, invalid
-exports, bare `browserProbe` inputs, and the legacy
-`coreOptions.browserProbe`, `coreOptions.browserSession`, or
-`coreOptions.visualCritic` routes fail before core invocation.
-
-The author, fact critic, branded session probe, and visual critic must have
-distinct callback identities. The adapter asks the loaded core to validate the
-session's private brand and launched-Chromium runtime before passing it to
-`core.runExplainer`. Executable callbacks, descriptors, and module paths never
-enter the retained run request. Deterministic fixture sessions are rejected for
-unattended project recaps. See `visual-review-callback.md` for the session,
-request/result, and byte-bound whole-set review contracts.
-
-The core retains canonical 320, 768, and 1440 viewport screenshots, paired
-`explainer-kit.browser-evidence/v2` metrics with launched Chromium name,
-version, and capture identity, each review request and closed local evidence
-projection, cohesion
-observations, and any one-pass revision record. Missing, malformed, forged,
-cross-record mismatched, stale, or failed review-chain evidence terminates as
-`built-needs-review`; durability and publication remain blocked.
-The review chain performs at most one correction and one final review. It never
-starts a second rebuild to chase visual perfection.
-
-## Tracked-run finalization
-
-`planTrackedRunFinalization(request, context)` is the shared command planner for
-tracked project explainer and recap runs. The request contains `runRoot`,
-`manifestPath`, `commitMode`, and optional `relocatedFrom`. Context supplies the
-repository root, project name, an explicit compatible `coreRoot`, and, for
-`completion-bookkeeping`, the existing full artifact commit SHA. Finalization
-dynamically loads the versioned package-coverage contract from that core root;
-it does not maintain an adapter-local path list.
-
-A core `built-needs-review` or `failed` outcome is terminal evidence, not a
-non-durable success. Provider review and diagnostic prose exists only during
-the in-memory correction attempt. Retained review attempts use the closed
-`visual-review-evidence/v1` projection bound to the adjacent request hash and
-attempt directory. The core retains `terminal-evidence.json` with run identity,
-the manifest hash when available, bounded `stage`/`kind` reason tuples, and the
-evidence disposition. The planner verifies that binding and returns complete
-without artifact, attestation, evidence-commit, or push commands. This preserves
-the handoff without promoting it to durable or publishable success.
-
-The returned stages must run in order:
-
-1. In `dedicated` mode, commit exactly the manifest-declared immutable package
-   with `docs(oat): persist <recipe> for <project>`. In
-   `completion-bookkeeping` mode, reuse the caller's existing lifecycle commit.
-2. Replace `$ARTIFACT_COMMIT` with the created full SHA when present, then pass
-   the planned durability request to the compatible core's
-   `recordDurability(...)`. The core verifies commit blobs and updates records;
-   it never invokes Git or creates commits.
-3. Commit only `manifest.json` and `build-record.json` as the evidence update.
-4. Call `verifyTrackedRunFinalization(...)`, then push once so the artifact and
-   evidence commits travel together.
-
-Artifact evidence contains retained fact-base, content, theme, and rendered
-paths. It always excludes mutable `manifest.json` and `build-record.json`.
-Generated Git commands use explicit pathspecs and `commit --only`; callers must
-also snapshot unrelated working-tree changes before execution and supply the
-before/after lists to the verifier. A mismatch prevents pushing.
-
-An evidence-verification failure is a successful finalizer termination with
-run outcome `built-not-durable`: commit the warning-bearing mutable records and
-push them with the artifact commit. It does not block project completion. A
-later attempt reuses the same artifact commit, supplies the current HEAD as
-`currentHead`, invokes core verification again, and appends a new evidence
-commit. If the manifest already contains matching durable commit evidence, the
-planner returns `complete` with no commands, making repeat termination
-idempotent.
-
-For archive relocation, `relocatedFrom` identifies the prior active run for
-caller reporting. The current run's immutable paths and the export bookkeeping
-commit are submitted to the core; core evidence supersession remains the
-authoritative relocation record.
-
-## Completion-time archive relocation
-
-Completion consumes the machine-readable `oat project archive --json` report.
-When a recap was selected, `projectRecapExport.sourceRunRoot`,
-`projectRecapExport.exportRoot`, and
-`projectRecapExport.manifest.relativePath` identify the relocation. The caller
-must not predict the dated export path or substitute the gitignored local
-archive.
-
-Archive completion is exactly two commits: the lifecycle bookkeeping commit, then the exported recap evidence commit. The bookkeeping commit contains the
-tracked export and active-tree deletion and is passed to the finalizer as the
-existing artifact commit in `completion-bookkeeping` mode. The finalizer
-attests only immutable package paths under the reported export root. The
-second commit contains only the updated exported `manifest.json` and
-`build-record.json`; one push follows both commits.
-
-The exported-path evidence supersedes the selected run's prior active-path evidence. Mutable records are never part of their own commit evidence, and no
-path under `.oat/projects/archived/` is evidence.
-
-Failure to verify the exported commit evidence is non-blocking. The tracked
-export remains committed, the mutable records retain the warning and
-`built-not-durable` outcome, and the evidence-record commit and push still
-complete. A later attestation may recover durability without repeating the
-archive.
-
-This recovery path applies only to `built-not-durable`.
-`built-needs-review` and `failed` packages may be exported so their compact
-terminal evidence survives project deletion, but they cannot be attested into
-`built-durable`, pushed by the finalizer, or published. Flagged, failed,
-superseded, and `built-not-durable` runs are never publishable. Only a
-review-clean `built-durable` run may cross the explicit human publication gate.
-
-Post-archive summary and PR recap links target `projectRecapExport.exportRoot`
-under `.oat/repo/reference/project-recaps/` on the current head branch. The
-tracked summary export and the PR body may carry that link; the gitignored
-archive never does.
+Project-explainer runs remain active-project working artifacts and are never
+exported as completion reference products. Local-scope projects do not export a
+tracked recap or pass `--project-recap-run`.

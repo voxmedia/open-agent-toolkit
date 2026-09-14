@@ -1,0 +1,135 @@
+{
+  "terminology": [
+    {
+      "term": "Alpha migration"
+    },
+    {
+      "term": "p01"
+    },
+    {
+      "term": "p02"
+    },
+    {
+      "term": "W1"
+    },
+    {
+      "term": "W2"
+    }
+  ],
+  "numbers": [
+    {
+      "subject": "Alpha migration",
+      "value": "2026-09-09"
+    },
+    {
+      "subject": "Alpha migration",
+      "value": "17"
+    },
+    {
+      "subject": "W1",
+      "value": "2026-09-08"
+    },
+    {
+      "subject": "W2",
+      "value": "2026-09-09"
+    }
+  ],
+  "statuses": [
+    {
+      "subject": "Alpha migration",
+      "value": "merged"
+    },
+    {
+      "subject": "p01",
+      "value": "complete"
+    },
+    {
+      "subject": "p01",
+      "value": "deferred"
+    },
+    {
+      "subject": "W1",
+      "value": "merged"
+    },
+    {
+      "subject": "W2",
+      "value": "parked"
+    },
+    {
+      "subject": "p01-t01",
+      "value": "complete"
+    },
+    {
+      "subject": "p01-t02",
+      "value": "complete"
+    }
+  ],
+  "claims": [
+    {
+      "subject": "Alpha migration",
+      "value": "2026-09-09",
+      "kind": "date",
+      "claimId": "claim-b0b2df3c2a4d111d"
+    },
+    {
+      "subject": "Alpha migration",
+      "value": "17",
+      "kind": "number",
+      "claimId": "claim-b0b2df3c2a4d111d"
+    },
+    {
+      "subject": "Alpha migration",
+      "value": "merged",
+      "kind": "status",
+      "claimId": "claim-b0b2df3c2a4d111d"
+    },
+    {
+      "subject": "p01",
+      "value": "complete",
+      "kind": "status",
+      "claimId": "claim-1688f67f665fc380"
+    },
+    {
+      "subject": "p01",
+      "value": "deferred",
+      "kind": "status",
+      "claimId": "claim-1688f67f665fc380"
+    },
+    {
+      "subject": "W1",
+      "value": "2026-09-08",
+      "kind": "date",
+      "claimId": "claim-4a83af3bfdcfcc46"
+    },
+    {
+      "subject": "W1",
+      "value": "merged",
+      "kind": "status",
+      "claimId": "claim-4a83af3bfdcfcc46"
+    },
+    {
+      "subject": "W2",
+      "value": "2026-09-09",
+      "kind": "date",
+      "claimId": "claim-232d193e68636336"
+    },
+    {
+      "subject": "W2",
+      "value": "parked",
+      "kind": "status",
+      "claimId": "claim-232d193e68636336"
+    },
+    {
+      "subject": "p01-t01",
+      "value": "complete",
+      "kind": "status",
+      "claimId": "claim-14c317661ac8572b"
+    },
+    {
+      "subject": "p01-t02",
+      "value": "complete",
+      "kind": "status",
+      "claimId": "claim-cd6d292633a76b5f"
+    }
+  ]
+}

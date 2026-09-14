@@ -22,8 +22,14 @@ export type Lifecycle = 'active' | 'paused' | 'complete';
 
 export interface ExplainerDecisionV1 {
   decision: 'generate' | 'skip';
-  source: 'interactive' | 'kickoff_prompt' | 'autonomous_policy';
+  source:
+    | 'interactive'
+    | 'kickoff_prompt'
+    | 'autonomous_policy'
+    | 'capability_probe'
+    | 'failed_attempt';
   decided_at: string;
+  failed_attempt_evidence?: string;
 }
 
 export type ArtifactType =

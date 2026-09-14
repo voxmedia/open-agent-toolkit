@@ -141,8 +141,6 @@ export function parseCompletionRetryFields(input) {
 
   requireExactKeys(value, [
     'candidate',
-    'evidenceCommit',
-    'evidencePushRequired',
     'localCommit',
     'nextStep',
     'prArtifactPath',
@@ -177,16 +175,6 @@ export function parseCompletionRetryFields(input) {
       'Recovered completion retry receipts must use full commit SHAs.',
     );
   }
-  if (value.evidenceCommit !== null && !FULL_SHA.test(value.evidenceCommit)) {
-    throw completionRetryFieldsError(
-      'Recovered completion retry evidence receipt must be null or a full commit SHA.',
-    );
-  }
-  if (typeof value.evidencePushRequired !== 'boolean') {
-    throw completionRetryFieldsError(
-      'Recovered completion retry evidence push flag must be boolean.',
-    );
-  }
   if (
     typeof value.retainedRef !== 'string' ||
     !RETAINED_REF.test(value.retainedRef)
@@ -203,31 +191,12 @@ export function parseCompletionRetryFields(input) {
       'Recovered completion retry PR artifact path is malformed.',
     );
   }
-  if (value.evidenceCommit === null) {
-    if (
-      value.evidencePushRequired ||
-      value.localCommit !== value.projectRefCommit ||
-      value.remoteCommit !== value.projectRefCommit
-    ) {
-      throw completionRetryFieldsError(
-        'Recovered completion retry receipts are contradictory without evidence.',
-      );
-    }
-  } else if (value.evidencePushRequired) {
-    if (
-      value.localCommit !== value.evidenceCommit ||
-      value.remoteCommit !== value.projectRefCommit
-    ) {
-      throw completionRetryFieldsError(
-        'Recovered unpublished evidence receipts are contradictory.',
-      );
-    }
-  } else if (
-    value.localCommit !== value.evidenceCommit ||
-    value.remoteCommit !== value.evidenceCommit
+  if (
+    value.localCommit !== value.projectRefCommit ||
+    value.remoteCommit !== value.projectRefCommit
   ) {
     throw completionRetryFieldsError(
-      'Recovered published evidence receipts are contradictory.',
+      'Recovered completion retry receipts are contradictory.',
     );
   }
 
@@ -235,8 +204,6 @@ export function parseCompletionRetryFields(input) {
     'recovery',
     value.projectLinksPinCommit,
     value.projectRefCommit,
-    value.evidenceCommit ?? '-',
-    String(value.evidencePushRequired),
     value.prArtifactPath,
   ].join('\t');
 }

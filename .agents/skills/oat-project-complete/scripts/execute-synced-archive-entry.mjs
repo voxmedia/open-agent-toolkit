@@ -5,7 +5,6 @@ import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 
 import { validateSyncedArchiveTerminalReport } from './finalize-synced-archive.mjs';
-import { recoverArchivedRecapEvidenceReceipt } from './recover-completion-receipts.mjs';
 import { resolveSyncedArchiveEntry } from './resolve-synced-archive-entry.mjs';
 
 const execFile = promisify(execFileCallback);
@@ -20,13 +19,9 @@ async function buildPostArchiveContinuation(
   archiveReport,
   projectPath,
   repoRoot,
-  recoverArchiveEvidence,
 ) {
   let selectedProjectRecapRun = '';
   let exportedManifestPath = '';
-  let exportedBuildRecordPath = '';
-  let evidenceCommit = '';
-  let evidencePushRequired = false;
   if (archiveReport.projectRecapExport != null) {
     const sourceRunRoot = archiveReport.projectRecapExport?.sourceRunRoot;
     const exportRoot = archiveReport.projectRecapExport?.exportRoot;
@@ -66,19 +61,6 @@ async function buildPostArchiveContinuation(
       );
     }
     exportedManifestPath = posix.join(exportRootRelative, manifestPath);
-    exportedBuildRecordPath = posix.join(
-      exportRootRelative,
-      'build-record.json',
-    );
-    const recoveredEvidence = await recoverArchiveEvidence({
-      repoRoot,
-      lifecycleCommit: archiveReport.lifecycleCommit,
-      evidencePaths: [exportedManifestPath, exportedBuildRecordPath],
-    });
-    if (recoveredEvidence.evidenceCommit !== null) {
-      evidenceCommit = recoveredEvidence.evidenceCommit;
-      evidencePushRequired = recoveredEvidence.evidencePushRequired;
-    }
   }
   return {
     required: true,
@@ -90,9 +72,6 @@ async function buildPostArchiveContinuation(
     selectedProjectRecapRun,
     projectRecapExport: archiveReport.projectRecapExport ?? null,
     exportedManifestPath,
-    exportedBuildRecordPath,
-    evidenceCommit,
-    evidencePushRequired,
   };
 }
 
@@ -100,7 +79,6 @@ export async function continueSyncedArchiveCompletion({
   executionResult,
   finalizeLinks,
   refreshDashboard,
-  attestRecap,
   pushBookkeeping,
   closeoutPr,
   clearPointer,
@@ -118,12 +96,6 @@ export async function continueSyncedArchiveCompletion({
   }
   await finalizeLinks(executionResult.continuation);
   await refreshDashboard(executionResult.continuation);
-  if (
-    executionResult.continuation.projectRecapExport !== null &&
-    executionResult.continuation.evidenceCommit === ''
-  ) {
-    await attestRecap(executionResult.continuation);
-  }
   await pushBookkeeping(executionResult.continuation);
   await closeoutPr(executionResult.continuation);
   await clearPointer(executionResult.archiveReport);
@@ -145,7 +117,6 @@ export async function executeSyncedArchiveEntry({
   runActiveWorkflowSteps,
   archiveProject,
   validateArchive,
-  recoverArchiveEvidence = recoverArchivedRecapEvidenceReceipt,
 }) {
   const entry = record
     ? await resolveSyncedArchiveEntry({
@@ -214,7 +185,6 @@ export async function executeSyncedArchiveEntry({
       archiveReport,
       projectPath,
       repoRoot,
-      recoverArchiveEvidence,
     ),
   };
 }

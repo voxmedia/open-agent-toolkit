@@ -79,24 +79,24 @@ After implementation closeout finishes:
 
 ### Project-recap gate (non-lite)
 
-The final-closeout orchestrator owns one project-recap gate. It runs after the
-final code review has passed and after any configured pre-approval summary and
-documentation steps, but before final HiLL approval. It neither replaces nor
-repeats the final review, and the stored order of the other pre-approval steps
-is preserved.
+The final-closeout orchestrator re-reads persisted recap intent after final
+review and configured pre-approval summary and documentation steps, but before
+final HiLL approval. A persisted skip suppresses manifest discovery and the
+entire generation flow. A persisted generate decision reuses a fresh satisfied
+package or invokes `oat-explainer-kit` § Generate.
 
-Recap intent resolves through `oat-explainer-kit`. A fresh `project-recap`
-manifest for the current completed implementation is reused rather than
-regenerated — fresh means it names recipe `project-recap`, belongs to this
-project, has a terminal outcome, and its recorded source hashes match the
-current approved inputs. A present-but-incomplete, wrong-recipe, or stale
-manifest does not qualify.
+Fresh means the package identifies this project and recipe, has outcome `built`
+or `built-needs-review`, passes the complete package guard, and records source
+hashes for the current approved inputs. Wrong-project, wrong-recipe, stale,
+`failed`, and `incomplete` packages do not qualify.
 
-Recap outcomes are reported, not blocking: `failed` and `built-not-durable` are
-recorded as warnings and never block final approval, completion reporting, or
-later PR steps. The selected or attempted outcome and run path are included in
-the implementation completion report, and `summary.md` carries a single
-`Explainer Outcome` section when it exists.
+The flow bundles approved evidence, lets the host agent author one page,
+verifies it at the best available browser rung, and records the package.
+`built-needs-review` satisfies generation and does not block approval. In
+autonomy, an unsatisfied run is retried once; a second failure persists
+`skip/failed_attempt`, which closeout consumes without another bundle or
+authoring pass. Reports and `summary.md` preserve the actual outcome, run path,
+or skip reason.
 
 **Lite skips this gate entirely.** Lite sets `PROJECT_RECAP_REACHABLE=false` and
 does not resolve recap intent, inspect recap runs, invoke `oat-explainer-kit`,
@@ -125,7 +125,8 @@ On completion, OAT treats archive handling as an explicit closeout choice:
 - When archiving is disabled or declined, durable projects remain at their
   active path. Synced completion still finalizes and pushes the project ref,
   commits the discovery record as `complete`, retains the checkout and ref, and
-  attests a selected recap against the project-ref history.
+  keeps any recap governed by its manifest and package verification without a
+  separate closeout evidence push.
 - For a synced project, closeout first finalizes the project artifacts and
   pushes them to `refs/oat/projects/<project>`. Archive then requires a clean,
   fully pushed checkout; copies it without the `.git` pointer or `reviews/`;

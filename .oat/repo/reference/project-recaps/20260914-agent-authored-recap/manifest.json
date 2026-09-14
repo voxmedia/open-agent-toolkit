@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "explainer-kit.manifest/v2",
+  "runId": "d38d4d41-31e9-4c76-9668-6e74e30273ae",
+  "slug": "agent-authored-recap-recap-20260914",
+  "recipe": {
+    "id": "project-recap",
+    "version": "2"
+  },
+  "createdAt": "2026-09-14T15:08:15.634Z",
+  "mode": "unattended",
+  "source": {
+    "factBasePath": "source/fact-base.json",
+    "factBaseHash": "sha256:350b522d42e9341c531d7022cc9e2a43dcccbb0adb03be4398a2366ba65079e6",
+    "inputHashes": {
+      "design.md": "sha256:14178a751bc12d62e351605daf4cea13470667bc2badcdca826e67f78509f1d0",
+      "discovery.md": "sha256:09a001d8aa6dbe4f0a5121785308ba95207dc6dee2497d238b4213cca188f3b5",
+      "implementation.md": "sha256:5edf3d5d1deb6e9ee734f977d89971bb0f74ce5ed2f0dfc7f8391be3bb65a979",
+      "plan.md": "sha256:bceedac3bc4ee2c31b884ff631af7e0ae7f66978868e174fdc6db8c3d30759d4",
+      "project-log.md": "sha256:38349826289615ae7a4a803fefa4f6816ac4060e7d621b2f2721cba9151c1eca",
+      "spec.md": "sha256:cbab13305a37ec9337ed990945eeddd492282886103e2e8afff016b5228642e5",
+      "summary.md": "sha256:4ffe66bbf9198b3c29bda1c8c30d90d196f9f9338fb7eaad9c4a2451eb637055"
+    }
+  },
+  "theme": {
+    "path": "theme.resolved.json",
+    "hash": "sha256:82c4bf82ac817bb8c04c83bb971d2c2b22aa621384689fb4e0d0fa3a62498f27"
+  },
+  "artifacts": [
+    {
+      "id": "project-recap",
+      "type": "hub",
+      "contentPath": "site/index.html",
+      "hash": "sha256:e09bd84b8350c2e61a70011e74cc44f53b4bc48b3ceef58a5733692d1ab7708d",
+      "status": "built"
+    }
+  ],
+  "immutableHashes": {
+    "qa/result.json": "sha256:49c544ef08732eddbd95d9bba43b0eec8c488261e833206e989aaa74b401cd64",
+    "site/index.html": "sha256:e09bd84b8350c2e61a70011e74cc44f53b4bc48b3ceef58a5733692d1ab7708d",
+    "source/fact-base.json": "sha256:350b522d42e9341c531d7022cc9e2a43dcccbb0adb03be4398a2366ba65079e6",
+    "source/fact-base.md": "sha256:f739ce11395038a5da8b1c4bf0311fe0411330ef7218062eb3260f1e36c7d5d3",
+    "source/ledger.json": "sha256:bad1fb40ed5695593da7ab45ed85e83af302a308dda68013057bf502d49c6204",
+    "theme.resolved.json": "sha256:82c4bf82ac817bb8c04c83bb971d2c2b22aa621384689fb4e0d0fa3a62498f27"
+  },
+  "outcome": "built-needs-review",
+  "warnings": ["record-needs-review:browser-driver-not-installed"]
+}

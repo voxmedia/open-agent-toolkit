@@ -15,9 +15,7 @@
     {
       "id": "engineer-tour",
       "type": "explainer",
-      "authoring": "html",
       "template": "engineer-tour",
-      "required": true,
       "briefRef": "briefs/engineer-tour.md",
       "requiredNarrative": [
         "orientation",
@@ -27,24 +25,5 @@
         "validation"
       ]
     }
-  ],
-  "expansion": {
-    "profiles": [
-      {
-        "profileId": "supporting-diagram",
-        "type": "diagram",
-        "authoring": "html",
-        "briefRef": "briefs/supporting-diagram.md",
-        "shell": "diagram-shell",
-        "maxCount": 4
-      }
-    ],
-    "limits": {
-      "maxArtifacts": 4
-    }
-  },
-  "discoveryLimits": {
-    "consecutiveNoNewFindingsRounds": 2,
-    "maxRounds": 8
-  }
+  ]
 }

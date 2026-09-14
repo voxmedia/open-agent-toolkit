@@ -4,194 +4,119 @@ description: Use when building destination-neutral visual explainer artifacts fr
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Agent, mcp__*
 metadata:
-  version: 2.1.1
+  version: 3.0.2
 ---
 
 # Explainer Kit
 
-Build visual explainer artifact sets from explicit inputs without reading OAT,
-user, vault, or destination configuration.
+Build one destination-neutral visual explainer from explicit inputs without
+reading OAT, user, vault, or destination configuration.
 
 ## Responsibilities
 
-- Validate versioned run, source, theme, artifact, durability, and publishing
-  contracts.
-- Reconcile one cited fact base before producing narrative content.
-- Author every artifact against a bundled brief on one of two paths, and scale
-  the artifact set with the content through recipe-declared expansion profiles.
-- Render neutral, self-contained artifacts from bundled recipes and templates.
-- Report editorial and layout findings as manifest warnings while keeping
-  safety and provenance violations hard failures.
-- Record build outcomes and verify caller-supplied durability evidence.
-- Publish only through an explicitly requested, human-gated connector.
-
-## Dependency Direction
-
-This skill is the canonical core. It must not depend on `oat-explainer-kit` or
-OAT project state. Adapters and private wrappers may construct a core run
-request and consume its manifest, build record, and optional publish receipt.
-
-## Wrapper Extension Seam
-
-Wrappers own private pre-resolution and post-run work. They resolve presets,
-vaults, external documents, and personal destinations before translating the
-result into one `ExplainerRunRequestV1`; after the core run, they consume the
-versioned manifest and optional receipt to create links or companion records.
-They must not inject private work between core stages or expose private lanes as
-public config. See `references/extension-contract.md` for the frozen sequence,
-version policy, and compatibility fixture.
+- Collect only allowlisted inputs and create a cited fact base plus bounded
+  anchor ledger.
+- Give the host agent the selected recipe brief, authoring mechanics, theme,
+  and one recipe shell.
+- Verify required sections, source discipline, script safety, and both
+  directions of machine-checkable claim traceability.
+- Use the highest available browser rung without blocking browser-less hosts.
+- Record one exact-inventory `explainer-kit.manifest/v2` run package.
 
 ## Asset Resolution
 
-Resolve schemas, recipes, templates, scripts, examples, and references relative
-to this installed skill directory. Never resolve runtime assets from a source
-checkout or from absolute operator-specific paths.
+Resolve schemas, recipes, templates, scripts, and references relative to this
+installed skill directory. Never resolve runtime assets from a source checkout
+or from absolute operator-specific paths.
 
-## Core Run
+## Run
 
-Construct a complete `ExplainerRunRequestV1`, then invoke the packaged core:
-
-```bash
-node scripts/run.mjs --request /path/to/request.json
-```
-
-The core composes validation, fact-base processing, bounded recipe/content
-discovery, authoring, theme resolution, rendering, QA, approval, and
-manifest/build-record persistence. It runs without OAT files or ambient
-configuration. Supplied fact bases receive only lightweight
-consistency/freshness checks. Federated inputs require a provider-neutral
-critic callback and invoke it exactly once. Optional claim `sections` tags
-route facts to matching recipe narrative sections; untagged claims remain
-shared context for every required section.
-
-## Authoring
-
-Every run requires a provider-neutral author callback in **both** modes; there
-is no synthetic content model. A run without one fails `E_AUTHOR_REQUIRED`.
-In-process callers supply `options.author`; JSON-only CLI callers supply
-`--author-module`. Keep executable callback references out of the persisted run
-request.
-
-The recipe — never the author — selects each artifact's authoring path. Floor
-entries and expansion profiles declare `authoring: markdown` for the narrative
-path or `authoring: html` for the artistic path. The core invokes the author
-once per artifact with an `explainer-kit.author-request/v3` payload carrying the
-artifact identity and type, its authoring path, the inlined brief from
-`briefs/`, the reconciled fact base, the resolved theme, the shell source for
-artistic artifacts, the required narrative sections for narrative floor
-artifacts, and canonical `artifactLinks` with explicit `index.html` site paths
-and receiver-relative hrefs. Version 2 requests remain readable for replay. It
-accepts only a schema-valid
-`explainer-kit.author-result/v2` with exactly one of `content.markdown` or
-`content.html` plus non-secret provenance, rejects excessive verbatim source
-overlap, retains each validated result under `source/author/` and its content
-under `source/content/<artifact>.md` or `.html`, and never prompts.
-
-Authors follow the bundled medium-specific rules in
-`references/visual-authoring.md`. They do not require a home-directory plugin:
-an optional installed visual-explainer capability may enhance composition, but
-the bundled briefs, shells, and guidance are the complete unattended baseline.
-
-Markdown content is parsed to a validated AST and rendered through the themed
-block library, including GFM tables and task lists, GFM alert callouts, fenced
-`timeline` blocks, and fenced `diagram` blocks rendered to inline SVG at build
-time. HTML content is validated at the DOM level: the authored document's
-scripts must match the declared core shell's ordered multiset of script hashes
-exactly, and inline event handlers and external active content are rejected.
-Non-script markup stays free within the allowlist.
-
-A floor artifact may return `proposedArtifacts` of `{id, profileId, rationale}`
-to grow the set when the content earns it. The referenced profile supplies the
-type, authoring path, brief, and shell, so the author never chooses policy.
-Unknown profiles and unsafe, duplicate, or floor-colliding IDs are hard errors;
-proposals over a profile's `maxCount` or the recipe's
-`expansion.limits.maxArtifacts` are rejected with a warning and the run
-continues. Accepted expansion artifacts render to
-`site/{directory}/{slug}/{artifactId}/index.html` and are linked from the floor
-hub; floor artifacts keep their existing paths.
-
-`project-recap@2` requires one complete navigational hub and makes diagrams,
-decks, and deep dives adaptive expansions. The planner proposes one only when
-it can name a distinct reader question, the supporting source evidence, and why
-that medium improves on adding more hub prose. The prose brief governs
-typographic roles, hierarchy, slide archetypes, diagram semantics,
-fit-to-content composition, density, repetition, and medium choice. These are
-editorial judgments, not new request fields or renderer rules.
-`project-recap@1` remains readable for replay with its historical three-artifact
-floor.
-
-## Review, Approval, and Warnings
-
-Approval runs after theme, render, hard internal-reference validation, safety
-validation, the guideline checker, and render QA, immediately before publish and
-durability — so a reviewer approves rendered artifacts and the complete warning
-set, not raw prose. The reference gate resolves `href`, `src`, `srcset`,
-fragments, and safe embedded references against explicit manifest/site-tree
-files. It may invoke the existing correction author once, then rerenders and
-revalidates before any browser or visual review. A later visual correction also
-rerenders and passes through the validation-only reference gate without
-receiving another correction attempt. An exhausted `E_INTERNAL_REFERENCE`
-finding fails closed and cannot reach durability.
-
-Interactive runs stop with an `incomplete` outcome once artifacts are built and
-checked. Review the rendered `site/` tree, the sources under `source/content/`,
-and the accumulated warnings, then provide an explicit JSON decision and rerun
-the same request:
+Choose one recipe and one input mode, then prepare the run:
 
 ```bash
-node scripts/run.mjs \
-  --request /path/to/request.json \
-  --reviewed-source /path/to/content-review.json
+node scripts/bundle.mjs \
+  --recipe project-recap \
+  --project /path/to/project \
+  --theme /path/to/theme.resolved.json \
+  --out /path/to/run-root
 ```
 
-An approval decision resumes the existing run; a rejection persists its
-correction list, and a later approval re-renders and re-runs QA against the
-edited sources before proceeding. Approval does not authorize publishing: a
-publish request still requires the separate human-gated publisher callback.
+Use exactly one of the supported input modes:
 
-Review provenance persists in `source/content-approval.json` as an
-`explainer-kit.content-approval/v2` record. It carries
-`marking: human-approved` for interactive approval and `auto-drafted` for
-unattended runs, surfaced in the run result and never written to the manifest,
-plus the complete resolved artifact set so a paused expanded run rehydrates
-without re-invoking the author.
+- `--project <dir>` for a project recap or project explainer;
+- `--program <artifact> --summaries <dir> --archive <dir>` for a program
+  recap;
+- `--inputs <file|dir>...` for documents; or
+- `--fact-base <path>` for a supplied fact base.
 
-Safety and provenance violations fail the run with `E_QA`. Editorial and layout
-findings — narrative-coverage, architecture-diagram, and structured-depth
-guideline misses, rejected over-limit proposals, and render-QA layout findings —
-append stable warning IDs to the manifest's `warnings[]` and let the run
-succeed.
+### Front door
 
-Visual critics use the independent whole-set rubric in
-`references/visual-review.md`, which separates review judgment from
-medium-specific authoring rules. They assess typography, hierarchy,
-composition, density, medium leverage, template repetition, diagram semantics,
-and cross-artifact cohesion from rendered browser evidence. The rubric keeps
-the existing provider-neutral result contract: `pass` means no required
-correction remains, while `correct` carries concrete artifact-scoped actions
-into the one bounded correction round. It does not assign design scores or
-encode geometry thresholds.
+When a person invokes this skill directly, ask them to name the recipe, choose
+`--out <dir>`, and provide exactly one direct input mode:
 
-Render QA is opt-in. It runs only against an injected `browserProbe`, and the
-core never launches a browser of its own — reviewing the rendered output in a
-browser is the generating agent's job. Unattended project recaps require both
-complete browser evidence and an independent visual-critic `pass`. A missing
-probe or critic, a terminal critic failure, or an unresolved correction records
-`built-needs-review`: built artifacts and review evidence remain available, but
-durability and publishing callbacks are not invoked. Other runs without a probe
-record `render-qa-skipped-no-probe` and continue.
+- `--project <dir>` for an OAT project;
+- `--inputs <file|dir>...` for documents; or
+- `--fact-base <path>` for a prepared fact base.
 
-See `references/contracts.md` for source formats, callback modules, retained
-intermediates, and result semantics.
+Run from the installed skill directory. If the person does not supply a
+resolved theme, materialize the deterministic `clean-neutral` default before
+bundling:
 
-Durability and publishing run only when the request selects them and the caller
-supplies the matching callback. The core does not create commits, discover
-destinations, or publish automatically. A successful build remains
-`built-not-durable` until caller-supplied evidence is verified.
-`built-needs-review` is terminal but cannot receive durability evidence or be
-published.
+```bash
+node --input-type=module --eval '
+  import { writeFile } from "node:fs/promises";
+  import { resolveTheme } from "./scripts/lib/theme.mjs";
+  const { theme } = await resolveTheme({ style: "clean-neutral" });
+  await writeFile(process.argv[1], `${JSON.stringify(theme, null, 2)}\n`);
+' /path/to/theme.resolved.json
+```
 
-## Progress Indicators
+Pass that file as `--theme /path/to/theme.resolved.json`. After bundling,
+propose the bounded input scope and show a concise summary of the prepared fact
+base so the person can correct the scope or source facts before authoring. This
+is a lightweight interactive confirmation, not a project gate or approval
+workflow.
+
+Always pass `--recipe`, `--theme`, and `--out`. `bundle.mjs` writes
+`source/fact-base.json`, `source/fact-base.md`, `source/ledger.json`, and
+`theme.resolved.json`. If it reports `reuse: true`, return the existing
+satisfied run without changing it.
+
+The host agent then reads the selected recipe's `floor[0].briefRef`,
+`references/recap-authoring.md`, the fact base, anchor ledger, and resolved
+theme. Copy the recipe's shell from `templates/` and author exactly one
+standalone `site/index.html`. Preserve every required narrative section ID,
+keep all CSS and approved scripts inline, make no external requests, and spell
+every machine-checkable fact as the fact base spells it. Unattended runs never
+prompt.
+
+Run browser-free verification and the highest available browser rung. Record a
+direct front-door run as interactive:
+
+```bash
+node scripts/verify.mjs --run-root /path/to/run-root --recipe project-recap
+node scripts/record.mjs \
+  --run-root /path/to/run-root \
+  --recipe project-recap \
+  --slug project-recap \
+  --mode interactive \
+  --theme /path/to/run-root/theme.resolved.json
+```
+
+Lifecycle callers use `--mode unattended` instead and never prompt.
+
+The ladder is host browser capture and inspection, then the bundled Playwright
+probe, then the browser-free `none` rung. Host evidence uses 320, 768, and 1440
+pixel screenshots bound to the exact artifact hash and an explicit visual
+verdict. Browser-free structure, source-dumping, shell-script, ledger-to-page,
+and page-to-ledger checks run at every rung.
+
+`record.mjs` writes `explainer-kit.manifest/v2`. `built` means browser and
+visual checks passed. `built-needs-review` is a usable artifact whose browser
+rung was unavailable or found issues. `failed` and `incomplete` do not satisfy
+generation. Do not write into the run root after recording.
+
+## Progress Indicators (User-Facing)
 
 For interactive runs, show a concise banner and stage updates:
 
@@ -201,6 +126,6 @@ EXPLAINER KIT
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-Report validation, fact-base, content, theme, render, QA, durability, and
-publish stages as they begin and complete. Keep unattended output structured
-and non-interactive.
+Report bundle, authoring, verification, browser rung, recording, and outcome
+stages as they begin and complete. Keep unattended output structured and
+non-interactive.

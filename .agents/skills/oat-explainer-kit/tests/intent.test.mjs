@@ -7,26 +7,12 @@ import test from 'node:test';
 import {
   hashStateContent,
   persistIntent,
+  readPersistedIntent,
   updateStateFrontmatter,
 } from '../scripts/persist-intent.mjs';
-import { probeRecapSeams } from '../scripts/probe-recap-seams.mjs';
 import { resolveIntent } from '../scripts/resolve-intent.mjs';
 
 const NOW = '2026-07-18T02:30:00Z';
-
-const noop = () => {};
-
-function allFiveSeams(overrides = {}) {
-  return {
-    mode: 'unattended',
-    author: noop,
-    critic: noop,
-    browserSession: { brand: 'launched-chromium' },
-    visualCritic: noop,
-    planSet: noop,
-    ...overrides,
-  };
-}
 
 function resolve(overrides = {}) {
   return resolveIntent({
@@ -128,14 +114,19 @@ oat_project_explainer: null
       expectedHash: hashStateContent(initial),
     });
 
+    const reloaded = await readPersistedIntent({
+      statePath,
+      product: first.product,
+    });
     const second = resolve({
-      state: persisted.record,
+      state: reloaded,
       preference: 'ask',
     });
     assert.equal(second.decision, 'generate');
     assert.equal(second.resolutionSource, 'project_state');
     assert.equal(second.needsPrompt, false);
-    assert.equal(second.record, persisted.record);
+    assert.deepEqual(second.record, persisted.record);
+    assert.notEqual(second.record, persisted.record);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -149,18 +140,6 @@ test('autonomous mode forces recap and only generates an explainer from kickoff 
   });
   assert.equal(recap.decision, 'generate');
   assert.equal(recap.record.source, 'autonomous_policy');
-
-  const probedRecap = resolve({
-    product: 'projectRecap',
-    mode: 'autonomous',
-    preference: 'never',
-    seamProbe: probeRecapSeams(allFiveSeams()),
-  });
-  assert.equal(probedRecap.decision, 'generate');
-  assert.equal(probedRecap.record.source, 'autonomous_policy');
-  assert.deepEqual(probedRecap.warnings, [
-    'Autonomous project recap policy overrode workflow preference never.',
-  ]);
 
   const skippedExplainer = resolve({
     mode: 'autonomous',
@@ -221,276 +200,144 @@ test('rejects invalid intent combinations including autonomous skip', () => {
   );
 });
 
-test('an unavailable seam resolves a recordable autonomous capability skip', () => {
-  const unavailable = resolve({
-    product: 'projectRecap',
-    mode: 'autonomous',
-    seamProbe: probeRecapSeams({ mode: 'unattended', author: noop }),
-  });
-
-  assert.deepEqual(unavailable, {
-    product: 'projectRecap',
+test('failed_attempt is a projectRecap-only skip source', () => {
+  const record = {
     decision: 'skip',
-    resolutionSource: 'capability_probe',
-    needsPrompt: false,
-    record: {
-      decision: 'skip',
-      source: 'capability_probe',
-      decided_at: NOW,
-    },
-    warnings: [
-      'Autonomous project recap skipped: no provider is configured for critic, browserSession, visualCritic and planSet.',
-    ],
-  });
-
-  // A host with four seams and no set planner is the case the runtime would
-  // have thrown E_SET_PLANNER_REQUIRED on.
-  const noPlanner = resolve({
-    product: 'projectRecap',
-    mode: 'autonomous',
-    seamProbe: probeRecapSeams(allFiveSeams({ planSet: undefined })),
-  });
-  assert.equal(noPlanner.decision, 'skip');
-  assert.match(noPlanner.warnings[0], /planSet/);
-
-  // The persisted record round-trips through interactive validation.
+    source: 'failed_attempt',
+    decided_at: NOW,
+    failed_attempt_evidence: 'explainers/failed-run/failure.json',
+  };
   assert.equal(
     resolve({
       product: 'projectRecap',
       mode: 'interactive',
-      state: noPlanner.record,
+      state: record,
     }).resolutionSource,
     'project_state',
   );
-});
-
-test('a configured-but-invalid seam is an error rather than a capability skip', () => {
-  assert.throws(
-    () =>
-      resolve({
-        product: 'projectRecap',
-        mode: 'autonomous',
-        seamProbe: probeRecapSeams(allFiveSeams({ planSet: 'planner' })),
-      }),
-    (error) =>
-      error?.code === 'E_RECAP_SEAMS_INVALID' &&
-      /planSet must be a function when supplied/.test(error.message),
-  );
-});
-
-test('capability_probe is scoped to autonomous projectRecap skips', () => {
-  const probe = probeRecapSeams({ mode: 'unattended' });
-
   assert.throws(
     () =>
       resolve({
         product: 'projectExplainer',
-        mode: 'autonomous',
-        seamProbe: probe,
-      }),
-    /apply only to projectRecap resolution/,
-  );
-  assert.throws(
-    () =>
-      resolve({
-        product: 'projectRecap',
         mode: 'interactive',
-        seamProbe: probe,
+        state: record,
       }),
-    /apply only to autonomous projectRecap resolution/,
-  );
-  assert.throws(
-    () =>
-      updateStateFrontmatter(
-        '---\noat_phase: plan\n---\n',
-        'projectExplainer',
-        { decision: 'skip', source: 'capability_probe', decided_at: NOW },
-      ),
     /invalid projectExplainer decision\/source pair/i,
   );
-  assert.throws(
-    () =>
-      updateStateFrontmatter('---\noat_phase: plan\n---\n', 'projectRecap', {
-        decision: 'generate',
-        source: 'capability_probe',
-        decided_at: NOW,
-      }),
-    /invalid projectRecap decision\/source pair/i,
-  );
+});
 
-  // A half-populated probe object must never forge a capability skip out of an
-  // invalid seam, and an `ok` claim must carry the matching code.
-  for (const forged of [
-    { ok: false, mode: 'unattended', code: 'seams-unavailable' },
-    {
-      ok: false,
-      mode: 'unattended',
-      code: 'seams-unavailable',
-      missing: [],
-      invalid: [{ seam: 'planSet', reason: 'multiple-sources', message: 'x' }],
-      resolved: [],
-    },
-    {
-      ok: true,
-      mode: 'unattended',
-      code: 'seams-unavailable',
-      missing: ['planSet'],
-      invalid: [],
-      resolved: [],
-    },
-    {
-      ok: false,
-      mode: 'unattended',
-      code: 'seams-invalid',
-      missing: [],
-      invalid: [],
-      resolved: [],
-    },
+test('legacy capability-probe recap records remain read-only', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'oat-legacy-recap-'));
+  const statePath = join(root, 'state.md');
+  const record = {
+    decision: 'skip',
+    source: 'capability_probe',
+    decided_at: NOW,
+  };
+  const content = `---
+oat_phase: implement
+oat_project_recap:
+  decision: skip
+  source: capability_probe
+  decided_at: '${NOW}'
+---
+
+# State
+`;
+  try {
+    await writeFile(statePath, content);
+    assert.deepEqual(
+      await readPersistedIntent({ statePath, product: 'projectRecap' }),
+      record,
+    );
+    assert.throws(
+      () => updateStateFrontmatter(content, 'projectRecap', record),
+      /read-only legacy/i,
+    );
+    await assert.rejects(
+      persistIntent({
+        statePath,
+        product: 'projectRecap',
+        record,
+        expectedHash: hashStateContent(content),
+      }),
+      /read-only legacy/i,
+    );
+    assert.equal(await readFile(statePath, 'utf8'), content);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('failed_attempt requires one narrow project-relative evidence locator', () => {
+  const base = {
+    decision: 'skip',
+    source: 'failed_attempt',
+    decided_at: NOW,
+  };
+  for (const failed_attempt_evidence of [
+    '/tmp/failure.json',
+    '../outside/failure.json',
+    'explainers/../outside/failure.json',
+    'explainers/run/not-evidence.json',
   ]) {
     assert.throws(
       () =>
-        resolve({
-          product: 'projectRecap',
-          mode: 'autonomous',
-          seamProbe: forged,
+        updateStateFrontmatter('---\noat_phase: plan\n---\n', 'projectRecap', {
+          ...base,
+          failed_attempt_evidence,
         }),
-      (error) =>
-        error instanceof TypeError &&
-        /must partition the canonical recap seams|must list the seams its code claims/.test(
-          error.message,
-        ),
-      JSON.stringify(forged),
+      /failed_attempt_evidence/i,
     );
   }
   assert.throws(
     () =>
-      resolve({
-        product: 'projectRecap',
-        mode: 'autonomous',
-        seamProbe: {
-          ok: true,
-          mode: 'unattended',
-          code: 'seams-ok',
-          missing: [],
-          invalid: [],
-          resolved: ['author'],
-        },
-      }),
-    // A short `resolved` list fails the partition's coverage requirement first;
-    // either rejection keeps the forged success out of the generate path.
-    (error) =>
-      error instanceof TypeError &&
-      /must partition the canonical recap seams|must list the seams its code claims/.test(
-        error.message,
+      updateStateFrontmatter(
+        '---\noat_phase: plan\n---\n',
+        'projectRecap',
+        base,
       ),
+    /failed_attempt_evidence/i,
   );
-
-  // An interactive probe checks only the author and critic, so it would report
-  // a host with no set planner as fully available. It is the wrong evidence for
-  // a decision whose recap runs unattended.
-  assert.throws(
-    () =>
-      resolve({
-        product: 'projectRecap',
-        mode: 'autonomous',
-        seamProbe: probeRecapSeams({
-          mode: 'interactive',
-          author: noop,
-          critic: noop,
+  for (const decision of ['skip', 'generate']) {
+    assert.throws(
+      () =>
+        updateStateFrontmatter('---\noat_phase: plan\n---\n', 'projectRecap', {
+          decision,
+          source: 'interactive',
+          decided_at: NOW,
+          failed_attempt_evidence: 'explainers/failed-run/failure.json',
         }),
-      }),
-    /must come from an unattended probe/,
-  );
-  assert.throws(
-    () =>
-      resolve({
-        product: 'projectRecap',
-        mode: 'autonomous',
-        seamProbe: {
-          ok: false,
-          mode: 'unattended',
-          code: 'seams-unavailable',
-          missing: ['notASeam'],
-          invalid: [],
-          resolved: [],
-        },
-      }),
-    /must partition the canonical recap seams/,
-  );
+      /failed_attempt_evidence/i,
+    );
+  }
+});
 
-  // The partition must be disjoint and cover the canonical set, because the
-  // error message promises exactly that. Both shapes below were accepted before
-  // the coverage/disjointness checks existed: the first claims `planSet` is
-  // both missing and resolved and yielded a capability skip, the second pads
-  // `resolved` with one seam repeated five times and forced a generate.
-  // `probeRecapSeams` can emit neither: every seam lands in exactly one bucket.
-  assert.throws(
-    () =>
-      resolve({
-        product: 'projectRecap',
-        mode: 'autonomous',
-        seamProbe: {
-          ok: false,
-          mode: 'unattended',
-          code: 'seams-unavailable',
-          missing: ['planSet'],
-          invalid: [],
-          resolved: [
-            'planSet',
-            'author',
-            'critic',
-            'browserSession',
-            'visualCritic',
-          ],
-        },
-      }),
-    /must partition the canonical recap seams/,
-    'a seam claimed both missing and resolved must not yield a capability skip',
-  );
-  assert.throws(
-    () =>
-      resolve({
-        product: 'projectRecap',
-        mode: 'autonomous',
-        seamProbe: {
-          ok: true,
-          mode: 'unattended',
-          code: 'seams-ok',
-          missing: [],
-          invalid: [],
-          resolved: ['author', 'author', 'author', 'author', 'author'],
-        },
-      }),
-    /must partition the canonical recap seams/,
-    'duplicate resolved entries must not fake full seam availability',
-  );
-  // An invalid seam counts toward the partition, so a well-formed
-  // `seams-invalid` result still validates and fails closed on its own path.
-  assert.throws(
-    () =>
-      resolve({
-        product: 'projectRecap',
-        mode: 'autonomous',
-        seamProbe: probeRecapSeams(allFiveSeams({ planSet: 'not-a-function' })),
-      }),
-    (error) => error?.code === 'E_RECAP_SEAMS_INVALID',
-  );
-  assert.throws(
-    () =>
-      resolve({
-        product: 'projectRecap',
-        mode: 'autonomous',
-        seamProbe: {
-          ok: false,
-          mode: 'unattended',
-          code: 'not-a-code',
-          missing: ['planSet'],
-          invalid: [],
-          resolved: [],
-        },
-      }),
-    /ok and a known code/,
-  );
+test('failed_attempt evidence survives state persistence and reload', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'oat-failed-intent-'));
+  const statePath = join(root, 'state.md');
+  try {
+    const initial = '---\noat_phase: implement\n---\n\n# State\n';
+    await writeFile(statePath, initial);
+    const record = {
+      decision: 'skip',
+      source: 'failed_attempt',
+      decided_at: NOW,
+      failed_attempt_evidence: 'explainers/failed-run/manifest.json',
+    };
+    await persistIntent({
+      statePath,
+      product: 'projectRecap',
+      record,
+      expectedHash: hashStateContent(initial),
+    });
+    assert.deepEqual(
+      await readPersistedIntent({ statePath, product: 'projectRecap' }),
+      record,
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });
 
 test('safe frontmatter updates preserve unrelated fields and markdown body', () => {

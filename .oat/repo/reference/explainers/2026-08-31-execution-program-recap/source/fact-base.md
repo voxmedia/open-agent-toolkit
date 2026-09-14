@@ -1,0 +1,1889 @@
+# Fact base
+
+- oat_generated: true
+- oat_external_plan_index: false
+- oat_execution_program: true
+- oat_program_supersedes: .oat/repo/reference/external-plans/2026-08-19-execution-program.md
+- oat_program_indexes:
+- - .oat/repo/reference/external-plans/2026-08-30-backlog-review-wave-1-plan-index.md
+- - .oat/repo/reference/external-plans/2026-08-30-backlog-review-wave-2-plan-index.md
+- - .oat/repo/reference/external-plans/2026-08-30-backlog-review-wave-3-plan-index.md
+- - .oat/repo/reference/external-plans/2026-09-02-backlog-review-wave-4-plan-index.md
+- - .oat/repo/reference/external-plans/2026-09-03-backlog-review-wave-5-plan-index.md
+- - .oat/repo/reference/external-plans/2026-09-08-backlog-review-wave-7-plan-index.md
+- created: '2026-08-31T05:24:43Z'
+- This artifact is the durable program map for the external-plan corpus listed in
+- `oat_program_indexes`. It records wave composition and status. It is not an
+- executable plan and is not an `oat-project-import-plan` target—each wave runs as
+- a wrapper OAT project via `oat-wave-execute`, and each plan's implementation
+- contract remains its immutable plan file.
+- This program supersedes the composition map in
+- [the 2026-08-19 execution program](./2026-08-19-execution-program.md), whose four
+- implementation waves are already merged. It does not absorb or resolve that
+- program's deferred human-gated completion tails; those remain owned by the
+- predecessor record and the operator.
+- Execution approval: operator approved the composition and autonomous execution
+- (including merges) on 2026-09-05. W1–W4 merged 2026-09-06; the Lite workflow PR #264 merged 2026-09-07; W5 merged 2026-09-07 (ten of eleven lanes; p09 parked); W6 merged 2026-09-08 (five lanes). The program is complete; the parked W5 p09 plan is carried by `BL-260907-make-the-completion-seal`. W7 (twenty corrective lanes from the 2026-09-08 post-program triage, PR #282) was composed on 2026-09-08 (PR #284) and merged 2026-09-09 (PR #286, CLI 0.2.67; nineteen lanes merged, p16 parked as a decision). Every composed wave is merged.
+- | Wave | Theme                                | Lanes | Status | Record                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+- | W1   | CLI resolution and asset correctness | 4     | merged | PR #262 → `6db0457c095e4384e5ac2f464ee1c4d5a47d0179` (squash, 2026-09-06T02:19:50Z); wrapper project `.oat/projects/shared/wave-1-execution` (lifecycle complete 2026-09-06; completion record `summary.md` + `implementation.md` § Final Summary; CLI 0.2.56); completion tail: done 2026-09-09 (sealed, lifecycle complete, archived locally and to S3 at the wave-7 close); recap: not run — pending `BL-260907-replace-the-default-project` (program close 2026-09-09).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+- | W2   | Skill contract truthfulness          | 5     | merged | PR #267 → `ca71c00a014a6eba00cb4cd4c46974fc6aa58139` (squash, 2026-09-06T10:47:59Z); wrapper project `.oat/projects/shared/wave-2-execution` (lifecycle complete 2026-09-06; completion record `summary.md` + `implementation.md` § Final Summary; CLI 0.2.57); completion tail: done 2026-09-09 (sealed, lifecycle complete, archived locally and to S3 at the wave-7 close); recap: not run — pending `BL-260907-replace-the-default-project` (program close 2026-09-09).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+- | W3   | Workflow durability and containment  | 3     | merged | PR #269 → `ed75370db9f7cf43cd884572bd58502aa71f22bd` (squash, 2026-09-06T16:06:38Z); wrapper project `.oat/projects/shared/wave-3-execution` (lifecycle complete 2026-09-06; completion record `summary.md` + `implementation.md` § Final Summary; CLI 0.2.58); completion tail: done 2026-09-09 (sealed, lifecycle complete, archived locally and to S3 at the wave-7 close); recap: not run — pending `BL-260907-replace-the-default-project` (program close 2026-09-09).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+- | W4   | Delivered-project follow-ups         | 3     | merged | PR #271 → `81b784c3d3660968291a00cfc814336a36786c74` (squash, 2026-09-06T20:45:35Z); wrapper project `.oat/projects/shared/wave-4-execution` (lifecycle complete 2026-09-06; completion tail done 2026-09-09 (sealed, lifecycle complete, archived locally and to S3 at the wave-7 close)); CLI 0.2.59.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+- | W5   | Program-intake follow-ups            | 11    | merged | PR #275 → `cc91a2d21077ada69f52775b87abedd451e48994` (squash, 2026-09-07T23:19:34Z); wrapper project `.oat/projects/shared/wave-5-execution` (lifecycle complete 2026-09-07; completion tail done 2026-09-09 (sealed, lifecycle complete, archived locally and to S3 at the wave-7 close)); CLI 0.2.63; ten of eleven lanes merged — p09 (defer activeProject clearing) parked on its plan's STOP condition (`BL-260907-make-the-completion-seal`); exit gate passed on the operator-authorized third attempt after two blocking rounds fixed as Phase 12.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+- | W6   | Truthfulness residue                 | 5     | merged | PR #278 → `0ba401b31b7fc435e323b98681a5934a5e81f823` (squash, 2026-09-08T07:40:03Z); wrapper project `.oat/projects/shared/wave-6-execution` (lifecycle complete 2026-09-08); CLI 0.2.64; all five lanes merged in two groups; program complete — every composed wave has landed.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+- | W7   | Post-program corrective lanes        | 20    | merged | PR #286 → `f4c2dc4ef4d55a83be0cf7bfdc546f7b9fb23893` (squash, 2026-09-09T15:20:33Z); composed as PR #284 (`684bd3be3`); wrapper project `.oat/projects/shared/wave-7-execution` (lifecycle: final review passed on round 4 after a three-lane fix round and two bounded follow-ups, configured exit gate passed, `pr_open` → merged; completion record `summary.md` + `implementation.md` § Final Summary; CLI 0.2.67); nineteen of twenty lanes merged — p16 (dispatch baselines after journaling) parked on its plan's STOP condition (the recorder graph's no-process guard forbids the plan's git seam; `BL-260906-harden-dispatch-launch` returns to planning as a decision, partial work under the wrapper's `parked/wave-7-p16/`); fifteen `BL-260909-*` follow-ups filed; completion tail: done 2026-09-09 (sealed, lifecycle complete, archived locally and to S3; the active-project pointer cleared) — run for all seven wrappers at this close per the operator's standing decision (see below); recap: not run — pending `BL-260907-replace-the-default-project` |
+- | Plan                                                                                                                                                                                   | Index                                                            | Wave | Ordering notes                                                                                                                                         | Status                                                                                                                                                   |
+- | [Use configured docs index paths](./2026-08-30-use-configured-docs-index-paths.md)                                                                                                     | [Wave 1 index](./2026-08-30-backlog-review-wave-1-plan-index.md) | W1   | parallel group 1                                                                                                                                       | done                                                                                                                                                     |
+- | [Emit dispatch stamp with resolver JSON](./2026-08-30-emit-dispatch-stamp-with-resolver-json.md)                                                                                       | [Wave 2 index](./2026-08-30-backlog-review-wave-2-plan-index.md) | W4   | group 2 after gate override (shared contract tests and pins); moved from W1 on 2026-09-02; READY since PR #255 merged; issue #211 is soft              | done                                                                                                                                                     |
+- | [Validate assets bundle structure](./2026-08-30-validate-assets-bundle-structure.md)                                                                                                   | [Wave 1 index](./2026-08-30-backlog-review-wave-1-plan-index.md) | W1   | parallel group 1; merge before asset-error successor                                                                                                   | done                                                                                                                                                     |
+- | [Make asset errors override-aware](./2026-08-30-make-assets-errors-override-aware.md)                                                                                                  | [Wave 1 index](./2026-08-30-backlog-review-wave-1-plan-index.md) | W1   | group 2 after dependency revalidation sets the plan READY                                                                                              | done                                                                                                                                                     |
+- | [Repair bundled skill contract drift](./2026-08-30-repair-bundled-skill-contract-drift.md)                                                                                             | [Wave 1 index](./2026-08-30-backlog-review-wave-1-plan-index.md) | W2   | group 1; merge-first contract baseline                                                                                                                 | done                                                                                                                                                     |
+- | [Harden codex-skill anaphora guard](./2026-08-30-harden-codex-skill-anaphora-guard.md)                                                                                                 | [Wave 3 index](./2026-08-30-backlog-review-wave-3-plan-index.md) | W2   | group 2 after bundled-skill repair revalidation                                                                                                        | done                                                                                                                                                     |
+- | [Guard docs-app mirrors of skill prose](./2026-08-30-guard-docs-app-mirrors-of-skill-prose.md)                                                                                         | [Wave 3 index](./2026-08-30-backlog-review-wave-3-plan-index.md) | W2   | group 2 after bundled-skill repair revalidation                                                                                                        | done                                                                                                                                                     |
+- | [Require named lifecycle skills to be loaded](./2026-08-30-require-named-lifecycle-skills-to-be-loaded.md)                                                                             | [Wave 2 index](./2026-08-30-backlog-review-wave-2-plan-index.md) | W2   | group 2; revalidate if draft PR #190 changes first                                                                                                     | done                                                                                                                                                     |
+- | [Require repo-wide call-site sweeps](./2026-08-30-require-repo-wide-call-site-sweeps.md)                                                                                               | [Wave 3 index](./2026-08-30-backlog-review-wave-3-plan-index.md) | W3   | parallel group 1                                                                                                                                       | done                                                                                                                                                     |
+- | [Journal deterministic smoke worktrees](./2026-08-30-journal-deterministic-smoke-worktrees-before-creation.md)                                                                         | [Wave 3 index](./2026-08-30-backlog-review-wave-3-plan-index.md) | W3   | parallel group 1; dedicated safety review                                                                                                              | done                                                                                                                                                     |
+- | [Require executable backstops](./2026-08-30-require-executable-backstops-for-contract-claims.md)                                                                                       | [Wave 3 index](./2026-08-30-backlog-review-wave-3-plan-index.md) | W3   | group 2 after concrete guard examples and call-site sweep                                                                                              | done                                                                                                                                                     |
+- | [Disable configured gates per project](./2026-08-30-disable-configured-gates-per-project.md)                                                                                           | [Wave 2 index](./2026-08-30-backlog-review-wave-2-plan-index.md) | W4   | parallel group 1; preserve PR #246 contracts; owns the `oat-project-next` disposition consumer                                                         | done                                                                                                                                                     |
+- | [Warn on non-sync manifest restamps](./2026-08-30-warn-on-non-sync-manifest-restamps.md)                                                                                               | [Wave 1 index](./2026-08-30-backlog-review-wave-1-plan-index.md) | W4   | parallel group 1; READY since PR #255 merged (refreshed 2026-09-03 against Manifest V2); preserve PR #249 diagnostics                                  | done                                                                                                                                                     |
+- | [Recover committed review artifacts after post-selection gate failures](./2026-09-02-recover-committed-review-artifacts-after-post-selection-failures.md)                              | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 1; land before the index-lock plan                                                                                                               | done                                                                                                                                                     |
+- | [Retry gate project-log finalization across transient Git index locks](./2026-09-02-retry-gate-project-log-finalization-across-index-locks.md)                                         | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 2 after post-selection recovery                                                                                                                  | done                                                                                                                                                     |
+- | [Keep instruction-sync pointer files out of documentation content trees](./2026-09-02-keep-instruction-sync-pointers-out-of-docs-trees.md)                                             | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 1; before `oat config unset`                                                                                                                     | done                                                                                                                                                     |
+- | [Add an exclusion mechanism to docs index generation](./2026-09-02-add-exclusions-to-docs-index-generation.md)                                                                         | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W1   | group 2 successor; READY only after the docs-index lane merges and step 1 passes                                                                       | done                                                                                                                                                     |
+- | [Validate every shipped skill-to-script reference against its pack manifest](./2026-09-02-validate-skill-script-references-against-pack-manifests.md)                                  | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 2; before the readiness-contract lane                                                                                                            | done                                                                                                                                                     |
+- | [Add an oat config unset command](./2026-09-02-add-oat-config-unset-command.md)                                                                                                        | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 2 after instruction-sync pointers                                                                                                                | done                                                                                                                                                     |
+- | [Route incomplete quick projects to quick-start from plan, progress, and next](./2026-09-02-route-incomplete-quick-projects-to-quick-start.md)                                         | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 1                                                                                                                                                | done                                                                                                                                                     |
+- | [Document patch-and-restore recovery for lost child handles with staged work](./2026-09-02-document-patch-and-restore-for-lost-child-handles.md)                                       | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W2   | group 3 after the named-skill loading lane                                                                                                             | done                                                                                                                                                     |
+- | [Defer activeProject clearing on shared and local archive completions](./2026-09-02-defer-activeproject-clearing-on-archive-completions.md)                                            | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 4 after the recap lane; before terminal-status and the consolidation plan                                                                        | parked (plan STOP; BL-260907-make-the-completion-seal)                                                                                                   |
+- | [Make consolidated-project retirement checks semantic](./2026-09-02-make-consolidated-project-retirement-semantic.md)                                                                  | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 5 after active-pointer and quick-resume                                                                                                          | done                                                                                                                                                     |
+- | [Make the autonomous project recap capability-aware and non-blocking](./2026-09-02-make-autonomous-project-recap-capability-aware.md)                                                  | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 3 after the readiness lane (shared pins file); no longer waits on `oat config unset`                                                             | done                                                                                                                                                     |
+- | [Enforce plan-readiness versus execution-readiness in oat-repo-improve](./2026-09-02-enforce-external-plan-readiness-contract.md)                                                      | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 3 first, after the skill-script lane; before the recap lane (shared pins file)                                                                   | done                                                                                                                                                     |
+- | [Populate provider reachability evidence across pack and lifecycle surfaces](./2026-09-03-populate-provider-reachability-evidence.md)                                                  | [Wave 5 index](./2026-09-03-backlog-review-wave-5-plan-index.md) | W6   | parallel group 1; one wave-level lockstep bump                                                                                                         | done                                                                                                                                                     |
+- | [Validate review-ledger paths and archive only terminal reviews before the final PR](./2026-09-03-validate-review-ledger-paths-before-final-pr.md)                                     | [Wave 5 index](./2026-09-03-backlog-review-wave-5-plan-index.md) | W6   | parallel group 1; one wave-level lockstep bump                                                                                                         | done                                                                                                                                                     |
+- | [Preserve `__proto__`-named config keys through JSON parsing](./2026-09-03-preserve-proto-named-config-keys.md)                                                                        | [Wave 5 index](./2026-09-03-backlog-review-wave-5-plan-index.md) | W6   | parallel group 1; one wave-level lockstep bump                                                                                                         | done                                                                                                                                                     |
+- | [Honor metadata.version as the canonical skill version](./2026-09-04-honor-metadata-version-for-skills.md)                                                                             | [Wave 5 index](./2026-09-03-backlog-review-wave-5-plan-index.md) | W6   | group 2 after the pr-final lane (shared version pins)                                                                                                  | done                                                                                                                                                     |
+- | [Make terminal project status agree with completed revision plans](./2026-09-04-make-terminal-project-status-agree-with-revision-plans.md)                                             | [Wave 5 index](./2026-09-03-backlog-review-wave-5-plan-index.md) | W5   | group 4 after the active-pointer lane (shared pins file) and the quick-route lane (`next` skill)                                                       | done                                                                                                                                                     |
+- | [Diagnose canonical skills missing from a provider view at resolution time](./2026-09-04-diagnose-canonical-skills-missing-from-provider-views.md)                                     | [Wave 5 index](./2026-09-03-backlog-review-wave-5-plan-index.md) | W6   | group 2 after the provider-reachability lane (shared `info-tool.ts`)                                                                                   | done                                                                                                                                                     |
+- | [Read stdin with an fd-capable API in finalize-synced-archive.mjs](./2026-09-08-read-stdin-in-finalize-synced-archive.md)                                                              | [Wave 7 index](./2026-09-08-backlog-review-wave-7-plan-index.md) | W7   | group 1; first of the `oat-project-complete` pair and of the `validation/skills.test.ts` chain                                                         | done                                                                                                                                                     |
+- | [Let `oat config unset` remove a malformed value, and fold `adopt` onto the shared surface-flag resolver](./2026-09-08-fix-oat-config-unset-and-adopt.md)                              | [Wave 7 index](./2026-09-08-backlog-review-wave-7-plan-index.md) | W7   | group 1; first of the config chain (`commands/config/index.ts`, `config/resolve.ts`)                                                                   | done                                                                                                                                                     |
+- | [Guard repository Markdown against the formatter rewriting a bare prototype-key literal into bold](./2026-09-08-guard-bare-proto-in-markdown-records.md)                               | [Wave 7 index](./2026-09-08-backlog-review-wave-7-plan-index.md) | W7   | group 1; before the normalized-config-maps lane (repairs its source item title)                                                                        | done                                                                                                                                                     |
+- | [Guard a packed path under every required asset directory](./2026-09-08-guard-every-packed-asset-directory.md)                                                                         | [Wave 7 index](./2026-09-08-backlog-review-wave-7-plan-index.md) | W7   | group 1; never with the symlink-target lane (`configuration.md`)                                                                                       | done                                                                                                                                                     |
+- | [Make `oat status` persist and pin its native-skill adoption outcome](./2026-09-08-persist-native-skill-adoption-in-status.md)                                                         | [Wave 7 index](./2026-09-08-backlog-review-wave-7-plan-index.md) | W7   | group 1; sole writer of `commands/status/**`                                                                                                           | done                                                                                                                                                     |
+- | [Make `oat sync` report a failure summary instead of "No changes required." when a rejected collection leaves zero planned operations](./2026-09-08-fix-sync-apply-failure-summary.md) | [Wave 7 index](./2026-09-08-backlog-review-wave-7-plan-index.md) | W7   | group 1; sole writer of `commands/sync/apply.ts`                                                                                                       | done                                                                                                                                                     |
+- | [Harden the external-plan readiness contract and settle the wave-program ledger vocabulary](./2026-09-08-harden-the-external-plan-readiness-contract.md)                               | [Wave 7 index](./2026-09-08-backlog-review-wave-7-plan-index.md) | W7   | group 1; before the caller-model lane (shared `skills-bundled-docs-contract.test.ts`, `wave-workflows.md`); sole writer of `oat-wave-program/SKILL.md` | done                                                                                                                                                     |
+- | [Make the completion seal idempotent and unpark wave-5 p09](./2026-09-08-make-the-completion-seal-idempotent.md)                                                                       | [Wave 7 index](./2026-09-08-backlog-review-wave-7-plan-index.md) | W7   | group 2 after the stdin lane (shared completion skill and pins); unparks W5 p09                                                                        | done                                                                                                                                                     |
+- | [Harden normalized config maps against a preserved `__proto__` key](./2026-09-08-harden-normalized-config-maps.md)                                                                     | [Wave 7 index](./2026-09-08-backlog-review-wave-7-plan-index.md) | W7   | group 2 after the `unset`/`adopt` lane and the bare-proto guard (config chain, second)                                                                 | done                                                                                                                                                     |
+- | [Name the resolved target in the symlink inert-exclusion warning](./2026-09-08-name-the-resolved-symlink-target.md)                                                                    | [Wave 7 index](./2026-09-08-backlog-review-wave-7-plan-index.md) | W7   | group 2; never with the packed-asset lane (`configuration.md`); sole writer of `commands/instructions/**`                                              | done                                                                                                                                                     |
+- | [Converge copy-strategy skill projections so a synced copy reads in sync](./2026-09-08-converge-copy-strategy-skill-projections.md)                                                    | [Wave 7 index](./2026-09-08-backlog-review-wave-7-plan-index.md) | W7   | group 2; sole writer of `engine/compute-plan.ts` and `engine/execute-plan.ts`                                                                          | done                                                                                                                                                     |
+- | [Put skill-asset formatting and the worktree-init test inside the gates CI actually runs](./2026-09-08-cover-skill-and-script-tests-in-repo-gates.md)                                  | [Wave 7 index](./2026-09-08-backlog-review-wave-7-plan-index.md) | W7   | group 2; never with the validators, authoring-facts, or bare-proto lanes (`AGENTS.md`, `.lintstagedrc.mjs`)                                            | done                                                                                                                                                     |
+- | [Make the oat-doctor dashboard example describe a state the doctor can report](./2026-09-08-reconcile-the-oat-doctor-example.md)                                                       | [Wave 7 index](./2026-09-08-backlog-review-wave-7-plan-index.md) | W7   | group 3; `validation/skills.test.ts` chain (third writer); sole writer of `oat-doctor/SKILL.md`                                                        | done                                                                                                                                                     |
+- | [Warn on a wrong-typed `documentation.root` instead of dropping it in silence](./2026-09-08-warn-on-wrong-typed-documentation-root.md)                                                 | [Wave 7 index](./2026-09-08-backlog-review-wave-7-plan-index.md) | W7   | group 3 after the normalized-config-maps lane (config chain, third); before the docs-index lane                                                        | done                                                                                                                                                     |
+- | [Repair the stray fences that hide normative skill prose and widen the fence scanner across `.agents/skills`](./2026-09-08-repair-stray-fences-in-lifecycle-skills.md)                 | [Wave 7 index](./2026-09-08-backlog-review-wave-7-plan-index.md) | W7   | group 4; before the authoring-facts and caller-model lanes (shared `create-agnostic-skill` and `oat-repo-improve` bumps)                               | done                                                                                                                                                     |
+- | [Close the docs-index follow-ups from the wave-1 reviews](./2026-09-08-close-the-docs-index-follow-ups.md)                                                                             | [Wave 7 index](./2026-09-08-backlog-review-wave-7-plan-index.md) | W7   | group 4 after the config chain (last writer of `config/resolve.ts`)                                                                                    | done                                                                                                                                                     |
+- | [Close the version-validator gaps: agent roles, unresolvable versions, the alias promotion, and scripts-only skill changes](./2026-09-08-tighten-the-skill-version-validators.md)      | [Wave 7 index](./2026-09-08-backlog-review-wave-7-plan-index.md) | W7   | group 5; `validation/skills.test.ts` chain; never with the gates lane (`AGENTS.md`)                                                                    | done                                                                                                                                                     |
+- | [Resolve the accepted execution baseline after mandatory launch journaling, and make the ordering auditable](./2026-09-08-calculate-dispatch-baselines-after-journaling.md)            | [Wave 7 index](./2026-09-08-backlog-review-wave-7-plan-index.md) | W7   | group 6; `validation/skills.test.ts` chain; issue #266 half stays outside the program                                                                  | deferred — parked 2026-09-09 on the plan STOP (the recorder graph no-process guard forbids the Step 3 git seam; re-enters a later wave after a decision) |
+- | [Correct the factual skill-authoring claims and give each one a named backstop](./2026-09-08-correct-skill-authoring-facts.md)                                                         | [Wave 7 index](./2026-09-08-backlog-review-wave-7-plan-index.md) | W7   | group 7 after the fences lane (shared `create-agnostic-skill` bump)                                                                                    | done                                                                                                                                                     |
+- | [Keep external-plan writes on the caller's model class in oat-repo-improve](./2026-09-08-keep-plan-writes-on-the-callers-model.md)                                                     | [Wave 7 index](./2026-09-08-backlog-review-wave-7-plan-index.md) | W7   | group 8 (last) after the readiness and fences lanes (shared contract test and `oat-repo-improve` bump)                                                 | done                                                                                                                                                     |
+- - Assume a concurrency ceiling of three implementation lanes. A numbered plan
+- or row does not imply serial execution unless an ordering note says so.
+- - Create one wrapper OAT project and one integration PR per wave. Keep lane
+- commits reviewable inside the wrapper branch and record all reconciliations in
+- its orchestration log.
+- - Lockstep release files (the five public package manifests,
+- `packages/cli/assets/public-package-versions.json`, and `pnpm-lock.yaml`)
+- are owned exclusively by the wave fan-in step: no implementation lane edits
+- them, so parallel lanes never share that write surface. PR-scoped skill
+- `version:` bumps and their pins in `packages/cli/src/validation/skills.test.ts`
+- stay in lane ownership.
+- - Three verification modes, so lane success and integrated release readiness
+- are never confused (the execution skill requires integration gates after
+- every group, and `tools/release/validate-public-packages.ts` rejects changed
+- public packages whose lockstep versions did not move):
+- - **Lane mode:** each lane runs its plan's focused tests plus `pnpm check`,
+- `pnpm type-check`, and `pnpm run check:skill-bumps` (and `pnpm lint`,
+- `pnpm format`, `pnpm oat:validate-skills` when it changes `.agents/skills`
+- or `tools/smoke`). Lanes never run `pnpm release:check-versions` or
+- `pnpm release:validate` and never edit lockstep release files.
+- - **Group fan-in mode:** the fan-in owner establishes the wave's single
+- lockstep bump above freshly fetched `origin/main` before the first group's
+- integration gates, regenerates the version asset through the build, and
+- retains that bump through later groups; then it runs the full
+- definition-of-done sequence on the integrated wave branch after every
+- group, to completion, before any group bookkeeping edit.
+- - **Final-wave mode:** before the wave PR, fetch `origin/main` again,
+- re-check that the retained bump is still strictly above main (advance it
+- if main moved), and rerun the full sequence.
+- - Hidden shared write surfaces count when composing groups: the skill version
+- pins in `packages/cli/src/validation/skills.test.ts` (every lane that bumps a
+- pinned skill writes them), `review-skill-contracts.test.ts`, provider-sync
+- outputs, and generated files. Compute intersections from implementation
+- steps, test plans, and pins, not from Scope lists alone; at most one lane per
+- parallel group may write each of those files.
+- - At every wave and group boundary, the drift refresh compares each plan's
+- complete planned write set against the actual execution `HEAD` and the
+- current head of draft PR #190 (`63161897dd4` as of 2026-09-05; 217 files),
+- and records one SHA-bound result in the wrapper's Drift Refresh Record.
+- Plan landing-event tables forecast which assumption to re-check; that record
+- is the authoritative execution evidence.
+- - Revalidate every pending wave when main materially changes. Specifically
+- re-sweep W4 dispatch behavior if issue #211 changes and W2 lifecycle loading
+- if draft PR #190 changes before their lanes start.
+- - **External dependency (landed):** the `tool-pack-scope-provider-truthfulness`
+- project merged as PR #255 (`a06e9713a`, CLI 0.2.52) on 2026-09-03, followed
+- by PR #256 (0.2.53). The two W4 plans it blocked are now `READY` and
+- refreshed. Before each remaining lane starts, apply its landing-event row: W2's named-skill
+- lane re-sweeps `dispatch-and-dry-run.md` and the review-provide skills; W4's
+- gate-override lane re-anchors `oat-project-plan-writing` and
+- `user-sync-config.ts`; W3's smoke lane re-anchors `tools/smoke/CONTRACT.md`
+- (an adjacent `runtimeObservation` section lands there). Its `p07-t04` also
+- archives four backlog items and rewrites the backlog index, so any wave
+- closeout after that merge must rebase its backlog bookkeeping.
+- - Stop at the operator checkpoint below before creating the W1 wrapper project
+- or dispatching any implementation lane.
+- - **Parallel group 1:** Use configured docs index paths; validate asset-bundle
+- structure. (The dispatch-stamp lane moved to W4 on 2026-09-02 because the
+- in-flight truthfulness merge rewrites its cited skills.)
+- - **Group 2 status gate:** After structural asset validation completes and
+- merges into the wave branch, revalidate the successor against that exact
+- tree. The same gate applies to the docs-index exclusion successor: after the
+- docs-index path lane merges into the wave branch, run that plan's step 1,
+- set it `READY`, then implement it. Update or supersede its external plan and set `oat_execution_status` to
+- `READY` only when the hard-dependency evidence and focused asset tests pass.
+- Do not import or dispatch the successor while its source plan remains
+- `BLOCKED`. Then implement the override-aware remedies and revalidate every
+- pre-existing asset failure family plus the new structural branch.
+- - **Cross-wave prerequisites:** None beyond a fresh main baseline and operator
+- approval. The docs-index lane carries the 2026-09-05 output-safety fix
+- (default output is `<documentation.root>/index.md`; generation never writes
+- the scaffold's authored `docs/index.md` or `mkdocs.yml`) and the canonical
+- docs-root meaning (app root, with `<root>/docs` precedence as compatibility
+- behavior); the exclusion successor and the W5 instruction-sync lane inherit
+- that meaning rather than deriving their own.
+- - **Composition rationale:** The two first-group lanes are bounded CLI/runtime
+- fixes with disjoint primary write surfaces. The third is a true ordered
+- successor to the asset validator and remains in the same wrapper so its error
+- matrix is tested against the exact delivered branch.
+- - **Group 1:** Repair the verified bundled-skill contract drift and merge it
+- into the wave branch first.
+- - **Parallel group 2:** Harden the codex-skill anaphora guard; guard docs-app
+- mirrors of contract-tested skill prose; require lifecycle orchestrators to
+- load every named execution skill.
+- - **Group 3:** Document patch-and-restore recovery for lost child handles,
+- after the named-skill lane, with one coordinated `oat-project-implement`
+- bump. Draft PR #190 rewrites the same reference; apply that plan's
+- landing-event row if #190 merges first.
+- - **Cross-wave prerequisites:** W1 merged (PR #262, 2026-09-06) — satisfied. Revalidate the lifecycle corpus if
+- draft PR #190 changes before group 2 starts.
+- - **Composition rationale:** Group 1 establishes the corrected canonical prose
+- baseline. The three guard/loading lanes can then run as peers against that
+- baseline while coordinating canonical-skill versions, docs mirrors, shared
+- contract tests, and release files once at fan-in.
+- - **Parallel group 1:** Require repo-wide call-site sweeps for cross-cutting
+- options; journal deterministic smoke worktrees before creation.
+- - **Group 2:** Require executable backstops for standing contract claims after
+- the call-site sweep and W2 guard work provide current concrete examples.
+- - **Cross-wave prerequisites:** W2 merged (PR #267, 2026-09-06) — satisfied. The smoke lane receives a dedicated
+- ownership and deletion-safety review before integration.
+- - **Composition rationale:** The first two lanes have write-disjoint workflow
+- policy and smoke-tooling surfaces. The authoring-policy lane is not product-
+- blocked by them, but ordering it second reduces prose churn and lets its
+- examples cite freshly delivered executable contracts.
+- - **Parallel group 1:** Disable configured lifecycle gates per project; warn
+- on every non-sync manifest version restamp.
+- - **Group 2:** Emit the dispatch stamp with resolver JSON, after the
+- gate-override lane: both write `review-skill-contracts.test.ts` and the
+- version pins in `validation/skills.test.ts` (regrouped 2026-09-05).
+- - **Cross-wave prerequisites:** W3 merged (PR #269, 2026-09-06) — satisfied. The manifest-restamp and
+- dispatch-stamp plans were refreshed and set `READY` on 2026-09-03 after
+- PR #255 merged; re-anchor the gate-override plan's `oat-project-plan-writing` and
+- `user-sync-config.ts` citations. Revalidate all three against live
+- gate/status/dispatch surfaces because they follow freshly merged PRs #246,
+- #249, and the truthfulness PR.
+- - **Composition rationale:** All three plans follow merged projects that own
+- their surfaces. Their product surfaces (gate, status, dispatch) are
+- independent, but the gate-override and dispatch-stamp lanes share two
+- contract-test files, so they run in sequence; the gate-override lane also
+- now owns the `oat-project-next` disposition consumer it previously omitted.
+- - **Parallel group 1:** Recover committed review artifacts after
+- post-selection failures; keep instruction-sync pointers out of docs trees;
+- route incomplete quick projects to quick-start.
+- - **Parallel group 2:** Retry gate project-log finalization across index
+- locks (after group 1's gate plan); add `oat config unset` (after the
+- instruction-sync plan so its family-coverage test includes the new
+- `documentation.*` key); validate skill-to-script references.
+- - **Group 3 (sequential):** Enforce the external-plan readiness contract
+- (after the skill-script lane, which shares a contract-test file), then make
+- the autonomous recap capability-aware: both write
+- `validation/skills.test.ts` (readiness adds contract cases and a pin; recap
+- bumps two pinned skills). The recap lane no longer waits on `oat config
+- unset`; its optional seam keys live in `BL-260904-add-recap-seam-config-keys`.
+- - **Group 4 (sequential):** Defer activeProject clearing on archive
+- completions, after the recap lane releases `oat-project-complete/SKILL.md`;
+- then make terminal project status agree with completed revision plans,
+- which now also edits `oat-project-next/SKILL.md` Step 5.2 and its pin (so it
+- shares `validation/skills.test.ts` with the active-pointer lane and follows
+- the group-1 quick-route lane on the `next` skill).
+- - **Group 5:** Make consolidated-project retirement semantic, after the
+- active-pointer and quick-resume lanes; its sweep now runs before the
+- project-log seal.
+- - **Cross-wave prerequisites:** W4 merged (PR #271, 2026-09-06) — satisfied; the Lite workflow PR #264 (new `oat-project-lite` skill; lifecycle skills, templates, control-plane, `commands/project/**`) lands between W4 and W5 and is part of the W5 drift refresh. Before dispatch, re-read every W5
+- plan's `## Landing-event impact` table against the then-current state of
+- `tool-pack-scope-provider-truthfulness` and PR #190 and apply the listed
+- refreshes; the skill-script plan and the readiness plan re-anchor
+- contract-test files the truthfulness merge rewrites.
+- - **Composition rationale:** Eleven lanes with five shared seams (the gate
+- module; `OatDocumentationConfig`/`config/index.ts`; the completion skill,
+- which three lanes edit in sequence; the `next` skill, which two lanes edit
+- in sequence; and the skill contract-test files, above all the version pins
+- in `validation/skills.test.ts`, which seven lanes write) arranged in five
+- groups so each seam is touched by at most one lane at a time and the Wave 4
+- index ordering (docs-index exclusions → instruction-sync → unset) is
+- honored. Groups 3 and 4 are sequential pairs for that reason. The 2026-09-05
+- review recommended splitting W5 after group 2; the operator kept one wrapper
+- because every group ends in a full integration checkpoint and a split would
+- renumber references across the corpus, indexes, and backlog links.
+- - **Parallel group 1:** Populate provider reachability evidence; validate
+- review-ledger paths before the final PR; preserve `__proto__`-named config
+- keys.
+- - **Group 2:** Honor `metadata.version` as the canonical skill version, after
+- the pr-final lane releases the version pins in `validation/skills.test.ts`
+- (its bulk-migration follow-up stays outside the program); diagnose
+- canonical skills missing from a provider view in `oat tools info`, after
+- the reachability lane releases `info-tool.ts`.
+- - **Cross-wave prerequisites:** W5 merged (PR #275, 2026-09-07; p09 parked and carried as `BL-260907-make-the-completion-seal`) — satisfied, so the shared contract-test seams
+- the pr-final lane extends are settled. Apply the PR #190 landing-event rows
+- in the pr-final and config-key plans if that draft merges first.
+- - **Composition rationale:** Three write-disjoint first-group lanes plus two
+- ordered successors; the lanes share only the fan-in-owned lockstep files.
+- Kept out of W5 because its five groups already allocate every contract-test
+- seam.
+- - **Parallel group 1 (seven lanes):** read stdin with an fd-capable API in
+- `finalize-synced-archive.mjs`; fix `oat config unset` and fold `adopt` onto
+- the shared surface; guard bare `__proto__` literals in Markdown records;
+- guard every packed asset directory; persist the native-skill adoption
+- outcome in `oat status`; report a sync apply failure summary; harden the
+- external-plan readiness contract and settle the wave-program ledger
+- vocabulary (producer skill first, then `WAVE_STATUSES`).
+- - **Group 2 (five lanes):** make the completion seal idempotent and unpark W5
+- p09, after the stdin lane releases `oat-project-complete`; harden normalized
+- config maps, after the `unset`/`adopt` lane and the bare-proto guard; name
+- the resolved symlink target (never beside the packed-asset lane:
+- `configuration.md`); converge copy-strategy skill projections; put
+- skill-asset formatting and the worktree-init test inside the CI gates (sole
+- writer of root `package.json`, `.lintstagedrc.mjs`, `AGENTS.md` here).
+- - **Group 3 (two lanes):** reconcile the oat-doctor example; warn on a
+- wrong-typed `documentation.root`, after the normalized-maps lane (config
+- chain, third).
+- - **Group 4 (two lanes):** repair stray fences in lifecycle skills (takes the
+- `create-agnostic-skill` and `oat-repo-improve` bumps the later lanes
+- inherit); close the docs-index follow-ups, after the config chain (last
+- writer of `config/resolve.ts`).
+- - **Groups 5–8 (one lane each, in order):** tighten the skill version
+- validators (never beside the gates lane: root `AGENTS.md`); calculate
+- dispatch baselines after journaling; correct the skill-authoring facts,
+- after the fences lane; keep external-plan writes on the caller's model,
+- after the readiness and fences lanes.
+- - **Cross-wave prerequisites:** W1–W6 merged and the program complete
+- (2026-09-08) — satisfied; the bundled-skill migration (PR #280, CLI 0.2.65)
+- and PR #273 (remote project management, `7d70ac307`) are the baseline every
+- W7 plan was verified against. Draft PR #190 stays a landing event in every
+- plan. The recon-intent project (`BL-260908-restore-recon-s-cheap-fan-out`)
+- and the recap-simplification project (`BL-260907-replace-the-default-project`)
+- run as their own projects, not as W7 lanes; the recap contract in
+- `oat-wave-program` is unchanged by W7, so the program recap stays
+- `not run — pending` until that project lands.
+- - **Composition rationale:** Twenty lanes, all written on the caller's model
+- class (Fable) after delegated drafting, with the one dominant seam — eight
+- lanes write `validation/skills.test.ts` — serialized across eight groups
+- and every other lane placed beside exactly one of them; the config chain
+- (`unset`/`adopt` → normalized maps → typed root → docs-index) and the two
+- ordered skill-bump pairs (stdin → seal on `oat-project-complete`; fences →
+- authoring-facts and fences → caller-model) fix the remaining order. Groups
+- 5–8 are singletons because the chain leaves nothing write-disjoint to place
+- beside them; each fan-in there is small. The two high-priority items from
+- the triage are deliberately outside the wave (own projects), and dispatch
+- issue #266 waits for a producer.
+- - **Execution record (2026-09-09):** the wrapper ran the eight groups as six
+- triples plus two solo lanes under the operator's concurrency ceiling of 3
+- (group 1 p01–p03 … group 6 p16–p18, then p19, then p20 as the hill), with a
+- root review of every lane (one to two rounds), eight fan-ins each gated by
+- the full DoD sequence plus smoke, skills, scripts, and the root test with
+- `Cached: 0`, and one lockstep bump 0.2.66 → 0.2.67 at the first fan-in. Five
+- STOPs: p02, p05, p15, p17 closed by dated plan refreshes authored on the
+- caller's model class and resumed the same day; p16 parked. The root final
+- review (reconnaissance attempted) returned four Criticals — the closeout
+- archival itself plus three product holes in the completion seal and the
+- managed-copy digest — which ran as Phase 21 (three parallel fix lanes) and
+- two bounded follow-ups on the project-log surface until every reader and
+- writer sat behind one ambiguity predicate; round 4 passed and the configured
+- exit gate passed. Twenty-three backlog items archived; fifteen `BL-260909-*`
+- follow-ups filed; wave-close corrections written into fourteen plans.
+- - **2026-09-02 (intake)** — Added the Wave 4 index (12 plans) from the
+- program-intake triage; coverage 25/25. Placed the docs-index exclusion plan
+- as a W1 group-2 successor (`BLOCKED` until its predecessor merges),
+- patch-and-restore in W2 group 3, and the other ten in a new W5. Every new
+- plan carries a `## Landing-event impact` table for the truthfulness merge
+- and PR #190. Ledger: W1 = 4 lanes, W2 = 5, W3 = 3, W4 = 3, W5 = 10.
+- - **2026-09-02 (review)** — Bugbot found two composition defects in W5:
+- the active-pointer and recap lanes shared the completion skill in one
+- group, and `oat config unset` ran before the instruction-sync pointer key
+- it must cover. Recomposed W5 into five groups honoring the Wave 4 index
+- ordering and added the recap → unset ordering neither document stated.
+- - **2026-09-03 (truthfulness landed)** — Rebased onto `origin/main`
+- `cf0159893` (PR #255 truthfulness at `a06e9713a`, PR #256 duplicate-role
+- sync fix). Re-ran all 25 drift checks from the repository root: drift
+- matched every plan's landing-event forecast. Refreshed the manifest-restamp
+- and dispatch-stamp plans against Manifest V2, the new engine save sites, the
+- status collection-migration block, and the new `oat project dispatch record`
+- surface; both are now `READY` (23 READY, 2 BLOCKED: the two ordered
+- successors). Marked the event landed in every Wave 4 plan's impact table.
+- PR #255 also created eight `BL-260903-*` items (residue, retro feedback, two
+- pre-existing defects) and left `BL-260724` open by operator decision; none
+- enter this program yet. No new GitHub issues since the intake triage.
+- - **2026-09-03 (residue planned)** — PR #253 merged (`dd41adb9b`) and the
+- post-merge triage resume ran. Added the Wave 5 index (3 plans from the
+- `BL-260903-*` residue) as a new W6; coverage 28/28 (26 READY, 2 BLOCKED).
+- Filed `BL-260904-stabilize-the-collection` for the collection-detach test
+- flake observed on #253's CI (main passed on identical code); unplanned
+- until reproduced.
+- - **2026-09-04 (PR #248)** — Rebased onto `7c90b220a` (recon evidence
+- packets, 113 files). Incremental drift for all 29 plans: adjacent only
+- (`validation/skills.test.ts` recon pins, `oat-config.ts` `tools.requiredBy`
+- leases, autonomy-contract inventory, bundle and bundled-docs contract
+- tests) plus small anchor shifts re-applied in the manifest-restamp,
+- provider-reachability, skill-version, and skill-script plans. PR #248 also
+- added four backlog items; `BL-260901-make-terminal-project-status`
+- (high/S) is plan-ready and unplanned, the recon-integration and
+- corrective-revision items need discovery.
+- - **2026-09-04 (issue #258)** — Added the skill-versioning plan (Agent Skills
+- spec `metadata.version`) as W6 group 2; coverage 29/29 (27 READY,
+- 2 BLOCKED). The bundled-skill migration is a separate backlog item outside
+- the program.
+- - **2026-09-04 (status and diagnostic)** — Added the terminal
+- project-status plan (root cause: the control-plane parser drops
+- `## Phase p01:` and `## Revision Phase p-rev1:` headings, and the recommender
+- never reads `lifecycle`) to W5 group 4 and the provider-view diagnostic
+- (hosted in `oat tools info`, status untouched) to W6 group 2. Coverage
+- 31/31 (29 READY, 2 BLOCKED). Ledger: W5 = 11 lanes, W6 = 5.
+- - **2026-09-04 (independent review)** — Five independent review lanes (three
+- Codex, two Claude) covered all 31 plans. Corpus-wide fixes: lockstep release
+- files are now owned by the wave fan-in and no lane writes them; every
+- 2026-08-30 plan gained a landing-event table; reciprocal never-parallel rows
+- now exist for every shared write surface. Substantive fixes: the
+- active-pointer guard keys on `IS_DURABLE_PROJECT` (local scope never
+- archives); the terminal-status plan normalizes heading dialect and task-id
+- padding; the docs-index plan pins a derivation rule for the ambiguous
+- `documentation.root` and propagates the `CliError` exit code; the recap plan
+- moved its optional config step to `BL-260904-add-recap-seam-config-keys`;
+- decision-record steps carry PJM preconditions; stale anchors from PRs #248
+- and #255 were refreshed. Review record:
+- `.oat/repo/reference/reviews/2026-09-04-external-plan-independent-review.md`.
+- - **2026-09-08 (program-close dispositions)** — Per the program contract's
+- two program-close checkpoints: (1) **Program recap: not run —** the default
+- `program-recap` path depends on the explainer-kit seam machinery that issue
+- #230 shows cannot be relied on (`BL-260907-replace-the-default-project`,
+- high, runs as its own spec-driven project); the program recap (W1–W6, and
+- W7 once it lands) is generated after that project ships. Recorded here so
+- discretion is distinguishable from oversight. (2) **Completion tail:
+- standing deferral** — the operator decided on 2026-09-08 not to run
+- `oat-project-complete`'s tail (archive, pointer clear) across the six wave
+- wrapper projects now; owner: the wave-7 close, which runs the tail for all
+- seven wrappers together after wave 7 lands the two completion-tail defects
+- (`BL-260907-finalize-synced-archive-mjs`, `BL-260907-make-the-completion-seal`).
+- The human-gated question has been asked once and answered; it is not
+- repeated per wave. Post-program triage (PR #282) re-tiered the 42 follow-ups
+- the program filed and scoped wave 7 (corrective lanes) plus two standalone
+- projects (recon intent restoration `BL-260908-restore-recon-s-cheap-fan-out`;
+- recap simplification).
+- - **2026-09-08 (W6 closed; program complete)** — Wave 6 executed as wrapper
+- project `wave-6-execution` (five lanes in two groups, one lockstep bump to
+- 0.2.64 with the sync-manifest restamp in the same commit) and merged as
+- PR #278 (`0ba401b31b7fc435e323b98681a5934a5e81f823`). All five W6 rows flip to `done`; the program's
+- thirty-one plans are now thirty `done` and one `parked` (W5 p09, carried by
+- `BL-260907-make-the-completion-seal`). Pre-dispatch, the wave-boundary recon
+- found three false premises (the p04 plan's "eight callers" and pin
+- inventory, the p03 plan's null-prototype consumer safety, the p05 plan's
+- copy-drift assumption) and every plan received a dated
+- `Refresh applied 2026-09-07` entry; the p03 lane later hit its own STOP
+- (the plan's `getNodeValue` mechanism recursed where `parse` did not and a
+- null-prototype object broke a `String()` coercion in `oat-config.ts`) and
+- was resumed under a dated post-STOP refresh that replaced the mechanism
+- with iterative materialization into plain objects — a STOP whose remedy
+- lies within the plan's own file scope is closed by a refresh, not a park.
+- Review economics: every lane had a root review; p01, p03, and p04 needed
+- one fix round, p02 three (its first fix introduced a Critical — a
+- `git check-ignore` acceptance the archived-directory rule replaced), p05
+- two plus a rebase onto the merged p04 so its projected-copy reader could
+- adopt the shared version resolver. The root final review and the
+- configured exit gate ran after the group-2 fan-in (see the wrapper's
+- `implementation.md` for the gate outcome). Plan corrections applied at
+- this close: the p01 severity-matrix row for `provider-inactive`; the p02
+- test-case labels and the review-receive citation; the p03 depth figure,
+- the empty-content Test-plan bullet, and the `:1826→:1828` citation; the
+- p04 Step 6 pin premise and the numeric-scalar narrowing. Follow-ups filed
+- across the wave are listed in the wrapper's `implementation.md`; the bulk
+- `metadata.version` migration (`BL-260904-migrate-bundled-skills-from`,
+- raised to high on 2026-09-08) runs next as a standalone project.
+- - **2026-09-07 (W5 closed)** — Wave 5 executed as wrapper project
+- `wave-5-execution` (eleven lanes in five groups, one lockstep bump to 0.2.63
+- with the sync-manifest restamp in the same commit) and merged as PR #275
+- (`cc91a2d21077ada69f52775b87abedd451e48994`). Ten W5 rows flip to `done`; the eleventh (defer activeProject
+- clearing on archive completions) is `parked`: its plan's own STOP fired because
+- the completion seal append is not idempotent and `oat project log check`
+- cannot see a seal, so the plan's pre-archive resume premise is false
+- (reproduced on the CLI); refresh or supersede it under
+- `BL-260907-make-the-completion-seal` before a later wave runs it, and note
+- the incidental pre-existing bug it found (`BL-260907-finalize-synced-archive-mjs`:
+- the synced deferred clear from PR #254 always fails on a numeric-fd
+- `readFile`). Pre-dispatch, the wave-boundary refresh was applied to eight
+- plans as dated `Refresh applied 2026-09-07` entries in their Revalidation
+- sections (the plan gate rejected wrapper-side addenda three times; this is
+- the program's own mechanism from 2026-09-03/04 and stays the rule). Review
+- economics: every merged lane had a root review; p02, p03, p06, p07, p08,
+- p10 needed one fix round each and p01, p04, p05 an address-now sweep; the
+- p08 review caught a red root `pnpm test` (a smoke-tier skill-version pin the
+- CLI package filter never runs). Program-wide rules adopted: sweep old skill
+- version literals repo-wide in plain and regex-escaped forms and run
+- `pnpm test:smoke` whenever a skill is bumped; run gates sequentially in one
+- worktree; paste commit SHAs from `git rev-parse`; a reviewer's "do not weaken
+- — file and pin" ruling governs the fix round. Plan corrections applied in
+- this refresh (execution records plus the artifact-alignment items the
+- reviews found): the recover-review-artifacts plan's Done checkbox and two
+- Test-plan bullets; the quick-start routing plan's `oat_template` reading
+- (absent-or-false); the terminal-status plan's Step 2 Verify sentence; the
+- stale BLOCKED dependency row in the docs-index exclusions plan; the
+- gate-override (W4) plan's cross-wave rows already landed.
+- Exit gate: after the root final review passed, the configured cross-family
+- gate blocked attempt 1 on seven cross-lane composition gaps (gate-log
+- concurrency and HEAD identity, the control-plane recommender bypassing the
+- quick-plan readiness predicate because the p03 plan's out-of-scope note was
+- false, `oat config unset` missing p02's key, stale-receipt classification,
+- tab-indented fences, the backlink backstop, the pre-creation `PROJECT_PATH`)
+- — fixed as Phase 12 (p12-t01..t07) in three parallel lanes and root-reviewed;
+- a second launch's reviewer passed but the harness killed the gate for low
+- memory before its receipt (superseded; p12-t08); the re-run blocked on a
+- stale summary sentence plus two backlink-rule Mediums (p12-t09), exhausting
+- the configured attempts; the operator authorized attempt 3, which passed
+- (Mediums deferred as `BL-260907-harden-the-external-plan`); a post-gate
+- Linux-only CI failure (case-mismatched content-root probe) was fixed and
+- accepted by the operator without a further re-run. Program rules adopted
+- from the gate: root final-review briefs enumerate sibling-plan dependency
+- rows and every plan premise about another package; a wave-boundary premise
+- probe executes each plan's current-state claims against the built CLI;
+- filesystem-case tests run under a mocked probe or a case-sensitive image.
+- Sixteen follow-ups filed across the wave are listed in the wrapper's
+- `implementation.md`. W6 unblocked.
+- - **2026-09-06 (W4 closed)** — Wave 4 executed as wrapper project
+- `wave-4-execution` (three lanes, two groups, one lockstep bump to 0.2.59 with
+- the sync-manifest restamp in the same commit — that sync printed p02's new
+- advisory on the repository manifest) and merged as PR #271 (`81b784c3d3660968291a00cfc814336a36786c74`).
+- All three W4 rows flip to `done`. Review economics: the plan gate passed
+- first time (zero findings) because the wrapper was authored from this
+- section and the recon rather than from the previous wave's artifacts; p01
+- and p02 each needed one fix round (Codex caught a Critical in p01
+- pre-commit: a stored `project_disabled` transition was reusable after
+- re-enable; the p02 root reviewer found a `No changes required.` line the
+- pinned test could not see because the suite's injected formatter never
+- emitted it); p03 passed with an address-now sweep; the final review found
+- three prose contradictions outside the lanes' diff (discover/design gate
+- steps and `autonomy.md` still teaching `null` ⇒ no gate) and record
+- defects, all fixed on the root branch before the exit gate, which passed on
+- its first run (one Medium deferred). Program-wide rules adopted: pin
+- inventories by version literal (two lanes found more pins than briefed);
+- reviewer briefs require a live probe of the built CLI for command-surface
+- lanes and a re-run of implementer probes when Codex ran source-only; a
+- docs or decision-record contradiction inside the integration diff's own
+- rule is fixed in the wave. Plan corrections applied in this refresh: the
+- gate-override plan's Dependencies table gains cross-wave rows for
+- `apps/oat-docs/docs/contributing/skills.md` (W6 group 2) and
+- `packages/cli/src/commands/project/complete-state/state-utils.test.ts` (W5
+- group 4); execution records on all three plans. Follow-ups filed: sync-apply
+- branch precedence on rejected collections; persist status native-skill
+- adoption; the unused project-state frontmatter allowlist; per-scope
+- restamp-only suppression; harden the dispatch-stamp contract helper.
+- Decision records: `DR-260906-project-scoped-gate-overrides` (supersedes in
+- part DR-260718), `DR-260906-manifest-restamp-advisories`,
+- `DR-260906-the-dispatch-ceiling-resolver`. W5 unblocked after PR #264.
+- - **2026-09-06 (W3 closed)** — Wave 3 executed as wrapper project
+- `wave-3-execution` (three lanes, two groups, one lockstep bump to 0.2.58 with
+- the sync-manifest restamp in the same commit) and merged as PR #269
+- (`ed75370db9f7cf43cd884572bd58502aa71f22bd`). All three W3 rows flip to `done`. Review economics: p01 and
+- p02 each needed one fix round (the deletion-safety review found an
+- undocumented residual the lane had labelled documented); p03 passed outright
+- with an address-now sweep. Program-wide rules adopted: lanes sync
+- `--scope project` only (`--scope all` rewrites the operator's user-scope
+- provider views — every plan step that says `oat sync --scope all` is read as
+- `--scope project`); probe restores use `mktemp -d` backups, never
+- `git checkout --` on uncommitted work; reviewer briefs demand the exact
+- documentation location for any "documented residual" and a probe of the
+- residual itself. Plan corrections applied in this refresh: the call-site
+- plan's In-scope list gains `packages/cli/src/validation/skills.test.ts`
+- (its steps 4–5 move the agent pins) and records the reported owner decision
+- for `phase-execution.md:608`; the sync-scope convention on all three plans.
+- Follow-ups filed: extend `check:skill-bumps` to canonical agent files;
+- negation-aware sweep-contract tests; project reservation state into the
+- smoke evidence bundle; run `scripts/worktree/init.test.mjs` under a gate.
+- W4 unblocked.
+- - **2026-09-06 (W2 closed)** — Wave 2 executed as wrapper project
+- `wave-2-execution` (five lanes, three groups, one lockstep bump to 0.2.57)
+- and merged as PR #267 (`ca71c00a014a6eba00cb4cd4c46974fc6aa58139`). All five W2 rows flip to `done`. Review
+- economics: every lane needed at least one fix round (p05 two, plus two
+- post-PR rounds), two Criticals were introduced by fixes and caught by
+- disposition-verification rounds, the root final review took three rounds,
+- Cursor Bugbot found a High ordering defect in the recover-mode contract that
+- every earlier round had missed, and the configured exit gate ran three times
+- (pass → stale → blocked → pass). Rules adopted for later waves: the fan-in
+- bump commit restamps `.oat/sync/manifest.json`; lane and reviewer briefs
+- carry forced-turbo gate forms, the real package filter, the scratch-hygiene
+- rule, and a two-round cap on Codex pre-commit reviews; disposition rounds
+- execute prose shell snippets verbatim and walk every failure sequence of a
+- contract; `oat gate review` writes its own Reviews row, so receive moves it
+- forward in place. Plan corrections applied in this refresh (from
+- `BL-260906-wave-2-external-plan`): the bundled-skill plan's step-2 wording
+- and `analyze` pin; the named-skill plan's thirteen-skill list and two ripple
+- tests; the patch-and-restore plan's conditional step 5; the anaphora plan's
+- accepted anaphor-only shape. Follow-ups filed:
+- `BL-260906-repair-the-stray-fence-in-oat`,
+- `BL-260906-cover-skill-test-files-under`,
+- `BL-260906-reconcile-the-oat-doctor`. W3 unblocked.
+- - **2026-09-06 (W1 closed)** — Wave 1 executed as wrapper project
+- `wave-1-execution` (four lanes, two groups, one lockstep bump to 0.2.56) and
+- merged as PR #262 (`6db0457c095e4384e5ac2f464ee1c4d5a47d0179`). Two of the four plans' rows flip to `done`
+- together with their two ordered successors; both successors were flipped
+- `BLOCKED → READY` inside the wave after their readiness checks. Wave
+- learnings adopted as program rules: flip successor plans in the fan-in
+- bookkeeping commit with cited evidence; address-now sweeps for Medium/Minor
+- findings go through the original implementer handle; record lane-commit SHA
+- mappings at every rebase; file the follow-up ledger as backlog items before
+- the final gate. Plan corrections applied in the wave: the docs-index plan's
+- config-write clause and its dependency row; the two successors' status
+- callouts. Still queued: the exclusions plan's PR #190 landing row
+- under-reports three shared files (moot once W1 merged; PR #190 must rebase
+- onto the new `index-generate`, `oat-config.ts`, and docs pages). Follow-ups
+- `BL-260906-guard-packed-asset-directories`,
+- `BL-260906-report-errno-for-asset-root`, and
+- `BL-260906-docs-index-follow-ups-from` are unplanned candidates. W2 unblocked.
+- - **2026-09-05 (Astra review)** — An independent GPT 6 Astra review (three
+- luna and one terra subagents) of all 31 plans at `6d5c11243` returned 3
+- Critical, 19 Important, and 9 Medium findings; all were accepted except the
+- W5 wave split (declined, see the W5 rationale) and the W2 repair split
+- (recorded as an explicit policy exception). Corpus-wide: lane instructions
+- that still bumped the five packages or ran release gates were replaced by
+- the lane/fan-in/final verification modes above; the version-pin file
+- `validation/skills.test.ts` was recognized as a hidden shared write and W4
+- and W5 groups 3–4 were resequenced; PR #190 landing rows that claimed "No"
+- for files the draft actually touches (my earlier file list stopped at 100 of 217) were corrected. Substantive: docs-index generation no longer defaults
+- its output to the scaffold's authored `docs/index.md` or `mkdocs.yml`; the
+- patch-and-restore recipe fails closed on unsupported dirt and captures
+- binary-safe state; the retirement sweep moved before the project-log seal;
+- the gate-override, terminal-status, and quick-route plans now own their
+- `oat-project-next` consumers; the recap preflight includes the set planner;
+- the active-pointer resume is narrowed to post-archive receipt failure; the
+- readiness validator gains legacy-read mode and inspected-HEAD provenance;
+- the metadata-version plan drops its false parser-reuse premise and the
+- `check:skill-bumps` severity conflict. Review record with dispositions:
+- `.oat/repo/reference/reviews/2026-09-05-external-plan-review-astra.md`.
+- - **2026-09-02** — Rebased the program branch onto `origin/main`
+- `49aeb5075971180b48c131bbd2b21b82d455bfc9` (PR #254, retire archived synced
+- project records). Re-ran all 13 drift checks: only lockstep version bumps,
+- test line shifts, `oat-project-complete` 1.7.6 (fallback citation moved
+- 406 → 465 in the named-skill plan), and unrelated docs prose. All 13 plans
+- re-stamped to that baseline. Verified the in-flight
+- `tool-pack-scope-provider-truthfulness` branch read-only at `27b978528`
+- (190 files vs. the same merge-base): it implements neither the manifest
+- restamp nor the dispatch stamp outcome, but rewrites both plans' surfaces,
+- so both are now `BLOCKED` on its merge and the dispatch-stamp lane moved from
+- W1 to W4. PR #190 (`81a51d2d`, draft) and issue #211 remain open soft
+- triggers. Composition: W1 = 3 lanes, W2 = 4, W3 = 3, W4 = 3; coverage still
+- 13/13.
+- - **2026-09-08 (post-program triage; W7 composed)** — The program closed on
+- 2026-09-08 (W6 merged; 30 of 31 plans done, p09 parked). The post-program
+- triage (`.oat/repo/pjm/triage/2026-09-08-post-program-triage.md`, PR #282)
+- dispositioned the 42 open follow-ups the program created: two highs became
+- their own projects (recon intent restoration, recap simplification), five
+- items were closed, and twenty-two entered the Wave 7 index as twenty plans
+- (two items split or merged during planning; the operator added the
+- caller-model plan-write rule during composition). Every plan was drafted
+- on Opus and then re-verified and rewritten by same-model (Fable) reviewers
+- against `origin/main` `7d70ac307` (PR #273 merged); the readiness contract
+- passes for all 51 dated plans. Added the Wave 7 index as W7 (eight groups);
+- coverage 51/51 (20 new rows `pending`). Ledger: W7 = 20 lanes, `composed`,
+- awaiting operator composition approval.
+- - **2026-09-08 (W7 approved; execution started)** — PR #284 merged
+- (`684bd3be3`); the operator approved the wave-7 map and its autonomous
+- execution. Wrapper `.oat/projects/shared/wave-7-execution` scaffolded at that
+- base (drift 20 PASS / 0 / 0, mechanical); the plan gate's first attempt found
+- the parked wave-5 p09 patch lost from disk — recovered from the implementer
+- transcript into the wrapper's `parked/wave-5-p09/` — and a stale root
+- `AGENTS.md` write attributed to the authoring-facts plan (corrected in the
+- index and the Wave Table note). Ledger: W7 `in-progress`.
+- The four-wave composition is ready for review. Before W1 execution, the
+- operator must explicitly approve this program, its ordering, and its
+- concurrency assumptions. Approval to merge the program artifact does not by
+- itself authorize creation of a wave wrapper project, implementation dispatch,
+- or wave PR mutation.
+- The Wave 7 composition (2026-09-08) is a new checkpoint under the same rule:
+- the 2026-09-05 approval covered W1–W6, so W7 execution — its wrapper project,
+- dispatch, and PR mutation — waits for explicit operator approval of the
+- twenty-lane, eight-group map above and of its concurrency assumption (a single
+- `validation/skills.test.ts` writer per group).
+- **Wave 7 checkpoint answered 2026-09-08:** the operator approved the composition
+- and its autonomous execution after PR #284 presented the map (merged as
+- `684bd3be3`); the wrapper project `.oat/projects/shared/wave-7-execution` batches
+- the eight groups to the concurrency ceiling of 3 without changing any stated
+- ordering.
+- **Program completion checkpoint (2026-09-09):** with W7 merged every composed
+- wave is `merged`. The completion-tail question ("run the completion tail across
+- all seven wave wrapper projects now?") was answered in advance by the operator's
+- standing decision recorded at the W1–W6 close — the tail is a standing deferral
+- whose owner is the wave-7 close, to be run for all seven wrappers at that point
+- — so the wave-7 close ran `oat project complete-state` → `oat project archive`
+- → active-project pointer clear → completion bookkeeping for `wave-1-execution`
+- through `wave-7-execution` on 2026-09-09 (each log sealed after its roll-up and
+- synthesis; seven archive receipts with S3 paths; summaries exported under
+- `.oat/repo/reference/project-summaries/`), and every ledger disposition above
+- reads `done`. The program recap stays `not run — pending
+- BL-260907-replace-the-default-project` until that standalone project lands.
+- oat_status: complete
+- oat_ready_for: null
+- oat_blockers: []
+- oat_last_updated: 2026-09-06
+- oat_generated: true
+- oat_summary_last_task: p04-t02
+- oat_summary_revision_count: 0
+- oat_summary_includes_revisions: []
+- Wave 1 ("CLI resolution and asset correctness") of the 2026-08-31 execution
+- program: four external plans, each an immutable implementation contract, run
+- as a thin wrapper project so the fixes could execute in parallel worktrees
+- with root-owned reviews, one lockstep release bump, and full integration gates
+- after every fan-in. The motivating defects were a docs-index generator that
+- resolved paths from the invoking directory and rewrote config, an asset
+- resolver that accepted a metadata-only bundle as a valid installation, remedy
+- text that told `OAT_ASSETS_DIR` users to rebuild the CLI, and no way to exclude
+- paths from docs-index generation.
+- - **Configured docs-index paths (p01).** `oat docs generate-index` resolves
+- its docs directory and output from `documentation.root` (app root
+- canonical; `<root>/docs` precedence as compatibility behavior, reported as
+- `docsDirSource`), defaults output to the app-root manifest, never writes the
+- scaffold's authored `docs/index.md` or `mkdocs.yml`, refuses unsafe outputs
+- before any write (canonical-path containment with symlink and dangling-link
+- resolution, `documentation.config` and YAML refusals, unmarked Markdown
+- unless `--output` names it), and updates `documentation.index` only for the
+- Fumadocs bootstrap transition. `docs init` seeds the Fumadocs index at the
+- app root, and its scaffold output is now the test fixture.
+- - **Asset-bundle structure validation (p02).** `validateAssetsBundle` stats
+- the producer's seven top-level directories after the metadata and version
+- checks and fails closed with exit 2 naming the first offender; non-`ENOENT`
+- stat failures form a distinct "unreadable" diagnosis.
+- - **Source-aware asset remedies (p03).** Every asset failure routes through
+- one remedy formatter keyed on the resolved root source; `OAT_ASSETS_DIR`
+- failures name the override and never advise rebuild or reinstall, packaged
+- failures keep both prior remedy strings verbatim, and the unreadable branch
+- reports its errno.
+- - **Docs-index exclusions (p04).** `documentation.excludes` (JSON array) and
+- `--exclude` prune generation through a bounded, root-anchored glob grammar
+- implemented as a greedy two-pointer matcher (no RegExp, ReDoS-safe, verified
+- against a brute-force oracle over millions of cases); a malformed stored
+- value is repairable by the `oat config set` command its error names.
+- Lockstep public packages moved 0.2.55 → 0.2.56 once, at the group-1 fan-in.
+- 1. **Docs-index refusals exit 1; unusable configuration exits 2.** The plan
+- mandated exit 2 only for configuration resolution; the refusal set (output
+- inside the indexed tree, equal to `documentation.config`, YAML, unmarked
+- derived output, symlink hop cap) is actionable user error under
+- `packages/cli/AGENTS.md`, so scripts can tell "your flag is wrong" from
+- "your environment is broken".
+- 2. **Fumadocs keeps updating `documentation.index` even when
+- `documentation.config` is declared.** The plan's negative clause contradicted
+- its own Outcome and step 1 for this repository's live config shape; the
+- implementation follows the bootstrap transition, MkDocs configuration is
+- never touched, and both branches are pinned by tests that fail when the
+- tooling discriminator is removed.
+- 3. **Exclusion patterns are root-anchored and minimatch-style, not
+- gitignore-style.** A bare `CLAUDE.md`, `**/CLAUDE.md`, and `subdir/` have
+- distinct defined behaviors, which the plan required and which gitignore
+- any-depth semantics cannot provide.
+- 4. **Lane mode never touches lockstep release files; the fan-in owns one bump
+- and the full gate sequence** (program rule; existing record
+- `wave-level-lockstep-bump`). Both fan-ins ran the eight-gate sequence with
+- uncached tests.
+- - The docs-index plan's `## Current state` config-write clause was amended in
+- the wave (non-narrowing reconciliation recorded in `plan.md`) after the
+- final review asked for it to land rather than wait for wave-close.
+- - `AssetsRootSource` is exported (declaration emit forces it) although the
+- plan called it internal; the `fs` barrel still exports only
+- `resolveAssetsRoot`.
+- - Both group-2 plans were flipped `BLOCKED → READY` by the wrapper after their
+- readiness checks passed on the merged tip; the p03 review caught that the
+- first flip had been recorded only in the wrapper.
+- - The p01 lane's Codex cross-model review took four rounds to converge on the
+- containment surface: `..draft/` names mistaken for traversal, symlinked and
+- dangling-link outputs bypassing containment, hop-cap fall-through, and
+- relative dangling targets resolved against the lexical parent. Each round
+- produced a real defect fixed before the commit.
+- - The root review of p01 found a P0 test that could not fail (every MkDocs
+- fixture came from the scaffold, which always sets `documentation.config`);
+- the fix round added a falsifiable test whose neutralization breaks two tests
+- from both sides.
+- - The p04 matcher started as a RegExp compiler; Codex reproduced catastrophic
+- backtracking at 5.3 s for one non-match, and the first fix was insufficient,
+- so the compiler was replaced by a greedy matcher (0.17 s end-to-end).
+- - The wrapper's own record was truncated by a bookkeeping edit whose anchor
+- matched the template's conventions note; the final review caught it and the
+- file was restored from history.
+- - Address-now sweeps for Medium/Minor review findings on p04 landed without a
+- re-review (comment and docs only) to keep the group inside one fan-in;
+- Important findings always got a disposition-verification round.
+- - Deferred Medium findings outside lane scope (packed-path guards, the
+- `OAT_ASSETS_DIR` docs contract, root-level errno) became backlog items rather
+- than widening lanes.
+- - Refusal exit codes from `oat docs generate-index` changed from an
+- undifferentiated 2 to 1; no in-repo consumer branches on them, but downstream
+- scripts should re-check.
+- - `.oat/sync/manifest.json` carries the worktree-init restamp (schema
+- `version` 1 → 2 with `collections: []`, `oatVersion` 0.2.50 → 0.2.56;
+- `lastSynced` values unchanged) from the lane bootstrap.
+- - Reviews-table reviewed heads are pre-rebase; the SHA mapping lives in
+- `implementation.md` under the fan-in records.
+- - `BL-260906-guard-packed-asset-directories` — packed-path guards for all
+- seven required bundle directories; update the `OAT_ASSETS_DIR` docs contract.
+- - `BL-260906-report-errno-for-asset-root` — errno in the root-level stat
+- failure; `afterEach` reset for the `statRedirects` test seam.
+- - `BL-260906-docs-index-follow-ups-from` — init label vs seed, hop-cap flag
+- advice, empty-manifest signal, `excludes` in `--json`, `DEFAULT_SHARED_CONFIG`
+- default, config-root bare-refusal regression test.
+- - Program close: completion tail (archive, pointer clear) and recap deferred;
+- program-refresh corrections for the exclusions plan's PR #190 landing row.
+- - `BL-260718-fix-oat-docs-generate-index` — closed (p01)
+- - `BL-260827-fail-closed-on-partial-or` — closed (p02)
+- - `BL-260827-override-aware-remedy-text` — closed (p03)
+- - `BL-260902-add-an-exclusion-mechanism` — closed (p04)
+- target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:1,medium:1,minor:1 exit=1 status=blocked artifact=.oat/projects/shared/wave-1-execution/reviews/artifact-plan-review-2026-09-05T224504Z.md
+- Final gate code review recorded at reviews/final-review-2026-09-06T015333Z.md (0C/0I/1M/1m).
+- target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:0,medium:1,minor:1 exit=0 status=ok artifact=.oat/projects/shared/wave-1-execution/reviews/final-review-2026-09-06T015333Z.md
+- The oat-wave-execute fixed wave-N-execution slug and branch collided with the archived 2026-08 program wrapper and its stale remote branch; the wave kept the local name and pushed to origin/wave-1-execution-2026-09, deferring the archive-name collision to program close. The skill should qualify the slug or branch by program, or check archived wrappers and remote branches in preflight. (observed on oat 0.2.55)
+- A session restart left the prior orchestrator instance alive on the same worktree, which scaffolded a second wrapper directory before standing down. Check ListAgents for a busy peer on the same path before scaffolding; the skill has no claim-the-tree step. (observed on oat 0.2.55)
+- A reviewer put the mandatory Reconnaissance signal in its chat reply rather than the artifact; the root validates the file, so the round was recovered through the accepted handle. Reviewer briefs should state that the line is validated in the artifact. (observed on oat 0.2.55)
+- oat project dispatch record rejects a revision that changes child_outcome (generic fields are immutable), so a record written at acceptance never carries the terminal outcome; outcomes were recorded in implementation.md instead. Consider a terminal event kind or an outcome revision. (observed on oat 0.2.55)
+- Flipping successor plans to READY in the fan-in bookkeeping commit with cited evidence, and landing Medium/Minor review findings as address-now sweeps through the original implementer handle, kept both groups inside one fan-in each with zero merge conflicts. (observed on oat 0.2.55)
+- oat_status: complete
+- oat_ready_for: null
+- oat_blockers: []
+- oat_last_updated: 2026-09-06
+- oat_generated: true
+- oat_summary_last_task: p05-t03
+- oat_summary_revision_count: 0
+- oat_summary_includes_revisions: []
+- Wave 2 ("skill contract truthfulness") of the 2026-08-31 execution program:
+- five external plans, each an immutable implementation contract, run as a thin
+- wrapper project so the fixes could execute in parallel worktrees with
+- root-owned reviews, one lockstep release bump, and full integration gates
+- after every fan-in. The motivating defects were bundled skills whose prose
+- described inventories, tools, and steps that did not match what shipped; a
+- safety guard in the codex skill that a one-sentence rewrite could bypass; docs
+- pages that mirrored guarded skill prose without any test; lifecycle skills that
+- told orchestrators to "run skill X" from memory; and no recovery path for a
+- child agent's staged work when its handle was lost.
+- - **Bundled-skill contract repairs (p01).** `oat-doctor` declares the pack
+- inventory exactly as `PACK_MANIFEST` ships it, `oat-brainstorm` no longer
+- promises a later doctor run, `oat-idea-summarize` declares `Bash` and `Glob`,
+- and `analyze` describes one ten-step model; each repair carries its own
+- contract group in `packages/cli/src/validation/skills.test.ts`, including a
+- bounded positive invariant with inline negative controls for the brainstorm
+- guard and a manifest-membership assertion for the doctor example table.
+- - **Codex-skill anaphora guard (p02).** The below-floor guard in
+- `codex-skill/tests/codex-skill-contract.test.mjs` attaches anaphoric
+- continuations ("In that case…", list-marker, blockquote, scenario and
+- circumstance forms) to the non-blocking anchor and rejects them, while the
+- legitimate direct-API confirmation stays accepted as an independent clause;
+- 15 rejected, 6 accepted, and 6 documented-boundary cases are pinned.
+- - **Docs-app mirrors of guarded prose (p03).** `explainer-kit/tests/contracts.test.mjs`
+- runs the publication-boundary matrix over both the canonical reference and
+- the docs page, with sentence-scoped, negation- and mutation-aware positive
+- patterns and a whole-document forbidden-phrase guard that is proven
+- load-bearing through the real matrix; the docs page names the catalog
+- requirement and its canonical owner.
+- - **Mandatory skill-load clauses (p04).** Thirteen lifecycle skills require
+- loading the current `SKILL.md` of every OAT skill they direct an orchestrator
+- to execute, or record a narrow inline fallback; the new
+- `packages/cli/src/validation/named-skill-load-contract.test.ts` sweeps the
+- bounded surface (verb and anaphor detection, exemptions bound to exactly one
+- sentence, stray-fence detection, corpus floors). Three four-backtick fences
+- that had hidden whole steps of `oat-project-plan`,
+- `oat-project-review-receive`, and `oat-project-revise` are repaired, and the
+- plan skill now stops with a handoff when `design.md` is missing instead of
+- reading as a silent continuation.
+- - **Patch-and-restore recovery for lost child handles (p05).**
+- `oat-project-implement/scripts/capture-dirty-tree.mjs` captures a child's
+- staged, unstaged, and untracked work into a digest-verified, sealed artifact
+- outside the worktree (quiescence check, realpath containment, exclusive
+- creates, mandatory phase bound, expected-head reconciliation, scoped literal
+- pathspecs, exec-bit authentication, fail-closed on renames and mixed states,
+- guarded invocations in every prose block, symlinked-install fail-closed), and
+- `phase-execution.md` plus `oat-phase-implementer.md` (1.1.1 → 1.1.2) define
+- `recovered_patch` as the one permitted pre-existing dirt, applied and
+- committed first.
+- - **Release.** Lockstep public packages 0.2.56 → 0.2.57 in one fan-in bump;
+- `.oat/sync/manifest.json` `oatVersion` restamped; `.codex/agents` and
+- `.cursor/agents` views regenerated.
+- - **One bump per skill per PR.** p05 carried p04's `oat-project-implement`
+- bump (2.3.1 → 2.3.2) instead of re-bumping; the rule is recorded in the
+- plan's Drift Refresh Record and enforced by `check:skill-bumps`.
+- - **Anaphor-only attachment in the codex guard.** A Codex-suggested "clause
+- classifies its own route" exemption was reverted on round-2 evidence: every
+- workable form was an ordered-token heuristic that admitted real escapes, and
+- the plan's "explicitly and independently classifies" wording makes an
+- anaphoric continuation non-independent by construction.
+- - **Fail closed on unrestorable dirt.** Staged renames and paths that are both
+- tracked-changed and untracked are `unsupported-dirt`; the capture refuses
+- rather than guessing, within the plan's enumerated supported set.
+- - **Address-now sweeps stay bounded.** The p04 round-2 sweep fixed only the
+- reviewer's one-line items; the `oat-project-review-provide` fence repair,
+- which needs its own bump and a coupled matrix-row deletion, became a backlog
+- item instead.
+- - p01 shipped four per-defect commits (the plan's own batch-exception
+- boundary) and moved the `analyze` pin the plan said did not exist.
+- - p04 covered thirteen skills where the brief pre-declared ten (all inside the
+- plan's In-scope surface) and placed the matrix in an adjacent test file the
+- plan's Test plan permits.
+- - p05 strengthened the plan's "two byte-identical status snapshots" rule to a
+- superset (porcelain v2 carries no worktree object id) and left the autonomy
+- inventory untouched because its mirrors are symlinks and no prompt-site token
+- changed; the plan's step 5 is therefore conditional.
+- - Plan corrections for the above are tracked in
+- `BL-260906-wave-2-external-plan` for the wave-close program refresh.
+- - **Fixes that introduced the next defect.** The p03 refactor narrowed a
+- whole-document guard to one passage (Critical, caught by the reviewer's
+- same-input/opposite-verdict probe), and the p05 round-1 fix left the
+- script-path guard in a different shell block than its invocations, so an
+- empty path would have exited zero (Critical, caught by executing the prose
+- snippets verbatim in a fresh shell). Both were repaired and pinned; the
+- second also surfaced a same-class fail-open inside the script for symlinked
+- installs.
+- - **Dead assertions.** The wave-level final review found that the p03
+- whole-source guard was only exercised at one direct call site; a fixture now
+- drives the real matrix against injected copies of both guarded files.
+- - **Findings after the gate.** Cursor Bugbot found a High ordering defect in the recover-mode contract that three root final-review rounds, three p05 rounds, and the first exit-gate pass had all missed; the fix then needed a second correction (the artifact-free retry path) caught by the exit gate's re-run.
+- - **Hidden fences.** Four-backtick fences had turned whole lifecycle steps into
+- code blocks invisible to every prose scan and every gate; three are repaired
+- and a fourth is filed.
+- - The codex guard's fail-open boundary (a filler clause between the anchor and
+- the anaphor breaks attachment) is documented and pinned rather than closed,
+- because closing it needs the antecedent resolution owned by
+- `BL-260827-span-based-prose-guards`; widening the span would reintroduce the
+- false positive the plan forbids.
+- - The explainer-kit sentence splitter now splits at terminators followed by
+- closing punctuation; finer splitting also narrows what the negation marker
+- can disqualify, so the guard stays a drift alarm rather than a proof of
+- meaning (documented in the helper comment).
+- - Configured cross-family exit gate (`codex-5-6-sol-xhigh`): generation 1 run `45ee23dc` passed with zero findings, then went stale when Cursor Bugbot's High finding on PR #267 (recover mode committed the recovered patch before reconciling the pending attempt) was fixed in `3ee49fcad`; generation 2 attempt 1 (run `ba8ff320`) blocked on two Important findings (the artifact-free retry still ran the verifier; duplicate gate ledger rows), fixed in `e8e25f780` and the record commits; generation 2 attempt 2 (run `1c033697`) passed with zero findings. Exit gate history: three runs, two passes.
+- - `BL-260906-repair-the-stray-fence-in-oat` — `oat-project-review-provide`
+- fence repair with the coupled matrix row, fence-rule tightening, and the three
+- out-of-surface fences.
+- - `BL-260906-cover-skill-test-files-under` — `.agents/skills/**/*.mjs` in
+- `pnpm check` and lint-staged.
+- - `BL-260906-reconcile-the-oat-doctor` — the doctor example's
+- both-installed-and-available contradiction.
+- - `BL-260906-wave-2-external-plan` — external-plan corrections for the
+- program refresh.
+- - `BL-260827-span-based-prose-guards` — anaphora-guard residuals appended.
+- - Skill signals for `oat-wave-execute` (fan-in manifest restamp, forced-gate
+- and scratch-hygiene brief clauses, capped cross-model rounds, verbatim
+- snippet execution in disposition rounds) are recorded in the wrapper's
+- `orchestration-log.md` synthesis.
+- - `BL-260819-repair-verified-bundled-skill`, `BL-260827-harden-the-codex-skill-below`,
+- `BL-260818-extend-guarded-prose-contract`, `BL-260718-mandatory-skill-load-clause`,
+- `BL-260902-document-patch-and-restore` — archived by this wave.
+- target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:1,medium:0,minor:1 exit=1 status=blocked artifact=.oat/projects/shared/wave-2-execution/reviews/artifact-plan-review-2026-09-06T023526Z.md
+- End-of-run synthesis for this wave wrapper lives in orchestration-log.md (convention verdicts, skill-signal rulings, adopted rules, graduated-entries ledger); this project log carries structural events only.
+- target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/shared/wave-2-execution/reviews/final-review-2026-09-06T093256Z.md
+- Gate-originated final review used two bounded read-only reconnaissance lanes; orchestration evidence and primary reconciliation are in reviews/final-review-2026-09-06T101616Z.md.
+- target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:2,medium:0,minor:0 exit=1 status=blocked artifact=.oat/projects/shared/wave-2-execution/reviews/final-review-2026-09-06T101616Z.md
+- Gate run 1c033697 final re-review used two bounded read-only reconnaissance lanes; orchestration evidence and primary reconciliation are in reviews/final-review-2026-09-06T103833Z.md.
+- target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/shared/wave-2-execution/reviews/final-review-2026-09-06T103833Z.md
+- Exit gate generation 2 attempt 2 (run 1c033697-daac-4794-8c7a-7fd024f65bc7, codex-5-6-sol-xhigh) passed with zero findings on f8b0222277147f438096f3c6af8ec1c69f5a5f2e after generation 1 (run 45ee23dc) went stale on the Bugbot fix 3ee49fcad and generation-2 attempt 1 (run ba8ff320) blocked; artifact reviews/archived/final-review-2026-09-06T103833Z.md.
+- oat_status: complete
+- oat_ready_for: null
+- oat_blockers: []
+- oat_last_updated: 2026-09-06
+- oat_generated: true
+- oat_summary_last_task: p03-t02
+- oat_summary_revision_count: 0
+- oat_summary_includes_revisions: []
+- Wave 3 ("workflow durability and containment") of the 2026-08-31 execution
+- program: three external plans, each an immutable implementation contract, run
+- as a thin wrapper project so the fixes could execute in parallel worktrees with
+- root-owned reviews, one lockstep release bump, and full integration gates
+- after every fan-in. The motivating defects were an implementer contract that
+- let a task change a cross-cutting option without finding every consumer, a
+- deterministic smoke runner that created git worktrees before journaling them
+- and so leaked them on interruption, and skill-authoring guidance that let
+- standing claims ship with nothing executable behind them.
+- - **Repo-wide call-site sweeps (p01).** `oat-phase-implementer.md` (1.1.2 →
+- 1.1.3) and, after the exit gate required it, `oat-project-implement` (2.3.2 →
+- 2.3.3; the root acceptance clause now accepts the effective boundary) require a repository-wide sweep for every consumer of a changed
+- cross-cutting option (including fixtures, mocks, snapshots, and tests),
+- defines the effective task boundary as the declared files plus mechanical
+- additions permitted by and reported under the sweep, and stops to report
+- when an expansion crosses another owner. `post-implement-sequence-contracts.test.ts`
+- pins the rule with six red-proved negative probes and a scoped deny-list
+- against softening the stop-and-report duty.
+- - **Smoke worktrees journaled before creation (p02).** The deterministic smoke
+- runner reserves a nested resource in its ownership journal before
+- `git worktree add`, cleanup reconciles reserved entries after re-deriving
+- run-directory containment and run-baseline equality (with `reservedAt`
+- required for reserved entries), and every deletion path re-reads the branch
+- tip and keeps Git's checked-out-branch protection. The one residual, a
+- foreign branch created in the reserve-to-create window at the exact reserved
+- baseline, is stated in code, `CONTRACT.md`, and a pinning test.
+- `pnpm test:smoke` grew from 141 to 160 tests.
+- - **Executable backstops for standing claims (p03).** `create-oat-skill`
+- (1.5.0 → 1.5.1) requires every standing claim to name its executable owner
+- and ship its backstop in the same PR, never keyed to a physical line;
+- `oat-project-design` (2.3.2 → 2.3.3) echoes the obligation at design time;
+- `skills.test.ts` pins both with fence-, comment-, and indent-aware
+- extraction, `existsSync` checks on cited precedent paths, and a
+- weakening-vocabulary deny list.
+- - **Release.** Lockstep 0.2.57 → 0.2.58 in one fan-in bump with the
+- `.oat/sync/manifest.json` restamp in the same commit; provider agent views
+- regenerated for the agent bump; the implementation-execution docs page
+- aligned with the effective task boundary.
+- - **Report, do not improvise, out-of-lane contradictions — then let the gate
+- decide.** p01 found that the implement route's acceptance check still said
+- "only declared files"; the lane reported it, the root reviewer routed it to
+- wave close, and the cross-family exit gate blocked on it because the
+- contradiction sits inside the same integration diff. It was aligned in a
+- post-gate fix with the `oat-project-implement` bump and seven pins.
+- - **Fail closed on unattributable ownership.** Direct registrations keep their
+- looser containment because `scripts/worktree/init.sh` legitimately registers
+- children outside the run directory; everything reservation-shaped is
+- re-derived, and an entry cannot escape the guard by dropping a field.
+- - **Sync lanes at project scope only.** A lane's `oat sync --scope all`
+- rewrote the operator's user-scope provider views; the wrapper now mandates
+- `--scope project`, and every plan step that says `--scope all` is read that
+- way.
+- - p01 wrote `packages/cli/src/validation/skills.test.ts` (three agent pins)
+- although its plan's In-scope list omits the file; the recon predicted it and
+- the plan is corrected at wave close.
+- - p03's runtime example ("a rollup never reports success without writing its
+- ledger entry") was false against `rollup.ts` and was corrected to "when a
+- required ledger write fails" before commit.
+- - Plan corrections are tracked for the wave-close program refresh.
+- - **A "documented residual" that was not documented.** The dedicated
+- deletion-safety review reproduced the reserve-to-create window with a probe
+- and found the code comment claimed Git closed it; the lane then measured
+- that no sound Git discriminator exists and pinned the accepted behavior.
+- - **Reviewer probes after green Codex rounds.** p01's reviewer found two
+- assertions that could be loosened without failing after two Codex rounds had
+- passed; p03's reviewer re-verified in a harness three fixes the Codex cap had
+- left unverified.
+- - **The wrapper's own instructions.** Two brief defects surfaced: `git checkout
+- --` as probe restore wiped uncommitted work once, and `sync --scope all`
+- reached outside the repository. Both are now rules.
+- - The reserve-to-create window is accepted and pinned rather than closed:
+- closing it would require creating the Git ref before intent is durable,
+- which the plan forbids.
+- - The sweep contract's deny-list is presence-based with a bare-word negation
+- lookbehind; a novel synonym still evades it and a bolded negation trips it
+- fail-closed (follow-up filed).
+- - `BL-260906-extend-check-skill-bumps` — the bump gate ignores canonical agent files.
+- - `BL-260906-make-the-phase-implementer` — negation-aware sweep-contract tests.
+- - `BL-260906-project-journal-reservation` — reservation state in the smoke evidence bundle.
+- - `BL-260906-run-scripts-worktree-init-test` — `scripts/worktree/init.test.mjs` under a gate.
+- - Wave-close plan corrections: the call-site plan's In-scope list and reported
+- owner decision; the `sync --scope project` convention across plans.
+- - Skill signals for `oat-wave-execute` are recorded in the wrapper's
+- `orchestration-log.md` synthesis.
+- - `BL-260818-require-repo-wide-call-site`, `BL-260826-deterministic-smoke-tier-leaks`,
+- `BL-260714-executable-backstops` — archived by this wave.
+- target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:3,medium:1,minor:0 exit=1 status=blocked artifact=.oat/projects/shared/wave-3-execution/reviews/artifact-plan-review-2026-09-06T110723Z.md
+- target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:2,medium:0,minor:0 exit=1 status=blocked artifact=.oat/projects/shared/wave-3-execution/reviews/final-review-2026-09-06T140727Z.md
+- target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/shared/wave-3-execution/reviews/final-review-2026-09-06T155523Z.md
+- Exit gate attempt 2 (run 0c1ab7b5-c8d5-42ad-8b15-f832b05d8111, codex-5-6-sol-xhigh) passed with zero findings on 8483694bbb88a32a43ba0a4fff57f569064cf12a after attempt 1 (run 872d498a) blocked and two launches were host-killed; artifact reviews/archived/final-review-2026-09-06T155523Z.md.
+- oat_status: complete
+- oat_ready_for: null
+- oat_blockers: []
+- oat_last_updated: 2026-09-06
+- oat_generated: true
+- oat_summary_last_task: p03-t01
+- oat_summary_revision_count: 0
+- oat_summary_includes_revisions: []
+- Wave 4 ("delivered-project follow-ups") of the 2026-08-31 execution program:
+- three external plans that each follow a merged project (the consolidated gate
+- project, the scope-and-adoption diagnostics project, and the truthfulness
+- project), run as a thin wrapper project so the fixes could execute in parallel
+- worktrees with root-owned reviews, one lockstep release bump, and full
+- integration gates after every fan-in. The motivating gaps were a configured
+- lifecycle gate that no single project could opt out of without editing shared
+- configuration, commands other than `oat sync` that silently rewrote which OAT
+- version produced the sync manifest, and a dispatch resolver that computed
+- every field of the audit stamp but left orchestrators to assemble it by hand.
+- - **Per-project gate overrides (p01).** A strict `oat_skill_gate_overrides`
+- map in project `state.md` (keys restricted to `oat_gateable` skills, literal
+- `disabled`); `oat gate resolve --project [path-or-name]` returns
+- `configured`, `configured_disabled_by_project`, or `not_configured` while the
+- legacy no-project output stays byte-identical; a shared gate-posture setup
+- contract in `oat-project-plan-writing` used by quick-start, plan, and
+- import-plan (non-interactive runs never write a map); a `project_disabled`
+- closeout disposition whose fingerprint covers the override so re-enabling the
+- gate stales the stored transition; `oat-project-next` routes it;
+- `oat-project-progress` shows active overrides; the workflow-gates,
+- configuration, and gate-authoring docs describe the boundary. After the
+- final review, the discover, design, plan, quick-start, and import-plan gate
+- steps all resolve with project context and fail closed on a null or
+- malformed result. Ten skills bumped once each.
+- - **Non-sync manifest restamp advisories (p02).** One pure
+- `detectManifestVersionRestamp` helper; `oat init`, `oat remove skill`, and
+- interactive `oat status` adoption emit a scoped advisory before
+- `saveManifest` in human mode, and init and remove-skill carry
+- `manifestVersionRestamps` in JSON; sync's `versionSkew` reuses the shared
+- shape; a restamp-only sync apply reports the refresh and no longer prints
+- `No changes required.` anywhere in its body. The wave's own fan-in sync
+- printed the new advisory on the repository manifest.
+- - **Dispatch stamp with resolver JSON (p03).** `oat project dispatch-ceiling
+- resolve … --json` emits `dispatchStamp` beside `dispatchReport` (present iff
+- the report is, byte-equal to `formatDispatchStamp`, including report-bearing
+- blocked resolutions; absent on non-report and error envelopes); the
+- review-provide, review-provide-remote, and implement dispatch guidance now
+- require reading the returned field and forbid hand-assembly or an
+- out-of-tree shim, pinned by a bounded-window contract helper with negative
+- fixtures.
+- - **Release.** Lockstep 0.2.58 → 0.2.59 in one fan-in bump with the
+- `.oat/sync/manifest.json` restamp in the same commit; a new decision record
+- supersedes the "a configured gate cannot be disabled" consequence of the
+- 2026-07-18 exit-gate decision.
+- - **Project-scoped gate overrides and fail-closed gate resolution.** A project
+- may disable a configured gate-aware skill's gate only through its own
+- `state.md`; overrides are accepted only for `oat_gateable` skills; only
+- `not_configured` is an explicit no-gate allowance, and a null, missing, or
+- malformed resolution fails closed. Recorded as
+- `DR-260906-project-scoped-gate-overrides`.
+- - **Manifest restamp advisories precede the save and never block.** Every
+- non-sync command that saves the manifest reports producer-versus-invoking
+- version by plain string identity before `saveManifest` replaces it, in human
+- output or a JSON array, and `saveManifest` keeps its final restamp; commands
+- that never save (JSON status) carry no restamp evidence.
+- - **The resolver is the only stamp producer.** `dispatchStamp` exists exactly
+- when `dispatchReport` exists and is derived by the one existing formatter;
+- orchestrators copy it and never assemble their own.
+- - p01 edited `apps/oat-docs/docs/contributing/skills.md` outside its plan's
+- named docs scope because the closeout rule made that page's gate-authoring
+- step a self-contradiction inside the diff, and bumped
+- `oat-project-autonomous` through a recovery that mapped the new prompt sites
+- in the autonomy inventory. The plan's Dependencies table gains cross-wave
+- rows at the wave-close refresh.
+- - p02's restamp-only condition additionally requires zero failed operations,
+- because a rejected collection counts as failed but never as planned.
+- - p03 did not re-bump `oat-project-implement` (p01 owns the wave's bump) and
+- documents the stamp prefix without its trailing space in prose (MD038).
+- - The final review widened the fail-closed gate rule to the discover and
+- design skills (kept non-gateable per the plan's out-of-scope clause) and
+- the three plan-producing skills, and superseded part of DR-260718.
+- - **Assertions that could not see the defect.** The restamp-only sync body
+- still printed `No changes required.` from the shared plan formatter; the
+- pinned test used array-element equality and the suite's injected formatter
+- fake never emitted the sentence, so it passed both Codex rounds. The root
+- reviewer found it by running the built CLI, and the fix had to add a
+- real-formatter harness option before the strengthened assertion meant
+- anything.
+- - **A stale transition that looked fresh.** Codex found pre-commit that a
+- stored `project_disabled` closeout could be reused after the gate was
+- re-enabled because the implementation fingerprint excludes `state.md`; the
+- closeout and router now re-resolve with project context and compare a
+- fingerprint recomputed from the current resolution.
+- - **Prose contracts beyond the diff.** The final review found the retired
+- "null means no gate" rule still taught by two skills and one docs page
+- outside every lane's write surface, plus the decision record that predated
+- overrides; all were aligned in the wave rather than deferred, because the
+- W3 exit gate had blocked on exactly that class.
+- - **Pin inventories by name undercount.** Two lanes found more version pins
+- than briefed (one was a regex-form pin); lanes now grep the version literal.
+- - Discover and design gates cannot be disabled per project: their gate steps
+- now resolve with project context and fail closed, but override keys stay
+- restricted to `oat_gateable` skills, as the plan scoped.
+- - The stamp contract helper's lexical guards are a tripwire, not a proof;
+- the exit gate's remaining Medium (bold-step boundaries, a direct normal-path
+- shim sentence) is filed rather than fixed after the passed gate.
+- - `PROJECT_STATE_FRONTMATTER_FIELDS` still has no production consumer;
+- preserve-on-write is pinned by an executable writer test instead.
+- - `BL-260906-fix-sync-apply-branch` — `No changes required.` on a rejected collection with zero planned operations (pre-existing).
+- - `BL-260906-persist-status-native-skill` — status native-skill adoption never sets `manifestChanged`.
+- - `BL-260906-give-project-state-frontmatter` — wire or delete the unused project-state allowlist.
+- - `BL-260906-scope-the-restamp-only-sync` — per-scope restamp-only suppression under `--scope all`.
+- - `BL-260906-make-the-dispatch-stamp` — harden the stamp contract helper (exit-gate M1).
+- - Wave-close plan corrections: the gate-override plan's Dependencies table
+- (cross-wave rows for `contributing/skills.md` and `state-utils.test.ts`);
+- W5 group 4 and W6 group 2 lanes re-anchor.
+- - Skill signals for `oat-wave-execute` are recorded in the wrapper's
+- `orchestration-log.md` synthesis.
+- - `BL-260712-per-project-override`, `BL-260826-warn-on-silent-oatversion`,
+- `BL-260826-emit-the-dispatch-stamp-from` — archived by this wave.
+- target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/shared/wave-4-execution/reviews/artifact-plan-review-2026-09-06T162416Z.md
+- Final gate review completed with delegated reconnaissance; 0 critical, 0 important, 1 medium, 1 minor.
+- target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:0,medium:1,minor:1 exit=0 status=ok artifact=.oat/projects/shared/wave-4-execution/reviews/final-review-2026-09-06T203008Z.md
+- oat_status: complete
+- oat_ready_for: null
+- oat_blockers: []
+- oat_last_updated: 2026-09-07
+- oat_generated: true
+- oat_summary_last_task: p12-t09
+- oat_summary_revision_count: 0
+- oat_summary_includes_revisions: []
+- Wave 5 ("program-intake follow-ups") of the 2026-08-31 execution program:
+- eleven external plans that closed backlog items opened during the program's
+- own intake reviews, run as a thin wrapper project so the fixes could execute
+- in parallel worktrees with root-owned reviews, one lockstep release bump, and
+- full integration gates after every fan-in. The motivating gaps were gates that
+- lost already-produced reviews to post-selection or index-lock failures,
+- instruction pointer files that landed inside documentation content, quick
+- projects that dead-ended in the spec-driven plan skill, a missing
+- `oat config unset`, skill text that could reference scripts no pack ships,
+- external plans whose readiness status contradicted their dependency tables,
+- autonomous completions that failed on a missing recap seam, terminal status
+- that disagreed with revision plans, and consolidated projects that retired
+- their absorbed work without checking it. Ten lanes merged; the eleventh
+- (deferring the activeProject clear) parked on its plan's own STOP condition
+- because its resume premise is false against the real CLI.
+- - **Gate resilience (p01, p04).** A committed review artifact that survives a
+- post-selection failure is re-validated through the normal path's own
+- eligibility function and returned with its real disposition
+- (`postSelectionRecovery: true`, no reviewer re-dispatch; replacement bytes
+- never recover; `unexpected_post_selection_failure` envelopes name the thrown
+- sub-step and code). Gate project-log finalization retries transient index
+- locks on git's own contention evidence, settles only on a clean log with a
+- moved HEAD carrying the entry, and leaves a durable receipt under
+- `<project>/gate-receipts/` whose recovery command is idempotent and
+- identity-bound.
+- - **Configuration (p02, p05).** `documentation.instructionPointerExcludes`
+- keeps instruction-sync pointer files out of docs content trees (normalized,
+- escape-rejecting, fail-closed on malformed values with a repair message; the
+- `.oat/repo` carve-in keeps precedence; issue #238 reproduced and closed on
+- this repository). `oat config unset <key>` with `set`-parity refusals,
+- aggregate-key rejection, empty-parent pruning, and family coverage derived
+- from the live catalog.
+- - **Lifecycle routing and closeout (p03, p08, p10, p11).** One quick-plan
+- readiness predicate shared by `oat-project-plan` 1.4.10, `progress` 1.4.1,
+- `next` 1.1.1, and `quick-start` 2.3.10, with incomplete quick projects
+- resuming in quick-start in place. The recommender treats a project as
+- terminal only when `oat_lifecycle` is complete AND no revision phase is
+- incomplete, on a control-plane task parser that normalizes heading dialects
+- with string-only ordinals, keyed on lifecycle alone across spec-driven,
+- quick, and lite. The autonomous recap is capability-aware and non-blocking:
+- `oat-explainer-kit` 1.0.7 ships a forgery-resistant seam probe, the recap is
+- attempted exactly once only when every required seam resolves, and
+- `complete` 1.7.8, `implement` 2.3.6, `summary` 1.5.3, `autonomous` 1.0.13
+- carry the contract with the Lite carve-out pinned verbatim.
+- Consolidated-project retirement is semantic: `oat-project-complete` reads the
+- `absorbed_projects` / `absorbed_backlog_ids` a quick-start consolidation
+- recorded, sweeps the active planning surfaces for ownership language still
+- naming that work, and dispositions each hit before the roll-up and seal.
+- - **Contracts (p06, p07).** Every `.oat/scripts` reference in shipped skill
+- Markdown resolves against a pack manifest (lossless two-stage extraction;
+- 74 shipped, 8 canonical-unshipped). The `oat-repo-improve` 2.1.3 plan
+- template carries the external-plan readiness contract and the contract test
+- sweeps all 44 dated plans; the stale row it caught is a provenance-headed
+- fixture.
+- - **Exit-gate fix round (p12).** After the root final review passed, the
+- cross-family exit gate blocked attempt 1 on seven composition gaps; three
+- parallel fix lanes resolved them: the gate-log append window is one critical
+- section under a project-local advisory lock and a commit settles only when
+- `HEAD:project-log.md` carries the entry; receipt staleness is decided against
+- HEAD; `documentation.instructionPointerExcludes` is catalogued for `set` and
+- `unset`; the control-plane reader carries an executable Quick Plan Readiness
+- predicate so `oat project status` routes not-ready quick plans to
+- quick-start; the awk readiness guard measures indentation in columns;
+- quick-start re-resolves `PROJECT_PATH` after scaffolding; the readiness
+- contract backstops the plan↔source backlink.
+- - **Release.** Lockstep 0.2.62 → 0.2.63 in one fan-in bump with the
+- `.oat/sync/manifest.json` restamp in the same commit; two decision records
+- (`DR-260907-additive-post-selection`, `DR-260907-gate-log-receipts-live-under`).
+- - **Recovery re-validates, never re-reads.** A post-selection recovery runs
+- the selected artifact snapshot through the same eligibility function as the
+- normal path; on-disk bytes that diverge from the snapshot fail closed rather
+- than being recovered. Recorded as `DR-260907-additive-post-selection`.
+- - **Gate log receipts live under the project and are idempotent.** The retry,
+- classification, and dedupe logic lives in the log module (not the gate), a
+- receipt binds producer, ref, and body, and the printed recovery command can
+- be re-run without duplicating the entry. Recorded as
+- `DR-260907-gate-log-receipts-live-under`.
+- - **Pre-dispatch refreshes belong in the source plans.** Recorded as
+- `DR-260907-pre-dispatch-refreshes-live`.
+- - **(superseded wording removed)** Wave-boundary
+- refreshes are dated `Refresh applied` entries in each plan's Revalidation
+- section; the wrapper stays single-contract and wave-close corrections are
+- reserved for execution records. The plan gate rejected wrapper-side addenda
+- three times before this.
+- - **A rewrite that cannot take the log lock refuses; a commit that cannot be
+- read back does not settle.** The gate-log critical section uses a
+- project-local advisory lock under the OS temp root (never a Git lock), and
+- `committed` requires a positive HEAD read-back; anything else routes to
+- the durable receipt and its idempotent recovery.
+- - **A false plan premise parks the lane.** p09 stopped before widening a guard
+- whose resume design cannot work on the current CLI, preserved its work as a
+- patch, and filed the refresh item rather than improvising.
+- - p01's Test-plan bullet expected the original verdict after a post-selection
+- byte swap; the Done criterion governs, so the shipped behavior is fail-closed
+- and the plan is corrected at wave close.
+- - p03 reads `oat_template` absent as false (the repository convention; 12 of
+- 76 live quick plans flip not-ready → ready, none the other way).
+- - p04 keeps the retry in the log module with a thin gate wrapper because the
+- plan's literal placement creates an import cycle.
+- - p07 ships the readiness rules as local test helpers, not a module, because
+- the plan's In-scope names only the test file.
+- - p08's seam probe requires the fact critic in both modes where `run.mjs`
+- returns null without one — the one place the probe is stricter than the
+- runtime, pinned as a judgment call.
+- - p10 flipped two same-phase cross-spelling negatives because collapsing
+- heading dialects makes them positives by definition; the cross-phase
+- negatives survive in a dedicated case.
+- - p11 resolves the configured `projects.root` (the plan's literal glob matched
+- zero files on this scope-nested layout) and records that Lite consolidations
+- write no `absorbed_*` fields (plan-scope gap, filed).
+- - **A red root test only the root reviewer saw.** p08 bumped
+- `oat-explainer-kit` and swept the CLI package's pins, but
+- `tools/smoke/wrapper-compatibility.test.mjs` pinned the old version in a
+- regex-escaped literal that the CLI package filter never runs. The lane's
+- forced gates were green; root `pnpm test` was red. Lanes that bump a skill
+- now sweep old literals repo-wide in plain and escaped forms and run
+- `pnpm test:smoke`.
+- - **A plan whose premise was false.** p09's resume design assumed the status
+- probe could see the completion seal and skip a second append; the seal
+- append is not idempotent and the probe cannot see it (two seals on replay).
+- The lane reproduced it on the built CLI and parked per its STOP clause.
+- - **Where the wave-boundary refresh lives.** The plan gate blocked on attempts
+- 1, 3, and 4 because wrapper-side addenda claimed authority the governing
+- skill brief does not grant; moving the refreshes into the plans themselves
+- passed on attempt 5 with zero findings.
+- - **A review that caught the orchestrator.** The p11 review flagged that the
+- review brief's ordering ruling was inverted relative to the plan (sweep
+- before the seal, not after); the implementation followed the plan and no
+- code changed. Brief rulings now quote the plan sentence they derive from.
+- - **The gate saw composition the lanes could not.** Every lane passed its
+- own review, and the root final review passed on the integrated tree, yet
+- the cross-family exit gate blocked on cross-lane seams: a sibling-plan
+- dependency row (p05 had to cover p02's key), a plan premise that was false
+- for another package ("no routing code exists" while the control-plane
+- routes), and a concurrency claim with no overlapping-writer test. The
+- fix round reproduced every finding before changing code.
+- - **A gate exhausted on a sentence.** The cross-family exit gate blocked
+- twice: once on real composition gaps, once on a stale user-facing summary
+- sentence plus two test-rule Mediums, after a launch whose reviewer had
+- passed was killed by the harness for low memory before its receipt. With
+- attempts exhausted the wave stopped at the boundary, escalated with every
+- finding already fixed, and the operator authorized a third attempt, which
+- passed (0C/0I/2M/1m; the Mediums deferred as filed hardening).
+- - **Records that lagged git.** The final review's only Important was
+- `state.md` not advanced at the last fan-in; all seven findings were record
+- corrections, fixed in one commit and verified in a second round.
+- - The retirement sweep is advisory by the plan's own rule: a raw match never
+- blocks closeout, and a Lite consolidation that recorded nothing degrades to
+- a recorded note rather than failing.
+- - `unset tools.<pack>` refuses rather than removes (it points at
+- `oat tools remove`), keeping intent and installed files from drifting.
+- - Archived projects whose completion is recorded at phase level (no `### Task`
+- headings) still report zero completed tasks; the reviewer ruled "do not
+- weaken the widening — file and pin", so the interaction is pinned and filed.
+- - The stale quick-start `PROJECT_PATH` after `oat project new` is pre-existing
+- and left for a follow-up rather than fixed inside a lane that shares the
+- Step 0.5 routing with p03.
+- - `BL-260907-make-the-completion-seal` — refresh or supersede the p09 plan
+- (seal idempotence, seal visibility to the status probe).
+- - `BL-260907-finalize-synced-archive-mjs` — the synced deferred clear from
+- PR #254 always fails on a numeric-fd `readFile` (pre-existing).
+- - `BL-260907-recognize-phase-level` — phase-level completion records.
+- - `BL-260907-type-check-cli-test-files`, `BL-260907-fold-oat-config-adopt-onto`,
+- `BL-260907-route-quick-mode-discovery`, `BL-260907-warn-when-documentation-root`,
+- `BL-260907-name-the-resolved-target`, `BL-260907-ignore-backslash-escaped`,
+- `BL-260907-settle-the-oat-wave-program`, `BL-260907-fail-closed-on-unparsable`,
+- `BL-260907-record-absorbed-projects` — closeout follow-ups from the lane
+- reviews (`BL-260907-re-resolve-project-path-after` was fixed in the wave as
+- p12-t06 and is archived).
+- - `BL-260907-let-oat-config-unset-remove`, `BL-260907-decode-entity-and-percent`,
+- `BL-260907-harden-the-external-plan` — exit-gate fix-round residue (a
+- malformed stored value `unset` cannot remove; encoded neighbouring IDs and
+- raw HTML blocks in the backlink rule; full extension consumption and
+- comments-before-fences in the same rule).
+- - Wave-close plan corrections: execution records on the ten merged plans;
+- p01's Done checkbox and two Test-plan bullets; p03's `oat_template`
+- reading; p10's Step 2 Verify sentence; p11's verify filter; the stale
+- BLOCKED row in the docs-index exclusions plan.
+- - Skill signals for `oat-wave-execute` are recorded in the wrapper's
+- `orchestration-log.md` synthesis.
+- - `BL-260902-recover-committed-review`, `BL-260902-keep-pjm-init-provider`,
+- `BL-260830-clarify-quick-mode-resume`, `BL-260902-retry-gate-project-log`,
+- `BL-260830-add-oat-config-unset-command`, `BL-260902-validate-every-shipped-skill`,
+- `BL-260830-distinguish-external-plan`, `BL-260902-make-autonomous-project-recap`,
+- `BL-260901-make-terminal-project-status`, `BL-260902-make-consolidated-project`
+- — archived by this wave; `BL-260902-defer-activeproject-clearing` stays
+- open (p09 parked).
+- target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:1,medium:1,minor:1 exit=1 status=blocked artifact=.oat/projects/shared/wave-5-execution/reviews/artifact-plan-review-2026-09-07T042724Z.md
+- target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:1,medium:1,minor:1 exit=1 status=blocked artifact=.oat/projects/shared/wave-5-execution/reviews/artifact-plan-review-2026-09-07T043343Z.md
+- target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:1,medium:0,minor:0 exit=1 status=blocked artifact=.oat/projects/shared/wave-5-execution/reviews/artifact-plan-review-2026-09-07T044034Z.md
+- target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:1,medium:0,minor:0 exit=1 status=blocked artifact=.oat/projects/shared/wave-5-execution/reviews/artifact-plan-review-2026-09-07T044657Z.md
+- target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/shared/wave-5-execution/reviews/artifact-plan-review-2026-09-07T045405Z.md
+- review=final status=fixes_added artifact=reviews/final-review-2026-09-07T144442Z.md findings=0C/3I/4M/0m run=33895672-bac5-4cb4-9a9e-474e440a9bc5
+- target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:1,medium:2,minor:1 exit=1 status=blocked artifact=.oat/projects/shared/wave-5-execution/reviews/final-review-2026-09-07T174812Z.md run=a720129c-9808-4d43-8ae6-4b8de92e8fdb
+- target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:0,medium:2,minor:1 exit=0 status=ok artifact=.oat/projects/shared/wave-5-execution/reviews/final-review-2026-09-07T214334Z.md run=905419ec-75d0-4ea0-9881-5425c6c54e9d
+- oat_status: complete
+- oat_ready_for: null
+- oat_blockers: []
+- oat_last_updated: 2026-09-08
+- oat_generated: true
+- oat_summary_last_task: p06-t05
+- oat_summary_revision_count: 0
+- oat_summary_includes_revisions: []
+- Wave 6 ("truthfulness residue") of the 2026-08-31 execution program: five
+- external plans that closed the program's remaining backlog items about
+- surfaces that claimed more than they knew, run as a thin wrapper project so
+- the fixes could execute in parallel worktrees with root-owned reviews, one
+- lockstep release bump (0.2.63 → 0.2.64), and full integration gates after every
+- fan-in. The motivating gaps were pack evidence that reported every provider
+- reachable from a hard-coded empty list, a final-PR skill that archived
+- in-progress reviews and opened PRs over dangling ledger rows, a config parser
+- that dropped a `__proto__` key on read and injected it in one command, skill
+- versions read from the top-level field alone so a `metadata.version`-only
+- skill reported no version, and no way to tell why a canonical skill was
+- missing from a provider's view. All five lanes merged; with this wave the
+- program's composed waves are complete (thirty of thirty-one plans done, one
+- parked and carried as `BL-260907-make-the-completion-seal`).
+- - **Provider reachability evidence (p01).** A `provider-reachability` mapper
+- feeds `projectPackEvidence` from real per-scope provider state; sync
+- evidence is collected in-process (the spawned `--json` subprocess is gone);
+- every production `providers: []` literal removed; the six dead diagnostic
+- codes gain real emitters with a pinned severity matrix (exit codes derive
+- from severity, never from the code name); `list`/`info` agree with
+- `status`/`doctor` on user-agent materialization; a failed sync run reports
+- as `partial` / exit 1.
+- - **Review-ledger paths before the final PR (p02).** `oat-project-pr-final`
+- 1.6.3 archives only terminal review rows (event identity, enumerated
+- rewrites, idempotent names) and runs a fail-closed ledger-path guard before
+- `gh pr create`: containment including symlink chains and `cd -P`, fenced and
+- blockquoted rows skipped, per-table header recognition, an absent archived
+- artifact excused only when `reviews/archived` was never materialized
+- (`! -e` and `! -L`, with a stop for a non-directory), a missing `## Reviews`
+- section and an escaped pipe in a ledger header or row are stops,
+- `PRFINAL-05` registered.
+- - **`__proto__`-named config keys (p03).** `config/json.ts` keeps `parseTree`
+- for error collection and materializes the tree iteratively into plain
+- objects whose every own key is set with `Object.defineProperty`, so
+- `__proto__` survives as an own data property and consumers receive ordinary
+- objects; error contract unchanged, depth within one stack frame of the base;
+- the injection, the `projects` sibling contract, and `unset` are pinned
+- through the real `oat config` command. Decision record
+- `DR-260907-oat-config-reads-materialize`.
+- - **`metadata.version` as the canonical skill version (p04).** One
+- parsed-input contract (`parseSkillFrontmatter` with strict `uniqueKeys`,
+- `resolveSkillVersion`: metadata first, top-level as alias, both-and-different
+- → conflict) shared by the runtime helper, both validators, canonical-role
+- resolution, and doctor; conflict is an error; alias-only a structural
+- warning over all 82 bundled skills that never reaches the bump result;
+- unusable or malformed declarations block on both the current and base side;
+- `create-agnostic-skill` 1.4.2 and `create-oat-skill` 1.5.2 emit
+- `metadata.version`; `contributing/skills.md` documents the order.
+- - **Provider-view diagnostics (p05).** `oat tools info <skill>` gains an
+- additive provider-view section (human and JSON) from a pure
+- `drift/skill-view-diagnostic.ts` mapper — `inactive`, `unsupported`,
+- `excluded`, `untracked`, `unverified`, `missing-additive` (with a
+- scope-correct repair), and manifest-backed additive/removed/modified classes
+- — with copies compared through the shared version resolver on
+- banner-stripped content, a manifest entry whose path diverges from the
+- expected projection rendered honestly, an unreadable sync config or manifest
+- degrading the scope to `unavailable` with a root-redacted reason, a failing
+- provider degrading alone, and a real post-sync convergence case.
+- - **Final-review fix round (p06).** The root final review's Important and the
+- fixable Mediums and Minors, fixed in two parallel lanes with
+- reproduction-first probes, red-then-green controls, and two Codex rounds
+- each; verified at source by the same reviewer in round 2.
+- - **Release.** Lockstep 0.2.63 → 0.2.64 in one fan-in bump with the
+- `.oat/sync/manifest.json` restamp in the same commit; two decision records
+- (`DR-260907-oat-config-reads-materialize`, `DR-260908-a-stop-whose-remedy-lies`).
+- - **OAT config reads materialize plain objects with own-key definition.**
+- Recorded as `DR-260907-oat-config-reads-materialize`; supersedes the plan's
+- null-prototype mechanism after its own STOP fired.
+- - **A STOP whose remedy lies inside the plan's own file scope is closed by a
+- dated refresh, not a park.** Recorded as `DR-260908-a-stop-whose-remedy-lies`; p03 resumed the same day
+- under the amended contract instead of parking to a later wave.
+- - **The alias warning runs over every bundled skill; the bump gate never sees
+- it.** The structural validator's version-alias pass ignores the `oat-*`
+- filter its other checks keep, so the two migrated template skills are
+- covered while `check:skill-bumps` stays exit 0 (the plan's refresh
+- amendment; the operator asked that the bulk migration off the top-level
+- field follow as `BL-260904-migrate-bundled-skills-from`, raised to high).
+- - **Weaker-anywhere governs fix rounds.** p02's first fix accepted every
+- absent path under the `local`/`synced` scopes because `git check-ignore`
+- ignores those whole project trees; the archived-directory rule replaced it,
+- and lane briefs now restate the rule for fix rounds.
+- - **A reviewer's suggested fix is a hypothesis.** The sentinel substitution the
+- final review suggested for escaped pipes drew three Codex Criticals in the
+- lane; the fail-closed stop that replaced it is strictly stronger, and the
+- review's literal `! -e` needed `! -L` beside it.
+- - p03's mechanism changed under a dated post-STOP refresh (`03e1aa576`): plain
+- objects with own-key `defineProperty` instead of null-prototype objects; the
+- refresh's 5000-depth figure and the empty-content bullet are corrected at
+- wave close.
+- - p04 rejects non-string version scalars rather than stringifying them
+- (`version: 1.10` is a YAML 1.1 float); no bundled skill affected.
+- - p05 adds two view classes beyond the plan's four (`untracked`, native-read
+- `in-sync`), carries no `strategy` on the expected projection, and offers a
+- repair for a conflicting copy because the reviewer ran the repair and it
+- worked.
+- - p01's `provider-inactive` fires only for a config-disabled provider (a
+- never-detected provider produces no row); the plan's matrix row is corrected
+- at wave close.
+- - **Three false plan premises at recon** (p03's caller count, p04's pin set
+- and the two 2026-09-06 decisions, the `oat-*` filter gap) were caught by
+- executing each plan's current-state claims on the built CLI before dispatch
+- and applied as dated refreshes; the plan gate still blocked once on the p04
+- refresh amendment contradicting the plan's alias routing.
+- - **p03's STOP** fired mid-lane on two regressions the plan's own mechanism
+- caused; resumed under the post-STOP refresh the same day.
+- - **p02's fix round introduced a Critical** (`git check-ignore` accepted
+- everything for ignored project scopes) and needed two more fixes.
+- - **p05 depended on p04's resolver**: p04 merged first, the p05 worktree was
+- rebased onto the merged tip, and its deferred Important landed as a third
+- commit verified in a third round.
+- - **The root final review** (0C/1I/5M/14m) found a sync-config read failure
+- silently dropping a provider-view section and a manifest-path divergence
+- rendering a false claim; both fixed in Phase 06. The review's declared Minor
+- count was one short of its bullets, so one finding was dropped until round 2
+- recovered it.
+- - **The exit gate passed on attempt 1** (codex-5-6-sol-xhigh, 0/0/0/0) after
+- reconsidering every deferral explicitly.
+- - Alias warnings print 82 times per `oat:validate-skills` run until the
+- migration item lands (plan-sanctioned bridge).
+- - The scaffold templates emit metadata-only frontmatter that two `^version:`
+- regex readers cannot parse; fixing those readers is a blocking criterion on
+- the migration item rather than a change in this wave.
+- - The escaped-pipe stop rejects two shapes the base accepted (a `\|` right of
+- the Artifact column; a non-ledger header inside `## Reviews`) — fail-closed
+- with zero corpus impact, carried as a low follow-up.
+- - `oat decision new` dates ids in UTC; both records this wave used
+- `--created-at` and a follow-up decides local versus UTC.
+- - `BL-260908-guard-normalized-config-maps` (medium) — normalizers reinstall a
+- preserved `__proto__` key as a map prototype; sweep criterion added.
+- - `BL-260908-make-copy-strategy-skill` (medium) — copy-strategy directories
+- report `drifted/modified` right after a successful sync (pre-existing).
+- - `BL-260908-validate-the-catalog-refresh` — validate the catalog-refresh
+- policy state in `normalizeSyncEvidence`.
+- - `BL-260908-report-a-changed-skill-with-no` — a changed skill with no
+- frontmatter block is skipped silently by the bump validator.
+- - `BL-260908-repair-or-exempt-archived` — 35 archived ledgers fail the new
+- path guard (two genuinely dangling rows).
+- - `BL-260908-date-decision-record-ids` — local-date or documented-UTC ids.
+- - `BL-260908-keep-a-bare-proto-in-markdown` — oxfmt bolds a bare `__proto__`.
+- - `BL-260908-align-the-provider-view-json` (low) — `--json`/JSDoc/evidence and
+- docs polish on the provider-view diagnostic.
+- - `BL-260908-tighten-the-pr-final-ledger` (low) — escaped-pipe boundary and
+- scan-boundary prose.
+- - `BL-260904-migrate-bundled-skills-from` (high; next) — drop the top-level
+- `version:` from every bundled skill; fix the two regex readers first.
+- - Plan corrections applied at wave close: p01 matrix row 2; p02 labels,
+- citation, drift omissions; p03 depth figure, empty-content bullet, Outcome
+- wording; p04 Step 6 pins and drift omissions.
+- - `BL-260903-populate-provider-reachability` — archived (p01).
+- - `BL-260903-pr-final-archives-reviews` — archived (p02).
+- - `BL-260903-preserve-proto-named-config` — archived (p03).
+- - `BL-260904-honor-metadata-version` — archived (p04).
+- - `BL-260904-diagnose-canonical-skills` — archived (p05).
+- target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:1,medium:2,minor:0 exit=1 status=blocked artifact=.oat/projects/shared/wave-6-execution/reviews/artifact-plan-review-2026-09-07T235418Z.md run=e5ddc829-41d7-410f-8e6e-d1b96ea442b6
+- target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:0,medium:1,minor:0 exit=0 status=ok artifact=.oat/projects/shared/wave-6-execution/reviews/artifact-plan-review-2026-09-08T001147Z.md run=8d154521-b9de-4949-a78f-a393bcef2991
+- target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/shared/wave-6-execution/reviews/final-review-2026-09-08T072250Z.md run=f458f4c1-dbf0-4fa2-b0d0-1b99593c4fd1
+- Entries are chronological and append-only.
+- target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:1,medium:2,minor:0 exit=1 status=blocked artifact=.oat/projects/shared/wave-6-execution/reviews/artifact-plan-review-2026-09-07T235418Z.md run=e5ddc829-41d7-410f-8e6e-d1b96ea442b6
+- target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:0,medium:1,minor:0 exit=0 status=ok artifact=.oat/projects/shared/wave-6-execution/reviews/artifact-plan-review-2026-09-08T001147Z.md run=8d154521-b9de-4949-a78f-a393bcef2991
+- target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/shared/wave-6-execution/reviews/final-review-2026-09-08T072250Z.md run=f458f4c1-dbf0-4fa2-b0d0-1b99593c4fd1
+- oat_status: complete
+- oat_ready_for: null
+- oat_blockers: []
+- oat_last_updated: 2026-09-09
+- oat_generated: true
+- oat_summary_last_task: p21c-t01
+- oat_summary_revision_count: 0
+- oat_summary_includes_revisions: []
+- Wave 7 ("post-program corrective lanes") of the 2026-08-31 execution program:
+- twenty external plans composed after the program's W1–W6 closed and the
+- metadata-version migration merged, run as a thin wrapper project so the fixes
+- could execute in parallel worktrees (six groups of three plus two solo lanes
+- under a concurrency ceiling of three) with root-owned reviews, one lockstep
+- release bump (0.2.66 → 0.2.67), and full integration gates after every
+- fan-in. The lanes closed the corrective items the program's own reviews had
+- filed: a synced archive script that never ran through a symlinked install, a
+- config command that could not remove a malformed value, a formatter that
+- rewrote a bare `__proto__` literal into bold, a completion seal that failed on
+- replay, config maps that reinstalled a preserved `__proto__` key as a
+- prototype, a release contract that guarded one bundle directory of seven,
+- a doctor example that described an impossible state, a wrong-typed docs root
+- that vanished in silence, a symlink warning that blamed the filesystem, stray
+- fences that hid normative skill prose, four docs-index follow-ups, a status
+- command that lost its native-skill adoption, four version-validator gaps, a
+- sync failure that reported "No changes required.", a copy-strategy projection
+- that never read in sync, a readiness contract with a decodable scanner, gates
+- CI never ran, skill-authoring claims no test backed, and plan authoring that
+- could drift below the caller's model class. Nineteen lanes merged; p16
+- (dispatch baselines after journaling) parked on a plan STOP because the
+- recorder graph's no-process guard forbids the plan's git seam, and its item
+- returns to planning as a decision.
+- - **finalize-synced-archive reads stdin through an fd (p01).**
+- `readFileSync(0)` replaces the stream reader and the main-module guard
+- canonicalizes both sides, so the synced deferred-clear path runs through a
+- symlinked install; a seven-case CLI entry-point test; `oat-project-complete`
+- 1.7.10.
+- - **`oat config unset` removes a malformed value (p02).** Three repair keys
+- unset behind a targeted strict barrier that leaves every untargeted surface
+- and the `pjm.remote` raw-write branch validated exactly as before; the
+- env-override refusal uses the exported `resolveEnvOverride`; `adopt`
+- resolves its surface flags through the shared resolver.
+- - **A repository Markdown guard for bare `__proto__` literals (p03).** A
+- block-scoped CommonMark classifier (container-aware fences, HTML block types
+- 1–7) rejects the literal outside code spans under `.oat/repo/**` and the
+- docs tree, with an invariant test derived from real `oxfmt --write`; seven
+- pre-existing occurrences repaired.
+- - **An idempotent completion seal (p04).** `checkProjectLog` reports `sealed`,
+- a replayed seal returns `already-appended`, and any new content appended to a
+- sealed log is refused through a thrown `ProjectLogSealedError` mapped at the
+- command layer; the parked wave-5 p09 work (durable archive receipt validator
+- and resume routing) is unparked byte-exact; the summary and retro skills
+- route around the refusal.
+- - **Own-key config maps (p05).** `getOwnKey` / `setOwnKey` guard every map
+- rebuilt from parsed config data (normalizers, exec-target merges, config and
+- gate lookups, the ceiling layers, the dispatch report); a global
+- prototype-pollution path in `buildResolvedConfigAggregate` is closed;
+- `--provider __proto__` rejects cleanly; the materialization decision record
+- names every site.
+- - **Every required bundle directory guarded (p06).** A correspondence test
+- over the exported `REQUIRED_BUNDLE_DIRECTORIES` with real-tarball pack
+- controls per directory.
+- - **A doctor example the doctor can report (p07).** Every pack in exactly one
+- of installed / available, backed by a disjointness case whose extractions
+- must be complete; `oat-doctor` 1.2.4.
+- - **A wrong-typed `documentation.root` warns (p08).** `readOatConfigWithWarnings`
+- carries the warning through a sink; `config get` and `list` read once and
+- print it once (stderr, or a `warnings` array under `--json`); the value
+- still falls back to the default.
+- - **The symlink exclusion warning names the resolved target (p09).** Or the
+- on-disk spelling for a case-only mismatch; the `absent` message byte-identical;
+- a 16-scenario differential shows no inert entry became effective.
+- - **Stray fences repaired and the scanner widened (p10).** Five skill assets
+- repaired with prose byte-identical apart from fence markers; the scanner in
+- `named-skill-load-contract.test.ts` walks 205 files recursively with an
+- inventory floor, an after-prose defect shape, and a propagating `readdir`
+- failure.
+- - **Docs-index follow-ups closed (p11).** A `Docs source index` bullet for both
+- frameworks, a role-aware hop-cap refusal, a distinct empty-manifest line
+- naming the exclusion count, and `excludes` / `instructionPointerExcludes`
+- defaults in `DEFAULT_SHARED_CONFIG`.
+- - **`oat status` persists native-skill adoption (p12).** The first adopt and a
+- confirmed `replaceCanonical` retry set `manifestChanged`; a native adopt
+- adds no row; `keep` never writes; the checklist-abort harness really aborts.
+- - **Version-validator gaps closed (p13).** Agent roles version-gated, an
+- unresolvable version a finding, the alias promotion a structural error while
+- the bump gate still accepts an alias-only skill with a valid bump, and
+- `check:skill-bumps` covering whole skill directories (everything but
+- `tests/`) with NUL-safe paths; `AGENTS.md` and the contributing docs say so.
+- - **A rejected sync apply reports partial failure (p14).** The failure arm wins
+- before the restamp-only ternary.
+- - **Copy-strategy projections converge (p15).** The banner-and-sentinel-aware
+- directory hash is extracted into `engine/managed-copy-hash.ts`, hardened
+- against symlinked roots and sentinels, and shared by the drift detector, the
+- planner, and the retirement classifier.
+- - **p16 — parked.** Dispatch baselines after journaling: the recorder graph's
+- no-process guard forbids the plan's git seam; partial steps 2–3 preserved
+- under `parked/wave-7-p16/`.
+- - **The readiness contract hardened and the ledger vocabulary settled (p17).**
+- `composed` / `in-progress` / `merged` are the only wave statuses; the
+- source-declaration scanner runs the fence machine first, recognizes
+- declarations only at an original column 0, decodes labels for
+- CommonMark-bounded character references only and destinations once for
+- unreserved characters, restricts HTML-block openers to CommonMark's
+- conditions, and carries hidden-ness out of band; the acceptance set is the
+- base's plus exactly four enumerated widenings, pinned against a 79-row
+- differential and a 50,625-document sweep; the prospective floor is 18.
+- - **Skill-asset formatting and the worktree-init test inside CI's gates
+- (p18).** `pnpm check` runs `format:root` over the skills tree, the docs, and
+- `tools/smoke`; `pnpm test` runs `test:scripts` last; lint-staged formats
+- `*.{mjs,cjs}`; `AGENTS.md` states the true remaining gap.
+- - **Skill-authoring facts corrected with named backstops (p19).** The
+- 500-character rule is `oat-*`-only, `allowed-tools` is comma-separated by
+- convention, a bare `oat sync` defaults to `--scope all`, the Codex guidance
+- quotes the live page with verification dates, the emitted template carries
+- no unsourced provider claim, and the duplicated frontmatter matrix is
+- consolidated; `create-agnostic-skill` 1.5.0, `create-oat-skill` 1.5.4.
+- - **Final-review fix round (Phase 21).** The completion seal routes on
+- structure before the idempotency short-circuit and the skill re-verifies
+- `sealed: true`; the project-log parser is LF-only and every validator refuses
+- CR / U+2028 / U+2029 (a log two readers resolve differently fails closed);
+- `synthesize` honors the seal and the lock; the directory digest is
+- length-framed under a domain tag with the marker file required, plus a
+- read-once compatibility bridge for existing manifests; `turbo.json` hashes
+- the record surfaces; the fence scanner follows in-repo symlinks; the
+- authoring skills state the alias error; `oat-wave-execute` gains a closeout
+- gate step.
+- - **Plan writes stay on the caller's model class (p20).** The rule is written
+- in `oat-repo-improve` Step 2, `oat-wave-execute`'s reconciliation contract,
+- and the `repo-improve` docs page, pinned by a bundled-docs contract case;
+- `oat-wave-execute` 1.9.2.
+- - **A STOP whose remedy lies inside the plan's file scope is refreshed; an
+- architectural remedy is parked.** Applied four times (p02, p05, p15, p17)
+- and once the other way (p16), each as a dated entry in the plan's
+- `## Revalidation Before Execution` authored by the root.
+- - **Enumerated widenings are the acceptance contract for a scanner change
+- (p17).** Every rendered-text-equivalent widening the differential or the
+- reviewer's sweep found was either enumerated by the root with a pinned
+- minimal witness — (c) label character references, (d) a whole-line comment
+- before a continuation — or rejected; nothing widened silently.
+- - **The seal refusal is a thrown error, not a fourth result variant (p04).**
+- `gate/index.ts` narrows `result.status`; the thrown `ProjectLogSealedError`
+- mapped at the command layer is at least as strong, and `status` on the check
+- result stays a three-value union as the plan's Review focus required.
+- - **A licensed narrowing needs an explicit ruling (p13, p18).** The
+- `tests/`-nested exemption and the refusal of a false plan sentence were both
+- adjudicated by the reviewer against the categorical weaker-anywhere rule,
+- with the evidence the ruling demanded, and recorded as deviations.
+- - **One PR-scoped bump per skill, even across two lanes (p10 → p19, p10 →
+- p20).** `create-agnostic-skill` reads 1.5.0 (superseding p10's 1.4.4 per the
+- source plan's soft-ordering row) and `oat-repo-improve` stays at 2.1.5.
+- - p02's strict barrier is targeted to the three repair keys rather than
+- removed (post-STOP refresh); the env-override probe is exported.
+- - p05 closes a global prototype-pollution path the plan's own Step 2 would have
+- exposed, and the real cause of the corrupt `--provider __proto__` output is
+- `registry.ts`'s `??` fallback, not the site the plan named.
+- - p15's moved helper is hardened (symlinked root or sentinel rejected) instead
+- of moved verbatim.
+- - p17's scanner is deliberately non-CommonMark in one place (a fence opener
+- inside an HTML block still hides what follows it) so the change is strictly
+- narrowing there; bare `%` in a destination rejects by design.
+- - p18 did not write the plan's "`pnpm check` now contains everything `pnpm
+- format` checks" sentence (false for `packages/control-plane`); `format:fix`
+- shares one root glob through `format:root:fix`.
+- - p19's spec-level frontmatter example keeps the spec's space-delimited value
+- with OAT's comma convention in the annotation (root address-now after the
+- review); the corpus rule splits on commas outside parentheses.
+- - **Five STOPs in twenty lanes.** Each was a plan premise the lane could not
+- reproduce as written; the root authored every remedy (four refreshes, one
+- park) and the lanes resumed the same day.
+- - **The parked wave-5 p09 patch had been lost** from scratch before this wave;
+- the plan gate's first attempt caught the dangling reference, and the work was
+- rebuilt byte-exact from the subagent transcript and a dangling blob, then
+- committed under the wrapper before p04 applied it.
+- - **Four false lane claims** (p09 "inert on macOS", p03 "external plans
+- unwritable", p14's record wording, p17's "no Codex coverage possible") were
+- each overturned by a reviewer with counts or a completed run.
+- - **Codex wedging in worktrees** (p17 three times, then two more in the fix
+- round) was covered by re-running from the root checkout at review.
+- - **Root rulings were wrong twice** (a `create-oat-skill` pin that never
+- existed; a wrapper Ordering row contradicting source-plan step 7) and the
+- reviewers corrected them; both are recorded as rules for later waves.
+- - The p16 item stays open with both halves rather than redesigning the
+- recorder's process guard inside a wave ("anything too complex should be its
+- own project").
+- - The p17 scanner rejects any bare `%` left in a destination, so a future plan
+- linking a query string or fragment must spell it unencoded or lose its
+- backlink (noted for authors).
+- - The `create-agnostic-skill` template still carries a repo-internal backstop
+- path inside the emitted block, as the plan prescribed; moving it is a polish
+- item.
+- - The recap and the completion tail for all seven wrappers are deferred to the
+- program boundary per the program rules.
+- - `BL-260909-sweep-the-raw-main-module` (p01) — other raw main-module guards.
+- - `BL-260909-repair-the-bare-fences-that` (p10) — five bare fences outside
+- `.agents/skills`.
+- - `BL-260909-use-handle-bound-traversal` (p15) — handle-bound traversal for the
+- remaining path-based readers.
+- - `BL-260909-reject-malformed-nested-values` (p02) — the strict `pjm.remote`
+- reader.
+- - `BL-260909-add-a-grep-by-shape-control` (p05) — a dynamic-key indexing
+- control.
+- - `BL-260909-show-the-brainstorm-pack` (p07) — the doctor example's missing
+- pack and its derivation rule.
+- - `BL-260909-surface-config-warnings` (p08) — warnings on every reader path,
+- one read per `config get`, the `warnings` field documented.
+- - `BL-260909-fix-the-agents-md-unsafe` (p12) — a shared-fixture race.
+- - `BL-260909-make-oat-sync-scope-all-report` (p14) — a sibling scope's failure
+- in the `--scope all` body.
+- - `BL-260909-give-packages-control-plane` (p18) — a `check` script so its
+- formatting is CI-gated (lockstep change).
+- - `BL-260909-make-findsection-comment-aware` (p17) — the third fence pass,
+- plus CRLF and helper placement.
+- - `BL-260909-re-source-the-surviving-codex` (p19) — the surviving Codex `name`
+- claims and the twelve dead provider-reference URLs.
+- - `BL-260909-wave-7-review-polish-leftovers` — the Minors deferred across the
+- wave.
+- - `BL-260909-rewrite-inbound-references` (final review M3) — `oat backlog
+- archive` leaves dangling `items/` links in every plan that cites the item.
+- - `BL-260909-restamp-a-stale-copy-strategy` (Phase 21) — sync never restamps
+- a stale `contentHash` on skip; retire the pre-framing digest bridge once it
+- does; obsolete legacy mappings classify `detach`.
+- - Update-only, still open: `BL-260906-harden-dispatch-launch` (p16 parked;
+- Notes entry points at the STOP record and the parked patch) and
+- `BL-260908-retire-the-top-level-skill` (p13 landed step 1; step 2 one release
+- later).
+- - Plan corrections applied at wave close: p01, p04, p05, p08, p10, p11, p12,
+- p13, p14, p17, p18, p19, p20; `DR-260907-oat-config-reads-materialize`
+- anchors re-derived by symbol.
+- - `BL-260907-finalize-synced-archive-mjs` — archived (p01).
+- - `BL-260907-let-oat-config-unset-remove` — archived (p02).
+- - `BL-260907-fold-oat-config-adopt-onto` — archived (p02).
+- - `BL-260908-keep-a-bare-proto-in-markdown` — archived (p03).
+- - `BL-260907-make-the-completion-seal` — archived (p04).
+- - `BL-260908-guard-normalized-config-maps` — archived (p05).
+- - `BL-260906-guard-packed-asset-directories` — archived (p06).
+- - `BL-260906-reconcile-the-oat-doctor` — archived (p07).
+- - `BL-260907-warn-when-documentation-root` — archived (p08).
+- - `BL-260907-name-the-resolved-target` — archived (p09).
+- - `BL-260906-repair-the-stray-fence-in-oat` — archived (p10).
+- - `BL-260906-docs-index-follow-ups-from` — archived (p11).
+- - `BL-260906-persist-status-native-skill` — archived (p12).
+- - `BL-260906-extend-check-skill-bumps` — archived (p13).
+- - `BL-260908-report-a-changed-skill-with-no` — archived (p13).
+- - `BL-260906-fix-sync-apply-branch` — archived (p14).
+- - `BL-260908-make-copy-strategy-skill` — archived (p15).
+- - `BL-260907-harden-the-external-plan` — archived (p17).
+- - `BL-260907-settle-the-oat-wave-program` — archived (p17).
+- - `BL-260906-cover-skill-test-files-under` — archived (p18).
+- - `BL-260906-run-scripts-worktree-init-test` — archived (p18).
+- - `BL-260908-correct-the-factual-skill` — archived (p19).
+- - `BL-260908-keep-external-plan-writes` — archived (p20).
+- - `BL-260906-harden-dispatch-launch` — open, update-only (p16 parked; Notes entry).
+- - `BL-260908-retire-the-top-level-skill` — open, update-only (p13 landed step 1; step 2 one release later).
+- Rolled up from the orchestration log's end-of-run synthesis (2026-09-09):
+- - **Convention verdicts.** "Reproduce, report, never improvise" held through
+- five STOPs (four dated refreshes, one park) and the refresh-vs-park rule
+- decided each; plan writes stayed on the caller's model class and are now
+- pinned by p20; reviewer-built adversarial sweeps (a 50,625-document
+- combinatorial sweep, a refetched provider page) found what hand-built
+- differentials and quoted claims missed; the categorical weaker-anywhere rule
+- with explicit adjudication rulings turned two licensed narrowings into
+- documented decisions; four false lane claims were caught by reviewers with
+- counts; root address-nows closed small findings at seven of eight fan-ins.
+- - **Adjustments as rules.** Briefs carry the root's own pin grep, never a
+- belief; a wrapper links a source-plan rule and never paraphrases it;
+- `check:skill-bumps` controls run post-commit on a throwaway branch; Codex is
+- retried once from the root at review when a lane's run wedged; a parked
+- patch lives under the wrapper, SHA-256 pinned; scratch paths are namespaced
+- by wave and Codex output mtimes are checked; lane diagnoses carry
+- instrumentation counts and neutralizations are checked against the case
+- they must break.
+- - **Graduated.** The STOP taxonomy (`DR-260908-a-stop-whose-remedy-lies`) and
+- the caller-model rule (p20) are skill text; the address-now convention and
+- the adjudication-ruling pattern remain wave practice recorded for the retro.
+- - Gate ledger: plan gate blocked once (a dangling parked-work reference,
+- recovered) then passed; every lane review passed within two rounds; eight
+- fan-ins each ran the eight DoD gates plus smoke, skills, scripts, and the
+- root test with `Cached: 0`; the root final review returned CHANGES REQUESTED (4C/5I/6M/7m) — one Critical was the closeout archival itself (a bare `__proto__` in two summaries, bolded by the pre-commit formatter), three were product holes in the completion seal and the managed-copy digest — closed by a root record commit and a three-lane Phase 21 fix round, then a closeout gate runs after every later content commit (0 cached; cli 7395 at the tip); reviewer rounds 2 and 3 each found one more unguarded reader in the same family (`check`, then `rollup`) and were closed by two bounded fix rounds; round 4 passed (0C/0I/2M/3m); the configured exit gate (`codex-5-6-sol-xhigh`) passed at the important threshold with 0C/0I/0M/2m.
+- target=codex-5-6-sol-xhigh threshold=important findings=critical:1,important:2,medium:1,minor:0 exit=1 status=blocked artifact=.oat/projects/shared/wave-7-execution/reviews/artifact-plan-review-2026-09-08T224620Z.md run=f905852e-4f03-417e-a51f-6fbd79b6db99
+- target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:0,medium:1,minor:0 exit=0 status=ok artifact=.oat/projects/shared/wave-7-execution/reviews/artifact-plan-review-2026-09-08T231038Z.md run=c023731b-5c88-4e5c-a384-2061370d75e6
+- target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:0,medium:0,minor:2 exit=0 status=ok artifact=.oat/projects/shared/wave-7-execution/reviews/final-review-2026-09-09T145954Z.md run=16ffcb7f-6a5d-4954-abd6-1b53154c9f6a
+- **What shipped:**
+- - `oat docs generate-index` resolves its docs directory and output from `documentation.root` (app root canonical, `<root>/docs` as compatibility precedence), defaults output to the app-root manifest, never overwrites the scaffold's authored `docs/index.md` or `mkdocs.yml`, refuses unsafe outputs before writing (canonical-path containment with symlink resolution), and updates `documentation.index` only for the Fumadocs bootstrap transition; `docs init` seeds the Fumadocs index at the app root.
+- - `documentation.excludes` / `--exclude` prune docs-index generation with a bounded root-anchored glob grammar backed by a ReDoS-safe matcher; malformed values are repairable through `oat config set`.
+- - `validateAssetsBundle` fails closed on a partial or malformed bundle (seven required directories, exit 2, deterministic first offender, errno-bearing unreadable diagnosis), and every asset error remedy is source-aware (`OAT_ASSETS_DIR` failures never advise a rebuild or reinstall).
+- **Behavioral changes (user-facing):**
+- - Bare `oat docs generate-index` no longer writes a stray root `index.md` or rewrites config from the invoking directory; in legacy source-root configs a bare run is refused with the `--docs-dir` / `--output` escape hatch (documented).
+- - Docs-index output refusals exit 1 (actionable), unusable configuration exits 2 (repair command).
+- - Metadata-only or truncated asset bundles exit 2 instead of resolving as empty installations.
+- - New config key `documentation.excludes` (JSON array) and `oat config set|get|unset documentation.excludes`.
+- - `.oat/sync/manifest.json` carries the worktree-init restamp from the lane bootstrap: schema `version` 1 → 2 with a new `collections: []` key and `oatVersion` 0.2.50 → 0.2.56; the 91 `lastSynced` values are byte-identical (only key order moved) and no provider-view content changed.
+- **Key files / modules:**
+- - `packages/cli/src/commands/docs/index-generate/{index,generator}.ts` (+tests) - configuration-first resolution, safety guards, exclusions
+- - `packages/cli/src/commands/docs/init/scaffold.ts` (+tests) - Fumadocs seed
+- - `packages/cli/src/fs/assets.ts` (+tests) - structural validation and source-aware remedies
+- - `packages/cli/src/config/oat-config.ts`, `packages/cli/src/commands/config/index.ts` (+tests) - `documentation.excludes`
+- - `apps/oat-docs/docs/{docs-tooling/commands,cli-utilities/configuration,reference/oat-directory-structure}.md` - contracts and grammar
+- **Verification performed:**
+- - Per lane: focused suites, `pnpm check`, `pnpm type-check`, `pnpm run check:skill-bumps`, uncached CLI suite; Codex read-only cross-model review; root-owned reviews with adversarial probes (p01 two rounds).
+- - Per group fan-in: full eight-gate definition-of-done sequence with an uncached test run and a config-integrity check; lockstep 0.2.55 → 0.2.56 once at the group-1 fan-in.
+- - Negative controls recorded for every P0 clause (pre-fix reproduction, guard neutralizations, matcher oracle and ReDoS timing, mutation controls).
+- **Design deltas (if any):**
+- - The docs-index plan's `## Current state` negative clause (never write config when `documentation.config` is set) contradicted its Outcome and step 1 for Fumadocs; the implementation follows Outcome/step 1 (Fumadocs transition keeps updating `documentation.index`), recorded as a non-narrowing reconciliation; plan amendment queued for wave-close.
+- - Refusal exit codes use 1 rather than the plan-unmandated 2 (reviewer ruling per `packages/cli/AGENTS.md`).
+- - `AssetsRootSource` is exported (declaration emit) though the plan called it internal; the `fs` barrel is unchanged.
+- **What shipped (five external plans, five backlog items closed):**
+- - p01 — four bundled skills repaired to match what ships (`oat-doctor` pack inventory = `PACK_MANIFEST`, `oat-brainstorm` no later-doctor promise, `oat-idea-summarize` declares `Bash`/`Glob`, `analyze` one ten-step model), each with its own contract group in `validation/skills.test.ts`.
+- - p02 — codex-skill below-floor guard attaches and rejects anaphoric continuations (list, blockquote, scenario/circumstance forms); direct-API exception preserved; 15 rejected / 6 accepted / 6 boundary cases pinned.
+- - p03 — explainer-kit publication-boundary assertions run over the docs page as well as the canonical reference, with a whole-document forbidden-phrase guard and negation/mutation-aware patterns; the docs page names the catalog requirement and canonical owner.
+- - p04 — thirteen lifecycle skills require loading the current `SKILL.md` of every OAT skill they direct an orchestrator to execute; `validation/named-skill-load-contract.test.ts` sweeps the surface (verb/anaphor detection, one-sentence exemptions, stray-fence detection, corpus floors); three hidden four-backtick fences repaired (`oat-project-plan`, `oat-project-review-receive`, `oat-project-revise`).
+- - p05 — `oat-project-implement/scripts/capture-dirty-tree.mjs` captures a lost child's dirty tree into a digest-verified, sealed, contained artifact (mandatory bound, expected-head reconciliation, guarded invocations in every prose block, symlinked-install fail-closed), and the `recovered_patch` contract in `phase-execution.md` / `oat-phase-implementer.md` (1.1.1 → 1.1.2) lets the next attempt apply and commit exactly that artifact first.
+- **Release:** lockstep 0.2.56 → 0.2.57 (single fan-in bump); `.oat/sync/manifest.json` `oatVersion` 0.2.56 → 0.2.57 (carried by p02's worktree-init sync commit); `.codex/agents` and `.cursor/agents` views regenerated for the `oat-phase-implementer` bump.
+- **Verification:** per lane focused suites, forced-turbo check/type-check, Codex read-only review, and a root-owned adversarial review with one to three disposition-verification rounds (one Critical caught in p03 round 1; one Critical caught in p05 round 2 that the round-1 fix had introduced); three fan-ins with the eight-gate sequence and `Cached: 0` forced test runs; the final review (round 1 `reviews/archived/final-review-2026-09-06T085208Z.md`, 0C/3I/7M/8m; dispositions in the Review Received sections) and the configured exit gate are recorded in the sections that follow as they complete.
+- **User-visible lifecycle change (p04):** `oat-project-plan/SKILL.md` step 1 no longer auto-chains into design when `design.md` is missing; it now stops and tells the user to run `oat-project-design` first (the prior prose read as a silent continuation).
+- **Bookkeeping:** archived `BL-260819-repair-verified-bundled-skill`, `BL-260827-harden-the-codex-skill-below`, `BL-260818-extend-guarded-prose-contract`, `BL-260718-mandatory-skill-load-clause`, `BL-260902-document-patch-and-restore`; filed `BL-260906-repair-the-stray-fence-in-oat`, `BL-260906-cover-skill-test-files-under`, `BL-260906-reconcile-the-oat-doctor`; residuals appended to `BL-260827-span-based-prose-guards`; plan corrections queued for the wave-close program refresh; completion tail and recap deferred to program close.
+- **What shipped (three external plans, three backlog items closed):**
+- - p01 — `oat-phase-implementer.md` (1.1.2 → 1.1.3) and, after the exit gate, `oat-project-implement` (2.3.2 → 2.3.3, root acceptance clause aligned) require a repository-wide call-site sweep for cross-cutting options, defines the effective task boundary as declared files plus mechanical additions permitted by and reported under the sweep, and stops to report cross-owner expansions; pinned by `post-implement-sequence-contracts.test.ts` (six negative probes, scoped deny-list).
+- - p02 — the deterministic smoke runner reserves nested resources before `git worktree add`, cleanup reconciles reserved entries with re-derived ownership invariants, every deletion path re-reads the tip; the reserve-to-create residual is documented in code, `CONTRACT.md`, and a pinning test; test:smoke 141 → 160.
+- - p03 — `create-oat-skill` (1.5.0 → 1.5.1) and `oat-project-design` (2.3.2 → 2.3.3) require every standing claim to name its executable owner and ship its backstop in the same PR; `skills.test.ts` pins the rule with fence-, comment-, and indent-aware extraction, `existsSync` precedent checks, and a weakening deny-list.
+- **Release:** lockstep 0.2.57 → 0.2.58 with `.oat/sync/manifest.json` restamped in the same commit; provider agent views regenerated for the agent bump.
+- **Verification:** per lane focused suites, forced-turbo check/type-check, Codex read-only review (two-round cap), and a root-owned adversarial review (p02's being the program's dedicated deletion-safety review) with one fix round each for p01 and p02 and an address-now sweep for p03; two fan-ins with the eight-gate sequence and `Cached: 0` forced test runs; the final review and the configured exit gate are recorded in the sections that follow as they complete.
+- **Process changes adopted:** lanes sync `--scope project` only (a lane's `--scope all` rewrote user-scope provider views); probe restores use `mktemp -d` backups; wrappers are authored from the program section, not the previous wave.
+- **Bookkeeping:** archived `BL-260818-require-repo-wide-call-site`, `BL-260826-deterministic-smoke-tier-leaks`, `BL-260714-executable-backstops`; filed `BL-260906-extend-check-skill-bumps`, `BL-260906-make-the-phase-implementer`, `BL-260906-project-journal-reservation`, `BL-260906-run-scripts-worktree-init-test`; plan corrections for the wave-close refresh; completion tail and recap deferred to program close.
+- **What shipped:**
+- - Per-project gate overrides: a strict `oat_skill_gate_overrides` map in project `state.md` (keys restricted to `oat_gateable` skills, literal `disabled`), `oat gate resolve --project [path-or-name]` returning `configured` / `configured_disabled_by_project` / `not_configured` with byte-identical legacy output, a shared gate-posture setup contract used by quick-start, plan, and import-plan (non-interactive runs never write), a `project_disabled` closeout disposition whose fingerprint covers the override so re-enabling stales it, router acceptance in `oat-project-next`, progress visibility, and docs (workflow-gates, configuration, gate-authoring contract). Eight skills bumped.
+- - Non-sync manifest restamp advisories: one pure `detectManifestVersionRestamp` helper; init, remove-skill, and interactive status adoption warn before `saveManifest` in human mode and carry `manifestVersionRestamps` in JSON; sync's `versionSkew` reuses the shared shape; a restamp-only sync apply reports the refresh and no longer says `No changes required.` anywhere in its body.
+- - Dispatch stamp with resolver JSON: `oat project dispatch-ceiling resolve … --json` emits `dispatchStamp` beside `dispatchReport` (present iff the report is, byte-equal to `formatDispatchStamp`); review-provide, review-provide-remote, and the implement dispatch reference consume the field under a bounded-window contract helper with negative fixtures; no out-of-tree shim on the normal path. Two skills bumped.
+- **Behavioral changes (user-facing):**
+- - Lockstep public packages 0.2.58 → 0.2.59; `.oat/sync/manifest.json` restamped in the same commit (the fan-in sync emitted the new advisory for real).
+- - Gate-aware lifecycle skills pass project context to `oat gate resolve`; a configured gate disabled by a project override is reported as such and never launched, never read as passed or missing.
+- - Init, remove-skill, status adoption, and sync tell the operator when they replace a manifest's producer version.
+- - Orchestrators copy the resolver's returned stamp instead of formatting one.
+- **Key files / modules:**
+- - `packages/cli/src/commands/gate/index.ts`, `config/resolve.ts`, `commands/shared/frontmatter.ts`, `.oat/templates/state.md` — override state and project-aware resolution.
+- - `.agents/skills/oat-project-{plan-writing,quick-start,plan,import-plan,implement,next,progress,autonomous}` — gate posture, closeout disposition, router, inventory.
+- - `packages/cli/src/manifest/manager.ts`, `commands/{init,remove/skill,status,sync}` — restamp diagnostics.
+- - `packages/cli/src/commands/project/dispatch-ceiling/index.ts`, `packages/cli/src/__tests__/skills/dispatch-stamp-contract.ts`, `.agents/skills/oat-project-review-provide{,-remote}`, `oat-project-implement/references/dispatch-and-dry-run.md` — stamp emission and consumption.
+- **Verification performed:**
+- - Per lane: plan-focused suites, forced-turbo check/type-check/test (`Cached: 0`), lint, format, validate-skills, check:skill-bumps, one or two read-only Codex rounds, a root-owned adversarial review (p01 and p02 with a fix round and a round-2 verification; p03 with an address-now sweep). Live CLI probes in scratch projects for every fail-closed surface.
+- - Two fan-ins with the full eight-gate definition-of-done sequence and uncached test runs (5728 CLI tests at the tip); final review and the configured exit gate recorded below.
+- **Design deltas (if any):**
+- - p01 edited `apps/oat-docs/docs/contributing/skills.md` outside its plan's named docs scope (mechanical consequence of the fail-closed closeout rule) and bumped `oat-project-autonomous` via a recovery for the autonomy inventory.
+- - p02's `restampOnly` additionally requires zero failed operations.
+- - p03 did not re-bump `oat-project-implement` (p01 owns the wave's bump) and documents the stamp prefix without its trailing space in prose (MD038).
+- **What shipped:**
+- - Gate resilience: a committed review artifact that survives a post-selection failure is re-validated through the normal path's own eligibility function and returned with its real disposition (no reviewer re-dispatch; replacement bytes never recover; envelopes name `postSelection.step` / `code`); gate project-log finalization retries transient index locks on git's own contention evidence, settles only on proven identity, and leaves a durable, idempotent recovery receipt (`DR-260907-gate-log-receipts-live-under`).
+- - Configuration: `documentation.instructionPointerExcludes` keeps instruction-sync pointer files out of docs content trees (fail-closed on malformed values; issue #238 reproduced and closed on this repository); `oat config unset <key>` with `set`-parity refusals, aggregate-key rejection, and empty-parent pruning.
+- - Lifecycle routing and closeout: one quick-plan readiness predicate shared by plan 1.4.10 / progress 1.4.1 / next 1.1.1 / quick-start 2.3.10, with incomplete quick projects resuming in quick-start rather than dead-ending; the recommender treats a project as terminal only when `oat_lifecycle` is complete AND no revision phase is incomplete, on a task parser that normalizes heading dialects; the autonomous recap is capability-aware and non-blocking (explainer-kit 1.0.7 seam probe; complete 1.7.8, implement 2.3.6, summary 1.5.3, autonomous 1.0.13); consolidated-project retirement is semantic (an advisory sweep of the active planning surfaces for ownership language still naming an absorbed slug or backlog ID, each hit dispositioned before the roll-up and seal; quick-start records `absorbed_*`).
+- - Contracts: every `.oat/scripts` reference in shipped skill Markdown is validated against pack manifests; the repo-improve plan template (2.1.3) carries the external-plan readiness contract and the contract test sweeps all 44 dated plans.
+- **Behavioral changes (user-facing):**
+- - Lockstep public packages 0.2.62 → 0.2.63; `.oat/sync/manifest.json` restamped in the same commit.
+- - A gate whose post-selection step throws after a committed artifact exists no longer fails as `review_failed`; an index-lock collision during log finalization no longer loses the gate's log entry; a recovery command is printed and idempotent.
+- - Malformed `instructionPointerExcludes` stops sync/validate with a repair message; `oat config unset` exists.
+- - Incomplete quick projects route to quick-start; a project with incomplete revision phases is not reported terminal; autonomous completion skips the recap (recorded) when a required seam is missing instead of failing; a consolidating project's closeout sweeps the active planning surfaces for ownership language still naming its absorbed work and dispositions each hit before the seal (advisory; never a hard block).
+- - Skills with dangling script references and external plans whose status contradicts their dependency table fail the contract test.
+- **Key files / modules:**
+- - `packages/cli/src/commands/gate/index.ts`, `project/log/append.ts`, `<project>/gate-receipts/` receipts — recovery and retry.
+- - `packages/cli/src/config/oat-config.ts`, `commands/instructions/*`, `commands/config/index.ts` — exclusions and `unset`.
+- - `.agents/skills/oat-project-{plan,progress,next,quick-start,complete,implement,summary,autonomous}`, `oat-explainer-kit/scripts/probe-recap-seams.mjs`, `oat-repo-improve/references/plan-template.md` — routing, recap, retirement, readiness.
+- - `packages/control-plane/src/state/tasks.ts`, `recommender/router.ts` — terminal status.
+- - `packages/cli/src/commands/init/tools/shared/skill-script-references.ts`, `skills-bundled-docs-contract.test.ts` — script-reference and readiness contracts.
+- **Verification performed:**
+- - Per lane: plan-focused suites, forced-turbo check/type-check/test (`Cached: 0`), lint, format, validate-skills, check:skill-bumps, `test:smoke` where a skill was bumped, one or two read-only Codex rounds, and a root-owned adversarial review with live CLI probes (p02, p03, p06, p07, p08, p10 with a fix round and a round-2 verification; p01, p04, p05, p11 with an address-now sweep).
+- - Six fan-ins with the eight-gate definition-of-done sequence and uncached test runs (6011 CLI tests at the tip); final review and the configured exit gate recorded below.
+- **Design deltas (if any):**
+- - p09 parked on its plan's STOP (false resume premise, reproduced); ten of eleven lanes merged.
+- - Pre-dispatch refreshes were applied to eight source plans as dated Revalidation entries after the plan gate rejected wrapper-side addenda three times.
+- - See the Deviations table for the per-lane deltas (retry placement, readiness helpers, critic seam, flipped negatives, configured-root glob, Lite recording gap).
+- **What shipped:**
+- - p01 — pack evidence carries real provider reachability: a `provider-reachability` mapper, in-process sync evidence (the spawned `--json` subprocess is gone), every production `providers: []` literal removed, real emitters for the six dead diagnostic codes with the pinned severity matrix; `list`/`info` agree with `status`/`doctor`; failed sync runs report through the evidence.
+- - p02 — `oat-project-pr-final` 1.6.3: only terminal review rows are archived (event identity, enumerated rewrites, idempotent names) and a fail-closed ledger-path guard runs before `gh pr create` (containment incl. symlink chains, fenced/blockquoted rows skipped, per-table header recognition, `PRFINAL-05`).
+- - p03 — `config/json.ts` materializes the parsed tree iteratively into plain objects with own-key `defineProperty`, so a `__proto__` key survives as an own data property instead of being dropped or injected; decision record `DR-260907-oat-config-reads-materialize`.
+- - p04 — `metadata.version` is the canonical skill version through one parsed-input contract (`parseSkillFrontmatter` + `resolveSkillVersion`) shared by the runtime helper, both validators, canonical-role resolution, and doctor; conflict is an error, alias-only a structural warning over all 82 skills, unusable/malformed declarations block on both sides; templates `create-agnostic-skill` 1.4.2 and `create-oat-skill` 1.5.2.
+- - p05 — `oat tools info <skill>` gains an additive provider-view section (human and JSON) from a pure diagnostic mapper: `inactive`, `unsupported`, `excluded`, `untracked`, `unverified`, `missing-additive` (with a scope-correct repair), and manifest-backed additive/removed/modified classes; copies compared through the shared version resolver; manifest failures degrade to `unavailable`.
+- - One lockstep bump 0.2.63 → 0.2.64 with the sync-manifest restamp; five backlog items archived; five follow-ups filed plus two filed mid-wave.
+- **Behavioral changes (user-facing):**
+- - `oat tools install/update/remove/list/info` report per-provider reachability with real diagnostic codes; a materialization failure now yields `partial` / exit 1 instead of a silent success.
+- - `oat tools info <skill>` prints a provider-view section; JSON gains `providerViews`.
+- - `oat config get` no longer injects a `__proto__` key into the parsed config; deep nesting and error messages unchanged.
+- - `pnpm run check:skill-bumps` and `oat:validate-skills` read `metadata.version` first; a conflicting or unusable declaration blocks; 82 alias warnings print until the migration item lands.
+- - `oat-project-pr-final` refuses to open a PR when a review-ledger row points outside the project or at a missing artifact.
+- **Key files / modules:**
+- - `packages/cli/src/commands/tools/shared/{provider-reachability,sync-evidence}.ts`, `pack-evidence.ts`, `sync/index.ts` (p01)
+- - `.agents/skills/oat-project-pr-final/SKILL.md`, `.agents/docs/autonomy-contract.md`, `review-skill-contracts.test.ts`, `named-skill-load-contract.test.ts`, `validation/skills.test.ts` (p02)
+- - `packages/cli/src/config/json.ts` (+ `json.test.ts`), `.oat/repo/reference/decisions/DR-260907-oat-config-reads-materialize.md` (p03)
+- - `packages/cli/src/commands/shared/frontmatter.ts`, `validation/skills.ts`, `commands/internal/validate-skill-version-bumps.ts`, `agents/canonical/resolve.ts`, `apps/oat-docs/docs/contributing/skills.md` (p04)
+- - `packages/cli/src/drift/skill-view-diagnostic.ts`, `commands/tools/info/skill-views.ts` (new), `info-tool.ts`, `apps/oat-docs/docs/cli-utilities/tool-packs.md`, `provider-sync/manifest-and-drift.md` (p05)
+- **Verification performed:**
+- - Per lane: forced `check`/`type-check`/`test` with `Cached: 0`, focused suites, two Codex rounds, red-then-green negative controls (see the Phase sections); root reviews p01 ×2, p02 ×3, p03 ×2, p04 ×2, p05 ×3, all PASS at the final round.
+- - Group fan-ins: eight definition-of-done gates sequential with exit codes plus `test:smoke`, `test:skills`, root `pnpm test` (group 1 CLI 6135; group 2 CLI 6242, 338 files, 0 cached); `git patch-id --stable` identity for every re-hashed lane commit.
+- - Root final review and the configured exit gate: recorded under Autonomy Gate Provenance.
+- **Design deltas (if any):**
+- - p03's mechanism changed under a dated post-STOP refresh (plain objects with own-key `defineProperty` instead of null-prototype objects).
+- - p04's alias warning runs over every bundled skill (the `oat-*` filter applies only to the other structural checks) — the refresh's contract amendment.
+- - p05 adds two view classes beyond the plan's four and offers a repair for a conflicting copy because the repair provably works.
+- Wave 7 executed twenty post-program corrective plans as six groups of three plus two solo lanes under a concurrency ceiling of three: nineteen lanes merged into `wave-7-execution` (one lockstep bump 0.2.66 → 0.2.67 at the first fan-in; eleven gates green with `Cached: 0` after every fan-in, cli 7260 tests at the tip) and one lane (p16, dispatch baselines after journaling) parked on a plan STOP because the recorder graph's no-process guard forbids the plan's git seam. Five STOPs were closed by dated plan refreshes authored by the root (p02, p05, p15, p17) or a park (p16); every lane review passed within two rounds; thirteen follow-up items were filed and twenty-three source items are archived at closeout with outcome summaries. What shipped, in one line each: an fd-capable synced-archive reader; `oat config unset` for malformed values behind a targeted barrier; a Markdown guard for bare `__proto__` literals; an idempotent completion seal with the wave-5 p09 work unparked; own-key config maps; every bundle directory guarded; a doctor example the doctor can report; a warning for a wrong-typed docs root; a symlink warning that names the target; stray skill fences repaired and a recursive fence scanner; the docs-index follow-ups; persisted native-skill adoption in `oat status`; four version-validator gaps closed; honest sync-apply failure output; convergent copy-strategy projections; a hardened readiness contract with four enumerated widenings and a settled ledger vocabulary; skill-asset formatting and the worktree-init test inside CI's gates; corrected skill-authoring facts with named backstops; and plan writes pinned to the caller's model class.

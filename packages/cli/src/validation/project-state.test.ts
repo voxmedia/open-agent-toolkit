@@ -2,6 +2,7 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { getProjectState } from '@open-agent-toolkit/control-plane';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import {
@@ -9,6 +10,90 @@ import {
   assertValidProjectStateContent,
   validateProjectState,
 } from './project-state';
+
+const FAILED_ATTEMPT_EVIDENCE_CORPUS = [
+  {
+    label: 'valid failure scalar',
+    source: 'failed_attempt',
+    evidence: 'explainers/failed-run/failure.json',
+    expectedValid: true,
+  },
+  {
+    label: 'valid manifest scalar',
+    source: 'failed_attempt',
+    evidence: 'explainers/failed-run/manifest.json',
+    expectedValid: true,
+  },
+  {
+    label: 'missing required evidence',
+    source: 'failed_attempt',
+    expectedValid: false,
+  },
+  {
+    label: 'array evidence',
+    source: 'failed_attempt',
+    evidence: '[explainers/failed-run/failure.json]',
+    expectedValid: false,
+  },
+  {
+    label: 'object evidence',
+    source: 'failed_attempt',
+    evidence: '{ path: explainers/failed-run/failure.json }',
+    expectedValid: false,
+  },
+  {
+    label: 'numeric evidence',
+    source: 'failed_attempt',
+    evidence: '42',
+    expectedValid: false,
+  },
+  {
+    label: 'boolean evidence',
+    source: 'failed_attempt',
+    evidence: 'true',
+    expectedValid: false,
+  },
+  {
+    label: 'traversal evidence',
+    source: 'failed_attempt',
+    evidence: '../outside/failure.json',
+    expectedValid: false,
+  },
+  {
+    label: 'extra path segment',
+    source: 'failed_attempt',
+    evidence: 'explainers/failed-run/nested/failure.json',
+    expectedValid: false,
+  },
+  {
+    label: 'missing optional evidence',
+    source: 'interactive',
+    expectedValid: true,
+  },
+  {
+    label: 'legacy capability-probe read',
+    source: 'capability_probe',
+    expectedValid: true,
+  },
+  {
+    label: 'leading whitespace',
+    source: 'failed_attempt',
+    evidence: "' explainers/failed-run/failure.json'",
+    expectedValid: false,
+  },
+  {
+    label: 'trailing whitespace',
+    source: 'failed_attempt',
+    evidence: "'explainers/failed-run/failure.json '",
+    expectedValid: false,
+  },
+  {
+    label: 'both-sides whitespace',
+    source: 'failed_attempt',
+    evidence: "' explainers/failed-run/failure.json '",
+    expectedValid: false,
+  },
+] as const;
 
 function stateContent(frontmatter: Record<string, unknown>): string {
   return [
@@ -120,6 +205,41 @@ describe('validateProjectState - coordination additions', () => {
 });
 
 describe('validateProjectState - explainer intent', () => {
+  it.each(FAILED_ATTEMPT_EVIDENCE_CORPUS)(
+    'agrees with control-plane for $label',
+    async ({ source, evidence, expectedValid }) => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-state-reader-corpus-'));
+      const content = `---
+oat_project_recap:
+  decision: skip
+  source: ${source}
+  decided_at: '2026-09-11T14:45:00Z'
+${evidence === undefined ? '' : `  failed_attempt_evidence: ${evidence}\n`}---
+`;
+      try {
+        await writeFile(join(root, 'state.md'), content);
+        let cliAccepted = true;
+        try {
+          assertValidProjectStateContent(content, { filePath: 'state.md' });
+        } catch {
+          cliAccepted = false;
+        }
+        const controlPlaneRecap = (await getProjectState(root)).projectRecap;
+        const controlPlaneAccepted = controlPlaneRecap !== null;
+
+        expect({ cliAccepted, controlPlaneAccepted }).toEqual({
+          cliAccepted: expectedValid,
+          controlPlaneAccepted: expectedValid,
+        });
+        if (expectedValid && source === 'failed_attempt') {
+          expect(controlPlaneRecap?.failed_attempt_evidence).toBe(evidence);
+        }
+      } finally {
+        await rm(root, { recursive: true, force: true });
+      }
+    },
+  );
+
   it('accepts independent decisions, valid sources, timestamps, and nulls', () => {
     expect(
       validateProjectState({
@@ -151,6 +271,107 @@ describe('validateProjectState - explainer intent', () => {
       state: {
         oat_project_explainer: undefined,
         oat_project_recap: undefined,
+      },
+    });
+  });
+
+  it('accepts failed-attempt evidence only on the matching recap decision', () => {
+    const failedAttempt = {
+      decision: 'skip',
+      source: 'failed_attempt',
+      decided_at: '2026-09-11T14:45:00Z',
+      failed_attempt_evidence: 'explainers/failed-run/manifest.json',
+    };
+    expect(
+      validateProjectState({
+        frontmatter: { oat_project_recap: failedAttempt },
+      }),
+    ).toMatchObject({
+      ok: true,
+      state: { oat_project_recap: failedAttempt },
+    });
+    for (const record of [
+      { ...failedAttempt, source: 'interactive' },
+      { ...failedAttempt, failed_attempt_evidence: '../outside/manifest.json' },
+      {
+        decision: 'skip',
+        source: 'failed_attempt',
+        decided_at: '2026-09-11T14:45:00Z',
+      },
+    ]) {
+      expect(
+        validateProjectState({
+          frontmatter: { oat_project_recap: record },
+        }).ok,
+      ).toBe(false);
+    }
+  });
+
+  it.each([
+    ['a valid scalar locator', 'explainers/failed-run/failure.json', true],
+    ['a missing locator', undefined, false],
+    ['an array locator', ['explainers/failed-run/failure.json'], false],
+    [
+      'an object locator',
+      { path: 'explainers/failed-run/failure.json' },
+      false,
+    ],
+    ['a numeric locator', 42, false],
+    ['a boolean locator', true, false],
+    ['a malformed scalar locator', '../outside/failure.json', false],
+  ] as const)(
+    'validates failed-attempt evidence supplied as %s before normalization',
+    (_label, failedAttemptEvidence, expectedValid) => {
+      const record = {
+        decision: 'skip',
+        source: 'failed_attempt',
+        decided_at: '2026-09-11T14:45:00Z',
+        ...(failedAttemptEvidence !== undefined && {
+          failed_attempt_evidence: failedAttemptEvidence,
+        }),
+      };
+
+      expect(
+        validateProjectState({
+          frontmatter: { oat_project_recap: record },
+        }).ok,
+      ).toBe(expectedValid);
+    },
+  );
+
+  it('accepts missing failed-attempt evidence for non-failed-attempt records', () => {
+    expect(
+      validateProjectState({
+        frontmatter: {
+          oat_project_recap: {
+            decision: 'skip',
+            source: 'interactive',
+            decided_at: '2026-09-11T14:45:00Z',
+          },
+        },
+      }),
+    ).toMatchObject({ ok: true });
+  });
+
+  it('accepts the read-only legacy recap capability-probe decision', () => {
+    expect(
+      validateProjectState({
+        frontmatter: {
+          oat_project_recap: {
+            decision: 'skip',
+            source: 'capability_probe',
+            decided_at: '2026-09-11T14:45:00Z',
+          },
+        },
+      }),
+    ).toMatchObject({
+      ok: true,
+      state: {
+        oat_project_recap: {
+          decision: 'skip',
+          source: 'capability_probe',
+          decided_at: '2026-09-11T14:45:00Z',
+        },
       },
     });
   });

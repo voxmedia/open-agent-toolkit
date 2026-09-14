@@ -206,6 +206,123 @@ oat_project_recap: null
     });
   });
 
+  it('parses failed-attempt recap evidence without granting it to other decisions', () => {
+    const failedAttempt = `---
+oat_project_recap:
+  decision: skip
+  source: failed_attempt
+  decided_at: '2026-09-11T14:45:00Z'
+  failed_attempt_evidence: explainers/failed-run/failure.json
+---
+`;
+    expect(parseStateFrontmatter(failedAttempt)).toMatchObject({
+      projectRecap: {
+        decision: 'skip',
+        source: 'failed_attempt',
+        decided_at: '2026-09-11T14:45:00Z',
+        failed_attempt_evidence: 'explainers/failed-run/failure.json',
+      },
+    });
+
+    expect(
+      parseStateFrontmatter(
+        failedAttempt.replace('source: failed_attempt', 'source: interactive'),
+      ),
+    ).toMatchObject({ projectRecap: null });
+    expect(
+      parseStateFrontmatter(
+        failedAttempt.replace(
+          '\n  failed_attempt_evidence: explainers/failed-run/failure.json',
+          '',
+        ),
+      ),
+    ).toMatchObject({ projectRecap: null });
+    expect(
+      parseStateFrontmatter(
+        failedAttempt.replace(
+          'explainers/failed-run/failure.json',
+          '../outside/failure.json',
+        ),
+      ),
+    ).toMatchObject({ projectRecap: null });
+  });
+
+  it.each([
+    [
+      'a valid scalar locator',
+      '  failed_attempt_evidence: explainers/failed-run/failure.json',
+      true,
+    ],
+    ['a missing locator', '', false],
+    [
+      'an array locator',
+      '  failed_attempt_evidence: [explainers/failed-run/failure.json]',
+      false,
+    ],
+    [
+      'an object locator',
+      '  failed_attempt_evidence: { path: explainers/failed-run/failure.json }',
+      false,
+    ],
+    ['a numeric locator', '  failed_attempt_evidence: 42', false],
+    ['a boolean locator', '  failed_attempt_evidence: true', false],
+    [
+      'a malformed scalar locator',
+      '  failed_attempt_evidence: ../outside/failure.json',
+      false,
+    ],
+  ] as const)(
+    'validates failed-attempt evidence supplied as %s before normalization',
+    (_label, evidenceLine, expectedValid) => {
+      const parsed = parseStateFrontmatter(`---
+oat_project_recap:
+  decision: skip
+  source: failed_attempt
+  decided_at: '2026-09-11T14:45:00Z'
+${evidenceLine}
+---
+`);
+
+      expect(parsed.projectRecap === null).toBe(!expectedValid);
+    },
+  );
+
+  it('accepts missing failed-attempt evidence for non-failed-attempt records', () => {
+    expect(
+      parseStateFrontmatter(`---
+oat_project_recap:
+  decision: skip
+  source: interactive
+  decided_at: '2026-09-11T14:45:00Z'
+---
+`),
+    ).toMatchObject({
+      projectRecap: {
+        decision: 'skip',
+        source: 'interactive',
+        decided_at: '2026-09-11T14:45:00Z',
+      },
+    });
+  });
+
+  it('accepts the read-only legacy recap capability-probe decision', () => {
+    expect(
+      parseStateFrontmatter(`---
+oat_project_recap:
+  decision: skip
+  source: capability_probe
+  decided_at: '2026-09-11T14:45:00Z'
+---
+`),
+    ).toMatchObject({
+      projectRecap: {
+        decision: 'skip',
+        source: 'capability_probe',
+        decided_at: '2026-09-11T14:45:00Z',
+      },
+    });
+  });
+
   it.each([
     ['oat_project_explainer', 'generate', 'interactive', true],
     ['oat_project_explainer', 'skip', 'interactive', true],

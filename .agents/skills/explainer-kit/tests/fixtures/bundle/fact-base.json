@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "explainer-kit.fact-base/v1",
+  "generatedAt": "2026-09-10T00:00:00.000Z",
+  "mode": "supplied",
+  "freshnessPolicy": "live-wins",
+  "sources": [
+    {
+      "id": "source-supplied",
+      "kind": "file",
+      "locator": "supplied.md",
+      "hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-supplied",
+      "text": "The supplied fact base is complete.",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-supplied",
+          "locator": "supplied.md:1-1"
+        }
+      ]
+    }
+  ],
+  "unresolvedClaims": [],
+  "overrides": []
+}

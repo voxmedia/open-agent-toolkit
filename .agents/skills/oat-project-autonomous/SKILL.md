@@ -6,7 +6,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: 1.0.14
+  version: 1.0.15
 ---
 
 # Autonomous OAT Project
@@ -264,18 +264,19 @@ existing project is resolved, use the `oat-explainer-kit` lifecycle intent
 resolver and persistence helper against that project's `state.md`.
 
 Resolve and persist `projectRecap` as `generate` with source `autonomous_policy` after project creation or resolution.
-Reassert this forced recap intent on resume; a stale lower-precedence skip is overridden, warned, and recorded.
-The autonomous mode policy has precedence over project state and workflow
-preference, so `never` does not suppress the recap.
+Reassert this forced recap intent on resume unless closeout already persisted
+`skip/failed_attempt`. The autonomous mode policy has precedence over workflow
+preference, so `never` does not suppress the initial recap attempt.
 
-Kickoff persists the forced `generate` intent without probing seams, because the
-host that runs the recap is the one that matters and closeout is where it runs.
-The closeout recap gate probes seam availability and may resolve a recordable
-`skip` with source `capability_probe` on a host where a required seam is
-unavailable. That later capability skip is the only thing that overrides this
-forced intent, it is decided before any run rather than from a failed one, and
-it never blocks unattended completion. Do not reassert `generate` over a
-recorded `capability_probe` skip within the same closeout.
+Kickoff persists the forced `generate` intent. At closeout, invoke
+`oat-explainer-kit` § Generate with recipe `project-recap`. If the terminal
+outcome is `failed` or `incomplete`, make one retry. If that retry also fails,
+persist `skip/failed_attempt` with `failed_attempt_evidence` naming that run's
+project-relative failed or incomplete `manifest.json`, or its `failure.json`
+when recording did not occur, and continue unattended closeout. On resume, use
+the completion consumer's containment-checked proof and honor that persisted
+skip without another bundle or authoring pass; do not reassert `generate` over
+it.
 
 Resolve and persist `projectExplainer` as `generate` with source `kickoff_prompt` only when the kickoff request explicitly asks for a project explainer.
 A general autonomous goal, project creation, or normal planning does not count as an explainer request.

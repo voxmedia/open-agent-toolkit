@@ -1,0 +1,2 @@
+Availability is 99.9%.
+Open incidents: 0.

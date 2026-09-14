@@ -1,5 +1,4 @@
 import { execFile } from 'node:child_process';
-import { join } from 'node:path';
 import { promisify } from 'node:util';
 
 import { resolveSourceAwarePath } from './resolve-paths.mjs';
@@ -11,12 +10,6 @@ export const EXPLAINER_CONFIG_KEYS = Object.freeze([
   'explainers.defaults.palette',
   'explainers.defaults.visualProfile',
   'explainers.defaults.themeBundlePath',
-  'explainers.publish.provider',
-  'explainers.publish.s3Uri',
-  'explainers.publish.publicBaseUrl',
-  'explainers.publish.awsRegion',
-  'explainers.publish.publicAccess',
-  'explainers.publish.awsProfile',
   'workflow.explainers.projectExplainer',
   'workflow.explainers.projectRecap',
 ]);
@@ -116,7 +109,6 @@ export async function resolveExplainerConfig({
     }
   }
 
-  const { publish, publishReport } = resolvePublish(values, sources);
   const preferences = {
     projectExplainer: resolvePreference(
       'workflow.explainers.projectExplainer',
@@ -132,74 +124,8 @@ export async function resolveExplainerConfig({
     values,
     sources,
     theme,
-    publish,
-    publishReport,
     preferences,
     warnings,
-  };
-}
-
-export function toExplainerRunRequest({
-  resolvedConfig,
-  recipe,
-  slug,
-  outputRoot,
-  factBase,
-  mode,
-  durabilityStrategy = 'none',
-  artDirection,
-  defaultMode,
-  renderStrategy,
-  retainRawArtDirection = false,
-}) {
-  if (!resolvedConfig || !outputRoot || !factBase) {
-    throw new TypeError(
-      'resolvedConfig, outputRoot, and factBase are required to build a run request.',
-    );
-  }
-  if (retainRawArtDirection && !nullableString(artDirection)) {
-    throw new Error(
-      'retainRawArtDirection requires a non-empty artDirection runtime input.',
-    );
-  }
-
-  const theme = {
-    ...resolvedConfig.theme,
-    ...(nullableString(artDirection)
-      ? { artDirection: artDirection.trim() }
-      : {}),
-    ...(defaultMode ? { defaultMode } : {}),
-    ...(renderStrategy ? { renderStrategy } : {}),
-  };
-  const durability = { strategy: durabilityStrategy };
-  if (durabilityStrategy === 'publish') {
-    if (!resolvedConfig.publish) {
-      throw new Error(
-        'Publish durability requires a complete explainer publish configuration.',
-      );
-    }
-    durability.publish = {
-      schemaVersion: 'explainer-kit.publish-request/v2',
-      ...resolvedConfig.publish,
-      publicAccess: resolvedConfig.publish.publicAccess ?? 'public',
-      siteRoot: join(outputRoot, slug, 'site'),
-      manifestPath: join(outputRoot, slug, 'manifest.json'),
-    };
-  }
-
-  return {
-    schemaVersion: 'explainer-kit.run-request/v1',
-    recipe: {
-      id: recipe,
-      version: recipe === 'project-recap' ? '2' : '1',
-    },
-    slug,
-    outputRoot,
-    factBase,
-    ...(Object.keys(theme).length > 0 ? { theme } : {}),
-    durability,
-    privacy: { retainRawArtDirection },
-    mode,
   };
 }
 
@@ -264,15 +190,6 @@ function normalizeRuntimeValue(key, value) {
     );
   }
   const normalized = value.trim();
-  if (key === 'explainers.publish.provider' && normalized !== 's3-static') {
-    throw new Error(`${key} runtime override must be s3-static.`);
-  }
-  if (
-    key === 'explainers.publish.publicAccess' &&
-    !['public', 'protected'].includes(normalized)
-  ) {
-    throw new Error(`${key} runtime override must be public or protected.`);
-  }
   if (key === 'explainers.defaults.style' && !STYLES.has(normalized)) {
     throw new Error(
       `${key} runtime override must name a curated explainer style.`,
@@ -281,86 +198,7 @@ function normalizeRuntimeValue(key, value) {
   if (key.startsWith('workflow.explainers.') && !PREFERENCES.has(normalized)) {
     throw new Error(`${key} runtime override must be always, ask, or never.`);
   }
-  if (
-    key === 'explainers.publish.s3Uri' &&
-    !/^s3:\/\/[^/\s]+(?:\/.*)?$/.test(normalized)
-  ) {
-    throw new Error(`${key} runtime override must be an s3:// URI.`);
-  }
-  if (
-    key === 'explainers.publish.publicBaseUrl' &&
-    !/^https:\/\/[^\s]+$/.test(normalized)
-  ) {
-    throw new Error(`${key} runtime override must be an https:// URL.`);
-  }
-  if (
-    key === 'explainers.publish.s3Uri' ||
-    key === 'explainers.publish.publicBaseUrl'
-  ) {
-    return normalized.replace(/\/+$/, '');
-  }
   return normalized;
-}
-
-function resolvePublish(values, sources) {
-  const fields = {
-    provider: nullableString(values['explainers.publish.provider']),
-    s3Uri: nullableString(values['explainers.publish.s3Uri']),
-    publicBaseUrl: nullableString(values['explainers.publish.publicBaseUrl']),
-    awsRegion: nullableString(values['explainers.publish.awsRegion']),
-  };
-  if (fields.provider && fields.provider !== 's3-static') {
-    throw new Error(
-      `Unsupported explainer publish provider: ${fields.provider}`,
-    );
-  }
-  const missing = Object.entries(fields)
-    .filter(([, value]) => !value)
-    .map(([key]) => key);
-  if (missing.length > 0) {
-    return {
-      publish: null,
-      publishReport: {
-        mode: 'build-only',
-        publishCapable: false,
-        missing,
-      },
-    };
-  }
-  if (!/^s3:\/\/[^/\s]+(?:\/.*)?$/.test(fields.s3Uri)) {
-    throw new Error('explainers.publish.s3Uri must be a valid s3:// URI.');
-  }
-  if (!/^https:\/\/[^\s]+$/.test(fields.publicBaseUrl)) {
-    throw new Error(
-      'explainers.publish.publicBaseUrl must be a valid https:// URL.',
-    );
-  }
-
-  const awsProfile = nullableString(values['explainers.publish.awsProfile']);
-  const publicAccess =
-    nullableString(values['explainers.publish.publicAccess']) ?? 'public';
-  if (!['public', 'protected'].includes(publicAccess)) {
-    throw new Error(
-      'explainers.publish.publicAccess must be public or protected.',
-    );
-  }
-  return {
-    publish: {
-      provider: fields.provider,
-      s3Uri: fields.s3Uri.replace(/\/+$/, ''),
-      publicBaseUrl: fields.publicBaseUrl.replace(/\/+$/, ''),
-      awsRegion: fields.awsRegion,
-      ...(sources['explainers.publish.publicAccess'] !== 'default'
-        ? { publicAccess }
-        : {}),
-      ...(awsProfile ? { awsProfile } : {}),
-    },
-    publishReport: {
-      mode: 'publish-capable',
-      publishCapable: true,
-      missing: [],
-    },
-  };
 }
 
 function resolvePreference(key, value) {

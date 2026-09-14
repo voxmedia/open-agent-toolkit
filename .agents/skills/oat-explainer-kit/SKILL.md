@@ -5,41 +5,28 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, AskUserQuestion
 metadata:
-  version: 1.0.8
+  version: 1.0.9
 ---
 
 # OAT Explainer Kit
 
-Adapt OAT project context into the versioned request consumed by the canonical
-`explainer-kit` core.
+Adapt OAT project and program context into the agent-authored flow provided by
+the canonical `explainer-kit` core.
 
 ## Responsibilities
 
 - Require a compatible installed `explainer-kit` core.
-- Resolve typed OAT configuration with source attribution.
-- Derive canonical project or repository output roots.
+- Resolve explainer defaults and preserve their source attribution.
+- Derive canonical project or repository output roots with
+  `scripts/resolve-paths.mjs`.
 - Bind OAT lifecycle artifacts to generic recipe source roles.
-- Probe recap seam availability before an unattended run is attempted.
-- Resolve project explainer and recap intent before invoking the core.
-- Resolve one provider-neutral set planner for unattended project recaps.
-- Require lifecycle callers to construct a brief-aware author seam.
-- Require first-class browser-evidence and whole-set visual-review providers
-  for unattended project recaps.
+- Resolve and persist project-explainer and project-recap intent.
+- Run the core's bundle, agent-authoring, verification, and recording stages.
+- Return the terminal outcome and run path to the lifecycle caller.
 
-## Dependency Direction
-
-This adapter depends on `explainer-kit`; the core never depends on this adapter.
-Fail closed when the compatible installed core is unavailable. Do not copy core
-runtime logic into the adapter.
-
-Private wrappers use the core's frozen pre-resolution/request/core-run/manifest/
-post-run seam directly; they do not route presets, vaults, Google Docs, Stoa, or
-personal destinations through this adapter. For the release-candidate sequence,
-rollback, and operator-owned real-wrapper gate, use `references/migration.md`.
-
-Before reading OAT config or invoking the core, call
+Before reading OAT config or preparing a bundle, call
 `scripts/check-core.mjs#checkCoreCompatibility` with this installed skill
-directory and minimum core version `2.1.0`. Continue only when it returns
+directory and the exported `MINIMUM_CORE_VERSION`. Continue only when it returns
 `ok: true`.
 
 - Missing core: stop and show
@@ -54,97 +41,49 @@ Resolve adapter scripts and references relative to this installed skill
 directory. Resolve the core only from its installed canonical skill path. Never
 fall back to a repository source checkout.
 
-## Core Invocation
+## Generate
 
-Call `scripts/run.mjs#runOatExplainer` with the repository root, project
-invocation, active project path, recipe, slug, lifecycle mode, and any explicit
-runtime overrides. The adapter:
+Use this flow for `project-recap`, `program-recap`, or `project-explainer`.
+Lifecycle callers use `mode: unattended` and never prompt.
 
-1. checks the user-scoped installed core at minimum version `2.1.0`;
-2. resolves only the public `explainers.*` and `workflow.explainers.*` keys;
-3. derives the canonical project output root;
-4. binds approved OAT artifacts to the recipe's single `project` source set;
-5. creates one `ExplainerRunRequestV1`;
-6. calls the installed core's `runExplainer(request, options)` export; and
-7. consumes and returns the resulting `explainer-kit.manifest/v1`.
+1. Check the installed core as described above.
+2. Resolve intent with `scripts/resolve-intent.mjs`. Persist a returned record
+   with `scripts/persist-intent.mjs` before generation. A persisted `skip`
+   ends the flow without bundling or authoring.
+3. Resolve only the `explainers.defaults.*` theme values with
+   `scripts/resolve-config.mjs`.
+4. Resolve the parent output root with
+   `scripts/resolve-paths.mjs#resolveExplainerOutputRoot`.
+5. Resolve approved inputs with
+   `scripts/bind-project-sources.mjs`. `project-explainer` uses `plan.md`,
+   `design.md`, `spec.md`, and optional `discovery.md`. `project-recap` also
+   uses completion, summary, project-log, and optional orchestration material.
+   `program-recap` uses the program record and its reconciled summaries.
+6. Run the installed core's `scripts/bundle.mjs` with the selected recipe,
+   input mode, resolved theme JSON, and run root. If it reports `reuse: true`,
+   return that satisfied run without authoring or recording again.
+7. The host agent reads the recipe's `briefRef`, the core's
+   `references/recap-authoring.md`, `source/fact-base.json`,
+   `source/ledger.json`, and `theme.resolved.json`, then authors exactly one
+   `site/index.html` from the recipe shell.
+8. Run `scripts/verify.mjs`. Use the first available rung: host browser capture
+   and inspection at 320, 768, and 1440 pixels; the Playwright probe; or the
+   browser-free `none` rung. Browser-free checks always run.
+9. Run `scripts/record.mjs` with the recipe, slug, `mode: unattended`, and
+   resolved theme. Do not write into the run root after recording.
+10. Return the run path, `runId`, and outcome from
+    `explainer-kit.manifest/v2`. `built` and `built-needs-review` satisfy a
+    `generate` intent; `failed` and `incomplete` do not.
 
-`project-explainer` binds `plan.md`, `design.md`, and `spec.md`.
-`project-recap` additionally binds `implementation.md` and `summary.md`.
-Missing optional artifacts are omitted, but at least one approved lifecycle
-artifact is required. An explicit supplied fact-base path bypasses artifact
-federation and is passed through as `factBase.mode: supplied`.
-
-New project-recap requests select immutable `project-recap@2`: one
-navigational hub is the floor, while a diagram, walkthrough deck, or deep dive
-is selected only when the planner can state its distinct reader question,
-source evidence, and medium rationale. The installed core continues reading
-`project-recap@1` for replay; the adapter never rewrites a retained request's
-recipe selector.
-
-Before an unattended `project-recap`, call
-`scripts/probe-recap-seams.mjs#probeRecapSeams` with the seam inputs you are
-about to pass. The probe is pure and checks all five required seams — author,
-fact critic, browser session, visual critic, and set planner — using the same
-rules `run.mjs` applies. `seams-unavailable` means no provider is configured
-for a required seam: pass the probe result to the intent resolver as
-`seamProbe`, which returns a recordable `skip` with source `capability_probe`
-and a warning. `seams-invalid` means a supplied seam violates a resolution
-rule: fail closed and report the configuration error; it is never a skip. When
-the probe returns `ok: true`, invoke the adapter with unchanged behavior, and
-treat any later failure as `failed` rather than as a skip.
-
-Before invocation, read `references/author-callback.md`. Unattended
-`project-recap` runs require exactly one provider-neutral set planner:
-in-process callers supply `planSet`, while JSON/CLI callers supply
-`planSetModulePath` naming a module with a `planSet` function export. The
-adapter resolves this executable capability and passes only the callback to the
-core. It never persists provider configuration or module paths.
-
-Construct exactly one provider-neutral author seam in both modes: in-process
-callers supply `author`, while JSON/CLI callers supply `authorModulePath` naming
-a module with an `author` function export. The core invokes that callback once
-per planned artifact. Every request carries the immutable shared `setContext`,
-the matching `plannedArtifact`, the recipe brief, theme, and any
-recipe-selected artistic shell. Those bundled inputs are the required
-medium-specific guidance; an optional visual-explainer installation may enhance
-provider execution but is never required. The adapter validates and resolves
-executable inputs before passing them to `core.runExplainer`; callbacks and
-module paths never enter the persisted run request.
-
-Also read `references/visual-review-callback.md`. Unattended `project-recap`
-runs require exactly one trusted launched-Chromium browser session and one
-whole-set visual critic. In-process callers supply a branded `browserSession`
-created by the compatible core and `visualCritic`; JSON/CLI callers supply
-`browserSessionModulePath` and `visualCriticModulePath`, naming modules with
-matching exports. Bare browser callbacks and caller-authored runtime metadata
-are rejected. These are first-class adapter inputs; do not place either
-provider in `coreOptions`.
-
-The critic judges typography, hierarchy, composition, density, medium leverage,
-template repetition, diagram semantics, and cross-artifact cohesion from the
-bound rendered evidence. Keep those criteria in prose. Preserve the core's
-existing `visual-review-result/v1` contract and actionable `pass`/`correct`
-behavior; do not add adapter-owned scores, layout thresholds, or result fields.
-
-The adapter resolves all executable providers before core invocation, enforces
-direct-versus-module mutual exclusion, and requires distinct identities for
-authoring, fact criticism, browser evidence, and visual criticism. A missing,
-forged, or deterministic fixture session fails production validation before the
-core runs. A runtime browser or visual-review failure is retained by the core
-as `built-needs-review`, never as a successful durability or publication
-outcome.
-
-Unattended project runs pass `approved-oat-artifacts` provenance to the core's
-content-approval seam and never prompt. Automated completion and
-implementation-tail recaps always use `mode: unattended`.
-
-Federated runs still require an explicit provider-neutral critic callback.
-In-process callers may supply `critic` (or `coreOptions.critic` for
-compatibility); JSON/CLI callers supply `criticModulePath` naming a module whose
-`critic` export implements the same provider-neutral request/result contract.
-Supply exactly one critic seam. Approval provenance does not bypass fact
-reconciliation. Do not read private presets, vault files, provider
-configuration, or ambient destination configuration.
+On `failed` or `incomplete`, show the sanitized cause and require retry or an
+explicit skip. A skip after an attempted run must be persisted as
+`skip/failed_attempt` with `failed_attempt_evidence` set to the project-relative
+`explainers/<run-slug>/manifest.json`, or to that run's `failure.json` when
+recording never occurred. The deployed completion consumer validates canonical
+project/run containment and the terminal evidence contract before returning
+the trusted path to `scripts/check-terminal-outcome.mjs`.
+`skip/capability_probe` remains readable only for an existing legacy intent and
+must not be newly written.
 
 ## Progress Indicators (User-Facing)
 
@@ -156,5 +95,6 @@ OAT ▸ EXPLAINER KIT
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-Report compatibility, config, intent, source-binding, core-run, and finalization
-stages. Lifecycle-triggered unattended runs must not prompt.
+Report compatibility, intent, source binding, bundle, authoring, verification,
+recording, and outcome stages. Lifecycle-triggered unattended runs must not
+prompt.

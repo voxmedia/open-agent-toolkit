@@ -161,10 +161,9 @@ oat tools update --pack research --scope project
 The public explainer family also spans two packs:
 
 - `utility` owns `explainer-kit`, the destination-neutral core with its
-  contracts, recipes, themes, templates, render QA, durability verifier, and
-  optional publishing connector.
+  recipes, briefs, themes, templates, bundler, verifier, and recorder.
 - `workflows` owns `oat-explainer-kit`, the adapter that resolves OAT config,
-  project artifacts, output paths, and lifecycle intent.
+  approved project artifacts, output paths, and lifecycle intent.
 
 Install the core at user scope before using the adapter:
 
@@ -173,7 +172,8 @@ oat tools install utility --scope user
 oat tools install workflows
 ```
 
-The dependency is one-way: the adapter invokes the core, while the core remains
+The dependency is one-way: the adapter invokes the core's
+`bundle → host-agent authoring → verify → record` flow, while the core remains
 usable without OAT. The adapter checks the installed canonical core path and
 minimum compatible version before reading config or running. If the core is
 missing it fails closed with the utility install command; if it is too old it

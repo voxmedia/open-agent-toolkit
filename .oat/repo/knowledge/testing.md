@@ -26,13 +26,12 @@ oat_warning: 'GENERATED FILE - Do not edit manually. Regenerate with oat-repo-kn
 **Run Commands:**
 
 ```bash
-pnpm test                                      # Workspace Vitest, smoke, skill, and release suites
+pnpm test                                      # Workspace Vitest, smoke, skill, and scripts suites
 pnpm --filter @open-agent-toolkit/cli test     # CLI package Vitest suite
 pnpm --filter @open-agent-toolkit/cli test:watch # CLI watch mode
 pnpm --filter @open-agent-toolkit/cli test:coverage # CLI coverage report
 pnpm test:smoke                                # Node built-in smoke suites
 pnpm test:skills                               # Node built-in skill suites
-pnpm test:release                              # Node built-in release suites
 pnpm test:scripts                              # Node built-in scripts suites (scripts/worktree)
 ```
 

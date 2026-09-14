@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Alpha migration recap</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 2rem;
+      }
+      table {
+        border-collapse: collapse;
+      }
+      td,
+      th {
+        padding: 0.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section id="original-request">
+        <h2>Alpha migration</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Subject</th>
+              <th>Evidence</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Alpha migration</td>
+              <td>2026-09-09 17 merged</td>
+            </tr>
+            <tr>
+              <td>p01</td>
+              <td>complete</td>
+            </tr>
+            <tr>
+              <td>p01</td>
+              <td>deferred</td>
+            </tr>
+            <tr>
+              <td>W1</td>
+              <td>2026-09-08 merged</td>
+            </tr>
+            <tr>
+              <td>W2</td>
+              <td>2026-09-09 parked</td>
+            </tr>
+            <tr>
+              <td>p01-t01</td>
+              <td>complete</td>
+            </tr>
+            <tr>
+              <td>p01-t02</td>
+              <td>complete</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+      <section id="key-agent-decisions">
+        <h2>Agent decisions</h2>
+        <p>The p02 boundary remains explicit.</p>
+      </section>
+      <section id="as-built-architecture">
+        <h2>As-built architecture</h2>
+        <p>The result uses one self-contained page.</p>
+      </section>
+      <section id="implementation-record">
+        <h2>Implementation record</h2>
+        <p>The record connects evidence to the authored result.</p>
+      </section>
+      <section id="validation-evidence">
+        <h2>Validation evidence</h2>
+        <p>The package carries its own verification details.</p>
+      </section>
+      <section id="outcome">
+        <h2>Outcome</h2>
+        <p>The requested migration now has a concise recap.</p>
+      </section>
+    </main>
+    <script>
+      (() => {
+        const links = [...document.querySelectorAll('.toc a[href^="#"]')];
+        const targets = links
+          .map((link) => document.querySelector(link.getAttribute('href')))
+          .filter(Boolean);
+        const observer = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (!entry.isIntersecting) continue;
+              links.forEach((link) =>
+                link.classList.toggle(
+                  'active',
+                  link.getAttribute('href') === `#${entry.target.id}`,
+                ),
+              );
+            }
+          },
+          { rootMargin: '-15% 0px -70% 0px' },
+        );
+        targets.forEach((target) => observer.observe(target));
+      })();
+    </script>
+  </body>
+</html>
