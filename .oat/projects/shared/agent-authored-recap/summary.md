@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-09-13
+oat_last_updated: 2026-09-14
 oat_generated: true
 oat_summary_last_task: p06-t18
 oat_summary_revision_count: 0
@@ -155,3 +155,7 @@ final-current-basis-pass-20260913: PASS; 0 Critical, 0 Important, 0 Medium, 2 Mi
 ### 2026-09-13 · structural · oat gate review · final
 
 target=cursor-fable-5-1-high threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/shared/agent-authored-recap/reviews/final-review-2026-09-13T050025Z.md run=52787dbb-20c4-4fe7-b484-a72f0cd20c35
+
+### 2026-09-14 · structural · oat-project-retro · project-retro
+
+retro artifact=.oat/projects/shared/agent-authored-recap/references/project-retro.md evidence_used=archived-review-markdown,gate-receipts,git-history,lifecycle-artifacts,project-log,recap-package-receipts,session-transcript evidence_unavailable=oat-execution-learnings promotions=2 upstream=2 apply=deferred filing=deferred
