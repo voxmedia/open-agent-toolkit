@@ -58,6 +58,61 @@ test('rejects a ledger with all three groups empty', () => {
   assert.ok(report.issues.some(({ code }) => code === 'cohesion-ledger-empty'));
 });
 
+test('checks every same-subject numeric and status ledger claim', () => {
+  const ledger = {
+    terminology: [{ term: 'Explainer Kit' }],
+    numbers: [
+      { subject: 'Implementation', value: 12 },
+      { subject: 'Implementation', value: 3 },
+    ],
+    statuses: [
+      { subject: 'Implementation', value: 'complete' },
+      { subject: 'Implementation', value: 'merged' },
+    ],
+  };
+  assert.equal(
+    checkArtifactCohesion(
+      [
+        {
+          id: 'hub',
+          cohesion: {
+            terminology: { 'Explainer Kit': 'Explainer Kit' },
+            numericClaims: { Implementation: '3' },
+            statuses: { Implementation: 'merged' },
+            claims: [
+              { subject: 'Implementation', value: '12', kind: 'number' },
+              { subject: 'Implementation', value: '3', kind: 'number' },
+              { subject: 'Implementation', value: 'complete', kind: 'status' },
+              { subject: 'Implementation', value: 'merged', kind: 'status' },
+            ],
+          },
+        },
+      ],
+      { ledger },
+    ).valid,
+    true,
+  );
+  const omitted = checkArtifactCohesion(
+    [
+      {
+        id: 'hub',
+        cohesion: {
+          terminology: { 'Explainer Kit': 'Explainer Kit' },
+          numericClaims: { Implementation: '3' },
+          statuses: { Implementation: 'merged' },
+        },
+      },
+    ],
+    { ledger },
+  );
+  assert.equal(omitted.valid, false);
+  assert.equal(
+    omitted.issues.filter(({ code }) => code === 'cohesion-claim-unobserved')
+      .length,
+    2,
+  );
+});
+
 test('keys terminology by term and numeric or status facts by subject', () => {
   assert.deepEqual(
     checkArtifactCohesion(

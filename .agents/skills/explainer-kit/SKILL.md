@@ -4,7 +4,7 @@ description: Use when building destination-neutral visual explainer artifacts fr
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Agent, mcp__*
 metadata:
-  version: 3.0.1
+  version: 3.0.2
 ---
 
 # Explainer Kit

@@ -10,7 +10,10 @@ import {
   createBrowserProbeSession,
   RUNTIME_UNAVAILABLE_REASONS,
 } from './lib/browser-runtime.mjs';
-import { normalizeClaimSubject } from './lib/claim-subject.mjs';
+import {
+  harvestNumericTokens,
+  normalizeClaimSubject,
+} from './lib/claim-subject.mjs';
 import { validateHtmlSafety } from './lib/html-safety.mjs';
 import {
   BROWSER_PROBE_EVALUATE,
@@ -105,7 +108,7 @@ export function extractRenderedClaims(html) {
       addClaim(value, 'date');
     }
     const withoutDates = valuesText.replace(/\b\d{4}-\d{2}-\d{2}\b/g, '');
-    for (const value of withoutDates.match(/\b\d+(?:\.\d+)?%?\b/g) ?? []) {
+    for (const value of harvestNumericTokens(withoutDates)) {
       addClaim(value, 'number');
     }
     for (const token of valuesText.toLowerCase().match(/[a-z][a-z_-]*/g) ??

@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, AskUserQuestion
 metadata:
-  version: 1.7.11
+  version: 1.7.12
 ---
 
 # Complete Project
@@ -48,6 +48,22 @@ ACTIVE_PROJECT_PATH="$PROJECT_PATH"
 # Set SKILL_DIR to the absolute directory containing this loaded SKILL.md.
 COMPLETION_RECEIPT_SCRIPT="$SKILL_DIR/scripts/recover-completion-receipts.mjs"
 RECAP_INTENT_CONSUMER="$SKILL_DIR/scripts/consume-persisted-recap-intent.mjs"
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+RECAP_TERMINAL_GUARD=""
+for CANDIDATE in \
+  "$(dirname "$SKILL_DIR")/oat-explainer-kit" \
+  "${HOME}/.agents/skills/oat-explainer-kit" \
+  "$REPO_ROOT/.agents/skills/oat-explainer-kit"
+do
+  if [[ -f "$CANDIDATE/SKILL.md" && -f "$CANDIDATE/scripts/check-terminal-outcome.mjs" ]]; then
+    RECAP_TERMINAL_GUARD="$CANDIDATE/scripts/check-terminal-outcome.mjs"
+    break
+  fi
+done
+test -f "$RECAP_TERMINAL_GUARD" || {
+  echo "oat-explainer-kit is not installed at the loaded, user, or project skill root." >&2
+  exit 1
+}
 COMPLETION_RETRY_SCRIPT="$SKILL_DIR/scripts/resolve-completion-retry.mjs"
 COMPLETION_RETRY_FIELDS_SCRIPT="$SKILL_DIR/scripts/parse-completion-retry-fields.mjs"
 NONARCHIVE_LIFECYCLE_RECEIPT_SCRIPT="$SKILL_DIR/scripts/validate-nonarchive-lifecycle-receipt.mjs"
@@ -628,12 +644,12 @@ retry also fails, persist `skip/failed_attempt` with a fresh state hash and
 `manifest.json` or `failure.json`. Re-read it through the executable consumer
 before continuing. Never silently skip a failed attempt.
 
-Before any lifecycle mutation, invoke
-`oat-explainer-kit/scripts/check-terminal-outcome.mjs` with the persisted
-intent. For `generate`, pass the selected package's canonical `manifest.json`;
-for `skip`, pass `--project-root "$PROJECT_PATH"`, the recorded source, and
-`"${RECAP_TERMINAL_EVIDENCE_ARGS[@]}"`. This passes only the failed-attempt
-proof path already validated and canonicalized by the executable consumer.
+Before any lifecycle mutation, invoke `"$RECAP_TERMINAL_GUARD"` with the
+persisted intent. For `generate`, pass the selected package's canonical
+`manifest.json`; for `skip`, pass `--project-root "$PROJECT_PATH"`, the
+recorded source, and `"${RECAP_TERMINAL_EVIDENCE_ARGS[@]}"`. This passes only
+the failed-attempt proof path already validated and canonicalized by the
+executable consumer.
 The outcome vocabulary is `built`, `built-needs-review`, `failed`, and
 `incomplete`: only the first two satisfy generation. Missing packages do not
 satisfy generation.

@@ -273,19 +273,22 @@ export function checkArtifactCohesion(artifacts, { ledger = null } = {}) {
   const groups = ['terminology', 'numericClaims', 'statuses'];
   const expected = ledger
     ? {
-        terminology: new Map(
-          (ledger.terminology ?? []).map(({ term }) => [term, term]),
-        ),
-        numericClaims: new Map(
-          (ledger.numbers ?? []).map(({ subject, value }) => [subject, value]),
-        ),
-        statuses: new Map(
-          (ledger.statuses ?? []).map(({ subject, value }) => [subject, value]),
-        ),
+        terminology: (ledger.terminology ?? []).map(({ term }) => ({
+          claim: term,
+          value: term,
+        })),
+        numericClaims: (ledger.numbers ?? []).map(({ subject, value }) => ({
+          claim: subject,
+          value,
+        })),
+        statuses: (ledger.statuses ?? []).map(({ subject, value }) => ({
+          claim: subject,
+          value,
+        })),
       }
     : null;
 
-  if (expected && groups.every((group) => expected[group].size === 0)) {
+  if (expected && groups.every((group) => expected[group].length === 0)) {
     issues.push({
       code: 'cohesion-ledger-empty',
       message: 'Cohesion requires at least one ledger entry.',
@@ -302,34 +305,26 @@ export function checkArtifactCohesion(artifacts, { ledger = null } = {}) {
         );
       }
       for (const [claim, value] of Object.entries(values)) {
-        const normalized = normalizeClaim(value);
-        const prior = claims.get(claim);
-        if (!prior) {
-          claims.set(claim, {
-            normalized,
-            value,
-            artifactId: artifact.id,
-          });
-        } else if (prior.normalized !== normalized) {
-          issues.push({
-            code: `cohesion-${group}`,
-            message: `Artifact set disagrees on ${group}.${claim}.`,
-            claim,
-            values: [
-              { artifactId: prior.artifactId, value: prior.value },
-              { artifactId: artifact.id, value },
-            ],
-          });
-        }
+        addObservedValues(claims, issues, group, claim, value, artifact.id);
+      }
+      if (group === 'terminology') continue;
+      for (const entry of artifact?.cohesion?.claims ?? []) {
+        if (!claimKindMatchesGroup(entry?.kind, group)) continue;
+        if (typeof entry?.subject !== 'string') continue;
+        addObservedValues(
+          claims,
+          issues,
+          group,
+          entry.subject,
+          entry.value,
+          artifact.id,
+        );
       }
     }
     if (expected) {
-      for (const [claim, expectedValue] of expected[group]) {
+      for (const { claim, value: expectedValue } of expected[group]) {
         const observed = claims.get(claim);
-        if (
-          !observed ||
-          observed.normalized !== normalizeClaim(expectedValue)
-        ) {
+        if (!observed?.normalized.has(normalizeClaim(expectedValue))) {
           issues.push({
             code: 'cohesion-claim-unobserved',
             message: `Rendered artifacts do not observably support ${group}.${claim}.`,
@@ -636,10 +631,47 @@ function visibleText(value) {
     .trim();
 }
 
+function addObservedValues(claims, issues, group, claim, value, artifactId) {
+  const items = Array.isArray(value) ? value : [value];
+  for (const item of items) {
+    const normalized = normalizeClaim(item);
+    const prior = claims.get(claim);
+    if (!prior) {
+      claims.set(claim, {
+        normalized: new Set([normalized]),
+        value: item,
+        artifactId,
+      });
+      continue;
+    }
+    if (group === 'terminology' && !prior.normalized.has(normalized)) {
+      issues.push({
+        code: `cohesion-${group}`,
+        message: `Artifact set disagrees on ${group}.${claim}.`,
+        claim,
+        values: [
+          { artifactId: prior.artifactId, value: prior.value },
+          { artifactId, value: item },
+        ],
+      });
+    }
+    prior.normalized.add(normalized);
+  }
+}
+
+function claimKindMatchesGroup(kind, group) {
+  if (group === 'statuses') return kind === 'status';
+  return kind === 'number' || kind === 'date';
+}
+
 function normalizeClaim(value) {
   if (typeof value === 'number') return `number:${value}`;
   if (typeof value === 'string') {
-    const compact = value.trim().replace(/\s+/g, ' ').toLocaleLowerCase();
+    const compact = value
+      .trim()
+      .replace(/\s+/g, ' ')
+      .replaceAll(',', '')
+      .toLocaleLowerCase();
     if (/^[+-]?(?:\d+\.?\d*|\.\d+)$/.test(compact)) {
       return `number:${Number(compact)}`;
     }

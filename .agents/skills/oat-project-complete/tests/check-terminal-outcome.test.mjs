@@ -13,7 +13,7 @@ import {
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 
 import { writeFailure } from '../../explainer-kit/scripts/bundle.mjs';
@@ -579,15 +579,62 @@ test('project completion consumes boundary discovery and authoring permission', 
   );
 });
 
-test('project completion invokes the shared guard before lifecycle mutation', async () => {
+test('project completion binds the terminal guard to installed skill roots', async () => {
   const guidance = await readFile(route, 'utf8');
-  const guard = guidance.indexOf('scripts/check-terminal-outcome.mjs');
+  assert.match(guidance, /RECAP_TERMINAL_GUARD=/);
+  assert.match(guidance, /loaded, user, or project skill root/);
+  assert.equal(
+    guidance.includes('`oat-explainer-kit/scripts/check-terminal-outcome.mjs`'),
+    false,
+  );
+  const guard = guidance.indexOf('"$RECAP_TERMINAL_GUARD"');
   const mutation = guidance.indexOf('### Step 4:', guard);
-
   assert.notEqual(guard, -1);
   assert.ok(mutation > guard);
   assert.match(
     guidance.slice(guard, mutation),
     /`built`.*`built-needs-review`.*`failed`.*`incomplete`/s,
   );
+});
+
+test('interactive skip consumption does not load the sibling explainer-kit core', async () => {
+  const isolated = await mkdtemp(join(tmpdir(), 'recap-skip-isolated-'));
+  try {
+    const completeScripts = join(isolated, 'oat-project-complete', 'scripts');
+    const adapterScripts = join(isolated, 'oat-explainer-kit', 'scripts');
+    await mkdir(completeScripts, { recursive: true });
+    await mkdir(adapterScripts, { recursive: true });
+    await cp(
+      fileURLToPath(consumerScript),
+      join(completeScripts, 'consume-persisted-recap-intent.mjs'),
+    );
+    await cp(
+      join(here, '../../oat-explainer-kit/scripts/persist-intent.mjs'),
+      join(adapterScripts, 'persist-intent.mjs'),
+    );
+    await cp(
+      join(here, '../../oat-explainer-kit/scripts/resolve-intent.mjs'),
+      join(adapterScripts, 'resolve-intent.mjs'),
+    );
+    const project = await mkdtemp(join(tmpdir(), 'recap-skip-project-'));
+    try {
+      await writeFile(
+        join(project, 'state.md'),
+        "---\noat_project_recap:\n  decision: skip\n  source: interactive\n  decided_at: '2026-09-11T14:45:00.000Z'\n---\n",
+      );
+      const { consumePersistedRecapIntent } = await import(
+        pathToFileURL(
+          join(completeScripts, 'consume-persisted-recap-intent.mjs'),
+        ).href
+      );
+      const result = await consumePersistedRecapIntent({
+        projectPath: project,
+      });
+      assert.equal(result.route, 'skip');
+    } finally {
+      await rm(project, { recursive: true, force: true });
+    }
+  } finally {
+    await rm(isolated, { recursive: true, force: true });
+  }
 });

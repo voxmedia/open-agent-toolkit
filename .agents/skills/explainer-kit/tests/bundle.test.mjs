@@ -283,6 +283,31 @@ test('anchor ledger uses row and heading subjects and bounds groups', () => {
   assert.ok(ledger.claims.length > ledger.numbers.length);
 });
 
+test('indexClaims keeps thousands-grouped numbers as one token', () => {
+  const indexed = indexClaims([
+    {
+      id: 'count',
+      text: 'The backlog has 3,000 open items across 12 waves.',
+      status: 'confirmed',
+      citations: [{ sourceId: 'source', locator: 'plan.md:1' }],
+      _subject: 'Backlog',
+    },
+  ]);
+  assert.deepEqual(
+    indexed
+      .filter(({ kind }) => kind === 'number')
+      .map(({ subject, value }) => ({ subject, value })),
+    [
+      { subject: 'Backlog', value: '3000' },
+      { subject: 'Backlog', value: '12' },
+    ],
+  );
+  assert.equal(
+    indexed.some(({ value }) => value === '3' || value === '000'),
+    false,
+  );
+});
+
 test('machine-checkable source headings enter the claim index', () => {
   const text = '# W9 release 2026-09-12\n\nNarrative without new facts.\n';
   const extracted = extractClaims({

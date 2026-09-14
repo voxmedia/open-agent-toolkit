@@ -166,6 +166,21 @@ test('containsLedgerTerm requires token boundaries, not substrings', () => {
   assert.equal(containsLedgerTerm('recapture the flow', 'recap'), false);
 });
 
+test('extractRenderedClaims keeps thousands-grouped numbers as one token', () => {
+  const claims = extractRenderedClaims(
+    '<section id="implementation"><h2>Implementation</h2><p>Shipped 3,000 checks.</p></section>',
+  );
+  assert.ok(
+    claims.claims.some(
+      ({ value, kind }) => value === '3000' && kind === 'number',
+    ),
+  );
+  assert.equal(
+    claims.claims.some(({ value }) => value === '3' || value === '000'),
+    false,
+  );
+});
+
 test('extractRenderedClaims keys terms and normalized facts by subject', async () => {
   const html = await readFile(join(fixtures, 'valid.html'), 'utf8');
   const claims = extractRenderedClaims(html);

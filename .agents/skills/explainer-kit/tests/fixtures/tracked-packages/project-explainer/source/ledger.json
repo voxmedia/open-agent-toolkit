@@ -44,43 +44,11 @@
     },
     {
       "subject": "Implementation Plan: agent-authored-recap",
-      "value": "2026-08-31"
-    },
-    {
-      "subject": "Implementation Plan: agent-authored-recap",
       "value": "22"
     },
     {
       "subject": "p01-t01",
       "value": "1"
-    },
-    {
-      "subject": "p01-t17",
-      "value": "1"
-    },
-    {
-      "subject": "p01-t17",
-      "value": "1491"
-    },
-    {
-      "subject": "p01-t17",
-      "value": "1492"
-    },
-    {
-      "subject": "p01-t17",
-      "value": "2122"
-    },
-    {
-      "subject": "p01-t17",
-      "value": "2603"
-    },
-    {
-      "subject": "p01-t17",
-      "value": "2912"
-    },
-    {
-      "subject": "p01-t17",
-      "value": "3001"
     },
     {
       "subject": "p01-t17",
@@ -98,39 +66,11 @@
     },
     {
       "subject": "Task p01-t04: Manifest v2 schema and package rule v3",
-      "value": "built"
-    },
-    {
-      "subject": "Task p01-t04: Manifest v2 schema and package rule v3",
-      "value": "failed"
-    },
-    {
-      "subject": "Task p01-t04: Manifest v2 schema and package rule v3",
-      "value": "built-needs-review"
-    },
-    {
-      "subject": "Task p01-t04: Manifest v2 schema and package rule v3",
       "value": "incomplete"
     },
     {
       "subject": "w1",
-      "value": "failed"
-    },
-    {
-      "subject": "w1",
       "value": "built"
-    },
-    {
-      "subject": "Task p01-t06: `record.mjs` — manifest v2 and the checked-in archive fixture",
-      "value": "built"
-    },
-    {
-      "subject": "Task p01-t06: `record.mjs` — manifest v2 and the checked-in archive fixture",
-      "value": "built-needs-review"
-    },
-    {
-      "subject": "Task p01-t06: `record.mjs` — manifest v2 and the checked-in archive fixture",
-      "value": "failed"
     },
     {
       "subject": "Task p01-t06: `record.mjs` — manifest v2 and the checked-in archive fixture",

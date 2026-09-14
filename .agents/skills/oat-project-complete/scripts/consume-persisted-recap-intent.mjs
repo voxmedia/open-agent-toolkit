@@ -2,7 +2,6 @@ import { readdir, realpath } from 'node:fs/promises';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { resolveProjectFailedAttemptEvidence } from '../../oat-explainer-kit/scripts/check-terminal-outcome.mjs';
 import { readPersistedIntent } from '../../oat-explainer-kit/scripts/persist-intent.mjs';
 
 function consumptionError(message) {
@@ -41,6 +40,8 @@ async function discoverManifestCandidates(explainersPath) {
 
 async function resolveFailedAttemptEvidence(projectRoot, locator) {
   try {
+    const { resolveProjectFailedAttemptEvidence } =
+      await import('../../oat-explainer-kit/scripts/check-terminal-outcome.mjs');
     return await resolveProjectFailedAttemptEvidence({
       projectPath: projectRoot,
       locator,

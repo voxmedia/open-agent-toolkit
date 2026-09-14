@@ -23,7 +23,10 @@ import {
 } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { normalizeClaimSubject } from './lib/claim-subject.mjs';
+import {
+  harvestNumericTokens,
+  normalizeClaimSubject,
+} from './lib/claim-subject.mjs';
 import { validateContract } from './lib/contracts.mjs';
 import { isFlowFailureStage } from './lib/failure.mjs';
 import { loadRecipe, recipeRequiredNarrative } from './lib/recipes.mjs';
@@ -177,7 +180,7 @@ export function indexClaims(claims) {
       });
     }
     const withoutDates = claim.text.replace(/\b\d{4}-\d{2}-\d{2}\b/g, '');
-    for (const value of withoutDates.match(/\b\d+(?:\.\d+)?%?\b/g) ?? []) {
+    for (const value of harvestNumericTokens(withoutDates)) {
       addIndexed(indexed, seen, {
         subject,
         value,

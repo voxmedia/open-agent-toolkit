@@ -44,15 +44,7 @@
     },
     {
       "subject": "wave-1",
-      "value": "2026-08-30"
-    },
-    {
-      "subject": "wave-1",
       "value": "1"
-    },
-    {
-      "subject": "wave-2",
-      "value": "2026-08-30"
     },
     {
       "subject": "wave-2",
@@ -60,23 +52,11 @@
     },
     {
       "subject": "wave-3",
-      "value": "2026-08-30"
-    },
-    {
-      "subject": "wave-3",
       "value": "3"
     },
     {
       "subject": "wave-4",
-      "value": "2026-09-02"
-    },
-    {
-      "subject": "wave-4",
       "value": "4"
-    },
-    {
-      "subject": "wave-5",
-      "value": "2026-09-03"
     },
     {
       "subject": "wave-5",
@@ -90,27 +70,11 @@
   "statuses": [
     {
       "subject": "Execution Program: 2026-08-31 (revalidated backlog-review implementation corpus)",
-      "value": "merged"
-    },
-    {
-      "subject": "Execution Program: 2026-08-31 (revalidated backlog-review implementation corpus)",
       "value": "deferred"
     },
     {
       "subject": "W1",
-      "value": "merged"
-    },
-    {
-      "subject": "W1",
-      "value": "parked"
-    },
-    {
-      "subject": "W1",
       "value": "complete"
-    },
-    {
-      "subject": "W2",
-      "value": "merged"
     },
     {
       "subject": "W2",
@@ -118,15 +82,7 @@
     },
     {
       "subject": "W3",
-      "value": "merged"
-    },
-    {
-      "subject": "W3",
       "value": "complete"
-    },
-    {
-      "subject": "W4",
-      "value": "merged"
     },
     {
       "subject": "W4",
