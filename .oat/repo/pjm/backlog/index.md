@@ -240,6 +240,7 @@
 | BL-260906-harden-dispatch-launch         | Harden dispatch launch baselines and terminal reconciliation                                          | open   | high     | feature    | M        |
 | BL-260718-harden-full-surface-gate       | Harden full-surface gate reviews against budget and recursive dispatch                                | open   | high     | feature    | M        |
 | BL-260729-implement-reviewplan-first     | Implement ReviewPlan-first reviewer workflow                                                          | open   | high     | feature    | L        |
+| BL-260911-make-docs-bootstrap-a-front    | Make docs bootstrap a front door for existing docs and support the docs-directory convention          | open   | high     | feature    | M        |
 | BL-260829-order-phase-bookkeeping-before | Order phase bookkeeping before per-phase review dispatch                                              | open   | high     | task       | M        |
 | BL-260908-restore-recon-s-cheap-fan-out  | Restore recon's cheap-fan-out intent with per-wave routing under one approval envelope                | open   | high     | feature    | L        |
 | BL-260724-support-provider-directory     | Support provider directory symlinks as full collection sync                                           | open   | high     | feature    | M        |
@@ -283,6 +284,7 @@
 | BL-260713-root-agent-judgment-logging    | Root-agent judgment logging responsibility for project log                                            | open   | medium   | feature    | S        |
 | BL-260827-span-based-prose-guards        | Span-based prose guards, anchored probe records, and a shared probe runner for skill contract tests   | open   | medium   | task       | S        |
 | BL-260718-support-fumadocs-in-oat-docs   | Support Fumadocs in oat docs nav sync (currently MkDocs-only)                                         | open   | medium   | task       |          |
+| BL-260911-support-per-tool-scope         | Support per-tool scope migration in oat tools migrate                                                 | open   | medium   | task       | S        |
 | BL-260909-surface-config-warnings        | Surface config warnings on every reader path and document the warnings field                          | open   | medium   | task       | M        |
 | BL-260909-sweep-the-raw-main-module      | Sweep the raw main-module guard across the sibling skill scripts                                      | open   | medium   | task       | M        |
 | BL-260907-type-check-cli-test-files      | Type-check CLI test files with a test-scoped tsconfig gate                                            | open   | medium   | task       | M        |
