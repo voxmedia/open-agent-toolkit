@@ -132,6 +132,10 @@ final-current-basis-pass-20260913: PASS; 0 Critical, 0 Important, 0 Medium, 2 Mi
 
 target=cursor-fable-5-1-high threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/shared/agent-authored-recap/reviews/final-review-2026-09-13T050025Z.md run=52787dbb-20c4-4fe7-b484-a72f0cd20c35
 
+### 2026-09-14 · structural · oat-project-retro · project-retro
+
+retro artifact=.oat/projects/shared/agent-authored-recap/references/project-retro.md evidence_used=archived-review-markdown,gate-receipts,git-history,lifecycle-artifacts,project-log,recap-package-receipts,session-transcript evidence_unavailable=oat-execution-learnings promotions=2 upstream=2 apply=deferred filing=deferred
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
