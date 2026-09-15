@@ -543,25 +543,161 @@ test -z "$(git status --porcelain .codex .cursor .claude .oat/sync)"
 
 ---
 
+### Task p01-t06: (review) Bind reconciliation inputs to exact manifest identities
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/reconcile-ledger.mjs`
+- Modify: `.agents/skills/recon/tests/workflow.integration.test.mjs`
+
+**Step 1: Understand the issue**
+
+The controller CLI currently uses a raw path-prefix check and parses supplied
+review files without verifying their manifest digests. A changed in-packet file
+or crafted sibling path can therefore feed unapproved bytes into
+reconciliation.
+
+**Step 2: Implement fix**
+
+Retain the canonical packet root; resolve every supplied review path; require
+exact equality with one expected manifest-declared path; reject duplicates;
+and verify the file hash matches the declared digest before parsing. Add
+negative controls for changed bytes and prefix-collision siblings plus an
+accepted exact-path/exact-digest control. Both candidate outputs must remain
+absent on rejection.
+
+**Step 3: Verify**
+
+Run:
+`node --test .agents/skills/recon/tests/workflow.integration.test.mjs`
+Expected: both reproduced bypasses fail before output and the exact control
+passes.
+
+**Step 4: Commit**
+
+```bash
+git add -- .agents/skills/recon/scripts/reconcile-ledger.mjs .agents/skills/recon/tests/workflow.integration.test.mjs
+git commit -m "fix(p01-t06): bind reconciliation review inputs"
+```
+
+---
+
+### Task p01-t07: (review) Compare reconciliation declarations semantically
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/lib/contracts.mjs`
+- Modify: `.agents/skills/recon/tests/routing-contracts.test.mjs`
+
+**Step 1: Understand the issue**
+
+The declaration validator compares `JSON.stringify()` output, making valid
+closed objects fail solely because their keys were inserted in another order.
+
+**Step 2: Implement fix**
+
+Compare the six required scalar/array values directly or through the existing
+canonical JSON helper. Preserve array ordering and the closed schema. Add a
+positive reordered-key control.
+
+**Step 3: Verify**
+
+Run:
+`node --test .agents/skills/recon/tests/routing-contracts.test.mjs`
+Expected: a semantically identical reordered declaration passes while changed
+values still fail.
+
+**Step 4: Commit**
+
+```bash
+git add -- .agents/skills/recon/scripts/lib/contracts.mjs .agents/skills/recon/tests/routing-contracts.test.mjs
+git commit -m "fix(p01-t07): canonicalize reconciliation declarations"
+```
+
+---
+
+### Task p01-t08: (review) Close the worker-mode regression assertion
+
+**Files:**
+
+- Modify: `.agents/skills/recon/tests/skill-contract.test.mjs`
+
+**Step 1: Understand the issue**
+
+The worker-mode test still treats the removed `reconcile` token as positive
+evidence because it appears in prohibitive prose, so the test no longer proves
+its stated closed-vocabulary contract.
+
+**Step 2: Implement fix**
+
+Assert the role's declared mode sentence or mapping table exactly excludes
+`reconcile`, and keep an explicit negative assertion that workers must not own
+reconciliation.
+
+**Step 3: Verify**
+
+Run: `node --test .agents/skills/recon/tests/skill-contract.test.mjs`
+Expected: only the declared non-interactive leaf modes are accepted.
+
+**Step 4: Commit**
+
+```bash
+git add -- .agents/skills/recon/tests/skill-contract.test.mjs
+git commit -m "test(p01-t08): close recon worker mode vocabulary"
+```
+
+---
+
+### Task p01-t09: (review) Repair the packet evidence-association prose
+
+**Files:**
+
+- Modify: `.agents/skills/recon/references/packet-contract.md`
+
+**Step 1: Understand the issue**
+
+The new `unresolvedIssues` paragraph interrupts one evidence-association
+sentence and leaves its final clause dangling.
+
+**Step 2: Implement fix**
+
+Finish the evidence-association sentence first, then place the closed
+`unresolvedIssues` rule in its own paragraph without changing semantics.
+
+**Step 3: Verify**
+
+Run: `pnpm oat:validate-skills`
+Expected: the contract reads coherently and skill validation passes.
+
+**Step 4: Commit**
+
+```bash
+git add -- .agents/skills/recon/references/packet-contract.md
+git commit -m "docs(p01-t09): repair packet association contract"
+```
+
+---
+
 ## Reviews
 
-| Scope | Type     | Status   | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target                   |
-| ----- | -------- | -------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
-| p01   | code     | received | 2026-09-15 | reviews/code-p01-review-2026-09-15T053259Z.md               | 59b6241db737d331a9cc850c872c7546397a0030 | auto       | -                             |
-| final | code     | pending  | -          | -                                                           | -                                        | -          | -                             |
-| plan  | artifact | passed   | 2026-09-15 | structured-output                                           | -                                        | auto       | oat-reviewer-gpt-5-6-sol-high |
-| plan  | artifact | received | 2026-09-15 | reviews/archived/artifact-plan-review-2026-09-15T042341Z.md | -                                        | -          | -                             |
-| plan  | artifact | received | 2026-09-15 | reviews/archived/artifact-plan-review-2026-09-15T043825Z.md | -                                        | -          | -                             |
-| plan  | artifact | passed   | 2026-09-15 | reviews/archived/artifact-plan-review-2026-09-15T045555Z.md | -                                        | gate       | claude-fable-skip-permissions |
+| Scope | Type     | Status      | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target                   |
+| ----- | -------- | ----------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
+| p01   | code     | fixes_added | 2026-09-15 | reviews/archived/code-p01-review-2026-09-15T053259Z.md      | 59b6241db737d331a9cc850c872c7546397a0030 | auto       | -                             |
+| final | code     | pending     | -          | -                                                           | -                                        | -          | -                             |
+| plan  | artifact | passed      | 2026-09-15 | structured-output                                           | -                                        | auto       | oat-reviewer-gpt-5-6-sol-high |
+| plan  | artifact | received    | 2026-09-15 | reviews/archived/artifact-plan-review-2026-09-15T042341Z.md | -                                        | -          | -                             |
+| plan  | artifact | received    | 2026-09-15 | reviews/archived/artifact-plan-review-2026-09-15T043825Z.md | -                                        | -          | -                             |
+| plan  | artifact | passed      | 2026-09-15 | reviews/archived/artifact-plan-review-2026-09-15T045555Z.md | -                                        | gate       | claude-fable-skip-permissions |
 
 ## Implementation Complete
 
 **Summary:**
 
-- Phase 1: 5 tasks — simplify and harden recon execution, contracts,
-  reconciliation ownership, documentation, and release surfaces.
+- Phase 1: 9 tasks — five implementation tasks plus four review-fix tasks for
+  manifest-bound reconciliation inputs, semantic declaration comparison,
+  worker-mode coverage, and packet-contract prose.
 
-**Total: 5 tasks**
+**Total: 9 tasks**
 
 Ready for final code review and PR preparation after implementation.
 

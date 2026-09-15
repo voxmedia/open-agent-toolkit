@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: review
 oat_blockers: []
 oat_last_updated: 2026-09-15
-oat_current_task_id: null
+oat_current_task_id: p01-t06
 oat_generated: false
 ---
 
@@ -20,15 +20,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 5     | 5/5       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | in progress | 9     | 5/9       |
 
-**Total:** 5/5 tasks completed
+**Total:** 5/9 tasks completed
 
 ## Phase 1: Simplify and harden recon execution
 
-**Status:** complete
+**Status:** in progress
 **Started:** 2026-09-15
 
 ### Phase Summary
@@ -76,6 +76,22 @@ workspace test has one pre-existing unrelated assertion mismatch in
 **Status:** complete
 **Commit:** c642f58c876492236ce985daf5394921e82358bf
 
+### Task p01-t06: (review) Bind reconciliation inputs to exact manifest identities
+
+**Status:** pending
+
+### Task p01-t07: (review) Compare reconciliation declarations semantically
+
+**Status:** pending
+
+### Task p01-t08: (review) Close the worker-mode regression assertion
+
+**Status:** pending
+
+### Task p01-t09: (review) Repair the packet evidence-association prose
+
+**Status:** pending
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -95,6 +111,28 @@ _No implementation run has started._
 - [x] p01-t03: Close worker excerpt and review-result schemas (`c00509e39`)
 - [x] p01-t04: Move reconciliation to one deterministic controller stage (`d45155882`)
 - [x] p01-t05: Align docs, triage disposition, and release metadata (`c642f58c8`)
+- [ ] p01-t06: Bind reconciliation inputs to exact manifest identities
+- [ ] p01-t07: Compare reconciliation declarations semantically
+- [ ] p01-t08: Close the worker-mode regression assertion
+- [ ] p01-t09: Repair the packet evidence-association prose
+
+### Review Received: p01
+
+**Date:** 2026-09-15
+**Review artifact:**
+`reviews/archived/code-p01-review-2026-09-15T053259Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 1
+- Minor: 2
+
+**New tasks added:** p01-t06, p01-t07, p01-t08, p01-t09
+
+**Next:** Execute the four review-fix tasks via `oat-project-implement`, then
+mark this review event `fixes_completed` and re-run independent Phase 1 review.
 
 ### Recovery Event recovery-p01-001
 

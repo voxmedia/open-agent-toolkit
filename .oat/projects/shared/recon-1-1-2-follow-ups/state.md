@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p01-t06
 oat_last_commit: df7e591607d329374d93559751cc78df70c66694
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -90,7 +90,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-15T02:47:32.316Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-15T05:13:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-15T05:38:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -102,7 +102,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Phase 1 complete; awaiting independent code review
+Implementation — Phase 1 review fixes; resume at `p01-t06`
 
 ## Artifacts
 
@@ -131,6 +131,8 @@ Implementation — Phase 1 complete; awaiting independent code review
 - ✓ p01-t05 completed: docs, triage, versions, and provider sync aligned
 - ✓ Phase 1 implementation complete with one append-only recovery
 - ✓ Recovery event `recovery-p01-001` validated and cleared by the controller
+- ✓ Phase 1 review received: 1 Important, 1 Medium, and 2 Minor findings
+- → Four review-fix tasks queued as `p01-t06` through `p01-t09`
 
 ## Blockers
 
@@ -138,4 +140,4 @@ None.
 
 ## Next Milestone
 
-Run the independent Phase 1 code review.
+Execute review-fix task `p01-t06`.
