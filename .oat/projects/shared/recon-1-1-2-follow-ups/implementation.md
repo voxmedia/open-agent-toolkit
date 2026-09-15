@@ -153,6 +153,32 @@ configured attempts were consumed. The gate declaration remains unchanged at
 `maxAttempts: 2`; this is a one-run project exception, not a user-config change.
 No further retry is authorized if this attempt blocks.
 
+### Review Received: plan (authorized gate attempt)
+
+**Date:** 2026-09-15
+**Review artifact:**
+`reviews/archived/artifact-plan-review-2026-09-15T045555Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 2
+- Minor: 0
+
+**Artifact edits applied:** 2
+
+- `M1` (`resolve_in_artifact`): p01-t05 now owns and verifies the tracked sync
+  manifest restamp alongside provider projections.
+- `M2` (`resolve_in_artifact`): p01-t01 now owns the fake-run helper required to
+  simulate a post-write stream-close diagnostic without relaunch.
+
+**New tasks added:** none; both sub-threshold findings were corrected within
+the existing task boundaries.
+
+**Gate result:** passed at the Important threshold. Continue to Lite plan
+completion and implementation.
+
 **Decisions:**
 
 - Use both canonical `is_background` frontmatter and recon launch prose.

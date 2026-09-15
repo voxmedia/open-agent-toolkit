@@ -172,6 +172,7 @@ This plan has one phase and executes sequentially.
 - Modify: `.agents/skills/recon/references/worker-contract.md`
 - Modify: `.agents/skills/recon/tests/skill-contract.test.mjs`
 - Modify: `.agents/skills/recon/tests/workflow.integration.test.mjs`
+- Modify: `.agents/skills/recon/tests/helpers/fake-recon-run.mjs`
 - Modify: `packages/cli/src/providers/cursor/codec/materialize.test.ts`
 
 **Implementation and Proof Strategy:**
@@ -194,6 +195,9 @@ failure and no-replacement behavior for invalid output. State explicitly that a
 materialized `.cursor/agents/recon-worker.md` file is not evidence that the
 current Cursor Task catalog can launch that role; routing uses the observed live
 catalog and retains the pre-approved generic fallback when the role is absent.
+Extend the fake-run helper with a post-write stream-close option whose provider
+diagnostic is recorded as a non-material entry in the existing `manifest.gaps`
+sink, without changing the manifest schema or triggering a relaunch.
 
 **Step 2: Prove**
 
@@ -206,7 +210,7 @@ the background field or precedence rule makes the focused test fail.
 
 Keep Cursor launch grammar in the provider mechanics reference and only state
 recon's required outcome. Run:
-`pnpm exec oxfmt --write .agents/agents/recon-worker.md .agents/skills/recon/SKILL.md .agents/skills/recon/references/worker-contract.md .agents/skills/recon/tests/skill-contract.test.mjs .agents/skills/recon/tests/workflow.integration.test.mjs packages/cli/src/providers/cursor/codec/materialize.test.ts`
+`pnpm exec oxfmt --write .agents/agents/recon-worker.md .agents/skills/recon/SKILL.md .agents/skills/recon/references/worker-contract.md .agents/skills/recon/tests/skill-contract.test.mjs .agents/skills/recon/tests/workflow.integration.test.mjs .agents/skills/recon/tests/helpers/fake-recon-run.mjs packages/cli/src/providers/cursor/codec/materialize.test.ts`
 
 **Step 4: Verify**
 
@@ -217,7 +221,7 @@ Expected: no errors.
 **Step 5: Commit**
 
 ```bash
-git add -- .agents/agents/recon-worker.md .agents/skills/recon/SKILL.md .agents/skills/recon/references/worker-contract.md .agents/skills/recon/tests/skill-contract.test.mjs .agents/skills/recon/tests/workflow.integration.test.mjs packages/cli/src/providers/cursor/codec/materialize.test.ts
+git add -- .agents/agents/recon-worker.md .agents/skills/recon/SKILL.md .agents/skills/recon/references/worker-contract.md .agents/skills/recon/tests/skill-contract.test.mjs .agents/skills/recon/tests/workflow.integration.test.mjs .agents/skills/recon/tests/helpers/fake-recon-run.mjs packages/cli/src/providers/cursor/codec/materialize.test.ts
 git commit -m "fix(p01-t01): keep Cursor recon leaves durable"
 ```
 
@@ -454,6 +458,7 @@ git commit -m "refactor(p01-t04): make recon reconciliation controller-owned"
 - Modify: `.agents/skills/recon/SKILL.md`
 - Modify: `.agents/agents/recon-worker.md`
 - Modify: `.codex/agents/recon-worker.toml`
+- Modify: `.oat/sync/manifest.json`
 - Modify: `apps/oat-docs/docs/workflows/skills/recon.md`
 - Modify: `.oat/repo/pjm/triage/2026-09-14-recon-1-1-2-feedback.md`
 - Modify: `packages/cli/package.json`
@@ -503,8 +508,10 @@ Run:
 Expected: canonical and packaged assets agree, required version bumps are
 present, release dry-run validation passes, and public docs build. After the
 first project-scoped sync, `git status --porcelain .codex .cursor .claude`
-shows only the expected tracked `.codex/agents/recon-worker.toml` update; a
-second sync produces no further provider-view diff.
+shows only the expected tracked `.codex/agents/recon-worker.toml` update, while
+`.oat/sync/manifest.json` carries the expected CLI-version restamp. A second
+sync produces no further diff across
+`git status --porcelain .codex .cursor .claude .oat/sync`.
 
 **Step 3: Refactor and format**
 
@@ -527,10 +534,10 @@ tests where Turborepo reports a cache replay.
 **Step 5: Commit**
 
 ```bash
-git add -- .agents/skills/recon/SKILL.md .agents/agents/recon-worker.md .codex/agents/recon-worker.toml apps/oat-docs/docs/workflows/skills/recon.md .oat/repo/pjm/triage/2026-09-14-recon-1-1-2-feedback.md packages/cli/src/validation/skills.test.ts packages/cli/assets/public-package-versions.json packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json
+git add -- .agents/skills/recon/SKILL.md .agents/agents/recon-worker.md .codex/agents/recon-worker.toml .oat/sync/manifest.json apps/oat-docs/docs/workflows/skills/recon.md .oat/repo/pjm/triage/2026-09-14-recon-1-1-2-feedback.md packages/cli/src/validation/skills.test.ts packages/cli/assets/public-package-versions.json packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json
 git commit -m "chore(p01-t05): align recon release surfaces"
 pnpm run cli -- sync --scope project
-test -z "$(git status --porcelain .codex .cursor .claude)"
+test -z "$(git status --porcelain .codex .cursor .claude .oat/sync)"
 ```
 
 ---
@@ -544,7 +551,7 @@ test -z "$(git status --porcelain .codex .cursor .claude)"
 | plan  | artifact | passed   | 2026-09-15 | structured-output                                           | -             | auto       | oat-reviewer-gpt-5-6-sol-high |
 | plan  | artifact | received | 2026-09-15 | reviews/archived/artifact-plan-review-2026-09-15T042341Z.md | -             | -          | -                             |
 | plan  | artifact | received | 2026-09-15 | reviews/archived/artifact-plan-review-2026-09-15T043825Z.md | -             | -          | -                             |
-| plan  | artifact | received | 2026-09-15 | reviews/artifact-plan-review-2026-09-15T045555Z.md          | -             | -          | -                             |
+| plan  | artifact | passed   | 2026-09-15 | reviews/archived/artifact-plan-review-2026-09-15T045555Z.md | -             | gate       | claude-fable-skip-permissions |
 
 ## Implementation Complete
 
