@@ -134,6 +134,10 @@ async function main(argv) {
   if (options.mode === 'receipt') {
     let report;
     try {
+      // Stdin is read to EOF with no timeout. Every caller pipes the archive
+      // report in (`printf '%s\n' "$ARCHIVE_OUTPUT" | node ...`), so EOF
+      // always arrives; a timeout would turn a slow producer into a false
+      // failure, and a caller that leaves stdin open is a caller bug.
       report = JSON.parse(readFileSync(0, 'utf8'));
     } catch (error) {
       throw receiptError(
@@ -158,6 +162,9 @@ async function main(argv) {
  * `--preserve-symlinks-main`, which keeps the link in `import.meta.url`. Either
  * way the caller reads "exited 0" as "verified" — the fail-open shape this
  * validator exists to prevent.
+ * A path that cannot be canonicalized is not a module Node loaded as the entry
+ * point, so a thrown `realpathSync` means "not invoked directly" and returns
+ * `false`; it never masks a direct run.
  */
 function isDirectInvocation(invokedPath) {
   if (!invokedPath) return false;
