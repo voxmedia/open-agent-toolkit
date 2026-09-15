@@ -48,6 +48,10 @@ target=cursor-gpt-5-6-sol-xhigh threshold=important findings=critical:0,importan
 
 target=cursor-gpt-5-6-sol-xhigh threshold=important findings=critical:0,important:2,medium:1,minor:1 exit=1 status=blocked artifact=.oat/projects/shared/oat-doctor-router/reviews/final-review-2026-09-15T043126Z.md run=7f9a1399-668a-4f2c-8e50-762dd0c7a378
 
+### 2026-09-15 · structural · oat gate review · final
+
+target=cursor-gpt-5-6-sol-xhigh threshold=important findings=critical:0,important:1,medium:0,minor:0 exit=1 status=blocked artifact=.oat/projects/shared/oat-doctor-router/reviews/final-review-2026-09-15T044211Z.md run=094ad1f2-c9c7-4cfe-9d5a-943788b855df
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
