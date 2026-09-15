@@ -320,6 +320,10 @@ test('packet contract pins exact lane outcome contradictions and same-run errors
 
 test('worker exposes only the declared non-interactive leaf modes', async () => {
   const { worker, workerContract } = await readContracts();
+  assert.match(
+    worker,
+    /one declared mode: `map`, `gather`, `compile`, `verify`, `adversary`, or\s+`coverage`\. No other mode is valid\./,
+  );
   for (const mode of [
     'map',
     'gather',
@@ -327,10 +331,10 @@ test('worker exposes only the declared non-interactive leaf modes', async () => 
     'verify',
     'adversary',
     'coverage',
-    'reconcile',
   ]) {
     assert.match(worker, new RegExp(`\\b${mode}\\b`, 'i'));
   }
+  assert.match(worker, /do not reconcile the ledger/i);
   assert.match(worker, /never interact with the user/i);
   assert.match(worker, /never dispatch/i);
   assert.match(worker, /write only[\s\S]{0,120}assigned artifact/i);
