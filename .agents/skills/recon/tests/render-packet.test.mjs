@@ -24,7 +24,6 @@ import {
   approveExecution,
   configureConditionalContradiction,
   createPacketFixture,
-  fixtureTarget,
 } from './fixtures/packet-fixture.mjs';
 
 const tempRoots = [];

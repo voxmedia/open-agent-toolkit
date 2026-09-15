@@ -976,8 +976,7 @@ export function validateV2ProfileTopology(
     );
   }
   const conditionalRequired = stageIndexes.find(
-    ({ mode, indexes }) =>
-      indexes.length === 1 && waves[indexes[0]]?.conditional,
+    ({ indexes }) => indexes.length === 1 && waves[indexes[0]]?.conditional,
   );
   if (conditionalRequired) {
     errors.push(

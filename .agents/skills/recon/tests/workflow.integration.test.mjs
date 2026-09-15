@@ -49,12 +49,6 @@ const cheapTarget = {
   serviceTier: 'priority',
 };
 
-const strongerTerminalTarget = {
-  ...cheapTarget,
-  model: 'synthetic-judgment-worker',
-  effort: 'high',
-};
-
 const contradictionEvidenceTarget = {
   ...cheapTarget,
   route: 'agent-role:counterexample-search',

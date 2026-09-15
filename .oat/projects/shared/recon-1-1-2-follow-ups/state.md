@@ -37,6 +37,22 @@ oat_dispatch_policy:
   mode: managed
   policy: high
   source: project-state
+oat_phase_recovery_policy:
+  default_attempt_limit: 10
+  phase_attempt_limits: {}
+  phase_attempt_usage:
+    p01:
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: recovery-p01-001
+        original_request_id: impl-recon-112-p01-20260915-01
+        original_task_id: p01-t04
+        original_commit: d4515588242b502069bd7793bab7c9233c7a6c9a
+        discovered_by: pnpm lint
+        dispatch_target: oat-phase-implementer-gpt-5-6-sol-medium
+        reservation_head: c642f58c876492236ce985daf5394921e82358bf
+        status: completed
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
 oat_workflow_mode: lite # spec-driven | quick | import | lite
 oat_workflow_origin: native # native | imported
