@@ -1406,7 +1406,7 @@ printf 'artifact-read\\n'`,
       /Under autonomy, retry once\. If that\s+retry also fails, persist `skip\/failed_attempt` with a fresh state hash and\s+`failed_attempt_evidence` naming that run's project-relative failed\/incomplete\s+`manifest\.json` or `failure\.json`\./,
     );
     expect(content).toMatch(
-      /Before any lifecycle mutation, invoke\s+`oat-explainer-kit\/scripts\/check-terminal-outcome\.mjs` with the persisted\s+intent\./,
+      /Before any lifecycle mutation, invoke\s+`"\$RECAP_TERMINAL_GUARD"` with the\s+persisted intent\./,
     );
 
     const resolveIndex = normalizedContent.indexOf(
