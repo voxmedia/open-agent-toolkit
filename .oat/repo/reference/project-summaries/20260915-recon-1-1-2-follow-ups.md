@@ -139,3 +139,7 @@ target=claude-fable-skip-permissions threshold=important findings=critical:0,imp
 ### 2026-09-15 · structural · oat gate review · final
 
 target=claude-fable-skip-permissions threshold=important findings=critical:0,important:0,medium:0,minor:1 exit=0 status=ok artifact=.oat/projects/shared/recon-1-1-2-follow-ups/reviews/final-review-2026-09-15T070929Z.md run=9eec5f13-a6eb-4116-927b-8eb1278faed3
+
+### 2026-09-15 · structural · oat-project-complete · retirement-sweep
+
+Retirement sweep: no absorbed projects recorded.
