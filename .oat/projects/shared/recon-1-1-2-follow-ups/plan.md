@@ -682,6 +682,7 @@ git commit -m "docs(p01-t09): repair packet association contract"
 
 | Scope | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target                   |
 | ----- | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
+| p01   | code     | passed          | 2026-09-15 | reviews/code-p01-review-2026-09-15T055209Z.md               | f4c762af08f80c898c9f332960378bb95b478e94 | auto       | -                             |
 | p01   | code     | fixes_completed | 2026-09-15 | reviews/archived/code-p01-review-2026-09-15T053259Z.md      | 59b6241db737d331a9cc850c872c7546397a0030 | auto       | -                             |
 | final | code     | pending         | -          | -                                                           | -                                        | -          | -                             |
 | plan  | artifact | passed          | 2026-09-15 | structured-output                                           | -                                        | auto       | oat-reviewer-gpt-5-6-sol-high |
