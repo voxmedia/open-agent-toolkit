@@ -419,6 +419,17 @@ async function main(argv = process.argv.slice(2)) {
       'Manifest does not authorize controller:reconcile-ledger-v1',
     );
   }
+  const artifacts = manifest.artifacts ?? [];
+  if (
+    manifest.run.requestedProfile === 'thorough' &&
+    !artifacts.some(
+      (reference) => reference.path === 'reviews/redundant-verification.json',
+    )
+  ) {
+    throw new Error(
+      'Thorough reconciliation requires the redundant-verification review artifact',
+    );
+  }
   const packetRoot = dirname(manifestPath);
   const packetIdentity = await assertCanonicalRoot(packetRoot);
   await assertSafeExistingPath(packetRoot, resolve(options.manifest));
@@ -448,14 +459,12 @@ async function main(argv = process.argv.slice(2)) {
   const declaredReviews = [
     ...(declaration.requiredReviews ?? []),
     ...(declaration.conditionalReviews ?? []).filter((path) =>
-      (manifest.artifacts ?? []).some((reference) => reference.path === path),
+      artifacts.some((reference) => reference.path === path),
     ),
   ];
   const declaredReviewInputs = await Promise.all(
     declaredReviews.map(async (path) => {
-      const reference = (manifest.artifacts ?? []).find(
-        (artifact) => artifact.path === path,
-      );
+      const reference = artifacts.find((artifact) => artifact.path === path);
       if (!reference) {
         throw new Error(
           `Reconciliation review ${path} has no manifest artifact reference`,
@@ -485,7 +494,7 @@ async function main(argv = process.argv.slice(2)) {
   const priorLedger = JSON.parse(
     await readFile(resolvedInputs.get('input-ledger'), 'utf8'),
   );
-  const priorReference = (manifest.artifacts ?? []).find(
+  const priorReference = artifacts.find(
     (reference) => reference.path === declaration.inputLedger,
   );
   if (

@@ -974,6 +974,74 @@ test('controller reconciliation CLI enforces manifest paths and the exact review
   );
 });
 
+test('thorough reconciliation requires redundant verification before output', async () => {
+  const injectedRoots = await roots();
+  await runFakeRecon({ profile: 'thorough', roots: injectedRoots });
+  const script = resolve('.agents/skills/recon/scripts/reconcile-ledger.mjs');
+  const packet = injectedRoots.packetRoot;
+  const manifestPath = join(packet, 'manifest.json');
+  const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+  const completeManifest = structuredClone(manifest);
+  const outputLedger = join(packet, 'raw/drafts/claims-v2.json');
+  const outputReview = join(packet, 'reviews/reconciliation.json');
+  const reviewPaths = [
+    'reviews/semantic.json',
+    'reviews/adversarial.json',
+    'reviews/coverage.json',
+    'reviews/redundant-verification.json',
+    'reviews/contradiction-resolution.json',
+  ];
+  const argsFor = (reviews) => [
+    script,
+    '--manifest',
+    manifestPath,
+    '--input-ledger',
+    join(packet, 'raw/drafts/claims-v1.json'),
+    ...reviews.flatMap((path) => ['--review', join(packet, path)]),
+    '--output-ledger',
+    outputLedger,
+    '--output-review',
+    outputReview,
+  ];
+  const removeOutputs = () =>
+    Promise.all([
+      rm(outputLedger, { force: true }),
+      rm(outputReview, { force: true }),
+    ]);
+  const assertNoOutputs = async () => {
+    await assert.rejects(readFile(outputLedger));
+    await assert.rejects(readFile(outputReview));
+  };
+
+  manifest.artifacts = manifest.artifacts.filter(
+    ({ path }) => path !== 'reviews/redundant-verification.json',
+  );
+  await writeJson(manifestPath, manifest);
+  await removeOutputs();
+  const rejected = spawnSync(
+    process.execPath,
+    argsFor(
+      reviewPaths.filter(
+        (path) => path !== 'reviews/redundant-verification.json',
+      ),
+    ),
+    { encoding: 'utf8' },
+  );
+  assert.notEqual(rejected.status, 0);
+  assert.match(rejected.stderr, /thorough.*redundant-verification/i);
+  await assertNoOutputs();
+
+  await writeJson(manifestPath, completeManifest);
+  const accepted = spawnSync(process.execPath, argsFor(reviewPaths), {
+    encoding: 'utf8',
+  });
+  assert.equal(accepted.status, 0, accepted.stderr);
+  assert.equal(
+    JSON.parse(accepted.stdout).ledger.path,
+    'raw/drafts/claims-v2.json',
+  );
+});
+
 test('controller reconciliation rejects traversal and symlinked output parents before writing', async () => {
   const script = resolve('.agents/skills/recon/scripts/reconcile-ledger.mjs');
 
