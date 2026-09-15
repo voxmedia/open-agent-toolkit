@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t02
-oat_last_commit: 222ba6e9ecb4697d33dd5b4ada2ae4d5b33b9d74
+oat_current_task: p01-t03
+oat_last_commit: 783f925c9c0c3aad6939486a3e47c12621a0fd4b
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -95,7 +95,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Phase 1, task p01-t02
+Implementation — Phase 1, task p01-t03
 
 ## Artifacts
 
@@ -118,7 +118,8 @@ Implementation — Phase 1, task p01-t02
 - ✓ Both sub-threshold Medium plan findings resolved in their owning tasks
 - ✓ Lite plan marked complete and ready for implementation
 - ✓ p01-t01 completed: Cursor background launch and durable artifact precedence
-- ⧗ Phase 1 implementation continues at p01-t02
+- ✓ p01-t02 completed: realpath-safe bundled CLI entry detection
+- ⧗ Phase 1 implementation continues at p01-t03
 
 ## Blockers
 
