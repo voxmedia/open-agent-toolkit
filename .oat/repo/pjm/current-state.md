@@ -37,6 +37,17 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- CLI `0.2.76` (`oat-doctor-router`, PR #300) rewrites `oat-doctor` (2.0.0)
+  as a read-only router: one sweep over config, PJM, agent instructions, docs,
+  and tools from seven projected `--json` commands and four file checks, one
+  report grouped by area and severity, then dives that teach from the bundled
+  docs and `oat config describe` and offer the exact fix command or owning
+  skill. The skill may run only a fix command it just named, after explicit
+  approval; unattended runs end at the report. `oat config describe` carries a
+  structured `deprecated` field (`supersededBy`, `note`, `legacyValues`) on
+  deprecated keys. The hand-maintained key descriptions and pack manifest are
+  gone; a contract test binds the skill to the built CLI, every `pjm:*` check
+  id, and the cited docs.
 - CLI `0.2.74` (`agent-authored-recap`, lifecycle complete and archived; PR
   #299 open) replaces callback-driven Explainer Kit orchestration with one
   `bundle → host-agent author → verify → record` flow for project recaps,
