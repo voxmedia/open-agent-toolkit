@@ -1,7 +1,8 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - Lite exit gate exhausted its two configured attempts; the corrected plan requires an explicit gate reset or override before completion.
 oat_last_updated: 2026-09-15
 oat_current_task_id: p01-t01
 oat_generated: false
@@ -117,6 +118,33 @@ implementation tasks were corrected directly.
 
 **Next:** Re-run the configured `oat-project-lite` artifact gate.
 
+### Review Received: plan (gate attempt 2)
+
+**Date:** 2026-09-15
+**Review artifact:**
+`reviews/archived/artifact-plan-review-2026-09-15T043825Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 1
+- Minor: 0
+
+**Artifact edits applied:** 2
+
+- Added the tracked Codex worker projection, explicit project-scoped sync, and
+  post-sync provider-view stability checks to p01-t05.
+- Replaced the unchanged lockfile with the generated public-package version
+  asset in the task's file and commit contracts.
+
+**New tasks added:** none; both findings were resolved directly in the existing
+p01-t05 release-surface task.
+
+**Next:** The plan is corrected but the blocking Lite gate exhausted its two
+configured attempts. Do not mark the plan complete until an operator explicitly
+resets or overrides that gate boundary.
+
 **Decisions:**
 
 - Use both canonical `is_background` frontmatter and recon launch prose.
@@ -125,7 +153,7 @@ implementation tasks were corrected directly.
 - Replace the two-output reconciliation worker ambiguity with one deterministic
   controller stage.
 
-**Blockers:** none
+**Blockers:** Lite exit gate exhausted its two configured attempts.
 
 ## Deviations from Plan / Design
 

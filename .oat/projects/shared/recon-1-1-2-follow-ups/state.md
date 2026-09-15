@@ -1,7 +1,8 @@
 ---
 oat_current_task: null
 oat_last_commit: null
-oat_blockers: []
+oat_blockers:
+  - Lite exit gate exhausted its two configured attempts; the corrected plan requires an explicit gate reset or override before completion.
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -83,7 +84,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-15T02:47:32.316Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-15T04:30:10Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-15T04:42:10Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -112,12 +113,15 @@ Plan - Authoring a single-phase lite plan
 - ✓ Structured plan review passed after one bounded revision
 - ✓ User-scoped Lite exit gate configured to match Quick Start
 - ✓ First Lite gate review received; all seven plan findings resolved
-- ⧗ Awaiting Lite exit-gate re-review
+- ✓ Second Lite gate review received; both additional plan findings resolved
+- ⛔ Lite exit gate exhausted its two configured attempts before a passing run
 
 ## Blockers
 
-None
+The corrected plan requires an explicit gate reset or override before the Lite
+workflow can mark it complete.
 
 ## Next Milestone
 
-Run and receive the configured Lite plan exit gate
+Resolve the exhausted Lite exit-gate boundary; then rerun the gate or explicitly
+override it before implementation handoff.

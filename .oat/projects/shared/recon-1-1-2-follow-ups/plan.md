@@ -2,7 +2,8 @@
 oat_template: true
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - Lite exit gate exhausted its two configured attempts; the corrected plan requires an explicit gate reset or override before completion.
 oat_last_updated: 2026-09-15
 oat_phase: plan
 oat_phase_status: in_progress
@@ -449,6 +450,7 @@ git commit -m "refactor(p01-t04): make recon reconciliation controller-owned"
 
 - Modify: `.agents/skills/recon/SKILL.md`
 - Modify: `.agents/agents/recon-worker.md`
+- Modify: `.codex/agents/recon-worker.toml`
 - Modify: `apps/oat-docs/docs/workflows/skills/recon.md`
 - Modify: `.oat/repo/pjm/triage/2026-09-14-recon-1-1-2-feedback.md`
 - Modify: `packages/cli/package.json`
@@ -457,7 +459,7 @@ git commit -m "refactor(p01-t04): make recon reconciliation controller-owned"
 - Modify: `packages/docs-theme/package.json`
 - Modify: `packages/docs-transforms/package.json`
 - Modify: `packages/cli/src/validation/skills.test.ts`
-- Modify: `pnpm-lock.yaml`
+- Modify: `packages/cli/assets/public-package-versions.json`
 
 **Implementation and Proof Strategy:**
 
@@ -477,8 +479,12 @@ precedence; shared CLI entry helper; exact excerpts without locator repair;
 worker self-validation without controller retry; live Cursor discovery remains
 volatile; and reconciliation is controller-owned. Bump recon once from 1.1.2,
 recon-worker once from 1.0.1, and all five public packages in lockstep above
-`origin/main`; update the CLI validation version pin; refresh the lockfile and
-bundled assets through documented commands. Set the triage record to
+`origin/main`; update the CLI validation version pin; regenerate
+`packages/cli/assets/public-package-versions.json` through `pnpm build`. Run
+`pnpm run cli -- sync --scope project` to refresh the tracked Codex projection
+without mutating user-scope views, and include
+`.codex/agents/recon-worker.toml` in the commit. The `.claude` and `.cursor`
+generic views are symlinks and need no regeneration. Set the triage record to
 `status: approved`, keep `triage_pr: null` until a PR exists, mark every claim
 as approved by the user on 2026-09-14 for direct implementation by this Lite
 project, and leave each post-merge result pending until merge. Create no new
@@ -492,13 +498,16 @@ context in the triage record.
 Run:
 `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts && pnpm oat:validate-skills && pnpm run check:skill-bumps && pnpm release:check-versions && pnpm release:validate && pnpm build:docs`
 Expected: canonical and packaged assets agree, required version bumps are
-present, release dry-run validation passes, and public docs build.
+present, release dry-run validation passes, and public docs build. After the
+first project-scoped sync, `git status --porcelain .codex .cursor .claude`
+shows only the expected tracked `.codex/agents/recon-worker.toml` update; a
+second sync produces no further provider-view diff.
 
 **Step 3: Refactor and format**
 
 Remove superseded triage recommendations instead of preserving alternatives.
 Run:
-`pnpm exec oxfmt --write .agents/skills/recon/SKILL.md .agents/agents/recon-worker.md apps/oat-docs/docs/workflows/skills/recon.md .oat/repo/pjm/triage/2026-09-14-recon-1-1-2-feedback.md packages/cli/src/validation/skills.test.ts packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json`
+`pnpm exec oxfmt --write .agents/skills/recon/SKILL.md .agents/agents/recon-worker.md apps/oat-docs/docs/workflows/skills/recon.md .oat/repo/pjm/triage/2026-09-14-recon-1-1-2-feedback.md packages/cli/src/validation/skills.test.ts packages/cli/assets/public-package-versions.json packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json`
 
 **Step 4: Verify**
 
@@ -515,8 +524,10 @@ tests where Turborepo reports a cache replay.
 **Step 5: Commit**
 
 ```bash
-git add -- .agents/skills/recon/SKILL.md .agents/agents/recon-worker.md apps/oat-docs/docs/workflows/skills/recon.md .oat/repo/pjm/triage/2026-09-14-recon-1-1-2-feedback.md packages/cli/src/validation/skills.test.ts packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml
+git add -- .agents/skills/recon/SKILL.md .agents/agents/recon-worker.md .codex/agents/recon-worker.toml apps/oat-docs/docs/workflows/skills/recon.md .oat/repo/pjm/triage/2026-09-14-recon-1-1-2-feedback.md packages/cli/src/validation/skills.test.ts packages/cli/assets/public-package-versions.json packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json
 git commit -m "chore(p01-t05): align recon release surfaces"
+pnpm run cli -- sync --scope project
+test -z "$(git status --porcelain .codex .cursor .claude)"
 ```
 
 ---
@@ -529,7 +540,7 @@ git commit -m "chore(p01-t05): align recon release surfaces"
 | final | code     | pending  | -          | -                                                           | -             | -          | -                             |
 | plan  | artifact | passed   | 2026-09-15 | structured-output                                           | -             | auto       | oat-reviewer-gpt-5-6-sol-high |
 | plan  | artifact | received | 2026-09-15 | reviews/archived/artifact-plan-review-2026-09-15T042341Z.md | -             | -          | -                             |
-| plan  | artifact | received | 2026-09-15 | reviews/artifact-plan-review-2026-09-15T043825Z.md          | -             | -          | -                             |
+| plan  | artifact | received | 2026-09-15 | reviews/archived/artifact-plan-review-2026-09-15T043825Z.md | -             | -          | -                             |
 
 ## Implementation Complete
 
