@@ -148,14 +148,15 @@ Deliverable: the rewritten skill, its contract test, the two docs pages, live ve
 
 {Keep both code + artifact rows below. Add additional code rows as needed, but do not delete existing rows.}
 
-| Scope  | Type     | Status          | Date       | Artifact                                                 | Reviewed Head                            | Invocation | Gate Target |
-| ------ | -------- | --------------- | ---------- | -------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
-| p01    | code     | pending         | -          | -                                                        | -                                        | -          | -           |
-| p02    | code     | pending         | -          | -                                                        | -                                        | -          | -           |
-| final  | code     | fixes_completed | 2026-09-15 | reviews/archived/code-final-review-2026-09-15T034718Z.md | 6540d08f9fab48ca7fa642ffdc1df2da1cdf72c9 | manual     | -           |
-| design | artifact | pending         | -          | -                                                        | -                                        | -          | -           |
-| plan   | artifact | fixes_completed | 2026-09-14 | - (structured, in-memory, round 1)                       | -                                        | manual     | -           |
-| plan   | artifact | fixes_completed | 2026-09-14 | - (structured, in-memory, round 2)                       | -                                        | manual     | -           |
+| Scope  | Type     | Status          | Date       | Artifact                                                 | Reviewed Head                            | Invocation | Gate Target              |
+| ------ | -------- | --------------- | ---------- | -------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------------ |
+| p01    | code     | pending         | -          | -                                                        | -                                        | -          | -                        |
+| p02    | code     | pending         | -          | -                                                        | -                                        | -          | -                        |
+| final  | code     | fixes_completed | 2026-09-15 | reviews/archived/code-final-review-2026-09-15T034718Z.md | 6540d08f9fab48ca7fa642ffdc1df2da1cdf72c9 | manual     | -                        |
+| final  | code     | received        | 2026-09-15 | reviews/final-review-2026-09-15T041753Z.md               | 14e315152e0c86f1860eb72f2f87ac9b91dd97f6 | gate       | cursor-gpt-5-6-sol-xhigh |
+| design | artifact | pending         | -          | -                                                        | -                                        | -          | -                        |
+| plan   | artifact | fixes_completed | 2026-09-14 | - (structured, in-memory, round 1)                       | -                                        | manual     | -                        |
+| plan   | artifact | fixes_completed | 2026-09-14 | - (structured, in-memory, round 2)                       | -                                        | manual     | -                        |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
