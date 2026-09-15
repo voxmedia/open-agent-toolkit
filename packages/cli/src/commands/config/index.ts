@@ -63,6 +63,7 @@ import {
   writeOatConfig,
   writeOatLocalConfig,
   writeUserConfig,
+  VALID_POST_IMPLEMENT_LEGACY_SEQUENCES,
 } from '@config/oat-config';
 import { getOwnKey, setOwnKey } from '@config/own-keys';
 import {
@@ -191,6 +192,14 @@ interface ConfigValue {
   source: ResolvedConfigSource;
 }
 
+interface ConfigCatalogDeprecation {
+  /** The key (or the same key's structured form) that replaces this one. */
+  supersededBy: string;
+  note?: string;
+  /** For keys deprecated only in a legacy value form: the legacy values. */
+  legacyValues?: readonly string[];
+}
+
 interface ConfigCatalogEntry {
   key: string;
   group: string;
@@ -201,6 +210,13 @@ interface ConfigCatalogEntry {
   mutability: string;
   owningCommand: string;
   description: string;
+  /**
+   * Machine-readable deprecation. Every entry whose description carries one
+   * of the catalog's deprecation phrasings must set this; the describe tests
+   * keep the prose and the field in step so oat-doctor can read a field
+   * instead of scanning prose.
+   */
+  deprecated?: ConfigCatalogDeprecation;
 }
 
 const PJM_REMOTE_PROVIDERS = ['github', 'linear', 'jira'] as const;
@@ -443,6 +459,7 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     owningCommand: 'oat config set autoReviewAtCheckpoints <true|false>',
     description:
       'Deprecated compatibility alias for workflow.autoReviewAtHillCheckpoints. Prefer `oat config set workflow.autoReviewAtHillCheckpoints <true|false>`.',
+    deprecated: { supersededBy: 'workflow.autoReviewAtHillCheckpoints' },
   },
   {
     key: 'documentation.root',
@@ -702,6 +719,7 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
       'oat config set explainers.defaults.palette <value> [--local|--shared|--user]',
     description:
       'Deprecated nullable compatibility selection for a named color palette; prefer explainers.defaults.style.',
+    deprecated: { supersededBy: 'explainers.defaults.style' },
   },
   {
     key: 'explainers.defaults.visualProfile',
@@ -715,6 +733,7 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
       'oat config set explainers.defaults.visualProfile <value> [--local|--shared|--user]',
     description:
       'Deprecated nullable compatibility selection for a named visual profile; prefer explainers.defaults.style.',
+    deprecated: { supersededBy: 'explainers.defaults.style' },
   },
   {
     key: 'explainers.defaults.themeBundlePath',
@@ -861,6 +880,12 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
       "oat config set workflow.postImplementSequence '<legacy-or-json>'",
     description:
       'Default post-implementation chaining. Legacy strings remain supported unchanged. Structured JSON uses {"preApproval":[...],"postApproval":[...]} with the canonical sequence steps. Plain get/list/dump output serializes structured values as compact JSON; get --json preserves the object value. When unset, the skill prompts. Resolution: local > shared > user > default.',
+    deprecated: {
+      supersededBy:
+        'workflow.postImplementSequence (structured {preApproval, postApproval})',
+      note: 'legacy string values only',
+      legacyValues: VALID_POST_IMPLEMENT_LEGACY_SEQUENCES,
+    },
   },
   {
     key: 'workflow.retro.filing.repo',
@@ -1024,6 +1049,10 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     owningCommand: 'oat config set workflow.dispatchCeiling.preset <value>',
     description:
       'Legacy compatibility alias for capped managed dispatch policies. Provider-neutral ceiling preset that compiles to concrete per-provider values at write time. balanced → Codex: high, Claude: sonnet; maximum → Codex: xhigh, Claude: opus; cost-conscious → Codex: medium, Claude: sonnet. Preset provenance only; runtime dispatch reads concrete providers values. Resolution: local > shared > user > default.',
+    deprecated: {
+      supersededBy: 'workflow.dispatchCeiling.providers.codex',
+      note: 'and workflow.dispatchCeiling.providers.claude; the preset compiles to these per-provider values',
+    },
   },
   {
     key: 'workflow.dispatchPolicy.mode',
@@ -3410,6 +3439,11 @@ function formatCatalogDetails(entries: ConfigCatalogEntry[]): string {
         `Mutability: ${entry.mutability}`,
         `Owning command: ${entry.owningCommand}`,
         `Description: ${entry.description}`,
+        ...(entry.deprecated
+          ? [
+              `Deprecated: prefer ${entry.deprecated.supersededBy}${entry.deprecated.note ? ` (${entry.deprecated.note})` : ''}`,
+            ]
+          : []),
       ].join('\n'),
     )
     .join('\n\n');
