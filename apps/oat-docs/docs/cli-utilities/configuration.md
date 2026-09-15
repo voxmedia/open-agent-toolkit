@@ -54,7 +54,9 @@ What each command is for:
 - `oat config set <key> <value>` updates supported shared or repo-local keys.
 - `oat config unset <key>` removes a supported key from one surface, using the same `--shared`/`--local`/`--user` flags and per-key restrictions as `set`. The resolved value then falls back to the next surface down, or to the built-in default. A key the surface does not hold exits 0 as already-unset (`--json` adds a `removed` boolean to tell the two apart). Unknown keys, lifecycle state, `tools.*` pack intent, aggregate read views, read-only remote-policy structure, and environment-shadowed keys with nothing stored are refused with exit 1 — see [CLI Reference](../reference/cli-reference.md#oat-config-surface-flags).
 - `oat config describe` shows the supported config catalog across shared repo, repo-local, user, and sync/provider surfaces.
-- `oat config describe <key>` shows file, scope, default, mutability, owning command, and description for one key.
+- `oat config describe <key>` shows file, scope, default, mutability, owning command, and description for one key. A deprecated key also prints `Deprecated: prefer <successor>`, and `--json` carries the same fact as a `deprecated` object (`supersededBy`, plus `note` and `legacyValues` where they apply).
+
+For a guided pass instead of individual commands, run the `/oat-doctor` skill (core pack). It sweeps every config surface read-only, flags stale `activeProject` / `lastPausedProject` pointers, keys set on the wrong surface, and deprecated values, then walks each key group you have not set: what it does, when you would want it, and which surface owns it. It offers the exact `oat config` command for each fix and runs one only after you approve it. See [Config and Local State](config-and-local-state.md#internal-helpers-and-diagnostics) for the other areas it covers.
 
 ### Source labels
 

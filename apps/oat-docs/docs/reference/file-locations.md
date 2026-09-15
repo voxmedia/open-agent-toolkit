@@ -62,7 +62,7 @@ Pack intent is stored per scope:
 Config discovery via CLI:
 
 - `oat config describe` lists the supported config surfaces and keys across `.oat/config.json`, `.oat/config.local.json`, `~/.oat/config.json`, `.oat/sync/config.json`, and `~/.oat/sync/config.json`.
-- `oat config describe <key>` shows file location, scope, default, mutability, and the owning command for one key.
+- `oat config describe <key>` shows file location, scope, default, mutability, and the owning command for one key, and for a deprecated key its successor.
 - `oat config list` shows the currently resolved values for the repo-local/shared command surface.
 
 Config ownership note:
