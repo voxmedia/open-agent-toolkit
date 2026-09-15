@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-15
-oat_current_task_id: p01-t03
+oat_current_task_id: p01-t04
 oat_generated: false
 ---
 
@@ -22,9 +22,9 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 5     | 2/5       |
+| Phase 1 | in_progress | 5     | 3/5       |
 
-**Total:** 2/5 tasks completed
+**Total:** 3/5 tasks completed
 
 ## Phase 1: Simplify and harden recon execution
 
@@ -56,12 +56,12 @@ oat_generated: false
 
 ### Task p01-t03: Close worker excerpt and review-result schemas
 
-**Status:** in_progress
-**Commit:** -
+**Status:** complete
+**Commit:** c00509e3982c335a99eda7e60e6c649bb7fe4774
 
 ### Task p01-t04: Move reconciliation to one deterministic controller stage
 
-**Status:** pending
+**Status:** in_progress
 **Commit:** -
 
 ### Task p01-t05: Align docs, triage disposition, and release metadata
@@ -85,8 +85,8 @@ _No implementation run has started._
 
 - [x] p01-t01: Make Cursor background launch and artifact completion explicit (`222ba6e9e`)
 - [x] p01-t02: Make recon CLI entry detection realpath-safe (`783f925c9`)
-- [ ] p01-t03: Close worker excerpt and review-result schemas (in progress)
-- [ ] p01-t04: Move reconciliation to one deterministic controller stage
+- [x] p01-t03: Close worker excerpt and review-result schemas (`c00509e39`)
+- [ ] p01-t04: Move reconciliation to one deterministic controller stage (in progress)
 - [ ] p01-t05: Align docs, triage disposition, and release metadata
 
 ### Review Received: plan
