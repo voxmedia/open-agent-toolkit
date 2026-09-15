@@ -44,6 +44,10 @@ Entries are chronological and append-only.
 
 target=claude-fable-skip-permissions threshold=important findings=critical:0,important:2,medium:3,minor:2 exit=1 status=blocked artifact=.oat/projects/shared/recon-1-1-2-follow-ups/reviews/artifact-plan-review-2026-09-15T042341Z.md run=928567ff-e70a-4d5a-b2cc-4d208e621edf
 
+### 2026-09-15 · structural · oat gate review · plan
+
+target=claude-fable-skip-permissions threshold=important findings=critical:0,important:1,medium:1,minor:0 exit=1 status=blocked artifact=.oat/projects/shared/recon-1-1-2-follow-ups/reviews/artifact-plan-review-2026-09-15T043825Z.md run=f0f323e4-a4a0-4513-b19e-8eaf638b3464
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
