@@ -90,9 +90,10 @@ repair or a controller retry state machine.
   prose but no closed JSON examples; and the terminal `reconcile` worker is
   authorized for one artifact even though `reconcileLedger()` returns both a
   ledger and reconciliation result.
-- **Proposed changes:** preserve Cursor's existing generic frontmatter
-  projection in `packages/cli/src/providers/cursor/codec/materialize.ts` and
-  prove the canonical role's `is_background` field survives it. Centralize
+- **Proposed changes:** prove model-pinned Cursor materialization in
+  `packages/cli/src/providers/cursor/codec/materialize.ts` preserves the
+  canonical role's `is_background: true`; the generic Cursor view is a symlink
+  and needs no projection. Centralize
   realpath-aware direct-execution detection under
   `.agents/skills/recon/scripts/lib/`. Tighten closed-schema validation and
   worker instructions. Remove `reconcile` from the worker vocabulary and from
@@ -143,9 +144,9 @@ repair or a controller retry state machine.
 
 ## Validation Criteria
 
-- [ ] `pnpm exec vitest run packages/cli/src/providers/cursor/codec/materialize.test.ts && node --test .agents/skills/recon/tests/skill-contract.test.mjs` proves canonical and materialized Cursor recon workers retain `is_background: true` and both custom and generic fallback routes require background launch.
+- [ ] `pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/cursor/codec/materialize.test.ts && node --test .agents/skills/recon/tests/skill-contract.test.mjs` proves canonical and model-pinned materialized Cursor recon workers retain `is_background: true`, both custom and generic fallback routes require background launch, and a materialized role file is not treated as live Task-catalog evidence.
 - [ ] `node --test .agents/skills/recon/tests/workflow.integration.test.mjs` proves a post-write stream-close completes only for a valid approved-path artifact, invalid output remains `PASS_FAILED`, and neither case relaunches.
-- [ ] `node --test .agents/skills/recon/tests/cli-entry.test.mjs` proves canonical and symlink invocations of all five bundled CLIs reject the reproduced exit-zero/no-output failure.
+- [ ] `node --test .agents/skills/recon/tests/cli-entry.test.mjs` proves canonical and symlink invocations of every bundled CLI, including `reconcile-ledger.mjs`, reject the reproduced exit-zero/no-output failure.
 - [ ] `node --test .agents/skills/recon/tests/integrity-contracts.test.mjs .agents/skills/recon/tests/packet-validation.test.mjs .agents/skills/recon/tests/skill-contract.test.mjs` proves paraphrased excerpts and non-string `unresolvedIssues` fail while valid excerpts and every remaining review example pass.
 - [ ] `node --test .agents/skills/recon/tests/routing-contracts.test.mjs .agents/skills/recon/tests/routing-preview.test.mjs .agents/skills/recon/tests/workflow.integration.test.mjs` proves routing dispatches no reconciliation worker and one controller stage safely promotes two named outputs.
 - [ ] `node --test .agents/skills/recon/tests/*.test.mjs` proves the complete recon regression suite passes.
@@ -185,12 +186,15 @@ custom and generic Cursor background prose, and valid-artifact-over-stream
 precedence. Then add `is_background: true`, require all Cursor recon launches to
 be background, explain parent-turn interruption, and make approved-path
 validation authoritative over a later transport error while retaining terminal
-failure and no-replacement behavior for invalid output.
+failure and no-replacement behavior for invalid output. State explicitly that a
+materialized `.cursor/agents/recon-worker.md` file is not evidence that the
+current Cursor Task catalog can launch that role; routing uses the observed live
+catalog and retains the pre-approved generic fallback when the role is absent.
 
 **Step 2: Prove**
 
 Run:
-`pnpm exec vitest run packages/cli/src/providers/cursor/codec/materialize.test.ts && node --test .agents/skills/recon/tests/skill-contract.test.mjs .agents/skills/recon/tests/workflow.integration.test.mjs`
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/cursor/codec/materialize.test.ts && node --test .agents/skills/recon/tests/skill-contract.test.mjs .agents/skills/recon/tests/workflow.integration.test.mjs`
 Expected: the background assertions and both stream-close controls pass; removing
 the background field or precedence rule makes the focused test fail.
 
@@ -203,7 +207,7 @@ recon's required outcome. Run:
 **Step 4: Verify**
 
 Run:
-`pnpm exec vitest run packages/cli/src/providers/cursor/codec/materialize.test.ts && node --test .agents/skills/recon/tests/skill-contract.test.mjs .agents/skills/recon/tests/workflow.integration.test.mjs`
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/cursor/codec/materialize.test.ts && node --test .agents/skills/recon/tests/skill-contract.test.mjs .agents/skills/recon/tests/workflow.integration.test.mjs`
 Expected: no errors.
 
 **Step 5: Commit**
@@ -353,6 +357,8 @@ git commit -m "fix(p01-t03): close recon worker output contracts"
 - Modify: `.agents/skills/recon/tests/routing-preview.test.mjs`
 - Modify: `.agents/skills/recon/tests/skill-contract.test.mjs`
 - Modify: `.agents/skills/recon/tests/workflow.integration.test.mjs`
+- Modify: `.agents/skills/recon/tests/cli-entry.test.mjs`
+- Modify: `packages/cli/src/validation/skills.test.ts`
 
 **Implementation and Proof Strategy:**
 
@@ -386,6 +392,10 @@ node reconcile-ledger.mjs \
   --output-review "$PACKET_ROOT/reviews/reconciliation.json"
 ```
 
+Its direct-entry guard uses the shared realpath-aware
+`scripts/lib/cli-entry.mjs` helper introduced by p01-t02, and the symlink
+subprocess matrix covers this sixth executable.
+
 The controller adds only manifest-declared completed conditional review paths.
 The CLI rejects path or review-set drift before writing, calls
 `reconcileLedger()` once, writes both candidates, and returns their references.
@@ -401,29 +411,33 @@ than a target escalation.
 **Step 2: Prove**
 
 Run:
-`node --test .agents/skills/recon/tests/routing-contracts.test.mjs .agents/skills/recon/tests/routing-preview.test.mjs .agents/skills/recon/tests/conditional-routing.test.mjs .agents/skills/recon/tests/packet-validation.test.mjs .agents/skills/recon/tests/workflow.integration.test.mjs`
+`node --test .agents/skills/recon/tests/cli-entry.test.mjs .agents/skills/recon/tests/routing-contracts.test.mjs .agents/skills/recon/tests/routing-preview.test.mjs .agents/skills/recon/tests/conditional-routing.test.mjs .agents/skills/recon/tests/packet-validation.test.mjs .agents/skills/recon/tests/workflow.integration.test.mjs && pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`
 Expected: approval previews contain no reconciliation worker target; valid
 packets preserve reconciliation audit and ledger invariants; forged controller
 identity, manifest path/review drift, missing, swapped, tampered, or partially
-promoted outputs fail closed. Removing the controller stage makes the positive
-workflow control fail.
+promoted outputs fail closed; canonical and symlink invocation reach the new
+controller CLI; and the CLI validation suite pins the new
+`controller:reconcile-ledger-v1` wording. Removing the controller stage makes
+the positive workflow control fail.
 
 **Step 3: Refactor and format**
 
 Delete obsolete routing and worker branches instead of adding compatibility
 aliases. Run:
-`pnpm exec oxfmt --write .agents/agents/recon-worker.md .agents/skills/recon/SKILL.md .agents/skills/recon/references/profiles.md .agents/skills/recon/references/worker-contract.md .agents/skills/recon/references/packet-contract.md .agents/skills/recon/scripts/lib/contracts.mjs .agents/skills/recon/scripts/lib/routing.mjs .agents/skills/recon/scripts/lib/validated-run.mjs .agents/skills/recon/scripts/reconcile-ledger.mjs .agents/skills/recon/scripts/validate-packet.mjs .agents/skills/recon/tests/fixtures/packet-fixture.mjs .agents/skills/recon/tests/helpers/fake-recon-run.mjs .agents/skills/recon/tests/conditional-routing.test.mjs .agents/skills/recon/tests/integrity-contracts.test.mjs .agents/skills/recon/tests/packet-validation.test.mjs .agents/skills/recon/tests/render-packet.test.mjs .agents/skills/recon/tests/routing-contracts.test.mjs .agents/skills/recon/tests/routing-preview.test.mjs .agents/skills/recon/tests/skill-contract.test.mjs .agents/skills/recon/tests/workflow.integration.test.mjs`
+`pnpm exec oxfmt --write .agents/agents/recon-worker.md .agents/skills/recon/SKILL.md .agents/skills/recon/references/profiles.md .agents/skills/recon/references/worker-contract.md .agents/skills/recon/references/packet-contract.md .agents/skills/recon/scripts/lib/contracts.mjs .agents/skills/recon/scripts/lib/routing.mjs .agents/skills/recon/scripts/lib/validated-run.mjs .agents/skills/recon/scripts/reconcile-ledger.mjs .agents/skills/recon/scripts/validate-packet.mjs .agents/skills/recon/tests/fixtures/packet-fixture.mjs .agents/skills/recon/tests/helpers/fake-recon-run.mjs .agents/skills/recon/tests/cli-entry.test.mjs .agents/skills/recon/tests/conditional-routing.test.mjs .agents/skills/recon/tests/integrity-contracts.test.mjs .agents/skills/recon/tests/packet-validation.test.mjs .agents/skills/recon/tests/render-packet.test.mjs .agents/skills/recon/tests/routing-contracts.test.mjs .agents/skills/recon/tests/routing-preview.test.mjs .agents/skills/recon/tests/skill-contract.test.mjs .agents/skills/recon/tests/workflow.integration.test.mjs packages/cli/src/validation/skills.test.ts`
 
 **Step 4: Verify**
 
-Run: `node --test .agents/skills/recon/tests/*.test.mjs`
-Expected: all recon tests pass with one controller reconciliation and no
-reconciliation worker dispatch.
+Run:
+`node --test .agents/skills/recon/tests/*.test.mjs && pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`
+Expected: all recon and CLI validation tests pass with one controller
+reconciliation, no reconciliation worker dispatch, and realpath-safe direct
+execution for all six bundled CLIs.
 
 **Step 5: Commit**
 
 ```bash
-git add -- .agents/agents/recon-worker.md .agents/skills/recon/SKILL.md .agents/skills/recon/references/profiles.md .agents/skills/recon/references/worker-contract.md .agents/skills/recon/references/packet-contract.md .agents/skills/recon/scripts/lib/contracts.mjs .agents/skills/recon/scripts/lib/routing.mjs .agents/skills/recon/scripts/lib/validated-run.mjs .agents/skills/recon/scripts/reconcile-ledger.mjs .agents/skills/recon/scripts/validate-packet.mjs .agents/skills/recon/tests
+git add -- .agents/agents/recon-worker.md .agents/skills/recon/SKILL.md .agents/skills/recon/references/profiles.md .agents/skills/recon/references/worker-contract.md .agents/skills/recon/references/packet-contract.md .agents/skills/recon/scripts/lib/contracts.mjs .agents/skills/recon/scripts/lib/routing.mjs .agents/skills/recon/scripts/lib/validated-run.mjs .agents/skills/recon/scripts/reconcile-ledger.mjs .agents/skills/recon/scripts/validate-packet.mjs .agents/skills/recon/tests packages/cli/src/validation/skills.test.ts
 git commit -m "refactor(p01-t04): make recon reconciliation controller-owned"
 ```
 
@@ -442,6 +456,7 @@ git commit -m "refactor(p01-t04): make recon reconciliation controller-owned"
 - Modify: `packages/docs-config/package.json`
 - Modify: `packages/docs-theme/package.json`
 - Modify: `packages/docs-transforms/package.json`
+- Modify: `packages/cli/src/validation/skills.test.ts`
 - Modify: `pnpm-lock.yaml`
 
 **Implementation and Proof Strategy:**
@@ -462,13 +477,20 @@ precedence; shared CLI entry helper; exact excerpts without locator repair;
 worker self-validation without controller retry; live Cursor discovery remains
 volatile; and reconciliation is controller-owned. Bump recon once from 1.1.2,
 recon-worker once from 1.0.1, and all five public packages in lockstep above
-`origin/main`; refresh the lockfile and bundled assets through documented
-commands.
+`origin/main`; update the CLI validation version pin; refresh the lockfile and
+bundled assets through documented commands. Set the triage record to
+`status: approved`, keep `triage_pr: null` until a PR exists, mark every claim
+as approved by the user on 2026-09-14 for direct implementation by this Lite
+project, and leave each post-merge result pending until merge. Create no new
+consolidated backlog item: this project now owns the accepted work directly.
+Leave `BL-260906-harden-dispatch-launch` and
+`BL-260719-add-pinned-recon-agents` unchanged and retain them only as related
+context in the triage record.
 
 **Step 2: Prove**
 
 Run:
-`pnpm oat:validate-skills && pnpm run check:skill-bumps && pnpm release:check-versions && pnpm release:validate && pnpm build:docs`
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts && pnpm oat:validate-skills && pnpm run check:skill-bumps && pnpm release:check-versions && pnpm release:validate && pnpm build:docs`
 Expected: canonical and packaged assets agree, required version bumps are
 present, release dry-run validation passes, and public docs build.
 
@@ -476,12 +498,14 @@ present, release dry-run validation passes, and public docs build.
 
 Remove superseded triage recommendations instead of preserving alternatives.
 Run:
-`pnpm exec oxfmt --write .agents/skills/recon/SKILL.md .agents/agents/recon-worker.md apps/oat-docs/docs/workflows/skills/recon.md .oat/repo/pjm/triage/2026-09-14-recon-1-1-2-feedback.md packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml`
+`pnpm exec oxfmt --write .agents/skills/recon/SKILL.md .agents/agents/recon-worker.md apps/oat-docs/docs/workflows/skills/recon.md .oat/repo/pjm/triage/2026-09-14-recon-1-1-2-feedback.md packages/cli/src/validation/skills.test.ts packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json`
 
 **Step 4: Verify**
 
-Run the definition-of-done gates in repository order, capturing each exit code:
-`pnpm check`; `pnpm type-check`; `pnpm test`; `pnpm build`;
+First run the affected version-and-wording regression:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`.
+Then run the definition-of-done gates in repository order, capturing each exit
+code: `pnpm check`; `pnpm type-check`; `pnpm test`; `pnpm build`;
 `pnpm run check:skill-bumps`; `pnpm release:check-versions` after fetching
 `origin/main`; `pnpm release:validate`; `pnpm build:docs`. Then run the affected
 ungated surfaces: `pnpm lint` and `pnpm format`.
@@ -491,7 +515,7 @@ tests where Turborepo reports a cache replay.
 **Step 5: Commit**
 
 ```bash
-git add -- .agents/skills/recon/SKILL.md .agents/agents/recon-worker.md apps/oat-docs/docs/workflows/skills/recon.md .oat/repo/pjm/triage/2026-09-14-recon-1-1-2-feedback.md packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml
+git add -- .agents/skills/recon/SKILL.md .agents/agents/recon-worker.md apps/oat-docs/docs/workflows/skills/recon.md .oat/repo/pjm/triage/2026-09-14-recon-1-1-2-feedback.md packages/cli/src/validation/skills.test.ts packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml
 git commit -m "chore(p01-t05): align recon release surfaces"
 ```
 
@@ -499,12 +523,12 @@ git commit -m "chore(p01-t05): align recon release surfaces"
 
 ## Reviews
 
-| Scope | Type     | Status   | Date       | Artifact                                           | Reviewed Head | Invocation | Gate Target                   |
-| ----- | -------- | -------- | ---------- | -------------------------------------------------- | ------------- | ---------- | ----------------------------- |
-| p01   | code     | pending  | -          | -                                                  | -             | -          | -                             |
-| final | code     | pending  | -          | -                                                  | -             | -          | -                             |
-| plan  | artifact | passed   | 2026-09-15 | structured-output                                  | -             | auto       | oat-reviewer-gpt-5-6-sol-high |
-| plan  | artifact | received | 2026-09-15 | reviews/artifact-plan-review-2026-09-15T042341Z.md | -             | -          | -                             |
+| Scope | Type     | Status   | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target                   |
+| ----- | -------- | -------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ----------------------------- |
+| p01   | code     | pending  | -          | -                                                           | -             | -          | -                             |
+| final | code     | pending  | -          | -                                                           | -             | -          | -                             |
+| plan  | artifact | passed   | 2026-09-15 | structured-output                                           | -             | auto       | oat-reviewer-gpt-5-6-sol-high |
+| plan  | artifact | received | 2026-09-15 | reviews/archived/artifact-plan-review-2026-09-15T042341Z.md | -             | -          | -                             |
 
 ## Implementation Complete
 

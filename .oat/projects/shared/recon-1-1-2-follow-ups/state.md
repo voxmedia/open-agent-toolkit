@@ -83,7 +83,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-15T02:47:32.316Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-15T04:18:20Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-15T04:30:10Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -111,7 +111,8 @@ Plan - Authoring a single-phase lite plan
 - ✓ High managed dispatch ceiling selected
 - ✓ Structured plan review passed after one bounded revision
 - ✓ User-scoped Lite exit gate configured to match Quick Start
-- ⧗ Awaiting Lite exit-gate execution
+- ✓ First Lite gate review received; all seven plan findings resolved
+- ⧗ Awaiting Lite exit-gate re-review
 
 ## Blockers
 

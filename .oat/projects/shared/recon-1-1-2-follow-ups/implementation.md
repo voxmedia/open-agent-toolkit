@@ -89,6 +89,34 @@ _No implementation run has started._
 - [ ] p01-t04: Move reconciliation to one deterministic controller stage
 - [ ] p01-t05: Align docs, triage disposition, and release metadata
 
+### Review Received: plan
+
+**Date:** 2026-09-15
+**Review artifact:**
+`reviews/archived/artifact-plan-review-2026-09-15T042341Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 2
+- Medium: 3
+- Minor: 2
+
+**Artifact edits applied:** 7
+
+- Added the hidden CLI validation consumer and its package-filtered proof.
+- Corrected the Cursor materialization test command.
+- Extended the shared CLI-entry contract to the new reconciliation CLI.
+- Bound the Cursor installed-role versus live-catalog distinction to p01-t01.
+- Made triage status, approval, post-merge, and backlog dispositions explicit.
+- Removed `pnpm-lock.yaml` from the oxfmt target list.
+- Corrected generic-symlink versus model-pinned Cursor projection wording.
+
+**New tasks added:** none; this was an artifact review, so the existing five
+implementation tasks were corrected directly.
+
+**Next:** Re-run the configured `oat-project-lite` artifact gate.
+
 **Decisions:**
 
 - Use both canonical `is_background` frontmatter and recon launch prose.
