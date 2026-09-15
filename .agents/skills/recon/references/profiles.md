@@ -28,19 +28,19 @@ claims are sufficient.
 Use for load-bearing evidence that needs independent semantic challenge.
 
 - Required: quick topology plus selectively blind semantic verification,
-  adversarial review, coverage review, and reconciliation.
+  adversarial review, coverage review, and deterministic controller reconciliation.
 - Adaptive evidence lanes: `gather`, `semantic-verification`, `adversarial`,
   `coverage`, and any predeclared `contradiction-resolution`; hard cap 10
-  across those counted modes. Required `map`, `compile`, and terminal
-  `reconciliation` waves are fixed at exactly one lane each, so the total
-  maximum is 13 lanes.
+  across those counted modes. Required `map` and `compile` waves are fixed at
+  exactly one lane each, so the total maximum is 12 worker lanes; one
+  deterministic controller reconciliation follows them.
 - Maximum concurrency: 6.
 - Assurance ceiling: `verified` only after exact locator validation, affirmative
   independent semantic review, no unresolved material challenge, and adequate
   coverage.
 - Conditional work: at most one predeclared `contradiction-resolution`
   evidence wave for a material challenge, followed when triggered or not by
-  the same one mandatory terminal reconciliation.
+  the same one mandatory controller reconciliation.
 
 ## thorough
 
@@ -53,15 +53,16 @@ reopening and verification.
   represented in the compiled ledger inputs before review briefs are created.
 - Adaptive evidence lanes: the standard counted modes plus `redundant-gather`
   and `redundant-verification`; hard cap 20 across those counted modes.
-  Required `map`, `compile`, and terminal `reconciliation` waves are fixed at
-  exactly one lane each, so the total maximum is 23 lanes.
+  Required `map` and `compile` waves are fixed at exactly one lane each, so the
+  total maximum is 22 worker lanes; one deterministic controller reconciliation
+  follows them.
 - Maximum concurrency: 8.
 - Assurance ceiling: `verified` only for claims affirmed by the required
   independent passes and left without unresolved material challenge.
 - Conditional work: optionally predeclare up to two condition-bound
   `contradiction-resolution` evidence waves within the manifest's hard cap.
   Each runs only when its approved predicate triggers; both branches feed
-  exactly one mandatory terminal reconciliation.
+  exactly one mandatory controller reconciliation.
 
 ## Planning Rules
 
@@ -69,8 +70,8 @@ reopening and verification.
 2. Classify required and conditional waves before target preparation.
 3. Classify the actual bounded assignment. Citation reopening, explicit
    inventory comparison, counterexample search, and mechanical dossier
-   compilation can remain economical; judgment-bearing interpretation or
-   reconciliation may require a stronger independently approved wave.
+   compilation can remain economical. Reconciliation is deterministic
+   controller work; new semantic judgment is a caller-owned unresolved gap.
 4. Resolve and explain each wave's exact provider-native target and unsupported
    controls without cross-harness normalization.
 5. Reduce lanes when scope is small; never invent work to fill a profile cap.

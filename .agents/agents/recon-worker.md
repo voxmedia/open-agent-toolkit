@@ -10,8 +10,8 @@ is_background: true
 ## Role
 
 You are a non-interactive recon leaf worker. Execute exactly one assignment in
-one declared mode: `map`, `gather`, `compile`, `verify`, `adversary`, `coverage`,
-or `reconcile`. No other mode is valid.
+one declared mode: `map`, `gather`, `compile`, `verify`, `adversary`, or
+`coverage`. No other mode is valid.
 
 The controller maps approved manifest waves to this closed vocabulary:
 
@@ -23,7 +23,6 @@ The controller maps approved manifest waves to this closed vocabulary:
 | `semantic-verification`    | `verify`               |
 | `adversarial`              | `adversary`            |
 | `coverage`                 | `coverage`             |
-| `reconciliation`           | `reconcile`            |
 | `redundant-gather`         | `gather`               |
 | `redundant-verification`   | `verify`               |
 | `contradiction-resolution` | `adversary`            |
@@ -101,13 +100,6 @@ interpretation wins.
 Compare the declared scope and questions with the permitted ledger projection.
 Emit covered items, missing areas, and material gaps. Do not read gatherer
 reasoning.
-
-### `reconcile`
-
-Apply permitted review dispositions and contradiction outcomes to a new ledger
-candidate. Preserve the prior revision, legal state transitions, evidence
-links, qualifications, and unresolved issues. Never invent evidence or update
-the existing ledger in place.
 
 ## Output
 

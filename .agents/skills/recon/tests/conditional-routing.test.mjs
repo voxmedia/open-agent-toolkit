@@ -72,7 +72,7 @@ test('condition topology is forward-only, single-activation, unique-output, and 
   const packet = await fixture({ profile: 'standard' });
   await configureConditionalContradiction(packet);
   const condition = packet.manifest.execution.conditions[0];
-  condition.afterWaveIds = ['wave-reconciliation'];
+  condition.afterWaveIds = ['wave-contradiction-resolution'];
   condition.maxActivations = 2;
   packet.manifest.execution.waves.find(
     (wave) => wave.mode === 'contradiction-resolution',
@@ -112,9 +112,7 @@ test('unknown, duplicate, and terminal condition destinations fail closed', asyn
     { ...structuredClone(base), afterWaveIds: ['wave-missing'] },
     { ...structuredClone(base), conditionId: 'condition-second' },
   ];
-  packet.manifest.execution.waves.find(
-    (wave) => wave.mode === 'reconciliation',
-  ).conditional = true;
+  delete packet.manifest.execution.reconciliation;
   packet.manifest.execution = approveExecution(packet.manifest.execution);
   const result = validateArtifactShape(packet.manifest);
   for (const code of [
@@ -239,10 +237,7 @@ test('two triggered lanes require distinct exact wave and lane outcome gaps', as
   secondWave.lanes[0].scope = 'packet/contradiction-resolution-second';
   secondWave.lanes[0].writeRoot =
     'reviews/contradiction-resolution-second.json';
-  const terminalIndex = execution.waves.findIndex(
-    (wave) => wave.mode === 'reconciliation',
-  );
-  execution.waves.splice(terminalIndex, 0, secondWave);
+  execution.waves.push(secondWave);
   const secondCondition = structuredClone(execution.conditions[0]);
   secondCondition.conditionId = 'condition-contradiction-resolution-second';
   secondCondition.destinationWaveId = secondWave.waveId;

@@ -29,7 +29,6 @@ const requiredPasses = {
     'semantic-verification',
     'adversarial',
     'coverage',
-    'reconciliation',
   ],
   thorough: [
     'map',
@@ -37,7 +36,6 @@ const requiredPasses = {
     'semantic-verification',
     'adversarial',
     'coverage',
-    'reconciliation',
     'redundant-gather',
     'redundant-verification',
   ],
@@ -674,10 +672,6 @@ const passContracts = {
   },
   adversarial: { kind: 'recon.review-result', reviewKind: 'adversarial' },
   coverage: { kind: 'recon.review-result', reviewKind: 'coverage' },
-  reconciliation: {
-    kind: 'recon.review-result',
-    reviewKind: 'reconciliation',
-  },
   'redundant-verification': {
     kind: 'recon.review-result',
     reviewKind: 'redundant-verification',
@@ -746,7 +740,6 @@ const reviewWaveMode = {
   semantic: 'semantic-verification',
   adversarial: 'adversarial',
   coverage: 'coverage',
-  reconciliation: 'reconciliation',
   'redundant-verification': 'redundant-verification',
   'contradiction-resolution': 'contradiction-resolution',
 };
@@ -967,6 +960,13 @@ function validateApprovedLanes(
   const written = new Set();
   for (const [id, { reference, value }] of artifactsById) {
     if (value.runId !== manifest.run.id) continue;
+    if (
+      value.kind === 'recon.review-result' &&
+      value.reviewKind === 'reconciliation' &&
+      value.reviewerLane === 'controller:reconcile-ledger-v1'
+    ) {
+      continue;
+    }
     const laneId = artifactLaneId(value);
     if (laneId === null) continue;
     const approved = lanes.get(laneId);
@@ -1242,33 +1242,68 @@ function sameReference(left, right) {
 }
 
 function resolveTerminalReconciliation(
+  manifest,
   artifactsById,
   artifactsByPath,
-  passes,
   reconciliationRequired,
   errors,
 ) {
-  const terminalId = passes.get('reconciliation')?.[0];
+  const declaration = manifest.execution?.reconciliation;
   const reconciliationResults = [...artifactsById.values()].filter(
     ({ value }) =>
       value.kind === 'recon.review-result' &&
       value.reviewKind === 'reconciliation',
   );
   const expectedCount = reconciliationRequired ? 1 : 0;
-  if (
-    reconciliationResults.length !== expectedCount ||
-    (reconciliationRequired &&
-      reconciliationResults[0]?.value.id !== terminalId)
-  ) {
+  if (reconciliationResults.length !== expectedCount) {
     errors.push(
       issue(
         'SHADOW_RECONCILIATION',
         'The packet must contain exactly its one complete terminal reconciliation',
-        terminalId ?? '$.artifacts',
+        declaration?.outputReview ?? '$.artifacts',
       ),
     );
   }
-  const reconciliation = artifactsById.get(terminalId)?.value ?? null;
+  const entry = declaration
+    ? artifactsByPath.get(declaration.outputReview)
+    : null;
+  const outputLedgerEntry = declaration
+    ? artifactsByPath.get(declaration.outputLedger)
+    : null;
+  const reconciliation = entry?.value ?? null;
+  if (
+    reconciliationRequired &&
+    (!entry ||
+      reconciliation.reviewKind !== 'reconciliation' ||
+      reconciliation.reviewerLane !== declaration.producer ||
+      !sameReference(
+        entry.reference,
+        manifest.artifacts.find(
+          (item) => item.path === declaration.outputReview,
+        ),
+      ))
+  ) {
+    errors.push(
+      issue(
+        'INVALID_RECONCILIATION_BINDING',
+        'Reconciliation result must match the manifest-bound controller producer and output path',
+        declaration?.outputReview ?? '$.execution.reconciliation',
+      ),
+    );
+  }
+  if (
+    reconciliationRequired &&
+    (!outputLedgerEntry ||
+      outputLedgerEntry.value.kind !== 'recon.claim-ledger')
+  ) {
+    errors.push(
+      issue(
+        'INVALID_RECONCILIATION_OUTPUT',
+        'Controller reconciliation must produce its manifest-declared ledger candidate',
+        declaration?.outputLedger ?? '$.execution.reconciliation',
+      ),
+    );
+  }
   const priorLedger = reconciliation
     ? ([...artifactsByPath.values()].find(
         ({ reference, value }) =>
@@ -1276,7 +1311,11 @@ function resolveTerminalReconciliation(
           value.kind === 'recon.claim-ledger',
       )?.value ?? null)
     : null;
-  return { reconciliation, priorLedger };
+  return {
+    reconciliation,
+    priorLedger,
+    outputLedger: outputLedgerEntry?.value ?? null,
+  };
 }
 
 function reviewBriefBindsClaim(brief, reviewKind, claim, ledger, manifest) {
@@ -2461,12 +2500,26 @@ export async function compileValidatedRun(packetDirectory) {
     const reconciliationRequired =
       achievedProfile === 'standard' || achievedProfile === 'thorough';
     const reconciliationContext = resolveTerminalReconciliation(
+      manifest,
       artifactsById,
       artifactsByPath,
-      passes,
       reconciliationRequired,
       errors,
     );
+    if (
+      reconciliationRequired &&
+      reconciliationContext.outputLedger &&
+      hashCanonicalJson(reconciliationContext.outputLedger) !==
+        hashCanonicalJson(ledger)
+    ) {
+      errors.push(
+        issue(
+          'RECONCILIATION_PROMOTION_MISMATCH',
+          'Canonical claims.json must exactly match the validated controller ledger candidate',
+          '$.claims',
+        ),
+      );
+    }
     if (
       routing &&
       (!reconciliationRequired || reconciliationContext.priorLedger)

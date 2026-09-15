@@ -416,6 +416,15 @@ export async function runFakeRecon(options = {}) {
     });
     Object.keys(fixture.ledger).forEach((key) => delete fixture.ledger[key]);
     Object.assign(fixture.ledger, reconciled.ledger);
+    const outputLedgerPath = join(
+      roots.packetRoot,
+      'raw/drafts/claims-v2.json',
+    );
+    await writeJson(outputLedgerPath, reconciled.ledger);
+    const outputLedgerReference = fixture.manifest.artifacts.find(
+      (item) => item.path === 'raw/drafts/claims-v2.json',
+    );
+    outputLedgerReference.digest = await hashFile(outputLedgerPath);
     const reconciliationPath = join(
       roots.packetRoot,
       'reviews',

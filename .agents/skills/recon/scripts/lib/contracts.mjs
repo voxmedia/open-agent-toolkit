@@ -33,7 +33,6 @@ export const workerModes = [
   'verify',
   'adversary',
   'coverage',
-  'reconcile',
 ];
 export const evidenceRelations = [
   'supports',
@@ -49,7 +48,6 @@ export const waveModes = [
   'semantic-verification',
   'adversarial',
   'coverage',
-  'reconciliation',
   'redundant-gather',
   'redundant-verification',
   'contradiction-resolution',
@@ -100,7 +98,6 @@ export const profileRoutingPolicy = Object.freeze({
       'semantic-verification',
       'adversarial',
       'coverage',
-      'reconciliation',
     ],
     [
       'map',
@@ -109,7 +106,6 @@ export const profileRoutingPolicy = Object.freeze({
       'semantic-verification',
       'adversarial',
       'coverage',
-      'reconciliation',
       'contradiction-resolution',
     ],
     [
@@ -131,7 +127,6 @@ export const profileRoutingPolicy = Object.freeze({
       'adversarial',
       'coverage',
       'redundant-verification',
-      'reconciliation',
     ],
     [
       'map',
@@ -142,7 +137,6 @@ export const profileRoutingPolicy = Object.freeze({
       'coverage',
       'redundant-gather',
       'redundant-verification',
-      'reconciliation',
       'contradiction-resolution',
     ],
     [
@@ -359,6 +353,7 @@ const executionV2Keys = new Set([
   'retryLimit',
   'waves',
   'conditions',
+  'reconciliation',
   'approval',
 ]);
 
@@ -409,6 +404,57 @@ function validateExecutionV2(value, errors, path) {
   requiredArray(value, 'conditions', errors, path);
   requiredObject(value, 'approval', errors, path);
   validateApprovalEvidence(value.approval, errors, `${path}.approval`);
+
+  if (Object.hasOwn(value, 'reconciliation')) {
+    const reconciliation = value.reconciliation;
+    requiredObject(value, 'reconciliation', errors, path);
+    if (isObject(reconciliation)) {
+      closedObject(
+        reconciliation,
+        new Set([
+          'producer',
+          'inputLedger',
+          'outputLedger',
+          'outputReview',
+          'requiredReviews',
+          'conditionalReviews',
+        ]),
+        errors,
+        `${path}.reconciliation`,
+      );
+      for (const key of [
+        'producer',
+        'inputLedger',
+        'outputLedger',
+        'outputReview',
+      ]) {
+        requiredString(reconciliation, key, errors, `${path}.reconciliation`);
+      }
+      if (reconciliation.producer !== 'controller:reconcile-ledger-v1') {
+        errors.push(
+          issue(
+            'INVALID_RECONCILIATION_PRODUCER',
+            'Controller reconciliation must use controller:reconcile-ledger-v1',
+            `${path}.reconciliation.producer`,
+          ),
+        );
+      }
+      for (const key of ['requiredReviews', 'conditionalReviews']) {
+        requiredArray(reconciliation, key, errors, `${path}.reconciliation`);
+        for (const [index, item] of (reconciliation[key] ?? []).entries()) {
+          if (typeof item !== 'string' || item.length === 0) {
+            errors.push(
+              issue(
+                'INVALID_RECONCILIATION_PATH',
+                `${key} must contain non-empty paths`,
+                `${path}.reconciliation.${key}[${index}]`,
+              ),
+            );
+          }
+        }
+      }
+    }
+  }
 
   const waves = Array.isArray(value.waves) ? value.waves : [];
   const waveIds = new Set();
@@ -673,25 +719,43 @@ export function validateV2ProfileTopology(
       ),
     );
   }
-  const reconciliationIndexes = waves
-    .map((wave, index) => (wave?.mode === 'reconciliation' ? index : -1))
-    .filter((index) => index !== -1);
   const requiresReconciliation = ['standard', 'thorough'].includes(
     requestedProfile,
   );
-  if (
-    reconciliationIndexes.length > 1 ||
-    (requiresReconciliation && reconciliationIndexes.length !== 1) ||
-    reconciliationIndexes.some((index) => index !== waves.length - 1) ||
-    reconciliationIndexes.some((index) => waves[index]?.conditional === true)
-  ) {
+  if (requiresReconciliation !== isObject(execution.reconciliation)) {
     errors.push(
       issue(
         'INVALID_TERMINAL_TOPOLOGY',
-        'Standard and thorough routing require exactly one non-conditional terminal reconciliation wave',
-        `${path}.waves`,
+        'Standard and thorough routing require exactly one controller reconciliation declaration',
+        `${path}.reconciliation`,
       ),
     );
+  } else if (requiresReconciliation) {
+    const reconciliation = execution.reconciliation;
+    const expected = {
+      producer: 'controller:reconcile-ledger-v1',
+      inputLedger: 'raw/drafts/claims-v1.json',
+      outputLedger: 'raw/drafts/claims-v2.json',
+      outputReview: 'reviews/reconciliation.json',
+      requiredReviews: [
+        'reviews/semantic.json',
+        'reviews/adversarial.json',
+        'reviews/coverage.json',
+      ],
+      conditionalReviews: [
+        'reviews/redundant-verification.json',
+        'reviews/contradiction-resolution.json',
+      ],
+    };
+    if (JSON.stringify(reconciliation) !== JSON.stringify(expected)) {
+      errors.push(
+        issue(
+          'INVALID_RECONCILIATION_PATH',
+          'Controller reconciliation paths and review sets must exactly match the closed manifest contract',
+          `${path}.reconciliation`,
+        ),
+      );
+    }
   }
 
   const waveIndexes = new Map(
@@ -708,7 +772,6 @@ export function validateV2ProfileTopology(
     'predicate',
     'maxActivations',
   ]);
-  const terminalIndex = reconciliationIndexes[0] ?? -1;
   for (const [index, condition] of conditions.entries()) {
     const conditionPath = `${path}.conditions[${index}]`;
     if (
@@ -852,24 +915,10 @@ export function validateV2ProfileTopology(
         );
       }
     }
-    if (
-      terminalIndex !== -1 &&
-      destinationIndex !== undefined &&
-      destinationIndex >= terminalIndex
-    ) {
-      errors.push(
-        issue(
-          'INVALID_TERMINAL_TOPOLOGY',
-          'Conditional evidence waves must complete before the one terminal reconciliation',
-          `${conditionPath}.destinationWaveId`,
-        ),
-      );
-    }
   }
   for (const wave of waves) {
     if (
       wave?.conditional === true &&
-      wave.mode !== 'reconciliation' &&
       !policy.orderedSingletonWaveModes.includes(wave.mode) &&
       !conditionDestinations.has(wave.waveId)
     ) {
@@ -928,9 +977,7 @@ export function validateV2ProfileTopology(
   }
   const conditionalRequired = stageIndexes.find(
     ({ mode, indexes }) =>
-      mode !== 'reconciliation' &&
-      indexes.length === 1 &&
-      waves[indexes[0]]?.conditional,
+      indexes.length === 1 && waves[indexes[0]]?.conditional,
   );
   if (conditionalRequired) {
     errors.push(

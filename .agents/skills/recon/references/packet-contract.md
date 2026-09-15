@@ -125,7 +125,7 @@ condition contains `conditionId`, `destinationWaveId`, `afterWaveIds`, one of
 `insufficient-evidence` or `unresolved-material-challenge`, and
 `maxActivations: 1`. Each conditional destination is a uniquely identified
 `contradiction-resolution` evidence wave, has exactly one condition, appears
-after every named predecessor and before the one terminal reconciliation, and
+after every named predecessor and before controller reconciliation, and
 owns unique lane IDs and write roots. Conversely, every wave marked
 `conditional: true` must be the destination of exactly one activating condition;
 dead conditional waves are invalid. Quick permits no conditional wave;
@@ -134,8 +134,7 @@ counts `gather`, `semantic-verification`, `adversarial`, `coverage`,
 `redundant-gather`, `redundant-verification`, and
 `contradiction-resolution` when those modes are permitted by the profile.
 Every permitted mode outside that counted set is fixed at exactly one lane:
-`map` and `compile` for quick, plus terminal `reconciliation` for standard and
-thorough. The resulting total lane maxima are 6/13/23, and concurrency remains
+`map` and `compile`. The resulting worker-lane maxima are 6/12/22, and concurrency remains
 capped at 4/6/8.
 
 Triggered dispositions require exact complete same-run artifacts from every
@@ -150,17 +149,14 @@ no achieved pass. Accepted failed, cancelled, timed-out, or missing predecessor
 work cannot activate replacement work. Required profile passes remain required
 regardless of conditional annotations.
 
-`reconciliation-needs-judgment` is a controller escalation outcome, never a
-condition predicate. Foreseeable judgment changes the one terminal target before
-approval. A need discovered later preserves completed work and records an
-unresolved out-of-envelope gap until renewed approval or a new run; it never
-mutates the approved target or launches a second reconciliation.
+`reconciliation-needs-judgment` is a caller-owned unresolved outcome, never a
+condition predicate or target escalation. The controller preserves completed
+work and records the gap; it never dispatches reconciliation work.
 
-The controller maps the ten manifest wave modes onto the worker contract's
-seven assignment modes: redundant gathering uses `gather`; semantic and
+The controller maps the nine manifest wave modes onto the worker contract's
+six assignment modes: redundant gathering uses `gather`; semantic and
 redundant verification use `verify`; adversarial and contradiction-resolution
-use `adversary`; and only terminal reconciliation uses `reconcile`. This mapping
-does not change the approved manifest mode used for artifact and pass checks.
+use `adversary`. Reconciliation is not a worker mode or approval target.
 
 Approval is `{ type: "explicit-user-approval", approvedAt }`. It is valid only
 for the exact proposal shown in the same uninterrupted controller flow. Resume,
@@ -183,7 +179,6 @@ complete typed artifacts of the same run:
 | `semantic-verification`    | a `recon.review-result` with kind `semantic`                              |
 | `adversarial`              | a `recon.review-result` with kind `adversarial`                           |
 | `coverage`                 | a `recon.review-result` with kind `coverage`                              |
-| `reconciliation`           | a `recon.review-result` with kind `reconciliation`                        |
 | `redundant-gather`         | a complete `gather` dossier owned by the approved `redundant-gather` wave |
 | `redundant-verification`   | a `recon.review-result` with kind `redundant-verification`                |
 | `contradiction-resolution` | a `recon.review-result` with kind `contradiction-resolution`              |
@@ -191,11 +186,11 @@ complete typed artifacts of the same run:
 `quick` requires `map` and `gather`; the canonical ledger itself is the
 compile result, so an approved `compile` lane needs no separate artifact, and
 locator validation is performed by the validator.
-`standard` adds `semantic-verification`, `adversarial`, `coverage`, and
-`reconciliation`. `thorough` adds `redundant-gather` and
+`standard` adds `semantic-verification`, `adversarial`, and `coverage`, then
+requires the manifest-bound controller reconciliation. `thorough` adds `redundant-gather` and
 `redundant-verification`. A predeclared conditional
 `contradiction-resolution` evidence pass may feed the same mandatory terminal
-reconciliation when its predicate triggers; it is not a second terminal pass.
+controller reconciliation when its predicate triggers.
 
 Thorough routing completes `redundant-gather` before `compile`. The compiled
 ledger must directly reference by exact path and digest at least one complete

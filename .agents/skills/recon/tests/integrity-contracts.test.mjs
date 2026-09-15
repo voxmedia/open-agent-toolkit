@@ -60,6 +60,16 @@ async function replaceArtifact(packet, relative, value) {
     (item) => item.path === relative,
   );
   reference.digest = await hashFile(path);
+  if (relative === 'claims.json') {
+    const outputReference = packet.manifest.artifacts.find(
+      (item) => item.path === 'raw/drafts/claims-v2.json',
+    );
+    if (outputReference) {
+      const outputPath = join(packet.packetRoot, outputReference.path);
+      await writeJson(outputPath, value);
+      outputReference.digest = await hashFile(outputPath);
+    }
+  }
   await writeJson(packet.manifestPath, packet.manifest);
   return reference;
 }

@@ -8462,7 +8462,9 @@ describe('recon canonical contracts', () => {
     );
     expect(skill).toMatch(/before\s+(?:any\s+)?(?:worker\s+)?launch/i);
     expect(skill).not.toMatch(/same\s+approved model and effort/i);
-    expect(skill).toMatch(/exactly one terminal `reconciliation` wave/i);
+    expect(skill).toMatch(/one deterministic controller reconciliation/i);
+    expect(skill).toMatch(/controller:reconcile-ledger-v1/i);
+    expect(skill).toMatch(/No reconciliation worker is dispatched/i);
     expect(skill).toMatch(/quick[\s\S]{0,1000}no independent semantic pass/i);
     expect(skill).toMatch(/packet directory/i);
     expect(worker).toMatch(/never interact with the user/i);

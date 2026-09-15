@@ -80,7 +80,6 @@ test('economical routing defaults exhaust the supported wave-mode union', () => 
     'coverage',
     'gather',
     'map',
-    'reconciliation',
     'redundant-gather',
     'redundant-verification',
     'semantic-verification',
@@ -96,7 +95,7 @@ test('economical routing defaults exhaust the supported wave-mode union', () => 
 
 test('routing resolution inherits or replaces a whole exact target without axis merging', () => {
   const execution = createV2ExecutionApproval({
-    modes: ['map', 'reconciliation'],
+    modes: ['map', 'gather', 'compile'],
     laneIdForMode,
   });
   const override = {
@@ -177,7 +176,6 @@ test('profiles require exactly one lane for every fixed wave mode', () => {
   for (const [profile, modes, mode, laneCount] of [
     ['quick', ['map', 'gather', 'compile'], 'map', 40],
     ['quick', ['map', 'gather', 'compile'], 'compile', 2],
-    ['standard', standardModes, 'reconciliation', 2],
   ]) {
     const execution = createV2ExecutionApproval({ modes, laneIdForMode });
     const wave = execution.waves.find((item) => item.mode === mode);
@@ -213,11 +211,7 @@ test('profiles reject wave modes owned by stronger profiles', () => {
       ['map', 'gather', 'semantic-verification', 'compile'],
       'semantic-verification',
     ],
-    [
-      'standard',
-      [...standardModes.slice(0, -1), 'redundant-gather', 'reconciliation'],
-      'redundant-gather',
-    ],
+    ['standard', [...standardModes, 'redundant-gather'], 'redundant-gather'],
   ]) {
     const execution = createV2ExecutionApproval({ modes, laneIdForMode });
     const errors = validateV2ProfileTopology({
@@ -322,12 +316,12 @@ test('every conditional wave has exactly one activating condition', () => {
 });
 
 for (const [profile, modes] of [['standard', standardModes]]) {
-  test(`${profile} conditional terminal defects have one topology diagnostic owner`, () => {
+  test(`${profile} missing controller reconciliation has one topology diagnostic owner`, () => {
     const execution = createV2ExecutionApproval({
       modes,
       laneIdForMode,
     });
-    execution.waves.at(-1).conditional = true;
+    delete execution.reconciliation;
 
     const errors = validateV2ProfileTopology({
       schemaVersion: 2,

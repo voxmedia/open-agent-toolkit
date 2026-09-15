@@ -453,7 +453,7 @@ async function makePacket({
       id: 'review-reconciliation',
       runId: 'run-1',
       reviewKind: 'reconciliation',
-      reviewerLane: 'lane-reconciliation',
+      reviewerLane: 'controller:reconcile-ledger-v1',
       status: 'complete',
       inputLedger: { ...priorRef, revision: 1 },
       outputRevision: 2,
@@ -502,6 +502,15 @@ async function makePacket({
     path: 'claims.json',
     digest: await hashFile(claimsPath),
   };
+  let outputLedgerRef = null;
+  if (profile !== 'quick') {
+    const outputLedgerPath = join(packetRoot, 'raw/drafts/claims-v2.json');
+    await writeJson(outputLedgerPath, ledger);
+    outputLedgerRef = {
+      path: 'raw/drafts/claims-v2.json',
+      digest: await hashFile(outputLedgerPath),
+    };
+  }
   const passModes = passesFor(profile);
   const passLaneId = (mode) =>
     mode === 'semantic-verification' ? 'lane-semantic' : `lane-${mode}`;
@@ -561,7 +570,13 @@ async function makePacket({
     },
     sources: [source],
     execution,
-    artifacts: [claimsRef, dossierRef, ...reviewArtifacts, ...passArtifacts],
+    artifacts: [
+      claimsRef,
+      dossierRef,
+      ...(outputLedgerRef ? [outputLedgerRef] : []),
+      ...reviewArtifacts,
+      ...passArtifacts,
+    ],
     gaps: [],
     conditionOutcomes: [],
   };
@@ -586,6 +601,14 @@ async function persist(packet) {
     (artifact) => artifact.path === 'claims.json',
   );
   if (claimRef) claimRef.digest = await hashFile(packet.claimsPath);
+  const outputRef = packet.manifest.artifacts.find(
+    (artifact) => artifact.path === 'raw/drafts/claims-v2.json',
+  );
+  if (outputRef) {
+    const outputPath = join(packet.packetRoot, outputRef.path);
+    await writeJson(outputPath, packet.ledger);
+    outputRef.digest = await hashFile(outputPath);
+  }
   await writeJson(packet.manifestPath, packet.manifest);
 }
 
@@ -1116,16 +1139,9 @@ test('production validation enforces approved profile topology', async () => {
     },
     {
       profile: 'standard',
-      code: 'INVALID_PROFILE_SINGLETON_LANE_COUNT',
+      code: 'INVALID_RECONCILIATION_PRODUCER',
       mutate(execution) {
-        const reconciliation = execution.waves.find(
-          (wave) => wave.mode === 'reconciliation',
-        );
-        reconciliation.lanes.push({
-          ...reconciliation.lanes[0],
-          laneId: 'lane-reconciliation-second',
-          writeRoot: 'reviews/reconciliation-second.json',
-        });
+        execution.reconciliation.producer = 'worker:reconcile';
       },
     },
     {
@@ -1140,8 +1156,7 @@ test('production validation enforces approved profile topology', async () => {
     {
       code: 'INVALID_TERMINAL_TOPOLOGY',
       mutate(execution) {
-        const terminal = execution.waves.pop();
-        execution.waves.splice(3, 0, terminal);
+        delete execution.reconciliation;
       },
     },
     {
@@ -1614,6 +1629,46 @@ test('review results require unresolvedIssues to contain only strings', async ()
   assert.ok(
     validation.errors.some(
       (error) => error.code === 'INVALID_UNRESOLVED_ISSUE',
+    ),
+  );
+});
+
+test('controller reconciliation outputs fail closed when missing, swapped, or tampered', async () => {
+  const missing = await makePacket({ profile: 'standard' });
+  await rm(join(missing.packetRoot, 'raw/drafts/claims-v2.json'));
+  const missingResult = await validatePacket(missing.packetRoot);
+  assert.equal(missingResult.valid, false);
+  assert.ok(
+    missingResult.errors.some((error) => error.code === 'MISSING_ARTIFACT'),
+  );
+
+  const swapped = await makePacket({ profile: 'standard' });
+  [
+    swapped.manifest.execution.reconciliation.outputLedger,
+    swapped.manifest.execution.reconciliation.outputReview,
+  ] = [
+    swapped.manifest.execution.reconciliation.outputReview,
+    swapped.manifest.execution.reconciliation.outputLedger,
+  ];
+  const swappedResult = validateArtifactShape(swapped.manifest);
+  assert.equal(swappedResult.valid, false);
+  assert.ok(
+    swappedResult.errors.some(
+      (error) => error.code === 'INVALID_RECONCILIATION_PATH',
+    ),
+  );
+
+  const tampered = await makePacket({ profile: 'standard' });
+  await writeFile(
+    join(tampered.packetRoot, 'raw/drafts/claims-v2.json'),
+    '{"tampered":true}\n',
+    'utf8',
+  );
+  const tamperedResult = await validatePacket(tampered.packetRoot);
+  assert.equal(tamperedResult.valid, false);
+  assert.ok(
+    tamperedResult.errors.some(
+      (error) => error.code === 'ARTIFACT_DIGEST_MISMATCH',
     ),
   );
 });

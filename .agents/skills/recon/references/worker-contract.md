@@ -21,7 +21,7 @@ Reject an incomplete or contradictory assignment before reading sources. Never
 request credentials, mutate an investigated source, broaden scope, or choose an
 alternate write path.
 
-The manifest's ten wave modes map to the worker's closed seven-mode vocabulary:
+The manifest's nine wave modes map to the worker's closed six-mode vocabulary:
 
 | Manifest wave mode         | Worker assignment mode |
 | -------------------------- | ---------------------- |
@@ -31,7 +31,6 @@ The manifest's ten wave modes map to the worker's closed seven-mode vocabulary:
 | `semantic-verification`    | `verify`               |
 | `adversarial`              | `adversary`            |
 | `coverage`                 | `coverage`             |
-| `reconciliation`           | `reconcile`            |
 | `redundant-gather`         | `gather`               |
 | `redundant-verification`   | `verify`               |
 | `contradiction-resolution` | `adversary`            |
@@ -56,10 +55,7 @@ wave target; the worker neither selects nor upgrades it.
   counterevidence, unsupported inference, and missing alternatives.
 - `coverage`: compare declared scope and questions with ledger coverage without
   reading gatherer reasoning.
-- `reconcile`: apply review dispositions and contradiction outcomes to a new
-  ledger candidate. Preserve prior revisions and never invent evidence.
-
-No other mode is valid.
+  No other mode is valid.
 
 ## Output Contract
 

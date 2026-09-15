@@ -127,8 +127,8 @@ Use the complete mode policy from `references/profiles.md` and
 `scripts/lib/routing.mjs`. Map manifest wave modes to the worker's closed
 assignment vocabulary: `redundant-gather` to `gather`;
 `semantic-verification` and `redundant-verification` to `verify`; `adversarial`
-and `contradiction-resolution` to `adversary`; and only `reconciliation` to
-`reconcile`. The remaining modes keep their same-named assignment. All lanes
+and `contradiction-resolution` to `adversary`. The remaining worker modes keep
+their same-named assignment; reconciliation is controller-owned. All lanes
 within one launch are a homogeneous wave. Select each wave independently; a
 stronger wave never raises unrelated waves' targets or effort.
 
@@ -273,16 +273,17 @@ Run the passes in this order:
    `adversary` evidence assignment; a not-triggered or unresolved wave supplies
    no artifact. Accepted failure, cancellation, timeout, or missing output never
    authorizes replacement work.
-6. Standard and thorough execute exactly one terminal `reconciliation` wave,
-   mapped to `reconcile`, after required review evidence and any triggered
-   contradiction investigation. It writes a new candidate ledger without
-   mutating the prior ledger.
+6. Standard and thorough run one deterministic controller reconciliation after
+   required review evidence and any triggered contradiction investigation. The
+   controller invokes `scripts/reconcile-ledger.mjs` once using the manifest's
+   `execution.reconciliation` paths and literal producer
+   `controller:reconcile-ledger-v1`, validates both candidate outputs, copies
+   the exact ledger bytes to a packet-contained temporary file, and atomically
+   renames it to `claims.json`. No reconciliation worker is dispatched.
 
-If `reconciliation-needs-judgment` is foreseeable, select an adequate target
-for that one terminal wave before approval. If it appears after approval and
-the approved target is inadequate, preserve completed evidence and return an
-explicit unresolved, out-of-envelope gap for renewed approval or a new run.
-Never mutate the target, launch a second reconciliation, or substitute a
+If reconciliation requires new semantic judgment, preserve completed evidence
+and return an explicit unresolved caller-owned gap. Never mutate the target or
+substitute a
 contradiction search for synthesis.
 
 Use `references/worker-contract.md` for every assignment. Never allow two

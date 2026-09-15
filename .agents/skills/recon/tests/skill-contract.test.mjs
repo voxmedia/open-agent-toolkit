@@ -149,18 +149,15 @@ test('profiles define adaptive bounded quick, standard, and thorough runs', asyn
     /standard[\s\S]{0,900}semantic verification[\s\S]{0,900}adversarial[\s\S]{0,900}coverage/i,
   );
   assert.match(profiles, /thorough[\s\S]{0,1100}redundant/i);
-  assert.match(
-    profiles,
-    /exactly one mandatory[\s\S]{0,120}terminal reconciliation/i,
-  );
+  assert.match(profiles, /one deterministic controller reconciliation/i);
   assert.match(packetContract, /4\/10\/20 adaptive-lane cap/i);
   assert.match(packetContract, /fixed at exactly one lane/i);
-  assert.match(packetContract, /total lane maxima are 6\/13\/23/i);
+  assert.match(packetContract, /worker-lane maxima are 6\/12\/22/i);
   assert.match(profiles, /hard cap 4[\s\S]*hard cap 10[\s\S]*hard cap 20/i);
-  for (const total of [6, 13, 23]) {
+  for (const total of [6, 12, 22]) {
     assert.match(
       profiles,
-      new RegExp(`total\\s+maximum\\s+is ${total} lanes`, 'i'),
+      new RegExp(`total\\s+maximum\\s+is ${total} (?:worker )?lanes`, 'i'),
     );
   }
 });
@@ -186,7 +183,7 @@ test('thorough keeps redundant work required and contradiction resolution condit
   assert.match(conditional, /approved predicate triggers/i);
 });
 
-test('controller maps ten wave modes onto the closed worker vocabulary', async () => {
+test('controller maps nine wave modes onto the closed worker vocabulary', async () => {
   const { skill, workerContract, worker } = await readContracts();
   const expected = [
     ['map', 'map'],
@@ -195,7 +192,6 @@ test('controller maps ten wave modes onto the closed worker vocabulary', async (
     ['semantic-verification', 'verify'],
     ['adversarial', 'adversary'],
     ['coverage', 'coverage'],
-    ['reconciliation', 'reconcile'],
     ['redundant-gather', 'gather'],
     ['redundant-verification', 'verify'],
     ['contradiction-resolution', 'adversary'],
@@ -203,7 +199,7 @@ test('controller maps ten wave modes onto the closed worker vocabulary', async (
 
   assert.deepEqual(readModeMappings(workerContract), expected);
   assert.deepEqual(readModeMappings(worker), expected);
-  assert.match(skill, /only `reconciliation`[\s\S]{0,40}`reconcile`/i);
+  assert.match(skill, /reconciliation is controller-owned/i);
   assert.match(
     workerContract,
     /contradiction-resolution[\s\S]{0,220}discriminating evidence/i,
@@ -251,18 +247,11 @@ test('worker documents distinguish assignment concepts and use closed output fie
   }
 });
 
-test('controller preserves single-terminal and renewed-approval boundaries', async () => {
+test('controller owns one deterministic reconciliation boundary', async () => {
   const { skill } = await readContracts();
-  assert.match(skill, /exactly one terminal `reconciliation` wave/i);
-  assert.match(skill, /reconciliation-needs-judgment/i);
-  assert.match(
-    skill,
-    /unresolved, out-of-envelope gap[\s\S]{0,180}renewed approval or a new run/i,
-  );
-  assert.match(
-    skill,
-    /never mutate the target[\s\S]{0,120}second reconciliation/i,
-  );
+  assert.match(skill, /one deterministic controller reconciliation/i);
+  assert.match(skill, /No reconciliation worker is dispatched/i);
+  assert.match(skill, /new semantic judgment[\s\S]{0,120}caller-owned gap/i);
 });
 
 test('controller preserves selective blindness and the context firewall', async () => {

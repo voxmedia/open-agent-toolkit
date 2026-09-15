@@ -57,13 +57,15 @@ export function createExecutionApproval({
   target = fixtureTarget,
   authority = 'contract-enforced',
 }) {
+  const controllerReconciliation = modes.includes('reconciliation');
+  const workerModes = modes.filter((mode) => mode !== 'reconciliation');
   return approveExecution({
     target: structuredClone(target),
     authority,
     maxConcurrency: concurrency,
     deadlineSeconds: 60,
     retryLimit: 0,
-    waves: modes.map((mode) => ({
+    waves: workerModes.map((mode) => ({
       waveId: `wave-${mode}`,
       mode,
       taskClass: 'intelligent-recon',
@@ -80,6 +82,25 @@ export function createExecutionApproval({
       conditional: false,
     })),
     conditions: [],
+    ...(controllerReconciliation
+      ? {
+          reconciliation: {
+            producer: 'controller:reconcile-ledger-v1',
+            inputLedger: 'raw/drafts/claims-v1.json',
+            outputLedger: 'raw/drafts/claims-v2.json',
+            outputReview: 'reviews/reconciliation.json',
+            requiredReviews: [
+              'reviews/semantic.json',
+              'reviews/adversarial.json',
+              'reviews/coverage.json',
+            ],
+            conditionalReviews: [
+              'reviews/redundant-verification.json',
+              'reviews/contradiction-resolution.json',
+            ],
+          },
+        }
+      : {}),
   });
 }
 
@@ -129,17 +150,11 @@ export async function configureConditionalContradiction(
       ],
       conditional: true,
     };
-    const terminalIndex = execution.waves.findIndex(
-      (wave) => wave.mode === 'reconciliation',
-    );
-    execution.waves.splice(terminalIndex, 0, destination);
+    execution.waves.push(destination);
   } else {
     destination.conditional = true;
     execution.waves = execution.waves.filter((wave) => wave !== destination);
-    const terminalIndex = execution.waves.findIndex(
-      (wave) => wave.mode === 'reconciliation',
-    );
-    execution.waves.splice(terminalIndex, 0, destination);
+    execution.waves.push(destination);
   }
   execution.conditions = [
     {
@@ -446,6 +461,8 @@ export async function createPacketFixture({
     ],
   };
   const reviewArtifacts = [];
+  let outputLedgerRef = null;
+  let outputLedgerPath = null;
   if (achievedProfile !== 'quick') {
     const priorLedger = structuredClone(ledger);
     priorLedger.revision = 1;
@@ -592,7 +609,7 @@ export async function createPacketFixture({
       id: 'review-reconciliation',
       runId: 'run-render',
       reviewKind: 'reconciliation',
-      reviewerLane: 'lane-reconciliation',
+      reviewerLane: 'controller:reconcile-ledger-v1',
       status: 'complete',
       inputLedger: { ...priorRef, revision: 1 },
       outputRevision: 2,
@@ -626,6 +643,12 @@ export async function createPacketFixture({
       path: 'reviews/reconciliation.json',
       digest: await hashFile(path),
     });
+    outputLedgerPath = join(packetRoot, 'raw/drafts/claims-v2.json');
+    await writeJson(outputLedgerPath, ledger);
+    outputLedgerRef = {
+      path: 'raw/drafts/claims-v2.json',
+      digest: await hashFile(outputLedgerPath),
+    };
   }
   const claimsPath = join(packetRoot, 'claims.json');
   await writeJson(claimsPath, ledger);
@@ -746,7 +769,13 @@ export async function createPacketFixture({
     },
     sources: [source],
     execution,
-    artifacts: [claimsRef, dossierRef, ...reviewArtifacts, ...passArtifacts],
+    artifacts: [
+      claimsRef,
+      dossierRef,
+      ...(outputLedgerRef ? [outputLedgerRef] : []),
+      ...reviewArtifacts,
+      ...passArtifacts,
+    ],
     gaps: [
       {
         id: 'gap-1',
@@ -776,6 +805,10 @@ export async function createPacketFixture({
     persist: async () => {
       await writeJson(claimsPath, ledger);
       manifest.artifacts[0].digest = await hashFile(claimsPath);
+      if (outputLedgerPath && outputLedgerRef) {
+        await writeJson(outputLedgerPath, ledger);
+        outputLedgerRef.digest = await hashFile(outputLedgerPath);
+      }
       await writeJson(manifestPath, manifest);
     },
   };

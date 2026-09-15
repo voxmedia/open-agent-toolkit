@@ -58,7 +58,7 @@ export function createValidatedRun({
     passes: normalizePasses(passes),
     achievedProfile,
     assuranceReviewIds: [...assuranceReviewIds].sort(),
-    terminalReconciliation: reconciliationContext?.reconciliation
+    controllerReconciliation: reconciliationContext?.reconciliation
       ? clone(reconciliationContext.reconciliation)
       : null,
     priorLedger: reconciliationContext?.priorLedger

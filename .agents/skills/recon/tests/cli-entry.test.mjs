@@ -13,6 +13,7 @@ const executables = [
   'validate-packet.mjs',
   'render-packet.mjs',
   'prepare-routing.mjs',
+  'reconcile-ledger.mjs',
 ];
 const temporaryRoots = [];
 

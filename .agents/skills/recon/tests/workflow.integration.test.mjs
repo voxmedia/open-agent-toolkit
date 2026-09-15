@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { afterEach, test } from 'node:test';
 
 import { hashFile } from '../scripts/lib/canonical-json.mjs';
@@ -159,7 +160,11 @@ for (const profile of ['standard', 'thorough']) {
         manifest.execution.waves.filter(
           (wave) => wave.mode === 'reconciliation',
         ).length,
-        1,
+        0,
+      );
+      assert.equal(
+        manifest.execution.reconciliation.producer,
+        'controller:reconcile-ledger-v1',
       );
       const reconciliation = JSON.parse(
         await readFile(
@@ -185,7 +190,6 @@ for (const conditionalDisposition of ['triggered', 'not-triggered']) {
       conditionalDisposition,
       target: cheapTarget,
       waveTargets: {
-        reconciliation: strongerTerminalTarget,
         'contradiction-resolution': contradictionEvidenceTarget,
       },
       roots: injectedRoots,
@@ -208,7 +212,10 @@ for (const conditionalDisposition of ['triggered', 'not-triggered']) {
     ]) {
       assert.deepEqual(targetFor(mode), cheapTarget, mode);
     }
-    assert.deepEqual(targetFor('reconciliation'), strongerTerminalTarget);
+    assert.equal(
+      manifest.execution.reconciliation.producer,
+      'controller:reconcile-ledger-v1',
+    );
     assert.deepEqual(
       targetFor('contradiction-resolution'),
       contradictionEvidenceTarget,
@@ -378,7 +385,11 @@ test('triggered contradiction work uses the adversary brief and feeds only recon
   assert.equal(
     manifest.execution.waves.filter((wave) => wave.mode === 'reconciliation')
       .length,
-    1,
+    0,
+  );
+  assert.equal(
+    manifest.execution.reconciliation.producer,
+    'controller:reconcile-ledger-v1',
   );
 });
 
@@ -837,6 +848,44 @@ test('standard workflow emits all typed review results and reconciles revision o
   );
 });
 
+test('controller reconciliation CLI enforces manifest paths and the exact review set', async () => {
+  const injectedRoots = await roots();
+  await runFakeRecon({ profile: 'standard', roots: injectedRoots });
+  const script = resolve('.agents/skills/recon/scripts/reconcile-ledger.mjs');
+  const packet = injectedRoots.packetRoot;
+  const args = [
+    script,
+    '--manifest',
+    join(packet, 'manifest.json'),
+    '--input-ledger',
+    join(packet, 'raw/drafts/claims-v1.json'),
+    '--review',
+    join(packet, 'reviews/semantic.json'),
+    '--review',
+    join(packet, 'reviews/adversarial.json'),
+    '--review',
+    join(packet, 'reviews/coverage.json'),
+    '--output-ledger',
+    join(packet, 'raw/drafts/claims-v2.json'),
+    '--output-review',
+    join(packet, 'reviews/reconciliation.json'),
+  ];
+  const accepted = spawnSync(process.execPath, args, { encoding: 'utf8' });
+  assert.equal(accepted.status, 0, accepted.stderr);
+  assert.equal(
+    JSON.parse(accepted.stdout).ledger.path,
+    'raw/drafts/claims-v2.json',
+  );
+
+  const rejected = spawnSync(
+    process.execPath,
+    [...args.slice(0, 9), ...args.slice(11)],
+    { encoding: 'utf8' },
+  );
+  assert.notEqual(rejected.status, 0);
+  assert.match(rejected.stderr, /review set drifts/i);
+});
+
 test('standard workflow retains a genuine adversarial contradiction as contested', async () => {
   const injectedRoots = await roots();
   await runFakeRecon({ profile: 'standard', roots: injectedRoots });
@@ -882,6 +931,14 @@ test('standard workflow retains a genuine adversarial contradiction as contested
   await writeJson(claimsPath, ledger);
   manifest.artifacts.find((item) => item.path === 'claims.json').digest =
     await hashFile(claimsPath);
+  const outputLedgerPath = join(
+    injectedRoots.packetRoot,
+    'raw/drafts/claims-v2.json',
+  );
+  await writeJson(outputLedgerPath, ledger);
+  manifest.artifacts.find(
+    (item) => item.path === 'raw/drafts/claims-v2.json',
+  ).digest = await hashFile(outputLedgerPath);
   const reconciliationPath = join(
     injectedRoots.packetRoot,
     'reviews',

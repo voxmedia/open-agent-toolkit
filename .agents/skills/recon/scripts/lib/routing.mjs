@@ -52,11 +52,6 @@ const economicalDefaults = Object.freeze({
       'Compare evidence with an explicit question or source inventory.',
     taskClass: 'mechanical-recon',
   }),
-  reconciliation: Object.freeze({
-    assignment:
-      'Assemble agreement and disagreement without deciding implications.',
-    taskClass: 'mechanical-recon',
-  }),
   'contradiction-resolution': Object.freeze({
     assignment: 'Seek discriminating evidence for a named contradiction.',
     taskClass: 'mechanical-recon',
@@ -172,6 +167,7 @@ function assertProposalExecution(manifest) {
       'retryLimit',
       'waves',
       'conditions',
+      'reconciliation',
       'approval',
     ]),
     'INVALID_ROUTING_PROPOSAL',
@@ -377,6 +373,7 @@ export function normalizeManifestRouting(manifest) {
       target: resolveEffectiveWaveTarget(execution, wave),
     })),
     conditions: clone(execution.conditions),
+    reconciliation: clone(execution.reconciliation ?? null),
     approval: clone(execution.approval),
   };
   return deepFreeze(routing);
