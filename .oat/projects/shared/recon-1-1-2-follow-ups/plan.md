@@ -750,6 +750,117 @@ git commit -m "fix(p01-t11): canonicalize reconciliation input order"
 
 ---
 
+### Task p01-t12: (review) Cap thorough routing at one contradiction condition
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/lib/contracts.mjs`
+- Modify: `.agents/skills/recon/references/profiles.md`
+- Modify: `.agents/skills/recon/references/packet-contract.md`
+- Modify: `.agents/skills/recon/tests/routing-preview.test.mjs`
+- Modify: `.agents/skills/recon/tests/conditional-routing.test.mjs`
+- Modify: `.agents/skills/recon/tests/workflow.integration.test.mjs`
+
+**Step 1: Understand the issue**
+
+The closed reconciliation declaration accepts one contradiction-resolution
+result, while the thorough profile still permits two condition-bound waves.
+If both activate, the second valid result cannot be incorporated and packet
+publication fails after the work has already run.
+
+**Step 2: Implement fix**
+
+Choose the lower-complexity contract: cap thorough routing at one conditional
+contradiction-resolution wave. Align profile and packet prose, preview limits,
+and conditional-routing controls. Add an end-to-end thorough control proving
+the single triggered condition reconciles and publishes, while a second
+condition is rejected before approval.
+
+**Step 3: Verify**
+
+Run:
+`node --test .agents/skills/recon/tests/routing-preview.test.mjs .agents/skills/recon/tests/conditional-routing.test.mjs .agents/skills/recon/tests/workflow.integration.test.mjs`
+Expected: one triggered thorough condition reconciles and validates; two
+conditions fail the routing cap before worker dispatch.
+
+**Step 4: Commit**
+
+```bash
+git add -- .agents/skills/recon/scripts/lib/contracts.mjs .agents/skills/recon/references/profiles.md .agents/skills/recon/references/packet-contract.md .agents/skills/recon/tests/routing-preview.test.mjs .agents/skills/recon/tests/conditional-routing.test.mjs .agents/skills/recon/tests/workflow.integration.test.mjs
+git commit -m "fix(p01-t12): cap thorough contradiction routing"
+```
+
+---
+
+### Task p01-t13: (review) Keep CLI entry detection side-effect free on imports
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/lib/cli-entry.mjs`
+- Modify: `.agents/skills/recon/tests/cli-entry.test.mjs`
+
+**Step 1: Understand the issue**
+
+The shared direct-execution predicate writes diagnostics and sets the importing
+process exit code when an unrelated, non-resolvable `argv[1]` is present. A
+library import can therefore make its host fail without invoking a recon CLI.
+
+**Step 2: Implement fix**
+
+Keep import detection a pure predicate for unrelated entry paths while
+preserving nonzero direct-execution failures and realpath/symlink support. Add
+a subprocess control whose unresolved host entry imports all CLI modules and
+exits successfully without stderr.
+
+**Step 3: Verify**
+
+Run: `node --test .agents/skills/recon/tests/cli-entry.test.mjs`
+Expected: canonical and symlink launches still run, imports remain silent, and
+an unresolved unrelated host entry does not mutate its exit status.
+
+**Step 4: Commit**
+
+```bash
+git add -- .agents/skills/recon/scripts/lib/cli-entry.mjs .agents/skills/recon/tests/cli-entry.test.mjs
+git commit -m "fix(p01-t13): isolate CLI entry failure policy"
+```
+
+---
+
+### Task p01-t14: (review) Require thorough redundant verification at reconciliation
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/reconcile-ledger.mjs`
+- Modify: `.agents/skills/recon/tests/workflow.integration.test.mjs`
+
+**Step 1: Understand the issue**
+
+Thorough routing requires redundant verification, but the controller currently
+omits that declared input when its manifest artifact is absent and relies on
+later packet validation for the failure.
+
+**Step 2: Implement fix**
+
+Fail reconciliation immediately and specifically when a thorough manifest
+lacks the required redundant-verification artifact. Preserve conditional
+handling for the single contradiction result.
+
+**Step 3: Verify**
+
+Run: `node --test .agents/skills/recon/tests/workflow.integration.test.mjs`
+Expected: thorough reconciliation without redundant verification fails before
+output; the complete thorough control still passes.
+
+**Step 4: Commit**
+
+```bash
+git add -- .agents/skills/recon/scripts/reconcile-ledger.mjs .agents/skills/recon/tests/workflow.integration.test.mjs
+git commit -m "fix(p01-t14): require thorough redundant review"
+```
+
+---
+
 ## Reviews
 
 | Scope | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target                   |
@@ -762,17 +873,18 @@ git commit -m "fix(p01-t11): canonicalize reconciliation input order"
 | plan  | artifact | received        | 2026-09-15 | reviews/archived/artifact-plan-review-2026-09-15T043825Z.md | -                                        | -          | -                             |
 | plan  | artifact | passed          | 2026-09-15 | reviews/archived/artifact-plan-review-2026-09-15T045555Z.md | -                                        | gate       | claude-fable-skip-permissions |
 | final | code     | passed          | 2026-09-15 | reviews/archived/final-review-2026-09-15T062118Z.md         | 4c9cb6532a22d9d3a39b5fb61e70102d58811f8d | auto       | -                             |
-| final | code     | received        | 2026-09-15 | reviews/final-review-2026-09-15T063725Z.md                  | f016f836235c040d131f75d7eeb015c94cb78d7a | gate       | claude-fable-skip-permissions |
+| final | code     | fixes_added     | 2026-09-15 | reviews/archived/final-review-2026-09-15T063725Z.md         | f016f836235c040d131f75d7eeb015c94cb78d7a | gate       | claude-fable-skip-permissions |
 
 ## Implementation Complete
 
 **Summary:**
 
-- Phase 1: 11 tasks — five implementation tasks plus six review-fix tasks,
-  including final-review repairs for packet-contained outputs and deterministic
-  review ordering.
+- Phase 1: 14 tasks — five implementation tasks plus nine review-fix tasks,
+  including the configured gate repairs for a single economical thorough
+  contradiction condition, import-safe CLI entry detection, and early required
+  redundant-review enforcement.
 
-**Total: 11 tasks**
+**Total: 14 tasks**
 
 Ready for final code review and PR preparation after implementation.
 

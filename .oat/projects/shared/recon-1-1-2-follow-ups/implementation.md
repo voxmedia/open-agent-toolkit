@@ -131,6 +131,9 @@ _No implementation run has started._
 - [x] p01-t09: Repair the packet evidence-association prose (`cd75c5ff8`)
 - [x] p01-t10: Contain manifest-directed reconciliation paths (`dffc5c010`)
 - [x] p01-t11: Canonicalize reconciliation review order (`36806913f`)
+- [ ] p01-t12: Cap thorough routing at one contradiction condition
+- [ ] p01-t13: Keep CLI entry detection side-effect free on imports
+- [ ] p01-t14: Require thorough redundant verification at reconciliation
 
 ### Review Received: final
 
@@ -186,6 +189,35 @@ implementation exit gate.
   `/private/tmp/recon-feedback-exit-gate-20260915T062919Z.receipt.json`
 - Gate run: `8147baea-2a6b-4da5-9b26-9a018e5d45e4`
 - Target: `claude-fable-skip-permissions` (cross-family review)
+
+### Review Received: final (configured gate)
+
+**Date:** 2026-09-15
+**Review artifact:**
+`reviews/archived/final-review-2026-09-15T063725Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 0
+- Minor: 2
+
+**New tasks added:** p01-t12, p01-t13, p01-t14
+
+**Dispositions:**
+
+- `I1` (`code_fix_required`, Moderate): convert to p01-t12. Cap thorough at
+  one conditional contradiction wave instead of expanding the reconciliation
+  schema. This aligns with the project's complexity-reduction goal and prevents
+  an approved topology from becoming unpublishable.
+- `m1` (`code_fix_required`, Minor): convert to p01-t13. The predicate's import
+  side effect is localized and cheaper to remove now than document as debt.
+- `m2` (`code_fix_required`, Minor): convert to p01-t14. Early rejection gives
+  the controller a precise failure and is a contained validation change.
+
+**Next:** Execute p01-t12 through p01-t14, run independent final re-review,
+then run a fresh configured implementation exit-gate attempt.
 
 ### Review Received: p01
 

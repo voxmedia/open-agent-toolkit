@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p01-t12
 oat_last_commit: 36806913ffdec74b5fdc1d4469a018aafcd270b4
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -138,7 +138,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Configured exit gate returned blocking findings
+Implementation — Configured exit-gate fixes queued
 
 ## Artifacts
 
@@ -173,6 +173,8 @@ Implementation — Configured exit gate returned blocking findings
 - ✓ Final review received: 1 Important and 1 Medium finding
 - ✓ Two final-review fix tasks completed as `p01-t10` and `p01-t11`
 - ✓ Fresh final re-review passed with no findings
+- ✓ Configured exit-gate review received: 1 Important and 2 Minor findings
+- ○ Three configured gate fix tasks queued as `p01-t12` through `p01-t14`
 
 ## Blockers
 
@@ -180,4 +182,4 @@ None.
 
 ## Next Milestone
 
-Receive the configured gate review and close its findings.
+Execute `p01-t12` through `p01-t14`, then run final re-review.
