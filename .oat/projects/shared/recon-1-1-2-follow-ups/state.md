@@ -48,21 +48,21 @@ oat_phase_recovery_policy:
 oat_workflow_mode: lite # spec-driven | quick | import | lite
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: 'sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324'
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
   project_override: null
   on_failure: block
   max_attempts: 2
-  attempts_completed: 1
+  attempts_completed: 2
   reviewed_head: c188a5b5b16af3f20ba395e041f7c423314bc7a5
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:73f3717566724b35c11fad1c1331a8e5b2d39db6a28927b282be17df206af118'
-  freshness_head: c188a5b5b16af3f20ba395e041f7c423314bc7a5
-  freshness_fingerprint: 'sha256:effective-delta-v1:73f3717566724b35c11fad1c1331a8e5b2d39db6a28927b282be17df206af118'
+  freshness_head: 2c4f04922b21deb063209fdc3b1f8100784520a5
+  freshness_fingerprint: 'sha256:effective-delta-v1:716d5b41d87779f1119ed2b735a89047efd07c7b7066dfdace14d7475e3a75cb'
   launch_state: result_persisted
   launch_attempt_id: 'recon-feedback-exit-gate-2-20260915T070433Z'
   launch_started_at: '2026-09-15T07:04:33Z'
@@ -70,19 +70,19 @@ oat_implement_exit_gate:
   gate_run_marker: '/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/9eec5f13-a6eb-4116-927b-8eb1278faed3.json'
   gate_run_id: 9eec5f13-a6eb-4116-927b-8eb1278faed3
   envelope_status: ok
-  artifact: '.oat/projects/shared/recon-1-1-2-follow-ups/reviews/final-review-2026-09-15T070929Z.md'
-  handoff: 'Gate passed at the important threshold, but the final review still contains non-blocking findings (minor=1). Run oat-project-review-receive for .oat/projects/shared/recon-1-1-2-follow-ups/reviews/final-review-2026-09-15T070929Z.md to disposition them before marking the final review row passed.'
-  receive_state: intent_persisted
+  artifact: '.oat/projects/shared/recon-1-1-2-follow-ups/reviews/archived/final-review-2026-09-15T070929Z.md'
+  handoff: 'Gate attempt 2 passed (run 9eec5f13, 0/0/0/1) and was received; the Minor public-doc alignment was addressed now.'
+  receive_state: completed
   receive_correlation: 'run=9eec5f13-a6eb-4116-927b-8eb1278faed3; handoff=receive; source=reviews/final-review-2026-09-15T070929Z.md; scope=final; type=code'
   receive_source_artifact: '.oat/projects/shared/recon-1-1-2-follow-ups/reviews/final-review-2026-09-15T070929Z.md'
   receive_archived_artifact: '.oat/projects/shared/recon-1-1-2-follow-ups/reviews/archived/final-review-2026-09-15T070929Z.md'
   receive_event_identity: 'final | code | final-review-2026-09-15T070929Z.md'
   receive_pre_head: d1912c49d972a73a017e20bea08f69a254868101
-  receive_commit: null
+  receive_commit: 2c4f04922b21deb063209fdc3b1f8100784520a5
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: '2026-09-15T07:11:21Z'
+  updated_at: '2026-09-15T07:12:44Z'
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
@@ -126,7 +126,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-15T02:47:32.316Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-15T07:12:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-15T07:12:44Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -138,7 +138,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Gate attempt 2 passed; receiving result
+Implementation — Configured exit gate passed; starting Lite closeout
 
 ## Artifacts
 
@@ -186,4 +186,4 @@ None.
 
 ## Next Milestone
 
-Complete the durable gate receive, then run Lite post-implementation sequence.
+Run the Lite post-implementation sequence.
