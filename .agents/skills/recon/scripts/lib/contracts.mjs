@@ -148,7 +148,7 @@ export const profileRoutingPolicy = Object.freeze({
       'redundant-verification',
       'contradiction-resolution',
     ],
-    { lanes: 20, concurrency: 8, conditions: 2 },
+    { lanes: 20, concurrency: 8, conditions: 1 },
   ),
 });
 

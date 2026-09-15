@@ -129,7 +129,7 @@ after every named predecessor and before controller reconciliation, and
 owns unique lane IDs and write roots. Conversely, every wave marked
 `conditional: true` must be the destination of exactly one activating condition;
 dead conditional waves are invalid. Quick permits no conditional wave;
-standard permits one and thorough two. The profile's 4/10/20 adaptive-lane cap
+standard and thorough each permit one. The profile's 4/10/20 adaptive-lane cap
 counts `gather`, `semantic-verification`, `adversarial`, `coverage`,
 `redundant-gather`, `redundant-verification`, and
 `contradiction-resolution` when those modes are permitted by the profile.

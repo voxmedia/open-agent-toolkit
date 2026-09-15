@@ -59,10 +59,10 @@ reopening and verification.
 - Maximum concurrency: 8.
 - Assurance ceiling: `verified` only for claims affirmed by the required
   independent passes and left without unresolved material challenge.
-- Conditional work: optionally predeclare up to two condition-bound
-  `contradiction-resolution` evidence waves within the manifest's hard cap.
-  Each runs only when its approved predicate triggers; both branches feed
-  exactly one mandatory controller reconciliation.
+- Conditional work: optionally predeclare one condition-bound
+  `contradiction-resolution` evidence wave within the manifest's hard cap. It
+  runs only when its approved predicate triggers; both branches feed exactly
+  one mandatory controller reconciliation.
 
 ## Planning Rules
 

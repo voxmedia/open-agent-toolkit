@@ -154,6 +154,7 @@ for (const profile of ['standard', 'thorough']) {
       const manifest = JSON.parse(
         await readFile(join(injectedRoots.packetRoot, 'manifest.json'), 'utf8'),
       );
+      assert.equal(manifest.execution.conditions.length, 1);
       assert.equal(
         manifest.conditionOutcomes[0].disposition,
         conditionalDisposition,

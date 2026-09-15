@@ -230,7 +230,7 @@ test('preview covers all nine worker defaults and preserves independent targets'
   assert.deepEqual(preview.profileCaps, {
     maxLanes: 20,
     maxConcurrency: 8,
-    maxConditions: 2,
+    maxConditions: 1,
   });
   assert.equal(preview.limits.waveCount, 9);
   assert.equal(preview.limits.laneCount, 9);
@@ -457,7 +457,7 @@ test('preview rejects missing, malformed, mismatched, and over-cap v2 routing', 
     code: 'PROFILE_LANE_CAP_EXCEEDED',
   });
 
-  const conditionCap = conditionalDraft();
+  const conditionCap = draftManifest();
   const conditional = {
     waveId: 'wave-conditional-resolution-second',
     mode: 'contradiction-resolution',
