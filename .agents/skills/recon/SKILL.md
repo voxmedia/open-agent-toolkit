@@ -164,9 +164,14 @@ task class and class floor. Preserve provider, route, role, model, effort,
 reasoning mode, and service tier as separate provider-native axes. A null axis
 means the adapter exposes no independently requested control; never translate
 effort between harnesses or normalize an opaque selector. Prefer the canonical
-`recon-worker` role. If that role is unavailable, plan the generic role with the
-complete worker contract as a visible generic role fallback before approval. A
-fallback after approval is forbidden.
+`recon-worker` role only when the current live Task catalog exposes it. A
+materialized `.cursor/agents/recon-worker.md` file proves installation, not that
+the current Cursor Task catalog can launch the role. If the role is absent from
+that observed catalog, plan the generic role with the complete worker contract
+as a visible generic role fallback before approval. A fallback after approval
+is forbidden. Every Cursor recon leaf, including that generic fallback, must be
+launched as a background task so a new parent-chat message cannot turn parent
+turn interruption into an apparent worker crash.
 
 Prepare a `schemaVersion: 2` draft manifest. Its execution object contains a
 complete inherited `target`, limits, waves, conditions, and later the approval.
@@ -218,7 +223,8 @@ result. If any approved axis cannot be satisfied, stop with a
 launch nothing. Never substitute a different axis to make the launch fit.
 
 Launch each wave through the dispatch dependency with exactly the approved
-axes. Immediately before each launch, check the constructed target through the
+axes. On Cursor, launch both the custom worker role and the pre-approved generic
+fallback in the background. Immediately before each launch, check the constructed target through the
 same production helper used by preview:
 
 ```bash
@@ -234,6 +240,13 @@ record that lane as failed with a material `PASS_FAILED` gap carrying its exact
 approved `waveId` and `laneId`. This structured identity is required for
 conditional and non-conditional lanes alike; prose is descriptive, not
 identity.
+
+Worker completion is decided from the approved-path artifact before interpreting
+a later provider transport error. When the artifact's identity, closed schema,
+bytes, and digest validate, the lane is complete; a subsequent stream-close or
+RPC error is recorded as a non-material diagnostic and never triggers a
+replacement launch. Missing or invalid output remains a terminal `PASS_FAILED`
+outcome with no retry or replacement.
 
 Run the passes in this order:
 

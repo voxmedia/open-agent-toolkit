@@ -88,6 +88,12 @@ bundled deterministic artifact validator. A validation failure quarantines the
 candidate; it never authorizes the worker to rewrite a shared artifact, retry,
 or launch a replacement.
 
+For an accepted launch, the approved-path artifact is authoritative over the
+return transport. If its identity, schema, bytes, and digest validate, a later
+stream-close diagnostic is non-material and the lane is complete. Missing or
+invalid output remains terminal `PASS_FAILED`; neither outcome authorizes a
+replacement launch.
+
 ## Invariants
 
 - Read only the assignment's allowed inputs using its source-read authority.

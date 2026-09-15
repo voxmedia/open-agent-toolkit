@@ -466,6 +466,16 @@ export async function runFakeRecon(options = {}) {
     });
   }
 
+  if (options.postWriteStreamClose && !options.invalidOutput) {
+    fixture.manifest.gaps.push({
+      id: 'gap-provider-stream-close',
+      code: 'PROVIDER_STREAM_CLOSED',
+      message:
+        'The provider stream closed after the approved-path artifact validated; completion was retained and no replacement was dispatched.',
+      material: false,
+    });
+  }
+
   let quarantinedPath;
   let ledgerPreserved;
   if (options.invalidOutput) {

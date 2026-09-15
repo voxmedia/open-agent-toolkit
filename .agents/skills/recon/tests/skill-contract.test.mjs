@@ -290,6 +290,21 @@ test('controller publishes honest partials and never retries or substitutes sile
   assert.match(skill, /structural failure[\s\S]{0,240}no `packet\.md`/i);
 });
 
+test('Cursor leaves stay background and durable artifacts outrank stream errors', async () => {
+  const { skill, worker, workerContract } = await readContracts();
+  assert.match(worker, /^is_background:\s*true$/m);
+  assert.match(skill, /Every Cursor recon leaf[\s\S]{0,180}background task/i);
+  assert.match(skill, /generic fallback[\s\S]{0,180}background/i);
+  assert.match(
+    skill,
+    /materialized `\.cursor\/agents\/recon-worker\.md`[\s\S]{0,220}not[\s\S]{0,100}current Cursor Task catalog/i,
+  );
+  assert.match(
+    `${skill}\n${workerContract}`,
+    /approved-path artifact[\s\S]{0,240}(?:stream-close|transport error)[\s\S]{0,200}non-material/i,
+  );
+});
+
 test('packet contract pins exact lane outcome contradictions and same-run errors', async () => {
   const { skill, packetContract } = await readContracts();
   assert.match(

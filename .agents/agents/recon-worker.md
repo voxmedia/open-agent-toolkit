@@ -4,6 +4,7 @@ version: 1.0.1
 description: Executes one bounded recon packet assignment as a non-interactive leaf worker and writes exactly one declared artifact.
 tools: Read, Bash, Grep, Glob, Write, WebSearch, WebFetch
 color: cyan
+is_background: true
 ---
 
 ## Role

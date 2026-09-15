@@ -87,6 +87,32 @@ describe('cursor markdown materializer', () => {
     expect(materialized.content).toContain('# oat-owner: supported-catalogue');
   });
 
+  it('preserves background execution for a model-pinned recon worker', () => {
+    const canonical = parseCanonicalAgentMarkdown(
+      [
+        '---',
+        'name: recon-worker',
+        'description: Execute one bounded recon assignment.',
+        'is_background: true',
+        '---',
+        '',
+        '## Role',
+        '',
+        'Write one artifact.',
+      ].join('\n'),
+      'recon-worker.md',
+    );
+    const mapping = CURSOR_MODEL_PIN_MAPPINGS[0]!;
+    const rendered = parseRendered(
+      materializeCursorAgent({
+        agent: canonical,
+        mapping,
+        owner: 'supported-catalogue',
+      }).content,
+    );
+    expect(rendered.frontmatter.is_background).toBe(true);
+  });
+
   it('rejects normalized desired-name collisions before writes', () => {
     const canonical = parseCanonicalAgentMarkdown(
       '---\nname: oat-reviewer\ndescription: Review.\n---\n\nBody',

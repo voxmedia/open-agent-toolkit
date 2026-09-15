@@ -552,6 +552,48 @@ test('generic worker-role fallback is fixed before approval', async () => {
   assert.equal(manifest.execution.approval.type, 'explicit-user-approval');
 });
 
+test('a valid approved-path artifact wins over a later stream-close diagnostic', async () => {
+  const injectedRoots = await roots();
+  const result = await runFakeRecon({
+    profile: 'quick',
+    postWriteStreamClose: true,
+    roots: injectedRoots,
+  });
+  assert.equal(result.status, 'complete');
+  assert.deepEqual(result.failures, []);
+  const manifest = JSON.parse(
+    await readFile(join(injectedRoots.packetRoot, 'manifest.json'), 'utf8'),
+  );
+  assert.ok(
+    manifest.gaps.some(
+      (gap) => gap.code === 'PROVIDER_STREAM_CLOSED' && gap.material === false,
+    ),
+  );
+  assert.equal(
+    manifest.gaps.some((gap) => gap.code === 'PASS_FAILED'),
+    false,
+  );
+});
+
+test('a stream-close does not rescue invalid output or launch replacement work', async () => {
+  const injectedRoots = await roots();
+  const result = await runFakeRecon({
+    profile: 'standard',
+    invalidOutput: true,
+    postWriteStreamClose: true,
+    roots: injectedRoots,
+  });
+  assert.equal(result.status, 'partial');
+  const manifest = JSON.parse(
+    await readFile(join(injectedRoots.packetRoot, 'manifest.json'), 'utf8'),
+  );
+  assert.ok(manifest.gaps.some((gap) => gap.code === 'PASS_FAILED'));
+  assert.equal(
+    manifest.gaps.some((gap) => gap.code === 'PROVIDER_STREAM_CLOSED'),
+    false,
+  );
+});
+
 test('dispatch-axis drift stops before accepted launch and publication', async () => {
   const injectedRoots = await roots();
   const result = await runFakeRecon({
