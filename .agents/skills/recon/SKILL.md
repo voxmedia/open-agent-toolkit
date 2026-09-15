@@ -6,7 +6,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Glob, Grep, Bash, AskUserQuestion, Agent, mcp__*
 metadata:
-  version: 1.1.3
+  version: 1.1.4
 ---
 
 # Recon

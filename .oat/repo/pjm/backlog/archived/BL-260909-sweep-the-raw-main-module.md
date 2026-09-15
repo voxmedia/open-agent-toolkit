@@ -1,7 +1,7 @@
 ---
 id: BL-260909-sweep-the-raw-main-module
 title: Sweep the raw main-module guard across the sibling skill scripts
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: M
@@ -11,7 +11,7 @@ labels:
   - wave-7-followup
 assignee: null
 created: 2026-09-09T00:02:03.255Z
-updated: 2026-09-09T00:02:03.255Z
+updated: '2026-09-15T14:00:00Z'
 associated_issues: []
 external_plans: []
 ---

@@ -8,6 +8,7 @@
 
 ## Completed Items
 
+- 2026-09-15 — BL-260909-sweep-the-raw-main-module — Sweep the raw main-module guard across the sibling skill scripts — Every skill entry-point script uses the canonical isDirectInvocation guard, validate-nonarchive-lifecycle-receipt gains one, and per-skill tests run each script through a symlinked install root in plain and preserve-symlinks forms.
 - 2026-09-15 — BL-260915-present-design-section-drafts — Present design section drafts in chat, not inside the approval prompt — oat-project-quick-start lightweight design now shows each section draft as chat text and asks for approval separately, matching oat-project-design; a contract test pins both skills (PR #300).
 - 2026-09-15 — BL-260915-stop-the-implementation — Stop the implementation template preamble from quoting a section heading — The implementation template preamble names the Final Summary section in prose, and a template test rejects any template line that quotes its own heading (PR #300).
 - 2026-09-15 — BL-260911-make-oat-doctor — Make oat-doctor a collaborative router over config, PJM, agent instructions, and docs health — Shipped by oat-doctor-router (PR #300, CLI 0.2.76): oat-doctor 2.0.0 sweeps config, PJM, agent instructions, docs, and tools read-only, reports by area and severity, and dives with teaching and exact fixes; oat config describe carries a structured deprecated field.

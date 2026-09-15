@@ -21,7 +21,7 @@ adding locator-repair or controller-retry state machines.
 
 ## What Was Implemented
 
-- Released the canonical recon skill as 1.1.3 and recon-worker as 1.0.2.
+- Released the canonical recon skill as 1.1.4 and recon-worker as 1.0.2.
 - Made every Cursor recon leaf a background task, including the approved generic
   fallback, while preserving the distinction between a materialized role and
   live Task-catalog availability.
@@ -100,7 +100,7 @@ independent final review passes all succeeded.
 
 PR #302 is open. The latest `origin/main` was merged, its generated decision
 index conflict was rebuilt from source records, and the lockstep public package
-version was advanced to 0.2.77 above main's 0.2.76 release.
+version was advanced to 0.2.78 above main's 0.2.77 release.
 
 ## Follow-up Items
 
