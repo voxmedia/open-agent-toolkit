@@ -48,7 +48,7 @@ oat_phase_recovery_policy:
 oat_workflow_mode: lite # spec-driven | quick | import | lite
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: pending
+  status: blocked
   resolution: configured
   disposition: null
   config_fingerprint: 'sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324'
@@ -57,7 +57,7 @@ oat_implement_exit_gate:
   project_override: null
   on_failure: block
   max_attempts: 2
-  attempts_completed: 0
+  attempts_completed: 1
   reviewed_head: 4c9cb6532a22d9d3a39b5fb61e70102d58811f8d
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:be98110931229e9bbae10ed112115ad1f47fe27c180112010889a01682a581bd'
@@ -70,19 +70,19 @@ oat_implement_exit_gate:
   gate_run_marker: '/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/8147baea-2a6b-4da5-9b26-9a018e5d45e4.json'
   gate_run_id: 8147baea-2a6b-4da5-9b26-9a018e5d45e4
   envelope_status: blocked
-  artifact: '.oat/projects/shared/recon-1-1-2-follow-ups/reviews/final-review-2026-09-15T063725Z.md'
-  handoff: 'Run oat-project-review-receive for .oat/projects/shared/recon-1-1-2-follow-ups/reviews/final-review-2026-09-15T063725Z.md before treating this gate review as consumed.'
-  receive_state: intent_persisted
+  artifact: '.oat/projects/shared/recon-1-1-2-follow-ups/reviews/archived/final-review-2026-09-15T063725Z.md'
+  handoff: 'Gate attempt 1 blocked (run 8147baea, 0/1/0/2) and was received; execute p01-t12 through p01-t14, re-review, then run attempt 2.'
+  receive_state: completed
   receive_correlation: 'run=8147baea-2a6b-4da5-9b26-9a018e5d45e4; handoff=receive; source=reviews/final-review-2026-09-15T063725Z.md; scope=final; type=code'
   receive_source_artifact: '.oat/projects/shared/recon-1-1-2-follow-ups/reviews/final-review-2026-09-15T063725Z.md'
   receive_archived_artifact: '.oat/projects/shared/recon-1-1-2-follow-ups/reviews/archived/final-review-2026-09-15T063725Z.md'
   receive_event_identity: 'final | code | final-review-2026-09-15T063725Z.md'
   receive_pre_head: 5482a46ca980a7c7cf580112444ebd46d652979c
-  receive_commit: null
+  receive_commit: 4b77f5def1894027435c93defe60e4d783396e10
   receive_eligible: true
-  receive_completed: false
-  failure: null
-  updated_at: '2026-09-15T06:39:10Z'
+  receive_completed: true
+  failure: 'blocking_findings'
+  updated_at: '2026-09-15T06:40:54Z'
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
@@ -126,7 +126,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-15T02:47:32.316Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-15T06:39:10Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-15T06:40:54Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
