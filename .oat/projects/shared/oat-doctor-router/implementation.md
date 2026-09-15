@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-09-14
+oat_last_updated: 2026-09-15
 oat_current_task_id: null
 oat_generated: false
 ---
@@ -10,7 +10,7 @@ oat_generated: false
 # Implementation: oat-doctor-router
 
 **Started:** 2026-09-14
-**Last Updated:** 2026-09-14
+**Last Updated:** 2026-09-15
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -20,7 +20,69 @@ oat_generated: false
 > - When all plan tasks are complete, set `oat_current_task_id: null`.
 > - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews` (e.g., `| final | code | passed | ... |`).
 > - Keep phase/task statuses consistent with the Progress Overview table so restarts resume correctly.
-> - Before running the `oat-project-pr-final` skill, ensure `## Final Summary (for PR/docs)
+> - Before running the `oat-project-pr-final` skill, ensure `## Final Summary (for PR/docs)` is filled with what was actually implemented.
+
+## Progress Overview
+
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 2     | 2/2       |
+| Phase 2 | complete | 4     | 4/4       |
+
+**Total:** 6/6 tasks completed
+
+---
+
+## Phase 1: Config describe carries deprecations
+
+**Status:** complete — `229171eed` (p01-t01), `2ae812d70` (p01-t02). Gates at the boundary: every gate exit 0 except `pnpm test` / `test:skills`, red only on the pre-existing `explainer-kit` fixture (see § Live verification); forced package run `Cached: 0`, one pre-existing pin failure repinned at `c92ccc469`.
+
+### Task p01-t01: Add `deprecated` to `ConfigCatalogEntry` and the five deprecated entries — complete
+
+Five entries carry `{ supersededBy, note?, legacyValues? }`; `legacyValues` references the exported `VALID_POST_IMPLEMENT_LEGACY_SEQUENCES`. `workflow.dispatchCeiling.preset` first superseded to `workflow.dispatchCeiling.providers.codex`; after the Bugbot review of PR #300 it supersedes to `workflow.dispatchPolicy.policy`, the provider-neutral named policy (see § Deviations). Neutralized on `explainers.defaults.palette`: the prose/field sweep test went red; restored.
+
+### Task p01-t02: Docs line and lockstep bump — complete
+
+Describe bullets in `config-and-local-state.md`; lockstep 0.2.74 → 0.2.75 (rebased to 0.2.76 after PR #301 merged); sync manifest restamped.
+
+## Phase 2: The doctor router
+
+**Status:** complete — `2ebfd5344` (p02-t01), `be2dc0d24` + `69f2b1e93` (p02-t02), `2ca2d9050` (p02-t03), `8d14eed63` (p02-t04).
+
+### Task p02-t01: Rewrite `oat-doctor` as the sweep-report-dive router — complete
+
+Skill 1.2.4 → 2.0.0. The synced-bookkeeping inventory anchor moved to the new synced-health rule (the validator requires `project:synced_tracked_artifacts` at the anchor site). Adoption-state literals corrected during live verification.
+
+### Task p02-t02: Skill contract test — complete
+
+Contract test green (6 cases at the task, extended through review with projection and repair cases); proven to fail on a dropped `pjm:*` id and a misspelled sweep command. The `skills.test.ts` doctor-inventory block that pinned the 1.x pack manifest is replaced by a no-manifest contract.
+
+### Task p02-t03: Docs pages — complete
+
+Two docs pages; the stale `oat --scope all sync` example at `config-and-local-state.md:284` is kept as the illustration it is, with the `allow-stale-invocation` marker the doctor honors.
+
+### Task p02-t04: Live verification and phase gates — complete
+
+See § Live verification.
+
+## Deviations from Plan / Design
+
+| Deviation                                                                                                            | Source of truth                                   | Why                                                                                                                                                       |
+| -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PJM adoption states are `none` / `partial-initialization` / `inferred-legacy` / `declared`, not `absent` / `partial` | implementation (design corrected at final review) | the design guessed the literals; `packages/cli/src/commands/pjm/adoption.ts` defines them                                                                 |
+| `workflow.dispatchCeiling.preset` supersedes to `workflow.dispatchPolicy.policy`, not `workflow.dispatchCeiling`     | implementation                                    | the design's target is not a catalog key; the first successor (`providers.codex`) covered one provider only, corrected after the Bugbot review of PR #300 |
+| `skills.test.ts` doctor-inventory pins replaced, and `synced-bookkeeping-sites.json` anchor moved                    | implementation                                    | neither was named by the plan; both pinned the 1.x prose the rewrite removed                                                                              |
+| Test-only repin of the #299 completion-guard prose (`c92ccc469`)                                                     | implementation                                    | pre-existing red on `origin/main`; out of scope but required for CI                                                                                       |
+| Plan exit gate not run                                                                                               | operator decision                                 | declined after implementation had already completed; the implementation exit gate ran instead                                                             |
+
+## Test Results
+
+| Phase | Tests Run                                          | Passed                            | Failed                                                                    | Notes                                                                 |
+| ----- | -------------------------------------------------- | --------------------------------- | ------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| 1     | forced `turbo run test` + smoke + skills + scripts | all package tests, smoke, scripts | `test:skills`: 1 (pre-existing `explainer-kit` fixture, fixed by PR #301) | `Cached: 0`                                                           |
+| 2     | same list                                          | same                              | same 1                                                                    | contract test green; CI, release dry run, and Bugbot green on PR #300 |
+
+## Final Summary (for PR/docs)
 
 **What shipped:**
 
@@ -135,11 +197,11 @@ Every area offers its bootstrap. With `OAT_NON_INTERACTIVE=1` the same run ends 
 
 Corrections made during verification: the CLI's adoption states are `declared`, `inferred-legacy`, `partial-initialization`, `none` (`packages/cli/src/commands/pjm/adoption.ts:8`), not the `absent`/`partial` the design assumed; the PJM rule and dive now use the CLI's literals.
 
-Pre-existing failures on `origin/main` observed at the Phase 1 gate, not caused by this project: (1) `review-skill-contracts.test.ts` pinned the old literal guard path after #299 switched `oat-project-complete` to `"$RECAP_TERMINAL_GUARD"` — repinned in this branch (`4e4a47480`) because it kept every PR's CI red; (2) `.agents/skills/explainer-kit/tests/flow.e2e.test.mjs` "real program material passes …" fails `ledgerToPage` (`cohesion-claim-unobserved` for `numericClaims.wave-1` … `wave-4`): the authored fixture page no longer observes the live program material's wave numbers — the recap project's own test drifting against real inputs; left for a follow-up item.
+Pre-existing failures on `origin/main` observed at the Phase 1 gate, not caused by this project: (1) `review-skill-contracts.test.ts` pinned the old literal guard path after #299 switched `oat-project-complete` to `"$RECAP_TERMINAL_GUARD"` — repinned in this branch (`c92ccc469`) because it kept every PR's CI red; (2) `.agents/skills/explainer-kit/tests/flow.e2e.test.mjs` "real program material passes …" fails `ledgerToPage` (`cohesion-claim-unobserved` for `numericClaims.wave-1` … `wave-4`): the authored fixture page no longer observes the live program material's wave numbers — the recap project's own test drifting against real inputs; left for a follow-up item.
 
 ### 2026-09-15 — Final code review received
 
-- `code-final-review-2026-09-15T034718Z.md` (head `6540d08f9`): 0 critical, 2 important, 3 medium, 3 minor — CHANGES REQUESTED. All 8 applied (`resolve_in_artifact` / fixed in code), received inline: the docs sentence at `config-and-local-state.md:284` keeps the stale `oat --scope all sync` example as an illustration with the `allow-stale-invocation` marker the doctor honors (the p02-t03 "fix" had made the sentence call the current form stale); `implementation.md` filled from the scaffold (progress, per-task records, deviations, test results, final summary); the design's adoption literals corrected to the CLI's four; a projection-fields contract test runs every sweep command against the built CLI and asserts each projected field exists; the `pjm:*` harvest regex widened and the docs-page existence asserted; the pack-manifest guard matches list and table tokens, not only trailing commas; the docs-surface check lists `apps/docs`, `apps/*-docs`, and `documentation/` as bootstrap's preflight does; `BL-260915-re-author-the-explainer-kit` filed for the pre-existing `explainer-kit` fixture drift that keeps `pnpm test:skills` red on `origin/main`.
+- `code-final-review-2026-09-15T034718Z.md` (head `8d14eed63`): 0 critical, 2 important, 3 medium, 3 minor — CHANGES REQUESTED. All 8 applied (`resolve_in_artifact` / fixed in code), received inline: the docs sentence at `config-and-local-state.md:284` keeps the stale `oat --scope all sync` example as an illustration with the `allow-stale-invocation` marker the doctor honors (the p02-t03 "fix" had made the sentence call the current form stale); `implementation.md` filled from the scaffold (progress, per-task records, deviations, test results, final summary); the design's adoption literals corrected to the CLI's four; a projection-fields contract test runs every sweep command against the built CLI and asserts each projected field exists; the `pjm:*` harvest regex widened and the docs-page existence asserted; the pack-manifest guard matches list and table tokens, not only trailing commas; the docs-surface check lists `apps/docs`, `apps/*-docs`, and `documentation/` as bootstrap's preflight does; `BL-260915-re-author-the-explainer-kit` filed for the pre-existing `explainer-kit` fixture drift that keeps `pnpm test:skills` red on `origin/main`.
 
 ### 2026-09-15 — Configured implementation exit gate, attempt 1 (cross-family, `cursor-gpt-5-6-sol-xhigh`)
 

@@ -85,6 +85,10 @@ oat_project_created: '2026-09-14T23:04:16.039Z' # ISO 8601 UTC timestamp — set
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
 oat_project_state_updated: '2026-09-15T11:36:02Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
+oat_project_recap:
+  decision: skip
+  source: interactive
+  decided_at: '2026-09-15T12:49:14.941Z'
 ---
 
 # Project State: oat-doctor-router
