@@ -284,6 +284,20 @@ Those substantive recon and test changes invalidate its immutable reviewed
 basis. The first generation is marked `stale` before attempt 2 is initialized
 from the fresh passing final-review head.
 
+### Configured Implementation Exit Gate: attempt 2 basis initialized
+
+- Reviewed head: `c188a5b5b16af3f20ba395e041f7c423314bc7a5`
+- Integration base: `origin/main` (merge base
+  `81bf04c1e48798276f5a56872d759057893f4efe`)
+- Configuration fingerprint:
+  `sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324`
+- Implementation fingerprint:
+  `sha256:effective-delta-v1:73f3717566724b35c11fad1c1331a8e5b2d39db6a28927b282be17df206af118`
+- Prior attempts consumed: 1 of 2
+
+The user-scoped blocking gate resolves unchanged with no project override. The
+second and final attempt is pending from the fresh passing final-review basis.
+
 ### Review Received: p01
 
 **Date:** 2026-09-15

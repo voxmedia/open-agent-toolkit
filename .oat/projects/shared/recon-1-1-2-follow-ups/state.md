@@ -48,7 +48,7 @@ oat_phase_recovery_policy:
 oat_workflow_mode: lite # spec-driven | quick | import | lite
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: stale
+  status: pending
   resolution: configured
   disposition: null
   config_fingerprint: 'sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324'
@@ -58,31 +58,31 @@ oat_implement_exit_gate:
   on_failure: block
   max_attempts: 2
   attempts_completed: 1
-  reviewed_head: 4c9cb6532a22d9d3a39b5fb61e70102d58811f8d
+  reviewed_head: c188a5b5b16af3f20ba395e041f7c423314bc7a5
   implementation_base_ref: origin/main
-  implementation_fingerprint: 'sha256:effective-delta-v1:be98110931229e9bbae10ed112115ad1f47fe27c180112010889a01682a581bd'
-  freshness_head: 4c9cb6532a22d9d3a39b5fb61e70102d58811f8d
-  freshness_fingerprint: 'sha256:effective-delta-v1:be98110931229e9bbae10ed112115ad1f47fe27c180112010889a01682a581bd'
-  launch_state: result_persisted
-  launch_attempt_id: 'recon-feedback-exit-gate-20260915T062919Z'
-  launch_started_at: '2026-09-15T06:29:19Z'
-  launch_result_receipt: '/private/tmp/recon-feedback-exit-gate-20260915T062919Z.receipt.json'
-  gate_run_marker: '/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/8147baea-2a6b-4da5-9b26-9a018e5d45e4.json'
-  gate_run_id: 8147baea-2a6b-4da5-9b26-9a018e5d45e4
-  envelope_status: blocked
-  artifact: '.oat/projects/shared/recon-1-1-2-follow-ups/reviews/archived/final-review-2026-09-15T063725Z.md'
-  handoff: 'Gate attempt 1 blocked (run 8147baea, 0/1/0/2) and was received; execute p01-t12 through p01-t14, re-review, then run attempt 2.'
-  receive_state: completed
-  receive_correlation: 'run=8147baea-2a6b-4da5-9b26-9a018e5d45e4; handoff=receive; source=reviews/final-review-2026-09-15T063725Z.md; scope=final; type=code'
-  receive_source_artifact: '.oat/projects/shared/recon-1-1-2-follow-ups/reviews/final-review-2026-09-15T063725Z.md'
-  receive_archived_artifact: '.oat/projects/shared/recon-1-1-2-follow-ups/reviews/archived/final-review-2026-09-15T063725Z.md'
-  receive_event_identity: 'final | code | final-review-2026-09-15T063725Z.md'
-  receive_pre_head: 5482a46ca980a7c7cf580112444ebd46d652979c
-  receive_commit: 4b77f5def1894027435c93defe60e4d783396e10
-  receive_eligible: true
-  receive_completed: true
-  failure: 'remediated_implementation_basis_changed'
-  updated_at: '2026-09-15T07:02:53Z'
+  implementation_fingerprint: 'sha256:effective-delta-v1:73f3717566724b35c11fad1c1331a8e5b2d39db6a28927b282be17df206af118'
+  freshness_head: c188a5b5b16af3f20ba395e041f7c423314bc7a5
+  freshness_fingerprint: 'sha256:effective-delta-v1:73f3717566724b35c11fad1c1331a8e5b2d39db6a28927b282be17df206af118'
+  launch_state: not_started
+  launch_attempt_id: null
+  launch_started_at: null
+  launch_result_receipt: null
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_state: not_started
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
+  failure: null
+  updated_at: '2026-09-15T07:03:47Z'
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
@@ -126,7 +126,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-15T02:47:32.316Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-15T07:02:53Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-15T07:03:47Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
