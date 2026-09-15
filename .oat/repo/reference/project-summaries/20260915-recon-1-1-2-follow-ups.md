@@ -36,8 +36,9 @@ adding locator-repair or controller-retry state machines.
   controller stage that validates two named outputs and atomically promotes only
   the candidate ledger.
 - Bound reconciliation inputs to canonical paths and digests, contained all
-  manifest-directed writes, canonicalized review ordering, and required the
-  thorough redundant-verification artifact before output.
+  manifest-directed writes, canonicalized review ordering, required redundant
+  verification for full thorough assurance, and preserved honest publication at
+  achieved standard when that conditional review fails with exact gap evidence.
 - Updated the public recon guide, provider projection, triage record, tests, and
   lockstep package release metadata.
 
@@ -67,8 +68,8 @@ Final gate review exposed a mismatch between thorough routing and the closed
 reconciliation schema: routing allowed two contradiction conditions while the
 schema could consume one result. The project chose the lower-complexity fix and
 capped thorough at one condition. Later review also required import-safe CLI
-entry detection and earlier rejection when thorough redundant verification is
-missing.
+entry detection and explicit degraded-profile coverage when thorough redundant
+verification fails after launch.
 
 ## Notable Challenges
 
@@ -92,16 +93,14 @@ product behavior.
 
 ## Integration Notes
 
-Focused suites passed with 300 fresh recon tests and 242 Cursor/CLI validation
-tests. Check, type-check, build, release validation, docs build, lint, format,
-phase review, final review, and the cross-family implementation gate passed.
-The full workspace test remained at 7,389/7,390 because of one unchanged
-baseline assertion in `review-skill-contracts.test.ts`.
+After the final review fixes and `origin/main` integration, the complete recon
+suite passed with 302 tests. Check, type-check, full workspace test, build, skill
+and release version gates, release validation, docs build, lint, format, and two
+independent final review passes all succeeded.
 
-PR #302 is open. PR #301 advanced `main` and the lockstep release files after
-the final gate, so the PR currently requires integration conflict resolution.
-That resolution must preserve the reviewed behavior and follow the repository's
-version and review/gate policy.
+PR #302 is open. The latest `origin/main` was merged, its generated decision
+index conflict was rebuilt from source records, and the lockstep public package
+version was advanced to 0.2.77 above main's 0.2.76 release.
 
 ## Follow-up Items
 
