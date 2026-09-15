@@ -14,158 +14,92 @@ oat_generated: false
 
 > This document is used to resume interrupted implementation sessions.
 >
-> Conventions:
->
-> - `oat_current_task_id` always points at the **next plan task to do** (not the last completed task).
-> - When all plan tasks are complete, set `oat_current_task_id: null`.
-> - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews` (e.g., `| final | code | passed | ... |`).
-> - Keep phase/task statuses consistent with the Progress Overview table so restarts resume correctly.
-> - Before running the `oat-project-pr-final` skill, ensure `## Final Summary (for PR/docs)` is filled with what was actually implemented.
+> - `oat_current_task_id` points to the next plan task to do.
+> - Reviews are tracked in `plan.md`, not as implementation tasks.
+> - Task commits remain scoped to the files declared by the plan.
 
 ## Progress Overview
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase 1 | in_progress | 5     | 0/5       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/5 tasks completed
 
----
-
-## Phase 1: {Phase Name}
+## Phase 1: Simplify and harden recon execution
 
 **Status:** in_progress
 **Started:** 2026-09-15
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
-**Outcome (what changed):**
+**Outcome:** pending
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+**Key files touched:** pending
 
-**Key files touched:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+**Verification:** pending
 
 **Notes / Decisions:**
 
-- {trade-offs or deviations discovered during implementation}
+- Lite plan selected after the whole-feedback complexity review.
+- No locator-repair or controller schema-retry state machine will be added.
 
-### Task p01-t01: {Task Name}
+### Task p01-t01: Make Cursor background launch and artifact completion explicit
 
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
+**Status:** in_progress
+**Commit:** -
 
-**Outcome (required when completed):**
-
-- {what materially changed (not “did task”, but “system now does X”)}
-
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
-
----
-
-### Task p01-t02: {Task Name}
+### Task p01-t02: Make recon CLI entry detection realpath-safe
 
 **Status:** pending
 **Commit:** -
 
-**Notes:**
-
-- {Notes will be added during implementation}
-
----
-
-## Phase 2: {Phase Name}
-
-**Status:** pending
-**Started:** -
-
-### Task p02-t01: {Task Name}
+### Task p01-t03: Close worker excerpt and review-result schemas
 
 **Status:** pending
 **Commit:** -
 
----
+### Task p01-t04: Move reconciliation to one deterministic controller stage
+
+**Status:** pending
+**Commit:** -
+
+### Task p01-t05: Align docs, triage disposition, and release metadata
+
+**Status:** pending
+**Commit:** -
 
 ## Orchestration Runs
 
-_Each run from `oat-project-implement` appends an entry below with:_
-_- Run header (number, timestamp, branch, tier, policy, phase counts)_
-_- Phase Outcomes table_
-_- Parallel Groups list_
-_- Outstanding Items_
-
 <!-- orchestration-runs-start -->
 
-_Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
+_No implementation run has started._
 
 <!-- orchestration-runs-end -->
 
----
-
 ## Implementation Log
-
-Chronological log of implementation progress.
 
 ### 2026-09-15
 
-**Session Start:** {time}
+**Session Start:** planning only
 
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
-
-**What changed (high level):**
-
-- {short bullets suitable for PR/docs}
+- [ ] p01-t01: Make Cursor background launch and artifact completion explicit
+- [ ] p01-t02: Make recon CLI entry detection realpath-safe
+- [ ] p01-t03: Close worker excerpt and review-result schemas
+- [ ] p01-t04: Move reconciliation to one deterministic controller stage
+- [ ] p01-t05: Align docs, triage disposition, and release metadata
 
 **Decisions:**
 
-- {Decision made and rationale}
+- Use both canonical `is_background` frontmatter and recon launch prose.
+- Treat installed role and live Cursor discovery as separate facts.
+- Prefer worker self-validation over a controller retry lifecycle.
+- Replace the two-output reconciliation worker ambiguity with one deterministic
+  controller stage.
 
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
-
-**Blockers:**
-
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
-
----
-
-### 2026-09-15
-
-**Session Start:** {time}
-
-{Continue log...}
-
----
+**Blockers:** none
 
 ## Deviations from Plan / Design
-
-Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
 | Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
 | ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
@@ -173,38 +107,24 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 ## Test Results
 
-Track test execution during implementation.
-
 | Phase | Tests Run | Passed | Failed | Coverage |
 | ----- | --------- | ------ | ------ | -------- |
 | 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
-**What shipped:**
+**What shipped:** pending
 
-- {capability 1}
-- {capability 2}
+**Behavioral changes:** pending
 
-**Behavioral changes (user-facing):**
+**Key files / modules:** pending
 
-- {bullet}
+**Verification performed:** pending
 
-**Key files / modules:**
-
-- `{path}` - {purpose}
-
-**Verification performed:**
-
-- {tests/lint/typecheck/build/manual steps}
-
-**Design deltas (if any):**
-
-- {what changed vs design.md and why}
+**Design deltas:** pending
 
 ## References
 
 - Plan: `plan.md`
-- Design: `design.md`
-- Spec: `spec.md`
+- Feedback triage:
+  `.oat/repo/pjm/triage/2026-09-14-recon-1-1-2-feedback.md`
