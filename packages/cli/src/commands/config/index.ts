@@ -1050,8 +1050,8 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     description:
       'Legacy compatibility alias for capped managed dispatch policies. Provider-neutral ceiling preset that compiles to concrete per-provider values at write time. balanced → Codex: high, Claude: sonnet; maximum → Codex: xhigh, Claude: opus; cost-conscious → Codex: medium, Claude: sonnet. Preset provenance only; runtime dispatch reads concrete providers values. Resolution: local > shared > user > default.',
     deprecated: {
-      supersededBy: 'workflow.dispatchCeiling.providers.codex',
-      note: 'and workflow.dispatchCeiling.providers.claude; the preset compiles to these per-provider values',
+      supersededBy: 'workflow.dispatchPolicy.policy',
+      note: 'with workflow.dispatchPolicy.mode managed; a provider-neutral named policy that covers every provider',
     },
   },
   {

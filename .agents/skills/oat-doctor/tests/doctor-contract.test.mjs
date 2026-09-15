@@ -162,21 +162,30 @@ function sweepTable() {
   assert.ok(rows.length >= 7, `expected 7 sweep rows, found ${rows.length}`);
   return rows.map(([, command, projection]) => {
     const fields = [];
-    // `.checks[] | {name, status, message}` → checks[].name …; `.adoption` → adoption
-    for (const m of projection.matchAll(
-      /\.([a-zA-Z]+)(\[\])?(?:[^{]*?\{([^}]*)\})?/g,
-    )) {
-      const [, head, arr, inner] = m;
-      if (arr && inner) {
-        for (const name of inner
+    // A row may name several projections joined by "and" (for example
+    // `.adoption` and `.checks[] | {name, status, message}`). Parse each
+    // backtick segment on its own so no sibling projection is swallowed.
+    const segments = [...projection.matchAll(/`([^`]+)`/g)].map((m) =>
+      m[1].replace(/\\\|/g, '|'),
+    );
+    assert.ok(segments.length > 0, `${command}: no projection segments`);
+    for (const segment of segments) {
+      const arrayed = segment.match(
+        /^\.([a-zA-Z]+)\[\](?:\s*\|\s*select\([^)]*\))?\s*\|\s*\{([^}]*)\}/,
+      );
+      if (arrayed) {
+        for (const name of arrayed[2]
           .split(',')
           .map((x) => x.trim())
           .filter(Boolean)) {
-          fields.push(`${head}[].${name}`);
+          fields.push(`${arrayed[1]}[].${name}`);
         }
-      } else if (!arr) {
-        fields.push(head);
+        continue;
       }
+      for (const m of segment.matchAll(
+        /(?:^|,\s*)\.([a-zA-Z]+)(?=\s*(?:,|$))/g,
+      ))
+        fields.push(m[1]);
     }
     return { command: command.split(' ').slice(1), fields };
   });
@@ -232,10 +241,12 @@ test('every field the sweep projects exists in the built CLI output, on every it
     join(home, '.agents/skills/oat-docs/SKILL.md'),
     docsSkill.replace(/^  version: .*$/m, '  version: 0.0.1'),
   );
+  const parsedRows = [];
   for (const { command, fields } of sweepTable()) {
     const label = `oat ${command.join(' ')}`;
     const payload = await runJson(command);
     requireFields(payload, fields, label);
+    parsedRows.push({ label, fields });
     if (command[0] === 'tools' && command[1] === 'outdated') {
       const seeded = await runJson(
         [
@@ -251,6 +262,26 @@ test('every field the sweep projects exists in the built CLI output, on every it
       requireFields(seeded, fields, `${label} (seeded)`);
     }
   }
+  // Rows that name more than one projection must yield all of them.
+  const byLabel = Object.fromEntries(
+    parsedRows.map((row) => [row.label, row.fields]),
+  );
+  assert.ok(
+    byLabel['oat pjm doctor --json'].includes('adoption'),
+    'pjm doctor: adoption not parsed',
+  );
+  assert.ok(
+    byLabel['oat pjm doctor --json'].includes('checks[].name'),
+    'pjm doctor: checks[] not parsed',
+  );
+  assert.ok(
+    byLabel['oat instructions validate --json'].includes('summary'),
+    'instructions validate: summary not parsed',
+  );
+  assert.ok(
+    byLabel['oat instructions validate --json'].includes('entries[].status'),
+    'instructions validate: entries[] not parsed',
+  );
 });
 
 test('every cited docs page exists, with or without a section', async () => {

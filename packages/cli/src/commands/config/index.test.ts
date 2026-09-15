@@ -5872,8 +5872,7 @@ describe('oat config', () => {
       'explainers.defaults.visualProfile': 'explainers.defaults.style',
       'workflow.postImplementSequence':
         'workflow.postImplementSequence (structured {preApproval, postApproval})',
-      'workflow.dispatchCeiling.preset':
-        'workflow.dispatchCeiling.providers.codex',
+      'workflow.dispatchCeiling.preset': 'workflow.dispatchPolicy.policy',
     };
 
     async function describeEntries(): Promise<Array<Record<string, unknown>>> {
