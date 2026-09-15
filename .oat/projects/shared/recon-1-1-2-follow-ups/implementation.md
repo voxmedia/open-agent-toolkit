@@ -308,6 +308,17 @@ second and final attempt is pending from the fresh passing final-review basis.
 The launch intent is persisted before invoking the configured command. No
 replacement may be launched after acceptance.
 
+### Configured Implementation Exit Gate: attempt 2 accepted
+
+- Gate run: `9eec5f13-a6eb-4116-927b-8eb1278faed3`
+- Marker:
+  `/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/9eec5f13-a6eb-4116-927b-8eb1278faed3.json`
+- Target: `claude-fable-skip-permissions`
+
+The run marker matches the normalized project, configured runtime/target, and
+persisted start boundary. This attempt is accepted and must be resumed rather
+than relaunched.
+
 ### Review Received: p01
 
 **Date:** 2026-09-15
