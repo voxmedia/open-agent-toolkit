@@ -1590,6 +1590,15 @@ test('rejects missing artifacts, hash mismatches, and path escape', async () => 
   });
   await writeJson(escape.manifestPath, escape.manifest);
   await expectInvalid(escape, 'PATH_ESCAPE');
+
+  const reconciliationEscape = await makePacket({ profile: 'standard' });
+  reconciliationEscape.manifest.execution.reconciliation.outputLedger =
+    '../escaped-ledger.json';
+  await writeJson(
+    reconciliationEscape.manifestPath,
+    reconciliationEscape.manifest,
+  );
+  await expectInvalid(reconciliationEscape, 'INVALID_RECONCILIATION_PATH');
 });
 
 test('detects source drift, wrong excerpts, and shifted lines', async () => {

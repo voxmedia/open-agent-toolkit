@@ -6,6 +6,7 @@ import {
   readFile,
   realpath,
   rm,
+  symlink,
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -921,7 +922,7 @@ test('controller reconciliation CLI enforces manifest paths and the exact review
     encoding: 'utf8',
   });
   assert.notEqual(sibling.status, 0);
-  assert.match(sibling.stderr, /review set drifts/i);
+  assert.match(sibling.stderr, /managed root/i);
   await assertNoOutputs();
 
   const duplicateArgs = [...args];
@@ -938,6 +939,94 @@ test('controller reconciliation CLI enforces manifest paths and the exact review
   assert.equal(
     JSON.parse(accepted.stdout).ledger.path,
     'raw/drafts/claims-v2.json',
+  );
+});
+
+test('controller reconciliation rejects traversal and symlinked output parents before writing', async () => {
+  const script = resolve('.agents/skills/recon/scripts/reconcile-ledger.mjs');
+
+  const traversalRoots = await roots();
+  await runFakeRecon({ profile: 'standard', roots: traversalRoots });
+  const traversalPacket = traversalRoots.packetRoot;
+  const traversalManifestPath = join(traversalPacket, 'manifest.json');
+  const traversalManifest = JSON.parse(
+    await readFile(traversalManifestPath, 'utf8'),
+  );
+  traversalManifest.execution.reconciliation.outputLedger =
+    '../escaped-ledger.json';
+  await writeJson(traversalManifestPath, traversalManifest);
+  await Promise.all([
+    rm(join(traversalPacket, 'raw/drafts/claims-v2.json'), { force: true }),
+    rm(join(traversalPacket, 'reviews/reconciliation.json'), { force: true }),
+  ]);
+  const escapedLedger = join(traversalPacket, '..', 'escaped-ledger.json');
+  const traversal = spawnSync(
+    process.execPath,
+    [
+      script,
+      '--manifest',
+      traversalManifestPath,
+      '--input-ledger',
+      join(traversalPacket, 'raw/drafts/claims-v1.json'),
+      '--review',
+      join(traversalPacket, 'reviews/semantic.json'),
+      '--review',
+      join(traversalPacket, 'reviews/adversarial.json'),
+      '--review',
+      join(traversalPacket, 'reviews/coverage.json'),
+      '--output-ledger',
+      escapedLedger,
+      '--output-review',
+      join(traversalPacket, 'reviews/reconciliation.json'),
+    ],
+    { encoding: 'utf8' },
+  );
+  assert.notEqual(traversal.status, 0);
+  assert.match(traversal.stderr, /invalid manifest/i);
+  await assert.rejects(readFile(escapedLedger));
+  await assert.rejects(
+    readFile(join(traversalPacket, 'reviews/reconciliation.json')),
+  );
+
+  const symlinkRoots = await roots();
+  await runFakeRecon({ profile: 'standard', roots: symlinkRoots });
+  const symlinkPacket = symlinkRoots.packetRoot;
+  const draftsPath = join(symlinkPacket, 'raw/drafts');
+  const outsideDrafts = join(symlinkPacket, '..', 'outside-drafts');
+  await mkdir(outsideDrafts);
+  await writeFile(
+    join(outsideDrafts, 'claims-v1.json'),
+    await readFile(join(draftsPath, 'claims-v1.json')),
+  );
+  await rm(draftsPath, { recursive: true });
+  await symlink(outsideDrafts, draftsPath, 'dir');
+  await rm(join(symlinkPacket, 'reviews/reconciliation.json'), { force: true });
+  const symlinkedParent = spawnSync(
+    process.execPath,
+    [
+      script,
+      '--manifest',
+      join(symlinkPacket, 'manifest.json'),
+      '--input-ledger',
+      join(draftsPath, 'claims-v1.json'),
+      '--review',
+      join(symlinkPacket, 'reviews/semantic.json'),
+      '--review',
+      join(symlinkPacket, 'reviews/adversarial.json'),
+      '--review',
+      join(symlinkPacket, 'reviews/coverage.json'),
+      '--output-ledger',
+      join(draftsPath, 'claims-v2.json'),
+      '--output-review',
+      join(symlinkPacket, 'reviews/reconciliation.json'),
+    ],
+    { encoding: 'utf8' },
+  );
+  assert.notEqual(symlinkedParent.status, 0);
+  assert.match(symlinkedParent.stderr, /symlink/i);
+  await assert.rejects(readFile(join(outsideDrafts, 'claims-v2.json')));
+  await assert.rejects(
+    readFile(join(symlinkPacket, 'reviews/reconciliation.json')),
   );
 });
 

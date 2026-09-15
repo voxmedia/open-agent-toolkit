@@ -6,6 +6,12 @@ import { dirname, resolve } from 'node:path';
 import { canonicalJson, hashFile } from './lib/canonical-json.mjs';
 import { isDirectExecution } from './lib/cli-entry.mjs';
 import { validateArtifactShape } from './lib/contracts.mjs';
+import {
+  assertCanonicalRoot,
+  assertSafeExistingPath,
+  assertSafeOutputPath,
+  assertUnchangedRoot,
+} from './lib/safe-path.mjs';
 
 const requiredDispositions = new Map([
   ['semantic', 'affirmed'],
@@ -396,6 +402,14 @@ async function main(argv = process.argv.slice(2)) {
   const options = parseArgs(argv);
   const manifestPath = await realpath(options.manifest);
   const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+  const manifestValidation = validateArtifactShape(manifest);
+  if (!manifestValidation.valid) {
+    throw new Error(
+      `Reconciliation rejects invalid manifest: ${manifestValidation.errors
+        .map((error) => error.code)
+        .join(', ')}`,
+    );
+  }
   const declaration = manifest.execution?.reconciliation;
   if (
     !declaration ||
@@ -406,7 +420,11 @@ async function main(argv = process.argv.slice(2)) {
     );
   }
   const packetRoot = dirname(manifestPath);
+  const packetIdentity = await assertCanonicalRoot(packetRoot);
+  await assertSafeExistingPath(packetRoot, resolve(options.manifest));
   const expected = (path) => resolve(packetRoot, path);
+  const resolvedInputs = new Map();
+  const resolvedOutputs = new Map();
   for (const [option, field] of [
     ['input-ledger', 'inputLedger'],
     ['output-ledger', 'outputLedger'],
@@ -416,6 +434,15 @@ async function main(argv = process.argv.slice(2)) {
       throw new Error(
         `Reconciliation ${option} drifts from the manifest declaration`,
       );
+    }
+    if (option === 'input-ledger') {
+      await assertSafeExistingPath(packetRoot, resolve(options[option]));
+      resolvedInputs.set(option, await realpath(options[option]));
+    } else {
+      const outputPath = resolve(options[option]);
+      await assertSafeExistingPath(packetRoot, dirname(outputPath));
+      await assertSafeOutputPath(packetRoot, outputPath);
+      resolvedOutputs.set(option, outputPath);
     }
   }
   const declaredReviews = [
@@ -441,7 +468,10 @@ async function main(argv = process.argv.slice(2)) {
     declaredReviewInputs.map((input) => [input.path, input.reference]),
   );
   const suppliedReviews = await Promise.all(
-    options.review.map(async (path) => realpath(path)),
+    options.review.map(async (path) => {
+      await assertSafeExistingPath(packetRoot, resolve(path));
+      return realpath(path);
+    }),
   );
   if (
     new Set(suppliedReviews).size !== suppliedReviews.length ||
@@ -453,14 +483,15 @@ async function main(argv = process.argv.slice(2)) {
     );
   }
   const priorLedger = JSON.parse(
-    await readFile(options['input-ledger'], 'utf8'),
+    await readFile(resolvedInputs.get('input-ledger'), 'utf8'),
   );
   const priorReference = (manifest.artifacts ?? []).find(
     (reference) => reference.path === declaration.inputLedger,
   );
   if (
     !priorReference ||
-    (await hashFile(options['input-ledger'])) !== priorReference.digest
+    (await hashFile(resolvedInputs.get('input-ledger'))) !==
+      priorReference.digest
   ) {
     throw new Error(
       'Reconciliation input ledger does not match its manifest digest',
@@ -488,18 +519,22 @@ async function main(argv = process.argv.slice(2)) {
     runId: manifest.run.id,
     reviewerLane: declaration.producer,
   });
-  await writeAtomic(options['output-ledger'], result.ledger);
-  await writeAtomic(options['output-review'], result.reconciliation);
+  await assertUnchangedRoot(packetIdentity);
+  await writeAtomic(resolvedOutputs.get('output-ledger'), result.ledger);
+  await writeAtomic(
+    resolvedOutputs.get('output-review'),
+    result.reconciliation,
+  );
   process.stdout.write(
     `${JSON.stringify(
       {
         ledger: {
           path: declaration.outputLedger,
-          digest: await hashFile(options['output-ledger']),
+          digest: await hashFile(resolvedOutputs.get('output-ledger')),
         },
         reconciliation: {
           path: declaration.outputReview,
-          digest: await hashFile(options['output-review']),
+          digest: await hashFile(resolvedOutputs.get('output-review')),
         },
       },
       null,
