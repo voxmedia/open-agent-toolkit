@@ -498,8 +498,7 @@ async function main(argv = process.argv.slice(2)) {
     );
   }
   const reviewResults = await Promise.all(
-    suppliedReviews.map(async (path) => {
-      const artifactReference = declaredByPath.get(path);
+    declaredReviewInputs.map(async ({ path, reference: artifactReference }) => {
       if ((await hashFile(path)) !== artifactReference.digest) {
         throw new Error(
           `Reconciliation review ${artifactReference.path} does not match its manifest digest`,

@@ -940,6 +940,37 @@ test('controller reconciliation CLI enforces manifest paths and the exact review
     JSON.parse(accepted.stdout).ledger.path,
     'raw/drafts/claims-v2.json',
   );
+  const acceptedLedgerBytes = await readFile(outputLedger, 'utf8');
+  const acceptedReviewBytes = await readFile(outputReview, 'utf8');
+  const acceptedDigests = {
+    ledger: await hashFile(outputLedger),
+    review: await hashFile(outputReview),
+  };
+
+  await removeOutputs();
+  const permutedArgs = [
+    ...args.slice(0, 5),
+    '--review',
+    join(packet, 'reviews/coverage.json'),
+    '--review',
+    join(packet, 'reviews/semantic.json'),
+    '--review',
+    join(packet, 'reviews/adversarial.json'),
+    ...args.slice(11),
+  ];
+  const permuted = spawnSync(process.execPath, permutedArgs, {
+    encoding: 'utf8',
+  });
+  assert.equal(permuted.status, 0, permuted.stderr);
+  assert.equal(await readFile(outputLedger, 'utf8'), acceptedLedgerBytes);
+  assert.equal(await readFile(outputReview, 'utf8'), acceptedReviewBytes);
+  assert.deepEqual(
+    {
+      ledger: await hashFile(outputLedger),
+      review: await hashFile(outputReview),
+    },
+    acceptedDigests,
+  );
 });
 
 test('controller reconciliation rejects traversal and symlinked output parents before writing', async () => {
