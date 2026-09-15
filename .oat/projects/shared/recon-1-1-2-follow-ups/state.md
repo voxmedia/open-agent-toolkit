@@ -84,7 +84,7 @@ oat_implement_exit_gate:
   failure: null
   updated_at: '2026-09-15T07:12:44Z'
 oat_post_implement_sequence:
-  status: failed
+  status: pre_approval
   source: configured
   final_phase: p01
   pre_approval:
@@ -94,7 +94,7 @@ oat_post_implement_sequence:
   approval_source: null
   post_approval: []
   post_approval_completed: []
-  failure: 'pr publication authorization required; local artifact is ready; resume with oat-project-implement'
+  failure: null
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
@@ -138,7 +138,7 @@ oat_pr_status: ready # null | ready | open | closed | merged — actual PR state
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-15T02:47:32.316Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-15T07:17:43Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-15T11:05:30Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -150,7 +150,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — PR artifact ready; publication authorization required
+Implementation — Publishing prepared final PR
 
 ## Artifacts
 
@@ -192,7 +192,7 @@ Implementation — PR artifact ready; publication authorization required
 - ✓ Configured gate attempt 2 passed at the Important threshold
 - ✓ Its one Minor public-doc alignment finding was addressed immediately
 - ✓ Local PR description prepared and review-ledger paths validated
-- ⧗ Branch push and GitHub PR creation not authorized
+- ⧗ Branch push and GitHub PR creation in progress
 
 ## Blockers
 
@@ -200,4 +200,4 @@ None.
 
 ## Next Milestone
 
-Authorize branch push and GitHub PR creation, then resume `oat-project-implement`.
+Push `recon-feedback`, create the final PR, and record its metadata.
