@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
-import { readFile, realpath, rename, writeFile } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
+import { link, open, readFile, realpath, unlink } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 
 import { canonicalJson, hashFile } from './lib/canonical-json.mjs';
@@ -392,10 +393,73 @@ function parseArgs(argv) {
   return values;
 }
 
-async function writeAtomic(path, value) {
-  const temporary = `${path}.tmp-${process.pid}`;
-  await writeFile(temporary, `${canonicalJson(value)}\n`, 'utf8');
-  await rename(temporary, path);
+async function removeCreatedPath(path) {
+  try {
+    await unlink(path);
+  } catch (error) {
+    if (error?.code !== 'ENOENT') throw error;
+  }
+}
+
+async function stageOutput(path, value) {
+  const temporary = `${path}.tmp-${process.pid}-${randomUUID()}`;
+  const handle = await open(temporary, 'wx', 0o600);
+  let closed = false;
+  try {
+    await handle.writeFile(`${canonicalJson(value)}\n`, 'utf8');
+    await handle.sync();
+    await handle.close();
+    closed = true;
+  } catch (error) {
+    if (!closed) await handle.close().catch(() => {});
+    await removeCreatedPath(temporary).catch(() => {});
+    throw error;
+  }
+  return temporary;
+}
+
+async function writeAtomicPair(outputs, packetIdentity) {
+  const staged = [];
+  const published = [];
+  try {
+    for (const output of outputs) {
+      staged.push({
+        ...output,
+        temporary: await stageOutput(output.path, output.value),
+      });
+    }
+    await assertUnchangedRoot(packetIdentity);
+    for (const output of staged) {
+      await link(output.temporary, output.path);
+      published.push(output.path);
+    }
+  } catch (error) {
+    const cleanupErrors = [];
+    for (const path of published.reverse()) {
+      try {
+        await removeCreatedPath(path);
+      } catch (cleanupError) {
+        cleanupErrors.push(cleanupError);
+      }
+    }
+    for (const { temporary } of staged) {
+      try {
+        await removeCreatedPath(temporary);
+      } catch (cleanupError) {
+        cleanupErrors.push(cleanupError);
+      }
+    }
+    if (cleanupErrors.length > 0) {
+      throw new AggregateError(
+        [error, ...cleanupErrors],
+        'Reconciliation output publication and cleanup failed',
+      );
+    }
+    throw error;
+  }
+  for (const { temporary } of staged) {
+    await removeCreatedPath(temporary);
+  }
 }
 
 async function main(argv = process.argv.slice(2)) {
@@ -528,10 +592,18 @@ async function main(argv = process.argv.slice(2)) {
     reviewerLane: declaration.producer,
   });
   await assertUnchangedRoot(packetIdentity);
-  await writeAtomic(resolvedOutputs.get('output-ledger'), result.ledger);
-  await writeAtomic(
-    resolvedOutputs.get('output-review'),
-    result.reconciliation,
+  await writeAtomicPair(
+    [
+      {
+        path: resolvedOutputs.get('output-ledger'),
+        value: result.ledger,
+      },
+      {
+        path: resolvedOutputs.get('output-review'),
+        value: result.reconciliation,
+      },
+    ],
+    packetIdentity,
   );
   process.stdout.write(
     `${JSON.stringify(

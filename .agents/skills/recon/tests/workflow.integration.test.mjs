@@ -4,6 +4,7 @@ import {
   mkdir,
   mkdtemp,
   readFile,
+  readdir,
   realpath,
   rm,
   symlink,
@@ -885,6 +886,20 @@ test('controller reconciliation CLI enforces manifest paths and the exact review
     await assert.rejects(readFile(outputLedger));
     await assert.rejects(readFile(outputReview));
   };
+  const assertNoTemporaryOutputs = async () => {
+    const ledgerEntries = await readdir(join(packet, 'raw/drafts'));
+    const reviewEntries = await readdir(join(packet, 'reviews'));
+    assert.deepEqual(
+      ledgerEntries.filter((entry) => entry.startsWith('claims-v2.json.tmp-')),
+      [],
+    );
+    assert.deepEqual(
+      reviewEntries.filter((entry) =>
+        entry.startsWith('reconciliation.json.tmp-'),
+      ),
+      [],
+    );
+  };
 
   await removeOutputs();
 
@@ -905,6 +920,25 @@ test('controller reconciliation CLI enforces manifest paths and the exact review
   assert.match(changedBytes.stderr, /manifest digest/i);
   await assertNoOutputs();
   await writeFile(semanticPath, semanticBytes, 'utf8');
+
+  await mkdir(outputReview);
+  const secondPublicationFailure = spawnSync(process.execPath, args, {
+    encoding: 'utf8',
+  });
+  assert.notEqual(secondPublicationFailure.status, 0);
+  await assert.rejects(readFile(outputLedger));
+  assert.deepEqual(await readdir(outputReview), []);
+  await assertNoTemporaryOutputs();
+  await rm(outputReview, { recursive: true, force: true });
+
+  const preexistingLedger = 'pre-existing candidate ledger\n';
+  await writeFile(outputLedger, preexistingLedger, 'utf8');
+  const noOverwrite = spawnSync(process.execPath, args, { encoding: 'utf8' });
+  assert.notEqual(noOverwrite.status, 0);
+  assert.equal(await readFile(outputLedger, 'utf8'), preexistingLedger);
+  await assert.rejects(readFile(outputReview));
+  await assertNoTemporaryOutputs();
+  await rm(outputLedger, { force: true });
 
   const siblingReviews = join(resolve(packet, '..'), 'packetXreviews');
   await mkdir(siblingReviews);

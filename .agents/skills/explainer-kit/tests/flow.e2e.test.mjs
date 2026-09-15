@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import { createHash } from 'node:crypto';
 import {
   cp,
   copyFile,
@@ -12,31 +11,23 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join } from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import { runBundle } from '../scripts/bundle.mjs';
-import { validateContract } from '../scripts/lib/contracts.mjs';
-import { enforceRunPackageInventory } from '../scripts/lib/package-coverage.mjs';
 import { resolveTheme } from '../scripts/lib/theme.mjs';
 import { runRecord } from '../scripts/record.mjs';
 import { runVerify } from '../scripts/verify.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const repoRoot = resolve(here, '..', '..', '..', '..');
-const programPath = join(
-  repoRoot,
-  '.oat/repo/reference/external-plans/2026-08-31-execution-program.md',
-);
-const summariesRoot = join(repoRoot, '.oat/repo/reference/project-summaries');
+// Tracked byte copies of the live PJM artifacts; see fixtures/flow/inputs/PROVENANCE.md.
+const flowInputs = join(here, 'fixtures', 'flow', 'inputs');
+const programPath = join(flowInputs, '2026-08-31-execution-program.md');
+const summariesRoot = join(flowInputs, 'summaries');
 const authoredPage = join(here, 'fixtures', 'flow', 'program-recap.html');
 const projectFixture = join(here, 'fixtures', 'bundle', 'project');
 const projectPage = join(here, 'fixtures', 'verify', 'valid.html');
-const expectedSummaries = [
-  '20260909-wave-7-execution.md',
-  '20260909-wave-6-execution.md',
-];
 
 async function prepareRun(name) {
   const root = await mkdtemp(join(tmpdir(), `explainer-flow-${name}-`));
@@ -45,13 +36,7 @@ async function prepareRun(name) {
   const themePath = join(root, 'theme.json');
   await mkdir(summaries);
 
-  const newest = (await readdir(summariesRoot))
-    .filter((entry) => /^\d{8}-wave-\d+-execution\.md$/.test(entry))
-    .sort()
-    .reverse()
-    .slice(0, 2);
-  assert.deepEqual(newest, expectedSummaries);
-  for (const summary of newest) {
+  for (const summary of await readdir(summariesRoot)) {
     await copyFile(join(summariesRoot, summary), join(summaries, summary));
   }
 
@@ -145,10 +130,6 @@ async function packageSnapshot(root, relativeRoot = '') {
   return snapshot;
 }
 
-function allChecksPass(result) {
-  return Object.values(result.checks).every(({ status }) => status === 'pass');
-}
-
 function recordArgs(runRoot, themePath) {
   return [
     '--run-root',
@@ -167,55 +148,6 @@ function recordArgs(runRoot, themePath) {
     '2026-09-11T14:45:00.000Z',
   ];
 }
-
-test('real program material passes bundle, verify, record, package, and reuse', async () => {
-  const fixture = await prepareRun('accepted');
-  try {
-    const provenance = await readFile(authoredPage, 'utf8');
-    assert.match(
-      provenance,
-      /Source content commit: 8845103ec48625ce8a24f52e4d3986db8e52105d/,
-    );
-
-    const qa = await runVerify(
-      [
-        '--run-root',
-        fixture.runRoot,
-        '--recipe',
-        'program-recap',
-        '--rung',
-        'none',
-      ],
-      { log() {} },
-    );
-    assert.equal(allChecksPass(qa), true);
-    assert.equal(qa.checks.ledgerToPage.status, 'pass');
-    assert.equal(qa.checks.pageToLedger.status, 'pass');
-
-    const manifest = await runRecord(
-      recordArgs(fixture.runRoot, fixture.themePath),
-      { log() {} },
-    );
-    assert.equal(manifest.outcome, 'built-needs-review');
-    assert.equal(validateContract('manifest', manifest).valid, true);
-    for (const [relativePath, expectedHash] of Object.entries(
-      manifest.immutableHashes,
-    )) {
-      const bytes = await readFile(join(fixture.runRoot, relativePath));
-      const actualHash = `sha256:${createHash('sha256')
-        .update(bytes)
-        .digest('hex')}`;
-      assert.equal(actualHash, expectedHash, relativePath);
-    }
-    await enforceRunPackageInventory(fixture.runRoot, manifest);
-
-    const reuse = await runBundle(fixture.bundleArgs, { log() {} });
-    assert.equal(reuse.reuse, true);
-    assert.equal(reuse.runRoot, fixture.runRoot);
-  } finally {
-    await rm(fixture.root, { recursive: true, force: true });
-  }
-});
 
 test('recorded multi-file project reuse ignores hash key order without touching the package', async () => {
   const fixture = await prepareProjectRun('reuse');

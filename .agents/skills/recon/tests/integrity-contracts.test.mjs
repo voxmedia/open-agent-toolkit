@@ -49,6 +49,37 @@ test('review-result unresolved issues are a closed string array', async () => {
   );
 });
 
+test('ledger rejects misplaced unresolved issues without throwing', async () => {
+  const packet = await fixture('standard');
+  const ledger = await readJson(packet.claimsPath);
+  ledger.unresolvedIssues = {};
+  const validation = validateArtifactShape(ledger);
+  assert.equal(validation.valid, false);
+  assert.ok(
+    validation.errors.some(
+      (error) =>
+        error.code === 'UNKNOWN_FIELD' && error.path === '$.unresolvedIssues',
+    ),
+  );
+});
+
+test('review-result reports a malformed unresolved issues container', async () => {
+  const packet = await fixture('standard');
+  const review = await readJson(
+    join(packet.packetRoot, 'reviews', 'semantic.json'),
+  );
+  review.unresolvedIssues = {};
+  const validation = validateArtifactShape(review);
+  assert.equal(validation.valid, false);
+  assert.ok(
+    validation.errors.some(
+      (error) =>
+        error.code === 'MISSING_REQUIRED_FIELD' &&
+        error.path === '$.unresolvedIssues',
+    ),
+  );
+});
+
 async function writeJson(path, value) {
   await writeFile(path, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
 }
