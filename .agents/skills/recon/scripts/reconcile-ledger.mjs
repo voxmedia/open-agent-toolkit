@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import { readFile, rename, writeFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { readFile, realpath, rename, writeFile } from 'node:fs/promises';
+import { dirname, resolve } from 'node:path';
 
 import { canonicalJson, hashFile } from './lib/canonical-json.mjs';
 import { isDirectExecution } from './lib/cli-entry.mjs';
@@ -394,7 +394,8 @@ async function writeAtomic(path, value) {
 
 async function main(argv = process.argv.slice(2)) {
   const options = parseArgs(argv);
-  const manifest = JSON.parse(await readFile(options.manifest, 'utf8'));
+  const manifestPath = await realpath(options.manifest);
+  const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
   const declaration = manifest.execution?.reconciliation;
   if (
     !declaration ||
@@ -404,7 +405,7 @@ async function main(argv = process.argv.slice(2)) {
       'Manifest does not authorize controller:reconcile-ledger-v1',
     );
   }
-  const packetRoot = resolve(options.manifest, '..');
+  const packetRoot = dirname(manifestPath);
   const expected = (path) => resolve(packetRoot, path);
   for (const [option, field] of [
     ['input-ledger', 'inputLedger'],
@@ -423,13 +424,29 @@ async function main(argv = process.argv.slice(2)) {
       (manifest.artifacts ?? []).some((reference) => reference.path === path),
     ),
   ];
-  const suppliedReviews = options.review.map((path) =>
-    path.startsWith(packetRoot) ? path.slice(packetRoot.length + 1) : null,
+  const declaredReviewInputs = await Promise.all(
+    declaredReviews.map(async (path) => {
+      const reference = (manifest.artifacts ?? []).find(
+        (artifact) => artifact.path === path,
+      );
+      if (!reference) {
+        throw new Error(
+          `Reconciliation review ${path} has no manifest artifact reference`,
+        );
+      }
+      return { path: await realpath(expected(path)), reference };
+    }),
+  );
+  const declaredByPath = new Map(
+    declaredReviewInputs.map((input) => [input.path, input.reference]),
+  );
+  const suppliedReviews = await Promise.all(
+    options.review.map(async (path) => realpath(path)),
   );
   if (
-    suppliedReviews.includes(null) ||
-    canonicalJson([...suppliedReviews].sort()) !==
-      canonicalJson([...declaredReviews].sort())
+    new Set(suppliedReviews).size !== suppliedReviews.length ||
+    suppliedReviews.length !== declaredByPath.size ||
+    suppliedReviews.some((path) => !declaredByPath.has(path))
   ) {
     throw new Error(
       'Reconciliation review set drifts from the manifest declaration',
@@ -450,13 +467,17 @@ async function main(argv = process.argv.slice(2)) {
     );
   }
   const reviewResults = await Promise.all(
-    options.review.map(async (path) => {
+    suppliedReviews.map(async (path) => {
+      const artifactReference = declaredByPath.get(path);
+      if ((await hashFile(path)) !== artifactReference.digest) {
+        throw new Error(
+          `Reconciliation review ${artifactReference.path} does not match its manifest digest`,
+        );
+      }
       const value = JSON.parse(await readFile(path, 'utf8'));
       return {
         ...value,
-        artifactReference: (manifest.artifacts ?? []).find(
-          (reference) => resolve(path) === expected(reference.path),
-        ),
+        artifactReference,
       };
     }),
   );

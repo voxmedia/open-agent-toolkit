@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  realpath,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { afterEach, test } from 'node:test';
@@ -864,12 +871,20 @@ test('controller reconciliation CLI enforces manifest paths and the exact review
     '--output-review',
     join(packet, 'reviews/reconciliation.json'),
   ];
-  const accepted = spawnSync(process.execPath, args, { encoding: 'utf8' });
-  assert.equal(accepted.status, 0, accepted.stderr);
-  assert.equal(
-    JSON.parse(accepted.stdout).ledger.path,
-    'raw/drafts/claims-v2.json',
-  );
+  const outputLedger = join(packet, 'raw/drafts/claims-v2.json');
+  const outputReview = join(packet, 'reviews/reconciliation.json');
+  const removeOutputs = async () => {
+    await Promise.all([
+      rm(outputLedger, { force: true }),
+      rm(outputReview, { force: true }),
+    ]);
+  };
+  const assertNoOutputs = async () => {
+    await assert.rejects(readFile(outputLedger));
+    await assert.rejects(readFile(outputReview));
+  };
+
+  await removeOutputs();
 
   const rejected = spawnSync(
     process.execPath,
@@ -878,6 +893,52 @@ test('controller reconciliation CLI enforces manifest paths and the exact review
   );
   assert.notEqual(rejected.status, 0);
   assert.match(rejected.stderr, /review set drifts/i);
+  await assertNoOutputs();
+
+  const semanticPath = join(packet, 'reviews/semantic.json');
+  const semanticBytes = await readFile(semanticPath, 'utf8');
+  await writeFile(semanticPath, `${semanticBytes.trimEnd()} \n`, 'utf8');
+  const changedBytes = spawnSync(process.execPath, args, { encoding: 'utf8' });
+  assert.notEqual(changedBytes.status, 0);
+  assert.match(changedBytes.stderr, /manifest digest/i);
+  await assertNoOutputs();
+  await writeFile(semanticPath, semanticBytes, 'utf8');
+
+  const siblingReviews = join(resolve(packet, '..'), 'packetXreviews');
+  await mkdir(siblingReviews);
+  for (const kind of ['semantic', 'adversarial', 'coverage']) {
+    await writeFile(
+      join(siblingReviews, `${kind}.json`),
+      await readFile(join(packet, 'reviews', `${kind}.json`)),
+    );
+  }
+  const siblingArgs = args.map((value, index) =>
+    args[index - 1] === '--review'
+      ? value.replace(join(packet, 'reviews'), siblingReviews)
+      : value,
+  );
+  const sibling = spawnSync(process.execPath, siblingArgs, {
+    encoding: 'utf8',
+  });
+  assert.notEqual(sibling.status, 0);
+  assert.match(sibling.stderr, /review set drifts/i);
+  await assertNoOutputs();
+
+  const duplicateArgs = [...args];
+  duplicateArgs.splice(11, 0, '--review', semanticPath);
+  const duplicate = spawnSync(process.execPath, duplicateArgs, {
+    encoding: 'utf8',
+  });
+  assert.notEqual(duplicate.status, 0);
+  assert.match(duplicate.stderr, /review set drifts/i);
+  await assertNoOutputs();
+
+  const accepted = spawnSync(process.execPath, args, { encoding: 'utf8' });
+  assert.equal(accepted.status, 0, accepted.stderr);
+  assert.equal(
+    JSON.parse(accepted.stdout).ledger.path,
+    'raw/drafts/claims-v2.json',
+  );
 });
 
 test('standard workflow retains a genuine adversarial contradiction as contested', async () => {
