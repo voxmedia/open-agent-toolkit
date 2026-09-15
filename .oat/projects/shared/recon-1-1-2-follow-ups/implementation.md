@@ -337,6 +337,21 @@ final reviews remain required.
 
 ## Deviations from Plan / Design
 
+### Configured Implementation Exit Gate: result persisted
+
+**Date:** 2026-09-15
+
+- Gate run: `8147baea-2a6b-4da5-9b26-9a018e5d45e4`
+- Receipt: `/private/tmp/recon-feedback-exit-gate-20260915T062919Z.receipt.json`
+- Envelope: `blocked` and receive-eligible
+- Review artifact:
+  `reviews/final-review-2026-09-15T063725Z.md`
+- Findings: 0 Critical, 1 Important, 0 Medium, 2 Minor
+
+The accepted gate run completed normally. Its nonzero exit represents the
+configured Important-threshold block, not a dispatch or stream failure. The
+review must be received before any fix implementation or retry.
+
 | Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
 | ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
 | -             | -               | -                    | -                 | -      | -               | -         |
