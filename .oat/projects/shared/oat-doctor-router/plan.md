@@ -5,6 +5,7 @@ oat_blockers: []
 oat_last_updated: 2026-09-14
 oat_phase: plan
 oat_phase_status: complete
+oat_plan_hill_phases: ['p02'] # confirmed at implementation start: pause only after the final phase
 oat_plan_parallel_groups: [] # sequential: p02's live verification and its contract test read the describe field p01 adds
 oat_plan_source: quick # spec-driven | quick | imported | lite
 oat_import_reference: null
