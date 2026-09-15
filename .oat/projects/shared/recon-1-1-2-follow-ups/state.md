@@ -126,7 +126,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-15T02:47:32.316Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-15T07:11:21Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-15T07:12:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -138,7 +138,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Final re-review passed; preparing gate attempt 2
+Implementation — Gate attempt 2 passed; receiving result
 
 ## Artifacts
 
@@ -177,6 +177,8 @@ Implementation — Final re-review passed; preparing gate attempt 2
 - ✓ Three configured gate fix tasks completed as `p01-t12` through `p01-t14`
 - ✓ Recovery event `recovery-p01-t12-20260915-02` validated and cleared by the controller
 - ✓ Fresh final re-review passed with no findings after configured-gate fixes
+- ✓ Configured gate attempt 2 passed at the Important threshold
+- ✓ Its one Minor public-doc alignment finding was addressed immediately
 
 ## Blockers
 
@@ -184,4 +186,4 @@ None.
 
 ## Next Milestone
 
-Refresh the implementation gate basis and run configured attempt 2 of 2.
+Complete the durable gate receive, then run Lite post-implementation sequence.

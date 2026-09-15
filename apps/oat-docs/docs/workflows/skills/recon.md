@@ -129,9 +129,9 @@ cost.
 
 ### Bounded Conditional Evidence
 
-Standard and thorough may predeclare finite conditional
-`contradiction-resolution` evidence waves. A completed predecessor can trigger
-one such wave to seek discriminating evidence; accepted failure, cancellation,
+Standard and thorough may each predeclare at most one conditional
+`contradiction-resolution` evidence wave. A completed predecessor can trigger
+that wave to seek discriminating evidence; accepted failure, cancellation,
 timeout, or missing output cannot trigger a replacement. Triggered,
 not-triggered, and unresolved dispositions remain visible. Both branches feed
 the same deterministic controller reconciliation.

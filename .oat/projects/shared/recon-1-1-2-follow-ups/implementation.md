@@ -328,6 +328,27 @@ than relaunched.
 Attempt 2 passed the configured Important threshold. The active review must be
 received and its Minor finding dispositioned before the gate becomes allowed.
 
+### Review Received: final (configured gate attempt 2)
+
+**Date:** 2026-09-15
+**Review artifact:**
+`reviews/archived/final-review-2026-09-15T070929Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 1
+
+**Disposition:** `m1` addressed now as a contained artifact-alignment fix. The
+public recon docs now state that standard and thorough may each predeclare at
+most one conditional contradiction-resolution wave. No implementation task,
+standard re-review, or gate rerun is required by the passing-gate judgment
+sweep.
+
+**Result:** Configured gate attempt 2 passed and all findings are resolved.
+
 ### Review Received: p01
 
 **Date:** 2026-09-15
