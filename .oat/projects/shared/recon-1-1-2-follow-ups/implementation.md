@@ -364,20 +364,21 @@ PR preparation only. Summary, documentation workflow, retro, and generic HiLL
 branches are unreachable. External push and GitHub PR creation remain outside
 the current authorization.
 
-### Lite Post-Implementation Sequence: PR preparation boundary
+### Lite Post-Implementation Sequence: PR opened
 
 - Local artifact: `pr/project-pr-2026-09-15.md`
 - Proposed title: `fix: simplify and harden recon execution`
 - Base branch: `main`
 - Review ledger: all ten file-backed artifacts resolve to regular files inside
   the project; the in-memory structured-output review uses the `-` placeholder.
-- PR status: `ready`
-- External state: no branch push and no GitHub PR created
+- PR status: `open`
+- Published PR: https://github.com/voxmedia/open-agent-toolkit/pull/302
+- External state: branch `recon-feedback` pushed to `origin`; PR opened against
+  `main`
 
-The `pr` step cannot be marked complete without crossing the external
-publication boundary. The sequence is durably `failed` at that boundary with
-the local artifact preserved. Resume with `oat-project-implement` after branch
-push and GitHub PR creation are explicitly authorized.
+The user authorized the publication boundary. The stored Lite pre-approval
+step `[pr]` is complete, approval remains `not_required`, and the
+post-implementation sequence is complete. The PR was not merged.
 
 ### Review Received: p01
 

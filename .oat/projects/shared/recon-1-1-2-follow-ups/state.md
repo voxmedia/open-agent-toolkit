@@ -12,7 +12,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -84,12 +84,13 @@ oat_implement_exit_gate:
   failure: null
   updated_at: '2026-09-15T07:12:44Z'
 oat_post_implement_sequence:
-  status: pre_approval
+  status: complete
   source: configured
   final_phase: p01
   pre_approval:
     - pr
-  pre_approval_completed: []
+  pre_approval_completed:
+    - pr
   approval: not_required
   approval_source: null
   post_approval: []
@@ -134,23 +135,23 @@ oat_post_implement_sequence:
 #   failure: null
 #   updated_at: '2026-07-18T00:00:00Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
-oat_pr_status: ready # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/302' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-15T02:47:32.316Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-15T11:05:30Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-15T11:08:38Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: recon-1-1-2-follow-ups
 
-**Status:** Plan complete
+**Status:** Implementation closeout
 **Started:** 2026-09-15
 **Last Updated:** 2026-09-15
 
 ## Current Phase
 
-Implementation — Publishing prepared final PR
+Implementation — PR open; completion bookkeeping pending
 
 ## Artifacts
 
@@ -192,7 +193,9 @@ Implementation — Publishing prepared final PR
 - ✓ Configured gate attempt 2 passed at the Important threshold
 - ✓ Its one Minor public-doc alignment finding was addressed immediately
 - ✓ Local PR description prepared and review-ledger paths validated
-- ⧗ Branch push and GitHub PR creation in progress
+- ✓ Branch pushed and PR #302 opened for review
+- ✓ Lite post-implementation sequence completed with `[pr]`
+- ⧗ Final implementation completion bookkeeping pending
 
 ## Blockers
 
@@ -200,4 +203,4 @@ None.
 
 ## Next Milestone
 
-Push `recon-feedback`, create the final PR, and record its metadata.
+Complete implementation bookkeeping while PR #302 remains open for review.
