@@ -153,10 +153,9 @@ Deliverable: the rewritten skill, its contract test, the two docs pages, live ve
 | p01    | code     | pending         | -          | -                                                        | -                                        | -          | -                        |
 | p02    | code     | pending         | -          | -                                                        | -                                        | -          | -                        |
 | final  | code     | fixes_completed | 2026-09-15 | reviews/archived/code-final-review-2026-09-15T034718Z.md | 6540d08f9fab48ca7fa642ffdc1df2da1cdf72c9 | manual     | -                        |
-| final  | code     | fixes_completed | 2026-09-15 | reviews/archived/final-review-2026-09-15T041753Z.md      | 14e315152e0c86f1860eb72f2f87ac9b91dd97f6 | gate       | oat-project-implement    |
-| final  | code     | received        | 2026-09-15 | reviews/final-review-2026-09-15T041753Z.md               | 14e315152e0c86f1860eb72f2f87ac9b91dd97f6 | gate       | cursor-gpt-5-6-sol-xhigh |
-| final  | code     | received        | 2026-09-15 | reviews/final-review-2026-09-15T042941Z.md               | 971e9125812f50adaa4a18fd4479098dd8dd40d1 | gate       | cursor-gpt-5-6-sol-xhigh |
-| final  | code     | received        | 2026-09-15 | reviews/final-review-2026-09-15T043126Z.md               | 0d8d2cc93b7db3f140a1ef038185d724954c8739 | gate       | cursor-gpt-5-6-sol-xhigh |
+| final  | code     | fixes_completed | 2026-09-15 | reviews/archived/final-review-2026-09-15T041753Z.md      | 14e315152e0c86f1860eb72f2f87ac9b91dd97f6 | gate       | cursor-gpt-5-6-sol-xhigh |
+| final  | code     | fixes_completed | 2026-09-15 | reviews/archived/final-review-2026-09-15T042941Z.md      | 971e9125812f50adaa4a18fd4479098dd8dd40d1 | gate       | cursor-gpt-5-6-sol-xhigh |
+| final  | code     | fixes_completed | 2026-09-15 | reviews/archived/final-review-2026-09-15T043126Z.md      | 0d8d2cc93b7db3f140a1ef038185d724954c8739 | gate       | cursor-gpt-5-6-sol-xhigh |
 | design | artifact | pending         | -          | -                                                        | -                                        | -          | -                        |
 | plan   | artifact | fixes_completed | 2026-09-14 | - (structured, in-memory, round 1)                       | -                                        | manual     | -                        |
 | plan   | artifact | fixes_completed | 2026-09-14 | - (structured, in-memory, round 2)                       | -                                        | manual     | -                        |

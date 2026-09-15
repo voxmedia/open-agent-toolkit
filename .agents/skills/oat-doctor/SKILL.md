@@ -158,7 +158,7 @@ Print the findings grouped by area in this order: config, PJM, agent instruction
 OAT ▸ DOCTOR
 Config (1 error, 1 warning, 4 info)
   ✖ activeProject points at .oat/projects/shared/x, which does not exist   [config.local]
-    → oat config unset activeProject --local
+    → oat config set activeProject ''
   ⚠ workflow.postImplementSequence uses the legacy value "docs-pr"         [shared]
     → prefer the structured form: oat config describe workflow.postImplementSequence
 PJM (ok)

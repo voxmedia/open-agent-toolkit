@@ -153,95 +153,102 @@ test('every cited docs section is a prefix of a real heading', async () => {
   }
 });
 
-const PROJECTIONS = [
-  {
-    command: ['config', 'describe', '--json'],
-    fields: [
-      'entries[].key',
-      'entries[].group',
-      'entries[].file',
-      'entries[].scope',
-      'entries[].defaultValue',
-      'entries[].owningCommand',
-      'entries[].deprecated',
-    ],
-  },
-  {
-    command: ['pjm', 'doctor', '--json'],
-    fields: [
-      'adoption.state',
-      'checks[].name',
-      'checks[].status',
-      'checks[].message',
-    ],
-  },
-  {
-    command: ['config', 'dump', '--json'],
-    fields: ['shared', 'local', 'user'],
-  },
-  {
-    command: ['instructions', 'validate', '--json'],
-    fields: [
-      'summary.contentMismatch',
-      'entries[].agentsPath',
-      'entries[].status',
-      'entries[].detail',
-    ],
-  },
-  {
-    command: ['tools', 'list', '--json', '--scope', 'all'],
-    fields: ['tools[].name', 'tools[].pack', 'tools[].scope', 'tools[].status'],
-  },
-  {
-    command: ['tools', 'outdated', '--json', '--scope', 'all'],
-    fields: [
-      'tools[].name',
-      'tools[].version',
-      'tools[].bundledVersion',
-      'tools[].scope',
-    ],
-  },
-  {
-    command: ['doctor', '--json', '--scope', 'all'],
-    fields: ['checks[].name', 'checks[].status', 'checks[].message'],
-  },
-];
-
-function hasPath(value, path) {
-  const [head, ...rest] = path.split('.');
-  const key = head.replace('[]', '');
-  if (value === null || typeof value !== 'object' || !(key in value))
-    return false;
-  const next = value[key];
-  if (head.endsWith('[]')) {
-    if (!Array.isArray(next)) return false;
-    // An empty array is a valid projection source (CI has no outdated tools);
-    // per-item fields are checked only when items exist. `deprecated` is
-    // optional per entry, so at least one item must carry it when any exist.
-    if (rest.length === 0 || next.length === 0) return true;
-    return next.some((item) => hasPath(item, rest.join('.')));
-  }
-  return rest.length === 0 || hasPath(next, rest.join('.'));
+// The expected command/projection pairs come from the skill's own sweep table,
+// so removing a projection from the skill removes it from the test.
+function sweepTable() {
+  const rows = [
+    ...skill.matchAll(/^\| \d+ +\| `(oat [^`]+)` +\| (.+?) +\| [^|]+\|$/gm),
+  ];
+  assert.ok(rows.length >= 7, `expected 7 sweep rows, found ${rows.length}`);
+  return rows.map(([, command, projection]) => {
+    const fields = [];
+    // `.checks[] | {name, status, message}` → checks[].name …; `.adoption` → adoption
+    for (const m of projection.matchAll(
+      /\.([a-zA-Z]+)(\[\])?(?:[^{]*?\{([^}]*)\})?/g,
+    )) {
+      const [, head, arr, inner] = m;
+      if (arr && inner) {
+        for (const name of inner
+          .split(',')
+          .map((x) => x.trim())
+          .filter(Boolean)) {
+          fields.push(`${head}[].${name}`);
+        }
+      } else if (!arr) {
+        fields.push(head);
+      }
+    }
+    return { command: command.split(' ').slice(1), fields };
+  });
 }
 
-test('every field the sweep projects exists in the built CLI output', async () => {
-  for (const { command, fields } of PROJECTIONS) {
-    const { stdout } = await execFileAsync(
-      process.execPath,
-      [CLI, ...command],
-      {
-        cwd: REPO_ROOT,
-        maxBuffer: 64 * 1024 * 1024,
-      },
-    ).catch((error) =>
-      error.stdout ? { stdout: error.stdout } : Promise.reject(error),
-    );
-    const payload = JSON.parse(stdout);
-    for (const field of fields) {
+const OPTIONAL_ITEM_FIELDS = new Set(['deprecated']);
+
+function requireFields(payload, fields, label) {
+  for (const field of fields) {
+    const [head, ...rest] = field.split('.');
+    const key = head.replace('[]', '');
+    assert.ok(payload && key in payload, `${label}: missing ${key}`);
+    if (!head.endsWith('[]')) continue;
+    const items = payload[key];
+    assert.ok(Array.isArray(items), `${label}: ${key} is not an array`);
+    const name = rest.join('.');
+    if (OPTIONAL_ITEM_FIELDS.has(name)) {
       assert.ok(
-        hasPath(payload, field),
-        `oat ${command.join(' ')}: missing ${field}`,
+        items.length === 0 || items.some((item) => name in item),
+        `${label}: no item carries ${name}`,
       );
+    } else {
+      for (const item of items)
+        assert.ok(name in item, `${label}: an item lacks ${key}[].${name}`);
+    }
+  }
+}
+
+async function runJson(args, env = process.env) {
+  const result = await execFileAsync(process.execPath, [CLI, ...args], {
+    cwd: REPO_ROOT,
+    env,
+    maxBuffer: 64 * 1024 * 1024,
+  }).catch((error) =>
+    error.stdout ? { stdout: error.stdout } : Promise.reject(error),
+  );
+  return JSON.parse(result.stdout);
+}
+
+test('every field the sweep projects exists in the built CLI output, on every item', async () => {
+  const { mkdtemp, mkdir, writeFile } = await import('node:fs/promises');
+  const { tmpdir } = await import('node:os');
+  // A temp home with one deliberately outdated user-scope skill, so the
+  // `tools outdated` projection is proven on a real item even where the
+  // machine running the test has nothing outdated.
+  const home = await mkdtemp(join(tmpdir(), 'oat-doctor-home-'));
+  await mkdir(join(home, '.agents/skills/oat-docs'), { recursive: true });
+  const docsSkill = await readFile(
+    join(REPO_ROOT, '.agents/skills/oat-docs/SKILL.md'),
+    'utf8',
+  );
+  await writeFile(
+    join(home, '.agents/skills/oat-docs/SKILL.md'),
+    docsSkill.replace(/^  version: .*$/m, '  version: 0.0.1'),
+  );
+  for (const { command, fields } of sweepTable()) {
+    const label = `oat ${command.join(' ')}`;
+    const payload = await runJson(command);
+    requireFields(payload, fields, label);
+    if (command[0] === 'tools' && command[1] === 'outdated') {
+      const seeded = await runJson(
+        [
+          ...command.filter((x) => x !== 'all' && x !== '--scope'),
+          '--scope',
+          'user',
+          '--cwd',
+          home,
+        ],
+        { ...process.env, HOME: home },
+      );
+      assert.ok(seeded.tools.length >= 1, 'seeded outdated tool not reported');
+      requireFields(seeded, fields, `${label} (seeded)`);
     }
   }
 });
@@ -262,10 +269,31 @@ test('every cited docs page exists, with or without a section', async () => {
 });
 
 test('the lifecycle pointer repairs the skill prescribes are accepted by the CLI', async () => {
+  // The commands come from the skill's own finding rule, so the test cannot
+  // pass on hard-coded forms while the skill prescribes something else.
+  const rule = skill
+    .split('\n')
+    .find((line) =>
+      line.includes('`lastPausedProject` set to a path that does not exist'),
+    );
+  assert.ok(rule, 'stale-pointer rule missing');
+  const prescribed = [
+    ...rule.matchAll(/`(oat config (?:set|unset) [^`]+)`/g),
+  ].map((m) => m[1]);
+  assert.deepEqual(prescribed.sort(), [
+    "oat config set activeProject ''",
+    "oat config set lastPausedProject ''",
+    'oat config unset activeIdea --local',
+  ]);
+  // The form the CLI refuses must not appear anywhere in the skill, examples included.
+  assert.doesNotMatch(
+    skill,
+    /config unset (?:activeProject|lastPausedProject)\b/,
+  );
+
   const { mkdtemp, mkdir, writeFile } = await import('node:fs/promises');
   const { tmpdir } = await import('node:os');
   const root = await mkdtemp(join(tmpdir(), 'oat-doctor-repair-'));
-  // Project-root resolution needs a repository, not just an .oat directory.
   await execFileAsync('git', ['init', '-q', root]);
   await mkdir(join(root, '.oat'));
   await writeFile(join(root, '.oat/config.json'), '{\n  "version": 1\n}\n');
@@ -285,17 +313,20 @@ test('the lifecycle pointer repairs the skill prescribes are accepted by the CLI
     execFileAsync(process.execPath, [CLI, ...args, '--cwd', root], {
       cwd: root,
     });
-  // The skill's exact repair forms (Finding rules, config).
-  await run(['config', 'set', 'activeProject', '']);
-  await run(['config', 'set', 'lastPausedProject', '']);
-  await run(['config', 'unset', 'activeIdea', '--local']);
+  for (const command of prescribed) {
+    const argv = command
+      .replace(/''/g, '\u0000')
+      .split(' ')
+      .slice(1)
+      .map((x) => x.replace('\u0000', ''));
+    await run(argv);
+  }
   const local = JSON.parse(
     await readFile(join(root, '.oat/config.local.json'), 'utf8'),
   );
   assert.ok(!local.activeProject, 'activeProject not cleared');
   assert.ok(!local.lastPausedProject, 'lastPausedProject not cleared');
   assert.equal(local.activeIdea, undefined, 'activeIdea not removed');
-  // Negative control: the form the 2.0.0 draft prescribed is refused by the CLI.
   await assert.rejects(
     run(['config', 'unset', 'activeProject', '--local']),
     /Cannot unset state key/,
