@@ -241,7 +241,7 @@
   },
   {
     "file": ".agents/skills/oat-doctor/SKILL.md",
-    "anchor": "**Synced project health:** Report `project:synced_tracked_artifacts`",
+    "anchor": "Synced project health: `project:synced_tracked_artifacts`, `project:synced_gitignore`",
     "kind": "resolve",
     "guard": "canonical-resolution"
   },

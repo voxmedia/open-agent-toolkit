@@ -240,7 +240,7 @@ export interface OatWorkflowConfig {
 
 const VALID_HILL_CHECKPOINT_DEFAULTS: readonly WorkflowHillCheckpointDefault[] =
   ['every', 'final'];
-const VALID_POST_IMPLEMENT_LEGACY_SEQUENCES: readonly WorkflowPostImplementLegacySequence[] =
+export const VALID_POST_IMPLEMENT_LEGACY_SEQUENCES: readonly WorkflowPostImplementLegacySequence[] =
   ['wait', 'summary', 'pr', 'docs-pr'];
 const VALID_POST_IMPLEMENT_STEPS: readonly WorkflowPostImplementStep[] = [
   'summary',

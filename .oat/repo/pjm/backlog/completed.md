@@ -8,6 +8,10 @@
 
 ## Completed Items
 
+- 2026-09-15 — BL-260915-present-design-section-drafts — Present design section drafts in chat, not inside the approval prompt — oat-project-quick-start lightweight design now shows each section draft as chat text and asks for approval separately, matching oat-project-design; a contract test pins both skills (PR #300).
+- 2026-09-15 — BL-260915-stop-the-implementation — Stop the implementation template preamble from quoting a section heading — The implementation template preamble names the Final Summary section in prose, and a template test rejects any template line that quotes its own heading (PR #300).
+- 2026-09-15 — BL-260911-make-oat-doctor — Make oat-doctor a collaborative router over config, PJM, agent instructions, and docs health — Shipped by oat-doctor-router (PR #300, CLI 0.2.76): oat-doctor 2.0.0 sweeps config, PJM, agent instructions, docs, and tools read-only, reports by area and severity, and dives with teaching and exact fixes; oat config describe carries a structured deprecated field.
+- 2026-09-15 — BL-260915-re-author-the-explainer-kit — Re-author the explainer-kit program-recap fixture page against the live program material — Delivered by PR #301: removed the live-material e2e case and pinned the remaining flow cases to tracked fixture inputs; pnpm test:skills green on main
 - 2026-09-13 — BL-260817-verify-protected-mode-public — Verify protected-mode public URLs with an authenticated end-to-end GET — Superseded by agent-authored-recap: protected publication and external publishing were retired; archive export is the durable copy
 - 2026-09-13 — BL-260817-drop-explainer-kit-publish — Drop explainer-kit publish-request/v1 in a future minor — Agent-authored-recap retired the entire publication path, including publish-request/v1 and its producers and consumers
 - 2026-09-13 — BL-260817-decide-and-pin-the-system — Decide and pin the system-Chromium requirement introduced by test:skills on the merge path — Superseded by agent-authored-recap: browser-less verification is an explicit supported outcome, so system Chromium is not a merge-gate requirement

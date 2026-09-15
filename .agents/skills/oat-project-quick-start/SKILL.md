@@ -7,7 +7,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 2.3.12
+  version: 2.3.13
 ---
 
 # Quick Start Project
@@ -501,12 +501,15 @@ IF DESIGN_MODE == "collaborative":
     Draft section content. Scale each section to its complexity:
       a few sentences if straightforward, up to 200-300 words if nuanced.
     Not-applicable sections: state as a single sentence, not empty.
-    Present:
-      "Here's what I have for [section]: [content].
-       Does this look right, or should we adjust before continuing?"
-    Use AskUserQuestion for the validation prompt.
+    STEP A — emit the section content as a plain assistant message.
+      Show the full drafted text, not a summary. Do NOT put the section
+      content inside an AskUserQuestion prompt — the question widget is
+      for the confirmation choices only.
+    STEP B — ask for approval in a separate message, via AskUserQuestion
+      when available or as a plain chat message when it is not:
+      "Does this look right, or should we adjust before continuing?"
     Revise inline on feedback. Be ready to go back and clarify if something
-      doesn't make sense. Re-present if substantive.
+      doesn't make sense. Re-emit the revised section if substantive.
     Mark section approved. Move to next.
 
 IF DESIGN_MODE == "draft":

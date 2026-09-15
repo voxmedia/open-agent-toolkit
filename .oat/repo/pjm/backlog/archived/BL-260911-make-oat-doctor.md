@@ -2,7 +2,7 @@
 id: BL-260911-make-oat-doctor
 title: Make oat-doctor a collaborative router over config, PJM, agent
   instructions, and docs health
-status: open
+status: closed
 priority: high
 scope: feature
 scope_estimate: M
@@ -15,7 +15,7 @@ labels:
   - skills
 assignee: null
 created: 2026-09-11T23:34:16.344Z
-updated: 2026-09-11T23:34:16.344Z
+updated: '2026-09-15T11:30:52Z'
 associated_issues: []
 external_plans: []
 ---

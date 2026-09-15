@@ -124,7 +124,7 @@ Use `oat config` for repo runtime config inspection and supported key mutation.
 - `oat config list` - show the resolved command-surface values with source information
 - `oat config dump --json` - emit the full merged config payload with per-key source attribution, suitable for automation and debugging
 - `oat config describe` - list supported config surfaces and keys across shared repo, repo-local, user, and sync/provider config
-- `oat config describe <key>` - show file location, scope, default, mutability, and owning command for one key
+- `oat config describe <key>` - show file location, scope, default, mutability, and owning command for one key; a deprecated key also prints a `Deprecated: prefer …` line, and `--json` carries it as a `deprecated` object with `supersededBy` (plus `legacyValues` when only a legacy value form is deprecated), which `oat-doctor` reads
 
 Use `oat config dump --json` when you need the whole resolved config in one machine-readable response rather than a single key or a human-oriented list view.
 
@@ -281,6 +281,6 @@ For the full state model, repair semantics, and examples, see [Instruction Sync]
 - `oat internal validate-oat-skills` - validate `oat-*` skill contracts and metadata
 - `oat doctor` - run environment and setup diagnostics, including installed-vs-bundled skill version checks
 
-`oat doctor` is the quickest way to confirm that your runtime, directory structure, and installed OAT assets are healthy before deeper debugging. At project scope it also scans bounded repository script and documentation surfaces for known-stale CLI grammar, such as `oat --scope all sync`, and reports file/line evidence plus the current `oat sync --scope all` form. Generated provider views, OAT lifecycle artifacts, archived content, dependencies, build output, and nested worktrees are excluded.
+`oat doctor` is the quickest way to confirm that your runtime, directory structure, and installed OAT assets are healthy before deeper debugging. At project scope it also scans bounded repository script and documentation surfaces for known-stale CLI grammar, such as `oat --scope all sync` <!-- oat-doctor: allow-stale-invocation -->, and reports file/line evidence plus the current `oat sync --scope all` form. Generated provider views, OAT lifecycle artifacts, archived content, dependencies, build output, and nested worktrees are excluded.
 
-The `/oat-doctor` skill (installed via the core pack) provides richer diagnostics with check and summary modes, including config explanations sourced from bundled documentation.
+The `/oat-doctor` skill (installed via the core pack) goes further: it sweeps config, project management (PJM), agent instructions, docs, and installed tools read-only, prints one report grouped by area and severity, and then dives into any area you pick, teaching from the bundled documentation and the `oat config describe` entries and offering the exact fix command or the owning skill. It applies nothing except a single fix command you approve. Unattended (`OAT_NON_INTERACTIVE=1`), the report is the whole output; `--summary` keeps the installed-tools dashboard.

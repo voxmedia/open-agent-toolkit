@@ -81,6 +81,22 @@ function readPreflightStep(name: string): string {
 const UNSAFE_M_MIXES = ['MD', 'MT', 'AM', 'RM', 'CM'] as const;
 
 describe('project-start preflight contracts', () => {
+  it.each(['oat-project-quick-start', 'oat-project-design'])(
+    '%s shows collaborative section drafts as chat text, not inside the approval prompt',
+    (name) => {
+      const skill = readSkill(name);
+      expect(skill).toContain(
+        'emit the section content as a plain assistant message',
+      );
+      expect(skill).toContain(
+        'Do NOT put the section\n      content inside an AskUserQuestion prompt',
+      );
+      expect(skill).not.toMatch(
+        /Here's what I have for \[section\]: \[content\]/,
+      );
+    },
+  );
+
   it.each(PROJECT_START_SKILLS)(
     '%s restricts the manifest auto-commit to plain modifications',
     (name) => {
