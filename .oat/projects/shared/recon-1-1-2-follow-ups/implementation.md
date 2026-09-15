@@ -1,8 +1,7 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - Lite exit gate exhausted its two configured attempts; the corrected plan requires an explicit gate reset or override before completion.
+oat_blockers: []
 oat_last_updated: 2026-09-15
 oat_current_task_id: p01-t01
 oat_generated: false
@@ -145,6 +144,15 @@ p01-t05 release-surface task.
 configured attempts. Do not mark the plan complete until an operator explicitly
 resets or overrides that gate boundary.
 
+### Gate Exception Authorized
+
+**Date:** 2026-09-15
+
+The user authorized exactly one additional Lite exit-gate attempt after the two
+configured attempts were consumed. The gate declaration remains unchanged at
+`maxAttempts: 2`; this is a one-run project exception, not a user-config change.
+No further retry is authorized if this attempt blocks.
+
 **Decisions:**
 
 - Use both canonical `is_background` frontmatter and recon launch prose.
@@ -153,7 +161,8 @@ resets or overrides that gate boundary.
 - Replace the two-output reconciliation worker ambiguity with one deterministic
   controller stage.
 
-**Blockers:** Lite exit gate exhausted its two configured attempts.
+**Blockers:** none; one additional gate attempt is explicitly authorized and
+pending.
 
 ## Deviations from Plan / Design
 

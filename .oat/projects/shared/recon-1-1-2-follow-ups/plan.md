@@ -2,8 +2,7 @@
 oat_template: true
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - Lite exit gate exhausted its two configured attempts; the corrected plan requires an explicit gate reset or override before completion.
+oat_blockers: []
 oat_last_updated: 2026-09-15
 oat_phase: plan
 oat_phase_status: in_progress
@@ -60,6 +59,10 @@ repair or a controller retry state machine.
   include it in the implementation PR.
 - **Approval:** the user approved this recorded requirement set and plan on
   2026-09-14 (America/Chicago), then selected the High managed dispatch ceiling.
+- **Gate exception:** on 2026-09-15 the user authorized exactly one additional
+  Lite exit-gate attempt after both configured attempts were consumed. This
+  authorization does not change the user-scoped gate configuration or permit a
+  further retry.
 
 ## Product Behavior
 
