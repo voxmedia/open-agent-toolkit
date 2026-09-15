@@ -80,7 +80,7 @@ The one CLI change is a structured `deprecated` field on `oat config describe` e
 OAT ▸ DOCTOR
 Config (1 error, 2 warnings, 4 info)
   ✖ activeProject points at .oat/projects/shared/x, which does not exist        [config.local]
-    → oat config unset activeProject
+    → oat config set activeProject ''
   ⚠ workflow.postImplementSequence uses the legacy value "docs-pr"              [shared]
     → prefer the structured form; see oat config describe workflow.postImplementSequence
 PJM (ok)
