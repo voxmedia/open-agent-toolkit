@@ -1,7 +1,17 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
+import { spawnSync } from 'node:child_process';
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  readdir,
+  realpath,
+  rm,
+  symlink,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { afterEach, test } from 'node:test';
 
 import { hashFile } from '../scripts/lib/canonical-json.mjs';
@@ -46,12 +56,6 @@ const cheapTarget = {
   effort: 'low',
   reasoningMode: null,
   serviceTier: 'priority',
-};
-
-const strongerTerminalTarget = {
-  ...cheapTarget,
-  model: 'synthetic-judgment-worker',
-  effort: 'high',
 };
 
 const contradictionEvidenceTarget = {
@@ -151,6 +155,7 @@ for (const profile of ['standard', 'thorough']) {
       const manifest = JSON.parse(
         await readFile(join(injectedRoots.packetRoot, 'manifest.json'), 'utf8'),
       );
+      assert.equal(manifest.execution.conditions.length, 1);
       assert.equal(
         manifest.conditionOutcomes[0].disposition,
         conditionalDisposition,
@@ -159,7 +164,11 @@ for (const profile of ['standard', 'thorough']) {
         manifest.execution.waves.filter(
           (wave) => wave.mode === 'reconciliation',
         ).length,
-        1,
+        0,
+      );
+      assert.equal(
+        manifest.execution.reconciliation.producer,
+        'controller:reconcile-ledger-v1',
       );
       const reconciliation = JSON.parse(
         await readFile(
@@ -185,7 +194,6 @@ for (const conditionalDisposition of ['triggered', 'not-triggered']) {
       conditionalDisposition,
       target: cheapTarget,
       waveTargets: {
-        reconciliation: strongerTerminalTarget,
         'contradiction-resolution': contradictionEvidenceTarget,
       },
       roots: injectedRoots,
@@ -208,7 +216,10 @@ for (const conditionalDisposition of ['triggered', 'not-triggered']) {
     ]) {
       assert.deepEqual(targetFor(mode), cheapTarget, mode);
     }
-    assert.deepEqual(targetFor('reconciliation'), strongerTerminalTarget);
+    assert.equal(
+      manifest.execution.reconciliation.producer,
+      'controller:reconcile-ledger-v1',
+    );
     assert.deepEqual(
       targetFor('contradiction-resolution'),
       contradictionEvidenceTarget,
@@ -378,7 +389,11 @@ test('triggered contradiction work uses the adversary brief and feeds only recon
   assert.equal(
     manifest.execution.waves.filter((wave) => wave.mode === 'reconciliation')
       .length,
-    1,
+    0,
+  );
+  assert.equal(
+    manifest.execution.reconciliation.producer,
+    'controller:reconcile-ledger-v1',
   );
 });
 
@@ -550,6 +565,48 @@ test('generic worker-role fallback is fixed before approval', async () => {
   );
   assert.equal(manifest.execution.target.role, 'generic');
   assert.equal(manifest.execution.approval.type, 'explicit-user-approval');
+});
+
+test('a valid approved-path artifact wins over a later stream-close diagnostic', async () => {
+  const injectedRoots = await roots();
+  const result = await runFakeRecon({
+    profile: 'quick',
+    postWriteStreamClose: true,
+    roots: injectedRoots,
+  });
+  assert.equal(result.status, 'complete');
+  assert.deepEqual(result.failures, []);
+  const manifest = JSON.parse(
+    await readFile(join(injectedRoots.packetRoot, 'manifest.json'), 'utf8'),
+  );
+  assert.ok(
+    manifest.gaps.some(
+      (gap) => gap.code === 'PROVIDER_STREAM_CLOSED' && gap.material === false,
+    ),
+  );
+  assert.equal(
+    manifest.gaps.some((gap) => gap.code === 'PASS_FAILED'),
+    false,
+  );
+});
+
+test('a stream-close does not rescue invalid output or launch replacement work', async () => {
+  const injectedRoots = await roots();
+  const result = await runFakeRecon({
+    profile: 'standard',
+    invalidOutput: true,
+    postWriteStreamClose: true,
+    roots: injectedRoots,
+  });
+  assert.equal(result.status, 'partial');
+  const manifest = JSON.parse(
+    await readFile(join(injectedRoots.packetRoot, 'manifest.json'), 'utf8'),
+  );
+  assert.ok(manifest.gaps.some((gap) => gap.code === 'PASS_FAILED'));
+  assert.equal(
+    manifest.gaps.some((gap) => gap.code === 'PROVIDER_STREAM_CLOSED'),
+    false,
+  );
 });
 
 test('dispatch-axis drift stops before accepted launch and publication', async () => {
@@ -795,6 +852,373 @@ test('standard workflow emits all typed review results and reconciles revision o
   );
 });
 
+test('controller reconciliation CLI enforces manifest paths and the exact review set', async () => {
+  const injectedRoots = await roots();
+  await runFakeRecon({ profile: 'standard', roots: injectedRoots });
+  const script = resolve('.agents/skills/recon/scripts/reconcile-ledger.mjs');
+  const packet = injectedRoots.packetRoot;
+  const args = [
+    script,
+    '--manifest',
+    join(packet, 'manifest.json'),
+    '--input-ledger',
+    join(packet, 'raw/drafts/claims-v1.json'),
+    '--review',
+    join(packet, 'reviews/semantic.json'),
+    '--review',
+    join(packet, 'reviews/adversarial.json'),
+    '--review',
+    join(packet, 'reviews/coverage.json'),
+    '--output-ledger',
+    join(packet, 'raw/drafts/claims-v2.json'),
+    '--output-review',
+    join(packet, 'reviews/reconciliation.json'),
+  ];
+  const outputLedger = join(packet, 'raw/drafts/claims-v2.json');
+  const outputReview = join(packet, 'reviews/reconciliation.json');
+  const removeOutputs = async () => {
+    await Promise.all([
+      rm(outputLedger, { force: true }),
+      rm(outputReview, { force: true }),
+    ]);
+  };
+  const assertNoOutputs = async () => {
+    await assert.rejects(readFile(outputLedger));
+    await assert.rejects(readFile(outputReview));
+  };
+  const assertNoTemporaryOutputs = async () => {
+    const ledgerEntries = await readdir(join(packet, 'raw/drafts'));
+    const reviewEntries = await readdir(join(packet, 'reviews'));
+    assert.deepEqual(
+      ledgerEntries.filter((entry) => entry.startsWith('claims-v2.json.tmp-')),
+      [],
+    );
+    assert.deepEqual(
+      reviewEntries.filter((entry) =>
+        entry.startsWith('reconciliation.json.tmp-'),
+      ),
+      [],
+    );
+  };
+
+  await removeOutputs();
+
+  const rejected = spawnSync(
+    process.execPath,
+    [...args.slice(0, 9), ...args.slice(11)],
+    { encoding: 'utf8' },
+  );
+  assert.notEqual(rejected.status, 0);
+  assert.match(rejected.stderr, /review set drifts/i);
+  await assertNoOutputs();
+
+  const semanticPath = join(packet, 'reviews/semantic.json');
+  const semanticBytes = await readFile(semanticPath, 'utf8');
+  await writeFile(semanticPath, `${semanticBytes.trimEnd()} \n`, 'utf8');
+  const changedBytes = spawnSync(process.execPath, args, { encoding: 'utf8' });
+  assert.notEqual(changedBytes.status, 0);
+  assert.match(changedBytes.stderr, /manifest digest/i);
+  await assertNoOutputs();
+  await writeFile(semanticPath, semanticBytes, 'utf8');
+
+  await mkdir(outputReview);
+  const secondPublicationFailure = spawnSync(process.execPath, args, {
+    encoding: 'utf8',
+  });
+  assert.notEqual(secondPublicationFailure.status, 0);
+  await assert.rejects(readFile(outputLedger));
+  assert.deepEqual(await readdir(outputReview), []);
+  await assertNoTemporaryOutputs();
+  await rm(outputReview, { recursive: true, force: true });
+
+  const preexistingLedger = 'pre-existing candidate ledger\n';
+  await writeFile(outputLedger, preexistingLedger, 'utf8');
+  const noOverwrite = spawnSync(process.execPath, args, { encoding: 'utf8' });
+  assert.notEqual(noOverwrite.status, 0);
+  assert.equal(await readFile(outputLedger, 'utf8'), preexistingLedger);
+  await assert.rejects(readFile(outputReview));
+  await assertNoTemporaryOutputs();
+  await rm(outputLedger, { force: true });
+
+  const siblingReviews = join(resolve(packet, '..'), 'packetXreviews');
+  await mkdir(siblingReviews);
+  for (const kind of ['semantic', 'adversarial', 'coverage']) {
+    await writeFile(
+      join(siblingReviews, `${kind}.json`),
+      await readFile(join(packet, 'reviews', `${kind}.json`)),
+    );
+  }
+  const siblingArgs = args.map((value, index) =>
+    args[index - 1] === '--review'
+      ? value.replace(join(packet, 'reviews'), siblingReviews)
+      : value,
+  );
+  const sibling = spawnSync(process.execPath, siblingArgs, {
+    encoding: 'utf8',
+  });
+  assert.notEqual(sibling.status, 0);
+  assert.match(sibling.stderr, /managed root/i);
+  await assertNoOutputs();
+
+  const duplicateArgs = [...args];
+  duplicateArgs.splice(11, 0, '--review', semanticPath);
+  const duplicate = spawnSync(process.execPath, duplicateArgs, {
+    encoding: 'utf8',
+  });
+  assert.notEqual(duplicate.status, 0);
+  assert.match(duplicate.stderr, /review set drifts/i);
+  await assertNoOutputs();
+
+  const accepted = spawnSync(process.execPath, args, { encoding: 'utf8' });
+  assert.equal(accepted.status, 0, accepted.stderr);
+  assert.equal(
+    JSON.parse(accepted.stdout).ledger.path,
+    'raw/drafts/claims-v2.json',
+  );
+  const acceptedLedgerBytes = await readFile(outputLedger, 'utf8');
+  const acceptedReviewBytes = await readFile(outputReview, 'utf8');
+  const acceptedDigests = {
+    ledger: await hashFile(outputLedger),
+    review: await hashFile(outputReview),
+  };
+
+  await removeOutputs();
+  const permutedArgs = [
+    ...args.slice(0, 5),
+    '--review',
+    join(packet, 'reviews/coverage.json'),
+    '--review',
+    join(packet, 'reviews/semantic.json'),
+    '--review',
+    join(packet, 'reviews/adversarial.json'),
+    ...args.slice(11),
+  ];
+  const permuted = spawnSync(process.execPath, permutedArgs, {
+    encoding: 'utf8',
+  });
+  assert.equal(permuted.status, 0, permuted.stderr);
+  assert.equal(await readFile(outputLedger, 'utf8'), acceptedLedgerBytes);
+  assert.equal(await readFile(outputReview, 'utf8'), acceptedReviewBytes);
+  assert.deepEqual(
+    {
+      ledger: await hashFile(outputLedger),
+      review: await hashFile(outputReview),
+    },
+    acceptedDigests,
+  );
+});
+
+test('thorough reconciliation supports an honest standard partial without redundant verification', async () => {
+  const injectedRoots = await roots();
+  await runFakeRecon({ profile: 'thorough', roots: injectedRoots });
+  const script = resolve('.agents/skills/recon/scripts/reconcile-ledger.mjs');
+  const packet = injectedRoots.packetRoot;
+  const manifestPath = join(packet, 'manifest.json');
+  const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+  const completeManifest = structuredClone(manifest);
+  const outputLedger = join(packet, 'raw/drafts/claims-v2.json');
+  const outputReview = join(packet, 'reviews/reconciliation.json');
+  const redundantReview = join(packet, 'reviews/redundant-verification.json');
+  const redundantReviewBytes = await readFile(redundantReview, 'utf8');
+  const reviewPaths = [
+    'reviews/semantic.json',
+    'reviews/adversarial.json',
+    'reviews/coverage.json',
+    'reviews/redundant-verification.json',
+    'reviews/contradiction-resolution.json',
+  ];
+  const argsFor = (reviews) => [
+    script,
+    '--manifest',
+    manifestPath,
+    '--input-ledger',
+    join(packet, 'raw/drafts/claims-v1.json'),
+    ...reviews.flatMap((path) => ['--review', join(packet, path)]),
+    '--output-ledger',
+    outputLedger,
+    '--output-review',
+    outputReview,
+  ];
+  const removeOutputs = () =>
+    Promise.all([
+      rm(outputLedger, { force: true }),
+      rm(outputReview, { force: true }),
+    ]);
+
+  manifest.artifacts = manifest.artifacts.filter(
+    ({ path }) => path !== 'reviews/redundant-verification.json',
+  );
+  manifest.run.status = 'partial';
+  manifest.run.achievedProfile = 'standard';
+  const redundantWave = manifest.execution.waves.find(
+    ({ mode }) => mode === 'redundant-verification',
+  );
+  assert.ok(redundantWave);
+  manifest.gaps.push({
+    id: 'gap-redundant-verification-failed',
+    code: 'PASS_FAILED',
+    message: 'redundant-verification failed after its approved launch.',
+    material: true,
+    waveId: redundantWave.waveId,
+    laneId: redundantWave.lanes[0].laneId,
+  });
+  await writeJson(manifestPath, manifest);
+  await rm(redundantReview);
+  await removeOutputs();
+  const degraded = spawnSync(
+    process.execPath,
+    argsFor(
+      reviewPaths.filter(
+        (path) => path !== 'reviews/redundant-verification.json',
+      ),
+    ),
+    { encoding: 'utf8' },
+  );
+  assert.equal(degraded.status, 0, degraded.stderr);
+  const degradedOutput = JSON.parse(degraded.stdout);
+  assert.equal(degradedOutput.ledger.path, 'raw/drafts/claims-v2.json');
+  assert.equal(
+    degradedOutput.reconciliation.path,
+    'reviews/reconciliation.json',
+  );
+  const degradedReview = JSON.parse(await readFile(outputReview, 'utf8'));
+  assert.equal(degradedReview.status, 'complete');
+  assert.equal(
+    degradedReview.incorporatedReviewIds.includes(
+      'review-redundant-verification',
+    ),
+    false,
+  );
+  for (const path of [
+    'raw/drafts/claims-v2.json',
+    'reviews/reconciliation.json',
+  ]) {
+    manifest.artifacts.find((item) => item.path === path).digest =
+      await hashFile(join(packet, path));
+  }
+  const claimsPath = join(packet, 'claims.json');
+  await writeFile(claimsPath, await readFile(outputLedger));
+  manifest.artifacts.find((item) => item.path === 'claims.json').digest =
+    await hashFile(claimsPath);
+  await writeJson(manifestPath, manifest);
+  const validatedPartial = await validatePacket(packet);
+  assert.equal(
+    validatedPartial.valid,
+    true,
+    JSON.stringify(validatedPartial, null, 2),
+  );
+  assert.equal(validatedPartial.publishable, true);
+  assert.equal(validatedPartial.requestedProfile, 'thorough');
+  assert.equal(validatedPartial.achievedProfile, 'standard');
+
+  await removeOutputs();
+  await writeFile(redundantReview, redundantReviewBytes, 'utf8');
+  await writeJson(manifestPath, completeManifest);
+  const accepted = spawnSync(process.execPath, argsFor(reviewPaths), {
+    encoding: 'utf8',
+  });
+  assert.equal(accepted.status, 0, accepted.stderr);
+  assert.equal(
+    JSON.parse(accepted.stdout).ledger.path,
+    'raw/drafts/claims-v2.json',
+  );
+  const acceptedReview = JSON.parse(await readFile(outputReview, 'utf8'));
+  assert.equal(
+    acceptedReview.incorporatedReviewIds.includes(
+      'review-redundant-verification',
+    ),
+    true,
+  );
+});
+
+test('controller reconciliation rejects traversal and symlinked output parents before writing', async () => {
+  const script = resolve('.agents/skills/recon/scripts/reconcile-ledger.mjs');
+
+  const traversalRoots = await roots();
+  await runFakeRecon({ profile: 'standard', roots: traversalRoots });
+  const traversalPacket = traversalRoots.packetRoot;
+  const traversalManifestPath = join(traversalPacket, 'manifest.json');
+  const traversalManifest = JSON.parse(
+    await readFile(traversalManifestPath, 'utf8'),
+  );
+  traversalManifest.execution.reconciliation.outputLedger =
+    '../escaped-ledger.json';
+  await writeJson(traversalManifestPath, traversalManifest);
+  await Promise.all([
+    rm(join(traversalPacket, 'raw/drafts/claims-v2.json'), { force: true }),
+    rm(join(traversalPacket, 'reviews/reconciliation.json'), { force: true }),
+  ]);
+  const escapedLedger = join(traversalPacket, '..', 'escaped-ledger.json');
+  const traversal = spawnSync(
+    process.execPath,
+    [
+      script,
+      '--manifest',
+      traversalManifestPath,
+      '--input-ledger',
+      join(traversalPacket, 'raw/drafts/claims-v1.json'),
+      '--review',
+      join(traversalPacket, 'reviews/semantic.json'),
+      '--review',
+      join(traversalPacket, 'reviews/adversarial.json'),
+      '--review',
+      join(traversalPacket, 'reviews/coverage.json'),
+      '--output-ledger',
+      escapedLedger,
+      '--output-review',
+      join(traversalPacket, 'reviews/reconciliation.json'),
+    ],
+    { encoding: 'utf8' },
+  );
+  assert.notEqual(traversal.status, 0);
+  assert.match(traversal.stderr, /invalid manifest/i);
+  await assert.rejects(readFile(escapedLedger));
+  await assert.rejects(
+    readFile(join(traversalPacket, 'reviews/reconciliation.json')),
+  );
+
+  const symlinkRoots = await roots();
+  await runFakeRecon({ profile: 'standard', roots: symlinkRoots });
+  const symlinkPacket = symlinkRoots.packetRoot;
+  const draftsPath = join(symlinkPacket, 'raw/drafts');
+  const outsideDrafts = join(symlinkPacket, '..', 'outside-drafts');
+  await mkdir(outsideDrafts);
+  await writeFile(
+    join(outsideDrafts, 'claims-v1.json'),
+    await readFile(join(draftsPath, 'claims-v1.json')),
+  );
+  await rm(draftsPath, { recursive: true });
+  await symlink(outsideDrafts, draftsPath, 'dir');
+  await rm(join(symlinkPacket, 'reviews/reconciliation.json'), { force: true });
+  const symlinkedParent = spawnSync(
+    process.execPath,
+    [
+      script,
+      '--manifest',
+      join(symlinkPacket, 'manifest.json'),
+      '--input-ledger',
+      join(draftsPath, 'claims-v1.json'),
+      '--review',
+      join(symlinkPacket, 'reviews/semantic.json'),
+      '--review',
+      join(symlinkPacket, 'reviews/adversarial.json'),
+      '--review',
+      join(symlinkPacket, 'reviews/coverage.json'),
+      '--output-ledger',
+      join(draftsPath, 'claims-v2.json'),
+      '--output-review',
+      join(symlinkPacket, 'reviews/reconciliation.json'),
+    ],
+    { encoding: 'utf8' },
+  );
+  assert.notEqual(symlinkedParent.status, 0);
+  assert.match(symlinkedParent.stderr, /symlink/i);
+  await assert.rejects(readFile(join(outsideDrafts, 'claims-v2.json')));
+  await assert.rejects(
+    readFile(join(symlinkPacket, 'reviews/reconciliation.json')),
+  );
+});
+
 test('standard workflow retains a genuine adversarial contradiction as contested', async () => {
   const injectedRoots = await roots();
   await runFakeRecon({ profile: 'standard', roots: injectedRoots });
@@ -840,6 +1264,14 @@ test('standard workflow retains a genuine adversarial contradiction as contested
   await writeJson(claimsPath, ledger);
   manifest.artifacts.find((item) => item.path === 'claims.json').digest =
     await hashFile(claimsPath);
+  const outputLedgerPath = join(
+    injectedRoots.packetRoot,
+    'raw/drafts/claims-v2.json',
+  );
+  await writeJson(outputLedgerPath, ledger);
+  manifest.artifacts.find(
+    (item) => item.path === 'raw/drafts/claims-v2.json',
+  ).digest = await hashFile(outputLedgerPath);
   const reconciliationPath = join(
     injectedRoots.packetRoot,
     'reviews',

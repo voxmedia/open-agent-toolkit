@@ -1,5 +1,24 @@
-import { canonicalJson } from './lib/canonical-json.mjs';
+#!/usr/bin/env node
+
+import { randomUUID } from 'node:crypto';
+import {
+  link as linkFile,
+  open,
+  readFile,
+  realpath,
+  unlink,
+} from 'node:fs/promises';
+import { dirname, resolve } from 'node:path';
+
+import { canonicalJson, hashFile } from './lib/canonical-json.mjs';
+import { isDirectExecution } from './lib/cli-entry.mjs';
 import { validateArtifactShape } from './lib/contracts.mjs';
+import {
+  assertCanonicalRoot,
+  assertSafeExistingPath,
+  assertSafeOutputPath,
+  assertUnchangedRoot,
+} from './lib/safe-path.mjs';
 
 const requiredDispositions = new Map([
   ['semantic', 'affirmed'],
@@ -42,7 +61,7 @@ export function reconcileLedger({
   reviewResults,
   priorReference,
   runId = priorLedger?.runId,
-  reviewerLane = 'lane-reconciliation',
+  reviewerLane = 'controller:reconcile-ledger-v1',
 }) {
   if (!priorLedger || priorLedger.runId !== runId || priorLedger.revision < 1) {
     throw new Error(
@@ -357,4 +376,252 @@ export function reconcileLedger({
     );
   }
   return { ledger, reconciliation };
+}
+
+function parseArgs(argv) {
+  const values = { review: [] };
+  for (let index = 0; index < argv.length; index += 2) {
+    const key = argv[index]?.replace(/^--/, '');
+    const value = argv[index + 1];
+    if (!key || value === undefined)
+      throw new Error('Invalid reconciliation arguments');
+    if (key === 'review') values.review.push(value);
+    else values[key] = value;
+  }
+  for (const key of [
+    'manifest',
+    'input-ledger',
+    'output-ledger',
+    'output-review',
+  ]) {
+    if (!values[key]) throw new Error(`Missing --${key}`);
+  }
+  return values;
+}
+
+async function removeCreatedPath(path) {
+  try {
+    await unlink(path);
+  } catch (error) {
+    if (error?.code !== 'ENOENT') throw error;
+  }
+}
+
+async function stageOutput(path, value) {
+  const temporary = `${path}.tmp-${process.pid}-${randomUUID()}`;
+  const handle = await open(temporary, 'wx', 0o600);
+  let closed = false;
+  try {
+    await handle.writeFile(`${canonicalJson(value)}\n`, 'utf8');
+    await handle.sync();
+    await handle.close();
+    closed = true;
+  } catch (error) {
+    if (!closed) await handle.close().catch(() => {});
+    await removeCreatedPath(temporary).catch(() => {});
+    throw error;
+  }
+  return temporary;
+}
+
+async function writeAtomicPair(outputs, packetIdentity) {
+  const staged = [];
+  const published = [];
+  try {
+    for (const output of outputs) {
+      staged.push({
+        ...output,
+        temporary: await stageOutput(output.path, output.value),
+      });
+    }
+    await assertUnchangedRoot(packetIdentity);
+    for (const output of staged) {
+      await linkFile(output.temporary, output.path);
+      published.push(output.path);
+    }
+  } catch (error) {
+    const cleanupErrors = [];
+    for (const path of published.reverse()) {
+      try {
+        await removeCreatedPath(path);
+      } catch (cleanupError) {
+        cleanupErrors.push(cleanupError);
+      }
+    }
+    for (const { temporary } of staged) {
+      try {
+        await removeCreatedPath(temporary);
+      } catch (cleanupError) {
+        cleanupErrors.push(cleanupError);
+      }
+    }
+    if (cleanupErrors.length > 0) {
+      throw new Error(
+        `Reconciliation output publication failed and ${cleanupErrors.length} cleanup operation(s) also failed`,
+        { cause: error },
+      );
+    }
+    throw error;
+  }
+  for (const { temporary } of staged) {
+    await removeCreatedPath(temporary);
+  }
+}
+
+async function main(argv = process.argv.slice(2)) {
+  const options = parseArgs(argv);
+  const manifestPath = await realpath(options.manifest);
+  const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+  const manifestValidation = validateArtifactShape(manifest);
+  if (!manifestValidation.valid) {
+    throw new Error(
+      `Reconciliation rejects invalid manifest: ${manifestValidation.errors
+        .map((error) => error.code)
+        .join(', ')}`,
+    );
+  }
+  const declaration = manifest.execution?.reconciliation;
+  if (
+    !declaration ||
+    declaration.producer !== 'controller:reconcile-ledger-v1'
+  ) {
+    throw new Error(
+      'Manifest does not authorize controller:reconcile-ledger-v1',
+    );
+  }
+  const artifacts = manifest.artifacts ?? [];
+  const packetRoot = dirname(manifestPath);
+  const packetIdentity = await assertCanonicalRoot(packetRoot);
+  await assertSafeExistingPath(packetRoot, resolve(options.manifest));
+  const expected = (path) => resolve(packetRoot, path);
+  const resolvedInputs = new Map();
+  const resolvedOutputs = new Map();
+  for (const [option, field] of [
+    ['input-ledger', 'inputLedger'],
+    ['output-ledger', 'outputLedger'],
+    ['output-review', 'outputReview'],
+  ]) {
+    if (resolve(options[option]) !== expected(declaration[field])) {
+      throw new Error(
+        `Reconciliation ${option} drifts from the manifest declaration`,
+      );
+    }
+    if (option === 'input-ledger') {
+      await assertSafeExistingPath(packetRoot, resolve(options[option]));
+      resolvedInputs.set(option, await realpath(options[option]));
+    } else {
+      const outputPath = resolve(options[option]);
+      await assertSafeExistingPath(packetRoot, dirname(outputPath));
+      await assertSafeOutputPath(packetRoot, outputPath);
+      resolvedOutputs.set(option, outputPath);
+    }
+  }
+  const declaredReviews = [
+    ...(declaration.requiredReviews ?? []),
+    ...(declaration.conditionalReviews ?? []).filter((path) =>
+      artifacts.some((reference) => reference.path === path),
+    ),
+  ];
+  const declaredReviewInputs = await Promise.all(
+    declaredReviews.map(async (path) => {
+      const reference = artifacts.find((artifact) => artifact.path === path);
+      if (!reference) {
+        throw new Error(
+          `Reconciliation review ${path} has no manifest artifact reference`,
+        );
+      }
+      return { path: await realpath(expected(path)), reference };
+    }),
+  );
+  const declaredByPath = new Map(
+    declaredReviewInputs.map((input) => [input.path, input.reference]),
+  );
+  const suppliedReviews = await Promise.all(
+    options.review.map(async (path) => {
+      await assertSafeExistingPath(packetRoot, resolve(path));
+      return realpath(path);
+    }),
+  );
+  if (
+    new Set(suppliedReviews).size !== suppliedReviews.length ||
+    suppliedReviews.length !== declaredByPath.size ||
+    suppliedReviews.some((path) => !declaredByPath.has(path))
+  ) {
+    throw new Error(
+      'Reconciliation review set drifts from the manifest declaration',
+    );
+  }
+  const priorLedger = JSON.parse(
+    await readFile(resolvedInputs.get('input-ledger'), 'utf8'),
+  );
+  const priorReference = artifacts.find(
+    (reference) => reference.path === declaration.inputLedger,
+  );
+  if (
+    !priorReference ||
+    (await hashFile(resolvedInputs.get('input-ledger'))) !==
+      priorReference.digest
+  ) {
+    throw new Error(
+      'Reconciliation input ledger does not match its manifest digest',
+    );
+  }
+  const reviewResults = await Promise.all(
+    declaredReviewInputs.map(async ({ path, reference: artifactReference }) => {
+      if ((await hashFile(path)) !== artifactReference.digest) {
+        throw new Error(
+          `Reconciliation review ${artifactReference.path} does not match its manifest digest`,
+        );
+      }
+      const value = JSON.parse(await readFile(path, 'utf8'));
+      return {
+        ...value,
+        artifactReference,
+      };
+    }),
+  );
+  const result = reconcileLedger({
+    priorLedger,
+    reviewResults,
+    priorReference,
+    runId: manifest.run.id,
+    reviewerLane: declaration.producer,
+  });
+  await assertUnchangedRoot(packetIdentity);
+  await writeAtomicPair(
+    [
+      {
+        path: resolvedOutputs.get('output-ledger'),
+        value: result.ledger,
+      },
+      {
+        path: resolvedOutputs.get('output-review'),
+        value: result.reconciliation,
+      },
+    ],
+    packetIdentity,
+  );
+  process.stdout.write(
+    `${JSON.stringify(
+      {
+        ledger: {
+          path: declaration.outputLedger,
+          digest: await hashFile(resolvedOutputs.get('output-ledger')),
+        },
+        reconciliation: {
+          path: declaration.outputReview,
+          digest: await hashFile(resolvedOutputs.get('output-review')),
+        },
+      },
+      null,
+      2,
+    )}\n`,
+  );
+}
+
+if (isDirectExecution(import.meta.url)) {
+  main().catch((error) => {
+    process.stderr.write(`${error instanceof Error ? error.message : error}\n`);
+    process.exitCode = 1;
+  });
 }

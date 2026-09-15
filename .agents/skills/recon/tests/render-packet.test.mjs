@@ -24,7 +24,6 @@ import {
   approveExecution,
   configureConditionalContradiction,
   createPacketFixture,
-  fixtureTarget,
 } from './fixtures/packet-fixture.mjs';
 
 const tempRoots = [];
@@ -150,14 +149,6 @@ test('v2 rendering shows normalized intended targets and conditional outcomes wi
   await configureConditionalContradiction(fixture, {
     disposition: 'not-triggered',
   });
-  const terminalWave = fixture.manifest.execution.waves.find(
-    (wave) => wave.mode === 'reconciliation',
-  );
-  terminalWave.target = {
-    ...fixtureTarget,
-    model: 'fixture-terminal-model',
-    effort: 'fixture-terminal-effort',
-  };
   fixture.manifest.execution = approveExecution(fixture.manifest.execution);
   await fixture.persist();
 
@@ -165,9 +156,10 @@ test('v2 rendering shows normalized intended targets and conditional outcomes wi
   assert.equal(validation.valid, true, JSON.stringify(validation, null, 2));
   const document = renderPacketDocument(validation.validatedRun);
   assert.match(document, /Manifest routing version:\*\* 2/i);
-  assert.match(
-    document,
-    /wave-reconciliation[\s\S]{0,500}model=fixture-terminal-model[\s\S]{0,200}effort=fixture-terminal-effort/i,
+  assert.doesNotMatch(document, /wave-reconciliation/i);
+  assert.equal(
+    fixture.manifest.execution.reconciliation.producer,
+    'controller:reconcile-ledger-v1',
   );
   assert.match(
     document,

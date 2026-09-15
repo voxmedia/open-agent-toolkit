@@ -416,6 +416,15 @@ export async function runFakeRecon(options = {}) {
     });
     Object.keys(fixture.ledger).forEach((key) => delete fixture.ledger[key]);
     Object.assign(fixture.ledger, reconciled.ledger);
+    const outputLedgerPath = join(
+      roots.packetRoot,
+      'raw/drafts/claims-v2.json',
+    );
+    await writeJson(outputLedgerPath, reconciled.ledger);
+    const outputLedgerReference = fixture.manifest.artifacts.find(
+      (item) => item.path === 'raw/drafts/claims-v2.json',
+    );
+    outputLedgerReference.digest = await hashFile(outputLedgerPath);
     const reconciliationPath = join(
       roots.packetRoot,
       'reviews',
@@ -463,6 +472,16 @@ export async function runFakeRecon(options = {}) {
       code: 'PASS_FAILED',
       message: `${options.workerFailure} lane ${options.laneOutcome ?? 'failed'} after accepted launch; no replacement was dispatched.`,
       material: true,
+    });
+  }
+
+  if (options.postWriteStreamClose && !options.invalidOutput) {
+    fixture.manifest.gaps.push({
+      id: 'gap-provider-stream-close',
+      code: 'PROVIDER_STREAM_CLOSED',
+      message:
+        'The provider stream closed after the approved-path artifact validated; completion was retained and no replacement was dispatched.',
+      material: false,
     });
   }
 

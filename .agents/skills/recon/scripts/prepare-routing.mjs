@@ -1,10 +1,8 @@
 #!/usr/bin/env node
 
-import { realpathSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 
+import { isDirectExecution } from './lib/cli-entry.mjs';
 import {
   checkApprovedWaveTarget,
   createRoutingPreview,
@@ -81,29 +79,7 @@ export async function main(argv = process.argv.slice(2)) {
   );
 }
 
-/**
- * Direct invocation, compared as canonical paths on both sides. Comparing a raw
- * `process.argv[1]` against `import.meta.url` makes this script a silent no-op
- * that exits 0 whenever the skill is reached through a symlinked install root,
- * and canonicalizing only one side has the same effect under
- * `--preserve-symlinks-main`, which keeps the link in `import.meta.url`.
- * A path that cannot be canonicalized is not a module Node loaded as the entry
- * point, so a thrown `realpathSync` means "not invoked directly" and returns
- * `false`; it never masks a direct run.
- */
-function isDirectInvocation(invokedPath) {
-  if (!invokedPath) return false;
-  try {
-    return (
-      realpathSync(fileURLToPath(import.meta.url)) ===
-      realpathSync(resolve(invokedPath))
-    );
-  } catch {
-    return false;
-  }
-}
-
-if (isDirectInvocation(process.argv[1])) {
+if (isDirectExecution(import.meta.url)) {
   main().catch((error) => {
     const code = error instanceof RoutingContractError ? error.code : 'ERROR';
     process.stderr.write(`${code}: ${error.message}\n`);

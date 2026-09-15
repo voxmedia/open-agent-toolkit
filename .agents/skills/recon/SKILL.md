@@ -6,7 +6,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Glob, Grep, Bash, AskUserQuestion, Agent, mcp__*
 metadata:
-  version: 1.1.3
+  version: 1.1.5
 ---
 
 # Recon
@@ -127,8 +127,8 @@ Use the complete mode policy from `references/profiles.md` and
 `scripts/lib/routing.mjs`. Map manifest wave modes to the worker's closed
 assignment vocabulary: `redundant-gather` to `gather`;
 `semantic-verification` and `redundant-verification` to `verify`; `adversarial`
-and `contradiction-resolution` to `adversary`; and only `reconciliation` to
-`reconcile`. The remaining modes keep their same-named assignment. All lanes
+and `contradiction-resolution` to `adversary`. The remaining worker modes keep
+their same-named assignment; reconciliation is controller-owned. All lanes
 within one launch are a homogeneous wave. Select each wave independently; a
 stronger wave never raises unrelated waves' targets or effort.
 
@@ -164,9 +164,14 @@ task class and class floor. Preserve provider, route, role, model, effort,
 reasoning mode, and service tier as separate provider-native axes. A null axis
 means the adapter exposes no independently requested control; never translate
 effort between harnesses or normalize an opaque selector. Prefer the canonical
-`recon-worker` role. If that role is unavailable, plan the generic role with the
-complete worker contract as a visible generic role fallback before approval. A
-fallback after approval is forbidden.
+`recon-worker` role only when the current live Task catalog exposes it. A
+materialized `.cursor/agents/recon-worker.md` file proves installation, not that
+the current Cursor Task catalog can launch the role. If the role is absent from
+that observed catalog, plan the generic role with the complete worker contract
+as a visible generic role fallback before approval. A fallback after approval
+is forbidden. Every Cursor recon leaf, including that generic fallback, must be
+launched as a background task so a new parent-chat message cannot turn parent
+turn interruption into an apparent worker crash.
 
 Prepare a `schemaVersion: 2` draft manifest. Its execution object contains a
 complete inherited `target`, limits, waves, conditions, and later the approval.
@@ -218,7 +223,8 @@ result. If any approved axis cannot be satisfied, stop with a
 launch nothing. Never substitute a different axis to make the launch fit.
 
 Launch each wave through the dispatch dependency with exactly the approved
-axes. Immediately before each launch, check the constructed target through the
+axes. On Cursor, launch both the custom worker role and the pre-approved generic
+fallback in the background. Immediately before each launch, check the constructed target through the
 same production helper used by preview:
 
 ```bash
@@ -235,13 +241,22 @@ approved `waveId` and `laneId`. This structured identity is required for
 conditional and non-conditional lanes alike; prose is descriptive, not
 identity.
 
+Worker completion is decided from the approved-path artifact before interpreting
+a later provider transport error. When the artifact's identity, closed schema,
+bytes, and digest validate, the lane is complete; a subsequent stream-close or
+RPC error is recorded as a non-material diagnostic and never triggers a
+replacement launch. Missing or invalid output remains a terminal `PASS_FAILED`
+outcome with no retry or replacement.
+
 Run the passes in this order:
 
 1. `map` and `gather` workers write unique dossiers under `raw/dossiers/`.
    Thorough runs complete their independent `redundant-gather` wave here too.
 2. `compile` writes a candidate canonical claim ledger. A thorough candidate
    directly references a complete dossier from every approved primary and
-   redundant gather lane before any review brief is created.
+   redundant gather lane before any review brief is created. Every display
+   excerpt is an exact contiguous substring of its cited source, apart from the
+   declared `redacted-exact` representation; paraphrase is invalid evidence.
 3. Source preflight: run `scripts/validate-artifact.mjs` on the candidate
    manifest and ledger, then reopen every declared source and evidence locator
    with the checks in `scripts/validate-packet.mjs`. Resolve source roots to
@@ -251,23 +266,26 @@ Run the passes in this order:
    manifest and ledger pair validates.
 4. Profile-required `verify`, `adversary`, and `coverage` workers consume only
    immutable selectively blind briefs created by
-   `scripts/create-review-brief.mjs` at unique paths.
+   `scripts/create-review-brief.mjs` at unique paths. Each review-producing
+   wave has exactly one lane; partition source or question fan-out in the
+   applicable gather wave instead.
 5. Evaluate each predeclared evidence condition only after its completed
    predecessor artifacts exist. Record exactly one root-authored condition
    outcome. A triggered `contradiction-resolution` wave runs once as an
    `adversary` evidence assignment; a not-triggered or unresolved wave supplies
    no artifact. Accepted failure, cancellation, timeout, or missing output never
    authorizes replacement work.
-6. Standard and thorough execute exactly one terminal `reconciliation` wave,
-   mapped to `reconcile`, after required review evidence and any triggered
-   contradiction investigation. It writes a new candidate ledger without
-   mutating the prior ledger.
+6. Standard and thorough run one deterministic controller reconciliation after
+   required review evidence and any triggered contradiction investigation. The
+   controller invokes `scripts/reconcile-ledger.mjs` once using the manifest's
+   `execution.reconciliation` paths and literal producer
+   `controller:reconcile-ledger-v1`, validates both candidate outputs, copies
+   the exact ledger bytes to a packet-contained temporary file, and atomically
+   renames it to `claims.json`. No reconciliation worker is dispatched.
 
-If `reconciliation-needs-judgment` is foreseeable, select an adequate target
-for that one terminal wave before approval. If it appears after approval and
-the approved target is inadequate, preserve completed evidence and return an
-explicit unresolved, out-of-envelope gap for renewed approval or a new run.
-Never mutate the target, launch a second reconciliation, or substitute a
+If reconciliation requires new semantic judgment, preserve completed evidence
+and return an explicit unresolved caller-owned gap. Never mutate the target or
+substitute a
 contradiction search for synthesis.
 
 Use `references/worker-contract.md` for every assignment. Never allow two

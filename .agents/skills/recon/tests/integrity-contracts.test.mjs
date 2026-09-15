@@ -34,6 +34,52 @@ async function readJson(path) {
   return JSON.parse(await readFile(path, 'utf8'));
 }
 
+test('review-result unresolved issues are a closed string array', async () => {
+  const packet = await fixture('standard');
+  const review = await readJson(
+    join(packet.packetRoot, 'reviews', 'semantic.json'),
+  );
+  review.unresolvedIssues = [{ message: 'object members are not allowed' }];
+  const validation = validateArtifactShape(review);
+  assert.equal(validation.valid, false);
+  assert.ok(
+    validation.errors.some(
+      (error) => error.code === 'INVALID_UNRESOLVED_ISSUE',
+    ),
+  );
+});
+
+test('ledger rejects misplaced unresolved issues without throwing', async () => {
+  const packet = await fixture('standard');
+  const ledger = await readJson(packet.claimsPath);
+  ledger.unresolvedIssues = {};
+  const validation = validateArtifactShape(ledger);
+  assert.equal(validation.valid, false);
+  assert.ok(
+    validation.errors.some(
+      (error) =>
+        error.code === 'UNKNOWN_FIELD' && error.path === '$.unresolvedIssues',
+    ),
+  );
+});
+
+test('review-result reports a malformed unresolved issues container', async () => {
+  const packet = await fixture('standard');
+  const review = await readJson(
+    join(packet.packetRoot, 'reviews', 'semantic.json'),
+  );
+  review.unresolvedIssues = {};
+  const validation = validateArtifactShape(review);
+  assert.equal(validation.valid, false);
+  assert.ok(
+    validation.errors.some(
+      (error) =>
+        error.code === 'MISSING_REQUIRED_FIELD' &&
+        error.path === '$.unresolvedIssues',
+    ),
+  );
+});
+
 async function writeJson(path, value) {
   await writeFile(path, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
 }
@@ -45,6 +91,16 @@ async function replaceArtifact(packet, relative, value) {
     (item) => item.path === relative,
   );
   reference.digest = await hashFile(path);
+  if (relative === 'claims.json') {
+    const outputReference = packet.manifest.artifacts.find(
+      (item) => item.path === 'raw/drafts/claims-v2.json',
+    );
+    if (outputReference) {
+      const outputPath = join(packet.packetRoot, outputReference.path);
+      await writeJson(outputPath, value);
+      outputReference.digest = await hashFile(outputPath);
+    }
+  }
   await writeJson(packet.manifestPath, packet.manifest);
   return reference;
 }

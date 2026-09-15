@@ -52,7 +52,10 @@ function addConditionalWave(execution, suffix = '') {
       {
         laneId: `lane-conditional${suffix}`,
         scope: `packet/conditional${suffix}`,
-        writeRoot: `reviews/conditional${suffix}.json`,
+        writeRoot:
+          suffix === ''
+            ? 'reviews/contradiction-resolution.json'
+            : `reviews/conditional${suffix}.json`,
       },
     ],
     conditional: true,
@@ -80,7 +83,6 @@ test('economical routing defaults exhaust the supported wave-mode union', () => 
     'coverage',
     'gather',
     'map',
-    'reconciliation',
     'redundant-gather',
     'redundant-verification',
     'semantic-verification',
@@ -96,7 +98,7 @@ test('economical routing defaults exhaust the supported wave-mode union', () => 
 
 test('routing resolution inherits or replaces a whole exact target without axis merging', () => {
   const execution = createV2ExecutionApproval({
-    modes: ['map', 'reconciliation'],
+    modes: ['map', 'gather', 'compile'],
     laneIdForMode,
   });
   const override = {
@@ -173,11 +175,14 @@ test('quick permits four gather lanes in addition to map and compile', () => {
   );
 });
 
-test('profiles require exactly one lane for every fixed wave mode', () => {
+test('profiles require exactly one lane for fixed and review-result wave modes', () => {
   for (const [profile, modes, mode, laneCount] of [
     ['quick', ['map', 'gather', 'compile'], 'map', 40],
     ['quick', ['map', 'gather', 'compile'], 'compile', 2],
-    ['standard', standardModes, 'reconciliation', 2],
+    ['standard', standardModes, 'semantic-verification', 2],
+    ['standard', standardModes, 'adversarial', 2],
+    ['standard', standardModes, 'coverage', 2],
+    ['thorough', thoroughModes, 'redundant-verification', 2],
   ]) {
     const execution = createV2ExecutionApproval({ modes, laneIdForMode });
     const wave = execution.waves.find((item) => item.mode === mode);
@@ -213,11 +218,7 @@ test('profiles reject wave modes owned by stronger profiles', () => {
       ['map', 'gather', 'semantic-verification', 'compile'],
       'semantic-verification',
     ],
-    [
-      'standard',
-      [...standardModes.slice(0, -1), 'redundant-gather', 'reconciliation'],
-      'redundant-gather',
-    ],
+    ['standard', [...standardModes, 'redundant-gather'], 'redundant-gather'],
   ]) {
     const execution = createV2ExecutionApproval({ modes, laneIdForMode });
     const errors = validateV2ProfileTopology({
@@ -235,7 +236,7 @@ test('profiles reject wave modes owned by stronger profiles', () => {
   }
 });
 
-test('condition semantics have one validator owner and one diagnostic per injected defect', () => {
+test('condition semantics have one validator owner and deterministic diagnostics', () => {
   const unknownPredicate = createV2ExecutionApproval({
     modes: standardModes,
     laneIdForMode,
@@ -269,10 +270,18 @@ test('condition semantics have one validator owner and one diagnostic per inject
     conditionFor(secondWave, 'condition-duplicate'),
   ];
 
-  for (const [execution, expectedCode, profile] of [
-    [unknownPredicate, 'INVALID_CONDITION_PREDICATE', 'standard'],
-    [duplicateDestination, 'DUPLICATE_CONDITION_DESTINATION', 'thorough'],
-    [duplicateId, 'DUPLICATE_ROUTING_ID', 'thorough'],
+  for (const [execution, expectedCodes, profile] of [
+    [unknownPredicate, ['INVALID_CONDITION_PREDICATE'], 'standard'],
+    [
+      duplicateDestination,
+      ['PROFILE_CONDITION_CAP_EXCEEDED', 'DUPLICATE_CONDITION_DESTINATION'],
+      'thorough',
+    ],
+    [
+      duplicateId,
+      ['PROFILE_CONDITION_CAP_EXCEEDED', 'DUPLICATE_ROUTING_ID'],
+      'thorough',
+    ],
   ]) {
     const executionErrors = [];
     validateExecution(execution, executionErrors);
@@ -284,7 +293,7 @@ test('condition semantics have one validator owner and one diagnostic per inject
     });
     assert.deepEqual(
       topologyErrors.map(({ code }) => code),
-      [expectedCode],
+      expectedCodes,
     );
   }
 });
@@ -304,7 +313,7 @@ test('every conditional wave has exactly one activating condition', () => {
       {
         laneId: 'lane-dead-conditional',
         scope: 'packet/dead-conditional',
-        writeRoot: 'raw/dossiers/dead-conditional.json',
+        writeRoot: 'reviews/contradiction-resolution.json',
       },
     ],
     conditional: true,
@@ -322,12 +331,12 @@ test('every conditional wave has exactly one activating condition', () => {
 });
 
 for (const [profile, modes] of [['standard', standardModes]]) {
-  test(`${profile} conditional terminal defects have one topology diagnostic owner`, () => {
+  test(`${profile} missing controller reconciliation has one topology diagnostic owner`, () => {
     const execution = createV2ExecutionApproval({
       modes,
       laneIdForMode,
     });
-    execution.waves.at(-1).conditional = true;
+    delete execution.reconciliation;
 
     const errors = validateV2ProfileTopology({
       schemaVersion: 2,
@@ -340,6 +349,58 @@ for (const [profile, modes] of [['standard', standardModes]]) {
     );
   });
 }
+
+test('controller reconciliation declaration comparison is semantic and closed', () => {
+  const execution = createV2ExecutionApproval({
+    modes: standardModes,
+    laneIdForMode,
+  });
+  const declaration = execution.reconciliation;
+  execution.reconciliation = {
+    conditionalReviews: declaration.conditionalReviews,
+    requiredReviews: declaration.requiredReviews,
+    outputReview: declaration.outputReview,
+    outputLedger: declaration.outputLedger,
+    inputLedger: declaration.inputLedger,
+    producer: declaration.producer,
+  };
+
+  assert.deepEqual(
+    validateV2ProfileTopology({
+      schemaVersion: 2,
+      run: { requestedProfile: 'standard' },
+      execution,
+    }),
+    [],
+  );
+
+  execution.reconciliation.outputReview = 'reviews/changed.json';
+  assert.ok(
+    validateV2ProfileTopology({
+      schemaVersion: 2,
+      run: { requestedProfile: 'standard' },
+      execution,
+    }).some(({ code }) => code === 'INVALID_RECONCILIATION_PATH'),
+  );
+});
+
+test('controller reconciliation paths stay inside their review lane roots', () => {
+  const execution = createV2ExecutionApproval({
+    modes: standardModes,
+    laneIdForMode,
+  });
+  execution.waves.find(
+    (wave) => wave.mode === 'semantic-verification',
+  ).lanes[0].writeRoot = 'reviews/semantic-renamed.json';
+
+  assert.ok(
+    validateV2ProfileTopology({
+      schemaVersion: 2,
+      run: { requestedProfile: 'standard' },
+      execution,
+    }).some(({ code }) => code === 'INVALID_RECONCILIATION_PATH'),
+  );
+});
 
 test('normalization refuses unknown manifest versions', () => {
   assert.throws(

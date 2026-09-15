@@ -72,7 +72,7 @@ test('condition topology is forward-only, single-activation, unique-output, and 
   const packet = await fixture({ profile: 'standard' });
   await configureConditionalContradiction(packet);
   const condition = packet.manifest.execution.conditions[0];
-  condition.afterWaveIds = ['wave-reconciliation'];
+  condition.afterWaveIds = ['wave-contradiction-resolution'];
   condition.maxActivations = 2;
   packet.manifest.execution.waves.find(
     (wave) => wave.mode === 'contradiction-resolution',
@@ -112,9 +112,7 @@ test('unknown, duplicate, and terminal condition destinations fail closed', asyn
     { ...structuredClone(base), afterWaveIds: ['wave-missing'] },
     { ...structuredClone(base), conditionId: 'condition-second' },
   ];
-  packet.manifest.execution.waves.find(
-    (wave) => wave.mode === 'reconciliation',
-  ).conditional = true;
+  delete packet.manifest.execution.reconciliation;
   packet.manifest.execution = approveExecution(packet.manifest.execution);
   const result = validateArtifactShape(packet.manifest);
   for (const code of [
@@ -223,7 +221,7 @@ test('a triggered lane may terminate only with a material typed outcome gap', as
   assert.equal(result.status, 'partial');
 });
 
-test('two triggered lanes require distinct exact wave and lane outcome gaps', async () => {
+test('thorough rejects a second contradiction condition before dispatch', async () => {
   const packet = await fixture({
     profile: 'thorough',
     includeContradictionResolution: false,
@@ -239,84 +237,20 @@ test('two triggered lanes require distinct exact wave and lane outcome gaps', as
   secondWave.lanes[0].scope = 'packet/contradiction-resolution-second';
   secondWave.lanes[0].writeRoot =
     'reviews/contradiction-resolution-second.json';
-  const terminalIndex = execution.waves.findIndex(
-    (wave) => wave.mode === 'reconciliation',
-  );
-  execution.waves.splice(terminalIndex, 0, secondWave);
+  execution.waves.push(secondWave);
   const secondCondition = structuredClone(execution.conditions[0]);
   secondCondition.conditionId = 'condition-contradiction-resolution-second';
   secondCondition.destinationWaveId = secondWave.waveId;
   execution.conditions.push(secondCondition);
-  const secondOutcome = structuredClone(packet.manifest.conditionOutcomes[0]);
-  secondOutcome.conditionId = secondCondition.conditionId;
-  packet.manifest.conditionOutcomes.push(secondOutcome);
   packet.manifest.execution = approveExecution(execution);
-  packet.manifest.run.status = 'partial';
-  packet.manifest.gaps.push({
-    id: 'gap-shared-conditional-outcome',
-    code: 'PASS_FAILED',
-    message:
-      'Activated wave `wave-contradiction-resolution` lane `lane-contradiction-resolution` failed.',
-    material: true,
-    sourceIds: [],
-    claimIds: [],
-    coverageFindingIds: [],
-  });
-  await persistManifest(packet);
-
-  let result = await validatePacket(packet.packetRoot);
+  const result = validateArtifactShape(packet.manifest);
+  assert.equal(result.valid, false);
   assert.ok(
     result.errors.some(
-      (error) =>
-        error.code === 'MISSING_LANE_OUTCOME' &&
-        error.path === 'lane:lane-contradiction-resolution',
-    ),
-    'free-text wave and lane names must not settle a structured lane outcome',
-  );
-
-  Object.assign(
-    packet.manifest.gaps.find(
-      (gap) => gap.id === 'gap-shared-conditional-outcome',
-    ),
-    {
-      waveId: 'wave-contradiction-resolution',
-      laneId: 'lane-contradiction-resolution',
-    },
-  );
-  await persistManifest(packet);
-  result = await validatePacket(packet.packetRoot);
-  assert.ok(
-    result.errors.some(
-      (error) =>
-        error.code === 'MISSING_LANE_OUTCOME' &&
-        error.path === 'lane:lane-contradiction-resolution-second',
+      (error) => error.code === 'PROFILE_CONDITION_CAP_EXCEEDED',
     ),
     JSON.stringify(result, null, 2),
   );
-  assert.equal(
-    result.errors.some(
-      (error) =>
-        error.code === 'MISSING_LANE_OUTCOME' &&
-        error.path === 'lane:lane-contradiction-resolution',
-    ),
-    false,
-  );
-
-  packet.manifest.gaps.push({
-    id: 'gap-second-conditional-outcome',
-    code: 'PASS_OMITTED',
-    message: 'The second activated conditional lane was omitted.',
-    material: true,
-    waveId: 'wave-contradiction-resolution-second',
-    laneId: 'lane-contradiction-resolution-second',
-    sourceIds: [],
-    claimIds: [],
-    coverageFindingIds: [],
-  });
-  await persistManifest(packet);
-  result = await validatePacket(packet.packetRoot);
-  assert.equal(result.valid, true, JSON.stringify(result, null, 2));
-  assert.equal(result.status, 'partial');
 });
 
 test('non-triggered lanes cannot publish or contribute conditional artifacts', async () => {

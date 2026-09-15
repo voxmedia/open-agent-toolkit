@@ -47,7 +47,7 @@ function readModeMappings(content) {
 test('recon is a provider-neutral user-invocable skill', async () => {
   const { skill } = await readContracts();
   assert.match(skill, /^name:\s*recon$/m);
-  assert.equal(readSkillVersion(skill), '1.1.3');
+  assert.equal(readSkillVersion(skill), '1.1.5');
   assert.match(skill, /^user-invocable:\s*true$/m);
   assert.match(skill, /provider-neutral/i);
   assert.doesNotMatch(skill, /(?:must|required to) use GPT-|Claude-|Gemini-/i);
@@ -149,18 +149,15 @@ test('profiles define adaptive bounded quick, standard, and thorough runs', asyn
     /standard[\s\S]{0,900}semantic verification[\s\S]{0,900}adversarial[\s\S]{0,900}coverage/i,
   );
   assert.match(profiles, /thorough[\s\S]{0,1100}redundant/i);
-  assert.match(
-    profiles,
-    /exactly one mandatory[\s\S]{0,120}terminal reconciliation/i,
-  );
-  assert.match(packetContract, /4\/10\/20 adaptive-lane cap/i);
+  assert.match(profiles, /one deterministic controller reconciliation/i);
+  assert.match(packetContract, /4\/10\/20 evidence-lane cap/i);
   assert.match(packetContract, /fixed at exactly one lane/i);
-  assert.match(packetContract, /total lane maxima are 6\/13\/23/i);
+  assert.match(packetContract, /worker-lane maxima are 6\/12\/22/i);
   assert.match(profiles, /hard cap 4[\s\S]*hard cap 10[\s\S]*hard cap 20/i);
-  for (const total of [6, 13, 23]) {
+  for (const total of [6, 12, 22]) {
     assert.match(
       profiles,
-      new RegExp(`total\\s+maximum\\s+is ${total} lanes`, 'i'),
+      new RegExp(`total\\s+maximum\\s+is ${total} (?:worker )?lanes`, 'i'),
     );
   }
 });
@@ -173,7 +170,7 @@ test('thorough keeps redundant work required and contradiction resolution condit
   );
   const required = thorough.slice(
     thorough.indexOf('- Required:'),
-    thorough.indexOf('- Adaptive evidence lanes:'),
+    thorough.indexOf('- Counted evidence lanes:'),
   );
   const conditional = thorough.slice(thorough.indexOf('- Conditional work:'));
 
@@ -186,7 +183,7 @@ test('thorough keeps redundant work required and contradiction resolution condit
   assert.match(conditional, /approved predicate triggers/i);
 });
 
-test('controller maps ten wave modes onto the closed worker vocabulary', async () => {
+test('controller maps nine wave modes onto the closed worker vocabulary', async () => {
   const { skill, workerContract, worker } = await readContracts();
   const expected = [
     ['map', 'map'],
@@ -195,7 +192,6 @@ test('controller maps ten wave modes onto the closed worker vocabulary', async (
     ['semantic-verification', 'verify'],
     ['adversarial', 'adversary'],
     ['coverage', 'coverage'],
-    ['reconciliation', 'reconcile'],
     ['redundant-gather', 'gather'],
     ['redundant-verification', 'verify'],
     ['contradiction-resolution', 'adversary'],
@@ -203,7 +199,7 @@ test('controller maps ten wave modes onto the closed worker vocabulary', async (
 
   assert.deepEqual(readModeMappings(workerContract), expected);
   assert.deepEqual(readModeMappings(worker), expected);
-  assert.match(skill, /only `reconciliation`[\s\S]{0,40}`reconcile`/i);
+  assert.match(skill, /reconciliation is controller-owned/i);
   assert.match(
     workerContract,
     /contradiction-resolution[\s\S]{0,220}discriminating evidence/i,
@@ -251,18 +247,11 @@ test('worker documents distinguish assignment concepts and use closed output fie
   }
 });
 
-test('controller preserves single-terminal and renewed-approval boundaries', async () => {
+test('controller owns one deterministic reconciliation boundary', async () => {
   const { skill } = await readContracts();
-  assert.match(skill, /exactly one terminal `reconciliation` wave/i);
-  assert.match(skill, /reconciliation-needs-judgment/i);
-  assert.match(
-    skill,
-    /unresolved, out-of-envelope gap[\s\S]{0,180}renewed approval or a new run/i,
-  );
-  assert.match(
-    skill,
-    /never mutate the target[\s\S]{0,120}second reconciliation/i,
-  );
+  assert.match(skill, /one deterministic controller reconciliation/i);
+  assert.match(skill, /No reconciliation worker is dispatched/i);
+  assert.match(skill, /new semantic judgment[\s\S]{0,120}caller-owned gap/i);
 });
 
 test('controller preserves selective blindness and the context firewall', async () => {
@@ -288,6 +277,21 @@ test('controller publishes honest partials and never retries or substitutes sile
   );
   assert.match(skill, /no silent retry/i);
   assert.match(skill, /structural failure[\s\S]{0,240}no `packet\.md`/i);
+});
+
+test('Cursor leaves stay background and durable artifacts outrank stream errors', async () => {
+  const { skill, worker, workerContract } = await readContracts();
+  assert.match(worker, /^is_background:\s*true$/m);
+  assert.match(skill, /Every Cursor recon leaf[\s\S]{0,180}background task/i);
+  assert.match(skill, /generic fallback[\s\S]{0,180}background/i);
+  assert.match(
+    skill,
+    /materialized `\.cursor\/agents\/recon-worker\.md`[\s\S]{0,220}not[\s\S]{0,100}current Cursor Task catalog/i,
+  );
+  assert.match(
+    `${skill}\n${workerContract}`,
+    /approved-path artifact[\s\S]{0,240}(?:stream-close|transport error)[\s\S]{0,200}non-material/i,
+  );
 });
 
 test('packet contract pins exact lane outcome contradictions and same-run errors', async () => {
@@ -316,6 +320,10 @@ test('packet contract pins exact lane outcome contradictions and same-run errors
 
 test('worker exposes only the declared non-interactive leaf modes', async () => {
   const { worker, workerContract } = await readContracts();
+  assert.match(
+    worker,
+    /one declared mode: `map`, `gather`, `compile`, `verify`, `adversary`, or\s+`coverage`\. No other mode is valid\./,
+  );
   for (const mode of [
     'map',
     'gather',
@@ -323,10 +331,10 @@ test('worker exposes only the declared non-interactive leaf modes', async () => 
     'verify',
     'adversary',
     'coverage',
-    'reconcile',
   ]) {
     assert.match(worker, new RegExp(`\\b${mode}\\b`, 'i'));
   }
+  assert.match(worker, /do not reconcile the ledger/i);
   assert.match(worker, /never interact with the user/i);
   assert.match(worker, /never dispatch/i);
   assert.match(worker, /write only[\s\S]{0,120}assigned artifact/i);
@@ -335,6 +343,28 @@ test('worker exposes only the declared non-interactive leaf modes', async () => 
   assert.match(workerContract, /excluded inputs/i);
   assert.match(workerContract, /uncertainty/i);
   assert.match(workerContract, /contradiction/i);
+});
+
+test('worker contract requires exact excerpts, closed examples, and same-task validation', async () => {
+  const { worker, workerContract } = await readContracts();
+  const contract = `${worker}\n${workerContract}`;
+  assert.match(contract, /exact contiguous (?:source )?substring/i);
+  assert.match(contract, /`redacted-exact`/i);
+  assert.match(
+    contract,
+    /supplied deterministic validator[\s\S]{0,260}same accepted\s+task/i,
+  );
+  assert.match(contract, /terminal invalid[\s\S]{0,100}`PASS_FAILED`/i);
+  const examples = [
+    ...workerContract.matchAll(/```json\n([\s\S]*?)\n```/g),
+  ].map((match) => JSON.parse(match[1]));
+  assert.deepEqual(
+    examples.map(({ reviewKind }) => reviewKind),
+    ['semantic', 'adversarial', 'coverage'],
+  );
+  assert.ok(
+    examples.every(({ unresolvedIssues }) => Array.isArray(unresolvedIssues)),
+  );
 });
 
 /**

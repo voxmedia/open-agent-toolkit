@@ -30,6 +30,7 @@ const skillRoot = fileURLToPath(new URL('..', import.meta.url));
 const scripts = [
   'create-review-brief.mjs',
   'prepare-routing.mjs',
+  'reconcile-ledger.mjs',
   'render-packet.mjs',
   'validate-artifact.mjs',
   'validate-packet.mjs',

@@ -145,7 +145,7 @@ function conditionalDraft() {
       {
         laneId: 'lane-conditional-resolution',
         scope: 'packet/conditional-resolution',
-        writeRoot: 'reviews/conditional-resolution.json',
+        writeRoot: 'reviews/contradiction-resolution.json',
       },
     ],
     conditional: true,
@@ -188,7 +188,7 @@ function markdownHostileDraft() {
   return manifest;
 }
 
-test('preview covers all ten economical defaults and preserves independent targets', () => {
+test('preview covers all nine worker defaults and preserves independent targets', () => {
   const manifest = draftManifest();
   const stronger = {
     provider: 'fixture-provider',
@@ -199,30 +199,29 @@ test('preview covers all ten economical defaults and preserves independent targe
     reasoningMode: 'synthetic-deliberation',
     serviceTier: null,
   };
-  const terminal = manifest.execution.waves.find(
-    (wave) => wave.mode === 'reconciliation',
+  const adversarial = manifest.execution.waves.find(
+    (wave) => wave.mode === 'adversarial',
   );
-  terminal.taskClass = 'intelligent-recon';
-  terminal.target = stronger;
-  terminal.selectionReason =
-    'Synthetic preservation fixture: bounded reconciliation needs judgment.';
+  adversarial.taskClass = 'intelligent-recon';
+  adversarial.target = stronger;
+  adversarial.selectionReason = 'Synthetic independent target fixture.';
 
   const preview = createRoutingPreview(manifest);
   assert.deepEqual(
     preview.waves.map((wave) => wave.mode).sort(),
-    [...modeList].sort(),
+    modeList.filter((mode) => mode !== 'reconciliation').sort(),
   );
   assert.ok(
     preview.waves.every((wave) => wave.assignment.length > 20),
     'every mode exposes a bounded assignment default',
   );
   assert.deepEqual(
-    preview.waves.find((wave) => wave.mode === 'reconciliation').target,
+    preview.waves.find((wave) => wave.mode === 'adversarial').target,
     stronger,
   );
   assert.ok(
     preview.waves
-      .filter((wave) => wave.mode !== 'reconciliation')
+      .filter((wave) => wave.mode !== 'adversarial')
       .every((wave) => wave.target.model === fixtureTarget.model),
   );
   assert.equal(preview.approvalState, 'draft');
@@ -231,15 +230,15 @@ test('preview covers all ten economical defaults and preserves independent targe
   assert.deepEqual(preview.profileCaps, {
     maxLanes: 20,
     maxConcurrency: 8,
-    maxConditions: 2,
+    maxConditions: 1,
   });
-  assert.equal(preview.limits.waveCount, 10);
-  assert.equal(preview.limits.laneCount, 10);
+  assert.equal(preview.limits.waveCount, 9);
+  assert.equal(preview.limits.laneCount, 9);
   assert.equal(preview.limits.countedAdaptiveLaneCount, 7);
   assert.match(renderRoutingPreview(preview), /Worst-case limits/);
   assert.equal(
     JSON.parse(renderRoutingPreview(preview, 'json')).waves.length,
-    10,
+    9,
   );
 });
 
@@ -260,13 +259,13 @@ test('preview validates and displays the complete approval-bound topology', () =
     'Requested profile: standard',
     'lane-conditional-resolution',
     'packet/conditional-resolution',
-    'reviews/conditional-resolution.json',
+    'reviews/contradiction-resolution.json',
     'condition-resolution',
     'wave-conditional-resolution',
     'wave-map',
     'insufficient-evidence',
     '| 1 |',
-    '- Profile adaptive-lane cap: 10 (counted lanes: 5 of 8 total)',
+    '- Profile adaptive-lane cap: 10 (counted lanes: 5 of 7 total)',
     '- Profile concurrency cap: 6',
     '- Profile condition cap: 1',
   ]) {
@@ -288,9 +287,13 @@ test('preview rejects incomplete quick, standard, and thorough profile topologie
 
     for (const requiredMode of requiredModesByProfile[profile]) {
       const incomplete = completeDraft(profile);
-      incomplete.execution.waves = incomplete.execution.waves.filter(
-        (wave) => wave.mode !== requiredMode,
-      );
+      if (requiredMode === 'reconciliation') {
+        delete incomplete.execution.reconciliation;
+      } else {
+        incomplete.execution.waves = incomplete.execution.waves.filter(
+          (wave) => wave.mode !== requiredMode,
+        );
+      }
       assert.throws(() => createRoutingPreview(incomplete), {
         code:
           requiredMode === 'reconciliation'
@@ -305,6 +308,7 @@ test('preview rejects incomplete quick, standard, and thorough profile topologie
     (wave) => wave.mode === 'adversarial',
   );
   required.mode = 'contradiction-resolution';
+  required.lanes[0].writeRoot = 'reviews/contradiction-resolution.json';
   required.conditional = true;
   conditionalOnly.execution.conditions = [
     {
@@ -454,7 +458,7 @@ test('preview rejects missing, malformed, mismatched, and over-cap v2 routing', 
     code: 'PROFILE_LANE_CAP_EXCEEDED',
   });
 
-  const conditionCap = conditionalDraft();
+  const conditionCap = draftManifest();
   const conditional = {
     waveId: 'wave-conditional-resolution-second',
     mode: 'contradiction-resolution',
