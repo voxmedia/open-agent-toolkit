@@ -747,7 +747,19 @@ export function validateV2ProfileTopology(
         'reviews/contradiction-resolution.json',
       ],
     };
-    if (JSON.stringify(reconciliation) !== JSON.stringify(expected)) {
+    const matchesExpected =
+      ['producer', 'inputLedger', 'outputLedger', 'outputReview'].every(
+        (key) => reconciliation[key] === expected[key],
+      ) &&
+      ['requiredReviews', 'conditionalReviews'].every(
+        (key) =>
+          Array.isArray(reconciliation[key]) &&
+          reconciliation[key].length === expected[key].length &&
+          reconciliation[key].every(
+            (value, index) => value === expected[key][index],
+          ),
+      );
+    if (!matchesExpected) {
       errors.push(
         issue(
           'INVALID_RECONCILIATION_PATH',

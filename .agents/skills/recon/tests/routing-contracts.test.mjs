@@ -335,6 +335,40 @@ for (const [profile, modes] of [['standard', standardModes]]) {
   });
 }
 
+test('controller reconciliation declaration comparison is semantic and closed', () => {
+  const execution = createV2ExecutionApproval({
+    modes: standardModes,
+    laneIdForMode,
+  });
+  const declaration = execution.reconciliation;
+  execution.reconciliation = {
+    conditionalReviews: declaration.conditionalReviews,
+    requiredReviews: declaration.requiredReviews,
+    outputReview: declaration.outputReview,
+    outputLedger: declaration.outputLedger,
+    inputLedger: declaration.inputLedger,
+    producer: declaration.producer,
+  };
+
+  assert.deepEqual(
+    validateV2ProfileTopology({
+      schemaVersion: 2,
+      run: { requestedProfile: 'standard' },
+      execution,
+    }),
+    [],
+  );
+
+  execution.reconciliation.outputReview = 'reviews/changed.json';
+  assert.ok(
+    validateV2ProfileTopology({
+      schemaVersion: 2,
+      run: { requestedProfile: 'standard' },
+      execution,
+    }).some(({ code }) => code === 'INVALID_RECONCILIATION_PATH'),
+  );
+});
+
 test('normalization refuses unknown manifest versions', () => {
   assert.throws(
     () => normalizeManifestRouting({ schemaVersion: 99, execution: {} }),
