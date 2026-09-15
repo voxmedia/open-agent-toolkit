@@ -1,9 +1,9 @@
 ---
 oat_status: in_progress
-oat_ready_for: null
+oat_ready_for: review-fixes
 oat_blockers: []
 oat_last_updated: 2026-09-15
-oat_current_task_id: null
+oat_current_task_id: p01-t10
 oat_generated: false
 ---
 
@@ -20,15 +20,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 9     | 9/9       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | in progress | 11    | 9/11      |
 
-**Total:** 9/9 tasks completed
+**Total:** 9/11 tasks completed
 
 ## Phase 1: Simplify and harden recon execution
 
-**Status:** complete
+**Status:** in progress
 **Started:** 2026-09-15
 
 ### Phase Summary
@@ -96,6 +96,14 @@ workspace test has one pre-existing unrelated assertion mismatch in
 **Status:** complete
 **Commit:** cd75c5ff8ae5189df2e0f055fd74c061d195dcf4
 
+### Task p01-t10: (review) Contain manifest-directed reconciliation paths
+
+**Status:** pending
+
+### Task p01-t11: (review) Canonicalize reconciliation review order
+
+**Status:** pending
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -119,6 +127,27 @@ _No implementation run has started._
 - [x] p01-t07: Compare reconciliation declarations semantically (`fcabc90b7`)
 - [x] p01-t08: Close the worker-mode regression assertion (`db7a2dc37`)
 - [x] p01-t09: Repair the packet evidence-association prose (`cd75c5ff8`)
+- [ ] p01-t10: Contain manifest-directed reconciliation paths
+- [ ] p01-t11: Canonicalize reconciliation review order
+
+### Review Received: final
+
+**Date:** 2026-09-15
+**Review artifact:**
+`reviews/archived/final-review-2026-09-15T060425Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 1
+- Minor: 0
+
+**New tasks added:** p01-t10, p01-t11
+
+**Next:** Execute both final-review fix tasks, mark this bound event
+`fixes_completed`, and run a fresh final review before the implementation exit
+gate.
 
 ### Review Received: p01
 

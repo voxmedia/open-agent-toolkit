@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p01-t10
 oat_last_commit: acd5c8bb04052f1e2b7b8276b60275d511d7e503
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -90,7 +90,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-15T02:47:32.316Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-15T06:02:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-15T06:18:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -102,7 +102,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Tasks complete; awaiting final review
+Implementation — Final-review fixes; resume at `p01-t10`
 
 ## Artifacts
 
@@ -134,6 +134,8 @@ Implementation — Tasks complete; awaiting final review
 - ✓ Phase 1 review received: 1 Important, 1 Medium, and 2 Minor findings
 - ✓ Four review-fix tasks completed as `p01-t06` through `p01-t09`
 - ✓ Phase 1 re-review passed with no findings
+- ✓ Final review received: 1 Important and 1 Medium finding
+- → Two final-review fix tasks queued as `p01-t10` and `p01-t11`
 
 ## Blockers
 
@@ -141,5 +143,4 @@ None.
 
 ## Next Milestone
 
-Run final verification and the required final code review, then execute the
-configured implementation exit gate.
+Execute final-review fix task `p01-t10`.

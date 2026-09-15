@@ -678,13 +678,85 @@ git commit -m "docs(p01-t09): repair packet association contract"
 
 ---
 
+### Task p01-t10: (review) Contain manifest-directed reconciliation paths
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/reconcile-ledger.mjs`
+- Modify: `.agents/skills/recon/scripts/lib/contracts.mjs`
+- Modify: `.agents/skills/recon/tests/workflow.integration.test.mjs`
+- Modify: `.agents/skills/recon/tests/packet-validation.test.mjs`
+
+**Step 1: Understand the issue**
+
+The reconciliation CLI trusts manifest-declared paths before validating the
+closed topology or proving canonical packet containment. A declaration such as
+`../escaped-ledger.json` can direct a write outside the packet.
+
+**Step 2: Implement fix**
+
+Validate the complete manifest and profile topology before reading or writing;
+require the closed canonical reconciliation declaration; and apply the existing
+canonical, symlink-safe packet-containment rules to every input, output, and
+output parent. Add fail-before-write controls for lexical traversal and a
+symlinked output parent, plus the canonical accepted control.
+
+**Step 3: Verify**
+
+Run:
+`node --test .agents/skills/recon/tests/workflow.integration.test.mjs .agents/skills/recon/tests/packet-validation.test.mjs`
+Expected: traversal and symlink-parent attempts exit nonzero without external
+or partial output, while the canonical invocation passes.
+
+**Step 4: Commit**
+
+```bash
+git add -- .agents/skills/recon/scripts/reconcile-ledger.mjs .agents/skills/recon/scripts/lib/contracts.mjs .agents/skills/recon/tests/workflow.integration.test.mjs .agents/skills/recon/tests/packet-validation.test.mjs
+git commit -m "fix(p01-t10): contain reconciliation paths"
+```
+
+---
+
+### Task p01-t11: (review) Canonicalize reconciliation review order
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/reconcile-ledger.mjs`
+- Modify: `.agents/skills/recon/tests/workflow.integration.test.mjs`
+
+**Step 1: Understand the issue**
+
+Equivalent accepted `--review` sets currently produce different ledger and
+reconciliation bytes when the caller permutes flag order.
+
+**Step 2: Implement fix**
+
+After validating set membership and identity, construct review results in the
+manifest's required-then-conditional order. Add a control that runs the same
+manifest and review bytes with permuted flags and compares both output digests.
+
+**Step 3: Verify**
+
+Run: `node --test .agents/skills/recon/tests/workflow.integration.test.mjs`
+Expected: equivalent review permutations produce byte-identical ledger and
+reconciliation outputs.
+
+**Step 4: Commit**
+
+```bash
+git add -- .agents/skills/recon/scripts/reconcile-ledger.mjs .agents/skills/recon/tests/workflow.integration.test.mjs
+git commit -m "fix(p01-t11): canonicalize reconciliation input order"
+```
+
+---
+
 ## Reviews
 
 | Scope | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target                   |
 | ----- | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
 | p01   | code     | passed          | 2026-09-15 | reviews/archived/code-p01-review-2026-09-15T055209Z.md      | f4c762af08f80c898c9f332960378bb95b478e94 | auto       | -                             |
 | p01   | code     | fixes_completed | 2026-09-15 | reviews/archived/code-p01-review-2026-09-15T053259Z.md      | 59b6241db737d331a9cc850c872c7546397a0030 | auto       | -                             |
-| final | code     | received        | 2026-09-15 | reviews/final-review-2026-09-15T060425Z.md                  | 9b5ad13d68be0b70bd3a9058842eddf2e202f610 | auto       | oat-reviewer-gpt-5-6-sol-high |
+| final | code     | fixes_added     | 2026-09-15 | reviews/archived/final-review-2026-09-15T060425Z.md         | 9b5ad13d68be0b70bd3a9058842eddf2e202f610 | auto       | oat-reviewer-gpt-5-6-sol-high |
 | plan  | artifact | passed          | 2026-09-15 | structured-output                                           | -                                        | auto       | oat-reviewer-gpt-5-6-sol-high |
 | plan  | artifact | received        | 2026-09-15 | reviews/archived/artifact-plan-review-2026-09-15T042341Z.md | -                                        | -          | -                             |
 | plan  | artifact | received        | 2026-09-15 | reviews/archived/artifact-plan-review-2026-09-15T043825Z.md | -                                        | -          | -                             |
@@ -694,11 +766,11 @@ git commit -m "docs(p01-t09): repair packet association contract"
 
 **Summary:**
 
-- Phase 1: 9 tasks — five implementation tasks plus four review-fix tasks for
-  manifest-bound reconciliation inputs, semantic declaration comparison,
-  worker-mode coverage, and packet-contract prose.
+- Phase 1: 11 tasks — five implementation tasks plus six review-fix tasks,
+  including final-review repairs for packet-contained outputs and deterministic
+  review ordering.
 
-**Total: 9 tasks**
+**Total: 11 tasks**
 
 Ready for final code review and PR preparation after implementation.
 
