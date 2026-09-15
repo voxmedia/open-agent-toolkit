@@ -545,14 +545,14 @@ test -z "$(git status --porcelain .codex .cursor .claude .oat/sync)"
 
 ## Reviews
 
-| Scope | Type     | Status   | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target                   |
-| ----- | -------- | -------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ----------------------------- |
-| p01   | code     | pending  | -          | -                                                           | -             | -          | -                             |
-| final | code     | pending  | -          | -                                                           | -             | -          | -                             |
-| plan  | artifact | passed   | 2026-09-15 | structured-output                                           | -             | auto       | oat-reviewer-gpt-5-6-sol-high |
-| plan  | artifact | received | 2026-09-15 | reviews/archived/artifact-plan-review-2026-09-15T042341Z.md | -             | -          | -                             |
-| plan  | artifact | received | 2026-09-15 | reviews/archived/artifact-plan-review-2026-09-15T043825Z.md | -             | -          | -                             |
-| plan  | artifact | passed   | 2026-09-15 | reviews/archived/artifact-plan-review-2026-09-15T045555Z.md | -             | gate       | claude-fable-skip-permissions |
+| Scope | Type     | Status   | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target                   |
+| ----- | -------- | -------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
+| p01   | code     | received | 2026-09-15 | reviews/code-p01-review-2026-09-15T053259Z.md               | 59b6241db737d331a9cc850c872c7546397a0030 | auto       | -                             |
+| final | code     | pending  | -          | -                                                           | -                                        | -          | -                             |
+| plan  | artifact | passed   | 2026-09-15 | structured-output                                           | -                                        | auto       | oat-reviewer-gpt-5-6-sol-high |
+| plan  | artifact | received | 2026-09-15 | reviews/archived/artifact-plan-review-2026-09-15T042341Z.md | -                                        | -          | -                             |
+| plan  | artifact | received | 2026-09-15 | reviews/archived/artifact-plan-review-2026-09-15T043825Z.md | -                                        | -          | -                             |
+| plan  | artifact | passed   | 2026-09-15 | reviews/archived/artifact-plan-review-2026-09-15T045555Z.md | -                                        | gate       | claude-fable-skip-permissions |
 
 ## Implementation Complete
 
