@@ -1,7 +1,13 @@
 #!/usr/bin/env node
 
 import { randomUUID } from 'node:crypto';
-import { link, open, readFile, realpath, unlink } from 'node:fs/promises';
+import {
+  link as linkFile,
+  open,
+  readFile,
+  realpath,
+  unlink,
+} from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 
 import { canonicalJson, hashFile } from './lib/canonical-json.mjs';
@@ -430,7 +436,7 @@ async function writeAtomicPair(outputs, packetIdentity) {
     }
     await assertUnchangedRoot(packetIdentity);
     for (const output of staged) {
-      await link(output.temporary, output.path);
+      await linkFile(output.temporary, output.path);
       published.push(output.path);
     }
   } catch (error) {
@@ -450,9 +456,9 @@ async function writeAtomicPair(outputs, packetIdentity) {
       }
     }
     if (cleanupErrors.length > 0) {
-      throw new AggregateError(
-        [error, ...cleanupErrors],
-        'Reconciliation output publication and cleanup failed',
+      throw new Error(
+        `Reconciliation output publication failed and ${cleanupErrors.length} cleanup operation(s) also failed`,
+        { cause: error },
       );
     }
     throw error;
