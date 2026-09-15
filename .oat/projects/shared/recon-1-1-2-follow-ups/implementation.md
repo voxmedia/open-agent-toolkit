@@ -187,8 +187,11 @@ completion and implementation.
 - Replace the two-output reconciliation worker ambiguity with one deterministic
   controller stage.
 
-**Blockers:** none; one additional gate attempt is explicitly authorized and
-pending.
+**Blockers:** none.
+
+**Implementation transition:** the authorized Lite gate passed and project
+state now resumes at p01-t01. Lite has no HiLL checkpoints; standard phase and
+final reviews remain required.
 
 ## Deviations from Plan / Design
 
