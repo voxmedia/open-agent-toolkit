@@ -104,7 +104,7 @@ Current config ownership:
 CLI discovery surfaces:
 
 - `oat config describe` lists the supported config surfaces and keys across shared repo, repo-local, user, and sync/provider config.
-- `oat config describe <key>` prints scope, file, default, mutability, owning command, and description for one config key.
+- `oat config describe <key>` prints scope, file, default, mutability, owning command, and description for one config key, plus a `Deprecated: prefer …` line when the key is deprecated.
 - `oat config list` prints the resolved values for the repo-scoped/local command surface.
 
 Legacy `.oat/active-project` / `.oat/projects-root` / `.oat/active-idea` files may still be present in some environments but are no longer the canonical source in migrated command paths.

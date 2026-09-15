@@ -850,7 +850,7 @@ packs and is retained while either pack still owns it in that scope.
 
 The `core` pack contains foundational diagnostic and documentation skills:
 
-- **oat-doctor** — Setup diagnostics with two modes: check mode (terse `brew doctor`-style warnings with fix commands) and summary mode (full dashboard of installed packs, config values, and sync status).
+- **oat-doctor** — One read-only sweep over config, PJM, agent instructions, docs, and tools; a report grouped by area and severity; then a dive into any area on request that explains findings and unset settings from the bundled docs and offers the exact fix command or the owning skill (nothing is applied without approval). `--summary` keeps the installed-tools dashboard.
 - **oat-docs** — Interactive Q&A skill backed by locally-bundled OAT documentation at `~/.oat/docs/`.
 
 Key behavior:

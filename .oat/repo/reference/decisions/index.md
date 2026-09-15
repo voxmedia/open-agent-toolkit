@@ -10,7 +10,10 @@
 
 | ID                                       | Date       | Status     | Title                                                                                                  | Legacy  |
 | ---------------------------------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------ | ------- |
+| DR-260915-doctor-is-read-only-with-one   | 2026-09-15 | accepted   | Doctor is read-only with one approved-command carve-out                                                | -       |
+| DR-260915-one-doctor-router-instead      | 2026-09-15 | accepted   | One doctor router instead of a family of doctor skills                                                 | -       |
 | DR-260915-separate-cursor-installation   | 2026-09-15 | accepted   | Separate Cursor installation from launchability                                                        | -       |
+| DR-260915-the-doctor-reads-cli-signals   | 2026-09-15 | accepted   | The doctor reads CLI signals and does not restate them                                                 | -       |
 | DR-260911-explainers-are-agent-authored  | 2026-09-11 | accepted   | Explainers are agent-authored; the provider seams and durability path are retired                      | -       |
 | DR-260911-use-session-local-recon        | 2026-09-11 | accepted   | Use session-local recon approval                                                                       | -       |
 | DR-260910-restore-economical-recon       | 2026-09-10 | accepted   | Restore economical recon routing and caller-owned judgment                                             | -       |

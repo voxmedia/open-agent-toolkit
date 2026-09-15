@@ -5858,4 +5858,89 @@ describe('oat config', () => {
       expect(unexpected).toEqual([]);
     });
   });
+
+  describe('describe deprecations', () => {
+    const DEPRECATION_PHRASES = [
+      'Deprecated compatibility',
+      'Deprecated nullable',
+      'Legacy compatibility alias',
+      'Legacy strings remain',
+    ];
+    const EXPECTED_SUPERSEDED: Record<string, string> = {
+      autoReviewAtCheckpoints: 'workflow.autoReviewAtHillCheckpoints',
+      'explainers.defaults.palette': 'explainers.defaults.style',
+      'explainers.defaults.visualProfile': 'explainers.defaults.style',
+      'workflow.postImplementSequence':
+        'workflow.postImplementSequence (structured {preApproval, postApproval})',
+      'workflow.dispatchCeiling.preset': 'workflow.dispatchPolicy.policy',
+    };
+
+    async function describeEntries(): Promise<Array<Record<string, unknown>>> {
+      const root = await createRepoRoot();
+      const harness = createHarness({ cwd: root });
+      await runCommand(harness.command, ['describe'], ['--json']);
+      const payload = harness.capture.jsonPayloads[0] as {
+        entries: Array<Record<string, unknown>>;
+      };
+      return payload.entries;
+    }
+
+    it('carries a structured deprecated field on every deprecated key', async () => {
+      const entries = await describeEntries();
+      for (const [key, supersededBy] of Object.entries(EXPECTED_SUPERSEDED)) {
+        const entry = entries.find((candidate) => candidate.key === key);
+        expect(entry, key).toBeDefined();
+        expect(entry?.deprecated, key).toMatchObject({ supersededBy });
+      }
+      const sequence = entries.find(
+        (candidate) => candidate.key === 'workflow.postImplementSequence',
+      );
+      expect(sequence?.deprecated).toMatchObject({
+        legacyValues: ['wait', 'summary', 'pr', 'docs-pr'],
+      });
+    });
+
+    it('does not mark the successor key as deprecated', async () => {
+      const entries = await describeEntries();
+      const successor = entries.find(
+        (candidate) => candidate.key === 'workflow.autoReviewAtHillCheckpoints',
+      );
+      expect(successor).toBeDefined();
+      expect(successor?.deprecated).toBeUndefined();
+    });
+
+    it('keeps deprecation prose and the deprecated field in step', async () => {
+      const entries = await describeEntries();
+      const keys = new Set(entries.map((entry) => String(entry.key)));
+      for (const entry of entries) {
+        const description = String(entry.description);
+        const flagged =
+          description.startsWith('Deprecated') ||
+          DEPRECATION_PHRASES.some((phrase) => description.includes(phrase));
+        if (flagged) {
+          expect(entry.deprecated, String(entry.key)).toBeDefined();
+        }
+        if (entry.deprecated !== undefined) {
+          const deprecated = entry.deprecated as { supersededBy: string };
+          const target = deprecated.supersededBy.split(' ')[0];
+          expect(
+            keys.has(target) || target === entry.key,
+            String(entry.key),
+          ).toBe(true);
+        }
+      }
+    });
+
+    it('prints the deprecation in the plain describe output', async () => {
+      const root = await createRepoRoot();
+      const harness = createHarness({ cwd: root });
+      await runCommand(harness.command, [
+        'describe',
+        'autoReviewAtCheckpoints',
+      ]);
+      expect(harness.capture.info[0]).toContain(
+        'Deprecated: prefer workflow.autoReviewAtHillCheckpoints',
+      );
+    });
+  });
 });

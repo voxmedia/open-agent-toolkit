@@ -31,6 +31,7 @@ Examples include:
 - general configuration guidance
 - workflow gate commands for per-skill final checks and cross-runtime review dispatch
 - utility command groups for config, local state, diagnostics, and related inspection flows
+- a guided health check, the `/oat-doctor` skill, that sweeps config, project management, agent instructions, docs, and installed tools, then explains and offers fixes for what it finds (described in [Config and Local State](config-and-local-state.md))
 
 ## Who It's For
 

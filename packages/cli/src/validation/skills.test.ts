@@ -2145,7 +2145,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-quick-start',
-        version: '2.3.12',
+        version: '2.3.13',
         finalizedHeading: '### Step 3.6: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading:
@@ -3227,7 +3227,7 @@ describe('validateOatSkills', () => {
       ['.agents/skills/oat-project-summary/SKILL.md', '1.5.6'],
       ['.agents/skills/oat-project-document/SKILL.md', '1.8.4'],
       ['.agents/skills/oat-project-pr-final/SKILL.md', '1.6.5'],
-      ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.12'],
+      ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.13'],
     ] as const;
 
     for (const [path, expectedVersion] of runtimeSurfaces) {
@@ -6049,7 +6049,7 @@ describe('validateOatSkills', () => {
     const expectedVersions = [
       ['oat-project-plan-writing', '1.2.25'],
       ['oat-project-plan', '1.4.12'],
-      ['oat-project-quick-start', '2.3.12'],
+      ['oat-project-quick-start', '2.3.13'],
       ['oat-project-import-plan', '1.4.15'],
       ['oat-project-review-provide', '1.5.8'],
     ] as const;
@@ -7042,7 +7042,7 @@ describe('validateOatSkills', () => {
     );
     const content = await readFile(skillPath, 'utf8');
 
-    expect(readDeclaredVersion(content)).toBe('2.3.12');
+    expect(readDeclaredVersion(content)).toBe('2.3.13');
   });
 
   it('documents quick-start selective config fallback to collaborative', async () => {
@@ -8473,213 +8473,36 @@ describe('recon canonical contracts', () => {
 });
 
 describe('bundled skill contract truthfulness — doctor inventory', () => {
-  it("keeps doctor's declared bundled inventory identical to the pack manifest", async () => {
+  it('carries no hand-maintained pack manifest; the pack list comes from oat tools list', async () => {
     const doctor = await readRepoFile('.agents/skills/oat-doctor/SKILL.md');
-
-    const sectionStart = doctor.indexOf(
-      '**Bundled skill manifest (source of truth):**',
-    );
-    const sectionEnd = doctor.indexOf('For each pack, determine:');
-    expect(sectionStart, 'inventory section start').toBeGreaterThan(-1);
-    expect(sectionEnd, 'inventory section end').toBeGreaterThan(sectionStart);
-
-    const section = doctor.slice(sectionStart, sectionEnd);
-    const declared = new Map<string, string[]>();
-    let currentPack: string | undefined;
-    for (const line of section.split('\n')) {
-      const heading = line.match(/^`([a-z-]+)` pack skills:$/);
-      if (heading?.[1]) {
-        currentPack = heading[1];
-        // A repeated heading would let a later block silently discard the
-        // names declared under the earlier one.
-        expect(
-          declared.has(currentPack),
-          `duplicate ${currentPack} heading`,
-        ).toBe(false);
-        declared.set(currentPack, []);
-        continue;
-      }
-      const bullet = line.match(/^-\s+(.+)$/);
-      if (bullet?.[1] && currentPack) {
-        declared.get(currentPack)?.push(
-          ...bullet[1]
-            .split(',')
-            .map((name) => name.trim())
-            .filter((name) => name.length > 0),
-        );
-      }
-    }
-
-    const expected = new Map(
-      PACK_MANIFEST.map((pack) => [
-        pack.name,
-        [...getPackMemberNames(pack.name, 'skill')].sort(),
-      ]),
-    );
-
-    expect([...declared.keys()].sort(), 'declared pack headings').toEqual(
-      [...expected.keys()].sort(),
-    );
-    for (const [pack, expectedSkills] of expected) {
-      expect([...(declared.get(pack) ?? [])].sort(), `${pack} pack`).toEqual(
-        expectedSkills,
+    // The 1.x skill listed every pack's skills by name and drifted from the
+    // manifest; 2.x derives packs from the `pack` field of `oat tools list`.
+    expect(doctor).not.toMatch(/^`[a-z-]+` pack skills:$/m);
+    expect(doctor).not.toContain('Bundled skill manifest (source of truth)');
+    for (const pack of PACK_MANIFEST) {
+      const names = [...getPackMemberNames(pack.name, 'skill')];
+      const listed = names.filter((name) =>
+        new RegExp(`^[-|]\\s*\`?${name}\`?\\s*[,|]?\\s*$`, 'm').test(doctor),
+      );
+      expect(listed, `${pack.name} skill names listed in the doctor`).toEqual(
+        [],
       );
     }
+    expect(doctor).toMatch(/`oat tools list --json --scope all`/);
+    expect(doctor).toMatch(
+      /grouped by `pack`|group(?:ed)? the tools by `pack`/,
+    );
   });
 
-  it("derives doctor's summary example counts from the pack manifest", async () => {
+  it('keeps the summary example free of manifest-derived denominators', async () => {
     const doctor = await readRepoFile('.agents/skills/oat-doctor/SKILL.md');
-    const packSkills = new Map(
-      PACK_MANIFEST.map((pack) => [
-        pack.name,
-        [...getPackMemberNames(pack.name, 'skill')].sort(),
-      ]),
-    );
-
     const installedTable = doctor.slice(
       doctor.indexOf('## Installed Packs'),
       doctor.indexOf('## Outdated Skills'),
     );
-    const installedRows = [
-      ...installedTable.matchAll(
-        /^\|\s*([a-z-]+)\s*\|\s*[a-z]+\s*\|\s*\d+\/(\d+)\s*\|/gm,
-      ),
-    ];
-    expect(installedRows.length, 'installed pack example rows').toBeGreaterThan(
-      0,
-    );
-    for (const [, pack, total] of installedRows) {
-      // Membership is asserted, never filtered: a row naming a pack that does
-      // not exist is itself the drift this case exists to catch.
-      expect(packSkills.has(pack ?? ''), `${pack} is a manifest pack`).toBe(
-        true,
-      );
-      expect(Number(total), `${pack} example denominator`).toBe(
-        packSkills.get(pack ?? '')?.length,
-      );
-    }
-
-    const availableSection = doctor.slice(
-      doctor.indexOf('## Available But Not Installed'),
-      doctor.indexOf('## Configuration'),
-    );
-    const availableRows = [
-      ...availableSection.matchAll(
-        /^- \*\*([a-z-]+)\*\* pack: (.+?) \((\d+) skills available\)$/gm,
-      ),
-    ];
-    expect(availableRows.length, 'available pack example rows').toBeGreaterThan(
-      0,
-    );
-    for (const [, pack, names, count] of availableRows) {
-      const listed = (names ?? '')
-        .split(',')
-        .map((name) => name.trim())
-        .sort();
-      expect(listed, `${pack} example skill list`).toEqual(
-        packSkills.get(pack ?? ''),
-      );
-      expect(Number(count), `${pack} example count`).toBe(listed.length);
-    }
-  });
-
-  it('keeps a pack out of both the installed and available example sections', async () => {
-    const doctor = await readRepoFile('.agents/skills/oat-doctor/SKILL.md');
-    const manifestPacks = new Set<string>(
-      PACK_MANIFEST.map((pack) => pack.name),
-    );
-
-    // Step 5 of the same skill defines the pack states as mutually exclusive
-    // ("Installed: all pack skills found" / "Not installed: no pack skills
-    // found"), so a name in both example sections describes a run the doctor
-    // can never report. The two neighbouring cases validate each section
-    // against PACK_MANIFEST in isolation and cannot see that relationship.
-    const installedTable = doctor.slice(
-      doctor.indexOf('## Installed Packs'),
-      doctor.indexOf('## Outdated Skills'),
-    );
-    const installedPacks = [
-      ...installedTable.matchAll(
-        /^\|\s*([a-z-]+)\s*\|\s*[a-z]+\s*\|\s*\d+\/(\d+)\s*\|/gm,
-      ),
-    ].map(([, pack]) => pack ?? '');
-
-    const availableSection = doctor.slice(
-      doctor.indexOf('## Available But Not Installed'),
-      doctor.indexOf('## Configuration'),
-    );
-    const availablePacks = [
-      ...availableSection.matchAll(
-        /^- \*\*([a-z-]+)\*\* pack: (.+?) \((\d+) skills available\)$/gm,
-      ),
-    ].map(([, pack]) => pack ?? '');
-
-    // Without these two guards a renamed heading would empty a slice and the
-    // disjointness assertion below would pass vacuously.
-    expect(
-      installedPacks.length,
-      'installed pack example rows',
-    ).toBeGreaterThan(0);
-    expect(
-      availablePacks.length,
-      'available pack example rows',
-    ).toBeGreaterThan(0);
-
-    // Non-emptiness alone lets a single pack drop out of the comparison: a row
-    // or bullet whose wording drifts stops matching the regex above and is
-    // silently excluded from the overlap check, which is enough to bring the
-    // contradiction back while every case here stays green. So require the
-    // extraction to be complete — every candidate line in each slice must have
-    // parsed — and name the lines that did not.
-    const installedRowLines = installedTable
-      .split('\n')
-      // `^\s*` on every filter: a row indented by one space must still count as
-      // a candidate, or it would be invisible to both the parse and the count.
-      .filter((line) => /^\s*\|/.test(line))
-      .filter((line) => !/^\s*\|\s*Pack\s*\|/.test(line))
-      .filter((line) => !/^\s*\|[\s-]+\|[\s|-]*$/.test(line));
-    const unparsedInstalledRows = installedRowLines.filter(
-      (line) =>
-        !/^\|\s*([a-z-]+)\s*\|\s*[a-z]+\s*\|\s*\d+\/(\d+)\s*\|/.test(line),
-    );
-    expect(
-      unparsedInstalledRows,
-      'installed example rows the pack-row pattern could not parse',
-    ).toEqual([]);
-    expect(installedPacks.length, 'parsed installed example rows').toBe(
-      installedRowLines.length,
-    );
-
-    const availableBulletLines = availableSection
-      .split('\n')
-      .filter((line) => /^\s*- /.test(line));
-    const unparsedAvailableBullets = availableBulletLines.filter(
-      (line) =>
-        !/^- \*\*([a-z-]+)\*\* pack: (.+?) \((\d+) skills available\)$/.test(
-          line,
-        ),
-    );
-    expect(
-      unparsedAvailableBullets,
-      'available example bullets the pack-bullet pattern could not parse',
-    ).toEqual([]);
-    expect(availablePacks.length, 'parsed available example bullets').toBe(
-      availableBulletLines.length,
-    );
-
-    const availableSet = new Set(availablePacks);
-    const overlap = [...new Set(installedPacks)]
-      .filter((pack) => availableSet.has(pack))
-      .sort();
-    expect(
-      overlap,
-      'packs listed as installed and as available to install',
-    ).toEqual([]);
-
-    // A pack can never be moved out of the contradiction by inventing a name.
-    for (const pack of [...installedPacks, ...availablePacks]) {
-      expect(manifestPacks.has(pack), `${pack} is a manifest pack`).toBe(true);
-    }
+    expect(installedTable.length, 'installed packs example').toBeGreaterThan(0);
+    // A `2/2`-style denominator restates the manifest and drifts with it.
+    expect(installedTable).not.toMatch(/\|\s*\d+\/\d+\s*\|/);
   });
 });
 
