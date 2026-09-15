@@ -298,6 +298,16 @@ from the fresh passing final-review head.
 The user-scoped blocking gate resolves unchanged with no project override. The
 second and final attempt is pending from the fresh passing final-review basis.
 
+### Configured Implementation Exit Gate: attempt 2 launch intent
+
+- Launch attempt: `recon-feedback-exit-gate-2-20260915T070433Z`
+- Started at: `2026-09-15T07:04:33Z`
+- Result receipt:
+  `/private/tmp/recon-feedback-exit-gate-2-20260915T070433Z.receipt.json`
+
+The launch intent is persisted before invoking the configured command. No
+replacement may be launched after acceptance.
+
 ### Review Received: p01
 
 **Date:** 2026-09-15
