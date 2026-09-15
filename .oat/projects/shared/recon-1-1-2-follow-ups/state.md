@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t06
-oat_last_commit: df7e591607d329374d93559751cc78df70c66694
+oat_current_task: null
+oat_last_commit: cd75c5ff8ae5189df2e0f055fd74c061d195dcf4
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -102,7 +102,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Phase 1 review fixes; resume at `p01-t06`
+Implementation — Phase 1 review fixes complete; awaiting independent re-review
 
 ## Artifacts
 
@@ -132,7 +132,7 @@ Implementation — Phase 1 review fixes; resume at `p01-t06`
 - ✓ Phase 1 implementation complete with one append-only recovery
 - ✓ Recovery event `recovery-p01-001` validated and cleared by the controller
 - ✓ Phase 1 review received: 1 Important, 1 Medium, and 2 Minor findings
-- → Four review-fix tasks queued as `p01-t06` through `p01-t09`
+- ✓ Four review-fix tasks completed as `p01-t06` through `p01-t09`
 
 ## Blockers
 
@@ -140,4 +140,4 @@ None.
 
 ## Next Milestone
 
-Execute review-fix task `p01-t06`.
+Run the independent Phase 1 re-review.

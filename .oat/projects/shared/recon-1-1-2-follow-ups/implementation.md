@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: review
 oat_blockers: []
 oat_last_updated: 2026-09-15
-oat_current_task_id: p01-t06
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -20,15 +20,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in progress | 9     | 5/9       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 9     | 9/9       |
 
-**Total:** 5/9 tasks completed
+**Total:** 9/9 tasks completed
 
 ## Phase 1: Simplify and harden recon execution
 
-**Status:** in progress
+**Status:** complete
 **Started:** 2026-09-15
 
 ### Phase Summary
@@ -78,19 +78,23 @@ workspace test has one pre-existing unrelated assertion mismatch in
 
 ### Task p01-t06: (review) Bind reconciliation inputs to exact manifest identities
 
-**Status:** pending
+**Status:** complete
+**Commit:** 83048df8a354f6431fe7fe85b9c84adeb6305726
 
 ### Task p01-t07: (review) Compare reconciliation declarations semantically
 
-**Status:** pending
+**Status:** complete
+**Commit:** fcabc90b7c57ac0ef8efc3faa0e94b38793a5782
 
 ### Task p01-t08: (review) Close the worker-mode regression assertion
 
-**Status:** pending
+**Status:** complete
+**Commit:** db7a2dc379b8ac3a35b99d66a2b959c558c658f3
 
 ### Task p01-t09: (review) Repair the packet evidence-association prose
 
-**Status:** pending
+**Status:** complete
+**Commit:** cd75c5ff8ae5189df2e0f055fd74c061d195dcf4
 
 ## Orchestration Runs
 
@@ -111,10 +115,10 @@ _No implementation run has started._
 - [x] p01-t03: Close worker excerpt and review-result schemas (`c00509e39`)
 - [x] p01-t04: Move reconciliation to one deterministic controller stage (`d45155882`)
 - [x] p01-t05: Align docs, triage disposition, and release metadata (`c642f58c8`)
-- [ ] p01-t06: Bind reconciliation inputs to exact manifest identities
-- [ ] p01-t07: Compare reconciliation declarations semantically
-- [ ] p01-t08: Close the worker-mode regression assertion
-- [ ] p01-t09: Repair the packet evidence-association prose
+- [x] p01-t06: Bind reconciliation inputs to exact manifest identities (`83048df8a`)
+- [x] p01-t07: Compare reconciliation declarations semantically (`fcabc90b7`)
+- [x] p01-t08: Close the worker-mode regression assertion (`db7a2dc37`)
+- [x] p01-t09: Repair the packet evidence-association prose (`cd75c5ff8`)
 
 ### Review Received: p01
 
@@ -131,8 +135,9 @@ _No implementation run has started._
 
 **New tasks added:** p01-t06, p01-t07, p01-t08, p01-t09
 
-**Next:** Execute the four review-fix tasks via `oat-project-implement`, then
-mark this review event `fixes_completed` and re-run independent Phase 1 review.
+**Fixes completed:** all four findings were resolved in p01-t06 through
+p01-t09. The bound plan review event is `fixes_completed` and ready for an
+independent Phase 1 re-review.
 
 ### Recovery Event recovery-p01-001
 
