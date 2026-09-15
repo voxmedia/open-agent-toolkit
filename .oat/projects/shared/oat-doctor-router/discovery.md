@@ -83,7 +83,7 @@ The CLI writes known headings into the root instructions (`## Tool Packs` from t
 ## Key Decisions
 
 - One `oat-doctor` skill; areas are dives; unattended runs report only.
-- Read-only: the doctor never edits config, PJM, instructions, docs, or skills; it offers the exact command or the owning skill.
+- Read-only with one carve-out: the sweep and dives never edit config, PJM, instructions, docs, or skills; the doctor offers the exact command or the owning skill and may run exactly the command it named, once, after the person approves it (settled at plan review, 2026-09-14).
 - Knowledge is sourced from the CLI (`describe`, the doctors, `instructions validate`) and the bundled docs; the eleven-key fallback list and the hand-maintained pack manifest go.
 - Legacy detection is a structured field on `describe` entries, backed by a CLI contract test (Option B).
 - The docs dive detects and routes to `oat-docs-bootstrap`; it carries no docs logic. The bootstrap front door itself is `BL-260911-make-docs-bootstrap-a-front` and is not blocked by this project.
