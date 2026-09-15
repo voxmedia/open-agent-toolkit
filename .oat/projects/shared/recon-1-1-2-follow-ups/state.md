@@ -43,16 +43,7 @@ oat_phase_recovery_policy:
   phase_attempt_usage:
     p01:
       used_attempts: 2
-      pending_attempt:
-        attempt: 2
-        event_id: recovery-p01-t12-20260915-02
-        original_request_id: impl-recon-112-p01-20260915-01
-        original_task_id: p01-t12
-        original_commit: 806511e6be05bd32d8cfcfd1900333923e4c3645
-        discovered_by: node --test .agents/skills/recon/tests/*.test.mjs
-        dispatch_target: oat-phase-implementer-gpt-5-6-sol-medium
-        reservation_head: ea758dd7d641f5e527bc59d2923486ddf4228eb7
-        status: completed
+      pending_attempt: null
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
 oat_workflow_mode: lite # spec-driven | quick | import | lite
 oat_workflow_origin: native # native | imported
@@ -91,7 +82,7 @@ oat_implement_exit_gate:
   receive_eligible: true
   receive_completed: true
   failure: 'blocking_findings'
-  updated_at: '2026-09-15T06:40:54Z'
+  updated_at: '2026-09-15T06:53:19Z'
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
@@ -135,7 +126,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-15T02:47:32.316Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-15T06:51:32Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-15T06:53:19Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -147,7 +138,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Configured exit-gate fixes completed
+Implementation — Configured exit-gate fixes complete; awaiting final re-review
 
 ## Artifacts
 
@@ -184,7 +175,7 @@ Implementation — Configured exit-gate fixes completed
 - ✓ Fresh final re-review passed with no findings
 - ✓ Configured exit-gate review received: 1 Important and 2 Minor findings
 - ✓ Three configured gate fix tasks completed as `p01-t12` through `p01-t14`
-- ✓ Recovery attempt 2 completed with focused and full recon verification
+- ✓ Recovery event `recovery-p01-t12-20260915-02` validated and cleared by the controller
 
 ## Blockers
 
@@ -192,4 +183,4 @@ None.
 
 ## Next Milestone
 
-Validate and clear recovery attempt 2, then run final re-review.
+Run an independent final re-review.

@@ -241,6 +241,23 @@ multi-condition diagnostic expectation. Recovery attempt 2 aligned that
 control with the new one-condition cap in commit `6d5ade7d6`; authoritative
 focused and full recon reruns passed.
 
+### Recovery Event recovery-p01-t12-20260915-02
+
+- Phase/task: p01 / p01-t12
+- Original request: impl-recon-112-p01-20260915-01
+- Original commit: 806511e6be05bd32d8cfcfd1900333923e4c3645
+- Defect class: test
+- Discovered by: `node --test .agents/skills/recon/tests/*.test.mjs`
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 2/10
+- Dispatch target: oat-phase-implementer-gpt-5-6-sol-medium
+- Recovery commit: 6d5ade7d6fee870815f24fdce43a4b86d23ea2ba
+- Verification: focused 11/11 passed; full recon 300/300 passed
+- Reason: The duplicate-condition fixture mechanically triggered the newly
+  correct profile-cap diagnostic in addition to its targeted diagnostic;
+  expectations were aligned without changing product behavior.
+
 ### Review Received: p01
 
 **Date:** 2026-09-15
