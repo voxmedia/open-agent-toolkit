@@ -69,14 +69,13 @@ context source, output directory, or strict authority:
 The default profile is `standard`. Each homogeneous wave has an independently
 selected and approved exact target. Bounded mapping, extraction, citation
 reopening, counterexample search, and mechanical dossier compilation start with
-economical qualified routes. A wave that genuinely requires interpretation or
-reconciliation judgment can use a stronger approved target without raising the
-cost of unrelated evidence waves.
+economical qualified routes. Reconciliation is deterministic controller work
+rather than a separately approved worker target.
 
 | Profile    | Use it for                                  | Required assurance work                                                                                            | Claim ceiling |
 | ---------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------- |
 | `quick`    | Bounded orientation                         | Mapping, gathering, compilation, schema validation, and locator validation; no independent semantic pass by design | `supported`   |
-| `standard` | Load-bearing evidence                       | Quick work plus blind semantic verification, adversarial review, coverage, and reconcile                           | `verified`    |
+| `standard` | Load-bearing evidence                       | Quick work plus blind semantic verification, adversarial review, coverage, and deterministic reconciliation        | `verified`    |
 | `thorough` | Expensive failure or correlated blind spots | Standard work plus required redundant gathering and redundant verification                                         | `verified`    |
 
 A thorough run may additionally predeclare an optional, condition-bound
@@ -93,11 +92,16 @@ change requires renewed approval; there is no silent substitution after
 approval.
 
 Before any worker launches, recon confirms that the live launch surface can run
-the approved role, model, effort, and authority level. If it cannot, the run
-stays at `awaiting-approval` with a provider/dispatch diagnostic and nothing is
-launched. Deadlines are approved execution limits chosen for the task class,
-not short watchdogs; an accepted lane is never interrupted by hand because a
-displayed deadline elapsed.
+the approved role, model, effort, and authority level. A materialized Cursor
+role file is configuration, not evidence that the current Task catalog exposes
+that role; the live catalog controls eligibility, with the approved generic
+fallback used when needed. If the launch surface cannot run the selected
+target, the run stays at `awaiting-approval` with a provider/dispatch diagnostic
+and nothing is launched. Every Cursor leaf runs in the background so later
+parent-chat messages cannot interrupt multi-minute evidence work. Deadlines are
+approved execution limits chosen for the task class, not short watchdogs; an
+accepted lane is never interrupted by hand because a displayed deadline
+elapsed.
 
 ### Preview and Check Routing
 
@@ -117,9 +121,11 @@ compare the constructed target with that wave's approved exact target:
 node .agents/skills/recon/scripts/prepare-routing.mjs --manifest manifest.json --wave gather-1 --check-target candidate-target.json
 ```
 
-These commands validate structure, approval integrity, and exact identity. They
-do not launch a worker, rank model names, attest actual runtime identity, or
-measure cost.
+These commands validate structure, approval integrity, and exact identity. Like
+the other recon command-line helpers, they use a shared realpath-aware entry
+check, so direct and symlinked invocations execute identically. They do not
+launch a worker, rank model names, attest actual runtime identity, or measure
+cost.
 
 ### Bounded Conditional Evidence
 
@@ -128,18 +134,17 @@ Standard and thorough may predeclare finite conditional
 one such wave to seek discriminating evidence; accepted failure, cancellation,
 timeout, or missing output cannot trigger a replacement. Triggered,
 not-triggered, and unresolved dispositions remain visible. Both branches feed
-the same single mandatory terminal reconciliation.
+the same deterministic controller reconciliation.
 
 A triggered condition must cite complete, digest-bound evidence from an approved
 predecessor in the same run. Evidence copied from another run cannot activate
 the destination wave and fails packet validation with
 `CONDITION_EVIDENCE_RUN_MISMATCH`.
 
-If a need for stronger reconciliation judgment is foreseeable, select that one
-terminal target before approval. If it appears only after approval, recon
-preserves completed evidence and returns an unresolved, out-of-envelope gap for
-renewed approval or a new run. It never mutates the target, silently retries,
-or launches a second reconciliation.
+If reconciliation exposes a need for new semantic judgment, recon preserves
+completed evidence and returns an unresolved, out-of-envelope gap for renewed
+approval or a new run. It never converts deterministic reconciliation into a
+worker wave or silently retries an accepted worker.
 
 ## Destination Precedence
 
@@ -173,8 +178,8 @@ non-publishable candidate generation withdraws any existing `packet.md`:
 - `claims.json` is the canonical claim ledger.
 - `manifest.json` records request, source, approved execution envelope, and
   gap provenance.
-- `reviews/` contains compact semantic, adversarial, coverage, and
-  reconciliation evidence.
+- `reviews/` contains compact semantic, adversarial, coverage, and the
+  controller-produced reconciliation record.
 - `raw/` contains worker dossiers, candidate artifacts, and safe failure
   diagnostics. It is not normal consumer input.
 
@@ -197,6 +202,20 @@ thorough run, redundant gathering finishes before compilation, and the compiled
 ledger must reference every completed primary and redundant gather dossier by
 exact path and digest before review briefs are created. Missing provenance fails
 with `MISSING_THOROUGH_GATHER_LEDGER_INPUT`.
+
+Compile workers copy each evidence excerpt as one contiguous exact substring of
+the reopened source. A source-required redaction may replace only the sensitive
+span while preserving the surrounding bytes and recording the redaction. Recon
+does not repair stale locators after compilation. Each accepted worker validates
+its own closed artifact schema once, within the same accepted task, before
+returning. An invalid accepted artifact is terminal; the controller neither
+retries the schema nor substitutes another worker.
+
+When an accepted lane has already written a schema-valid, lane-matching artifact
+at its approved path, that durable artifact remains the result even if the
+provider stream later closes with an error. Recon records the stream failure as
+a provider diagnostic and does not relaunch the lane. A missing or invalid
+artifact remains a failed pass.
 
 The ledger compiler and packet validator enforce categorical referential
 integrity on `synthesis.keyClaimIds` and `synthesis.unresolvedQuestionIds`. Any
@@ -228,10 +247,14 @@ the caller assesses sufficiency and conclusions. Stronger profiles can promote
 claims only when their required independent review artifacts validate and were
 written by approved lanes.
 
-When an independent semantic review rejects a proposed claim, the reconciler
-transitions it to `unsupported` rather than deleting it. This preserves the
-claim statement, cited evidence, and transition history in `claims.json`, and
-renders the finding under Contradictions and Qualifications.
+When an independent semantic review rejects a proposed claim, deterministic
+controller reconciliation transitions it to `unsupported` rather than deleting
+it. The controller validates the digest-bound input ledger and required review
+set, writes `raw/drafts/claims-v2.json` and
+`reviews/reconciliation.json`, validates both, then atomically promotes the
+candidate ledger to `claims.json`. This preserves the claim statement, cited
+evidence, and transition history and renders the finding under Contradictions
+and Qualifications.
 
 An adversarial challenge transitions a claim to `contested`. A run with
 contested claims may publish as `complete` when all declared questions and

@@ -1,12 +1,12 @@
 ---
 oat_triage_record: true
 schema_version: 1
-status: proposed
+status: approved
 scope: Seven remaining-friction claims from the 2026-09-14 operator report against recon 1.1.2 and recon-worker 1.0.1
 baseline_sha: 81bf04c1e48798276f5a56872d759057893f4efe
 triage_pr: null
 created: 2026-09-14
-updated: 2026-09-14
+updated: 2026-09-15
 ---
 
 # Recon 1.1.2 follow-up feedback
@@ -16,8 +16,8 @@ updated: 2026-09-14
 - In scope: the seven claims under "Still open" in the operator's 2026-09-14
   Cursor report, verified against the canonical OAT repository after PR #285.
 - Excluded: items the report marks addressed; the private downstream repository
-  and its evidence packet; implementation; new public GitHub issues; Cursor
-  product changes outside OAT's repository.
+  and its evidence packet; new public GitHub issues; Cursor product changes
+  outside OAT's repository.
 - Public-safe source description: operator report from a Cursor IDE run using
   recon 1.1.2 and recon-worker 1.0.1. Private downstream paths and findings are
   intentionally omitted.
@@ -42,14 +42,11 @@ updated: 2026-09-14
 
 ## Disposition ledger
 
-All repository-owned rows below are proposed as one backlog item: **Harden recon
-controller and artifact contracts after 1.1.2** — priority `high`, scope
-`feature`, estimate `M`. High reflects repeatable loss or invalidation of
-multi-minute evidence work plus an ambiguity at the assurance-bearing
-reconciliation boundary. `M` reflects changes across the controller and worker
-contracts, routing/validation helpers, fixtures, tests, bundled-skill and agent
-versions, public package lockstep versions, release validation, and docs, while
-remaining localized to recon and its Cursor mechanics reference.
+The user approved all seven repository-owned rows on 2026-09-14 for direct
+implementation through the Lite project
+`.oat/projects/shared/recon-1-1-2-follow-ups`. No consolidated backlog item or
+public GitHub issue is required. Existing backlog references remain context,
+not owners of this implementation.
 
 ### CLAIM-001 — Interactive Cursor background dispatch
 
@@ -69,14 +66,12 @@ remaining localized to recon and its Cursor mechanics reference.
 - Existing coverage: dispatch mechanics document the host behavior; no recon
   test binds that behavior into a lane launch.
 - Proposed GitHub action: none; no public issue was requested.
-- Backlog action: create/link the consolidated item. Require background for an
-  interactive Cursor lane expected to exceed a short check when a durable
-  awaited handle exists; record the mode and reason. Keep the foreground
-  exception and avoid copying provider launch grammar into recon.
+- Accepted disposition: require every Cursor recon leaf to launch in the
+  background while keeping provider launch grammar in the provider mechanics.
 - Priority and size rationale: recurring interruption risk with an existing
   documented workaround; small alone, but part of the consolidated reliability
   contract.
-- Approval: pending.
+- Approval: approved by user on 2026-09-14 for the Lite project.
 - Post-merge result: pending.
 
 ### CLAIM-002 — Valid artifact followed by stream-close error
@@ -98,13 +93,12 @@ remaining localized to recon and its Cursor mechanics reference.
   `BL-260906-harden-dispatch-launch` own general terminal reconciliation, but do
   not state recon's artifact-over-stream precedence rule.
 - Proposed GitHub action: none; no public issue was requested.
-- Backlog action: create/link the consolidated item and cross-reference
-  `BL-260906-harden-dispatch-launch`. Validate only the approved path, lane
-  identity, schema, and exact bytes; when all pass, record completion plus a
-  provider diagnostic and do not relaunch. Otherwise record `PASS_FAILED`.
+- Accepted disposition: a valid artifact at the approved path takes precedence
+  over a later stream-close error; record the provider diagnostic and do not
+  relaunch. `BL-260906-harden-dispatch-launch` remains related context only.
 - Priority and size rationale: a real host error can discard expensive valid
   work or tempt an unsafe duplicate launch; targeted controller/test change.
-- Approval: pending.
+- Approval: approved by user on 2026-09-14 for the Lite project.
 - Post-merge result: pending.
 
 ### CLAIM-003 — Bundled CLI entrypoint can silently no-op
@@ -122,13 +116,13 @@ remaining localized to recon and its Cursor mechanics reference.
 - Existing coverage: current CLI tests invoke canonical real paths and do not
   exercise a symlink or alternate filesystem identity.
 - Proposed GitHub action: none; no public issue was requested.
-- Backlog action: create/link the consolidated item. Centralize a realpath-based
-  ESM-main predicate and add canonical-plus-symlink subprocess controls for all
-  five executables.
+- Accepted disposition: centralize a realpath-based ESM-main predicate and add
+  canonical-plus-symlink subprocess controls for the six executables, including
+  the controller reconciliation CLI.
 - Priority and size rationale: silent success is misleading and mechanically
   reproducible; implementation is small, with the main burden in regression
   coverage.
-- Approval: pending.
+- Approval: approved by user on 2026-09-14 for the Lite project.
 - Post-merge result: pending.
 
 ### CLAIM-004 — Cursor role file is not live Task eligibility
@@ -150,12 +144,12 @@ remaining localized to recon and its Cursor mechanics reference.
   generic fallback when no pinned role is available; PR #285 tests generic
   fallback before approval.
 - Proposed GitHub action: none; provider escalation is outside this triage.
-- Backlog action: refine/link `BL-260719-add-pinned-recon-agents` for the provider
-  capability boundary; include the small wording/test hardening in the
-  consolidated item without claiming Cursor Task exposure.
+- Accepted disposition: state and test that a materialized role file is not live
+  Task-catalog evidence, retain the generic fallback, and do not claim Cursor
+  Task exposure. `BL-260719-add-pinned-recon-agents` remains context only.
 - Priority and size rationale: OAT behavior is already fail-closed; this is
   clarity against a repeatedly confusing provider boundary.
-- Approval: pending.
+- Approval: approved by user on 2026-09-14 for the Lite project.
 - Post-merge result: pending.
 
 ### CLAIM-005 — Compile excerpts and post-reconcile repair
@@ -176,14 +170,12 @@ remaining localized to recon and its Cursor mechanics reference.
 - Existing coverage: strong pre-review fail-closed validation; no worker-facing
   rule or repair model.
 - Proposed GitHub action: none; no public issue was requested.
-- Backlog action: create/link the consolidated item for a contiguous exact or
-  redacted-exact excerpt rule and a compile-stage negative control. Explicitly
-  exclude locator-repair revisions from this item: they weaken the existing
-  immutable-evidence model and need a separately approved design if still
-  desired.
+- Accepted disposition: require a contiguous exact excerpt, with a narrowly
+  recorded source-required redaction exception, and add a compile-stage negative
+  control. Locator-repair revisions remain deliberately out of scope.
 - Priority and size rationale: current packets already fail closed; reducing
   avoidable failed runs is medium-value, while repair is intentionally deferred.
-- Approval: pending.
+- Approval: approved by user on 2026-09-14 for the Lite project.
 - Post-merge result: pending.
 
 ### CLAIM-006 — Closed examples and schema retry
@@ -205,16 +197,14 @@ remaining localized to recon and its Cursor mechanics reference.
   default-deny unless a caller-specific contract defines it
   (`oat-dispatch-subagents/SKILL.md:465-477`).
 - Proposed GitHub action: none; no public issue was requested.
-- Backlog action: create/link the consolidated item. Add compact closed examples
-  for each review kind; enforce string-only unresolved issues; define a
-  controller-only schema retry bounded by the already approved `retryLimit`,
-  with the same lane, target, authority, and write path, quarantining the invalid
-  attempt and forbidding route or worker substitution. Exhaustion becomes
-  `PASS_FAILED`.
+- Accepted disposition: add compact closed examples for every review kind,
+  enforce string-only unresolved issues, and require each worker to self-validate
+  once within the same accepted task. An invalid accepted artifact is terminal;
+  no controller schema-retry semantics are added.
 - Priority and size rationale: invalid artifacts occurred in a real run, and the
   advertised retry budget currently has no usable meaning after acceptance;
   contract and negative-control work make this medium-sized.
-- Approval: pending.
+- Approval: approved by user on 2026-09-14 for the Lite project.
 - Post-merge result: pending.
 
 ### CLAIM-007 — Reconciliation has two outputs but one approved path
@@ -239,23 +229,20 @@ remaining localized to recon and its Cursor mechanics reference.
   authorization gap. PR #285 introduced the current terminal topology but did
   not settle promotion ownership.
 - Proposed GitHub action: none; no public issue was requested.
-- Backlog action: create/link the consolidated item. Make the approved
-  reconciliation envelope name both the review-result path and candidate-ledger
-  path, preferably contained by one approved reconciliation directory; state
-  that the controller validates both and atomically promotes only the candidate
-  ledger to canonical `claims.json`. Add swapped, missing, unapproved-path, and
-  valid-promotion controls.
+- Accepted disposition: reconciliation is controller-owned and deterministic.
+  The manifest binds its input ledger, candidate-ledger output, reconciliation
+  review output, review set, and literal producer. The controller validates both
+  outputs and atomically promotes only the candidate ledger to `claims.json`;
+  missing, swapped, tampered, and valid-promotion controls are required.
 - Priority and size rationale: this is an assurance-bearing ownership ambiguity
   that made the real run easy to invert; localized but cross-schema.
-- Approval: pending.
+- Approval: approved by user on 2026-09-14 for the Lite project.
 - Post-merge result: pending.
 
 ## Open concerns
 
-- The exact mechanics of a schema retry need one lightweight design decision:
-  continuation through the accepted handle when possible versus an explicitly
-  linked same-target attempt when the handle is gone. The generic dispatch
-  contract permits either only when recon defines the boundary before launch.
+- Controller schema retry is deliberately deferred. Workers self-validate once
+  in their accepted task, and an invalid accepted artifact is terminal.
 - A locator-repair revision is not included in the proposed item. Any future
   design must preserve evidence identity and distinguish correction from
   invented or silently replaced evidence.
@@ -267,7 +254,6 @@ remaining localized to recon and its Cursor mechanics reference.
 
 ## Resume instructions
 
-Pending consolidated approval of the disposition ledger. If approved, create
-the one proposed backlog item, refine/cross-link existing coverage as stated,
-regenerate managed indexes, and open the triage PR. No GitHub issue mutations
-are proposed.
+Implementation is owned by the approved Lite project. Complete its independent
+review and normal merge workflow; do not create a consolidated backlog item or
+mutate GitHub issues from this triage record.
