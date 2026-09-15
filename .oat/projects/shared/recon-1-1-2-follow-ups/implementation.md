@@ -319,6 +319,15 @@ The run marker matches the normalized project, configured runtime/target, and
 persisted start boundary. This attempt is accepted and must be resumed rather
 than relaunched.
 
+### Configured Implementation Exit Gate: attempt 2 result persisted
+
+- Envelope: `ok` and receive-eligible
+- Findings: 0 Critical, 0 Important, 0 Medium, 1 Minor
+- Review artifact: `reviews/final-review-2026-09-15T070929Z.md`
+
+Attempt 2 passed the configured Important threshold. The active review must be
+received and its Minor finding dispositioned before the gate becomes allowed.
+
 ### Review Received: p01
 
 **Date:** 2026-09-15
