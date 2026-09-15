@@ -1317,6 +1317,19 @@ function validateLedger(value, errors) {
   ]) {
     requiredArray(value, key, errors);
   }
+  for (const [index, unresolvedIssue] of (
+    value.unresolvedIssues ?? []
+  ).entries()) {
+    if (typeof unresolvedIssue !== 'string') {
+      errors.push(
+        issue(
+          'INVALID_UNRESOLVED_ISSUE',
+          'unresolvedIssues members must be strings',
+          `$.unresolvedIssues[${index}]`,
+        ),
+      );
+    }
+  }
   requiredArray(value, 'transitions', errors);
   requiredObject(value, 'synthesis', errors);
   if (isObject(value.synthesis)) {
@@ -2191,6 +2204,19 @@ function validateReviewResult(value, errors) {
     'unresolvedIssues',
   ]) {
     requiredArray(value, key, errors);
+  }
+  for (const [index, unresolvedIssue] of (
+    value.unresolvedIssues ?? []
+  ).entries()) {
+    if (typeof unresolvedIssue !== 'string') {
+      errors.push(
+        issue(
+          'INVALID_UNRESOLVED_ISSUE',
+          'unresolvedIssues members must be strings',
+          `$.unresolvedIssues[${index}]`,
+        ),
+      );
+    }
   }
   if (
     ![

@@ -254,7 +254,9 @@ Run the passes in this order:
    Thorough runs complete their independent `redundant-gather` wave here too.
 2. `compile` writes a candidate canonical claim ledger. A thorough candidate
    directly references a complete dossier from every approved primary and
-   redundant gather lane before any review brief is created.
+   redundant gather lane before any review brief is created. Every display
+   excerpt is an exact contiguous substring of its cited source, apart from the
+   declared `redacted-exact` representation; paraphrase is invalid evidence.
 3. Source preflight: run `scripts/validate-artifact.mjs` on the candidate
    manifest and ledger, then reopen every declared source and evidence locator
    with the checks in `scripts/validate-packet.mjs`. Resolve source roots to

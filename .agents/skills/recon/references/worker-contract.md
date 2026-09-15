@@ -47,7 +47,9 @@ wave target; the worker neither selects nor upgrades it.
 - `gather`: inspect assigned sources and emit source-grounded findings with
   typed locators, minimal display excerpts, uncertainty, and contradictions.
 - `compile`: consume only designated dossiers and create a provisional claim
-  ledger candidate. Deduplicate without inventing evidence.
+  ledger candidate. Deduplicate without inventing evidence. Display excerpts
+  must be exact contiguous source substrings, except for the explicit
+  `redacted-exact` representation; never paraphrase an excerpt.
 - `verify`: consume an immutable verification brief, reopen only its declared
   sources, test locators and claim semantics, and report claim dispositions.
 - `adversary`: consume scope, questions, and provisional statements only; seek
@@ -82,6 +84,82 @@ artifact can be promoted.
 Persist minimal excerpts only. Detect and redact secret spans before writing;
 never persist the secret or its sensitive-span digest. Finish by returning the
 artifact path and compact outcome only.
+
+Before returning, run the supplied deterministic validator against the sole
+unpromoted `writePath`. Correct an invalid candidate within the same accepted
+task and validate again. A terminal invalid candidate is `PASS_FAILED`; it does
+not authorize controller retry or replacement.
+
+Closed review-result examples (all omitted arrays are still required as shown):
+
+```json
+{
+  "kind": "recon.review-result",
+  "schemaVersion": 1,
+  "id": "review-semantic",
+  "runId": "run-1",
+  "reviewKind": "semantic",
+  "reviewerLane": "lane-semantic",
+  "status": "complete",
+  "brief": {
+    "path": "reviews/briefs/verify.json",
+    "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "permittedInputs": [],
+  "excludedInputs": [],
+  "dispositions": [],
+  "newEvidence": [],
+  "evidenceAssociations": [],
+  "coverageFindings": [],
+  "unresolvedIssues": []
+}
+```
+
+```json
+{
+  "kind": "recon.review-result",
+  "schemaVersion": 1,
+  "id": "review-adversarial",
+  "runId": "run-1",
+  "reviewKind": "adversarial",
+  "reviewerLane": "lane-adversarial",
+  "status": "complete",
+  "brief": {
+    "path": "reviews/briefs/adversary.json",
+    "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "permittedInputs": [],
+  "excludedInputs": [],
+  "dispositions": [],
+  "newEvidence": [],
+  "evidenceAssociations": [],
+  "coverageFindings": [],
+  "unresolvedIssues": []
+}
+```
+
+```json
+{
+  "kind": "recon.review-result",
+  "schemaVersion": 1,
+  "id": "review-coverage",
+  "runId": "run-1",
+  "reviewKind": "coverage",
+  "reviewerLane": "lane-coverage",
+  "status": "complete",
+  "brief": {
+    "path": "reviews/briefs/coverage.json",
+    "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "permittedInputs": [],
+  "excludedInputs": [],
+  "dispositions": [],
+  "newEvidence": [],
+  "evidenceAssociations": [],
+  "coverageFindings": [],
+  "unresolvedIssues": []
+}
+```
 
 The controller validates the candidate against `packet-contract.md` with the
 bundled deterministic artifact validator. A validation failure quarantines the

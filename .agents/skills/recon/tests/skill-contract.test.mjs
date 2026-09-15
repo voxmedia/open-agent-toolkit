@@ -352,6 +352,28 @@ test('worker exposes only the declared non-interactive leaf modes', async () => 
   assert.match(workerContract, /contradiction/i);
 });
 
+test('worker contract requires exact excerpts, closed examples, and same-task validation', async () => {
+  const { worker, workerContract } = await readContracts();
+  const contract = `${worker}\n${workerContract}`;
+  assert.match(contract, /exact contiguous (?:source )?substring/i);
+  assert.match(contract, /`redacted-exact`/i);
+  assert.match(
+    contract,
+    /supplied deterministic validator[\s\S]{0,260}same accepted\s+task/i,
+  );
+  assert.match(contract, /terminal invalid[\s\S]{0,100}`PASS_FAILED`/i);
+  const examples = [
+    ...workerContract.matchAll(/```json\n([\s\S]*?)\n```/g),
+  ].map((match) => JSON.parse(match[1]));
+  assert.deepEqual(
+    examples.map(({ reviewKind }) => reviewKind),
+    ['semantic', 'adversarial', 'coverage'],
+  );
+  assert.ok(
+    examples.every(({ unresolvedIssues }) => Array.isArray(unresolvedIssues)),
+  );
+});
+
 /**
  * Read the version a canonical skill declares: `metadata.version` first, the
  * deprecated top-level `version` as the fallback.

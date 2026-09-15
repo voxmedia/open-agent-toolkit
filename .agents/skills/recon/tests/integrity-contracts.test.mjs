@@ -34,6 +34,21 @@ async function readJson(path) {
   return JSON.parse(await readFile(path, 'utf8'));
 }
 
+test('review-result unresolved issues are a closed string array', async () => {
+  const packet = await fixture('standard');
+  const review = await readJson(
+    join(packet.packetRoot, 'reviews', 'semantic.json'),
+  );
+  review.unresolvedIssues = [{ message: 'object members are not allowed' }];
+  const validation = validateArtifactShape(review);
+  assert.equal(validation.valid, false);
+  assert.ok(
+    validation.errors.some(
+      (error) => error.code === 'INVALID_UNRESOLVED_ISSUE',
+    ),
+  );
+});
+
 async function writeJson(path, value) {
   await writeFile(path, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
 }

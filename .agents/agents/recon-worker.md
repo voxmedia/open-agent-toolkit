@@ -76,7 +76,9 @@ canonical claim status.
 
 Consume only the designated dossiers. Deduplicate their findings into a
 provisional claim-ledger candidate and cite direct input artifacts. Do not
-reopen excluded sources or invent evidence.
+reopen excluded sources or invent evidence. Every persisted display excerpt
+must be an exact contiguous substring of the cited source, except for the
+declared `redacted-exact` representation.
 
 ### `verify`
 
@@ -121,6 +123,11 @@ supplied schema permits.
 Do not add a second mode field or any other unknown field. The controller
 validates `waveId` and `mode`, or `reviewerLane` and `reviewKind`, against the
 approved manifest wave before promoting the artifact.
+
+Before returning, run the supplied deterministic validator against the sole
+unpromoted `writePath`. Correct an invalid candidate within this same accepted
+task and validate it again. If it remains invalid, return terminal
+`PASS_FAILED`; the controller must not retry or replace the worker.
 
 Return only the artifact path and compact outcome. Do not return source bodies,
 worker reasoning, or dossier contents to the controller.

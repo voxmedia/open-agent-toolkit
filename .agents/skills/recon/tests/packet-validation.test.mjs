@@ -1594,6 +1594,30 @@ test('detects source drift, wrong excerpts, and shifted lines', async () => {
   await expectInvalid(shifted, 'LOCATOR_EXCERPT_MISMATCH');
 });
 
+test('rejects paraphrased excerpts that are not contiguous source substrings', async () => {
+  const packet = await makePacket();
+  packet.ledger.evidence[0].displayExcerpt =
+    'alpha evidence, paraphrased for readability';
+  packet.ledger.evidence[0].contentHash = hashCanonicalJson(
+    packet.ledger.evidence[0].displayExcerpt,
+  );
+  await persist(packet);
+  await expectInvalid(packet, 'LOCATOR_EXCERPT_MISMATCH');
+});
+
+test('review results require unresolvedIssues to contain only strings', async () => {
+  const packet = await makePacket({ profile: 'standard' });
+  const semantic = packet.reviewPaths.get('review-semantic').value;
+  semantic.unresolvedIssues = [{ message: 'not a closed string issue' }];
+  const validation = validateArtifactShape(semantic);
+  assert.equal(validation.valid, false);
+  assert.ok(
+    validation.errors.some(
+      (error) => error.code === 'INVALID_UNRESOLVED_ISSUE',
+    ),
+  );
+});
+
 for (const sourceKind of ['url', 'command-output', 'connected-resource']) {
   test(`detects changed ${sourceKind} captures`, async () => {
     const packet = await makePacket({ sourceKind });

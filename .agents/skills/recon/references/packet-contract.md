@@ -346,17 +346,20 @@ branch; source ineligibility never bypasses persistence safety.
   claim/evidence associations, coverage findings, unresolved issues, and
   completion status. Every new evidence record has at least one exact
   association, and an association cannot name evidence absent from that result
-  or a claim without a disposition in that result. Reconciliation results
-  replace the brief reference with prior-ledger/revision, additions/removals,
-  exact transitions, and coverage-disposition bindings. Coverage findings are
-  closed records bound to affected claims and exact manifest gaps. Accepted
-  material gaps require a legal downgrade for every affected claim; a resolved
-  finding instead names exact typed evidence. Non-material coverage gaps
-  downgrade verified claims and transition provisional claims to unresolved,
-  while existing supported claims remain supported without verified promotion.
-  Thorough redundant verification and contradiction resolution are
-  claim-bearing typed review results, not raw dossiers: they bind immutable
-  briefs, claim dispositions, and explicit affected-contradiction dispositions.
+
+Every `unresolvedIssues` member is a string. Review results are closed objects:
+unknown fields and object-valued issue entries are invalid.
+or a claim without a disposition in that result. Reconciliation results
+replace the brief reference with prior-ledger/revision, additions/removals,
+exact transitions, and coverage-disposition bindings. Coverage findings are
+closed records bound to affected claims and exact manifest gaps. Accepted
+material gaps require a legal downgrade for every affected claim; a resolved
+finding instead names exact typed evidence. Non-material coverage gaps
+downgrade verified claims and transition provisional claims to unresolved,
+while existing supported claims remain supported without verified promotion.
+Thorough redundant verification and contradiction resolution are
+claim-bearing typed review results, not raw dossiers: they bind immutable
+briefs, claim dispositions, and explicit affected-contradiction dispositions.
 
 Create immutable mode-specific review projections with
 `scripts/create-review-brief.mjs`. Verification briefs expose only claim
