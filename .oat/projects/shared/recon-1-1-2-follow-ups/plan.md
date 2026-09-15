@@ -499,11 +499,12 @@ git commit -m "chore(p01-t05): align recon release surfaces"
 
 ## Reviews
 
-| Scope | Type     | Status  | Date       | Artifact          | Reviewed Head | Invocation | Gate Target                   |
-| ----- | -------- | ------- | ---------- | ----------------- | ------------- | ---------- | ----------------------------- |
-| p01   | code     | pending | -          | -                 | -             | -          | -                             |
-| final | code     | pending | -          | -                 | -             | -          | -                             |
-| plan  | artifact | passed  | 2026-09-15 | structured-output | -             | auto       | oat-reviewer-gpt-5-6-sol-high |
+| Scope | Type     | Status   | Date       | Artifact                                           | Reviewed Head | Invocation | Gate Target                   |
+| ----- | -------- | -------- | ---------- | -------------------------------------------------- | ------------- | ---------- | ----------------------------- |
+| p01   | code     | pending  | -          | -                                                  | -             | -          | -                             |
+| final | code     | pending  | -          | -                                                  | -             | -          | -                             |
+| plan  | artifact | passed   | 2026-09-15 | structured-output                                  | -             | auto       | oat-reviewer-gpt-5-6-sol-high |
+| plan  | artifact | received | 2026-09-15 | reviews/artifact-plan-review-2026-09-15T042341Z.md | -             | -          | -                             |
 
 ## Implementation Complete
 
