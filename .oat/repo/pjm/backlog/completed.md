@@ -8,6 +8,7 @@
 
 ## Completed Items
 
+- 2026-09-15 — BL-260915-re-author-the-explainer-kit — Re-author the explainer-kit program-recap fixture page against the live program material — Delivered by PR #301: removed the live-material e2e case and pinned the remaining flow cases to tracked fixture inputs; pnpm test:skills green on main
 - 2026-09-13 — BL-260817-verify-protected-mode-public — Verify protected-mode public URLs with an authenticated end-to-end GET — Superseded by agent-authored-recap: protected publication and external publishing were retired; archive export is the durable copy
 - 2026-09-13 — BL-260817-drop-explainer-kit-publish — Drop explainer-kit publish-request/v1 in a future minor — Agent-authored-recap retired the entire publication path, including publish-request/v1 and its producers and consumers
 - 2026-09-13 — BL-260817-decide-and-pin-the-system — Decide and pin the system-Chromium requirement introduced by test:skills on the merge path — Superseded by agent-authored-recap: browser-less verification is an explicit supported outcome, so system Chromium is not a merge-gate requirement

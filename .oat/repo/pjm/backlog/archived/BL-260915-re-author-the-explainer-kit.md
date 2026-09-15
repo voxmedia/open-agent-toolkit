@@ -2,7 +2,7 @@
 id: BL-260915-re-author-the-explainer-kit
 title: Re-author the explainer-kit program-recap fixture page against the live
   program material
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: S
@@ -12,7 +12,7 @@ labels:
   - ci
 assignee: null
 created: 2026-09-15T03:58:26.394Z
-updated: 2026-09-15T03:58:26.394Z
+updated: '2026-09-15T04:51:44Z'
 associated_issues: []
 external_plans: []
 ---
