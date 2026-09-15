@@ -57,3 +57,23 @@ for (const executable of executables) {
     assert.equal(imported.stderr, '');
   });
 }
+
+test('an unresolved unrelated host entry imports every CLI without side effects', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'recon-cli-import-host-'));
+  temporaryRoots.push(root);
+  const moduleUrls = executables.map(
+    (executable) => pathToFileURL(join(scriptsRoot, executable)).href,
+  );
+  const imported = spawnSync(
+    process.execPath,
+    [
+      '--input-type=module',
+      '--eval',
+      `process.argv[1] = ${JSON.stringify(join(root, 'missing-host.mjs'))}; await Promise.all(${JSON.stringify(moduleUrls)}.map((moduleUrl) => import(moduleUrl)));`,
+    ],
+    { encoding: 'utf8' },
+  );
+  assert.equal(imported.status, 0, imported.stderr);
+  assert.equal(imported.stdout, '');
+  assert.equal(imported.stderr, '');
+});

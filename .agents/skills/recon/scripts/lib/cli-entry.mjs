@@ -9,11 +9,7 @@ export function isDirectExecution(moduleUrl, entryPath = process.argv[1]) {
       realpathSync(fileURLToPath(moduleUrl)) ===
       realpathSync(resolve(entryPath))
     );
-  } catch (error) {
-    process.stderr.write(
-      `Unable to resolve CLI entry path: ${error instanceof Error ? error.message : error}\n`,
-    );
-    process.exitCode = 2;
+  } catch {
     return false;
   }
 }
