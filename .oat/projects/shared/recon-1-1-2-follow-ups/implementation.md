@@ -180,10 +180,12 @@ implementation exit gate.
   `sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324`
 - Implementation fingerprint:
   `sha256:effective-delta-v1:be98110931229e9bbae10ed112115ad1f47fe27c180112010889a01682a581bd`
-- Launch state: `intent_persisted`
+- Launch state: `accepted`
 - Launch attempt: `recon-feedback-exit-gate-20260915T062919Z`
 - Result receipt:
   `/private/tmp/recon-feedback-exit-gate-20260915T062919Z.receipt.json`
+- Gate run: `8147baea-2a6b-4da5-9b26-9a018e5d45e4`
+- Target: `claude-fable-skip-permissions` (cross-family review)
 
 ### Review Received: p01
 

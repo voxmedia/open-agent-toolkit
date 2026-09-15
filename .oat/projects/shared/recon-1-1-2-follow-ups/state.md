@@ -63,12 +63,12 @@ oat_implement_exit_gate:
   implementation_fingerprint: 'sha256:effective-delta-v1:be98110931229e9bbae10ed112115ad1f47fe27c180112010889a01682a581bd'
   freshness_head: 4c9cb6532a22d9d3a39b5fb61e70102d58811f8d
   freshness_fingerprint: 'sha256:effective-delta-v1:be98110931229e9bbae10ed112115ad1f47fe27c180112010889a01682a581bd'
-  launch_state: intent_persisted
+  launch_state: accepted
   launch_attempt_id: 'recon-feedback-exit-gate-20260915T062919Z'
   launch_started_at: '2026-09-15T06:29:19Z'
   launch_result_receipt: '/private/tmp/recon-feedback-exit-gate-20260915T062919Z.receipt.json'
-  gate_run_marker: null
-  gate_run_id: null
+  gate_run_marker: '/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/8147baea-2a6b-4da5-9b26-9a018e5d45e4.json'
+  gate_run_id: 8147baea-2a6b-4da5-9b26-9a018e5d45e4
   envelope_status: null
   artifact: null
   handoff: null
@@ -82,7 +82,7 @@ oat_implement_exit_gate:
   receive_eligible: false
   receive_completed: false
   failure: null
-  updated_at: '2026-09-15T06:29:19Z'
+  updated_at: '2026-09-15T06:29:51Z'
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
@@ -126,7 +126,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-15T02:47:32.316Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-15T06:29:19Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-15T06:29:51Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -138,7 +138,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Configured exit gate launch intent persisted
+Implementation — Configured exit gate reviewer accepted
 
 ## Artifacts
 
