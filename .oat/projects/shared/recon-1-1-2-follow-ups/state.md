@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t05
-oat_last_commit: d4515588242b502069bd7793bab7c9233c7a6c9a
+oat_current_task: null
+oat_last_commit: df7e591607d329374d93559751cc78df70c66694
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -111,7 +111,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Phase 1, task p01-t05
+Implementation — Phase 1 complete; awaiting independent code review
 
 ## Artifacts
 
@@ -137,7 +137,8 @@ Implementation — Phase 1, task p01-t05
 - ✓ p01-t02 completed: realpath-safe bundled CLI entry detection
 - ✓ p01-t03 completed: exact excerpts and closed worker output schemas
 - ✓ p01-t04 completed: controller-owned deterministic reconciliation
-- ⧗ Phase 1 implementation continues at p01-t05
+- ✓ p01-t05 completed: docs, triage, versions, and provider sync aligned
+- ✓ Phase 1 implementation complete with one append-only recovery
 
 ## Blockers
 
@@ -145,4 +146,4 @@ None.
 
 ## Next Milestone
 
-Complete Phase 1 and its independent code review.
+Run the independent Phase 1 code review.

@@ -1,9 +1,9 @@
 ---
 oat_status: in_progress
-oat_ready_for: null
+oat_ready_for: review
 oat_blockers: []
 oat_last_updated: 2026-09-15
-oat_current_task_id: p01-t05
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -20,24 +20,31 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 5     | 4/5       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 5     | 5/5       |
 
-**Total:** 4/5 tasks completed
+**Total:** 5/5 tasks completed
 
 ## Phase 1: Simplify and harden recon execution
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-09-15
 
 ### Phase Summary
 
-**Outcome:** pending
+**Outcome:** Recon execution is durable under Cursor interruption, all six CLIs
+run through direct and symlinked paths, worker output contracts are closed and
+self-validating, and reconciliation is controller-owned and deterministic.
 
-**Key files touched:** pending
+**Key files touched:** canonical recon skill and worker, recon scripts and tests,
+provider projection/sync manifest, public docs, triage record, and release
+metadata.
 
-**Verification:** pending
+**Verification:** Focused task suites passed. Phase check, type-check, build,
+release, docs, lint, format, and fresh recon/CLI validation passed. The full
+workspace test has one pre-existing unrelated assertion mismatch in
+`review-skill-contracts.test.ts`; 7,389 of 7,390 tests passed.
 
 **Notes / Decisions:**
 
@@ -66,8 +73,8 @@ oat_generated: false
 
 ### Task p01-t05: Align docs, triage disposition, and release metadata
 
-**Status:** in_progress
-**Commit:** -
+**Status:** complete
+**Commit:** c642f58c876492236ce985daf5394921e82358bf
 
 ## Orchestration Runs
 
@@ -87,7 +94,14 @@ _No implementation run has started._
 - [x] p01-t02: Make recon CLI entry detection realpath-safe (`783f925c9`)
 - [x] p01-t03: Close worker excerpt and review-result schemas (`c00509e39`)
 - [x] p01-t04: Move reconciliation to one deterministic controller stage (`d45155882`)
-- [ ] p01-t05: Align docs, triage disposition, and release metadata (in progress)
+- [x] p01-t05: Align docs, triage disposition, and release metadata (`c642f58c8`)
+
+### Recovery Event recovery-p01-001
+
+- Removed three stale bindings exposed by the phase lint gate and aligned the
+  recon skill-version assertion with the planned 1.1.3 release.
+- Recovery commit: `df7e591607d329374d93559751cc78df70c66694`.
+- Post-commit `pnpm lint` and all 296 fresh recon tests passed.
 
 ### Review Received: plan
 
@@ -201,21 +215,27 @@ final reviews remain required.
 
 ## Test Results
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
+| Phase | Tests Run | Passed | Failed | Coverage                                                             |
+| ----- | --------- | ------ | ------ | -------------------------------------------------------------------- |
+| 1     | 7,390     | 7,389  | 1      | One unrelated baseline contract assertion; focused phase suites pass |
 
 ## Final Summary (for PR/docs)
 
-**What shipped:** pending
+**What shipped:** Reduced-complexity recon 1.1.3 and recon-worker 1.0.2 follow-ups.
 
-**Behavioral changes:** pending
+**Behavioral changes:** Background Cursor leaves, artifact-over-stream
+completion, reliable CLI entry, exact excerpts, closed/self-validated worker
+outputs, and deterministic controller reconciliation.
 
-**Key files / modules:** pending
+**Key files / modules:** `recon`, `recon-worker`, recon script/test contracts,
+provider projection, docs, triage, and public release metadata.
 
-**Verification performed:** pending
+**Verification performed:** Task-focused suites, workspace gates, fresh recon
+tests, CLI skill validation, version/release validation, docs build, sync
+idempotence, lint, and format.
 
-**Design deltas:** pending
+**Design deltas:** None. Locator repair, controller schema retry, Cursor live
+probe, and additional provider materialization remain deferred as planned.
 
 ## References
 
