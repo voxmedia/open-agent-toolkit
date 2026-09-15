@@ -72,17 +72,17 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: '.oat/projects/shared/recon-1-1-2-follow-ups/reviews/final-review-2026-09-15T070929Z.md'
   handoff: 'Gate passed at the important threshold, but the final review still contains non-blocking findings (minor=1). Run oat-project-review-receive for .oat/projects/shared/recon-1-1-2-follow-ups/reviews/final-review-2026-09-15T070929Z.md to disposition them before marking the final review row passed.'
-  receive_state: not_started
-  receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
+  receive_state: intent_persisted
+  receive_correlation: 'run=9eec5f13-a6eb-4116-927b-8eb1278faed3; handoff=receive; source=reviews/final-review-2026-09-15T070929Z.md; scope=final; type=code'
+  receive_source_artifact: '.oat/projects/shared/recon-1-1-2-follow-ups/reviews/final-review-2026-09-15T070929Z.md'
+  receive_archived_artifact: '.oat/projects/shared/recon-1-1-2-follow-ups/reviews/archived/final-review-2026-09-15T070929Z.md'
+  receive_event_identity: 'final | code | final-review-2026-09-15T070929Z.md'
+  receive_pre_head: d1912c49d972a73a017e20bea08f69a254868101
   receive_commit: null
   receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-09-15T07:10:47Z'
+  updated_at: '2026-09-15T07:11:21Z'
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
@@ -126,7 +126,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-15T02:47:32.316Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-15T07:10:47Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-15T07:11:21Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
