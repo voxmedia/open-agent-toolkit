@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 import { readFile } from 'node:fs/promises';
-import { pathToFileURL } from 'node:url';
 
+import { isDirectExecution } from './lib/cli-entry.mjs';
 import {
   checkApprovedWaveTarget,
   createRoutingPreview,
@@ -79,7 +79,7 @@ export async function main(argv = process.argv.slice(2)) {
   );
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
+if (isDirectExecution(import.meta.url)) {
   main().catch((error) => {
     const code = error instanceof RoutingContractError ? error.code : 'ERROR';
     process.stderr.write(`${code}: ${error.message}\n`);

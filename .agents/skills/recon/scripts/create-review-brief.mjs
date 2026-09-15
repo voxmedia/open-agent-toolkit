@@ -2,9 +2,9 @@
 
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, relative, resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
 
 import { canonicalJson, hashFile } from './lib/canonical-json.mjs';
+import { isDirectExecution } from './lib/cli-entry.mjs';
 import { issue, isObject, validateArtifactShape } from './lib/contracts.mjs';
 import { assertSafeOutputPath } from './lib/safe-path.mjs';
 
@@ -441,10 +441,7 @@ async function main(argv) {
   process.stdout.write(`${JSON.stringify(reference, null, 2)}\n`);
 }
 
-if (
-  process.argv[1] &&
-  import.meta.url === pathToFileURL(process.argv[1]).href
-) {
+if (isDirectExecution(import.meta.url)) {
   main(process.argv.slice(2)).catch((error) => {
     process.stderr.write(`${error instanceof Error ? error.message : error}\n`);
     process.exitCode = 1;

@@ -2,9 +2,9 @@
 
 import { readFile, rm } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
 
 import { hashCanonicalJson, hashFile, sha256 } from './lib/canonical-json.mjs';
+import { isDirectExecution } from './lib/cli-entry.mjs';
 import {
   isDigest,
   isObject,
@@ -2598,10 +2598,7 @@ async function main(argv) {
   process.exitCode = result.publishable ? 0 : 1;
 }
 
-if (
-  process.argv[1] &&
-  import.meta.url === pathToFileURL(process.argv[1]).href
-) {
+if (isDirectExecution(import.meta.url)) {
   main(process.argv.slice(2)).catch((error) => {
     process.stderr.write(`${error instanceof Error ? error.message : error}\n`);
     process.exitCode = 2;
