@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t04
-oat_last_commit: c00509e3982c335a99eda7e60e6c649bb7fe4774
+oat_current_task: p01-t05
+oat_last_commit: d4515588242b502069bd7793bab7c9233c7a6c9a
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -95,7 +95,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Phase 1, task p01-t04
+Implementation — Phase 1, task p01-t05
 
 ## Artifacts
 
@@ -120,7 +120,8 @@ Implementation — Phase 1, task p01-t04
 - ✓ p01-t01 completed: Cursor background launch and durable artifact precedence
 - ✓ p01-t02 completed: realpath-safe bundled CLI entry detection
 - ✓ p01-t03 completed: exact excerpts and closed worker output schemas
-- ⧗ Phase 1 implementation continues at p01-t04
+- ✓ p01-t04 completed: controller-owned deterministic reconciliation
+- ⧗ Phase 1 implementation continues at p01-t05
 
 ## Blockers
 
