@@ -762,6 +762,7 @@ git commit -m "fix(p01-t11): canonicalize reconciliation input order"
 | plan  | artifact | received        | 2026-09-15 | reviews/archived/artifact-plan-review-2026-09-15T043825Z.md | -                                        | -          | -                             |
 | plan  | artifact | passed          | 2026-09-15 | reviews/archived/artifact-plan-review-2026-09-15T045555Z.md | -                                        | gate       | claude-fable-skip-permissions |
 | final | code     | passed          | 2026-09-15 | reviews/archived/final-review-2026-09-15T062118Z.md         | 4c9cb6532a22d9d3a39b5fb61e70102d58811f8d | auto       | -                             |
+| final | code     | received        | 2026-09-15 | reviews/final-review-2026-09-15T063725Z.md                  | f016f836235c040d131f75d7eeb015c94cb78d7a | gate       | claude-fable-skip-permissions |
 
 ## Implementation Complete
 
