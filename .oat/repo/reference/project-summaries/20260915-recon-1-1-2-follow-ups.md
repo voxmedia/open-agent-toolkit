@@ -94,7 +94,7 @@ product behavior.
 ## Integration Notes
 
 After the final review fixes and `origin/main` integration, the complete recon
-suite passed with 302 tests. Check, type-check, full workspace test, build, skill
+suite passed with 328 tests. Check, type-check, full workspace test, build, skill
 and release version gates, release validation, docs build, lint, format, and two
 independent final review passes all succeeded.
 
