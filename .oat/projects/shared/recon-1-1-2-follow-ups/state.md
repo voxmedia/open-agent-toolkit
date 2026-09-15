@@ -43,16 +43,7 @@ oat_phase_recovery_policy:
   phase_attempt_usage:
     p01:
       used_attempts: 1
-      pending_attempt:
-        attempt: 1
-        event_id: recovery-p01-001
-        original_request_id: impl-recon-112-p01-20260915-01
-        original_task_id: p01-t04
-        original_commit: d4515588242b502069bd7793bab7c9233c7a6c9a
-        discovered_by: pnpm lint
-        dispatch_target: oat-phase-implementer-gpt-5-6-sol-medium
-        reservation_head: c642f58c876492236ce985daf5394921e82358bf
-        status: completed
+      pending_attempt: null
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
 oat_workflow_mode: lite # spec-driven | quick | import | lite
 oat_workflow_origin: native # native | imported
@@ -99,7 +90,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-15T02:47:32.316Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-15T05:07:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-15T05:13:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -139,6 +130,7 @@ Implementation — Phase 1 complete; awaiting independent code review
 - ✓ p01-t04 completed: controller-owned deterministic reconciliation
 - ✓ p01-t05 completed: docs, triage, versions, and provider sync aligned
 - ✓ Phase 1 implementation complete with one append-only recovery
+- ✓ Recovery event `recovery-p01-001` validated and cleared by the controller
 
 ## Blockers
 
