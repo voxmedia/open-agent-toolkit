@@ -42,8 +42,17 @@ oat_phase_recovery_policy:
   phase_attempt_limits: {}
   phase_attempt_usage:
     p01:
-      used_attempts: 1
-      pending_attempt: null
+      used_attempts: 2
+      pending_attempt:
+        attempt: 2
+        event_id: recovery-p01-t12-20260915-02
+        original_request_id: impl-recon-112-p01-20260915-01
+        original_task_id: p01-t12
+        original_commit: 806511e6be05bd32d8cfcfd1900333923e4c3645
+        discovered_by: node --test .agents/skills/recon/tests/*.test.mjs
+        dispatch_target: oat-phase-implementer-gpt-5-6-sol-medium
+        reservation_head: ea758dd7d641f5e527bc59d2923486ddf4228eb7
+        status: pending
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
 oat_workflow_mode: lite # spec-driven | quick | import | lite
 oat_workflow_origin: native # native | imported
