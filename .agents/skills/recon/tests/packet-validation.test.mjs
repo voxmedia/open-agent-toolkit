@@ -1139,6 +1139,29 @@ test('production validation enforces approved profile topology', async () => {
     },
     {
       profile: 'standard',
+      code: 'INVALID_PROFILE_SINGLETON_LANE_COUNT',
+      mutate(execution) {
+        const adversarial = execution.waves.find(
+          (wave) => wave.mode === 'adversarial',
+        );
+        adversarial.lanes.push({
+          ...adversarial.lanes[0],
+          laneId: 'lane-adversarial-second',
+          writeRoot: 'reviews/adversarial-second.json',
+        });
+      },
+    },
+    {
+      profile: 'standard',
+      code: 'INVALID_RECONCILIATION_PATH',
+      mutate(execution) {
+        execution.waves.find(
+          (wave) => wave.mode === 'semantic-verification',
+        ).lanes[0].writeRoot = 'reviews/semantic-renamed.json';
+      },
+    },
+    {
+      profile: 'standard',
       code: 'INVALID_RECONCILIATION_PRODUCER',
       mutate(execution) {
         execution.reconciliation.producer = 'worker:reconcile';
@@ -1440,7 +1463,7 @@ test('packet validation rejects a conditional wave without an activating conditi
       {
         laneId: 'lane-dead-conditional',
         scope: 'packet/dead-conditional',
-        writeRoot: 'raw/dossiers/dead-conditional.json',
+        writeRoot: 'reviews/contradiction-resolution.json',
       },
     ],
     conditional: true,

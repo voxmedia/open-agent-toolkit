@@ -47,7 +47,7 @@ function readModeMappings(content) {
 test('recon is a provider-neutral user-invocable skill', async () => {
   const { skill } = await readContracts();
   assert.match(skill, /^name:\s*recon$/m);
-  assert.equal(readSkillVersion(skill), '1.1.4');
+  assert.equal(readSkillVersion(skill), '1.1.5');
   assert.match(skill, /^user-invocable:\s*true$/m);
   assert.match(skill, /provider-neutral/i);
   assert.doesNotMatch(skill, /(?:must|required to) use GPT-|Claude-|Gemini-/i);
@@ -150,7 +150,7 @@ test('profiles define adaptive bounded quick, standard, and thorough runs', asyn
   );
   assert.match(profiles, /thorough[\s\S]{0,1100}redundant/i);
   assert.match(profiles, /one deterministic controller reconciliation/i);
-  assert.match(packetContract, /4\/10\/20 adaptive-lane cap/i);
+  assert.match(packetContract, /4\/10\/20 evidence-lane cap/i);
   assert.match(packetContract, /fixed at exactly one lane/i);
   assert.match(packetContract, /worker-lane maxima are 6\/12\/22/i);
   assert.match(profiles, /hard cap 4[\s\S]*hard cap 10[\s\S]*hard cap 20/i);
@@ -170,7 +170,7 @@ test('thorough keeps redundant work required and contradiction resolution condit
   );
   const required = thorough.slice(
     thorough.indexOf('- Required:'),
-    thorough.indexOf('- Adaptive evidence lanes:'),
+    thorough.indexOf('- Counted evidence lanes:'),
   );
   const conditional = thorough.slice(thorough.indexOf('- Conditional work:'));
 

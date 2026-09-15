@@ -6,7 +6,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Glob, Grep, Bash, AskUserQuestion, Agent, mcp__*
 metadata:
-  version: 1.1.4
+  version: 1.1.5
 ---
 
 # Recon
@@ -266,7 +266,9 @@ Run the passes in this order:
    manifest and ledger pair validates.
 4. Profile-required `verify`, `adversary`, and `coverage` workers consume only
    immutable selectively blind briefs created by
-   `scripts/create-review-brief.mjs` at unique paths.
+   `scripts/create-review-brief.mjs` at unique paths. Each review-producing
+   wave has exactly one lane; partition source or question fan-out in the
+   applicable gather wave instead.
 5. Evaluate each predeclared evidence condition only after its completed
    predecessor artifacts exist. Record exactly one root-authored condition
    outcome. A triggered `contradiction-resolution` wave runs once as an

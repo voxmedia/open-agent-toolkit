@@ -21,7 +21,7 @@ adding locator-repair or controller-retry state machines.
 
 ## What Was Implemented
 
-- Released the canonical recon skill as 1.1.4 and recon-worker as 1.0.2.
+- Released the canonical recon skill as 1.1.5 and recon-worker as 1.0.2.
 - Made every Cursor recon leaf a background task, including the approved generic
   fallback, while preserving the distinction between a materialized role and
   live Task-catalog availability.
@@ -67,9 +67,14 @@ adding locator-repair or controller-retry state machines.
 Final gate review exposed a mismatch between thorough routing and the closed
 reconciliation schema: routing allowed two contradiction conditions while the
 schema could consume one result. The project chose the lower-complexity fix and
-capped thorough at one condition. Later review also required import-safe CLI
-entry detection and explicit degraded-profile coverage when thorough redundant
-verification fails after launch.
+capped thorough at one condition. A post-merge Bugbot review exposed the same
+class at lane granularity: routing allowed multiple typed-review lanes while
+reconciliation intentionally consumes one result per kind. The project again
+chose the lower-complexity contract, keeping gather fan-out while making every
+typed review wave singleton and binding its approved root to the fixed manifest
+path. Later review also required import-safe CLI entry detection and explicit
+degraded-profile coverage when thorough redundant verification fails after
+launch.
 
 ## Notable Challenges
 
@@ -93,14 +98,15 @@ product behavior.
 
 ## Integration Notes
 
-After the final review fixes and `origin/main` integration, the complete recon
-suite passed with 328 tests. Check, type-check, full workspace test, build, skill
-and release version gates, release validation, docs build, lint, format, and two
-independent final review passes all succeeded.
+After the final review fixes, `origin/main` integration, and post-merge Bugbot
+correction, the complete recon suite passed with 329 tests. Check, type-check,
+full workspace test, build, skill and release version gates, release validation,
+docs build, lint, format, and two independent final review passes all succeeded
+before the post-merge correction; its complete gate sequence was rerun.
 
 PR #302 is open. The latest `origin/main` was merged, its generated decision
 index conflict was rebuilt from source records, and the lockstep public package
-version was advanced to 0.2.78 above main's 0.2.77 release.
+version was advanced to 0.2.79 above main's 0.2.77 release.
 
 ## Follow-up Items
 

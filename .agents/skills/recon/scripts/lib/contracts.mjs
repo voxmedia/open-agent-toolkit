@@ -65,6 +65,18 @@ export const conditionPredicates = [
   'unresolved-material-challenge',
 ];
 
+const reconciliationReviewPaths = Object.freeze({
+  'semantic-verification': 'reviews/semantic.json',
+  adversarial: 'reviews/adversarial.json',
+  coverage: 'reviews/coverage.json',
+  'redundant-verification': 'reviews/redundant-verification.json',
+  'contradiction-resolution': 'reviews/contradiction-resolution.json',
+});
+
+const singletonReviewWaveModes = new Set(
+  Object.keys(reconciliationReviewPaths),
+);
+
 function profilePolicy(
   orderedSingletonWaveModes,
   allowedWaveModes,
@@ -670,7 +682,8 @@ export function validateV2ProfileTopology(
   for (const [waveIndex, wave] of waves.entries()) {
     if (
       policy.allowedWaveModes.includes(wave?.mode) &&
-      !policy.countedLaneModes.includes(wave.mode) &&
+      (!policy.countedLaneModes.includes(wave.mode) ||
+        singletonReviewWaveModes.has(wave.mode)) &&
       Array.isArray(wave?.lanes) &&
       wave.lanes.length !== 1
     ) {
@@ -738,13 +751,13 @@ export function validateV2ProfileTopology(
       outputLedger: 'raw/drafts/claims-v2.json',
       outputReview: 'reviews/reconciliation.json',
       requiredReviews: [
-        'reviews/semantic.json',
-        'reviews/adversarial.json',
-        'reviews/coverage.json',
+        reconciliationReviewPaths['semantic-verification'],
+        reconciliationReviewPaths.adversarial,
+        reconciliationReviewPaths.coverage,
       ],
       conditionalReviews: [
-        'reviews/redundant-verification.json',
-        'reviews/contradiction-resolution.json',
+        reconciliationReviewPaths['redundant-verification'],
+        reconciliationReviewPaths['contradiction-resolution'],
       ],
     };
     const matchesExpected =
@@ -767,6 +780,28 @@ export function validateV2ProfileTopology(
           `${path}.reconciliation`,
         ),
       );
+    }
+    for (const [mode, reviewPath] of Object.entries(
+      reconciliationReviewPaths,
+    )) {
+      const matchingWaves = waves.filter((wave) => wave?.mode === mode);
+      if (matchingWaves.length !== 1 || matchingWaves[0].lanes?.length !== 1) {
+        continue;
+      }
+      const writeRoot = matchingWaves[0].lanes[0].writeRoot;
+      if (
+        typeof writeRoot === 'string' &&
+        reviewPath !== writeRoot &&
+        !reviewPath.startsWith(`${writeRoot}/`)
+      ) {
+        errors.push(
+          issue(
+            'INVALID_RECONCILIATION_PATH',
+            `${mode} output ${reviewPath} must be inside its approved write root`,
+            `${path}.waves`,
+          ),
+        );
+      }
     }
   }
 

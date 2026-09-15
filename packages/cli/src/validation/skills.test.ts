@@ -8453,7 +8453,7 @@ describe('recon canonical contracts', () => {
     ]);
 
     expect(skill).toMatch(/^name:\s*recon$/m);
-    expect(readDeclaredVersion(skill)).toBe('1.1.4');
+    expect(readDeclaredVersion(skill)).toBe('1.1.5');
     expect(skill).toMatch(/provider-neutral/i);
     expect(skill).toMatch(/select each wave independently/i);
     expect(skill).toMatch(/schemaVersion: 2/i);

@@ -81,6 +81,9 @@ rather than a separately approved worker target.
 A thorough run may additionally predeclare an optional, condition-bound
 `contradiction-resolution` evidence wave. It runs only when its approved
 predicate triggers and is not required when that branch is not triggered.
+Gather and redundant-gather waves may partition source work across lanes. Each
+typed review wave uses exactly one lane so deterministic reconciliation has one
+result per review kind, at the fixed path bound by the approved manifest.
 
 The approval manifest shows each wave's exact target, task class, class floor,
 selection rationale, adaptive lane count, conditional rule, concurrency,

@@ -145,7 +145,7 @@ function conditionalDraft() {
       {
         laneId: 'lane-conditional-resolution',
         scope: 'packet/conditional-resolution',
-        writeRoot: 'reviews/conditional-resolution.json',
+        writeRoot: 'reviews/contradiction-resolution.json',
       },
     ],
     conditional: true,
@@ -259,7 +259,7 @@ test('preview validates and displays the complete approval-bound topology', () =
     'Requested profile: standard',
     'lane-conditional-resolution',
     'packet/conditional-resolution',
-    'reviews/conditional-resolution.json',
+    'reviews/contradiction-resolution.json',
     'condition-resolution',
     'wave-conditional-resolution',
     'wave-map',
@@ -308,6 +308,7 @@ test('preview rejects incomplete quick, standard, and thorough profile topologie
     (wave) => wave.mode === 'adversarial',
   );
   required.mode = 'contradiction-resolution';
+  required.lanes[0].writeRoot = 'reviews/contradiction-resolution.json';
   required.conditional = true;
   conditionalOnly.execution.conditions = [
     {

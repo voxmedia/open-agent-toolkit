@@ -29,11 +29,12 @@ Use for load-bearing evidence that needs independent semantic challenge.
 
 - Required: quick topology plus selectively blind semantic verification,
   adversarial review, coverage review, and deterministic controller reconciliation.
-- Adaptive evidence lanes: `gather`, `semantic-verification`, `adversarial`,
+- Counted evidence lanes: `gather`, `semantic-verification`, `adversarial`,
   `coverage`, and any predeclared `contradiction-resolution`; hard cap 10
-  across those counted modes. Required `map` and `compile` waves are fixed at
-  exactly one lane each, so the total maximum is 12 worker lanes; one
-  deterministic controller reconciliation follows them.
+  across those modes. `gather` may partition work across lanes. Every typed
+  review wave, plus required `map` and `compile`, is fixed at exactly one lane,
+  so the total maximum is 12 worker lanes.
+  One deterministic controller reconciliation follows.
 - Maximum concurrency: 6.
 - Assurance ceiling: `verified` only after exact locator validation, affirmative
   independent semantic review, no unresolved material challenge, and adequate
@@ -51,11 +52,12 @@ reopening and verification.
   redundant verification for load-bearing claims. Redundant gathering finishes
   before compilation, and every completed primary or redundant gather lane is
   represented in the compiled ledger inputs before review briefs are created.
-- Adaptive evidence lanes: the standard counted modes plus `redundant-gather`
+- Counted evidence lanes: the standard counted modes plus `redundant-gather`
   and `redundant-verification`; hard cap 20 across those counted modes.
-  Required `map` and `compile` waves are fixed at exactly one lane each, so the
-  total maximum is 22 worker lanes; one deterministic controller reconciliation
-  follows them.
+  `gather` and `redundant-gather` may partition work across lanes. Every typed
+  review wave, plus required `map` and `compile`, is fixed at exactly one lane,
+  so the total maximum is 22 worker lanes.
+  One deterministic controller reconciliation follows.
 - Maximum concurrency: 8.
 - Assurance ceiling: `verified` only for claims affirmed by the required
   independent passes and left without unresolved material challenge.

@@ -129,13 +129,17 @@ after every named predecessor and before controller reconciliation, and
 owns unique lane IDs and write roots. Conversely, every wave marked
 `conditional: true` must be the destination of exactly one activating condition;
 dead conditional waves are invalid. Quick permits no conditional wave;
-standard and thorough each permit one. The profile's 4/10/20 adaptive-lane cap
+standard and thorough each permit one. The profile's 4/10/20 evidence-lane cap
 counts `gather`, `semantic-verification`, `adversarial`, `coverage`,
 `redundant-gather`, `redundant-verification`, and
 `contradiction-resolution` when those modes are permitted by the profile.
-Every permitted mode outside that counted set is fixed at exactly one lane:
-`map` and `compile`. The resulting worker-lane maxima are 6/12/22, and concurrency remains
-capped at 4/6/8.
+Only `gather` and `redundant-gather` may partition a wave across multiple lanes.
+Every typed review wave and every permitted mode outside the counted set is
+fixed at exactly one lane, including `map` and `compile`. The resulting
+worker-lane maxima are 6/12/22, and concurrency remains capped at 4/6/8.
+Each review lane's approved write root must contain the corresponding fixed
+path in `execution.reconciliation`; a different approved root is invalid before
+launch.
 
 Triggered dispositions require exact complete same-run artifacts from every
 approved predecessor and concrete typed predicate evidence from those same-run

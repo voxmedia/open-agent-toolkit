@@ -52,7 +52,10 @@ function addConditionalWave(execution, suffix = '') {
       {
         laneId: `lane-conditional${suffix}`,
         scope: `packet/conditional${suffix}`,
-        writeRoot: `reviews/conditional${suffix}.json`,
+        writeRoot:
+          suffix === ''
+            ? 'reviews/contradiction-resolution.json'
+            : `reviews/conditional${suffix}.json`,
       },
     ],
     conditional: true,
@@ -172,10 +175,14 @@ test('quick permits four gather lanes in addition to map and compile', () => {
   );
 });
 
-test('profiles require exactly one lane for every fixed wave mode', () => {
+test('profiles require exactly one lane for fixed and review-result wave modes', () => {
   for (const [profile, modes, mode, laneCount] of [
     ['quick', ['map', 'gather', 'compile'], 'map', 40],
     ['quick', ['map', 'gather', 'compile'], 'compile', 2],
+    ['standard', standardModes, 'semantic-verification', 2],
+    ['standard', standardModes, 'adversarial', 2],
+    ['standard', standardModes, 'coverage', 2],
+    ['thorough', thoroughModes, 'redundant-verification', 2],
   ]) {
     const execution = createV2ExecutionApproval({ modes, laneIdForMode });
     const wave = execution.waves.find((item) => item.mode === mode);
@@ -306,7 +313,7 @@ test('every conditional wave has exactly one activating condition', () => {
       {
         laneId: 'lane-dead-conditional',
         scope: 'packet/dead-conditional',
-        writeRoot: 'raw/dossiers/dead-conditional.json',
+        writeRoot: 'reviews/contradiction-resolution.json',
       },
     ],
     conditional: true,
@@ -368,6 +375,24 @@ test('controller reconciliation declaration comparison is semantic and closed', 
   );
 
   execution.reconciliation.outputReview = 'reviews/changed.json';
+  assert.ok(
+    validateV2ProfileTopology({
+      schemaVersion: 2,
+      run: { requestedProfile: 'standard' },
+      execution,
+    }).some(({ code }) => code === 'INVALID_RECONCILIATION_PATH'),
+  );
+});
+
+test('controller reconciliation paths stay inside their review lane roots', () => {
+  const execution = createV2ExecutionApproval({
+    modes: standardModes,
+    laneIdForMode,
+  });
+  execution.waves.find(
+    (wave) => wave.mode === 'semantic-verification',
+  ).lanes[0].writeRoot = 'reviews/semantic-renamed.json';
+
   assert.ok(
     validateV2ProfileTopology({
       schemaVersion: 2,
