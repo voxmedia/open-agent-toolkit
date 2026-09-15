@@ -364,6 +364,21 @@ PR preparation only. Summary, documentation workflow, retro, and generic HiLL
 branches are unreachable. External push and GitHub PR creation remain outside
 the current authorization.
 
+### Lite Post-Implementation Sequence: PR preparation boundary
+
+- Local artifact: `pr/project-pr-2026-09-15.md`
+- Proposed title: `fix: simplify and harden recon execution`
+- Base branch: `main`
+- Review ledger: all ten file-backed artifacts resolve to regular files inside
+  the project; the in-memory structured-output review uses the `-` placeholder.
+- PR status: `ready`
+- External state: no branch push and no GitHub PR created
+
+The `pr` step cannot be marked complete without crossing the external
+publication boundary. The sequence is durably `failed` at that boundary with
+the local artifact preserved. Resume with `oat-project-implement` after branch
+push and GitHub PR creation are explicitly authorized.
+
 ### Review Received: p01
 
 **Date:** 2026-09-15
@@ -551,13 +566,15 @@ bound to exact canonical manifest paths and digests.
 **Key files / modules:** `recon`, `recon-worker`, recon script/test contracts,
 provider projection, docs, triage, and public release metadata.
 
-**Verification performed:** Task-focused suites, workspace gates, 297 fresh
-recon tests, 242 Cursor/CLI validation tests, version/release validation, docs
-build, sync idempotence, lint, format, and a clean independent Phase 1
-re-review after four findings were fixed.
+**Verification performed:** Task-focused suites, workspace gates, 300 fresh
+recon tests, 242 Cursor/CLI validation tests, version/release validation, a
+fresh docs build, sync idempotence, lint, format, passing independent phase and
+final re-reviews, and a passing cross-family implementation exit gate.
 
-**Design deltas:** None. Locator repair, controller schema retry, Cursor live
-probe, and additional provider materialization remain deferred as planned.
+**Design deltas:** Final gate review simplified thorough routing from up to two
+conditional contradiction waves to one, matching the closed reconciliation
+contract. Locator repair, controller schema retry, Cursor live probe, and
+additional provider materialization remain deferred as planned.
 
 ## References
 

@@ -868,7 +868,7 @@ git commit -m "fix(p01-t14): require thorough redundant review"
 | p01   | code     | passed          | 2026-09-15 | reviews/archived/code-p01-review-2026-09-15T055209Z.md      | f4c762af08f80c898c9f332960378bb95b478e94 | auto       | -                             |
 | p01   | code     | fixes_completed | 2026-09-15 | reviews/archived/code-p01-review-2026-09-15T053259Z.md      | 59b6241db737d331a9cc850c872c7546397a0030 | auto       | -                             |
 | final | code     | fixes_completed | 2026-09-15 | reviews/archived/final-review-2026-09-15T060425Z.md         | 9b5ad13d68be0b70bd3a9058842eddf2e202f610 | auto       | oat-reviewer-gpt-5-6-sol-high |
-| plan  | artifact | passed          | 2026-09-15 | structured-output                                           | -                                        | auto       | oat-reviewer-gpt-5-6-sol-high |
+| plan  | artifact | passed          | 2026-09-15 | -                                                           | -                                        | auto       | oat-reviewer-gpt-5-6-sol-high |
 | plan  | artifact | received        | 2026-09-15 | reviews/archived/artifact-plan-review-2026-09-15T042341Z.md | -                                        | -          | -                             |
 | plan  | artifact | received        | 2026-09-15 | reviews/archived/artifact-plan-review-2026-09-15T043825Z.md | -                                        | -          | -                             |
 | plan  | artifact | passed          | 2026-09-15 | reviews/archived/artifact-plan-review-2026-09-15T045555Z.md | -                                        | gate       | claude-fable-skip-permissions |

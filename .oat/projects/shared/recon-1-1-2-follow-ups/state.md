@@ -84,7 +84,7 @@ oat_implement_exit_gate:
   failure: null
   updated_at: '2026-09-15T07:12:44Z'
 oat_post_implement_sequence:
-  status: pre_approval
+  status: failed
   source: configured
   final_phase: p01
   pre_approval:
@@ -94,7 +94,7 @@ oat_post_implement_sequence:
   approval_source: null
   post_approval: []
   post_approval_completed: []
-  failure: null
+  failure: 'pr publication authorization required; local artifact is ready; resume with oat-project-implement'
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
@@ -134,11 +134,11 @@ oat_post_implement_sequence:
 #   failure: null
 #   updated_at: '2026-07-18T00:00:00Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
-oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_status: ready # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-15T02:47:32.316Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-15T07:14:13Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-15T07:16:40Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -150,7 +150,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Lite closeout sequence started
+Implementation — PR artifact ready; publication authorization required
 
 ## Artifacts
 
@@ -191,6 +191,8 @@ Implementation — Lite closeout sequence started
 - ✓ Fresh final re-review passed with no findings after configured-gate fixes
 - ✓ Configured gate attempt 2 passed at the Important threshold
 - ✓ Its one Minor public-doc alignment finding was addressed immediately
+- ✓ Local PR description prepared and review-ledger paths validated
+- ⧗ Branch push and GitHub PR creation not authorized
 
 ## Blockers
 
@@ -198,4 +200,4 @@ None.
 
 ## Next Milestone
 
-Prepare the local final PR artifact without external publication.
+Authorize branch push and GitHub PR creation, then resume `oat-project-implement`.
