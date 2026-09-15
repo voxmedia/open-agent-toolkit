@@ -208,3 +208,7 @@ Track test execution during implementation.
 - Plan: `plan.md`
 - Design: `design.md`
 - Spec: `spec.md`
+
+### 2026-09-14 — Plan artifact review received (round 1, structured)
+
+- 0 critical, 4 important, 8 medium, 5 minor — CHANGES REQUESTED. All 17 applied to `plan.md` (and the design where it was the stale copy), received inline: the `pjm:*` id set is derived from the CLI source at test time (21 ids incl. the nine remote checks), not pinned; every sweep call projects to named fields (`oat doctor --json` is ~410 KB raw); a command is failed only when its stdout is not JSON (both doctors exit 1 on a healthy repo); the read-only invariant is settled as a one-fix carve-out (run exactly the named command after explicit approval) and pinned in the contract test; five deprecated entries not six; the legacy table is exported under its own name and referenced, not copied; the group walk iterates every describe group; per-area finding rules enumerated in p02-t01; Error Handling rule 4 assigned; the contract test validates sweep commands against the built CLI and drops the self-pinning assertions; live verification reads the branch skill by absolute path and never installs at user scope; grep guards and docs anchors corrected; design `:118` path and phrase list aligned.
