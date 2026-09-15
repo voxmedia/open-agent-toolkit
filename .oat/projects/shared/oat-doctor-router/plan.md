@@ -157,7 +157,7 @@ Deliverable: the rewritten skill, its contract test, the two docs pages, live ve
 | final  | code     | fixes_completed | 2026-09-15 | reviews/archived/final-review-2026-09-15T042941Z.md      | 971e9125812f50adaa4a18fd4479098dd8dd40d1 | gate       | cursor-gpt-5-6-sol-xhigh |
 | final  | code     | fixes_completed | 2026-09-15 | reviews/archived/final-review-2026-09-15T043126Z.md      | 0d8d2cc93b7db3f140a1ef038185d724954c8739 | gate       | cursor-gpt-5-6-sol-xhigh |
 | final  | code     | fixes_completed | 2026-09-15 | reviews/archived/final-review-2026-09-15T044211Z.md      | f3baaa951578ec2da1de1d0ac9c9ad2f56947b6f | gate       | cursor-gpt-5-6-sol-xhigh |
-| final  | code     | received        | 2026-09-15 | reviews/final-review-2026-09-15T044732Z.md               | 2918473254a1889e3509a2523c67627eb3cf246b | gate       | cursor-gpt-5-6-sol-xhigh |
+| final  | code     | passed          | 2026-09-15 | reviews/archived/final-review-2026-09-15T044732Z.md      | 2918473254a1889e3509a2523c67627eb3cf246b | gate       | cursor-gpt-5-6-sol-xhigh |
 | design | artifact | pending         | -          | -                                                        | -                                        | -          | -                        |
 | plan   | artifact | fixes_completed | 2026-09-14 | - (structured, in-memory, round 1)                       | -                                        | manual     | -                        |
 | plan   | artifact | fixes_completed | 2026-09-14 | - (structured, in-memory, round 2)                       | -                                        | manual     | -                        |

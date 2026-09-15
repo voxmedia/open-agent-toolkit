@@ -151,4 +151,8 @@ Pre-existing failures on `origin/main` observed at the Phase 1 gate, not caused 
 
 ### 2026-09-15 — Configured implementation exit gate, attempt 3 (manual re-run)
 
-- `reviews/final-review-2026-09-15T044211Z.md` (reviewed head `f3baaa951`): 0 critical, 1 important, 0 medium, 0 minor — blocked. Received inline and applied: the design's canonical report example still printed the refused `oat config unset activeProject`; replaced with `oat config set activeProject ''`, and every project artifact swept for the refused forms (none remain outside archived review artifacts).
+- `reviews/final-review-2026-09-15T044211Z.md` (reviewed head `f3baaa951`): 0 critical, 1 important, 0 medium, 0 minor — blocked. Received inline and applied: the design's canonical report example still printed the refused `oat config unset activeProject`; replaced with `oat config set activeProject ''`, and every project artifact swept for the refused forms (none remains as an executable prescription or canonical report example; the forms survive only in quoted history like this note).
+
+### 2026-09-15 — Configured implementation exit gate, attempt 4: passed
+
+- `reviews/final-review-2026-09-15T044732Z.md` (reviewed head `291847325`): 0 critical, 0 important, 0 medium, 1 minor — gate passed at threshold `important`. The minor (this log's attempt-3 note overstated a literal-absence claim) is applied above. Gate history: attempt 1 blocked 3I, attempt 2 blocked 2I, attempt 3 (manual re-run past `maxAttempts: 2`) blocked 1I, attempt 4 passed; every finding applied inline.
