@@ -23,5 +23,7 @@ external_plans: []
 
 ## Acceptance Criteria
 
-- {Outcome 1}
-- {Outcome 2}
+- `pnpm test:skills` is green on `origin/main` with the explainer-kit flow cases passing in isolation (`node --test .agents/skills/explainer-kit/tests/flow.e2e.test.mjs`).
+- No explainer-kit unit test reads live repository records under `.oat/repo/`: inputs are tracked fixture copies with a provenance header naming their source commit.
+- The live-material proof is retired rather than re-authored; if a future change needs it, it runs as a documented manual check, not as a CI test.
+- Delivered by PR #301.

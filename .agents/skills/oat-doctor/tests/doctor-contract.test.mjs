@@ -215,10 +215,11 @@ function hasPath(value, path) {
   const next = value[key];
   if (head.endsWith('[]')) {
     if (!Array.isArray(next)) return false;
-    // `deprecated` is optional per entry: at least one entry must carry it.
-    return (
-      rest.length === 0 || next.some((item) => hasPath(item, rest.join('.')))
-    );
+    // An empty array is a valid projection source (CI has no outdated tools);
+    // per-item fields are checked only when items exist. `deprecated` is
+    // optional per entry, so at least one item must carry it when any exist.
+    if (rest.length === 0 || next.length === 0) return true;
+    return next.some((item) => hasPath(item, rest.join('.')));
   }
   return rest.length === 0 || hasPath(next, rest.join('.'));
 }
@@ -243,4 +244,60 @@ test('every field the sweep projects exists in the built CLI output', async () =
       );
     }
   }
+});
+
+test('every cited docs page exists, with or without a section', async () => {
+  const pages = new Set(
+    [...skill.matchAll(/`cli-utilities\/([a-z-]+)\.md`/g)].map((m) => m[1]),
+  );
+  assert.ok(pages.size >= 6, `expected cited pages, found ${pages.size}`);
+  for (const page of pages) {
+    await readFile(
+      join(REPO_ROOT, 'apps/oat-docs/docs/cli-utilities', `${page}.md`),
+      'utf8',
+    ).catch(() => {
+      assert.fail(`cited docs page does not exist: cli-utilities/${page}.md`);
+    });
+  }
+});
+
+test('the lifecycle pointer repairs the skill prescribes are accepted by the CLI', async () => {
+  const { mkdtemp, mkdir, writeFile } = await import('node:fs/promises');
+  const { tmpdir } = await import('node:os');
+  const root = await mkdtemp(join(tmpdir(), 'oat-doctor-repair-'));
+  // Project-root resolution needs a repository, not just an .oat directory.
+  await execFileAsync('git', ['init', '-q', root]);
+  await mkdir(join(root, '.oat'));
+  await writeFile(join(root, '.oat/config.json'), '{\n  "version": 1\n}\n');
+  await writeFile(
+    join(root, '.oat/config.local.json'),
+    JSON.stringify(
+      {
+        activeProject: '.oat/projects/shared/missing',
+        lastPausedProject: '.oat/projects/shared/gone',
+        activeIdea: '.oat/ideas/none',
+      },
+      null,
+      2,
+    ),
+  );
+  const run = (args) =>
+    execFileAsync(process.execPath, [CLI, ...args, '--cwd', root], {
+      cwd: root,
+    });
+  // The skill's exact repair forms (Finding rules, config).
+  await run(['config', 'set', 'activeProject', '']);
+  await run(['config', 'set', 'lastPausedProject', '']);
+  await run(['config', 'unset', 'activeIdea', '--local']);
+  const local = JSON.parse(
+    await readFile(join(root, '.oat/config.local.json'), 'utf8'),
+  );
+  assert.ok(!local.activeProject, 'activeProject not cleared');
+  assert.ok(!local.lastPausedProject, 'lastPausedProject not cleared');
+  assert.equal(local.activeIdea, undefined, 'activeIdea not removed');
+  // Negative control: the form the 2.0.0 draft prescribed is refused by the CLI.
+  await assert.rejects(
+    run(['config', 'unset', 'activeProject', '--local']),
+    /Cannot unset state key/,
+  );
 });

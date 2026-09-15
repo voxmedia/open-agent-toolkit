@@ -108,7 +108,7 @@ Each finding is one line with an **area**, a **severity**, a one-line **summary*
 
 **Config**
 
-- `activeProject`, `activeIdea`, or `lastPausedProject` set to a path that does not exist → `error`; fix `oat config unset <key> --local` (or `--user` for a user-level `activeIdea`).
+- `activeProject` or `lastPausedProject` set to a path that does not exist → `error`; fix `oat config set activeProject ''` / `oat config set lastPausedProject ''` (the CLI refuses `unset` for these two lifecycle keys). `activeIdea` set to a missing path → `error`; fix `oat config unset activeIdea --local` (or `--user` for a user-level value).
 - A set key whose `describe` entry carries `deprecated` → `warning`; summary names the key and its `deprecated.supersededBy`; when `deprecated.legacyValues` is present the finding fires only when the set value is one of those values; fix = the entry's `owningCommand` for the successor.
 - A key set on a surface that is not one of the surfaces its `describe` entry's `file` names → `warning`; fix `oat config unset <key> --<surface>` then `oat config set <key> <value> --<right surface>`.
 - The `dispatch-matrix` recommendation not adopted (no `workflow.dispatchCeiling.recommendationVersion` in the dump) → `info`; fix `oat config adopt dispatch-matrix --shared`.
@@ -132,6 +132,7 @@ Each finding is one line with an **area**, a **severity**, a one-line **summary*
 
 - A docs surface detected with no `documentation` config → `warning`; fix: run `oat-docs-bootstrap`, which detects the existing surface and offers the audit.
 - `documentation.root` set but absent on disk → `error`; fix `oat config unset documentation.root --shared` or `oat-docs-bootstrap`.
+- No docs surface and no `documentation` config (an uninitialized or docs-less repository) → `info`; fix: run `oat-docs-bootstrap` to set one up. This is what makes an empty repository offer its docs bootstrap alongside the other areas.
 
 **Tools**
 

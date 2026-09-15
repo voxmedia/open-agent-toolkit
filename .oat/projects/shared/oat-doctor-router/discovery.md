@@ -31,7 +31,7 @@ Backlog item `BL-260911-make-oat-doctor` (high), from the operator's 2026-09-11 
 ### Question 2: Where does the knowledge come from?
 
 **Q:** Should the doctor carry its own descriptions of config keys and legacy values?
-**A:** No. The current skill carries an eleven-key fallback list and a hard-coded pack manifest, both of which drift from the CLI. The CLI already exposes what the doctor needs: `oat config describe --json` returns 109 entries with group, file, scope, type, default, mutability, owning command, and description, and six of those descriptions already say "Deprecated" or "Legacy"; `oat pjm doctor --json` returns twelve `pjm:*` checks with status and message; `oat instructions validate --json` returns per-file sync status; `oat doctor --json` returns the environment checks; the bundled docs under `~/.oat/docs/cli-utilities/` carry the five-surface model and the per-key guidance.
+**A:** No. The current skill carries an eleven-key fallback list and a hard-coded pack manifest, both of which drift from the CLI. The CLI already exposes what the doctor needs: `oat config describe --json` returns 109 entries with group, file, scope, type, default, mutability, owning command, and description, and five of those descriptions already say "Deprecated" or "Legacy" (a sixth mentions the legacy alias it supersedes); `oat pjm doctor --json` returns twelve `pjm:*` checks with status and message; `oat instructions validate --json` returns per-file sync status; `oat doctor --json` returns the environment checks; the bundled docs under `~/.oat/docs/cli-utilities/` carry the five-surface model and the per-key guidance.
 **Decision:** The doctor reads, it does not restate. Legacy detection is sourced from the CLI (design decides how, see Open Questions). The fallback description list and the hard-coded pack manifest are removed.
 
 ### Question 3: What does "collaborative" mean under automation?
@@ -70,11 +70,11 @@ Backlog item `BL-260911-make-oat-doctor` (high), from the operator's 2026-09-11 
 
 ### Option A: Source legacy detection by scanning `describe` descriptions for "deprecated" / "legacy" _(considered)_
 
-Works today with no CLI change (six keys match), but is a string match on prose and would silently miss a new deprecation worded differently.
+Works today with no CLI change (five keys match once the successor key is excluded), but is a string match on prose and would silently miss a new deprecation worded differently.
 
 ### Option B: Add a structured deprecation field to `oat config describe` entries _(chosen for design)_
 
-A small change to an existing command's output (`deprecated: { supersededBy }` on the six entries and any future one), with a CLI test that ties the field to the config module's legacy tables. The doctor then reads a field, not prose. This is not a new diagnostic; it is the existing describe command carrying a fact it already states in words. Design confirms the exact shape.
+A small change to an existing command's output (`deprecated: { supersededBy }` on the five entries and any future one), with a CLI test that ties the field to the config module's legacy tables. The doctor then reads a field, not prose. This is not a new diagnostic; it is the existing describe command carrying a fact it already states in words. Design confirms the exact shape.
 
 ### Option C: Detect "missing OAT context sections" by heading presence
 

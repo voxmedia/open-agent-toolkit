@@ -123,11 +123,12 @@ Config (1 warning, 9 info)
 PJM (1 error)
   ✖ adoption is none: PJM is not adopted here   → oat pjm init
 Agent instructions (ok)   (no instruction files scanned; no packs at project scope, so no heading rule fires)
-Docs (ok)
+Docs (1 info)
+  ℹ no docs surface and no documentation config   → run oat-docs-bootstrap to set one up
 Tools (4 warnings)
   ⚠ project:canonical_directories, project:manifest, project:providers: no OAT project setup   → oat init, then oat tools install <pack>
   ⚠ user:pack_state; 5 outdated at user scope   → oat tools update --scope user
-Where do you want to dive? [config / pjm / tools / all / done]
+Where do you want to dive? [config / pjm / docs / tools / all / done]
 ```
 
 Every area offers its bootstrap. With `OAT_NON_INTERACTIVE=1` the same run ends after the report line above the prompt; no `AskUserQuestion` is issued and no fix is run.
@@ -139,3 +140,7 @@ Pre-existing failures on `origin/main` observed at the Phase 1 gate, not caused 
 ### 2026-09-15 — Final code review received
 
 - `code-final-review-2026-09-15T034718Z.md` (head `6540d08f9`): 0 critical, 2 important, 3 medium, 3 minor — CHANGES REQUESTED. All 8 applied (`resolve_in_artifact` / fixed in code), received inline: the docs sentence at `config-and-local-state.md:284` keeps the stale `oat --scope all sync` example as an illustration with the `allow-stale-invocation` marker the doctor honors (the p02-t03 "fix" had made the sentence call the current form stale); `implementation.md` filled from the scaffold (progress, per-task records, deviations, test results, final summary); the design's adoption literals corrected to the CLI's four; a projection-fields contract test runs every sweep command against the built CLI and asserts each projected field exists; the `pjm:*` harvest regex widened and the docs-page existence asserted; the pack-manifest guard matches list and table tokens, not only trailing commas; the docs-surface check lists `apps/docs`, `apps/*-docs`, and `documentation/` as bootstrap's preflight does; `BL-260915-re-author-the-explainer-kit` filed for the pre-existing `explainer-kit` fixture drift that keeps `pnpm test:skills` red on `origin/main`.
+
+### 2026-09-15 — Configured implementation exit gate, attempt 1 (cross-family, `cursor-gpt-5-6-sol-xhigh`)
+
+- `reviews/final-review-2026-09-15T041753Z.md` (reviewed head `14e315152`): 0 critical, 3 important, 2 medium, 2 minor — blocked at threshold `important`. Received inline. All 7 applied: the stale-pointer repair is `oat config set activeProject ''` / `lastPausedProject ''` (the CLI refuses `unset` for those keys; `unset` kept for `activeIdea`) with a contract test that executes the repairs in a scratch repo and a negative control on the refused form; the projection test treats an empty array as a valid source (CI has no outdated tools) and checks per-item fields only when items exist; a docs `info` finding offers `oat-docs-bootstrap` when no surface and no config exist, so an empty repository offers every area's bootstrap (scratch transcript corrected); `state.md` body aligned with its frontmatter; discovery and design corrected to five entries, four file checks, and the CLI's adoption states; bare docs-page citations asserted to exist; `BL-260915`'s placeholder criteria replaced (closed by PR #301). The quick-start plan exit gate was not run: the operator declined it after implementation had already completed.
