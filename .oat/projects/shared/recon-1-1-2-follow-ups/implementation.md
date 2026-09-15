@@ -1,6 +1,6 @@
 ---
 oat_status: in_progress
-oat_ready_for: review
+oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-15
 oat_current_task_id: null
@@ -286,14 +286,16 @@ final reviews remain required.
 
 **Behavioral changes:** Background Cursor leaves, artifact-over-stream
 completion, reliable CLI entry, exact excerpts, closed/self-validated worker
-outputs, and deterministic controller reconciliation.
+outputs, and deterministic controller reconciliation whose review inputs are
+bound to exact canonical manifest paths and digests.
 
 **Key files / modules:** `recon`, `recon-worker`, recon script/test contracts,
 provider projection, docs, triage, and public release metadata.
 
-**Verification performed:** Task-focused suites, workspace gates, fresh recon
-tests, CLI skill validation, version/release validation, docs build, sync
-idempotence, lint, and format.
+**Verification performed:** Task-focused suites, workspace gates, 297 fresh
+recon tests, 242 Cursor/CLI validation tests, version/release validation, docs
+build, sync idempotence, lint, format, and a clean independent Phase 1
+re-review after four findings were fixed.
 
 **Design deltas:** None. Locator repair, controller schema retry, Cursor live
 probe, and additional provider materialization remain deferred as planned.
