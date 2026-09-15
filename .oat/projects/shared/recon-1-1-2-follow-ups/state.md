@@ -33,6 +33,10 @@ oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 #         - composer-2.5
 #         - { harness: cursor, model: gpt-5.5-xhigh }
 #   source: project-state
+oat_dispatch_policy:
+  mode: managed
+  policy: high
+  source: project-state
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
 oat_workflow_mode: lite # spec-driven | quick | import | lite
 oat_workflow_origin: native # native | imported
@@ -79,7 +83,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-15T02:47:32.316Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-15T03:04:37Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-15T04:18:20Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -95,7 +99,7 @@ Plan - Authoring a single-phase lite plan
 
 ## Artifacts
 
-- **Plan:** `plan.md` (authored — awaiting validation and approval)
+- **Plan:** `plan.md` (approved — structured artifact review passed)
 - **Implementation:** `implementation.md` (initialized at `p01-t01`)
 
 ## Progress
@@ -103,7 +107,11 @@ Plan - Authoring a single-phase lite plan
 - ✓ Lite project scaffolded
 - ✓ Critical interview decisions recorded
 - ✓ Single-phase plan authored with five sequential tasks
-- ⧗ Awaiting plan validation and approval
+- ✓ Requirement set and plan approved by the user
+- ✓ High managed dispatch ceiling selected
+- ✓ Structured plan review passed after one bounded revision
+- ✓ User-scoped Lite exit gate configured to match Quick Start
+- ⧗ Awaiting Lite exit-gate execution
 
 ## Blockers
 
@@ -111,4 +119,4 @@ None
 
 ## Next Milestone
 
-Validate, review, and approve the Lite plan
+Run and receive the configured Lite plan exit gate

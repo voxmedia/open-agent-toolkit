@@ -57,6 +57,8 @@ repair or a controller retry state machine.
   the validated candidate to `claims.json`.
 - Revise the existing triage record to reflect these accepted dispositions and
   include it in the implementation PR.
+- **Approval:** the user approved this recorded requirement set and plan on
+  2026-09-14 (America/Chicago), then selected the High managed dispatch ceiling.
 
 ## Product Behavior
 
@@ -96,16 +98,22 @@ repair or a controller retry state machine.
   worker instructions. Remove `reconcile` from the worker vocabulary and from
   approved launch topology, then make the controller call
   `.agents/skills/recon/scripts/reconcile-ledger.mjs` once after review inputs
-  are final. Keep the reconciliation result as deterministic audit evidence
-  while reserving its producer identity for the controller rather than an
-  approved worker lane.
+  are final. Add an `execution.reconciliation` manifest object containing the
+  literal producer `controller:reconcile-ledger-v1` and exact input-ledger,
+  output-ledger, output-review, and required/conditional review paths. Keep the
+  reconciliation result as deterministic audit evidence; its existing
+  `reviewerLane` field uses that reserved producer literal and validation
+  accepts it only when every value matches the manifest object.
 - **Data flow:** approved background leaves write unique unpromoted candidate
   artifacts; the controller validates the assigned path and digest before
   interpreting transport status; compile emits a candidate ledger; independent
   review results and any contradiction evidence feed `reconcileLedger()`; its
-  two named outputs are validated together; only the ledger output is promoted
-  to canonical `claims.json`, while the reconciliation result remains under
-  `reviews/` for packet validation and audit.
+  two named outputs, `raw/drafts/claims-v2.json` and
+  `reviews/reconciliation.json`, are validated together; the controller copies
+  the exact validated ledger bytes to a packet-contained temporary file and
+  atomically renames it to canonical `claims.json`. Reconciliation remains a
+  profile-required pass derived from the manifest-bound controller artifact,
+  independently of worker execution waves.
 
 ## Assumptions
 
@@ -361,22 +369,44 @@ git commit -m "fix(p01-t03): close recon worker output contracts"
 First preserve the existing valid standard/thorough packet and all invalid
 transition controls. Remove `reconcile` from the worker vocabulary and remove
 the terminal reconciliation wave and target from approval/routing topology.
-Define one post-review controller stage that calls `reconcileLedger()` with
-validated inputs, writes its reconciliation audit result and candidate ledger
-to distinct packet-contained paths, validates both as one operation, and
-promotes the ledger to `claims.json` only after success. Reserve an explicit
-controller producer identity so the audit result cannot impersonate a worker
-lane. Treat a request for new semantic judgment as an unresolved caller-owned
-gap rather than a target escalation.
+Define `execution.reconciliation` as a closed manifest object with producer
+`controller:reconcile-ledger-v1`, input ledger
+`raw/drafts/claims-v1.json`, output ledger `raw/drafts/claims-v2.json`, output
+review `reviews/reconciliation.json`, and exact required plus conditional review
+paths. Make `reconcile-ledger.mjs` directly invocable as:
+
+```bash
+node reconcile-ledger.mjs \
+  --manifest "$PACKET_ROOT/manifest.json" \
+  --input-ledger "$PACKET_ROOT/raw/drafts/claims-v1.json" \
+  --review "$PACKET_ROOT/reviews/semantic.json" \
+  --review "$PACKET_ROOT/reviews/adversarial.json" \
+  --review "$PACKET_ROOT/reviews/coverage.json" \
+  --output-ledger "$PACKET_ROOT/raw/drafts/claims-v2.json" \
+  --output-review "$PACKET_ROOT/reviews/reconciliation.json"
+```
+
+The controller adds only manifest-declared completed conditional review paths.
+The CLI rejects path or review-set drift before writing, calls
+`reconcileLedger()` once, writes both candidates, and returns their references.
+The reconciliation artifact uses the manifest's reserved producer literal in
+`reviewerLane`; other review results still require an approved worker lane.
+Packet validation derives the profile's reconciliation pass from this exact
+manifest-bound artifact rather than a wave. Only after both outputs validate
+and their digests bind to the manifest may the controller copy the exact ledger
+bytes to a temporary file and atomically rename it to `claims.json`. Treat a
+request for new semantic judgment as an unresolved caller-owned gap rather
+than a target escalation.
 
 **Step 2: Prove**
 
 Run:
 `node --test .agents/skills/recon/tests/routing-contracts.test.mjs .agents/skills/recon/tests/routing-preview.test.mjs .agents/skills/recon/tests/conditional-routing.test.mjs .agents/skills/recon/tests/packet-validation.test.mjs .agents/skills/recon/tests/workflow.integration.test.mjs`
 Expected: approval previews contain no reconciliation worker target; valid
-packets preserve reconciliation audit and ledger invariants; missing, swapped,
-tampered, or partially promoted outputs fail closed. Removing the controller
-stage makes the positive workflow control fail.
+packets preserve reconciliation audit and ledger invariants; forged controller
+identity, manifest path/review drift, missing, swapped, tampered, or partially
+promoted outputs fail closed. Removing the controller stage makes the positive
+workflow control fail.
 
 **Step 3: Refactor and format**
 
@@ -469,11 +499,11 @@ git commit -m "chore(p01-t05): align recon release surfaces"
 
 ## Reviews
 
-| Scope | Type     | Status  | Date | Artifact | Reviewed Head | Invocation | Gate Target |
-| ----- | -------- | ------- | ---- | -------- | ------------- | ---------- | ----------- |
-| p01   | code     | pending | -    | -        | -             | -          | -           |
-| final | code     | pending | -    | -        | -             | -          | -           |
-| plan  | artifact | pending | -    | -        | -             | -          | -           |
+| Scope | Type     | Status  | Date       | Artifact          | Reviewed Head | Invocation | Gate Target                   |
+| ----- | -------- | ------- | ---------- | ----------------- | ------------- | ---------- | ----------------------------- |
+| p01   | code     | pending | -          | -                 | -             | -          | -                             |
+| final | code     | pending | -          | -                 | -             | -          | -                             |
+| plan  | artifact | passed  | 2026-09-15 | structured-output | -             | auto       | oat-reviewer-gpt-5-6-sol-high |
 
 ## Implementation Complete
 
