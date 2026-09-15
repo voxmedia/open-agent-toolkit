@@ -1488,8 +1488,8 @@ describe('validateOatSkills', () => {
 
   it('tracks the current explainer skill family versions', async () => {
     for (const [skillName, expectedVersion] of [
-      ['explainer-kit', '3.0.2'],
-      ['oat-explainer-kit', '1.0.9'],
+      ['explainer-kit', '3.0.3'],
+      ['oat-explainer-kit', '1.0.10'],
     ]) {
       const content = await readRepoFile(
         `.agents/skills/${skillName}/SKILL.md`,
@@ -2162,7 +2162,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-implement',
-        version: '2.3.9',
+        version: '2.3.10',
         finalizedHeading: '### Step 13: Trigger Final Review',
         gateHeading: '### Step 14: Gate Execution',
         completionHeading: '### Step 16: Mark Implementation Complete',
@@ -2643,7 +2643,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(readDeclaredVersion(content)).toBe('2.3.9');
+    expect(readDeclaredVersion(content)).toBe('2.3.10');
   });
 
   it('requires classified resolver calls and effective terminal reviewer notices before launch', async () => {
@@ -2952,7 +2952,7 @@ describe('validateOatSkills', () => {
     );
     const combined = `${content}\n${dispatchReference}`;
 
-    expect(readDeclaredVersion(content)).toBe('2.3.9');
+    expect(readDeclaredVersion(content)).toBe('2.3.10');
     expect(dispatchReference).toContain(
       '${IMPLEMENTER_AGENT_PROVIDER_ROOT}/agents/oat-phase-implementer.md',
     );
@@ -3041,7 +3041,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(readDeclaredVersion(content)).toBe('2.3.9');
+    expect(readDeclaredVersion(content)).toBe('2.3.10');
     expect(content).toMatch(
       /accepted native reviewer[\s\S]{0,260}(?:poll|nudge|continue)[\s\S]{0,180}existing handle/i,
     );
@@ -3533,7 +3533,7 @@ describe('validateOatSkills', () => {
       /implements one plan phase end-to-end/i,
     );
     expect(agent.match(/^tools:\s*(.+)$/m)?.[1]).toContain('Task');
-    expect(readDeclaredVersion(implement)).toBe('2.3.9');
+    expect(readDeclaredVersion(implement)).toBe('2.3.10');
     expect(agent).toMatch(
       /directly execute(?:s)? every task in dependency order/i,
     );
@@ -4741,10 +4741,10 @@ describe('validateOatSkills', () => {
       ['oat-project-review-provide', '1.5.8'],
       ['oat-project-review-receive', '1.6.6'],
       ['oat-project-review-receive-remote', '1.5.2'],
-      ['oat-project-implement', '2.3.9'],
+      ['oat-project-implement', '2.3.10'],
       ['oat-project-pr-final', '1.6.5'],
       ['oat-project-pr-progress', '1.3.2'],
-      ['oat-project-complete', '1.7.12'],
+      ['oat-project-complete', '1.7.13'],
       ['oat-project-next', '1.1.2'],
     ] as const;
 
@@ -6064,7 +6064,7 @@ describe('validateOatSkills', () => {
 
   it('tracks Dispatch Report V1 workflow contract versions and provenance boundaries', async () => {
     const expectedVersions = [
-      ['oat-project-implement', '2.3.9'],
+      ['oat-project-implement', '2.3.10'],
       ['oat-project-review-provide', '1.5.8'],
       ['oat-project-review-provide-remote', '1.1.5'],
     ] as const;
@@ -8180,7 +8180,7 @@ describe('lite mode skill contracts', () => {
     expect(proofDisposition(true, false)).toBe('BLOCKED');
     expect(proofDisposition(false, false)).toBe('NEEDS_CONTEXT');
     expect(proofDisposition(true, true)).toBe('performed');
-    expect(readDeclaredVersion(implementWorkflow)).toBe('2.3.9');
+    expect(readDeclaredVersion(implementWorkflow)).toBe('2.3.10');
     expect(readDeclaredVersion(implementer)).toBe('1.1.5');
   });
 
@@ -8453,7 +8453,7 @@ describe('recon canonical contracts', () => {
     ]);
 
     expect(skill).toMatch(/^name:\s*recon$/m);
-    expect(readDeclaredVersion(skill)).toBe('1.1.2');
+    expect(readDeclaredVersion(skill)).toBe('1.1.3');
     expect(skill).toMatch(/provider-neutral/i);
     expect(skill).toMatch(/select each wave independently/i);
     expect(skill).toMatch(/schemaVersion: 2/i);

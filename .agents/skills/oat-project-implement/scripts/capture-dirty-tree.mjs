@@ -1051,6 +1051,9 @@ async function main(argv) {
  * `--preserve-symlinks-main`, which keeps the link in `import.meta.url`. Either
  * way the caller reads "exited 0" as "verified" — the fail-open shape the
  * contracts exist to prevent.
+ * A path that cannot be canonicalized is not a module Node loaded as the entry
+ * point, so a thrown `realpathSync` means "not invoked directly" and returns
+ * `false`; it never masks a direct run.
  */
 function isDirectInvocation(invokedPath) {
   if (!invokedPath) return false;

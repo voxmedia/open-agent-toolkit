@@ -292,7 +292,6 @@
 | BL-260718-support-fumadocs-in-oat-docs   | Support Fumadocs in oat docs nav sync (currently MkDocs-only)                                         | open   | medium   | task       |          |
 | BL-260911-support-per-tool-scope         | Support per-tool scope migration in oat tools migrate                                                 | open   | medium   | task       | S        |
 | BL-260909-surface-config-warnings        | Surface config warnings on every reader path and document the warnings field                          | open   | medium   | task       | M        |
-| BL-260909-sweep-the-raw-main-module      | Sweep the raw main-module guard across the sibling skill scripts                                      | open   | medium   | task       | M        |
 | BL-260907-type-check-cli-test-files      | Type-check CLI test files with a test-scoped tsconfig gate                                            | open   | medium   | task       | M        |
 | BL-260726-validate-cursor-pin-effort     | Validate Cursor pin effort rungs at sync time                                                         | open   | medium   | task       | S        |
 | BL-260908-validate-the-catalog-refresh   | Validate the catalog-refresh policy state in normalizeSyncEvidence                                    | open   | medium   | task       | XS       |
