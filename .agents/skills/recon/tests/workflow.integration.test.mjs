@@ -1008,7 +1008,7 @@ test('controller reconciliation CLI enforces manifest paths and the exact review
   );
 });
 
-test('thorough reconciliation requires redundant verification before output', async () => {
+test('thorough reconciliation supports an honest standard partial without redundant verification', async () => {
   const injectedRoots = await roots();
   await runFakeRecon({ profile: 'thorough', roots: injectedRoots });
   const script = resolve('.agents/skills/recon/scripts/reconcile-ledger.mjs');
@@ -1018,6 +1018,8 @@ test('thorough reconciliation requires redundant verification before output', as
   const completeManifest = structuredClone(manifest);
   const outputLedger = join(packet, 'raw/drafts/claims-v2.json');
   const outputReview = join(packet, 'reviews/reconciliation.json');
+  const redundantReview = join(packet, 'reviews/redundant-verification.json');
+  const redundantReviewBytes = await readFile(redundantReview, 'utf8');
   const reviewPaths = [
     'reviews/semantic.json',
     'reviews/adversarial.json',
@@ -1042,17 +1044,28 @@ test('thorough reconciliation requires redundant verification before output', as
       rm(outputLedger, { force: true }),
       rm(outputReview, { force: true }),
     ]);
-  const assertNoOutputs = async () => {
-    await assert.rejects(readFile(outputLedger));
-    await assert.rejects(readFile(outputReview));
-  };
 
   manifest.artifacts = manifest.artifacts.filter(
     ({ path }) => path !== 'reviews/redundant-verification.json',
   );
+  manifest.run.status = 'partial';
+  manifest.run.achievedProfile = 'standard';
+  const redundantWave = manifest.execution.waves.find(
+    ({ mode }) => mode === 'redundant-verification',
+  );
+  assert.ok(redundantWave);
+  manifest.gaps.push({
+    id: 'gap-redundant-verification-failed',
+    code: 'PASS_FAILED',
+    message: 'redundant-verification failed after its approved launch.',
+    material: true,
+    waveId: redundantWave.waveId,
+    laneId: redundantWave.lanes[0].laneId,
+  });
   await writeJson(manifestPath, manifest);
+  await rm(redundantReview);
   await removeOutputs();
-  const rejected = spawnSync(
+  const degraded = spawnSync(
     process.execPath,
     argsFor(
       reviewPaths.filter(
@@ -1061,10 +1074,45 @@ test('thorough reconciliation requires redundant verification before output', as
     ),
     { encoding: 'utf8' },
   );
-  assert.notEqual(rejected.status, 0);
-  assert.match(rejected.stderr, /thorough.*redundant-verification/i);
-  await assertNoOutputs();
+  assert.equal(degraded.status, 0, degraded.stderr);
+  const degradedOutput = JSON.parse(degraded.stdout);
+  assert.equal(degradedOutput.ledger.path, 'raw/drafts/claims-v2.json');
+  assert.equal(
+    degradedOutput.reconciliation.path,
+    'reviews/reconciliation.json',
+  );
+  const degradedReview = JSON.parse(await readFile(outputReview, 'utf8'));
+  assert.equal(degradedReview.status, 'complete');
+  assert.equal(
+    degradedReview.incorporatedReviewIds.includes(
+      'review-redundant-verification',
+    ),
+    false,
+  );
+  for (const path of [
+    'raw/drafts/claims-v2.json',
+    'reviews/reconciliation.json',
+  ]) {
+    manifest.artifacts.find((item) => item.path === path).digest =
+      await hashFile(join(packet, path));
+  }
+  const claimsPath = join(packet, 'claims.json');
+  await writeFile(claimsPath, await readFile(outputLedger));
+  manifest.artifacts.find((item) => item.path === 'claims.json').digest =
+    await hashFile(claimsPath);
+  await writeJson(manifestPath, manifest);
+  const validatedPartial = await validatePacket(packet);
+  assert.equal(
+    validatedPartial.valid,
+    true,
+    JSON.stringify(validatedPartial, null, 2),
+  );
+  assert.equal(validatedPartial.publishable, true);
+  assert.equal(validatedPartial.requestedProfile, 'thorough');
+  assert.equal(validatedPartial.achievedProfile, 'standard');
 
+  await removeOutputs();
+  await writeFile(redundantReview, redundantReviewBytes, 'utf8');
   await writeJson(manifestPath, completeManifest);
   const accepted = spawnSync(process.execPath, argsFor(reviewPaths), {
     encoding: 'utf8',
@@ -1073,6 +1121,13 @@ test('thorough reconciliation requires redundant verification before output', as
   assert.equal(
     JSON.parse(accepted.stdout).ledger.path,
     'raw/drafts/claims-v2.json',
+  );
+  const acceptedReview = JSON.parse(await readFile(outputReview, 'utf8'));
+  assert.equal(
+    acceptedReview.incorporatedReviewIds.includes(
+      'review-redundant-verification',
+    ),
+    true,
   );
 });
 

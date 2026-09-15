@@ -490,16 +490,6 @@ async function main(argv = process.argv.slice(2)) {
     );
   }
   const artifacts = manifest.artifacts ?? [];
-  if (
-    manifest.run.requestedProfile === 'thorough' &&
-    !artifacts.some(
-      (reference) => reference.path === 'reviews/redundant-verification.json',
-    )
-  ) {
-    throw new Error(
-      'Thorough reconciliation requires the redundant-verification review artifact',
-    );
-  }
   const packetRoot = dirname(manifestPath);
   const packetIdentity = await assertCanonicalRoot(packetRoot);
   await assertSafeExistingPath(packetRoot, resolve(options.manifest));
