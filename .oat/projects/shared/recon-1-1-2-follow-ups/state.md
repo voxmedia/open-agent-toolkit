@@ -126,7 +126,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-15T02:47:32.316Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-15T06:53:19Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-15T07:02:13Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -138,7 +138,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Configured exit-gate fixes complete; awaiting final re-review
+Implementation — Final re-review passed; preparing gate attempt 2
 
 ## Artifacts
 
@@ -176,6 +176,7 @@ Implementation — Configured exit-gate fixes complete; awaiting final re-review
 - ✓ Configured exit-gate review received: 1 Important and 2 Minor findings
 - ✓ Three configured gate fix tasks completed as `p01-t12` through `p01-t14`
 - ✓ Recovery event `recovery-p01-t12-20260915-02` validated and cleared by the controller
+- ✓ Fresh final re-review passed with no findings after configured-gate fixes
 
 ## Blockers
 
@@ -183,4 +184,4 @@ None.
 
 ## Next Milestone
 
-Run an independent final re-review.
+Refresh the implementation gate basis and run configured attempt 2 of 2.
