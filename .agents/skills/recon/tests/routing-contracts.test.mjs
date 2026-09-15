@@ -229,7 +229,7 @@ test('profiles reject wave modes owned by stronger profiles', () => {
   }
 });
 
-test('condition semantics have one validator owner and one diagnostic per injected defect', () => {
+test('condition semantics have one validator owner and deterministic diagnostics', () => {
   const unknownPredicate = createV2ExecutionApproval({
     modes: standardModes,
     laneIdForMode,
@@ -263,10 +263,18 @@ test('condition semantics have one validator owner and one diagnostic per inject
     conditionFor(secondWave, 'condition-duplicate'),
   ];
 
-  for (const [execution, expectedCode, profile] of [
-    [unknownPredicate, 'INVALID_CONDITION_PREDICATE', 'standard'],
-    [duplicateDestination, 'DUPLICATE_CONDITION_DESTINATION', 'thorough'],
-    [duplicateId, 'DUPLICATE_ROUTING_ID', 'thorough'],
+  for (const [execution, expectedCodes, profile] of [
+    [unknownPredicate, ['INVALID_CONDITION_PREDICATE'], 'standard'],
+    [
+      duplicateDestination,
+      ['PROFILE_CONDITION_CAP_EXCEEDED', 'DUPLICATE_CONDITION_DESTINATION'],
+      'thorough',
+    ],
+    [
+      duplicateId,
+      ['PROFILE_CONDITION_CAP_EXCEEDED', 'DUPLICATE_ROUTING_ID'],
+      'thorough',
+    ],
   ]) {
     const executionErrors = [];
     validateExecution(execution, executionErrors);
@@ -278,7 +286,7 @@ test('condition semantics have one validator owner and one diagnostic per inject
     });
     assert.deepEqual(
       topologyErrors.map(({ code }) => code),
-      [expectedCode],
+      expectedCodes,
     );
   }
 });

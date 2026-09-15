@@ -52,7 +52,7 @@ oat_phase_recovery_policy:
         discovered_by: node --test .agents/skills/recon/tests/*.test.mjs
         dispatch_target: oat-phase-implementer-gpt-5-6-sol-medium
         reservation_head: ea758dd7d641f5e527bc59d2923486ddf4228eb7
-        status: pending
+        status: completed
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
 oat_workflow_mode: lite # spec-driven | quick | import | lite
 oat_workflow_origin: native # native | imported
