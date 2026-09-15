@@ -289,7 +289,6 @@
 | BL-260718-rewrite-worktree-bootstrap     | Rewrite worktree bootstrap-group as tested TypeScript command                                         | open   | medium   | feature    | M        |
 | BL-260713-root-agent-judgment-logging    | Root-agent judgment logging responsibility for project log                                            | open   | medium   | feature    | S        |
 | BL-260827-span-based-prose-guards        | Span-based prose guards, anchored probe records, and a shared probe runner for skill contract tests   | open   | medium   | task       | S        |
-| BL-260915-stop-the-implementation        | Stop the implementation template preamble from quoting a section heading                              | open   | medium   | task       | XS       |
 | BL-260718-support-fumadocs-in-oat-docs   | Support Fumadocs in oat docs nav sync (currently MkDocs-only)                                         | open   | medium   | task       |          |
 | BL-260911-support-per-tool-scope         | Support per-tool scope migration in oat tools migrate                                                 | open   | medium   | task       | S        |
 | BL-260909-surface-config-warnings        | Surface config warnings on every reader path and document the warnings field                          | open   | medium   | task       | M        |

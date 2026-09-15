@@ -1,7 +1,7 @@
 ---
 id: BL-260915-stop-the-implementation
 title: Stop the implementation template preamble from quoting a section heading
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: XS
@@ -10,7 +10,7 @@ labels:
   - oat-project-implement
 assignee: null
 created: 2026-09-15T13:00:20.503Z
-updated: 2026-09-15T13:00:20.503Z
+updated: '2026-09-15T13:01:41Z'
 associated_issues: []
 external_plans: []
 ---
