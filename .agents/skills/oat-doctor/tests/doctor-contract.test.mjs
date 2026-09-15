@@ -112,7 +112,7 @@ test('every pjm:* check the CLI defines has a place in the PJM dive', async () =
   const ids = new Set();
   for (const source of sources) {
     const text = await readFile(join(REPO_ROOT, source), 'utf8');
-    for (const match of text.matchAll(/'(pjm:[a-z_]+)'/g)) ids.add(match[1]);
+    for (const match of text.matchAll(/(pjm:[a-z_]+)/g)) ids.add(match[1]);
   }
   assert.ok(ids.size >= 21, `expected at least 21 pjm ids, found ${ids.size}`);
   const dive = section('#### PJM dive');
@@ -150,5 +150,97 @@ test('every cited docs section is a prefix of a real heading', async () => {
       headings.some((heading) => heading.startsWith(cited)),
       `${page}.md has no heading starting with "${cited}"`,
     );
+  }
+});
+
+const PROJECTIONS = [
+  {
+    command: ['config', 'describe', '--json'],
+    fields: [
+      'entries[].key',
+      'entries[].group',
+      'entries[].file',
+      'entries[].scope',
+      'entries[].defaultValue',
+      'entries[].owningCommand',
+      'entries[].deprecated',
+    ],
+  },
+  {
+    command: ['pjm', 'doctor', '--json'],
+    fields: [
+      'adoption.state',
+      'checks[].name',
+      'checks[].status',
+      'checks[].message',
+    ],
+  },
+  {
+    command: ['config', 'dump', '--json'],
+    fields: ['shared', 'local', 'user'],
+  },
+  {
+    command: ['instructions', 'validate', '--json'],
+    fields: [
+      'summary.contentMismatch',
+      'entries[].agentsPath',
+      'entries[].status',
+      'entries[].detail',
+    ],
+  },
+  {
+    command: ['tools', 'list', '--json', '--scope', 'all'],
+    fields: ['tools[].name', 'tools[].pack', 'tools[].scope', 'tools[].status'],
+  },
+  {
+    command: ['tools', 'outdated', '--json', '--scope', 'all'],
+    fields: [
+      'tools[].name',
+      'tools[].version',
+      'tools[].bundledVersion',
+      'tools[].scope',
+    ],
+  },
+  {
+    command: ['doctor', '--json', '--scope', 'all'],
+    fields: ['checks[].name', 'checks[].status', 'checks[].message'],
+  },
+];
+
+function hasPath(value, path) {
+  const [head, ...rest] = path.split('.');
+  const key = head.replace('[]', '');
+  if (value === null || typeof value !== 'object' || !(key in value))
+    return false;
+  const next = value[key];
+  if (head.endsWith('[]')) {
+    if (!Array.isArray(next)) return false;
+    // `deprecated` is optional per entry: at least one entry must carry it.
+    return (
+      rest.length === 0 || next.some((item) => hasPath(item, rest.join('.')))
+    );
+  }
+  return rest.length === 0 || hasPath(next, rest.join('.'));
+}
+
+test('every field the sweep projects exists in the built CLI output', async () => {
+  for (const { command, fields } of PROJECTIONS) {
+    const { stdout } = await execFileAsync(
+      process.execPath,
+      [CLI, ...command],
+      {
+        cwd: REPO_ROOT,
+        maxBuffer: 64 * 1024 * 1024,
+      },
+    ).catch((error) =>
+      error.stdout ? { stdout: error.stdout } : Promise.reject(error),
+    );
+    const payload = JSON.parse(stdout);
+    for (const field of fields) {
+      assert.ok(
+        hasPath(payload, field),
+        `oat ${command.join(' ')}: missing ${field}`,
+      );
+    }
   }
 });

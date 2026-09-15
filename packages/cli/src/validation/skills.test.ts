@@ -8479,7 +8479,9 @@ describe('bundled skill contract truthfulness — doctor inventory', () => {
     expect(doctor).not.toContain('Bundled skill manifest (source of truth)');
     for (const pack of PACK_MANIFEST) {
       const names = [...getPackMemberNames(pack.name, 'skill')];
-      const listed = names.filter((name) => doctor.includes(`${name},`));
+      const listed = names.filter((name) =>
+        new RegExp(`^[-|]\\s*\`?${name}\`?\\s*[,|]?\\s*$`, 'm').test(doctor),
+      );
       expect(listed, `${pack.name} skill names listed in the doctor`).toEqual(
         [],
       );

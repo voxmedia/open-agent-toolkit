@@ -95,7 +95,7 @@ File checks (read-only):
 
 - **Root instructions headings.** Read `AGENTS.md` at the repository root (and `CLAUDE.md` when it is a file rather than a pointer). Note which of these headings are present: `## Tool Packs` (written by `oat tools install --project-guidance`), `### Project Management` and `### Decision Records` (written by `oat pjm init`), `## Documentation` (written by `oat docs init` / `oat-docs-bootstrap`).
 - **Sync config surfaces.** Read `.oat/sync/config.json` and `~/.oat/sync/config.json` when present, keys only. `oat config dump` does not carry the `Sync/Provider` and `User Sync` groups, so this is their only set-state source.
-- **Docs surface.** Detect an existing docs surface the way `oat-docs-bootstrap`'s preflight does: `documentation.root` in the dump; a docs app under `apps/*` (a `source.config.*`, or `next.config.*` with a `docs/` directory, or `mkdocs.yml`); a root `mkdocs.yml`; a root `docs/` directory.
+- **Docs surface.** Detect an existing docs surface the way `oat-docs-bootstrap`'s preflight does: `documentation.root` in the dump; a docs app under `apps/docs` or `apps/*-docs`, or any `apps/*` with a `source.config.*`, a `next.config.*` beside a `docs/` directory, or `mkdocs.yml`; a root `mkdocs.yml`; a root `docs/` or `documentation/` directory.
 - **`documentation.root` on disk.** When the dump sets it, check that the directory exists.
 
 #### Finding rules

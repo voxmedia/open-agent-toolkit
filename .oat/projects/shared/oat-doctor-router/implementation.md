@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-14
-oat_current_task_id: p01-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -20,188 +20,27 @@ oat_generated: false
 > - When all plan tasks are complete, set `oat_current_task_id: null`.
 > - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews` (e.g., `| final | code | passed | ... |`).
 > - Keep phase/task statuses consistent with the Progress Overview table so restarts resume correctly.
-> - Before running the `oat-project-pr-final` skill, ensure `## Final Summary (for PR/docs)` is filled with what was actually implemented.
-
-## Progress Overview
-
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
-
-**Total:** 0/{N} tasks completed
-
----
-
-## Phase 1: {Phase Name}
-
-**Status:** in_progress
-**Started:** 2026-09-14
-
-### Phase Summary (fill when phase is complete)
-
-**Outcome (what changed):**
-
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
-
-**Key files touched:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {trade-offs or deviations discovered during implementation}
-
-### Task p01-t01: {Task Name}
-
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
-
-**Outcome (required when completed):**
-
-- {what materially changed (not “did task”, but “system now does X”)}
-
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
-
----
-
-### Task p01-t02: {Task Name}
-
-**Status:** pending
-**Commit:** -
-
-**Notes:**
-
-- {Notes will be added during implementation}
-
----
-
-## Phase 2: {Phase Name}
-
-**Status:** pending
-**Started:** -
-
-### Task p02-t01: {Task Name}
-
-**Status:** pending
-**Commit:** -
-
----
-
-## Orchestration Runs
-
-_Each run from `oat-project-implement` appends an entry below with:_
-_- Run header (number, timestamp, branch, tier, policy, phase counts)_
-_- Phase Outcomes table_
-_- Parallel Groups list_
-_- Outstanding Items_
-
-<!-- orchestration-runs-start -->
-
-_Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
-
-<!-- orchestration-runs-end -->
-
----
-
-## Implementation Log
-
-Chronological log of implementation progress.
-
-### 2026-09-14
-
-**Session Start:** {time}
-
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
-
-**What changed (high level):**
-
-- {short bullets suitable for PR/docs}
-
-**Decisions:**
-
-- {Decision made and rationale}
-
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
-
-**Blockers:**
-
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
-
----
-
-### 2026-09-14
-
-**Session Start:** {time}
-
-{Continue log...}
-
----
-
-## Deviations from Plan / Design
-
-Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
-
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
-
-## Test Results
-
-Track test execution during implementation.
-
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
-
-## Final Summary (for PR/docs)
+> - Before running the `oat-project-pr-final` skill, ensure `## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- `oat-doctor` 2.0.0: one read-only sweep over config, PJM, agent instructions, docs, and tools from seven projected CLI commands; a report grouped by area and severity; dives that teach from the bundled docs and `oat config describe` and offer exact fixes, with a single approved-command carve-out; `--summary` kept.
+- `oat config describe`: a structured `deprecated` field (`supersededBy`, `note`, `legacyValues`) on the five deprecated keys, printed in plain output, pinned to the catalog's deprecation phrasings by test.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- Running `/oat-doctor` now reports PJM adoption problems, instruction-file drift and missing OAT guidance sections, undeclared docs surfaces, deprecated config values, and tool drift in one screen, and can explain any of them.
+- `oat config describe <key>` prints a `Deprecated: prefer …` line for deprecated keys.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `.agents/skills/oat-doctor/SKILL.md`, `tests/doctor-contract.test.mjs`
+- `packages/cli/src/commands/config/index.ts` (`ConfigCatalogEntry.deprecated`), `packages/cli/src/config/oat-config.ts` (exported legacy table)
+- `apps/oat-docs/docs/cli-utilities/{config-and-local-state,tool-packs}.md`
 
-**Verification performed:**
+**Verification performed:** the full gate list at both phase boundaries with captured exit codes and a forced test run (`Cached: 0`); live sweeps on this repository, `~/code/vox/pntr`, and a scratch repository; contract-test negative controls; final code review received.
 
-- {tests/lint/typecheck/build/manual steps}
-
-**Design deltas (if any):**
-
-- {what changed vs design.md and why}
+**Design deltas (if any):** see § Deviations.
 
 ## References
 
@@ -296,3 +135,7 @@ Every area offers its bootstrap. With `OAT_NON_INTERACTIVE=1` the same run ends 
 Corrections made during verification: the CLI's adoption states are `declared`, `inferred-legacy`, `partial-initialization`, `none` (`packages/cli/src/commands/pjm/adoption.ts:8`), not the `absent`/`partial` the design assumed; the PJM rule and dive now use the CLI's literals.
 
 Pre-existing failures on `origin/main` observed at the Phase 1 gate, not caused by this project: (1) `review-skill-contracts.test.ts` pinned the old literal guard path after #299 switched `oat-project-complete` to `"$RECAP_TERMINAL_GUARD"` — repinned in this branch (`4e4a47480`) because it kept every PR's CI red; (2) `.agents/skills/explainer-kit/tests/flow.e2e.test.mjs` "real program material passes …" fails `ledgerToPage` (`cohesion-claim-unobserved` for `numericClaims.wave-1` … `wave-4`): the authored fixture page no longer observes the live program material's wave numbers — the recap project's own test drifting against real inputs; left for a follow-up item.
+
+### 2026-09-15 — Final code review received
+
+- `code-final-review-2026-09-15T034718Z.md` (head `6540d08f9`): 0 critical, 2 important, 3 medium, 3 minor — CHANGES REQUESTED. All 8 applied (`resolve_in_artifact` / fixed in code), received inline: the docs sentence at `config-and-local-state.md:284` keeps the stale `oat --scope all sync` example as an illustration with the `allow-stale-invocation` marker the doctor honors (the p02-t03 "fix" had made the sentence call the current form stale); `implementation.md` filled from the scaffold (progress, per-task records, deviations, test results, final summary); the design's adoption literals corrected to the CLI's four; a projection-fields contract test runs every sweep command against the built CLI and asserts each projected field exists; the `pjm:*` harvest regex widened and the docs-page existence asserted; the pack-manifest guard matches list and table tokens, not only trailing commas; the docs-surface check lists `apps/docs`, `apps/*-docs`, and `documentation/` as bootstrap's preflight does; `BL-260915-re-author-the-explainer-kit` filed for the pre-existing `explainer-kit` fixture drift that keeps `pnpm test:skills` red on `origin/main`.
