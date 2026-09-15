@@ -22,9 +22,9 @@ oat_generated: false
 
 | Phase   | Status   | Tasks | Completed |
 | ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 11    | 11/11     |
+| Phase 1 | complete | 14    | 14/14     |
 
-**Total:** 11/11 tasks completed
+**Total:** 14/14 tasks completed
 
 ## Phase 1: Simplify and harden recon execution
 
@@ -106,6 +106,21 @@ workspace test has one pre-existing unrelated assertion mismatch in
 **Status:** complete
 **Commit:** 36806913ffdec74b5fdc1d4469a018aafcd270b4
 
+### Task p01-t12: (review) Cap thorough routing at one contradiction condition
+
+**Status:** complete
+**Commit:** 806511e6be05bd32d8cfcfd1900333923e4c3645
+
+### Task p01-t13: (review) Keep CLI entry detection side-effect free on imports
+
+**Status:** complete
+**Commit:** 9c8f9e1d71f9bd5fe428a12ea71475c1b5db9860
+
+### Task p01-t14: (review) Require thorough redundant verification at reconciliation
+
+**Status:** complete
+**Commit:** ea758dd7d641f5e527bc59d2923486ddf4228eb7
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -131,9 +146,9 @@ _No implementation run has started._
 - [x] p01-t09: Repair the packet evidence-association prose (`cd75c5ff8`)
 - [x] p01-t10: Contain manifest-directed reconciliation paths (`dffc5c010`)
 - [x] p01-t11: Canonicalize reconciliation review order (`36806913f`)
-- [ ] p01-t12: Cap thorough routing at one contradiction condition
-- [ ] p01-t13: Keep CLI entry detection side-effect free on imports
-- [ ] p01-t14: Require thorough redundant verification at reconciliation
+- [x] p01-t12: Cap thorough routing at one contradiction condition (`806511e6b`)
+- [x] p01-t13: Keep CLI entry detection side-effect free on imports (`9c8f9e1d7`)
+- [x] p01-t14: Require thorough redundant verification at reconciliation (`ea758dd7d`)
 
 ### Review Received: final
 
@@ -216,8 +231,15 @@ implementation exit gate.
 - `m2` (`code_fix_required`, Minor): convert to p01-t14. Early rejection gives
   the controller a precise failure and is a contained validation change.
 
-**Next:** Execute p01-t12 through p01-t14, run independent final re-review,
-then run a fresh configured implementation exit-gate attempt.
+**Fixes completed:** all three configured-gate findings were resolved in
+p01-t12 through p01-t14. The bound review event is `fixes_completed` and ready
+for an independent final re-review before a fresh configured implementation
+exit-gate attempt.
+
+**Recovery:** The fresh full recon suite exposed a mechanically stale
+multi-condition diagnostic expectation. Recovery attempt 2 aligned that
+control with the new one-condition cap in commit `6d5ade7d6`; authoritative
+focused and full recon reruns passed.
 
 ### Review Received: p01
 
