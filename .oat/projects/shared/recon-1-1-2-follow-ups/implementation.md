@@ -1,9 +1,9 @@
 ---
 oat_status: in_progress
-oat_ready_for: review-fixes
+oat_ready_for: final-review
 oat_blockers: []
 oat_last_updated: 2026-09-15
-oat_current_task_id: p01-t10
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -20,15 +20,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in progress | 11    | 9/11      |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 11    | 11/11     |
 
-**Total:** 9/11 tasks completed
+**Total:** 11/11 tasks completed
 
 ## Phase 1: Simplify and harden recon execution
 
-**Status:** in progress
+**Status:** complete
 **Started:** 2026-09-15
 
 ### Phase Summary
@@ -98,11 +98,13 @@ workspace test has one pre-existing unrelated assertion mismatch in
 
 ### Task p01-t10: (review) Contain manifest-directed reconciliation paths
 
-**Status:** pending
+**Status:** complete
+**Commit:** dffc5c010280c89975709bf59f4f357fed71d1fa
 
 ### Task p01-t11: (review) Canonicalize reconciliation review order
 
-**Status:** pending
+**Status:** complete
+**Commit:** 36806913ffdec74b5fdc1d4469a018aafcd270b4
 
 ## Orchestration Runs
 
@@ -127,8 +129,8 @@ _No implementation run has started._
 - [x] p01-t07: Compare reconciliation declarations semantically (`fcabc90b7`)
 - [x] p01-t08: Close the worker-mode regression assertion (`db7a2dc37`)
 - [x] p01-t09: Repair the packet evidence-association prose (`cd75c5ff8`)
-- [ ] p01-t10: Contain manifest-directed reconciliation paths
-- [ ] p01-t11: Canonicalize reconciliation review order
+- [x] p01-t10: Contain manifest-directed reconciliation paths (`dffc5c010`)
+- [x] p01-t11: Canonicalize reconciliation review order (`36806913f`)
 
 ### Review Received: final
 
@@ -145,9 +147,9 @@ _No implementation run has started._
 
 **New tasks added:** p01-t10, p01-t11
 
-**Next:** Execute both final-review fix tasks, mark this bound event
-`fixes_completed`, and run a fresh final review before the implementation exit
-gate.
+**Fixes completed:** both findings were resolved in p01-t10 and p01-t11. The
+bound final-review event is `fixes_completed` and ready for a fresh final
+review before the implementation exit gate.
 
 ### Review Received: p01
 

@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t10
-oat_last_commit: acd5c8bb04052f1e2b7b8276b60275d511d7e503
+oat_current_task: null
+oat_last_commit: 36806913ffdec74b5fdc1d4469a018aafcd270b4
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -102,7 +102,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Final-review fixes; resume at `p01-t10`
+Implementation — Final-review fixes complete; awaiting fresh final review
 
 ## Artifacts
 
@@ -135,7 +135,7 @@ Implementation — Final-review fixes; resume at `p01-t10`
 - ✓ Four review-fix tasks completed as `p01-t06` through `p01-t09`
 - ✓ Phase 1 re-review passed with no findings
 - ✓ Final review received: 1 Important and 1 Medium finding
-- → Two final-review fix tasks queued as `p01-t10` and `p01-t11`
+- ✓ Two final-review fix tasks completed as `p01-t10` and `p01-t11`
 
 ## Blockers
 
@@ -143,4 +143,4 @@ None.
 
 ## Next Milestone
 
-Execute final-review fix task `p01-t10`.
+Run the fresh final review.
