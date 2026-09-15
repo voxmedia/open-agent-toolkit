@@ -220,3 +220,79 @@ Track test execution during implementation.
 ### 2026-09-14 — Plan artifact review received (round 3, structured, final)
 
 - 0 critical, 1 important, 5 medium, 4 minor — CHANGES REQUESTED on the Important only; every round-2 disposition verified closed. All 10 applied: the `oat doctor` check mapping is a semantic map (dispatch matrix and synced checkouts → config; manifest, providers, symlinks, codex, skill versions, pack state → tools; stale invocations → docs; anything else → info) in the plan and both design table rows; the live-verification expectation names every non-passing check and its area; the design's contract-test bullet no longer asks for the area/severity assertion; the three docs citations restored; the deprecation test claim softened to the catalog's phrasings; the Mode Assertion assertion specified as an exact command-stem set; docs lines `:126-127`; prefix-only citation rule; the stale `oat --scope all sync` invocation folded into p02-t03. Retry bound exhausted; plan marked complete.
+
+## Live verification (p02-t04)
+
+Run 2026-09-14 by the implementing agent following `.agents/skills/oat-doctor/SKILL.md` at this branch by absolute path, with the branch-built CLI (`packages/cli/dist/index.js`, 0.2.75) and `--cwd` pointing at each repository. Nothing was installed or synced at user scope. First screens as the skill's rules produce them from the projected sweep:
+
+**This repository** (`.oat/config.json` documentation set, PJM `declared`)
+
+```text
+OAT ▸ DOCTOR
+Config (2 warnings, 5 info)
+  ⚠ project:synced_gate-execution-contract-hardening_checkout: synced checkout is absent   [oat doctor]
+    → oat project pull .oat/projects/synced/gate-execution-contract-hardening
+  ⚠ project:dispatch_matrix: dispatch matrix recommendation not adopted                     [oat doctor]
+    → oat config adopt dispatch-matrix --shared
+PJM (1 warning)
+  ⚠ pjm:backlog_completed_unarchived                                                      [oat pjm doctor]
+    → oat backlog archive <id> for each named item, then oat backlog regenerate-index
+Agent instructions (1 warning)
+  ⚠ AGENTS.md has no "## Tool Packs" section although packs are installed at project scope   [AGENTS.md]
+    → oat tools install <pack> --project-guidance   (this repo carries a hand-written skills block instead)
+Docs (ok)
+Tools (8 warnings)
+  ⚠ 5 outdated at user scope (explainer-kit, oat-doctor, oat-project-complete, oat-project-review-receive, oat-reviewer)
+    → oat tools update --scope user
+  ⚠ project:pack_state, user:pack_state, packs:scope_duplication                            [oat doctor]
+    → oat tools migrate --pack <pack> --from project --to user
+Where do you want to dive? [config / pjm / instructions / tools / all / done]
+```
+
+Both `oat doctor` and `oat pjm doctor` exited 1 and were parsed as findings, as the sweep rule requires. Every `project:*` warning landed in the area the semantic map assigns; none fell into config by prefix.
+
+**`~/code/vox/pntr`** (root `docs/`, no `documentation` config, PJM `partial-initialization`)
+
+```text
+OAT ▸ DOCTOR
+Config (2 warnings, 6 info)
+  ⚠ project:synced_gitignore   → see message; ⚠ project:dispatch_matrix → oat config adopt dispatch-matrix --shared
+PJM (3 errors, 2 warnings)
+  ✖ adoption is partial-initialization: declared but canonical files are missing   → oat pjm init
+  ✖ pjm:canonical_files   → oat pjm init
+  ✖ pjm:backlog_terminal_in_items   → oat backlog archive <id> for each named item
+  ⚠ pjm:top_level_layout   → move the unknown top-level entries (backlog-lifecycle.md § Catching lifecycle drift)
+  ⚠ pjm:backlog_completed_unarchived   → oat backlog archive <id>, then oat backlog regenerate-index
+Agent instructions (2 warnings)
+  ⚠ AGENTS.md has no "### Project Management" / "### Decision Records" although PJM is declared   → oat pjm init
+Docs (1 warning)
+  ⚠ docs/ exists but .oat/config.json has no documentation section   → run oat-docs-bootstrap; it detects the surface and offers the audit
+Tools (66 warnings)
+  ⚠ 62 outdated at project scope, 5 at user scope   → oat tools update --scope project
+  ⚠ project:skill_versions, project:pack_state, user:pack_state, packs:scope_duplication
+Where do you want to dive? [config / pjm / instructions / docs / tools / all / done]
+```
+
+Read-only: nothing in that repository was changed. The docs warning is the case `BL-260911-make-docs-bootstrap-a-front` exists for.
+
+**Scratch repository** (`git init` under `mktemp -d`, no `.oat/`)
+
+```text
+OAT ▸ DOCTOR
+Config (1 warning, 9 info)
+  ⚠ project:dispatch_matrix   → oat config adopt dispatch-matrix --shared
+PJM (1 error)
+  ✖ adoption is none: PJM is not adopted here   → oat pjm init
+Agent instructions (ok)   (no instruction files scanned; no packs at project scope, so no heading rule fires)
+Docs (ok)
+Tools (4 warnings)
+  ⚠ project:canonical_directories, project:manifest, project:providers: no OAT project setup   → oat init, then oat tools install <pack>
+  ⚠ user:pack_state; 5 outdated at user scope   → oat tools update --scope user
+Where do you want to dive? [config / pjm / tools / all / done]
+```
+
+Every area offers its bootstrap. With `OAT_NON_INTERACTIVE=1` the same run ends after the report line above the prompt; no `AskUserQuestion` is issued and no fix is run.
+
+Corrections made during verification: the CLI's adoption states are `declared`, `inferred-legacy`, `partial-initialization`, `none` (`packages/cli/src/commands/pjm/adoption.ts:8`), not the `absent`/`partial` the design assumed; the PJM rule and dive now use the CLI's literals.
+
+Pre-existing failures on `origin/main` observed at the Phase 1 gate, not caused by this project: (1) `review-skill-contracts.test.ts` pinned the old literal guard path after #299 switched `oat-project-complete` to `"$RECAP_TERMINAL_GUARD"` — repinned in this branch (`4e4a47480`) because it kept every PR's CI red; (2) `.agents/skills/explainer-kit/tests/flow.e2e.test.mjs` "real program material passes …" fails `ledgerToPage` (`cohesion-claim-unobserved` for `numericClaims.wave-1` … `wave-4`): the authored fixture page no longer observes the live program material's wave numbers — the recap project's own test drifting against real inputs; left for a follow-up item.

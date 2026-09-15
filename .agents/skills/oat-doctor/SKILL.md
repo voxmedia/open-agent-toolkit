@@ -117,7 +117,7 @@ Each finding is one line with an **area**, a **severity**, a one-line **summary*
 
 **PJM**
 
-- `adoption.state` `absent` or `partial` → `error`; fix `oat pjm init`.
+- `adoption.state` `none` → `error` (PJM not adopted; fix `oat pjm init`); `partial-initialization` → `error` (declared but canonical files missing; fix `oat pjm init`, which completes the layout); `inferred-legacy` → `warning` (a pre-adoption layout the CLI recognizes; fix `oat pjm init` to declare it); `declared` is healthy.
 - Any `pjm:*` check with status `fail` → `error`; `warn` → `warning`; the fix path is the one the check's message implies (see the PJM dive for the map).
 - A `pjm:*` check name the PJM dive does not know → `info` with its message.
 
@@ -206,7 +206,7 @@ A deprecated key is explained through its `deprecated.supersededBy` and the succ
 
 #### PJM dive
 
-State the adoption state and what it means (`cli-utilities/backlog-lifecycle.md` § Adoption comes first). Then each non-passing check and its fix:
+State the adoption state (`declared`, `inferred-legacy`, `partial-initialization`, or `none`) and what it means (`cli-utilities/backlog-lifecycle.md` § Adoption comes first). Then each non-passing check and its fix:
 
 | Check                                                                                                                                                                                                                                         | Fix path                                                                                                                                                                         |
 | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
