@@ -277,6 +277,13 @@ focused and full recon reruns passed.
 and early redundant-verification guard all passed independent final re-review.
 The project may advance to configured implementation exit-gate attempt 2.
 
+### Configured Implementation Exit Gate: attempt 1 basis stale
+
+The first gate result was received and all three findings were remediated.
+Those substantive recon and test changes invalidate its immutable reviewed
+basis. The first generation is marked `stale` before attempt 2 is initialized
+from the fresh passing final-review head.
+
 ### Review Received: p01
 
 **Date:** 2026-09-15
