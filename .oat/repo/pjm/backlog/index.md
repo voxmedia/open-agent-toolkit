@@ -317,7 +317,6 @@
 | BL-260909-make-findsection-comment-aware | Make findSection comment-aware in the bundled-docs contract test                                      | open   | low      | task       | S        |
 | BL-260906-make-the-phase-implementer     | Make the phase-implementer sweep contract test negation-aware                                         | open   | low      | task       | S        |
 | BL-260830-memory-subsystem-ownership     | Memory subsystem ownership decision for OAT                                                           | open   | low      | idea       | XL       |
-| BL-260915-present-design-section-drafts  | Present design section drafts in chat, not inside the approval prompt                                 | open   | low      | task       | XS       |
 | BL-260906-project-journal-reservation    | Project journal reservation state into the smoke evidence bundle                                      | open   | low      | task       | S        |
 | BL-260909-re-source-the-surviving-codex  | Re-source the surviving Codex provider claims and repair the dead provider-reference URLs             | open   | low      | task       | S        |
 | BL-260909-reject-malformed-nested-values | Reject malformed nested values in the strict pjm.remote shared reader                                 | open   | low      | task       | S        |

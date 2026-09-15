@@ -2145,7 +2145,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-quick-start',
-        version: '2.3.12',
+        version: '2.3.13',
         finalizedHeading: '### Step 3.6: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading:
@@ -3227,7 +3227,7 @@ describe('validateOatSkills', () => {
       ['.agents/skills/oat-project-summary/SKILL.md', '1.5.6'],
       ['.agents/skills/oat-project-document/SKILL.md', '1.8.4'],
       ['.agents/skills/oat-project-pr-final/SKILL.md', '1.6.5'],
-      ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.12'],
+      ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.13'],
     ] as const;
 
     for (const [path, expectedVersion] of runtimeSurfaces) {
@@ -6049,7 +6049,7 @@ describe('validateOatSkills', () => {
     const expectedVersions = [
       ['oat-project-plan-writing', '1.2.25'],
       ['oat-project-plan', '1.4.12'],
-      ['oat-project-quick-start', '2.3.12'],
+      ['oat-project-quick-start', '2.3.13'],
       ['oat-project-import-plan', '1.4.15'],
       ['oat-project-review-provide', '1.5.8'],
     ] as const;
@@ -7042,7 +7042,7 @@ describe('validateOatSkills', () => {
     );
     const content = await readFile(skillPath, 'utf8');
 
-    expect(readDeclaredVersion(content)).toBe('2.3.12');
+    expect(readDeclaredVersion(content)).toBe('2.3.13');
   });
 
   it('documents quick-start selective config fallback to collaborative', async () => {

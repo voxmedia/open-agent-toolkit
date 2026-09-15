@@ -1,7 +1,7 @@
 ---
 id: BL-260915-present-design-section-drafts
 title: Present design section drafts in chat, not inside the approval prompt
-status: open
+status: closed
 priority: low
 scope: task
 scope_estimate: XS
@@ -11,7 +11,7 @@ labels:
   - ux
 assignee: null
 created: 2026-09-15T13:00:20.941Z
-updated: 2026-09-15T13:00:20.941Z
+updated: '2026-09-15T13:11:38Z'
 associated_issues: []
 external_plans: []
 ---
