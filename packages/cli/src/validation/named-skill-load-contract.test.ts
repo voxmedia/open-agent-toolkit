@@ -2427,6 +2427,15 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
   },
   {
     file: '.agents/skills/oat-project-review-receive/SKILL.md',
+    anchor: 'Step 1.5: Reject Retired Severity Artifacts (Fail Closed)',
+    match: 're-run `oat-project-review-provide` so it emits a current artifact',
+    classification: 'non-executing',
+    skills: ['oat-project-review-provide'],
+    reason:
+      'Recovery guidance tells the user to re-run the review provider after the receiver stops.',
+  },
+  {
+    file: '.agents/skills/oat-project-review-receive/SKILL.md',
     anchor: 'Re-Review Scoping',
     match: 'is called after fix tasks exist',
     classification: 'non-executing',

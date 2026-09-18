@@ -5,7 +5,7 @@
  *
  * The body is the durable handoff to `*-receive-remote`: a leading
  * HTML-comment marker block (parsed back by {@link parseMarkerBlock}) followed
- * by human-readable prose (summary, severity counts, optional minor-fix nudge,
+ * by human-readable prose (summary, severity counts, optional low-fix nudge,
  * optional verification commands).
  */
 

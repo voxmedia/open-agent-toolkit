@@ -1301,6 +1301,41 @@ printf 'artifact-read\\n'`,
     );
   });
 
+  it('fails closed on retired review tiers before project receive count parsing', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-review-receive/SKILL.md',
+    );
+    const guardStart = content.indexOf(
+      '### Step 1.5: Reject Retired Severity Artifacts (Fail Closed)',
+    );
+    const parseStart = content.indexOf(
+      '### Step 2: Parse Findings into Buckets',
+    );
+    const zeroCountPass = content.indexOf(
+      '**If Critical + High + Medium == 0:**',
+    );
+
+    expect(guardStart).toBeGreaterThan(-1);
+    expect(guardStart).toBeLessThan(parseStart);
+    expect(guardStart).toBeLessThan(zeroCountPass);
+
+    const guard = content.slice(guardStart, parseStart);
+    for (const retiredForm of [
+      '`### Important`',
+      '`### Minor`',
+      '`oat_review_important_count`',
+      '`oat_review_minor_count`',
+      'legacy `Findings:` count line',
+    ]) {
+      expect(guard).toContain(retiredForm);
+    }
+    expect(normalizeProse(guard)).toContain(
+      'Do not treat an unread retired heading or count as absent or zero, do not enter the `Critical + High + Medium == 0` pass path',
+    );
+    expect(guard).toContain('re-run `oat-project-review-provide`');
+    expect(guard).toContain('run `oat tools update`');
+  });
+
   it('requires project completion to skip PR prompting when an open PR is tracked', () => {
     const skillPath = repoFilePath(
       '.agents/skills/oat-project-complete/SKILL.md',

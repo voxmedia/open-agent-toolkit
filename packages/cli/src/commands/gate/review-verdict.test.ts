@@ -344,6 +344,74 @@ None
     });
   });
 
+  it('rejects a partial blocking frontmatter count contradicted by empty sections', async () => {
+    const artifactPath = await writeArtifact(`---
+oat_review_type: code
+oat_review_scope: p01
+oat_review_invocation: gate
+oat_review_high_count: 1
+---
+
+# Review
+
+## Findings
+
+### Critical
+
+None
+
+### High
+
+None
+
+### Medium
+
+None
+
+### Low
+
+None
+`);
+
+    await expect(parseReviewGateVerdict(artifactPath)).rejects.toThrow(
+      /contradicts itself about finding counts \(high\)[\s\S]*frontmatter count fields[\s\S]*Findings sections/i,
+    );
+  });
+
+  it('rejects invalid values in partial frontmatter counts', async () => {
+    const artifactPath = await writeArtifact(`---
+oat_review_type: code
+oat_review_scope: p01
+oat_review_invocation: gate
+oat_review_high_count: many
+---
+
+# Review
+
+## Findings
+
+### Critical
+
+None
+
+### High
+
+None
+
+### Medium
+
+None
+
+### Low
+
+None
+`);
+
+    await expect(parseReviewGateVerdict(artifactPath)).rejects.toThrow(
+      /invalid high count[\s\S]*non-negative integers/i,
+    );
+  });
+
   it('does not treat inherited object keys as severity aliases', async () => {
     const artifactPath = await writeArtifact(`---
 oat_review_type: code
@@ -444,6 +512,50 @@ Findings by severity: 0 critical, 0 high, 0 medium, 0 low
     await expect(parseReviewGateVerdict(artifactPath)).rejects.toThrow(
       /conflicting high counts/i,
     );
+  });
+
+  it('allows retired-tier words as headings outside the Findings section', async () => {
+    const artifactPath = await writeArtifact(`---
+oat_review_type: code
+oat_review_scope: p01
+oat_review_invocation: manual
+---
+
+# Review
+
+## Findings
+
+### Critical
+
+None
+
+### High
+
+None
+
+### Medium
+
+None
+
+### Low
+
+None
+
+## Requirements
+
+### Important
+
+This prose heading describes requirement priority, not review severity.
+
+### Minor
+
+This prose heading describes a secondary requirement.
+`);
+
+    await expect(parseReviewGateVerdict(artifactPath)).resolves.toMatchObject({
+      counts: { critical: 0, high: 0, medium: 0, low: 0 },
+      blocking: false,
+    });
   });
 
   it('fails closed on conflicting frontmatter count keys', async () => {

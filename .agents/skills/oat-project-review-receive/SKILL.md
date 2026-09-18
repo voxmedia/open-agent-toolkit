@@ -201,6 +201,25 @@ identity and destination. Resolve them here, before writing plan,
 implementation, or artifact-review references. Never choose a different
 basename later in either receive path.
 
+### Step 1.5: Reject Retired Severity Artifacts (Fail Closed)
+
+Before parsing findings, deriving counts, selecting a handling mode, or making
+any lifecycle mutation, scan the selected review artifact for the retired
+severity vocabulary. Reject the artifact when it contains any of:
+
+- `### Important` or `### Minor` severity headings (case-insensitive);
+- `oat_review_important_count` or `oat_review_minor_count` frontmatter keys;
+- a legacy `Findings:` count line that reports `important` or `minor` counts.
+
+Stop immediately when any retired form is present. Do not treat an unread
+retired heading or count as absent or zero, do not enter the
+`Critical + High + Medium == 0` pass path, and do not update or archive project
+artifacts. Report which retired forms were found and direct the user to rename
+`Important` to `High`, `Minor` to `Low`, and the matching count keys, or to
+re-run `oat-project-review-provide` so it emits a current artifact. If a fresh
+review still emits retired tiers, run `oat tools update` to refresh the
+installed tools and provider projections, then re-run the review.
+
 ### Step 2: Parse Findings into Buckets
 
 Extract findings from the review artifact and categorize:

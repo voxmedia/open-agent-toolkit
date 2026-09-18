@@ -46,6 +46,13 @@ const SEVERITIES: ReadonlySet<string> = new Set([
   'low',
 ]);
 
+const SEVERITY_ID_PREFIX: Readonly<Record<FindingSeverity, string>> = {
+  critical: 'C',
+  high: 'H',
+  medium: 'M',
+  low: 'L',
+};
+
 /** A single structured finding (see design.md → Data Models). */
 export interface StructuredFinding {
   /** Stable per-dispatch ID with a C/H/M/L prefix. */
@@ -141,15 +148,21 @@ function validateFinding(value: unknown, index: number): StructuredFinding {
     throw new StructuredFindingsError(`${at} must be an object.`);
   }
 
-  if (typeof value['id'] !== 'string' || value['id'] === '') {
-    throw new StructuredFindingsError(`${at}.id must be a non-empty string.`);
-  }
   if (
     typeof value['severity'] !== 'string' ||
     !SEVERITIES.has(value['severity'])
   ) {
     throw new StructuredFindingsError(
       `${at}.severity must be one of critical|high|medium|low.`,
+    );
+  }
+  const severity = value['severity'] as FindingSeverity;
+  const expectedIdPattern = new RegExp(
+    `^${SEVERITY_ID_PREFIX[severity]}[1-9]\\d*$`,
+  );
+  if (typeof value['id'] !== 'string' || !expectedIdPattern.test(value['id'])) {
+    throw new StructuredFindingsError(
+      `${at}.id must use the ${SEVERITY_ID_PREFIX[severity]} prefix for ${severity} severity followed by a positive integer.`,
     );
   }
   if (typeof value['title'] !== 'string') {
@@ -184,7 +197,7 @@ function validateFinding(value: unknown, index: number): StructuredFinding {
 
   return {
     id: value['id'],
-    severity: value['severity'] as FindingSeverity,
+    severity,
     title: value['title'],
     file: fileSet ? (file as string) : null,
     line: lineSet ? (line as number) : null,

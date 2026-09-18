@@ -62,6 +62,11 @@ interface MarkdownLine {
   start: number;
 }
 
+interface FrontmatterCountSource {
+  counts: ReviewGateVerdict['counts'];
+  tiers: Severity[];
+}
+
 const SEVERITIES: readonly Severity[] = ['critical', 'high', 'medium', 'low'];
 
 const FRONTMATTER_COUNT_KEYS: Readonly<Record<Severity, readonly string[]>> = {
@@ -136,6 +141,10 @@ function readGateInvocation(
 }
 
 function parseCountValue(value: unknown): number | null {
+  if (typeof value === 'string' && value.trim().length === 0) {
+    return null;
+  }
+
   const numberValue =
     typeof value === 'number'
       ? value
@@ -152,7 +161,19 @@ function parseCountValue(value: unknown): number | null {
 function readFrontmatterCounts(
   frontmatter: Record<string, unknown>,
   artifactPath: string,
-): ReviewGateVerdict['counts'] | null {
+): FrontmatterCountSource | null {
+  const hasNestedCounts = Object.hasOwn(frontmatter, 'oat_review_counts');
+  if (
+    hasNestedCounts &&
+    (typeof frontmatter['oat_review_counts'] !== 'object' ||
+      frontmatter['oat_review_counts'] === null ||
+      Array.isArray(frontmatter['oat_review_counts']))
+  ) {
+    throw new Error(
+      `Review artifact at ${artifactPath} declares an invalid oat_review_counts block; it must be an object of non-negative integer counts.`,
+    );
+  }
+
   const nestedCounts =
     typeof frontmatter['oat_review_counts'] === 'object' &&
     frontmatter['oat_review_counts'] !== null &&
@@ -167,11 +188,24 @@ function readFrontmatterCounts(
   // fall through to a summary line that reports fewer findings.
   for (const severity of SEVERITIES) {
     const candidateValues = [
-      ...FRONTMATTER_COUNT_KEYS[severity].map((key) => frontmatter[key]),
+      ...FRONTMATTER_COUNT_KEYS[severity].flatMap((key) =>
+        Object.hasOwn(frontmatter, key) ? [frontmatter[key]] : [],
+      ),
       ...(nestedCounts
-        ? FRONTMATTER_COUNT_KEYS[severity].map((key) => nestedCounts[key])
+        ? FRONTMATTER_COUNT_KEYS[severity].flatMap((key) =>
+            Object.hasOwn(nestedCounts, key) ? [nestedCounts[key]] : [],
+          )
         : []),
-    ].filter((value) => value !== undefined && value !== null);
+    ];
+
+    const hasInvalidValue = candidateValues.some(
+      (value) => parseCountValue(value) === null,
+    );
+    if (hasInvalidValue) {
+      throw new Error(
+        `Review artifact at ${artifactPath} declares an invalid ${severity} count; counts must be non-negative integers.`,
+      );
+    }
 
     const distinct = [
       ...new Set(
@@ -192,15 +226,18 @@ function readFrontmatterCounts(
     }
   }
 
-  if (parsed.size !== SEVERITIES.length) {
+  if (parsed.size === 0) {
     return null;
   }
 
   return {
-    critical: parsed.get('critical')!,
-    high: parsed.get('high')!,
-    medium: parsed.get('medium')!,
-    low: parsed.get('low')!,
+    counts: {
+      critical: parsed.get('critical') ?? 0,
+      high: parsed.get('high') ?? 0,
+      medium: parsed.get('medium') ?? 0,
+      low: parsed.get('low') ?? 0,
+    },
+    tiers: [...parsed.keys()],
   };
 }
 
@@ -411,14 +448,18 @@ function describeLegacySeverityUsage(
   frontmatter: Record<string, unknown>,
 ): string[] {
   const found = new Set<string>();
+  const findingsSection = findFindingsSection(content);
 
-  for (const line of linesOutsideFences(content)) {
+  for (const line of linesOutsideFences(findingsSection?.content ?? '')) {
     if (/^#{1,6}\s+Important\s*#*\s*$/i.test(line.text)) {
       found.add('a `### Important` heading');
     }
     if (/^#{1,6}\s+Minor\s*#*\s*$/i.test(line.text)) {
       found.add('a `### Minor` heading');
     }
+  }
+
+  for (const line of linesOutsideFences(content)) {
     if (/^Findings:\s*\d+\s+critical,/i.test(line.text.trim())) {
       found.add('a legacy `Findings:` count line');
     }
@@ -620,6 +661,7 @@ async function normalizeMissingEmptySeveritySections(
 interface CountSource {
   name: string;
   counts: ReviewGateVerdict['counts'];
+  tiers: readonly Severity[];
 }
 
 function formatCounts(counts: ReviewGateVerdict['counts']): string {
@@ -670,7 +712,8 @@ function resolveCounts(
   if (frontmatterCounts) {
     explicitSources.push({
       name: 'the frontmatter count fields',
-      counts: frontmatterCounts,
+      counts: frontmatterCounts.counts,
+      tiers: frontmatterCounts.tiers,
     });
   }
 
@@ -679,12 +722,16 @@ function resolveCounts(
     explicitSources.push({
       name: 'the "Findings by severity" count line',
       counts: summaryCounts,
+      tiers: SEVERITIES,
     });
   }
 
   const [primarySource, ...otherSources] = explicitSources;
   for (const source of otherSources) {
-    assertAgreeingCounts(artifactPath, primarySource!, source);
+    const comparableTiers = primarySource!.tiers.filter((severity) =>
+      source.tiers.includes(severity),
+    );
+    assertAgreeingCounts(artifactPath, primarySource!, source, comparableTiers);
   }
 
   const bodyCounts = tallySeveritySections(content);
@@ -700,13 +747,20 @@ function resolveCounts(
     const bodySource: CountSource = {
       name: 'the Findings sections',
       counts: bodyCounts,
+      tiers: bodyTiers,
     };
     for (const source of explicitSources) {
-      assertAgreeingCounts(artifactPath, source, bodySource, bodyTiers);
+      const comparableTiers = source.tiers.filter((severity) =>
+        bodyTiers.includes(severity),
+      );
+      assertAgreeingCounts(artifactPath, source, bodySource, comparableTiers);
     }
   }
 
-  return primarySource?.counts ?? null;
+  return (
+    explicitSources.find((source) => source.tiers.length === SEVERITIES.length)
+      ?.counts ?? null
+  );
 }
 
 export async function parseReviewGateVerdict(

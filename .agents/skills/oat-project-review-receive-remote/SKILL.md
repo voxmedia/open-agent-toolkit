@@ -173,7 +173,7 @@ For each comment:
 - capture `type`, `path`, `line`, `url`, and comment body.
 - classify severity using 4-tier model.
 - use review state (e.g., `CHANGES_REQUESTED`) as a hint, not a hard override.
-- assign stable IDs by severity bucket (`C`, `I`, `M`, `m`).
+- assign stable IDs by severity bucket (`C`, `H`, `M`, `L`).
 
 ### Step 4: Present Findings Overview and Triage
 
