@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: false
 allowed-tools: Read, Write, Glob, Grep
 metadata:
-  version: 1.2.25
+  version: 1.2.26
 ---
 
 # Plan Writing Contract
@@ -371,7 +371,7 @@ oat_phase_review_gate:
   enabled: true
   phases: []
   review_type: code
-  exit_nonzero_on: important
+  exit_nonzero_on: high
 ```
 
 For selected phases, use the same shape with `phases` populated. Validate the
@@ -530,8 +530,8 @@ Use this loop after an artifact has been written and before the calling skill ha
 
 4. **Apply or offer fixes by severity**
    - If the structured review is clean, proceed to outcome recording.
-   - Apply Critical and Important fixes by default when they are local to the reviewed artifact and the fix is unambiguous.
-   - Offer Medium and Minor fixes to the user instead of applying them silently.
+   - Apply Critical and High fixes by default when they are local to the reviewed artifact and the fix is unambiguous.
+   - Offer Medium and Low fixes to the user instead of applying them silently.
    - If a finding cannot be fixed within the artifact boundary, preserve it as residual and surface it before handoff.
 
 5. **Rewrite and re-dispatch within the bound**

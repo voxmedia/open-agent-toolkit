@@ -5,7 +5,7 @@
  *
  * The body is the durable handoff to `*-receive-remote`: a leading
  * HTML-comment marker block (parsed back by {@link parseMarkerBlock}) followed
- * by human-readable prose (summary, severity counts, optional minor-fix nudge,
+ * by human-readable prose (summary, severity counts, optional low-fix nudge,
  * optional verification commands).
  */
 
@@ -13,7 +13,7 @@ import { MARKER_BLOCK_OPEN, type ReviewInvocation } from './marker-parser';
 
 export type ReviewVerdict = 'REQUEST_CHANGES' | 'COMMENT';
 
-export type FindingSeverity = 'critical' | 'important' | 'medium' | 'minor';
+export type FindingSeverity = 'critical' | 'high' | 'medium' | 'low';
 
 /** Minimal finding shape the builder needs — only severity is required. */
 export interface BuilderFinding {
@@ -84,29 +84,29 @@ export type BuildInput = BuildInputBase &
 
 /**
  * Map a finding set to the GitHub review verdict: `REQUEST_CHANGES` when any
- * critical or important finding is present, otherwise `COMMENT` (including the
+ * critical or high finding is present, otherwise `COMMENT` (including the
  * zero-findings clean-review case). Never auto-`APPROVE`.
  */
 export function mapVerdict(findings: BuilderFinding[]): ReviewVerdict {
   const hasBlocking = findings.some(
-    (f) => f.severity === 'critical' || f.severity === 'important',
+    (f) => f.severity === 'critical' || f.severity === 'high',
   );
   return hasBlocking ? 'REQUEST_CHANGES' : 'COMMENT';
 }
 
 interface SeverityCounts {
   critical: number;
-  important: number;
+  high: number;
   medium: number;
-  minor: number;
+  low: number;
 }
 
 function countSeverities(findings: BuilderFinding[]): SeverityCounts {
   const counts: SeverityCounts = {
     critical: 0,
-    important: 0,
+    high: 0,
     medium: 0,
-    minor: 0,
+    low: 0,
   };
   for (const f of findings) {
     counts[f.severity] += 1;
@@ -167,10 +167,10 @@ function buildOutOfDiffSection(
   return ['## Findings outside the PR diff', '', ...entries].join('\n');
 }
 
-const MINOR_FIX_NUDGE =
-  'Minor findings are included inline. We recommend fixing minors during ' +
-  'this cycle rather than tracking them as backlog items — they are usually ' +
-  'faster to just resolve than to manage.';
+const LOW_FIX_NUDGE =
+  'Low findings are included inline. We recommend fixing low-severity ' +
+  'findings during this cycle rather than tracking them as backlog items — ' +
+  'they are usually faster to just resolve than to manage.';
 
 /**
  * Build the posted-review body and compute its verdict.
@@ -189,9 +189,9 @@ export function buildReviewBody(input: BuildInput): {
       '## Severity Counts',
       '',
       `- Critical: ${counts.critical}`,
-      `- Important: ${counts.important}`,
+      `- High: ${counts.high}`,
       `- Medium: ${counts.medium}`,
-      `- Minor: ${counts.minor}`,
+      `- Low: ${counts.low}`,
     ].join('\n'),
   ];
 
@@ -200,8 +200,8 @@ export function buildReviewBody(input: BuildInput): {
     sections.push(outOfDiffSection);
   }
 
-  if (counts.minor > 0) {
-    sections.push(`## Notes\n\n${MINOR_FIX_NUDGE}`);
+  if (counts.low > 0) {
+    sections.push(`## Notes\n\n${LOW_FIX_NUDGE}`);
   }
 
   if (input.verificationCommands && input.verificationCommands.length > 0) {

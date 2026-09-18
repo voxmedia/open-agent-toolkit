@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Glob, Grep, Write, Edit, Bash(git:*), Bash(oat:*), Bash(pnpm:*), Bash(mkdir:*), Bash(date:*), Bash(realpath:*), Bash(awk:*), AskUserQuestion
 metadata:
-  version: 1.5.8
+  version: 1.5.9
 ---
 
 # Request Review
@@ -535,7 +535,7 @@ When reviewing `artifact plan`, apply this Dispatch Profile named-ceiling
 advisory:
 
 - A missing `## Dispatch Profile` section is normal and must not be flagged.
-- Important findings:
+- High findings:
   - invalid phase ID that does not match a real plan phase
   - unknown named ceiling or a phase ceiling above the project ceiling
   - wording that pins an exact provider model, family, effort, or role instead
@@ -546,7 +546,7 @@ advisory:
 - Medium findings:
   - malformed but recoverable Dispatch Profile table structure
   - mid-tier ceiling for architecture-heavy work without convincing rationale
-- Minor findings:
+- Low findings:
   - rationale is present but weakly tied to phase scope
 
 Include this advisory in the Review Scope metadata for artifact plan reviews so
@@ -566,7 +566,7 @@ Preferred sources:
 Build:
 
 - `DEFERRED_MEDIUM_COUNT`
-- `DEFERRED_MINOR_COUNT`
+- `DEFERRED_LOW_COUNT`
 - `DEFERRED_LEDGER` (one-line summary per finding with source artifact)
 
 Rules:
@@ -619,7 +619,7 @@ Build the "Review Scope" metadata for the reviewer:
 **Deferred Findings Ledger (final scope only):**
 
 - Deferred Medium count: {DEFERRED_MEDIUM_COUNT}
-- Deferred Minor count: {DEFERRED_MINOR_COUNT}
+- Deferred Low count: {DEFERRED_LOW_COUNT}
   {DEFERRED_LEDGER}
 
 **Design Drift Review Guidance:**
@@ -968,7 +968,7 @@ If running inline (Tier 3), execute the review and write artifact.
 2. If code review: verify alignment to available requirements sources (`spec`/`design` for spec-driven mode; `discovery`/import reference for quick/import; plan.md Summary, Decisions, Assumptions, Out of Scope, and Validation Criteria for lite)
 3. If code review: verify code quality (correctness, tests, security, maintainability)
 4. If artifact review: verify completeness/clarity/readiness of the artifact and its alignment with upstream artifacts
-5. Categorize findings (Critical/Important/Medium/Minor)
+5. Categorize findings (Critical/High/Medium/Low)
 6. For final scope: explicitly disposition deferred Medium ledger items (fix now vs accept defer)
 7. Write artifact with file:line references and fix guidance
 
@@ -1021,8 +1021,8 @@ oat_invocation_source: { exec-target-config|unknown }
 
 **Frontmatter field: `oat_review_invocation`**
 
-- `manual` (default): Review was manually triggered by the user. `oat-project-review-receive` uses standard disposition behavior (user prompts for triage, minors auto-deferred for non-final scopes).
-- `auto`: Review was spawned by the auto-review checkpoint trigger in `oat-project-implement`. `oat-project-review-receive` uses relaxed disposition: minors are auto-converted to fix tasks (not deferred), no user prompts for disposition decisions.
+- `manual` (default): Review was manually triggered by the user. `oat-project-review-receive` uses standard disposition behavior (user prompts for triage, low findings auto-deferred for non-final scopes).
+- `auto`: Review was spawned by the auto-review checkpoint trigger in `oat-project-implement`. `oat-project-review-receive` uses relaxed disposition: low findings are auto-converted to fix tasks (not deferred), no user prompts for disposition decisions.
 - `gate`: Review was spawned by `oat gate review` for a workflow gate. Gate-originated reviews use normal stateful review-provide behavior: write the review artifact, update the `## Reviews` row, and commit review bookkeeping. The gate CLI maps the review artifact findings to exit status, and `oat-project-review-receive` dispositions gate reviews autonomously (no user prompts) — selecting convert-to-fix-tasks when the gate **blocked** at its threshold, or non-pausing judgment-sweep disposition (defer / small-fix-now / reject, with sub-threshold findings recorded durably) when the gate **passed**.
 
 When `oat-project-implement` spawns this skill for auto-review at checkpoints, it passes context indicating auto invocation. Set `oat_review_invocation: auto` in the artifact frontmatter.
@@ -1035,7 +1035,7 @@ For all other invocations (user-triggered, fresh session), use `manual`.
 
 Gate parsing contract:
 
-- Include either the `Findings: {N} critical, {N} important, {N} medium, {N} minor` summary line or the standard `## Findings` section with `### Critical`, `### Important`, `### Medium`, and `### Minor` subsections populated with findings or `None`.
+- Include either the `Findings by severity: {N} critical, {N} high, {N} medium, {N} low` summary line or the standard `## Findings` section with `### Critical`, `### High`, `### Medium`, and `### Low` subsections populated with findings or `None`.
 - Do not omit severity headings merely because a severity has zero findings; `oat gate review` depends on counts or standard Findings sections to determine whether the review blocks.
 
 ```markdown
@@ -1043,7 +1043,7 @@ Gate parsing contract:
 
 {2-3 sentence summary}
 
-Findings: {N} critical, {N} important, {N} medium, {N} minor
+Findings by severity: {N} critical, {N} high, {N} medium, {N} low
 
 ## Findings
 
@@ -1051,7 +1051,7 @@ Findings: {N} critical, {N} important, {N} medium, {N} minor
 
 {findings or "None"}
 
-### Important
+### High
 
 {findings or "None"}
 
@@ -1059,7 +1059,7 @@ Findings: {N} critical, {N} important, {N} medium, {N} minor
 
 {findings or "None"}
 
-### Minor
+### Low
 
 {findings or "None"}
 
@@ -1128,7 +1128,7 @@ Record this artifact as one append-ordered review event:
 - `Scope`: `{scope}` (examples: `p02`, `final`, `spec`, `design`)
   - Phase-range examples such as `p02-p03` are valid code-review scopes and should be preserved exactly.
 - `Type`: `code` or `artifact`
-- `Status`: `received` (receive-review will decide `fixes_added` vs `passed`; `passed` now requires no unresolved Critical/Important/Medium and final deferred-medium disposition when applicable)
+- `Status`: `received` (receive-review will decide `fixes_added` vs `passed`; `passed` now requires no unresolved Critical/High/Medium and final deferred-medium disposition when applicable)
 - `Date`: `{today}`
 - `Artifact`: `reviews/{filename}.md`
 - `Reviewed Head`: for code reviews, the full 40-character SHA from
@@ -1229,7 +1229,7 @@ Review complete for {project-name}.
 
 Scope: {scope}
 Files reviewed: {N}
-Findings: {N} critical, {N} important, {N} medium, {N} minor
+Findings by severity: {N} critical, {N} high, {N} medium, {N} low
 
 Review artifact: {path}
 Bookkeeping commit: {sha or "deferred with user approval"}

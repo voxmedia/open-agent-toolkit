@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.1.2
+  version: 1.1.4
 ---
 
 # Remote Review Provide (Ad-hoc GitHub PR)
@@ -88,8 +88,8 @@ Normalize every finding to this shape (matches the ad-hoc review checklist and t
 
 ```yaml
 finding:
-  id: "C1" | "I1" | "M1" | "m1"
-  severity: critical | important | medium | minor
+  id: "C1" | "H1" | "M1" | "L1"
+  severity: critical | high | medium | low
   title: string
   file: string | null
   line: number | null
@@ -100,9 +100,9 @@ finding:
 Severity conventions:
 
 - `critical`: Broken behavior, security risk, or missing P0 requirement.
-- `important`: Missing P1 requirement, major robustness issue.
+- `high`: Missing P1 requirement, major robustness issue.
 - `medium`: Meaningful but non-blocking quality/maintainability issue.
-- `minor`: Cosmetic/style/documentation issue.
+- `low`: Cosmetic/style/documentation issue.
 
 Checklist + severity model source of truth: the `oat-review-provide` review
 artifact template. Independently probe each required `<name>/SKILL.md` in
@@ -213,7 +213,7 @@ The shared vocabulary remains `empty`, `bookkeeping-only`, or `substantive`; `bo
 
 ### Step 4: Run the Review (Inline)
 
-Review inline (no tier model — matches local `oat-review-provide`) using the ad-hoc review checklist + severity model. Scope to the narrowing range when one was chosen; otherwise the full PR diff. Assign finding IDs per severity bucket (`C1`, `I1`, `M1`, `m1`).
+Review inline (no tier model — matches local `oat-review-provide`) using the ad-hoc review checklist + severity model. Scope to the narrowing range when one was chosen; otherwise the full PR diff. Assign finding IDs per severity bucket (`C1`, `H1`, `M1`, `L1`).
 
 ### Step 5: Map Inline Comments to the Diff
 
@@ -229,7 +229,7 @@ For each finding with non-null `file` + `line`, classify it against the PR diff 
 
 ### Step 6: Build the Review Body + Verdict
 
-Build the posted-review body (design.md → Data Models → Posted-review-body): a leading HTML-comment marker block, then summary, severity counts, the minor-fix "Notes" nudge (only when minor findings are present), and optional verification commands.
+Build the posted-review body (design.md → Data Models → Posted-review-body): a leading HTML-comment marker block, then summary, severity counts, the low-fix "Notes" nudge (only when low findings are present), and optional verification commands.
 
 Markers (ad-hoc rail):
 
@@ -242,7 +242,7 @@ oat_review_invocation: manual
 -->
 ```
 
-`oat_project` is omitted entirely on the ad-hoc rail. Verdict: `REQUEST_CHANGES` when any critical or important finding exists; `COMMENT` otherwise (including a clean, zero-findings review — never auto-`APPROVE`).
+`oat_project` is omitted entirely on the ad-hoc rail. Verdict: `REQUEST_CHANGES` when any critical or high finding exists; `COMMENT` otherwise (including a clean, zero-findings review — never auto-`APPROVE`).
 
 ### Step 7: Post the Review + Clean Up
 
@@ -253,7 +253,7 @@ Probe `agent-reviews` for a posting flow with a non-mutating check (`npx agent-r
 
 Present the body + verdict + inline-comment count to the user and get explicit confirmation, then post a single review.
 
-`gh api --field`/`-f`/`-F` only set top-level scalar values; they CANNOT build the nested `comments[]` array of objects the reviews endpoint requires for inline comments. Construct the complete review payload as JSON and pipe it through `--input -` instead (a heredoc or a temp JSON file both work). Each in-diff finding (from Step 5) becomes one `comments[]` entry `{ path, line, side, body }`; out-of-diff findings are NOT added here — they were already downgraded into `$REVIEW_BODY` in Step 5. `event` is the Step 6 verdict (`REQUEST_CHANGES` when any critical/important finding exists, else `COMMENT`). A body-only review (zero in-diff findings) uses an empty `comments` array or omits the key:
+`gh api --field`/`-f`/`-F` only set top-level scalar values; they CANNOT build the nested `comments[]` array of objects the reviews endpoint requires for inline comments. Construct the complete review payload as JSON and pipe it through `--input -` instead (a heredoc or a temp JSON file both work). Each in-diff finding (from Step 5) becomes one `comments[]` entry `{ path, line, side, body }`; out-of-diff findings are NOT added here — they were already downgraded into `$REVIEW_BODY` in Step 5. `event` is the Step 6 verdict (`REQUEST_CHANGES` when any critical/high finding exists, else `COMMENT`). A body-only review (zero in-diff findings) uses an empty `comments` array or omits the key:
 
 ```bash
 # Build the payload as JSON. `comments` is the in-diff findings array; jq
@@ -319,8 +319,8 @@ At completion, report:
 - Narrowed ranges are classified as `empty` or `substantive` for reporting only; changed-file enumeration failure conservatively reports `substantive`.
 - Findings produced with consistent 4-tier severities and file:line references.
 - Inline comments mapped to in-diff positions; out-of-diff findings downgraded to the body, never dropped.
-- Posted-review body carries the marker block first, correct severity counts, and the minor-fix nudge when minors are present.
-- Verdict matches the C/I rule (`REQUEST_CHANGES` vs `COMMENT`; never auto-`APPROVE`).
+- Posted-review body carries the marker block first, correct severity counts, and the low-fix nudge when low findings are present.
+- Verdict matches the C/H rule (`REQUEST_CHANGES` vs `COMMENT`; never auto-`APPROVE`).
 - Single PR review posted (with user confirmation) via `agent-reviews` if supported, else `gh api`.
 - Ephemeral worktree removed on success and on failure.
 - No local artifact, no lifecycle bookkeeping, no fixes/commits/pushes on this machine.

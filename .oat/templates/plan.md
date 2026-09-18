@@ -189,7 +189,7 @@ cell; never truncate a widened row back to five columns.
 - `received`: review artifact exists (not yet converted into fix tasks)
 - `fixes_added`: fix tasks were added to the plan (work queued)
 - `fixes_completed`: fix tasks implemented, awaiting re-review
-- `passed`: re-review run and recorded as passing (no Critical/Important)
+- `passed`: re-review run and recorded as passing (no Critical/High)
 
 ---
 

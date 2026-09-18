@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(oat:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.6.6
+  version: 1.6.7
 ---
 
 # Receive Review
@@ -201,6 +201,25 @@ identity and destination. Resolve them here, before writing plan,
 implementation, or artifact-review references. Never choose a different
 basename later in either receive path.
 
+### Step 1.5: Reject Retired Severity Artifacts (Fail Closed)
+
+Before parsing findings, deriving counts, selecting a handling mode, or making
+any lifecycle mutation, scan the selected review artifact for the retired
+severity vocabulary. Reject the artifact when it contains any of:
+
+- `### Important` or `### Minor` severity headings (case-insensitive);
+- `oat_review_important_count` or `oat_review_minor_count` frontmatter keys;
+- a legacy `Findings:` count line that reports `important` or `minor` counts.
+
+Stop immediately when any retired form is present. Do not treat an unread
+retired heading or count as absent or zero, do not enter the
+`Critical + High + Medium == 0` pass path, and do not update or archive project
+artifacts. Report which retired forms were found and direct the user to rename
+`Important` to `High`, `Minor` to `Low`, and the matching count keys, or to
+re-run `oat-project-review-provide` so it emits a current artifact. If a fresh
+review still emits retired tiers, run `oat tools update` to refresh the
+installed tools and provider projections, then re-run the review.
+
 ### Step 2: Parse Findings into Buckets
 
 Extract findings from the review artifact and categorize:
@@ -212,7 +231,7 @@ Extract findings from the review artifact and categorize:
 - Broken functionality
 - Missing tests for critical paths
 
-**Important (should fix before merge):**
+**High (should fix before merge):**
 
 - Missing P1 requirements
 - Missing error handling
@@ -224,7 +243,7 @@ Extract findings from the review artifact and categorize:
 - Moderate maintainability/testability issues
 - Contract gaps that can cause future regressions
 
-**Minor (fix if time permits):**
+**Low (fix if time permits):**
 
 - Cosmetic/non-behavioral polish
 - Style issues
@@ -234,17 +253,17 @@ Extract findings from the review artifact and categorize:
 
 ```
 Critical: {N}
-Important: {N}
+High: {N}
 Medium: {N}
-Minor: {N}
+Low: {N}
 ```
 
 Assign stable finding IDs for this receive run and keep them consistent in all prompts:
 
 - Critical: `C1`, `C2`, ...
-- Important: `I1`, `I2`, ...
+- High: `H1`, `H2`, ...
 - Medium: `M1`, `M2`, ...
-- Minor: `m1`, `m2`, ...
+- Low: `L1`, `L2`, ...
 
 For each finding, build a structured register entry:
 
@@ -262,17 +281,17 @@ For each finding, build a structured register entry:
   - `rejected_with_rationale` (invalid/not applicable)
   - `needs_user_direction` (unclear or disagreement)
 
-**If Critical + Important + Medium == 0:**
+**If Critical + High + Medium == 0:**
 
 - For non-final scopes:
   - Mark the review as `passed` in the plan.md Reviews table (if plan.md exists)
   - No fix tasks are added
-  - Minor findings still follow the Step 9 recommendation/disposition rules before routing onward
+  - Low findings still follow the Step 9 recommendation/disposition rules before routing onward
   - Route user to normal next action
 - For `final` scope:
   - Do not mark `passed` until both gates are complete:
     1. Deferred-medium resurfacing/disposition (Step 8.5)
-    2. Minor findings disposition is explicitly confirmed by user (Step 9)
+    2. Low findings disposition is explicitly confirmed by user (Step 9)
   - After both gates are complete, mark `passed` and route to PR/finalization
 - Note: `passed` means “review passed” (not merely “fixes completed”). If fixes exist, use `fixes_completed` until a re-review passes.
 
@@ -286,9 +305,9 @@ Required output structure:
 Findings Overview:
 
 - Critical: {N}
-- Important: {N}
+- High: {N}
 - Medium: {N}
-- Minor: {N}
+- Low: {N}
 
 Critical Findings:
 {for each C\* finding}
@@ -299,13 +318,13 @@ Critical Findings:
   - Recommendation: {convert_to_task | defer_with_rationale}
   - Task Scope: {Large | Moderate | Minor | Negligible}
 
-Important Findings:
+High Findings:
 {same pattern}
 
 Medium Findings:
 {same pattern}
 
-Minor Findings:
+Low Findings:
 {same pattern, include fix-now vs defer-now tradeoff in plain language}
 ```
 
@@ -333,20 +352,20 @@ Read `oat_review_type` and `oat_review_invocation` from review artifact frontmat
   - Do not defer findings by default. Only use `rejected_with_rationale` for invalid findings, or `needs_user_direction` when user input is required.
 - If `oat_review_type == code` AND `oat_review_invocation == auto`, OR `oat_review_invocation == gate` from a **blocking** gate (the gate-originated context does not indicate a passing-gate sweep):
   - **Auto-disposition mode.** This review was spawned by the auto-review checkpoint trigger in `oat-project-implement` or by a blocking `oat gate review`. Apply relaxed disposition defaults:
-    - Critical/Important/Medium: convert to fix tasks (same as manual mode)
-    - Minor: auto-convert to fix tasks unless clearly out of scope (e.g., cosmetic polish unrelated to changed code). Manual mode now also defaults minors to `convert` (see Step 9); auto/gate mode keeps the same intent — fix everything while context is fresh — but without any user prompts.
+    - Critical/High/Medium: convert to fix tasks (same as manual mode)
+    - Low: auto-convert to fix tasks unless clearly out of scope (e.g., cosmetic polish unrelated to changed code). Manual mode now also defaults lows to `convert` (see Step 9); auto/gate mode keeps the same intent — fix everything while context is fresh — but without any user prompts.
     - **No user prompts for disposition decisions.** The auto/gate review path runs fully autonomously.
     - Genuinely ambiguous findings (e.g., a medium the agent disagrees with) are deferred with a note explaining why, rather than pausing for interactive resolution.
   - Follow the task-conversion flow in Steps 3-10 with these adjusted defaults.
 - If `oat_review_type == code` AND `oat_review_invocation == gate` from a **passing** gate (the gate-originated context indicates a passing-gate judgment sweep):
   - **Judgment-sweep mode.** The phase gate already passed at its `exit_nonzero_on` threshold, so the phase does not stop. Consume the artifact anyway, so its sub-threshold findings become durable, ordered dispositions in `implementation.md` instead of evaporating. Fully non-pausing; no user prompts.
-    - The gate verdict decided whether the phase stops; it did **not** decide whether Medium/Minor findings are ignored. There are, by definition, no unresolved Critical/Important findings in a passing gate (if there were, the gate would have blocked).
-    - Make a per-finding **judgment call** for each Medium/Minor — do not mechanically dump them all:
+    - The gate verdict decided whether the phase stops; it did **not** decide whether Medium/Low findings are ignored. There are, by definition, no unresolved Critical/High findings in a passing gate (if there were, the gate would have blocked).
+    - Make a per-finding **judgment call** for each Medium/Low — do not mechanically dump them all:
       - **Defer to final** (default): record under "Deferred Findings" (Mediums under "Deferred Findings (Medium)" so Step 8.5 resurfacing picks them up) with concrete rationale.
       - **Address now:** only for small, contained, low-risk fixes. Apply the fix, commit it with the phase bookkeeping, and record the disposition. Do **not** re-run the standard reviewer or re-gate the phase for address-now fixes.
       - **Reject** as false-positive / out-of-scope, with concrete rationale.
     - `address now` is an **exception, not the norm** — when in doubt, defer. Do not let a passing gate drift into behaving like a Medium-blocking gate by habit.
-    - **Escalation exception:** if an address-now fix reveals or creates a Critical/Important concern, stop treating it as a sweep item. Convert it to a fix task and return control to the blocking-gate path (`oat-project-implement` re-runs the standard reviewer and the gate for the phase).
+    - **Escalation exception:** if an address-now fix reveals or creates a Critical/High concern, stop treating it as a sweep item. Convert it to a fix task and return control to the blocking-gate path (`oat-project-implement` re-runs the standard reviewer and the gate for the phase).
     - Do not add blocking fix tasks for deferred or rejected findings. After recording all dispositions, archive the artifact (Step 7.5) and commit review bookkeeping (Step 7.6) as usual.
 - If `oat_review_type == code` (manual or `oat_review_invocation` absent):
   - Follow the existing task-conversion flow in Steps 3-10 with standard disposition behavior.
@@ -393,7 +412,7 @@ Derive `TASK_PREFIX` from scope:
 
 ### Step 5: Convert Findings to Tasks
 
-**For each Critical, Important, and Medium finding (default):**
+**For each Critical, High, and Medium finding (default):**
 
 Create a plan task entry:
 
@@ -475,7 +494,7 @@ Add new tasks to plan.md in the target phase. When adding or editing tasks, pres
 
 - Find the existing event by `{scope}`, review Type, and
   `$SOURCE_REVIEW_FILENAME`, then update only that row:
-  - Status: `fixes_added` (if tasks were added) or `passed` (if no Critical/Important/Medium and no unresolved final-scope gates)
+  - Status: `fixes_added` (if tasks were added) or `passed` (if no Critical/High/Medium and no unresolved final-scope gates)
   - Date: `{today}`
   - Artifact: `reviews/archived/$REVIEW_FILENAME`
   - Reviewed Head: validated full `oat_review_head_sha` for code reviews
@@ -487,7 +506,7 @@ Add new tasks to plan.md in the target phase. When adding or editing tasks, pres
 
 - `fixes_added`: fix tasks were created and added to the plan
 - `fixes_completed`: fix tasks implemented, awaiting re-review
-- `passed`: re-review completed and recorded as passing (no unresolved Critical/Important/Medium, and all final-scope gates satisfied: deferred-medium + minor disposition)
+- `passed`: re-review completed and recorded as passing (no unresolved Critical/High/Medium, and all final-scope gates satisfied: deferred-medium + low-severity disposition)
 - Status changes are monotonic. Never move an event status backward, replace an earlier event, or update a different event that happens to share the same scope/type.
 
 ### Step 7: Update Implementation.md
@@ -503,9 +522,9 @@ Add a note to implementation.md:
 **Findings:**
 
 - Critical: {N}
-- Important: {N}
+- High: {N}
 - Medium: {N}
-- Minor: {N}
+- Low: {N}
 
 **New tasks added:** {task_ids}
 
@@ -630,7 +649,7 @@ Rules:
 - If any deferred Medium remains undecided, final review cannot be marked `passed`.
 - Record user decisions + rationale in `implementation.md` under the final review notes.
 
-### Step 9: Handle Medium Deferral Requests and Minor Findings
+### Step 9: Handle Medium Deferral Requests and Low Findings
 
 Medium findings are converted to tasks by default.
 
@@ -642,43 +661,43 @@ If any Medium is proposed for deferral:
 - If user declines deferral, convert that Medium to a fix task now.
 - If user approves deferral, record rationale in `implementation.md` under "Deferred Findings (Medium)".
 
-Design drift handling applies before Medium/Minor convenience deferrals:
+Design drift handling applies before Medium/Low convenience deferrals:
 
 - If a review finding reveals that the design artifact is stale relative to a defensible implementation, do not treat this as a no-op.
 - Either convert the finding to an artifact-alignment task or record an explicit deferral.
 - In both cases, add an `implementation.md` review note so final summary generation can preserve the design delta.
 - The note must include what drift was found, why the implementation is accepted, whether implementation or artifact is source of truth, and the artifact task or deferral that will align the lifecycle record.
 
-Minor findings handling is scope-aware:
+Low findings handling is scope-aware:
 
 - If `scope != final`:
-  - Minor findings default to `convert`, not `defer`. Small findings are usually cheaper to fix inline than to track as backlog items, so converting is the baseline disposition for every Minor.
-  - `defer` (and `dismiss`) at Minor severity requires explicit, concrete rationale — the same gate that applies to Medium and above. Only propose deferral when the finding is genuinely low-probability cleanup, blocked by another change, duplicated elsewhere, explicitly out of scope, or fixing now would create disproportionate churn/risk.
+  - Low findings default to `convert`, not `defer`. Small findings are usually cheaper to fix inline than to track as backlog items, so converting is the baseline disposition for every Low.
+  - `defer` (and `dismiss`) at Low severity requires explicit, concrete rationale — the same gate that applies to Medium and above. Only propose deferral when the finding is genuinely low-probability cleanup, blocked by another change, duplicated elsewhere, explicitly out of scope, or fixing now would create disproportionate churn/risk.
   - If deferred, record rationale in implementation.md under "Deferred Findings".
-  - Do not block review completion on minor disposition once each finding has been converted or explicitly deferred with rationale.
+  - Do not block review completion on low-severity disposition once each finding has been converted or explicitly deferred with rationale.
 
 - If `scope == final`:
-  - Minor findings are NOT auto-deferred silently.
-  - Before asking for disposition, explain each minor in plain language:
+  - Low findings are NOT auto-deferred silently.
+  - Before asking for disposition, explain each low-severity finding in plain language:
     - what the issue is,
     - potential user/maintainer impact,
     - why fixing now vs deferring is reasonable.
   - Recommendation default:
-    - default to recommending `convert` — fixing a non-blocking minor inline is usually cheaper than tracking it as a backlog item, and this is especially true for `Negligible`/`Minor`-scope fixes;
+    - default to recommending `convert` — fixing a non-blocking low-severity finding inline is usually cheaper than tracking it as a backlog item, and this is especially true for `Negligible`/`Minor`-scope fixes;
     - recommend `defer` only when the finding is unlikely to matter soon, blocked, duplicated, or high-churn to address now, and capture that concrete rationale.
-  - Keep explanations concise (1-3 sentences per minor) and include file/line when available.
+  - Keep explanations concise (1-3 sentences per low-severity finding) and include file/line when available.
   - Ask user explicitly:
 
     ```
-    {N} minor findings pending final disposition:
-    - {m1}: {summary} — {brief explanation}
-    - {m2}: {summary} — {brief explanation}
+    {N} low findings pending final disposition:
+    - {L1}: {summary} — {brief explanation}
+    - {L2}: {summary} — {brief explanation}
     ...
 
     Options:
-    1. Defer all minor findings with rationale
-    2. Select specific minor IDs to convert to tasks (e.g., m2,m3)
-    3. Convert all minors to tasks
+    1. Defer all low findings with rationale
+    2. Select specific low IDs to convert to tasks (e.g., L2,L3)
+    3. Convert all lows to tasks
 
     Choose:
     ```
@@ -750,14 +769,14 @@ Review received for {project-name}.
 
 Review: $REVIEW_FILENAME
 Scope: {scope}
-Findings: {N} critical, {N} important, {N} medium, {N} minor
+Findings by severity: {N} critical, {N} high, {N} medium, {N} low
 
 Actions taken:
 - Added {N} fix tasks to plan.md ({task_ids})
 - Updated implementation.md with review notes
 - Archived review artifact to `reviews/archived/$REVIEW_FILENAME`
 - Deferred/accepted Medium findings: {N}
-- Minor findings dispositioned: {N} converted (default), {N} deferred-with-rationale (explicit user decision required for final scope)
+- Low findings dispositioned: {N} converted (default), {N} deferred-with-rationale (explicit user decision required for final scope)
 - Finding disposition map: {ID -> converted|deferred|accepted + rationale summary}
 
 Review cycle: {N} of 3
@@ -772,7 +791,7 @@ Review received for {project-name}.
 
 Review: $REVIEW_FILENAME
 Scope: {scope}
-Findings: {N} critical, {N} important, {N} medium, {N} minor
+Findings by severity: {N} critical, {N} high, {N} medium, {N} low
 
 Actions taken:
 - Applied {N} artifact edits
@@ -804,7 +823,7 @@ This prevents reviewing already-approved code and focuses the reviewer on just t
 - Active review artifact located and read
 - Findings parsed and categorized
 - Findings overview + per-finding analysis presented to user before disposition choices
-- Fix tasks created for Critical/Important/Medium findings by default
+- Fix tasks created for Critical/High/Medium findings by default
 - Plan.md updated with new tasks
 - Implementation.md updated with review notes
 - Consumed review artifact archived under `reviews/archived/`
@@ -813,6 +832,6 @@ This prevents reviewing already-approved code and focuses the reviewer on just t
 - Final-scope deferred Medium findings resurfaced and explicitly dispositioned
 - User routed to next action
 - Medium deferrals handled via explicit user approval
-- Minor findings handled (converted or deferred), with explicit user decision required for final scope
+- Low findings handled (converted or deferred), with explicit user decision required for final scope
 - For `artifact` reviews: findings are resolved directly in artifacts (or rejected with rationale if invalid), with no default deferrals
 - For `artifact` reviews: user confirms proposed edits before they are applied

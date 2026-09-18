@@ -6,7 +6,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: 1.0.15
+  version: 1.0.16
 ---
 
 # Autonomous OAT Project
@@ -395,7 +395,7 @@ At every required artifact or code review:
    Configured invocation evidence is authoritative; runtime identity is
    separate and non-authoritative.
 6. Fail closed for blocking reviews. Unresolved Critical findings always stop;
-   Important findings follow the configured gate policy.
+   High findings follow the configured gate policy.
 
 Do not reproduce provider-specific model, catalog, or launch mechanics here.
 

@@ -469,7 +469,7 @@ oat --json gate review \
   --project "$PROJECT_PATH" \
   --review-type code \
   --review-scope final \
-  --exit-nonzero-on important \
+  --exit-nonzero-on high \
   'Use oat-project-review-provide code final for the declared project'
 ```
 

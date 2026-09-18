@@ -527,13 +527,13 @@ describe('oat gate', () => {
     fileName?: string;
     generatedAt?: string | null;
     reviewScope?: string;
-    finding?: 'important' | 'minor' | 'clean';
+    finding?: 'high' | 'low' | 'clean';
     omitMediumSection?: boolean;
     counts?: {
       critical: number;
-      important: number;
+      high: number;
       medium: number;
-      minor: number;
+      low: number;
     };
     reviewInvocation?: 'gate' | 'manual' | 'auto' | null;
     artifactProject?: string | null;
@@ -552,20 +552,20 @@ describe('oat gate', () => {
     await mkdir(join(options.root, dirname(relativePath)), {
       recursive: true,
     });
-    const importantContent =
-      options.finding === 'important'
-        ? ['- Important finding that should block.']
+    const highContent =
+      options.finding === 'high'
+        ? ['- High finding that should block.']
         : ['None.'];
-    const minorContent =
-      options.finding === 'minor'
-        ? ['- Minor finding that still needs disposition.']
+    const lowContent =
+      options.finding === 'low'
+        ? ['- Low finding that still needs disposition.']
         : ['None.'];
     const countLines = options.counts
       ? [
           `oat_review_critical_count: ${options.counts.critical}`,
-          `oat_review_important_count: ${options.counts.important}`,
+          `oat_review_high_count: ${options.counts.high}`,
           `oat_review_medium_count: ${options.counts.medium}`,
-          `oat_review_minor_count: ${options.counts.minor}`,
+          `oat_review_low_count: ${options.counts.low}`,
         ]
       : [];
     const mediumSection = options.omitMediumSection
@@ -631,14 +631,14 @@ describe('oat gate', () => {
         '',
         'None',
         '',
-        '### Important',
+        '### High',
         '',
-        ...importantContent,
+        ...highContent,
         '',
         ...mediumSection,
-        '### Minor',
+        '### Low',
         '',
-        ...minorContent,
+        ...lowContent,
       ].join('\n'),
       'utf8',
     );
@@ -649,15 +649,15 @@ describe('oat gate', () => {
     root: string;
     fileName?: string;
     generatedAt?: string;
-    finding?: 'important' | 'clean';
+    finding?: 'high' | 'clean';
   }): Promise<string> {
     const relativePath = `.oat/repo/reviews/${options.fileName ?? 'ad-hoc-review.md'}`;
     await mkdir(join(options.root, dirname(relativePath)), {
       recursive: true,
     });
-    const importantContent =
-      options.finding === 'important'
-        ? ['- Important finding that should not be accepted by project gate.']
+    const highContent =
+      options.finding === 'high'
+        ? ['- High finding that should not be accepted by project gate.']
         : ['None.'];
     await writeFile(
       join(options.root, relativePath),
@@ -679,9 +679,9 @@ describe('oat gate', () => {
         '',
         'None',
         '',
-        '### Important',
+        '### High',
         '',
-        ...importantContent,
+        ...highContent,
       ].join('\n'),
       'utf8',
     );
@@ -4438,7 +4438,7 @@ describe('oat gate', () => {
         '',
         '## Findings',
         '',
-        '### Important',
+        '### High',
         '',
         '- Blocking finding that generic execution must ignore.',
       ].join('\n'),
@@ -4460,7 +4460,7 @@ describe('oat gate', () => {
     expect(process.exitCode).toBe(0);
   });
 
-  it('runs gate review through an explicit target, annotates the prompt, and blocks on Important findings', async () => {
+  it('runs gate review through an explicit target, annotates the prompt, and blocks on High findings', async () => {
     const { root, home } = await setup();
     const projectPath = await writeProject(root);
     await writeActiveProject(root, projectPath);
@@ -4470,7 +4470,7 @@ describe('oat gate', () => {
         artifactPath = await writeReviewArtifact({
           root,
           projectPath,
-          finding: 'important',
+          finding: 'high',
         });
       },
     });
@@ -4487,7 +4487,7 @@ describe('oat gate', () => {
         '--review-type',
         'artifact',
         '--exit-nonzero-on',
-        'important',
+        'high',
         'Use oat-project-review-provide artifact plan.',
       ],
     });
@@ -4512,14 +4512,53 @@ describe('oat gate', () => {
       project: projectPath,
       projectResolutionSource: 'active-project',
       artifactPath,
-      threshold: 'important',
-      counts: { critical: 0, important: 1 },
+      threshold: 'high',
+      counts: { critical: 0, high: 1 },
       handoff: expect.stringContaining('oat-project-review-receive'),
       corroboration: {
         run: 'matched',
         project: 'ambient',
         invocation: 'matched',
       },
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('maps the legacy important threshold onto the high tier', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          finding: 'high',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: [
+        '--target',
+        'codex-default',
+        '--review-scope',
+        'plan',
+        '--review-type',
+        'artifact',
+        '--exit-nonzero-on',
+        'important',
+        'Use oat-project-review-provide artifact plan.',
+      ],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'blocked',
+      threshold: 'high',
+      counts: { critical: 0, high: 1 },
     });
     expect(process.exitCode).toBe(1);
   });
@@ -4744,7 +4783,7 @@ describe('oat gate', () => {
           '--review-type',
           'artifact',
           '--exit-nonzero-on',
-          'important',
+          'high',
           'Use oat-project-review-provide artifact plan.',
         ],
       });
@@ -5294,7 +5333,7 @@ describe('oat gate', () => {
       project: projectPath,
       projectResolutionSource: 'active-project',
       blocking: false,
-      counts: { critical: 0, important: 0 },
+      counts: { critical: 0, high: 0 },
       runId: expect.any(String),
       generatedAt: '2026-06-01T00:00:00Z',
     });
@@ -5346,7 +5385,7 @@ describe('oat gate', () => {
     {
       outcome: 'blocking verdict',
       childExitCode: 0,
-      finding: 'important' as const,
+      finding: 'high' as const,
       expectedStatus: 'blocked',
       expectedExitCode: 1,
       expectedArtifact: true,
@@ -5446,7 +5485,7 @@ describe('oat gate', () => {
         ref: 'p02',
       });
       expect(input?.body).toContain('target=codex-default');
-      expect(input?.body).toContain('threshold=important');
+      expect(input?.body).toContain('threshold=high');
       expect(input?.body).toContain(`exit=${expectedExitCode}`);
       expect(input?.body).toContain(`status=${expectedStatus}`);
       if (expectedCounts) {
@@ -5563,7 +5602,7 @@ describe('oat gate', () => {
         await writeReviewArtifact({
           root,
           projectPath,
-          finding: 'important',
+          finding: 'high',
         });
       },
     });
@@ -5718,7 +5757,7 @@ describe('oat gate', () => {
         await writeReviewArtifact({
           root,
           projectPath,
-          finding: 'important',
+          finding: 'high',
         });
       },
     });
@@ -6956,9 +6995,9 @@ describe('oat gate', () => {
           omitMediumSection: true,
           counts: {
             critical: 0,
-            important: 0,
+            high: 0,
             medium: 0,
-            minor: 0,
+            low: 0,
           },
         });
         originalContent = await readFile(join(root, artifactPath), 'utf8');
@@ -6977,7 +7016,7 @@ describe('oat gate', () => {
         '--review-type',
         'code',
         '--exit-nonzero-on',
-        'important',
+        'high',
         'Use oat-project-review-provide code final.',
       ],
     });
@@ -6989,9 +7028,9 @@ describe('oat gate', () => {
       blocking: false,
       counts: {
         critical: 0,
-        important: 0,
+        high: 0,
         medium: 0,
-        minor: 0,
+        low: 0,
       },
       normalization: {
         insertedSeverities: ['medium'],
@@ -7022,9 +7061,9 @@ describe('oat gate', () => {
           omitMediumSection: true,
           counts: {
             critical: 0,
-            important: 0,
+            high: 0,
             medium: 1,
-            minor: 0,
+            low: 0,
           },
         });
       },
@@ -7056,7 +7095,7 @@ describe('oat gate', () => {
     expect(process.exitCode).toBe(1);
   });
 
-  it('keeps final-scope Minor-only gate success tied to review-receive disposition', async () => {
+  it('keeps final-scope Low-only gate success tied to review-receive disposition', async () => {
     const { root, home } = await setup();
     const projectPath = await writeProject(root);
     await writeActiveProject(root, projectPath);
@@ -7067,7 +7106,7 @@ describe('oat gate', () => {
           root,
           projectPath,
           reviewScope: 'final',
-          finding: 'minor',
+          finding: 'low',
         });
       },
     });
@@ -7084,7 +7123,7 @@ describe('oat gate', () => {
         '--review-type',
         'code',
         '--exit-nonzero-on',
-        'important',
+        'high',
         'Review',
       ],
     });
@@ -7096,9 +7135,9 @@ describe('oat gate', () => {
       blocking: false,
       counts: {
         critical: 0,
-        important: 0,
+        high: 0,
         medium: 0,
-        minor: 1,
+        low: 1,
       },
       handoff: expect.stringContaining(
         'final review still contains non-blocking findings',
@@ -7112,7 +7151,7 @@ describe('oat gate', () => {
     expect(process.exitCode).toBe(0);
   });
 
-  it('keeps final-scope Important findings in handoff text when only Critical blocks', async () => {
+  it('keeps final-scope High findings in handoff text when only Critical blocks', async () => {
     const { root, home } = await setup();
     const projectPath = await writeProject(root);
     await writeActiveProject(root, projectPath);
@@ -7123,7 +7162,7 @@ describe('oat gate', () => {
           root,
           projectPath,
           reviewScope: 'final',
-          finding: 'important',
+          finding: 'high',
         });
       },
     });
@@ -7152,11 +7191,11 @@ describe('oat gate', () => {
       blocking: false,
       counts: {
         critical: 0,
-        important: 1,
+        high: 1,
         medium: 0,
-        minor: 0,
+        low: 0,
       },
-      handoff: expect.stringContaining('important=1'),
+      handoff: expect.stringContaining('high=1'),
     });
     expect(capture.jsonPayloads[0]).toMatchObject({
       handoff: expect.stringContaining(
@@ -7187,7 +7226,7 @@ describe('oat gate', () => {
           fileName: 'p01-review.md',
           generatedAt: '2026-06-29',
           reviewScope: 'p01',
-          finding: 'important',
+          finding: 'high',
         });
       },
     });
@@ -7203,7 +7242,7 @@ describe('oat gate', () => {
       status: 'blocked',
       project: projectPath,
       artifactPath,
-      counts: { critical: 0, important: 1 },
+      counts: { critical: 0, high: 1 },
     });
     expect(process.exitCode).toBe(1);
   });
@@ -7444,8 +7483,8 @@ describe('oat gate', () => {
         await writeReviewArtifact({
           root,
           projectPath,
-          finding: 'important',
-          counts: { critical: 0, important: 1, medium: 0, minor: 0 },
+          finding: 'high',
+          counts: { critical: 0, high: 1, medium: 0, low: 0 },
         });
       },
     });
@@ -7464,7 +7503,7 @@ describe('oat gate', () => {
       outcome: 'review_completed_blocking_findings',
       receiveEligible: true,
       postSelectionRecovery: true,
-      counts: { critical: 0, important: 1, medium: 0, minor: 0 },
+      counts: { critical: 0, high: 1, medium: 0, low: 0 },
       handoff: expect.stringContaining('oat-project-review-receive'),
     });
     // The blocking disposition reaches the project log too, so a recovery
@@ -7674,16 +7713,13 @@ describe('oat gate', () => {
         artifactPath = await writeReviewArtifact({
           root,
           projectPath,
-          finding: 'important',
-          counts: { critical: 0, important: 1, medium: 0, minor: 0 },
+          finding: 'high',
+          counts: { critical: 0, high: 1, medium: 0, low: 0 },
         });
         originalContent = await readFile(join(root, artifactPath), 'utf8');
         replacementContent = originalContent
-          .replace(
-            'oat_review_important_count: 1',
-            'oat_review_important_count: 0',
-          )
-          .replace('- Important finding that should block.', 'None.');
+          .replace('oat_review_high_count: 1', 'oat_review_high_count: 0')
+          .replace('- High finding that should block.', 'None.');
       },
     });
     const transient = createTransientPostSelectionParse({
@@ -7707,7 +7743,7 @@ describe('oat gate', () => {
     for (const call of transient.calls) {
       expect(call.snapshot?.content).toBe(originalContent);
       expect(call.snapshot?.content).toContain(
-        '- Important finding that should block.',
+        '- High finding that should block.',
       );
     }
     // Replacement bytes never recover: the snapshot no longer matches the
@@ -7850,7 +7886,7 @@ describe('oat gate', () => {
       root: string,
       projectPath: string,
     ): Promise<void> => {
-      await writeReviewArtifact({ root, projectPath, finding: 'minor' });
+      await writeReviewArtifact({ root, projectPath, finding: 'low' });
     };
     // Normalize the only run-scoped value so the two envelopes are directly
     // comparable.
@@ -7994,7 +8030,7 @@ describe('oat gate', () => {
       expectedStatus: 'ok',
     },
     {
-      finding: 'important' as const,
+      finding: 'high' as const,
       expectedExitCode: 1,
       expectedOutcome: 'review_completed_blocking_findings',
       expectedStatus: 'blocked',
@@ -9301,11 +9337,11 @@ describe('oat gate', () => {
   it.each([
     {
       label: 'malformed findings',
-      counts: { critical: 0, important: 0, medium: 1, minor: 0 },
+      counts: { critical: 0, high: 0, medium: 1, low: 0 },
     },
     {
       label: 'normalizable missing heading',
-      counts: { critical: 0, important: 0, medium: 0, minor: 0 },
+      counts: { critical: 0, high: 0, medium: 0, low: 0 },
     },
   ])(
     'rejects a declared-project mismatch before parsing $label',
@@ -9435,8 +9471,8 @@ describe('oat gate', () => {
           projectPath: declaredProject,
           artifactProject: declaredProject,
           reviewScope: 'p01',
-          finding: 'important',
-          counts: { critical: 0, important: 1, medium: 0, minor: 0 },
+          finding: 'high',
+          counts: { critical: 0, high: 1, medium: 0, low: 0 },
           gateInvocationOverrides: {
             oat_invocation_model: 'stale-model',
           },
@@ -9459,11 +9495,8 @@ describe('oat gate', () => {
             'oat_invocation_model: stale-model',
             'oat_invocation_model: provider-default',
           )
-          .replace(
-            'oat_review_important_count: 1',
-            'oat_review_important_count: 0',
-          )
-          .replace('- Important finding that should block.', 'None.');
+          .replace('oat_review_high_count: 1', 'oat_review_high_count: 0')
+          .replace('- High finding that should block.', 'None.');
         await writeFile(absolutePath, mutatedContent, 'utf8');
         return parseReviewGateVerdictFromDisk(absolutePath, options);
       },
@@ -9826,7 +9859,7 @@ describe('oat gate', () => {
           root,
           projectPath,
           fileName: 'wrong-run-review.md',
-          finding: 'important',
+          finding: 'high',
           gateInvocationOverrides: {
             oat_gate_run_id: '11111111-1111-4111-8111-111111111111',
           },

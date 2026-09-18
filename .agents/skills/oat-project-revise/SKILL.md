@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.0.3
+  version: 1.0.4
 ---
 
 # Project Revise
@@ -146,7 +146,7 @@ How would you like to provide feedback?
 
 Parse the user's inline feedback into discrete change items. Each distinct change becomes one task.
 
-**No severity classification.** Unlike review-receive, inline feedback does not use Critical/Important/Medium/Minor triage. The user is telling us directly what to change — all items become tasks.
+**No severity classification.** Unlike review-receive, inline feedback does not use Critical/High/Medium/Low triage. The user is telling us directly what to change — all items become tasks.
 
 The agent may ask clarifying questions about ambiguous feedback.
 

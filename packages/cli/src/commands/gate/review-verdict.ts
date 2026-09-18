@@ -13,9 +13,9 @@ export interface ReviewGateVerdict {
   gateInvocation?: ReviewArtifactGateInvocation;
   counts: {
     critical: number;
-    important: number;
+    high: number;
     medium: number;
-    minor: number;
+    low: number;
   };
   blocking: boolean;
   normalization?: {
@@ -62,18 +62,18 @@ interface MarkdownLine {
   start: number;
 }
 
-const SEVERITIES: readonly Severity[] = [
-  'critical',
-  'important',
-  'medium',
-  'minor',
-];
+interface FrontmatterCountSource {
+  counts: ReviewGateVerdict['counts'];
+  tiers: Severity[];
+}
+
+const SEVERITIES: readonly Severity[] = ['critical', 'high', 'medium', 'low'];
 
 const FRONTMATTER_COUNT_KEYS: Readonly<Record<Severity, readonly string[]>> = {
   critical: ['oat_review_critical_count', 'critical'],
-  important: ['oat_review_important_count', 'important'],
+  high: ['oat_review_high_count', 'high'],
   medium: ['oat_review_medium_count', 'medium'],
-  minor: ['oat_review_minor_count', 'minor'],
+  low: ['oat_review_low_count', 'low'],
 };
 
 function artifactContentSignature(content: string): string {
@@ -141,6 +141,10 @@ function readGateInvocation(
 }
 
 function parseCountValue(value: unknown): number | null {
+  if (typeof value === 'string' && value.trim().length === 0) {
+    return null;
+  }
+
   const numberValue =
     typeof value === 'number'
       ? value
@@ -156,7 +160,20 @@ function parseCountValue(value: unknown): number | null {
 
 function readFrontmatterCounts(
   frontmatter: Record<string, unknown>,
-): ReviewGateVerdict['counts'] | null {
+  artifactPath: string,
+): FrontmatterCountSource | null {
+  const hasNestedCounts = Object.hasOwn(frontmatter, 'oat_review_counts');
+  if (
+    hasNestedCounts &&
+    (typeof frontmatter['oat_review_counts'] !== 'object' ||
+      frontmatter['oat_review_counts'] === null ||
+      Array.isArray(frontmatter['oat_review_counts']))
+  ) {
+    throw new Error(
+      `Review artifact at ${artifactPath} declares an invalid oat_review_counts block; it must be an object of non-negative integer counts.`,
+    );
+  }
+
   const nestedCounts =
     typeof frontmatter['oat_review_counts'] === 'object' &&
     frontmatter['oat_review_counts'] !== null &&
@@ -164,43 +181,64 @@ function readFrontmatterCounts(
       ? (frontmatter['oat_review_counts'] as Record<string, unknown>)
       : null;
 
-  const counts: ReviewGateVerdict['counts'] = {
-    critical: 0,
-    important: 0,
-    medium: 0,
-    minor: 0,
-  };
+  const parsed = new Map<Severity, number>();
 
+  // Validate every supplied alias before deciding whether the block is
+  // complete. A partial block must not be able to hide a conflicting pair and
+  // fall through to a summary line that reports fewer findings.
   for (const severity of SEVERITIES) {
     const candidateValues = [
-      ...FRONTMATTER_COUNT_KEYS[severity].map((key) => frontmatter[key]),
+      ...FRONTMATTER_COUNT_KEYS[severity].flatMap((key) =>
+        Object.hasOwn(frontmatter, key) ? [frontmatter[key]] : [],
+      ),
       ...(nestedCounts
-        ? FRONTMATTER_COUNT_KEYS[severity].map((key) => nestedCounts[key])
+        ? FRONTMATTER_COUNT_KEYS[severity].flatMap((key) =>
+            Object.hasOwn(nestedCounts, key) ? [nestedCounts[key]] : [],
+          )
         : []),
-    ].filter((value) => value !== undefined && value !== null);
+    ];
 
-    if (candidateValues.length === 0) {
-      return null;
-    }
-
-    const parsedCount = candidateValues.reduce<number | null>(
-      (parsed, value) => {
-        if (parsed !== null) {
-          return parsed;
-        }
-        return parseCountValue(value);
-      },
-      null,
+    const hasInvalidValue = candidateValues.some(
+      (value) => parseCountValue(value) === null,
     );
-
-    if (parsedCount === null) {
-      return null;
+    if (hasInvalidValue) {
+      throw new Error(
+        `Review artifact at ${artifactPath} declares an invalid ${severity} count; counts must be non-negative integers.`,
+      );
     }
 
-    counts[severity] = parsedCount;
+    const distinct = [
+      ...new Set(
+        candidateValues
+          .map((value) => parseCountValue(value))
+          .filter((value): value is number => value !== null),
+      ),
+    ];
+
+    if (distinct.length > 1) {
+      throw new Error(
+        `Review artifact at ${artifactPath} declares conflicting ${severity} counts (${distinct.join(', ')}); resolve the frontmatter before the gate can evaluate the review.`,
+      );
+    }
+
+    if (distinct.length === 1) {
+      parsed.set(severity, distinct[0]!);
+    }
   }
 
-  return counts;
+  if (parsed.size === 0) {
+    return null;
+  }
+
+  return {
+    counts: {
+      critical: parsed.get('critical') ?? 0,
+      high: parsed.get('high') ?? 0,
+      medium: parsed.get('medium') ?? 0,
+      low: parsed.get('low') ?? 0,
+    },
+    tiers: [...parsed.keys()],
+  };
 }
 
 function sectionContentIsEmpty(content: string): boolean {
@@ -255,8 +293,8 @@ function markdownLines(content: string): MarkdownLine[] {
 
 function fenceMarker(
   line: string,
-): { marker: '`' | '~'; length: number } | null {
-  const match = line.match(/^\s*(`{3,}|~{3,})/);
+): { marker: '`' | '~'; length: number; trailing: string } | null {
+  const match = line.match(/^\s*(`{3,}|~{3,})(.*)$/);
   if (!match?.[1]) {
     return null;
   }
@@ -264,12 +302,22 @@ function fenceMarker(
   return {
     marker: match[1].startsWith('`') ? '`' : '~',
     length: match[1].length,
+    trailing: match[2] ?? '',
   };
 }
 
+/**
+ * Lines outside fenced code blocks.
+ *
+ * An opening fence may carry an info string (```ts), but a closing fence may
+ * not: a marker run followed by other text is fence content, not a delimiter.
+ * Treating such a line as a closer ends the fence early and exposes quoted
+ * examples to the count scans, which is the failure the fence-awareness is
+ * there to prevent.
+ */
 function linesOutsideFences(content: string): MarkdownLine[] {
   const outsideFenceLines: MarkdownLine[] = [];
-  let activeFence: { marker: '`' | '~'; length: number } | null = null;
+  let activeFence: ReturnType<typeof fenceMarker> = null;
 
   for (const line of markdownLines(content)) {
     const marker = fenceMarker(line.text);
@@ -278,7 +326,8 @@ function linesOutsideFences(content: string): MarkdownLine[] {
         activeFence = marker;
       } else if (
         marker.marker === activeFence.marker &&
-        marker.length >= activeFence.length
+        marker.length >= activeFence.length &&
+        marker.trailing.trim() === ''
       ) {
         activeFence = null;
       }
@@ -343,27 +392,115 @@ function missingSeverityHeadings(
   return SEVERITIES.filter((severity) => !seenSeverities.has(severity));
 }
 
+const FINDINGS_SUMMARY_PATTERN =
+  /^Findings by severity:\s*(\d+)\s+critical,\s*(\d+)\s+high,\s*(\d+)\s+medium,\s*(\d+)\s+low\s*$/i;
+
+/**
+ * Read the canonical count line. Only lines outside fenced code blocks count,
+ * so a quoted example cannot be mistaken for the artifact's own counts, and two
+ * disagreeing count lines are rejected rather than silently resolved in favor
+ * of whichever appears first.
+ */
 function parseFindingsSummaryCounts(
   content: string,
+  artifactPath: string,
 ): ReviewGateVerdict['counts'] | null {
-  const match = content.match(
-    /^Findings:\s*(\d+)\s+critical,\s*(\d+)\s+important,\s*(\d+)\s+medium,\s*(\d+)\s+minor\s*$/im,
-  );
-  if (!match) {
+  const found: ReviewGateVerdict['counts'][] = [];
+
+  for (const line of linesOutsideFences(content)) {
+    const match = FINDINGS_SUMMARY_PATTERN.exec(line.text.trim());
+    if (!match) {
+      continue;
+    }
+    found.push({
+      critical: Number.parseInt(match[1] ?? '0', 10),
+      high: Number.parseInt(match[2] ?? '0', 10),
+      medium: Number.parseInt(match[3] ?? '0', 10),
+      low: Number.parseInt(match[4] ?? '0', 10),
+    });
+  }
+
+  if (found.length === 0) {
     return null;
   }
 
-  return {
-    critical: Number.parseInt(match[1] ?? '0', 10),
-    important: Number.parseInt(match[2] ?? '0', 10),
-    medium: Number.parseInt(match[3] ?? '0', 10),
-    minor: Number.parseInt(match[4] ?? '0', 10),
-  };
+  const distinct = new Map(
+    found.map((counts) => [JSON.stringify(counts), counts]),
+  );
+  if (distinct.size > 1) {
+    throw new Error(
+      `Review artifact at ${artifactPath} contains ${found.length} conflicting "Findings by severity" count lines; keep exactly one so the gate can evaluate the review.`,
+    );
+  }
+
+  return found[0]!;
 }
 
-function parseFindingsSectionCounts(
+/**
+ * Tier spellings retired by the severity rename. They are no longer read, and
+ * detecting them fails the artifact with a migration error rather than letting
+ * it parse. A retired heading that parsed alongside canonical ones would have
+ * its findings attributed to whichever canonical section precedes it, which can
+ * move a finding below the blocking threshold.
+ */
+function describeLegacySeverityUsage(
   content: string,
+  frontmatter: Record<string, unknown>,
+): string[] {
+  const found = new Set<string>();
+  const findingsSection = findFindingsSection(content);
+
+  for (const line of linesOutsideFences(findingsSection?.content ?? '')) {
+    if (/^#{1,6}\s+Important\s*#*\s*$/i.test(line.text)) {
+      found.add('a `### Important` heading');
+    }
+    if (/^#{1,6}\s+Minor\s*#*\s*$/i.test(line.text)) {
+      found.add('a `### Minor` heading');
+    }
+  }
+
+  for (const line of linesOutsideFences(content)) {
+    if (/^Findings:\s*\d+\s+critical,/i.test(line.text.trim())) {
+      found.add('a legacy `Findings:` count line');
+    }
+  }
+
+  const nested =
+    typeof frontmatter['oat_review_counts'] === 'object' &&
+    frontmatter['oat_review_counts'] !== null &&
+    !Array.isArray(frontmatter['oat_review_counts'])
+      ? (frontmatter['oat_review_counts'] as Record<string, unknown>)
+      : {};
+  for (const key of [...Object.keys(frontmatter), ...Object.keys(nested)]) {
+    if (/^(oat_review_)?(important|minor)(_count)?$/.test(key)) {
+      found.add(`the \`${key}\` count key`);
+    }
+  }
+
+  return [...found];
+}
+
+function legacySeverityError(
   artifactPath: string,
+  legacyUsage: readonly string[],
+): Error | null {
+  if (legacyUsage.length === 0) {
+    return null;
+  }
+  return new Error(
+    `Review artifact at ${artifactPath} uses retired severity tiers (${legacyUsage.join(', ')}). The tiers are now Critical, High, Medium, and Low: rename \`### Important\` to \`### High\` and \`### Minor\` to \`### Low\`, and \`oat_review_important_count\`/\`oat_review_minor_count\` to \`oat_review_high_count\`/\`oat_review_low_count\`, or re-run the review. If the reviewer that wrote this artifact still emits the retired tiers, its installed instructions are stale: run \`oat tools update\` to refresh the installed tools and their provider projections.`,
+  );
+}
+
+/**
+ * Per-tier counts for every severity heading the body actually has.
+ *
+ * Deliberately tolerant: it counts what is present without requiring the full
+ * canonical heading set, so it can cross-check explicit counts without changing
+ * how a body-only artifact is validated.
+ */
+function tallySeveritySections(
+  content: string,
 ): ReviewGateVerdict['counts'] | null {
   const findingsSection = findFindingsSection(content);
   const severityHeadings = findSeverityHeadings(content);
@@ -372,18 +509,11 @@ function parseFindingsSectionCounts(
     return null;
   }
 
-  const missingSeverities = missingSeverityHeadings(severityHeadings);
-  if (missingSeverities.length > 0) {
-    throw new Error(
-      `Review artifact at ${artifactPath} has an incomplete Findings section; expected headings for Critical, Important, Medium, and Minor. Missing: ${missingSeverities.join(', ')}.`,
-    );
-  }
-
   const counts: ReviewGateVerdict['counts'] = {
     critical: 0,
-    important: 0,
+    high: 0,
     medium: 0,
-    minor: 0,
+    low: 0,
   };
 
   for (const [offset, heading] of severityHeadings.entries()) {
@@ -391,8 +521,31 @@ function parseFindingsSectionCounts(
     const sectionStart = heading.index + heading.headingLength;
     const sectionEnd =
       nextHeading?.index ?? findingsSection?.end ?? content.length;
-    counts[heading.severity] = countFindingsInSection(
+    // Accumulate rather than assign: a repeated heading for one tier must not
+    // erase findings already counted under an earlier occurrence.
+    counts[heading.severity] += countFindingsInSection(
       content.slice(sectionStart, sectionEnd),
+    );
+  }
+
+  return counts;
+}
+
+function parseFindingsSectionCounts(
+  content: string,
+  artifactPath: string,
+): ReviewGateVerdict['counts'] | null {
+  const counts = tallySeveritySections(content);
+  if (counts === null) {
+    return null;
+  }
+
+  const missingSeverities = missingSeverityHeadings(
+    findSeverityHeadings(content),
+  );
+  if (missingSeverities.length > 0) {
+    throw new Error(
+      `Review artifact at ${artifactPath} has an incomplete Findings section; expected headings for ${SEVERITIES.map(severityDisplayName).join(', ')}. Missing: ${missingSeverities.join(', ')}.`,
     );
   }
 
@@ -423,7 +576,7 @@ function parseFrontmatterObject(
 }
 
 function hasBlockingFindings(counts: ReviewGateVerdict['counts']): boolean {
-  return counts.critical > 0 || counts.important > 0;
+  return counts.critical > 0 || counts.high > 0;
 }
 
 function insertionTextForSeverity(severity: Severity): string {
@@ -505,21 +658,109 @@ async function normalizeMissingEmptySeveritySections(
   };
 }
 
+interface CountSource {
+  name: string;
+  counts: ReviewGateVerdict['counts'];
+  tiers: readonly Severity[];
+}
+
+function formatCounts(counts: ReviewGateVerdict['counts']): string {
+  return SEVERITIES.map((severity) => `${counts[severity]} ${severity}`).join(
+    ', ',
+  );
+}
+
+/**
+ * Fail closed when two count sources disagree.
+ *
+ * No single source may win by precedence: a stale all-zero frontmatter block or
+ * count line would otherwise mask real findings written in the body, and the
+ * gate would pass a review that clearly reports a blocking finding.
+ */
+function assertAgreeingCounts(
+  artifactPath: string,
+  left: CountSource,
+  right: CountSource,
+  tiers: readonly Severity[] = SEVERITIES,
+): void {
+  const differing = tiers.filter(
+    (severity) => left.counts[severity] !== right.counts[severity],
+  );
+  if (differing.length === 0) {
+    return;
+  }
+
+  throw new Error(
+    `Review artifact at ${artifactPath} contradicts itself about finding counts (${differing.join(', ')}): declared counts are ${formatCounts(left.counts)} (${left.name}) but ${formatCounts(right.counts)} (${right.name}). Reconcile them before the gate can evaluate the review.`,
+  );
+}
+
+/**
+ * Resolve the artifact's counts, cross-checking every source that is present.
+ *
+ * Returns `null` when only the body carries counts, so the caller keeps the
+ * completeness-checked body path for body-only artifacts.
+ */
 function resolveCounts(
   content: string,
   frontmatter: Record<string, unknown>,
+  artifactPath: string,
 ): ReviewGateVerdict['counts'] | null {
-  const frontmatterCounts = readFrontmatterCounts(frontmatter);
+  const explicitSources: CountSource[] = [];
+
+  const frontmatterCounts = readFrontmatterCounts(frontmatter, artifactPath);
   if (frontmatterCounts) {
-    return frontmatterCounts;
+    explicitSources.push({
+      name: 'the frontmatter count fields',
+      counts: frontmatterCounts.counts,
+      tiers: frontmatterCounts.tiers,
+    });
   }
 
-  const summaryCounts = parseFindingsSummaryCounts(content);
+  const summaryCounts = parseFindingsSummaryCounts(content, artifactPath);
   if (summaryCounts) {
-    return summaryCounts;
+    explicitSources.push({
+      name: 'the "Findings by severity" count line',
+      counts: summaryCounts,
+      tiers: SEVERITIES,
+    });
   }
 
-  return null;
+  const [primarySource, ...otherSources] = explicitSources;
+  for (const source of otherSources) {
+    const comparableTiers = primarySource!.tiers.filter((severity) =>
+      source.tiers.includes(severity),
+    );
+    assertAgreeingCounts(artifactPath, primarySource!, source, comparableTiers);
+  }
+
+  const bodyCounts = tallySeveritySections(content);
+  if (bodyCounts) {
+    // Only tiers the body actually has a heading for are comparable. A missing
+    // heading is not a claim of zero findings, it is a malformed body, and the
+    // completeness and normalization checks own that diagnosis.
+    const bodyTiers = [
+      ...new Set(
+        findSeverityHeadings(content).map((heading) => heading.severity),
+      ),
+    ];
+    const bodySource: CountSource = {
+      name: 'the Findings sections',
+      counts: bodyCounts,
+      tiers: bodyTiers,
+    };
+    for (const source of explicitSources) {
+      const comparableTiers = source.tiers.filter((severity) =>
+        bodyTiers.includes(severity),
+      );
+      assertAgreeingCounts(artifactPath, source, bodySource, comparableTiers);
+    }
+  }
+
+  return (
+    explicitSources.find((source) => source.tiers.length === SEVERITIES.length)
+      ?.counts ?? null
+  );
 }
 
 export async function parseReviewGateVerdict(
@@ -553,7 +794,20 @@ export async function parseReviewGateVerdict(
   const frontmatter = frontmatterBlock
     ? parseFrontmatterObject(frontmatterBlock, artifactPath)
     : {};
-  let counts = resolveCounts(content, frontmatter);
+
+  // Retired tiers fail the artifact outright rather than being ignored, and do
+  // so before normalization can rewrite the file. Ignoring them is not safe: a
+  // retired heading that parses alongside canonical ones has its findings
+  // attributed to whichever canonical section precedes it.
+  const retiredTierError = legacySeverityError(
+    artifactPath,
+    describeLegacySeverityUsage(content, frontmatter),
+  );
+  if (retiredTierError) {
+    throw retiredTierError;
+  }
+
+  let counts = resolveCounts(content, frontmatter, artifactPath);
   let insertedSeverities: Severity[] = [];
   let normalizationPersisted = false;
 

@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 2.3.5
+  version: 2.3.6
 ---
 
 # Design Phase
@@ -738,7 +738,7 @@ the autonomy contract's `onFailure` semantics without prompting: `warn`
 continues with provenance, `block` stops after bounded attempts, and `prompt`
 is a reported boundary. Unresolved Critical review findings always stop
 autonomous design progression, regardless of a less restrictive gate failure
-setting; record the blocker and leave the project resumable. Important findings
+setting; record the blocker and leave the project resumable. High findings
 follow the configured gate policy. When autonomy is inactive, the interactive
 behavior above is unchanged.
 

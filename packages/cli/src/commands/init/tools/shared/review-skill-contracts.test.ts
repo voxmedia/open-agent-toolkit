@@ -356,7 +356,7 @@ describe('review skill contracts', () => {
 
     // The `oat-reviewer` AGENT role is out of scope for the skill version
     // migration and keeps its top-level declaration, so this read stays direct.
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.5');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.7');
     expect(content).toContain(
       'must represent the same instant from the same `date -u` capture',
     );
@@ -1015,7 +1015,7 @@ printf 'artifact-read\\n'`,
       .slice(contractStart, cleanStart)
       .replace(/\s+/g, ' ');
 
-    expect(readDeclaredVersion(content)).toBe('1.5.2');
+    expect(readDeclaredVersion(content)).toBe('1.5.3');
     expect(contractStart).toBeGreaterThanOrEqual(0);
     expect(contractStart).toBeLessThan(cleanStart);
     expect(contractStart).toBeLessThan(findingsStart);
@@ -1299,6 +1299,41 @@ printf 'artifact-read\\n'`,
     expect(content).toContain(
       'including range review tags such as `(p02-p03-review)`',
     );
+  });
+
+  it('fails closed on retired review tiers before project receive count parsing', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-review-receive/SKILL.md',
+    );
+    const guardStart = content.indexOf(
+      '### Step 1.5: Reject Retired Severity Artifacts (Fail Closed)',
+    );
+    const parseStart = content.indexOf(
+      '### Step 2: Parse Findings into Buckets',
+    );
+    const zeroCountPass = content.indexOf(
+      '**If Critical + High + Medium == 0:**',
+    );
+
+    expect(guardStart).toBeGreaterThan(-1);
+    expect(guardStart).toBeLessThan(parseStart);
+    expect(guardStart).toBeLessThan(zeroCountPass);
+
+    const guard = content.slice(guardStart, parseStart);
+    for (const retiredForm of [
+      '`### Important`',
+      '`### Minor`',
+      '`oat_review_important_count`',
+      '`oat_review_minor_count`',
+      'legacy `Findings:` count line',
+    ]) {
+      expect(guard).toContain(retiredForm);
+    }
+    expect(normalizeProse(guard)).toContain(
+      'Do not treat an unread retired heading or count as absent or zero, do not enter the `Critical + High + Medium == 0` pass path',
+    );
+    expect(guard).toContain('re-run `oat-project-review-provide`');
+    expect(guard).toContain('run `oat tools update`');
   });
 
   it('requires project completion to skip PR prompting when an open PR is tracked', () => {

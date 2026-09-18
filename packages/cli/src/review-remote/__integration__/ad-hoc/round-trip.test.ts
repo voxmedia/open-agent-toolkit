@@ -4,7 +4,7 @@
  * Exercises the full marker round-trip the `oat-review-provide-remote` skill
  * relies on: build a posted-review body for a known finding set via the
  * body-builder, parse it back via the marker-parser, and assert the markers,
- * the verdict, and the minor-fix "Notes" presence all match the design rules
+ * the verdict, and the low-fix "Notes" presence all match the design rules
  * (design.md → Data Models → Posted-review-body; Posted-review-body builder).
  */
 
@@ -35,7 +35,7 @@ describe('ad-hoc provide-remote round-trip', () => {
       scope: 'ad-hoc',
       invocation: 'manual',
       summary: 'Reviewed the auth callback changes.',
-      findings: [{ severity: 'minor' }],
+      findings: [{ severity: 'low' }],
     });
 
     const markers = parseMarkerBlock(body);
@@ -48,10 +48,10 @@ describe('ad-hoc provide-remote round-trip', () => {
     expect(markers?.oat_project).toBeUndefined();
   });
 
-  it('maps verdict to REQUEST_CHANGES when a critical or important finding exists', () => {
+  it('maps verdict to REQUEST_CHANGES when a critical or high finding exists', () => {
     const findings: BuilderFinding[] = [
-      { severity: 'important' },
-      { severity: 'minor' },
+      { severity: 'high' },
+      { severity: 'low' },
     ];
     const { body, verdict } = buildReviewBody({
       headSha: HEAD_SHA,
@@ -65,15 +65,15 @@ describe('ad-hoc provide-remote round-trip', () => {
     expect(parseMarkerBlock(body)?.oat_review_scope).toBe('ad-hoc');
   });
 
-  it('maps verdict to COMMENT when no critical or important findings exist (incl. clean)', () => {
-    const minorOnly = buildReviewBody({
+  it('maps verdict to COMMENT when no critical or high findings exist (incl. clean)', () => {
+    const lowOnly = buildReviewBody({
       headSha: HEAD_SHA,
       scope: 'ad-hoc',
       invocation: 'manual',
       summary: 'Only cosmetics.',
-      findings: [{ severity: 'minor' }, { severity: 'medium' }],
+      findings: [{ severity: 'low' }, { severity: 'medium' }],
     });
-    expect(minorOnly.verdict).toBe('COMMENT');
+    expect(lowOnly.verdict).toBe('COMMENT');
 
     const clean = buildReviewBody({
       headSha: HEAD_SHA,
@@ -85,24 +85,24 @@ describe('ad-hoc provide-remote round-trip', () => {
     expect(clean.verdict).toBe('COMMENT');
   });
 
-  it('includes the minor-fix Notes subsection only when minor findings are present', () => {
-    const withMinor = buildReviewBody({
+  it('includes the low-fix Notes subsection only when low findings are present', () => {
+    const withLow = buildReviewBody({
       headSha: HEAD_SHA,
       scope: 'ad-hoc',
       invocation: 'manual',
       summary: 'One nit.',
-      findings: [{ severity: 'minor' }],
+      findings: [{ severity: 'low' }],
     });
-    expect(withMinor.body).toContain('## Notes');
+    expect(withLow.body).toContain('## Notes');
 
-    const noMinor = buildReviewBody({
+    const noLow = buildReviewBody({
       headSha: HEAD_SHA,
       scope: 'ad-hoc',
       invocation: 'manual',
       summary: 'A blocking issue, no nits.',
       findings: [{ severity: 'critical' }],
     });
-    expect(noMinor.body).not.toContain('## Notes');
+    expect(noLow.body).not.toContain('## Notes');
 
     const clean = buildReviewBody({
       headSha: HEAD_SHA,

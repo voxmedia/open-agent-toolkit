@@ -260,7 +260,7 @@ type GateDiversityAchieved =
   | 'same-family - no diverse target available'
   | 'unknown-producer';
 type GateWriteLayer = 'shared' | 'local' | 'user';
-type ReviewGateThreshold = 'critical' | 'important' | 'medium' | 'minor';
+type ReviewGateThreshold = 'critical' | 'high' | 'medium' | 'low';
 type ReviewGateTerminalStatus =
   | 'ok'
   | 'blocked'
@@ -446,10 +446,20 @@ const VALID_CROSS_PROVIDER_AVOIDS: readonly CrossProviderAvoid[] = [
 ];
 const VALID_REVIEW_GATE_THRESHOLDS: readonly ReviewGateThreshold[] = [
   'critical',
-  'important',
+  'high',
   'medium',
-  'minor',
+  'low',
 ];
+
+/**
+ * Threshold aliases accepted from configuration written before the severity
+ * rename, so an existing `exit_nonzero_on: important` keeps its meaning.
+ */
+const LEGACY_REVIEW_GATE_THRESHOLDS: ReadonlyMap<string, ReviewGateThreshold> =
+  new Map([
+    ['important', 'high'],
+    ['minor', 'low'],
+  ]);
 const VALID_IDENTITY_PROVENANCES: readonly IdentityProvenance[] = [
   'declared',
   'observed',
@@ -457,7 +467,7 @@ const VALID_IDENTITY_PROVENANCES: readonly IdentityProvenance[] = [
   'unknown',
 ];
 const REVIEW_GATE_CONTEXT_NOTE = [
-  'This review is gate-originated. If you run `oat-project-review-provide`, set `oat_review_invocation: gate` in the review artifact. Write a canonical review artifact with `### Critical`, `### Important`, `### Medium`, and `### Minor` headings in that order, using `None` for empty sections.',
+  'This review is gate-originated. If you run `oat-project-review-provide`, set `oat_review_invocation: gate` in the review artifact. Write a canonical review artifact with `### Critical`, `### High`, `### Medium`, and `### Low` headings in that order, using `None` for empty sections.',
   'Complete the review, artifact write, and required bookkeeping inline or through a synchronously awaited child before this headless process exits. Do not start background tasks, monitors, or waiters that outlive this turn.',
   "Artifact hygiene contract: Before finishing or committing, format every file you created or edited. Use the concrete write/fix formatting command supplied by the governing plan, task, or brief. If none is usable, discover the repository's documented write/fix command from applicable `AGENTS.md`/`CLAUDE.md` instructions and relevant package manifests; do not infer or hardcode a formatter. Prefer a file-scoped invocation when supported, and avoid rewriting unrelated files. If no command is discoverable, warn once with `no format command discovered in repo instructions; skipping`, then continue.",
 ].join('\n\n');
@@ -803,12 +813,13 @@ function parseCrossProviderAvoid(
 function parseReviewGateThreshold(
   value: string | undefined,
 ): ReviewGateThreshold {
-  const threshold = value?.trim() || 'important';
+  const raw = value?.trim() || 'high';
+  const threshold = LEGACY_REVIEW_GATE_THRESHOLDS.get(raw) ?? raw;
   if (
     !(VALID_REVIEW_GATE_THRESHOLDS as readonly string[]).includes(threshold)
   ) {
     throw new Error(
-      '--exit-nonzero-on must be one of critical | important | medium | minor.',
+      '--exit-nonzero-on must be one of critical | high | medium | low.',
     );
   }
   return threshold as ReviewGateThreshold;
@@ -2501,10 +2512,10 @@ function reviewBlocksAtThreshold(
   if (threshold === 'critical') {
     return false;
   }
-  if (verdict.counts.important > 0) {
+  if (verdict.counts.high > 0) {
     return true;
   }
-  if (threshold === 'important') {
+  if (threshold === 'high') {
     return false;
   }
   if (verdict.counts.medium > 0) {
@@ -2513,7 +2524,7 @@ function reviewBlocksAtThreshold(
   if (threshold === 'medium') {
     return false;
   }
-  return verdict.counts.minor > 0;
+  return verdict.counts.low > 0;
 }
 
 function buildReviewGateHandoff(options: {
@@ -2614,7 +2625,7 @@ function writeReviewGateResult(
     );
   }
   context.logger.info(
-    `Verdict: ${payload.status} (critical=${payload.counts.critical}, important=${payload.counts.important}, medium=${payload.counts.medium}, minor=${payload.counts.minor})`,
+    `Verdict: ${payload.status} (critical=${payload.counts.critical}, high=${payload.counts.high}, medium=${payload.counts.medium}, low=${payload.counts.low})`,
   );
   if (payload.diversity) {
     if (payload.diversity.warning) {
@@ -3207,7 +3218,7 @@ async function finalizeReviewGateProjectLog(
   finalization: ReviewGateProjectLogFinalization,
 ): Promise<void> {
   const findings = finalization.counts
-    ? ` findings=critical:${finalization.counts.critical},important:${finalization.counts.important},medium:${finalization.counts.medium},minor:${finalization.counts.minor}`
+    ? ` findings=critical:${finalization.counts.critical},high:${finalization.counts.high},medium:${finalization.counts.medium},low:${finalization.counts.low}`
     : '';
   const artifact = finalization.artifactPath
     ? ` artifact=${finalization.artifactPath}`
@@ -4726,7 +4737,7 @@ export function createGateCommand(
     .option('--review-type <type>', 'Review type hint for the provider')
     .option(
       '--exit-nonzero-on <severity>',
-      'Lowest severity that exits nonzero: critical, important, medium, or minor',
+      'Lowest severity that exits nonzero: critical, high, medium, or low',
     )
     .argument(
       '<prompt...>',

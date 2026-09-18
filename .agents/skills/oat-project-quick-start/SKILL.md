@@ -7,7 +7,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 2.3.13
+  version: 2.3.14
 ---
 
 # Quick Start Project
@@ -804,7 +804,7 @@ Apply the shared loop exactly:
 - Run an exception inline only with verified equivalent current-host model and
   effort controls. Default inherited review runs in the planning parent. If
   neither route applies, fail closed before artifact review.
-- Apply Critical and Important artifact-local fixes when unambiguous; offer Medium and Minor fixes instead of silently applying them.
+- Apply Critical and High artifact-local fixes when unambiguous; offer Medium and Low fixes instead of silently applying them.
 - Re-dispatch after rewrites until clean or the retry bound is exhausted.
 - Update the `plan` artifact row in the `## Reviews` table to `passed` when clean. If residual findings remain, preserve the row and surface the residual findings before downstream handoff.
 

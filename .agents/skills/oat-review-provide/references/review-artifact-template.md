@@ -23,7 +23,7 @@ oat_review_mode: ad_hoc
 
 {2-3 sentence summary}
 
-Findings: {N} critical, {N} important, {N} medium, {N} minor
+Findings by severity: {N} critical, {N} high, {N} medium, {N} low
 
 ## Findings
 
@@ -31,7 +31,7 @@ Findings: {N} critical, {N} important, {N} medium, {N} minor
 
 {If none: "None"}
 
-### Important
+### High
 
 {If none: "None"}
 
@@ -39,7 +39,7 @@ Findings: {N} critical, {N} important, {N} medium, {N} minor
 
 {If none: "None"}
 
-### Minor
+### Low
 
 {If none: "None"}
 

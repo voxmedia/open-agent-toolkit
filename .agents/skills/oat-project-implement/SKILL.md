@@ -7,7 +7,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(oat:*), Bash(oat project log:*), Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: 2.3.10
+  version: 2.3.11
 ---
 
 # Implementation Phase
@@ -239,7 +239,7 @@ Rules:
 - Each task result and commit was verified against HEAD and its file boundary
 - Implementation.md tracks all progress
 - Final verification passes
-- Final review passes (no Critical/Important findings)
+- Final review passes (no Critical/High findings)
 - The configured implementation exit gate has an allowed and fresh disposition
   before approval-aware sequencing, completion state, or success output
 - No unresolved blockers

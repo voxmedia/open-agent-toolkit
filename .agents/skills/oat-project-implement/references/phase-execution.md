@@ -752,12 +752,12 @@ phase-outcome entry at Step 7 and committed by that step's bookkeeping.
 After successful signal and orchestration validation, validate the review
 artifact scope and commit range.
 
-Zero Critical and zero Important findings passes. Medium/Minor findings are
+Zero Critical and zero High findings passes. Medium/Low findings are
 recorded without blocking.
 
 #### Bounded Fix and Re-Review Loop
 
-On Critical/Important findings:
+On Critical/High findings:
 
 1. Read `oat_orchestration_retry_limit` from state (default `2`, range 0–5).
 2. Resume the original phase implementer handle in `mode: fix` with only the
@@ -771,7 +771,7 @@ On Critical/Important findings:
 Review-fix and gate rounds continue to use
 `oat_orchestration_retry_limit`; implementation recovery does not consume or
 alter that counter. The independent three-cycle review governance cap,
-Critical/Important handling, and protected boundaries remain unchanged.
+Critical/High handling, and protected boundaries remain unchanged.
 
 If the original phase handle cannot be resumed after successful phase
 completion, the root may launch at most one fresh phase implementer with the

@@ -39,8 +39,8 @@ function wellFormedFindings(): StructuredFindings {
     summary: 'Reviewed the p02 phase. One important robustness gap found.',
     findings: [
       {
-        id: 'I1',
-        severity: 'important',
+        id: 'H1',
+        severity: 'high',
         title: 'Missing error handling on checkout failure',
         file: 'src/foo.ts',
         line: 42,
@@ -48,8 +48,8 @@ function wellFormedFindings(): StructuredFindings {
         fix_guidance: 'Capture and report the exit code.',
       },
       {
-        id: 'm1',
-        severity: 'minor',
+        id: 'L1',
+        severity: 'low',
         title: 'Stale comment',
         file: null,
         line: null,
@@ -158,6 +158,47 @@ describe('dispatchStructuredReview', () => {
       dispatchStructuredReview(context(), dispatcher),
     ).rejects.toBeInstanceOf(StructuredFindingsError);
   });
+
+  it.each([
+    ['I1', 'high'],
+    ['m1', 'low'],
+  ] as const)(
+    'rejects retired finding ID %s for %s severity',
+    async (id, severity) => {
+      const bad = wellFormedFindings();
+      bad.findings[0]!.id = id;
+      bad.findings[0]!.severity = severity;
+      const { dispatcher } = stubDispatcher(bad);
+
+      await expect(
+        dispatchStructuredReview(context(), dispatcher),
+      ).rejects.toBeInstanceOf(StructuredFindingsError);
+    },
+  );
+
+  it('rejects a finding ID whose prefix does not match its severity', async () => {
+    const bad = wellFormedFindings();
+    bad.findings[0]!.id = 'M1';
+    bad.findings[0]!.severity = 'high';
+    const { dispatcher } = stubDispatcher(bad);
+
+    await expect(
+      dispatchStructuredReview(context(), dispatcher),
+    ).rejects.toBeInstanceOf(StructuredFindingsError);
+  });
+
+  it.each(['H0', 'H01', 'H-1', 'H', '1', 'H1.5'])(
+    'rejects malformed finding ID %s',
+    async (id) => {
+      const bad = wellFormedFindings();
+      bad.findings[0]!.id = id;
+      const { dispatcher } = stubDispatcher(bad);
+
+      await expect(
+        dispatchStructuredReview(context(), dispatcher),
+      ).rejects.toBeInstanceOf(StructuredFindingsError);
+    },
+  );
 
   it('raises a typed error when file/line are not both set or both null', async () => {
     const bad = wellFormedFindings();

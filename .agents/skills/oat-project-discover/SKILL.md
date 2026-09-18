@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(oat:*), Bash(pnpm:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 2.2.6
+  version: 2.2.7
 ---
 
 # Discovery Phase
@@ -512,7 +512,7 @@ the autonomy contract's `onFailure` semantics without prompting: `warn`
 continues with provenance, `block` stops after bounded attempts, and `prompt`
 is a reported boundary. Unresolved Critical review findings always stop
 autonomous discovery progression, regardless of a less restrictive gate
-failure setting; record the blocker and leave the project resumable. Important
+failure setting; record the blocker and leave the project resumable. High
 findings follow the configured gate policy. When autonomy is inactive, the
 interactive behavior above is unchanged.
 
