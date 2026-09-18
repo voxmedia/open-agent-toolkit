@@ -38,9 +38,9 @@ oat_invocation_model: gpt-5.6-sol
 oat_invocation_reasoning_effort: max
 oat_invocation_source: exec-target-config
 oat_review_critical_count: 2
-oat_review_important_count: 1
+oat_review_high_count: 1
 oat_review_medium_count: 3
-oat_review_minor_count: 4
+oat_review_low_count: 4
 ---
 
 # Review
@@ -49,7 +49,25 @@ oat_review_minor_count: 4
 
 ### Critical
 
-None.
+- Critical one
+- Critical two
+
+### High
+
+- High one
+
+### Medium
+
+- Medium one
+- Medium two
+- Medium three
+
+### Low
+
+- Low one
+- Low two
+- Low three
+- Low four
 `);
 
     await expect(parseReviewGateVerdict(artifactPath)).resolves.toEqual({
@@ -68,9 +86,9 @@ None.
       },
       counts: {
         critical: 2,
-        important: 1,
+        high: 1,
         medium: 3,
-        minor: 4,
+        low: 4,
       },
       blocking: true,
     });
@@ -85,7 +103,7 @@ oat_review_invocation: manual
 
 # Review
 
-Findings: 0 critical, 0 important, 0 medium, 0 minor
+Findings by severity: 0 critical, 0 high, 0 medium, 0 low
 `);
 
     const verdict = await parseReviewGateVerdict(artifactPath);
@@ -110,18 +128,18 @@ oat_review_invocation: manual
 
 None
 
-### Important
+### High
 
-- Important finding
+- High finding
 
 ### Medium
 
 1. First medium finding
 2. Second medium finding
 
-### Minor
+### Low
 
-- Minor finding
+- Low finding
 `);
 
     await expect(parseReviewGateVerdict(artifactPath)).resolves.toMatchObject({
@@ -131,12 +149,339 @@ None
       invocation: 'manual',
       counts: {
         critical: 0,
-        important: 1,
+        high: 1,
         medium: 2,
-        minor: 1,
+        low: 1,
       },
       blocking: true,
     });
+  });
+
+  it('reports retired tiers by name instead of an opaque parse failure', async () => {
+    const artifactPath = await writeArtifact(`---
+oat_review_type: code
+oat_review_scope: p01
+oat_review_invocation: manual
+---
+
+# Review
+
+## Findings
+
+### Critical
+
+None
+
+### Important
+
+- Legacy high finding
+
+### Medium
+
+None
+
+### Minor
+
+- Legacy low finding
+`);
+
+    // Retired tiers are not read. The failure must name the rename and the
+    // refresh remedy rather than reporting an unrecognizable artifact.
+    await expect(parseReviewGateVerdict(artifactPath)).rejects.toThrow(
+      /retired severity tiers[\s\S]*### Important[\s\S]*### Minor[\s\S]*oat tools update/i,
+    );
+  });
+
+  it('names retired count lines and count keys in the failure', async () => {
+    const countLineArtifact = await writeArtifact(`---
+oat_review_type: code
+oat_review_scope: p01
+oat_review_invocation: manual
+---
+
+# Review
+
+Findings: 0 critical, 2 important, 0 medium, 1 minor
+`);
+
+    await expect(parseReviewGateVerdict(countLineArtifact)).rejects.toThrow(
+      /retired severity tiers[\s\S]*legacy `Findings:` count line/i,
+    );
+
+    const frontmatterArtifact = await writeArtifact(`---
+oat_review_type: code
+oat_review_scope: p01
+oat_review_invocation: manual
+oat_review_critical_count: 0
+oat_review_important_count: 1
+oat_review_medium_count: 0
+oat_review_minor_count: 3
+---
+
+# Review
+
+The review completed but rendered no canonical severity sections.
+`);
+
+    await expect(parseReviewGateVerdict(frontmatterArtifact)).rejects.toThrow(
+      /retired severity tiers[\s\S]*oat_review_important_count[\s\S]*oat_review_minor_count/i,
+    );
+  });
+
+  it('rejects retired count keys even when the canonical sections parse', async () => {
+    const artifactPath = await writeArtifact(`---
+oat_review_type: code
+oat_review_scope: p01
+oat_review_invocation: manual
+oat_review_critical_count: 0
+oat_review_important_count: 1
+oat_review_medium_count: 0
+oat_review_minor_count: 3
+---
+
+# Review
+
+## Findings
+
+### Critical
+
+None
+
+### High
+
+- High finding
+
+### Medium
+
+None
+
+### Low
+
+- Low one
+- Low two
+- Low three
+`);
+
+    // Retired keys are not tolerated merely because the sections happen to
+    // parse: ignoring them would silently pick one source of truth over the
+    // other.
+    await expect(parseReviewGateVerdict(artifactPath)).rejects.toThrow(
+      /retired severity tiers[\s\S]*oat_review_important_count[\s\S]*oat_review_minor_count/i,
+    );
+  });
+
+  it('rejects an artifact that mixes retired and canonical headings', async () => {
+    const artifactPath = await writeArtifact(`---
+oat_review_type: code
+oat_review_scope: p01
+oat_review_invocation: manual
+---
+
+# Review
+
+## Findings
+
+### Critical
+
+None
+
+### High
+
+- High finding
+
+### Medium
+
+None
+
+### Low
+
+None
+
+### Important
+
+- Retired-tier finding
+`);
+
+    // A retired heading that parsed would have its findings attributed to the
+    // canonical section above it, so it must fail rather than be ignored.
+    await expect(parseReviewGateVerdict(artifactPath)).rejects.toThrow(
+      /retired severity tiers[\s\S]*### Important/i,
+    );
+  });
+
+  it('treats partial frontmatter counts with empty sections as zero', async () => {
+    const artifactPath = await writeArtifact(`---
+oat_review_type: code
+oat_review_scope: p01
+oat_review_invocation: gate
+oat_review_critical_count: 0
+---
+
+# Review
+
+## Findings
+
+### Critical
+
+None
+
+### High
+
+None
+
+### Medium
+
+None
+
+### Low
+
+None
+`);
+
+    await expect(parseReviewGateVerdict(artifactPath)).resolves.toMatchObject({
+      counts: { critical: 0, high: 0, medium: 0, low: 0 },
+      blocking: false,
+    });
+  });
+
+  it('does not treat inherited object keys as severity aliases', async () => {
+    const artifactPath = await writeArtifact(`---
+oat_review_type: code
+oat_review_scope: p01
+oat_review_invocation: manual
+---
+
+# Review
+
+## Findings
+
+### Critical
+
+None
+
+#### constructor
+
+- A subheading named after an Object.prototype key.
+
+### High
+
+- Real high finding
+
+### Medium
+
+None
+
+### Low
+
+None
+`);
+
+    // `constructor` must not resolve to an inherited property and become a
+    // severity boundary. Its bullet therefore stays attributed to the
+    // enclosing `### Critical` section, and the high finding still blocks.
+    await expect(parseReviewGateVerdict(artifactPath)).resolves.toMatchObject({
+      counts: { critical: 1, high: 1, medium: 0, low: 0 },
+      blocking: true,
+    });
+  });
+
+  it('accumulates findings across a repeated heading for one tier', async () => {
+    const artifactPath = await writeArtifact(`---
+oat_review_type: code
+oat_review_scope: p01
+oat_review_invocation: manual
+---
+
+# Review
+
+## Findings
+
+### Critical
+
+None
+
+### High
+
+- First high finding
+
+### High
+
+- Second high finding
+
+### Medium
+
+None
+
+### Low
+
+None
+`);
+
+    // A repeated heading must not erase findings counted under the first one.
+    await expect(parseReviewGateVerdict(artifactPath)).resolves.toMatchObject({
+      counts: { critical: 0, high: 2, medium: 0, low: 0 },
+      blocking: true,
+    });
+  });
+
+  it('fails closed on a conflict inside a partial frontmatter block', async () => {
+    const artifactPath = await writeArtifact(`---
+oat_review_type: code
+oat_review_scope: p01
+oat_review_invocation: manual
+oat_review_high_count: 0
+high: 1
+---
+
+# Review
+
+Findings by severity: 0 critical, 0 high, 0 medium, 0 low
+`);
+
+    // The block is incomplete, so the parser falls back to the summary line.
+    // It must still reject the contradictory high keys rather than let the
+    // all-zero summary report no findings.
+    await expect(parseReviewGateVerdict(artifactPath)).rejects.toThrow(
+      /conflicting high counts/i,
+    );
+  });
+
+  it('fails closed on conflicting frontmatter count keys', async () => {
+    const artifactPath = await writeArtifact(`---
+oat_review_type: code
+oat_review_scope: p01
+oat_review_invocation: manual
+oat_review_high_count: 0
+high: 1
+oat_review_critical_count: 0
+oat_review_medium_count: 0
+oat_review_low_count: 0
+---
+
+# Review
+
+## Findings
+
+### Critical
+
+None
+
+### High
+
+- High finding
+
+### Medium
+
+None
+
+### Low
+
+None
+`);
+
+    await expect(parseReviewGateVerdict(artifactPath)).rejects.toThrow(
+      /conflicting high counts/i,
+    );
   });
 
   it('parses findings when explicit frontmatter counts are partial', async () => {
@@ -155,15 +500,15 @@ oat_review_critical_count: 0
 
 None
 
-### Important
+### High
 
-- Important body finding that must not be suppressed by partial counts
+- High body finding that must not be suppressed by partial counts
 
 ### Medium
 
 None
 
-### Minor
+### Low
 
 None
 `);
@@ -171,9 +516,9 @@ None
     await expect(parseReviewGateVerdict(artifactPath)).resolves.toMatchObject({
       counts: {
         critical: 0,
-        important: 1,
+        high: 1,
         medium: 0,
-        minor: 0,
+        low: 0,
       },
       blocking: true,
     });
@@ -194,7 +539,7 @@ oat_review_invocation: gate
 
 None
 
-### Important
+### High
 
 - **Review gate accepts archived artifacts** (\`packages/cli/src/commands/gate/index.ts:1129\`)
   - Issue: The nested issue detail explains the finding.
@@ -206,7 +551,7 @@ None
    - Issue: Nested bullets are details, not separate findings.
    - Fix: Count only the top-level numbered item.
 
-### Minor
+### Low
 
 None
 `);
@@ -214,9 +559,9 @@ None
     await expect(parseReviewGateVerdict(artifactPath)).resolves.toMatchObject({
       counts: {
         critical: 0,
-        important: 1,
+        high: 1,
         medium: 1,
-        minor: 0,
+        low: 0,
       },
       blocking: true,
     });
@@ -241,17 +586,17 @@ oat_review_invocation: gate
   ## this is not a markdown section
   ~~~
 
-### Important
+### High
 
-- Important finding
+- High finding
 
 ### Medium
 
 None
 
-### Minor
+### Low
 
-- Minor finding
+- Low finding
 
 ## Verification Commands
 
@@ -263,9 +608,9 @@ None
     await expect(parseReviewGateVerdict(artifactPath)).resolves.toMatchObject({
       counts: {
         critical: 1,
-        important: 1,
+        high: 1,
         medium: 0,
-        minor: 1,
+        low: 1,
       },
       blocking: true,
     });
@@ -280,18 +625,293 @@ oat_review_invocation: gate
 
 # Review
 
-Findings: 0 critical, 1 important, 2 medium, 3 minor
+Findings by severity: 0 critical, 1 high, 2 medium, 3 low
 `);
 
     await expect(parseReviewGateVerdict(artifactPath)).resolves.toMatchObject({
       counts: {
         critical: 0,
-        important: 1,
+        high: 1,
         medium: 2,
-        minor: 3,
+        low: 3,
       },
       blocking: true,
     });
+  });
+
+  it('ignores a count line quoted inside a fenced example', async () => {
+    const artifactPath = await writeArtifact(`---
+oat_review_type: code
+oat_review_scope: p01
+oat_review_invocation: manual
+---
+
+# Review
+
+## Summary
+
+The template emits a line like this:
+
+\`\`\`markdown
+Findings by severity: 0 critical, 0 high, 0 medium, 0 low
+\`\`\`
+
+## Findings
+
+### Critical
+
+None
+
+### High
+
+- Real high finding
+
+### Medium
+
+None
+
+### Low
+
+None
+`);
+
+    // The fenced example must not be read as the artifact's own counts.
+    await expect(parseReviewGateVerdict(artifactPath)).resolves.toMatchObject({
+      counts: { critical: 0, high: 1, medium: 0, low: 0 },
+      blocking: true,
+    });
+  });
+
+  it('keeps a fence open when a marker line carries trailing text', async () => {
+    const artifactPath = await writeArtifact(`---
+oat_review_type: code
+oat_review_scope: p01
+oat_review_invocation: manual
+---
+
+# Review
+
+## Findings
+
+### Critical
+
+None
+
+### High
+
+- Real high finding
+
+### Medium
+
+None
+
+### Low
+
+None
+
+\`\`\`markdown
+\`\`\`not-a-closer
+Findings by severity: 0 critical, 0 high, 0 medium, 0 low
+\`\`\`
+`);
+
+    // Only a marker run followed by whitespace closes a fence. Treating the
+    // inner line as a closer would expose the quoted zero-count line and let a
+    // review with a real High finding read as clean.
+    await expect(parseReviewGateVerdict(artifactPath)).resolves.toMatchObject({
+      counts: { critical: 0, high: 1, medium: 0, low: 0 },
+      blocking: true,
+    });
+  });
+
+  it('rejects a count line that contradicts findings in the body', async () => {
+    const artifactPath = await writeArtifact(`---
+oat_review_type: code
+oat_review_scope: p01
+oat_review_invocation: manual
+---
+
+# Review
+
+Findings by severity: 0 critical, 0 high, 0 medium, 0 low
+
+## Findings
+
+### Critical
+
+None
+
+### High
+
+- Real high finding
+
+### Medium
+
+None
+
+### Low
+
+None
+`);
+
+    await expect(parseReviewGateVerdict(artifactPath)).rejects.toThrow(
+      /contradicts itself about finding counts \(high\)[\s\S]*count line[\s\S]*Findings sections/i,
+    );
+  });
+
+  it('rejects frontmatter counts that contradict findings in the body', async () => {
+    const artifactPath = await writeArtifact(`---
+oat_review_type: code
+oat_review_scope: p01
+oat_review_invocation: manual
+oat_review_critical_count: 0
+oat_review_high_count: 0
+oat_review_medium_count: 0
+oat_review_low_count: 0
+---
+
+# Review
+
+## Findings
+
+### Critical
+
+None
+
+### High
+
+- Real high finding
+
+### Medium
+
+None
+
+### Low
+
+None
+`);
+
+    await expect(parseReviewGateVerdict(artifactPath)).rejects.toThrow(
+      /contradicts itself about finding counts \(high\)[\s\S]*frontmatter count fields[\s\S]*Findings sections/i,
+    );
+  });
+
+  it('rejects frontmatter counts that contradict the count line', async () => {
+    const artifactPath = await writeArtifact(`---
+oat_review_type: code
+oat_review_scope: p01
+oat_review_invocation: manual
+oat_review_critical_count: 0
+oat_review_high_count: 0
+oat_review_medium_count: 0
+oat_review_low_count: 0
+---
+
+# Review
+
+Findings by severity: 0 critical, 1 high, 0 medium, 0 low
+`);
+
+    await expect(parseReviewGateVerdict(artifactPath)).rejects.toThrow(
+      /contradicts itself about finding counts \(high\)[\s\S]*frontmatter count fields[\s\S]*count line/i,
+    );
+  });
+
+  it('resolves counts when frontmatter, count line, and body agree', async () => {
+    const artifactPath = await writeArtifact(`---
+oat_review_type: code
+oat_review_scope: p01
+oat_review_invocation: manual
+oat_review_critical_count: 0
+oat_review_high_count: 1
+oat_review_medium_count: 1
+oat_review_low_count: 0
+---
+
+# Review
+
+Findings by severity: 0 critical, 1 high, 1 medium, 0 low
+
+## Findings
+
+### Critical
+
+None
+
+### High
+
+- High finding
+
+### Medium
+
+- Medium finding
+
+### Low
+
+None
+`);
+
+    await expect(parseReviewGateVerdict(artifactPath)).resolves.toMatchObject({
+      counts: { critical: 0, high: 1, medium: 1, low: 0 },
+      blocking: true,
+    });
+  });
+
+  it('rejects a section whose findings are prose rather than countable items', async () => {
+    const artifactPath = await writeArtifact(`---
+oat_review_type: code
+oat_review_scope: p01
+oat_review_invocation: manual
+---
+
+# Review
+
+Findings by severity: 0 critical, 1 high, 0 medium, 0 low
+
+## Findings
+
+### Critical
+
+None
+
+### High
+
+**High:** a finding written as prose, not as a countable bullet.
+
+### Medium
+
+None
+
+### Low
+
+None
+`);
+
+    // Prose findings are still not parsed as items. With an explicit count that
+    // contradicts the (zero) countable items, the artifact now fails loudly
+    // instead of silently counting zero and letting the review pass.
+    await expect(parseReviewGateVerdict(artifactPath)).rejects.toThrow(
+      /contradicts itself about finding counts \(high\)/i,
+    );
+  });
+
+  it('rejects two disagreeing count lines instead of taking the first', async () => {
+    const artifactPath = await writeArtifact(`---
+oat_review_type: code
+oat_review_scope: p01
+oat_review_invocation: manual
+---
+
+# Review
+
+Findings by severity: 0 critical, 0 high, 0 medium, 0 low
+
+Findings by severity: 0 critical, 1 high, 0 medium, 0 low
+`);
+
+    await expect(parseReviewGateVerdict(artifactPath)).rejects.toThrow(
+      /conflicting "Findings by severity" count lines/i,
+    );
   });
 
   it('treats clean blocking sections as zero findings', async () => {
@@ -309,14 +929,14 @@ oat_review_invocation: auto
 
 None.
 
-### Important
+### High
 
 
 ### Medium
 
 None
 
-### Minor
+### Low
 
 ${'   '}
 `);
@@ -324,15 +944,15 @@ ${'   '}
     await expect(parseReviewGateVerdict(artifactPath)).resolves.toMatchObject({
       counts: {
         critical: 0,
-        important: 0,
+        high: 0,
         medium: 0,
-        minor: 0,
+        low: 0,
       },
       blocking: false,
     });
   });
 
-  it('reports one Important finding as blocking even when the child process succeeded', async () => {
+  it('reports one High finding as blocking even when the child process succeeded', async () => {
     const artifactPath = await writeArtifact(`---
 oat_review_type: code
 oat_review_scope: p02
@@ -347,22 +967,22 @@ oat_review_invocation: gate
 
 None
 
-### Important
+### High
 
-1. Important finding
+1. High finding
 
 ### Medium
 
 None
 
-### Minor
+### Low
 
 None
 `);
 
     const verdict = await parseReviewGateVerdict(artifactPath);
 
-    expect(verdict.counts.important).toBe(1);
+    expect(verdict.counts.high).toBe(1);
     expect(verdict.blocking).toBe(true);
   });
 
@@ -372,9 +992,9 @@ oat_review_type: code
 oat_review_scope: final
 oat_review_invocation: gate
 oat_review_critical_count: 0
-oat_review_important_count: 0
+oat_review_high_count: 0
 oat_review_medium_count: 0
-oat_review_minor_count: 0
+oat_review_low_count: 0
 ---
 
 # Review
@@ -385,11 +1005,11 @@ oat_review_minor_count: 0
 
 None
 
-### Important
+### High
 
 None
 
-### Minor
+### Low
 
 None
 `);
@@ -401,9 +1021,9 @@ None
     expect(verdict).toMatchObject({
       counts: {
         critical: 0,
-        important: 0,
+        high: 0,
         medium: 0,
-        minor: 0,
+        low: 0,
       },
       blocking: false,
       normalization: {
@@ -413,7 +1033,7 @@ None
     });
     const normalizedContent = await readFile(artifactPath, 'utf8');
     expect(normalizedContent).toMatch(
-      /### Important[\s\S]*None[\s\S]*### Medium\s+None[\s\S]*### Minor/i,
+      /### High[\s\S]*None[\s\S]*### Medium\s+None[\s\S]*### Low/i,
     );
   });
 
@@ -423,9 +1043,9 @@ oat_review_type: code
 oat_review_scope: final
 oat_review_invocation: gate
 oat_review_critical_count: 0
-oat_review_important_count: 0
+oat_review_high_count: 0
 oat_review_medium_count: 0
-oat_review_minor_count: 0
+oat_review_low_count: 0
 ---
 
 # Review
@@ -436,11 +1056,11 @@ oat_review_minor_count: 0
 
 None
 
-### Important
+### High
 
 None
 
-### Minor
+### Low
 
 None
 `);
@@ -455,7 +1075,7 @@ None
     });
 
     expect(verdict).toMatchObject({
-      counts: { critical: 0, important: 0, medium: 0, minor: 0 },
+      counts: { critical: 0, high: 0, medium: 0, low: 0 },
       normalization: {
         insertedSeverities: ['medium'],
         persisted: false,
@@ -477,9 +1097,9 @@ oat_invocation_model: stale-model
 oat_invocation_reasoning_effort: provider-default
 oat_invocation_source: exec-target-config
 oat_review_critical_count: 0
-oat_review_important_count: 1
+oat_review_high_count: 1
 oat_review_medium_count: 0
-oat_review_minor_count: 0
+oat_review_low_count: 0
 ---
 
 # Review
@@ -490,11 +1110,11 @@ oat_review_minor_count: 0
 
 None
 
-### Important
+### High
 
 - Blocking finding.
 
-### Minor
+### Low
 
 None
 `);
@@ -509,7 +1129,7 @@ None
         'oat_invocation_model: stale-model',
         'oat_invocation_model: provider-default',
       )
-      .replace('oat_review_important_count: 1', 'oat_review_important_count: 0')
+      .replace('oat_review_high_count: 1', 'oat_review_high_count: 0')
       .replace('- Blocking finding.', 'None.');
     await writeFile(artifactPath, mutatedContent, 'utf8');
 
@@ -531,9 +1151,9 @@ oat_review_type: code
 oat_review_scope: final
 oat_review_invocation: gate
 oat_review_critical_count: 1
-oat_review_important_count: 0
+oat_review_high_count: 0
 oat_review_medium_count: 0
-oat_review_minor_count: 0
+oat_review_low_count: 0
 ---
 
 # Review
@@ -548,7 +1168,7 @@ oat_review_minor_count: 0
   ## this is not a markdown section
   ~~~
 
-### Important
+### High
 
 None
 
@@ -556,7 +1176,7 @@ None
 
 None
 
-### Minor
+### Low
 
 None
 `);
@@ -576,14 +1196,14 @@ oat_review_type: code
 oat_review_scope: final
 oat_review_invocation: gate
 oat_review_critical_count: 0
-oat_review_important_count: 0
+oat_review_high_count: 0
 oat_review_medium_count: 0
-oat_review_minor_count: 0
+oat_review_low_count: 0
 ---
 
 # Review
 
-Findings: 0 critical, 0 important, 0 medium, 0 minor
+Findings by severity: 0 critical, 0 high, 0 medium, 0 low
 
 ## Summary
 
@@ -603,9 +1223,9 @@ oat_review_type: code
 oat_review_scope: final
 oat_review_invocation: gate
 oat_review_critical_count: 0
-oat_review_important_count: 0
+oat_review_high_count: 0
 oat_review_medium_count: 1
-oat_review_minor_count: 0
+oat_review_low_count: 0
 ---
 
 # Review
@@ -616,11 +1236,11 @@ oat_review_minor_count: 0
 
 None
 
-### Important
+### High
 
 None
 
-### Minor
+### Low
 
 None
 `);
@@ -653,7 +1273,7 @@ None
 `);
 
     await expect(parseReviewGateVerdict(artifactPath)).rejects.toThrow(
-      /incomplete Findings section.*Important.*Minor/i,
+      /incomplete Findings section.*High.*Low/i,
     );
   });
 

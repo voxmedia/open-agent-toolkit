@@ -76,7 +76,7 @@ The common rule is offer-and-confirm: the model may recognize the request and pr
 
 - **GitHub is the source of truth.** No local review artifact is written on the reviewing machine, and the project rail makes no `plan.md`/bookkeeping mutations there — the originating machine's `*-receive-remote` owns those. The posted PR review carries metadata markers (`oat_provide_remote`, `oat_review_head_sha`, and on the project rail `oat_project` + `oat_review_scope`) so a subsequent provide-remote pass can find the prior review for re-review narrowing.
 - **Hybrid read strategy.** The skill checks the PR out into an ephemeral worktree for full-context review by default, and falls back to diff-only mode (`gh pr diff`, or when `--no-checkout` is set / checkout fails) with a degraded-context warning.
-- **Single posted review.** Findings are posted as one PR review via `gh api` with inline `comments[]`; the verdict is `REQUEST_CHANGES` when any Critical/Important finding exists, otherwise `COMMENT` (including clean reviews — never an automatic `APPROVE`). Findings whose line is outside the PR diff are downgraded into the top-level review body rather than dropped.
+- **Single posted review.** Findings are posted as one PR review via `gh api` with inline `comments[]`; the verdict is `REQUEST_CHANGES` when any Critical/High finding exists, otherwise `COMMENT` (including clean reviews — never an automatic `APPROVE`). Findings whose line is outside the PR diff are downgraded into the top-level review body rather than dropped.
 - **Project rail is project-aware but read-only.** It resolves the project by scanning the PR diff for `.oat/projects/*/*/state.md` (with a `--project <path>` override), reads project artifacts to drive mode-aware review quality, and uses Tier 1/2/3 dispatch (`oat-reviewer` structured-output mode → fresh session → inline). The ad-hoc rail runs inline only.
 - **Re-review narrowing** scopes a follow-up pass to commits since the prior matching review, guarded against a stale/force-pushed prior SHA (existence + ancestry checks; falls back to full scope when the prior SHA is unreachable). Project-rail narrowing matches on the `(project, scope)` tuple so a `p02` re-review never narrows against a prior `final` review.
 
@@ -111,11 +111,11 @@ the relevant scope and type.
 
 ## Current policy
 
-- Critical/Important: address before pass.
+- Critical/High: address before pass.
 - Medium: address by default; defer only with explicit approval and recorded rationale/disposition.
-- Minor: **default to `convert`** (fix inline). Small non-blocking findings are usually cheaper to fix than to track as backlog items, so the receive skills convert them by default rather than deferring.
-- Deferring (or dismissing) a finding **at any severity, including minor**, requires a concrete recorded rationale (duplicate, blocked dependency, explicit out-of-scope follow-up, or disproportionate churn now). This brings the manual receive path in line with the auto-review path, which already converts minors.
-- Minor (final scope): still require explicit per-finding user disposition after a plain-language explanation, with `convert` as the recommended default.
+- Low: **default to `convert`** (fix inline). Small non-blocking findings are usually cheaper to fix than to track as backlog items, so the receive skills convert them by default rather than deferring.
+- Deferring (or dismissing) a finding **at any severity, including low**, requires a concrete recorded rationale (duplicate, blocked dependency, explicit out-of-scope follow-up, or disproportionate churn now). This brings the manual receive path in line with the auto-review path, which already converts low findings.
+- Low (final scope): still require explicit per-finding user disposition after a plain-language explanation, with `convert` as the recommended default.
 
 ## Auto-review at HiLL checkpoints
 
@@ -132,7 +132,7 @@ latest stamp as the producer for the whole scope.
 
 This is separate from Tier 1 phase gate reviews. Tier 1 implementation always runs `oat-reviewer` after each phase; `workflow.autoReviewAtHillCheckpoints` only controls the additional lifecycle review when a HiLL checkpoint is reached. Legacy `autoReviewAtCheckpoints` and `oat_auto_review_at_checkpoints` are still read as fallbacks.
 
-Auto-triggered reviews use `oat_review_invocation: auto` in the review artifact frontmatter. In auto mode, `oat-project-review-receive` auto-converts all findings to fix tasks without user prompts (Minor findings that are clearly out of scope are deferred with a note).
+Auto-triggered reviews use `oat_review_invocation: auto` in the review artifact frontmatter. In auto mode, `oat-project-review-receive` auto-converts all findings to fix tasks without user prompts (Low findings that are clearly out of scope are deferred with a note).
 
 This feature is opt-in and disabled by default. When disabled, the manual `oat-project-review-provide` workflow applies.
 
@@ -150,7 +150,7 @@ leaves the gate disabled.
 
 It is independent of [HiLL checkpoints](hill-checkpoints.md): a passing gate does not pause, and the gate never touches `oat_hill_completed`, `oat_plan_hill_phases`, or `oat_auto_review_at_hill_checkpoints`.
 
-Gate-produced review artifacts use `oat_review_invocation: gate` in frontmatter (the third invocation marker alongside `manual` and `auto`). The gate verdict — controlled by `exit_nonzero_on` (default `important`) — decides whether the **phase stops**; it does not decide whether sub-threshold findings are ignored. Before invoking `oat-project-review-receive`, the result must satisfy all three eligibility conditions: `status` is `ok` or `blocked`, `receiveEligible` is `true`, and `handoff` is non-null. A missing or contradictory field is an operational failure even when `artifactPath` is present. Once eligibility is established, the produced artifact is consumed autonomously and without user prompts, so findings never evaporate:
+Gate-produced review artifacts use `oat_review_invocation: gate` in frontmatter (the third invocation marker alongside `manual` and `auto`). The gate verdict — controlled by `exit_nonzero_on` (default `high`) — decides whether the **phase stops**; it does not decide whether sub-threshold findings are ignored. Before invoking `oat-project-review-receive`, the result must satisfy all three eligibility conditions: `status` is `ok` or `blocked`, `receiveEligible` is `true`, and `handoff` is non-null. A missing or contradictory field is an operational failure even when `artifactPath` is present. Once eligibility is established, the produced artifact is consumed autonomously and without user prompts, so findings never evaporate:
 
 The gate prompt provides six additional frontmatter values: `oat_gate_run_id`,
 `oat_gate_target`, `oat_gate_runtime`, `oat_invocation_model`,
@@ -160,7 +160,7 @@ separate from optional observed or self-reported producer identity. Missing or
 mismatched values produce `artifact_validation_failed` before finding severity
 is evaluated.
 
-- **Passing gate** (no findings at or above the threshold): receive runs a non-pausing **judgment sweep**. It makes a per-finding decision for each Medium/Minor — defer to final review (the default, recorded so [final review](#phase-and-final-review) resurfaces it), address now (only for small, contained, low-risk fixes, which do **not** re-trigger the standard reviewer or re-gate the phase), or reject with rationale — then archives the artifact. Address-now is an exception, not the norm; if such a fix reveals a Critical/Important concern it escalates to the blocking path.
+- **Passing gate** (no findings at or above the threshold): receive runs a non-pausing **judgment sweep**. It makes a per-finding decision for each Medium/Low — defer to final review (the default, recorded so [final review](#phase-and-final-review) resurfaces it), address now (only for small, contained, low-risk fixes, which do **not** re-trigger the standard reviewer or re-gate the phase), or reject with rationale — then archives the artifact. Address-now is an exception, not the norm; if such a fix reveals a Critical/High concern it escalates to the blocking path.
 - **Blocking gate** (one or more findings at or above the threshold): receive converts findings to fix tasks and implementation re-runs the standard reviewer and the gate for the phase. These block → fix → re-gate rounds are bounded by `oat_orchestration_retry_limit` (default `2`); exhausting the bound stops a sequential run or excludes the phase in a parallel group, matching the standard fix loop's terminal handling.
 
 Gate-originated artifacts (`oat_review_invocation: gate`) are excluded from the same-scope review-cycle cap in `oat-project-review-receive`. The cap measures failed fix cycles of the standard review loop, so counting gate artifacts would trip it on artifact volume rather than real fix rounds.
@@ -173,7 +173,7 @@ This feature is opt-in and disabled by default (missing or `enabled: false`). Fo
 
 Generated planning and analysis artifacts have a separate review loop from code/phase reviews.
 
-For plans, `oat-project-plan`, `oat-project-quick-start`, `oat-project-lite`, and `oat-project-import-plan` run a bounded `plan.md` artifact review before marking the plan ready for implementation. The loop dispatches `oat-reviewer` in structured-output artifact mode with `scope: plan`, applies unambiguous Critical and Important artifact-local fixes, offers Medium and Minor fixes, and re-runs until clean or the retry bound is exhausted. A clean result records the `plan` row in the plan's `## Reviews` table as `passed`.
+For plans, `oat-project-plan`, `oat-project-quick-start`, `oat-project-lite`, and `oat-project-import-plan` run a bounded `plan.md` artifact review before marking the plan ready for implementation. The loop dispatches `oat-reviewer` in structured-output artifact mode with `scope: plan`, applies unambiguous Critical and High artifact-local fixes, offers Medium and Low fixes, and re-runs until clean or the retry bound is exhausted. A clean result records the `plan` row in the plan's `## Reviews` table as `passed`.
 
 For analysis artifacts, `oat-docs-analyze` and `oat-agent-instructions-analyze` run a bounded accuracy review after writing their severity-rated artifacts. The reviewer checks cited evidence, severity, and recommendations before the matching apply workflow consumes the artifact. The analysis loop updates tracking metadata to mark the artifact verified.
 
@@ -219,9 +219,9 @@ Use phase-scoped review artifacts during implementation (`p01`, `p02`, etc), the
 
 Final review `passed` gate requires:
 
-- No unresolved Critical/Important/Medium findings.
+- No unresolved Critical/High/Medium findings.
 - Deferred Medium findings resurfaced and explicitly dispositioned.
-- Minor findings explicitly dispositioned (after plain-language explanation).
+- Low findings explicitly dispositioned (after plain-language explanation).
 
 ## Subagent Compatibility
 

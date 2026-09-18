@@ -188,7 +188,7 @@ describe('project-rail: posted-body round-trip with project markers', () => {
       project: PROJECT,
       invocation: 'manual',
       summary: 'Reviewed the p02 phase against design.md.',
-      findings: [{ severity: 'important' }, { severity: 'minor' }],
+      findings: [{ severity: 'high' }, { severity: 'low' }],
       verificationCommands: ['pnpm test'],
     });
 
@@ -202,7 +202,7 @@ describe('project-rail: posted-body round-trip with project markers', () => {
     expect(markers?.oat_project).toBe(PROJECT);
     expect(markers?.oat_review_invocation).toBe('manual');
 
-    // An important finding drives REQUEST_CHANGES; the minor drives the Notes nudge.
+    // A high finding drives REQUEST_CHANGES; the low drives the Notes nudge.
     expect(verdict).toBe('REQUEST_CHANGES');
     expect(body).toContain('## Notes');
   });

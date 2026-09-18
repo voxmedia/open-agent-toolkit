@@ -6,7 +6,7 @@ import { parseMarkerBlock } from './marker-parser';
 const FULL_SHA = 'c'.repeat(40);
 
 interface TestFinding {
-  severity: 'critical' | 'important' | 'medium' | 'minor';
+  severity: 'critical' | 'high' | 'medium' | 'low';
 }
 
 const finding = (severity: TestFinding['severity']): TestFinding => ({
@@ -15,19 +15,19 @@ const finding = (severity: TestFinding['severity']): TestFinding => ({
 
 describe('mapVerdict', () => {
   it('returns REQUEST_CHANGES when any critical finding is present', () => {
-    expect(mapVerdict([finding('critical'), finding('minor')])).toBe(
+    expect(mapVerdict([finding('critical'), finding('low')])).toBe(
       'REQUEST_CHANGES',
     );
   });
 
-  it('returns REQUEST_CHANGES when any important finding is present', () => {
-    expect(mapVerdict([finding('medium'), finding('important')])).toBe(
+  it('returns REQUEST_CHANGES when any high finding is present', () => {
+    expect(mapVerdict([finding('medium'), finding('high')])).toBe(
       'REQUEST_CHANGES',
     );
   });
 
-  it('returns COMMENT when only medium and minor findings are present', () => {
-    expect(mapVerdict([finding('medium'), finding('minor')])).toBe('COMMENT');
+  it('returns COMMENT when only medium and low findings are present', () => {
+    expect(mapVerdict([finding('medium'), finding('low')])).toBe('COMMENT');
   });
 
   it('returns COMMENT for zero findings', () => {
@@ -42,7 +42,7 @@ describe('buildReviewBody', () => {
       scope: 'ad-hoc',
       invocation: 'manual',
       summary: 'A short review summary.',
-      findings: [finding('minor')],
+      findings: [finding('low')],
     });
 
     expect(verdict).toBe('COMMENT');
@@ -62,7 +62,7 @@ describe('buildReviewBody', () => {
       project: '.oat/projects/shared/remote-review',
       invocation: 'auto',
       summary: 'Project review.',
-      findings: [finding('important')],
+      findings: [finding('high')],
     });
 
     const parsed = parseMarkerBlock(body);
@@ -80,31 +80,31 @@ describe('buildReviewBody', () => {
       findings: [
         finding('critical'),
         finding('critical'),
-        finding('important'),
+        finding('high'),
         finding('medium'),
-        finding('minor'),
-        finding('minor'),
-        finding('minor'),
+        finding('low'),
+        finding('low'),
+        finding('low'),
       ],
     });
 
     expect(body).toMatch(/- Critical: 2/);
-    expect(body).toMatch(/- Important: 1/);
+    expect(body).toMatch(/- High: 1/);
     expect(body).toMatch(/- Medium: 1/);
-    expect(body).toMatch(/- Minor: 3/);
+    expect(body).toMatch(/- Low: 3/);
   });
 
-  it('includes the minor-fix Notes nudge when minor findings are present', () => {
+  it('includes the low-fix Notes nudge when low findings are present', () => {
     const { body } = buildReviewBody({
       headSha: FULL_SHA,
       scope: 'ad-hoc',
       invocation: 'manual',
-      summary: 'Has minors.',
-      findings: [finding('minor')],
+      summary: 'Has low findings.',
+      findings: [finding('low')],
     });
 
     expect(body).toContain('## Notes');
-    expect(body).toMatch(/recommend fixing minors/i);
+    expect(body).toMatch(/recommend fixing low-severity/i);
   });
 
   it('omits the Notes subsection when all severity counts are zero', () => {
@@ -120,12 +120,12 @@ describe('buildReviewBody', () => {
     expect(body).not.toContain('## Notes');
   });
 
-  it('omits the Notes subsection when only non-minor findings exist', () => {
+  it('omits the Notes subsection when only non-low findings exist', () => {
     const { body } = buildReviewBody({
       headSha: FULL_SHA,
       scope: 'ad-hoc',
       invocation: 'manual',
-      summary: 'No minors.',
+      summary: 'No low findings.',
       findings: [finding('critical')],
     });
 
@@ -220,12 +220,12 @@ describe('buildReviewBody', () => {
       scope: 'ad-hoc',
       invocation: 'manual',
       summary: 'Has an out-of-diff finding.',
-      findings: [finding('important')],
+      findings: [finding('high')],
       outOfDiffFindings: [
         {
           file: 'packages/cli/src/legacy/untouched.ts',
           line: 42,
-          severity: 'important',
+          severity: 'high',
           title: 'Legacy guard missing',
           body: 'This guard is required but the line is not in the PR diff.',
         },
@@ -293,21 +293,21 @@ describe('buildReviewBody', () => {
       scope: 'ad-hoc',
       invocation: 'manual',
       summary: 'Counts include the downgraded finding.',
-      findings: [finding('critical'), finding('important')],
+      findings: [finding('critical'), finding('high')],
       outOfDiffFindings: [
         {
           file: 'packages/cli/src/legacy/untouched.ts',
           line: 7,
-          severity: 'important',
+          severity: 'high',
           body: 'Downgraded into the body but still counted.',
         },
       ],
     });
 
-    // The important out-of-diff finding is present in `findings`, so the count
+    // The high out-of-diff finding is present in `findings`, so the count
     // is 1 — the out-of-diff section does not add a second tally.
     expect(body).toMatch(/- Critical: 1/);
-    expect(body).toMatch(/- Important: 1/);
+    expect(body).toMatch(/- High: 1/);
   });
 
   it('places the Findings outside the PR diff subsection after Severity Counts', () => {
@@ -316,13 +316,13 @@ describe('buildReviewBody', () => {
       scope: 'ad-hoc',
       invocation: 'manual',
       summary: 'Ordering check.',
-      findings: [finding('minor')],
+      findings: [finding('low')],
       outOfDiffFindings: [
         {
           file: 'a/b/c.ts',
           line: 3,
-          severity: 'minor',
-          body: 'Out-of-diff minor.',
+          severity: 'low',
+          body: 'Out-of-diff low.',
         },
       ],
     });
@@ -341,7 +341,7 @@ describe('buildReviewBody', () => {
       scope: 'ad-hoc',
       invocation: 'manual',
       summary: 'Has fixes.',
-      findings: [finding('important')],
+      findings: [finding('high')],
       verificationCommands: ['pnpm test'],
     }).body;
     const withoutCommands = buildReviewBody({

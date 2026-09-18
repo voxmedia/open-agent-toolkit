@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.3.1
+  version: 1.3.2
 ---
 
 # Remote Review Receive (Ad-hoc GitHub PR)
@@ -71,8 +71,8 @@ Normalize every finding to this shape:
 
 ```yaml
 finding:
-  id: "C1" | "I1" | "M1" | "m1"
-  severity: critical | important | medium | minor
+  id: "C1" | "H1" | "M1" | "L1"
+  severity: critical | high | medium | low
   title: string
   file: string | null
   line: number | null
@@ -86,9 +86,9 @@ finding:
 Severity conventions:
 
 - `critical`: Broken behavior, security risk, or missing P0 requirement.
-- `important`: Missing P1 requirement, major robustness issue.
+- `high`: Missing P1 requirement, major robustness issue.
 - `medium`: Meaningful but non-blocking quality/maintainability issue.
-- `minor`: Cosmetic/style/documentation issue.
+- `low`: Cosmetic/style/documentation issue.
 
 ## Process
 
@@ -126,16 +126,16 @@ For each item in JSON:
 
 - Capture `type` (`review_comment`, `issue_comment`, `review`).
 - Map location fields (`path`, `line`) when present.
-- Use comment body + context to assign severity (`critical`, `important`, `medium`, `minor`).
-- Treat `CHANGES_REQUESTED` review state as a strong hint toward `important+`, not an automatic override.
+- Use comment body + context to assign severity (`critical`, `high`, `medium`, `low`).
+- Treat `CHANGES_REQUESTED` review state as a strong hint toward `high+`, not an automatic override.
 - Normalize into the shared findings model.
 
 ID assignment per severity bucket:
 
 - Critical: `C1`, `C2`, ...
-- Important: `I1`, `I2`, ...
+- High: `H1`, `H2`, ...
 - Medium: `M1`, `M2`, ...
-- Minor: `m1`, `m2`, ...
+- Low: `L1`, `L2`, ...
 
 ### Step 4: Present Findings Overview and Triage
 
@@ -146,21 +146,21 @@ Before triage prompts, output:
 
 Disposition options per finding:
 
-- `convert` (default for critical/important/medium/minor)
+- `convert` (default for critical/high/medium/low)
 - `defer`
 - `dismiss`
 
 Rules:
 
-- Require concrete rationale for `defer`/`dismiss` at any severity, including minor. Small findings are usually cheaper to fix inline than to track as backlog items, so a minor `defer` must be justified just like any other deferral.
-- For any deferral (minor included), require a concrete reason (duplicate, dependency, explicit out-of-scope follow-up, risky churn).
+- Require concrete rationale for `defer`/`dismiss` at any severity, including low. Small findings are usually cheaper to fix inline than to track as backlog items, so a low `defer` must be justified just like any other deferral.
+- For any deferral (low included), require a concrete reason (duplicate, dependency, explicit out-of-scope follow-up, risky churn).
 
 ### Step 5: Generate Standalone Task List
 
 Task entry format:
 
 ```markdown
-- [ ] [important] Add null-guard in OAuth callback parser (`packages/auth/src/callback.ts:142`) - Validate provider payload before dereference.
+- [ ] [high] Add null-guard in OAuth callback parser (`packages/auth/src/callback.ts:142`) - Validate provider payload before dereference.
 ```
 
 Output modes:

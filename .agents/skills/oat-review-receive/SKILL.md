@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.4.1
+  version: 1.4.2
 ---
 
 # Review Receive (Ad-hoc Local)
@@ -42,8 +42,8 @@ If you catch yourself:
 
 - Editing project lifecycle docs in ad-hoc mode -> STOP and revert to task-list output only.
 - Triaging without presenting a findings overview first -> STOP and show overview before disposition prompts.
-- Skipping rationale when proposing deferral at any severity (including Minor) -> STOP and collect explicit rationale.
-- Defaulting a Minor finding to `defer` instead of `convert` -> STOP; the Minor default is `convert` (fix inline), and `defer` requires concrete rationale.
+- Skipping rationale when proposing deferral at any severity (including Low) -> STOP and collect explicit rationale.
+- Defaulting a Low finding to `defer` instead of `convert` -> STOP; the Low default is `convert` (fix inline), and `defer` requires concrete rationale.
 
 **Recovery:**
 
@@ -72,8 +72,8 @@ Normalize every finding to this shape:
 
 ```yaml
 finding:
-  id: "C1" | "I1" | "M1" | "m1"
-  severity: critical | important | medium | minor
+  id: "C1" | "H1" | "M1" | "L1"
+  severity: critical | high | medium | low
   title: string
   file: string | null
   line: number | null
@@ -86,16 +86,16 @@ finding:
 Severity conventions:
 
 - `critical`: Missing P0 requirements, security vulnerabilities, broken behavior.
-- `important`: Missing P1 requirements, major error-handling or maintainability gaps.
+- `high`: Missing P1 requirements, major error-handling or maintainability gaps.
 - `medium`: P2 issues with meaningful impact.
-- `minor`: Low-impact polish/documentation/style issues.
+- `low`: Low-impact polish/documentation/style issues.
 
 ID conventions:
 
 - Critical: `C1`, `C2`, ...
-- Important: `I1`, `I2`, ...
+- High: `H1`, `H2`, ...
 - Medium: `M1`, `M2`, ...
-- Minor: `m1`, `m2`, ...
+- Low: `L1`, `L2`, ...
 
 ## Process
 
@@ -132,12 +132,13 @@ Validation:
 Parse by severity sections/headings using case-insensitive matching:
 
 - `Critical`
-- `Important`
+- `High`
 - `Medium`
-- `Minor`
+- `Low`
 
 Compatibility rule:
 
+- Artifacts written before the severity rename use `### Important` and `### Minor` headings, which are no longer read — the gate rejects any artifact that still contains a retired tier, its count keys, or the legacy `Findings:` count line. Rename them to `### High` and `### Low` (and `oat_review_important_count`/`oat_review_minor_count` to `oat_review_high_count`/`oat_review_low_count`), or re-run the review. If the reviewer still writes the retired tiers, its installed instructions are stale: run `oat tools update` to refresh the installed tools and their provider projections.
 - If artifact uses a 3-tier model (no Medium section), treat Medium as zero findings.
 
 Extraction guidance per finding item:
@@ -163,9 +164,9 @@ Example summary:
 
 ```text
 Critical: 1
-Important: 2
+High: 2
 Medium: 1
-Minor: 3
+Low: 3
 ```
 
 If there are zero findings across all severities, output a clean result and stop.
@@ -181,14 +182,14 @@ For each finding, ask for disposition:
 Default suggestions:
 
 - Critical -> `convert`
-- Important -> `convert`
+- High -> `convert`
 - Medium -> `convert` (propose `defer` only with concrete rationale)
-- Minor -> `convert` (propose `defer` only with concrete rationale)
+- Low -> `convert` (propose `defer` only with concrete rationale)
 
 Rules:
 
-- Require explicit rationale for `defer` or `dismiss` at any severity, including Minor. Small findings are cheap to fix inline, so deferring a Minor into a backlog item must be justified just like any other deferral.
-- Do not recommend `defer` for a Minor finding solely because it does not impact current functionality — fixing inline is usually cheaper than tracking it. Reserve `defer` for the genuine cases (low-probability cleanup, blocked dependency, duplicated elsewhere, explicitly out of scope, or disproportionate churn now).
+- Require explicit rationale for `defer` or `dismiss` at any severity, including Low. Small findings are cheap to fix inline, so deferring a Low into a backlog item must be justified just like any other deferral.
+- Do not recommend `defer` for a Low finding solely because it does not impact current functionality — fixing inline is usually cheaper than tracking it. Reserve `defer` for the genuine cases (low-probability cleanup, blocked dependency, duplicated elsewhere, explicitly out of scope, or disproportionate churn now).
 - Do not silently skip findings.
 
 ### Step 5: Generate Task List Output

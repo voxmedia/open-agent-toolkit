@@ -260,7 +260,7 @@ registers. Non-interactive completion skips this offer, so autonomous
 generation occurs only through an explicitly configured post-approval `retro`
 step.
 
-When `workflow.autoReviewAtHillCheckpoints` is enabled or `plan.md` frontmatter sets `oat_auto_review_at_hill_checkpoints`, completing a HiLL checkpoint automatically runs the extra lifecycle review scoped to every implementation phase not already covered by a passed whole-phase code review, through the just-completed checkpoint. Mid-implementation multi-phase reviews use inclusive phase-range scopes such as `p02-p03`; the final implementation checkpoint uses `code final`. The review uses auto-disposition mode (minors auto-converted to fix tasks, no user prompts). Disabled by default. Legacy `autoReviewAtCheckpoints` and `oat_auto_review_at_checkpoints` are still read as fallbacks. This does not control Tier 1 per-phase `oat-reviewer` gates.
+When `workflow.autoReviewAtHillCheckpoints` is enabled or `plan.md` frontmatter sets `oat_auto_review_at_hill_checkpoints`, completing a HiLL checkpoint automatically runs the extra lifecycle review scoped to every implementation phase not already covered by a passed whole-phase code review, through the just-completed checkpoint. Mid-implementation multi-phase reviews use inclusive phase-range scopes such as `p02-p03`; the final implementation checkpoint uses `code final`. The review uses auto-disposition mode (low findings auto-converted to fix tasks, no user prompts). Disabled by default. Legacy `autoReviewAtCheckpoints` and `oat_auto_review_at_checkpoints` are still read as fallbacks. This does not control Tier 1 per-phase `oat-reviewer` gates.
 
 ### Phase-review setup during planning
 

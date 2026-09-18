@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.5.2
+  version: 1.5.3
 ---
 
 # Project Remote Review Receive
@@ -70,8 +70,8 @@ Normalize findings as:
 
 ```yaml
 finding:
-  id: "C1" | "I1" | "M1" | "m1"
-  severity: critical | important | medium | minor
+  id: "C1" | "H1" | "M1" | "L1"
+  severity: critical | high | medium | low
   title: string
   file: string | null
   line: number | null
@@ -184,11 +184,11 @@ Before prompting dispositions, print:
 
 Disposition options:
 
-- `convert` (default for critical/important/medium/minor)
+- `convert` (default for critical/high/medium/low)
 - `defer`
 - `dismiss`
 
-Require concrete rationale for `defer`/`dismiss` at any severity, including minor. Small findings are usually cheaper to fix inline than to track as backlog items, so a minor `defer` must be justified just like any other deferral.
+Require concrete rationale for `defer`/`dismiss` at any severity, including low. Small findings are usually cheaper to fix inline than to track as backlog items, so a low `defer` must be justified just like any other deferral.
 
 ### Step 5: Convert Findings to Plan Tasks
 

@@ -107,7 +107,7 @@ Autonomous execution preserves independent review:
   a cheaper or less independent reviewer.
 - Eligible review artifacts are received immediately. Fix tasks use the normal
   bounded implement-and-re-review loop.
-- Critical findings and failed blocking reviews stop progression. Important
+- Critical findings and failed blocking reviews stop progression. High
   findings follow the configured gate policy.
 - A normal phase or final lifecycle review cannot satisfy a configured
   implementation exit gate. Only gate invocation provenance with the matching

@@ -40,7 +40,7 @@ function wellFormedFindings(): StructuredFindings {
     findings: [
       {
         id: 'I1',
-        severity: 'important',
+        severity: 'high',
         title: 'Missing error handling on checkout failure',
         file: 'src/foo.ts',
         line: 42,
@@ -49,7 +49,7 @@ function wellFormedFindings(): StructuredFindings {
       },
       {
         id: 'm1',
-        severity: 'minor',
+        severity: 'low',
         title: 'Stale comment',
         file: null,
         line: null,

@@ -46,7 +46,7 @@ The root supplies:
 Fix mode also supplies:
 
 - `review_artifact`: authoritative root-dispatched phase review;
-- `findings`: bounded Critical/Important findings;
+- `findings`: bounded Critical/High findings;
 - `prior_report`: prior implementation/fix report;
 - `original_request_id`: original phase dispatch request;
 - `continuation_event`: resume linkage for this fix attempt.
@@ -468,7 +468,7 @@ After all task commits:
   - `quick`: `plan.md` and `discovery.md`, plus design/spec when present; and
   - `import`: `plan.md` and the imported plan, plus design/spec when present;
 - confirm no task boundary or dependency was missed; and
-- report Medium/Minor concerns without launching a reviewer.
+- report Medium/Low concerns without launching a reviewer.
 
 The independent implementation review is root-owned and occurs after this
 report.
@@ -714,7 +714,7 @@ Fix mode is a continuation of a successfully completed phase, not a replay.
    `original_request_id`. A fresh same-target recovery must record this linkage
    in the generic record's existing `continuation_events`; do not invent a new
    schema or unrelated request chain.
-3. Address only supplied Critical/Important findings within their declared
+3. Address only supplied Critical/High findings within their declared
    files.
 4. Run the cited task or phase verification.
 5. Create one append-only fix commit for this review round. Do not amend task
@@ -729,7 +729,7 @@ Fix mode is a continuation of a successfully completed phase, not a replay.
 **Phase:** {phase-id}
 **Original request ID:** {request_id}
 **Continuation event:** {event identifier}
-**Findings addressed:** {N} critical, {N} important
+**Findings addressed:** {N} critical, {N} high
 **Fix commit:** {sha}
 **Phase verification:** pass | fail
 **Dispatch target:** {same launcher-owned target}

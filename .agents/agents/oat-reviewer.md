@@ -1,6 +1,6 @@
 ---
 name: oat-reviewer
-version: 1.2.5
+version: 1.2.7
 description: Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode.
 tools: Read, Bash, Grep, Glob, Write, Task
 color: yellow
@@ -194,7 +194,7 @@ Strategy`, check whether the evidence matches the declared strategy, covers
 
 3. **Is there extra work?**
    - Code that doesn't map to any requirement
-   - If significant: add to Important findings (potential scope creep)
+   - If significant: add to High findings (potential scope creep)
 
 ### Step 4: Verify Artifact Quality
 
@@ -291,8 +291,8 @@ Review the analysis artifact as a fact-checking target, not as a rewrite request
    - Open each cited file/location that materially supports the finding; if the cited evidence is absent, stale, or unrelated, add a finding.
 
 2. **Severity is justified**
-   - Critical/Important findings must describe concrete user-visible, workflow, correctness, security, or maintainability impact.
-   - Medium/Minor findings must not be inflated solely because they are easy to fix.
+   - Critical/High findings must describe concrete user-visible, workflow, correctness, security, or maintainability impact.
+   - Medium/Low findings must not be inflated solely because they are easy to fix.
 
 3. **Recommendations are accurate**
    - Suggested fixes must match the actual repo contracts and existing file conventions.
@@ -340,7 +340,7 @@ Group findings by severity:
 - Broken functionality
 - Missing capable evidence for critical paths
 
-**Important** (should fix before merge)
+**High** (should fix before merge)
 
 - Missing P1 requirements
 - Missing error handling
@@ -354,7 +354,7 @@ Group findings by severity:
 - Moderate maintainability or testability issues
 - Contract gaps that can cause future regressions
 
-**Minor** (fix if time permits)
+**Low** (fix if time permits)
 
 - P2 requirements
 - Style issues
@@ -415,7 +415,7 @@ oat_invocation_source: { exec-target-config|unknown }
 
 {2-3 sentence summary of findings}
 
-Findings: {N} critical, {N} important, {N} medium, {N} minor
+Findings by severity: {N} critical, {N} high, {N} medium, {N} low
 
 ## Review Orchestration
 
@@ -439,7 +439,7 @@ worker claims, and root-inline coverage}
   - Fix: {specific guidance}
   - Requirement: {FR/NFR ID if applicable}
 
-### Important
+### High
 
 {If none: "None"}
 
@@ -455,7 +455,7 @@ worker claims, and root-inline coverage}
   - Issue: {description}
   - Fix: {specific guidance}
 
-### Minor
+### Low
 
 {If none: "None"}
 
@@ -494,7 +494,7 @@ Run the `oat-project-review-receive` skill to convert findings into plan tasks.
 
 ```
 
-Gate parsing contract: artifact-mode reviews, including reviews spawned by `oat gate review`, MUST include either the complete `Findings: {N} critical, {N} important, {N} medium, {N} minor` count line or the standard `## Findings` sections shown above with every severity subsection present.
+Gate parsing contract: artifact-mode reviews, including reviews spawned by `oat gate review`, MUST include either the complete `Findings by severity: {N} critical, {N} high, {N} medium, {N} low` count line or the standard `## Findings` sections shown above with every severity subsection present. When more than one count source is present — the frontmatter count fields, the count line, and the sections — the counts must agree; the gate refuses an artifact whose sources contradict each other rather than picking one.
 
 For every artifact-mode code review, `oat_review_head_sha` is required and must be the full 40-character commit SHA at the head of the authoritative review range. Resolve it with `git rev-parse <authoritative-range-head>^{commit}`. An abbreviated SHA, symbolic ref, or range string is invalid. When the review narrowed, `oat_review_range`, `oat_prior_review_artifact`, and `oat_prior_review_head_sha` are also required; the prior head must likewise be a full 40-character SHA. These code-review fields are independent of the gate-only block and do not apply to artifact, analysis, or structured-output reviews.
 
@@ -518,7 +518,7 @@ Format:
 ## Review Complete
 
 **Scope:** {scope}
-**Findings:** {N} critical, {N} important, {N} medium, {N} minor
+**Findings:** {N} critical, {N} high, {N} medium, {N} low
 **Review artifact:** {path}
 **Reconnaissance:** {attempted | not-attempted}
 
@@ -539,8 +539,8 @@ When the dispatch payload sets `oat_output_mode: structured`, the output sink ch
 interface StructuredFindings {
   summary: string; // 2-3 sentence review summary; include compact orchestration when reconnaissance was attempted
   findings: Array<{
-    id: string; // C1, I1, M1, m1 — stable per dispatch (C/I/M/m prefix matches the severity model)
-    severity: 'critical' | 'important' | 'medium' | 'minor';
+    id: string; // C1, H1, M1, L1 — stable per dispatch (C/H/M/L prefix matches the severity model)
+    severity: 'critical' | 'high' | 'medium' | 'low';
     title: string;
     file: string | null; // repo-relative path
     line: number | null; // 1-based line in the post-image (new file)
@@ -553,9 +553,9 @@ interface StructuredFindings {
 
 **Rules for the structured return:**
 
-- `severity` MUST be one of the four enum values, mapped from the same Critical/Important/Medium/Minor buckets as Step 7.
+- `severity` MUST be one of the four enum values, mapped from the same Critical/High/Medium/Low buckets as Step 7.
 - `file` and `line` MUST both be set or both be `null`. A finding with a concrete location sets both; a reviewer-level finding without a specific location sets both to `null` and is conveyed via the `summary` / its own `body`, not as an inline location.
-- `id` prefixes follow the existing convention (`C`/`I`/`M`/`m`) and are stable within a single dispatch — no renumbering.
+- `id` prefixes follow the existing convention (`C`/`H`/`M`/`L`) and are stable within a single dispatch — no renumbering.
 - `verification_commands` carries what Step 8's "Verification Commands" section would have carried, as an array of command strings.
 
 Default behavior is unaffected: when `oat_output_mode` is absent or set to anything other than `structured`, follow Steps 8-9 and write the artifact exactly as before. Analysis reviews MUST honor `oat_output_mode: structured` whenever supplied by an auto-review loop: return the `StructuredFindings` object and write no artifact.

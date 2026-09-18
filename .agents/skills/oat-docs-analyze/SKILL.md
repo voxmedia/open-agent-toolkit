@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: 1.5.1
+  version: 1.5.2
 ---
 
 # Docs Analysis
@@ -448,8 +448,8 @@ Follow the canonical loop exactly:
 1. Resolve `workflow.autoArtifactReview.analysis`; missing config means enabled, and only explicit `false` skips the loop.
 2. Resolve `oat_orchestration_retry_limit`; default to `2` if unavailable.
 3. Dispatch `oat-reviewer` in structured mode via Tier 1 subagent when available, falling back to the same reviewer prompt inline when needed.
-4. Apply Critical and Important fixes when they are local to the analysis artifact and unambiguous.
-5. Offer Medium and Minor fixes rather than applying them silently.
+4. Apply Critical and High fixes when they are local to the analysis artifact and unambiguous.
+5. Offer Medium and Low fixes rather than applying them silently.
 6. Rewrite `$ARTIFACT_PATH` after applied fixes and re-dispatch while retries remain.
 7. Stop when the reviewer is clean or the retry bound is exhausted.
 

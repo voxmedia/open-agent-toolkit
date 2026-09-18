@@ -6,7 +6,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Task
 metadata:
-  version: 1.9.4
+  version: 1.9.5
 ---
 
 # Execute a Wave of External Plans
@@ -181,7 +181,7 @@ excluded from groups) — never mid-run. **Reconciliation contract:** when recon
 reveals a stale plan premise, the reconciliation must be NON-NARROWING (WHERE
 the work happens may change; WHAT must be true may not), recorded exactly once
 in the Drift Refresh Record with pointer-only references elsewhere — a
-reconciliation that waives a source-plan requirement is a plan-gate Important
+reconciliation that waives a source-plan requirement is a plan-gate High
 (wave-4 evidence).
 
 Recon is delegated; the Drift Refresh Record entries and any reconciliation

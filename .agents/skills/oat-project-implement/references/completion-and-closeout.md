@@ -289,7 +289,7 @@ To run in a separate session use: oat-project-review-provide code final
 - If fresh session (option 2): User runs `oat-project-review-provide code final` in a separate session, then returns here
 - If inline (option 3): Agent first verifies equivalent current-host controls or an allowed exception, then executes the review per `oat-project-review-provide`; otherwise it uses the exact/pinned route or blocks
 - After review: User runs `oat-project-review-receive` to process findings
-- If Critical/Important findings: Fix tasks added, re-run the `oat-project-implement` skill
+- If Critical/High findings: Fix tasks added, re-run the `oat-project-implement` skill
 - Loop until final review passes (max 3 cycles per oat-project-review-receive)
 
 **After final review is marked `passed`:**

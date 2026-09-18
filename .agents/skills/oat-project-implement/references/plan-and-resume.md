@@ -277,7 +277,7 @@ oat_phase_review_gate:
   enabled: true
   phases: [] # empty or omitted = every implementation phase
   review_type: code
-  exit_nonzero_on: important
+  exit_nonzero_on: high
 ```
 
 Validation rules:
@@ -286,7 +286,7 @@ Validation rules:
 - `enabled: true` activates the gate.
 - `phases` is optional. If missing or empty (`[]`), run after every implementation phase. If populated, every value must be a known plan phase ID.
 - `review_type` is optional and defaults to `code`. This skill only supports `code` phase gates; any other value is invalid for implementation phase execution.
-- `exit_nonzero_on` is optional and defaults to `important`. Allowed values: `critical`, `important`, `medium`, `minor`.
+- `exit_nonzero_on` is optional and defaults to `high`. Allowed values: `critical`, `high`, `medium`, `low`. The pre-rename values `important` and `minor` are still accepted and resolve to `high` and `low`, so plans written before the rename stay valid.
 
 If the setting is invalid, stop before task execution and ask the user to repair `plan.md`. Do not silently disable a malformed gate.
 

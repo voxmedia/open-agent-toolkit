@@ -37,18 +37,18 @@ export const STRUCTURED_OUTPUT_MODE_FLAG = 'oat_output_mode' as const;
 /** The single accepted value of {@link STRUCTURED_OUTPUT_MODE_FLAG}. */
 export const STRUCTURED_OUTPUT_MODE_VALUE = 'structured' as const;
 
-export type FindingSeverity = 'critical' | 'important' | 'medium' | 'minor';
+export type FindingSeverity = 'critical' | 'high' | 'medium' | 'low';
 
 const SEVERITIES: ReadonlySet<string> = new Set([
   'critical',
-  'important',
+  'high',
   'medium',
-  'minor',
+  'low',
 ]);
 
 /** A single structured finding (see design.md → Data Models). */
 export interface StructuredFinding {
-  /** Stable per-dispatch ID with a C/I/M/m prefix. */
+  /** Stable per-dispatch ID with a C/H/M/L prefix. */
   id: string;
   severity: FindingSeverity;
   title: string;
@@ -149,7 +149,7 @@ function validateFinding(value: unknown, index: number): StructuredFinding {
     !SEVERITIES.has(value['severity'])
   ) {
     throw new StructuredFindingsError(
-      `${at}.severity must be one of critical|important|medium|minor.`,
+      `${at}.severity must be one of critical|high|medium|low.`,
     );
   }
   if (typeof value['title'] !== 'string') {

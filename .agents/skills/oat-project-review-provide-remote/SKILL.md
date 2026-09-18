@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, Task, AskUserQuestion
 metadata:
-  version: 1.1.5
+  version: 1.1.7
 ---
 
 # Remote Review Provide (Project-Scoped GitHub PR)
@@ -101,8 +101,8 @@ Normalize every finding to this shape (matches the `oat-reviewer` `StructuredFin
 
 ```yaml
 finding:
-  id: "C1" | "I1" | "M1" | "m1"
-  severity: critical | important | medium | minor
+  id: "C1" | "H1" | "M1" | "L1"
+  severity: critical | high | medium | low
   title: string
   file: string | null
   line: number | null
@@ -113,9 +113,9 @@ finding:
 Severity conventions:
 
 - `critical`: Broken behavior, security risk, or missing P0 requirement.
-- `important`: Missing P1 requirement, major robustness issue.
+- `high`: Missing P1 requirement, major robustness issue.
 - `medium`: Meaningful but non-blocking quality/maintainability issue.
-- `minor`: Cosmetic/style/documentation issue.
+- `low`: Cosmetic/style/documentation issue.
 
 Before reading the canonical reviewer definition or starting a fresh-child
 fallback, resolve the workflows-owned role locally. Probe candidates in this
@@ -277,7 +277,7 @@ Classification is reporting-only: `empty`, `bookkeeping-only`, and `substantive`
 
 ### Step 5: Run the Review (Tier 1/2/3 Dispatch)
 
-Mode-aware review against the project artifacts + the `oat-reviewer` checklist + severity model. Scope to the narrowing range when one was chosen; otherwise the full PR diff. Assign finding IDs per severity bucket (`C1`, `I1`, `M1`, `m1`), stable within the dispatch.
+Mode-aware review against the project artifacts + the `oat-reviewer` checklist + severity model. Scope to the narrowing range when one was chosen; otherwise the full PR diff. Assign finding IDs per severity bucket (`C1`, `H1`, `M1`, `L1`), stable within the dispatch.
 
 **Step 5.0: Resolve and report the exact reviewer target.** Before capability
 probing, run:
@@ -391,7 +391,7 @@ For each finding with non-null `file` + `line`, classify it against the PR diff 
 
 ### Step 7: Build the Review Body + Verdict
 
-Build the posted-review body with project markers (design.md → Data Models → Posted-review-body; mirrors `packages/cli/src/review-remote/body-builder.ts`): a leading HTML-comment marker block, then summary, severity counts, the minor-fix "Notes" nudge (only when minor findings are present), and the verification commands.
+Build the posted-review body with project markers (design.md → Data Models → Posted-review-body; mirrors `packages/cli/src/review-remote/body-builder.ts`): a leading HTML-comment marker block, then summary, severity counts, the low-fix "Notes" nudge (only when low findings are present), and the verification commands.
 
 Markers (project rail — both `oat_project` and `oat_review_scope` present):
 
@@ -406,7 +406,7 @@ oat_gate_target: <exact configured gate target; omit for lifecycle>
 -->
 ```
 
-`oat_project` carries the resolved project path so machine A's `oat-project-review-receive-remote` routes findings into the right project's plan tasks. Preserve the current invocation lineage in the GitHub marker: omit `oat_gate_target` for lifecycle reviews and include the exact target for gate reviews. Verdict: `REQUEST_CHANGES` when any critical or important finding exists; `COMMENT` otherwise (including a clean, zero-findings review — never auto-`APPROVE`).
+`oat_project` carries the resolved project path so machine A's `oat-project-review-receive-remote` routes findings into the right project's plan tasks. Preserve the current invocation lineage in the GitHub marker: omit `oat_gate_target` for lifecycle reviews and include the exact target for gate reviews. Verdict: `REQUEST_CHANGES` when any critical or high finding exists; `COMMENT` otherwise (including a clean, zero-findings review — never auto-`APPROVE`).
 
 ### Step 8: Post the Review + Clean Up
 
@@ -493,8 +493,8 @@ At completion, report:
   dispatch unavailability or explicit pre-start native role rejection.
 - Findings produced with consistent 4-tier severities and file:line references.
 - Inline comments mapped to in-diff positions; out-of-diff findings downgraded to the body, never dropped.
-- Posted-review body carries the marker block first (with `oat_project` + `oat_review_scope`), correct severity counts, and the minor-fix nudge when minors are present.
-- Verdict matches the C/I rule (`REQUEST_CHANGES` vs `COMMENT`; never auto-`APPROVE`).
+- Posted-review body carries the marker block first (with `oat_project` + `oat_review_scope`), correct severity counts, and the low-fix nudge when low findings are present.
+- Verdict matches the C/H rule (`REQUEST_CHANGES` vs `COMMENT`; never auto-`APPROVE`).
 - Single PR review posted (with user confirmation) via `agent-reviews` if supported, else `gh api`.
 - Ephemeral worktree removed on success and on failure.
 - No local artifact, no `plan.md` / `state.md` / `implementation.md` updates, no commits, no pushes on this machine.

@@ -251,7 +251,7 @@ oat_phase_review_gate:
   enabled: true
   phases: [] # empty or omitted = every implementation phase
   review_type: code
-  exit_nonzero_on: important
+  exit_nonzero_on: high
 ```
 
 **Semantics:**
@@ -259,7 +259,7 @@ oat_phase_review_gate:
 - Missing, `null`, or `enabled: false` → disabled (default). `enabled: true` activates the gate.
 - `phases` → optional. Empty or missing runs the gate after every implementation phase; a populated list restricts it to those phase IDs, each of which must exist in the plan body.
 - `review_type` → optional, defaults to `code`. Only `code` is supported for phase gates.
-- `exit_nonzero_on` → optional, defaults to `important`. One of `critical`, `important`, `medium`, `minor`. This is the blocking threshold: findings at or above it stop the phase; sub-threshold findings are dispositioned by the judgment sweep rather than ignored.
+- `exit_nonzero_on` → optional, defaults to `high`. One of `critical`, `high`, `medium`, `low`. This is the blocking threshold: findings at or above it stop the phase; sub-threshold findings are dispositioned by the judgment sweep rather than ignored.
 
 A malformed gate stops the run before task execution rather than being silently disabled. The gate is independent of HiLL checkpoints and reuses the existing `oat gate review` target config — it does not hardcode a `--target`. See [Reviews → Phase review gate](reviews.md#phase-review-gate) for the runtime behavior and disposition rules.
 

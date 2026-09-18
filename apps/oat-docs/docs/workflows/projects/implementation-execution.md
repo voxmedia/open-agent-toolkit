@@ -237,8 +237,8 @@ already part of the next phase's base.
 
 The root sends the reviewer a fresh scope containing the authoritative phase
 commit range, task IDs and boundaries, project artifacts, and verification
-evidence. The review passes with zero Critical and zero Important findings.
-Medium and Minor findings are recorded without blocking the phase.
+evidence. The review passes with zero Critical and zero High findings.
+Medium and Low findings are recorded without blocking the phase.
 
 ## Final Exit-Gate Boundary
 
@@ -381,7 +381,7 @@ See [Dispatch Policy](dispatch-ceiling.md) for configuration and
 
 ## Fix Continuity
 
-When review finds Critical or Important issues, the root resumes the original
+When review finds Critical or High issues, the root resumes the original
 phase handle in `fix` mode with:
 
 - the review artifact and bounded findings;
@@ -404,7 +404,7 @@ sequenceDiagram
   Root->>Phase: Phase Scope (request_id=A)
   Phase-->>Root: DONE + task commits
   Root->>Review: Review phase commit range
-  Review-->>Root: Critical / Important findings
+  Review-->>Root: Critical / High findings
   Root->>Phase: Resume A in fix mode
   Phase-->>Root: Fix commit + verification
   Root->>Review: New independent review round
