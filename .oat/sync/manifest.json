@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "oatVersion": "0.3.0",
+  "oatVersion": "0.3.1",
   "entries": [
     {
       "canonicalPath": ".agents/agents/oat-codebase-mapper.md",
