@@ -56,7 +56,7 @@ Proposed Claude-only recommendation for this feature, subject to supported-pair 
 
 | Tier     | Ordered candidates                     | Rationale                                                                                                                         |
 | -------- | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| Economy  | `haiku`, `sonnet/low`, `sonnet/medium` | Preserve Haiku's effortless route and offer bounded lower-cost Sonnet choices.                                                    |
+| Economy  | `haiku`, `sonnet/medium`               | Preserve Haiku's effortless route and offer a bounded Sonnet route that meets current guidance.                                   |
 | Balanced | `sonnet/high`                          | Preserve Sonnet as the tier's terminal reviewer with a substantive explicit effort.                                               |
 | High     | `opus/medium`, `opus/high`             | Express normal versus deeper reasoning inside the existing Opus tier.                                                             |
 | Frontier | `opus/xhigh`, `opus/max`, `fable/high` | Expose exceptional Opus depth while preserving the current Fable terminal family without making max the default for every review. |
@@ -175,9 +175,32 @@ Also capture a default/inherit case and an override/cap case. An override must b
 
 **Files:** project `implementation.md`, plan review rows, state, and only fixes justified by failed gates.
 
-**Work:** Run the repository definition-of-done gates in order, capturing each exit code directly in its own log. Fetch origin/main before the version gate; review integration drift and adjust lockstep versions if needed. Run `pnpm lint` and `pnpm format` because skills/smoke surfaces changed. Distinguish cached output from execution. For fresh evidence, first build and then run `pnpm exec turbo run test --force`; inject temporary home into template-dependent tests through their supported harness rather than repurposing the shell HOME variable. Separately execute smoke, skill, and script suites when using the direct Turbo invocation. Resolve failures without widening scope, update evidence, and run the workflow's phase/final reviews and configured gates. Do not merge, publish, or globally install as part of this task.
+**Work:** Run the repository definition-of-done gates in order, capturing each exit code directly in its own log. Fetch origin/main before the version gate; review integration drift and adjust lockstep versions if needed. Run `pnpm lint` and `pnpm format` because skills/smoke surfaces changed. Distinguish cached output from execution. For fresh evidence, build first and run the isolated child-process recipe below. It creates a temporary test home for the test process without assigning or repurposing the shell HOME variable. Run the separate smoke, skill, script, and skill-validation suites after the forced Turbo suite. Preserve failures and test output before the temporary directory is removed. Resolve failures without widening scope, update evidence, and run the workflow's phase/final reviews and configured gates. Do not merge, publish, or globally install as part of this task.
 
 **Verify, in CI order:** `pnpm check`; `pnpm type-check`; `pnpm test`; `pnpm build`; `pnpm run check:skill-bumps`; `git fetch origin main` then `pnpm release:check-versions`; `pnpm release:validate`; `pnpm build:docs`. Additionally `pnpm lint` and `pnpm format`. Each command must succeed on its own exit status. Live acceptance and negative-control evidence must also be present; green unit tests cannot replace them.
+
+**Fresh execution recipe:** Run after `pnpm build`, capture its exit status directly, and record that Turbo reports actual execution rather than replayed cached logs. The temporary HOME belongs only to the child test environment; the invoking shell and real user configuration are unchanged.
+
+```sh
+node --input-type=module <<'JS'
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { spawnSync } from 'node:child_process';
+const testHome = mkdtempSync(join(tmpdir(), 'oat-claude-effort-test-'));
+try {
+  const result = spawnSync('pnpm', ['exec', 'turbo', 'run', 'test', '--force'], {
+    stdio: 'inherit',
+    env: { ...process.env, HOME: testHome },
+  });
+  process.exitCode = result.status ?? 1;
+} finally {
+  rmSync(testHome, { recursive: true, force: true });
+}
+JS
+```
+
+Then run each separately with its own captured exit code: `pnpm test:smoke`, `pnpm test:skills`, `pnpm test:scripts`, and `pnpm oat:validate-skills`. These commands supplement the CI-order gates above; they are not inferred from a passing Turbo command.
 
 **Format:** `pnpm exec oxfmt --write .oat/projects/shared/claude-effort-levels/discovery.md .oat/projects/shared/claude-effort-levels/plan.md .oat/projects/shared/claude-effort-levels/implementation.md .oat/projects/shared/claude-effort-levels/state.md` and exact files changed by gate fixes.
 
@@ -207,7 +230,7 @@ Also capture a default/inherit case and an override/cap case. An override must b
 | spec   | artifact | pending | -    | -        | -             | -          | -           |
 | design | artifact | pending | -    | -        | -             | -          | -           |
 | p03    | code     | pending | -    | -        | -             | -          | -           |
-| plan   | artifact | pending | -    | -        | -             | auto       | -           |
+| plan   | artifact | pending | -    | -        | -             | -          | -           |
 
 Spec and design rows are retained from the scaffold for compatibility and are not required in this quick workflow. Plan readiness remains false until review disposition and configured gate receipt are durable.
 

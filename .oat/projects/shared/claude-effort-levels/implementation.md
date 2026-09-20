@@ -92,8 +92,15 @@ Not implemented. No release, installation, deployment, or live effort acceptance
 - Selection reason: ceiling exception because the planning parent's effort was not established by launcher-owned evidence; no effort inferred from model name.
 - Launch: accepted through the registered native variant; read-only artifact review; structured output; no review-file writes or live probes authorized to this child.
 - Dispatch: scope=plan action=review role=reviewer model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high target=oat-reviewer-gpt-5-6-sol-high.
-- Outcome: pending. Continue only through the accepted handle; no replacement after acceptance.
+- Outcome: completed with H1, M1, L1; no delegated reconnaissance. Findings and dispositions below. A bounded revised-artifact review continues through this same handle.
 
 ### Approved scope addition — workflow-gate prompt relevance
 
 The user explicitly requested including the recurring irrelevant-mode prompt fix. Added discovery SC9 and plan p02-t04 for a shared prose/caller-contract correction and regression coverage. This does not alter the retained gate settings for this project. Total tasks: 9.
+
+### Artifact review attempt 1 — finding dispositions
+
+- H1 (High): accepted. Removed Sonnet/low from the proposed Economy bundle because current routing guidance does not qualify it. Economy is now Haiku plus Sonnet/medium; model capability alone does not establish task eligibility.
+- M1 (Medium): accepted. Replaced the underspecified test-isolation instruction with a concrete child-process recipe using an isolated temporary test home and named all separate suites. The invoking shell HOME is untouched. This is a verification clarification within the authorized planning scope.
+- L1 (Low): accepted. Set the artifact review placeholder's Invocation field to `-`; dispatch provenance remains in this log. This is ledger-only cleanup.
+- Review count: initial structured review complete; revised-artifact review pending (retry 1 of 2).
