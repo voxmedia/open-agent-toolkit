@@ -1,6 +1,6 @@
 ---
 name: oat-reviewer
-version: 1.2.7
+version: 1.2.8
 description: Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode.
 tools: Read, Bash, Grep, Glob, Write, Task
 color: yellow
@@ -430,6 +430,8 @@ worker claims, and root-inline coverage}
 
 ## Findings
 
+{Every finding MUST be written as a markdown list item — a line starting with `- `, `* `, `+ `, or `1. `. The gate counts list items only; a finding written as a bold paragraph, a heading, or any other prose shape counts as zero and makes the gate refuse the whole artifact.}
+
 ### Critical
 
 {If none: "None"}
@@ -494,7 +496,7 @@ Run the `oat-project-review-receive` skill to convert findings into plan tasks.
 
 ```
 
-Gate parsing contract: artifact-mode reviews, including reviews spawned by `oat gate review`, MUST include either the complete `Findings by severity: {N} critical, {N} high, {N} medium, {N} low` count line or the standard `## Findings` sections shown above with every severity subsection present. When more than one count source is present — the frontmatter count fields, the count line, and the sections — the counts must agree; the gate refuses an artifact whose sources contradict each other rather than picking one.
+Gate parsing contract: artifact-mode reviews, including reviews spawned by `oat gate review`, MUST include either the complete `Findings by severity: {N} critical, {N} high, {N} medium, {N} low` count line or the standard `## Findings` sections shown above with every severity subsection present. When more than one count source is present — the frontmatter count fields, the count line, and the sections — the counts must agree; the gate refuses an artifact whose sources contradict each other rather than picking one. How a section is counted is load-bearing: the gate counts only markdown list items (`- `, `* `, `+ `, or `1. `) as findings. A finding written as a bold paragraph, a heading, or any other prose shape counts as zero, so a section of prose findings under a non-zero count line is a contradiction and the gate refuses the artifact — the entire review is rejected, not just the miscounted section.
 
 For every artifact-mode code review, `oat_review_head_sha` is required and must be the full 40-character commit SHA at the head of the authoritative review range. Resolve it with `git rev-parse <authoritative-range-head>^{commit}`. An abbreviated SHA, symbolic ref, or range string is invalid. When the review narrowed, `oat_review_range`, `oat_prior_review_artifact`, and `oat_prior_review_head_sha` are also required; the prior head must likewise be a full 40-character SHA. These code-review fields are independent of the gate-only block and do not apply to artifact, analysis, or structured-output reviews.
 

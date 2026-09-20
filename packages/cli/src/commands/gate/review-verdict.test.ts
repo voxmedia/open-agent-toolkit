@@ -908,6 +908,76 @@ None
     );
   });
 
+  it('names the list-item requirement when a section of prose findings tallies zero', async () => {
+    const artifactPath = await writeArtifact(`---
+oat_review_type: code
+oat_review_scope: p01
+oat_review_invocation: manual
+---
+
+# Review
+
+Findings by severity: 1 critical, 0 high, 0 medium, 0 low
+
+## Findings
+
+### Critical
+
+**C1 — the gate discards this review.** Issue: written as a bold paragraph.
+Fix: make it a list item.
+
+### High
+
+None
+
+### Medium
+
+None
+
+### Low
+
+None
+`);
+
+    // A reviewer that writes findings as prose sees only "the sections say 0",
+    // which reads as an arithmetic slip. Without the list-item requirement in
+    // the message there is nothing to correct from, and the rerun repeats the
+    // same shape and loses the whole review again.
+    await expect(parseReviewGateVerdict(artifactPath)).rejects.toThrow(
+      /Only markdown list items count as findings[\s\S]*`- `[\s\S]*bold paragraph/i,
+    );
+  });
+
+  it('omits the list-item explanation when no section tally is involved', async () => {
+    const artifactPath = await writeArtifact(`---
+oat_review_type: code
+oat_review_scope: p01
+oat_review_invocation: manual
+oat_review_critical_count: 0
+oat_review_high_count: 0
+oat_review_medium_count: 0
+oat_review_low_count: 0
+---
+
+# Review
+
+Findings by severity: 0 critical, 1 high, 0 medium, 0 low
+`);
+
+    // Frontmatter disagreeing with the count line has nothing to do with how a
+    // section is counted, so the hint would be a misleading lead.
+    const error = await parseReviewGateVerdict(artifactPath).then(
+      () => null,
+      (reason: unknown) => reason,
+    );
+
+    expect(error).toBeInstanceOf(Error);
+    expect((error as Error).message).toMatch(
+      /contradicts itself about finding counts/i,
+    );
+    expect((error as Error).message).not.toMatch(/Only markdown list items/i);
+  });
+
   it('rejects frontmatter counts that contradict the count line', async () => {
     const artifactPath = await writeArtifact(`---
 oat_review_type: code
