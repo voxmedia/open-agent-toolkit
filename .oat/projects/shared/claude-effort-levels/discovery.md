@@ -35,6 +35,12 @@ The user confirmed requirements were clear and requested quick-start discovery a
 **A:** Yes. The current bundle has model-only Claude candidates, and planning guidance also displays the recommendation.
 **Decision:** Add explicit Claude effort candidates to the bundled recommendation, update its version and presentations, and preserve explicit existing configuration during adoption.
 
+### Question 4: Repeated prompts for unrelated workflow gates
+
+**Q:** Is asking a quick project about lite/import-plan gates a workflow bug, and should this work fix it?
+**A:** The user reported repeated irrelevant prompts and explicitly requested hardening the prose as part of this work while it is cheap.
+**Decision:** Include a bounded shared-instruction fix: offer lifecycle gates only for the active planning workflow and applicable downstream implementation. Add regression coverage; do not redesign gate configuration or disable unrelated gates.
+
 ## Solution Space
 
 The selected direction reuses OAT's model-plus-effort target and generated-role pattern. Fixed effort on the two base roles would not provide selectable effort. A hypothetical per-call effort field is unsupported. A separate CLI dispatch architecture is unnecessary for the normal native path.
@@ -47,7 +53,8 @@ The selected direction reuses OAT's model-plus-effort target and generated-role 
 4. Teach Claude selection through the existing provider guidance and lifecycle consumers. Preserve reviewer policy instead of letting reviewers self-select a cheaper effort.
 5. Update the bundled Claude ladder and recommendation presentations, preserving Codex/Cursor ladder semantics and explicit user-owned cells. The bundle is a recommendation, not an automatic migration of personal configuration.
 6. Keep current model-family eligibility and the Opus-first hard-reasoning/consequential policy. This project adds effort control; it does not re-rank providers or turn every review into maximum effort.
-7. Proceed straight to a quick plan. The existing generated-role architecture provides the implementation pattern; no separate spec or design artifact is needed.
+7. Restrict lifecycle-gate setup to the actual workflow path. For quick-start, consider quick-start and implementation; do not prompt for lite, import-plan, or separate plan gates unless entering those workflows. Preserve explicitly configured settings and independent phase-review setup.
+8. Proceed straight to a quick plan. The existing generated-role architecture provides the implementation pattern; no separate spec or design artifact is needed.
 
 ## Constraints
 
@@ -69,6 +76,7 @@ The selected direction reuses OAT's model-plus-effort target and generated-role 
 - **SC6:** The versioned bundled recommendation includes useful Claude model-plus-effort candidates, and its documented table matches. Adoption fills missing cells while retaining explicit cells, including old model-only cells.
 - **SC7:** Reproducible positive and negative controls cover effort selection, payload/variant mismatch, observed metadata, and preservation of inheritance. Report runtime evidence and limitations honestly.
 - **SC8:** Supersede the accepted model-axis-only decision through the repository decision workflow, update docs/skill contracts, bump changed bundled skill/agent versions and public package versions, and pass the required gates.
+- **SC9:** Shared planning instructions filter lifecycle-gate setup to the actual workflow path. A quick project with all five gate-aware skills configured offers only quick-start and implementation; no irrelevant mode questions or gate overrides are produced. Other planning entry points get their own relevant gate plus implementation.
 
 ## Out of Scope
 

@@ -16,7 +16,7 @@ oat_template: true
 
 # Implementation Plan: claude-effort-levels
 
-**Goal:** Let OAT select and apply Claude model-plus-effort targets for reviewers and phase implementers, teach Claude orchestrators to use them, and ship consistent bundled recommendations.
+**Goal:** Let OAT select and apply Claude model-plus-effort targets for reviewers and phase implementers, teach Claude orchestrators to use them, ship consistent bundled recommendations, and avoid unrelated workflow-gate questions during planning.
 
 **Architecture:** Extend the shared dispatch target/resolver and materialization extension patterns. Claude effort is definition-bound: generate named Markdown roles with `model` and `effort`, resolve an exact native variant, and launch that variant. Keep the canonical role prompt separate from provider projections and retain the model-only compatibility path.
 
@@ -29,7 +29,7 @@ oat_template: true
 - [x] Discovery synthesized from the conversation and validated by `oat project complete-discovery`.
 - [x] Adjacent phases evaluated for dependencies and overlapping files.
 - [x] `oat_plan_parallel_groups` explicitly sequential.
-- [ ] Resolve project dispatch ceiling and review posture.
+- [x] Project ceiling: High (managed). Additional phase gate review: disabled by user; configured lifecycle gates retained.
 - [ ] Complete artifact review and configured quick-start exit gate.
 - HiLL implementation checkpoints are deferred to implementation entry; no planning-time value is asserted.
 
@@ -129,6 +129,18 @@ Synchronize the displayed recommendation with the authoritative JSON, including 
 
 **Commit:** `docs(p02-t03): document Claude effort dispatch and compatibility`.
 
+### Task p02-t04: Limit lifecycle-gate setup to the active workflow
+
+**Files:** `.agents/skills/oat-project-plan-writing/SKILL.md`; applicable call-site prose in `.agents/skills/oat-project-{quick-start,lite,import-plan,plan}/SKILL.md`; focused contracts in `packages/cli/src/validation/skills.test.ts` and existing skill tests where relevant.
+
+**Work:** Replace the shared contract's instruction to probe every gate-aware skill with an explicit caller-scoped set. The planning entry point supplies its own skill name plus `oat-project-implement` as the downstream implementation gate: quick-start → quick-start + implement; lite → lite + implement; import-plan → import-plan + implement; spec-driven plan → plan + implement. A new workflow transition evaluates its newly relevant gates when actually entered, not speculatively during the current plan. Probe and offer Keep/Disable only for configured gates in that relevant set. Do not disable or alter other modes' gates, expand the config schema, write an enabled override, or touch user/shared config. Preserve explicit existing project override maps without re-prompting, keep only disabled choices in project state, and keep phase-gate review independent. Document the active-workflow relevance rule in the shared contract and make callers pass it consistently; do not duplicate a second gate-selection system in every caller. Preserve a single PR-scoped metadata bump for each changed skill.
+
+**Verify:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts` and `pnpm oat:validate-skills`. Add a regression contract representing a quick project with all five lifecycle gates configured: expected offered set is exactly quick-start and implement, while lite/import-plan/plan are excluded. Check the corresponding relevant pairs for other planning entry points, explicit override preservation, and phase-gate independence. Since the consumer is an agent reading prose, verify complete instruction/caller consistency rather than adding runtime machinery solely to test the prose. Neutralize the relevance clause and demonstrate that its regression test fails, then restore it. Review the actual resulting prompt flow for quick-start to ensure the repeated irrelevant-mode question is removed.
+
+**Format:** `pnpm exec oxfmt --write .agents/skills/oat-project-plan-writing/SKILL.md .agents/skills/oat-project-quick-start/SKILL.md .agents/skills/oat-project-lite/SKILL.md .agents/skills/oat-project-import-plan/SKILL.md .agents/skills/oat-project-plan/SKILL.md packages/cli/src/validation/skills.test.ts`, narrowed to files actually changed.
+
+**Commit:** `fix(p02-t04): scope lifecycle gate prompts to active workflow`.
+
 ## Phase 3: Verify Real Dispatch and Release Readiness
 
 ### Task p03-t01: Add reproducible selection and launch negative controls
@@ -182,6 +194,7 @@ Also capture a default/inherit case and an override/cap case. An override must b
 | SC5 awareness and actual task-based choice     | p02-t01, p03-t02          |
 | SC6 recommendation and adoption                | p02-t02                   |
 | SC7 positive/negative/live evidence            | p03-t01, p03-t02          |
+| SC9 relevant workflow-gate prompts             | p02-t04                   |
 | SC8 decisions, docs, bumps, gates              | p02-t03, p03-t03          |
 
 ## Reviews
@@ -203,10 +216,10 @@ Spec and design rows are retained from the scaffold for compatibility and are no
 Implementation has not started.
 
 - Phase 1: 2 tasks — resolver and generated-role lifecycle.
-- Phase 2: 3 tasks — awareness, recommendations, documentation/decision alignment.
+- Phase 2: 4 tasks — awareness, recommendations, documentation/decision alignment, and relevant lifecycle-gate prompts.
 - Phase 3: 3 tasks — negative controls, live acceptance, release verification.
 
-**Total: 8 tasks; 0 complete.** This section is a planned rollup, not a completion claim.
+**Total: 9 tasks; 0 complete.** This section is a planned rollup, not a completion claim.
 
 ## References
 

@@ -1,4 +1,8 @@
 ---
+oat_dispatch_policy:
+  mode: managed
+  policy: high
+  source: project-state
 oat_current_task: null
 oat_last_commit: null
 oat_blockers: []
@@ -79,13 +83,13 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-20T19:40:55.054Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-20T19:47:28.236011+00:00'
+oat_project_state_updated: '2026-09-20T23:40:45.242054+00:00'
 oat_generated: false
 ---
 
 # Project State: claude-effort-levels
 
-**Status:** Plan drafted; setup and review pending
+**Status:** Plan drafted; review pending
 **Started:** 2026-09-20
 **Last Updated:** 2026-09-20
 
@@ -97,20 +101,20 @@ Plan — quick workflow, straight to plan using confirmed conversation requireme
 
 - **Discovery:** `discovery.md` — validated and complete.
 - **Spec / Design:** not required in this quick workflow.
-- **Plan:** `plan.md` — 3 sequential phases, 8 tasks; review pending.
-- **Implementation:** `implementation.md` — initialized; 0/8 tasks complete.
+- **Plan:** `plan.md` — 3 sequential phases, 9 tasks; review pending.
+- **Implementation:** `implementation.md` — initialized; 0/9 tasks complete.
 
 ## Progress
 
 - Discovery captured and validated.
 - Plan drafted, including bundled recommendations and effort-selection awareness.
-- Effective reusable ladders complete; project policy and review posture pending.
+- Effective reusable ladders complete; project ceiling High. Additional phase gate review disabled by user; configured lifecycle gates remain unchanged.
 - Implementation has not started.
 
 ## Blockers
 
-Planning setup and review must finish before implementation readiness.
+Plan artifact review and configured quick-start gate must finish before implementation readiness.
 
 ## Next Milestone
 
-Resolve project dispatch policy, review the plan, run the configured quick-start gate, and record its disposition.
+Review the plan, run the configured quick-start gate, and record its disposition.

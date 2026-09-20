@@ -17,10 +17,10 @@ Implementation has not started. This tracker records planning provenance and ide
 | Phase                                    | Status  | Tasks | Completed |
 | ---------------------------------------- | ------- | ----- | --------- |
 | p01 — Resolve and materialize            | pending | 2     | 0/2       |
-| p02 — Guidance and recommendations       | pending | 3     | 0/3       |
+| p02 — Guidance and recommendations       | pending | 4     | 0/4       |
 | p03 — Verification and release readiness | pending | 3     | 0/3       |
 
-**Total: 0/8 tasks completed.**
+**Total: 0/9 tasks completed.**
 
 ## Task Status
 
@@ -31,6 +31,7 @@ Implementation has not started. This tracker records planning provenance and ide
 | p02-t01 | pending | -      |
 | p02-t02 | pending | -      |
 | p02-t03 | pending | -      |
+| p02-t04 | pending | -      |
 | p03-t01 | pending | -      |
 | p03-t02 | pending | -      |
 | p03-t03 | pending | -      |
@@ -52,9 +53,9 @@ No implementation runs yet.
 - Existing active pointer referred to a missing `agent-provider-root` project; the explicit new project request now owns the local active pointer.
 - Discovery validation passed through `oat project complete-discovery`.
 - Bundled recommendations are owned by `packages/cli/config/dispatch-matrix-recommendation.json`; config adoption preserves explicit provider scalars and tier cells.
-- Effective ladder completeness is true; no ladder adoption is needed for this planning run. Project dispatch policy remains pending operator selection.
-- Optional phase-gate review offered after the target probe found explicitly configured, enabled, available targets.
-- Existing user lifecycle gates are configured. Keep/disable choices were offered separately; absent a disable selection they remain unchanged. Final readiness awaits project dispatch policy selection, plan review, and the configured quick-start gate.
+- Effective ladder completeness is true; no ladder adoption is needed for this planning run. User selected managed High for this project.
+- User disabled additional phase gate review. The plan leaves `oat_phase_review_gate` absent as required by the setup contract. Built-in per-phase root reviews and final review remain required.
+- Existing user lifecycle gates are configured. User explicitly selected Keep for all five configured lifecycle gates. No project override map is written. Final readiness awaits project dispatch policy selection, plan review, and the configured quick-start gate.
 - Read-only recon reused the existing `claude_effort_scope` child, returning source references for recommendation/adoption and sync lifecycle integration. No implementation edits were delegated.
 
 ## Deviations from Plan / Design
@@ -73,7 +74,7 @@ Planning checks passed:
 
 Draft commit `6d4c3d19c` succeeded. Its hook's source-CLI step reported a pre-existing `WORKFLOW_MODES` export mismatch in the built control-plane package; this is not recorded as a passing check. Installed `oat` commands used above succeeded. The implementation plan calls for refreshing local build dependencies before source-CLI verification.
 
-Plan artifact review and the configured exit gate have not run because the required project dispatch policy is unresolved. Implementation and live-provider tests are not yet run.
+Project policy is now resolved to managed High; plan artifact review and the configured exit gate are next. Implementation and live-provider tests are not yet run.
 
 ## Final Summary (for PR/docs)
 
@@ -83,3 +84,16 @@ Not implemented. No release, installation, deployment, or live effort acceptance
 
 - [Discovery](discovery.md)
 - [Plan](plan.md)
+
+### Plan artifact review dispatch — attempt 1
+
+- Request: `claude-effort-plan-review-01`; native handle `/root/claude_effort_plan_review`.
+- Managed reviewer preflight: resolved; complete reusable ladder; project ceiling High; target `gpt-5.6-sol/high`; exact native variant `oat-reviewer-gpt-5-6-sol-high`.
+- Selection reason: ceiling exception because the planning parent's effort was not established by launcher-owned evidence; no effort inferred from model name.
+- Launch: accepted through the registered native variant; read-only artifact review; structured output; no review-file writes or live probes authorized to this child.
+- Dispatch: scope=plan action=review role=reviewer model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high target=oat-reviewer-gpt-5-6-sol-high.
+- Outcome: pending. Continue only through the accepted handle; no replacement after acceptance.
+
+### Approved scope addition — workflow-gate prompt relevance
+
+The user explicitly requested including the recurring irrelevant-mode prompt fix. Added discovery SC9 and plan p02-t04 for a shared prose/caller-contract correction and regression coverage. This does not alter the retained gate settings for this project. Total tasks: 9.
