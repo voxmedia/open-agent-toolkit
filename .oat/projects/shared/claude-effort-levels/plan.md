@@ -222,15 +222,16 @@ Then run each separately with its own captured exit code: `pnpm test:smoke`, `pn
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | ------- | ---------- | -------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending | -          | -        | -             | -          | -           |
-| p02    | code     | pending | -          | -        | -             | -          | -           |
-| final  | code     | pending | -          | -        | -             | -          | -           |
-| spec   | artifact | pending | -          | -        | -             | -          | -           |
-| design | artifact | pending | -          | -        | -             | -          | -           |
-| p03    | code     | pending | -          | -        | -             | -          | -           |
-| plan   | artifact | passed  | 2026-09-20 | -        | -             | -          | -           |
+| Scope  | Type     | Status   | Date       | Artifact                                           | Reviewed Head | Invocation | Gate Target |
+| ------ | -------- | -------- | ---------- | -------------------------------------------------- | ------------- | ---------- | ----------- |
+| p01    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| p02    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| final  | code     | pending  | -          | -                                                  | -             | -          | -           |
+| spec   | artifact | pending  | -          | -                                                  | -             | -          | -           |
+| design | artifact | pending  | -          | -                                                  | -             | -          | -           |
+| p03    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| plan   | artifact | passed   | 2026-09-20 | -                                                  | -             | -          | -           |
+| plan   | artifact | received | 2026-09-20 | reviews/artifact-plan-review-2026-09-20T235147Z.md | -             | -          | -           |
 
 Spec and design rows are retained from the scaffold for compatibility and are not required in this quick workflow. Native structured artifact review passed after one revision. Plan readiness remains false until configured gate receipt is durable.
 
