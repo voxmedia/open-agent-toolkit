@@ -5,206 +5,71 @@ oat_blockers: []
 oat_last_updated: 2026-09-20
 oat_current_task_id: p01-t01
 oat_generated: false
+oat_template: false
 ---
 
 # Implementation: claude-effort-levels
 
-**Started:** 2026-09-20
-**Last Updated:** 2026-09-20
-
-> This document is used to resume interrupted implementation sessions.
->
-> Conventions:
->
-> - `oat_current_task_id` always points at the **next plan task to do** (not the last completed task).
-> - When all plan tasks are complete, set `oat_current_task_id: null`.
-> - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews` (e.g., `| final | code | passed | ... |`).
-> - Keep phase/task statuses consistent with the Progress Overview table so restarts resume correctly.
-> - Before running the `oat-project-pr-final` skill, fill the Final Summary (for PR/docs) section below with what was actually implemented.
+Implementation has not started. This tracker records planning provenance and identifies the first executable task.
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase                                    | Status  | Tasks | Completed |
+| ---------------------------------------- | ------- | ----- | --------- |
+| p01 — Resolve and materialize            | pending | 2     | 0/2       |
+| p02 — Guidance and recommendations       | pending | 3     | 0/3       |
+| p03 — Verification and release readiness | pending | 3     | 0/3       |
 
-**Total:** 0/{N} tasks completed
+**Total: 0/8 tasks completed.**
 
----
+## Task Status
 
-## Phase 1: {Phase Name}
-
-**Status:** in_progress
-**Started:** 2026-09-20
-
-### Phase Summary (fill when phase is complete)
-
-**Outcome (what changed):**
-
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
-
-**Key files touched:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {trade-offs or deviations discovered during implementation}
-
-### Task p01-t01: {Task Name}
-
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
-
-**Outcome (required when completed):**
-
-- {what materially changed (not “did task”, but “system now does X”)}
-
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
-
----
-
-### Task p01-t02: {Task Name}
-
-**Status:** pending
-**Commit:** -
-
-**Notes:**
-
-- {Notes will be added during implementation}
-
----
-
-## Phase 2: {Phase Name}
-
-**Status:** pending
-**Started:** -
-
-### Task p02-t01: {Task Name}
-
-**Status:** pending
-**Commit:** -
-
----
+| Task    | Status  | Commit |
+| ------- | ------- | ------ |
+| p01-t01 | pending | -      |
+| p01-t02 | pending | -      |
+| p02-t01 | pending | -      |
+| p02-t02 | pending | -      |
+| p02-t03 | pending | -      |
+| p03-t01 | pending | -      |
+| p03-t02 | pending | -      |
+| p03-t03 | pending | -      |
 
 ## Orchestration Runs
 
-_Each run from `oat-project-implement` appends an entry below with:_
-_- Run header (number, timestamp, branch, tier, policy, phase counts)_
-_- Phase Outcomes table_
-_- Parallel Groups list_
-_- Outstanding Items_
-
 <!-- orchestration-runs-start -->
 
-_Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
+No implementation runs yet.
 
 <!-- orchestration-runs-end -->
 
----
+## Planning Log
 
-## Implementation Log
+### 2026-09-20 — Quick-start planning
 
-Chronological log of implementation progress.
-
-### 2026-09-20
-
-**Session Start:** {time}
-
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
-
-**What changed (high level):**
-
-- {short bullets suitable for PR/docs}
-
-**Decisions:**
-
-- {Decision made and rationale}
-
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
-
-**Blockers:**
-
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
-
----
-
-### 2026-09-20
-
-**Session Start:** {time}
-
-{Continue log...}
-
----
+- User confirmed discovery requirements and requested a plan, including effort-selection awareness and bundled recommendations.
+- Created the quick project with `oat project new claude-effort-levels --mode quick --json`; scaffold commit `f3e964b7a2808bc9a573f7c039022e63066bd47f`.
+- Existing active pointer referred to a missing `agent-provider-root` project; the explicit new project request now owns the local active pointer.
+- Discovery validation passed through `oat project complete-discovery`.
+- Bundled recommendations are owned by `packages/cli/config/dispatch-matrix-recommendation.json`; config adoption preserves explicit provider scalars and tier cells.
+- Effective ladder completeness is true; no ladder adoption is needed for this planning run. Project dispatch policy remains pending operator selection.
+- Optional phase-gate review offered after the target probe found explicitly configured, enabled, available targets.
+- Existing user lifecycle gates are configured; final readiness awaits plan review and the configured quick-start gate.
+- Read-only recon reused the existing `claude_effort_scope` child, returning source references for recommendation/adoption and sync lifecycle integration. No implementation edits were delegated.
 
 ## Deviations from Plan / Design
 
-Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
-
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+None. No design artifact is required for this quick workflow.
 
 ## Test Results
 
-Track test execution during implementation.
-
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+Only planning-artifact checks have run; implementation and live-provider tests are not yet run.
 
 ## Final Summary (for PR/docs)
 
-**What shipped:**
-
-- {capability 1}
-- {capability 2}
-
-**Behavioral changes (user-facing):**
-
-- {bullet}
-
-**Key files / modules:**
-
-- `{path}` - {purpose}
-
-**Verification performed:**
-
-- {tests/lint/typecheck/build/manual steps}
-
-**Design deltas (if any):**
-
-- {what changed vs design.md and why}
+Not implemented. No release, installation, deployment, or live effort acceptance is claimed.
 
 ## References
 
-- Plan: `plan.md`
-- Design: `design.md`
-- Spec: `spec.md`
+- [Discovery](discovery.md)
+- [Plan](plan.md)

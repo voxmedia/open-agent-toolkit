@@ -1,142 +1,113 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-quick-start
 oat_blockers: []
 oat_last_updated: 2026-09-20
 oat_generated: false
+oat_template: false
 ---
 
 # Discovery: claude-effort-levels
 
-## Phase Guardrails (Discovery)
-
-Discovery is for requirements and decisions, not implementation details.
-
-- Prefer outcomes and constraints over concrete deliverables (no specific scripts, file paths, or function names).
-- If an implementation detail comes up, capture it as an **Open Question** for design (or a constraint), not as a deliverable list.
-
 ## Initial Request
 
-{Copy of user's initial request}
+Extend OAT's reviewer and phase-implementer dispatch to select Claude model and reasoning effort, matching the configurable behavior already available for Codex and Cursor. Include orchestrator awareness: Claude must know when and how to select effort, not merely have generated variants available. Update bundled dispatch ladder recommendations and their documented presentation.
+
+The user confirmed requirements were clear and requested quick-start discovery and a plan on 2026-09-20. This authorizes planning and its configured reviews; implementation is a subsequent action.
 
 ## Clarifying Questions
 
-### Question 1: {Topic}
+### Question 1: Which Claude control applies?
 
-**Q:** {Question}
-**A:** {User's answer}
-**Decision:** {What this means for the project}
+**Q:** Can effort be passed directly on the Agent call?
+**A:** The user supplied Anthropic's shipped-feature explanation: effort belongs in subagent frontmatter or the JSON supplied to `--agents`; there is no per-call Agent effort parameter.
+**Decision:** Generate named Claude variants with model and effort in their definitions, and dispatch the selected variant by name.
+
+### Question 2: Is mechanical support sufficient?
+
+**Q:** Should Claude be taught to choose different effort levels?
+**A:** Yes, explicitly. Existing Claude selection guidance contains effort recommendations, while workflow instructions still label effort inapplicable.
+**Decision:** Update selection, launch, retry, review, and reporting instructions together; verify an orchestrator actually makes and applies distinct choices.
+
+### Question 3: Should defaults be updated?
+
+**Q:** Does OAT have bundled ladder recommendations that should change?
+**A:** Yes. The current bundle has model-only Claude candidates, and planning guidance also displays the recommendation.
+**Decision:** Add explicit Claude effort candidates to the bundled recommendation, update its version and presentations, and preserve explicit existing configuration during adoption.
 
 ## Solution Space
 
-_Include this section only when the request is exploratory or multiple viable approaches exist. For well-understood requests with an obvious approach, omit or replace with a single sentence stating the chosen direction._
-
-{Divergent exploration of the problem space before converging on an approach. Capture genuinely distinct strategies, not minor variations. Include 2-3 approaches as needed.}
-
-### Approach 1: {Strategy Name} _(Recommended)_
-
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
-
-### Approach 2: {Strategy Name}
-
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
-
-### Chosen Direction
-
-**Approach:** {Which approach was selected}
-**Rationale:** {Why this approach over the alternatives}
-**User validated:** {Yes/No — explicit buy-in before proceeding}
-
-## Options Considered
-
-{Specific implementation options within the chosen approach. More granular than Solution Space — captures decisions about libraries, patterns, data formats, etc.}
-
-### Option A: {Option Name}
-
-**Description:** {What this option involves}
-
-**Pros:**
-
-- {Benefit 1}
-- {Benefit 2}
-
-**Cons:**
-
-- {Drawback 1}
-- {Drawback 2}
-
-**Chosen:** {A/B/Neither}
-
-**Summary:** {1-2 sentence summary of the chosen option and why}
+The selected direction reuses OAT's model-plus-effort target and generated-role pattern. Fixed effort on the two base roles would not provide selectable effort. A hypothetical per-call effort field is unsupported. A separate CLI dispatch architecture is unnecessary for the normal native path.
 
 ## Key Decisions
 
-1. **{Decision Category}:** {Decision made and why}
-2. **{Decision Category}:** {Decision made and why}
+1. Support `oat-reviewer` and `oat-phase-implementer`, including bounded fixes and nested launches using these roles. Generate provider-specific variants without editing installed files by hand.
+2. Keep model and effort independent in config, resolution, and evidence. The resolver owns exact selection and dispatch stamps; Claude's agent definition applies effort.
+3. Preserve existing model-only candidates and explicit inherit/default behavior. Capped reviewers still use the terminal candidate at their configured ceiling; implementers select eligible candidates by task.
+4. Teach Claude selection through the existing provider guidance and lifecycle consumers. Preserve reviewer policy instead of letting reviewers self-select a cheaper effort.
+5. Update the bundled Claude ladder and recommendation presentations, preserving Codex/Cursor ladder semantics and explicit user-owned cells. The bundle is a recommendation, not an automatic migration of personal configuration.
+6. Keep current model-family eligibility and the Opus-first hard-reasoning/consequential policy. This project adds effort control; it does not re-rank providers or turn every review into maximum effort.
+7. Proceed straight to a quick plan. The existing generated-role architecture provides the implementation pattern; no separate spec or design artifact is needed.
 
 ## Constraints
 
-- {Constraint 1}
-- {Constraint 2}
+- No per-call Agent effort argument; choose a role definition with the desired effort. An explicit model argument must agree with that definition.
+- Provider-native effort support is model-dependent. Unsupported pairs must not be claimed as enforced targets or silently substituted by OAT.
+- Environment overrides, provider limits, and older-runtime behavior can change effective effort. Configured selection and independently observed execution remain distinct evidence.
+- Model-only configurations keep their existing launch behavior; omission of effort does not become an implicit newly pinned effort.
+- Preserve native-first dispatch, pre-start rejection boundaries, and continuation through accepted child handles.
+- Generated projections and bundled output are produced from canonical sources. Follow repository version-bump and verification requirements when implementation ships.
+- Do not modify this user's reusable ladders, install globally, publish, or deploy as part of planning.
 
 ## Success Criteria
 
-- {Criterion 1}
-- {Criterion 2}
+- **SC1:** Same-model/different-effort Claude candidates resolve distinctly for implementer, fix, and reviewer paths; selection and cap/order checks preserve existing policy semantics.
+- **SC2:** Sync and managed tool installation/update produce both roles' correctly named Claude definitions with explicit model and effort; regeneration is idempotent and obsolete managed variants can be removed safely.
+- **SC3:** A selected native Claude launch uses the exact resolver variant. Missing variants, unsupported effort, or conflicting controls cannot silently fall back to a different target.
+- **SC4:** Legacy model-only and inherit/default paths retain their behavior; Codex and Cursor resolution/materialization regressions are covered.
+- **SC5:** Guidance explains task-based effort selection and how to execute it. A real Claude orchestration probe demonstrates two task shapes selecting and launching different eligible efforts without embedding the answers in the prompts.
+- **SC6:** The versioned bundled recommendation includes useful Claude model-plus-effort candidates, and its documented table matches. Adoption fills missing cells while retaining explicit cells, including old model-only cells.
+- **SC7:** Reproducible positive and negative controls cover effort selection, payload/variant mismatch, observed metadata, and preservation of inheritance. Report runtime evidence and limitations honestly.
+- **SC8:** Supersede the accepted model-axis-only decision through the repository decision workflow, update docs/skill contracts, bump changed bundled skill/agent versions and public package versions, and pass the required gates.
 
 ## Out of Scope
 
-- {Thing we explicitly decided not to do}
-- {Thing we explicitly decided not to include in this phase}
+- Changing the Agent tool schema or treating reasoning prose as an effort control.
+- Reworking all providers' policy tiers, automatic economic tuning, or benchmarking all Claude models.
+- A new dynamic agent broker, direct Anthropic API dispatcher, or global runtime instrumentation subsystem.
+- Automatically replacing installed user ladders, publishing, merging, or deploying during this planning session.
+- Implementation in this turn.
 
 ## Deferred Ideas
 
-{Ideas that came up during discovery but are intentionally out of scope for now}
-
-- {Idea 1} - {Why deferred}
-- {Idea 2} - {Why deferred}
+Provider-wide model ranking and broader recommendation refreshes remain separate work unless directly required to express Claude effort.
 
 ## Open Questions
 
-{Questions that need resolution before or during specification (and later design)}
-
-- **{Question Category}:** {Question that needs answering}
-- **{Question Category}:** {Question that needs answering}
+No unresolved product requirement blocks plan authoring. Planning setup still needs this project's dispatch ceiling and optional review posture. Implementation must verify the supported model/effort pairs and runtime precedence using current docs and captured real output before claiming live acceptance.
 
 ## Assumptions
 
-{Assumptions we're making that need validation}
-
-- {Assumption 1}
-- {Assumption 2}
+- The current Claude CLI (observed locally as 2.1.278) supports subagent effort frontmatter and `--agents` JSON. Verify again at implementation time.
+- Existing generic target shapes and materialization abstractions can be extended without a config schema migration.
+- The user request supplies the fresh capability evidence contemplated by the older model-axis-only decision; supersession will make that change explicit.
 
 ## Risks
 
-{Potential risks identified during discovery}
+- **Ignored effort:** Current matching considers effort only for Codex. Add a same-model/different-effort negative control before changing it.
+- **False enforcement:** A generated definition proves intent, not effective runtime effort. Capture actual child metadata and account for environment/cap precedence.
+- **Incomplete awareness:** Scattered implementation/review instructions currently contradict provider guidance. Inventory all consumers and test the actual selection-to-launch chain.
+- **Config drift:** Adoption intentionally preserves explicit old cells. Document opt-in updates instead of overwriting user choices.
+- **Decision drift:** An accepted decision forbids Claude effort variants; supersede it with capability and verification evidence.
 
-- **{Risk Name}:** {Description}
-  - **Likelihood:** Low / Medium / High
-  - **Impact:** Low / Medium / High
-  - **Mitigation Ideas:** {How to address}
+## References
+
+- [Claude subagents](https://code.claude.com/docs/en/sub-agents): frontmatter, `--agents` fields, and model precedence; inspected 2026-09-20.
+- [Claude model configuration](https://code.claude.com/docs/en/model-config): effort support and override precedence; inspected 2026-09-20.
+- [Claude changelog](https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md): runtime/version verification source.
+- Bundled recommendation: `packages/cli/config/dispatch-matrix-recommendation.json` (version `2026-07-27.1` at discovery).
+- Existing decisions: `.oat/repo/reference/decisions/DR-260706-claude-remains-model-axis-only.md`, `.oat/repo/reference/decisions/DR-260723-opus-first-claude-routing.md`.
 
 ## Next Steps
 
-Use this discovery artifact to drive the next workflow step:
-
-- **Spec-driven mode:** continue to `oat-project-design` (which confirms
-  requirements and produces both `spec.md` and `design.md`).
-- **Spec-driven mode → formalize-only:** use `oat-project-spec` standalone
-  if you want a formalized requirements artifact but aren't ready to
-  design yet.
-- **Quick mode → straight to plan:** proceed directly to `plan.md` when
-  scope is clear and no architecture decisions remain.
-- **Quick mode → optional lightweight design:** produce a focused
-  `design.md` (architecture, components, data flow, testing) before
-  planning. Choose this when discovery surfaced architecture choices
-  or component boundaries.
-- **Quick mode → promote:** escalate to spec-driven if discovery revealed
-  the scope is larger or more complex than expected.
+Complete discovery validation, author and review `plan.md`, resolve planning setup, and stop with an implementation handoff.
