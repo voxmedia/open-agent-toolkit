@@ -73,7 +73,7 @@ Synchronize the displayed recommendation with the authoritative JSON, including 
 
 **Work:** First reproduce current effort-insensitive matching with two candidates sharing a Claude model but differing in effort. Add provider-native pair validation, exact matching, ordering and ceiling handling, uncapped preferred-effort support, and selected effort axes. Extend adapter output for effort-pinned variants while retaining model-only argument output. Use one shared naming/target contract consumed by p01-t02. Expose task-effort classification inputs for Claude without changing Codex semantics. Ensure evidence and actual launch selectors cannot disagree.
 
-**Verify:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/dispatch-matrix.test.ts src/providers/ceiling/registry.test.ts src/commands/project/dispatch-ceiling/index.test.ts`. Cases: same model/different effort, invalid and unsupported values, duplicate/reversed candidates, cross-tier eligible choice, deterministic reviewer terminal choice, explicit model-only, inherited and uncapped branches, and unchanged Codex/Cursor outputs. Preserve the pre-fix reproduction and the post-fix rejection/valid-control outcomes in implementation notes.
+**Verify:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/dispatch-matrix.test.ts src/providers/ceiling/registry.test.ts src/commands/project/dispatch-ceiling/index.test.ts`. Cases: same model/different effort, invalid and unsupported values, duplicate/reversed candidates, cross-tier eligible choice, deterministic reviewer terminal choice, explicit model-only, inherited and uncapped branches, and unchanged Codex/Cursor outputs. Preserve the pre-fix reproduction and the post-fix rejection/valid-control outcomes in implementation notes. At implementation entry, build the local CLI dependencies before source-CLI tests: the planning checkout's commit hook exposed a stale control-plane build missing the WORKFLOW_MODES export; installed oat commands worked.
 
 **Format:** `pnpm exec oxfmt --write packages/cli/src/config/dispatch-matrix.ts packages/cli/src/config/dispatch-matrix.test.ts packages/cli/src/providers/ceiling/registry.ts packages/cli/src/providers/ceiling/registry.test.ts packages/cli/src/commands/project/dispatch-ceiling/index.ts packages/cli/src/commands/project/dispatch-ceiling/index.test.ts packages/cli/src/providers/claude/`.
 
@@ -81,7 +81,7 @@ Synchronize the displayed recommendation with the authoritative JSON, including 
 
 ### Task p01-t02: Generate both Claude role variants and wire their managed lifecycle
 
-**Files:** new `packages/cli/src/providers/claude/codec/` materialization and sync-extension modules/tests; provider extension registry and sync integration; `packages/cli/src/commands/sync/`; applicable `packages/cli/src/commands/tools/{install,update,remove,shared}/` integration tests. Use Codex/Cursor codec implementations and `providers/shared/materialization-extension.ts` as patterns.
+**Files:** new `packages/cli/src/providers/claude/codec/` materialization and sync-extension modules/tests; `packages/cli/src/providers/shared/registry.ts` and sync integration; `packages/cli/src/commands/sync/`; applicable `packages/cli/src/commands/tools/{install,update,remove,shared}/` integration tests. Use Codex/Cursor codec implementations and `providers/shared/materialization-extension.ts` as patterns.
 
 **Work:** Materialize only required configured Claude targets for `oat-reviewer` and `oat-phase-implementer`, with unique deterministic names, explicit model/effort frontmatter, canonical body and supported role metadata. Preserve base roles. Register the extension in the existing common extension flow. Cover project and user scopes, pack-scoped install/update, dry-run, idempotent regeneration, collision/ownership rules, and removal of stale managed variants. Claude discovers Markdown definitions directly; do not invent Codex-style config registration. Never hand-edit generated files or overwrite unmanaged agents.
 
@@ -123,7 +123,7 @@ Synchronize the displayed recommendation with the authoritative JSON, including 
 
 **Work:** Read docs-app and decision-surface instructions. Document configuration examples, native variant selection, model-only compatibility, known version/override limitations, adoption semantics, and configured versus observed effort. Use `oat-pjm-decision`/CLI to create a superseding decision for `DR-260706-claude-remains-model-axis-only`, preserve historical context, and regenerate the decision index. Retain the Opus-first decision. Bump all five public packages together to a version strictly above current origin/main; do not guess the implementation-time next version from this plan. Review changed-skill/role bump coverage across the whole PR.
 
-**Verify:** `pnpm exec markdownlint-cli2 'apps/oat-docs/docs/**/*.md'` where available from the docs workspace's installed toolchain; otherwise use its exact documented markdownlint invocation discovered before execution. Run `pnpm docs:check-links`, `oat pjm doctor --json`, and inspect the generated decision index and feature examples. Full release/version gates run in p03-t03.
+**Verify:** `pnpm --filter oat-docs docs:lint`. Run `pnpm docs:check-links`, `oat pjm doctor --json`, and inspect the generated decision index and feature examples. Full release/version gates run in p03-t03.
 
 **Format:** `pnpm exec oxfmt --write` followed by the exact changed documentation, decision, manifest, and lockfile paths. Do not hand-edit generated docs indexes or provider output.
 
@@ -133,11 +133,11 @@ Synchronize the displayed recommendation with the authoritative JSON, including 
 
 ### Task p03-t01: Add reproducible selection and launch negative controls
 
-**Files:** new focused tests/probe documentation under `tools/smoke/` following its existing conventions; relevant `packages/cli/src/providers/identity/` tests and real-output fixture only where needed; project `implementation.md` evidence.
+**Files:** new `tools/smoke/verification/claude-effort-dispatch.test.mjs` following existing smoke conventions; relevant `packages/cli/src/providers/identity/` tests and real-output fixture only where needed; project `implementation.md` evidence.
 
 **Work:** Exercise config → resolver → generated definition → launch payload → dispatch record as one chain for both roles. Freeze an effort-mismatch reproduction showing the old behavior incorrectly treats different efforts as the same target, then demonstrate rejection/precise selection after the fix and a valid accepted control. Test an absent variant, conflicting model argument, unknown/unsupported effort, and model-only inheritance. Neutralize each new assurance-bearing guard temporarily and prove its test fails, then restore it. Reuse current transcript observation; do not invent external fields. Any new parser fixture must be derived from the live probe's captured output with provenance and redaction.
 
-**Verify:** `pnpm build` followed by the exact new Node smoke test path using `node --test`, and `pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/identity/claude-runtime-observation.test.ts src/providers/identity/dispatch-validation.test.ts src/providers/identity/oat-dispatch-record.test.ts`. Record commands, categorical outcomes, and guard-neutralization evidence. Keep live API use out of ordinary CI.
+**Verify:** `pnpm build` followed by `node --test tools/smoke/verification/claude-effort-dispatch.test.mjs`, and `pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/identity/claude-runtime-observation.test.ts src/providers/identity/dispatch-validation.test.ts src/providers/identity/oat-dispatch-record.test.ts`. Record commands, categorical outcomes, and guard-neutralization evidence. Keep live API use out of ordinary CI.
 
 **Format:** `pnpm exec oxfmt --write` with the exact new smoke files, changed identity tests/fixtures, and project evidence paths.
 
@@ -145,7 +145,7 @@ Synchronize the displayed recommendation with the authoritative JSON, including 
 
 ### Task p03-t02: Verify Claude orchestrator awareness and actual child effort
 
-**Files:** a bounded manual probe recipe under `tools/smoke/` or existing provider-verification docs; sanitized captured fixture/evidence and `implementation.md`.
+**Files:** `tools/smoke/verification/claude-effort-live.md` as the bounded manual probe recipe; sanitized captured fixture/evidence and `implementation.md`.
 
 **Work:** Verify current `claude --help`, version, supported effort pairs, environment/cap precedence, and the official changelog. Use temporary project/config roots and generated definitions; do not install into real user scope. Before live execution, confirm the implementation session's route/spend authority; ambient CLI availability alone is not authority. If not already authorized, prepare the exact bounded prompts and commands for approval. This planning session does not launch probes.
 

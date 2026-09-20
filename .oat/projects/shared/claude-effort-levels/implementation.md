@@ -54,7 +54,7 @@ No implementation runs yet.
 - Bundled recommendations are owned by `packages/cli/config/dispatch-matrix-recommendation.json`; config adoption preserves explicit provider scalars and tier cells.
 - Effective ladder completeness is true; no ladder adoption is needed for this planning run. Project dispatch policy remains pending operator selection.
 - Optional phase-gate review offered after the target probe found explicitly configured, enabled, available targets.
-- Existing user lifecycle gates are configured; final readiness awaits plan review and the configured quick-start gate.
+- Existing user lifecycle gates are configured. Keep/disable choices were offered separately; absent a disable selection they remain unchanged. Final readiness awaits project dispatch policy selection, plan review, and the configured quick-start gate.
 - Read-only recon reused the existing `claude_effort_scope` child, returning source references for recommendation/adoption and sync lifecycle integration. No implementation edits were delegated.
 
 ## Deviations from Plan / Design
@@ -63,7 +63,17 @@ None. No design artifact is required for this quick workflow.
 
 ## Test Results
 
-Only planning-artifact checks have run; implementation and live-provider tests are not yet run.
+Planning checks passed:
+
+- `oat project complete-discovery .oat/projects/shared/claude-effort-levels --ready-for oat-project-quick-start --json` — exit 0.
+- `oat project validate-plan --project-path .oat/projects/shared/claude-effort-levels --json` — `valid: true`, exit 0.
+- `pnpm exec oxfmt --check .oat/projects/shared/claude-effort-levels/*.md` — exit 0.
+- `git diff --check` — exit 0.
+- `oat state refresh` — exit 0; local generated dashboard refreshed.
+
+Draft commit `6d4c3d19c` succeeded. Its hook's source-CLI step reported a pre-existing `WORKFLOW_MODES` export mismatch in the built control-plane package; this is not recorded as a passing check. Installed `oat` commands used above succeeded. The implementation plan calls for refreshing local build dependencies before source-CLI verification.
+
+Plan artifact review and the configured exit gate have not run because the required project dispatch policy is unresolved. Implementation and live-provider tests are not yet run.
 
 ## Final Summary (for PR/docs)
 
