@@ -111,3 +111,14 @@ The user explicitly requested including the recurring irrelevant-mode prompt fix
 - Structured result: no findings; H1/M1/L1 resolved; SC9/p02-t04 confirmed bounded and covered.
 - No review artifact was written by the structured reviewer. The plan artifact row records the pass; the configured exit gate remains pending.
 - User confirmed all five existing lifecycle gates Keep; no override map was added.
+
+### Configured quick-start gate — first run received
+
+- Run ID: `6be6a7aa-cd6e-46ae-9efc-9dfb26efc3cc`; exact configured target `cursor-fable-5-1-high`, runtime Cursor, configured model `claude-fable-5-1-high`; effort separately reported as unknown, not inferred from the target name.
+- Scope: `legacy-plan-only` because the unchanged user command explicitly reviews artifact plan. The reviewer also consulted discovery/state/implementation as upstream context.
+- Exit 0; structured status `ok`; threshold high; counts 0 Critical, 0 High, 1 Medium, 2 Low; receiveEligible true; non-null handoff; run/project/invocation corroboration all matched.
+- Consumed artifact: `reviews/archived/artifact-plan-review-2026-09-20T235147Z.md` (source was `reviews/artifact-plan-review-2026-09-20T235147Z.md`). Root read the entire artifact; no retired severity fields/headings found.
+- M1 (Medium; Minor scope): accepted, `resolve_in_artifact`. Named project/user destinations, a shared deterministic Claude-prefixed role-name pattern, and explicit cross-host eligibility/collision tests. Cursor may discover the files, but discovery alone cannot authorize a Claude-native pin for Cursor.
+- L1 (Low; Negligible scope): accepted, `resolve_in_artifact`. Ordered SC1–SC9 in the coverage table.
+- L2 (Low; Minor scope): accepted, `resolve_in_artifact`. Specified caller-supplied set, exact caller pairs, absence of unconditional all-skill probing, and preserved explicit-map ordering as regression invariants.
+- All changes are bounded planning clarifications under the requested project scope. No implementation tasks were added; total remains 9. Revised plan verification and final gate remain pending.
