@@ -103,4 +103,11 @@ The user explicitly requested including the recurring irrelevant-mode prompt fix
 - H1 (High): accepted. Removed Sonnet/low from the proposed Economy bundle because current routing guidance does not qualify it. Economy is now Haiku plus Sonnet/medium; model capability alone does not establish task eligibility.
 - M1 (Medium): accepted. Replaced the underspecified test-isolation instruction with a concrete child-process recipe using an isolated temporary test home and named all separate suites. The invoking shell HOME is untouched. This is a verification clarification within the authorized planning scope.
 - L1 (Low): accepted. Set the artifact review placeholder's Invocation field to `-`; dispatch provenance remains in this log. This is ledger-only cleanup.
-- Review count: initial structured review complete; revised-artifact review pending (retry 1 of 2).
+- Review count: initial structured review complete; revised-artifact review passed with no findings (retry 1 of 2).
+
+### Plan artifact review — revised artifact accepted
+
+- Same native reviewer handle `/root/claude_effort_plan_review`, preserving Sol/high.
+- Structured result: no findings; H1/M1/L1 resolved; SC9/p02-t04 confirmed bounded and covered.
+- No review artifact was written by the structured reviewer. The plan artifact row records the pass; the configured exit gate remains pending.
+- User confirmed all five existing lifecycle gates Keep; no override map was added.
