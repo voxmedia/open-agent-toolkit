@@ -54,6 +54,7 @@ oat_workflow_mode: quick # spec-driven | quick | import | lite
 oat_workflow_origin: native # native | imported
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
+ '2026-09-21T14:57:44Z'
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
@@ -95,7 +96,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-20T19:40:55.054Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-21T14:55:53Z'
+oat_project_state_updated: '2026-09-21T14:57:44Z'
 oat_generated: false
 ---
 
@@ -134,4 +135,4 @@ None.
 
 ## Next Milestone
 
-Run and receive the configured implementation exit gate.
+Launch and receive the persisted configured implementation exit gate generation.
