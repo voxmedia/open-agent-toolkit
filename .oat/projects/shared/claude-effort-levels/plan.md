@@ -1,17 +1,17 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-09-20
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_parallel_groups: []
 oat_plan_source: quick
 oat_import_reference: null
 oat_import_source_path: null
 oat_import_provider: null
 oat_generated: false
-oat_template: true
+oat_template: false
 ---
 
 # Implementation Plan: claude-effort-levels
@@ -30,7 +30,7 @@ oat_template: true
 - [x] Adjacent phases evaluated for dependencies and overlapping files.
 - [x] `oat_plan_parallel_groups` explicitly sequential.
 - [x] Project ceiling: High (managed). Additional phase gate review: disabled by user; configured lifecycle gates retained.
-- [ ] Complete artifact review and configured quick-start exit gate.
+- [x] Complete artifact review and configured quick-start exit gate.
 - HiLL implementation checkpoints are deferred to implementation entry; no planning-time value is asserted.
 
 ## Parallelism
@@ -85,7 +85,7 @@ Synchronize the displayed recommendation with the authoritative JSON, including 
 
 **Work:** Materialize only required configured Claude targets for `oat-reviewer` and `oat-phase-implementer`, with unique deterministic names, explicit model/effort frontmatter, canonical body and supported role metadata. Write project variants to `<project-root>/.claude/agents/<variant>.md` and user variants to `<injected-home>/.claude/agents/<variant>.md`, following the existing Claude mappings. Use the shared deterministic name pattern `<canonical-role>-claude-<model-slug>-<effort>` (for example `oat-reviewer-claude-opus-high` and `oat-phase-implementer-claude-opus-high`); one builder serves resolution and generation, with validation/collision refusal for normalized names. Preserve base roles. Register the extension in the existing common extension flow. Cover project and user scopes, pack-scoped install/update, dry-run, idempotent regeneration, collision/ownership rules, and removal of stale managed variants. Claude discovers Markdown definitions directly; do not invent Codex-style config registration. Never hand-edit generated files or overwrite unmanaged agents. Other hosts, including Cursor, may discover `.claude/agents/`; do not claim the directory is physically Claude-only. Mark the generated description as a Claude-native effort variant and keep OAT's provider target eligibility separate: Cursor's managed resolver must select only Cursor-approved mappings/variants, never a Claude-native variant merely because it is visible. Cursor's existing compatibility read of canonical base-role instructions remains valid and cannot serve as proof that a Claude effort pin is supported. Preserve cross-directory collision checks and fail if an unrelated host-owned name would be overwritten.
 
-**Verify:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/claude/codec/materialize.test.ts src/providers/claude/codec/sync-extension.test.ts src/commands/sync/index.test.ts src/commands/tools/install/index.test.ts src/commands/tools/update/update-tools.test.ts src/commands/tools/remove/remove-tools.test.ts src/commands/tools/shared/in-process-sync.test.ts`. Use temporary scope roots and injected home directories. Assert both roles, exact names/fields, zero operations on a second sync, scoped removal, preserved unmanaged collisions, and rollback/failure reporting through the existing extension behavior. Include a mixed-host fixture with Claude variants present: Cursor resolution remains on its own approved variants, base-role compatibility still works, and cross-host name collisions are refused without overwrites.
+**Verify:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/claude/codec/materialize.test.ts src/providers/claude/codec/sync-extension.test.ts src/commands/sync/index.test.ts src/commands/tools/install/index.test.ts src/commands/tools/update/update-tools.test.ts src/commands/tools/remove/remove-tools.test.ts src/commands/tools/shared/in-process-sync.test.ts`. Use temporary scope roots and injected home directories. Assert both roles, exact names/fields, zero operations on a second sync, scoped removal, preserved unmanaged collisions, and rollback/failure reporting through the existing extension behavior. Include a mixed-host fixture with Claude variants present: Cursor resolution remains on its own approved variants, base-role compatibility still works, and cross-host name collisions are refused without overwrites. Materialize a Cursor variant from a real `claude-*` catalog ID alongside a Claude effort variant for the same role; assert distinct-name coexistence and refusal when normalized names coincide.
 
 **Format:** `pnpm exec oxfmt --write packages/cli/src/providers/claude/ packages/cli/src/commands/sync/ packages/cli/src/commands/tools/` scoped further to the changed files before execution; include any changed shared extension registration file explicitly.
 
@@ -147,7 +147,7 @@ Synchronize the displayed recommendation with the authoritative JSON, including 
 
 **Files:** new `tools/smoke/verification/claude-effort-dispatch.test.mjs` following existing smoke conventions; relevant `packages/cli/src/providers/identity/` tests and real-output fixture only where needed; project `implementation.md` evidence.
 
-**Work:** Exercise config → resolver → generated definition → launch payload → dispatch record as one chain for both roles. Freeze an effort-mismatch reproduction showing the old behavior incorrectly treats different efforts as the same target, then demonstrate rejection/precise selection after the fix and a valid accepted control. Test an absent variant, conflicting model argument, unknown/unsupported effort, and model-only inheritance. Neutralize each new assurance-bearing guard temporarily and prove its test fails, then restore it. Reuse current transcript observation; do not invent external fields. Any new parser fixture must be derived from the live probe's captured output with provenance and redaction.
+**Work:** Exercise config → resolver → generated definition → launch payload → dispatch record as one chain for both roles. Freeze an effort-mismatch reproduction showing the old behavior incorrectly treats different efforts as the same target, then demonstrate rejection/precise selection after the fix and a valid accepted control. Test an absent variant, conflicting model argument, unknown/unsupported effort, and model-only inheritance. Neutralize each new assurance-bearing guard temporarily and prove its test fails, then restore it. Reuse current transcript observation; do not invent external fields. Use only existing provenance-backed identity fixtures in p03-t01. Any new parser fixture must be derived from the live probe's captured output with provenance and redaction; create it and run its dependent observation assertions in p03-t02 after capture.
 
 **Verify:** `pnpm build` followed by `node --test tools/smoke/verification/claude-effort-dispatch.test.mjs`, and `pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/identity/claude-runtime-observation.test.ts src/providers/identity/dispatch-validation.test.ts src/providers/identity/oat-dispatch-record.test.ts`. Record commands, categorical outcomes, and guard-neutralization evidence. Keep live API use out of ordinary CI.
 
@@ -232,9 +232,9 @@ Then run each separately with its own captured exit code: `pnpm test:smoke`, `pn
 | p03    | code     | pending         | -          | -                                                           | -             | -          | -           |
 | plan   | artifact | passed          | 2026-09-20 | -                                                           | -             | -          | -           |
 | plan   | artifact | fixes_completed | 2026-09-20 | reviews/archived/artifact-plan-review-2026-09-20T235147Z.md | -             | -          | -           |
-| plan   | artifact | received        | 2026-09-21 | reviews/artifact-plan-review-2026-09-21T000015Z.md          | -             | -          | -           |
+| plan   | artifact | fixes_completed | 2026-09-21 | reviews/archived/artifact-plan-review-2026-09-21T000015Z.md | -             | -          | -           |
 
-Spec and design rows are retained from the scaffold for compatibility and are not required in this quick workflow. Native structured artifact review passed after one revision. Plan readiness remains false until configured gate receipt is durable.
+Spec and design rows are retained from the scaffold for compatibility and are not required in this quick workflow. Native structured artifact review passed after one revision. The final configured gate passed its High threshold with 0 Critical, 0 High, 0 Medium, and 2 Low findings. Root received the corroborated artifact and resolved both Low findings in-place: a realistic Cursor `claude-*` collision fixture and fixture-provenance sequencing. The latest row remains `fixes_completed`, not a claim of an independent zero-finding re-review; local plan validation and formatting verify these clarifications. The second gate independently confirmed resolution of all first-gate findings. No unresolved planning findings remain.
 
 ## Implementation Complete
 

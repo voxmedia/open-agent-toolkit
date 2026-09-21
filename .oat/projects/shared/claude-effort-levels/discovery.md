@@ -92,7 +92,7 @@ Provider-wide model ranking and broader recommendation refreshes remain separate
 
 ## Open Questions
 
-No unresolved product requirement blocks plan authoring. Planning setup still needs this project's dispatch ceiling and optional review posture. Implementation must verify the supported model/effort pairs and runtime precedence using current docs and captured real output before claiming live acceptance.
+No unresolved product requirement blocks plan authoring. Planning setup is complete: managed High ceiling, additional phase gate review disabled, and configured lifecycle gates retained. Implementation must verify the supported model/effort pairs and runtime precedence using current docs and captured real output before claiming live acceptance.
 
 ## Assumptions
 
@@ -118,4 +118,4 @@ No unresolved product requirement blocks plan authoring. Planning setup still ne
 
 ## Next Steps
 
-Complete discovery validation, author and review `plan.md`, resolve planning setup, and stop with an implementation handoff.
+Discovery and plan validation are complete; reviews are received and resolved. Continue with `oat-project-implement` when implementation is requested.

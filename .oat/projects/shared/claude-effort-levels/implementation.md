@@ -74,7 +74,7 @@ Planning checks passed:
 
 Draft commit `6d4c3d19c` succeeded. Its hook's source-CLI step reported a pre-existing `WORKFLOW_MODES` export mismatch in the built control-plane package; this is not recorded as a passing check. Installed `oat` commands used above succeeded. The implementation plan calls for refreshing local build dependencies before source-CLI verification.
 
-Project policy is now resolved to managed High; plan artifact review and the configured exit gate are next. Implementation and live-provider tests are not yet run.
+Project policy is resolved to managed High; plan artifact review and the configured exit gate are complete (see final receipt below). Implementation and live-provider tests are not yet run.
 
 ## Final Summary (for PR/docs)
 
@@ -122,3 +122,13 @@ The user explicitly requested including the recurring irrelevant-mode prompt fix
 - L1 (Low; Negligible scope): accepted, `resolve_in_artifact`. Ordered SC1–SC9 in the coverage table.
 - L2 (Low; Minor scope): accepted, `resolve_in_artifact`. Specified caller-supplied set, exact caller pairs, absence of unconditional all-skill probing, and preserved explicit-map ordering as regression invariants.
 - All changes are bounded planning clarifications under the requested project scope. No implementation tasks were added; total remains 9. Revised plan verification and final gate remain pending.
+
+### Final plan review and implementation handoff
+
+- Native bounded delta review on the same Sol/high handle passed with no findings (retry 2 of 2), covering first-gate corrections.
+- Final configured gate run `4b0b73b8-93d9-4bd5-bfb3-0f43e55b9dfe`: exit 0, status `ok`, High threshold passed, 0 Critical / 0 High / 0 Medium / 2 Low. Target `cursor-fable-5-1-high`, configured model `claude-fable-5-1-high`; separate effort unknown and runtime identity not reported.
+- Receipt authorized by `receiveEligible: true`, non-null handoff, and matched run/project/invocation corroboration. Root read the complete artifact; no retired severity fields found. Archived to `reviews/archived/artifact-plan-review-2026-09-21T000015Z.md`; committed original remains in git history.
+- L1 accepted, resolve_in_artifact: p01-t02 now requires a real Cursor `claude-*` catalog variant alongside a Claude variant, distinct-name coexistence, and normalized-name collision refusal.
+- L2 accepted, resolve_in_artifact: p03-t01 uses existing provenance-backed fixtures; new captured fixtures and dependent observation assertions belong to p03-t02 after capture.
+- These are bounded Low clarifications; no third gate is needed. Ledger remains `fixes_completed` to distinguish local corrections from a new independent clean review. All earlier gate findings were independently confirmed resolved by the final gate.
+- Planning complete: 3 sequential phases, 9 tasks, 0 implemented. High project ceiling; additional phase review disabled; existing lifecycle gates retained. SC9/p02-t04 includes the user-requested gate-prompt prose hardening.
