@@ -14,11 +14,11 @@ Implementation is in progress. Phase p01 passed independent review; phase p02 is
 
 ## Progress Overview
 
-| Phase                                    | Status         | Tasks | Completed |
-| ---------------------------------------- | -------------- | ----- | --------- |
-| p01 — Resolve and materialize            | completed      | 2     | 2/2       |
-| p02 — Guidance and recommendations       | review_pending | 4     | 4/4       |
-| p03 — Verification and release readiness | pending        | 3     | 0/3       |
+| Phase                                    | Status            | Tasks | Completed |
+| ---------------------------------------- | ----------------- | ----- | --------- |
+| p01 — Resolve and materialize            | completed         | 2     | 2/2       |
+| p02 — Guidance and recommendations       | fixes_in_progress | 4     | 4/4       |
+| p03 — Verification and release readiness | pending           | 3     | 0/3       |
 
 **Total: 6/9 tasks completed.**
 
@@ -75,6 +75,11 @@ Implementation is in progress. Phase p01 passed independent review; phase p02 is
 - Root pre-review validation: p02-t04 regression 241/241 and release version check passed. `check:skill-bumps` found `oat-reviewer` still at origin/main's 1.2.8, requiring bounded phase recovery attempt 2 before review.
 - Phase p02 recovery attempt 2/10: reservation `83ad83df0`, event `p02-recovery-02`, append-only recovery `fc986addb`. It bumped the canonical reviewer role to 1.2.9 and refreshed 32 project-managed Codex/Cursor reviewer projections plus the sync manifest. Root validated the completed marker, exact target, bounded generated paths, passing skill-bump/skill-validation checks, idempotent project sync, and clean worktree before clearing the marker; used-attempt count remains 2.
 - Phase p02 implementation is complete at `fc986addb653930df9bae103750c01e07a6c1824`; independent phase review is next.
+- Phase p02 review request `claude-effort-p02-review-01` used `oat-reviewer-gpt-5-6-sol-high` at the fixed High reviewer target.
+- Phase p02 review dispatch: `Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`.
+- Review artifact: `reviews/p02-review-2026-09-21T020650Z.md`; reviewed head `fc986addb653930df9bae103750c01e07a6c1824`; invocation `phase`.
+- Reconnaissance: attempted. The artifact contains a complete `## Review Orchestration` section for two accepted intelligent-recon lanes plus one capacity-rejected lane covered inline, with floor, fallback, outcomes, and primary reconciliation. Its structural log entry is deferred to the terminal p02 outcome.
+- Review verdict: blocked with 0 Critical, 4 High, 1 Medium, 0 Low. Findings cover stale reviewer-version pins, contradictory model-only launch consumers, malformed plan-template dispatch profile, missing real-resolver proof across all tiers, and missing repeated-adoption idempotence proof. Bounded fix round 1 is next through the original p02 implementer handle.
 
 <!-- orchestration-runs-end -->
 
