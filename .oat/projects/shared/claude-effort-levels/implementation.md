@@ -179,6 +179,8 @@ No finding is deferred. The review remains `fixes_added` until p05-t03 is implem
 
 Task p05-t03 commit `92143dbea5490d2d4d2991c9ebb9c380e8256ae3` now sends explicit managed-Uncapped Claude effort choices through the exact-candidate model/effort path with matching task-effort provenance, while retaining `--preferred` for model-only compatibility. The executable resolver assertion proves the generated variant, selected model and effort axes, exact target, and normalized fix-route classification. Focused resolver and skill suites passed 402/402 after the assertion correctly accounted for fix-route role normalization; canonical skill validation, the PR-scoped skill-bump check, and diff validation passed.
 
+The fresh Sol/high final re-review passed at reviewed head `43ef811f8161313a92ad64a606dab6244d474fbe` with 0 Critical, 0 High, 0 Medium, and 0 Low findings. It independently verified prior H1 and L1 resolved, including the exact-candidate effort variant, separate model-only preferred route, normalized classification evidence, and consistent 14/14 active tracking. The clean artifact is archived at `reviews/archived/final-review-2026-09-21T231425Z.md`; no Medium is deferred and the earlier proportional Low structural-comparison deferral remains unchanged.
+
 <!-- orchestration-runs-end -->
 
 ## Planning Log
