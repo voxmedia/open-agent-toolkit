@@ -4685,6 +4685,13 @@ describe('validateOatSkills', () => {
     expect(reviewer).toContain('providers.claude.dispatchArgs.variant');
     expect(reviewer).toMatch(/frontmatter applies both model and effort/i);
     expect(reviewer).toMatch(/legacy model-only and inherited/i);
+
+    expect(dispatch).toContain(
+      'Dispatch policy: balanced; selected=sonnet/high; cap=sonnet/high (claude, enforced — native variant oat-phase-implementer-claude-sonnet-high)',
+    );
+    expect(dispatch).not.toContain(
+      'Dispatch policy: balanced; selected=sonnet; cap=sonnet (claude, enforced — Task model arg)',
+    );
   });
 
   it('keeps every phase and public lifecycle launch consumer effort-aware', async () => {
