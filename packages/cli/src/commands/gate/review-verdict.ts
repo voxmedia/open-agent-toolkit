@@ -252,6 +252,17 @@ function sectionContentIsEmpty(content: string): boolean {
   return cleaned.length === 0 || /^none\.?$/i.test(cleaned);
 }
 
+/**
+ * Count the findings a severity section declares.
+ *
+ * Only top-level markdown list items count. Prose shapes are deliberately not
+ * counted — a bold lead-in paragraph, a wrapped continuation line, and a nested
+ * detail bullet are indistinguishable from a finding title without parsing the
+ * prose, so counting them would miscount and double-count. The cost of that
+ * choice is that a reviewer who writes findings as paragraphs gets a zero
+ * tally, so every diagnostic built on this count must name the list-item
+ * requirement (see `FINDING_LIST_ITEM_CONTRACT_HINT`).
+ */
 function countFindingsInSection(content: string): number {
   if (sectionContentIsEmpty(content)) {
     return 0;
@@ -662,7 +673,20 @@ interface CountSource {
   name: string;
   counts: ReviewGateVerdict['counts'];
   tiers: readonly Severity[];
+  /** True for the source tallied from the body's severity sections. */
+  fromSections?: boolean;
 }
+
+/**
+ * The one fact a reviewer cannot recover from the raw contradiction report.
+ *
+ * A section whose findings are written as bold paragraphs tallies zero, so the
+ * gate reports a contradiction that looks like a counting mistake. Without this
+ * sentence the reviewer has no way to learn that the shape of the finding, not
+ * the arithmetic, is what the parser objected to.
+ */
+const FINDING_LIST_ITEM_CONTRACT_HINT =
+  'Only markdown list items count as findings in a Findings section: a line starting with `- `, `* `, `+ `, or `1. `. A finding written as a bold paragraph, a heading, or any other prose shape counts as zero, which is the usual reason a section tallies lower than the declared counts. Rewrite each finding as a list item, or correct the declared counts to match.';
 
 function formatCounts(counts: ReviewGateVerdict['counts']): string {
   return SEVERITIES.map((severity) => `${counts[severity]} ${severity}`).join(
@@ -690,8 +714,11 @@ function assertAgreeingCounts(
     return;
   }
 
+  const sectionsInvolved =
+    left.fromSections === true || right.fromSections === true;
+
   throw new Error(
-    `Review artifact at ${artifactPath} contradicts itself about finding counts (${differing.join(', ')}): declared counts are ${formatCounts(left.counts)} (${left.name}) but ${formatCounts(right.counts)} (${right.name}). Reconcile them before the gate can evaluate the review.`,
+    `Review artifact at ${artifactPath} contradicts itself about finding counts (${differing.join(', ')}): declared counts are ${formatCounts(left.counts)} (${left.name}) but ${formatCounts(right.counts)} (${right.name}). Reconcile them before the gate can evaluate the review.${sectionsInvolved ? ` ${FINDING_LIST_ITEM_CONTRACT_HINT}` : ''}`,
   );
 }
 
@@ -748,6 +775,7 @@ function resolveCounts(
       name: 'the Findings sections',
       counts: bodyCounts,
       tiers: bodyTiers,
+      fromSections: true,
     };
     for (const source of explicitSources) {
       const comparableTiers = source.tiers.filter((severity) =>

@@ -367,6 +367,26 @@ describe('review skill contracts', () => {
     expect(nextStep).toBeLessThan(templateEnd);
   });
 
+  it('states the list-item finding contract in the template and the gate parsing contract', () => {
+    const content = readRepoFile('.agents/agents/oat-reviewer.md');
+    const templateStart = content.indexOf('````markdown\n---');
+    const templateEnd = content.indexOf('````', templateStart + 4);
+    const findingsHeading = content.indexOf('\n## Findings\n', templateStart);
+    const listItemNote = content.indexOf(
+      'Every finding MUST be written as a markdown list item',
+    );
+
+    // The gate counts only list items, so this requirement is load-bearing:
+    // a reviewer that writes findings as prose has its whole artifact refused.
+    // The requirement has to sit where findings are written, not only in the
+    // parsing contract paragraph far below the template.
+    expect(listItemNote).toBeGreaterThan(findingsHeading);
+    expect(listItemNote).toBeLessThan(templateEnd);
+    expect(content).toContain(
+      'the gate counts only markdown list items (`- `, `* `, `+ `, or `1. `) as findings',
+    );
+  });
+
   it('keeps the model-invokable project workflow skills gated by explicit asks', () => {
     const skills = [
       {
