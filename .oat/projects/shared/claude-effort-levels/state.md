@@ -55,7 +55,7 @@ oat_workflow_origin: native # native | imported
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
 oat_implement_exit_gate:
-  status: allowed
+  status: stale
   resolution: configured
   disposition: passed
   config_fingerprint: 'sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324'
@@ -88,8 +88,8 @@ oat_implement_exit_gate:
   receive_commit: 7bf3e39917c7e646417263c9bb51065593c7bee9
   receive_eligible: true
   receive_completed: true
-  failure: null
-  updated_at: '2026-09-21T21:58:17Z'
+  failure: freshness_mismatch_after_base_update
+  updated_at: '2026-09-21T22:09:26Z'
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
