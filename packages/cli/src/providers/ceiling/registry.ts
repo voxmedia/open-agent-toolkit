@@ -23,8 +23,9 @@ import { buildCursorMaterializedRoleName } from '@providers/cursor/codec/shared'
  * to produce concrete dispatch args — skills never re-implement this logic.
  *
  * Codex enforces via sync-time materialized role variants selected from matrix
- * model+effort targets. Claude enforces via the per-call Task `model` argument
- * (no variant files). Every other provider is advisory by default.
+ * model+effort targets. Claude effort routes use materialized model-and-effort
+ * variants, while legacy model-only routes keep the per-call Task `model`
+ * argument. Every other provider is advisory by default.
  */
 
 export type EnforcementMechanism = 'pinned-variant' | 'model-arg' | 'none';
