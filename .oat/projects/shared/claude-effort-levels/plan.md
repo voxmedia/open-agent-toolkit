@@ -232,6 +232,7 @@ Then run each separately with its own captured exit code: `pnpm test:smoke`, `pn
 | p03    | code     | pending         | -          | -                                                           | -             | -          | -           |
 | plan   | artifact | passed          | 2026-09-20 | -                                                           | -             | -          | -           |
 | plan   | artifact | fixes_completed | 2026-09-20 | reviews/archived/artifact-plan-review-2026-09-20T235147Z.md | -             | -          | -           |
+| plan   | artifact | received        | 2026-09-21 | reviews/artifact-plan-review-2026-09-21T000015Z.md          | -             | -          | -           |
 
 Spec and design rows are retained from the scaffold for compatibility and are not required in this quick workflow. Native structured artifact review passed after one revision. Plan readiness remains false until configured gate receipt is durable.
 
