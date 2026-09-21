@@ -250,6 +250,18 @@ Then run each separately with its own captured exit code: `pnpm test:smoke`, `pn
 
 **Commit:** `docs(p05-t01): align Claude capability guidance`.
 
+### Task p05-t02: (PR review) Use the shipped Claude task-effort flag
+
+**Files:** `.agents/skills/oat-project-implement/references/dispatch-and-dry-run.md`, `packages/cli/src/validation/skills.test.ts`.
+
+**Work:** Correct the managed-Uncapped Claude implementer/fix recipe to pair `--preferred <preferred-model>` with the shipped `--task-effort <preferred-effort>` classification flag. Remove the nonexistent `--preferred-effort` spelling and pin both the supported flag and the absence of the unsupported one in the canonical skill contract test.
+
+**Verify:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`; `pnpm oat:validate-skills`; `pnpm run check:skill-bumps`; `git diff --check`.
+
+**Format:** `pnpm exec oxfmt --write .agents/skills/oat-project-implement/references/dispatch-and-dry-run.md packages/cli/src/validation/skills.test.ts`.
+
+**Commit:** `fix(p05-t02): use shipped Claude task effort flag`.
+
 ## Validation Coverage
 
 | Success criterion                              | Owning tasks              |
@@ -258,7 +270,7 @@ Then run each separately with its own captured exit code: `pnpm test:smoke`, `pn
 | SC2 generated roles and managed lifecycle      | p01-t02, p04-t01          |
 | SC3 exact native launch and refusal boundaries | p02-t01, p03-t01, p03-t02 |
 | SC4 compatibility and other providers          | p01-t01, p01-t02, p02-t02 |
-| SC5 awareness and actual task-based choice     | p02-t01, p03-t02          |
+| SC5 awareness and actual task-based choice     | p02-t01, p03-t02, p05-t02 |
 | SC6 recommendation and adoption                | p02-t02, p04-t01          |
 | SC7 positive/negative/live evidence            | p03-t01, p03-t02          |
 | SC8 decisions, docs, bumps, gates              | p02-t03, p03-t03, p05-t01 |
@@ -304,9 +316,9 @@ All twelve planned tasks are implemented, phases p01 through p05 passed independ
 - Phase 2: 4 tasks — awareness, recommendations, documentation/decision alignment, and relevant lifecycle-gate prompts.
 - Phase 3: 3 tasks — negative controls, live acceptance, release verification.
 - Phase 4: 2 tasks — version-aware Claude effort validation and provider-registry guidance.
-- Phase 5: 1 task — align shipped docs and orchestrator guidance with the fail-closed capability contract.
+- Phase 5: 2 tasks — align shipped docs and orchestrator guidance with the fail-closed capability contract and correct the uncapped Claude effort flag.
 
-**Total: 12 tasks; 12 implemented.**
+**Total: 13 tasks; 12 implemented.**
 
 ## References
 

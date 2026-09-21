@@ -15,7 +15,7 @@ oat_phase_recovery_policy:
     p04:
       used_attempts: 0
       pending_attempt: null
-oat_current_task: null
+oat_current_task: p05-t02
 oat_last_commit: 8fce3af3799c07400e4ed4d23da08ad172e9f3dc
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -28,7 +28,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: pr_open # Status: in_progress | complete | pr_open
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -55,7 +55,7 @@ oat_workflow_origin: native # native | imported
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
 oat_implement_exit_gate:
-  status: allowed
+  status: stale
   resolution: configured
   disposition: passed
   config_fingerprint: 'sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324'
@@ -88,8 +88,8 @@ oat_implement_exit_gate:
   receive_commit: 6ed8307c8bcbc1afe5b9c53b10cbd7ef6053a13a
   receive_eligible: true
   receive_completed: true
-  failure: null
-  updated_at: '2026-09-21T22:36:38Z'
+  failure: substantive_pr_review_fix_required
+  updated_at: '2026-09-21T22:45:45Z'
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
@@ -127,11 +127,11 @@ oat_implement_exit_gate:
 #   failure: null
 #   updated_at: '2026-07-18T00:00:00Z'
 oat_post_implement_sequence:
-  status: awaiting_approval
+  status: pre_approval
   source: configured
   final_phase: p05
   pre_approval: [summary, document, pr]
-  pre_approval_completed: [summary, document, pr]
+  pre_approval_completed: []
   approval: pending
   approval_source: null
   post_approval: []
@@ -142,7 +142,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/315' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-20T19:40:55.054Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-21T22:36:38Z'
+oat_project_state_updated: '2026-09-21T22:45:45Z'
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -152,13 +152,13 @@ oat_project_recap:
 
 # Project State: claude-effort-levels
 
-**Status:** PR open; awaiting final implementation approval
+**Status:** PR review fix in progress
 **Started:** 2026-09-20
 **Last Updated:** 2026-09-21
 
 ## Current Phase
 
-Implementation — PR #315 is open; replacement exit gate passed and final approval is pending.
+Implementation — PR #315 is open; p05-t02 corrects an unsupported Claude flag before fresh review and gate.
 
 ## Artifacts
 
