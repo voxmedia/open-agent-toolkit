@@ -137,6 +137,7 @@ The first final review found one High capability-modeling defect and one Low arc
 - Exit-gate launch intent `claude-effort-exit-gate-20260921T145856Z` persisted before launch, with durable result receipt `/private/tmp/claude-effort-exit-gate-20260921T145856Z.receipt.json`.
 - Exit-gate launch accepted as run `6e5693ec-5f6c-46a2-b26b-7585321b1903` on target `cursor-fable-5-1-high`; the durable run marker is bound in `state.md`.
 - Exit-gate run `6e5693ec-5f6c-46a2-b26b-7585321b1903` returned a corroborated `ok` envelope at the High threshold with 0 Critical, 0 High, 1 Medium, and 4 Low findings. The result receipt is durable, receive is eligible, and attempt 1 of 2 is consumed.
+- Gate review receive intent persisted for `reviews/final-review-2026-09-21T151012Z.md`, bound to archived destination `reviews/archived/final-review-2026-09-21T151012Z.md`, exact ledger event, and pre-receive head `09f811505ba272edb36f229c0d68eb37ac11dfdc`.
 
 <!-- orchestration-runs-end -->
 
