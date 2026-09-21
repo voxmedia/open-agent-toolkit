@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: false
 allowed-tools: Read, Write, Glob, Grep
 metadata:
-  version: 1.2.26
+  version: 1.2.27
 ---
 
 # Plan Writing Contract
@@ -233,8 +233,12 @@ over generic tier availability.
   the complete target and no child has started. If another route cannot
   preserve the target, use only a verified-equivalent inline route or block the
   review.
-- Claude: require a non-empty `providers.claude.dispatchArgs.model` and put
-  that exact value in the actual provider invocation as its `model` argument.
+- Claude: for an effort-pinned target, require a non-empty
+  `providers.claude.dispatchArgs.variant` and launch that exact generated agent
+  type; effort comes from its frontmatter because Agent has no effort field.
+  For a legacy model-only target, require and pass the exact
+  `providers.claude.dispatchArgs.model`. Any model supplied with a variant must
+  match the definition.
 - Cursor: require a non-empty `providers.cursor.dispatchArgs.variant` and
   launch that exact resolver-returned native reviewer variant as the native
   agent type first. Keep Cursor model strings opaque inside the resolver and
@@ -523,7 +527,7 @@ Use this loop after an artifact has been written and before the calling skill ha
 
 3. **Dispatch `oat-reviewer` in structured mode**
    - Default: after the parent-at-or-above-ceiling check succeeds, omit the child model deliberately and record `selection_reason: inherit`. Tier 1 uses the configured `oat-reviewer` subagent; Tier 2 runs the same structured prompt in the planning parent.
-   - Exception: when the planning parent is unknown or below the ceiling, use the resolver's concrete ceiling target. Codex uses its exact registered reviewer or a fresh child pinned to the same model, effort, and canonical instructions after pre-start role rejection. Claude requires the exact `providers.claude.dispatchArgs.model` value on the actual invocation. Cursor requires the exact `providers.cursor.dispatchArgs.variant` native reviewer variant first; skills keep its mapped model opaque, and only a pre-start native role-selection rejection permits another route. If the host cannot preserve that target, block unless inline execution has verified equivalent controls.
+   - Exception: when the planning parent is unknown or below the ceiling, use the resolver's concrete ceiling target. Codex uses its exact registered reviewer or a fresh child pinned to the same model, effort, and canonical instructions after pre-start role rejection. Claude uses the exact generated `providers.claude.dispatchArgs.variant` for an effort-pinned target and the exact `providers.claude.dispatchArgs.model` only for a legacy model-only target. Cursor requires the exact `providers.cursor.dispatchArgs.variant` native reviewer variant first; skills keep its mapped model opaque, and only a pre-start native role-selection rejection permits another route. If the host cannot preserve that target, block unless inline execution has verified equivalent controls.
    - If an accepted child does not conclude, continue only through its existing handle. A terminal timeout blocks or escalates and cannot launch a replacement child.
    - Always set `oat_output_mode: structured`; the loop consumes `StructuredFindings` in-memory and the reviewer writes no artifact.
    - Do not downgrade the selected inheritance/exception policy or checklist when changing execution mechanics.
@@ -535,7 +539,7 @@ Use this loop after an artifact has been written and before the calling skill ha
    - If a finding cannot be fixed within the artifact boundary, preserve it as residual and surface it before handoff.
 
 5. **Rewrite and re-dispatch within the bound**
-   - After applying fixes, rewrite the artifact and start a new review attempt with the same deliberate inheritance policy or complete exception payload, including the exact Claude `dispatchArgs.model` argument or Cursor `dispatchArgs.variant`.
+   - After applying fixes, rewrite the artifact and start a new review attempt with the same deliberate inheritance policy or complete exception payload, including the exact Claude effort variant or legacy `dispatchArgs.model`, or Cursor `dispatchArgs.variant`.
    - Each rewrite/re-dispatch cycle consumes one retry.
    - Stop when the reviewer returns no findings or when the retry bound is exhausted.
 

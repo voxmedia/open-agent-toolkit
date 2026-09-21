@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Glob, Grep, Write, Edit, Bash(git:*), Bash(oat:*), Bash(pnpm:*), Bash(mkdir:*), Bash(date:*), Bash(realpath:*), Bash(awk:*), AskUserQuestion
 metadata:
-  version: 1.5.9
+  version: 1.5.10
 ---
 
 # Request Review
@@ -720,8 +720,11 @@ Build the actual provider invocation before reporting the target as enforced:
   `${WORKFLOWS_AGENT_PROVIDER_ROOT}/agents/oat-reviewer.md`,
   and the same Review Scope payload. If neither exact route is available, use
   only a verified-equivalent inline route or block the review.
-- Claude requires a non-empty `providers.claude.dispatchArgs.model`; the actual
-  provider invocation must include that exact value as its `model` argument.
+- Claude requires the exact `providers.claude.dispatchArgs.variant` for an
+  effort-pinned target; launch that generated native agent type and take effort
+  from its frontmatter. A legacy model-only target instead requires the exact
+  `providers.claude.dispatchArgs.model`. Any model supplied with a variant must
+  match its definition.
 - Cursor requires a non-empty `providers.cursor.dispatchArgs.variant`; the
   actual provider invocation must launch that exact resolver-returned native
   reviewer variant as the native agent type first. Keep Cursor model strings
@@ -875,7 +878,7 @@ First, pre-compute the review artifact path using Step 7 naming conventions so i
 Then spawn the reviewer:
 
 - Use provider-appropriate dispatch:
-  - Claude Code: Task tool with `subagent_type: "oat-reviewer"` (resolves from `.claude/agents/oat-reviewer.md`). For a concrete managed target, the payload must also contain `model: providers.claude.dispatchArgs.model` with the resolver-returned value.
+  - Claude Code: for an effort-pinned target, use the exact generated `providers.claude.dispatchArgs.variant` as the native agent type. For a legacy model-only target, use `subagent_type: "oat-reviewer"` and include the exact resolver-returned `model: providers.claude.dispatchArgs.model`. The Agent call has no effort field.
   - Cursor: for a concrete managed target, invoke `providers.cursor.dispatchArgs.variant` as the exact resolver-selected native reviewer variant. Do not attach a Task-level model argument or normalize the mapped model. Base `oat-reviewer` is allowed only for explicit inherit/default behavior. A pre-start native role-selection rejection is the only replacement boundary.
   - Codex style: for a concrete managed target, first spawn the exact resolver-returned native `agent_type`; only an explicit pre-start native role-selection rejection permits the explicitly pinned fresh-child route from Step 6.0. Generic auto-selection is permitted only for the documented base-role exceptions.
 - Pass the Review Scope metadata block from Step 5 as the prompt

@@ -221,6 +221,8 @@ missing self-report, or a later `BLOCKED` result cannot trigger fallback. Record
 the final review `target`, `model_axis`, and `effort_axis` from resolver output
 and the constructed launcher payload, never from reviewer self-report. A
 concrete managed Claude target must put
+`providers.claude.dispatchArgs.variant` into the native agent type for an
+effort-pinned target. A legacy model-only target must put
 `providers.claude.dispatchArgs.model` into the actual provider invocation as
 the exact `model` argument. A concrete managed Cursor target must launch
 `providers.cursor.dispatchArgs.variant` as the exact resolver-selected native

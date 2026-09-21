@@ -6,7 +6,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.4.13
+  version: 1.4.14
 ---
 
 # Planning Phase
@@ -578,7 +578,8 @@ Apply the shared loop exactly:
   materialized variant must first be launched as the exact native `agent_type`;
   only a recorded actual pre-start role-selection rejection permits a fresh
   child pinned to the resolved model and effort. Claude uses the exact
-  resolver-returned `providers.claude.dispatchArgs.model` value. Cursor
+  resolver-returned generated variant for an effort-pinned target, or the exact
+  `providers.claude.dispatchArgs.model` for a legacy model-only target. Cursor
   launches the exact resolver-returned
   `providers.cursor.dispatchArgs.variant` native reviewer variant first;
   Cursor model strings remain opaque inside the mapping and resolver. Only a

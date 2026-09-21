@@ -465,29 +465,42 @@ requested; never silently downgrade to it.
 
 Claude rules:
 
-- Claude policy selection is model-based: `haiku < sonnet < opus < fable`.
+- Claude policy selection compares configured model and effort independently.
+  Model families remain ordered `haiku < sonnet < opus < fable`; within one
+  model, configured effort follows the provider-supported order.
 - Implementer/fix dispatch chooses one selection branch:
   - Managed `Uncapped`: use the preferred-selection branch with
-    `--preferred <preferred-model>` so the resolver selects the classified
-    model with no cap.
+    `--preferred <preferred-model>` and, for an explicit effort choice,
+    `--preferred-effort <preferred-effort>` so the resolver selects the
+    classified target with no cap.
   - Capped managed policy: use the exact-candidate branch below. The
     `--candidate-model` call replaces the preferred-selection call and must not
     include `--preferred`.
   - Inherit/default: use neither selection branch; the resolver returns no
-    selected model, so omit `model` and inherit host/default behavior.
+    selected target, so omit managed variant/model controls and inherit
+    host/default behavior.
 - Review dispatch:
   - Capped managed policy: target the configured policy cap directly.
-  - Managed `Uncapped` or inherit/default: no reviewer target exists; omit `model` and log inherited/default model behavior.
+  - Managed `Uncapped` or inherit/default: no reviewer target exists; omit
+    managed variant/model controls and log inherited/default behavior.
 - For managed capped phase-implementer/fix dispatch, call
-  `oat project dispatch-ceiling resolve --provider claude --role implementer --ceiling-tier <project-or-phase-tier> --candidate-model <model> --task-class <task-class> --orchestrator-tier <current-orchestrator-tier> --escalation-level <route-level> --report-scope <phase-id> --report-action implementation --json`.
+  `oat project dispatch-ceiling resolve --provider claude --role implementer --ceiling-tier <project-or-phase-tier> --candidate-model <model> [--candidate-effort <effort>] --task-class <task-class> --orchestrator-tier <current-orchestrator-tier> --escalation-level <route-level> --report-scope <phase-id> --report-action implementation --json`.
   For bounded fixes, reuse the exact phase target and task classification with a
   bounded fix scope.
   For review dispatch, call the resolver with
   `--role reviewer --report-scope <phase-or-review-scope> --report-action review --json`
-  and no candidate flags. Read `providers.claude.dispatchArgs.model` and pass it
-  exactly on the actual Task invocation.
-- Pass `model: "<value>"` when `model_axis=selected:<value>` on the Task tool call.
-- Keep `effort_axis=not-applicable`; Claude Code has no separate per-dispatch effort axis.
+  and no candidate flags. For an effort-pinned result, require
+  `providers.claude.dispatchArgs.variant` and launch that exact generated native
+  agent type. For a legacy model-only result, read
+  `providers.claude.dispatchArgs.model` and pass it exactly on the actual Agent
+  invocation.
+- An effort-pinned launch gets effort from generated agent frontmatter; the
+  Agent call has no per-call effort field. If the call also includes `model`, it
+  must equal the definition's model.
+- Derive `model_axis=selected:<model>` and `effort_axis=selected:<effort>` from
+  resolver output and the constructed variant payload. Legacy model-only
+  targets retain provider-default effort; inherited targets retain inherited
+  axes.
 
 Cursor rules:
 

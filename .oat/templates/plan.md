@@ -57,7 +57,7 @@ _Optional override surface. Use only for explicit user-authored constraints or p
 
 Blank or `auto` means there is no explicit constraint for that provider. Do not generate rows by default; a missing phase row uses runtime selection.
 
-| Phase | Claude model                     | Codex effort                   | Rationale                     |
+| Phase | Claude model / effort            | Codex model / effort           | Rationale                     |
 | ----- | -------------------------------- | ------------------------------ | ----------------------------- |
 | pNN   | haiku\|sonnet\|opus\|fable\|auto | low\|medium\|high\|xhigh\|auto | why this constraint is needed |
 

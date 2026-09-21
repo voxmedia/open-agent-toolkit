@@ -1,7 +1,7 @@
 ---
-guidance_version: 2026-07-25
-last_verified: 2026-07-25
-review_after: 2026-09-08
+guidance_version: 2026-09-20
+last_verified: 2026-09-20
+review_after: 2026-12-20
 ---
 
 # Claude Model Selection
@@ -32,6 +32,14 @@ provisions and authorizes it.
 ## Provider-Native Effort
 
 Never normalize Claude effort against OpenAI or Cursor labels.
+
+For OAT-managed Claude reviewers and phase implementers, explicit effort is
+definition-bound. Classify the task here, choose an eligible configured
+model/effort pair, resolve it, and launch the exact generated agent variant.
+The Agent call has no effort field. If it also supplies a model, that model must
+match the generated definition. Model-only candidates retain their existing
+native model argument behavior, and inherited targets leave both axes to the
+host.
 
 - Opus 5: use medium for normal substantive work and high for hard reasoning,
   architecture, ambiguity, and deep review. Use xhigh only when reasoning depth

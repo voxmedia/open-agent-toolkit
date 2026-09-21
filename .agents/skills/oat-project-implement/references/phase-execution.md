@@ -700,7 +700,8 @@ artifact under the project's `reviews/` directory.
 
 For a managed capped review, bind the exact provider argument to the actual
 invocation: `providers.codex.dispatchArgs.variant`,
-`providers.claude.dispatchArgs.model`, or
+`providers.claude.dispatchArgs.variant` for an effort-pinned target,
+`providers.claude.dispatchArgs.model` for a legacy model-only target, or
 `providers.cursor.dispatchArgs.variant`. Cursor must launch that exact
 resolver-selected native reviewer variant first and must not normalize its
 mapped model or attach a Task-level model argument. If the root cannot apply,
