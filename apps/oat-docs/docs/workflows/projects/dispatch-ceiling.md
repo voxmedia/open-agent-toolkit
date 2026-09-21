@@ -80,7 +80,11 @@ To pick up a new version, compare your
 `workflow.dispatchCeiling.recommendationVersion` against the bundled version,
 then either edit the affected cells by hand or clear them and re-adopt.
 
-Version `2026-07-27.1` is a live example. It interleaves the Cursor `high` and
+Version `2026-09-20.1` is a live example. It adds explicit Claude effort
+candidates while retaining `haiku` as a model-only compatibility route. Its
+Claude tier terminals are `sonnet/medium`, `sonnet/high`, `opus/high`, and
+`fable/high`; rerunning adoption preserves any explicit older cell unchanged.
+It also interleaves the Cursor `high` and
 `frontier` tiers so each alternates a GPT rung with a Claude rung, ending `high`
 at `gpt-5.6-sol-high` and `frontier` at `claude-fable-5-thinking-high`. It also
 drops `claude-opus-5-thinking-max` and `claude-fable-5-thinking-xhigh` from

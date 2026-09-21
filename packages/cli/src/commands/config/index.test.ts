@@ -1,6 +1,6 @@
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 import {
@@ -2875,7 +2875,7 @@ describe('oat config', () => {
         ),
       ) as Record<string, unknown>;
 
-      expect(recommendation.version).toBe('2026-07-27.1');
+      expect(recommendation.version).toBe('2026-09-20.1');
       expect(recommendation.providers).toMatchObject({
         codex: {
           economy: {
@@ -2909,10 +2909,25 @@ describe('oat config', () => {
           },
         },
         claude: {
-          economy: { candidates: ['haiku', 'sonnet'] },
-          balanced: { candidates: ['sonnet'] },
-          high: { candidates: ['opus'] },
-          frontier: { candidates: ['fable'] },
+          economy: {
+            candidates: ['haiku', { model: 'sonnet', effort: 'medium' }],
+          },
+          balanced: {
+            candidates: [{ model: 'sonnet', effort: 'high' }],
+          },
+          high: {
+            candidates: [
+              { model: 'opus', effort: 'medium' },
+              { model: 'opus', effort: 'high' },
+            ],
+          },
+          frontier: {
+            candidates: [
+              { model: 'opus', effort: 'xhigh' },
+              { model: 'opus', effort: 'max' },
+              { model: 'fable', effort: 'high' },
+            ],
+          },
         },
         cursor: {
           economy: {
@@ -3254,7 +3269,17 @@ describe('oat config', () => {
           workflow: {
             dispatchCeiling: {
               recommendationVersion: 'old',
-              providers: { cursor: { high: 'existing-model' } },
+              providers: {
+                cursor: { high: 'existing-model' },
+                claude: {
+                  economy: 'haiku',
+                  high: {
+                    candidates: [
+                      { harness: 'claude', model: 'opus', effort: 'medium' },
+                    ],
+                  },
+                },
+              },
             },
           },
         })}\n`,
@@ -3291,7 +3316,14 @@ describe('oat config', () => {
                 economy: { candidates: ['recommended-economy'] },
                 high: { candidates: ['existing-model'] },
               },
-              claude: { high: { candidates: ['opus'] } },
+              claude: {
+                economy: { candidates: ['haiku'] },
+                high: {
+                  candidates: [
+                    { harness: 'claude', model: 'opus', effort: 'medium' },
+                  ],
+                },
+              },
             },
           },
         },
@@ -3299,6 +3331,96 @@ describe('oat config', () => {
       expect(capture.error).toHaveLength(0);
       expect(process.exitCode).toBe(0);
     });
+
+    it.each([
+      ['--shared', '.oat/config.json'],
+      ['--local', '.oat/config.local.json'],
+      ['--user', '.oat/config.json'],
+    ] as const)(
+      'preserves explicit Claude model and effort cells during %s adoption',
+      async (scope, relativePath) => {
+        const root = await createRepoRoot();
+        const home = await createHome();
+        const ownerRoot = scope === '--user' ? home : root;
+        const target = join(ownerRoot, ...relativePath.split('/'));
+        await mkdir(dirname(target), { recursive: true });
+        await writeFile(
+          target,
+          `${JSON.stringify({
+            version: 1,
+            workflow: {
+              dispatchCeiling: {
+                recommendationVersion: 'old',
+                providers: {
+                  claude: {
+                    economy: 'haiku',
+                    high: {
+                      candidates: [
+                        {
+                          harness: 'claude',
+                          model: 'opus',
+                          effort: 'medium',
+                        },
+                      ],
+                    },
+                  },
+                },
+              },
+            },
+          })}\n`,
+          'utf8',
+        );
+        const { command, capture } = createHarness({
+          cwd: root,
+          home,
+          validateMatrixCell: vi.fn(async () => 'valid' as const),
+          assetFiles: {
+            '/tmp/assets/config/dispatch-matrix-recommendation.json':
+              JSON.stringify({
+                version: 'new',
+                providers: {
+                  claude: {
+                    economy: 'sonnet',
+                    balanced: {
+                      candidates: [
+                        {
+                          harness: 'claude',
+                          model: 'sonnet',
+                          effort: 'high',
+                        },
+                      ],
+                    },
+                    high: {
+                      candidates: [
+                        {
+                          harness: 'claude',
+                          model: 'opus',
+                          effort: 'high',
+                        },
+                      ],
+                    },
+                  },
+                },
+              }),
+          },
+        });
+
+        await runCommand(command, ['adopt', 'dispatch-matrix', scope]);
+        const adopted = JSON.parse(await readFile(target, 'utf8'));
+        expect(adopted.workflow.dispatchCeiling.providers.claude).toMatchObject(
+          {
+            economy: { candidates: ['haiku'] },
+            high: {
+              candidates: [
+                { harness: 'claude', model: 'opus', effort: 'medium' },
+              ],
+            },
+          },
+        );
+        expect(capture.error).toEqual([]);
+        expect(process.exitCode).toBe(0);
+      },
+    );
 
     it('preserves explicit values even when --yes is supplied', async () => {
       const root = await createRepoRoot();

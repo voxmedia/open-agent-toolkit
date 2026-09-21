@@ -3278,10 +3278,10 @@ describe('validateOatSkills', () => {
       /Claude[\s\S]{0,300}haiku[\s\S]{0,120}sonnet[\s\S]{0,120}opus[\s\S]{0,120}fable/i,
     );
     for (const cursorTarget of [
-      'gpt-5.6-luna-low',
-      'gpt-5.6-terra-medium',
+      'composer-2.5',
+      'gpt-5.6-terra-high',
       'gpt-5.6-sol-high',
-      'gpt-5.6-sol-max',
+      'claude-fable-5-thinking-high',
     ]) {
       expect(
         shared,
@@ -4679,6 +4679,35 @@ describe('validateOatSkills', () => {
     expect(reviewer).toMatch(/legacy model-only and inherited/i);
   });
 
+  it('keeps the planning recommendation display aligned with the bundled matrix', async () => {
+    const recommendation = JSON.parse(
+      await readRepoFile(
+        'packages/cli/config/dispatch-matrix-recommendation.json',
+      ),
+    );
+    const planWriting = await readRepoFile(
+      '.agents/skills/oat-project-plan-writing/SKILL.md',
+    );
+    const renderCandidate = (candidate: unknown): string => {
+      if (typeof candidate === 'string') return candidate;
+      const target = candidate as { model: string; effort: string };
+      return `${target.model}/${target.effort}`;
+    };
+
+    for (const tier of ['economy', 'balanced', 'high', 'frontier']) {
+      const rendered = recommendation.providers.claude[tier].candidates
+        .map(renderCandidate)
+        .join(', ');
+      expect(planWriting).toContain(rendered);
+    }
+    for (const tier of ['economy', 'balanced', 'high', 'frontier']) {
+      const rendered = recommendation.providers.cursor[tier].candidates
+        .map((candidate: string) => `\`${candidate}\``)
+        .join(', ');
+      expect(planWriting).toContain(rendered);
+    }
+  });
+
   it('mirrors every resolver selection mode in the structured dispatch log', async () => {
     const dispatch = await readRawRepoFile(
       '.agents/skills/oat-project-implement/references/dispatch-and-dry-run.md',
@@ -5532,7 +5561,7 @@ describe('validateOatSkills', () => {
     );
     for (const model of [
       'gpt-5.6-luna-high',
-      'gpt-5.6-terra-xhigh',
+      'gpt-5.6-terra-high',
       'gpt-5.6-sol-high',
       'gpt-5.6-sol-max',
     ]) {
