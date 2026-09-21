@@ -4679,7 +4679,13 @@ describe('validateOatSkills', () => {
     expect(claudeRules).toMatch(
       /effort_axis=selected:<effort>[\s\S]{0,180}resolver output/i,
     );
+    expect(claudeRules).toContain(
+      '--candidate-model <preferred-model> --candidate-effort',
+    );
     expect(claudeRules).toContain('--task-effort <preferred-effort>');
+    expect(claudeRules).toMatch(
+      /model-only choice[\s\S]{0,180}--preferred <preferred-model>[\s\S]{0,180}no selected effort/i,
+    );
     expect(claudeRules).not.toContain('--preferred-effort');
     expect(claudeRules).toContain('oat project dispatch record');
     expect(claudeRules).toContain('claudeLaunch');

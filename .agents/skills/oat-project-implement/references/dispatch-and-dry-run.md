@@ -477,10 +477,14 @@ Claude rules:
   Model families remain ordered `haiku < sonnet < opus < fable`; within one
   model, configured effort follows the provider-supported order.
 - Implementer/fix dispatch chooses one selection branch:
-  - Managed `Uncapped`: use the preferred-selection branch with
-    `--preferred <preferred-model>` and, for an explicit effort choice,
-    `--task-effort <preferred-effort>` so the resolver selects the
-    classified target with no cap.
+  - Managed `Uncapped` with an explicit effort: use the exact-candidate branch
+    with `--candidate-model <preferred-model> --candidate-effort
+<preferred-effort>` and include `--task-effort <preferred-effort>` as
+    matching classification provenance. Do not combine this branch with
+    `--preferred`.
+  - Managed `Uncapped` with a model-only choice: use the preferred-selection
+    branch with `--preferred <preferred-model>`; this intentionally preserves
+    the legacy model-only route with no selected effort.
   - Capped managed policy: use the exact-candidate branch below. The
     `--candidate-model` call replaces the preferred-selection call and must not
     include `--preferred`.

@@ -3561,10 +3561,20 @@ describe('oat project dispatch-ceiling resolve', () => {
     await runCommand(command, [
       '--provider',
       'claude',
+      '--role',
+      'implementer',
       '--candidate-model',
       'claude-opus-5',
       '--candidate-effort',
       'medium',
+      '--task-class',
+      'hard-reasoning',
+      '--task-effort',
+      'medium',
+      '--report-scope',
+      'p05-t03',
+      '--report-action',
+      'fix',
       '--json',
     ]);
 
@@ -3575,10 +3585,26 @@ describe('oat project dispatch-ceiling resolve', () => {
           dispatchArgs: {
             variant: 'oat-phase-implementer-claude-claude-opus-5-medium',
           },
+          modelAxis: 'selected:claude-opus-5',
+          effortAxis: 'selected:medium',
           selection: {
             requestedCandidate: { model: 'claude-opus-5', effort: 'medium' },
             candidateIndex: 0,
+            target: {
+              harness: 'claude',
+              model: 'claude-opus-5',
+              effort: 'medium',
+              crossHarness: false,
+            },
           },
+        },
+      },
+      dispatchReport: {
+        route: { scope: 'p05-t03', action: 'fix', role: 'fix' },
+        classification: {
+          taskClass: 'hard-reasoning',
+          preferredEffort: 'medium',
+          source: 'caller',
         },
       },
     });
