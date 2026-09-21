@@ -6,6 +6,7 @@ import { getOwnKey } from '@config/own-keys';
 import {
   buildClaudeEffortVariantName,
   CLAUDE_MODEL_ORDER,
+  type ClaudeCapabilityEvidence,
   validateClaudeDispatchCapability,
 } from '@providers/claude/targets';
 import { buildCodexMaterializedTargetRoleName } from '@providers/codex/codec/shared';
@@ -36,10 +37,12 @@ export type CeilingRole = 'implementer' | 'reviewer';
 export interface CeilingCompileContext {
   /** The orchestrator's own tier, used to detect above-orchestrator upgrades. */
   orchestratorTier?: string;
+  /** Provider environment used by the resolver's capability derivation. */
+  env?: NodeJS.ProcessEnv;
   target?: {
     model?: string;
     effort?: string;
-    resolvedModel?: string;
+    capabilityEvidence?: ClaudeCapabilityEvidence;
   } | null;
 }
 
@@ -147,13 +150,16 @@ const claudeAdapter: ProviderCeilingAdapter = {
     if (target?.effort) {
       const model = target.model ?? value;
       if (
-        !validateClaudeDispatchCapability({
-          model,
-          effort: target.effort,
-          ...(target.resolvedModel
-            ? { resolvedModel: target.resolvedModel }
-            : {}),
-        }).valid
+        !validateClaudeDispatchCapability(
+          {
+            model,
+            effort: target.effort,
+            ...(target.capabilityEvidence
+              ? { capabilityEvidence: target.capabilityEvidence }
+              : {}),
+          },
+          ctx.env,
+        ).valid
       ) {
         return null;
       }

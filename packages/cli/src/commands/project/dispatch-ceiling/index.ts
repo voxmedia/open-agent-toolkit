@@ -64,6 +64,7 @@ import {
 import {
   claudeTargetRank,
   CLAUDE_EFFORT_ORDER,
+  type ClaudeCapabilityEvidence,
   validateClaudeDispatchCapability,
   validateClaudeDispatchTarget,
 } from '@providers/claude/targets';
@@ -214,7 +215,7 @@ interface ResolvedDispatchRouteTarget {
   harness: string;
   model?: string;
   effort?: string;
-  resolvedModel?: string;
+  capabilityEvidence?: ClaudeCapabilityEvidence;
   crossHarness: boolean;
   routeIndex: number;
   routeLength: number;
@@ -623,17 +624,19 @@ function resolveClaudeTargetCapability(
     {
       model: target.model,
       effort: target.effort,
-      ...(target.resolvedModel ? { resolvedModel: target.resolvedModel } : {}),
+      ...(target.capabilityEvidence
+        ? { capabilityEvidence: target.capabilityEvidence }
+        : {}),
     },
     env,
   );
-  if (!validation.valid || !validation.resolvedModel) {
+  if (!validation.valid || !validation.capabilityEvidence) {
     throw new Error(
       validation.reason ??
         'Claude effort target has no established model capability.',
     );
   }
-  return { ...target, resolvedModel: validation.resolvedModel };
+  return { ...target, capabilityEvidence: validation.capabilityEvidence };
 }
 
 function resolveClaudePolicyCapabilities(
@@ -2008,6 +2011,7 @@ function buildProviderResolution(
   role: CeilingRole,
   orchestratorTier: string | undefined,
   preferredValue: DispatchCeilingValue | null,
+  env: NodeJS.ProcessEnv,
 ): ProviderResolution {
   const adapter = getCeilingAdapter(provider);
 
@@ -2051,6 +2055,7 @@ function buildProviderResolution(
       ? adapter.compileToDispatchArgs(dispatchValue, role, {
           orchestratorTier,
           target: selection.target,
+          env,
         })
       : null;
 
@@ -2340,6 +2345,7 @@ async function resolveDispatchCeiling(
     role,
     orchestratorTier,
     preferredValue,
+    dependencies.processEnv,
   );
   const providers: Record<string, ProviderResolution> = {
     [provider]: providerResolution,

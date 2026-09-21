@@ -3574,15 +3574,53 @@ describe('oat project dispatch-ceiling resolve', () => {
   });
 
   it.each([
-    ['claude-sonnet-5', 'xhigh', 'sonnet-5'],
-    ['sonnet', 'low', 'sonnet-5'],
-    ['sonnet', 'max', 'sonnet-5'],
-    ['opus', 'low', 'opus-5'],
-    ['fable', 'low', 'fable-5-1'],
-    ['fable', 'medium', 'fable-5-1'],
+    {
+      model: 'claude-sonnet-5',
+      effort: 'xhigh',
+      evidence: {
+        source: 'explicit-model-id',
+        exactModel: true,
+        generation: 'sonnet-5',
+      },
+    },
+    {
+      model: 'sonnet',
+      effort: 'low',
+      evidence: {
+        source: 'alias-capability-equivalence',
+        exactModel: false,
+        possibleGenerations: ['sonnet-5', 'sonnet-4-6'],
+      },
+    },
+    {
+      model: 'sonnet',
+      effort: 'max',
+      evidence: {
+        source: 'alias-capability-equivalence',
+        exactModel: false,
+        possibleGenerations: ['sonnet-5', 'sonnet-4-6'],
+      },
+    },
+    {
+      model: 'opus',
+      effort: 'low',
+      evidence: {
+        source: 'alias-capability-equivalence',
+        exactModel: false,
+      },
+    },
+    {
+      model: 'fable',
+      effort: 'xhigh',
+      evidence: {
+        source: 'alias-capability-equivalence',
+        exactModel: false,
+        possibleGenerations: ['fable-5-1', 'fable-5'],
+      },
+    },
   ])(
-    'resolves documented Claude capability %s/%s as %s',
-    async (model, effort, resolvedModel) => {
+    'resolves documented Claude capability $model/$effort without overstating exactness',
+    async ({ model, effort, evidence }) => {
       const { root, home } = await setup();
       const candidates = [{ harness: 'claude', model, effort }];
       await writeJson(join(root, '.oat', 'config.json'), {
@@ -3608,12 +3646,117 @@ describe('oat project dispatch-ceiling resolve', () => {
         status: 'resolved',
         providers: {
           claude: {
-            target: { model, effort, resolvedModel },
-            selection: { target: { model, effort, resolvedModel } },
+            target: { model, effort, capabilityEvidence: evidence },
+            selection: {
+              target: { model, effort, capabilityEvidence: evidence },
+            },
           },
         },
       });
       expect(process.exitCode).toBe(0);
+    },
+  );
+
+  it('resolves custom family pins from declared capabilities', async () => {
+    const { root, home } = await setup();
+    const candidates = [{ harness: 'claude', model: 'opus', effort: 'xhigh' }];
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchPolicy: { mode: 'managed', policy: 'high' },
+        dispatchCeiling: { providers: { claude: { high: { candidates } } } },
+      },
+    });
+    const pin =
+      'arn:aws:bedrock:us-east-1:123456789012:inference-profile/custom-opus';
+    const { command, capture } = createHarness({
+      cwd: root,
+      home,
+      processEnv: {
+        CLAUDE_CODE_USE_BEDROCK: '1',
+        ANTHROPIC_DEFAULT_OPUS_MODEL: pin,
+        ANTHROPIC_DEFAULT_OPUS_MODEL_SUPPORTED_CAPABILITIES:
+          'effort,xhigh_effort',
+      },
+    });
+    await runCommand(command, [
+      '--provider',
+      'claude',
+      '--candidate-model',
+      'opus',
+      '--candidate-effort',
+      'xhigh',
+      '--json',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
+      providers: {
+        claude: {
+          mode: 'enforced',
+          dispatchArgs: {
+            variant: 'oat-phase-implementer-claude-opus-xhigh',
+          },
+          target: {
+            capabilityEvidence: {
+              source: 'family-pin-declaration',
+              modelReference: pin,
+              capabilitiesSource:
+                'ANTHROPIC_DEFAULT_OPUS_MODEL_SUPPORTED_CAPABILITIES',
+              supportedEfforts: ['low', 'medium', 'high', 'xhigh'],
+            },
+          },
+          selection: {
+            target: {
+              capabilityEvidence: {
+                source: 'family-pin-declaration',
+                modelReference: pin,
+              },
+            },
+          },
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it.each([
+    { CLAUDE_CODE_USE_BEDROCK: '1' },
+    { CLAUDE_CODE_USE_VERTEX: '1' },
+    { CLAUDE_CODE_USE_FOUNDRY: '1' },
+  ])(
+    'rejects provider-mapped Sonnet 4.5 aliases: $CLAUDE_CODE_USE_BEDROCK$CLAUDE_CODE_USE_VERTEX$CLAUDE_CODE_USE_FOUNDRY',
+    async (processEnv) => {
+      const { root, home } = await setup();
+      const candidates = [
+        { harness: 'claude', model: 'sonnet', effort: 'high' },
+      ];
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: {
+          dispatchPolicy: { mode: 'managed', policy: 'high' },
+          dispatchCeiling: { providers: { claude: { high: { candidates } } } },
+        },
+      });
+      const { command, capture } = createHarness({
+        cwd: root,
+        home,
+        processEnv,
+      });
+      await runCommand(command, [
+        '--provider',
+        'claude',
+        '--candidate-model',
+        'sonnet',
+        '--candidate-effort',
+        'high',
+        '--json',
+      ]);
+      expect(capture.jsonPayloads[0]).toMatchObject({ status: 'error' });
+      expect(capture.jsonPayloads[0]?.message).toMatch(
+        /no documented effort-capability equivalence class/iu,
+      );
+      expect(process.exitCode).toBe(1);
     },
   );
 

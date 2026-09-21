@@ -21,6 +21,21 @@ const CLAUDE_GENERATION_EFFORTS = {
 
 type ClaudeModelFamily = (typeof CLAUDE_MODEL_ORDER)[number];
 export type ClaudeModelGeneration = keyof typeof CLAUDE_GENERATION_EFFORTS;
+export type ClaudeCapabilitySource =
+  | 'explicit-model-id'
+  | 'family-pin-model-id'
+  | 'family-pin-declaration'
+  | 'alias-capability-equivalence';
+
+export interface ClaudeCapabilityEvidence {
+  source: ClaudeCapabilitySource;
+  modelReference: string;
+  exactModel: boolean;
+  generation?: ClaudeModelGeneration;
+  possibleGenerations?: ClaudeModelGeneration[];
+  capabilitiesSource: string;
+  supportedEfforts: string[];
+}
 
 const ALIAS_DEFAULT_ENV: Record<ClaudeModelFamily, string> = {
   haiku: 'ANTHROPIC_DEFAULT_HAIKU_MODEL',
@@ -32,13 +47,13 @@ const ALIAS_DEFAULT_ENV: Record<ClaudeModelFamily, string> = {
 export interface ClaudeDispatchTarget {
   model: string;
   effort?: string;
-  resolvedModel?: string;
+  capabilityEvidence?: ClaudeCapabilityEvidence;
 }
 
 export interface ClaudeTargetValidation {
   valid: boolean;
   reason?: string;
-  resolvedModel?: ClaudeModelGeneration;
+  capabilityEvidence?: ClaudeCapabilityEvidence;
 }
 
 function modelFamily(model: string): ClaudeModelFamily | null {
@@ -80,68 +95,174 @@ function isEnabled(value: string | undefined): boolean {
   return value === '1' || value?.toLowerCase() === 'true';
 }
 
-function builtInAliasGeneration(
+function generationEvidence(
+  generation: ClaudeModelGeneration,
+  source: Extract<
+    ClaudeCapabilitySource,
+    'explicit-model-id' | 'family-pin-model-id'
+  >,
+  modelReference: string,
+  capabilitiesSource: string,
+): ClaudeCapabilityEvidence {
+  return {
+    source,
+    modelReference,
+    exactModel: source === 'explicit-model-id',
+    generation,
+    capabilitiesSource,
+    supportedEfforts: [...CLAUDE_GENERATION_EFFORTS[generation]],
+  };
+}
+
+function familyPinCapabilityEvidence(
+  family: ClaudeModelFamily,
+  pinName: string,
+  pinnedModel: string,
+  env: NodeJS.ProcessEnv,
+): ClaudeTargetValidation {
+  const generation = claudeModelGeneration(pinnedModel);
+  if (generation) {
+    if (modelFamily(generation) !== family) {
+      return {
+        valid: false,
+        reason: `Claude alias ${JSON.stringify(family)} is pinned by ${pinName}=${JSON.stringify(pinnedModel)}, but the pin belongs to another model family.`,
+      };
+    }
+    return {
+      valid: true,
+      capabilityEvidence: generationEvidence(
+        generation,
+        'family-pin-model-id',
+        pinnedModel,
+        pinName,
+      ),
+    };
+  }
+
+  const capabilityName = `${pinName}_SUPPORTED_CAPABILITIES`;
+  const declaration = env[capabilityName];
+  if (!declaration) {
+    return {
+      valid: false,
+      reason: `Claude alias ${JSON.stringify(family)} uses custom pin ${pinName}=${JSON.stringify(pinnedModel)}, but ${capabilityName} does not establish effort support.`,
+    };
+  }
+  const capabilities = new Set(
+    declaration
+      .split(',')
+      .map((entry) => entry.trim())
+      .filter(Boolean),
+  );
+  if (!capabilities.has('effort')) {
+    return {
+      valid: false,
+      reason: `${capabilityName} must include effort before xhigh_effort or max_effort can establish Claude effort support.`,
+    };
+  }
+  const supportedEfforts = ['low', 'medium', 'high'];
+  if (capabilities.has('xhigh_effort')) supportedEfforts.push('xhigh');
+  if (capabilities.has('max_effort')) supportedEfforts.push('max');
+  return {
+    valid: true,
+    capabilityEvidence: {
+      source: 'family-pin-declaration',
+      modelReference: pinnedModel,
+      exactModel: false,
+      capabilitiesSource: capabilityName,
+      supportedEfforts,
+    },
+  };
+}
+
+function aliasCapabilityEvidence(
   family: ClaudeModelFamily,
   env: NodeJS.ProcessEnv,
-): ClaudeModelGeneration | null {
-  if (family === 'haiku') return null;
-  if (family === 'fable') return 'fable-5-1';
-  if (isEnabled(env['CLAUDE_CODE_USE_FOUNDRY'])) {
-    return family === 'opus' ? 'opus-4-6' : null;
-  }
-  if (
+): ClaudeTargetValidation {
+  let possibleGenerations: ClaudeModelGeneration[] = [];
+  let capabilitiesSource = 'claude-model-alias-and-substitution-tables';
+  if (family === 'fable') {
+    // Claude Code does not expose an apps-gateway discriminator to subprocesses.
+    // Both documented alias destinations have the same effort capabilities.
+    possibleGenerations = ['fable-5-1', 'fable-5'];
+  } else if (isEnabled(env['CLAUDE_CODE_USE_FOUNDRY'])) {
+    possibleGenerations = family === 'opus' ? ['opus-4-6'] : [];
+    capabilitiesSource = 'claude-model-alias-table:foundry';
+  } else if (
     isEnabled(env['CLAUDE_CODE_USE_BEDROCK']) ||
     isEnabled(env['CLAUDE_CODE_USE_VERTEX'])
   ) {
-    return family === 'opus' ? 'opus-5' : null;
+    possibleGenerations = family === 'opus' ? ['opus-5'] : [];
+    capabilitiesSource = 'claude-model-alias-table:bedrock-agent-platform';
+  } else if (isEnabled(env['CLAUDE_CODE_USE_ANTHROPIC_AWS'])) {
+    possibleGenerations =
+      family === 'opus'
+        ? ['opus-5']
+        : family === 'sonnet'
+          ? ['sonnet-4-6']
+          : [];
+    capabilitiesSource = 'claude-model-alias-table:claude-platform-aws';
+  } else if (family === 'sonnet') {
+    possibleGenerations = ['sonnet-5', 'sonnet-4-6'];
+  } else if (family === 'opus') {
+    possibleGenerations = ['opus-5', 'opus-4-8', 'opus-4-7', 'opus-4-6'];
   }
-  if (isEnabled(env['CLAUDE_CODE_USE_ANTHROPIC_AWS'])) {
-    return family === 'opus' ? 'opus-5' : 'sonnet-4-6';
+  if (possibleGenerations.length === 0) {
+    return {
+      valid: false,
+      reason: `Claude alias ${JSON.stringify(family)} has no documented effort-capability equivalence class. Use a versioned model ID or family pin with declared capabilities.`,
+    };
   }
-  return family === 'opus' ? 'opus-5' : 'sonnet-5';
+  const supportedEfforts = CLAUDE_EFFORT_ORDER.filter((effort) =>
+    possibleGenerations.every((generation) =>
+      (CLAUDE_GENERATION_EFFORTS[generation] as readonly string[]).includes(
+        effort,
+      ),
+    ),
+  );
+  return {
+    valid: true,
+    capabilityEvidence: {
+      source: 'alias-capability-equivalence',
+      modelReference: `${family}-documented-substitutions`,
+      exactModel: false,
+      possibleGenerations,
+      capabilitiesSource,
+      supportedEfforts,
+    },
+  };
 }
 
-function ambiguousProviderEnvironment(env: NodeJS.ProcessEnv): boolean {
-  return Boolean(env['ANTHROPIC_BASE_URL']);
-}
-
-/** Resolve an alias or model ID to the generation used for capability checks. */
-export function resolveClaudeModelGeneration(
-  target: Pick<ClaudeDispatchTarget, 'model' | 'resolvedModel'>,
+/** Resolve capability evidence without claiming an unobserved exact model. */
+function deriveClaudeCapabilityEvidence(
+  model: string,
   env: NodeJS.ProcessEnv = process.env,
 ): ClaudeTargetValidation {
-  const requestedFamily = modelFamily(target.model);
+  const requestedFamily = modelFamily(model);
   if (!requestedFamily) {
     return {
       valid: false,
-      reason: `Unsupported Claude model ${JSON.stringify(target.model)}. Valid aliases: ${CLAUDE_MODEL_ORDER.join(', ')}; version-pinned Claude model IDs are also accepted.`,
+      reason: `Unsupported Claude model ${JSON.stringify(model)}. Valid aliases: ${CLAUDE_MODEL_ORDER.join(', ')}; version-pinned Claude model IDs are also accepted.`,
     };
   }
 
-  const explicitModel = target.resolvedModel ?? target.model;
-  const explicitGeneration = claudeModelGeneration(explicitModel);
+  const explicitGeneration = claudeModelGeneration(model);
   if (explicitGeneration) {
-    if (modelFamily(explicitGeneration) !== requestedFamily) {
-      return {
-        valid: false,
-        reason: `Resolved Claude model ${JSON.stringify(explicitModel)} does not match requested family ${JSON.stringify(requestedFamily)}.`,
-      };
-    }
-    return { valid: true, resolvedModel: explicitGeneration };
-  }
-
-  if (target.resolvedModel) {
     return {
-      valid: false,
-      reason: `Cannot establish a documented Claude effort capability for resolved model ${JSON.stringify(target.resolvedModel)}. Pin a recognized versioned model ID.`,
+      valid: true,
+      capabilityEvidence: generationEvidence(
+        explicitGeneration,
+        'explicit-model-id',
+        model,
+        'dispatch-target-model',
+      ),
     };
   }
 
-  const alias = target.model.toLowerCase().replace(/\[1m\]$/u, '');
+  const alias = model.toLowerCase().replace(/\[1m\]$/u, '');
   if (alias !== requestedFamily) {
     return {
       valid: false,
-      reason: `Cannot establish a documented Claude effort capability for model ${JSON.stringify(target.model)}. Use a recognized versioned model ID.`,
+      reason: `Cannot establish a documented Claude effort capability for model ${JSON.stringify(model)}. Use a recognized versioned model ID.`,
     };
   }
 
@@ -155,20 +276,15 @@ export function resolveClaudeModelGeneration(
 
   const pinnedModel = env[pinName];
   if (pinnedModel) {
-    const pinnedGeneration = claudeModelGeneration(pinnedModel);
-    if (
-      !pinnedGeneration ||
-      modelFamily(pinnedGeneration) !== requestedFamily
-    ) {
-      return {
-        valid: false,
-        reason: `Claude alias ${JSON.stringify(alias)} is pinned by ${pinName}=${JSON.stringify(pinnedModel)}, but OAT cannot establish its model generation and effort capability.`,
-      };
-    }
-    return { valid: true, resolvedModel: pinnedGeneration };
+    return familyPinCapabilityEvidence(
+      requestedFamily,
+      pinName,
+      pinnedModel,
+      env,
+    );
   }
 
-  if (ambiguousProviderEnvironment(env)) {
+  if (env['ANTHROPIC_BASE_URL']) {
     return {
       valid: false,
       reason: `Claude alias ${JSON.stringify(alias)} has an ambiguous provider-dependent generation. Pin ${pinName} to a versioned model ID before selecting effort.`,
@@ -182,14 +298,29 @@ export function resolveClaudeModelGeneration(
     };
   }
 
-  const builtIn = builtInAliasGeneration(requestedFamily, env);
-  if (!builtIn) {
+  return aliasCapabilityEvidence(requestedFamily, env);
+}
+
+/** Resolve capability evidence without claiming an unobserved exact model. */
+export function resolveClaudeCapabilityEvidence(
+  target: Pick<ClaudeDispatchTarget, 'model' | 'capabilityEvidence'>,
+  env: NodeJS.ProcessEnv = process.env,
+): ClaudeTargetValidation {
+  const derived = deriveClaudeCapabilityEvidence(target.model, env);
+  if (!derived.valid || !derived.capabilityEvidence) return derived;
+  if (
+    target.capabilityEvidence &&
+    JSON.stringify(target.capabilityEvidence) !==
+      JSON.stringify(derived.capabilityEvidence)
+  ) {
     return {
       valid: false,
-      reason: `Claude alias ${JSON.stringify(alias)} does not resolve to a model with documented effort support for this provider. Pin ${pinName} to a supported versioned model ID.`,
+      reason:
+        'Provided Claude capability evidence does not match the capability derived from the model and active provider configuration.',
+      capabilityEvidence: derived.capabilityEvidence,
     };
   }
-  return { valid: true, resolvedModel: builtIn };
+  return derived;
 }
 
 export function validateClaudeDispatchTarget(
@@ -216,7 +347,7 @@ export function validateClaudeDispatchTarget(
   return { valid: true };
 }
 
-/** Validate an effort-pinned target against its concrete model generation. */
+/** Validate an effort-pinned target against explicit capability evidence. */
 export function validateClaudeDispatchCapability(
   target: ClaudeDispatchTarget,
   env: NodeJS.ProcessEnv = process.env,
@@ -224,17 +355,17 @@ export function validateClaudeDispatchCapability(
   const route = validateClaudeDispatchTarget(target);
   if (!route.valid || target.effort === undefined) return route;
 
-  const resolution = resolveClaudeModelGeneration(target, env);
-  if (!resolution.valid || !resolution.resolvedModel) return resolution;
-  const supported = CLAUDE_GENERATION_EFFORTS[resolution.resolvedModel];
-  if (!(supported as readonly string[]).includes(target.effort)) {
+  const resolution = resolveClaudeCapabilityEvidence(target, env);
+  if (!resolution.valid || !resolution.capabilityEvidence) return resolution;
+  const evidence = resolution.capabilityEvidence;
+  if (!evidence.supportedEfforts.includes(target.effort)) {
     return {
       valid: false,
-      reason: `Claude model ${JSON.stringify(resolution.resolvedModel)} does not support effort ${JSON.stringify(target.effort)}. Supported values: ${supported.join(', ')}.`,
-      resolvedModel: resolution.resolvedModel,
+      reason: `Claude capability evidence ${JSON.stringify(evidence.modelReference)} does not support effort ${JSON.stringify(target.effort)}. Supported values: ${evidence.supportedEfforts.join(', ')}.`,
+      capabilityEvidence: evidence,
     };
   }
-  return { valid: true, resolvedModel: resolution.resolvedModel };
+  return { valid: true, capabilityEvidence: evidence };
 }
 
 export function normalizeClaudeRoleName(input: string): string {

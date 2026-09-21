@@ -8,14 +8,43 @@ import { z } from 'zod';
 import { readOatManagedClaudeRole } from './codec/materialize';
 import {
   buildClaudeEffortVariantName,
+  type ClaudeCapabilityEvidence,
   validateClaudeDispatchCapability,
 } from './targets';
+
+const generationSchema = z.enum([
+  'fable-5-1',
+  'fable-5',
+  'opus-5',
+  'sonnet-5',
+  'opus-4-8',
+  'opus-4-7',
+  'opus-4-6',
+  'sonnet-4-6',
+]);
+
+const capabilityEvidenceSchema = z
+  .object({
+    source: z.enum([
+      'explicit-model-id',
+      'family-pin-model-id',
+      'family-pin-declaration',
+      'alias-capability-equivalence',
+    ]),
+    modelReference: z.string().min(1),
+    exactModel: z.boolean(),
+    generation: generationSchema.optional(),
+    possibleGenerations: z.array(generationSchema).optional(),
+    capabilitiesSource: z.string().min(1),
+    supportedEfforts: z.array(z.string().min(1)).min(1),
+  })
+  .strict();
 
 const targetSchema = z
   .object({
     model: z.string().min(1),
     effort: z.string().min(1),
-    resolvedModel: z.string().min(1),
+    capabilityEvidence: capabilityEvidenceSchema,
     crossHarness: z.literal(false),
   })
   .passthrough();
@@ -81,7 +110,7 @@ export interface AcceptedClaudeLaunchEnvelope {
   baseRole: 'oat-phase-implementer' | 'oat-reviewer';
   variant: string;
   model: string;
-  resolvedModel: string;
+  capabilityEvidence: ClaudeCapabilityEvidence;
   effort: string;
   policy: string;
   ceiling: string;
@@ -104,12 +133,25 @@ function definitionFrontmatter(content: string): Record<string, unknown> {
 }
 
 function assertSameTarget(
-  left: { model: string; effort: string },
-  right: { model: string; effort: string },
+  left: {
+    model: string;
+    effort: string;
+    capabilityEvidence: ClaudeCapabilityEvidence;
+  },
+  right: {
+    model: string;
+    effort: string;
+    capabilityEvidence: ClaudeCapabilityEvidence;
+  },
 ): void {
-  if (left.model !== right.model || left.effort !== right.effort) {
+  if (
+    left.model !== right.model ||
+    left.effort !== right.effort ||
+    JSON.stringify(left.capabilityEvidence) !==
+      JSON.stringify(right.capabilityEvidence)
+  ) {
     throw new Error(
-      'Claude resolver target and selection target disagree on model or effort.',
+      'Claude resolver target and selection target disagree on model, effort, or capability evidence.',
     );
   }
 }
@@ -164,9 +206,12 @@ export function acceptClaudeLaunchEnvelope(input: {
       `Generated Claude definition ${expectedVariant} is absent or is not the matching OAT-managed role.`,
     );
   }
-  if (managed.resolvedModel !== provider.selection.target.resolvedModel) {
+  if (
+    JSON.stringify(managed.capabilityEvidence) !==
+    JSON.stringify(provider.selection.target.capabilityEvidence)
+  ) {
     throw new Error(
-      `Generated Claude definition resolved model does not match selected capability ${provider.selection.target.resolvedModel}.`,
+      'Generated Claude definition capability evidence does not match the resolver-selected capability.',
     );
   }
   const frontmatter = definitionFrontmatter(input.definition);
@@ -207,7 +252,7 @@ export function acceptClaudeLaunchEnvelope(input: {
     baseRole,
     variant: expectedVariant,
     model: provider.selection.target.model,
-    resolvedModel: provider.selection.target.resolvedModel,
+    capabilityEvidence: provider.selection.target.capabilityEvidence,
     effort: provider.selection.target.effort,
     policy: resolution.policy,
     ceiling: provider.value,
@@ -271,7 +316,19 @@ export function buildClaudeDispatchRecord(input: {
         schemaVersion: input.envelope.schemaVersion,
         variant: input.envelope.variant,
         model: input.envelope.model,
-        resolvedModel: input.envelope.resolvedModel,
+        capabilitySource: input.envelope.capabilityEvidence.source,
+        capabilityModelReference:
+          input.envelope.capabilityEvidence.modelReference,
+        capabilityExactModel: input.envelope.capabilityEvidence.exactModel,
+        capabilityGeneration:
+          input.envelope.capabilityEvidence.generation ?? null,
+        capabilityPossibleGenerations:
+          input.envelope.capabilityEvidence.possibleGenerations?.join(',') ??
+          null,
+        capabilityDeclarationSource:
+          input.envelope.capabilityEvidence.capabilitiesSource,
+        capabilitySupportedEfforts:
+          input.envelope.capabilityEvidence.supportedEfforts.join(','),
         effort: input.envelope.effort,
       },
     ],

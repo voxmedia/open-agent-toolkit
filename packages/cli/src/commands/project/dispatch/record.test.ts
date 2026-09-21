@@ -134,8 +134,15 @@ function managedClaudeResolution(
   const target = {
     harness: 'claude',
     model: 'sonnet',
-    resolvedModel: 'sonnet-5',
     effort,
+    capabilityEvidence: {
+      source: 'alias-capability-equivalence',
+      modelReference: 'sonnet-documented-substitutions',
+      exactModel: false,
+      possibleGenerations: ['sonnet-5', 'sonnet-4-6'],
+      capabilitiesSource: 'claude-model-alias-and-substitution-tables',
+      supportedEfforts: ['low', 'medium', 'high', 'max'],
+    },
     crossHarness: false,
   };
   return {
@@ -331,7 +338,14 @@ describe('managed Claude launch production boundary', () => {
           schemaVersion: 1,
           variant,
           model: 'sonnet',
-          resolvedModel: 'sonnet-5',
+          capabilitySource: 'alias-capability-equivalence',
+          capabilityModelReference: 'sonnet-documented-substitutions',
+          capabilityExactModel: false,
+          capabilityGeneration: null,
+          capabilityPossibleGenerations: 'sonnet-5,sonnet-4-6',
+          capabilityDeclarationSource:
+            'claude-model-alias-and-substitution-tables',
+          capabilitySupportedEfforts: 'low,medium,high,max',
           effort,
         },
       ]);
@@ -357,6 +371,26 @@ describe('managed Claude launch production boundary', () => {
       'oat-phase-implementer-claude-sonnet-medium';
     expect(() => parseDispatchRecordInput(staleEffort)).toThrow(
       /resolver variant .* does not match selected target/i,
+    );
+
+    const mutatedEvidence = managedClaudeInput();
+    mutatedEvidence.claudeLaunch.resolution.providers.claude.target =
+      structuredClone(
+        mutatedEvidence.claudeLaunch.resolution.providers.claude.target,
+      );
+    mutatedEvidence.claudeLaunch.resolution.providers.claude.target.capabilityEvidence.supportedEfforts.push(
+      'xhigh',
+    );
+    expect(() => parseDispatchRecordInput(mutatedEvidence)).toThrow(
+      /target and selection target disagree.*capability evidence/i,
+    );
+
+    const forgedEvidence = managedClaudeInput();
+    forgedEvidence.claudeLaunch.resolution.providers.claude.target.capabilityEvidence.supportedEfforts.push(
+      'xhigh',
+    );
+    expect(() => parseDispatchRecordInput(forgedEvidence)).toThrow(
+      /provided Claude capability evidence does not match/i,
     );
 
     const missingDefinition = managedClaudeInput();

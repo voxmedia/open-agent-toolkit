@@ -85,6 +85,70 @@ describe('Claude effort sync extension', () => {
     expect(second.aggregateHash).toBe(first.aggregateHash);
   });
 
+  it('regenerates stale capability evidence when a custom deployment changes', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-claude-extension-'));
+    roots.push(root);
+    const entries = await canonicalEntries(root);
+    await mkdir(join(root, '.oat'), { recursive: true });
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      config([{ harness: 'claude', model: 'opus', effort: 'high' }]),
+    );
+    const bedrockArn =
+      'arn:aws:bedrock:us-east-1:123456789012:inference-profile/custom-opus';
+    const first = await computeClaudeProjectExtensionPlan(
+      root,
+      entries,
+      undefined,
+      {
+        env: {
+          CLAUDE_CODE_USE_BEDROCK: '1',
+          ANTHROPIC_DEFAULT_OPUS_MODEL: bedrockArn,
+          ANTHROPIC_DEFAULT_OPUS_MODEL_SUPPORTED_CAPABILITIES: 'effort',
+        },
+      },
+    );
+    await applyClaudeProjectExtensionPlan(root, first);
+    const rolePath = join(
+      root,
+      '.claude',
+      'agents',
+      'oat-reviewer-claude-opus-high.md',
+    );
+    await expect(readFile(rolePath, 'utf8')).resolves.toContain(bedrockArn);
+
+    const foundryDeployment = 'prod-opus-foundry-deployment';
+    const changed = await computeClaudeProjectExtensionPlan(
+      root,
+      entries,
+      undefined,
+      {
+        env: {
+          CLAUDE_CODE_USE_FOUNDRY: '1',
+          ANTHROPIC_DEFAULT_OPUS_MODEL: foundryDeployment,
+          ANTHROPIC_DEFAULT_OPUS_MODEL_SUPPORTED_CAPABILITIES:
+            'effort,xhigh_effort,max_effort',
+        },
+      },
+    );
+    expect(changed.operations).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          action: 'update',
+          roleName: 'oat-reviewer-claude-opus-high',
+          content: expect.stringContaining(foundryDeployment),
+        }),
+      ]),
+    );
+    await applyClaudeProjectExtensionPlan(root, changed);
+    const regenerated = await readFile(rolePath, 'utf8');
+    expect(regenerated).toContain(foundryDeployment);
+    expect(regenerated).toContain(
+      'ANTHROPIC_DEFAULT_OPUS_MODEL_SUPPORTED_CAPABILITIES',
+    );
+    expect(regenerated).not.toContain(bedrockArn);
+  });
+
   it('removes only managed variants owned by a filtered removed base role', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-claude-extension-'));
     roots.push(root);

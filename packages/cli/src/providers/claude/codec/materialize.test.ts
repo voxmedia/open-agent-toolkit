@@ -44,7 +44,12 @@ describe('Claude effort materializer', () => {
     );
     expect(parsed).not.toHaveProperty('version');
     expect(role.content.slice(match[0].length)).toBe(agent.body);
-    expect(role.content).toContain('# oat-resolved-model: opus-5');
+    expect(role.target.capabilityEvidence).toMatchObject({
+      source: 'alias-capability-equivalence',
+      exactModel: false,
+      possibleGenerations: ['opus-5', 'opus-4-8', 'opus-4-7', 'opus-4-6'],
+    });
+    expect(role.content).toContain('# oat-capability-evidence:');
   });
 
   it.each([
@@ -54,7 +59,7 @@ describe('Claude effort materializer', () => {
     ['claude-fable-5', 'medium', 'fable-5'],
   ])(
     'materializes documented capability %s/%s',
-    (model, effort, resolvedModel) => {
+    (model, effort, generation) => {
       const agent = parseCanonicalAgentMarkdown(
         '---\nname: oat-reviewer\ndescription: Review changes.\n---\n\nBody',
       );
@@ -62,8 +67,12 @@ describe('Claude effort materializer', () => {
         agent,
         target: { model, effort, owner: 'project-config' },
       });
-      expect(role.target.resolvedModel).toBe(resolvedModel);
-      expect(role.content).toContain(`# oat-resolved-model: ${resolvedModel}`);
+      expect(role.target.capabilityEvidence).toMatchObject({
+        source: 'explicit-model-id',
+        exactModel: true,
+        generation,
+      });
+      expect(role.content).toContain(`"generation":"${generation}"`);
     },
   );
 
@@ -127,7 +136,11 @@ describe('Claude effort materializer', () => {
         ANTHROPIC_DEFAULT_SONNET_MODEL: 'claude-sonnet-4-6',
       },
     });
-    expect(versioned.target.resolvedModel).toBe('sonnet-5');
+    expect(versioned.target.capabilityEvidence).toMatchObject({
+      source: 'explicit-model-id',
+      exactModel: true,
+      generation: 'sonnet-5',
+    });
 
     const pinnedMantle = materializeClaudeAgent({
       agent,
@@ -137,7 +150,151 @@ describe('Claude effort materializer', () => {
         ANTHROPIC_DEFAULT_SONNET_MODEL: 'claude-sonnet-5',
       },
     });
-    expect(pinnedMantle.target.resolvedModel).toBe('sonnet-5');
+    expect(pinnedMantle.target.capabilityEvidence).toMatchObject({
+      source: 'family-pin-model-id',
+      exactModel: false,
+      generation: 'sonnet-5',
+      capabilitiesSource: 'ANTHROPIC_DEFAULT_SONNET_MODEL',
+    });
+  });
+
+  it('covers normal and allowlist-substituted Sonnet plus apps-gateway Fable without exact claims', () => {
+    const agent = parseCanonicalAgentMarkdown(
+      '---\nname: oat-reviewer\ndescription: Review changes.\n---\n\nBody',
+    );
+    const sonnet = materializeClaudeAgent({
+      agent,
+      target: { model: 'sonnet', effort: 'high', owner: 'project-config' },
+    });
+    expect(sonnet.target.capabilityEvidence).toMatchObject({
+      source: 'alias-capability-equivalence',
+      exactModel: false,
+      possibleGenerations: ['sonnet-5', 'sonnet-4-6'],
+      supportedEfforts: ['low', 'medium', 'high', 'max'],
+    });
+
+    const appsGatewayFable = materializeClaudeAgent({
+      agent,
+      target: { model: 'fable', effort: 'xhigh', owner: 'project-config' },
+    });
+    expect(appsGatewayFable.target.capabilityEvidence).toMatchObject({
+      source: 'alias-capability-equivalence',
+      exactModel: false,
+      possibleGenerations: ['fable-5-1', 'fable-5'],
+      supportedEfforts: ['low', 'medium', 'high', 'xhigh', 'max'],
+    });
+  });
+
+  it('honors provider alias mappings and fails closed for Sonnet 4.5', () => {
+    const agent = parseCanonicalAgentMarkdown(
+      '---\nname: oat-reviewer\ndescription: Review changes.\n---\n\nBody',
+    );
+    for (const providerEnv of [
+      { CLAUDE_CODE_USE_BEDROCK: '1' },
+      { CLAUDE_CODE_USE_VERTEX: '1' },
+      { CLAUDE_CODE_USE_FOUNDRY: '1' },
+    ]) {
+      expect(() =>
+        materializeClaudeAgent({
+          agent,
+          target: {
+            model: 'sonnet',
+            effort: 'high',
+            owner: 'project-config',
+          },
+          env: providerEnv,
+        }),
+      ).toThrow(/no documented effort-capability equivalence class/iu);
+    }
+
+    const bedrockOpus = materializeClaudeAgent({
+      agent,
+      target: { model: 'opus', effort: 'xhigh', owner: 'project-config' },
+      env: { CLAUDE_CODE_USE_BEDROCK: '1' },
+    });
+    expect(bedrockOpus.target.capabilityEvidence).toMatchObject({
+      exactModel: false,
+      possibleGenerations: ['opus-5'],
+      capabilitiesSource: 'claude-model-alias-table:bedrock-agent-platform',
+    });
+
+    const foundryOpus = materializeClaudeAgent({
+      agent,
+      target: { model: 'opus', effort: 'max', owner: 'project-config' },
+      env: { CLAUDE_CODE_USE_FOUNDRY: '1' },
+    });
+    expect(foundryOpus.target.capabilityEvidence).toMatchObject({
+      exactModel: false,
+      possibleGenerations: ['opus-4-6'],
+      supportedEfforts: ['low', 'medium', 'high', 'max'],
+    });
+  });
+
+  it('uses declared capabilities for custom Bedrock and Foundry pins', () => {
+    const agent = parseCanonicalAgentMarkdown(
+      '---\nname: oat-reviewer\ndescription: Review changes.\n---\n\nBody',
+    );
+    const bedrockArn =
+      'arn:aws:bedrock:us-east-1:123456789012:inference-profile/custom-opus';
+    const bedrock = materializeClaudeAgent({
+      agent,
+      target: { model: 'opus', effort: 'xhigh', owner: 'project-config' },
+      env: {
+        CLAUDE_CODE_USE_BEDROCK: '1',
+        ANTHROPIC_DEFAULT_OPUS_MODEL: bedrockArn,
+        ANTHROPIC_DEFAULT_OPUS_MODEL_SUPPORTED_CAPABILITIES:
+          'effort,xhigh_effort,max_effort',
+      },
+    });
+    expect(bedrock.target.capabilityEvidence).toEqual({
+      source: 'family-pin-declaration',
+      modelReference: bedrockArn,
+      exactModel: false,
+      capabilitiesSource: 'ANTHROPIC_DEFAULT_OPUS_MODEL_SUPPORTED_CAPABILITIES',
+      supportedEfforts: ['low', 'medium', 'high', 'xhigh', 'max'],
+    });
+
+    const foundry = materializeClaudeAgent({
+      agent,
+      target: { model: 'sonnet', effort: 'high', owner: 'project-config' },
+      env: {
+        CLAUDE_CODE_USE_FOUNDRY: '1',
+        ANTHROPIC_DEFAULT_SONNET_MODEL: 'prod-sonnet-deployment',
+        ANTHROPIC_DEFAULT_SONNET_MODEL_SUPPORTED_CAPABILITIES: 'effort',
+      },
+    });
+    expect(foundry.target.capabilityEvidence).toMatchObject({
+      source: 'family-pin-declaration',
+      modelReference: 'prod-sonnet-deployment',
+      supportedEfforts: ['low', 'medium', 'high'],
+    });
+    expect(() =>
+      materializeClaudeAgent({
+        agent,
+        target: { model: 'sonnet', effort: 'xhigh', owner: 'project-config' },
+        env: {
+          ANTHROPIC_DEFAULT_SONNET_MODEL: 'prod-sonnet-deployment',
+          ANTHROPIC_DEFAULT_SONNET_MODEL_SUPPORTED_CAPABILITIES: 'effort',
+        },
+      }),
+    ).toThrow(/does not support effort "xhigh"/iu);
+    expect(() =>
+      materializeClaudeAgent({
+        agent,
+        target: { model: 'opus', effort: 'high', owner: 'project-config' },
+        env: { ANTHROPIC_DEFAULT_OPUS_MODEL: bedrockArn },
+      }),
+    ).toThrow(/does not establish effort support/iu);
+    expect(() =>
+      materializeClaudeAgent({
+        agent,
+        target: { model: 'opus', effort: 'xhigh', owner: 'project-config' },
+        env: {
+          ANTHROPIC_DEFAULT_OPUS_MODEL: bedrockArn,
+          ANTHROPIC_DEFAULT_OPUS_MODEL_SUPPORTED_CAPABILITIES: 'xhigh_effort',
+        },
+      }),
+    ).toThrow(/must include effort/iu);
   });
 
   it('refuses unmanaged cross-directory collisions', async () => {

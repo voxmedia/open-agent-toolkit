@@ -374,8 +374,12 @@ test('versioned capabilities fail closed while model-only and inherit paths rema
   );
   assert.equal(supported.status, 0, supported.stderr);
   assert.equal(
-    supported.payload.providers.claude.target.resolvedModel,
+    supported.payload.providers.claude.target.capabilityEvidence.generation,
     'sonnet-5',
+  );
+  assert.equal(
+    supported.payload.providers.claude.target.capabilityEvidence.exactModel,
+    true,
   );
   const supportedDefinition = definitionFor(
     'oat-phase-implementer',

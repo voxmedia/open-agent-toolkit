@@ -8,6 +8,7 @@ import YAML from 'yaml';
 import {
   buildClaudeEffortVariantName,
   normalizeClaudeRoleName,
+  type ClaudeCapabilityEvidence,
   validateClaudeDispatchCapability,
 } from '../targets';
 
@@ -16,7 +17,7 @@ export type ClaudeRoleOwner = 'user-config' | 'project-config';
 export interface ClaudeMaterializationTarget {
   model: string;
   effort: string;
-  resolvedModel?: string;
+  capabilityEvidence?: ClaudeCapabilityEvidence;
   owner: ClaudeRoleOwner;
 }
 
@@ -37,14 +38,14 @@ const DISCOVERY_DIRECTORIES = [
 function managedComments(
   roleName: string,
   owner: ClaudeRoleOwner,
-  resolvedModel: string,
+  capabilityEvidence: ClaudeCapabilityEvidence,
 ): string[] {
   return [
     '# oat-managed: true',
     `# oat-role: ${roleName}`,
     `# oat-owner: ${owner}`,
     '# oat-provider: claude',
-    `# oat-resolved-model: ${resolvedModel}`,
+    `# oat-capability-evidence: ${JSON.stringify(capabilityEvidence)}`,
   ];
 }
 
@@ -66,7 +67,7 @@ function frontmatter(
 export function readOatManagedClaudeRole(content: string): {
   roleName: string;
   owner: ClaudeRoleOwner;
-  resolvedModel?: string;
+  capabilityEvidence?: ClaudeCapabilityEvidence;
 } | null {
   const parsed = frontmatter(content);
   if (!parsed) return null;
@@ -79,12 +80,23 @@ export function readOatManagedClaudeRole(content: string): {
   const owner = /^# oat-owner: (user-config|project-config)$/m.exec(
     parsed.yaml,
   )?.[1] as ClaudeRoleOwner | undefined;
-  const resolvedModel =
-    /^# oat-resolved-model: ([a-z0-9]+(?:-[a-z0-9]+)*)$/m.exec(
-      parsed.yaml,
-    )?.[1];
+  const evidenceJson = /^# oat-capability-evidence: (\{.+\})$/m.exec(
+    parsed.yaml,
+  )?.[1];
+  let capabilityEvidence: ClaudeCapabilityEvidence | undefined;
+  if (evidenceJson) {
+    try {
+      capabilityEvidence = JSON.parse(evidenceJson) as ClaudeCapabilityEvidence;
+    } catch {
+      // Malformed evidence makes the role stale but does not hide its ownership.
+    }
+  }
   return managed && provider && role && owner
-    ? { roleName: role, owner, ...(resolvedModel ? { resolvedModel } : {}) }
+    ? {
+        roleName: role,
+        owner,
+        ...(capabilityEvidence ? { capabilityEvidence } : {}),
+      }
     : null;
 }
 
@@ -99,10 +111,10 @@ export function materializeClaudeAgent(options: {
   );
   if (!validation.valid)
     throw new CliError(validation.reason ?? 'Invalid Claude target.');
-  const resolvedModel = validation.resolvedModel;
-  if (!resolvedModel) {
+  const capabilityEvidence = validation.capabilityEvidence;
+  if (!capabilityEvidence) {
     throw new CliError(
-      'Claude effort target has no resolved model capability.',
+      'Claude effort target has no validated capability evidence.',
     );
   }
   const roleName = buildClaudeEffortVariantName({
@@ -123,9 +135,9 @@ export function materializeClaudeAgent(options: {
   return {
     roleName,
     fileName: `${roleName}.md`,
-    content: `---\n${managedComments(roleName, options.target.owner, resolvedModel).join('\n')}\n${rendered}\n---\n${options.agent.body}`,
+    content: `---\n${managedComments(roleName, options.target.owner, capabilityEvidence).join('\n')}\n${rendered}\n---\n${options.agent.body}`,
     owner: options.target.owner,
-    target: { ...options.target, resolvedModel },
+    target: { ...options.target, capabilityEvidence },
   };
 }
 
