@@ -54,6 +54,10 @@ No separate design artifact was required for this quick workflow. Final review a
 - Planning entry points consider only their own configured gate plus downstream implementation, while preserving settings for workflows that are not active.
 - Verification passed the full repository and release sequence after p05: check, type-check, test, build, skill-bump validation, origin-aware version validation, release validation, docs build, lint, and format. Live probes covered medium/high selection, capped review, inheritance, and runtime divergence.
 
+## Explainer Outcome
+
+- **project-recap:** skipped — the user chose to use the completed summary and PR without an additional recap package.
+
 ## Follow-up Items
 
 - Consider replacing order-sensitive `JSON.stringify` comparisons in the Claude target and dispatch-envelope paths with a canonical structural comparison if a real producer begins emitting equivalent objects in a different key order. The current paths produce canonical order and fail closed, so this remains a Low-priority deferred cleanup.
