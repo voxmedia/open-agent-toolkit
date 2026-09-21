@@ -8,13 +8,14 @@ import { z } from 'zod';
 import { readOatManagedClaudeRole } from './codec/materialize';
 import {
   buildClaudeEffortVariantName,
-  validateClaudeDispatchTarget,
+  validateClaudeDispatchCapability,
 } from './targets';
 
 const targetSchema = z
   .object({
     model: z.string().min(1),
     effort: z.string().min(1),
+    resolvedModel: z.string().min(1),
     crossHarness: z.literal(false),
   })
   .passthrough();
@@ -80,6 +81,7 @@ export interface AcceptedClaudeLaunchEnvelope {
   baseRole: 'oat-phase-implementer' | 'oat-reviewer';
   variant: string;
   model: string;
+  resolvedModel: string;
   effort: string;
   policy: string;
   ceiling: string;
@@ -127,7 +129,9 @@ export function acceptClaudeLaunchEnvelope(input: {
   const launch = launchPayloadSchema.parse(input.launch);
   assertSameTarget(provider.target, provider.selection.target);
 
-  const validation = validateClaudeDispatchTarget(provider.selection.target);
+  const validation = validateClaudeDispatchCapability(
+    provider.selection.target,
+  );
   if (!validation.valid) {
     throw new Error(
       validation.reason ?? 'Resolver selected an invalid Claude target.',
@@ -158,6 +162,11 @@ export function acceptClaudeLaunchEnvelope(input: {
   if (!managed || managed.roleName !== expectedVariant) {
     throw new Error(
       `Generated Claude definition ${expectedVariant} is absent or is not the matching OAT-managed role.`,
+    );
+  }
+  if (managed.resolvedModel !== provider.selection.target.resolvedModel) {
+    throw new Error(
+      `Generated Claude definition resolved model does not match selected capability ${provider.selection.target.resolvedModel}.`,
     );
   }
   const frontmatter = definitionFrontmatter(input.definition);
@@ -198,6 +207,7 @@ export function acceptClaudeLaunchEnvelope(input: {
     baseRole,
     variant: expectedVariant,
     model: provider.selection.target.model,
+    resolvedModel: provider.selection.target.resolvedModel,
     effort: provider.selection.target.effort,
     policy: resolution.policy,
     ceiling: provider.value,
@@ -261,6 +271,7 @@ export function buildClaudeDispatchRecord(input: {
         schemaVersion: input.envelope.schemaVersion,
         variant: input.envelope.variant,
         model: input.envelope.model,
+        resolvedModel: input.envelope.resolvedModel,
         effort: input.envelope.effort,
       },
     ],

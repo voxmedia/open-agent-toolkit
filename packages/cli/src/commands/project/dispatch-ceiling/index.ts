@@ -64,6 +64,7 @@ import {
 import {
   claudeTargetRank,
   CLAUDE_EFFORT_ORDER,
+  validateClaudeDispatchCapability,
   validateClaudeDispatchTarget,
 } from '@providers/claude/targets';
 import {
@@ -213,6 +214,7 @@ interface ResolvedDispatchRouteTarget {
   harness: string;
   model?: string;
   effort?: string;
+  resolvedModel?: string;
   crossHarness: boolean;
   routeIndex: number;
   routeLength: number;
@@ -602,6 +604,52 @@ function routeTargetFromObject(
     crossHarness: harness !== provider,
     routeIndex,
     routeLength,
+  };
+}
+
+function resolveClaudeTargetCapability(
+  target: ResolvedDispatchRouteTarget | null | undefined,
+  env: NodeJS.ProcessEnv,
+): ResolvedDispatchRouteTarget | null | undefined {
+  if (
+    !target ||
+    target.harness !== 'claude' ||
+    !target.model ||
+    !target.effort
+  ) {
+    return target;
+  }
+  const validation = validateClaudeDispatchCapability(
+    {
+      model: target.model,
+      effort: target.effort,
+      ...(target.resolvedModel ? { resolvedModel: target.resolvedModel } : {}),
+    },
+    env,
+  );
+  if (!validation.valid || !validation.resolvedModel) {
+    throw new Error(
+      validation.reason ??
+        'Claude effort target has no established model capability.',
+    );
+  }
+  return { ...target, resolvedModel: validation.resolvedModel };
+}
+
+function resolveClaudePolicyCapabilities(
+  policy: ResolvedDispatchPolicy | null,
+  env: NodeJS.ProcessEnv,
+): ResolvedDispatchPolicy | null {
+  if (!policy) return policy;
+  return {
+    ...policy,
+    target: resolveClaudeTargetCapability(policy.target, env) ?? null,
+    ...(policy.ceilingTarget !== undefined
+      ? {
+          ceilingTarget:
+            resolveClaudeTargetCapability(policy.ceilingTarget, env) ?? null,
+        }
+      : {}),
   };
 }
 
@@ -2268,16 +2316,19 @@ async function resolveDispatchCeiling(
   const policyResolution =
     readResolvedConfigCeiling(provider, resolvedConfig) ??
     (await resolveProjectStateCeiling(provider, projectPath, dependencies));
-  const resolvedValue = await resolveCeilingValue(
-    provider,
-    resolvedConfig,
-    projectPath,
-    dependencies,
-    escalationLevel,
-    role,
-    preferredValue,
-    requestedCandidate,
-    ceilingTier,
+  const resolvedValue = resolveClaudePolicyCapabilities(
+    await resolveCeilingValue(
+      provider,
+      resolvedConfig,
+      projectPath,
+      dependencies,
+      escalationLevel,
+      role,
+      preferredValue,
+      requestedCandidate,
+      ceilingTier,
+    ),
+    dependencies.processEnv,
   );
   for (const warning of resolvedValue?.warnings ?? []) {
     context.logger.warn(warning);

@@ -183,7 +183,11 @@ describe('provider ceiling adapters', () => {
       ).toBeNull();
       expect(
         claude.compileToDispatchArgs('sonnet', 'implementer', {
-          target: { model: 'sonnet', effort: 'xhigh' },
+          target: {
+            model: 'sonnet',
+            effort: 'xhigh',
+            resolvedModel: 'claude-sonnet-4-6',
+          },
         }),
       ).toBeNull();
     });

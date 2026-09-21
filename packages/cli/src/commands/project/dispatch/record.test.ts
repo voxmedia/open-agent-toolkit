@@ -134,6 +134,7 @@ function managedClaudeResolution(
   const target = {
     harness: 'claude',
     model: 'sonnet',
+    resolvedModel: 'sonnet-5',
     effort,
     crossHarness: false,
   };
@@ -330,6 +331,7 @@ describe('managed Claude launch production boundary', () => {
           schemaVersion: 1,
           variant,
           model: 'sonnet',
+          resolvedModel: 'sonnet-5',
           effort,
         },
       ]);

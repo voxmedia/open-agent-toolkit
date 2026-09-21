@@ -6,7 +6,7 @@ import { getOwnKey } from '@config/own-keys';
 import {
   buildClaudeEffortVariantName,
   CLAUDE_MODEL_ORDER,
-  validateClaudeDispatchTarget,
+  validateClaudeDispatchCapability,
 } from '@providers/claude/targets';
 import { buildCodexMaterializedTargetRoleName } from '@providers/codex/codec/shared';
 import { findCursorModelPinMapping } from '@providers/cursor/codec/catalog';
@@ -38,6 +38,7 @@ export interface CeilingCompileContext {
   target?: {
     model?: string;
     effort?: string;
+    resolvedModel?: string;
   } | null;
 }
 
@@ -140,17 +141,18 @@ const claudeAdapter: ProviderCeilingAdapter = {
   mechanism: 'model-arg',
   selectionAxis: 'tier',
   compileToDispatchArgs(value, role, ctx) {
-    if (
-      isDirectDispatchRoleName(value) ||
-      !VALID_CLAUDE_DISPATCH_CEILINGS.includes(value as never)
-    ) {
-      return null;
-    }
+    if (isDirectDispatchRoleName(value)) return null;
     const target = ctx.target;
     if (target?.effort) {
       const model = target.model ?? value;
       if (
-        !validateClaudeDispatchTarget({ model, effort: target.effort }).valid
+        !validateClaudeDispatchCapability({
+          model,
+          effort: target.effort,
+          ...(target.resolvedModel
+            ? { resolvedModel: target.resolvedModel }
+            : {}),
+        }).valid
       ) {
         return null;
       }
@@ -163,7 +165,15 @@ const claudeAdapter: ProviderCeilingAdapter = {
         }),
       };
     }
-    return { model: target?.model ?? value };
+    const model = target?.model ?? value;
+    if (
+      !target?.model &&
+      !VALID_CLAUDE_DISPATCH_CEILINGS.includes(value as never)
+    ) {
+      return null;
+    }
+    if (!validateClaudeDispatchCapability({ model }).valid) return null;
+    return { model };
   },
   // Verify only when the request is above the orchestrator tier (upgrade path).
   verifyOnDispatch(value, ctx) {

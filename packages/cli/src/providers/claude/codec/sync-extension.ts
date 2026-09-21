@@ -289,7 +289,11 @@ export async function computeClaudeProjectExtensionPlan(
       );
     }
   }
-  const roles = materializeClaudeAgents({ agents, targets });
+  const roles = materializeClaudeAgents({
+    agents,
+    targets,
+    env: options.env,
+  });
   const desired = new Set(roles.map(({ roleName }) => roleName));
   await assertNoUnmanagedClaudeAgentCollisions(scopeRoot, desired);
   const stale = partial

@@ -348,11 +348,17 @@ test('same-model candidates resolve by effort and refuse absent or conflicting l
   );
 });
 
-test('invalid effort pairs fail closed while model-only and inherit paths remain unpinned', () => {
-  const unsupported = resolveDispatch(
+test('versioned capabilities fail closed while model-only and inherit paths remain unpinned', () => {
+  const supported = resolveDispatch(
     config('high', {
       high: {
-        candidates: [{ harness: 'claude', model: 'sonnet', effort: 'xhigh' }],
+        candidates: [
+          {
+            harness: 'claude',
+            model: 'claude-sonnet-5',
+            effort: 'xhigh',
+          },
+        ],
       },
     }),
     [
@@ -361,7 +367,48 @@ test('invalid effort pairs fail closed while model-only and inherit paths remain
       '--role',
       'implementer',
       '--candidate-model',
-      'sonnet',
+      'claude-sonnet-5',
+      '--candidate-effort',
+      'xhigh',
+    ],
+  );
+  assert.equal(supported.status, 0, supported.stderr);
+  assert.equal(
+    supported.payload.providers.claude.target.resolvedModel,
+    'sonnet-5',
+  );
+  const supportedDefinition = definitionFor(
+    'oat-phase-implementer',
+    'claude-sonnet-5',
+    'xhigh',
+  );
+  const supportedRecord = productionRecord({
+    role: 'oat-phase-implementer',
+    resolution: supported.payload,
+    definition: supportedDefinition.content,
+    payload: { variant: supportedDefinition.roleName },
+  });
+  assert.equal(supportedRecord.effort_selector, 'xhigh');
+
+  const unsupported = resolveDispatch(
+    config('high', {
+      high: {
+        candidates: [
+          {
+            harness: 'claude',
+            model: 'claude-sonnet-4-6',
+            effort: 'xhigh',
+          },
+        ],
+      },
+    }),
+    [
+      '--provider',
+      'claude',
+      '--role',
+      'implementer',
+      '--candidate-model',
+      'claude-sonnet-4-6',
       '--candidate-effort',
       'xhigh',
     ],

@@ -8,7 +8,7 @@ import YAML from 'yaml';
 import {
   buildClaudeEffortVariantName,
   normalizeClaudeRoleName,
-  validateClaudeDispatchTarget,
+  validateClaudeDispatchCapability,
 } from '../targets';
 
 export type ClaudeRoleOwner = 'user-config' | 'project-config';
@@ -16,6 +16,7 @@ export type ClaudeRoleOwner = 'user-config' | 'project-config';
 export interface ClaudeMaterializationTarget {
   model: string;
   effort: string;
+  resolvedModel?: string;
   owner: ClaudeRoleOwner;
 }
 
@@ -33,12 +34,17 @@ const DISCOVERY_DIRECTORIES = [
   { path: '.codex/agents', extension: '.toml' },
 ] as const;
 
-function managedComments(roleName: string, owner: ClaudeRoleOwner): string[] {
+function managedComments(
+  roleName: string,
+  owner: ClaudeRoleOwner,
+  resolvedModel: string,
+): string[] {
   return [
     '# oat-managed: true',
     `# oat-role: ${roleName}`,
     `# oat-owner: ${owner}`,
     '# oat-provider: claude',
+    `# oat-resolved-model: ${resolvedModel}`,
   ];
 }
 
@@ -60,6 +66,7 @@ function frontmatter(
 export function readOatManagedClaudeRole(content: string): {
   roleName: string;
   owner: ClaudeRoleOwner;
+  resolvedModel?: string;
 } | null {
   const parsed = frontmatter(content);
   if (!parsed) return null;
@@ -72,18 +79,32 @@ export function readOatManagedClaudeRole(content: string): {
   const owner = /^# oat-owner: (user-config|project-config)$/m.exec(
     parsed.yaml,
   )?.[1] as ClaudeRoleOwner | undefined;
+  const resolvedModel =
+    /^# oat-resolved-model: ([a-z0-9]+(?:-[a-z0-9]+)*)$/m.exec(
+      parsed.yaml,
+    )?.[1];
   return managed && provider && role && owner
-    ? { roleName: role, owner }
+    ? { roleName: role, owner, ...(resolvedModel ? { resolvedModel } : {}) }
     : null;
 }
 
 export function materializeClaudeAgent(options: {
   agent: CanonicalAgentDocument;
   target: ClaudeMaterializationTarget;
+  env?: NodeJS.ProcessEnv;
 }): ClaudeMaterializedAgent {
-  const validation = validateClaudeDispatchTarget(options.target);
+  const validation = validateClaudeDispatchCapability(
+    options.target,
+    options.env,
+  );
   if (!validation.valid)
     throw new CliError(validation.reason ?? 'Invalid Claude target.');
+  const resolvedModel = validation.resolvedModel;
+  if (!resolvedModel) {
+    throw new CliError(
+      'Claude effort target has no resolved model capability.',
+    );
+  }
   const roleName = buildClaudeEffortVariantName({
     agentName: options.agent.name,
     model: options.target.model,
@@ -102,18 +123,21 @@ export function materializeClaudeAgent(options: {
   return {
     roleName,
     fileName: `${roleName}.md`,
-    content: `---\n${managedComments(roleName, options.target.owner).join('\n')}\n${rendered}\n---\n${options.agent.body}`,
+    content: `---\n${managedComments(roleName, options.target.owner, resolvedModel).join('\n')}\n${rendered}\n---\n${options.agent.body}`,
     owner: options.target.owner,
-    target: options.target,
+    target: { ...options.target, resolvedModel },
   };
 }
 
 export function materializeClaudeAgents(options: {
   agents: CanonicalAgentDocument[];
   targets: ClaudeMaterializationTarget[];
+  env?: NodeJS.ProcessEnv;
 }): ClaudeMaterializedAgent[] {
   const roles = options.agents.flatMap((agent) =>
-    options.targets.map((target) => materializeClaudeAgent({ agent, target })),
+    options.targets.map((target) =>
+      materializeClaudeAgent({ agent, target, env: options.env }),
+    ),
   );
   const names = new Set<string>();
   for (const role of roles) {

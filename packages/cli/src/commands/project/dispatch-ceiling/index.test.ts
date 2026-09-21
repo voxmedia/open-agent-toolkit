@@ -3574,20 +3574,109 @@ describe('oat project dispatch-ceiling resolve', () => {
   });
 
   it.each([
+    ['claude-sonnet-5', 'xhigh', 'sonnet-5'],
+    ['sonnet', 'low', 'sonnet-5'],
+    ['sonnet', 'max', 'sonnet-5'],
+    ['opus', 'low', 'opus-5'],
+    ['fable', 'low', 'fable-5-1'],
+    ['fable', 'medium', 'fable-5-1'],
+  ])(
+    'resolves documented Claude capability %s/%s as %s',
+    async (model, effort, resolvedModel) => {
+      const { root, home } = await setup();
+      const candidates = [{ harness: 'claude', model, effort }];
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: {
+          dispatchPolicy: { mode: 'managed', policy: 'high' },
+          dispatchCeiling: { providers: { claude: { high: { candidates } } } },
+        },
+      });
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'claude',
+        '--candidate-model',
+        model,
+        '--candidate-effort',
+        effort,
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'resolved',
+        providers: {
+          claude: {
+            target: { model, effort, resolvedModel },
+            selection: { target: { model, effort, resolvedModel } },
+          },
+        },
+      });
+      expect(process.exitCode).toBe(0);
+    },
+  );
+
+  it('rejects a provider-ambiguous alias capability without an explicit family pin', async () => {
+    const { root, home } = await setup();
+    const candidates = [
+      { harness: 'claude', model: 'sonnet', effort: 'xhigh' },
+    ];
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchPolicy: { mode: 'managed', policy: 'high' },
+        dispatchCeiling: { providers: { claude: { high: { candidates } } } },
+      },
+    });
+
+    const { command, capture } = createHarness({
+      cwd: root,
+      home,
+      processEnv: { ANTHROPIC_BASE_URL: 'https://gateway.example.test' },
+    });
+    await runCommand(command, [
+      '--provider',
+      'claude',
+      '--candidate-model',
+      'sonnet',
+      '--candidate-effort',
+      'xhigh',
+      '--json',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({ status: 'error' });
+    expect(capture.jsonPayloads[0]?.message).toMatch(
+      /ambiguous provider-dependent generation.*ANTHROPIC_DEFAULT_SONNET_MODEL/u,
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
+  it.each([
     {
       candidates: [
         { harness: 'claude', model: 'opus', effort: 'high' },
         { harness: 'claude', model: 'opus', effort: 'medium' },
       ],
       message: 'Claude candidates must be nondecreasing',
+      candidateModel: 'opus',
+      candidateEffort: 'high',
     },
     {
-      candidates: [{ harness: 'claude', model: 'sonnet', effort: 'xhigh' }],
+      candidates: [
+        {
+          harness: 'claude',
+          model: 'claude-sonnet-4-6',
+          effort: 'xhigh',
+        },
+      ],
       message: 'does not support effort',
+      candidateModel: 'claude-sonnet-4-6',
+      candidateEffort: 'xhigh',
     },
   ])(
     'rejects invalid Claude effort ladders: $message',
-    async ({ candidates, message }) => {
+    async ({ candidates, message, candidateModel, candidateEffort }) => {
       const { root, home } = await setup();
       await writeJson(join(root, '.oat', 'config.json'), {
         version: 1,
@@ -3602,9 +3691,9 @@ describe('oat project dispatch-ceiling resolve', () => {
         '--provider',
         'claude',
         '--candidate-model',
-        'opus',
+        candidateModel,
         '--candidate-effort',
-        'high',
+        candidateEffort,
         '--json',
       ]);
 
@@ -3623,7 +3712,13 @@ describe('oat project dispatch-ceiling resolve', () => {
       message: 'Claude candidates must be nondecreasing',
     },
     {
-      candidates: [{ harness: 'claude', model: 'sonnet', effort: 'xhigh' }],
+      candidates: [
+        {
+          harness: 'claude',
+          model: 'claude-sonnet-4-6',
+          effort: 'xhigh',
+        },
+      ],
       message: 'does not support effort',
     },
   ])(

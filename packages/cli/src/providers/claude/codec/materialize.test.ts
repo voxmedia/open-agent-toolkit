@@ -44,6 +44,50 @@ describe('Claude effort materializer', () => {
     );
     expect(parsed).not.toHaveProperty('version');
     expect(role.content.slice(match[0].length)).toBe(agent.body);
+    expect(role.content).toContain('# oat-resolved-model: opus-5');
+  });
+
+  it.each([
+    ['claude-sonnet-5', 'xhigh', 'sonnet-5'],
+    ['claude-opus-5', 'low', 'opus-5'],
+    ['claude-fable-5-1', 'low', 'fable-5-1'],
+    ['claude-fable-5', 'medium', 'fable-5'],
+  ])(
+    'materializes documented capability %s/%s',
+    (model, effort, resolvedModel) => {
+      const agent = parseCanonicalAgentMarkdown(
+        '---\nname: oat-reviewer\ndescription: Review changes.\n---\n\nBody',
+      );
+      const role = materializeClaudeAgent({
+        agent,
+        target: { model, effort, owner: 'project-config' },
+      });
+      expect(role.target.resolvedModel).toBe(resolvedModel);
+      expect(role.content).toContain(`# oat-resolved-model: ${resolvedModel}`);
+    },
+  );
+
+  it('rejects Sonnet 4.6 xhigh and unresolved gateway aliases', () => {
+    const agent = parseCanonicalAgentMarkdown(
+      '---\nname: oat-reviewer\ndescription: Review changes.\n---\n\nBody',
+    );
+    expect(() =>
+      materializeClaudeAgent({
+        agent,
+        target: {
+          model: 'claude-sonnet-4-6',
+          effort: 'xhigh',
+          owner: 'project-config',
+        },
+      }),
+    ).toThrow(/sonnet-4-6.*does not support effort "xhigh"/iu);
+    expect(() =>
+      materializeClaudeAgent({
+        agent,
+        target: { model: 'sonnet', effort: 'xhigh', owner: 'project-config' },
+        env: { ANTHROPIC_BASE_URL: 'https://gateway.example.test' },
+      }),
+    ).toThrow(/ambiguous provider-dependent generation/iu);
   });
 
   it('refuses unmanaged cross-directory collisions', async () => {
