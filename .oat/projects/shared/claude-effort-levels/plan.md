@@ -226,7 +226,8 @@ Then run each separately with its own captured exit code: `pnpm test:smoke`, `pn
 
 | Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target |
 | ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
-| p01    | code     | fixes_added     | 2026-09-21 | reviews/p01-review-2026-09-21T005952Z.md                    | 10474030164d29fa52db1e367c9145c13a87ebb8 | phase      | -           |
+| p01    | code     | fixes_completed | 2026-09-21 | reviews/p01-review-2026-09-21T005952Z.md                    | 10474030164d29fa52db1e367c9145c13a87ebb8 | phase      | -           |
+| p01    | code     | passed          | 2026-09-21 | reviews/p01-review-2026-09-21T012030Z.md                    | ad56e6c56c40f547c9ebf8519a4609d6ed787720 | phase      | -           |
 | p02    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | final  | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -           |
@@ -240,13 +241,13 @@ Spec and design rows are retained from the scaffold for compatibility and are no
 
 ## Implementation Complete
 
-Implementation has not started.
+Phase p01 is complete and independently reviewed. Phases p02 and p03 remain.
 
 - Phase 1: 2 tasks — resolver and generated-role lifecycle.
 - Phase 2: 4 tasks — awareness, recommendations, documentation/decision alignment, and relevant lifecycle-gate prompts.
 - Phase 3: 3 tasks — negative controls, live acceptance, release verification.
 
-**Total: 9 tasks; 0 complete.** This section is a planned rollup, not a completion claim.
+**Total: 9 tasks; 2 complete.**
 
 ## References
 

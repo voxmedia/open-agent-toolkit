@@ -3,22 +3,22 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-20
-oat_current_task_id: p01-t02
+oat_current_task_id: p02-t01
 oat_generated: false
 oat_template: false
 ---
 
 # Implementation: claude-effort-levels
 
-Implementation is in progress. Phase p01 is the first executable phase.
+Implementation is in progress. Phase p01 passed independent review; phase p02 is next.
 
 ## Progress Overview
 
-| Phase                                    | Status            | Tasks | Completed |
-| ---------------------------------------- | ----------------- | ----- | --------- |
-| p01 — Resolve and materialize            | fixes_in_progress | 2     | 2/2       |
-| p02 — Guidance and recommendations       | pending           | 4     | 0/4       |
-| p03 — Verification and release readiness | pending           | 3     | 0/3       |
+| Phase                                    | Status    | Tasks | Completed |
+| ---------------------------------------- | --------- | ----- | --------- |
+| p01 — Resolve and materialize            | completed | 2     | 2/2       |
+| p02 — Guidance and recommendations       | pending   | 4     | 0/4       |
+| p03 — Verification and release readiness | pending   | 3     | 0/3       |
 
 **Total: 2/9 tasks completed.**
 
@@ -49,7 +49,7 @@ Implementation is in progress. Phase p01 is the first executable phase.
 - Optional cross-runtime phase review gate: disabled.
 - Tier: 1, exact native OAT phase implementer and reviewer variants.
 - Dispatch policy: managed High from project state; phase targets selected at or below that ceiling.
-- Current phase: p01.
+- Current phase: p02.
 - Phase implementation request: `claude-effort-p01-implementation-01`; accepted natively as `oat-phase-implementer-gpt-5-6-sol-medium`.
 - Dispatch: `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-medium`.
 - Selection: `default-implementation`, preferred medium; exact candidate `gpt-5.6-sol/medium` beneath the High ceiling. Candidates considered: Luna/high, Luna/xhigh, Terra/high, Sol/medium, Sol/high. Selection reason: native catalog.
@@ -63,6 +63,10 @@ Implementation is in progress. Phase p01 is the first executable phase.
 - Review artifact: `reviews/p01-review-2026-09-21T005952Z.md`; reviewed head `10474030164d29fa52db1e367c9145c13a87ebb8`; invocation `phase`.
 - Reconnaissance: attempted. The artifact contains a complete `## Review Orchestration` section for two intelligent-recon lanes, their Terra/high target, acceptance/outcome, floor satisfaction, fallback, and primary reconciliation. Its structural log entry is deferred to the terminal p01 outcome as required.
 - Review verdict: blocked with 0 Critical, 2 High, 2 Medium, 0 Low. High findings cover reviewer-path ladder validation and filtered tool removal; Medium findings cover human effort-axis output and Codex TOML collision discovery. Bounded fix round 1 is next through the original p01 implementer handle.
+- Fix round 1 resumed the original p01 handle at the same Sol/medium target. Commit `ad56e6c56c40f547c9ebf8519a4609d6ed787720` resolved all four findings; combined focused tests 356/356 and full CLI tests 7,467/7,467 passed with check, type-check, and build.
+- Re-review request `claude-effort-p01-review-02` used a fresh `oat-reviewer-gpt-5-6-sol-high` round against updated head `ad56e6c56c40f547c9ebf8519a4609d6ed787720`.
+- Re-review artifact: `reviews/p01-review-2026-09-21T012030Z.md`; `**Reconnaissance:** not-attempted`; no `## Review Orchestration` section. Verdict passed with 0 Critical, 0 High, 0 Medium, 0 Low; all four prior findings independently verified resolved.
+- Phase outcome: passed after one fix iteration. Structural project-log entry `p01-outcome-run1-20260921T012030Z` records the terminal outcome and references the attempted-recon review artifact without mirroring worker records.
 
 <!-- orchestration-runs-end -->
 

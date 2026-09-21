@@ -48,6 +48,10 @@ target=cursor-fable-5-1-high threshold=high findings=critical:0,high:0,medium:1,
 
 target=cursor-fable-5-1-high threshold=high findings=critical:0,high:0,medium:0,low:2 exit=0 status=ok artifact=.oat/projects/shared/claude-effort-levels/reviews/artifact-plan-review-2026-09-21T000015Z.md run=4b0b73b8-93d9-4bd5-bfb3-0f43e55b9dfe
 
+### 2026-09-21 · structural · oat-project-implement · p01
+
+p01 passed after one bounded fix iteration; first review orchestration is recorded in reviews/p01-review-2026-09-21T005952Z.md; clean re-review: reviews/p01-review-2026-09-21T012030Z.md; idempotency p01-outcome-run1-20260921T012030Z
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
