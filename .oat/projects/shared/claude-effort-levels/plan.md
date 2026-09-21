@@ -264,6 +264,7 @@ Then run each separately with its own captured exit code: `pnpm test:smoke`, `pn
 | p03    | code     | passed          | 2026-09-21 | reviews/p03-review-2026-09-21T040439Z.md                    | 3a5d9904739284c6c660fae75118efeb651324a8 | phase      | -           |
 | p04    | code     | fixes_completed | 2026-09-21 | reviews/p04-review-2026-09-21T134100Z.md                    | 7ff3bb101d641f2e273679b68d44868ac97141fa | phase      | -           |
 | p04    | code     | fixes_completed | 2026-09-21 | reviews/p04-review-2026-09-21T140558Z.md                    | 431c845ead1f668089401772cb64326dde9e7a2c | phase      | -           |
+| p04    | code     | passed          | 2026-09-21 | reviews/p04-review-2026-09-21T143647Z.md                    | ee5c8ef6a34c11de56fd7363540d77fc5246a26c | phase      | -           |
 | plan   | artifact | passed          | 2026-09-20 | -                                                           | -                                        | -          | -           |
 | plan   | artifact | fixes_completed | 2026-09-20 | reviews/archived/artifact-plan-review-2026-09-20T235147Z.md | -                                        | -          | -           |
 | plan   | artifact | fixes_completed | 2026-09-21 | reviews/archived/artifact-plan-review-2026-09-21T000015Z.md | -                                        | -          | -           |
@@ -274,13 +275,14 @@ Phase p02 passed with 0 Critical, 0 High, 0 Medium, and 1 Low after all five fir
 
 ## Implementation Complete
 
-All nine planned tasks are implemented, and phases p01 through p03 passed independent review. Final lifecycle review and the configured implementation exit gate remain before closeout.
+All eleven planned tasks are implemented, and phases p01 through p04 passed independent review. A fresh final lifecycle review and the configured implementation exit gate remain before closeout.
 
 - Phase 1: 2 tasks — resolver and generated-role lifecycle.
 - Phase 2: 4 tasks — awareness, recommendations, documentation/decision alignment, and relevant lifecycle-gate prompts.
 - Phase 3: 3 tasks — negative controls, live acceptance, release verification.
+- Phase 4: 2 tasks — version-aware Claude effort validation and provider-registry guidance.
 
-**Total: 9 tasks; 9 implemented.**
+**Total: 11 tasks; 11 implemented.**
 
 ## References
 
