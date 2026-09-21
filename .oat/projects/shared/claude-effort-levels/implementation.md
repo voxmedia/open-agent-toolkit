@@ -3,14 +3,14 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-21
-oat_current_task_id: null
+oat_current_task_id: p05-t01
 oat_generated: false
 oat_template: false
 ---
 
 # Implementation: claude-effort-levels
 
-The first final review found one High capability-modeling defect and one Low architecture-comment defect. The user selected Fix now for the Low finding. Phase p04 implemented both corrections and passed its third independent review cycle. A fresh final review and the configured implementation exit gate remain.
+The original final-review findings are resolved and phase p04 passed. A fresh final lifecycle review then passed cleanly. The configured exit gate passed its High threshold and converted one Medium documentation-alignment finding plus three wording-oriented Lows into p05-t01; one low-risk structural-comparison cleanup is explicitly deferred.
 
 ## Progress Overview
 
@@ -20,8 +20,9 @@ The first final review found one High capability-modeling defect and one Low arc
 | p02 — Guidance and recommendations       | completed | 4     | 4/4       |
 | p03 — Verification and release readiness | completed | 3     | 3/3       |
 | p04 — Final review fixes                 | completed | 2     | 2/2       |
+| p05 — Capability documentation alignment | pending   | 1     | 0/1       |
 
-**Total: 11/11 tasks completed.**
+**Total: 11/12 tasks completed.**
 
 ## Task Status
 
@@ -38,6 +39,7 @@ The first final review found one High capability-modeling defect and one Low arc
 | p03-t03 | completed | `f278335a77de048a616c3b77536fe21fcb41867b` |
 | p04-t01 | completed | `5f696f161c6025ff5ee01ffac907fd872741c6f3` |
 | p04-t02 | completed | `7bbafcd0aad74a6d0a4d59a3cb3d43459f1a771f` |
+| p05-t01 | pending   | -                                          |
 
 ## Orchestration Runs
 
@@ -138,6 +140,7 @@ The first final review found one High capability-modeling defect and one Low arc
 - Exit-gate launch accepted as run `6e5693ec-5f6c-46a2-b26b-7585321b1903` on target `cursor-fable-5-1-high`; the durable run marker is bound in `state.md`.
 - Exit-gate run `6e5693ec-5f6c-46a2-b26b-7585321b1903` returned a corroborated `ok` envelope at the High threshold with 0 Critical, 0 High, 1 Medium, and 4 Low findings. The result receipt is durable, receive is eligible, and attempt 1 of 2 is consumed.
 - Gate review receive intent persisted for `reviews/final-review-2026-09-21T151012Z.md`, bound to archived destination `reviews/archived/final-review-2026-09-21T151012Z.md`, exact ledger event, and pre-receive head `09f811505ba272edb36f229c0d68eb37ac11dfdc`.
+- Gate review judgment sweep converted the Medium documentation drift plus wording-oriented Lows L1-L3 into p05-t01. L4 is explicitly deferred: every current producer and schema parser emits canonical field order and the launch path fails closed, so a new canonical comparison helper would add code churn without a demonstrated failure. The gate artifact is archived after receive.
 
 <!-- orchestration-runs-end -->
 

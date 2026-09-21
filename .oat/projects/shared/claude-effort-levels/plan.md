@@ -6,7 +6,7 @@ oat_last_updated: 2026-09-20
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_parallel_groups: []
-oat_plan_hill_phases: ['p04']
+oat_plan_hill_phases: ['p05']
 oat_auto_review_at_hill_checkpoints: true
 oat_plan_source: quick
 oat_import_reference: null
@@ -234,6 +234,22 @@ Then run each separately with its own captured exit code: `pnpm test:smoke`, `pn
 
 **Commit:** `docs(p04-t02): correct Claude variant registry guidance`.
 
+## Phase 5: Align Claude Capability Documentation
+
+### Task p05-t01: Document the fail-closed effort capability contract
+
+**Files:** `apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md`, `apps/oat-docs/docs/cli-utilities/configuration.md`, `apps/oat-docs/docs/provider-sync/providers.md`, `.agents/skills/oat-dispatch-subagents/references/provider-claude.md`, and focused documentation/skill validation tests when required.
+
+**Work:** Replace the stale alias-plus-effort CLI example with a recognized versioned model ID. Explain recognized versioned IDs, `ANTHROPIC_DEFAULT_<FAMILY>_MODEL` pins, matching `_SUPPORTED_CAPABILITIES`, host-managed precedence, bare-alias refusal, and model-only compatibility in the user-facing dispatch and configuration docs plus the Claude provider reference. Clarify that legacy model-only routes report a non-applicable per-call effort axis because the Agent API carries no effort argument. Attribute the inherited Cursor recommendation behavior to its earlier recommendation version, and document the deterministic doubled `claude-` slug used when a versioned ID is embedded in a generated variant name rather than renaming existing managed roles.
+
+**Verify:** Reproduce refusal of `opus/medium` and successful resolution of `claude-opus-5/medium`; run docs lint/build, skill validation, skill-bump validation, `git diff --check`, and relevant guidance tests.
+
+**Disposition:** Fix the gate review's Medium and wording-oriented Lows L1-L3 now. Defer L4's key-order-sensitive structural comparison cleanup because all current producers and schema parsing canonicalize field order, the launch path fails closed, and changing comparison machinery after a passing implementation review would add code churn without a demonstrated failure.
+
+**Format:** `pnpm exec oxfmt --write` with the exact changed Markdown and test paths.
+
+**Commit:** `docs(p05-t01): align Claude capability guidance`.
+
 ## Validation Coverage
 
 | Success criterion                              | Owning tasks              |
@@ -245,7 +261,7 @@ Then run each separately with its own captured exit code: `pnpm test:smoke`, `pn
 | SC5 awareness and actual task-based choice     | p02-t01, p03-t02          |
 | SC6 recommendation and adoption                | p02-t02, p04-t01          |
 | SC7 positive/negative/live evidence            | p03-t01, p03-t02          |
-| SC8 decisions, docs, bumps, gates              | p02-t03, p03-t03          |
+| SC8 decisions, docs, bumps, gates              | p02-t03, p03-t03, p05-t01 |
 | SC9 relevant workflow-gate prompts             | p02-t04                   |
 
 ## Reviews
@@ -269,7 +285,7 @@ Then run each separately with its own captured exit code: `pnpm test:smoke`, `pn
 | plan   | artifact | passed          | 2026-09-20 | -                                                           | -                                        | -          | -                     |
 | plan   | artifact | fixes_completed | 2026-09-20 | reviews/archived/artifact-plan-review-2026-09-20T235147Z.md | -                                        | -          | -                     |
 | plan   | artifact | fixes_completed | 2026-09-21 | reviews/archived/artifact-plan-review-2026-09-21T000015Z.md | -                                        | -          | -                     |
-| final  | code     | received        | 2026-09-21 | reviews/final-review-2026-09-21T151012Z.md                  | 20ccadb91af8dda2882035a6f026124fb50eb900 | gate       | cursor-fable-5-1-high |
+| final  | code     | fixes_added     | 2026-09-21 | reviews/archived/final-review-2026-09-21T151012Z.md         | 20ccadb91af8dda2882035a6f026124fb50eb900 | gate       | cursor-fable-5-1-high |
 
 Spec and design rows are retained from the scaffold for compatibility and are not required in this quick workflow. Native structured artifact review passed after one revision. The final configured gate passed its High threshold with 0 Critical, 0 High, 0 Medium, and 2 Low findings. Root received the corroborated artifact and resolved both Low findings in-place: a realistic Cursor `claude-*` collision fixture and fixture-provenance sequencing. The latest row remains `fixes_completed`, not a claim of an independent zero-finding re-review; local plan validation and formatting verify these clarifications. The second gate independently confirmed resolution of all first-gate findings. No unresolved planning findings remain.
 
@@ -277,14 +293,15 @@ Phase p02 passed with 0 Critical, 0 High, 0 Medium, and 1 Low after all five fir
 
 ## Implementation Complete
 
-All eleven planned tasks are implemented, and phases p01 through p04 passed independent review. A fresh final lifecycle review and the configured implementation exit gate remain before closeout.
+Eleven of twelve planned tasks are implemented. Phases p01 through p04 passed independent review; phase p05 contains the configured exit gate's documentation-alignment task.
 
 - Phase 1: 2 tasks — resolver and generated-role lifecycle.
 - Phase 2: 4 tasks — awareness, recommendations, documentation/decision alignment, and relevant lifecycle-gate prompts.
 - Phase 3: 3 tasks — negative controls, live acceptance, release verification.
 - Phase 4: 2 tasks — version-aware Claude effort validation and provider-registry guidance.
+- Phase 5: 1 task — align shipped docs and orchestrator guidance with the fail-closed capability contract.
 
-**Total: 11 tasks; 11 implemented.**
+**Total: 12 tasks; 11 implemented.**
 
 ## References
 
