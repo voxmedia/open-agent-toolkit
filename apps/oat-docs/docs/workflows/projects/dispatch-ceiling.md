@@ -347,11 +347,11 @@ candidate before launch even though the command retains exit code `0`.
 Implementer and fix resolution has two mutually exclusive selection branches:
 
 - **Preferred selection:** pass `--preferred` for legacy scalar ceilings or
-  managed `Uncapped` compatibility. Do not include `--candidate-model` or
-  `--candidate-effort`.
+  managed `Uncapped` model-only compatibility. Do not include
+  `--candidate-model` or `--candidate-effort`.
 - **Exact-candidate selection:** pass `--candidate-model` and, where applicable,
-  `--candidate-effort` for a managed capped phase or fix. Do not include
-  `--preferred`.
+  `--candidate-effort` for a managed capped phase or fix, or for managed
+  `Uncapped` with an explicit model/effort choice. Do not include `--preferred`.
 
 Never combine the branches in one resolver invocation. The exact-candidate
 branch replaces, rather than supplements, preferred selection.

@@ -4680,7 +4680,7 @@ describe('validateOatSkills', () => {
       /effort_axis=selected:<effort>[\s\S]{0,180}resolver output/i,
     );
     expect(claudeRules).toContain(
-      '--candidate-model <preferred-model> --candidate-effort',
+      '--candidate-model <preferred-model> --candidate-effort <preferred-effort>',
     );
     expect(claudeRules).toContain('--task-effort <preferred-effort>');
     expect(claudeRules).toMatch(

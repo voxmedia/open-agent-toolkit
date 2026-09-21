@@ -191,6 +191,21 @@ The durable receipt completed with exit 0 and envelope status `ok`. Run/project/
 
 Receive intent binds gate run `a152776f-dd7b-4c71-884a-b57e337f96ca`, source `reviews/final-review-2026-09-21T232436Z.md`, archive destination `reviews/archived/final-review-2026-09-21T232436Z.md`, the exact final/code Reviews event, and pre-receive head `d0639132db25862ee85e0830cb00acb63a487f16`.
 
+### Final configured gate review received
+
+**Date:** 2026-09-21
+
+**Review artifact:** `reviews/archived/final-review-2026-09-21T232436Z.md`
+
+**Findings:** 0 Critical, 0 High, 0 Medium, 2 Low
+
+**Disposition:** passed at the configured High threshold; both Low findings addressed now
+
+- L1, selection-branch framing (`Minor`): accepted as artifact/documentation alignment. The shared workflow contract and user docs now state that exact-candidate selection applies both to managed capped routes and managed `Uncapped` explicit model/effort choices, while preferred selection retains model-only compatibility.
+- L2, split code span (`Negligible`): accepted as source readability and contract precision. The complete candidate-model/candidate-effort spelling is contiguous, and the skill-contract assertion now pins the full pair.
+
+These passing-gate judgment-sweep fixes change guidance and its prose contract only. They do not alter resolver behavior, and the receive contract does not require another gate cycle for these contained Low fixes.
+
 <!-- orchestration-runs-end -->
 
 ## Planning Log

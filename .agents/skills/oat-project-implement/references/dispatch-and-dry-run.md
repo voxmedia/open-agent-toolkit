@@ -210,13 +210,14 @@ pass through (Codex: `providers.codex.dispatchArgs.variant`; Claude:
 data. For implementer/fix dispatch, use exactly one of two mutually exclusive
 selection paths:
 
-1. **Preferred-selection branch:** pass `--preferred <preferred-value>` when
-   asking the resolver to choose from a preference under an uncapped or other
-   preference-driven policy. Do not include `--candidate-model` or
+1. **Preferred-selection branch:** pass `--preferred <preferred-value>` for a
+   legacy scalar ceiling, another preference-driven policy, or managed
+   `Uncapped` model-only compatibility. Do not include `--candidate-model` or
    `--candidate-effort`.
 2. **Exact-candidate branch:** pass `--candidate-model` and, when applicable,
    `--candidate-effort` after selecting a concrete configured candidate for a
-   managed-capped route. This branch must not include `--preferred`.
+   managed-capped route or for managed `Uncapped` with an explicit model/effort
+   choice. This branch must not include `--preferred`.
 
 Use `selection.selectedValue` as the selected axis value when it is present.
 Never re-derive these controls from the policy label or a ceiling-only variant
@@ -477,11 +478,11 @@ Claude rules:
   Model families remain ordered `haiku < sonnet < opus < fable`; within one
   model, configured effort follows the provider-supported order.
 - Implementer/fix dispatch chooses one selection branch:
-  - Managed `Uncapped` with an explicit effort: use the exact-candidate branch
-    with `--candidate-model <preferred-model> --candidate-effort
-<preferred-effort>` and include `--task-effort <preferred-effort>` as
-    matching classification provenance. Do not combine this branch with
-    `--preferred`.
+  - Managed `Uncapped` with an explicit effort: use the exact-candidate branch.
+    Pass
+    `--candidate-model <preferred-model> --candidate-effort <preferred-effort>`
+    and include `--task-effort <preferred-effort>` as matching classification
+    provenance. Do not combine this branch with `--preferred`.
   - Managed `Uncapped` with a model-only choice: use the preferred-selection
     branch with `--preferred <preferred-model>`; this intentionally preserves
     the legacy model-only route with no selected effort.
