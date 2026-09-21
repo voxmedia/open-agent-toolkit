@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-20
-oat_current_task_id: p02-t01
+oat_current_task_id: p02-t04
 oat_generated: false
 oat_template: false
 ---
@@ -14,13 +14,13 @@ Implementation is in progress. Phase p01 passed independent review; phase p02 is
 
 ## Progress Overview
 
-| Phase                                    | Status    | Tasks | Completed |
-| ---------------------------------------- | --------- | ----- | --------- |
-| p01 — Resolve and materialize            | completed | 2     | 2/2       |
-| p02 — Guidance and recommendations       | pending   | 4     | 0/4       |
-| p03 — Verification and release readiness | pending   | 3     | 0/3       |
+| Phase                                    | Status           | Tasks | Completed |
+| ---------------------------------------- | ---------------- | ----- | --------- |
+| p01 — Resolve and materialize            | completed        | 2     | 2/2       |
+| p02 — Guidance and recommendations       | recovery_pending | 4     | 4/4       |
+| p03 — Verification and release readiness | pending          | 3     | 0/3       |
 
-**Total: 2/9 tasks completed.**
+**Total: 6/9 tasks completed.**
 
 ## Task Status
 
@@ -28,10 +28,10 @@ Implementation is in progress. Phase p01 passed independent review; phase p02 is
 | ------- | --------- | ------------------------------------------ |
 | p01-t01 | completed | `cf0171757e58f611d757e33a4f3aee04c47480c3` |
 | p01-t02 | completed | `90502a9d478174e633a46efe4f0108c0c35bbeb9` |
-| p02-t01 | pending   | -                                          |
-| p02-t02 | pending   | -                                          |
-| p02-t03 | pending   | -                                          |
-| p02-t04 | pending   | -                                          |
+| p02-t01 | completed | `33a02d6e7`                                |
+| p02-t02 | completed | `9f1270c8c`                                |
+| p02-t03 | completed | `7b232ce6e`                                |
+| p02-t04 | completed | `ad81125c3`                                |
 | p03-t01 | pending   | -                                          |
 | p03-t02 | pending   | -                                          |
 | p03-t03 | pending   | -                                          |
@@ -67,6 +67,12 @@ Implementation is in progress. Phase p01 passed independent review; phase p02 is
 - Re-review request `claude-effort-p01-review-02` used a fresh `oat-reviewer-gpt-5-6-sol-high` round against updated head `ad56e6c56c40f547c9ebf8519a4609d6ed787720`.
 - Re-review artifact: `reviews/p01-review-2026-09-21T012030Z.md`; `**Reconnaissance:** not-attempted`; no `## Review Orchestration` section. Verdict passed with 0 Critical, 0 High, 0 Medium, 0 Low; all four prior findings independently verified resolved.
 - Phase outcome: passed after one fix iteration. Structural project-log entry `p01-outcome-run1-20260921T012030Z` records the terminal outcome and references the attempted-recon review artifact without mirroring worker records.
+- Phase p02 request: `claude-effort-p02-implementation-01`; accepted natively as `oat-phase-implementer-gpt-5-6-sol-medium`.
+- Phase p02 dispatch: `Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-medium`.
+- Phase p02 task commits: p02-t01 `33a02d6e7`; p02-t02 `9f1270c8c`; p02-t03 `7b232ce6e`; p02-t04 `ad81125c3`.
+- Phase p02 recovery attempt 1/10: reservation `17ab0d64b`, event `p02-recovery-01`, append-only recovery `266b8307b`. It regenerated the stale public-package version inventory after lockstep manifests moved to 0.3.2. Root validated the completed marker, immutable task commit, bounded generated asset, authoritative rerun, and clean worktree before clearing the pending marker; used-attempt count remains 1.
+- Phase p02 verification: 554 focused tests, skill validation, docs lint, 69-page/825-link crawl, uncached check 10/10, and type-check 10/10 passed. The p02-t04 neutralization control failed as required, then restoration passed 241/241.
+- Root pre-review validation: p02-t04 regression 241/241 and release version check passed. `check:skill-bumps` found `oat-reviewer` still at origin/main's 1.2.8, requiring bounded phase recovery attempt 2 before review.
 
 <!-- orchestration-runs-end -->
 
