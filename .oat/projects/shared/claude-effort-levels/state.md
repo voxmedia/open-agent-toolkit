@@ -68,7 +68,7 @@ oat_implement_exit_gate:
   reviewed_head: 1eb5bf6471288763cdbd9d4413af17794a9e5ef0
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:3885e1edbb50b85f2abab5eb8c96cbaf6095ab3d2b147721d92ff2104aab1df0'
-  freshness_head: cc04b88ffb3137e3695e95f8c9933caeed17180b
+  freshness_head: 52ab1cc4a5c4d063ba456701cd02d25abe78cb52
   freshness_fingerprint: 'sha256:effective-delta-v1:d1cb1400dca1ce12b7c6a902bc53f3c09088cc435d36a08a439ac71220bdaed2'
   launch_state: result_persisted
   launch_attempt_id: 'claude-effort-exit-gate-2-20260921T202400Z'
@@ -89,7 +89,7 @@ oat_implement_exit_gate:
   receive_eligible: true
   receive_completed: true
   failure: null
-  updated_at: '2026-09-21T20:46:06Z'
+  updated_at: '2026-09-21T20:48:02Z'
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
@@ -131,7 +131,7 @@ oat_post_implement_sequence:
   source: configured
   final_phase: p05
   pre_approval: [summary, document, pr]
-  pre_approval_completed: [summary]
+  pre_approval_completed: [summary, document]
   approval: pending
   approval_source: null
   post_approval: []
