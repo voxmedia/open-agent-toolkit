@@ -3,24 +3,25 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-20
-oat_current_task_id: null
+oat_current_task_id: p04-t01
 oat_generated: false
 oat_template: false
 ---
 
 # Implementation: claude-effort-levels
 
-All nine planned tasks and all three phase reviews are complete. Final closeout review and the configured implementation exit gate remain.
+The first final review found one High capability-modeling defect and one Low architecture-comment defect. The user selected Fix now for the Low finding. Phase p04 owns both corrections before a fresh final review and the configured implementation exit gate.
 
 ## Progress Overview
 
-| Phase                                    | Status    | Tasks | Completed |
-| ---------------------------------------- | --------- | ----- | --------- |
-| p01 — Resolve and materialize            | completed | 2     | 2/2       |
-| p02 — Guidance and recommendations       | completed | 4     | 4/4       |
-| p03 — Verification and release readiness | completed | 3     | 3/3       |
+| Phase                                    | Status      | Tasks | Completed |
+| ---------------------------------------- | ----------- | ----- | --------- |
+| p01 — Resolve and materialize            | completed   | 2     | 2/2       |
+| p02 — Guidance and recommendations       | completed   | 4     | 4/4       |
+| p03 — Verification and release readiness | completed   | 3     | 3/3       |
+| p04 — Final review fixes                 | in progress | 2     | 0/2       |
 
-**Total: 9/9 tasks completed.**
+**Total: 9/11 tasks completed.**
 
 ## Task Status
 
@@ -35,6 +36,8 @@ All nine planned tasks and all three phase reviews are complete. Final closeout 
 | p03-t01 | completed | `93101fb6dfa049b10937173fc6929d7425737b64` |
 | p03-t02 | completed | `d14b8175713ea3464fb0c6cd55e37a1c4c53dcad` |
 | p03-t03 | completed | `f278335a77de048a616c3b77536fe21fcb41867b` |
+| p04-t01 | pending   | -                                          |
+| p04-t02 | pending   | -                                          |
 
 ## Orchestration Runs
 
@@ -103,6 +106,10 @@ All nine planned tasks and all three phase reviews are complete. Final closeout 
 - Re-review request `claude-effort-p03-review-03` used a fresh `oat-reviewer-gpt-5-6-sol-high` round against `3a5d9904739284c6c660fae75118efeb651324a8`.
 - Re-review artifact: `reviews/p03-review-2026-09-21T040439Z.md`; `**Reconnaissance:** not-attempted`; no `## Review Orchestration` section. Verdict passed with 0 Critical, 0 High, 0 Medium, and 0 Low.
 - Phase outcome: passed after two fix iterations. Structural project-log entry `p03-outcome-run1-20260921T040439Z` records the terminal outcome and references the attempted-recon cycle-2 artifact without mirroring worker records.
+- Final lifecycle review request `claude-effort-final-review-01` used `oat-reviewer-gpt-5-6-sol-high` against reviewed head `4710fa145506e0cbb474b97fd9e46d0ff45d11a5` with invocation `auto`.
+- Final review artifact: `reviews/final-review-2026-09-21T041719Z.md`; verdict blocked with 0 Critical, 1 High, 0 Medium, and 1 Low. The High finding requires version-aware Claude model/effort capability validation separated from recommendation eligibility. The Low finding corrects the provider-registry architecture comment.
+- Reconnaissance: attempted. The artifact's complete `## Review Orchestration` section records one accepted intelligent-recon lane, one capacity-rejected lane covered inline, and the primary reviewer's independent reconciliation. Its structural project-log entry remains deferred until the final review reaches a terminal outcome.
+- Deferred Medium ledger: none. The user explicitly selected Fix now for the Low finding. Phase p04 adds two bounded tasks and becomes the final HiLL phase.
 
 <!-- orchestration-runs-end -->
 

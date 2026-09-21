@@ -6,7 +6,7 @@ oat_last_updated: 2026-09-20
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_parallel_groups: []
-oat_plan_hill_phases: ['p03']
+oat_plan_hill_phases: ['p04']
 oat_auto_review_at_hill_checkpoints: true
 oat_plan_source: quick
 oat_import_reference: null
@@ -208,12 +208,38 @@ Then run each separately with its own captured exit code: `pnpm test:smoke`, `pn
 
 **Commit:** `chore(p03-t03): record Claude effort verification`.
 
+## Phase 4: Resolve Final Review Findings
+
+### Task p04-t01: Validate Claude effort against the resolved model capability
+
+**Files:** `packages/cli/src/providers/claude/targets.ts`; resolver and materializer callers under `packages/cli/src/{config,commands/project/dispatch-ceiling,providers/claude,providers/ceiling}/`; their colocated tests; provider guidance or documentation only where the resolved-version contract must be exposed.
+
+**Work:** Replace the alias-only effort allowlist with a version-aware Claude capability contract. Keep provider capability separate from bundled recommendation and task-routing eligibility. Accept each documented model/version effort pair that OAT can establish, including low effort for supported Opus/Fable generations and xhigh/max for Sonnet 5. Resolve provider-dependent aliases to a concrete generation before validating version-sensitive effort levels. When the runtime/provider cannot establish the resolved generation, fail with a clear ambiguity/capability error rather than claiming the pair is unsupported. Preserve legacy model-only routes and the existing bundled recommendation unchanged.
+
+**Verify:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/dispatch-matrix.test.ts src/providers/ceiling/registry.test.ts src/commands/project/dispatch-ceiling/index.test.ts src/providers/claude/codec/materialize.test.ts src/providers/claude/codec/sync-extension.test.ts`; `node --test tools/smoke/verification/claude-effort-dispatch.test.mjs`; `pnpm run cli -- sync --scope project --dry-run --json`. Include controls that accept Sonnet 5 `xhigh`, reject Sonnet 4.6 `xhigh`, accept the missing documented low/medium pairs, and reject an unresolved version-dependent capability without changing recommendation eligibility.
+
+**Format:** `pnpm exec oxfmt --write` with the exact changed TypeScript, test, guidance, documentation, and project artifact paths.
+
+**Commit:** `fix(p04-t01): validate Claude effort by resolved model version`.
+
+### Task p04-t02: Correct the Claude ceiling mechanism description
+
+**Files:** `packages/cli/src/providers/ceiling/registry.ts`.
+
+**Work:** Update the provider-registry overview to describe effort-pinned Claude routes as materialized model-and-effort variants and legacy model-only routes as per-call model arguments. Keep executable behavior unchanged.
+
+**Verify:** Run the focused provider registry test in p04-t01 and `git diff --check`.
+
+**Format:** `pnpm exec oxfmt --write packages/cli/src/providers/ceiling/registry.ts`.
+
+**Commit:** `docs(p04-t02): correct Claude variant registry guidance`.
+
 ## Validation Coverage
 
 | Success criterion                              | Owning tasks              |
 | ---------------------------------------------- | ------------------------- |
-| SC1 distinct selection and policy semantics    | p01-t01, p03-t01          |
-| SC2 generated roles and managed lifecycle      | p01-t02                   |
+| SC1 distinct selection and policy semantics    | p01-t01, p03-t01, p04-t01 |
+| SC2 generated roles and managed lifecycle      | p01-t02, p04-t01          |
 | SC3 exact native launch and refusal boundaries | p02-t01, p03-t01, p03-t02 |
 | SC4 compatibility and other providers          | p01-t01, p01-t02, p02-t02 |
 | SC5 awareness and actual task-based choice     | p02-t01, p03-t02          |
@@ -230,7 +256,7 @@ Then run each separately with its own captured exit code: `pnpm test:smoke`, `pn
 | p01    | code     | passed          | 2026-09-21 | reviews/p01-review-2026-09-21T012030Z.md                    | ad56e6c56c40f547c9ebf8519a4609d6ed787720 | phase      | -           |
 | p02    | code     | fixes_completed | 2026-09-21 | reviews/p02-review-2026-09-21T020650Z.md                    | fc986addb653930df9bae103750c01e07a6c1824 | phase      | -           |
 | p02    | code     | passed          | 2026-09-21 | reviews/p02-review-2026-09-21T022325Z.md                    | a7636eee4d53b0996b6813ea364dcb192706ff53 | phase      | -           |
-| final  | code     | pending         | -          | -                                                           | -                                        | -          | -           |
+| final  | code     | fixes_added     | 2026-09-21 | reviews/final-review-2026-09-21T041719Z.md                  | 4710fa145506e0cbb474b97fd9e46d0ff45d11a5 | auto       | -           |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -           |
 | design | artifact | pending         | -          | -                                                           | -                                        | -          | -           |
 | p03    | code     | fixes_completed | 2026-09-21 | reviews/p03-review-2026-09-21T031442Z.md                    | f278335a77de048a616c3b77536fe21fcb41867b | phase      | -           |
