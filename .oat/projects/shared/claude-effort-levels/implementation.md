@@ -189,6 +189,8 @@ Bounded live Claude Code 2.1.278 probes used a disposable project/config root an
 
 After phase p04 passed, the complete repository Definition of Done sequence was rerun against the final implementation basis. `pnpm check`, `pnpm type-check`, `pnpm test`, `pnpm build`, skill-version validation, `git fetch origin main`, origin-aware release version validation, five-package release validation, and the docs build all exited 0 in the required order. The additional `pnpm lint` and `pnpm format` checks also exited 0.
 
+After phase p05 passed, the same complete sequence was rerun against the documentation-aligned basis in the required order. Every repository, test, build, skill-bump, origin-aware version, five-package release, docs-build, lint, and formatting gate exited 0.
+
 ## Final Summary (for PR/docs)
 
 Claude managed dispatch now treats model and effort as separate target axes, materializes effort-pinned reviewer and implementer variants, validates the exact generated definition and launch payload through the shipped dispatch-record boundary, and records runtime divergence when environment or settings precedence changes the observed effort.
