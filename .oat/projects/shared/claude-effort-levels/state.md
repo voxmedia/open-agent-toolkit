@@ -64,21 +64,21 @@ oat_implement_exit_gate:
   project_override: null
   on_failure: block
   max_attempts: 2
-  attempts_completed: 0
+  attempts_completed: 1
   reviewed_head: 590a08ce2d0b4c7637a75dcaf36fb40b55ed1da1
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:f3796df801075ef99542fa06ef2a956917f80a809d8110d2aa11b3c648f2fdc5'
   freshness_head: 24dfccb726f74f65e17eef59c11e943ef53cf3be
   freshness_fingerprint: 'sha256:effective-delta-v1:5e5ac83f7c694ed4d05dc0fee7ce1918b85883cd640f10a83f21077d7b96aeb1'
-  launch_state: accepted
+  launch_state: result_persisted
   launch_attempt_id: 'claude-effort-exit-gate-20260921T145856Z'
   launch_started_at: '2026-09-21T14:58:56Z'
   launch_result_receipt: '/private/tmp/claude-effort-exit-gate-20260921T145856Z.receipt.json'
   gate_run_marker: '/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/6e5693ec-5f6c-46a2-b26b-7585321b1903.json'
   gate_run_id: 6e5693ec-5f6c-46a2-b26b-7585321b1903
-  envelope_status: null
-  artifact: null
-  handoff: null
+  envelope_status: ok
+  artifact: '.oat/projects/shared/claude-effort-levels/reviews/final-review-2026-09-21T151012Z.md'
+  handoff: 'Gate passed at the high threshold, but the final review still contains non-blocking findings (medium=1, low=4). Run oat-project-review-receive for .oat/projects/shared/claude-effort-levels/reviews/final-review-2026-09-21T151012Z.md to disposition them before marking the final review row passed.'
   receive_state: not_started
   receive_correlation: null
   receive_source_artifact: null
@@ -86,10 +86,10 @@ oat_implement_exit_gate:
   receive_event_identity: null
   receive_pre_head: null
   receive_commit: null
-  receive_eligible: false
+  receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-09-21T14:59:27Z'
+  updated_at: '2026-09-21T15:13:00Z'
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
@@ -131,7 +131,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-20T19:40:55.054Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-21T14:59:27Z'
+oat_project_state_updated: '2026-09-21T15:13:00Z'
 oat_generated: false
 ---
 

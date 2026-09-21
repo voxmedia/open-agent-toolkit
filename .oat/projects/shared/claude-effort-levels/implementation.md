@@ -136,6 +136,7 @@ The first final review found one High capability-modeling defect and one Low arc
 - Configured implementation exit-gate generation prepared with blocking policy, two maximum attempts, reviewed head `590a08ce2d0b4c7637a75dcaf36fb40b55ed1da1`, logical base `origin/main`, and the qualified implementation fingerprint recorded in `state.md`. The rolling freshness checkpoint is final-review receive commit `24dfccb726f74f65e17eef59c11e943ef53cf3be`; no gate process has launched yet.
 - Exit-gate launch intent `claude-effort-exit-gate-20260921T145856Z` persisted before launch, with durable result receipt `/private/tmp/claude-effort-exit-gate-20260921T145856Z.receipt.json`.
 - Exit-gate launch accepted as run `6e5693ec-5f6c-46a2-b26b-7585321b1903` on target `cursor-fable-5-1-high`; the durable run marker is bound in `state.md`.
+- Exit-gate run `6e5693ec-5f6c-46a2-b26b-7585321b1903` returned a corroborated `ok` envelope at the High threshold with 0 Critical, 0 High, 1 Medium, and 4 Low findings. The result receipt is durable, receive is eligible, and attempt 1 of 2 is consumed.
 
 <!-- orchestration-runs-end -->
 
