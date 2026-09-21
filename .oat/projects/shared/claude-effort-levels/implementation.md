@@ -185,6 +185,8 @@ A new configured exit-gate generation resolves the unchanged user gate with fing
 
 Final configured-gate attempt `claude-effort-exit-gate-r3-1-20260921T232006Z` recorded launch intent at `2026-09-21T23:20:06Z` with durable result receipt `/private/tmp/claude-effort-exit-gate-r3-1-20260921T232006Z.receipt.json`. No gate result is inferred before acceptance and receipt evidence.
 
+The gate accepted that attempt as run `a152776f-dd7b-4c71-884a-b57e337f96ca` at `2026-09-21T23:20:56.935Z` on target `cursor-fable-5-1-high`. Its live acceptance marker is `/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/a152776f-dd7b-4c71-884a-b57e337f96ca.json`; terminal status remains pending the durable receipt.
+
 <!-- orchestration-runs-end -->
 
 ## Planning Log
