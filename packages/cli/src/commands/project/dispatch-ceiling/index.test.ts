@@ -3652,6 +3652,44 @@ describe('oat project dispatch-ceiling resolve', () => {
     expect(process.exitCode).toBe(1);
   });
 
+  it('does not let a family pin override host-managed model routing', async () => {
+    const { root, home } = await setup();
+    const candidates = [
+      { harness: 'claude', model: 'sonnet', effort: 'xhigh' },
+    ];
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchPolicy: { mode: 'managed', policy: 'high' },
+        dispatchCeiling: { providers: { claude: { high: { candidates } } } },
+      },
+    });
+
+    const { command, capture } = createHarness({
+      cwd: root,
+      home,
+      processEnv: {
+        CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST: '1',
+        ANTHROPIC_DEFAULT_SONNET_MODEL: 'claude-sonnet-5',
+      },
+    });
+    await runCommand(command, [
+      '--provider',
+      'claude',
+      '--candidate-model',
+      'sonnet',
+      '--candidate-effort',
+      'xhigh',
+      '--json',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({ status: 'error' });
+    expect(capture.jsonPayloads[0]?.message).toMatch(
+      /host-managed.*takes precedence.*ANTHROPIC_DEFAULT_SONNET_MODEL/iu,
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
   it.each([
     {
       candidates: [

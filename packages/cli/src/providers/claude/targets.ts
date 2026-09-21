@@ -91,8 +91,7 @@ function builtInAliasGeneration(
   }
   if (
     isEnabled(env['CLAUDE_CODE_USE_BEDROCK']) ||
-    isEnabled(env['CLAUDE_CODE_USE_VERTEX']) ||
-    isEnabled(env['CLAUDE_CODE_USE_MANTLE'])
+    isEnabled(env['CLAUDE_CODE_USE_VERTEX'])
   ) {
     return family === 'opus' ? 'opus-5' : null;
   }
@@ -103,9 +102,7 @@ function builtInAliasGeneration(
 }
 
 function ambiguousProviderEnvironment(env: NodeJS.ProcessEnv): boolean {
-  return Boolean(
-    env['CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST'] || env['ANTHROPIC_BASE_URL'],
-  );
+  return Boolean(env['ANTHROPIC_BASE_URL']);
 }
 
 /** Resolve an alias or model ID to the generation used for capability checks. */
@@ -149,6 +146,13 @@ export function resolveClaudeModelGeneration(
   }
 
   const pinName = ALIAS_DEFAULT_ENV[requestedFamily];
+  if (env['CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST']) {
+    return {
+      valid: false,
+      reason: `Claude alias ${JSON.stringify(alias)} has a host-managed provider-dependent generation. Host-managed model configuration takes precedence over ${pinName}; use a versioned model ID in the dispatch target to establish capability.`,
+    };
+  }
+
   const pinnedModel = env[pinName];
   if (pinnedModel) {
     const pinnedGeneration = claudeModelGeneration(pinnedModel);
@@ -168,6 +172,13 @@ export function resolveClaudeModelGeneration(
     return {
       valid: false,
       reason: `Claude alias ${JSON.stringify(alias)} has an ambiguous provider-dependent generation. Pin ${pinName} to a versioned model ID before selecting effort.`,
+    };
+  }
+
+  if (isEnabled(env['CLAUDE_CODE_USE_MANTLE'])) {
+    return {
+      valid: false,
+      reason: `Claude alias ${JSON.stringify(alias)} has no documented built-in Mantle generation mapping. Pin ${pinName} to a versioned model ID before selecting effort.`,
     };
   }
 

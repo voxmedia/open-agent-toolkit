@@ -90,6 +90,56 @@ describe('Claude effort materializer', () => {
     ).toThrow(/ambiguous provider-dependent generation/iu);
   });
 
+  it('honors host-managed precedence and requires Mantle alias pins', () => {
+    const agent = parseCanonicalAgentMarkdown(
+      '---\nname: oat-reviewer\ndescription: Review changes.\n---\n\nBody',
+    );
+    const target = {
+      model: 'sonnet',
+      effort: 'xhigh',
+      owner: 'project-config' as const,
+    };
+    expect(() =>
+      materializeClaudeAgent({
+        agent,
+        target,
+        env: {
+          CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST: '1',
+          ANTHROPIC_DEFAULT_SONNET_MODEL: 'claude-sonnet-5',
+        },
+      }),
+    ).toThrow(
+      /host-managed.*takes precedence.*ANTHROPIC_DEFAULT_SONNET_MODEL/iu,
+    );
+    expect(() =>
+      materializeClaudeAgent({
+        agent,
+        target,
+        env: { CLAUDE_CODE_USE_MANTLE: '1' },
+      }),
+    ).toThrow(/no documented built-in Mantle generation mapping/iu);
+
+    const versioned = materializeClaudeAgent({
+      agent,
+      target: { ...target, model: 'claude-sonnet-5' },
+      env: {
+        CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST: '1',
+        ANTHROPIC_DEFAULT_SONNET_MODEL: 'claude-sonnet-4-6',
+      },
+    });
+    expect(versioned.target.resolvedModel).toBe('sonnet-5');
+
+    const pinnedMantle = materializeClaudeAgent({
+      agent,
+      target,
+      env: {
+        CLAUDE_CODE_USE_MANTLE: '1',
+        ANTHROPIC_DEFAULT_SONNET_MODEL: 'claude-sonnet-5',
+      },
+    });
+    expect(pinnedMantle.target.resolvedModel).toBe('sonnet-5');
+  });
+
   it('refuses unmanaged cross-directory collisions', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-claude-collision-'));
     roots.push(root);
