@@ -228,7 +228,8 @@ Then run each separately with its own captured exit code: `pnpm test:smoke`, `pn
 | ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
 | p01    | code     | fixes_completed | 2026-09-21 | reviews/p01-review-2026-09-21T005952Z.md                    | 10474030164d29fa52db1e367c9145c13a87ebb8 | phase      | -           |
 | p01    | code     | passed          | 2026-09-21 | reviews/p01-review-2026-09-21T012030Z.md                    | ad56e6c56c40f547c9ebf8519a4609d6ed787720 | phase      | -           |
-| p02    | code     | fixes_added     | 2026-09-21 | reviews/p02-review-2026-09-21T020650Z.md                    | fc986addb653930df9bae103750c01e07a6c1824 | phase      | -           |
+| p02    | code     | fixes_completed | 2026-09-21 | reviews/p02-review-2026-09-21T020650Z.md                    | fc986addb653930df9bae103750c01e07a6c1824 | phase      | -           |
+| p02    | code     | passed          | 2026-09-21 | reviews/p02-review-2026-09-21T022325Z.md                    | a7636eee4d53b0996b6813ea364dcb192706ff53 | phase      | -           |
 | final  | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -           |
 | design | artifact | pending         | -          | -                                                           | -                                        | -          | -           |
@@ -238,6 +239,8 @@ Then run each separately with its own captured exit code: `pnpm test:smoke`, `pn
 | plan   | artifact | fixes_completed | 2026-09-21 | reviews/archived/artifact-plan-review-2026-09-21T000015Z.md | -                                        | -          | -           |
 
 Spec and design rows are retained from the scaffold for compatibility and are not required in this quick workflow. Native structured artifact review passed after one revision. The final configured gate passed its High threshold with 0 Critical, 0 High, 0 Medium, and 2 Low findings. Root received the corroborated artifact and resolved both Low findings in-place: a realistic Cursor `claude-*` collision fixture and fixture-provenance sequencing. The latest row remains `fixes_completed`, not a claim of an independent zero-finding re-review; local plan validation and formatting verify these clarifications. The second gate independently confirmed resolution of all first-gate findings. No unresolved planning findings remain.
+
+Phase p02 passed with 0 Critical, 0 High, 0 Medium, and 1 Low after all five first-round findings were resolved. The remaining Low concerns only the human-readable Claude enforcement-log example; launch behavior and contract tests are correct. Phase p03 owns closing or explicitly retaining that reporting-evidence drift before live acceptance and final review.
 
 ## Implementation Complete
 
