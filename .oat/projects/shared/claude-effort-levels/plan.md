@@ -234,18 +234,19 @@ Then run each separately with its own captured exit code: `pnpm test:smoke`, `pn
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -           |
 | design | artifact | pending         | -          | -                                                           | -                                        | -          | -           |
 | p03    | code     | fixes_completed | 2026-09-21 | reviews/p03-review-2026-09-21T031442Z.md                    | f278335a77de048a616c3b77536fe21fcb41867b | phase      | -           |
-| p03    | code     | fixes_added     | 2026-09-21 | reviews/p03-review-2026-09-21T035607Z.md                    | 4bab859cc4239c2462c5b43b93b0501aa444572a | phase      | -           |
+| p03    | code     | fixes_completed | 2026-09-21 | reviews/p03-review-2026-09-21T035607Z.md                    | 4bab859cc4239c2462c5b43b93b0501aa444572a | phase      | -           |
+| p03    | code     | passed          | 2026-09-21 | reviews/p03-review-2026-09-21T040439Z.md                    | 3a5d9904739284c6c660fae75118efeb651324a8 | phase      | -           |
 | plan   | artifact | passed          | 2026-09-20 | -                                                           | -                                        | -          | -           |
 | plan   | artifact | fixes_completed | 2026-09-20 | reviews/archived/artifact-plan-review-2026-09-20T235147Z.md | -                                        | -          | -           |
 | plan   | artifact | fixes_completed | 2026-09-21 | reviews/archived/artifact-plan-review-2026-09-21T000015Z.md | -                                        | -          | -           |
 
 Spec and design rows are retained from the scaffold for compatibility and are not required in this quick workflow. Native structured artifact review passed after one revision. The final configured gate passed its High threshold with 0 Critical, 0 High, 0 Medium, and 2 Low findings. Root received the corroborated artifact and resolved both Low findings in-place: a realistic Cursor `claude-*` collision fixture and fixture-provenance sequencing. The latest row remains `fixes_completed`, not a claim of an independent zero-finding re-review; local plan validation and formatting verify these clarifications. The second gate independently confirmed resolution of all first-gate findings. No unresolved planning findings remain.
 
-Phase p02 passed with 0 Critical, 0 High, 0 Medium, and 1 Low after all five first-round findings were resolved. The remaining Low concerns only the human-readable Claude enforcement-log example; launch behavior and contract tests are correct. Phase p03 owns closing or explicitly retaining that reporting-evidence drift before live acceptance and final review.
+Phase p02 passed with 0 Critical, 0 High, 0 Medium, and 1 Low after all five first-round findings were resolved. Phase p03 closed that reporting drift, added the shipped launch/record boundary and durable live evidence, and passed its third review cycle with zero findings after two bounded fix rounds.
 
 ## Implementation Complete
 
-All nine planned tasks are implemented. Phases p01 and p02 passed independent review; phase p03 is in its bounded review-fix loop before final closeout.
+All nine planned tasks are implemented, and phases p01 through p03 passed independent review. Final lifecycle review and the configured implementation exit gate remain before closeout.
 
 - Phase 1: 2 tasks — resolver and generated-role lifecycle.
 - Phase 2: 4 tasks — awareness, recommendations, documentation/decision alignment, and relevant lifecycle-gate prompts.

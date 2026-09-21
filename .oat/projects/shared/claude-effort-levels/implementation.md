@@ -10,15 +10,15 @@ oat_template: false
 
 # Implementation: claude-effort-levels
 
-Implementation is in progress. All nine planned tasks are implemented; phase p03 review fixes are in progress.
+All nine planned tasks and all three phase reviews are complete. Final closeout review and the configured implementation exit gate remain.
 
 ## Progress Overview
 
-| Phase                                    | Status            | Tasks | Completed |
-| ---------------------------------------- | ----------------- | ----- | --------- |
-| p01 — Resolve and materialize            | completed         | 2     | 2/2       |
-| p02 — Guidance and recommendations       | completed         | 4     | 4/4       |
-| p03 — Verification and release readiness | fixes_in_progress | 3     | 3/3       |
+| Phase                                    | Status    | Tasks | Completed |
+| ---------------------------------------- | --------- | ----- | --------- |
+| p01 — Resolve and materialize            | completed | 2     | 2/2       |
+| p02 — Guidance and recommendations       | completed | 4     | 4/4       |
+| p03 — Verification and release readiness | completed | 3     | 3/3       |
 
 **Total: 9/9 tasks completed.**
 
@@ -99,6 +99,10 @@ Implementation is in progress. All nine planned tasks are implemented; phase p03
 - Re-review artifact: `reviews/p03-review-2026-09-21T035607Z.md`; invocation `phase`; verdict passed the zero-Critical/High phase threshold with 0 Critical, 0 High, 1 Medium, and 0 Low.
 - Reconnaissance: attempted. The artifact's complete `## Review Orchestration` section records one intelligent-recon launch rejected before start by host capacity and inline primary reconciliation. Its structural project-log entry remains deferred to the terminal p03 outcome.
 - Remaining Medium: the durable gate manifest names a shell-level `HOME` reassignment instead of the plan's exact Node child-process isolation recipe. Bounded fix round 2 will rerun the exact recipe, update its digest/markers, and then re-review the corrected head.
+- Phase p03 fix round 2 commit `3a5d9904739284c6c660fae75118efeb651324a8` reran the exact Node child-process recipe, preserved child-only `HOME` isolation, direct exit 0, 10/10 forced tasks, zero cached tasks, ten force-execution markers, cleanup evidence, and digest `ef66ad8dec1b12d4d504b0b46280b47f2640e87e291cbafb4b2de13ab3718615`.
+- Re-review request `claude-effort-p03-review-03` used a fresh `oat-reviewer-gpt-5-6-sol-high` round against `3a5d9904739284c6c660fae75118efeb651324a8`.
+- Re-review artifact: `reviews/p03-review-2026-09-21T040439Z.md`; `**Reconnaissance:** not-attempted`; no `## Review Orchestration` section. Verdict passed with 0 Critical, 0 High, 0 Medium, and 0 Low.
+- Phase outcome: passed after two fix iterations. Structural project-log entry `p03-outcome-run1-20260921T040439Z` records the terminal outcome and references the attempted-recon cycle-2 artifact without mirroring worker records.
 
 <!-- orchestration-runs-end -->
 
@@ -118,7 +122,7 @@ Implementation is in progress. All nine planned tasks are implemented; phase p03
 
 ## Deviations from Plan / Design
 
-None. No design artifact is required for this quick workflow.
+No design artifact is required for this quick workflow. The p03 phase worker recorded release evidence in `tools/smoke/verification/` while the root workflow retained ownership of project tracking files; this preserves the execution contract without changing product behavior.
 
 ## Test Results
 
@@ -132,11 +136,19 @@ Planning checks passed:
 
 Draft commit `6d4c3d19c` succeeded. Its hook's source-CLI step reported a pre-existing `WORKFLOW_MODES` export mismatch in the built control-plane package; this is not recorded as a passing check. Installed `oat` commands used above succeeded. The implementation plan calls for refreshing local build dependencies before source-CLI verification.
 
-Project policy is resolved to managed High; plan artifact review and the configured exit gate are complete (see final receipt below). Implementation and live-provider tests are not yet run.
+Implementation verification passed: `pnpm check`, `pnpm type-check`, `pnpm test`, `pnpm build`, skill-version validation, origin-aware release version checks, five-package release validation, docs build, lint, and format all exited 0. The final authoritative CLI suite passed 7,484/7,484 tests; smoke passed 163/163, skill tests 650/650, and scripts 1/1.
+
+The exact Node child-process forced run executed 10/10 Turbo tasks with zero cached results and ten force-execution markers while leaving the invoking shell `HOME` unchanged. Focused managed-Claude producer/parser/guidance tests passed 334/334, production-boundary smoke passed 4/4, and deliberate neutralization of the shipped model-agreement guard made the expected smoke test fail before restoration.
+
+Bounded live Claude Code 2.1.278 probes used a disposable project/config root and provider-written transcript metadata. They verified explicit medium/high managed variants, task-based medium/high selection on one accepted awareness handle, capped review, inherit behavior, and documented environment/settings-cap divergence. No user/global settings or installations were changed.
 
 ## Final Summary (for PR/docs)
 
-Not implemented. No release, installation, deployment, or live effort acceptance is claimed.
+Claude managed dispatch now treats model and effort as separate target axes, materializes effort-pinned reviewer and implementer variants, validates the exact generated definition and launch payload through the shipped dispatch-record boundary, and records runtime divergence when environment or settings precedence changes the observed effort.
+
+The workflow guidance and bundled dispatch recommendations now teach Claude effort selection across Economy, Balanced, High, and Frontier policies. Lifecycle-gate setup prompts are scoped to the active planning workflow plus implementation, removing the repeated lite/import/plan questions from quick-start. Documentation and the superseding decision record describe adoption, compatibility, precedence, and evidence limits.
+
+Verification includes production negative controls, eleven sanitized provider-derived live observations with reproducible command recipes, full repository/release gates, and clean independent phase review. Public packages are versioned at 0.3.2. Nothing was published, installed globally, deployed, merged, or released by this implementation run.
 
 ## References
 
