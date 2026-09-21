@@ -479,7 +479,7 @@ Claude rules:
 - Implementer/fix dispatch chooses one selection branch:
   - Managed `Uncapped`: use the preferred-selection branch with
     `--preferred <preferred-model>` and, for an explicit effort choice,
-    `--preferred-effort <preferred-effort>` so the resolver selects the
+    `--task-effort <preferred-effort>` so the resolver selects the
     classified target with no cap.
   - Capped managed policy: use the exact-candidate branch below. The
     `--candidate-model` call replaces the preferred-selection call and must not

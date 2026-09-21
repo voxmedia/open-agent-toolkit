@@ -4679,6 +4679,8 @@ describe('validateOatSkills', () => {
     expect(claudeRules).toMatch(
       /effort_axis=selected:<effort>[\s\S]{0,180}resolver output/i,
     );
+    expect(claudeRules).toContain('--task-effort <preferred-effort>');
+    expect(claudeRules).not.toContain('--preferred-effort');
     expect(claudeRules).toContain('oat project dispatch record');
     expect(claudeRules).toContain('claudeLaunch');
     expect(claudeRules).toContain('recordBase');
