@@ -206,6 +206,8 @@ Replacement configured-gate attempt `claude-effort-exit-gate-r2-1-20260921T22243
 
 The gate accepted that attempt as run `4724fc0d-6aca-4114-ad12-3a8472847a1e` at `2026-09-21T22:25:26.154Z`, targeting `cursor-fable-5-1-high`. Its live acceptance marker is `/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/4724fc0d-6aca-4114-ad12-3a8472847a1e.json`; no result is inferred before the durable receipt completes.
 
+The durable gate receipt completed with exit 0 and envelope status `ok`. Run/project/invocation corroboration all matched, `receiveEligible` is true, the High threshold passed with 0 Critical, 0 High, 0 Medium, and 2 Low findings, and the source artifact is `reviews/final-review-2026-09-21T222944Z.md`. The two Low findings concern review-archive and tracker-wording hygiene; both remain pending root disposition until the receive transition completes.
+
 Bounded live Claude Code 2.1.278 probes used a disposable project/config root and provider-written transcript metadata. They verified explicit medium/high managed variants, task-based medium/high selection on one accepted awareness handle, capped review, inherit behavior, and documented environment/settings-cap divergence. No user/global settings or installations were changed.
 
 After phase p04 passed, the complete repository Definition of Done sequence was rerun against the final implementation basis. `pnpm check`, `pnpm type-check`, `pnpm test`, `pnpm build`, skill-version validation, `git fetch origin main`, origin-aware release version validation, five-package release validation, and the docs build all exited 0 in the required order. The additional `pnpm lint` and `pnpm format` checks also exited 0.
