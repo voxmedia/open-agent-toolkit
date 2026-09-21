@@ -189,6 +189,8 @@ The gate accepted that attempt as run `a152776f-dd7b-4c71-884a-b57e337f96ca` at 
 
 The durable receipt completed with exit 0 and envelope status `ok`. Run/project/invocation corroboration all matched, `receiveEligible` is true, and the High threshold passed with 0 Critical, 0 High, 0 Medium, and 2 Low findings. The active source artifact is `reviews/final-review-2026-09-21T232436Z.md`; its two Low prose-alignment findings await the persisted receive transition.
 
+Receive intent binds gate run `a152776f-dd7b-4c71-884a-b57e337f96ca`, source `reviews/final-review-2026-09-21T232436Z.md`, archive destination `reviews/archived/final-review-2026-09-21T232436Z.md`, the exact final/code Reviews event, and pre-receive head `d0639132db25862ee85e0830cb00acb63a487f16`.
+
 <!-- orchestration-runs-end -->
 
 ## Planning Log

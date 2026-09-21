@@ -79,17 +79,17 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: '.oat/projects/shared/claude-effort-levels/reviews/final-review-2026-09-21T232436Z.md'
   handoff: 'Gate passed at the high threshold, but the final review still contains non-blocking findings (low=2). Run oat-project-review-receive for .oat/projects/shared/claude-effort-levels/reviews/final-review-2026-09-21T232436Z.md to disposition them before marking the final review row passed.'
-  receive_state: not_started
-  receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
+  receive_state: intent_persisted
+  receive_correlation: 'run=a152776f-dd7b-4c71-884a-b57e337f96ca; handoff=receive; source=reviews/final-review-2026-09-21T232436Z.md; scope=final; type=code'
+  receive_source_artifact: '.oat/projects/shared/claude-effort-levels/reviews/final-review-2026-09-21T232436Z.md'
+  receive_archived_artifact: '.oat/projects/shared/claude-effort-levels/reviews/archived/final-review-2026-09-21T232436Z.md'
+  receive_event_identity: 'final | code | final-review-2026-09-21T232436Z.md'
+  receive_pre_head: d0639132db25862ee85e0830cb00acb63a487f16
   receive_commit: null
   receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-09-21T23:27:25Z'
+  updated_at: '2026-09-21T23:28:10Z'
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
@@ -142,7 +142,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/315' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-20T19:40:55.054Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-21T23:27:25Z'
+oat_project_state_updated: '2026-09-21T23:28:10Z'
 oat_generated: false
 oat_project_recap:
   decision: skip
