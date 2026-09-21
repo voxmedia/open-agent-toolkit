@@ -55,7 +55,7 @@ oat_workflow_origin: native # native | imported
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
 oat_implement_exit_gate:
-  status: stale
+  status: pending
   resolution: configured
   disposition: null
   config_fingerprint: 'sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324'
@@ -65,31 +65,31 @@ oat_implement_exit_gate:
   on_failure: block
   max_attempts: 2
   attempts_completed: 1
-  reviewed_head: 590a08ce2d0b4c7637a75dcaf36fb40b55ed1da1
+  reviewed_head: 1eb5bf6471288763cdbd9d4413af17794a9e5ef0
   implementation_base_ref: origin/main
-  implementation_fingerprint: 'sha256:effective-delta-v1:f3796df801075ef99542fa06ef2a956917f80a809d8110d2aa11b3c648f2fdc5'
-  freshness_head: 24dfccb726f74f65e17eef59c11e943ef53cf3be
-  freshness_fingerprint: 'sha256:effective-delta-v1:5e5ac83f7c694ed4d05dc0fee7ce1918b85883cd640f10a83f21077d7b96aeb1'
-  launch_state: result_persisted
-  launch_attempt_id: 'claude-effort-exit-gate-20260921T145856Z'
-  launch_started_at: '2026-09-21T14:58:56Z'
-  launch_result_receipt: '/private/tmp/claude-effort-exit-gate-20260921T145856Z.receipt.json'
-  gate_run_marker: '/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/6e5693ec-5f6c-46a2-b26b-7585321b1903.json'
-  gate_run_id: 6e5693ec-5f6c-46a2-b26b-7585321b1903
-  envelope_status: ok
-  artifact: '.oat/projects/shared/claude-effort-levels/reviews/final-review-2026-09-21T151012Z.md'
-  handoff: 'Gate passed at the high threshold, but the final review still contains non-blocking findings (medium=1, low=4). Run oat-project-review-receive for .oat/projects/shared/claude-effort-levels/reviews/final-review-2026-09-21T151012Z.md to disposition them before marking the final review row passed.'
-  receive_state: completed
-  receive_correlation: 'run=6e5693ec-5f6c-46a2-b26b-7585321b1903; handoff=receive; source=reviews/final-review-2026-09-21T151012Z.md; scope=final; type=code'
-  receive_source_artifact: '.oat/projects/shared/claude-effort-levels/reviews/final-review-2026-09-21T151012Z.md'
-  receive_archived_artifact: '.oat/projects/shared/claude-effort-levels/reviews/archived/final-review-2026-09-21T151012Z.md'
-  receive_event_identity: 'final | code | final-review-2026-09-21T151012Z.md'
-  receive_pre_head: 09f811505ba272edb36f229c0d68eb37ac11dfdc
-  receive_commit: e3cf8a737b8788ef7948fae9cbbfb4d48eaf3356
-  receive_eligible: true
-  receive_completed: true
-  failure: substantive_p05_remediation_requires_fresh_review
-  updated_at: '2026-09-21T20:21:55Z'
+  implementation_fingerprint: 'sha256:effective-delta-v1:3885e1edbb50b85f2abab5eb8c96cbaf6095ab3d2b147721d92ff2104aab1df0'
+  freshness_head: 951d802045679cb270a4bdf8503950455d8ed98e
+  freshness_fingerprint: 'sha256:effective-delta-v1:ca128470df6a8092af41aa71641346b8b2bb00730dac20c31ad716462d511e85'
+  launch_state: not_started
+  launch_attempt_id: null
+  launch_started_at: null
+  launch_result_receipt: null
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_state: not_started
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
+  failure: null
+  updated_at: '2026-09-21T20:23:20Z'
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
@@ -131,7 +131,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-20T19:40:55.054Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-21T20:21:55Z'
+oat_project_state_updated: '2026-09-21T20:23:20Z'
 oat_generated: false
 ---
 
