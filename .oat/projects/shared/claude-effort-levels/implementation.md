@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-21
-oat_current_task_id: p05-t03
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 ---
@@ -14,15 +14,15 @@ The original final-review findings are resolved and phase p04 passed. A fresh fi
 
 ## Progress Overview
 
-| Phase                                    | Status      | Tasks | Completed |
-| ---------------------------------------- | ----------- | ----- | --------- |
-| p01 — Resolve and materialize            | completed   | 2     | 2/2       |
-| p02 — Guidance and recommendations       | completed   | 4     | 4/4       |
-| p03 — Verification and release readiness | completed   | 3     | 3/3       |
-| p04 — Final review fixes                 | completed   | 2     | 2/2       |
-| p05 — Capability documentation alignment | in progress | 3     | 2/3       |
+| Phase                                    | Status    | Tasks | Completed |
+| ---------------------------------------- | --------- | ----- | --------- |
+| p01 — Resolve and materialize            | completed | 2     | 2/2       |
+| p02 — Guidance and recommendations       | completed | 4     | 4/4       |
+| p03 — Verification and release readiness | completed | 3     | 3/3       |
+| p04 — Final review fixes                 | completed | 2     | 2/2       |
+| p05 — Capability documentation alignment | completed | 3     | 3/3       |
 
-**Total: 13/14 tasks completed.**
+**Total: 14/14 tasks completed.**
 
 ## Task Status
 
@@ -41,7 +41,7 @@ The original final-review findings are resolved and phase p04 passed. A fresh fi
 | p04-t02 | completed | `7bbafcd0aad74a6d0a4d59a3cb3d43459f1a771f` |
 | p05-t01 | completed | `8fce3af3799c07400e4ed4d23da08ad172e9f3dc` |
 | p05-t02 | completed | `77f87981b6de7d6ac3e3b6b47c9a06cceede3f3c` |
-| p05-t03 | pending   | -                                          |
+| p05-t03 | completed | `92143dbea5490d2d4d2991c9ebb9c380e8256ae3` |
 
 ## Orchestration Runs
 
@@ -176,6 +176,8 @@ The original final-review findings are resolved and phase p04 passed. A fresh fi
 - L1 accepted and included in p05-t03: every plan, implementation, and state summary must report the new fourteen-task total consistently.
 
 No finding is deferred. The review remains `fixes_added` until p05-t03 is implemented and independently re-reviewed.
+
+Task p05-t03 commit `92143dbea5490d2d4d2991c9ebb9c380e8256ae3` now sends explicit managed-Uncapped Claude effort choices through the exact-candidate model/effort path with matching task-effort provenance, while retaining `--preferred` for model-only compatibility. The executable resolver assertion proves the generated variant, selected model and effort axes, exact target, and normalized fix-route classification. Focused resolver and skill suites passed 402/402 after the assertion correctly accounted for fix-route role normalization; canonical skill validation, the PR-scoped skill-bump check, and diff validation passed.
 
 <!-- orchestration-runs-end -->
 

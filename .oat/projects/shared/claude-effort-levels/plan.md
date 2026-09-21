@@ -323,7 +323,7 @@ Phase p02 passed with 0 Critical, 0 High, 0 Medium, and 1 Low after all five fir
 
 ## Implementation Complete
 
-Thirteen of fourteen planned tasks are implemented. Task p05-t03 is the final review fix for exact managed-Uncapped Claude effort selection; fresh final verification, lifecycle review, and the configured exit gate follow it. PR #315 remains open.
+All fourteen planned tasks are implemented. Task p05-t03 corrected exact managed-Uncapped Claude effort selection; fresh final verification, lifecycle review, and the configured exit gate follow it. PR #315 remains open.
 
 - Phase 1: 2 tasks — resolver and generated-role lifecycle.
 - Phase 2: 4 tasks — awareness, recommendations, documentation/decision alignment, and relevant lifecycle-gate prompts.
@@ -331,7 +331,7 @@ Thirteen of fourteen planned tasks are implemented. Task p05-t03 is the final re
 - Phase 4: 2 tasks — version-aware Claude effort validation and provider-registry guidance.
 - Phase 5: 3 tasks — align shipped guidance with the fail-closed capability contract and correct the uncapped Claude effort selection path.
 
-**Total: 14 tasks; 13 implemented.**
+**Total: 14 tasks; 14 implemented.**
 
 ## References
 
