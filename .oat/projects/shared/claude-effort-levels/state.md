@@ -144,6 +144,10 @@ oat_project_created: '2026-09-20T19:40:55.054Z' # ISO 8601 UTC timestamp — set
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
 oat_project_state_updated: '2026-09-21T21:06:38Z'
 oat_generated: false
+oat_project_recap:
+  decision: skip
+  source: interactive
+  decided_at: '2026-09-21T21:55:54.261Z'
 ---
 
 # Project State: claude-effort-levels
