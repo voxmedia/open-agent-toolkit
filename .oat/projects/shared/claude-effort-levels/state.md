@@ -11,18 +11,9 @@ oat_phase_recovery_policy:
       pending_attempt: null
     p02:
       used_attempts: 2
-      pending_attempt:
-        attempt: 2
-        event_id: p02-recovery-02
-        original_request_id: claude-effort-p02-implementation-01
-        original_task_id: p02-t01
-        original_commit: 33a02d6e7fa0d113389925636c995cf7066d11a8
-        discovered_by: pnpm run check:skill-bumps; oat sync --scope project hook check
-        dispatch_target: oat-phase-implementer-gpt-5-6-sol-medium
-        reservation_head: ffe6e1b9fa409eb2059c889e75b01195cfcbcef0
-        status: completed
+      pending_attempt: null
 oat_current_task: p02-t04
-oat_last_commit: ad81125c361b4aa39a00dc9309ec33069d56dca8
+oat_last_commit: fc986addb653930df9bae103750c01e07a6c1824
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -101,7 +92,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-20T19:40:55.054Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-21T01:52:26Z'
+oat_project_state_updated: '2026-09-21T01:56:47Z'
 oat_generated: false
 ---
 
