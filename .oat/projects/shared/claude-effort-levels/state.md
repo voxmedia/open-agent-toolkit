@@ -70,10 +70,10 @@ oat_implement_exit_gate:
   implementation_fingerprint: 'sha256:effective-delta-v1:347083ce8b379e5e76e02e88dcf8f8726217d072c1769e8da671ca6911cfabbb'
   freshness_head: a1ee64dcd0ffe05aad3e5824412ba2fa78488734
   freshness_fingerprint: 'sha256:effective-delta-v1:7872c0c52353371f97e74816b7cf1cf5bf0faf619336e173da414395ed740ca0'
-  launch_state: not_started
-  launch_attempt_id: null
-  launch_started_at: null
-  launch_result_receipt: null
+  launch_state: intent_persisted
+  launch_attempt_id: 'claude-effort-exit-gate-r2-1-20260921T222435Z'
+  launch_started_at: '2026-09-21T22:24:35Z'
+  launch_result_receipt: '/private/tmp/claude-effort-exit-gate-r2-1-20260921T222435Z.receipt.json'
   gate_run_marker: null
   gate_run_id: null
   envelope_status: null
@@ -89,7 +89,7 @@ oat_implement_exit_gate:
   receive_eligible: false
   receive_completed: false
   failure: null
-  updated_at: '2026-09-21T22:24:40Z'
+  updated_at: '2026-09-21T22:24:35Z'
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
@@ -142,7 +142,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/315' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-20T19:40:55.054Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-21T22:24:40Z'
+oat_project_state_updated: '2026-09-21T22:24:35Z'
 oat_generated: false
 oat_project_recap:
   decision: skip
