@@ -10,6 +10,7 @@
 
 | ID                                       | Date       | Status     | Title                                                                                                  | Legacy  |
 | ---------------------------------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------ | ------- |
+| DR-260921-claude-effort-aware-dispatch   | 2026-09-21 | accepted   | Claude effort-aware dispatch                                                                           | -       |
 | DR-260915-doctor-is-read-only-with-one   | 2026-09-15 | accepted   | Doctor is read-only with one approved-command carve-out                                                | -       |
 | DR-260915-one-doctor-router-instead      | 2026-09-15 | accepted   | One doctor router instead of a family of doctor skills                                                 | -       |
 | DR-260915-separate-cursor-installation   | 2026-09-15 | accepted   | Separate Cursor installation from launchability                                                        | -       |
@@ -211,7 +212,7 @@
 | DR-260709-codex-targets-are-materialized | 2026-07-09 | accepted   | Codex targets are materialized from canonical agents                                                   | -       |
 | DR-260709-cursor-uses-generic-agents     | 2026-07-09 | accepted   | Cursor uses generic agents with Task-level model arguments                                             | -       |
 | DR-260709-dispatch-matrix-remains-source | 2026-07-09 | accepted   | Dispatch matrix remains source of provider targets                                                     | -       |
-| DR-260706-claude-remains-model-axis-only | 2026-07-06 | accepted   | Claude remains model-axis only                                                                         | -       |
+| DR-260706-claude-remains-model-axis-only | 2026-07-06 | superseded | Claude remains model-axis only                                                                         | -       |
 | DR-260706-gate-completion-is-signaled-by | 2026-07-06 | accepted   | Gate completion is signaled by the JSON envelope not filesystem state                                  | -       |
 | DR-260706-inherit-host-defaults-means-no | 2026-07-06 | accepted   | Inherit Host Defaults means no OAT selection                                                           | -       |
 | DR-260706-managed-uncapped-is-explicit   | 2026-07-06 | accepted   | Managed Uncapped is explicit state                                                                     | -       |

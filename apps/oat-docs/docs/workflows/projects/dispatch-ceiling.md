@@ -294,12 +294,13 @@ oat project dispatch-ceiling resolve \
   --report-action implementation \
   --json
 
-# Claude: exact model argument
+# Claude: exact model and effort candidate
 oat project dispatch-ceiling resolve \
   --provider claude \
   --role implementer \
   --ceiling-tier high \
-  --candidate-model sonnet \
+  --candidate-model opus \
+  --candidate-effort medium \
   --task-class default-implementation \
   --report-scope p02 \
   --report-action implementation \
@@ -357,12 +358,12 @@ branch replaces, rather than supplements, preferred selection.
 
 ## Provider Enforcement
 
-| Provider | Exact phase-agent or optional-child invocation                                                                                     | Failure behavior                          |
-| -------- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
-| Codex    | Use `providers.codex.dispatchArgs.variant` as `agent_type`; otherwise launch a fresh child pinned to the returned model and effort | Block if neither exact route is usable    |
-| Claude   | Pass `providers.claude.dispatchArgs.model` as the actual Task `model`                                                              | Block if the model cannot be applied      |
-| Cursor   | Launch `providers.cursor.dispatchArgs.variant` as the exact native agent type first                                                | Block rather than normalize or substitute |
-| Other    | Use a registered provider adapter when it can compile exact controls                                                               | Unsupported providers remain advisory     |
+| Provider | Exact phase-agent or optional-child invocation                                                                                     | Failure behavior                            |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| Codex    | Use `providers.codex.dispatchArgs.variant` as `agent_type`; otherwise launch a fresh child pinned to the returned model and effort | Block if neither exact route is usable      |
+| Claude   | Launch `providers.claude.dispatchArgs.variant` for effort-pinned targets; pass the exact model for legacy targets                  | Block if the exact target cannot be applied |
+| Cursor   | Launch `providers.cursor.dispatchArgs.variant` as the exact native agent type first                                                | Block rather than normalize or substitute   |
+| Other    | Use a registered provider adapter when it can compile exact controls                                                               | Unsupported providers remain advisory       |
 
 Materialized Codex and Cursor roles exist before phase dispatch after
 project/user sync. Cursor definitions carry `supported-catalogue`,

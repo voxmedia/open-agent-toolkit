@@ -12,7 +12,8 @@ description: 'Provider-specific path mappings for Claude, Cursor, Copilot, Gemin
     - Project: `.agents/skills` -> `.claude/skills`, `.agents/agents` -> `.claude/agents`, `.agents/rules` -> `.claude/rules`
     - User: `~/.agents/skills` -> `~/.claude/skills`, `~/.agents/agents` -> `~/.claude/agents`
     - Rule files stay `.md` and are rendered with Claude-compatible frontmatter when needed
-    - Managed phase implementers and optional nested workers use the exact configured candidate returned as `providers.claude.dispatchArgs.model`; OAT passes that value as the actual Agent `model`
+    - Managed effort-pinned phase implementers and reviewers use the exact generated candidate returned as `providers.claude.dispatchArgs.variant`; its frontmatter carries model and effort because Agent has no per-call effort field. Legacy model-only candidates retain `providers.claude.dispatchArgs.model`, and any model supplied alongside a variant must match its definition.
+    - Project variants live under `.claude/agents/`; user variants live under `~/.claude/agents/`. Sync removes stale managed variants for the reconciled owner while preserving base roles and unmanaged agents.
     - Claude's official subagent contract says existing agent directories are watched and changes load within seconds. It describes a conditional restart for the first agent added to a directory that was absent when the session started, for agents added through `--add-dir`, and when Claude starts with `--disable-slash-commands`. OAT cannot observe those session-start and launch-mode facts. After a successful provider-visible file change, the generic OAT repository policy therefore conservatively advises starting a new provider session; it does not claim that Claude hot-reloaded the file or that the application process must restart. The provider semantics were verified against [Claude Code subagent documentation](https://code.claude.com/docs/en/sub-agents) on 2026-08-31.
 
 === "Cursor"
@@ -100,7 +101,8 @@ provenance and cannot replace those values.
 Only an explicit pre-start native role-selection rejection permits another
 target-preserving route. An accepted child, including one that later returns
 `BLOCKED` or lacks telemetry, is a task outcome rather than a fallback signal.
-Claude binds the exact model argument described above. Cursor launches the
+Claude binds the exact generated variant for effort-pinned targets or the exact
+model argument for legacy targets. Cursor launches the
 exact native variant. A missing or unselectable managed target blocks rather
 than falling back to the root target or a base role.
 
