@@ -9,6 +9,18 @@ oat_phase_recovery_policy:
     p01:
       used_attempts: 1
       pending_attempt: null
+    p02:
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: p02-recovery-01
+        original_request_id: claude-effort-p02-implementation-01
+        original_task_id: p02-t03
+        original_commit: 7b232ce6e7e1fb1d3683757f311fd28a8a3addb6
+        discovered_by: pnpm oat:validate-skills transition check
+        dispatch_target: oat-phase-implementer-gpt-5-6-sol-medium
+        reservation_head: 7b232ce6e7e1fb1d3683757f311fd28a8a3addb6
+        status: pending
 oat_current_task: p02-t01
 oat_last_commit: ad56e6c56c40f547c9ebf8519a4609d6ed787720
 oat_blockers: []
