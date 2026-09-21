@@ -70,12 +70,12 @@ oat_implement_exit_gate:
   implementation_fingerprint: 'sha256:effective-delta-v1:f3796df801075ef99542fa06ef2a956917f80a809d8110d2aa11b3c648f2fdc5'
   freshness_head: 24dfccb726f74f65e17eef59c11e943ef53cf3be
   freshness_fingerprint: 'sha256:effective-delta-v1:5e5ac83f7c694ed4d05dc0fee7ce1918b85883cd640f10a83f21077d7b96aeb1'
-  launch_state: intent_persisted
+  launch_state: accepted
   launch_attempt_id: 'claude-effort-exit-gate-20260921T145856Z'
   launch_started_at: '2026-09-21T14:58:56Z'
   launch_result_receipt: '/private/tmp/claude-effort-exit-gate-20260921T145856Z.receipt.json'
-  gate_run_marker: null
-  gate_run_id: null
+  gate_run_marker: '/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/6e5693ec-5f6c-46a2-b26b-7585321b1903.json'
+  gate_run_id: 6e5693ec-5f6c-46a2-b26b-7585321b1903
   envelope_status: null
   artifact: null
   handoff: null
@@ -89,7 +89,7 @@ oat_implement_exit_gate:
   receive_eligible: false
   receive_completed: false
   failure: null
-  updated_at: '2026-09-21T14:58:56Z'
+  updated_at: '2026-09-21T14:59:27Z'
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
@@ -131,7 +131,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-20T19:40:55.054Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-21T14:58:56Z'
+oat_project_state_updated: '2026-09-21T14:59:27Z'
 oat_generated: false
 ---
 
