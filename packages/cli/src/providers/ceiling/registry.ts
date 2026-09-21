@@ -3,6 +3,11 @@ import {
   VALID_CODEX_DISPATCH_CEILINGS,
 } from '@config/oat-config';
 import { getOwnKey } from '@config/own-keys';
+import {
+  buildClaudeEffortVariantName,
+  CLAUDE_MODEL_ORDER,
+  validateClaudeDispatchTarget,
+} from '@providers/claude/targets';
 import { buildCodexMaterializedTargetRoleName } from '@providers/codex/codec/shared';
 import { findCursorModelPinMapping } from '@providers/cursor/codec/catalog';
 import { buildCursorMaterializedRoleName } from '@providers/cursor/codec/shared';
@@ -76,12 +81,7 @@ const CODEX_IMPLEMENTER_ROLE = 'oat-phase-implementer';
 const CODEX_REVIEWER_ROLE = 'oat-reviewer';
 
 /** Claude tier order, low → high, for above-orchestrator comparison. */
-export const CLAUDE_TIER_ORDER: readonly string[] = [
-  'haiku',
-  'sonnet',
-  'opus',
-  'fable',
-];
+export const CLAUDE_TIER_ORDER: readonly string[] = [...CLAUDE_MODEL_ORDER];
 
 const codexAdapter: ProviderCeilingAdapter = {
   provider: 'codex',
@@ -139,14 +139,31 @@ const claudeAdapter: ProviderCeilingAdapter = {
   validValues: [...VALID_CLAUDE_DISPATCH_CEILINGS],
   mechanism: 'model-arg',
   selectionAxis: 'tier',
-  compileToDispatchArgs(value) {
+  compileToDispatchArgs(value, role, ctx) {
     if (
       isDirectDispatchRoleName(value) ||
       !VALID_CLAUDE_DISPATCH_CEILINGS.includes(value as never)
     ) {
       return null;
     }
-    return { model: value };
+    const target = ctx.target;
+    if (target?.effort) {
+      const model = target.model ?? value;
+      if (
+        !validateClaudeDispatchTarget({ model, effort: target.effort }).valid
+      ) {
+        return null;
+      }
+      return {
+        variant: buildClaudeEffortVariantName({
+          agentName:
+            role === 'reviewer' ? CODEX_REVIEWER_ROLE : CODEX_IMPLEMENTER_ROLE,
+          model,
+          effort: target.effort,
+        }),
+      };
+    }
+    return { model: target?.model ?? value };
   },
   // Verify only when the request is above the orchestrator tier (upgrade path).
   verifyOnDispatch(value, ctx) {

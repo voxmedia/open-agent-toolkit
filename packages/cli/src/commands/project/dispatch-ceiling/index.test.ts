@@ -2833,7 +2833,7 @@ describe('oat project dispatch-ceiling resolve', () => {
     {
       args: [
         '--provider',
-        'claude',
+        'cursor',
         '--task-effort',
         'high',
         '--report-scope',
@@ -2841,7 +2841,7 @@ describe('oat project dispatch-ceiling resolve', () => {
         '--report-action',
         'implementation',
       ],
-      message: '--task-effort is only valid for Codex',
+      message: '--task-effort is only valid for Codex or Claude',
     },
     {
       args: [
@@ -3405,6 +3405,212 @@ describe('oat project dispatch-ceiling resolve', () => {
         },
       });
       expect(process.exitCode).toBe(0);
+    },
+  );
+
+  it('distinguishes Claude candidates with the same model and different efforts', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchPolicy: { mode: 'managed', policy: 'high' },
+        dispatchCeiling: {
+          providers: {
+            claude: {
+              high: {
+                candidates: [
+                  { harness: 'claude', model: 'opus', effort: 'medium' },
+                  { harness: 'claude', model: 'opus', effort: 'high' },
+                ],
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, [
+      '--provider',
+      'claude',
+      '--candidate-model',
+      'opus',
+      '--candidate-effort',
+      'high',
+      '--task-class',
+      'hard-reasoning',
+      '--task-effort',
+      'high',
+      '--report-scope',
+      'p01-t01',
+      '--report-action',
+      'implementation',
+      '--json',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
+      providers: {
+        claude: {
+          dispatchArgs: {
+            variant: 'oat-phase-implementer-claude-opus-high',
+          },
+          modelAxis: 'selected:opus',
+          effortAxis: 'selected:high',
+          selection: {
+            requestedCandidate: { model: 'opus', effort: 'high' },
+            candidateIndex: 1,
+            selectedValue: 'opus',
+            target: { model: 'opus', effort: 'high' },
+          },
+        },
+      },
+      dispatchReport: {
+        classification: {
+          taskClass: 'hard-reasoning',
+          preferredEffort: 'high',
+        },
+        requestedControls: {
+          model: { value: 'opus' },
+          effort: { value: 'high', mechanism: 'materialized-role' },
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('uses the terminal Claude effort candidate for reviewer selection', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchPolicy: { mode: 'managed', policy: 'high' },
+        dispatchCeiling: {
+          providers: {
+            claude: {
+              high: {
+                candidates: [
+                  { harness: 'claude', model: 'opus', effort: 'medium' },
+                  { harness: 'claude', model: 'opus', effort: 'high' },
+                ],
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, [
+      '--provider',
+      'claude',
+      '--role',
+      'reviewer',
+      '--json',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      providers: {
+        claude: {
+          dispatchArgs: { variant: 'oat-reviewer-claude-opus-high' },
+          effortAxis: 'selected:high',
+          selection: {
+            selectedValue: 'opus',
+            target: { model: 'opus', effort: 'high' },
+          },
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('selects an exact effort-pinned Claude candidate under uncapped policy', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchPolicy: { mode: 'managed', policy: 'uncapped' },
+        dispatchCeiling: {
+          providers: {
+            claude: {
+              high: {
+                candidates: [
+                  { harness: 'claude', model: 'opus', effort: 'medium' },
+                  { harness: 'claude', model: 'opus', effort: 'high' },
+                ],
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, [
+      '--provider',
+      'claude',
+      '--candidate-model',
+      'opus',
+      '--candidate-effort',
+      'medium',
+      '--json',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      policy: 'uncapped',
+      providers: {
+        claude: {
+          dispatchArgs: {
+            variant: 'oat-phase-implementer-claude-opus-medium',
+          },
+          selection: {
+            requestedCandidate: { model: 'opus', effort: 'medium' },
+            candidateIndex: 0,
+          },
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it.each([
+    {
+      candidates: [
+        { harness: 'claude', model: 'opus', effort: 'high' },
+        { harness: 'claude', model: 'opus', effort: 'medium' },
+      ],
+      message: 'Claude candidates must be nondecreasing',
+    },
+    {
+      candidates: [{ harness: 'claude', model: 'sonnet', effort: 'xhigh' }],
+      message: 'does not support effort',
+    },
+  ])(
+    'rejects invalid Claude effort ladders: $message',
+    async ({ candidates, message }) => {
+      const { root, home } = await setup();
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: {
+          dispatchPolicy: { mode: 'managed', policy: 'high' },
+          dispatchCeiling: { providers: { claude: { high: { candidates } } } },
+        },
+      });
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'claude',
+        '--candidate-model',
+        'opus',
+        '--candidate-effort',
+        'high',
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({ status: 'error' });
+      expect(capture.jsonPayloads[0]?.message).toContain(message);
+      expect(process.exitCode).toBe(1);
     },
   );
 

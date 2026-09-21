@@ -160,6 +160,34 @@ describe('provider ceiling adapters', () => {
       });
     });
 
+    it('compiles an effort-pinned Claude target to a role variant', () => {
+      expect(
+        claude.compileToDispatchArgs('opus', 'implementer', {
+          target: { model: 'opus', effort: 'high' },
+        }),
+      ).toEqual({
+        variant: 'oat-phase-implementer-claude-opus-high',
+      });
+      expect(
+        claude.compileToDispatchArgs('opus', 'reviewer', {
+          target: { model: 'opus', effort: 'high' },
+        }),
+      ).toEqual({ variant: 'oat-reviewer-claude-opus-high' });
+    });
+
+    it('refuses unsupported Claude model-effort pairs', () => {
+      expect(
+        claude.compileToDispatchArgs('haiku', 'implementer', {
+          target: { model: 'haiku', effort: 'high' },
+        }),
+      ).toBeNull();
+      expect(
+        claude.compileToDispatchArgs('sonnet', 'implementer', {
+          target: { model: 'sonnet', effort: 'xhigh' },
+        }),
+      ).toBeNull();
+    });
+
     it('returns null for an invalid value', () => {
       expect(claude.compileToDispatchArgs('gpt', 'implementer', {})).toBeNull();
     });

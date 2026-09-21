@@ -1,3 +1,5 @@
+import { validateClaudeDispatchTarget } from '@providers/claude/targets';
+
 export type WorkflowDispatchMatrixTier =
   | 'economy'
   | 'balanced'
@@ -372,6 +374,19 @@ export function validateDispatchRouteTarget(
   provider: string,
   target: WorkflowDispatchRouteTarget,
 ): DispatchRouteTargetValidation {
+  if ((target.harness ?? provider) === 'claude') {
+    if (!target.model) {
+      return {
+        valid: false,
+        reason: 'Claude dispatch targets must provide a model.',
+      };
+    }
+    return validateClaudeDispatchTarget({
+      model: target.model,
+      ...(target.effort ? { effort: target.effort } : {}),
+    });
+  }
+
   if (!isCodexMaterializedRouteTarget(provider, target)) {
     return { valid: true };
   }
