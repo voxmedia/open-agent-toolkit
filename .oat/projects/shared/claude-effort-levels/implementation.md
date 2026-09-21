@@ -208,6 +208,8 @@ The gate accepted that attempt as run `4724fc0d-6aca-4114-ad12-3a8472847a1e` at 
 
 The durable gate receipt completed with exit 0 and envelope status `ok`. Run/project/invocation corroboration all matched, `receiveEligible` is true, the High threshold passed with 0 Critical, 0 High, 0 Medium, and 2 Low findings, and the source artifact is `reviews/final-review-2026-09-21T222944Z.md`. The two Low findings concern review-archive and tracker-wording hygiene; both remain pending root disposition until the receive transition completes.
 
+Receive intent binds gate run `4724fc0d-6aca-4114-ad12-3a8472847a1e`, source `reviews/final-review-2026-09-21T222944Z.md`, collision-free destination `reviews/archived/final-review-2026-09-21T222944Z.md`, exact final/code Reviews event identity, and pre-receive head `0b0e3dbeeeb5b30e448799a7d0f2ffb0fe1b9345`. No archive or disposition is inferred before the matching receive commit.
+
 Bounded live Claude Code 2.1.278 probes used a disposable project/config root and provider-written transcript metadata. They verified explicit medium/high managed variants, task-based medium/high selection on one accepted awareness handle, capped review, inherit behavior, and documented environment/settings-cap divergence. No user/global settings or installations were changed.
 
 After phase p04 passed, the complete repository Definition of Done sequence was rerun against the final implementation basis. `pnpm check`, `pnpm type-check`, `pnpm test`, `pnpm build`, skill-version validation, `git fetch origin main`, origin-aware release version validation, five-package release validation, and the docs build all exited 0 in the required order. The additional `pnpm lint` and `pnpm format` checks also exited 0.
