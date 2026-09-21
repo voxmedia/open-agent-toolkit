@@ -28,7 +28,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -131,18 +131,18 @@ oat_post_implement_sequence:
   source: configured
   final_phase: p05
   pre_approval: [summary, document, pr]
-  pre_approval_completed: [summary, document]
+  pre_approval_completed: [summary, document, pr]
   approval: pending
   approval_source: null
   post_approval: []
   post_approval_completed: []
   failure: null
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: ready # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/315' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-20T19:40:55.054Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-21T20:52:55Z'
+oat_project_state_updated: '2026-09-21T21:06:38Z'
 oat_generated: false
 ---
 
@@ -154,7 +154,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — PR artifact prepared locally; awaiting authorization to push the feature branch and open the PR.
+Implementation — PR open; completion may run before or after merge.
 
 ## Artifacts
 
@@ -180,6 +180,8 @@ Implementation — PR artifact prepared locally; awaiting authorization to push 
 - The complete repository, release, docs, lint, and formatting gate sequence passed on the post-p05 basis.
 - The third and final standard lifecycle review passed after the user chose to fix its one Low tracker sentence inline.
 - Configured exit-gate attempt 2 passed cleanly with zero findings; processed review artifacts were archived and the final PR body was prepared locally.
+- ✓ PR created: https://github.com/voxmedia/open-agent-toolkit/pull/315
+- ⧗ Awaiting human review.
 
 ## Blockers
 
@@ -187,4 +189,8 @@ None.
 
 ## Next Milestone
 
-Authorize the prepared `feat/claude-effort-levels` branch push and final PR creation, then continue to final HiLL approval.
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- Complete before merge: run `oat-project-complete` now, then merge the PR.
+- Merge before completion: merge the PR, then run `oat-project-complete`.
