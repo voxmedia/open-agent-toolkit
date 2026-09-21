@@ -14,11 +14,11 @@ Implementation is in progress. Phase p01 is the first executable phase.
 
 ## Progress Overview
 
-| Phase                                    | Status         | Tasks | Completed |
-| ---------------------------------------- | -------------- | ----- | --------- |
-| p01 — Resolve and materialize            | review_pending | 2     | 2/2       |
-| p02 — Guidance and recommendations       | pending        | 4     | 0/4       |
-| p03 — Verification and release readiness | pending        | 3     | 0/3       |
+| Phase                                    | Status            | Tasks | Completed |
+| ---------------------------------------- | ----------------- | ----- | --------- |
+| p01 — Resolve and materialize            | fixes_in_progress | 2     | 2/2       |
+| p02 — Guidance and recommendations       | pending           | 4     | 0/4       |
+| p03 — Verification and release readiness | pending           | 3     | 0/3       |
 
 **Total: 2/9 tasks completed.**
 
@@ -58,6 +58,11 @@ Implementation is in progress. Phase p01 is the first executable phase.
 - Phase recovery: attempt 1/10, event `p01-t01-recovery-01`, recovered by append-only commit `10474030164d29fa52db1e367c9145c13a87ebb8`. Root validated the committed `completed` marker, immutable task commits, bounded help-snapshot correction, exact target, focused 60/60 rerun, and clean worktree before clearing the pending marker. Used-attempt count remains 1.
 - Verification: focused task suites 187/187 and 180/180; full CLI suite 7,461/7,461; CLI check, type-check, and build exit 0. Root independently reran the 60-test help snapshot suite and `git diff --check`; both passed.
 - Optional nested dispatches: none.
+- Phase review request: `claude-effort-p01-review-01`; accepted natively as `oat-reviewer-gpt-5-6-sol-high` at the fixed High review target.
+- Review dispatch: `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`.
+- Review artifact: `reviews/p01-review-2026-09-21T005952Z.md`; reviewed head `10474030164d29fa52db1e367c9145c13a87ebb8`; invocation `phase`.
+- Reconnaissance: attempted. The artifact contains a complete `## Review Orchestration` section for two intelligent-recon lanes, their Terra/high target, acceptance/outcome, floor satisfaction, fallback, and primary reconciliation. Its structural log entry is deferred to the terminal p01 outcome as required.
+- Review verdict: blocked with 0 Critical, 2 High, 2 Medium, 0 Low. High findings cover reviewer-path ladder validation and filtered tool removal; Medium findings cover human effort-axis output and Codex TOML collision discovery. Bounded fix round 1 is next through the original p01 implementer handle.
 
 <!-- orchestration-runs-end -->
 
