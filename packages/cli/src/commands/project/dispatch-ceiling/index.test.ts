@@ -3419,8 +3419,12 @@ describe('oat project dispatch-ceiling resolve', () => {
             claude: {
               high: {
                 candidates: [
-                  { harness: 'claude', model: 'opus', effort: 'medium' },
-                  { harness: 'claude', model: 'opus', effort: 'high' },
+                  {
+                    harness: 'claude',
+                    model: 'claude-opus-5',
+                    effort: 'medium',
+                  },
+                  { harness: 'claude', model: 'claude-opus-5', effort: 'high' },
                 ],
               },
             },
@@ -3434,7 +3438,7 @@ describe('oat project dispatch-ceiling resolve', () => {
       '--provider',
       'claude',
       '--candidate-model',
-      'opus',
+      'claude-opus-5',
       '--candidate-effort',
       'high',
       '--task-class',
@@ -3453,15 +3457,15 @@ describe('oat project dispatch-ceiling resolve', () => {
       providers: {
         claude: {
           dispatchArgs: {
-            variant: 'oat-phase-implementer-claude-opus-high',
+            variant: 'oat-phase-implementer-claude-claude-opus-5-high',
           },
-          modelAxis: 'selected:opus',
+          modelAxis: 'selected:claude-opus-5',
           effortAxis: 'selected:high',
           selection: {
-            requestedCandidate: { model: 'opus', effort: 'high' },
+            requestedCandidate: { model: 'claude-opus-5', effort: 'high' },
             candidateIndex: 1,
-            selectedValue: 'opus',
-            target: { model: 'opus', effort: 'high' },
+            selectedValue: 'claude-opus-5',
+            target: { model: 'claude-opus-5', effort: 'high' },
           },
         },
       },
@@ -3471,7 +3475,7 @@ describe('oat project dispatch-ceiling resolve', () => {
           preferredEffort: 'high',
         },
         requestedControls: {
-          model: { value: 'opus' },
+          model: { value: 'claude-opus-5' },
           effort: { value: 'high', mechanism: 'materialized-role' },
         },
       },
@@ -3490,8 +3494,12 @@ describe('oat project dispatch-ceiling resolve', () => {
             claude: {
               high: {
                 candidates: [
-                  { harness: 'claude', model: 'opus', effort: 'medium' },
-                  { harness: 'claude', model: 'opus', effort: 'high' },
+                  {
+                    harness: 'claude',
+                    model: 'claude-opus-5',
+                    effort: 'medium',
+                  },
+                  { harness: 'claude', model: 'claude-opus-5', effort: 'high' },
                 ],
               },
             },
@@ -3512,11 +3520,11 @@ describe('oat project dispatch-ceiling resolve', () => {
     expect(capture.jsonPayloads[0]).toMatchObject({
       providers: {
         claude: {
-          dispatchArgs: { variant: 'oat-reviewer-claude-opus-high' },
+          dispatchArgs: { variant: 'oat-reviewer-claude-claude-opus-5-high' },
           effortAxis: 'selected:high',
           selection: {
-            selectedValue: 'opus',
-            target: { model: 'opus', effort: 'high' },
+            selectedValue: 'claude-opus-5',
+            target: { model: 'claude-opus-5', effort: 'high' },
           },
         },
       },
@@ -3535,8 +3543,12 @@ describe('oat project dispatch-ceiling resolve', () => {
             claude: {
               high: {
                 candidates: [
-                  { harness: 'claude', model: 'opus', effort: 'medium' },
-                  { harness: 'claude', model: 'opus', effort: 'high' },
+                  {
+                    harness: 'claude',
+                    model: 'claude-opus-5',
+                    effort: 'medium',
+                  },
+                  { harness: 'claude', model: 'claude-opus-5', effort: 'high' },
                 ],
               },
             },
@@ -3550,7 +3562,7 @@ describe('oat project dispatch-ceiling resolve', () => {
       '--provider',
       'claude',
       '--candidate-model',
-      'opus',
+      'claude-opus-5',
       '--candidate-effort',
       'medium',
       '--json',
@@ -3561,10 +3573,10 @@ describe('oat project dispatch-ceiling resolve', () => {
       providers: {
         claude: {
           dispatchArgs: {
-            variant: 'oat-phase-implementer-claude-opus-medium',
+            variant: 'oat-phase-implementer-claude-claude-opus-5-medium',
           },
           selection: {
-            requestedCandidate: { model: 'opus', effort: 'medium' },
+            requestedCandidate: { model: 'claude-opus-5', effort: 'medium' },
             candidateIndex: 0,
           },
         },
@@ -3584,38 +3596,39 @@ describe('oat project dispatch-ceiling resolve', () => {
       },
     },
     {
-      model: 'sonnet',
+      model: 'claude-sonnet-5',
       effort: 'low',
       evidence: {
-        source: 'alias-capability-equivalence',
-        exactModel: false,
-        possibleGenerations: ['sonnet-5', 'sonnet-4-6'],
+        source: 'explicit-model-id',
+        exactModel: true,
+        generation: 'sonnet-5',
       },
     },
     {
-      model: 'sonnet',
+      model: 'claude-sonnet-4-6',
       effort: 'max',
       evidence: {
-        source: 'alias-capability-equivalence',
-        exactModel: false,
-        possibleGenerations: ['sonnet-5', 'sonnet-4-6'],
+        source: 'explicit-model-id',
+        exactModel: true,
+        generation: 'sonnet-4-6',
       },
     },
     {
-      model: 'opus',
+      model: 'claude-opus-5',
       effort: 'low',
       evidence: {
-        source: 'alias-capability-equivalence',
-        exactModel: false,
+        source: 'explicit-model-id',
+        exactModel: true,
+        generation: 'opus-5',
       },
     },
     {
-      model: 'fable',
+      model: 'claude-fable-5-1',
       effort: 'xhigh',
       evidence: {
-        source: 'alias-capability-equivalence',
-        exactModel: false,
-        possibleGenerations: ['fable-5-1', 'fable-5'],
+        source: 'explicit-model-id',
+        exactModel: true,
+        generation: 'fable-5-1',
       },
     },
   ])(
@@ -3656,6 +3669,34 @@ describe('oat project dispatch-ceiling resolve', () => {
       expect(process.exitCode).toBe(0);
     },
   );
+
+  it('refuses a bare Sonnet effort alias that availableModels may substitute to Sonnet 4.5', async () => {
+    const { root, home } = await setup();
+    const candidates = [{ harness: 'claude', model: 'sonnet', effort: 'high' }];
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchPolicy: { mode: 'managed', policy: 'high' },
+        dispatchCeiling: { providers: { claude: { high: { candidates } } } },
+      },
+    });
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, [
+      '--provider',
+      'claude',
+      '--candidate-model',
+      'sonnet',
+      '--candidate-effort',
+      'high',
+      '--json',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({ status: 'error' });
+    expect(capture.jsonPayloads[0]?.message).toMatch(
+      /availableModels.*organization policy.*versioned model ID/iu,
+    );
+    expect(process.exitCode).toBe(1);
+  });
 
   it('resolves custom family pins from declared capabilities', async () => {
     const { root, home } = await setup();
@@ -3721,6 +3762,99 @@ describe('oat project dispatch-ceiling resolve', () => {
   });
 
   it.each([
+    ['effort', 'high', ['low', 'medium', 'high']],
+    ['effort,xhigh_effort', 'xhigh', ['low', 'medium', 'high', 'xhigh']],
+    ['effort,max_effort', 'max', ['low', 'medium', 'high', 'max']],
+  ] as const)(
+    'resolves recognized family pins using authoritative %s capabilities',
+    async (declaration, effort, supportedEfforts) => {
+      const { root, home } = await setup();
+      const candidates = [{ harness: 'claude', model: 'opus', effort }];
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: {
+          dispatchPolicy: { mode: 'managed', policy: 'high' },
+          dispatchCeiling: { providers: { claude: { high: { candidates } } } },
+        },
+      });
+      const pin = 'us.anthropic.claude-opus-5-v1:0';
+      const { command, capture } = createHarness({
+        cwd: root,
+        home,
+        processEnv: {
+          CLAUDE_CODE_USE_BEDROCK: '1',
+          ANTHROPIC_DEFAULT_OPUS_MODEL: pin,
+          ANTHROPIC_DEFAULT_OPUS_MODEL_SUPPORTED_CAPABILITIES: declaration,
+        },
+      });
+      await runCommand(command, [
+        '--provider',
+        'claude',
+        '--candidate-model',
+        'opus',
+        '--candidate-effort',
+        effort,
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'resolved',
+        providers: {
+          claude: {
+            target: {
+              capabilityEvidence: {
+                source: 'family-pin-declaration',
+                modelReference: pin,
+                generation: 'opus-5',
+                capabilitiesSource:
+                  'ANTHROPIC_DEFAULT_OPUS_MODEL_SUPPORTED_CAPABILITIES',
+                supportedEfforts,
+              },
+            },
+          },
+        },
+      });
+      expect(process.exitCode).toBe(0);
+    },
+  );
+
+  it('does not inflate a recognized family pin beyond its capability declaration', async () => {
+    const { root, home } = await setup();
+    const candidates = [{ harness: 'claude', model: 'opus', effort: 'xhigh' }];
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchPolicy: { mode: 'managed', policy: 'high' },
+        dispatchCeiling: { providers: { claude: { high: { candidates } } } },
+      },
+    });
+    const { command, capture } = createHarness({
+      cwd: root,
+      home,
+      processEnv: {
+        CLAUDE_CODE_USE_BEDROCK: '1',
+        ANTHROPIC_DEFAULT_OPUS_MODEL: 'us.anthropic.claude-opus-5-v1:0',
+        ANTHROPIC_DEFAULT_OPUS_MODEL_SUPPORTED_CAPABILITIES: 'effort',
+      },
+    });
+    await runCommand(command, [
+      '--provider',
+      'claude',
+      '--candidate-model',
+      'opus',
+      '--candidate-effort',
+      'xhigh',
+      '--json',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({ status: 'error' });
+    expect(capture.jsonPayloads[0]?.message).toMatch(
+      /does not support effort "xhigh"/iu,
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
+  it.each([
     { CLAUDE_CODE_USE_BEDROCK: '1' },
     { CLAUDE_CODE_USE_VERTEX: '1' },
     { CLAUDE_CODE_USE_FOUNDRY: '1' },
@@ -3754,7 +3888,7 @@ describe('oat project dispatch-ceiling resolve', () => {
       ]);
       expect(capture.jsonPayloads[0]).toMatchObject({ status: 'error' });
       expect(capture.jsonPayloads[0]?.message).toMatch(
-        /no documented effort-capability equivalence class/iu,
+        /availableModels.*organization policy/iu,
       );
       expect(process.exitCode).toBe(1);
     },
@@ -3790,7 +3924,7 @@ describe('oat project dispatch-ceiling resolve', () => {
 
     expect(capture.jsonPayloads[0]).toMatchObject({ status: 'error' });
     expect(capture.jsonPayloads[0]?.message).toMatch(
-      /ambiguous provider-dependent generation.*ANTHROPIC_DEFAULT_SONNET_MODEL/u,
+      /availableModels.*organization policy.*ANTHROPIC_DEFAULT_SONNET_MODEL/u,
     );
     expect(process.exitCode).toBe(1);
   });
@@ -5096,7 +5230,11 @@ describe('oat project dispatch-ceiling resolve', () => {
             claude: {
               high: {
                 candidates: [
-                  { harness: 'claude', model: 'opus', effort: 'high' },
+                  {
+                    harness: 'claude',
+                    model: 'claude-opus-5',
+                    effort: 'high',
+                  },
                 ],
               },
             },

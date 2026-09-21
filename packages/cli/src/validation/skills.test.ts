@@ -3275,7 +3275,7 @@ describe('validateOatSkills', () => {
       /Codex[\s\S]{0,500}Luna\/low[\s\S]{0,120}Luna\/medium[\s\S]{0,120}Luna\/high[\s\S]{0,500}Terra\/xhigh[\s\S]{0,500}Sol\/max/i,
     );
     expect(shared).toMatch(
-      /Claude[\s\S]{0,300}haiku[\s\S]{0,120}sonnet[\s\S]{0,120}opus[\s\S]{0,120}fable/i,
+      /Claude[\s\S]{0,500}haiku[\s\S]{0,200}claude-sonnet-5[\s\S]{0,200}claude-opus-5[\s\S]{0,200}claude-fable-5-1/i,
     );
     for (const cursorTarget of [
       'composer-2.5',
@@ -4696,7 +4696,7 @@ describe('validateOatSkills', () => {
     expect(reviewer).toMatch(/legacy model-only and inherited/i);
 
     expect(dispatch).toContain(
-      'Dispatch policy: balanced; selected=sonnet/high; cap=sonnet/high (claude, enforced — native variant oat-phase-implementer-claude-sonnet-high)',
+      'Dispatch policy: balanced; selected=claude-sonnet-5/high; cap=claude-sonnet-5/high (claude, enforced — native variant oat-phase-implementer-claude-claude-sonnet-5-high)',
     );
     expect(dispatch).not.toContain(
       'Dispatch policy: balanced; selected=sonnet; cap=sonnet (claude, enforced — Task model arg)',

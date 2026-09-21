@@ -91,10 +91,6 @@ export function claudeModelGeneration(
   return null;
 }
 
-function isEnabled(value: string | undefined): boolean {
-  return value === '1' || value?.toLowerCase() === 'true';
-}
-
 function generationEvidence(
   generation: ClaudeModelGeneration,
   source: Extract<
@@ -121,13 +117,16 @@ function familyPinCapabilityEvidence(
   env: NodeJS.ProcessEnv,
 ): ClaudeTargetValidation {
   const generation = claudeModelGeneration(pinnedModel);
-  if (generation) {
-    if (modelFamily(generation) !== family) {
-      return {
-        valid: false,
-        reason: `Claude alias ${JSON.stringify(family)} is pinned by ${pinName}=${JSON.stringify(pinnedModel)}, but the pin belongs to another model family.`,
-      };
-    }
+  if (generation && modelFamily(generation) !== family) {
+    return {
+      valid: false,
+      reason: `Claude alias ${JSON.stringify(family)} is pinned by ${pinName}=${JSON.stringify(pinnedModel)}, but the pin belongs to another model family.`,
+    };
+  }
+
+  const capabilityName = `${pinName}_SUPPORTED_CAPABILITIES`;
+  const declaration = env[capabilityName];
+  if (!declaration && generation) {
     return {
       valid: true,
       capabilityEvidence: generationEvidence(
@@ -138,9 +137,6 @@ function familyPinCapabilityEvidence(
       ),
     };
   }
-
-  const capabilityName = `${pinName}_SUPPORTED_CAPABILITIES`;
-  const declaration = env[capabilityName];
   if (!declaration) {
     return {
       valid: false,
@@ -168,65 +164,8 @@ function familyPinCapabilityEvidence(
       source: 'family-pin-declaration',
       modelReference: pinnedModel,
       exactModel: false,
+      ...(generation ? { generation } : {}),
       capabilitiesSource: capabilityName,
-      supportedEfforts,
-    },
-  };
-}
-
-function aliasCapabilityEvidence(
-  family: ClaudeModelFamily,
-  env: NodeJS.ProcessEnv,
-): ClaudeTargetValidation {
-  let possibleGenerations: ClaudeModelGeneration[] = [];
-  let capabilitiesSource = 'claude-model-alias-and-substitution-tables';
-  if (family === 'fable') {
-    // Claude Code does not expose an apps-gateway discriminator to subprocesses.
-    // Both documented alias destinations have the same effort capabilities.
-    possibleGenerations = ['fable-5-1', 'fable-5'];
-  } else if (isEnabled(env['CLAUDE_CODE_USE_FOUNDRY'])) {
-    possibleGenerations = family === 'opus' ? ['opus-4-6'] : [];
-    capabilitiesSource = 'claude-model-alias-table:foundry';
-  } else if (
-    isEnabled(env['CLAUDE_CODE_USE_BEDROCK']) ||
-    isEnabled(env['CLAUDE_CODE_USE_VERTEX'])
-  ) {
-    possibleGenerations = family === 'opus' ? ['opus-5'] : [];
-    capabilitiesSource = 'claude-model-alias-table:bedrock-agent-platform';
-  } else if (isEnabled(env['CLAUDE_CODE_USE_ANTHROPIC_AWS'])) {
-    possibleGenerations =
-      family === 'opus'
-        ? ['opus-5']
-        : family === 'sonnet'
-          ? ['sonnet-4-6']
-          : [];
-    capabilitiesSource = 'claude-model-alias-table:claude-platform-aws';
-  } else if (family === 'sonnet') {
-    possibleGenerations = ['sonnet-5', 'sonnet-4-6'];
-  } else if (family === 'opus') {
-    possibleGenerations = ['opus-5', 'opus-4-8', 'opus-4-7', 'opus-4-6'];
-  }
-  if (possibleGenerations.length === 0) {
-    return {
-      valid: false,
-      reason: `Claude alias ${JSON.stringify(family)} has no documented effort-capability equivalence class. Use a versioned model ID or family pin with declared capabilities.`,
-    };
-  }
-  const supportedEfforts = CLAUDE_EFFORT_ORDER.filter((effort) =>
-    possibleGenerations.every((generation) =>
-      (CLAUDE_GENERATION_EFFORTS[generation] as readonly string[]).includes(
-        effort,
-      ),
-    ),
-  );
-  return {
-    valid: true,
-    capabilityEvidence: {
-      source: 'alias-capability-equivalence',
-      modelReference: `${family}-documented-substitutions`,
-      exactModel: false,
-      possibleGenerations,
-      capabilitiesSource,
       supportedEfforts,
     },
   };
@@ -284,21 +223,10 @@ function deriveClaudeCapabilityEvidence(
     );
   }
 
-  if (env['ANTHROPIC_BASE_URL']) {
-    return {
-      valid: false,
-      reason: `Claude alias ${JSON.stringify(alias)} has an ambiguous provider-dependent generation. Pin ${pinName} to a versioned model ID before selecting effort.`,
-    };
-  }
-
-  if (isEnabled(env['CLAUDE_CODE_USE_MANTLE'])) {
-    return {
-      valid: false,
-      reason: `Claude alias ${JSON.stringify(alias)} has no documented built-in Mantle generation mapping. Pin ${pinName} to a versioned model ID before selecting effort.`,
-    };
-  }
-
-  return aliasCapabilityEvidence(requestedFamily, env);
+  return {
+    valid: false,
+    reason: `Claude effort-pinned alias ${JSON.stringify(alias)} cannot establish capability because provider routing, availableModels, or organization policy may substitute another generation. Use a recognized versioned model ID or pin ${pinName} with matching capability evidence.`,
+  };
 }
 
 /** Resolve capability evidence without claiming an unobserved exact model. */

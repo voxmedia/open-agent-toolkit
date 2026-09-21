@@ -2925,7 +2925,7 @@ describe('oat config', () => {
         ),
       ) as Record<string, unknown>;
 
-      expect(recommendation.version).toBe('2026-09-20.1');
+      expect(recommendation.version).toBe('2026-09-21.1');
       expect(recommendation.providers).toMatchObject({
         codex: {
           economy: {
@@ -2960,22 +2960,25 @@ describe('oat config', () => {
         },
         claude: {
           economy: {
-            candidates: ['haiku', { model: 'sonnet', effort: 'medium' }],
+            candidates: [
+              'haiku',
+              { model: 'claude-sonnet-5', effort: 'medium' },
+            ],
           },
           balanced: {
-            candidates: [{ model: 'sonnet', effort: 'high' }],
+            candidates: [{ model: 'claude-sonnet-5', effort: 'high' }],
           },
           high: {
             candidates: [
-              { model: 'opus', effort: 'medium' },
-              { model: 'opus', effort: 'high' },
+              { model: 'claude-opus-5', effort: 'medium' },
+              { model: 'claude-opus-5', effort: 'high' },
             ],
           },
           frontier: {
             candidates: [
-              { model: 'opus', effort: 'xhigh' },
-              { model: 'opus', effort: 'max' },
-              { model: 'fable', effort: 'high' },
+              { model: 'claude-opus-5', effort: 'xhigh' },
+              { model: 'claude-opus-5', effort: 'max' },
+              { model: 'claude-fable-5-1', effort: 'high' },
             ],
           },
         },
@@ -3015,10 +3018,30 @@ describe('oat config', () => {
     });
 
     it.each([
-      ['economy', 'sonnet', 'medium', 'oat-reviewer-claude-sonnet-medium'],
-      ['balanced', 'sonnet', 'high', 'oat-reviewer-claude-sonnet-high'],
-      ['high', 'opus', 'high', 'oat-reviewer-claude-opus-high'],
-      ['frontier', 'fable', 'high', 'oat-reviewer-claude-fable-high'],
+      [
+        'economy',
+        'claude-sonnet-5',
+        'medium',
+        'oat-reviewer-claude-claude-sonnet-5-medium',
+      ],
+      [
+        'balanced',
+        'claude-sonnet-5',
+        'high',
+        'oat-reviewer-claude-claude-sonnet-5-high',
+      ],
+      [
+        'high',
+        'claude-opus-5',
+        'high',
+        'oat-reviewer-claude-claude-opus-5-high',
+      ],
+      [
+        'frontier',
+        'claude-fable-5-1',
+        'high',
+        'oat-reviewer-claude-claude-fable-5-1-high',
+      ],
     ] as const)(
       'resolves the bundled Claude %s terminal reviewer pair through the real resolver',
       async (policy, model, effort, variant) => {

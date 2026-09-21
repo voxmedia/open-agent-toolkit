@@ -130,18 +130,18 @@ function managedClaudeResolution(
 ) {
   const baseRole =
     role === 'reviewer' ? 'oat-reviewer' : 'oat-phase-implementer';
-  const variant = `${baseRole}-claude-sonnet-${effort}`;
+  const variant = `${baseRole}-claude-claude-sonnet-5-${effort}`;
   const target = {
     harness: 'claude',
-    model: 'sonnet',
+    model: 'claude-sonnet-5',
     effort,
     capabilityEvidence: {
-      source: 'alias-capability-equivalence',
-      modelReference: 'sonnet-documented-substitutions',
-      exactModel: false,
-      possibleGenerations: ['sonnet-5', 'sonnet-4-6'],
-      capabilitiesSource: 'claude-model-alias-and-substitution-tables',
-      supportedEfforts: ['low', 'medium', 'high', 'max'],
+      source: 'explicit-model-id',
+      modelReference: 'claude-sonnet-5',
+      exactModel: true,
+      generation: 'sonnet-5',
+      capabilitiesSource: 'dispatch-target-model',
+      supportedEfforts: ['low', 'medium', 'high', 'xhigh', 'max'],
     },
     crossHarness: false,
   };
@@ -152,11 +152,11 @@ function managedClaudeResolution(
     policy: 'high',
     providers: {
       claude: {
-        value: 'sonnet',
+        value: 'claude-sonnet-5',
         mode: 'enforced',
         mechanism: 'pinned-variant',
         dispatchArgs: { variant },
-        modelAxis: 'selected:sonnet',
+        modelAxis: 'selected:claude-sonnet-5',
         effortAxis: `selected:${effort}`,
         target,
         selection: { role, policyMode: 'managed', policy: 'high', target },
@@ -175,7 +175,7 @@ function managedClaudeDefinition(
       description: 'Managed Claude boundary fixture.',
       body: '\n## Role\n\nExecute the bounded task.\n',
     },
-    target: { model: 'sonnet', effort, owner: 'project-config' },
+    target: { model: 'claude-sonnet-5', effort, owner: 'project-config' },
   }).content;
 }
 
@@ -190,7 +190,7 @@ function managedClaudeInput(
     claudeLaunch: {
       resolution: managedClaudeResolution(role, effort),
       definition: managedClaudeDefinition(baseRole, effort),
-      payload: { variant: `${baseRole}-claude-sonnet-${effort}` },
+      payload: { variant: `${baseRole}-claude-claude-sonnet-5-${effort}` },
     },
     recordBase: managedClaudeRecordBase(action),
     event: canonicalEvent(`managed-claude-${action}`),
@@ -322,12 +322,12 @@ describe('managed Claude launch production boundary', () => {
       const parsed = parseDispatchRecordInput(managedClaudeInput(role, effort));
       const baseRole =
         role === 'reviewer' ? 'oat-reviewer' : 'oat-phase-implementer';
-      const variant = `${baseRole}-claude-sonnet-${effort}`;
+      const variant = `${baseRole}-claude-claude-sonnet-5-${effort}`;
       expect(parsed.record).toMatchObject({
         provider: 'claude',
         role_name: baseRole,
         role_selector: variant,
-        model_selector: 'sonnet',
+        model_selector: 'claude-sonnet-5',
         effort_selector: effort,
         payload: { variant },
         candidates_considered: [variant],
@@ -337,15 +337,14 @@ describe('managed Claude launch production boundary', () => {
           source: 'accepted-claude-launch-envelope',
           schemaVersion: 1,
           variant,
-          model: 'sonnet',
-          capabilitySource: 'alias-capability-equivalence',
-          capabilityModelReference: 'sonnet-documented-substitutions',
-          capabilityExactModel: false,
-          capabilityGeneration: null,
-          capabilityPossibleGenerations: 'sonnet-5,sonnet-4-6',
-          capabilityDeclarationSource:
-            'claude-model-alias-and-substitution-tables',
-          capabilitySupportedEfforts: 'low,medium,high,max',
+          model: 'claude-sonnet-5',
+          capabilitySource: 'explicit-model-id',
+          capabilityModelReference: 'claude-sonnet-5',
+          capabilityExactModel: true,
+          capabilityGeneration: 'sonnet-5',
+          capabilityPossibleGenerations: null,
+          capabilityDeclarationSource: 'dispatch-target-model',
+          capabilitySupportedEfforts: 'low,medium,high,xhigh,max',
           effort,
         },
       ]);
@@ -359,7 +358,7 @@ describe('managed Claude launch production boundary', () => {
 
     const conflictingModel = managedClaudeInput();
     conflictingModel.claudeLaunch.payload = {
-      variant: 'oat-phase-implementer-claude-sonnet-high',
+      variant: 'oat-phase-implementer-claude-claude-sonnet-5-high',
       model: 'opus',
     };
     expect(() => parseDispatchRecordInput(conflictingModel)).toThrow(
@@ -368,7 +367,7 @@ describe('managed Claude launch production boundary', () => {
 
     const staleEffort = managedClaudeInput('implementer', 'high');
     staleEffort.claudeLaunch.resolution.providers.claude.dispatchArgs.variant =
-      'oat-phase-implementer-claude-sonnet-medium';
+      'oat-phase-implementer-claude-claude-sonnet-5-medium';
     expect(() => parseDispatchRecordInput(staleEffort)).toThrow(
       /resolver variant .* does not match selected target/i,
     );

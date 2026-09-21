@@ -720,7 +720,7 @@ Dispatch policy: {policy}; selected={selected value | none}; cap={value | none} 
 ```text
 Dispatch policy: balanced; selected=xhigh; cap=xhigh (codex, enforced — variant oat-phase-implementer-gpt-5-6-terra-xhigh)
 Dispatch policy: inherit host defaults; selected=none; cap=none (codex, advisory — base role follows provider default)
-Dispatch policy: balanced; selected=sonnet/high; cap=sonnet/high (claude, enforced — native variant oat-phase-implementer-claude-sonnet-high)
+Dispatch policy: balanced; selected=claude-sonnet-5/high; cap=claude-sonnet-5/high (claude, enforced — native variant oat-phase-implementer-claude-claude-sonnet-5-high)
 Cursor materialized-variant example: Dispatch policy: frontier; selected=gpt-5.6-sol-max; cap=gpt-5.6-sol-max (cursor, enforced — native variant oat-phase-implementer-gpt-5-6-sol-max)
 Dispatch policy: unresolved; selected=none; cap=none (codex, advisory — policy set but no value resolved)
 ```

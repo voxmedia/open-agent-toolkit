@@ -55,20 +55,25 @@ describe('Claude effort sync extension', () => {
     await mkdir(join(root, '.oat'), { recursive: true });
     await writeFile(
       join(root, '.oat', 'config.json'),
-      config([{ harness: 'claude', model: 'opus', effort: 'high' }]),
+      config([{ harness: 'claude', model: 'claude-opus-5', effort: 'high' }]),
     );
 
     const first = await computeClaudeProjectExtensionPlan(root, entries);
     expect(first.managedEntries).toEqual([
-      'oat-phase-implementer-claude-opus-high',
-      'oat-reviewer-claude-opus-high',
+      'oat-phase-implementer-claude-claude-opus-5-high',
+      'oat-reviewer-claude-claude-opus-5-high',
     ]);
     expect(first.operations.every(({ action }) => action === 'create')).toBe(
       true,
     );
     await expect(
       readFile(
-        join(root, '.claude', 'agents', 'oat-reviewer-claude-opus-high.md'),
+        join(
+          root,
+          '.claude',
+          'agents',
+          'oat-reviewer-claude-claude-opus-5-high.md',
+        ),
         'utf8',
       ),
     ).rejects.toMatchObject({ code: 'ENOENT' });
@@ -149,7 +154,7 @@ describe('Claude effort sync extension', () => {
     expect(regenerated).not.toContain(bedrockArn);
   });
 
-  it('removes only managed variants owned by a filtered removed base role', async () => {
+  it('regenerates recognized-pin evidence when only its declaration changes', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-claude-extension-'));
     roots.push(root);
     const entries = await canonicalEntries(root);
@@ -157,6 +162,65 @@ describe('Claude effort sync extension', () => {
     await writeFile(
       join(root, '.oat', 'config.json'),
       config([{ harness: 'claude', model: 'opus', effort: 'high' }]),
+    );
+    const pin = 'us.anthropic.claude-opus-5-v1:0';
+    const first = await computeClaudeProjectExtensionPlan(
+      root,
+      entries,
+      undefined,
+      {
+        env: {
+          CLAUDE_CODE_USE_BEDROCK: '1',
+          ANTHROPIC_DEFAULT_OPUS_MODEL: pin,
+          ANTHROPIC_DEFAULT_OPUS_MODEL_SUPPORTED_CAPABILITIES: 'effort',
+        },
+      },
+    );
+    await applyClaudeProjectExtensionPlan(root, first);
+    const rolePath = join(
+      root,
+      '.claude',
+      'agents',
+      'oat-reviewer-claude-opus-high.md',
+    );
+    const before = await readFile(rolePath, 'utf8');
+    expect(before).toContain('"generation":"opus-5"');
+    expect(before).toContain('"supportedEfforts":["low","medium","high"]');
+
+    const changed = await computeClaudeProjectExtensionPlan(
+      root,
+      entries,
+      undefined,
+      {
+        env: {
+          CLAUDE_CODE_USE_BEDROCK: '1',
+          ANTHROPIC_DEFAULT_OPUS_MODEL: pin,
+          ANTHROPIC_DEFAULT_OPUS_MODEL_SUPPORTED_CAPABILITIES:
+            'effort,xhigh_effort',
+        },
+      },
+    );
+    expect(changed.operations).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          action: 'update',
+          roleName: 'oat-reviewer-claude-opus-high',
+          content: expect.stringContaining(
+            '"supportedEfforts":["low","medium","high","xhigh"]',
+          ),
+        }),
+      ]),
+    );
+  });
+
+  it('removes only managed variants owned by a filtered removed base role', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-claude-extension-'));
+    roots.push(root);
+    const entries = await canonicalEntries(root);
+    await mkdir(join(root, '.oat'), { recursive: true });
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      config([{ harness: 'claude', model: 'claude-opus-5', effort: 'high' }]),
     );
     const initial = await computeClaudeProjectExtensionPlan(root, entries);
     await applyClaudeProjectExtensionPlan(root, initial);
@@ -170,7 +234,7 @@ describe('Claude effort sync extension', () => {
     expect(plan.operations).toEqual([
       expect.objectContaining({
         action: 'remove',
-        roleName: 'oat-reviewer-claude-opus-high',
+        roleName: 'oat-reviewer-claude-claude-opus-5-high',
       }),
     ]);
     await expect(
@@ -182,14 +246,19 @@ describe('Claude effort sync extension', () => {
           root,
           '.claude',
           'agents',
-          'oat-phase-implementer-claude-opus-high.md',
+          'oat-phase-implementer-claude-claude-opus-5-high.md',
         ),
         'utf8',
       ),
-    ).resolves.toContain('oat-phase-implementer-claude-opus-high');
+    ).resolves.toContain('oat-phase-implementer-claude-claude-opus-5-high');
     await expect(
       readFile(
-        join(root, '.claude', 'agents', 'oat-reviewer-claude-opus-high.md'),
+        join(
+          root,
+          '.claude',
+          'agents',
+          'oat-reviewer-claude-claude-opus-5-high.md',
+        ),
         'utf8',
       ),
     ).rejects.toMatchObject({ code: 'ENOENT' });
@@ -202,7 +271,9 @@ describe('Claude effort sync extension', () => {
     await mkdir(join(home, '.oat'), { recursive: true });
     await writeFile(
       join(home, '.oat', 'config.json'),
-      config([{ harness: 'claude', model: 'sonnet', effort: 'medium' }]),
+      config([
+        { harness: 'claude', model: 'claude-sonnet-5', effort: 'medium' },
+      ]),
     );
     const directory = join(home, '.claude', 'agents');
     await mkdir(directory, { recursive: true });
@@ -219,7 +290,9 @@ describe('Claude effort sync extension', () => {
         userConfigDir: join(home, '.oat'),
       },
     );
-    expect(plan.managedEntries).toContain('oat-reviewer-claude-sonnet-medium');
+    expect(plan.managedEntries).toContain(
+      'oat-reviewer-claude-claude-sonnet-5-medium',
+    );
     expect(plan.operations).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ action: 'remove', roleName: 'stale' }),
@@ -234,11 +307,11 @@ describe('Claude effort sync extension', () => {
     await mkdir(join(root, '.oat'), { recursive: true });
     await writeFile(
       join(root, '.oat', 'config.json'),
-      config([{ harness: 'claude', model: 'opus', effort: 'high' }]),
+      config([{ harness: 'claude', model: 'claude-opus-5', effort: 'high' }]),
     );
     const path = join(root, '.claude', 'agents');
     await mkdir(path, { recursive: true });
-    const collision = join(path, 'oat-reviewer-claude-opus-high.md');
+    const collision = join(path, 'oat-reviewer-claude-claude-opus-5-high.md');
     await writeFile(
       collision,
       '---\nname: unmanaged\ndescription: keep\n---\n',
