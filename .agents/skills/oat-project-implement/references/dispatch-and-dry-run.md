@@ -401,7 +401,11 @@ All project-aware launch paths record the launch in the project's run record.
 Construct and redact the complete generic record plus OAT role event before the
 native host call; when the call returns `accepted` or `blocked-before-start`,
 write the request ID, the `Dispatch:` stamp, the launch status, and later the
-terminal outcome into the run record in `implementation.md`. Writing a per-dispatch file with `oat project dispatch record` is optional and off by default: no lifecycle skill or command consumes those files, so do not write them unless the host has explicitly opted in. A rejected
+terminal outcome into the run record in `implementation.md`. Writing a
+per-dispatch file with `oat project dispatch record` is optional and off by
+default: no lifecycle skill or command consumes those files, so do not persist
+one unless the host has explicitly opted in. The managed Claude validation-only
+call below is mandatory and does not persist a file. A rejected
 launch must attest `provesNoChildStarted: true`; only it permits one
 exact-target approximation with a fresh request ID. Preserve exact model,
 effort, reasoning, service tier, route, authority, and provider controls.
@@ -501,6 +505,37 @@ Claude rules:
 - An effort-pinned launch gets effort from generated agent frontmatter; the
   Agent call has no per-call effort field. If the call also includes `model`, it
   must equal the definition's model.
+- Before any managed effort-pinned Claude launch, pass the real completed
+  resolver JSON, the selected generated `.claude/agents/<variant>.md`
+  definition, and the exact proposed payload through the shipped record
+  producer. Use its managed input form:
+
+  ```json
+  {
+    "claudeLaunch": {
+      "resolution": { "<complete-resolver-field>": "<value>" },
+      "definition": "<the exact generated definition text>",
+      "payload": { "variant": "<the exact native variant>" }
+    },
+    "recordBase": { "<generic-nonderived-field>": "<value>" },
+    "event": { "<canonical-role-resolution-field>": "<value>" }
+  }
+  ```
+
+  Construct this JSON with a JSON-aware tool such as `jq --slurpfile` and
+  `--rawfile`; the placeholder keys illustrate object shapes and are never
+  literal input. Set the pre-launch record base to `launch_status: planned` and
+  `child_outcome: null`, then run
+  `oat project dispatch record --event-file <input> --json` without
+  `--project`. Require `status: validated-only`. Launch only
+  `record.payload.variant` (and `record.payload.model` when present) from that
+  result. The producer rejects a missing or stale variant, an absent or drifted
+  generated definition, and a conflicting per-call model. After the terminal
+  child outcome, rebuild through the same managed input with the terminal
+  status; persistence remains subject to the opt-in rule above. Never copy
+  model, effort, selector, candidate, or payload fields into the record base:
+  the accepted envelope owns and derives them.
+
 - Derive `model_axis=selected:<model>` and `effort_axis=selected:<effort>` from
   resolver output and the constructed variant payload. Legacy model-only
   targets retain provider-default effort; inherited targets retain inherited

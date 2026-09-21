@@ -7,6 +7,10 @@ import {
   withContainedWriterLock,
 } from '@fs/io';
 import {
+  acceptClaudeLaunchEnvelope,
+  buildClaudeDispatchRecord,
+} from '@providers/claude/dispatch-envelope';
+import {
   assertJournalIdentityHasNoAbsolutePath,
   redactAbsolutePaths,
 } from '@providers/identity/absolute-paths';
@@ -257,12 +261,39 @@ export function parseDispatchRecordInput(value: unknown): DispatchRecordInput {
     throw new Error('Dispatch record input must be a JSON object.');
   }
   const keys = Object.keys(value).sort();
-  if (keys.length !== 2 || keys[0] !== 'event' || keys[1] !== 'record') {
-    throw new Error('Dispatch record input accepts only record and event.');
+  const isGenericInput =
+    keys.length === 2 && keys[0] === 'event' && keys[1] === 'record';
+  const isManagedClaudeInput =
+    keys.length === 3 &&
+    keys[0] === 'claudeLaunch' &&
+    keys[1] === 'event' &&
+    keys[2] === 'recordBase';
+  if (!isGenericInput && !isManagedClaudeInput) {
+    throw new Error(
+      'Dispatch record input accepts record and event, or claudeLaunch, event, and recordBase.',
+    );
   }
   if (!isRecord(value.event)) {
     throw new Error('Dispatch record event must be a JSON object.');
   }
+
+  const record = isManagedClaudeInput
+    ? buildClaudeDispatchRecord({
+        envelope: acceptClaudeLaunchEnvelope({
+          resolution: isRecord(value.claudeLaunch)
+            ? value.claudeLaunch.resolution
+            : undefined,
+          definition: isRecord(value.claudeLaunch)
+            ? String(value.claudeLaunch.definition ?? '')
+            : '',
+          launch: isRecord(value.claudeLaunch)
+            ? value.claudeLaunch.payload
+            : undefined,
+        }),
+        recordBase: value.recordBase,
+      })
+    : parseGenericDispatchRecord(value.record);
+  const boundedInput = { record, event: value.event };
 
   // Raw provider metadata is the one input a caller may legitimately supply
   // unmodified, so it is projected through the owning parser's allowlist and
@@ -275,9 +306,9 @@ export function parseDispatchRecordInput(value: unknown): DispatchRecordInput {
     : null;
   assertNoSensitiveDispatchContent(
     rawMetadata === null
-      ? value
+      ? boundedInput
       : {
-          ...value,
+          ...boundedInput,
           event: {
             ...value.event,
             metadata: { ...rawMetadata, entries: null },
@@ -285,7 +316,6 @@ export function parseDispatchRecordInput(value: unknown): DispatchRecordInput {
         },
   );
 
-  const record = parseGenericDispatchRecord(value.record);
   if (rawMetadata !== null) {
     if ('observation' in value.event) {
       throw new Error(

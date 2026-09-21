@@ -79,8 +79,12 @@ For project-aware work, the calling workflow records each launch in its run
 record in `implementation.md` (request ID, `Dispatch:` stamp, launch status,
 terminal outcome). Persisting one generic record per request under the
 project's `dispatch/` directory with `oat project dispatch record` is optional
-and off by default; no lifecycle skill or command consumes those files. When a
-host opts in, the generic snake-case fields remain authoritative. A namespaced `oat` block adds
+and off by default; no lifecycle skill or command consumes those files. Managed
+effort-pinned Claude launches still pass the real resolver result, generated
+definition, and proposed payload through the command without `--project`
+before launch. That validation-only call derives the configured invocation and
+does not persist a journal file. When a host opts in, the generic snake-case
+fields remain authoritative. A namespaced `oat` block adds
 only canonical-role identity, proven pre-start rejection, fallback linkage,
 and optional runtime observation. `DispatchReportV1` and the parseable
 `Dispatch:` compatibility stamp keep their existing byte shape.

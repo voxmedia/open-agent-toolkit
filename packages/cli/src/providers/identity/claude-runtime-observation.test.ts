@@ -7,11 +7,13 @@ import {
   observeClaudeRuntimeFacts,
 } from './claude-runtime-observation';
 import {
+  LIVE_CLAUDE_EFFORT_CASES,
   LIVE_HIGH_EFFORT_TRANSCRIPT,
   LIVE_MEDIUM_EFFORT_TRANSCRIPT,
   MAIN_SESSION_TRANSCRIPT,
   SIDECHAIN_TRANSCRIPT,
 } from './claude-runtime-observation.fixtures';
+import { compareObservedRuntimeMetadata } from './oat-dispatch-record';
 
 /** A real-shaped assistant entry. `message` is built by the caller. */
 function assistantEntry(
@@ -82,7 +84,7 @@ describe('extractClaudeRuntimeMetadata against captured transcripts', () => {
       effort: 'high',
       serviceTier: 'standard',
       requestId: null,
-      sessionId: '7f9d5ab4-3b08-4a21-adb5-405c04af2d89',
+      sessionId: '88888888-8888-4888-8888-888888888888',
     });
   });
 
@@ -118,6 +120,62 @@ describe('extractClaudeRuntimeMetadata against captured transcripts', () => {
       effort: 'high',
       serviceTier: 'standard',
     });
+  });
+
+  it('parses and compares every retained live effort case', () => {
+    expect(LIVE_CLAUDE_EFFORT_CASES.map(({ id }) => id)).toEqual([
+      'explicit-implementer-medium',
+      'explicit-reviewer-high',
+      'awareness-medium-no-file-tools',
+      'awareness-high-no-file-tools',
+      'awareness-medium-edit-denied',
+      'awareness-high-resumed-success',
+      'awareness-medium-resumed-success',
+      'capped-reviewer-high',
+      'default-inherit-high',
+      'environment-overrides-high-to-medium',
+      'settings-cap-high-to-medium',
+    ]);
+
+    for (const liveCase of LIVE_CLAUDE_EFFORT_CASES) {
+      const observed = extractClaudeRuntimeMetadata(liveCase.entries);
+      expect(observed, liveCase.id).not.toBeNull();
+      expect(observed, liveCase.id).toMatchObject({
+        childLineage: 'depth-unknown',
+        role: expect.stringMatching(/^oat-/u),
+        model: 'claude-sonnet-5',
+        effort:
+          liveCase.id.includes('medium') ||
+          liveCase.id.includes('overrides') ||
+          liveCase.id.includes('settings-cap')
+            ? 'medium'
+            : 'high',
+        serviceTier: 'standard',
+      });
+      expect(
+        compareObservedRuntimeMetadata(observed!, liveCase.configured),
+        liveCase.id,
+      ).toBe(liveCase.expectedMatch);
+    }
+  });
+
+  it('preserves same-handle continuation and failed versus successful awareness outcomes', () => {
+    const awareness = LIVE_CLAUDE_EFFORT_CASES.filter(({ id }) =>
+      id.startsWith('awareness-'),
+    );
+    const sessions = awareness.map(
+      ({ entries }) => extractClaudeRuntimeMetadata(entries)?.sessionId,
+    );
+    expect(new Set(sessions).size).toBe(1);
+    expect(
+      awareness.filter(({ acceptedOutcome }) => acceptedOutcome === 'failed'),
+    ).toHaveLength(3);
+    expect(
+      awareness.filter(({ acceptedOutcome }) => acceptedOutcome === 'success'),
+    ).toHaveLength(2);
+    expect(
+      awareness.map(({ sourceAssistantEntries }) => sourceAssistantEntries),
+    ).toEqual([2, 3, 3, 2, 3]);
   });
 
   it('reports the real effort axis instead of claiming it is unexposed', () => {

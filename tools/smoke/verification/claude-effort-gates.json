@@ -1,0 +1,302 @@
+{
+  "schemaVersion": 1,
+  "phase": "p03",
+  "capturedAt": "2026-09-20T22:04:00-05:00",
+  "logRoot": "<temporary-gate-log-root>",
+  "logPolicy": "Raw logs were transient; this manifest retains direct exit codes, counts, markers, sanitized excerpts, and SHA-256 hashes.",
+  "initialFailure": {
+    "command": "pnpm test",
+    "exitCode": 1,
+    "logSha256": "4020dac8462fa5c73f263d36d8dbab1fd61e50d6d260273b71ff7e420c59a61a",
+    "assertions": [
+      "autonomy-gate-inventory: repository HEAD mappings were stale after lifecycle wording changed",
+      "project-start-preflight-contracts: expected present each configured relevant gate separately",
+      "review-skill-contracts: expected reviewer role version 1.2.7 but reviewed contract was 1.2.9"
+    ],
+    "correction": "Updated the three reviewed contract expectations, ran 135 focused tests, and reran the authoritative workspace test gate."
+  },
+  "gates": [
+    {
+      "order": 1,
+      "command": "pnpm check",
+      "exitCode": 0,
+      "counts": "10/10 Turbo tasks",
+      "logSha256": "f72d3b7967c6d5f594e56065c81c12f24aaeeb9901e1b4632987773d47d95734"
+    },
+    {
+      "order": 2,
+      "command": "pnpm type-check",
+      "exitCode": 0,
+      "counts": "10/10 Turbo tasks",
+      "logSha256": "96c33c116916a447a8b94566f365433fa1949fe27a9fd5dbc7fea52be75af36a"
+    },
+    {
+      "order": "3a",
+      "command": "pnpm test",
+      "exitCode": 1,
+      "counts": "3 failing assertions",
+      "logSha256": "4020dac8462fa5c73f263d36d8dbab1fd61e50d6d260273b71ff7e420c59a61a"
+    },
+    {
+      "order": "3b",
+      "command": "pnpm exec vitest run packages/cli/src/validation/autonomy-gate-inventory.test.ts packages/cli/src/commands/init/tools/shared/project-start-preflight-contracts.test.ts packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts",
+      "exitCode": 0,
+      "counts": "135/135 tests",
+      "logSha256": "305176f4d6654de3b0cfc05f885e855fb998f90a049255b6ccdc731b8ca3f179"
+    },
+    {
+      "order": "3c",
+      "command": "pnpm test",
+      "exitCode": 0,
+      "counts": "10/10 Turbo tasks; CLI 7479/7479 tests",
+      "logSha256": "3d55e3e3cc8e537be7a7a6cfa7f21d89578cc48fb24006c75bf5f8be7e962638"
+    },
+    {
+      "order": "4a",
+      "command": "pnpm build",
+      "exitCode": 0,
+      "counts": "5/5 Turbo tasks",
+      "logSha256": "2d1fb45d20b84a88f5a5dfbcdc1d81d4d89bda8bb03fb35fd8279d0314cfd79f"
+    },
+    {
+      "order": "4b",
+      "command": "pnpm build",
+      "exitCode": 0,
+      "counts": "5/5 Turbo tasks; FULL TURBO",
+      "logSha256": "c0f2a5a552b1ed69ee308816e5cc9d2adf20d66bd3dd399db93d4f0818003296"
+    },
+    {
+      "order": 5,
+      "command": "ISOLATED_HOME=$(mktemp -d); HOME=$ISOLATED_HOME pnpm exec turbo run test --force",
+      "exitCode": 0,
+      "counts": "10/10 tasks; 0 cached",
+      "markers": { "cacheBypassForceExecuting": 10, "cached": 0 },
+      "logSha256": "3fac77a16c0bffb1574995c19e8f00331a760436a6c0e216024fe0d16347de39"
+    },
+    {
+      "order": 6,
+      "command": "pnpm test:smoke",
+      "exitCode": 0,
+      "counts": "163/163 tests",
+      "logSha256": "ad70a3ab832ee7aecbe8f8f8af395d04b5958fa957e5bec846c9ea1e31e0c49e"
+    },
+    {
+      "order": 7,
+      "command": "pnpm test:skills",
+      "exitCode": 0,
+      "counts": "650/650 tests",
+      "logSha256": "ff1b178e0050c6e72ec15184064ac364f61113d9cc11e2cb2dbd25dff8c622e0"
+    },
+    {
+      "order": 8,
+      "command": "pnpm test:scripts",
+      "exitCode": 0,
+      "counts": "1/1 test",
+      "logSha256": "b256b28f1ade603992bfbf442c166731860923c1388c6e8aee251585088de959"
+    },
+    {
+      "order": 9,
+      "command": "pnpm oat:validate-skills",
+      "exitCode": 0,
+      "counts": "65 skills",
+      "logSha256": "eebb2b90b8ce3b3c5dc89e2e656ef63ecd78f1747a798833b52b1612085e89b4"
+    },
+    {
+      "order": 10,
+      "command": "pnpm run check:skill-bumps",
+      "exitCode": 0,
+      "counts": "10 changed skills/roles",
+      "logSha256": "5a1b3af72a128dd26cb8047e901ad897b52ddaa1a995303d61f16542be41d632"
+    },
+    {
+      "order": 11,
+      "command": "git fetch origin main",
+      "exitCode": 0,
+      "counts": "origin/main refreshed",
+      "logSha256": "b83146b040a2e8b2c3900b2e5bd5ed03d63d08fd9241af4e974e626004bd9f22"
+    },
+    {
+      "order": 12,
+      "command": "pnpm release:check-versions",
+      "exitCode": 0,
+      "counts": "version check passed",
+      "logSha256": "e1d299acd036f3b6a36148cdd0a725e70a39f81fee392a4cbb46c31ea57808b8"
+    },
+    {
+      "order": 13,
+      "command": "pnpm release:validate",
+      "exitCode": 0,
+      "counts": "5 public package tarballs",
+      "logSha256": "817d886d2a0e36ecb1c1436c1a0ff52f3467e35c98ca4d71c80ab0f660d81f83"
+    },
+    {
+      "order": 14,
+      "command": "pnpm build:docs",
+      "exitCode": 0,
+      "counts": "6/6 Turbo tasks; 72 static pages",
+      "logSha256": "7b7aacff7c5e31751a445a2cc862179a2bc188683ce30647d61e4919a9cc9dff"
+    },
+    {
+      "order": 15,
+      "command": "pnpm lint",
+      "exitCode": 0,
+      "counts": "package and root oxlint",
+      "logSha256": "fea4d4da87465635d9436611e13502c05a7aa7cc98ca24f2f9a9885b6caada54"
+    },
+    {
+      "order": 16,
+      "command": "pnpm format",
+      "exitCode": 0,
+      "counts": "package and root oxfmt",
+      "logSha256": "6c5748fe8710c9109c6eb48f6dc4d1a3cee69504f601f480df79a7ca9e3d0e42"
+    }
+  ],
+  "reviewFixVerification": [
+    {
+      "command": "pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/identity/claude-runtime-observation.test.ts src/commands/project/dispatch/record.test.ts src/validation/skills.test.ts",
+      "exitCode": 0,
+      "counts": "334/334 tests",
+      "logSha256": "d7a76f20ec3cf6584e9ceddf207c2b1cca60e4c7803a501ecb8454590006de36"
+    },
+    {
+      "command": "pnpm build",
+      "exitCode": 0,
+      "counts": "5/5 Turbo tasks; 0 cached",
+      "logSha256": "dde32a6b6e1a9435d41139aa2d1a0de2500fc3c169d28754ba7643bd27b6f2f6"
+    },
+    {
+      "command": "node --test tools/smoke/verification/claude-effort-dispatch.test.mjs",
+      "exitCode": 0,
+      "counts": "4/4 tests",
+      "logSha256": "6b96c368f113d0b9a55ff7016829e30b433f9db4444dc4d53718b0eb65149786"
+    },
+    {
+      "command": "temporarily prepend false && to the production per-call model agreement guard; pnpm --filter @open-agent-toolkit/cli build; node --test tools/smoke/verification/claude-effort-dispatch.test.mjs",
+      "exitCode": 1,
+      "counts": "3/4 tests; conflicting-model assertion failed with Missing expected exception",
+      "buildExitCode": 0,
+      "logSha256": "8ad980d32d3d6d7912723ec96d33193cc8a9025709f666030bb495570a85e9fe"
+    },
+    {
+      "command": "restore production per-call model agreement guard; pnpm --filter @open-agent-toolkit/cli build; node --test tools/smoke/verification/claude-effort-dispatch.test.mjs",
+      "exitCode": 0,
+      "counts": "4/4 tests",
+      "buildExitCode": 0,
+      "logSha256": "9231b28a6b4017378637185fdc8ab172cef5fae1ce5575f3dd68d9bb9493ff2a"
+    },
+    {
+      "command": "pnpm run cli -- sync --scope project --dry-run --json (twice)",
+      "exitCode": 0,
+      "counts": "93 skill entries; 32 Codex operations; 0 non-skip operations on each run",
+      "logSha256": "7bfff98c61ae458a251e8ef9129b5faceca9c25e5ffad490e5a9f0522cf0ce82"
+    },
+    {
+      "command": "pnpm check",
+      "exitCode": 0,
+      "counts": "10/10 Turbo tasks; 0 cached",
+      "logSha256": "8ff09014bb1500a75f31557337139ac37826d28f46c7e7a5c59aa57bc64cb622"
+    },
+    {
+      "command": "pnpm type-check",
+      "exitCode": 0,
+      "counts": "10/10 Turbo tasks",
+      "logSha256": "88b6e8c340ef26c67130c55878c232ca103159295c1294a22bcb495ae1d4afea"
+    },
+    {
+      "command": "pnpm test",
+      "exitCode": 0,
+      "counts": "10/10 Turbo tasks; CLI 7484/7484; smoke 163/163; skills 650/650; scripts 1/1",
+      "logSha256": "b8e11ffe714c336b587913d4f3c9864916797cd9da1eb6322145b58a1ad3a354"
+    },
+    {
+      "command": "pnpm build",
+      "exitCode": 0,
+      "counts": "5/5 Turbo tasks; FULL TURBO replay after prior uncached build",
+      "logSha256": "99c2baf43278e18540b76be7f1056049c6c15983aa6e0e5da2211b6e8a57fd81"
+    },
+    {
+      "command": "pnpm run check:skill-bumps",
+      "exitCode": 0,
+      "counts": "10 changed skill/role checks",
+      "logSha256": "5a1b3af72a128dd26cb8047e901ad897b52ddaa1a995303d61f16542be41d632"
+    },
+    {
+      "command": "git fetch origin main",
+      "exitCode": 0,
+      "counts": "origin/main refreshed",
+      "logSha256": "b83146b040a2e8b2c3900b2e5bd5ed03d63d08fd9241af4e974e626004bd9f22"
+    },
+    {
+      "command": "pnpm release:check-versions",
+      "exitCode": 0,
+      "counts": "version bump check passed",
+      "logSha256": "e1d299acd036f3b6a36148cdd0a725e70a39f81fee392a4cbb46c31ea57808b8"
+    },
+    {
+      "command": "pnpm release:validate",
+      "exitCode": 0,
+      "counts": "5 public package tarballs",
+      "logSha256": "817d886d2a0e36ecb1c1436c1a0ff52f3467e35c98ca4d71c80ab0f660d81f83"
+    },
+    {
+      "command": "pnpm build:docs",
+      "exitCode": 0,
+      "counts": "6/6 Turbo tasks; 72 static pages",
+      "logSha256": "cdf410cc8cc7df55a4f1b103777057e6c6a59b7fda342d8b5bda50dcec636226"
+    },
+    {
+      "command": "pnpm lint",
+      "exitCode": 0,
+      "counts": "package and root oxlint",
+      "logSha256": "9b585f4376aa300aa0607d55b0d0cd34ccff4b6e476acb8cf5c40584504b8583"
+    },
+    {
+      "command": "pnpm format",
+      "exitCode": 0,
+      "counts": "package and root oxfmt",
+      "logSha256": "d730122f26aa99f490f1ce832c2b5030ee137a466098e93b2796c3ebb602e439"
+    },
+    {
+      "command": "pnpm test:smoke",
+      "exitCode": 0,
+      "counts": "163/163 tests",
+      "logSha256": "1037a1c71d93fcd88dc218f9c78fc8353069bb6f903b790e01e31afd2b564de3"
+    },
+    {
+      "command": "pnpm test:skills",
+      "exitCode": 0,
+      "counts": "650/650 tests",
+      "logSha256": "49821762ec00c86c0d440a5a6e646b2d3465fe0b2c1b986520a5b5d06974b5e8"
+    },
+    {
+      "command": "pnpm test:scripts",
+      "exitCode": 0,
+      "counts": "1/1 test",
+      "logSha256": "05383e7f4471c71c7ee0734551101ad30b41e2269b4df63afd20e5deae0a74d0"
+    },
+    {
+      "command": "pnpm oat:validate-skills",
+      "exitCode": 0,
+      "counts": "65 skills",
+      "logSha256": "eebb2b90b8ce3b3c5dc89e2e656ef63ecd78f1747a798833b52b1612085e89b4"
+    },
+    {
+      "command": "pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/identity/claude-runtime-observation.test.ts src/commands/project/dispatch/record.test.ts src/validation/skills.test.ts",
+      "exitCode": 0,
+      "counts": "334/334 final focused tests",
+      "logSha256": "bddbf0bca6a5895555b6ec44bb32ac1347d9ff3237b0aaa835b665809889c969"
+    },
+    {
+      "command": "node --test tools/smoke/verification/claude-effort-dispatch.test.mjs",
+      "exitCode": 0,
+      "counts": "4/4 final production-boundary smoke tests",
+      "logSha256": "39e22fceb886382dbacb057218285e600c78cab20ad6843d69c749e2290eeedb"
+    },
+    {
+      "command": "git diff --check",
+      "exitCode": 0,
+      "counts": "no whitespace errors",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

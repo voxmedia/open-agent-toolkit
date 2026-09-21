@@ -1,0 +1,373 @@
+{
+  "schemaVersion": 1,
+  "capturedWith": {
+    "claudeCodeVersion": "2.1.278",
+    "date": "2026-09-20",
+    "configRoot": "$LIVE_ROOT/config",
+    "workingDirectory": "$PROJECT_ROOT"
+  },
+  "execution": {
+    "binary": "$CLAUDE_BIN",
+    "environment": {
+      "CLAUDE_CONFIG_DIR": "$LIVE_ROOT/config"
+    },
+    "agentsArgumentEncoding": "JSON.stringify(agentSets[case.agentSet])",
+    "notes": [
+      "Replace only the three declared path variables with paths under one disposable root.",
+      "The argv arrays are passed directly to the binary without shell interpolation.",
+      "Continuation cases use the same supplied session handle through --resume."
+    ]
+  },
+  "fixtures": {
+    "mechanical.txt": "color=blue\n",
+    "state-machine.txt": "A run starts attempt 1. A retry starts attempt 2 while the state remains running. Attempt 1 then completes late and emits done. Attempt 2 completes and emits done again. Preserve retries and concurrent attempts, but emit done exactly once.\n",
+    "cap-settings.json": {
+      "effortLevel": "high",
+      "maxEffortLevel": "medium",
+      "permissions": {
+        "defaultMode": "dontAsk"
+      }
+    },
+    "inherit-settings.json": {
+      "effortLevel": "high",
+      "permissions": {
+        "defaultMode": "dontAsk"
+      }
+    }
+  },
+  "agentSets": {
+    "control-medium": {
+      "oat-phase-implementer-claude-sonnet-medium": {
+        "description": "Deterministic p03 wiring control. Use only when explicitly requested.",
+        "prompt": "Return exactly the requested control token and nothing else.",
+        "model": "sonnet",
+        "effort": "medium"
+      }
+    },
+    "control-high": {
+      "oat-reviewer-claude-sonnet-high": {
+        "description": "Deterministic p03 reviewer wiring control. Use only when explicitly requested.",
+        "prompt": "Return exactly the requested control token and nothing else.",
+        "model": "sonnet",
+        "effort": "high"
+      }
+    },
+    "awareness-invalid-tools": {
+      "oat-phase-implementer-claude-sonnet-medium": {
+        "description": "Clear bounded implementation route.",
+        "prompt": "Execute the requested bounded task and report its exact outcome.",
+        "model": "sonnet",
+        "effort": "medium",
+        "tools": ["Read", "Edit"]
+      },
+      "oat-phase-implementer-claude-sonnet-high": {
+        "description": "Ambiguous diagnosis and state-transition reasoning route.",
+        "prompt": "Diagnose the requested state-machine problem and report the smallest invariant-preserving fix.",
+        "model": "sonnet",
+        "effort": "high",
+        "tools": ["Read", "Edit"]
+      }
+    },
+    "awareness-no-tools": {
+      "oat-phase-implementer-claude-sonnet-medium": {
+        "description": "Clear bounded implementation route.",
+        "prompt": "Execute the requested bounded task and report its exact outcome.",
+        "model": "sonnet",
+        "effort": "medium"
+      },
+      "oat-phase-implementer-claude-sonnet-high": {
+        "description": "Ambiguous diagnosis and state-transition reasoning route.",
+        "prompt": "Diagnose the requested state-machine problem and report the smallest invariant-preserving fix.",
+        "model": "sonnet",
+        "effort": "high"
+      }
+    },
+    "awareness-read-edit": {
+      "oat-phase-implementer-claude-sonnet-medium": {
+        "description": "Clear bounded implementation route.",
+        "prompt": "Execute the requested bounded task and report its exact outcome.",
+        "model": "sonnet",
+        "effort": "medium",
+        "tools": ["Read", "Edit"]
+      },
+      "oat-phase-implementer-claude-sonnet-high": {
+        "description": "Ambiguous diagnosis and state-transition reasoning route.",
+        "prompt": "Diagnose the requested state-machine problem and report the smallest invariant-preserving fix.",
+        "model": "sonnet",
+        "effort": "high",
+        "tools": ["Read", "Edit"]
+      }
+    },
+    "inherit": {
+      "oat-phase-implementer-claude-sonnet-inherit": {
+        "description": "Deterministic p03 inherit control.",
+        "prompt": "Return exactly the requested control token and nothing else.",
+        "model": "sonnet"
+      }
+    }
+  },
+  "childPrompts": {
+    "taskA": "In ./mechanical.txt (working directory: $PROJECT_ROOT), replace the single value \"blue\" with \"green\". Then report the final line of the file.",
+    "taskB": "Read ./state-machine.txt (working directory: $PROJECT_ROOT) and identify the minimal root cause of the problem described there, plus the smallest invariant-preserving fix. Do NOT edit any files. Return the root cause and the fix.",
+    "controlMedium": "Return exactly CONTROL_MEDIUM_OK and nothing else.",
+    "controlHigh": "Return exactly CONTROL_HIGH_OK and nothing else.",
+    "cappedReview": "Return exactly CAPPED_REVIEW_OK and nothing else.",
+    "inherit": "Return exactly INHERIT_OK and nothing else.",
+    "environmentOverride": "Return the exact requested marker.",
+    "settingsCap": "Return the exact requested marker."
+  },
+  "cases": [
+    {
+      "id": "explicit-implementer-medium",
+      "agentSet": "control-medium",
+      "environment": {},
+      "argv": [
+        "-p",
+        "--session-id",
+        "11111111-1111-4111-8111-111111111111",
+        "--output-format",
+        "stream-json",
+        "--verbose",
+        "--model",
+        "sonnet",
+        "--effort",
+        "medium",
+        "--agents",
+        "$AGENTS_JSON",
+        "--tools",
+        "Agent",
+        "--permission-mode",
+        "dontAsk",
+        "Use the oat-phase-implementer-claude-sonnet-medium agent exactly once. Ask it to return exactly CONTROL_MEDIUM_OK. Return its result."
+      ],
+      "exitCode": 0
+    },
+    {
+      "id": "explicit-reviewer-high",
+      "agentSet": "control-high",
+      "environment": {},
+      "argv": [
+        "-p",
+        "--session-id",
+        "22222222-2222-4222-8222-222222222222",
+        "--output-format",
+        "stream-json",
+        "--verbose",
+        "--model",
+        "sonnet",
+        "--effort",
+        "high",
+        "--agents",
+        "$AGENTS_JSON",
+        "--tools",
+        "Agent",
+        "--permission-mode",
+        "dontAsk",
+        "Use the oat-reviewer-claude-sonnet-high agent exactly once. Ask it to return exactly CONTROL_HIGH_OK. Return its result."
+      ],
+      "exitCode": 0
+    },
+    {
+      "id": "awareness-invalid-tools",
+      "agentSet": "awareness-invalid-tools",
+      "environment": {},
+      "argv": [
+        "-p",
+        "--session-id",
+        "33333333-3333-4333-8333-333333333333",
+        "--output-format",
+        "stream-json",
+        "--verbose",
+        "--model",
+        "sonnet",
+        "--effort",
+        "high",
+        "--agents",
+        "$AGENTS_JSON",
+        "--tools",
+        "Agent",
+        "--permission-mode",
+        "dontAsk",
+        "Use the OAT task-based dispatch contract. Classify each task independently. Clear bounded implementation uses the lowest eligible normal route; ambiguous diagnosis involving causality and state transitions uses the deeper reasoning route. The eligible ladder has two exact native variants: oat-phase-implementer-claude-sonnet-medium and oat-phase-implementer-claude-sonnet-high. Invoke one eligible variant for each task. Do not solve either task yourself and do not infer effort from self-identification. Task A: In ./mechanical.txt replace the single value blue with green, then report the final line. Task B: Read ./state-machine.txt and identify the minimal root cause plus the smallest invariant-preserving fix; do not edit files for Task B. Return the two selected exact variant names and a one-sentence rationale for each after both agents finish."
+      ],
+      "exitCode": 1
+    },
+    {
+      "id": "awareness-no-file-tools",
+      "agentSet": "awareness-no-tools",
+      "environment": {},
+      "argv": [
+        "-p",
+        "--resume",
+        "33333333-3333-4333-8333-333333333333",
+        "--output-format",
+        "stream-json",
+        "--verbose",
+        "--model",
+        "sonnet",
+        "--effort",
+        "high",
+        "--agents",
+        "$AGENTS_JSON",
+        "--tools",
+        "Agent",
+        "--permission-mode",
+        "dontAsk",
+        "Continue the same accepted run. The two ephemeral agent definitions now omit the invalid tools list while preserving the exact selected variants, model, effort, and prompts. Re-dispatch Task A to oat-phase-implementer-claude-sonnet-medium and Task B to oat-phase-implementer-claude-sonnet-high. Do not solve either task yourself. Return the selected exact variant names and a one-sentence rationale for each after both agents finish."
+      ],
+      "exitCode": 0
+    },
+    {
+      "id": "awareness-read-edit",
+      "agentSet": "awareness-read-edit",
+      "environment": {},
+      "argv": [
+        "-p",
+        "--resume",
+        "33333333-3333-4333-8333-333333333333",
+        "--output-format",
+        "stream-json",
+        "--verbose",
+        "--model",
+        "sonnet",
+        "--effort",
+        "high",
+        "--agents",
+        "$AGENTS_JSON",
+        "--tools",
+        "default",
+        "--permission-mode",
+        "dontAsk",
+        "Continue this same accepted awareness run and preserve the selections already made: Task A uses oat-phase-implementer-claude-sonnet-medium and Task B uses oat-phase-implementer-claude-sonnet-high. The parent now exposes the minimum Read/Edit tools named by the ephemeral definitions. Re-dispatch the same original Task A and Task B without changing their expected results or selection rationale. Do not solve either task yourself. Return both successful child outcomes, exact variant names, and one-sentence rationales."
+      ],
+      "exitCode": 0
+    },
+    {
+      "id": "awareness-edit-resume",
+      "agentSet": "awareness-read-edit",
+      "environment": {},
+      "argv": [
+        "-p",
+        "--resume",
+        "33333333-3333-4333-8333-333333333333",
+        "--output-format",
+        "stream-json",
+        "--verbose",
+        "--model",
+        "sonnet",
+        "--effort",
+        "high",
+        "--agents",
+        "$AGENTS_JSON",
+        "--tools",
+        "default",
+        "--permission-mode",
+        "acceptEdits",
+        "Continue this same accepted awareness run. Task B already succeeded; do not rerun it. Re-dispatch only the unchanged original Task A to the already selected oat-phase-implementer-claude-sonnet-medium variant. The permission mode now permits the bounded edit to the disposable fixture. Do not make the edit yourself. Return the successful child outcome, exact variant name, and original one-sentence rationale."
+      ],
+      "exitCode": 0
+    },
+    {
+      "id": "capped-reviewer-high",
+      "agentSet": "control-high",
+      "environment": {},
+      "argv": [
+        "-p",
+        "--session-id",
+        "44444444-4444-4444-8444-444444444444",
+        "--output-format",
+        "stream-json",
+        "--verbose",
+        "--model",
+        "sonnet",
+        "--effort",
+        "high",
+        "--agents",
+        "$AGENTS_JSON",
+        "--tools",
+        "Agent",
+        "--permission-mode",
+        "dontAsk",
+        "The OAT capped reviewer resolver selected oat-reviewer-claude-sonnet-high. Invoke exactly that Agent variant and ask it to return exactly CAPPED_REVIEW_OK. Do not answer the task yourself."
+      ],
+      "exitCode": 0
+    },
+    {
+      "id": "default-inherit-high",
+      "agentSet": "inherit",
+      "environment": {},
+      "argv": [
+        "-p",
+        "--session-id",
+        "55555555-5555-4555-8555-555555555555",
+        "--output-format",
+        "stream-json",
+        "--verbose",
+        "--model",
+        "sonnet",
+        "--settings",
+        "$LIVE_ROOT/inherit-settings.json",
+        "--agents",
+        "$AGENTS_JSON",
+        "--tools",
+        "Agent",
+        "--permission-mode",
+        "dontAsk",
+        "Use the oat-phase-implementer-claude-sonnet-inherit agent exactly once. Ask it to return exactly INHERIT_OK. Return its result."
+      ],
+      "exitCode": 0
+    },
+    {
+      "id": "environment-overrides-high-to-medium",
+      "agentSet": "control-high",
+      "environment": { "CLAUDE_CODE_EFFORT_LEVEL": "medium" },
+      "argv": [
+        "-p",
+        "--session-id",
+        "66666666-6666-4666-8666-666666666667",
+        "--output-format",
+        "stream-json",
+        "--verbose",
+        "--model",
+        "sonnet",
+        "--effort",
+        "high",
+        "--agents",
+        "$AGENTS_JSON",
+        "--tools",
+        "Agent",
+        "--permission-mode",
+        "dontAsk",
+        "Use the oat-reviewer-claude-sonnet-high agent exactly once. Return its result."
+      ],
+      "exitCode": 0
+    },
+    {
+      "id": "settings-cap-high-to-medium",
+      "agentSet": "control-high",
+      "environment": {},
+      "argv": [
+        "-p",
+        "--session-id",
+        "77777777-7777-4777-8777-777777777777",
+        "--output-format",
+        "stream-json",
+        "--verbose",
+        "--model",
+        "sonnet",
+        "--effort",
+        "high",
+        "--settings",
+        "$LIVE_ROOT/cap-settings.json",
+        "--agents",
+        "$AGENTS_JSON",
+        "--tools",
+        "Agent",
+        "--permission-mode",
+        "dontAsk",
+        "Use the oat-reviewer-claude-sonnet-high agent exactly once. Return its result."
+      ],
+      "exitCode": 0
+    }
+  ]
+}

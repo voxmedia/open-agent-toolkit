@@ -76,7 +76,11 @@ Before a native launch, the root constructs and redacts the complete generic
 dispatch record and OAT role event. When the host returns, it writes the
 request ID, the `Dispatch:` stamp, and the accepted or `blocked-before-start`
 result into the run record in `implementation.md`; persisting a per-dispatch
-file with `oat project dispatch record` is optional and off by default. An accepted launch closes
+file with `oat project dispatch record` is optional and off by default. Before
+an effort-pinned managed Claude launch, the root must still run that command
+without `--project` as a validation-only boundary. It supplies the real
+resolver result, generated definition, and proposed launch payload, and launches
+only the payload returned by the accepted envelope. An accepted launch closes
 replacement. Only an explicit rejection proving no child started permits one
 fresh request that preserves the exact target and controls and is labeled as
 an approximation. Timeout, `BLOCKED`, refusal after acceptance, runtime

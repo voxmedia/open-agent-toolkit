@@ -2,7 +2,7 @@
 
 Date: 2026-09-20
 
-Claude Code: `2.1.278` at `/Users/tstang/.local/bin/claude`
+Claude Code: `2.1.278` at the sanitized `$CLAUDE_BIN` path
 
 Scope: p03 of `claude-effort-levels`
 
@@ -27,7 +27,10 @@ Code, not from child self-identification. The retained fields are
 `attributionAgent`, `message.model`, top-level `effort`,
 `message.usage.service_tier`, `requestId`, `sessionId`, and `version`. Prompts,
 responses, paths, Git state, timestamps, and unrelated transcript fields were
-removed from the parser fixtures.
+removed from the parser fixtures. Provider request IDs were replaced with
+deterministic synthetic identifiers. Session IDs were supplied as
+deterministic pseudonyms before capture, preserving the same-parent
+relationship without retaining an ambient provider session.
 
 ## Current provider contract
 
@@ -47,7 +50,19 @@ lists installed release `2.1.278`; release `2.1.274` added effort telemetry to
 tracing and fixed preservation of `--effort` in the agents view. These pages
 were checked on 2026-09-20.
 
-## Reproducible command shape
+## Reproducible command recipes
+
+The complete sanitized executable inputs are retained in
+[`claude-effort-live-recipe.json`](./claude-effort-live-recipe.json). The
+artifact records every argv element, environment override, settings document,
+parameterized `--agents` JSON object, parent prompt, child prompt, marker,
+session handle, and same-handle continuation. Its argv arrays are passed
+directly to `$CLAUDE_BIN`; `$AGENTS_JSON` means
+`JSON.stringify(agentSets[case.agentSet])`. Only `$LIVE_ROOT`, `$PROJECT_ROOT`,
+and `$CLAUDE_BIN` require substitution, and all paths stay under the disposable
+root.
+
+The common one-shot shape was:
 
 Every one-shot control used this command shape, with the recorded handle,
 definition, marker, and optional precedence input substituted exactly:
@@ -157,6 +172,12 @@ The restored focused smoke file passed all four tests. The exact temporary
 patches and failure logs were retained only for the implementation run; the
 committed test contains the active guards.
 
+The review fix moved these checks into the shipped `oat project dispatch
+record` producer. Its focused smoke test sends the real resolver result,
+generated definition, and proposed launch payload through that boundary. The
+production-guard neutralization and restored result are recorded in
+[`claude-effort-gates.json`](./claude-effort-gates.json).
+
 ## Repository verification
 
 Phase verification ran in the repository Definition of Done order with each
@@ -197,4 +218,7 @@ tests and complete `pnpm test` rerun passed after these updates.
 The forced run used a fresh disposable home at
 `$LIVE_ROOT/forced-test-home`. Every Turbo task printed an execution marker;
 none was served from cache. Detailed command logs remained under the temporary
-gate-log directory and were not committed.
+gate-log directory and were not committed. The durable
+[`claude-effort-gates.json`](./claude-effort-gates.json) manifest retains every
+command, direct exit code, relevant count, forced-Turbo execution/cache marker,
+initial failure and corrected rerun, and SHA-256 log digest.

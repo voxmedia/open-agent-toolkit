@@ -22,8 +22,8 @@ const { SIDECHAIN_TRANSCRIPT } =
   await import('../../../packages/cli/dist/providers/identity/claude-runtime-observation.fixtures.js');
 const { compareObservedRuntimeMetadata, configuredInvocationForObservation } =
   await import('../../../packages/cli/dist/providers/identity/oat-dispatch-record.js');
-const { parseGenericDispatchRecord } =
-  await import('../../../packages/cli/dist/providers/identity/generic-dispatch-record.js');
+const { parseDispatchRecordInput } =
+  await import('../../../packages/cli/dist/commands/project/dispatch/record.js');
 
 const roots = [];
 
@@ -107,46 +107,6 @@ function resolveDispatch(configuration, args) {
   return { ...result, payload };
 }
 
-function frontmatterValue(content, key) {
-  const value = new RegExp(`^${key}: ([^\\n]+)$`, 'mu').exec(content)?.[1];
-  assert.ok(value, `generated definition is missing ${key}`);
-  return value;
-}
-
-function assertEffortLaunch({ resolution, definitions, payload }) {
-  const provider = resolution.providers.claude;
-  assert.equal(provider.mode, 'enforced');
-  assert.equal(provider.mechanism, 'pinned-variant');
-  assert.equal(
-    provider.effortAxis,
-    `selected:${provider.selection.target.effort}`,
-  );
-  const selectedVariant = provider.dispatchArgs?.variant;
-  assert.ok(
-    selectedVariant,
-    'effort-pinned dispatch requires a native variant',
-  );
-  assert.equal(payload.variant, selectedVariant);
-
-  const definition = definitions.get(selectedVariant);
-  assert.ok(definition, `selected Claude variant ${selectedVariant} is absent`);
-  assert.equal(
-    frontmatterValue(definition, 'model'),
-    provider.selection.target.model,
-  );
-  assert.equal(
-    frontmatterValue(definition, 'effort'),
-    provider.selection.target.effort,
-  );
-  if (payload.model !== undefined) {
-    assert.equal(
-      payload.model,
-      provider.selection.target.model,
-      'per-call model must agree with the generated Claude definition',
-    );
-  }
-}
-
 function agent(name) {
   return {
     name,
@@ -163,45 +123,55 @@ function definitionFor(name, model, effort) {
   });
 }
 
-function genericRecord({ role, variant, model, effort }) {
-  return parseGenericDispatchRecord({
+function recordBase(role) {
+  return {
     request_id: `p03-t01-${role}`,
     caller: 'oat-project-implement',
     scope: 'p03-t01',
     objective: 'Verify Claude effort dispatch invariants',
     action: role === 'oat-reviewer' ? 'review' : 'implementation',
-    role_name: role,
     role_class: role === 'oat-reviewer' ? 'review' : 'implementation',
-    provider: 'claude',
     dispatch_context: 'smoke-control',
-    dispatch_policy: 'high',
-    dispatch_ceiling: effort,
     catalog_snapshot: {
       id: 'p03-static-control',
       source: 'generated-definition',
       observed_at: '2026-09-20T00:00:00.000Z',
     },
     authority: 'phase-files',
-    role_selector: variant,
-    model_selector: model,
-    model_selector_granularity: 'exact-native-model-choice',
-    effort_selector: effort,
     reasoning_mode_selector: null,
     service_tier_selector: null,
-    selection_source: 'policy-resolved',
-    candidates_considered: [variant],
-    selection_reason: 'native-catalog',
-    selected_route: 'native',
     deadline_seconds: 600,
     retry_limit: 0,
-    payload: { variant },
     launch_status: 'accepted',
     child_outcome: 'completed',
-    configured_invocation_evidence: ['dispatch ceiling resolver'],
     runtime_confirmation: 'not-reported',
     diagnostics: [],
     continuation_events: [],
-  });
+  };
+}
+
+function productionRecord({ role, resolution, definition, payload }) {
+  return parseDispatchRecordInput({
+    claudeLaunch: { resolution, definition, payload },
+    recordBase: recordBase(role),
+    event: {
+      kind: 'canonical-role-resolution',
+      requestId: `p03-t01-${role}`,
+      source: 'canonical-role-resolver',
+      evidence: {
+        status: 'resolved',
+        dependency: 'workflows',
+        canonicalRole: role,
+        tier: 'project',
+        validation: 'direct-canonical',
+        canonicalPath: `<repo>/agents/${role}.md`,
+        selectedPath: `<repo>/agents/${role}.md`,
+        roleVersion: 'fixture',
+        contentDigest: `sha256:${'a'.repeat(64)}`,
+        candidateMisses: [],
+      },
+    },
+  }).record;
 }
 
 test.after(() => {
@@ -250,35 +220,23 @@ test('config to resolver to generated definition to launch payload to dispatch r
     0,
     `${reviewer.stderr}\n${JSON.stringify(reviewer.payload)}`,
   );
-  const definitions = new Map();
-  for (const role of ['oat-phase-implementer', 'oat-reviewer']) {
-    const definition = definitionFor(role, 'opus', 'high');
-    definitions.set(definition.roleName, definition.content);
-  }
-  assertEffortLaunch({
-    resolution: implementer.payload,
-    definitions,
-    payload: { variant: 'oat-phase-implementer-claude-opus-high' },
-  });
-  assertEffortLaunch({
-    resolution: reviewer.payload,
-    definitions,
-    payload: { variant: 'oat-reviewer-claude-opus-high' },
-  });
-
-  for (const [role, resolution] of [
-    ['oat-phase-implementer', implementer.payload],
-    ['oat-reviewer', reviewer.payload],
+  for (const [role, resolution, expectedVariant] of [
+    [
+      'oat-phase-implementer',
+      implementer.payload,
+      'oat-phase-implementer-claude-opus-high',
+    ],
+    ['oat-reviewer', reviewer.payload, 'oat-reviewer-claude-opus-high'],
   ]) {
-    const selected = resolution.providers.claude;
-    const record = genericRecord({
+    const definition = definitionFor(role, 'opus', 'high');
+    const record = productionRecord({
       role,
-      variant: selected.dispatchArgs.variant,
-      model: selected.selection.target.model,
-      effort: selected.selection.target.effort,
+      resolution,
+      definition: definition.content,
+      payload: { variant: expectedVariant },
     });
     assert.deepEqual(configuredInvocationForObservation(record), {
-      role: [role, selected.dispatchArgs.variant],
+      role: [role, expectedVariant],
       model: 'opus',
       effort: 'high',
       serviceTier: null,
@@ -353,23 +311,40 @@ test('same-model candidates resolve by effort and refuse absent or conflicting l
   const highDefinition = definitionFor('oat-phase-implementer', 'opus', 'high');
   assert.throws(
     () =>
-      assertEffortLaunch({
+      productionRecord({
+        role: 'oat-phase-implementer',
         resolution: high.payload,
-        definitions: new Map(),
+        definition: '',
         payload: { variant: highDefinition.roleName },
       }),
-    /is absent/u,
+    /absent|no YAML frontmatter/u,
   );
   assert.throws(
     () =>
-      assertEffortLaunch({
+      productionRecord({
+        role: 'oat-phase-implementer',
         resolution: high.payload,
-        definitions: new Map([
-          [highDefinition.roleName, highDefinition.content],
-        ]),
+        definition: highDefinition.content,
         payload: { variant: highDefinition.roleName, model: 'sonnet' },
       }),
-    /must agree/u,
+    /conflicts/u,
+  );
+
+  // Frozen pre-fix reproduction: an effort-blind producer reused the medium
+  // native variant for a high selection on the same model.
+  const effortBlind = structuredClone(high.payload);
+  effortBlind.providers.claude.dispatchArgs.variant =
+    'oat-phase-implementer-claude-opus-medium';
+  assert.throws(
+    () =>
+      productionRecord({
+        role: 'oat-phase-implementer',
+        resolution: effortBlind,
+        definition: definitionFor('oat-phase-implementer', 'opus', 'medium')
+          .content,
+        payload: { variant: 'oat-phase-implementer-claude-opus-medium' },
+      }),
+    /resolver variant .* does not match selected target/u,
   );
 });
 
@@ -456,12 +431,19 @@ test('existing captured Claude transcript metadata stays observation-only', () =
       serviceTier: 'standard',
     },
   );
+  const resolution = resolveDispatch(config(), [
+    '--provider',
+    'claude',
+    '--role',
+    'reviewer',
+  ]);
+  assert.equal(resolution.status, 0, resolution.stderr);
   const configured = configuredInvocationForObservation(
-    genericRecord({
+    productionRecord({
       role: 'oat-reviewer',
-      variant: 'oat-reviewer-claude-opus-high',
-      model: 'opus',
-      effort: 'high',
+      resolution: resolution.payload,
+      definition: definitionFor('oat-reviewer', 'opus', 'high').content,
+      payload: { variant: 'oat-reviewer-claude-opus-high' },
     }),
   );
   assert.equal(

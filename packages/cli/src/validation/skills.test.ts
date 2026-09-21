@@ -3025,7 +3025,7 @@ describe('validateOatSkills', () => {
         index < 3 ? /run record/i : /writes? no launch record/i,
       );
       expect(contract, paths[index]).toMatch(
-        /oat project dispatch record[^]{0,160}optional and off by default/i,
+        /oat project dispatch record[^]{0,280}optional\s+and\s+off\s+by\s+default/i,
       );
       expect(contract, paths[index]).not.toMatch(
         /immediately after[^]{0,200}run `oat project dispatch record/i,
@@ -4679,6 +4679,15 @@ describe('validateOatSkills', () => {
     expect(claudeRules).toMatch(
       /effort_axis=selected:<effort>[\s\S]{0,180}resolver output/i,
     );
+    expect(claudeRules).toContain('oat project dispatch record');
+    expect(claudeRules).toContain('claudeLaunch');
+    expect(claudeRules).toContain('recordBase');
+    expect(claudeRules).toMatch(
+      /status: validated-only[\s\S]{0,260}record\.payload\.variant/i,
+    );
+    expect(claudeRules).toMatch(
+      /rejects a missing or stale variant[\s\S]{0,180}conflicting per-call model/i,
+    );
     expect(claudeRules).not.toMatch(/effort_axis=not-applicable/);
 
     const reviewer = await readRepoFile('.agents/agents/oat-reviewer.md');
@@ -4691,6 +4700,13 @@ describe('validateOatSkills', () => {
     );
     expect(dispatch).not.toContain(
       'Dispatch policy: balanced; selected=sonnet; cap=sonnet (claude, enforced — Task model arg)',
+    );
+
+    const phaseExecution = await readRawRepoFile(
+      '.agents/skills/oat-project-implement/references/phase-execution.md',
+    );
+    expect(phaseExecution).toMatch(
+      /mandatory validation-only managed-Claude record boundary/i,
     );
   });
 
@@ -4742,7 +4758,7 @@ describe('validateOatSkills', () => {
         'providers.claude.dispatchArgs.model',
       );
       expect(consumer, `launch consumer ${index} conditional split`).toMatch(
-        /effort-pinned[\s\S]{0,180}legacy model-only/i,
+        /effort-pinned[\s\S]{0,360}legacy model-only/i,
       );
     }
   });
