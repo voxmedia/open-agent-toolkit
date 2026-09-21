@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-20
-oat_current_task_id: p01-t01
+oat_current_task_id: p01-t02
 oat_generated: false
 oat_template: false
 ---
@@ -14,27 +14,27 @@ Implementation is in progress. Phase p01 is the first executable phase.
 
 ## Progress Overview
 
-| Phase                                    | Status      | Tasks | Completed |
-| ---------------------------------------- | ----------- | ----- | --------- |
-| p01 — Resolve and materialize            | in_progress | 2     | 0/2       |
-| p02 — Guidance and recommendations       | pending     | 4     | 0/4       |
-| p03 — Verification and release readiness | pending     | 3     | 0/3       |
+| Phase                                    | Status         | Tasks | Completed |
+| ---------------------------------------- | -------------- | ----- | --------- |
+| p01 — Resolve and materialize            | review_pending | 2     | 2/2       |
+| p02 — Guidance and recommendations       | pending        | 4     | 0/4       |
+| p03 — Verification and release readiness | pending        | 3     | 0/3       |
 
-**Total: 0/9 tasks completed.**
+**Total: 2/9 tasks completed.**
 
 ## Task Status
 
-| Task    | Status  | Commit |
-| ------- | ------- | ------ |
-| p01-t01 | pending | -      |
-| p01-t02 | pending | -      |
-| p02-t01 | pending | -      |
-| p02-t02 | pending | -      |
-| p02-t03 | pending | -      |
-| p02-t04 | pending | -      |
-| p03-t01 | pending | -      |
-| p03-t02 | pending | -      |
-| p03-t03 | pending | -      |
+| Task    | Status    | Commit                                     |
+| ------- | --------- | ------------------------------------------ |
+| p01-t01 | completed | `cf0171757e58f611d757e33a4f3aee04c47480c3` |
+| p01-t02 | completed | `90502a9d478174e633a46efe4f0108c0c35bbeb9` |
+| p02-t01 | pending   | -                                          |
+| p02-t02 | pending   | -                                          |
+| p02-t03 | pending   | -                                          |
+| p02-t04 | pending   | -                                          |
+| p03-t01 | pending   | -                                          |
+| p03-t02 | pending   | -                                          |
+| p03-t03 | pending   | -                                          |
 
 ## Orchestration Runs
 
@@ -50,6 +50,14 @@ Implementation is in progress. Phase p01 is the first executable phase.
 - Tier: 1, exact native OAT phase implementer and reviewer variants.
 - Dispatch policy: managed High from project state; phase targets selected at or below that ceiling.
 - Current phase: p01.
+- Phase implementation request: `claude-effort-p01-implementation-01`; accepted natively as `oat-phase-implementer-gpt-5-6-sol-medium`.
+- Dispatch: `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-medium`.
+- Selection: `default-implementation`, preferred medium; exact candidate `gpt-5.6-sol/medium` beneath the High ceiling. Candidates considered: Luna/high, Luna/xhigh, Terra/high, Sol/medium, Sol/high. Selection reason: native catalog.
+- Outcome: p01 implementation complete at `10474030164d29fa52db1e367c9145c13a87ebb8`; independent phase review pending.
+- Task commits: p01-t01 `cf0171757e58f611d757e33a4f3aee04c47480c3`; p01-t02 `90502a9d478174e633a46efe4f0108c0c35bbeb9`.
+- Phase recovery: attempt 1/10, event `p01-t01-recovery-01`, recovered by append-only commit `10474030164d29fa52db1e367c9145c13a87ebb8`. Root validated the committed `completed` marker, immutable task commits, bounded help-snapshot correction, exact target, focused 60/60 rerun, and clean worktree before clearing the pending marker. Used-attempt count remains 1.
+- Verification: focused task suites 187/187 and 180/180; full CLI suite 7,461/7,461; CLI check, type-check, and build exit 0. Root independently reran the 60-test help snapshot suite and `git diff --check`; both passed.
+- Optional nested dispatches: none.
 
 <!-- orchestration-runs-end -->
 
