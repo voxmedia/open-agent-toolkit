@@ -52,18 +52,18 @@ The phases remain sequential. Phase 1 owns target identity, variant generation, 
 
 ## Bundled Recommendation Change
 
-The source is `packages/cli/config/dispatch-matrix-recommendation.json`, currently version `2026-07-27.1`. The adoption contract preserves explicit cells, so a new recommendation changes fresh adoption and missing cells; it does not upgrade an explicitly configured old Claude cell automatically.
+The source is `packages/cli/config/dispatch-matrix-recommendation.json`; this project advances it to version `2026-09-21.1`. The adoption contract preserves explicit cells, so a new recommendation changes fresh adoption and missing cells; it does not upgrade an explicitly configured old Claude cell automatically.
 
 Proposed Claude-only recommendation for this feature, subject to supported-pair verification during p02-t02:
 
-| Tier     | Ordered candidates                     | Rationale                                                                                                                         |
-| -------- | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| Economy  | `haiku`, `sonnet/medium`               | Preserve Haiku's effortless route and offer a bounded Sonnet route that meets current guidance.                                   |
-| Balanced | `sonnet/high`                          | Preserve Sonnet as the tier's terminal reviewer with a substantive explicit effort.                                               |
-| High     | `opus/medium`, `opus/high`             | Express normal versus deeper reasoning inside the existing Opus tier.                                                             |
-| Frontier | `opus/xhigh`, `opus/max`, `fable/high` | Expose exceptional Opus depth while preserving the current Fable terminal family without making max the default for every review. |
+| Tier     | Ordered candidates                                                  | Rationale                                                                                                                         |
+| -------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Economy  | `haiku`, `claude-sonnet-5/medium`                                   | Preserve Haiku's effortless route and offer a bounded Sonnet route that meets current guidance.                                   |
+| Balanced | `claude-sonnet-5/high`                                              | Preserve Sonnet as the tier's terminal reviewer with a substantive explicit effort.                                               |
+| High     | `claude-opus-5/medium`, `claude-opus-5/high`                        | Express normal versus deeper reasoning inside the existing Opus tier.                                                             |
+| Frontier | `claude-opus-5/xhigh`, `claude-opus-5/max`, `claude-fable-5-1/high` | Expose exceptional Opus depth while preserving the current Fable terminal family without making max the default for every review. |
 
-These are supported choices, not blanket permission to use a below-floor model for a task. Existing task-class guidance controls eligibility; Haiku remains inappropriate for semantic audits. Fable remains a qualified specialist route. Other supported effort pairs, including Fable xhigh/max, may be configured explicitly without being bundled as routine defaults. Confirm exact aliases/efforts and runtime constraints before finalizing; if support differs, adjust only the affected pair with evidence, and escalate any material model-family or reviewer-ceiling change.
+These are supported choices, not blanket permission to use a below-floor model for a task. Existing task-class guidance controls eligibility; Haiku remains inappropriate for semantic audits. Fable remains a qualified specialist route. Other supported effort pairs, including Fable xhigh/max, may be configured explicitly with a recognized versioned model ID or an authoritative family-pin capability declaration. Effort-pinned bare aliases fail closed because `availableModels` or organization policy can substitute a generation with different capabilities. Model-only aliases retain compatibility.
 
 Synchronize the displayed recommendation with the authoritative JSON, including an already stale Cursor row in the plan-writing display; preserve the actual Codex/Cursor JSON values. Do not adopt the new bundle into this user's live configuration as an implementation side effect.
 
@@ -214,7 +214,7 @@ Then run each separately with its own captured exit code: `pnpm test:smoke`, `pn
 
 **Files:** `packages/cli/src/providers/claude/targets.ts`; resolver and materializer callers under `packages/cli/src/{config,commands/project/dispatch-ceiling,providers/claude,providers/ceiling}/`; their colocated tests; provider guidance or documentation only where the resolved-version contract must be exposed.
 
-**Work:** Replace the alias-only effort allowlist with a version-aware Claude capability contract. Keep provider capability separate from bundled recommendation and task-routing eligibility. Accept each documented model/version effort pair that OAT can establish, including low effort for supported Opus/Fable generations and xhigh/max for Sonnet 5. Resolve provider-dependent aliases to a concrete generation before validating version-sensitive effort levels. When the runtime/provider cannot establish the resolved generation, fail with a clear ambiguity/capability error rather than claiming the pair is unsupported. Preserve legacy model-only routes and the existing bundled recommendation unchanged.
+**Work:** Replace the alias-only effort allowlist with a version-aware Claude capability contract. Keep provider capability separate from task-routing eligibility. Accept each documented model/version effort pair that OAT can establish, including low effort for supported Opus/Fable generations and xhigh/max for Sonnet 5. Use recognized versioned IDs or authoritative family-pin declarations as capability evidence; fail effort-pinned bare aliases closed because runtime restrictions can substitute another generation. Preserve legacy model-only routes. Migrate bundled effort-pinned recommendations to explicit current Claude model IDs while retaining model-only Haiku and all existing Codex/Cursor cells.
 
 **Verify:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/dispatch-matrix.test.ts src/providers/ceiling/registry.test.ts src/commands/project/dispatch-ceiling/index.test.ts src/providers/claude/codec/materialize.test.ts src/providers/claude/codec/sync-extension.test.ts`; `node --test tools/smoke/verification/claude-effort-dispatch.test.mjs`; `pnpm run cli -- sync --scope project --dry-run --json`. Include controls that accept Sonnet 5 `xhigh`, reject Sonnet 4.6 `xhigh`, accept the missing documented low/medium pairs, and reject an unresolved version-dependent capability without changing recommendation eligibility.
 
@@ -243,7 +243,7 @@ Then run each separately with its own captured exit code: `pnpm test:smoke`, `pn
 | SC3 exact native launch and refusal boundaries | p02-t01, p03-t01, p03-t02 |
 | SC4 compatibility and other providers          | p01-t01, p01-t02, p02-t02 |
 | SC5 awareness and actual task-based choice     | p02-t01, p03-t02          |
-| SC6 recommendation and adoption                | p02-t02                   |
+| SC6 recommendation and adoption                | p02-t02, p04-t01          |
 | SC7 positive/negative/live evidence            | p03-t01, p03-t02          |
 | SC8 decisions, docs, bumps, gates              | p02-t03, p03-t03          |
 | SC9 relevant workflow-gate prompts             | p02-t04                   |
@@ -263,7 +263,7 @@ Then run each separately with its own captured exit code: `pnpm test:smoke`, `pn
 | p03    | code     | fixes_completed | 2026-09-21 | reviews/p03-review-2026-09-21T035607Z.md                    | 4bab859cc4239c2462c5b43b93b0501aa444572a | phase      | -           |
 | p03    | code     | passed          | 2026-09-21 | reviews/p03-review-2026-09-21T040439Z.md                    | 3a5d9904739284c6c660fae75118efeb651324a8 | phase      | -           |
 | p04    | code     | fixes_completed | 2026-09-21 | reviews/p04-review-2026-09-21T134100Z.md                    | 7ff3bb101d641f2e273679b68d44868ac97141fa | phase      | -           |
-| p04    | code     | fixes_added     | 2026-09-21 | reviews/p04-review-2026-09-21T140558Z.md                    | 431c845ead1f668089401772cb64326dde9e7a2c | phase      | -           |
+| p04    | code     | fixes_completed | 2026-09-21 | reviews/p04-review-2026-09-21T140558Z.md                    | 431c845ead1f668089401772cb64326dde9e7a2c | phase      | -           |
 | plan   | artifact | passed          | 2026-09-20 | -                                                           | -                                        | -          | -           |
 | plan   | artifact | fixes_completed | 2026-09-20 | reviews/archived/artifact-plan-review-2026-09-20T235147Z.md | -                                        | -          | -           |
 | plan   | artifact | fixes_completed | 2026-09-21 | reviews/archived/artifact-plan-review-2026-09-21T000015Z.md | -                                        | -          | -           |

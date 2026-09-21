@@ -15,8 +15,8 @@ oat_phase_recovery_policy:
     p04:
       used_attempts: 0
       pending_attempt: null
-oat_current_task: p04-fix2
-oat_last_commit: 431c845ead1f668089401772cb64326dde9e7a2c
+oat_current_task: null
+oat_last_commit: 14dbbb9a971904f18a673758a94be813ccfda428
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -95,7 +95,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-20T19:40:55.054Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-21T14:05:58Z'
+oat_project_state_updated: '2026-09-21T14:35:44Z'
 oat_generated: false
 ---
 
@@ -107,14 +107,14 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — phase p04 review fix round 2 in progress.
+Implementation — phase p04 review fix round 2 complete; final phase review pending.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` — validated and complete.
 - **Spec / Design:** not required in this quick workflow.
 - **Plan:** `plan.md` — 4 sequential phases, 11 tasks; final review findings converted to p04.
-- **Implementation:** `implementation.md` — 11/11 planned tasks complete; p04 bounded review fix round 2 is in progress.
+- **Implementation:** `implementation.md` — 11/11 planned tasks complete; p04 bounded review fix round 2 is complete and awaits its final review cycle.
 
 ## Progress
 
@@ -123,7 +123,7 @@ Implementation — phase p04 review fix round 2 in progress.
 - Effective reusable ladders complete; project ceiling High. Additional phase gate review disabled by user; configured lifecycle gates remain unchanged.
 - Phases p01 and p02 completed and passed independent review after one bounded fix round each.
 - Phase p03 implementation and live-provider evidence completed; two bounded fix rounds resolved every finding, and the third review cycle passed with zero findings.
-- Final lifecycle review found one High and one Low. Phase p04 implemented both; its second phase review left two High capability-inflation findings for fix round 2.
+- Final lifecycle review found one High and one Low. Phase p04 implemented both; fix round 2 closed the remaining bare-alias and restrictive-declaration capability gaps.
 
 ## Blockers
 
@@ -131,4 +131,4 @@ None.
 
 ## Next Milestone
 
-Complete fix round 2 and the third p04 review cycle, then rerun the final closeout review and configured implementation exit gate.
+Run the third and final p04 review cycle, then rerun the final closeout review and configured implementation exit gate.

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-21
-oat_current_task_id: p04-fix2
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 ---
@@ -123,6 +123,9 @@ The first final review found one High capability-modeling defect and one Low arc
 - Phase p04 re-review request `claude-effort-p04-review-02` used a fresh `oat-reviewer-gpt-5-6-sol-high` against reviewed head `431c845ead1f668089401772cb64326dde9e7a2c` with invocation `phase`.
 - Phase p04 re-review artifact: `reviews/p04-review-2026-09-21T140558Z.md`; verdict blocked with 0 Critical, 2 High, 0 Medium, and 0 Low. Reconnaissance was not attempted. Prior p04 M1 is resolved and no Medium is deferred.
 - Remaining Highs: bare aliases still cannot establish that `availableModels` or organization restrictions will not substitute a non-effort generation; recognized family pins ignore an explicit restrictive `_SUPPORTED_CAPABILITIES` declaration. Bounded fix round 2 addresses both through the original p04 implementer handle before the third and final p04 review cycle.
+- Phase p04 fix round 2 commit `14dbbb9a971904f18a673758a94be813ccfda428` makes effort-pinned bare aliases fail closed, keeps model-only aliases compatible, treats matching third-party `_SUPPORTED_CAPABILITIES` declarations as authoritative even for recognized pins, and migrates bundled effort routes to explicit Sonnet 5, Opus 5, and Fable 5.1 IDs in recommendation version `2026-09-21.1`.
+- Fix round 2 verification: implementer focused/removal suites 338/338, config/parity/skills 525/525, full `pnpm test`, check, type-check, build, lint, format, skill-bump validation, skill validation, smoke 4/4, diff checks, and zero-change sync dry-run passed. Root independently reran 827 focused/parity tests, smoke 4/4, skill-bump validation, skill validation, and zero-change built sync dry-run.
+- Fix round 2 is complete at `14dbbb9a971904f18a673758a94be813ccfda428`; the third and final p04 review cycle is next.
 
 <!-- orchestration-runs-end -->
 
