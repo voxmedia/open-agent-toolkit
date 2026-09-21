@@ -72,6 +72,10 @@ target=cursor-fable-5-1-high threshold=high findings=critical:0,high:0,medium:1,
 
 final-review-run3-20260921T153433Z Final lifecycle review passed its blocking threshold with one Low tracking-artifact wording finding; attempted reconnaissance and inline reconciliation are recorded in reviews/final-review-2026-09-21T153433Z.md.
 
+### 2026-09-21 · structural · oat gate review · final
+
+target=cursor-fable-5-1-high threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/claude-effort-levels/reviews/final-review-2026-09-21T203110Z.md run=a0edfdfe-585d-467c-b189-b5300b17d667
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
