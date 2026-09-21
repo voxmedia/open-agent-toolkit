@@ -282,6 +282,7 @@ Then run each separately with its own captured exit code: `pnpm test:smoke`, `pn
 | p04    | code     | fixes_completed | 2026-09-21 | reviews/p04-review-2026-09-21T134100Z.md                    | 7ff3bb101d641f2e273679b68d44868ac97141fa | phase      | -                     |
 | p04    | code     | fixes_completed | 2026-09-21 | reviews/p04-review-2026-09-21T140558Z.md                    | 431c845ead1f668089401772cb64326dde9e7a2c | phase      | -                     |
 | p04    | code     | passed          | 2026-09-21 | reviews/p04-review-2026-09-21T143647Z.md                    | ee5c8ef6a34c11de56fd7363540d77fc5246a26c | phase      | -                     |
+| p05    | code     | passed          | 2026-09-21 | reviews/p05-review-2026-09-21T152422Z.md                    | ce0cb2968a577c65fc74f185a65671e6401336e2 | phase      | -                     |
 | plan   | artifact | passed          | 2026-09-20 | -                                                           | -                                        | -          | -                     |
 | plan   | artifact | fixes_completed | 2026-09-20 | reviews/archived/artifact-plan-review-2026-09-20T235147Z.md | -                                        | -          | -                     |
 | plan   | artifact | fixes_completed | 2026-09-21 | reviews/archived/artifact-plan-review-2026-09-21T000015Z.md | -                                        | -          | -                     |
@@ -293,7 +294,7 @@ Phase p02 passed with 0 Critical, 0 High, 0 Medium, and 1 Low after all five fir
 
 ## Implementation Complete
 
-All twelve planned tasks are implemented. Phases p01 through p04 passed independent review; phase p05 awaits its independent review.
+All twelve planned tasks are implemented, and phases p01 through p05 passed independent review. Fresh final verification, final lifecycle review, and configured exit-gate attempt 2 remain before closeout.
 
 - Phase 1: 2 tasks — resolver and generated-role lifecycle.
 - Phase 2: 4 tasks — awareness, recommendations, documentation/decision alignment, and relevant lifecycle-gate prompts.
