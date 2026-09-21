@@ -250,25 +250,26 @@ Then run each separately with its own captured exit code: `pnpm test:smoke`, `pn
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target |
-| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
-| p01    | code     | fixes_completed | 2026-09-21 | reviews/p01-review-2026-09-21T005952Z.md                    | 10474030164d29fa52db1e367c9145c13a87ebb8 | phase      | -           |
-| p01    | code     | passed          | 2026-09-21 | reviews/p01-review-2026-09-21T012030Z.md                    | ad56e6c56c40f547c9ebf8519a4609d6ed787720 | phase      | -           |
-| p02    | code     | fixes_completed | 2026-09-21 | reviews/p02-review-2026-09-21T020650Z.md                    | fc986addb653930df9bae103750c01e07a6c1824 | phase      | -           |
-| p02    | code     | passed          | 2026-09-21 | reviews/p02-review-2026-09-21T022325Z.md                    | a7636eee4d53b0996b6813ea364dcb192706ff53 | phase      | -           |
-| final  | code     | fixes_added     | 2026-09-21 | reviews/final-review-2026-09-21T041719Z.md                  | 4710fa145506e0cbb474b97fd9e46d0ff45d11a5 | auto       | -           |
-| final  | code     | passed          | 2026-09-21 | reviews/final-review-2026-09-21T144805Z.md                  | 590a08ce2d0b4c7637a75dcaf36fb40b55ed1da1 | auto       | -           |
-| spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -           |
-| design | artifact | pending         | -          | -                                                           | -                                        | -          | -           |
-| p03    | code     | fixes_completed | 2026-09-21 | reviews/p03-review-2026-09-21T031442Z.md                    | f278335a77de048a616c3b77536fe21fcb41867b | phase      | -           |
-| p03    | code     | fixes_completed | 2026-09-21 | reviews/p03-review-2026-09-21T035607Z.md                    | 4bab859cc4239c2462c5b43b93b0501aa444572a | phase      | -           |
-| p03    | code     | passed          | 2026-09-21 | reviews/p03-review-2026-09-21T040439Z.md                    | 3a5d9904739284c6c660fae75118efeb651324a8 | phase      | -           |
-| p04    | code     | fixes_completed | 2026-09-21 | reviews/p04-review-2026-09-21T134100Z.md                    | 7ff3bb101d641f2e273679b68d44868ac97141fa | phase      | -           |
-| p04    | code     | fixes_completed | 2026-09-21 | reviews/p04-review-2026-09-21T140558Z.md                    | 431c845ead1f668089401772cb64326dde9e7a2c | phase      | -           |
-| p04    | code     | passed          | 2026-09-21 | reviews/p04-review-2026-09-21T143647Z.md                    | ee5c8ef6a34c11de56fd7363540d77fc5246a26c | phase      | -           |
-| plan   | artifact | passed          | 2026-09-20 | -                                                           | -                                        | -          | -           |
-| plan   | artifact | fixes_completed | 2026-09-20 | reviews/archived/artifact-plan-review-2026-09-20T235147Z.md | -                                        | -          | -           |
-| plan   | artifact | fixes_completed | 2026-09-21 | reviews/archived/artifact-plan-review-2026-09-21T000015Z.md | -                                        | -          | -           |
+| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target           |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | --------------------- |
+| p01    | code     | fixes_completed | 2026-09-21 | reviews/p01-review-2026-09-21T005952Z.md                    | 10474030164d29fa52db1e367c9145c13a87ebb8 | phase      | -                     |
+| p01    | code     | passed          | 2026-09-21 | reviews/p01-review-2026-09-21T012030Z.md                    | ad56e6c56c40f547c9ebf8519a4609d6ed787720 | phase      | -                     |
+| p02    | code     | fixes_completed | 2026-09-21 | reviews/p02-review-2026-09-21T020650Z.md                    | fc986addb653930df9bae103750c01e07a6c1824 | phase      | -                     |
+| p02    | code     | passed          | 2026-09-21 | reviews/p02-review-2026-09-21T022325Z.md                    | a7636eee4d53b0996b6813ea364dcb192706ff53 | phase      | -                     |
+| final  | code     | fixes_added     | 2026-09-21 | reviews/final-review-2026-09-21T041719Z.md                  | 4710fa145506e0cbb474b97fd9e46d0ff45d11a5 | auto       | -                     |
+| final  | code     | passed          | 2026-09-21 | reviews/final-review-2026-09-21T144805Z.md                  | 590a08ce2d0b4c7637a75dcaf36fb40b55ed1da1 | auto       | -                     |
+| spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                     |
+| design | artifact | pending         | -          | -                                                           | -                                        | -          | -                     |
+| p03    | code     | fixes_completed | 2026-09-21 | reviews/p03-review-2026-09-21T031442Z.md                    | f278335a77de048a616c3b77536fe21fcb41867b | phase      | -                     |
+| p03    | code     | fixes_completed | 2026-09-21 | reviews/p03-review-2026-09-21T035607Z.md                    | 4bab859cc4239c2462c5b43b93b0501aa444572a | phase      | -                     |
+| p03    | code     | passed          | 2026-09-21 | reviews/p03-review-2026-09-21T040439Z.md                    | 3a5d9904739284c6c660fae75118efeb651324a8 | phase      | -                     |
+| p04    | code     | fixes_completed | 2026-09-21 | reviews/p04-review-2026-09-21T134100Z.md                    | 7ff3bb101d641f2e273679b68d44868ac97141fa | phase      | -                     |
+| p04    | code     | fixes_completed | 2026-09-21 | reviews/p04-review-2026-09-21T140558Z.md                    | 431c845ead1f668089401772cb64326dde9e7a2c | phase      | -                     |
+| p04    | code     | passed          | 2026-09-21 | reviews/p04-review-2026-09-21T143647Z.md                    | ee5c8ef6a34c11de56fd7363540d77fc5246a26c | phase      | -                     |
+| plan   | artifact | passed          | 2026-09-20 | -                                                           | -                                        | -          | -                     |
+| plan   | artifact | fixes_completed | 2026-09-20 | reviews/archived/artifact-plan-review-2026-09-20T235147Z.md | -                                        | -          | -                     |
+| plan   | artifact | fixes_completed | 2026-09-21 | reviews/archived/artifact-plan-review-2026-09-21T000015Z.md | -                                        | -          | -                     |
+| final  | code     | received        | 2026-09-21 | reviews/final-review-2026-09-21T151012Z.md                  | 20ccadb91af8dda2882035a6f026124fb50eb900 | gate       | cursor-fable-5-1-high |
 
 Spec and design rows are retained from the scaffold for compatibility and are not required in this quick workflow. Native structured artifact review passed after one revision. The final configured gate passed its High threshold with 0 Critical, 0 High, 0 Medium, and 2 Low findings. Root received the corroborated artifact and resolved both Low findings in-place: a realistic Cursor `claude-*` collision fixture and fixture-provenance sequencing. The latest row remains `fixes_completed`, not a claim of an independent zero-finding re-review; local plan validation and formatting verify these clarifications. The second gate independently confirmed resolution of all first-gate findings. No unresolved planning findings remain.
 
