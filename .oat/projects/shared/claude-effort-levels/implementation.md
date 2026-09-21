@@ -187,6 +187,8 @@ Final configured-gate attempt `claude-effort-exit-gate-r3-1-20260921T232006Z` re
 
 The gate accepted that attempt as run `a152776f-dd7b-4c71-884a-b57e337f96ca` at `2026-09-21T23:20:56.935Z` on target `cursor-fable-5-1-high`. Its live acceptance marker is `/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/a152776f-dd7b-4c71-884a-b57e337f96ca.json`; terminal status remains pending the durable receipt.
 
+The durable receipt completed with exit 0 and envelope status `ok`. Run/project/invocation corroboration all matched, `receiveEligible` is true, and the High threshold passed with 0 Critical, 0 High, 0 Medium, and 2 Low findings. The active source artifact is `reviews/final-review-2026-09-21T232436Z.md`; its two Low prose-alignment findings await the persisted receive transition.
+
 <!-- orchestration-runs-end -->
 
 ## Planning Log
