@@ -20,7 +20,7 @@ oat_phase_recovery_policy:
         discovered_by: pnpm run check:skill-bumps; oat sync --scope project hook check
         dispatch_target: oat-phase-implementer-gpt-5-6-sol-medium
         reservation_head: ffe6e1b9fa409eb2059c889e75b01195cfcbcef0
-        status: pending
+        status: completed
 oat_current_task: p02-t04
 oat_last_commit: ad81125c361b4aa39a00dc9309ec33069d56dca8
 oat_blockers: []
