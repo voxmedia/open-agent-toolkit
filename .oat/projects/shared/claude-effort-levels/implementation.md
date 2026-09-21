@@ -3,14 +3,14 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-21
-oat_current_task_id: p05-t01
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 ---
 
 # Implementation: claude-effort-levels
 
-The original final-review findings are resolved and phase p04 passed. A fresh final lifecycle review then passed cleanly. The configured exit gate passed its High threshold and converted one Medium documentation-alignment finding plus three wording-oriented Lows into p05-t01; one low-risk structural-comparison cleanup is explicitly deferred.
+The original final-review findings are resolved and phase p04 passed. A fresh final lifecycle review then passed cleanly. The configured exit gate passed its High threshold and converted one Medium documentation-alignment finding plus three wording-oriented Lows into p05-t01, which is implemented and awaits phase review; one low-risk structural-comparison cleanup is explicitly deferred.
 
 ## Progress Overview
 
@@ -20,9 +20,9 @@ The original final-review findings are resolved and phase p04 passed. A fresh fi
 | p02 — Guidance and recommendations       | completed | 4     | 4/4       |
 | p03 — Verification and release readiness | completed | 3     | 3/3       |
 | p04 — Final review fixes                 | completed | 2     | 2/2       |
-| p05 — Capability documentation alignment | pending   | 1     | 0/1       |
+| p05 — Capability documentation alignment | completed | 1     | 1/1       |
 
-**Total: 11/12 tasks completed.**
+**Total: 12/12 tasks completed.**
 
 ## Task Status
 
@@ -39,7 +39,7 @@ The original final-review findings are resolved and phase p04 passed. A fresh fi
 | p03-t03 | completed | `f278335a77de048a616c3b77536fe21fcb41867b` |
 | p04-t01 | completed | `5f696f161c6025ff5ee01ffac907fd872741c6f3` |
 | p04-t02 | completed | `7bbafcd0aad74a6d0a4d59a3cb3d43459f1a771f` |
-| p05-t01 | pending   | -                                          |
+| p05-t01 | completed | `8fce3af3799c07400e4ed4d23da08ad172e9f3dc` |
 
 ## Orchestration Runs
 
@@ -142,6 +142,9 @@ The original final-review findings are resolved and phase p04 passed. A fresh fi
 - Gate review receive intent persisted for `reviews/final-review-2026-09-21T151012Z.md`, bound to archived destination `reviews/archived/final-review-2026-09-21T151012Z.md`, exact ledger event, and pre-receive head `09f811505ba272edb36f229c0d68eb37ac11dfdc`.
 - Gate review judgment sweep converted the Medium documentation drift plus wording-oriented Lows L1-L3 into p05-t01. L4 is explicitly deferred: every current producer and schema parser emits canonical field order and the launch path fails closed, so a new canonical comparison helper would add code churn without a demonstrated failure. The gate artifact is archived after receive.
 - Receive bookkeeping commit `e3cf8a737b8788ef7948fae9cbbfb4d48eaf3356` moved the run-correlated artifact to `reviews/archived/final-review-2026-09-21T151012Z.md`, advanced its exact Reviews event to `fixes_added`, and added p05-t01. The durable receive receipt is complete; gate attempt 2 remains available after remediation and fresh final review.
+- Phase p05 request `claude-effort-p05-implementation-01` used `oat-phase-implementer-gpt-5-6-sol-high`. Dispatch: `Dispatch: scope=p05 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`.
+- Phase p05 task commit `8fce3af3799c07400e4ed4d23da08ad172e9f3dc` corrected the stale resolver example, documented version/pin/declaration/host precedence and model-only behavior, attributed the inherited Cursor ladder to its prior recommendation, and documented the current deterministic variant slug. The skill already carried its required PR-scoped version bump.
+- Phase p05 verification passed both resolver controls, docs lint and production build, 348 guidance tests, skill and bump validation, repository lint/format, and `git diff --check`. Root independently reran docs lint, skill-bump validation, canonical skill validation, and diff checks. Independent p05 review is next.
 
 <!-- orchestration-runs-end -->
 

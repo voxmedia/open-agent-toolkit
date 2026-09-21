@@ -293,7 +293,7 @@ Phase p02 passed with 0 Critical, 0 High, 0 Medium, and 1 Low after all five fir
 
 ## Implementation Complete
 
-Eleven of twelve planned tasks are implemented. Phases p01 through p04 passed independent review; phase p05 contains the configured exit gate's documentation-alignment task.
+All twelve planned tasks are implemented. Phases p01 through p04 passed independent review; phase p05 awaits its independent review.
 
 - Phase 1: 2 tasks — resolver and generated-role lifecycle.
 - Phase 2: 4 tasks — awareness, recommendations, documentation/decision alignment, and relevant lifecycle-gate prompts.
@@ -301,7 +301,7 @@ Eleven of twelve planned tasks are implemented. Phases p01 through p04 passed in
 - Phase 4: 2 tasks — version-aware Claude effort validation and provider-registry guidance.
 - Phase 5: 1 task — align shipped docs and orchestrator guidance with the fail-closed capability contract.
 
-**Total: 12 tasks; 11 implemented.**
+**Total: 12 tasks; 12 implemented.**
 
 ## References
 

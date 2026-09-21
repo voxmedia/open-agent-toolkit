@@ -15,8 +15,8 @@ oat_phase_recovery_policy:
     p04:
       used_attempts: 0
       pending_attempt: null
-oat_current_task: p05-t01
-oat_last_commit: 590a08ce2d0b4c7637a75dcaf36fb40b55ed1da1
+oat_current_task: null
+oat_last_commit: 8fce3af3799c07400e4ed4d23da08ad172e9f3dc
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -55,7 +55,7 @@ oat_workflow_origin: native # native | imported
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
 oat_implement_exit_gate:
-  status: blocked
+  status: stale
   resolution: configured
   disposition: null
   config_fingerprint: 'sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324'
@@ -88,8 +88,8 @@ oat_implement_exit_gate:
   receive_commit: e3cf8a737b8788ef7948fae9cbbfb4d48eaf3356
   receive_eligible: true
   receive_completed: true
-  failure: judgment_sweep_fix_tasks_added
-  updated_at: '2026-09-21T15:16:00Z'
+  failure: substantive_p05_remediation_requires_fresh_review
+  updated_at: '2026-09-21T15:24:09Z'
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
@@ -131,7 +131,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-20T19:40:55.054Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-21T15:16:00Z'
+oat_project_state_updated: '2026-09-21T15:24:09Z'
 oat_generated: false
 ---
 
@@ -143,14 +143,14 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — configured exit-gate findings received; phase p05 documentation alignment pending.
+Implementation — phase p05 documentation alignment complete; independent phase review pending.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` — validated and complete.
 - **Spec / Design:** not required in this quick workflow.
 - **Plan:** `plan.md` — 5 sequential phases, 12 tasks; configured exit-gate documentation findings converted to p05.
-- **Implementation:** `implementation.md` — 11/12 planned tasks complete; p05-t01 is pending.
+- **Implementation:** `implementation.md` — 12/12 planned tasks complete; p05 awaits independent review.
 
 ## Progress
 
@@ -164,6 +164,7 @@ Implementation — configured exit-gate findings received; phase p05 documentati
 - The complete repository, release, docs, lint, and formatting gate sequence passed against the post-p04 implementation basis.
 - Fresh final lifecycle review passed with zero findings and no deferred Medium ledger.
 - The configured exit gate passed its High threshold with one Medium and four Low findings. Its judgment sweep converted the documentation and wording findings into p05-t01 and explicitly deferred the low-risk structural-comparison cleanup.
+- Phase p05 implemented the documentation alignment. The prior exit-gate generation is stale because p05 changed shipped content; fresh review and gate attempt 2 are required.
 
 ## Blockers
 
@@ -171,4 +172,4 @@ None.
 
 ## Next Milestone
 
-Implement p05-t01, rerun final verification and lifecycle review, then use the second configured exit-gate attempt.
+Run the independent p05 review, then rerun final verification and lifecycle review before configured exit-gate attempt 2.
