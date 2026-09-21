@@ -7,6 +7,8 @@ import {
   observeClaudeRuntimeFacts,
 } from './claude-runtime-observation';
 import {
+  LIVE_HIGH_EFFORT_TRANSCRIPT,
+  LIVE_MEDIUM_EFFORT_TRANSCRIPT,
   MAIN_SESSION_TRANSCRIPT,
   SIDECHAIN_TRANSCRIPT,
 } from './claude-runtime-observation.fixtures';
@@ -92,6 +94,27 @@ describe('extractClaudeRuntimeMetadata against captured transcripts', () => {
       childLineage: 'depth-unknown',
       role: 'general-purpose',
       model: 'claude-opus-5',
+      effort: 'high',
+      serviceTier: 'standard',
+    });
+  });
+
+  it('reads both effort levels from the bounded live selection controls', () => {
+    expect(
+      extractClaudeRuntimeMetadata(LIVE_MEDIUM_EFFORT_TRANSCRIPT),
+    ).toMatchObject({
+      childLineage: 'depth-unknown',
+      role: 'oat-phase-implementer-claude-sonnet-medium',
+      model: 'claude-sonnet-5',
+      effort: 'medium',
+      serviceTier: 'standard',
+    });
+    expect(
+      extractClaudeRuntimeMetadata(LIVE_HIGH_EFFORT_TRANSCRIPT),
+    ).toMatchObject({
+      childLineage: 'depth-unknown',
+      role: 'oat-reviewer-claude-sonnet-high',
+      model: 'claude-sonnet-5',
       effort: 'high',
       serviceTier: 'standard',
     });

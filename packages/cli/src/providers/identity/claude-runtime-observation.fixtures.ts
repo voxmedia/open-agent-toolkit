@@ -146,3 +146,56 @@ export const SIDECHAIN_TRANSCRIPT: readonly unknown[] = [
     },
   },
 ];
+
+/**
+ * Live effort-selection controls captured on 2026-09-20 with Claude Code
+ * 2.1.278. The source artifacts were the provider-written child transcripts
+ * for accepted sessions `11111111-1111-4111-8111-111111111111` and
+ * `22222222-2222-4222-8222-222222222222` in an isolated temporary
+ * `CLAUDE_CONFIG_DIR`. Both children completed successfully. The launch used
+ * generated agent definitions with `model: sonnet` and explicit `effort`
+ * values; these entries preserve the provider-reported role, resolved model,
+ * effort, tier, request, session, and version.
+ *
+ * Sanitization uses the same allowlist as the corpus fixtures above. It drops
+ * prompts, responses, cwd, Git state, agentId, timestamps, and attachment
+ * entries. UUID linkage is omitted because this control exercises selection,
+ * not transcript ancestry.
+ */
+export const LIVE_MEDIUM_EFFORT_TRANSCRIPT: readonly unknown[] = [
+  {
+    type: 'assistant',
+    isSidechain: true,
+    effort: 'medium',
+    attributionAgent: 'oat-phase-implementer-claude-sonnet-medium',
+    sessionId: '11111111-1111-4111-8111-111111111111',
+    requestId: 'req_011CfFopmXzZSp2V5VqMimix',
+    version: '2.1.278',
+    userType: 'external',
+    message: {
+      model: 'claude-sonnet-5',
+      usage: {
+        service_tier: 'standard',
+      },
+    },
+  },
+];
+
+export const LIVE_HIGH_EFFORT_TRANSCRIPT: readonly unknown[] = [
+  {
+    type: 'assistant',
+    isSidechain: true,
+    effort: 'high',
+    attributionAgent: 'oat-reviewer-claude-sonnet-high',
+    sessionId: '22222222-2222-4222-8222-222222222222',
+    requestId: 'req_011CfForWAaX8jVAbMkvPZSc',
+    version: '2.1.278',
+    userType: 'external',
+    message: {
+      model: 'claude-sonnet-5',
+      usage: {
+        service_tier: 'standard',
+      },
+    },
+  },
+];
