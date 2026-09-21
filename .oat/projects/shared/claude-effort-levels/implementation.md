@@ -141,6 +141,7 @@ The original final-review findings are resolved and phase p04 passed. A fresh fi
 - Exit-gate run `6e5693ec-5f6c-46a2-b26b-7585321b1903` returned a corroborated `ok` envelope at the High threshold with 0 Critical, 0 High, 1 Medium, and 4 Low findings. The result receipt is durable, receive is eligible, and attempt 1 of 2 is consumed.
 - Gate review receive intent persisted for `reviews/final-review-2026-09-21T151012Z.md`, bound to archived destination `reviews/archived/final-review-2026-09-21T151012Z.md`, exact ledger event, and pre-receive head `09f811505ba272edb36f229c0d68eb37ac11dfdc`.
 - Gate review judgment sweep converted the Medium documentation drift plus wording-oriented Lows L1-L3 into p05-t01. L4 is explicitly deferred: every current producer and schema parser emits canonical field order and the launch path fails closed, so a new canonical comparison helper would add code churn without a demonstrated failure. The gate artifact is archived after receive.
+- Receive bookkeeping commit `e3cf8a737b8788ef7948fae9cbbfb4d48eaf3356` moved the run-correlated artifact to `reviews/archived/final-review-2026-09-21T151012Z.md`, advanced its exact Reviews event to `fixes_added`, and added p05-t01. The durable receive receipt is complete; gate attempt 2 remains available after remediation and fresh final review.
 
 <!-- orchestration-runs-end -->
 

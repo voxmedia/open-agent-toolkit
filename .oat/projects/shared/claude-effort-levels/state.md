@@ -79,17 +79,17 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: '.oat/projects/shared/claude-effort-levels/reviews/final-review-2026-09-21T151012Z.md'
   handoff: 'Gate passed at the high threshold, but the final review still contains non-blocking findings (medium=1, low=4). Run oat-project-review-receive for .oat/projects/shared/claude-effort-levels/reviews/final-review-2026-09-21T151012Z.md to disposition them before marking the final review row passed.'
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation: 'run=6e5693ec-5f6c-46a2-b26b-7585321b1903; handoff=receive; source=reviews/final-review-2026-09-21T151012Z.md; scope=final; type=code'
   receive_source_artifact: '.oat/projects/shared/claude-effort-levels/reviews/final-review-2026-09-21T151012Z.md'
   receive_archived_artifact: '.oat/projects/shared/claude-effort-levels/reviews/archived/final-review-2026-09-21T151012Z.md'
   receive_event_identity: 'final | code | final-review-2026-09-21T151012Z.md'
   receive_pre_head: 09f811505ba272edb36f229c0d68eb37ac11dfdc
-  receive_commit: null
+  receive_commit: e3cf8a737b8788ef7948fae9cbbfb4d48eaf3356
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: judgment_sweep_fix_tasks_added
-  updated_at: '2026-09-21T15:14:00Z'
+  updated_at: '2026-09-21T15:16:00Z'
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
@@ -131,7 +131,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-20T19:40:55.054Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-21T15:15:00Z'
+oat_project_state_updated: '2026-09-21T15:16:00Z'
 oat_generated: false
 ---
 
