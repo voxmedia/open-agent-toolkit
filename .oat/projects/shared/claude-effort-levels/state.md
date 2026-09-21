@@ -55,9 +55,9 @@ oat_workflow_origin: native # native | imported
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
 oat_implement_exit_gate:
-  status: stale
+  status: pending
   resolution: configured
-  disposition: passed
+  disposition: null
   config_fingerprint: 'sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324'
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
@@ -65,31 +65,31 @@ oat_implement_exit_gate:
   on_failure: block
   max_attempts: 2
   attempts_completed: 0
-  reviewed_head: 11c61dcfbdab5ae534e41fc8de7169b10199fb13
+  reviewed_head: 43ef811f8161313a92ad64a606dab6244d474fbe
   implementation_base_ref: origin/main
-  implementation_fingerprint: 'sha256:effective-delta-v1:347083ce8b379e5e76e02e88dcf8f8726217d072c1769e8da671ca6911cfabbb'
-  freshness_head: d5cb241310cb84fb8e210fc23186721ca65f6804
-  freshness_fingerprint: 'sha256:effective-delta-v1:a668598e6b94b34d2473ac0c7d047de2d0876817e5da33dd18fc6f8e21ea50a9'
-  launch_state: result_persisted
-  launch_attempt_id: 'claude-effort-exit-gate-r2-1-20260921T222435Z'
-  launch_started_at: '2026-09-21T22:24:35Z'
-  launch_result_receipt: '/private/tmp/claude-effort-exit-gate-r2-1-20260921T222435Z.receipt.json'
-  gate_run_marker: '/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/4724fc0d-6aca-4114-ad12-3a8472847a1e.json'
-  gate_run_id: 4724fc0d-6aca-4114-ad12-3a8472847a1e
-  envelope_status: ok
-  artifact: '.oat/projects/shared/claude-effort-levels/reviews/final-review-2026-09-21T222944Z.md'
-  handoff: 'Gate passed at the high threshold, but the final review still contains non-blocking findings (low=2). Run oat-project-review-receive for .oat/projects/shared/claude-effort-levels/reviews/final-review-2026-09-21T222944Z.md to disposition them before marking the final review row passed.'
-  receive_state: completed
-  receive_correlation: 'run=4724fc0d-6aca-4114-ad12-3a8472847a1e; handoff=receive; source=reviews/final-review-2026-09-21T222944Z.md; scope=final; type=code'
-  receive_source_artifact: '.oat/projects/shared/claude-effort-levels/reviews/final-review-2026-09-21T222944Z.md'
-  receive_archived_artifact: '.oat/projects/shared/claude-effort-levels/reviews/archived/final-review-2026-09-21T222944Z.md'
-  receive_event_identity: 'final | code | final-review-2026-09-21T222944Z.md'
-  receive_pre_head: 0b0e3dbeeeb5b30e448799a7d0f2ffb0fe1b9345
-  receive_commit: 6ed8307c8bcbc1afe5b9c53b10cbd7ef6053a13a
-  receive_eligible: true
-  receive_completed: true
-  failure: substantive_pr_review_fix_required
-  updated_at: '2026-09-21T23:08:30Z'
+  implementation_fingerprint: 'sha256:effective-delta-v1:40ec5898c36a7af925703ccc991e6413dd9000eb179781e6ee2b9a126ce3266f'
+  freshness_head: 3e208ff36e4d4866684fb2bb8dccd7a30ef0e807
+  freshness_fingerprint: 'sha256:effective-delta-v1:dab240ff0ca490de1236c949ad877d1679e3e50fd7141cccf1a26c303e1eb70e'
+  launch_state: not_started
+  launch_attempt_id: null
+  launch_started_at: null
+  launch_result_receipt: null
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_state: not_started
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
+  failure: null
+  updated_at: '2026-09-21T23:17:57Z'
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
@@ -142,7 +142,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/315' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-20T19:40:55.054Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-21T23:08:30Z'
+oat_project_state_updated: '2026-09-21T23:17:57Z'
 oat_generated: false
 oat_project_recap:
   decision: skip

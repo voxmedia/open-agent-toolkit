@@ -181,6 +181,8 @@ Task p05-t03 commit `92143dbea5490d2d4d2991c9ebb9c380e8256ae3` now sends explici
 
 The fresh Sol/high final re-review passed at reviewed head `43ef811f8161313a92ad64a606dab6244d474fbe` with 0 Critical, 0 High, 0 Medium, and 0 Low findings. It independently verified prior H1 and L1 resolved, including the exact-candidate effort variant, separate model-only preferred route, normalized classification evidence, and consistent 14/14 active tracking. The clean artifact is archived at `reviews/archived/final-review-2026-09-21T231425Z.md`; no Medium is deferred and the earlier proportional Low structural-comparison deferral remains unchanged.
 
+A new configured exit-gate generation resolves the unchanged user gate with fingerprint `sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324`, immutable reviewed head `43ef811f8161313a92ad64a606dab6244d474fbe`, and effective-delta fingerprint `sha256:effective-delta-v1:40ec5898c36a7af925703ccc991e6413dd9000eb179781e6ee2b9a126ce3266f`. Its initial rolling closeout checkpoint is receive commit `3e208ff36e4d4866684fb2bb8dccd7a30ef0e807` with fingerprint `sha256:effective-delta-v1:dab240ff0ca490de1236c949ad877d1679e3e50fd7141cccf1a26c303e1eb70e`.
+
 <!-- orchestration-runs-end -->
 
 ## Planning Log
