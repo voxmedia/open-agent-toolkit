@@ -126,12 +126,23 @@ oat_implement_exit_gate:
 #   receive_completed: false
 #   failure: null
 #   updated_at: '2026-07-18T00:00:00Z'
+oat_post_implement_sequence:
+  status: pre_approval
+  source: configured
+  final_phase: p05
+  pre_approval: [summary, document, pr]
+  pre_approval_completed: []
+  approval: pending
+  approval_source: null
+  post_approval: []
+  post_approval_completed: []
+  failure: null
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-20T19:40:55.054Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-21T20:25:40Z'
+oat_project_state_updated: '2026-09-21T20:42:33Z'
 oat_generated: false
 ---
 
@@ -143,7 +154,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — all five phases, final verification, and final lifecycle review passed; configured exit-gate attempt 2 pending.
+Implementation — all five phases, final verification, final lifecycle review, and the configured exit gate passed; pre-approval closeout is in progress.
 
 ## Artifacts
 
