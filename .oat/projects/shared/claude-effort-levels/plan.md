@@ -317,6 +317,7 @@ Then run each separately with its own captured exit code: `pnpm test:smoke`, `pn
 | final  | code     | passed          | 2026-09-21 | reviews/archived/final-review-2026-09-21T222944Z.md         | 76abcbe59ff9a16702ed6c07e45beac7bccb97b8 | gate       | cursor-fable-5-1-high |
 | final  | code     | fixes_completed | 2026-09-21 | reviews/archived/final-review-2026-09-21T225911Z.md         | e045e6e6f33c2e5c297726ab9ea266ce7820a5a9 | auto       | -                     |
 | final  | code     | passed          | 2026-09-21 | reviews/archived/final-review-2026-09-21T231425Z.md         | 43ef811f8161313a92ad64a606dab6244d474fbe | auto       | -                     |
+| final  | code     | received        | 2026-09-21 | reviews/final-review-2026-09-21T232436Z.md                  | 48a38d492c447581ebdc94b39ceda0e87a587fba | gate       | cursor-fable-5-1-high |
 
 Spec and design rows are retained from the scaffold for compatibility and are not required in this quick workflow. Native structured artifact review passed after one revision. The replacement configured implementation gate passed its High threshold with 0 Critical, 0 High, 0 Medium, and 2 Low findings. Root received the corroborated artifact and addressed both Low bookkeeping findings in the passing-gate judgment sweep: the older consumed final review is archived, and stale closeout wording now matches project state. No unresolved planning or implementation review findings remain.
 
