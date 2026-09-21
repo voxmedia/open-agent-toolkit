@@ -28,7 +28,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -127,11 +127,11 @@ oat_implement_exit_gate:
 #   failure: null
 #   updated_at: '2026-07-18T00:00:00Z'
 oat_post_implement_sequence:
-  status: pre_approval
+  status: awaiting_approval
   source: configured
   final_phase: p05
   pre_approval: [summary, document, pr]
-  pre_approval_completed: [summary, document]
+  pre_approval_completed: [summary, document, pr]
   approval: pending
   approval_source: null
   post_approval: []
@@ -142,7 +142,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/315' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-20T19:40:55.054Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-21T23:39:36Z'
+oat_project_state_updated: '2026-09-21T23:43:13Z'
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -152,13 +152,13 @@ oat_project_recap:
 
 # Project State: claude-effort-levels
 
-**Status:** Exit gate passed; pre-approval closeout in progress
+**Status:** Awaiting final implementation approval
 **Started:** 2026-09-20
 **Last Updated:** 2026-09-21
 
 ## Current Phase
 
-Implementation — PR #315 is open; all 14 tasks and the configured exit gate are complete. Pre-approval closeout is in progress.
+Implementation — PR #315 is open; all 14 tasks, final reviews, the configured exit gate, and pre-approval closeout are complete. Final implementation approval is pending.
 
 ## Artifacts
 
