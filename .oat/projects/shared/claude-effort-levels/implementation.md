@@ -2,26 +2,26 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-09-20
-oat_current_task_id: p04-t01
+oat_last_updated: 2026-09-21
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 ---
 
 # Implementation: claude-effort-levels
 
-The first final review found one High capability-modeling defect and one Low architecture-comment defect. The user selected Fix now for the Low finding. Phase p04 owns both corrections before a fresh final review and the configured implementation exit gate.
+The first final review found one High capability-modeling defect and one Low architecture-comment defect. The user selected Fix now for the Low finding. Phase p04 implemented both corrections and awaits independent phase review before a fresh final review and the configured implementation exit gate.
 
 ## Progress Overview
 
-| Phase                                    | Status      | Tasks | Completed |
-| ---------------------------------------- | ----------- | ----- | --------- |
-| p01 — Resolve and materialize            | completed   | 2     | 2/2       |
-| p02 — Guidance and recommendations       | completed   | 4     | 4/4       |
-| p03 — Verification and release readiness | completed   | 3     | 3/3       |
-| p04 — Final review fixes                 | in progress | 2     | 0/2       |
+| Phase                                    | Status    | Tasks | Completed |
+| ---------------------------------------- | --------- | ----- | --------- |
+| p01 — Resolve and materialize            | completed | 2     | 2/2       |
+| p02 — Guidance and recommendations       | completed | 4     | 4/4       |
+| p03 — Verification and release readiness | completed | 3     | 3/3       |
+| p04 — Final review fixes                 | completed | 2     | 2/2       |
 
-**Total: 9/11 tasks completed.**
+**Total: 11/11 tasks completed.**
 
 ## Task Status
 
@@ -36,8 +36,8 @@ The first final review found one High capability-modeling defect and one Low arc
 | p03-t01 | completed | `93101fb6dfa049b10937173fc6929d7425737b64` |
 | p03-t02 | completed | `d14b8175713ea3464fb0c6cd55e37a1c4c53dcad` |
 | p03-t03 | completed | `f278335a77de048a616c3b77536fe21fcb41867b` |
-| p04-t01 | pending   | -                                          |
-| p04-t02 | pending   | -                                          |
+| p04-t01 | completed | `5f696f161c6025ff5ee01ffac907fd872741c6f3` |
+| p04-t02 | completed | `7bbafcd0aad74a6d0a4d59a3cb3d43459f1a771f` |
 
 ## Orchestration Runs
 
@@ -110,6 +110,11 @@ The first final review found one High capability-modeling defect and one Low arc
 - Final review artifact: `reviews/final-review-2026-09-21T041719Z.md`; verdict blocked with 0 Critical, 1 High, 0 Medium, and 1 Low. The High finding requires version-aware Claude model/effort capability validation separated from recommendation eligibility. The Low finding corrects the provider-registry architecture comment.
 - Reconnaissance: attempted. The artifact's complete `## Review Orchestration` section records one accepted intelligent-recon lane, one capacity-rejected lane covered inline, and the primary reviewer's independent reconciliation. Its structural project-log entry remains deferred until the final review reaches a terminal outcome.
 - Deferred Medium ledger: none. The user explicitly selected Fix now for the Low finding. Phase p04 adds two bounded tasks and becomes the final HiLL phase.
+- Phase p04 request `claude-effort-p04-implementation-01` used `oat-phase-implementer-gpt-5-6-sol-high` for the hard-reasoning provider-capability correction. Dispatch: `Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`.
+- Phase p04 task commits: p04-t01 `5f696f161c6025ff5ee01ffac907fd872741c6f3`; p04-t02 `7bbafcd0aad74a6d0a4d59a3cb3d43459f1a771f`. Root pre-review found that host-managed routing outranks family-pin environment evidence; bounded follow-up `04f7b6376f0d92856886de5aee2f85b428314357` fixed that precedence and made unpinned Mantle aliases fail closed.
+- Phase p04 implementation preserves the public `{harness, model, effort}` route, separates capability from recommendation eligibility, records a resolved model generation through resolver/materializer/launch evidence, accepts documented versioned pairs, and returns clear ambiguity errors where provider routing cannot establish the generation. The bundled recommendation and model-only compatibility remain unchanged.
+- Phase p04 verification: implementer focused suite 210/210, launch/record 97/97, full CLI tests, type-check, lint/format check, build, smoke 4/4, sync dry-run, and diff checks passed. Root independently reran 286 focused tests, smoke 4/4, and built project sync dry-run with zero planned operations and zero failures.
+- Phase p04 implementation is complete at `04f7b6376f0d92856886de5aee2f85b428314357`; independent phase review is next.
 
 <!-- orchestration-runs-end -->
 
