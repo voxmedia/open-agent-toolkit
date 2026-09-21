@@ -59,12 +59,20 @@ prohibited. Record the exact selector and `floor_satisfaction`.
 
 - Select an exact accepted alias from the native enum for native dispatch.
 - Select the exact generated agent variant before launch when managed effort is
-  required. A CLI route remains available only when the selected target cannot
-  be expressed by native dispatch and the caller's fallback contract permits it.
+  required. Effort-pinned targets must use a recognized versioned model ID or a
+  family alias whose matching `ANTHROPIC_DEFAULT_<FAMILY>_MODEL` pin establishes
+  capability. A custom pin requires matching `<PIN>_SUPPORTED_CAPABILITIES`;
+  `CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST` takes precedence, so bare aliases fail
+  closed when their generation cannot be proven. A CLI route remains available
+  only when the selected target cannot be expressed by native dispatch and the
+  caller's fallback contract permits it.
 - Record selector granularity such as `tier-alias` or `exact-model-id`.
 - Record generated-definition effort as `selected:<effort>`. Use `not-exposed`
   only for an unpinned native surface whose active schema cannot report effort;
   do not turn that observation into a global `not-applicable` claim.
+- Legacy model-only aliases remain compatible through the per-call model
+  argument. Their per-call effort axis is `not-applicable` because Agent exposes
+  no per-call effort argument; this does not claim that Claude lacks effort.
 - Record service tier separately; fast Claude routes are latency purchases.
 - Keep acceptance, outcome, runtime identity, and continuation separate.
 - Record the provider-guidance version and freshness state.

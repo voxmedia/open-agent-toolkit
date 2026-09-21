@@ -83,21 +83,21 @@ then either edit the affected cells by hand or clear them and re-adopt.
 Version `2026-09-21.1` is a live example. It adds explicit Claude effort
 candidates while retaining `haiku` as a model-only compatibility route. Its
 Claude tier terminals are `claude-sonnet-5/medium`, `claude-sonnet-5/high`,
-`claude-opus-5/high`, and `claude-fable-5-1/high`; rerunning adoption preserves any explicit older cell unchanged.
-It also interleaves the Cursor `high` and
-`frontier` tiers so each alternates a GPT rung with a Claude rung, ending `high`
-at `gpt-5.6-sol-high` and `frontier` at `claude-fable-5-thinking-high`. It also
-drops `claude-opus-5-thinking-max` and `claude-fable-5-thinking-xhigh` from
-`frontier`. Dropping the Opus max rung follows the non-monotonic top-end Opus
-evidence recorded in `subagent-orchestration/references/evidence-and-refresh.md`,
-which treats max as a route requiring justification rather than a strictly
-better rung. Dropping the Fable xhigh rung is a recommendation judgment rather
-than a measured finding: `subagent-orchestration/references/provider-claude.md`
-permits either Fable rung for a qualified specialist case, and this ladder takes
-the cheaper one absent a comparison favoring xhigh. The evidence record above
-does not compare the two rungs. Both models remain in the pin catalog and stay
-available to a hand-edited ladder. An adopter still on the prior version keeps their existing
-Cursor tiers untouched until they take one of the actions above.
+`claude-opus-5/high`, and `claude-fable-5-1/high`; rerunning adoption preserves
+any explicit older cell unchanged.
+
+The Cursor interleaving in the `high` and `frontier` tiers belongs to the prior
+`2026-07-27.1` recommendation and is retained unchanged by `2026-09-21.1`.
+That earlier version alternates GPT and Claude rungs, ends `high` at
+`gpt-5.6-sol-high` and `frontier` at `claude-fable-5-thinking-high`, and omits
+`claude-opus-5-thinking-max` and `claude-fable-5-thinking-xhigh` from
+`frontier`. The Opus omission follows the non-monotonic top-end evidence in
+`subagent-orchestration/references/evidence-and-refresh.md`, which treats max as
+a route requiring justification. The Fable omission is a recommendation
+judgment: `subagent-orchestration/references/provider-claude.md` permits either
+Fable rung for a qualified specialist case, and the earlier ladder chose the
+cheaper one without comparison evidence favoring xhigh. Both models remain in
+the pin catalog and stay available to a hand-edited ladder.
 
 The terminal Fable target may require model access from the executing provider.
 The adopting organization is responsible for confirming its applicable
@@ -299,7 +299,7 @@ oat project dispatch-ceiling resolve \
   --provider claude \
   --role implementer \
   --ceiling-tier high \
-  --candidate-model opus \
+  --candidate-model claude-opus-5 \
   --candidate-effort medium \
   --task-class default-implementation \
   --report-scope p02 \
@@ -355,6 +355,32 @@ Implementer and fix resolution has two mutually exclusive selection branches:
 
 Never combine the branches in one resolver invocation. The exact-candidate
 branch replaces, rather than supplements, preferred selection.
+
+### Claude effort capability evidence
+
+An effort-pinned Claude candidate must establish the exact generation and that
+generation's supported effort. OAT recognizes these versioned model
+generations directly: `claude-fable-5-1`, `claude-fable-5`, `claude-opus-5`,
+`claude-sonnet-5`, `claude-opus-4-8`, `claude-opus-4-7`, `claude-opus-4-6`, and
+`claude-sonnet-4-6`. The first six accept `low`, `medium`, `high`, `xhigh`, and
+`max`; the 4.6 generations accept `low`, `medium`, `high`, and `max`.
+
+A family alias can also establish capability through its matching
+`ANTHROPIC_DEFAULT_<FAMILY>_MODEL` pin. A recognized versioned model ID in that
+pin supplies generation evidence. A custom provider model ID additionally
+requires the matching `<PIN>_SUPPORTED_CAPABILITIES` declaration: `effort`
+enables `low`, `medium`, and `high`, while `xhigh_effort` and `max_effort` add
+those respective rungs. When a declaration is present, it is authoritative and
+must include `effort`; it cannot claim a different family.
+
+`CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST` takes precedence over family pins, so an
+effort-pinned bare alias fails closed under host-managed routing. A bare alias
+without a usable pin also fails closed because provider routing,
+`availableModels`, or organization policy can substitute another generation.
+Use a recognized versioned model ID when the host owns routing. Model-only
+aliases remain compatible through the Agent API's per-call model argument. They
+report the per-call effort axis as `not-applicable` because that API has no
+per-call effort argument; this does not claim that Claude itself lacks effort.
 
 ## Provider Enforcement
 
