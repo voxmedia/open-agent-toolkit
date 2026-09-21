@@ -418,7 +418,11 @@ same boundary the phase gate review setup uses. It runs adjacent to, but
 independently from, that setup: neither contract reads, writes, or
 satisfies the other's setting. The calling skill owns the prompt and the write
 to `"$PROJECT_PATH/state.md"`; this section owns the shared eligibility,
-preservation, validation, and non-interactive behavior.
+preservation, validation, and non-interactive behavior. The caller MUST supply
+one exact relevant set containing its own planning entry-point skill plus
+`oat-project-implement`. This procedure probes and offers choices only for that
+caller-supplied set. A later workflow transition supplies and evaluates its own
+newly relevant set when that workflow is actually entered.
 
 This contract governs the configured lifecycle gates declared with
 `oat_gateable: true` in skill frontmatter. It never reads or writes
@@ -438,10 +442,13 @@ Lifecycle gate posture: preserved existing oat_skill_gate_overrides setting.
 A malformed map is never silently repaired, replaced, or dropped. Stop and
 report the offending project state path so the operator can correct it.
 
-### 2. Probe configured gate-aware skills
+### 2. Probe only the caller-supplied relevant set
 
-When no explicit map exists, probe each gate-aware skill read-only. The probe
-resolves configuration and never launches a gate:
+Only after section 1 confirms that no explicit map exists, validate that the
+caller supplied exactly its own planning entry point plus
+`oat-project-implement`. Probe each skill in that relevant set read-only. Do not
+probe any other gate-aware skill, and do not speculate about a workflow that has
+not been entered. The probe resolves configuration and never launches a gate:
 
 ```bash
 oat gate resolve <gate-aware-skill> --project "$PROJECT_PATH" --json
@@ -466,8 +473,9 @@ Lifecycle gate posture: no configured lifecycle gates; nothing to disable.
 
 ### 3. Offer one choice per configured gate
 
-When at least one gate is configured and an interactive user-response channel is
-available, present each configured gate separately and let the user keep or
+When at least one relevant-set gate is configured and an interactive
+user-response channel is available, present each configured relevant gate
+separately and let the user keep or
 disable it independently. Granularity is per skill; no single answer disables
 every gate at once.
 

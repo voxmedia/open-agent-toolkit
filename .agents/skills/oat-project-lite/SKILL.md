@@ -7,7 +7,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.1.4
+  version: 1.1.5
 ---
 
 # Lite Project
@@ -331,12 +331,14 @@ review, invoke the `Shared Lifecycle Gate Posture Setup Contract` from the
 shared planning contract. At this boundary, load the current
 `oat-project-plan-writing/SKILL.md` and follow that contract as written. This
 setup remains independent from Lite's project-aware Gate Execution and does not
-add phase-review or HiLL setup.
+add phase-review or HiLL setup. Supply exactly this relevant set:
+`oat-project-lite` and `oat-project-implement`.
 
 Apply `LITE-10` to the shared contract's interaction. When
 `oat_skill_gate_overrides` already exists, preserve it through the shared
 contract without probing, prompting, or mutation. Otherwise, in interactive
-planning, offer Keep or Disable independently for each configured gate.
+planning, offer Keep or Disable independently for each configured gate in that
+caller-supplied relevant set.
 Persist only disabled choices to `"$PROJECT_PATH/state.md"`. Never modify the
 shared, local, or user configuration layers. In non-interactive planning,
 preserve configured gates and do not invent or write an override.

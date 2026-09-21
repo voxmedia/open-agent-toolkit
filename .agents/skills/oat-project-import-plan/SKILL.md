@@ -357,11 +357,13 @@ the import-aware plan artifact review, invoke the `Shared Lifecycle Gate Posture
 `oat-project-plan-writing`: load the current
 `oat-project-plan-writing/SKILL.md` and follow that contract as written. This
 runs adjacent to, but independently from, the phase gate review setup above.
+Supply exactly this relevant set: `oat-project-import-plan` and
+`oat-project-implement`.
 
 If `"$PROJECT_PATH/state.md"` already contains an explicit
 `oat_skill_gate_overrides` map, preserve it through the shared contract without
-probing, prompting, or mutation. Otherwise let the contract probe the configured
-gate-aware skills and offer a keep-or-disable choice for each configured gate
+probing, prompting, or mutation. Otherwise let the contract probe only the
+caller-supplied relevant set and offer a keep-or-disable choice for each configured gate
 independently.
 
 Persist only disabled choices, and only in `"$PROJECT_PATH/state.md"`. Keeping

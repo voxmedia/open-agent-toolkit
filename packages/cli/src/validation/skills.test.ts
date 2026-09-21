@@ -2154,7 +2154,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-lite',
-        version: '1.1.4',
+        version: '1.1.5',
         finalizedHeading: '### Step 6: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading: '### Step 7: Mark Plan Complete and Hand Off',
@@ -6134,6 +6134,7 @@ describe('validateOatSkills', () => {
       ['oat-project-plan', '1.4.14'],
       ['oat-project-quick-start', '2.3.15'],
       ['oat-project-import-plan', '1.4.17'],
+      ['oat-project-lite', '1.1.5'],
       ['oat-project-review-provide', '1.5.10'],
     ] as const;
 
@@ -6143,6 +6144,62 @@ describe('validateOatSkills', () => {
       );
       expect(readDeclaredVersion(content), skillName).toBe(expectedVersion);
     }
+  });
+
+  it('scopes lifecycle gate posture to the active planning workflow and implementation', async () => {
+    const shared = await readRepoFile(
+      '.agents/skills/oat-project-plan-writing/SKILL.md',
+    );
+    const preserveIndex = shared.indexOf(
+      '### 1. Preserve an explicit existing map',
+    );
+    const probeIndex = shared.indexOf(
+      '### 2. Probe only the caller-supplied relevant set',
+    );
+    expect(preserveIndex).toBeGreaterThanOrEqual(0);
+    expect(probeIndex).toBeGreaterThan(preserveIndex);
+    expect(shared).toMatch(
+      /caller MUST supply[\s\S]{0,180}own planning entry-point skill plus[\s\S]{0,80}`oat-project-implement`/i,
+    );
+    expect(shared).toMatch(
+      /probes and offers choices only for that[\s\S]{0,80}caller-supplied set/i,
+    );
+    expect(shared).toMatch(/Do not\s+probe any other gate-aware skill/i);
+    expect(shared).not.toMatch(/probe each gate-aware skill read-only/i);
+
+    const callers = [
+      ['oat-project-plan', 'oat-project-plan'],
+      ['oat-project-quick-start', 'oat-project-quick-start'],
+      ['oat-project-lite', 'oat-project-lite'],
+      ['oat-project-import-plan', 'oat-project-import-plan'],
+    ] as const;
+    for (const [skill, ownGate] of callers) {
+      const content = await readRepoFile(`.agents/skills/${skill}/SKILL.md`);
+      const start = content.indexOf('Configure Lifecycle Gate Posture');
+      expect(start, `${skill} posture section`).toBeGreaterThanOrEqual(0);
+      const next = content.indexOf('\n### ', start + 1);
+      const section = content.slice(start, next < 0 ? undefined : next);
+      expect(section, `${skill} exact relevant set`).toMatch(
+        new RegExp(
+          `Supply exactly this relevant set:[\\s\\S]{0,100}\`${ownGate}\`[\\s\\S]{0,80}\`oat-project-implement\``,
+        ),
+      );
+    }
+
+    const allConfigured = [
+      'oat-project-quick-start',
+      'oat-project-lite',
+      'oat-project-import-plan',
+      'oat-project-plan',
+      'oat-project-implement',
+    ];
+    const quickRelevant = allConfigured.filter((skill) =>
+      ['oat-project-quick-start', 'oat-project-implement'].includes(skill),
+    );
+    expect(quickRelevant).toEqual([
+      'oat-project-quick-start',
+      'oat-project-implement',
+    ]);
   });
 
   it('tracks Dispatch Report V1 workflow contract versions and provenance boundaries', async () => {
