@@ -1624,7 +1624,7 @@ describe('validateOatSkills', () => {
     const content = await readRepoFile('.agents/agents/oat-reviewer.md');
     const tools = content.match(/^tools:\s*(.+)$/m)?.[1] ?? '';
 
-    expect(readDeclaredVersion(content)).toBe('1.2.8');
+    expect(readDeclaredVersion(content)).toBe('1.2.9');
     expect(tools).toContain('Task');
     for (const broadReview of [
       'final code reviews',
@@ -3221,7 +3221,7 @@ describe('validateOatSkills', () => {
   it('keeps the complete artifact hygiene block equivalent at every runtime boundary', async () => {
     const runtimeSurfaces = [
       ['.agents/agents/oat-phase-implementer.md', '1.1.6'],
-      ['.agents/agents/oat-reviewer.md', '1.2.8'],
+      ['.agents/agents/oat-reviewer.md', '1.2.9'],
       ['.agents/skills/oat-project-review-provide/SKILL.md', '1.5.10'],
       ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.7'],
       ['.agents/skills/oat-project-summary/SKILL.md', '1.5.6'],
@@ -3443,6 +3443,7 @@ describe('validateOatSkills', () => {
     const shared = await readRepoFile(
       '.agents/skills/oat-project-plan-writing/SKILL.md',
     );
+    const template = await readRepoFile('.oat/templates/plan.md');
     const dispatchProfile = shared.slice(
       shared.indexOf('### Dispatch Profile Overrides'),
       shared.indexOf('### Stable Task IDs'),
@@ -3460,6 +3461,13 @@ describe('validateOatSkills', () => {
     );
     expect(dispatchProfile).not.toContain('Claude model');
     expect(dispatchProfile).not.toContain('Codex effort');
+
+    for (const content of [dispatchProfile, template]) {
+      expect(content).toContain('| Phase | Named ceiling');
+      expect(content).toContain('economy\\|balanced\\|high\\|frontier\\|auto');
+      expect(content).not.toContain('Claude model / effort');
+      expect(content).not.toContain('Codex model / effort');
+    }
   });
 
   it('keeps reviewers at their configured ceiling and lifecycle gates target-neutral', async () => {
@@ -4679,6 +4687,59 @@ describe('validateOatSkills', () => {
     expect(reviewer).toMatch(/legacy model-only and inherited/i);
   });
 
+  it('keeps every phase and public lifecycle launch consumer effort-aware', async () => {
+    const phaseExecution = await readRawRepoFile(
+      '.agents/skills/oat-project-implement/references/phase-execution.md',
+    );
+    const dispatch = await readRawRepoFile(
+      '.agents/skills/oat-project-implement/references/dispatch-and-dry-run.md',
+    );
+    const lifecycle = await readRepoFile(
+      'apps/oat-docs/docs/workflows/projects/lifecycle.md',
+    );
+    const implementation = await readRepoFile(
+      'apps/oat-docs/docs/workflows/projects/implementation-execution.md',
+    );
+    const artifacts = await readRepoFile(
+      'apps/oat-docs/docs/workflows/projects/artifacts.md',
+    );
+
+    const consumers = [
+      phaseExecution.slice(
+        phaseExecution.indexOf('Codex first uses'),
+        phaseExecution.indexOf('The phase recovery limit'),
+      ),
+      dispatch.slice(
+        dispatch.indexOf('Read `providers.<active-provider>`'),
+        dispatch.indexOf('1. **Preferred-selection branch:**'),
+      ),
+      lifecycle.slice(
+        lifecycle.indexOf('A concrete managed reviewer remains bound'),
+        lifecycle.indexOf('Within either tier'),
+      ),
+      implementation.slice(
+        implementation.indexOf('Provider controls remain exact'),
+        implementation.indexOf('See [Dispatch Policy]'),
+      ),
+      artifacts.slice(
+        artifacts.indexOf('- Parallelism is only honored at Tier 1'),
+        artifacts.indexOf('**Authoring responsibility:**'),
+      ),
+    ];
+
+    for (const [index, consumer] of consumers.entries()) {
+      expect(consumer, `launch consumer ${index} effort variant`).toContain(
+        'providers.claude.dispatchArgs.variant',
+      );
+      expect(consumer, `launch consumer ${index} legacy model`).toContain(
+        'providers.claude.dispatchArgs.model',
+      );
+      expect(consumer, `launch consumer ${index} conditional split`).toMatch(
+        /effort-pinned[\s\S]{0,180}legacy model-only/i,
+      );
+    }
+  });
+
   it('keeps the planning recommendation display aligned with the bundled matrix', async () => {
     const recommendation = JSON.parse(
       await readRepoFile(
@@ -4742,7 +4803,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/references/dispatch-and-dry-run.md',
     );
 
-    expect(dispatch).toMatch(/two mutually exclusive selection paths/i);
+    expect(dispatch).toMatch(/two mutually exclusive\s+selection\s+paths/i);
     expect(dispatch).toMatch(
       /preferred-selection branch[\s\S]{0,500}`--preferred[\s\S]{0,400}exact-candidate branch/i,
     );
@@ -6352,7 +6413,7 @@ describe('validateOatSkills', () => {
   it('pins portable user-default agents to installed-root sibling reads', async () => {
     const agents = [
       ['.agents/agents/oat-phase-implementer.md', '1.1.6'],
-      ['.agents/agents/oat-reviewer.md', '1.2.8'],
+      ['.agents/agents/oat-reviewer.md', '1.2.9'],
       ['.agents/agents/oat-codebase-mapper.md', '1.0.1'],
     ] as const;
 

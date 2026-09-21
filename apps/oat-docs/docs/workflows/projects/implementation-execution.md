@@ -367,9 +367,10 @@ Optional nested work also resolves an exact bounded target. If no nested work is
 needed, OAT does not probe or require third-tier capacity.
 
 Provider controls remain exact: Codex uses
-`providers.codex.dispatchArgs.variant`, Claude uses
-`providers.claude.dispatchArgs.model`, and Cursor uses
-`providers.cursor.dispatchArgs.variant`. Cursor launches that exact
+`providers.codex.dispatchArgs.variant`; Claude uses the generated
+`providers.claude.dispatchArgs.variant` for an effort-pinned target and
+`providers.claude.dispatchArgs.model` only for a legacy model-only target; and
+Cursor uses `providers.cursor.dispatchArgs.variant`. Cursor launches that exact
 resolver-selected native agent type first; the flat ID and bracket-form pin
 remain inside the explicit mapping and are never normalized by workflow prose.
 The launcher records this selection as `configured`, while runtime identity

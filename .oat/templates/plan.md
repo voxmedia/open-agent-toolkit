@@ -55,13 +55,13 @@ Default is `[]` (fully sequential, no worktrees). Only declare parallelism when 
 
 _Optional override surface. Use only for explicit user-authored constraints or preferences. Omit this section when runtime selection should choose the lowest confident tier._
 
-Blank or `auto` means there is no explicit constraint for that provider. Do not generate rows by default; a missing phase row uses runtime selection.
+Blank or `auto` means there is no explicit phase constraint. Do not generate rows by default; a missing phase row uses runtime selection.
 
-| Phase | Claude model / effort            | Codex model / effort           | Rationale                     |
-| ----- | -------------------------------- | ------------------------------ | ----------------------------- |
-| pNN   | haiku\|sonnet\|opus\|fable\|auto | low\|medium\|high\|xhigh\|auto | why this constraint is needed |
+| Phase | Named ceiling                           | Rationale                     |
+| ----- | --------------------------------------- | ----------------------------- |
+| pNN   | economy\|balanced\|high\|frontier\|auto | why this constraint is needed |
 
-Codex effort values are preferred controls. `oat-project-implement` caps them when a capped managed dispatch policy exists, selects them directly under managed `Uncapped`, and maps selected efforts to pinned implementer variants when available. Codex provider default effort is informational only for explicit inherit/default behavior or base/unpinned fallback paths.
+The named ceiling is a maximum candidate tier, not an exact provider, model family, or effort preference. `oat-project-implement` chooses one exact phase-implementer target from the complete configured ladder at runtime.
 
 ---
 

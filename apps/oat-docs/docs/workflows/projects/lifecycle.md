@@ -284,12 +284,14 @@ through the import-plan lane.
 
 A concrete managed reviewer remains bound across both tiers. Codex uses the
 exact registered role or a child pinned to the resolved model and effort;
-Claude passes the exact resolver-returned `dispatchArgs.model`; Cursor launches
-the exact `providers.cursor.dispatchArgs.variant` native reviewer variant.
-Retries preserve that complete target. Tier 2 does not authorize a target
-downgrade. Inline review is allowed only with verified equivalent host
-controls, or for explicit inherit/default behavior or the documented
-managed-uncapped reviewer base-role exception; otherwise the review blocks.
+Claude launches the exact generated `providers.claude.dispatchArgs.variant`
+for an effort-pinned target and passes `providers.claude.dispatchArgs.model`
+only for a legacy model-only target; Cursor launches the exact
+`providers.cursor.dispatchArgs.variant` native reviewer variant. Retries
+preserve that complete target. Tier 2 does not authorize a target downgrade.
+Inline review is allowed only with verified equivalent host controls, or for
+explicit inherit/default behavior or the documented managed-uncapped reviewer
+base-role exception; otherwise the review blocks.
 
 Within either tier, parallelism is expressed as plan metadata:
 

@@ -101,12 +101,14 @@ Before each phase:
 
 Codex first uses the resolver-returned materialized implementer variant as
 native `agent_type`; only explicit pre-start role rejection permits the exact
-pinned fresh-child route. Claude passes the exact resolver model argument.
-Cursor launches the exact `providers.cursor.dispatchArgs.variant` native agent
-type first; only explicit pre-start native role-selection rejection permits
-another target-preserving route. After acceptance, missing telemetry, timeout,
-`BLOCKED`, or any other terminal outcome cannot trigger fallback or
-replacement.
+pinned fresh-child route. For Claude, an effort-pinned target launches the exact
+generated `providers.claude.dispatchArgs.variant` as the native agent type; a
+legacy model-only target passes `providers.claude.dispatchArgs.model` as the
+exact model argument. Cursor launches the exact
+`providers.cursor.dispatchArgs.variant` native agent type first; only explicit
+pre-start native role-selection rejection permits another target-preserving
+route. After acceptance, missing telemetry, timeout, `BLOCKED`, or any other
+terminal outcome cannot trigger fallback or replacement.
 
 The phase recovery limit is not a route retry limit. Implementation recovery
 must not use route escalation, route-level advancement, model/provider

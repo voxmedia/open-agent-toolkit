@@ -201,11 +201,14 @@ Resolution order:
 
 Read `providers.<active-provider>` from the `--json` response for the concrete
 dispatch controls. `dispatchArgs` carries the provider-specific argument to
-pass through (Codex: `variant` name; Claude: `model` string; Cursor:
-materialized `variant` name). `selection` carries `role`, `selectedValue`, `capped`,
-`selectionMode`, and policy fields; `selection.target` and an optional
-`providers.<provider>.target` carry route data. For implementer/fix dispatch,
-use exactly one of two mutually exclusive selection paths:
+pass through (Codex: `providers.codex.dispatchArgs.variant`; Claude:
+`providers.claude.dispatchArgs.variant` for an effort-pinned target or
+`providers.claude.dispatchArgs.model` for a legacy model-only target; Cursor:
+`providers.cursor.dispatchArgs.variant`). `selection` carries `role`,
+`selectedValue`, `capped`, `selectionMode`, and policy fields;
+`selection.target` and an optional `providers.<provider>.target` carry route
+data. For implementer/fix dispatch, use exactly one of two mutually exclusive
+selection paths:
 
 1. **Preferred-selection branch:** pass `--preferred <preferred-value>` when
    asking the resolver to choose from a preference under an uncapped or other
@@ -266,8 +269,9 @@ At minimum, preserve these semantics in any fallback text:
   Implementation preflight must block until a policy resolves.
 
 OAT applies managed policies where the provider exposes a reliable mechanism
-(Codex: pinned variants; Claude: Task model parameter). Other providers may
-treat managed policies as advisory.
+(Codex: pinned variants; Claude: generated agent variants for effort-pinned
+targets and the Task model parameter for legacy model-only targets). Other
+providers may treat managed policies as advisory.
 
 **Managed capped policy selection** persists only `mode: managed`, the named
 maximum `policy`, and `source`. The named maximum leaves lower configured

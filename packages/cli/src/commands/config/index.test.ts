@@ -7,6 +7,8 @@ import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
+import { createProjectDispatchCeilingCommand } from '@commands/project/dispatch-ceiling/index';
+import { resolveEffectiveConfig } from '@config/resolve';
 import type {
   AvailabilityOracleDependencies,
   MatrixCellAvailability,
@@ -114,6 +116,34 @@ function createHarness(options: HarnessOptions): {
   return { capture, command };
 }
 
+function createResolverHarness(options: { cwd: string; home: string }): {
+  capture: LoggerCapture;
+  command: Command;
+} {
+  const capture = createLoggerCapture();
+  const command = createProjectDispatchCeilingCommand({
+    buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
+      scope: (globalOptions.scope ?? 'project') as 'project' | 'user' | 'all',
+      dryRun: false,
+      verbose: globalOptions.verbose ?? false,
+      json: globalOptions.json ?? false,
+      cwd: globalOptions.cwd ?? options.cwd,
+      home: options.home,
+      interactive: !(globalOptions.json ?? false),
+      logger: capture.logger,
+    }),
+    resolveProjectRoot: vi.fn(async () => options.cwd),
+    resolveEffectiveConfig,
+    resolveActiveProject: vi.fn(async () => ({
+      name: null,
+      path: null,
+      status: 'unset',
+    })),
+    processEnv: {},
+  });
+  return { capture, command };
+}
+
 async function runCommand(
   command: Command,
   commandArgs: string[],
@@ -131,6 +161,26 @@ async function runCommand(
   await program.parseAsync([...globalArgs, 'config', ...commandArgs], {
     from: 'user',
   });
+}
+
+async function runResolverCommand(
+  command: Command,
+  commandArgs: string[],
+): Promise<void> {
+  const program = new Command()
+    .name('oat')
+    .option('--json')
+    .option('--verbose')
+    .option('--scope <scope>')
+    .option('--cwd <path>')
+    .exitOverride();
+  const project = new Command('project');
+  project.addCommand(command);
+  program.addCommand(project);
+  await program.parseAsync(
+    ['--json', 'project', 'dispatch-ceiling', 'resolve', ...commandArgs],
+    { from: 'user' },
+  );
 }
 
 describe('oat config', () => {
@@ -2964,6 +3014,72 @@ describe('oat config', () => {
       });
     });
 
+    it.each([
+      ['economy', 'sonnet', 'medium', 'oat-reviewer-claude-sonnet-medium'],
+      ['balanced', 'sonnet', 'high', 'oat-reviewer-claude-sonnet-high'],
+      ['high', 'opus', 'high', 'oat-reviewer-claude-opus-high'],
+      ['frontier', 'fable', 'high', 'oat-reviewer-claude-fable-high'],
+    ] as const)(
+      'resolves the bundled Claude %s terminal reviewer pair through the real resolver',
+      async (policy, model, effort, variant) => {
+        const root = await createRepoRoot();
+        const home = await createHome();
+        const recommendation = await readFile(
+          join(process.cwd(), 'config', 'dispatch-matrix-recommendation.json'),
+          'utf8',
+        );
+        const adoption = createHarness({
+          cwd: root,
+          home,
+          validateMatrixCell: vi.fn(async () => 'valid' as const),
+          assetFiles: {
+            '/tmp/assets/config/dispatch-matrix-recommendation.json':
+              recommendation,
+          },
+        });
+        await runCommand(adoption.command, [
+          'adopt',
+          'dispatch-matrix',
+          '--shared',
+        ]);
+
+        const target = join(root, '.oat', 'config.json');
+        const adopted = JSON.parse(await readFile(target, 'utf8'));
+        adopted.workflow.dispatchPolicy = { mode: 'managed', policy };
+        await writeFile(
+          target,
+          `${JSON.stringify(adopted, null, 2)}\n`,
+          'utf8',
+        );
+
+        const resolver = createResolverHarness({ cwd: root, home });
+        await runResolverCommand(resolver.command, [
+          '--provider',
+          'claude',
+          '--role',
+          'reviewer',
+        ]);
+
+        expect(resolver.capture.jsonPayloads[0]).toMatchObject({
+          status: 'resolved',
+          policy,
+          providers: {
+            claude: {
+              dispatchArgs: { variant },
+              modelAxis: `selected:${model}`,
+              effortAxis: `selected:${effort}`,
+              selection: {
+                ceilingTier: policy,
+                selectedValue: model,
+                target: { model, effort },
+              },
+            },
+          },
+        });
+        expect(process.exitCode).toBe(0);
+      },
+    );
+
     it('rejects invalid closed-provider values during dispatch matrix recommendation adoption', async () => {
       const root = await createRepoRoot();
       const validateMatrixCell = vi.fn(async () => 'unknown-value' as const);
@@ -3370,43 +3486,46 @@ describe('oat config', () => {
           })}\n`,
           'utf8',
         );
-        const { command, capture } = createHarness({
+        const recommendation = JSON.stringify({
+          version: 'new',
+          providers: {
+            claude: {
+              economy: 'sonnet',
+              balanced: {
+                candidates: [
+                  {
+                    harness: 'claude',
+                    model: 'sonnet',
+                    effort: 'high',
+                  },
+                ],
+              },
+              high: {
+                candidates: [
+                  {
+                    harness: 'claude',
+                    model: 'opus',
+                    effort: 'high',
+                  },
+                ],
+              },
+            },
+          },
+        });
+        const harnessOptions = {
           cwd: root,
           home,
           validateMatrixCell: vi.fn(async () => 'valid' as const),
           assetFiles: {
             '/tmp/assets/config/dispatch-matrix-recommendation.json':
-              JSON.stringify({
-                version: 'new',
-                providers: {
-                  claude: {
-                    economy: 'sonnet',
-                    balanced: {
-                      candidates: [
-                        {
-                          harness: 'claude',
-                          model: 'sonnet',
-                          effort: 'high',
-                        },
-                      ],
-                    },
-                    high: {
-                      candidates: [
-                        {
-                          harness: 'claude',
-                          model: 'opus',
-                          effort: 'high',
-                        },
-                      ],
-                    },
-                  },
-                },
-              }),
+              recommendation,
           },
-        });
+        };
+        const { command, capture } = createHarness(harnessOptions);
 
         await runCommand(command, ['adopt', 'dispatch-matrix', scope]);
-        const adopted = JSON.parse(await readFile(target, 'utf8'));
+        const firstSerialized = await readFile(target, 'utf8');
+        const adopted = JSON.parse(firstSerialized);
         expect(adopted.workflow.dispatchCeiling.providers.claude).toMatchObject(
           {
             economy: { candidates: ['haiku'] },
@@ -3417,7 +3536,15 @@ describe('oat config', () => {
             },
           },
         );
+        expect(adopted.workflow.dispatchCeiling.recommendationVersion).toBe(
+          'new',
+        );
+
+        const second = createHarness(harnessOptions);
+        await runCommand(second.command, ['adopt', 'dispatch-matrix', scope]);
+        expect(await readFile(target, 'utf8')).toBe(firstSerialized);
         expect(capture.error).toEqual([]);
+        expect(second.capture.error).toEqual([]);
         expect(process.exitCode).toBe(0);
       },
     );
