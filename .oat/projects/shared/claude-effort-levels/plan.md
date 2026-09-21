@@ -318,7 +318,7 @@ All twelve planned tasks are implemented, phases p01 through p05 passed independ
 - Phase 4: 2 tasks — version-aware Claude effort validation and provider-registry guidance.
 - Phase 5: 2 tasks — align shipped docs and orchestrator guidance with the fail-closed capability contract and correct the uncapped Claude effort flag.
 
-**Total: 13 tasks; 12 implemented.**
+**Total: 13 tasks; 13 implemented.**
 
 ## References
 

@@ -3,44 +3,44 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-21
-oat_current_task_id: p05-t02
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 ---
 
 # Implementation: claude-effort-levels
 
-The original final-review findings are resolved and phase p04 passed. A fresh final lifecycle review then passed cleanly. The configured exit gate passed its High threshold and converted one Medium documentation-alignment finding plus three wording-oriented Lows into p05-t01, which is implemented and passed phase review; one low-risk structural-comparison cleanup is explicitly deferred. A resolved PR review thread exposed one remaining unsupported flag spelling in the uncapped Claude prose, now scheduled as p05-t02 before closeout.
+The original final-review findings are resolved and phase p04 passed. A fresh final lifecycle review then passed cleanly. The configured exit gate passed its High threshold and converted one Medium documentation-alignment finding plus three wording-oriented Lows into p05-t01, which is implemented and passed phase review; one low-risk structural-comparison cleanup is explicitly deferred. A resolved PR review thread exposed one remaining unsupported flag spelling in the uncapped Claude prose; p05-t02 corrected it and added a regression assertion before closeout.
 
 ## Progress Overview
 
-| Phase                                    | Status      | Tasks | Completed |
-| ---------------------------------------- | ----------- | ----- | --------- |
-| p01 — Resolve and materialize            | completed   | 2     | 2/2       |
-| p02 — Guidance and recommendations       | completed   | 4     | 4/4       |
-| p03 — Verification and release readiness | completed   | 3     | 3/3       |
-| p04 — Final review fixes                 | completed   | 2     | 2/2       |
-| p05 — Capability documentation alignment | in progress | 2     | 1/2       |
+| Phase                                    | Status    | Tasks | Completed |
+| ---------------------------------------- | --------- | ----- | --------- |
+| p01 — Resolve and materialize            | completed | 2     | 2/2       |
+| p02 — Guidance and recommendations       | completed | 4     | 4/4       |
+| p03 — Verification and release readiness | completed | 3     | 3/3       |
+| p04 — Final review fixes                 | completed | 2     | 2/2       |
+| p05 — Capability documentation alignment | completed | 2     | 2/2       |
 
-**Total: 12/13 tasks completed.**
+**Total: 13/13 tasks completed.**
 
 ## Task Status
 
-| Task    | Status      | Commit                                     |
-| ------- | ----------- | ------------------------------------------ |
-| p01-t01 | completed   | `cf0171757e58f611d757e33a4f3aee04c47480c3` |
-| p01-t02 | completed   | `90502a9d478174e633a46efe4f0108c0c35bbeb9` |
-| p02-t01 | completed   | `33a02d6e7`                                |
-| p02-t02 | completed   | `9f1270c8c`                                |
-| p02-t03 | completed   | `7b232ce6e`                                |
-| p02-t04 | completed   | `ad81125c3`                                |
-| p03-t01 | completed   | `93101fb6dfa049b10937173fc6929d7425737b64` |
-| p03-t02 | completed   | `d14b8175713ea3464fb0c6cd55e37a1c4c53dcad` |
-| p03-t03 | completed   | `f278335a77de048a616c3b77536fe21fcb41867b` |
-| p04-t01 | completed   | `5f696f161c6025ff5ee01ffac907fd872741c6f3` |
-| p04-t02 | completed   | `7bbafcd0aad74a6d0a4d59a3cb3d43459f1a771f` |
-| p05-t01 | completed   | `8fce3af3799c07400e4ed4d23da08ad172e9f3dc` |
-| p05-t02 | in_progress | -                                          |
+| Task    | Status    | Commit                                     |
+| ------- | --------- | ------------------------------------------ |
+| p01-t01 | completed | `cf0171757e58f611d757e33a4f3aee04c47480c3` |
+| p01-t02 | completed | `90502a9d478174e633a46efe4f0108c0c35bbeb9` |
+| p02-t01 | completed | `33a02d6e7`                                |
+| p02-t02 | completed | `9f1270c8c`                                |
+| p02-t03 | completed | `7b232ce6e`                                |
+| p02-t04 | completed | `ad81125c3`                                |
+| p03-t01 | completed | `93101fb6dfa049b10937173fc6929d7425737b64` |
+| p03-t02 | completed | `d14b8175713ea3464fb0c6cd55e37a1c4c53dcad` |
+| p03-t03 | completed | `f278335a77de048a616c3b77536fe21fcb41867b` |
+| p04-t01 | completed | `5f696f161c6025ff5ee01ffac907fd872741c6f3` |
+| p04-t02 | completed | `7bbafcd0aad74a6d0a4d59a3cb3d43459f1a771f` |
+| p05-t01 | completed | `8fce3af3799c07400e4ed4d23da08ad172e9f3dc` |
+| p05-t02 | completed | `77f87981b6de7d6ac3e3b6b47c9a06cceede3f3c` |
 
 ## Orchestration Runs
 
@@ -161,6 +161,7 @@ The original final-review findings are resolved and phase p04 passed. A fresh fi
 - Post-implementation summary and documentation sync completed. PR #315 is open from `feat/claude-effort-levels`; the user chose to skip the optional project recap, and the recap terminal-outcome guard passed. All configured pre-approval steps are complete, so the sequence awaits final HiLL approval.
 - `origin/main` advanced with PR #309 on the same reviewer contract. The merge preserved both changes and passed the complete repository/release/docs/lint/format sequence, plus 367 focused integration tests. Because the qualified effective-delta fingerprint changed against the new merge base, the prior configured gate is marked stale pending a narrow integration review and fresh gate generation.
 - After PR #315 reached a clean, all-green head, root inspected the resolved Bugbot thread and confirmed its original Medium finding still applied: the uncapped Claude recipe names nonexistent `--preferred-effort` while the CLI ships `--task-effort`. Task p05-t02 owns the bounded prose correction and regression assertion. The just-passed gate generation is stale because this is a substantive bundled-skill/test change.
+- Task p05-t02 commit `77f87981b6de7d6ac3e3b6b47c9a06cceede3f3c` replaces the unsupported spelling with `--task-effort <preferred-effort>` and pins both the supported flag and absence of `--preferred-effort` in the Claude launch contract test. Focused skill validation passed 242/242, canonical skill validation passed, the PR-scoped skill-bump check passed, and `git diff --check` passed.
 
 <!-- orchestration-runs-end -->
 
