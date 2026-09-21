@@ -1173,7 +1173,9 @@ describe('help output snapshots', () => {
       expect(help).toContain(taskClass);
     }
     expect(help).toContain('--task-effort <effort>');
-    expect(help).toMatch(/Codex-only task effort classification\s+provenance/);
+    expect(help).toMatch(
+      /Codex or Claude task effort classification\s+provenance/,
+    );
     expect(help).toMatch(/choices: "implementation", "fix",\s+"review"/);
     expect(help).toMatch(/Dispatch Report V1 action/);
   });

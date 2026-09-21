@@ -3,6 +3,21 @@ oat_dispatch_policy:
   mode: managed
   policy: high
   source: project-state
+oat_phase_recovery_policy:
+  default_attempt_limit: 10
+  phase_attempt_usage:
+    p01:
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: p01-t01-recovery-01
+        original_request_id: claude-effort-p01-implementation-01
+        original_task_id: p01-t01
+        original_commit: cf0171757e58f611d757e33a4f3aee04c47480c3
+        discovered_by: pnpm --filter @open-agent-toolkit/cli test
+        dispatch_target: oat-phase-implementer-gpt-5-6-sol-medium
+        reservation_head: 90502a9d478174e633a46efe4f0108c0c35bbeb9
+        status: completed
 oat_current_task: p01-t01
 oat_last_commit: null
 oat_blockers: []
