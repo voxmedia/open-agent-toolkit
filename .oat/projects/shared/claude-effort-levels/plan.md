@@ -233,7 +233,7 @@ Then run each separately with its own captured exit code: `pnpm test:smoke`, `pn
 | final  | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -           |
 | design | artifact | pending         | -          | -                                                           | -                                        | -          | -           |
-| p03    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
+| p03    | code     | fixes_added     | 2026-09-21 | reviews/p03-review-2026-09-21T031442Z.md                    | f278335a77de048a616c3b77536fe21fcb41867b | phase      | -           |
 | plan   | artifact | passed          | 2026-09-20 | -                                                           | -                                        | -          | -           |
 | plan   | artifact | fixes_completed | 2026-09-20 | reviews/archived/artifact-plan-review-2026-09-20T235147Z.md | -                                        | -          | -           |
 | plan   | artifact | fixes_completed | 2026-09-21 | reviews/archived/artifact-plan-review-2026-09-21T000015Z.md | -                                        | -          | -           |
@@ -244,13 +244,13 @@ Phase p02 passed with 0 Critical, 0 High, 0 Medium, and 1 Low after all five fir
 
 ## Implementation Complete
 
-Phase p01 is complete and independently reviewed. Phases p02 and p03 remain.
+All nine planned tasks are implemented. Phases p01 and p02 passed independent review; phase p03 is in its bounded review-fix loop before final closeout.
 
 - Phase 1: 2 tasks — resolver and generated-role lifecycle.
 - Phase 2: 4 tasks — awareness, recommendations, documentation/decision alignment, and relevant lifecycle-gate prompts.
 - Phase 3: 3 tasks — negative controls, live acceptance, release verification.
 
-**Total: 9 tasks; 2 complete.**
+**Total: 9 tasks; 9 implemented.**
 
 ## References
 
