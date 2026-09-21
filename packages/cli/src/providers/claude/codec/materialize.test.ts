@@ -60,6 +60,21 @@ describe('Claude effort materializer', () => {
     ).rejects.toThrow(/\.cursor\/agents/);
   });
 
+  it('refuses normalized Codex TOML role collisions', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-claude-collision-'));
+    roots.push(root);
+    const role = 'oat-reviewer-claude-opus-high';
+    await mkdir(join(root, '.codex', 'agents'), { recursive: true });
+    await writeFile(
+      join(root, '.codex', 'agents', 'OAT_Reviewer-Claude-Opus-High.toml'),
+      'name = "unmanaged-collision"\n',
+    );
+
+    await expect(
+      assertNoUnmanagedClaudeAgentCollisions(root, [role]),
+    ).rejects.toThrow(/\.codex\/agents/);
+  });
+
   it('keeps Cursor Claude-catalog names distinct and refuses normalized Claude collisions', () => {
     const agent = parseCanonicalAgentMarkdown(
       '---\nname: oat-reviewer\ndescription: Review changes.\n---\n\nBody',

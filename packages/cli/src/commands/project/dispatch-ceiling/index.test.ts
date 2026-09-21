@@ -3614,6 +3614,45 @@ describe('oat project dispatch-ceiling resolve', () => {
     },
   );
 
+  it.each([
+    {
+      candidates: [
+        { harness: 'claude', model: 'opus', effort: 'high' },
+        { harness: 'claude', model: 'opus', effort: 'medium' },
+      ],
+      message: 'Claude candidates must be nondecreasing',
+    },
+    {
+      candidates: [{ harness: 'claude', model: 'sonnet', effort: 'xhigh' }],
+      message: 'does not support effort',
+    },
+  ])(
+    'rejects invalid Claude reviewer ladders before terminal selection: $message',
+    async ({ candidates, message }) => {
+      const { root, home } = await setup();
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: {
+          dispatchPolicy: { mode: 'managed', policy: 'high' },
+          dispatchCeiling: { providers: { claude: { high: { candidates } } } },
+        },
+      });
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'claude',
+        '--role',
+        'reviewer',
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({ status: 'error' });
+      expect(capture.jsonPayloads[0]?.message).toContain(message);
+      expect(process.exitCode).toBe(1);
+    },
+  );
+
   it('rejects malformed closed-provider candidate ordering', async () => {
     const { root, home } = await setup();
     await writeJson(join(root, '.oat', 'config.json'), {
@@ -4767,6 +4806,33 @@ describe('oat project dispatch-ceiling resolve', () => {
     expect(capture.info).toContain('Mode: enforced (model-arg)');
     expect(capture.info).toContain('Selection: capped');
     expect(capture.info).toContain('Effort axis: not-applicable');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('prints the selected Claude effort axis for an effort-pinned target', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchPolicy: { mode: 'managed', policy: 'high' },
+        dispatchCeiling: {
+          providers: {
+            claude: {
+              high: {
+                candidates: [
+                  { harness: 'claude', model: 'opus', effort: 'high' },
+                ],
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, ['--provider', 'claude']);
+
+    expect(capture.info).toContain('Effort axis: selected:high');
     expect(process.exitCode).toBe(0);
   });
 

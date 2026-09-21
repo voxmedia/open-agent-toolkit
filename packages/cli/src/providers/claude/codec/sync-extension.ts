@@ -40,6 +40,7 @@ import {
 } from './materialize';
 
 const SUPPORTED_BASE_ROLES = ['oat-phase-implementer', 'oat-reviewer'] as const;
+type SupportedBaseRole = (typeof SUPPORTED_BASE_ROLES)[number];
 
 export interface ClaudeMaterializationTargetOptions {
   userConfigDir?: string;
@@ -189,6 +190,7 @@ async function staleRoles(
   scopeRoot: string,
   desired: Set<string>,
   owners: ClaudeRoleOwner[],
+  baseRoles?: ReadonlySet<SupportedBaseRole>,
 ): Promise<string[]> {
   let files: string[] = [];
   try {
@@ -205,10 +207,38 @@ async function staleRoles(
       join(scopeRoot, '.claude', 'agents', file),
     );
     const managed = content ? readOatManagedClaudeRole(content) : null;
-    if (managed?.roleName === roleName && owners.includes(managed.owner))
+    const matchesBaseRole =
+      !baseRoles ||
+      [...baseRoles].some((baseRole) =>
+        roleName.startsWith(`${baseRole}-claude-`),
+      );
+    if (
+      matchesBaseRole &&
+      managed?.roleName === roleName &&
+      owners.includes(managed.owner)
+    )
       stale.push(roleName);
   }
   return stale.sort();
+}
+
+function removedSupportedBaseRoles(
+  entries: CanonicalEntry[],
+  allowedCanonicalPaths?: string[],
+): Set<SupportedBaseRole> {
+  if (!allowedCanonicalPaths?.length) return new Set();
+  const present = new Set(
+    entries
+      .filter((entry) => entry.type === 'agent' && entry.isFile)
+      .map((entry) => entry.name.replace(/\.md$/, '')),
+  );
+  return new Set(
+    SUPPORTED_BASE_ROLES.filter(
+      (role) =>
+        allowedCanonicalPaths.includes(`.agents/agents/${role}.md`) &&
+        !present.has(role),
+    ),
+  );
 }
 
 export async function computeClaudeProjectExtensionPlan(
@@ -236,7 +266,12 @@ export async function computeClaudeProjectExtensionPlan(
       allowedCanonicalPaths,
     ),
   );
-  if (partial && entries.length === 0) return empty();
+  const removedBaseRoles = removedSupportedBaseRoles(
+    entries,
+    allowedCanonicalPaths,
+  );
+  if (partial && entries.length === 0 && removedBaseRoles.size === 0)
+    return empty();
   const targets = await readTargets(scopeRoot, options);
   const agents = [];
   for (const entry of entries) {
@@ -258,7 +293,7 @@ export async function computeClaudeProjectExtensionPlan(
   const desired = new Set(roles.map(({ roleName }) => roleName));
   await assertNoUnmanagedClaudeAgentCollisions(scopeRoot, desired);
   const stale = partial
-    ? []
+    ? await staleRoles(scopeRoot, desired, cleanupOwners, removedBaseRoles)
     : await staleRoles(scopeRoot, desired, cleanupOwners);
   const operations: ClaudeExtensionPlan['operations'] = [];
   for (const role of roles) {

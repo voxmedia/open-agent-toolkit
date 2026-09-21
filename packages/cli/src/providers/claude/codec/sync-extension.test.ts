@@ -85,6 +85,52 @@ describe('Claude effort sync extension', () => {
     expect(second.aggregateHash).toBe(first.aggregateHash);
   });
 
+  it('removes only managed variants owned by a filtered removed base role', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-claude-extension-'));
+    roots.push(root);
+    const entries = await canonicalEntries(root);
+    await mkdir(join(root, '.oat'), { recursive: true });
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      config([{ harness: 'claude', model: 'opus', effort: 'high' }]),
+    );
+    const initial = await computeClaudeProjectExtensionPlan(root, entries);
+    await applyClaudeProjectExtensionPlan(root, initial);
+
+    const plan = await computeClaudeProjectExtensionPlan(
+      root,
+      entries.filter(({ name }) => name !== 'oat-reviewer.md'),
+      ['.agents/agents/oat-reviewer.md'],
+    );
+
+    expect(plan.operations).toEqual([
+      expect.objectContaining({
+        action: 'remove',
+        roleName: 'oat-reviewer-claude-opus-high',
+      }),
+    ]);
+    await expect(
+      applyClaudeProjectExtensionPlan(root, plan),
+    ).resolves.toMatchObject({ applied: 1, failed: 0 });
+    await expect(
+      readFile(
+        join(
+          root,
+          '.claude',
+          'agents',
+          'oat-phase-implementer-claude-opus-high.md',
+        ),
+        'utf8',
+      ),
+    ).resolves.toContain('oat-phase-implementer-claude-opus-high');
+    await expect(
+      readFile(
+        join(root, '.claude', 'agents', 'oat-reviewer-claude-opus-high.md'),
+        'utf8',
+      ),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+  });
+
   it('uses only injected user config and removes stale managed user variants', async () => {
     const home = await mkdtemp(join(tmpdir(), 'oat-claude-home-'));
     roots.push(home);

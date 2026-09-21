@@ -28,9 +28,9 @@ export interface ClaudeMaterializedAgent {
 }
 
 const DISCOVERY_DIRECTORIES = [
-  '.claude/agents',
-  '.cursor/agents',
-  '.codex/agents',
+  { path: '.claude/agents', extension: '.md' },
+  { path: '.cursor/agents', extension: '.md' },
+  { path: '.codex/agents', extension: '.toml' },
 ] as const;
 
 function managedComments(roleName: string, owner: ClaudeRoleOwner): string[] {
@@ -143,7 +143,7 @@ export async function assertNoUnmanagedClaudeAgentCollisions(
   desiredNames: Iterable<string>,
 ): Promise<void> {
   const desired = new Set(desiredNames);
-  for (const directory of DISCOVERY_DIRECTORIES) {
+  for (const { path: directory, extension } of DISCOVERY_DIRECTORIES) {
     const absoluteDirectory = join(scopeRoot, directory);
     const stats = await pathStats(absoluteDirectory);
     if (!stats) continue;
@@ -153,11 +153,15 @@ export async function assertNoUnmanagedClaudeAgentCollisions(
       );
     }
     for (const fileName of await readdir(absoluteDirectory)) {
-      if (!fileName.endsWith('.md')) continue;
+      if (!fileName.endsWith(extension)) continue;
       const path = join(absoluteDirectory, fileName);
       const fileStats = await pathStats(path);
       if (!fileStats?.isFile() || fileStats.isSymbolicLink()) {
-        if (desired.has(normalizeClaudeRoleName(fileName))) {
+        if (
+          desired.has(
+            normalizeClaudeRoleName(fileName.slice(0, -extension.length)),
+          )
+        ) {
           throw new CliError(
             `Claude role collision at ${directory}/${fileName}: symbolic links are not writable targets.`,
           );
@@ -165,12 +169,14 @@ export async function assertNoUnmanagedClaudeAgentCollisions(
         continue;
       }
       const content = await readFile(path, 'utf8');
-      const parsed = frontmatter(content);
+      const parsed = extension === '.md' ? frontmatter(content) : null;
       const declared =
         typeof parsed?.value.name === 'string'
           ? normalizeClaudeRoleName(parsed.value.name)
           : null;
-      const fileRole = normalizeClaudeRoleName(fileName);
+      const fileRole = normalizeClaudeRoleName(
+        fileName.slice(0, -extension.length),
+      );
       if (!desired.has(fileRole) && (!declared || !desired.has(declared)))
         continue;
       const managed = readOatManagedClaudeRole(content);

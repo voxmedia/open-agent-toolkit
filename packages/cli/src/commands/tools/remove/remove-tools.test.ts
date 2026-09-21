@@ -10,6 +10,7 @@ import {
   WORKFLOW_TEMPLATES,
 } from '@commands/init/tools/shared/skill-manifest';
 import type { AutoSyncDependencies } from '@commands/tools/shared/auto-sync';
+import { inProcessSyncDependencies } from '@commands/tools/shared/in-process-sync';
 import {
   attributeSharedOwnerDiagnostics,
   inventoryPack,
@@ -22,6 +23,10 @@ import {
 } from '@commands/tools/shared/scoped-pack-intent';
 import type { ToolInfo } from '@commands/tools/shared/types';
 import { resolveAssetsRoot } from '@fs/assets';
+import {
+  applyClaudeProjectExtensionPlan,
+  computeClaudeProjectExtensionPlan,
+} from '@providers/claude/codec/sync-extension';
 import { Command } from 'commander';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -186,6 +191,8 @@ async function runRemoveCommand(
   scopeRoot: string,
   args: string[],
   runSync: AutoSyncDependencies['runSync'] = async () => {},
+  dependencies: RemoveToolsDependencies = filesystemDeps(scopeRoot),
+  scope: 'project' | 'user' = 'user',
 ): Promise<void> {
   const program = new Command()
     .name('oat')
@@ -196,14 +203,14 @@ async function runRemoveCommand(
     .exitOverride();
   const tools = new Command('tools');
   tools.addCommand(
-    createToolsRemoveCommand(filesystemDeps(scopeRoot), {
+    createToolsRemoveCommand(dependencies, {
       runSync,
     }),
   );
   program.addCommand(tools);
 
   await program.parseAsync(
-    ['--scope', 'user', '--cwd', scopeRoot, 'tools', 'remove', ...args],
+    ['--scope', scope, '--cwd', scopeRoot, 'tools', 'remove', ...args],
     { from: 'user' },
   );
 }
@@ -1240,5 +1247,116 @@ describe('removeTools', () => {
         ),
       }),
     ]);
+  });
+
+  it('removes only the removed base role Claude variants through in-process sync', async () => {
+    const scopeRoot = await makeScopeRoot();
+    await mkdir(join(scopeRoot, '.git'));
+    const agentsRoot = join(scopeRoot, '.agents', 'agents');
+    await mkdir(agentsRoot, { recursive: true });
+    const canonicalEntries = await Promise.all(
+      ['oat-phase-implementer', 'oat-reviewer'].map(async (name) => {
+        const canonicalPath = join(agentsRoot, `${name}.md`);
+        await writeFile(
+          canonicalPath,
+          `---\nname: ${name}\ndescription: ${name}\ntools: Read\n---\n\nBody`,
+        );
+        return {
+          name: `${name}.md`,
+          type: 'agent' as const,
+          canonicalPath,
+          isFile: true,
+        };
+      }),
+    );
+    await mkdir(join(scopeRoot, '.oat'), { recursive: true });
+    await writeFile(
+      join(scopeRoot, '.oat', 'config.json'),
+      JSON.stringify({
+        version: 1,
+        workflow: {
+          dispatchCeiling: {
+            providers: {
+              claude: {
+                high: {
+                  candidates: [
+                    { harness: 'claude', model: 'opus', effort: 'high' },
+                  ],
+                },
+              },
+            },
+          },
+        },
+      }),
+    );
+    await mkdir(join(scopeRoot, '.oat', 'sync'), { recursive: true });
+    await writeFile(
+      join(scopeRoot, '.oat', 'sync', 'config.json'),
+      JSON.stringify({
+        version: 1,
+        defaultStrategy: 'copy',
+        knownStrays: [],
+        providers: { claude: { enabled: true } },
+      }),
+    );
+    const initial = await computeClaudeProjectExtensionPlan(
+      scopeRoot,
+      canonicalEntries,
+    );
+    await applyClaudeProjectExtensionPlan(scopeRoot, initial);
+
+    const dependencies = filesystemDeps(scopeRoot);
+    dependencies.scanTools = async () => [
+      createTool({
+        name: 'oat-reviewer',
+        type: 'agent',
+        scope: 'project',
+        pack: 'workflows',
+      }),
+    ];
+    let syncEvidence: unknown;
+    await runRemoveCommand(
+      scopeRoot,
+      ['oat-reviewer'],
+      async (options) => {
+        syncEvidence = await inProcessSyncDependencies.runSync(options);
+        return syncEvidence as Awaited<
+          ReturnType<typeof inProcessSyncDependencies.runSync>
+        >;
+      },
+      dependencies,
+      'project',
+    );
+
+    expect(syncEvidence).toMatchObject({
+      extensionResults: [
+        expect.objectContaining({
+          provider: 'claude',
+          path: '.claude/agents/oat-reviewer-claude-opus-high.md',
+          status: 'changed',
+        }),
+      ],
+    });
+
+    await expect(
+      pathExists(
+        join(
+          scopeRoot,
+          '.claude',
+          'agents',
+          'oat-reviewer-claude-opus-high.md',
+        ),
+      ),
+    ).resolves.toBe(false);
+    await expect(
+      pathExists(
+        join(
+          scopeRoot,
+          '.claude',
+          'agents',
+          'oat-phase-implementer-claude-opus-high.md',
+        ),
+      ),
+    ).resolves.toBe(true);
   });
 });

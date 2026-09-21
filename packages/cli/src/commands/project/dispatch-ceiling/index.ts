@@ -686,6 +686,7 @@ function resolveProviderCellFromValue(
   }
 
   if (isWorkflowDispatchCandidateLadder(cell)) {
+    if (provider === 'claude') assertCandidateOrder(provider, tier, cell);
     const ceiling = cell.candidates.at(-1);
     if (ceiling === undefined) {
       return null;
@@ -861,6 +862,17 @@ function candidatePrimaryTarget(
     throw new Error(
       `Malformed ${provider} candidate ordering in ${tier}: model-argument candidates require a model.`,
     );
+  }
+  if (target.harness === 'claude' && target.model) {
+    const validation = validateClaudeDispatchTarget({
+      model: target.model,
+      ...(target.effort ? { effort: target.effort } : {}),
+    });
+    if (!validation.valid) {
+      throw new Error(
+        `Malformed ${provider} candidate ordering in ${tier}: ${validation.reason}`,
+      );
+    }
   }
 
   return target;
@@ -2757,7 +2769,9 @@ function writeHumanResolution(
       );
     }
   } else {
-    context.logger.info('Effort axis: not-applicable');
+    context.logger.info(
+      `Effort axis: ${providerResolution?.effortAxis ?? 'not-applicable'}`,
+    );
     if (providerResolution?.selection.selectionMode === 'inherit-default') {
       context.logger.info(
         'Note: OAT will not select a Claude model; Task dispatch inherits host/provider behavior.',
