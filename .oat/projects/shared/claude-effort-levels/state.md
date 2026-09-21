@@ -70,10 +70,10 @@ oat_implement_exit_gate:
   implementation_fingerprint: 'sha256:effective-delta-v1:3885e1edbb50b85f2abab5eb8c96cbaf6095ab3d2b147721d92ff2104aab1df0'
   freshness_head: 951d802045679cb270a4bdf8503950455d8ed98e
   freshness_fingerprint: 'sha256:effective-delta-v1:ca128470df6a8092af41aa71641346b8b2bb00730dac20c31ad716462d511e85'
-  launch_state: not_started
-  launch_attempt_id: null
-  launch_started_at: null
-  launch_result_receipt: null
+  launch_state: intent_persisted
+  launch_attempt_id: 'claude-effort-exit-gate-2-20260921T202400Z'
+  launch_started_at: '2026-09-21T20:24:00Z'
+  launch_result_receipt: '/private/tmp/claude-effort-exit-gate-2-20260921T202400Z.receipt.json'
   gate_run_marker: null
   gate_run_id: null
   envelope_status: null
@@ -131,7 +131,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-20T19:40:55.054Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-21T20:23:20Z'
+oat_project_state_updated: '2026-09-21T20:24:00Z'
 oat_generated: false
 ---
 
