@@ -68,7 +68,7 @@ oat_implement_exit_gate:
   reviewed_head: 43ef811f8161313a92ad64a606dab6244d474fbe
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:40ec5898c36a7af925703ccc991e6413dd9000eb179781e6ee2b9a126ce3266f'
-  freshness_head: 646ca62bf146b6906b12cb1574d14fc2e439faa1
+  freshness_head: 6738dd96329f2f72ca02b8c53d7203bd92e33b61
   freshness_fingerprint: 'sha256:effective-delta-v1:1a0f5295b13adacd208d11a37f5fadf2306fe5e3d260c110e9dcf11ed29ddf9d'
   launch_state: result_persisted
   launch_attempt_id: 'claude-effort-exit-gate-r3-1-20260921T232006Z'
