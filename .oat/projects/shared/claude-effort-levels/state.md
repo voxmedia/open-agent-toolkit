@@ -10,8 +10,17 @@ oat_phase_recovery_policy:
       used_attempts: 1
       pending_attempt: null
     p02:
-      used_attempts: 1
-      pending_attempt: null
+      used_attempts: 2
+      pending_attempt:
+        attempt: 2
+        event_id: p02-recovery-02
+        original_request_id: claude-effort-p02-implementation-01
+        original_task_id: p02-t01
+        original_commit: 33a02d6e7fa0d113389925636c995cf7066d11a8
+        discovered_by: pnpm run check:skill-bumps; oat sync --scope project hook check
+        dispatch_target: oat-phase-implementer-gpt-5-6-sol-medium
+        reservation_head: ffe6e1b9fa409eb2059c889e75b01195cfcbcef0
+        status: pending
 oat_current_task: p02-t04
 oat_last_commit: ad81125c361b4aa39a00dc9309ec33069d56dca8
 oat_blockers: []
