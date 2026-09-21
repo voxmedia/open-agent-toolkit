@@ -51,7 +51,7 @@ The final post-p05-t03 verification completed the repository's CI/release sequen
 - `pnpm lint`
 - `pnpm format`
 
-The authoritative CLI suite passed 7,484/7,484 tests; smoke passed 163/163, skill tests 650/650, and scripts 1/1. A forced isolated Turbo run executed 10/10 tasks without cache reuse. Focused Claude dispatch/guidance tests passed 334/334, production-boundary smoke passed 4/4, and a deliberate negative control proved the shipped model-agreement guard can fail. The final receive edits also passed the docs check and the 242-test skill validation suite.
+The authoritative CLI suite passed 7,484/7,484 tests; smoke passed 163/163, skill tests 650/650, and scripts 1/1. A forced isolated Turbo run executed 10/10 tasks without cache reuse. Focused Claude dispatch/guidance tests passed 334/334, production-boundary smoke passed 4/4, and a deliberate negative control proved the shipped model-agreement guard can fail. The final receive edits also passed the docs check and the 242-test skill validation suite. Current-head CI exposed one stale derived autonomy-inventory key after the guidance edit; removing it passed the focused 5-test inventory suite and the complete `pnpm test` command.
 
 ## Reviews
 

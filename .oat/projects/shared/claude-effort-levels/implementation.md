@@ -208,6 +208,8 @@ These passing-gate judgment-sweep fixes change guidance and its prose contract o
 
 Gate receive reconciliation confirmed the archived artifact, monotonic Reviews row, and bounded receive commit `8515d3bea`. The configured implementation exit gate is therefore durably `allowed/passed`; the immutable reviewed basis and full gate provenance remain preserved in project state.
 
+Current-head CI then caught one stale derived autonomy-inventory key left by the accepted guidance edit. The obsolete `2df3adae4120 -> NG` mapping was removed from the canonical autonomy contract; the focused 5-test inventory suite and the complete `pnpm test` command passed. This is the mechanical documentation-contract companion to the already accepted Low guidance fix.
+
 <!-- orchestration-runs-end -->
 
 ## Planning Log
