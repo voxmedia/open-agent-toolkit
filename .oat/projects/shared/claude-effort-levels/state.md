@@ -64,21 +64,21 @@ oat_implement_exit_gate:
   project_override: null
   on_failure: block
   max_attempts: 2
-  attempts_completed: 1
+  attempts_completed: 2
   reviewed_head: 1eb5bf6471288763cdbd9d4413af17794a9e5ef0
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:3885e1edbb50b85f2abab5eb8c96cbaf6095ab3d2b147721d92ff2104aab1df0'
   freshness_head: 951d802045679cb270a4bdf8503950455d8ed98e
   freshness_fingerprint: 'sha256:effective-delta-v1:ca128470df6a8092af41aa71641346b8b2bb00730dac20c31ad716462d511e85'
-  launch_state: accepted
+  launch_state: result_persisted
   launch_attempt_id: 'claude-effort-exit-gate-2-20260921T202400Z'
   launch_started_at: '2026-09-21T20:24:00Z'
   launch_result_receipt: '/private/tmp/claude-effort-exit-gate-2-20260921T202400Z.receipt.json'
   gate_run_marker: '/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/a0edfdfe-585d-467c-b189-b5300b17d667.json'
   gate_run_id: a0edfdfe-585d-467c-b189-b5300b17d667
-  envelope_status: null
-  artifact: null
-  handoff: null
+  envelope_status: ok
+  artifact: '.oat/projects/shared/claude-effort-levels/reviews/final-review-2026-09-21T203110Z.md'
+  handoff: 'Run oat-project-review-receive for .oat/projects/shared/claude-effort-levels/reviews/final-review-2026-09-21T203110Z.md before treating this gate review as consumed.'
   receive_state: not_started
   receive_correlation: null
   receive_source_artifact: null
@@ -86,10 +86,10 @@ oat_implement_exit_gate:
   receive_event_identity: null
   receive_pre_head: null
   receive_commit: null
-  receive_eligible: false
+  receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-09-21T20:25:23Z'
+  updated_at: '2026-09-21T20:37:48Z'
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
