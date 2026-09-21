@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-21
-oat_current_task_id: p04-fix1
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 ---
@@ -118,6 +118,8 @@ The first final review found one High capability-modeling defect and one Low arc
 - Phase p04 review request `claude-effort-p04-review-01` used `oat-reviewer-gpt-5-6-sol-high` against reviewed head `7ff3bb101d641f2e273679b68d44868ac97141fa` with invocation `phase`.
 - Phase p04 review artifact: `reviews/p04-review-2026-09-21T134100Z.md`; verdict blocked with 0 Critical, 2 High, 1 Medium, and 0 Low. Reconnaissance was not attempted, so no review-orchestration project-log entry is required.
 - High findings: provider-default aliases were recorded as exact resolved models despite apps-gateway and allowlist substitutions; custom provider pins with documented `_SUPPORTED_CAPABILITIES` declarations were rejected. Medium finding: the launch envelope compared model/effort but not the two `resolvedModel` copies. No Medium is deferred; bounded fix round 1 addresses all three through the original p04 implementer handle.
+- Phase p04 fix round 1 commit `a5e86e248ab818ec0aa7115175d1d6b91039f9a7` replaced inferred exact versions with provenance-bearing capability evidence, preserved provider-specific alias mappings, added custom pin capability declarations and stale regeneration, and reconciled both resolver copies, generated definitions, and independently rederived launch-boundary evidence.
+- Fix verification: implementer focused suites 219/219 and dispatch-record 74/74 passed with CLI check, type-check, build, smoke 4/4, sync dry-run, and diff checks. Root independently reran the combined 293-test focused suite, smoke 4/4, and built project sync dry-run with zero planned operations and zero failures. Fresh p04 re-review is next.
 
 <!-- orchestration-runs-end -->
 
