@@ -79,17 +79,17 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: '.oat/projects/shared/claude-effort-levels/reviews/final-review-2026-09-21T203110Z.md'
   handoff: 'Run oat-project-review-receive for .oat/projects/shared/claude-effort-levels/reviews/final-review-2026-09-21T203110Z.md before treating this gate review as consumed.'
-  receive_state: not_started
-  receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
+  receive_state: intent_persisted
+  receive_correlation: 'run=a0edfdfe-585d-467c-b189-b5300b17d667; handoff=receive; source=reviews/final-review-2026-09-21T203110Z.md; scope=final; type=code'
+  receive_source_artifact: '.oat/projects/shared/claude-effort-levels/reviews/final-review-2026-09-21T203110Z.md'
+  receive_archived_artifact: '.oat/projects/shared/claude-effort-levels/reviews/archived/final-review-2026-09-21T203110Z.md'
+  receive_event_identity: 'final | code | final-review-2026-09-21T203110Z.md'
+  receive_pre_head: bfed57a1802ddc247b252df1b5c6bf666673a50e
   receive_commit: null
   receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-09-21T20:37:48Z'
+  updated_at: '2026-09-21T20:38:27Z'
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
