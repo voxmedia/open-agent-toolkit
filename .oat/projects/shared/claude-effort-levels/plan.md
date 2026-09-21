@@ -262,19 +262,31 @@ Then run each separately with its own captured exit code: `pnpm test:smoke`, `pn
 
 **Commit:** `fix(p05-t02): use shipped Claude task effort flag`.
 
+### Task p05-t03: (review) Select the exact uncapped Claude effort candidate
+
+**Files:** `.agents/skills/oat-project-implement/references/dispatch-and-dry-run.md`, `packages/cli/src/commands/project/dispatch-ceiling/index.test.ts`, `packages/cli/src/validation/skills.test.ts`, project tracking artifacts.
+
+**Work:** Replace the incorrect managed-Uncapped explicit-effort recipe with the existing exact-candidate path: `--candidate-model <model> --candidate-effort <effort>`, plus matching `--task-effort <effort>` classification provenance. Keep `--preferred <model>` only for the legacy model-only compatibility branch. Extend the real resolver test to execute the documented role/report/classification invocation and require the exact generated variant, selected effort axis, and matching model/effort target. Correct all task-count summaries after adding this review fix.
+
+**Verify:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/dispatch-ceiling/index.test.ts src/validation/skills.test.ts`; `pnpm oat:validate-skills`; `pnpm run check:skill-bumps`; `git diff --check`.
+
+**Format:** `pnpm exec oxfmt --write .agents/skills/oat-project-implement/references/dispatch-and-dry-run.md packages/cli/src/commands/project/dispatch-ceiling/index.test.ts packages/cli/src/validation/skills.test.ts` plus changed project artifacts.
+
+**Commit:** `fix(p05-t03): select exact uncapped Claude effort target`.
+
 ## Validation Coverage
 
-| Success criterion                              | Owning tasks              |
-| ---------------------------------------------- | ------------------------- |
-| SC1 distinct selection and policy semantics    | p01-t01, p03-t01, p04-t01 |
-| SC2 generated roles and managed lifecycle      | p01-t02, p04-t01          |
-| SC3 exact native launch and refusal boundaries | p02-t01, p03-t01, p03-t02 |
-| SC4 compatibility and other providers          | p01-t01, p01-t02, p02-t02 |
-| SC5 awareness and actual task-based choice     | p02-t01, p03-t02, p05-t02 |
-| SC6 recommendation and adoption                | p02-t02, p04-t01          |
-| SC7 positive/negative/live evidence            | p03-t01, p03-t02          |
-| SC8 decisions, docs, bumps, gates              | p02-t03, p03-t03, p05-t01 |
-| SC9 relevant workflow-gate prompts             | p02-t04                   |
+| Success criterion                              | Owning tasks                       |
+| ---------------------------------------------- | ---------------------------------- |
+| SC1 distinct selection and policy semantics    | p01-t01, p03-t01, p04-t01          |
+| SC2 generated roles and managed lifecycle      | p01-t02, p04-t01                   |
+| SC3 exact native launch and refusal boundaries | p02-t01, p03-t01, p03-t02          |
+| SC4 compatibility and other providers          | p01-t01, p01-t02, p02-t02          |
+| SC5 awareness and actual task-based choice     | p02-t01, p03-t02, p05-t02, p05-t03 |
+| SC6 recommendation and adoption                | p02-t02, p04-t01                   |
+| SC7 positive/negative/live evidence            | p03-t01, p03-t02                   |
+| SC8 decisions, docs, bumps, gates              | p02-t03, p03-t03, p05-t01          |
+| SC9 relevant workflow-gate prompts             | p02-t04                            |
 
 ## Reviews
 
@@ -303,7 +315,7 @@ Then run each separately with its own captured exit code: `pnpm test:smoke`, `pn
 | final  | code     | passed          | 2026-09-21 | reviews/archived/final-review-2026-09-21T203110Z.md         | 3b1d929aa7b50ceee0ede595bb749e75c4760398 | gate       | cursor-fable-5-1-high |
 | final  | code     | passed          | 2026-09-21 | reviews/archived/final-review-2026-09-21T221532Z.md         | 11c61dcfbdab5ae534e41fc8de7169b10199fb13 | auto       | -                     |
 | final  | code     | passed          | 2026-09-21 | reviews/archived/final-review-2026-09-21T222944Z.md         | 76abcbe59ff9a16702ed6c07e45beac7bccb97b8 | gate       | cursor-fable-5-1-high |
-| final  | code     | received        | 2026-09-21 | reviews/final-review-2026-09-21T225911Z.md                  | e045e6e6f33c2e5c297726ab9ea266ce7820a5a9 | auto       | -                     |
+| final  | code     | fixes_added     | 2026-09-21 | reviews/archived/final-review-2026-09-21T225911Z.md         | e045e6e6f33c2e5c297726ab9ea266ce7820a5a9 | auto       | -                     |
 
 Spec and design rows are retained from the scaffold for compatibility and are not required in this quick workflow. Native structured artifact review passed after one revision. The replacement configured implementation gate passed its High threshold with 0 Critical, 0 High, 0 Medium, and 2 Low findings. Root received the corroborated artifact and addressed both Low bookkeeping findings in the passing-gate judgment sweep: the older consumed final review is archived, and stale closeout wording now matches project state. No unresolved planning or implementation review findings remain.
 
@@ -311,15 +323,15 @@ Phase p02 passed with 0 Critical, 0 High, 0 Medium, and 1 Low after all five fir
 
 ## Implementation Complete
 
-All twelve planned tasks are implemented, phases p01 through p05 passed independent review, final verification passed, and both the final lifecycle review and replacement configured exit gate completed successfully. PR #315 is open pending final implementation approval.
+Thirteen of fourteen planned tasks are implemented. Task p05-t03 is the final review fix for exact managed-Uncapped Claude effort selection; fresh final verification, lifecycle review, and the configured exit gate follow it. PR #315 remains open.
 
 - Phase 1: 2 tasks — resolver and generated-role lifecycle.
 - Phase 2: 4 tasks — awareness, recommendations, documentation/decision alignment, and relevant lifecycle-gate prompts.
 - Phase 3: 3 tasks — negative controls, live acceptance, release verification.
 - Phase 4: 2 tasks — version-aware Claude effort validation and provider-registry guidance.
-- Phase 5: 2 tasks — align shipped docs and orchestrator guidance with the fail-closed capability contract and correct the uncapped Claude effort flag.
+- Phase 5: 3 tasks — align shipped guidance with the fail-closed capability contract and correct the uncapped Claude effort selection path.
 
-**Total: 13 tasks; 13 implemented.**
+**Total: 14 tasks; 13 implemented.**
 
 ## References
 

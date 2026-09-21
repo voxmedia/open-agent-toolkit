@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-21
-oat_current_task_id: null
+oat_current_task_id: p05-t03
 oat_generated: false
 oat_template: false
 ---
@@ -14,15 +14,15 @@ The original final-review findings are resolved and phase p04 passed. A fresh fi
 
 ## Progress Overview
 
-| Phase                                    | Status    | Tasks | Completed |
-| ---------------------------------------- | --------- | ----- | --------- |
-| p01 — Resolve and materialize            | completed | 2     | 2/2       |
-| p02 — Guidance and recommendations       | completed | 4     | 4/4       |
-| p03 — Verification and release readiness | completed | 3     | 3/3       |
-| p04 — Final review fixes                 | completed | 2     | 2/2       |
-| p05 — Capability documentation alignment | completed | 2     | 2/2       |
+| Phase                                    | Status      | Tasks | Completed |
+| ---------------------------------------- | ----------- | ----- | --------- |
+| p01 — Resolve and materialize            | completed   | 2     | 2/2       |
+| p02 — Guidance and recommendations       | completed   | 4     | 4/4       |
+| p03 — Verification and release readiness | completed   | 3     | 3/3       |
+| p04 — Final review fixes                 | completed   | 2     | 2/2       |
+| p05 — Capability documentation alignment | in progress | 3     | 2/3       |
 
-**Total: 13/13 tasks completed.**
+**Total: 13/14 tasks completed.**
 
 ## Task Status
 
@@ -41,6 +41,7 @@ The original final-review findings are resolved and phase p04 passed. A fresh fi
 | p04-t02 | completed | `7bbafcd0aad74a6d0a4d59a3cb3d43459f1a771f` |
 | p05-t01 | completed | `8fce3af3799c07400e4ed4d23da08ad172e9f3dc` |
 | p05-t02 | completed | `77f87981b6de7d6ac3e3b6b47c9a06cceede3f3c` |
+| p05-t03 | pending   | -                                          |
 
 ## Orchestration Runs
 
@@ -162,6 +163,19 @@ The original final-review findings are resolved and phase p04 passed. A fresh fi
 - `origin/main` advanced with PR #309 on the same reviewer contract. The merge preserved both changes and passed the complete repository/release/docs/lint/format sequence, plus 367 focused integration tests. Because the qualified effective-delta fingerprint changed against the new merge base, the prior configured gate is marked stale pending a narrow integration review and fresh gate generation.
 - After PR #315 reached a clean, all-green head, root inspected the resolved Bugbot thread and confirmed its original Medium finding still applied: the uncapped Claude recipe names nonexistent `--preferred-effort` while the CLI ships `--task-effort`. Task p05-t02 owns the bounded prose correction and regression assertion. The just-passed gate generation is stale because this is a substantive bundled-skill/test change.
 - Task p05-t02 commit `77f87981b6de7d6ac3e3b6b47c9a06cceede3f3c` replaces the unsupported spelling with `--task-effort <preferred-effort>` and pins both the supported flag and absence of `--preferred-effort` in the Claude launch contract test. Focused skill validation passed 242/242, canonical skill validation passed, the PR-scoped skill-bump check passed, and `git diff --check` passed.
+
+### Review Received: final p05-t02 follow-up
+
+**Date:** 2026-09-21
+
+**Review artifact:** `reviews/archived/final-review-2026-09-21T225911Z.md`
+
+**Findings:** 0 Critical, 1 High, 0 Medium, 1 Low
+
+- H1 accepted and converted to p05-t03: `--task-effort` is classification provenance only. Managed Uncapped explicit-effort dispatch must use the existing exact-candidate model/effort path, while `--task-effort` records matching task classification. An executable resolver test must prove the generated variant and selected effort axis.
+- L1 accepted and included in p05-t03: every plan, implementation, and state summary must report the new fourteen-task total consistently.
+
+No finding is deferred. The review remains `fixes_added` until p05-t03 is implemented and independently re-reviewed.
 
 <!-- orchestration-runs-end -->
 
