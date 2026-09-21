@@ -156,3 +156,45 @@ focused smoke test and then restored:
 The restored focused smoke file passed all four tests. The exact temporary
 patches and failure logs were retained only for the implementation run; the
 committed test contains the active guards.
+
+## Repository verification
+
+Phase verification ran in the repository Definition of Done order with each
+command's process exit captured directly. `origin/main` was fetched immediately
+before the version gate. The project tracking files are root-owned and remained
+read-only during p03; this artifact records the reproducible p03-t03 outcomes
+for the root workflow to mirror into project tracking.
+
+| Order | Command                                            | Exit | Evidence                                                              |
+| ----- | -------------------------------------------------- | ---- | --------------------------------------------------------------------- |
+| 1     | `pnpm check`                                       | `0`  | 10/10 Turbo tasks; skill validation and root formatting passed        |
+| 2     | `pnpm type-check`                                  | `0`  | 10/10 Turbo tasks                                                     |
+| 3a    | `pnpm test`                                        | `1`  | Exposed three stale assertions from reviewed p01/p02 contract changes |
+| 3b    | focused correction tests                           | `0`  | 135/135 tests passed                                                  |
+| 3c    | `pnpm test`                                        | `0`  | 10/10 Turbo tasks; CLI 7,479/7,479 tests                              |
+| 4a    | `pnpm build`                                       | `0`  | 5/5 Turbo tasks                                                       |
+| 4b    | `pnpm build` after corrections                     | `0`  | 5/5 Turbo tasks; `>>> FULL TURBO`                                     |
+| 5     | isolated `HOME` `pnpm exec turbo run test --force` | `0`  | 10/10 tasks, 0 cached, 10 `cache bypass, force executing` markers     |
+| 6     | `pnpm test:smoke`                                  | `0`  | 163/163 tests                                                         |
+| 7     | `pnpm test:skills`                                 | `0`  | 650/650 tests                                                         |
+| 8     | `pnpm test:scripts`                                | `0`  | 1/1 test                                                              |
+| 9     | `pnpm oat:validate-skills`                         | `0`  | 65 skills validated                                                   |
+| 10    | `pnpm run check:skill-bumps`                       | `0`  | 10 changed skill/role checks                                          |
+| 11    | `git fetch origin main`                            | `0`  | `origin/main` refreshed before version comparison                     |
+| 12    | `pnpm release:check-versions`                      | `0`  | Version bump check passed                                             |
+| 13    | `pnpm release:validate`                            | `0`  | Five public package tarballs validated                                |
+| 14    | `pnpm build:docs`                                  | `0`  | 6/6 Turbo tasks; 72 static pages generated                            |
+| 15    | `pnpm lint`                                        | `0`  | Package and root oxlint passed                                        |
+| 16    | `pnpm format`                                      | `0`  | Package and root oxfmt checks passed                                  |
+
+The initial authoritative test failure was corrected narrowly. The autonomy
+contract's three HEAD mappings now point to the prompt-site hashes produced by
+the reviewed lifecycle-gate wording. The lifecycle posture test expects the
+reviewed phrase `present each configured relevant gate separately`, and the
+reviewer contract test expects reviewed agent role version `1.2.9`. The focused
+tests and complete `pnpm test` rerun passed after these updates.
+
+The forced run used a fresh disposable home at
+`$LIVE_ROOT/forced-test-home`. Every Turbo task printed an execution marker;
+none was served from cache. Detailed command logs remained under the temporary
+gate-log directory and were not committed.
