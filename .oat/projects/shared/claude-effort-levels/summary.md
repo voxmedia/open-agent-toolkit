@@ -4,7 +4,7 @@ oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-21
 oat_generated: true
-oat_summary_last_task: p05-t01
+oat_summary_last_task: p05-t03
 oat_summary_revision_count: 0
 oat_summary_includes_revisions: []
 ---
@@ -23,6 +23,7 @@ OAT could select model and effort independently for Codex and Cursor dispatch, w
 - Updated provider guidance, implementation and review workflows, and the reviewer contract so Claude orchestrators select effort by task class while preserving capped-review policy and Opus-first hard-reasoning guidance.
 - Updated the bundled Economy, Balanced, High, and Frontier recommendations with Claude effort candidates while preserving explicit user-owned cells and legacy model-only configuration.
 - Scoped lifecycle-gate setup prompts to the active planning workflow plus downstream implementation. Quick-start no longer asks about lite, import-plan, or separate plan gates.
+- Corrected managed `Uncapped` dispatch so an explicit Claude effort uses the exact model/effort candidate path, while model-only compatibility retains preferred selection and `--task-effort` remains classification provenance.
 - Superseded the model-axis-only Claude decision, documented capability and precedence rules, regenerated provider projections, and bumped the five public packages to 0.3.2.
 
 ## Key Decisions
@@ -31,13 +32,14 @@ OAT could select model and effort independently for Codex and Cursor dispatch, w
 
 ## Design Deltas
 
-No separate design artifact was required for this quick workflow. Final review added a version-aware Claude capability validator and corrected the ceiling-mechanism description before acceptance. The first configured exit-gate review then added phase p05 to align documentation with that fail-closed capability contract and current generated-role naming.
+No separate design artifact was required for this quick workflow. Final review added a version-aware Claude capability validator and corrected the ceiling-mechanism description before acceptance. Configured-gate and PR review added phase p05 to align the capability guidance, then corrected explicit managed `Uncapped` effort selection to use the resolver’s exact-candidate branch. The final review-receive sweep generalized that branch distinction across the shared workflow contract and user documentation.
 
 ## Notable Challenges
 
 - Claude runtime support varies by model generation and precedence layer. The implementation used disposable project and configuration roots plus provider-written observations to distinguish selected controls from effective runtime behavior without changing user settings.
 - Review uncovered two subtle contract gaps after the first implementation pass: registry prose still described model-only Claude ceilings, and recognized effort values were not sufficient evidence that every versioned model supported them. Both were fixed and independently re-reviewed.
-- Lifecycle closeout required two configured gate attempts. The first passed its blocking threshold but identified documentation drift; the second passed cleanly after p05 and fresh project-wide verification.
+- Lifecycle closeout exposed a subtle semantic distinction: `--task-effort` classifies the task but does not select a target. The final implementation uses `--candidate-model` plus `--candidate-effort` for explicit managed `Uncapped` choices and proves the selected model, effort, target, and generated variant through the real resolver.
+- Fresh final lifecycle review passed with zero findings. The replacement configured gate passed its High threshold with two Low prose findings, both resolved during the passing-gate receive sweep.
 
 ## Tradeoffs Made
 
@@ -52,7 +54,7 @@ No separate design artifact was required for this quick workflow. Final review a
 - The bundled ladder is a recommendation. Applying it fills missing cells and does not replace explicit user configuration.
 - Generated definitions and dispatch records prove configured intent; provider-written transcript metadata records observed execution and any settings-cap divergence without overwriting that provenance.
 - Planning entry points consider only their own configured gate plus downstream implementation, while preserving settings for workflows that are not active.
-- Verification passed the full repository and release sequence after p05: check, type-check, test, build, skill-bump validation, origin-aware version validation, release validation, docs build, lint, and format. Live probes covered medium/high selection, capped review, inheritance, and runtime divergence.
+- Verification passed the full repository and release sequence after p05-t03: check, type-check, test, build, skill-bump validation, origin-aware version validation, release validation, docs build, lint, and format. The final receive edits also passed the docs check and the 242-test skill validation suite. Live probes covered medium/high selection, capped review, inheritance, and runtime divergence.
 
 ## Explainer Outcome
 
@@ -99,3 +101,11 @@ final-review-run3-20260921T153433Z Final lifecycle review passed its blocking th
 ### 2026-09-21 · structural · oat gate review · final
 
 target=cursor-fable-5-1-high threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/claude-effort-levels/reviews/final-review-2026-09-21T203110Z.md run=a0edfdfe-585d-467c-b189-b5300b17d667
+
+### 2026-09-21 · structural · oat gate review · final
+
+target=cursor-fable-5-1-high threshold=high findings=critical:0,high:0,medium:0,low:2 exit=0 status=ok artifact=.oat/projects/shared/claude-effort-levels/reviews/final-review-2026-09-21T222944Z.md run=4724fc0d-6aca-4114-ad12-3a8472847a1e
+
+### 2026-09-21 · structural · oat gate review · final
+
+target=cursor-fable-5-1-high threshold=high findings=critical:0,high:0,medium:0,low:2 exit=0 status=ok artifact=.oat/projects/shared/claude-effort-levels/reviews/final-review-2026-09-21T232436Z.md run=a152776f-dd7b-4c71-884a-b57e337f96ca
