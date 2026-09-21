@@ -55,9 +55,9 @@ oat_workflow_origin: native # native | imported
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: 'sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324'
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
@@ -77,19 +77,19 @@ oat_implement_exit_gate:
   gate_run_marker: '/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/a152776f-dd7b-4c71-884a-b57e337f96ca.json'
   gate_run_id: a152776f-dd7b-4c71-884a-b57e337f96ca
   envelope_status: ok
-  artifact: '.oat/projects/shared/claude-effort-levels/reviews/final-review-2026-09-21T232436Z.md'
+  artifact: '.oat/projects/shared/claude-effort-levels/reviews/archived/final-review-2026-09-21T232436Z.md'
   handoff: 'Gate passed at the high threshold, but the final review still contains non-blocking findings (low=2). Run oat-project-review-receive for .oat/projects/shared/claude-effort-levels/reviews/final-review-2026-09-21T232436Z.md to disposition them before marking the final review row passed.'
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation: 'run=a152776f-dd7b-4c71-884a-b57e337f96ca; handoff=receive; source=reviews/final-review-2026-09-21T232436Z.md; scope=final; type=code'
   receive_source_artifact: '.oat/projects/shared/claude-effort-levels/reviews/final-review-2026-09-21T232436Z.md'
   receive_archived_artifact: '.oat/projects/shared/claude-effort-levels/reviews/archived/final-review-2026-09-21T232436Z.md'
   receive_event_identity: 'final | code | final-review-2026-09-21T232436Z.md'
   receive_pre_head: d0639132db25862ee85e0830cb00acb63a487f16
-  receive_commit: null
+  receive_commit: 8515d3bea
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: '2026-09-21T23:28:10Z'
+  updated_at: '2026-09-21T23:35:38Z'
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
@@ -142,7 +142,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/315' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-20T19:40:55.054Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-21T23:28:10Z'
+oat_project_state_updated: '2026-09-21T23:35:38Z'
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -152,20 +152,20 @@ oat_project_recap:
 
 # Project State: claude-effort-levels
 
-**Status:** Final review fix complete; fresh review required
+**Status:** Exit gate passed; pre-approval closeout in progress
 **Started:** 2026-09-20
 **Last Updated:** 2026-09-21
 
 ## Current Phase
 
-Implementation — PR #315 is open; all 14 tasks are complete and await fresh final review and gate.
+Implementation — PR #315 is open; all 14 tasks and the configured exit gate are complete. Pre-approval closeout is in progress.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` — validated and complete.
 - **Spec / Design:** not required in this quick workflow.
 - **Plan:** `plan.md` — 5 sequential phases, 14 tasks; final review finding H1 is p05-t03.
-- **Implementation:** `implementation.md` — 14/14 planned tasks complete; fresh final review is pending.
+- **Implementation:** `implementation.md` — 14/14 planned tasks complete; final lifecycle review and configured exit gate passed.
 
 ## Progress
 
