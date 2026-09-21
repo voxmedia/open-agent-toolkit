@@ -55,9 +55,9 @@ oat_workflow_origin: native # native | imported
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: 'sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324'
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
@@ -68,8 +68,8 @@ oat_implement_exit_gate:
   reviewed_head: 1eb5bf6471288763cdbd9d4413af17794a9e5ef0
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:3885e1edbb50b85f2abab5eb8c96cbaf6095ab3d2b147721d92ff2104aab1df0'
-  freshness_head: 951d802045679cb270a4bdf8503950455d8ed98e
-  freshness_fingerprint: 'sha256:effective-delta-v1:ca128470df6a8092af41aa71641346b8b2bb00730dac20c31ad716462d511e85'
+  freshness_head: 7bf3e39917c7e646417263c9bb51065593c7bee9
+  freshness_fingerprint: 'sha256:effective-delta-v1:39b7007981de990044e2fda5ae9e692c8bed71b480f79c950817919449fd5c76'
   launch_state: result_persisted
   launch_attempt_id: 'claude-effort-exit-gate-2-20260921T202400Z'
   launch_started_at: '2026-09-21T20:24:00Z'
@@ -79,17 +79,17 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: '.oat/projects/shared/claude-effort-levels/reviews/final-review-2026-09-21T203110Z.md'
   handoff: 'Run oat-project-review-receive for .oat/projects/shared/claude-effort-levels/reviews/final-review-2026-09-21T203110Z.md before treating this gate review as consumed.'
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation: 'run=a0edfdfe-585d-467c-b189-b5300b17d667; handoff=receive; source=reviews/final-review-2026-09-21T203110Z.md; scope=final; type=code'
   receive_source_artifact: '.oat/projects/shared/claude-effort-levels/reviews/final-review-2026-09-21T203110Z.md'
   receive_archived_artifact: '.oat/projects/shared/claude-effort-levels/reviews/archived/final-review-2026-09-21T203110Z.md'
   receive_event_identity: 'final | code | final-review-2026-09-21T203110Z.md'
   receive_pre_head: bfed57a1802ddc247b252df1b5c6bf666673a50e
-  receive_commit: null
+  receive_commit: 7bf3e39917c7e646417263c9bb51065593c7bee9
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: '2026-09-21T20:38:27Z'
+  updated_at: '2026-09-21T20:40:29Z'
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate

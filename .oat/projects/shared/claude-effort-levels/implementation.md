@@ -156,6 +156,7 @@ The original final-review findings are resolved and phase p04 passed. A fresh fi
 - Exit-gate attempt 2 accepted as run `a0edfdfe-585d-467c-b189-b5300b17d667` on target `cursor-fable-5-1-high`; the run marker is bound in `state.md`.
 - Exit-gate attempt 2 returned a corroborated `ok` envelope at the High threshold with 0 Critical, 0 High, 0 Medium, and 0 Low findings. The durable receipt names the active artifact, receive is eligible, and attempt 2 of 2 is consumed.
 - Gate review receive intent persisted for `reviews/final-review-2026-09-21T203110Z.md`, bound to archived destination `reviews/archived/final-review-2026-09-21T203110Z.md`, exact ledger event, and pre-receive head `bfed57a1802ddc247b252df1b5c6bf666673a50e`.
+- Exit-gate attempt 2 review passed cleanly with no findings. Receive bookkeeping commit `7bf3e39917c7e646417263c9bb51065593c7bee9` archived the exact run-correlated artifact and marked its Reviews event `passed`; the configured gate is allowed with no remediation task or deferred Medium.
 
 <!-- orchestration-runs-end -->
 
