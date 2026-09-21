@@ -55,9 +55,9 @@ oat_workflow_origin: native # native | imported
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: 'sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324'
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
@@ -79,17 +79,17 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: '.oat/projects/shared/claude-effort-levels/reviews/final-review-2026-09-21T222944Z.md'
   handoff: 'Gate passed at the high threshold, but the final review still contains non-blocking findings (low=2). Run oat-project-review-receive for .oat/projects/shared/claude-effort-levels/reviews/final-review-2026-09-21T222944Z.md to disposition them before marking the final review row passed.'
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation: 'run=4724fc0d-6aca-4114-ad12-3a8472847a1e; handoff=receive; source=reviews/final-review-2026-09-21T222944Z.md; scope=final; type=code'
   receive_source_artifact: '.oat/projects/shared/claude-effort-levels/reviews/final-review-2026-09-21T222944Z.md'
   receive_archived_artifact: '.oat/projects/shared/claude-effort-levels/reviews/archived/final-review-2026-09-21T222944Z.md'
   receive_event_identity: 'final | code | final-review-2026-09-21T222944Z.md'
   receive_pre_head: 0b0e3dbeeeb5b30e448799a7d0f2ffb0fe1b9345
-  receive_commit: null
+  receive_commit: 6ed8307c8bcbc1afe5b9c53b10cbd7ef6053a13a
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: '2026-09-21T22:34:15Z'
+  updated_at: '2026-09-21T22:35:58Z'
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
@@ -142,7 +142,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/315' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-20T19:40:55.054Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-21T22:34:15Z'
+oat_project_state_updated: '2026-09-21T22:35:58Z'
 oat_generated: false
 oat_project_recap:
   decision: skip
