@@ -272,7 +272,7 @@ Then run each separately with its own captured exit code: `pnpm test:smoke`, `pn
 | p01    | code     | passed          | 2026-09-21 | reviews/archived/p01-review-2026-09-21T012030Z.md           | ad56e6c56c40f547c9ebf8519a4609d6ed787720 | phase      | -                     |
 | p02    | code     | fixes_completed | 2026-09-21 | reviews/archived/p02-review-2026-09-21T020650Z.md           | fc986addb653930df9bae103750c01e07a6c1824 | phase      | -                     |
 | p02    | code     | passed          | 2026-09-21 | reviews/archived/p02-review-2026-09-21T022325Z.md           | a7636eee4d53b0996b6813ea364dcb192706ff53 | phase      | -                     |
-| final  | code     | fixes_added     | 2026-09-21 | reviews/final-review-2026-09-21T041719Z.md                  | 4710fa145506e0cbb474b97fd9e46d0ff45d11a5 | auto       | -                     |
+| final  | code     | fixes_added     | 2026-09-21 | reviews/archived/final-review-2026-09-21T041719Z.md         | 4710fa145506e0cbb474b97fd9e46d0ff45d11a5 | auto       | -                     |
 | final  | code     | passed          | 2026-09-21 | reviews/archived/final-review-2026-09-21T144805Z.md         | 590a08ce2d0b4c7637a75dcaf36fb40b55ed1da1 | auto       | -                     |
 | final  | code     | passed          | 2026-09-21 | reviews/archived/final-review-2026-09-21T153433Z.md         | 1eb5bf6471288763cdbd9d4413af17794a9e5ef0 | auto       | -                     |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                     |
@@ -290,15 +290,15 @@ Then run each separately with its own captured exit code: `pnpm test:smoke`, `pn
 | final  | code     | fixes_added     | 2026-09-21 | reviews/archived/final-review-2026-09-21T151012Z.md         | 20ccadb91af8dda2882035a6f026124fb50eb900 | gate       | cursor-fable-5-1-high |
 | final  | code     | passed          | 2026-09-21 | reviews/archived/final-review-2026-09-21T203110Z.md         | 3b1d929aa7b50ceee0ede595bb749e75c4760398 | gate       | cursor-fable-5-1-high |
 | final  | code     | passed          | 2026-09-21 | reviews/archived/final-review-2026-09-21T221532Z.md         | 11c61dcfbdab5ae534e41fc8de7169b10199fb13 | auto       | -                     |
-| final  | code     | received        | 2026-09-21 | reviews/final-review-2026-09-21T222944Z.md                  | 76abcbe59ff9a16702ed6c07e45beac7bccb97b8 | gate       | cursor-fable-5-1-high |
+| final  | code     | passed          | 2026-09-21 | reviews/archived/final-review-2026-09-21T222944Z.md         | 76abcbe59ff9a16702ed6c07e45beac7bccb97b8 | gate       | cursor-fable-5-1-high |
 
-Spec and design rows are retained from the scaffold for compatibility and are not required in this quick workflow. Native structured artifact review passed after one revision. The final configured gate passed its High threshold with 0 Critical, 0 High, 0 Medium, and 2 Low findings. Root received the corroborated artifact and resolved both Low findings in-place: a realistic Cursor `claude-*` collision fixture and fixture-provenance sequencing. The latest row remains `fixes_completed`, not a claim of an independent zero-finding re-review; local plan validation and formatting verify these clarifications. The second gate independently confirmed resolution of all first-gate findings. No unresolved planning findings remain.
+Spec and design rows are retained from the scaffold for compatibility and are not required in this quick workflow. Native structured artifact review passed after one revision. The replacement configured implementation gate passed its High threshold with 0 Critical, 0 High, 0 Medium, and 2 Low findings. Root received the corroborated artifact and addressed both Low bookkeeping findings in the passing-gate judgment sweep: the older consumed final review is archived, and stale closeout wording now matches project state. No unresolved planning or implementation review findings remain.
 
 Phase p02 passed with 0 Critical, 0 High, 0 Medium, and 1 Low after all five first-round findings were resolved. Phase p03 closed that reporting drift, added the shipped launch/record boundary and durable live evidence, and passed its third review cycle with zero findings after two bounded fix rounds.
 
 ## Implementation Complete
 
-All twelve planned tasks are implemented, and phases p01 through p05 passed independent review. Fresh final verification, final lifecycle review, and configured exit-gate attempt 2 remain before closeout.
+All twelve planned tasks are implemented, phases p01 through p05 passed independent review, final verification passed, and both the final lifecycle review and replacement configured exit gate completed successfully. PR #315 is open pending final implementation approval.
 
 - Phase 1: 2 tasks — resolver and generated-role lifecycle.
 - Phase 2: 4 tasks — awareness, recommendations, documentation/decision alignment, and relevant lifecycle-gate prompts.

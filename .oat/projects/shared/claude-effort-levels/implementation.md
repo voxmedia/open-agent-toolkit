@@ -210,6 +210,21 @@ The durable gate receipt completed with exit 0 and envelope status `ok`. Run/pro
 
 Receive intent binds gate run `4724fc0d-6aca-4114-ad12-3a8472847a1e`, source `reviews/final-review-2026-09-21T222944Z.md`, collision-free destination `reviews/archived/final-review-2026-09-21T222944Z.md`, exact final/code Reviews event identity, and pre-receive head `0b0e3dbeeeb5b30e448799a7d0f2ffb0fe1b9345`. No archive or disposition is inferred before the matching receive commit.
 
+### Replacement configured gate review received
+
+**Date:** 2026-09-21
+
+**Review artifact:** `reviews/archived/final-review-2026-09-21T222944Z.md`
+
+**Findings:** 0 Critical, 0 High, 0 Medium, 2 Low
+
+**Disposition:** passed at the configured High threshold; both Low findings addressed now
+
+- L1, review-archive hygiene (`Negligible`): accepted as a valid bookkeeping issue. The already-consumed `final-review-2026-09-21T041719Z.md` artifact moved to `reviews/archived/`, and its existing `fixes_added` ledger event now points to that durable path. This prevents the actionable-review resolver from presenting it as unconsumed after the current receive.
+- L2, tracker wording drift (`Negligible`): accepted as a valid artifact-alignment issue. The plan's completion summary and state body now report the completed verification/review/gate work, open PR #315, and pending final approval.
+
+These passing-gate sweep fixes affect project tracking only. They introduce no implementation, test, skill, template, or workflow change and do not require a replacement review or gate generation.
+
 Bounded live Claude Code 2.1.278 probes used a disposable project/config root and provider-written transcript metadata. They verified explicit medium/high managed variants, task-based medium/high selection on one accepted awareness handle, capped review, inherit behavior, and documented environment/settings-cap divergence. No user/global settings or installations were changed.
 
 After phase p04 passed, the complete repository Definition of Done sequence was rerun against the final implementation basis. `pnpm check`, `pnpm type-check`, `pnpm test`, `pnpm build`, skill-version validation, `git fetch origin main`, origin-aware release version validation, five-package release validation, and the docs build all exited 0 in the required order. The additional `pnpm lint` and `pnpm format` checks also exited 0.

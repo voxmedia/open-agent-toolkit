@@ -152,13 +152,13 @@ oat_project_recap:
 
 # Project State: claude-effort-levels
 
-**Status:** Implementation in progress
+**Status:** PR open; awaiting final implementation approval
 **Started:** 2026-09-20
-**Last Updated:** 2026-09-20
+**Last Updated:** 2026-09-21
 
 ## Current Phase
 
-Implementation — PR open; completion may run before or after merge.
+Implementation — PR #315 is open; replacement exit gate passed and final approval is pending.
 
 ## Artifacts
 
