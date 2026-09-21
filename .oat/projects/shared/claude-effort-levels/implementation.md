@@ -153,6 +153,7 @@ The original final-review findings are resolved and phase p04 passed. A fresh fi
 - The user selected Fix now for the final Low. The stale opening sentence that said p05 awaited phase review was corrected inline during receive. No deferred Medium remains; the final review is passed and configured exit-gate attempt 2 is next.
 - Configured exit-gate generation 2 is prepared for attempt 2 of 2 with reviewed head `1eb5bf6471288763cdbd9d4413af17794a9e5ef0`, freshness checkpoint `951d802045679cb270a4bdf8503950455d8ed98e`, unchanged configuration fingerprint, and new qualified implementation/freshness fingerprints recorded in `state.md`. No second gate process has launched yet.
 - Exit-gate attempt 2 launch intent `claude-effort-exit-gate-2-20260921T202400Z` persisted before launch with durable receipt `/private/tmp/claude-effort-exit-gate-2-20260921T202400Z.receipt.json`.
+- Exit-gate attempt 2 accepted as run `a0edfdfe-585d-467c-b189-b5300b17d667` on target `cursor-fable-5-1-high`; the run marker is bound in `state.md`.
 
 <!-- orchestration-runs-end -->
 
