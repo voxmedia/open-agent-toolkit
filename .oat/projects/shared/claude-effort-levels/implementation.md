@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-21
-oat_current_task_id: null
+oat_current_task_id: p04-fix1
 oat_generated: false
 oat_template: false
 ---
@@ -115,6 +115,9 @@ The first final review found one High capability-modeling defect and one Low arc
 - Phase p04 implementation preserves the public `{harness, model, effort}` route, separates capability from recommendation eligibility, records a resolved model generation through resolver/materializer/launch evidence, accepts documented versioned pairs, and returns clear ambiguity errors where provider routing cannot establish the generation. The bundled recommendation and model-only compatibility remain unchanged.
 - Phase p04 verification: implementer focused suite 210/210, launch/record 97/97, full CLI tests, type-check, lint/format check, build, smoke 4/4, sync dry-run, and diff checks passed. Root independently reran 286 focused tests, smoke 4/4, and built project sync dry-run with zero planned operations and zero failures.
 - Phase p04 implementation is complete at `04f7b6376f0d92856886de5aee2f85b428314357`; independent phase review is next.
+- Phase p04 review request `claude-effort-p04-review-01` used `oat-reviewer-gpt-5-6-sol-high` against reviewed head `7ff3bb101d641f2e273679b68d44868ac97141fa` with invocation `phase`.
+- Phase p04 review artifact: `reviews/p04-review-2026-09-21T134100Z.md`; verdict blocked with 0 Critical, 2 High, 1 Medium, and 0 Low. Reconnaissance was not attempted, so no review-orchestration project-log entry is required.
+- High findings: provider-default aliases were recorded as exact resolved models despite apps-gateway and allowlist substitutions; custom provider pins with documented `_SUPPORTED_CAPABILITIES` declarations were rejected. Medium finding: the launch envelope compared model/effort but not the two `resolvedModel` copies. No Medium is deferred; bounded fix round 1 addresses all three through the original p04 implementer handle.
 
 <!-- orchestration-runs-end -->
 
