@@ -215,8 +215,10 @@ reviewed phrase `present each configured relevant gate separately`, and the
 reviewer contract test expects reviewed agent role version `1.2.9`. The focused
 tests and complete `pnpm test` rerun passed after these updates.
 
-The forced run used a fresh disposable home at
-`$LIVE_ROOT/forced-test-home`. Every Turbo task printed an execution marker;
+The forced run used the plan's Node child-process recipe. Node created a
+temporary `oat-claude-effort-test-*` home, supplied it as `HOME` only in the
+`spawnSync` child environment, and removed it in `finally`; the invoking
+shell's `HOME` was unchanged. Every Turbo task printed an execution marker and
 none was served from cache. Detailed command logs remained under the temporary
 gate-log directory and were not committed. The durable
 [`claude-effort-gates.json`](./claude-effort-gates.json) manifest retains every

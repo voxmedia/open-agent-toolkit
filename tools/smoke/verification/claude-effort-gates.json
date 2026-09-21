@@ -67,11 +67,30 @@
     },
     {
       "order": 5,
-      "command": "ISOLATED_HOME=$(mktemp -d); HOME=$ISOLATED_HOME pnpm exec turbo run test --force",
+      "recipeId": "plan-p03-t03-node-child-home-v1",
+      "executor": ["node", "--input-type=module"],
+      "child": {
+        "command": "pnpm",
+        "argv": ["exec", "turbo", "run", "test", "--force"],
+        "stdio": "inherit",
+        "environment": {
+          "inheritsProcessEnvironment": true,
+          "HOME": "testHome created inside Node with mkdtempSync"
+        }
+      },
+      "isolation": {
+        "shellHomeAssigned": false,
+        "shellHomeUnchanged": true,
+        "testHomeCreation": "mkdtempSync(join(tmpdir(), 'oat-claude-effort-test-'))",
+        "cleanup": "rmSync(testHome, { recursive: true, force: true }) in finally",
+        "cleanupCompleted": true,
+        "outputCapture": "Node stdout and stderr redirected to <temporary-log-root>/forced-turbo-child-home.log before child-home cleanup"
+      },
       "exitCode": 0,
+      "exitSource": "spawnSync result.status propagated through Node process.exitCode",
       "counts": "10/10 tasks; 0 cached",
       "markers": { "cacheBypassForceExecuting": 10, "cached": 0 },
-      "logSha256": "3fac77a16c0bffb1574995c19e8f00331a760436a6c0e216024fe0d16347de39"
+      "logSha256": "ef66ad8dec1b12d4d504b0b46280b47f2640e87e291cbafb4b2de13ab3718615"
     },
     {
       "order": 6,
