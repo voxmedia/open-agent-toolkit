@@ -20,7 +20,7 @@ oat_phase_recovery_policy:
         discovered_by: pnpm oat:validate-skills transition check
         dispatch_target: oat-phase-implementer-gpt-5-6-sol-medium
         reservation_head: 7b232ce6e7e1fb1d3683757f311fd28a8a3addb6
-        status: pending
+        status: completed
 oat_current_task: p02-t01
 oat_last_commit: ad56e6c56c40f547c9ebf8519a4609d6ed787720
 oat_blockers: []
