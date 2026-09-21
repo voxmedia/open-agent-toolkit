@@ -94,6 +94,11 @@ Implementation is in progress. All nine planned tasks are implemented; phase p03
 - Review artifact: `reviews/p03-review-2026-09-21T031442Z.md`; reviewed head `f278335a77de048a616c3b77536fe21fcb41867b`; invocation `phase`.
 - Reconnaissance: not-attempted. The artifact correctly omits `## Review Orchestration`, so no structural project-log entry is required.
 - Review verdict: blocked with 0 Critical, 2 High, 1 Medium, and 1 Low. Findings require a shipped launch/record boundary and frozen mismatch reproduction, durable sanitized evidence for every load-bearing live case, durable gate-log evidence, and pseudonymized request identifiers. Bounded fix round 1 is next through the original p03 implementer handle.
+- Phase p03 fix round 1 resumed the original Sol/high implementer handle. Commit `4bab859cc4239c2462c5b43b93b0501aa444572a` added the shipped managed-Claude launch envelope boundary, wired the real dispatch-record producer and lifecycle guidance to it, retained eleven sanitized provider-derived live observations plus exact parameterized recipes, added durable gate evidence, and pseudonymized correlation IDs. Root reran 334/334 focused tests, 4/4 production-boundary smoke tests, skill-bump validation, and diff checks.
+- Re-review request `claude-effort-p03-review-02` used a fresh `oat-reviewer-gpt-5-6-sol-high` round against `4bab859cc4239c2462c5b43b93b0501aa444572a`.
+- Re-review artifact: `reviews/p03-review-2026-09-21T035607Z.md`; invocation `phase`; verdict passed the zero-Critical/High phase threshold with 0 Critical, 0 High, 1 Medium, and 0 Low.
+- Reconnaissance: attempted. The artifact's complete `## Review Orchestration` section records one intelligent-recon launch rejected before start by host capacity and inline primary reconciliation. Its structural project-log entry remains deferred to the terminal p03 outcome.
+- Remaining Medium: the durable gate manifest names a shell-level `HOME` reassignment instead of the plan's exact Node child-process isolation recipe. Bounded fix round 2 will rerun the exact recipe, update its digest/markers, and then re-review the corrected head.
 
 <!-- orchestration-runs-end -->
 
