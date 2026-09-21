@@ -76,6 +76,10 @@ final-review-run3-20260921T153433Z Final lifecycle review passed its blocking th
 
 target=cursor-fable-5-1-high threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/claude-effort-levels/reviews/final-review-2026-09-21T203110Z.md run=a0edfdfe-585d-467c-b189-b5300b17d667
 
+### 2026-09-21 · structural · oat gate review · final
+
+target=cursor-fable-5-1-high threshold=high findings=critical:0,high:0,medium:0,low:2 exit=0 status=ok artifact=.oat/projects/shared/claude-effort-levels/reviews/final-review-2026-09-21T222944Z.md run=4724fc0d-6aca-4114-ad12-3a8472847a1e
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
