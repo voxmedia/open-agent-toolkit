@@ -196,6 +196,10 @@ Implementation verification passed: `pnpm check`, `pnpm type-check`, `pnpm test`
 
 The exact Node child-process forced run executed 10/10 Turbo tasks with zero cached results and ten force-execution markers while leaving the invoking shell `HOME` unchanged. Focused managed-Claude producer/parser/guidance tests passed 334/334, production-boundary smoke passed 4/4, and deliberate neutralization of the shipped model-agreement guard made the expected smoke test fail before restoration.
 
+### Post-merge integration review
+
+The fresh Sol/high final integration review passed at reviewed head `11c61dcfbdab5ae534e41fc8de7169b10199fb13` with 0 Critical, 0 High, 0 Medium, and 0 Low findings. The reviewer verified the composed Claude effort changes and upstream list-item finding contract, including 367/367 focused tests and the repository, type, release, sync, and diff checks named in the review artifact. Its bounded mechanical-recon launch was rejected by the host thread limit before launch; the reviewer covered that deterministic scope inline and used no unlaunched worker claim as evidence. The clean artifact is archived at `reviews/archived/final-review-2026-09-21T221532Z.md`.
+
 Bounded live Claude Code 2.1.278 probes used a disposable project/config root and provider-written transcript metadata. They verified explicit medium/high managed variants, task-based medium/high selection on one accepted awareness handle, capped review, inherit behavior, and documented environment/settings-cap divergence. No user/global settings or installations were changed.
 
 After phase p04 passed, the complete repository Definition of Done sequence was rerun against the final implementation basis. `pnpm check`, `pnpm type-check`, `pnpm test`, `pnpm build`, skill-version validation, `git fetch origin main`, origin-aware release version validation, five-package release validation, and the docs build all exited 0 in the required order. The additional `pnpm lint` and `pnpm format` checks also exited 0.
