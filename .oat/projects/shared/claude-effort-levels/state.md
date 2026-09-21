@@ -3,7 +3,7 @@ oat_dispatch_policy:
   mode: managed
   policy: high
   source: project-state
-oat_current_task: null
+oat_current_task: p01-t01
 oat_last_commit: null
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -15,8 +15,8 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: plan
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase: implement
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -83,19 +83,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-20T19:40:55.054Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-21T00:05:50.158706+00:00'
+oat_project_state_updated: '2026-09-21T00:24:06Z'
 oat_generated: false
 ---
 
 # Project State: claude-effort-levels
 
-**Status:** Plan complete; ready for implementation
+**Status:** Implementation in progress
 **Started:** 2026-09-20
 **Last Updated:** 2026-09-20
 
 ## Current Phase
 
-Plan — quick workflow, straight to plan using confirmed conversation requirements.
+Implement — phase p01, beginning with p01-t01.
 
 ## Artifacts
 
@@ -109,12 +109,12 @@ Plan — quick workflow, straight to plan using confirmed conversation requireme
 - Discovery captured and validated.
 - Plan drafted, including bundled recommendations and effort-selection awareness.
 - Effective reusable ladders complete; project ceiling High. Additional phase gate review disabled by user; configured lifecycle gates remain unchanged.
-- Implementation has not started.
+- Implementation started with Tier 1 phase dispatch; current task p01-t01.
 
 ## Blockers
 
-None. Planning is complete; implementation has not started.
+None.
 
 ## Next Milestone
 
-Run `oat-project-implement` when implementation is requested.
+Complete and review phase p01.

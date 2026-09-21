@@ -10,15 +10,15 @@ oat_template: false
 
 # Implementation: claude-effort-levels
 
-Implementation has not started. This tracker records planning provenance and identifies the first executable task.
+Implementation is in progress. Phase p01 is the first executable phase.
 
 ## Progress Overview
 
-| Phase                                    | Status  | Tasks | Completed |
-| ---------------------------------------- | ------- | ----- | --------- |
-| p01 — Resolve and materialize            | pending | 2     | 0/2       |
-| p02 — Guidance and recommendations       | pending | 4     | 0/4       |
-| p03 — Verification and release readiness | pending | 3     | 0/3       |
+| Phase                                    | Status      | Tasks | Completed |
+| ---------------------------------------- | ----------- | ----- | --------- |
+| p01 — Resolve and materialize            | in_progress | 2     | 0/2       |
+| p02 — Guidance and recommendations       | pending     | 4     | 0/4       |
+| p03 — Verification and release readiness | pending     | 3     | 0/3       |
 
 **Total: 0/9 tasks completed.**
 
@@ -40,7 +40,16 @@ Implementation has not started. This tracker records planning provenance and ide
 
 <!-- orchestration-runs-start -->
 
-No implementation runs yet.
+### Run 1 — Tier 1 sequential implementation
+
+- Started: 2026-09-20
+- Schedule: p01 → p02 → p03; no parallel phase groups.
+- HiLL checkpoints: final phase p03 only, from `workflow.hillCheckpointDefault=final`.
+- Automatic HiLL review: enabled from `workflow.autoReviewAtHillCheckpoints=true`.
+- Optional cross-runtime phase review gate: disabled.
+- Tier: 1, exact native OAT phase implementer and reviewer variants.
+- Dispatch policy: managed High from project state; phase targets selected at or below that ceiling.
+- Current phase: p01.
 
 <!-- orchestration-runs-end -->
 
