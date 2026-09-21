@@ -263,6 +263,7 @@ Then run each separately with its own captured exit code: `pnpm test:smoke`, `pn
 | p03    | code     | fixes_completed | 2026-09-21 | reviews/p03-review-2026-09-21T035607Z.md                    | 4bab859cc4239c2462c5b43b93b0501aa444572a | phase      | -           |
 | p03    | code     | passed          | 2026-09-21 | reviews/p03-review-2026-09-21T040439Z.md                    | 3a5d9904739284c6c660fae75118efeb651324a8 | phase      | -           |
 | p04    | code     | fixes_completed | 2026-09-21 | reviews/p04-review-2026-09-21T134100Z.md                    | 7ff3bb101d641f2e273679b68d44868ac97141fa | phase      | -           |
+| p04    | code     | fixes_added     | 2026-09-21 | reviews/p04-review-2026-09-21T140558Z.md                    | 431c845ead1f668089401772cb64326dde9e7a2c | phase      | -           |
 | plan   | artifact | passed          | 2026-09-20 | -                                                           | -                                        | -          | -           |
 | plan   | artifact | fixes_completed | 2026-09-20 | reviews/archived/artifact-plan-review-2026-09-20T235147Z.md | -                                        | -          | -           |
 | plan   | artifact | fixes_completed | 2026-09-21 | reviews/archived/artifact-plan-review-2026-09-21T000015Z.md | -                                        | -          | -           |
