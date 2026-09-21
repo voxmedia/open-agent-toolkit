@@ -183,6 +183,8 @@ The fresh Sol/high final re-review passed at reviewed head `43ef811f8161313a92ad
 
 A new configured exit-gate generation resolves the unchanged user gate with fingerprint `sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324`, immutable reviewed head `43ef811f8161313a92ad64a606dab6244d474fbe`, and effective-delta fingerprint `sha256:effective-delta-v1:40ec5898c36a7af925703ccc991e6413dd9000eb179781e6ee2b9a126ce3266f`. Its initial rolling closeout checkpoint is receive commit `3e208ff36e4d4866684fb2bb8dccd7a30ef0e807` with fingerprint `sha256:effective-delta-v1:dab240ff0ca490de1236c949ad877d1679e3e50fd7141cccf1a26c303e1eb70e`.
 
+Final configured-gate attempt `claude-effort-exit-gate-r3-1-20260921T232006Z` recorded launch intent at `2026-09-21T23:20:06Z` with durable result receipt `/private/tmp/claude-effort-exit-gate-r3-1-20260921T232006Z.receipt.json`. No gate result is inferred before acceptance and receipt evidence.
+
 <!-- orchestration-runs-end -->
 
 ## Planning Log
