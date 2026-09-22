@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-21
@@ -10,7 +10,7 @@ oat_template: false
 
 # Implementation: claude-effort-levels
 
-The original final-review findings are resolved and phase p04 passed. A fresh final lifecycle review then passed cleanly. The configured exit gate passed its High threshold and converted one Medium documentation-alignment finding plus three wording-oriented Lows into p05-t01, which is implemented and passed phase review; one low-risk structural-comparison cleanup is explicitly deferred. A resolved PR review thread exposed one remaining unsupported flag spelling in the uncapped Claude prose; p05-t02 corrected it and added a regression assertion before closeout.
+All fourteen planned tasks are complete. Claude effort-aware dispatch, bundled ladder guidance, and active-workflow gate prompting are implemented; the final lifecycle review and configured exit gate passed, accepted Low guidance findings were resolved, the full verification suite is green, and the user approved final implementation closeout. PR #315 remains open and unmerged.
 
 ## Progress Overview
 
