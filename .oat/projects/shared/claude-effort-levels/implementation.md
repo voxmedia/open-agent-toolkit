@@ -1,28 +1,29 @@
 ---
-oat_status: complete
-oat_ready_for: null
+oat_status: in_progress
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-09-21
-oat_current_task_id: null
+oat_current_task_id: prev1-t01
 oat_generated: false
 oat_template: false
 ---
 
 # Implementation: claude-effort-levels
 
-All fourteen planned tasks are complete. Claude effort-aware dispatch, bundled ladder guidance, and active-workflow gate prompting are implemented; the final lifecycle review and configured exit gate passed, accepted Low guidance findings were resolved, the full verification suite is green, and the user approved final implementation closeout. PR #315 remains open and unmerged.
+The original fourteen tasks are complete; three September 22 revision tasks are in progress. Claude effort-aware dispatch, bundled ladder guidance, and active-workflow gate prompting are implemented; the final lifecycle review and configured exit gate passed, accepted Low guidance findings were resolved, the full verification suite is green, and the user approved final implementation closeout. PR #315 remains open and unmerged.
 
 ## Progress Overview
 
-| Phase                                    | Status    | Tasks | Completed |
-| ---------------------------------------- | --------- | ----- | --------- |
-| p01 — Resolve and materialize            | completed | 2     | 2/2       |
-| p02 — Guidance and recommendations       | completed | 4     | 4/4       |
-| p03 — Verification and release readiness | completed | 3     | 3/3       |
-| p04 — Final review fixes                 | completed | 2     | 2/2       |
-| p05 — Capability documentation alignment | completed | 3     | 3/3       |
+| Phase                                       | Status      | Tasks | Completed |
+| ------------------------------------------- | ----------- | ----- | --------- |
+| p01 — Resolve and materialize               | completed   | 2     | 2/2       |
+| p02 — Guidance and recommendations          | completed   | 4     | 4/4       |
+| p03 — Verification and release readiness    | completed   | 3     | 3/3       |
+| p04 — Final review fixes                    | completed   | 2     | 2/2       |
+| p05 — Capability documentation alignment    | completed   | 3     | 3/3       |
+| p-rev1 — Model refresh and maintenance docs | in_progress | 3     | 0/3       |
 
-**Total: 14/14 tasks completed.**
+**Total: 14/17 tasks completed.**
 
 ## Task Status
 
@@ -42,6 +43,10 @@ All fourteen planned tasks are complete. Claude effort-aware dispatch, bundled l
 | p05-t01 | completed | `8fce3af3799c07400e4ed4d23da08ad172e9f3dc` |
 | p05-t02 | completed | `77f87981b6de7d6ac3e3b6b47c9a06cceede3f3c` |
 | p05-t03 | completed | `92143dbea5490d2d4d2991c9ebb9c380e8256ae3` |
+
+| prev1-t01 | pending | - |
+| prev1-t02 | pending | - |
+| prev1-t03 | pending | - |
 
 ## Orchestration Runs
 
@@ -345,3 +350,14 @@ The user explicitly requested including the recurring irrelevant-mode prompt fix
 - L2 accepted, resolve_in_artifact: p03-t01 uses existing provenance-backed fixtures; new captured fixtures and dependent observation assertions belong to p03-t02 after capture.
 - These are bounded Low clarifications; no third gate is needed. Ledger remains `fixes_completed` to distinguish local corrections from a new independent clean review. All earlier gate findings were independently confirmed resolved by the final gate.
 - Planning complete: 3 sequential phases, 9 tasks, 0 implemented. High project ceiling; additional phase review disabled; existing lifecycle gates retained. SC9/p02-t04 includes the user-requested gate-prompt prose hardening.
+
+### Revision Received: Inline Feedback
+
+**Date:** 2026-09-22
+**Source:** inline conversation
+
+**Changes requested:** Add verified GPT-6 Sol/Luna while keeping 5.6; update Opus 5.5 and retire Opus 5/4.8; condition Cursor mappings on native pin evidence; add a reusable model-update docs page.
+
+**New tasks added:** prev1-t01, prev1-t02, prev1-t03.
+
+**Next:** Execute the revision tasks with oat-project-implement and refresh PR #315.

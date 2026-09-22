@@ -24,7 +24,7 @@ oat_template: false
 
 **Tech stack:** TypeScript ESM, Vitest, Node test runner, YAML/Markdown agent definitions, OAT skills and config bundle.
 
-**Scope authority:** This artifact plans implementation; no implementation has started. The user confirmed the requirements and requested straight-to-plan quick mode. Project setup and plan reviews do not authorize publishing or changing personal ladders.
+**Scope authority:** This artifact tracks the original implementation and the September 22 revision. The user confirmed the quick workflow and authorized the revision of the open PR. Existing personal ladder cells remain under user control.
 
 ## Planning Checklist
 
@@ -323,6 +323,40 @@ Spec and design rows are retained from the scaffold for compatibility and are no
 
 Phase p02 passed with 0 Critical, 0 High, 0 Medium, and 1 Low after all five first-round findings were resolved. Phase p03 closed that reporting drift, added the shipped launch/record boundary and durable live evidence, and passed its third review cycle with zero findings after two bounded fix rounds.
 
+## Phase p-rev1: Refresh Supported Models and Model-Update Guidance
+
+Source: inline feedback (2026-09-22). Keep GPT-5.6 available while adding GPT-6 Sol/Luna in Codex. Retire Opus 5 and 4.8 from current guidance in favor of Opus 5.5. Cursor GPT-6 is deferred until its live catalog supports it; approve an Opus 5.5 Cursor selector only with mapping-specific native evidence. Document the whole update path for the next round.
+
+### Task prev1-t01: (revision) Verify provider IDs and update canonical catalogues
+
+**Files:** `packages/cli/src/providers/codex/codec/shared.ts`, `packages/cli/src/providers/claude/targets.ts`, `packages/cli/src/providers/cursor/codec/catalog.ts`, their focused tests, and verified probe evidence when available.
+
+**Steps:** Record actual Codex and Claude model identities and supported efforts. Add GPT-6 Sol/Luna targets while retaining GPT-5.6. Replace recognized Opus 5/4.8 capabilities with 5.5, retaining historical fixtures only when they document old behavior. Probe Cursor's Opus 5.5 selector with native hooks and controls before approving a mapping; do not infer a mapping from `agent models` alone.
+
+**Verify:** Focused provider catalogue, capability, and materialization tests; generated roles have matching model/effort frontmatter. Any unsupported Cursor mapping remains explicitly deferred.
+
+**Commit:** `feat(prev1-t01): refresh verified model catalogues`.
+
+### Task prev1-t02: (revision) Update bundled recommendations and orchestration guidance
+
+**Files:** `packages/cli/config/dispatch-matrix-recommendation.json`, `.agents/skills/subagent-orchestration/references/provider-{codex,claude,cursor}.md`, associated tests, and generated bundle/role projections.
+
+**Steps:** Bump recommendation version; prefer verified GPT-6 Sol/Luna in Codex, Opus 5.5 in Claude, and only proved models in Cursor. Preserve GPT-5.6 availability and existing explicit user configuration. Update human task-class routing and skill version; sync provider projections from canonical sources.
+
+**Verify:** Recommendation validation, role sync tests, skill validation, generated asset parity, and `git diff --check`.
+
+**Commit:** `feat(prev1-t02): recommend verified new model routes`.
+
+### Task prev1-t03: (revision) Add model-update maintenance documentation and finish review
+
+**Files:** `apps/oat-docs/docs/contributing/updating-model-guidance.md`, its neighboring index, generated docs index, relevant existing dispatch docs, and project tracking.
+
+**Steps:** Write a reference page explaining source ownership, supported catalogues versus preferred ladders, provider-specific model ID and pin evidence, generated projections, explicit-cell adoption semantics, validation, and PR/release checks. Link it from the contributing index and related dispatch docs. Run the full repository gates and project reviews; update the open PR with the verified scope and any deferred provider mapping.
+
+**Verify:** Docs index regeneration, `pnpm build:docs`, full Definition of Done sequence, and current-head PR checks.
+
+**Commit:** `docs(prev1-t03): document model update procedure`.
+
 ## Implementation Complete
 
 All fourteen planned tasks are implemented. Task p05-t03 corrected exact managed-Uncapped Claude effort selection; fresh final verification, lifecycle review, and the configured exit gate follow it. PR #315 remains open.
@@ -333,7 +367,7 @@ All fourteen planned tasks are implemented. Task p05-t03 corrected exact managed
 - Phase 4: 2 tasks — version-aware Claude effort validation and provider-registry guidance.
 - Phase 5: 3 tasks — align shipped guidance with the fail-closed capability contract and correct the uncapped Claude effort selection path.
 
-**Total: 14 tasks; 14 implemented.**
+**Total: 17 tasks; 14 implemented; 3 revision tasks pending.**
 
 ## References
 
