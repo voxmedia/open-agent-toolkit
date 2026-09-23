@@ -244,6 +244,8 @@ The prior p-rev1 review was archived with a `fixes_completed` Reviews event at i
 
 Focused post-fix verification: the 242-test planning/skill contract suite and canonical 65-skill validation passed. The independent phase review and full current-head gates remain pending.
 
+The independent p-rev1 narrow re-review found one Medium tracking inconsistency at `bf1eb0cc9`. The prior review is now archived and its `fixes_completed` event is recorded. The bookkeeping re-review at `128e3a570` found zero findings; both artifacts are archived with exact reviewed heads.
+
 ## Deviations from Plan / Design
 
 The revision worker committed three task changes before the required separate task-bookkeeping commits. Its automatic post-commit recovery could not proceed because the original launch request and exact target were not persisted in the phase ledger. Root repaired failing fixtures in `bd3035ef4` and `8c98c8df2`, then reconciled tracking here. This records the missed bookkeeping boundary without inventing a recovery attempt or dispatch provenance. The model-update documentation and current guidance are the source of truth for the refreshed catalogue. Cursor Opus 5.5 subagent mapping remains deferred pending native `subagentStart` evidence.

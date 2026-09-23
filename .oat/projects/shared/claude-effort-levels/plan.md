@@ -321,7 +321,10 @@ Then run each separately with its own captured exit code: `pnpm test:smoke`, `pn
 
 | p-rev1 | code | fixes_completed | 2026-09-23 | reviews/archived/p-rev1-review-2026-09-23T005530Z.md | 599f066b19e0fd2e53833017c4d65365e3d2dc9e | phase | oat-reviewer-gpt-5-6-sol-high |
 
-Spec and design rows are retained from the scaffold for compatibility and are not required in this quick workflow. Native structured artifact review passed after one revision. The replacement configured implementation gate passed its High threshold with 0 Critical, 0 High, 0 Medium, and 2 Low findings. Root received the corroborated artifact and addressed both Low bookkeeping findings in the passing-gate judgment sweep: the older consumed final review is archived, and stale closeout wording now matches project state. The prior p-rev1 review fixes are complete; its narrowed re-review is pending receipt.
+| p-rev1 | code | fixes_completed | 2026-09-23 | reviews/archived/p-rev1-review-2026-09-23T010920Z.md | bf1eb0cc943d302d76ad6f87c08d4901f95b9af2 | phase | oat-reviewer-gpt-5-6-sol-high |
+| p-rev1 | code | passed | 2026-09-23 | reviews/archived/p-rev1-review-2026-09-23T011458Z.md | 128e3a57063cea1c3186ac2fe77fbaf4464dcc2e | phase | oat-reviewer-gpt-5-6-sol-high |
+
+Spec and design rows are retained from the scaffold for compatibility and are not required in this quick workflow. Native structured artifact review passed after one revision. The replacement configured implementation gate passed its High threshold with 0 Critical, 0 High, 0 Medium, and 2 Low findings. Root received the corroborated artifact and addressed both Low bookkeeping findings in the passing-gate judgment sweep: the older consumed final review is archived, and stale closeout wording now matches project state. The prior p-rev1 review fixes are complete; its narrowed re-reviews are received and passed.
 
 Phase p02 passed with 0 Critical, 0 High, 0 Medium, and 1 Low after all five first-round findings were resolved. Phase p03 closed that reporting drift, added the shipped launch/record boundary and durable live evidence, and passed its third review cycle with zero findings after two bounded fix rounds.
 
@@ -397,7 +400,7 @@ All twenty original, revision, and review-fix tasks are implemented. The origina
 - Phase 4: 2 tasks — version-aware Claude effort validation and provider-registry guidance.
 - Phase 5: 3 tasks — align shipped guidance with the fail-closed capability contract and correct the uncapped Claude effort selection path.
 
-**Total: 20 tasks; 20 implemented; independent re-review pending.**
+**Total: 20 tasks; 20 implemented; phase re-review passed.**
 
 ## References
 

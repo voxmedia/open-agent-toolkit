@@ -152,13 +152,13 @@ oat_project_recap:
 
 # Project State: claude-effort-levels
 
-**Status:** Revision fixes complete; re-review pending; PR open
+**Status:** Revision phase review passed; final review pending; PR open
 **Started:** 2026-09-20
 **Last Updated:** 2026-09-22
 
 ## Current Phase
 
-All twenty tasks are complete, including the three accepted phase-review fixes. Independent re-review and final review and configured exit gate are pending; PR #315 remains open and unmerged.
+All twenty tasks are complete, including the three accepted phase-review fixes. The independent phase re-review passed; final review and configured exit gate are pending; PR #315 remains open and unmerged.
 
 ## Artifacts
 
@@ -187,6 +187,6 @@ None.
 
 ## Next Milestone
 
-Receive the p-rev1 re-review, run the fresh final review and configured exit gate, then update PR #315.
+Run the fresh final review and configured exit gate, then update PR #315.
 
 - After the new closeout passes, refresh PR #315 and assess merge readiness.
