@@ -36,7 +36,7 @@ Check the provider's official model documentation and the local runtime before
 editing an ID or effort range. The [OpenAI model catalog](https://developers.openai.com/api/docs/models)
 lists GPT-6 Sol and Luna; compare it with the installed Codex runtime model
 cache for the exact names and local effort set. The
-[Anthropic Opus 5.5 documentation](https://platform.claude.com/docs/en/about-claude/models/overview)
+[Anthropic Opus 5.5 documentation](https://www.anthropic.com/claude-opus-5-5)
 names `claude-opus-5-5`; confirm a Claude Code invocation reports that exact
 assistant model before admitting it to the Claude catalog. Claude subagent
 `model` and `effort` frontmatter select a per-agent route; see the
