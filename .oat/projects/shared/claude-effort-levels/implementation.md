@@ -10,7 +10,7 @@ oat_template: false
 
 # Implementation: claude-effort-levels
 
-All twenty-one implementation tasks are complete; the final narrow re-review passed. The September 22 model refresh added verified GPT-6 Sol/Luna and Opus 5.5 targets while retaining GPT-5.6; the new maintenance page documents the next update cycle. The revision phase and final independent reviews passed; the configured exit gate remains pending. PR #315 remains open and unmerged.
+All twenty-four implementation tasks are complete; the final narrow re-review passed. The September 22 model refresh added verified GPT-6 Sol/Luna and Opus 5.5 targets while retaining GPT-5.6; the new maintenance page documents the next update cycle. The revision phase and final independent reviews passed; the configured exit gate passed its High threshold at the earlier head, and the received Medium/Low findings are fixed. A fresh post-fix review remains pending. PR #315 remains open and unmerged.
 
 ## Progress Overview
 
@@ -21,9 +21,9 @@ All twenty-one implementation tasks are complete; the final narrow re-review pas
 | p03 — Verification and release readiness    | completed | 3     | 3/3       |
 | p04 — Final review fixes                    | completed | 2     | 2/2       |
 | p05 — Capability documentation alignment    | completed | 3     | 3/3       |
-| p-rev1 — Model refresh and maintenance docs | completed | 7     | 7/7       |
+| p-rev1 — Model refresh and maintenance docs | completed | 10    | 10/10     |
 
-**Total: 21/21 tasks completed.**
+**Total: 24/24 tasks completed.**
 
 ## Task Status
 
@@ -51,6 +51,9 @@ All twenty-one implementation tasks are complete; the final narrow re-review pas
 | prev1-t05 | completed | `2725d4bf1` |
 | prev1-t06 | completed | `6317d2470` |
 | prev1-t07 | completed | `b60d3e036` |
+| prev1-t08 | completed | `5dcf80e08` |
+| prev1-t09 | completed | `ff6a29ba7` |
+| prev1-t10 | completed | `5dcf80e08` and tracking commit |
 
 ## Orchestration Runs
 
@@ -385,3 +388,7 @@ The user explicitly requested including the recurring irrelevant-mode prompt fix
 ### Final review follow-up: candidate-effort provider message
 
 The final review at `c5132af88` found one Low CLI message inconsistency. Accepted and fixed in `b60d3e036`: the Cursor candidate error identifies Codex and Claude as effort-capable, and unreachable Claude validation was removed. The narrow re-review at `b60d3e036` passed with no findings. Both artifacts are archived; the configured exit gate remains pending.
+
+## September 23 Configured Final-Gate Receive and Fixes
+
+The configured Cursor gate reviewed `33deb0d0a`, exited 0 at the High threshold, and reported two Medium and three Low findings in `reviews/archived/final-review-2026-09-23T014530Z.md`. All five findings were accepted and fixed in prev1-t08–t10. Configuration docs and the associated contract now derive their counts from the recommendation and catalogue; exact Codex Sol `ultra` resolves while the scalar project ceiling remains capped at `max`; the Cursor pin runbook uses a current example and preserves retired probes as history; review ledger metadata identifies only actual gates. Focused CLI tests passed (624/624). A fresh independent final review and complete repository gates are next, followed by a current-head PR check.

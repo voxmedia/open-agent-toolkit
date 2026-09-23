@@ -152,20 +152,20 @@ oat_project_recap:
 
 # Project State: claude-effort-levels
 
-**Status:** Revision phase and final review passed; configured exit gate pending; PR open
+**Status:** Gate findings fixed; post-fix verification and final review pending; PR open
 **Started:** 2026-09-20
 **Last Updated:** 2026-09-22
 
 ## Current Phase
 
-All twenty-one tasks are complete, including the final review Low fix. The independent phase and final re-reviews passed; the configured exit gate is pending; PR #315 remains open and unmerged.
+All twenty-four tasks are complete, including five fixes from the configured final gate at the earlier head. The gate passed its High threshold; a fresh post-fix review and repository verification remain pending. PR #315 remains open and unmerged.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` — validated and complete.
 - **Spec / Design:** not required in this quick workflow.
 - **Plan:** `plan.md` — 5 original phases, three model-refresh tasks, and three accepted review fixes.
-- **Implementation:** `implementation.md` — 21/21 tasks complete; phase and final review fixes passed independent re-review.
+- **Implementation:** `implementation.md` — 24/24 tasks complete; phase and final review fixes passed independent re-review.
 
 ## Progress
 
@@ -187,6 +187,6 @@ None.
 
 ## Next Milestone
 
-Run the configured exit gate, then update PR #315.
+Run the complete repository gates and repeat the configured final gate at the post-fix head, then update PR #315.
 
 - After the new closeout passes, refresh PR #315 and assess merge readiness.

@@ -290,40 +290,40 @@ Then run each separately with its own captured exit code: `pnpm test:smoke`, `pn
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target                   |
-| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
-| p01    | code     | fixes_completed | 2026-09-21 | reviews/archived/p01-review-2026-09-21T005952Z.md           | 10474030164d29fa52db1e367c9145c13a87ebb8 | phase      | -                             |
-| p01    | code     | passed          | 2026-09-21 | reviews/archived/p01-review-2026-09-21T012030Z.md           | ad56e6c56c40f547c9ebf8519a4609d6ed787720 | phase      | -                             |
-| p02    | code     | fixes_completed | 2026-09-21 | reviews/archived/p02-review-2026-09-21T020650Z.md           | fc986addb653930df9bae103750c01e07a6c1824 | phase      | -                             |
-| p02    | code     | passed          | 2026-09-21 | reviews/archived/p02-review-2026-09-21T022325Z.md           | a7636eee4d53b0996b6813ea364dcb192706ff53 | phase      | -                             |
-| final  | code     | fixes_added     | 2026-09-21 | reviews/archived/final-review-2026-09-21T041719Z.md         | 4710fa145506e0cbb474b97fd9e46d0ff45d11a5 | auto       | -                             |
-| final  | code     | passed          | 2026-09-21 | reviews/archived/final-review-2026-09-21T144805Z.md         | 590a08ce2d0b4c7637a75dcaf36fb40b55ed1da1 | auto       | -                             |
-| final  | code     | passed          | 2026-09-21 | reviews/archived/final-review-2026-09-21T153433Z.md         | 1eb5bf6471288763cdbd9d4413af17794a9e5ef0 | auto       | -                             |
-| spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                             |
-| design | artifact | pending         | -          | -                                                           | -                                        | -          | -                             |
-| p03    | code     | fixes_completed | 2026-09-21 | reviews/archived/p03-review-2026-09-21T031442Z.md           | f278335a77de048a616c3b77536fe21fcb41867b | phase      | -                             |
-| p03    | code     | fixes_completed | 2026-09-21 | reviews/archived/p03-review-2026-09-21T035607Z.md           | 4bab859cc4239c2462c5b43b93b0501aa444572a | phase      | -                             |
-| p03    | code     | passed          | 2026-09-21 | reviews/archived/p03-review-2026-09-21T040439Z.md           | 3a5d9904739284c6c660fae75118efeb651324a8 | phase      | -                             |
-| p04    | code     | fixes_completed | 2026-09-21 | reviews/archived/p04-review-2026-09-21T134100Z.md           | 7ff3bb101d641f2e273679b68d44868ac97141fa | phase      | -                             |
-| p04    | code     | fixes_completed | 2026-09-21 | reviews/archived/p04-review-2026-09-21T140558Z.md           | 431c845ead1f668089401772cb64326dde9e7a2c | phase      | -                             |
-| p04    | code     | passed          | 2026-09-21 | reviews/archived/p04-review-2026-09-21T143647Z.md           | ee5c8ef6a34c11de56fd7363540d77fc5246a26c | phase      | -                             |
-| p05    | code     | passed          | 2026-09-21 | reviews/archived/p05-review-2026-09-21T152422Z.md           | ce0cb2968a577c65fc74f185a65671e6401336e2 | phase      | -                             |
-| plan   | artifact | passed          | 2026-09-20 | -                                                           | -                                        | -          | -                             |
-| plan   | artifact | fixes_completed | 2026-09-20 | reviews/archived/artifact-plan-review-2026-09-20T235147Z.md | -                                        | -          | -                             |
-| plan   | artifact | fixes_completed | 2026-09-21 | reviews/archived/artifact-plan-review-2026-09-21T000015Z.md | -                                        | -          | -                             |
-| final  | code     | fixes_added     | 2026-09-21 | reviews/archived/final-review-2026-09-21T151012Z.md         | 20ccadb91af8dda2882035a6f026124fb50eb900 | gate       | cursor-fable-5-1-high         |
-| final  | code     | passed          | 2026-09-21 | reviews/archived/final-review-2026-09-21T203110Z.md         | 3b1d929aa7b50ceee0ede595bb749e75c4760398 | gate       | cursor-fable-5-1-high         |
-| final  | code     | passed          | 2026-09-21 | reviews/archived/final-review-2026-09-21T221532Z.md         | 11c61dcfbdab5ae534e41fc8de7169b10199fb13 | auto       | -                             |
-| final  | code     | passed          | 2026-09-21 | reviews/archived/final-review-2026-09-21T222944Z.md         | 76abcbe59ff9a16702ed6c07e45beac7bccb97b8 | gate       | cursor-fable-5-1-high         |
-| final  | code     | fixes_completed | 2026-09-21 | reviews/archived/final-review-2026-09-21T225911Z.md         | e045e6e6f33c2e5c297726ab9ea266ce7820a5a9 | auto       | -                             |
-| final  | code     | passed          | 2026-09-21 | reviews/archived/final-review-2026-09-21T231425Z.md         | 43ef811f8161313a92ad64a606dab6244d474fbe | auto       | -                             |
-| final  | code     | passed          | 2026-09-21 | reviews/archived/final-review-2026-09-21T232436Z.md         | 48a38d492c447581ebdc94b39ceda0e87a587fba | gate       | cursor-fable-5-1-high         |
-| p-rev1 | code     | fixes_completed | 2026-09-23 | reviews/archived/p-rev1-review-2026-09-23T005530Z.md        | 599f066b19e0fd2e53833017c4d65365e3d2dc9e | phase      | oat-reviewer-gpt-5-6-sol-high |
-| p-rev1 | code     | fixes_completed | 2026-09-23 | reviews/archived/p-rev1-review-2026-09-23T010920Z.md        | bf1eb0cc943d302d76ad6f87c08d4901f95b9af2 | phase      | oat-reviewer-gpt-5-6-sol-high |
-| p-rev1 | code     | passed          | 2026-09-23 | reviews/archived/p-rev1-review-2026-09-23T011458Z.md        | 128e3a57063cea1c3186ac2fe77fbaf4464dcc2e | phase      | oat-reviewer-gpt-5-6-sol-high |
-| final  | code     | fixes_completed | 2026-09-23 | reviews/archived/final-review-2026-09-23T012702Z.md         | c5132af882bbccaecbee6ebf7a5030955215a9fe | manual     | oat-reviewer-gpt-5-6-sol-high |
-| final  | code     | passed          | 2026-09-23 | reviews/archived/final-review-2026-09-23T013315Z.md         | b60d3e036da3817b44bf715d9456cda3a73925d4 | manual     | oat-reviewer-gpt-5-6-sol-high |
-| final  | code     | received        | 2026-09-23 | reviews/final-review-2026-09-23T014530Z.md                  | 33deb0d0aba348f62e00b23c5fc928748ab50785 | gate       | cursor-fable-5-1-high         |
+| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target           |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | --------------------- |
+| p01    | code     | fixes_completed | 2026-09-21 | reviews/archived/p01-review-2026-09-21T005952Z.md           | 10474030164d29fa52db1e367c9145c13a87ebb8 | phase      | -                     |
+| p01    | code     | passed          | 2026-09-21 | reviews/archived/p01-review-2026-09-21T012030Z.md           | ad56e6c56c40f547c9ebf8519a4609d6ed787720 | phase      | -                     |
+| p02    | code     | fixes_completed | 2026-09-21 | reviews/archived/p02-review-2026-09-21T020650Z.md           | fc986addb653930df9bae103750c01e07a6c1824 | phase      | -                     |
+| p02    | code     | passed          | 2026-09-21 | reviews/archived/p02-review-2026-09-21T022325Z.md           | a7636eee4d53b0996b6813ea364dcb192706ff53 | phase      | -                     |
+| final  | code     | fixes_added     | 2026-09-21 | reviews/archived/final-review-2026-09-21T041719Z.md         | 4710fa145506e0cbb474b97fd9e46d0ff45d11a5 | auto       | -                     |
+| final  | code     | passed          | 2026-09-21 | reviews/archived/final-review-2026-09-21T144805Z.md         | 590a08ce2d0b4c7637a75dcaf36fb40b55ed1da1 | auto       | -                     |
+| final  | code     | passed          | 2026-09-21 | reviews/archived/final-review-2026-09-21T153433Z.md         | 1eb5bf6471288763cdbd9d4413af17794a9e5ef0 | auto       | -                     |
+| spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                     |
+| design | artifact | pending         | -          | -                                                           | -                                        | -          | -                     |
+| p03    | code     | fixes_completed | 2026-09-21 | reviews/archived/p03-review-2026-09-21T031442Z.md           | f278335a77de048a616c3b77536fe21fcb41867b | phase      | -                     |
+| p03    | code     | fixes_completed | 2026-09-21 | reviews/archived/p03-review-2026-09-21T035607Z.md           | 4bab859cc4239c2462c5b43b93b0501aa444572a | phase      | -                     |
+| p03    | code     | passed          | 2026-09-21 | reviews/archived/p03-review-2026-09-21T040439Z.md           | 3a5d9904739284c6c660fae75118efeb651324a8 | phase      | -                     |
+| p04    | code     | fixes_completed | 2026-09-21 | reviews/archived/p04-review-2026-09-21T134100Z.md           | 7ff3bb101d641f2e273679b68d44868ac97141fa | phase      | -                     |
+| p04    | code     | fixes_completed | 2026-09-21 | reviews/archived/p04-review-2026-09-21T140558Z.md           | 431c845ead1f668089401772cb64326dde9e7a2c | phase      | -                     |
+| p04    | code     | passed          | 2026-09-21 | reviews/archived/p04-review-2026-09-21T143647Z.md           | ee5c8ef6a34c11de56fd7363540d77fc5246a26c | phase      | -                     |
+| p05    | code     | passed          | 2026-09-21 | reviews/archived/p05-review-2026-09-21T152422Z.md           | ce0cb2968a577c65fc74f185a65671e6401336e2 | phase      | -                     |
+| plan   | artifact | passed          | 2026-09-20 | -                                                           | -                                        | -          | -                     |
+| plan   | artifact | fixes_completed | 2026-09-20 | reviews/archived/artifact-plan-review-2026-09-20T235147Z.md | -                                        | -          | -                     |
+| plan   | artifact | fixes_completed | 2026-09-21 | reviews/archived/artifact-plan-review-2026-09-21T000015Z.md | -                                        | -          | -                     |
+| final  | code     | fixes_added     | 2026-09-21 | reviews/archived/final-review-2026-09-21T151012Z.md         | 20ccadb91af8dda2882035a6f026124fb50eb900 | gate       | cursor-fable-5-1-high |
+| final  | code     | passed          | 2026-09-21 | reviews/archived/final-review-2026-09-21T203110Z.md         | 3b1d929aa7b50ceee0ede595bb749e75c4760398 | gate       | cursor-fable-5-1-high |
+| final  | code     | passed          | 2026-09-21 | reviews/archived/final-review-2026-09-21T221532Z.md         | 11c61dcfbdab5ae534e41fc8de7169b10199fb13 | auto       | -                     |
+| final  | code     | passed          | 2026-09-21 | reviews/archived/final-review-2026-09-21T222944Z.md         | 76abcbe59ff9a16702ed6c07e45beac7bccb97b8 | gate       | cursor-fable-5-1-high |
+| final  | code     | fixes_completed | 2026-09-21 | reviews/archived/final-review-2026-09-21T225911Z.md         | e045e6e6f33c2e5c297726ab9ea266ce7820a5a9 | auto       | -                     |
+| final  | code     | passed          | 2026-09-21 | reviews/archived/final-review-2026-09-21T231425Z.md         | 43ef811f8161313a92ad64a606dab6244d474fbe | auto       | -                     |
+| final  | code     | passed          | 2026-09-21 | reviews/archived/final-review-2026-09-21T232436Z.md         | 48a38d492c447581ebdc94b39ceda0e87a587fba | gate       | cursor-fable-5-1-high |
+| p-rev1 | code     | fixes_completed | 2026-09-23 | reviews/archived/p-rev1-review-2026-09-23T005530Z.md        | 599f066b19e0fd2e53833017c4d65365e3d2dc9e | auto       | -                     |
+| p-rev1 | code     | fixes_completed | 2026-09-23 | reviews/archived/p-rev1-review-2026-09-23T010920Z.md        | bf1eb0cc943d302d76ad6f87c08d4901f95b9af2 | auto       | -                     |
+| p-rev1 | code     | passed          | 2026-09-23 | reviews/archived/p-rev1-review-2026-09-23T011458Z.md        | 128e3a57063cea1c3186ac2fe77fbaf4464dcc2e | auto       | -                     |
+| final  | code     | fixes_completed | 2026-09-23 | reviews/archived/final-review-2026-09-23T012702Z.md         | c5132af882bbccaecbee6ebf7a5030955215a9fe | manual     | -                     |
+| final  | code     | passed          | 2026-09-23 | reviews/archived/final-review-2026-09-23T013315Z.md         | b60d3e036da3817b44bf715d9456cda3a73925d4 | manual     | -                     |
+| final  | code     | fixes_completed | 2026-09-23 | reviews/archived/final-review-2026-09-23T014530Z.md         | 33deb0d0aba348f62e00b23c5fc928748ab50785 | gate       | cursor-fable-5-1-high |
 
 Spec and design rows are retained from the scaffold for compatibility and are not required in this quick workflow. Native structured artifact review passed after one revision. The replacement configured implementation gate passed its High threshold with 0 Critical, 0 High, 0 Medium, and 2 Low findings. Root received the corroborated artifact and addressed both Low bookkeeping findings in the passing-gate judgment sweep: the older consumed final review is archived, and stale closeout wording now matches project state. The prior p-rev1 review fixes are complete; its narrowed re-reviews are received and passed.
 
@@ -401,9 +401,33 @@ The independent p-rev1 review at `599f066b1` found one High and two Medium findi
 
 **Commit:** `fix(dispatch): clarify candidate effort providers` (`b60d3e036`).
 
+### Task prev1-t08: Align configuration docs with refreshed catalogues
+
+**Files:** `apps/oat-docs/docs/cli-utilities/configuration.md`, `packages/cli/src/validation/skills.test.ts`.
+
+**Steps:** Replace retired current-generation examples and stale recommendation counts. Derive the documentation assertions from the bundled recommendation and Cursor pin catalogue so future refreshes detect drift.
+
+**Verify:** Focused validation tests and docs build.
+
+### Task prev1-t09: Support exact Codex ultra candidates without changing the project ceiling
+
+**Files:** `packages/cli/src/commands/project/dispatch-ceiling/index.ts`, its tests, `packages/cli/src/config/oat-config.test.ts`, `packages/cli/src/providers/ceiling/registry.ts`, its tests, and `apps/oat-docs/docs/contributing/updating-model-guidance.md`.
+
+**Steps:** Accept catalogued `gpt-6-sol/ultra` as an exact candidate and compile its materialized role. Keep the project-wide scalar ceiling at `max`; check candidate ordering, configuration round-trip, and every catalogued target against adapter compilation. Document the two separate surfaces for future updates.
+
+**Verify:** Focused resolver, config, and adapter tests, including a rejected reversed effort order and an unchanged invalid scalar ceiling.
+
+### Task prev1-t10: Refresh the Cursor pin runbook and correct review ledger metadata
+
+**Files:** `apps/oat-docs/docs/contributing/verifying-cursor-pins.md`, project plan, implementation, state, and the received review artifact.
+
+**Steps:** Use a current mapping for the live probe example, label retired Opus data historical, correct the new review rows' gate targets and revision-review invocation, archive the received review, and track the fix results.
+
+**Verify:** Docs build, plan table check, and fresh independent final review.
+
 ## Implementation Complete
 
-All twenty-one original, revision, and review-fix tasks are implemented. The original fourteen-task implementation passed its prior closeout; the model-refresh phase and final independent review passed, and the configured exit gate remains pending. PR #315 remains open.
+All twenty-four original, revision, and review-fix tasks are implemented. The original fourteen-task implementation passed its prior closeout; the model-refresh phase and final independent review passed, and the configured exit gate requires a fresh post-fix run. PR #315 remains open.
 
 - Phase 1: 2 tasks — resolver and generated-role lifecycle.
 - Phase 2: 4 tasks — awareness, recommendations, documentation/decision alignment, and relevant lifecycle-gate prompts.
@@ -411,7 +435,7 @@ All twenty-one original, revision, and review-fix tasks are implemented. The ori
 - Phase 4: 2 tasks — version-aware Claude effort validation and provider-registry guidance.
 - Phase 5: 3 tasks — align shipped guidance with the fail-closed capability contract and correct the uncapped Claude effort selection path.
 
-**Total: 21 tasks; 21 implemented; phase and final re-reviews passed.**
+**Total: 24 tasks; 24 implemented; fresh final gate review pending.**
 
 ## References
 
