@@ -88,6 +88,10 @@ target=cursor-fable-5-1-high threshold=high findings=critical:0,high:0,medium:0,
 
 target=cursor-fable-5-1-high threshold=high findings=critical:0,high:0,medium:2,low:3 exit=0 status=ok artifact=.oat/projects/shared/claude-effort-levels/reviews/final-review-2026-09-23T014530Z.md run=ae6d1887-c68f-4a3f-8767-c4115feb045a
 
+### 2026-09-23 · structural · oat gate review · final
+
+target=cursor-fable-5-1-high threshold=high findings=critical:0,high:0,medium:1,low:2 exit=0 status=ok artifact=.oat/projects/shared/claude-effort-levels/reviews/final-review-2026-09-23T021854Z.md run=7631b0df-b9e8-437e-908e-5ec854bbfc52
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
