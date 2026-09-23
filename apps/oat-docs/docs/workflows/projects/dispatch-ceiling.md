@@ -80,24 +80,13 @@ To pick up a new version, compare your
 `workflow.dispatchCeiling.recommendationVersion` against the bundled version,
 then either edit the affected cells by hand or clear them and re-adopt.
 
-Version `2026-09-21.1` is a live example. It adds explicit Claude effort
-candidates while retaining `haiku` as a model-only compatibility route. Its
-Claude tier terminals are `claude-sonnet-5/medium`, `claude-sonnet-5/high`,
-`claude-opus-5/high`, and `claude-fable-5-1/high`; rerunning adoption preserves
-any explicit older cell unchanged.
-
-The Cursor interleaving in the `high` and `frontier` tiers belongs to the prior
-`2026-07-27.1` recommendation and is retained unchanged by `2026-09-21.1`.
-That earlier version alternates GPT and Claude rungs, ends `high` at
-`gpt-5.6-sol-high` and `frontier` at `claude-fable-5-thinking-high`, and omits
-`claude-opus-5-thinking-max` and `claude-fable-5-thinking-xhigh` from
-`frontier`. The Opus omission follows the non-monotonic top-end evidence in
-`subagent-orchestration/references/evidence-and-refresh.md`, which treats max as
-a route requiring justification. The Fable omission is a recommendation
-judgment: `subagent-orchestration/references/provider-claude.md` permits either
-Fable rung for a qualified specialist case, and the earlier ladder chose the
-cheaper one without comparison evidence favoring xhigh. Both models remain in
-the pin catalog and stay available to a hand-edited ladder.
+Version `2026-09-23.1` is the current bundled recommendation. It prefers
+GPT-6 Luna and Sol in Codex and Opus 5.5 in Claude. GPT-5.6 targets remain
+supported for explicit Codex and Cursor configurations. Cursor's preferred
+ladder uses existing verified GPT-5.6, Grok, Composer, and Fable mappings;
+Cursor Opus 5.5 awaits a native desktop mapping probe. Rerunning adoption
+preserves any explicit older cell unchanged. For the complete maintenance
+procedure, see [Updating Model Guidance](../../contributing/updating-model-guidance.md).
 
 The terminal Fable target may require model access from the executing provider.
 The adopting organization is responsible for confirming its applicable
@@ -175,17 +164,17 @@ An ordered candidate cell uses `candidates`:
             "candidates": [
               {
                 "harness": "codex",
-                "model": "gpt-5.6-terra",
+                "model": "gpt-6-luna",
                 "effort": "low"
               },
               {
                 "harness": "codex",
-                "model": "gpt-5.6-terra",
+                "model": "gpt-6-luna",
                 "effort": "medium"
               },
               {
                 "harness": "codex",
-                "model": "gpt-5.6-terra",
+                "model": "gpt-6-luna",
                 "effort": "high"
               }
             ]
@@ -196,11 +185,7 @@ An ordered candidate cell uses `candidates`:
         },
         "cursor": {
           "balanced": {
-            "candidates": [
-              "gpt-5.6-terra-low",
-              "gpt-5.6-terra-medium",
-              "gpt-5.6-terra-high"
-            ]
+            "candidates": ["gpt-5.6-terra-high"]
           }
         }
       }
@@ -243,22 +228,18 @@ oat_dispatch_policy:
 
 ## Complete Bundled Recommendation
 
-The bundled ladder contains every supported candidate, not only the final
-candidate in each tier:
+The bundled ladder is a curated subset of the supported targets:
 
-- **Codex:** Luna at `low`, `medium`, `high`, and `xhigh`; Terra at `low`,
-  `medium`, `high`, and `xhigh`; Sol at `low`, `medium`, `high`, `xhigh`, and
-  `max`.
-- **Claude:** `haiku`, `sonnet`, `opus`, and `fable` across the ordered named
-  tiers.
-- **Cursor:** verified multi-family flat IDs across Composer, Claude (Sonnet,
-  Opus, and Fable), GPT, and Grok. Two counts apply and they differ: the
-  bundled recommendation carries 14 Cursor candidates across the four tiers,
-  while the materialization catalogue carries 18 flat IDs. The four extra
-  entries are approved mappings deliberately kept out of the recommendation but
-  still materializable. The catalogue maps each flat ladder ID to a separate
-  bracket-form frontmatter model; OAT does not derive or normalize either
-  value.
+- **Codex:** GPT-6 Luna at `low` through `max` across Economy and Balanced;
+  GPT-6 Sol at `low` through `max` across High and Frontier. Sol `ultra` and
+  GPT-5.6 variants remain available outside this preferred ladder.
+- **Claude:** `haiku` and Sonnet 5 at Economy/Balanced, Opus 5.5 at High and
+  Frontier, and Fable 5.1 at Frontier.
+- **Cursor:** approved Composer 2.5, GPT-5.6, Grok 4.5, and Fable 5 targets.
+  The catalogue maps each flat ladder ID to its separately verified
+  bracket-form frontmatter model. Opus 5.5 catalog visibility has not yet
+  yielded an approved mapping; see
+  [Verifying Cursor Pins](../../contributing/verifying-cursor-pins.md).
 
 The final candidate in a named tier defines that tier's reviewer ceiling. Lower
 reviewer selection requires a separate reviewed contract; a normal reviewer
@@ -299,7 +280,7 @@ oat project dispatch-ceiling resolve \
   --provider claude \
   --role implementer \
   --ceiling-tier high \
-  --candidate-model claude-opus-5 \
+  --candidate-model claude-opus-5-5 \
   --candidate-effort medium \
   --task-class default-implementation \
   --report-scope p02 \
@@ -359,11 +340,13 @@ branch replaces, rather than supplements, preferred selection.
 ### Claude effort capability evidence
 
 An effort-pinned Claude candidate must establish the exact generation and that
-generation's supported effort. OAT recognizes these versioned model
-generations directly: `claude-fable-5-1`, `claude-fable-5`, `claude-opus-5`,
-`claude-sonnet-5`, `claude-opus-4-8`, `claude-opus-4-7`, `claude-opus-4-6`, and
-`claude-sonnet-4-6`. The first six accept `low`, `medium`, `high`, `xhigh`, and
-`max`; the 4.6 generations accept `low`, `medium`, `high`, and `max`.
+generation's supported effort. Current directly recognized generations include
+`claude-fable-5-1`, `claude-fable-5`, `claude-opus-5-5`, `claude-sonnet-5`,
+`claude-opus-4-7`, `claude-opus-4-6`, and `claude-sonnet-4-6`.
+Opus 5.5 supports `low`, `medium`, `high`, `xhigh`, and `max`; consult the
+[updating guide](../../contributing/updating-model-guidance.md) before adding
+further generations or rungs. Retired Opus 5.0 and 4.8 are no longer directly
+recognized for effort-pinned dispatch.
 
 A family alias can also establish capability through its matching
 `ANTHROPIC_DEFAULT_<FAMILY>_MODEL` pin. A recognized versioned model ID in that

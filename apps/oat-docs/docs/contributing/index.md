@@ -17,4 +17,5 @@ Use this section when you are changing OAT itself rather than consuming it as a 
 - [Commit Conventions](commit-conventions.md) - Traceable commit patterns for project and docs work.
 - [Hooks and Safety](hooks-and-safety.md) - Safety and mutation contracts for provider-sync behavior.
 - [Smoke Testing](smoke-testing.md) - Runbook for the live workflow smoke runner: prerequisites, scenarios, evidence reports, and recovery.
+- [Updating Model Guidance](updating-model-guidance.md) - Source map and verification checklist for provider model refreshes.
 - [Verifying Cursor Pins](verifying-cursor-pins.md) - Runbook for probe-verifying a Cursor model pin before shipping it.
