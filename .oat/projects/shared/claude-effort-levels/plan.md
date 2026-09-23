@@ -319,7 +319,9 @@ Then run each separately with its own captured exit code: `pnpm test:smoke`, `pn
 | final  | code     | passed          | 2026-09-21 | reviews/archived/final-review-2026-09-21T231425Z.md         | 43ef811f8161313a92ad64a606dab6244d474fbe | auto       | -                     |
 | final  | code     | passed          | 2026-09-21 | reviews/archived/final-review-2026-09-21T232436Z.md         | 48a38d492c447581ebdc94b39ceda0e87a587fba | gate       | cursor-fable-5-1-high |
 
-Spec and design rows are retained from the scaffold for compatibility and are not required in this quick workflow. Native structured artifact review passed after one revision. The replacement configured implementation gate passed its High threshold with 0 Critical, 0 High, 0 Medium, and 2 Low findings. Root received the corroborated artifact and addressed both Low bookkeeping findings in the passing-gate judgment sweep: the older consumed final review is archived, and stale closeout wording now matches project state. No unresolved planning or implementation review findings remain.
+| p-rev1 | code | fixes_completed | 2026-09-23 | reviews/archived/p-rev1-review-2026-09-23T005530Z.md | 599f066b19e0fd2e53833017c4d65365e3d2dc9e | phase | oat-reviewer-gpt-5-6-sol-high |
+
+Spec and design rows are retained from the scaffold for compatibility and are not required in this quick workflow. Native structured artifact review passed after one revision. The replacement configured implementation gate passed its High threshold with 0 Critical, 0 High, 0 Medium, and 2 Low findings. Root received the corroborated artifact and addressed both Low bookkeeping findings in the passing-gate judgment sweep: the older consumed final review is archived, and stale closeout wording now matches project state. The prior p-rev1 review fixes are complete; its narrowed re-review is pending receipt.
 
 Phase p02 passed with 0 Critical, 0 High, 0 Medium, and 1 Low after all five first-round findings were resolved. Phase p03 closed that reporting drift, added the shipped launch/record boundary and durable live evidence, and passed its third review cycle with zero findings after two bounded fix rounds.
 
@@ -359,7 +361,7 @@ Source: inline feedback (2026-09-22). Keep GPT-5.6 available while adding GPT-6 
 
 ### Review-fix tasks for p-rev1
 
-The independent p-rev1 review at `599f066b1` found one High and two Medium findings. All three are accepted; see `reviews/p-rev1-review-2026-09-23T005530Z.md`.
+The independent p-rev1 review at `599f066b1` found one High and two Medium findings. All three are accepted; see `reviews/archived/p-rev1-review-2026-09-23T005530Z.md`.
 
 ### Task prev1-t04: Refresh evidence routing for current generations
 
@@ -395,7 +397,7 @@ All twenty original, revision, and review-fix tasks are implemented. The origina
 - Phase 4: 2 tasks — version-aware Claude effort validation and provider-registry guidance.
 - Phase 5: 3 tasks — align shipped guidance with the fail-closed capability contract and correct the uncapped Claude effort selection path.
 
-**Total: 20 tasks; 17 implemented; three review fixes pending.**
+**Total: 20 tasks; 20 implemented; independent re-review pending.**
 
 ## References
 

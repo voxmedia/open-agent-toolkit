@@ -238,7 +238,9 @@ The user approved the final HiLL closeout checkpoint after exact-head verificati
 
 ### Revision phase review
 
-The independent Sol/high review at `599f066b1` found 1 High and 2 Medium findings. All three were fixed in prev1-t04–t06 (`c113bdce1`, `2725d4bf1`, `6317d2470`); the review artifact is `reviews/p-rev1-review-2026-09-23T005530Z.md`. The earlier 17-task completion and full gate results apply to that reviewed basis; a fresh review and checks follow these fixes.
+The independent Sol/high review at `599f066b1` found 1 High and 2 Medium findings. All three were fixed in prev1-t04–t06 (`c113bdce1`, `2725d4bf1`, `6317d2470`); the review artifact is `reviews/archived/p-rev1-review-2026-09-23T005530Z.md`. The earlier 17-task completion and full gate results apply to that reviewed basis; a fresh review and checks follow these fixes.
+
+The prior p-rev1 review was archived with a `fixes_completed` Reviews event at its reviewed head `599f066b1`. The narrowed re-review at `bf1eb0cc9` found one Medium bookkeeping inconsistency, resolved by aligning plan/state completion to 20/20 and retaining its artifact as the next actionable review.
 
 Focused post-fix verification: the 242-test planning/skill contract suite and canonical 65-skill validation passed. The independent phase review and full current-head gates remain pending.
 

@@ -165,7 +165,7 @@ All twenty tasks are complete, including the three accepted phase-review fixes. 
 - **Discovery:** `discovery.md` — validated and complete.
 - **Spec / Design:** not required in this quick workflow.
 - **Plan:** `plan.md` — 5 original phases, three model-refresh tasks, and three accepted review fixes.
-- **Implementation:** `implementation.md` — 17/20 tasks complete; p-rev1 review found 1 High and 2 Medium, all accepted for fixes.
+- **Implementation:** `implementation.md` — 20/20 tasks complete; p-rev1 review found 1 High and 2 Medium, all accepted for fixes.
 
 ## Progress
 
@@ -187,6 +187,6 @@ None.
 
 ## Next Milestone
 
-Review p-rev1, run the fresh final review and configured exit gate, then update PR #315.
+Receive the p-rev1 re-review, run the fresh final review and configured exit gate, then update PR #315.
 
 - After the new closeout passes, refresh PR #315 and assess merge readiness.
