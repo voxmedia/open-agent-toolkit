@@ -21,6 +21,7 @@ import {
   getPackMemberNames,
   PACK_MANIFEST,
 } from '@commands/tools/shared/pack-manifest';
+import { CURSOR_MODEL_PIN_MAPPINGS } from '@providers/cursor/codec/catalog';
 import { expectDispatchStampFieldContract } from '@test-support/skills/dispatch-stamp-contract';
 import {
   readDeclaredVersion,
@@ -2704,10 +2705,31 @@ describe('validateOatSkills', () => {
         /OAT (?:does not|cannot) determine[\s\S]{0,180}(?:access|eligibility)/i,
       );
     }
+    const recommendation = JSON.parse(
+      await readRawRepoFile(
+        'packages/cli/config/dispatch-matrix-recommendation.json',
+      ),
+    ) as {
+      providers: Record<string, Record<string, { candidates: unknown[] }>>;
+    };
+    const countCandidates = (provider: string) =>
+      Object.values(recommendation.providers[provider] ?? {}).reduce(
+        (total, cell) => total + cell.candidates.length,
+        0,
+      );
     expect(configurationDocs).toMatch(
-      /14 Cursor candidates[\s\S]{0,180}18 (?:flat IDs|catalogued|catalogue)/i,
+      new RegExp(`${countCandidates('codex')} Codex model/effort combinations`),
     );
-    expect(configurationDocs).not.toMatch(/Cursor covers 16 candidates/i);
+    expect(configurationDocs).toMatch(
+      new RegExp(`${countCandidates('cursor')} Cursor candidates`),
+    );
+    expect(configurationDocs).toMatch(
+      new RegExp(
+        `${CURSOR_MODEL_PIN_MAPPINGS.filter((mapping) => mapping.catalogue).length} catalogued`,
+      ),
+    );
+    expect(configurationDocs).toContain('`opus-5-5`');
+    expect(configurationDocs).not.toMatch(/`opus-5`|`opus-4-8`/);
     expect(workflowDocs).toMatch(
       /structured notices[\s\S]{0,260}effective target/i,
     );

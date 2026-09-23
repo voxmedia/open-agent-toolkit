@@ -475,11 +475,11 @@ even when the reusable ladder is user-owned.
 The example above is illustrative rather than a copy of the bundled ladder; its
 tiers are trimmed for readability.
 
-The bundled recommendation covers 13 Codex model/effort combinations: Luna and
-Terra at `low`, `medium`, `high`, and `xhigh`, plus Sol at those efforts and
-`max`. Claude covers `haiku`, plus explicit Sonnet, Opus, and Fable
+The bundled recommendation covers 10 Codex model/effort combinations: GPT-6
+Luna at `low` through `max`, and GPT-6 Sol at the same efforts.
+Claude covers `haiku`, plus explicit Sonnet, Opus, and Fable
 model/effort pairs. Effort-pinned Claude cells require a recognized versioned
-model ID (`fable-5-1`, `fable-5`, `opus-5`, `sonnet-5`, `opus-4-8`,
+model ID (`fable-5-1`, `fable-5`, `opus-5-5`, `sonnet-5`,
 `opus-4-7`, `opus-4-6`, or `sonnet-4-6`) or a matching
 `ANTHROPIC_DEFAULT_<FAMILY>_MODEL` pin. A custom provider pin must declare
 matching capability through `<PIN>_SUPPORTED_CAPABILITIES`: `effort` enables
@@ -489,9 +489,9 @@ rungs. A present declaration is authoritative. Host-managed routing through
 bare effort-pinned alias fails closed when its generation cannot be proven.
 Model-only Claude aliases remain compatible through the per-call model argument
 and report `effortAxis: not-applicable` because the Agent API exposes no
-per-call effort argument. The recommendation carries 14 Cursor candidates
+per-call effort argument. The recommendation carries 10 Cursor candidates
 across four tiers, drawn from a materialization
-catalogue with 18 catalogued multi-family flat IDs spanning Composer, Claude
+catalogue with 12 catalogued multi-family flat IDs spanning Composer, Claude
 (Sonnet, Opus, and Fable), GPT, and Grok; the two figures differ because some
 approved mappings stay materializable without being recommended. An explicit
 mapping connects each flat ladder ID to a separate bracket-form frontmatter
