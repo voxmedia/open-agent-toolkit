@@ -10,7 +10,7 @@ oat_template: false
 
 # Implementation: claude-effort-levels
 
-All twenty-six implementation tasks are complete; the final narrow re-review passed. The September 22 model refresh added verified GPT-6 Sol/Luna and Opus 5.5 targets while retaining GPT-5.6; the new maintenance page documents the next update cycle. The revision phase and final independent reviews passed; the configured exit gate passed its High threshold at the earlier head, and the received Medium/Low findings are fixed. A fresh post-fix review remains pending. PR #315 remains open and unmerged.
+All twenty-seven implementation tasks are complete; the final narrow re-review passed. The September 22 model refresh added verified GPT-6 Sol/Luna and Opus 5.5 targets while retaining GPT-5.6; the new maintenance page documents the next update cycle. The revision phase and final independent reviews passed; the configured exit gate passed its High threshold at the earlier head, and the received Medium/Low findings are fixed. A fresh post-fix review remains pending. PR #315 remains open and unmerged.
 
 ## Progress Overview
 
@@ -21,9 +21,9 @@ All twenty-six implementation tasks are complete; the final narrow re-review pas
 | p03 — Verification and release readiness    | completed | 3     | 3/3       |
 | p04 — Final review fixes                    | completed | 2     | 2/2       |
 | p05 — Capability documentation alignment    | completed | 3     | 3/3       |
-| p-rev1 — Model refresh and maintenance docs | completed | 12    | 12/12     |
+| p-rev1 — Model refresh and maintenance docs | completed | 13    | 13/13     |
 
-**Total: 26/26 tasks completed.**
+**Total: 27/27 tasks completed.**
 
 ## Task Status
 
@@ -55,7 +55,8 @@ All twenty-six implementation tasks are complete; the final narrow re-review pas
 | prev1-t09 | completed | `ff6a29ba7` |
 | prev1-t10 | completed | `5dcf80e08`, `c6d83eacb` |
 | prev1-t11 | completed | `60f2f197c` |
-| prev1-t12 | completed | pending bookkeeping commit |
+| prev1-t12 | completed | `bccd541d2`, `cfd458ca4` |
+| prev1-t13 | completed | `6b839399d` |
 
 ## Orchestration Runs
 
@@ -398,3 +399,7 @@ The configured Cursor gate reviewed `33deb0d0a`, exited 0 at the High threshold,
 ### Second configured final-gate receive and correction
 
 The configured Cursor gate reviewed `60ccb2bb9`, exited 0 at the High threshold, and returned one Medium and two Low findings in `reviews/archived/final-review-2026-09-23T021854Z.md`. All three were accepted. The `--preferred high` regression under a frontier `ultra` candidate was reproduced as a failing test before `60f2f197c` and passes afterward (the `max` control also passes); candidate ordering now derives from the Codex catalogue, and the adapter requires an exact catalogued target for a nonstandard effort. The scalar `--preferred ultra` request remains rejected, and Luna `ultra` is rejected without a catalogued target. The stale task count is corrected. Focused tests passed (627/627). The ordered repository gates passed after the fix: check, type-check, test (7,525 CLI tests executed), build, skill bumps, release version check against fetched `origin/main`, release validation, docs build, lint, and format. A new configured review remains pending.
+
+### Third configured final-gate receive
+
+The configured Cursor gate reviewed `cfd458ca4`, exited 0 at the High threshold, and reported 0 Critical, 0 High, 0 Medium, and 2 Low findings in `reviews/archived/final-review-2026-09-23T023848Z.md`. It independently verified the previous three findings resolved and reproduced the preferred-effort behavior against the built CLI. Both new Low findings were accepted: `6b839399d` pins the Codex catalogue's ascending effort rank (focused resolver/adapter suite 204/204), and the prev1-t12 row now names its actual commits. Full repository gates and remote PR checks are pending for this latest test-only change.

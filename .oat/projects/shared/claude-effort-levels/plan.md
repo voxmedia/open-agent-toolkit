@@ -325,6 +325,7 @@ Then run each separately with its own captured exit code: `pnpm test:smoke`, `pn
 | final  | code     | passed          | 2026-09-23 | reviews/archived/final-review-2026-09-23T013315Z.md         | b60d3e036da3817b44bf715d9456cda3a73925d4 | manual     | -                     |
 | final  | code     | fixes_completed | 2026-09-23 | reviews/archived/final-review-2026-09-23T014530Z.md         | 33deb0d0aba348f62e00b23c5fc928748ab50785 | gate       | cursor-fable-5-1-high |
 | final  | code     | fixes_completed | 2026-09-23 | reviews/archived/final-review-2026-09-23T021854Z.md         | 60ccb2bb90038282a6320cb5cbf773817ccd46a2 | gate       | cursor-fable-5-1-high |
+| final  | code     | fixes_completed | 2026-09-23 | reviews/archived/final-review-2026-09-23T023848Z.md         | cfd458ca4b8bb8636eaf5e5a171827bf20532d08 | gate       | cursor-fable-5-1-high |
 | final  | code     | received        | 2026-09-23 | reviews/final-review-2026-09-23T023848Z.md                  | cfd458ca4b8bb8636eaf5e5a171827bf20532d08 | gate       | cursor-fable-5-1-high |
 
 Spec and design rows are retained from the scaffold for compatibility and are not required in this quick workflow. Native structured artifact review passed after one revision. The replacement configured implementation gate passed its High threshold with 0 Critical, 0 High, 0 Medium, and 2 Low findings. Root received the corroborated artifact and addressed both Low bookkeeping findings in the passing-gate judgment sweep: the older consumed final review is archived, and stale closeout wording now matches project state. The prior p-rev1 review fixes are complete; its narrowed re-reviews are received and passed.
@@ -445,9 +446,19 @@ The independent p-rev1 review at `599f066b1` found one High and two Medium findi
 
 **Verify:** Ordered repository gates and independent configured final review.
 
+### Task prev1-t13: Pin the catalogue rank and receive final gate
+
+**Files:** `packages/cli/src/commands/project/dispatch-ceiling/index.test.ts`, project plan, implementation, state, and `reviews/archived/final-review-2026-09-23T023848Z.md`.
+
+**Steps:** Assert the first-seen Codex catalogue efforts retain ascending rank, replace the prior task's placeholder commit, archive the received gate review, and verify the current branch.
+
+**Verify:** Focused resolver/adapter tests, full repository gates, and current-head PR checks.
+
+**Commit:** `6b839399d` (`test(dispatch): pin catalogue effort rank order`).
+
 ## Implementation Complete
 
-All twenty-six original, revision, and review-fix tasks are implemented. The original fourteen-task implementation passed its prior closeout; the model-refresh phase and final independent review passed, and the configured exit gate requires a fresh post-fix run. PR #315 remains open.
+All twenty-seven original, revision, and review-fix tasks are implemented. The original fourteen-task implementation passed its prior closeout; the model-refresh phase and final independent review passed, and the configured exit gate requires a fresh post-fix run. PR #315 remains open.
 
 - Phase 1: 2 tasks — resolver and generated-role lifecycle.
 - Phase 2: 4 tasks — awareness, recommendations, documentation/decision alignment, and relevant lifecycle-gate prompts.
@@ -455,7 +466,7 @@ All twenty-six original, revision, and review-fix tasks are implemented. The ori
 - Phase 4: 2 tasks — version-aware Claude effort validation and provider-registry guidance.
 - Phase 5: 3 tasks — align shipped guidance with the fail-closed capability contract and correct the uncapped Claude effort selection path.
 
-**Total: 26 tasks; 26 implemented; fresh final gate review pending.**
+**Total: 27 tasks; 27 implemented; configured final gate passed its High threshold.**
 
 ## References
 
