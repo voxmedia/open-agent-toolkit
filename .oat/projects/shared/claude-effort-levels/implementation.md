@@ -53,7 +53,7 @@ All twenty-four implementation tasks are complete; the final narrow re-review pa
 | prev1-t07 | completed | `b60d3e036` |
 | prev1-t08 | completed | `5dcf80e08` |
 | prev1-t09 | completed | `ff6a29ba7` |
-| prev1-t10 | completed | `5dcf80e08` and tracking commit |
+| prev1-t10 | completed | `5dcf80e08`, `c6d83eacb` |
 
 ## Orchestration Runs
 
@@ -391,4 +391,4 @@ The final review at `c5132af88` found one Low CLI message inconsistency. Accepte
 
 ## September 23 Configured Final-Gate Receive and Fixes
 
-The configured Cursor gate reviewed `33deb0d0a`, exited 0 at the High threshold, and reported two Medium and three Low findings in `reviews/archived/final-review-2026-09-23T014530Z.md`. All five findings were accepted and fixed in prev1-t08–t10. Configuration docs and the associated contract now derive their counts from the recommendation and catalogue; exact Codex Sol `ultra` resolves while the scalar project ceiling remains capped at `max`; the Cursor pin runbook uses a current example and preserves retired probes as history; review ledger metadata identifies only actual gates. Focused CLI tests passed (624/624). A fresh independent final review and complete repository gates are next, followed by a current-head PR check.
+The configured Cursor gate reviewed `33deb0d0a`, exited 0 at the High threshold, and reported two Medium and three Low findings in `reviews/archived/final-review-2026-09-23T014530Z.md`. All five findings were accepted and fixed in prev1-t08–t10. Configuration docs and the associated contract now derive their counts from the recommendation and catalogue; exact Codex Sol `ultra` resolves while the scalar project ceiling remains capped at `max`; the Cursor pin runbook uses a current example and preserves retired probes as history; review ledger metadata identifies only actual gates. Focused CLI tests passed (624/624). The complete repository gates passed after these fixes in CI order: check, type-check, test (7,522 CLI tests executed), build, skill bumps, version check against fetched `origin/main`, release validation, docs build, lint, and format. A fresh independent final review is next, followed by a current-head PR check.
