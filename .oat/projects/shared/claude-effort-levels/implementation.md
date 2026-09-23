@@ -1,29 +1,29 @@
 ---
 oat_status: in_progress
-oat_ready_for: oat-project-implement
+oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-09-21
-oat_current_task_id: prev1-t01
+oat_last_updated: 2026-09-22
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 ---
 
 # Implementation: claude-effort-levels
 
-The original fourteen tasks are complete; three September 22 revision tasks are in progress. Claude effort-aware dispatch, bundled ladder guidance, and active-workflow gate prompting are implemented; the final lifecycle review and configured exit gate passed, accepted Low guidance findings were resolved, the full verification suite is green, and the user approved final implementation closeout. PR #315 remains open and unmerged.
+All seventeen implementation tasks are complete. The September 22 model refresh added verified GPT-6 Sol/Luna and Opus 5.5 targets while retaining GPT-5.6; the new maintenance page documents the next update cycle. The revision phase and final reviews and configured exit gate remain pending for this head. PR #315 remains open and unmerged.
 
 ## Progress Overview
 
-| Phase                                       | Status      | Tasks | Completed |
-| ------------------------------------------- | ----------- | ----- | --------- |
-| p01 — Resolve and materialize               | completed   | 2     | 2/2       |
-| p02 — Guidance and recommendations          | completed   | 4     | 4/4       |
-| p03 — Verification and release readiness    | completed   | 3     | 3/3       |
-| p04 — Final review fixes                    | completed   | 2     | 2/2       |
-| p05 — Capability documentation alignment    | completed   | 3     | 3/3       |
-| p-rev1 — Model refresh and maintenance docs | in_progress | 3     | 0/3       |
+| Phase                                       | Status    | Tasks | Completed |
+| ------------------------------------------- | --------- | ----- | --------- |
+| p01 — Resolve and materialize               | completed | 2     | 2/2       |
+| p02 — Guidance and recommendations          | completed | 4     | 4/4       |
+| p03 — Verification and release readiness    | completed | 3     | 3/3       |
+| p04 — Final review fixes                    | completed | 2     | 2/2       |
+| p05 — Capability documentation alignment    | completed | 3     | 3/3       |
+| p-rev1 — Model refresh and maintenance docs | completed | 3     | 3/3       |
 
-**Total: 14/17 tasks completed.**
+**Total: 17/17 tasks completed.**
 
 ## Task Status
 
@@ -44,9 +44,9 @@ The original fourteen tasks are complete; three September 22 revision tasks are 
 | p05-t02 | completed | `77f87981b6de7d6ac3e3b6b47c9a06cceede3f3c` |
 | p05-t03 | completed | `92143dbea5490d2d4d2991c9ebb9c380e8256ae3` |
 
-| prev1-t01 | pending | - |
-| prev1-t02 | pending | - |
-| prev1-t03 | pending | - |
+| prev1-t01 | completed | `b3631dfc9` |
+| prev1-t02 | completed | `bd90d58d2` |
+| prev1-t03 | completed | `8966287d6` |
 
 ## Orchestration Runs
 
@@ -235,9 +235,13 @@ The user approved the final HiLL closeout checkpoint after exact-head verificati
 
 ## Deviations from Plan / Design
 
+The revision worker committed three task changes before the required separate task-bookkeeping commits. Its automatic post-commit recovery could not proceed because the original launch request and exact target were not persisted in the phase ledger. Root repaired failing fixtures in `bd3035ef4` and `8c98c8df2`, then reconciled tracking here. This records the missed bookkeeping boundary without inventing a recovery attempt or dispatch provenance. The model-update documentation and current guidance are the source of truth for the refreshed catalogue. Cursor Opus 5.5 subagent mapping remains deferred pending native `subagentStart` evidence.
+
 No design artifact is required for this quick workflow. The p03 phase worker recorded release evidence in `tools/smoke/verification/` while the root workflow retained ownership of project tracking files; this preserves the execution contract without changing product behavior.
 
 ## Test Results
+
+Revision verification (September 22): focused CLI tests 475/475 and smoke 163/163; `pnpm check`, `pnpm type-check`, `pnpm test`, `pnpm build`, `pnpm run check:skill-bumps`, `pnpm release:check-versions`, `pnpm release:validate`, `pnpm build:docs`, `pnpm lint`, and `pnpm format` exited 0 in that order. `origin/main` was fetched before the origin-aware version check.
 
 Planning checks passed:
 
@@ -292,11 +296,13 @@ After phase p05 passed, the same complete sequence was rerun against the documen
 
 ## Final Summary (for PR/docs)
 
+The revision adds GPT-6 Sol and Luna to the Codex catalogue and recommendations while retaining GPT-5.6. Claude guidance and role generation use Opus 5.5 in place of Opus 5/4.8. The contributing model-update guide documents catalogue ownership, pin evidence, generation, adoption, and release checks. Cursor Opus 5.5 native subagent mapping remains deferred: CLI catalogues list flat selectors, but the successful CLI probe did not report a native subagent model pin.
+
 Claude managed dispatch now treats model and effort as separate target axes, materializes effort-pinned reviewer and implementer variants, validates the exact generated definition and launch payload through the shipped dispatch-record boundary, and records runtime divergence when environment or settings precedence changes the observed effort.
 
 The workflow guidance and bundled dispatch recommendations now teach Claude effort selection across Economy, Balanced, High, and Frontier policies. Lifecycle-gate setup prompts are scoped to the active planning workflow plus implementation, removing the repeated lite/import/plan questions from quick-start. Documentation and the superseding decision record describe adoption, compatibility, precedence, and evidence limits.
 
-Verification includes production negative controls, eleven sanitized provider-derived live observations with reproducible command recipes, full repository/release gates, and clean independent phase review. Public packages are versioned at 0.3.2. Nothing was published, installed globally, deployed, merged, or released by this implementation run.
+The original implementation verification includes production negative controls and eleven sanitized provider-derived live observations. For the revision, focused CLI tests (475/475), smoke (163/163), and the full repository check, type-check, test, build, skill bump, version, release, docs, lint, and format gates passed. The new revision review and exit gate remain pending. Nothing was published, installed globally, deployed, merged, or released by this implementation run.
 
 ## References
 

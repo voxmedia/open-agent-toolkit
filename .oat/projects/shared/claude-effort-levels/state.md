@@ -15,8 +15,8 @@ oat_phase_recovery_policy:
     p04:
       used_attempts: 0
       pending_attempt: null
-oat_current_task: prev1-t01
-oat_last_commit: a38d29225dad077ea74e24f377d794ab3c1167a7
+oat_current_task: null
+oat_last_commit: 8c98c8df2263756c751ead2efa63ef9599d1de97
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -55,7 +55,7 @@ oat_workflow_origin: native # native | imported
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
 oat_implement_exit_gate:
-  status: allowed
+  status: stale
   resolution: configured
   disposition: passed
   config_fingerprint: 'sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324'
@@ -127,22 +127,22 @@ oat_implement_exit_gate:
 #   failure: null
 #   updated_at: '2026-07-18T00:00:00Z'
 oat_post_implement_sequence:
-  status: complete
+  status: pending
   source: configured
-  final_phase: p05
+  final_phase: p-rev1
   pre_approval: [summary, document, pr]
-  pre_approval_completed: [summary, document, pr]
-  approval: approved
-  approval_source: user
+  pre_approval_completed: []
+  approval: null
+  approval_source: null
   post_approval: []
   post_approval_completed: []
   failure: null
-oat_docs_updated: complete # null | skipped | complete — documentation sync status
+oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/315' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-20T19:40:55.054Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-22T23:56:59Z'
+oat_project_state_updated: '2026-09-23T00:46:25Z'
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -152,23 +152,24 @@ oat_project_recap:
 
 # Project State: claude-effort-levels
 
-**Status:** Implementation complete; PR open
+**Status:** Revision tasks complete; review pending; PR open
 **Started:** 2026-09-20
-**Last Updated:** 2026-09-21
+**Last Updated:** 2026-09-22
 
 ## Current Phase
 
-Implementation complete — PR #315 is open for review and remains unmerged.
+The three revision tasks are complete. The revision phase and final review and configured exit gate are pending; PR #315 remains open and unmerged.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` — validated and complete.
 - **Spec / Design:** not required in this quick workflow.
-- **Plan:** `plan.md` — 5 sequential phases, 14 tasks; final review finding H1 is p05-t03.
-- **Implementation:** `implementation.md` — 14/14 planned tasks complete; final lifecycle review and configured exit gate passed.
+- **Plan:** `plan.md` — 5 original phases and the three-task p-rev1 model refresh.
+- **Implementation:** `implementation.md` — 17/17 planned tasks complete; new revision reviews pending.
 
 ## Progress
 
+- The p-rev1 model catalogue, recommendation, and maintenance-documentation tasks are implemented at `8966287d6`, with fixture repairs through `8c98c8df2`. Full local repository gates passed. The older review and exit-gate receipts below apply to the pre-revision head and require fresh review for this revision.
 - Discovery and the five-phase, fourteen-task plan are complete.
 - Claude model/effort resolution, exact role materialization, provider-aware guidance, bundled ladder recommendations, and active-workflow gate prompting are implemented.
 - All 14 tasks across p01-p05 passed bounded independent review.
@@ -178,7 +179,7 @@ Implementation complete — PR #315 is open for review and remains unmerged.
 - Current-head CI caught and verified the mechanical autonomy-inventory companion update; the focused inventory suite and complete `pnpm test` command passed.
 - Summary, documentation, and PR closeout steps completed in configured order.
 - The user approved final implementation closeout.
-- ✓ PR #315 is open, mergeable, and green at the approved head.
+- The previous PR head was green; new-head CI remains pending.
 
 ## Blockers
 
@@ -186,8 +187,6 @@ None.
 
 ## Next Milestone
 
-PR is open for review.
+Review p-rev1, run the fresh final review and configured exit gate, then update PR #315.
 
-- To incorporate feedback: run `oat-project-revise`
-- Complete before merge: run `oat-project-complete` now, then merge the PR.
-- Merge before completion: merge the PR, then run `oat-project-complete`.
+- After the new closeout passes, refresh PR #315 and assess merge readiness.

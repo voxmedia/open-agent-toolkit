@@ -359,7 +359,7 @@ Source: inline feedback (2026-09-22). Keep GPT-5.6 available while adding GPT-6 
 
 ## Implementation Complete
 
-All fourteen planned tasks are implemented. Task p05-t03 corrected exact managed-Uncapped Claude effort selection; fresh final verification, lifecycle review, and the configured exit gate follow it. PR #315 remains open.
+All seventeen planned tasks are implemented. The original fourteen-task implementation passed its prior closeout; the three model-refresh tasks are complete and await revision review and a fresh configured exit gate. PR #315 remains open.
 
 - Phase 1: 2 tasks — resolver and generated-role lifecycle.
 - Phase 2: 4 tasks — awareness, recommendations, documentation/decision alignment, and relevant lifecycle-gate prompts.
@@ -367,7 +367,7 @@ All fourteen planned tasks are implemented. Task p05-t03 corrected exact managed
 - Phase 4: 2 tasks — version-aware Claude effort validation and provider-registry guidance.
 - Phase 5: 3 tasks — align shipped guidance with the fail-closed capability contract and correct the uncapped Claude effort selection path.
 
-**Total: 17 tasks; 14 implemented; 3 revision tasks pending.**
+**Total: 17 tasks; 17 implemented; revision review pending.**
 
 ## References
 
