@@ -3147,7 +3147,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-plan-writing/SKILL.md',
     );
 
-    expect(readDeclaredVersion(shared)).toBe('1.2.28');
+    expect(readDeclaredVersion(shared)).toBe('1.2.29');
     expect(shared).toContain(
       '${WORKFLOWS_AGENT_PROVIDER_ROOT}/agents/oat-reviewer.md',
     );
@@ -3192,7 +3192,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-plan-writing/SKILL.md',
     );
 
-    expect(readDeclaredVersion(shared)).toBe('1.2.28');
+    expect(readDeclaredVersion(shared)).toBe('1.2.29');
     expect(shared).toMatch(/Planning-Time Artifact Formatting Contract/);
     expect(shared).toMatch(
       /applicable[\s\S]{0,120}`AGENTS\.md`[\s\S]{0,40}`CLAUDE\.md`[\s\S]{0,160}relevant package\s+manifests/i,
@@ -3334,7 +3334,7 @@ describe('validateOatSkills', () => {
     expect(adoptionContract).toMatch(
       /when adoption is required[\s\S]{0,200}bundled recommendation/i,
     );
-    expect(readDeclaredVersion(shared)).toBe('1.2.28');
+    expect(readDeclaredVersion(shared)).toBe('1.2.29');
   });
 
   it('auto-selects an existing dispatch-ladder scope only under explicit autonomy', async () => {
@@ -4793,6 +4793,12 @@ describe('validateOatSkills', () => {
       expect(planWriting).toContain(rendered);
     }
     for (const tier of ['economy', 'balanced', 'high', 'frontier']) {
+      const rendered = recommendation.providers.codex[tier].candidates
+        .map(renderCandidate)
+        .join(', ');
+      expect(planWriting).toContain(rendered);
+    }
+    for (const tier of ['economy', 'balanced', 'high', 'frontier']) {
       const rendered = recommendation.providers.cursor[tier].candidates
         .map((candidate: string) => `\`${candidate}\``)
         .join(', ');
@@ -4887,7 +4893,7 @@ describe('validateOatSkills', () => {
 
   it('defines append-ordered monotonic review events across lifecycle skills', async () => {
     const expectedVersions = [
-      ['oat-project-plan-writing', '1.2.28'],
+      ['oat-project-plan-writing', '1.2.29'],
       ['oat-project-review-provide', '1.5.10'],
       ['oat-project-review-receive', '1.6.7'],
       ['oat-project-review-receive-remote', '1.5.3'],
@@ -6222,7 +6228,7 @@ describe('validateOatSkills', () => {
 
   it('tracks the p04 planning skill contract versions', async () => {
     const expectedVersions = [
-      ['oat-project-plan-writing', '1.2.28'],
+      ['oat-project-plan-writing', '1.2.29'],
       ['oat-project-plan', '1.4.14'],
       ['oat-project-quick-start', '2.3.15'],
       ['oat-project-import-plan', '1.4.17'],
