@@ -85,9 +85,15 @@ export const CURSOR_MODEL_PIN_MAPPINGS = [
         resolvedModel: 'claude-sonnet-5-thinking-high',
         verifiedAt: '2026-09-23',
         evidencePath:
-          '.oat/projects/shared/claude-effort-levels/references/opus55-cursor-pin-probe.md',
+          'packages/cli/src/providers/cursor/codec/__fixtures__/README.md',
       },
     },
+  ),
+  approvedMapping(
+    'claude-sonnet-5-high',
+    'claude-sonnet-5[effort=high]',
+    'claude-effort',
+    { catalogue: false },
   ),
   approvedMapping(
     'claude-opus-5-5-low',
@@ -100,7 +106,7 @@ export const CURSOR_MODEL_PIN_MAPPINGS = [
         resolvedModel: 'claude-opus-5-5-low',
         verifiedAt: '2026-09-23',
         evidencePath:
-          '.oat/projects/shared/claude-effort-levels/references/opus55-cursor-pin-probe.md',
+          'packages/cli/src/providers/cursor/codec/__fixtures__/README.md',
       },
     },
   ),
@@ -115,7 +121,7 @@ export const CURSOR_MODEL_PIN_MAPPINGS = [
         resolvedModel: 'claude-opus-5-5-medium',
         verifiedAt: '2026-09-23',
         evidencePath:
-          '.oat/projects/shared/claude-effort-levels/references/opus55-cursor-pin-probe.md',
+          'packages/cli/src/providers/cursor/codec/__fixtures__/README.md',
       },
     },
   ),
@@ -130,7 +136,7 @@ export const CURSOR_MODEL_PIN_MAPPINGS = [
         resolvedModel: 'claude-opus-5-5-high',
         verifiedAt: '2026-09-23',
         evidencePath:
-          '.oat/projects/shared/claude-effort-levels/references/opus55-cursor-pin-probe.md',
+          'packages/cli/src/providers/cursor/codec/__fixtures__/README.md',
       },
     },
   ),
@@ -145,7 +151,7 @@ export const CURSOR_MODEL_PIN_MAPPINGS = [
         resolvedModel: 'claude-opus-5-5-xhigh',
         verifiedAt: '2026-09-23',
         evidencePath:
-          '.oat/projects/shared/claude-effort-levels/references/opus55-cursor-pin-probe.md',
+          'packages/cli/src/providers/cursor/codec/__fixtures__/README.md',
       },
     },
   ),
@@ -160,7 +166,7 @@ export const CURSOR_MODEL_PIN_MAPPINGS = [
         resolvedModel: 'claude-opus-5-5-max',
         verifiedAt: '2026-09-23',
         evidencePath:
-          '.oat/projects/shared/claude-effort-levels/references/opus55-cursor-pin-probe.md',
+          'packages/cli/src/providers/cursor/codec/__fixtures__/README.md',
       },
     },
   ),

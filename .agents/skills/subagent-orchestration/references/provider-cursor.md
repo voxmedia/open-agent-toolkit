@@ -47,7 +47,7 @@ does not by itself prove lower user-observed elapsed time.
 Use currently approved exact aliases from the Cursor catalogue. On 2026-09-23,
 Cursor desktop 3.20.14 resolved all five `claude-opus-5-5[effort=...]`
 selectors to corresponding flat IDs in native hooks. See the
-probe record at `.oat/projects/shared/claude-effort-levels/references/opus55-cursor-pin-probe.md`.
+probe record at `packages/cli/src/providers/cursor/codec/__fixtures__/README.md`.
 GPT-6 Sol/Luna were absent from the observed Cursor catalogue, so their Codex
 availability does not authorize Cursor routes.
 
@@ -67,7 +67,7 @@ Both the `subagentStart.subagent_model` and the subagent Shell `preToolUse.model
 agreed for every rung. The Sonnet 5 high positive control resolved to
 `claude-sonnet-5-thinking-high`. An unknown family fell back to
 `cursor-grok-4.6-high-fast`; an unknown effort on Opus 5.5 fell back to
-`claude-opus-5-5-medium`. The redacted native probe record at `.oat/projects/shared/claude-effort-levels/references/opus55-cursor-pin-probe.md`
+`claude-opus-5-5-medium`. The redacted native probe record at `packages/cli/src/providers/cursor/codec/__fixtures__/README.md`
 contains the exact observations. Recheck live availability before launch.
 
 ## Historical Opus Cursor Probe Evidence (Retired)

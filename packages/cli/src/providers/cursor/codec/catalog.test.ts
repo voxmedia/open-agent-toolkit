@@ -13,6 +13,7 @@ const APPROVED_G01_MAPPINGS = [
   ['composer-2.5', 'composer-2.5[fast=true]'],
   ['composer-2.5-fast', 'composer-2.5[fast=true]'],
   ['claude-sonnet-5-thinking-high', 'claude-sonnet-5[effort=high]'],
+  ['claude-sonnet-5-high', 'claude-sonnet-5[effort=high]'],
   ['claude-opus-5-5-low', 'claude-opus-5-5[effort=low]'],
   ['claude-opus-5-5-medium', 'claude-opus-5-5[effort=medium]'],
   ['claude-opus-5-5-high', 'claude-opus-5-5[effort=high]'],
@@ -94,10 +95,8 @@ describe('cursor model pin catalogue', () => {
   });
 
   it('matches the Opus 5.5 mappings to the captured native desktop observations', () => {
-    const evidencePath =
-      '.oat/projects/shared/claude-effort-levels/references/opus55-cursor-pin-probe.jsonl';
     const records = readFileSync(
-      join(process.cwd(), '..', '..', evidencePath),
+      new URL('./__fixtures__/opus55-cursor-pin-probe.jsonl', import.meta.url),
       'utf8',
     )
       .trim()
@@ -116,11 +115,9 @@ describe('cursor model pin catalogue', () => {
       );
     expect(records).toHaveLength(8);
     const nativeEvents = readFileSync(
-      join(
-        process.cwd(),
-        '..',
-        '..',
-        '.oat/projects/shared/claude-effort-levels/references/opus55-cursor-pin-probe-events.jsonl',
+      new URL(
+        './__fixtures__/opus55-cursor-pin-probe-events.jsonl',
+        import.meta.url,
       ),
       'utf8',
     )
@@ -206,6 +203,11 @@ describe('cursor model pin catalogue', () => {
       SUPPORTED_CURSOR_ROLE_TARGETS.map(({ ladderModelId }) => ladderModelId),
     );
 
+    expect(supported).not.toContain('claude-sonnet-5-high');
+    expect(findCursorModelPinMapping('claude-sonnet-5-high')).toMatchObject({
+      frontmatterModel: 'claude-sonnet-5[effort=high]',
+      catalogue: false,
+    });
     expect(supported).not.toContain('composer-2.5-fast');
     expect(supported).not.toContain('cursor-grok-4.5-high-fast');
     expect(supported).not.toContain('claude-fable-5-xhigh');

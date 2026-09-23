@@ -422,10 +422,10 @@ describe('Claude effort materializer', () => {
     });
     const cursor = buildCursorMaterializedRoleName({
       agentName: agent.name,
-      ladderModelId: 'claude-sonnet-5-high',
+      ladderModelId: 'claude-sonnet-5-thinking-high',
     });
     expect(claude.roleName).toBe('oat-reviewer-claude-claude-opus-5-5-high');
-    expect(cursor).toBe('oat-reviewer-claude-sonnet-5-high');
+    expect(cursor).toBe('oat-reviewer-claude-sonnet-5-thinking-high');
     expect(cursor).not.toBe(claude.roleName);
 
     expect(() =>

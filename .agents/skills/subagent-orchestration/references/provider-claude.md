@@ -1,6 +1,6 @@
 ---
-guidance_version: 2026-09-22
-last_verified: 2026-09-22
+guidance_version: 2026-09-23
+last_verified: 2026-09-23
 review_after: 2026-12-22
 ---
 
@@ -20,7 +20,7 @@ the dated model examples below. Launch mechanics for OAT dispatch live in
 - `claude-sonnet-5`: conditional route when measured latency, throughput,
   access, rate limits, or established-workflow economics beat the relevant
   Opus route.
-- `claude-fable-5`: eligibility-gated specialist for a directly relevant
+- `claude-fable-5-1`: eligibility-gated specialist for a directly relevant
   failure mode, not a universal escalation above Opus.
 
 Claude Mythos 5 is invitation-only and intended for approved defensive cyber
@@ -47,7 +47,7 @@ host.
 - Sonnet 5: use medium or high only when measured latency, throughput, access,
   or workload economics justify the conditional route. Do not preserve xhigh
   or max as generic workhorse settings.
-- Fable 5: use high or xhigh only for a qualified specialist case. Max is
+- Fable 5.1: use high or xhigh only for a qualified specialist case. Max is
   exceptional; medium or low are not routine economy substitutes for Opus.
 - Haiku 4.5 does not expose the same adaptive-effort surface. Use only controls
   present in the live schema.
@@ -111,7 +111,7 @@ standing. The non-Opus constraints are dated observations; reverify against the 
 schema and the organization's actual plan before launch. Do not transfer Opus 5
 service-tier or retention claims to Opus 5.5 without fresh evidence.
 
-| Constraint          | Opus 5.5      | Sonnet 5      | Fable 5                    | Haiku 4.5     |
+| Constraint          | Opus 5.5      | Sonnet 5      | Fable 5.1                  | Haiku 4.5     |
 | ------------------- | ------------- | ------------- | -------------------------- | ------------- |
 | Zero data retention | verify live   | eligible      | **unavailable**, needs 30d | eligible      |
 | Priority Tier       | verify live   | not supported | supported                  | verify live   |
