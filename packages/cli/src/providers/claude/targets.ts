@@ -11,9 +11,8 @@ export const CLAUDE_EFFORT_ORDER = [
 const CLAUDE_GENERATION_EFFORTS = {
   'fable-5-1': CLAUDE_EFFORT_ORDER,
   'fable-5': CLAUDE_EFFORT_ORDER,
-  'opus-5': CLAUDE_EFFORT_ORDER,
+  'opus-5-5': CLAUDE_EFFORT_ORDER,
   'sonnet-5': CLAUDE_EFFORT_ORDER,
-  'opus-4-8': CLAUDE_EFFORT_ORDER,
   'opus-4-7': CLAUDE_EFFORT_ORDER,
   'opus-4-6': ['low', 'medium', 'high', 'max'],
   'sonnet-4-6': ['low', 'medium', 'high', 'max'],

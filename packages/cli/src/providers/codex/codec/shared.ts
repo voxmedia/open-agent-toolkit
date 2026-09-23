@@ -30,6 +30,14 @@ const STANDARD_SUPPORTED_CODEX_EFFORTS = [
 ] as const;
 
 export const SUPPORTED_CODEX_ROLE_TARGETS = [
+  ...[...STANDARD_SUPPORTED_CODEX_EFFORTS, 'max'].map((effort) => ({
+    model: 'gpt-6-luna',
+    effort,
+  })),
+  ...[...STANDARD_SUPPORTED_CODEX_EFFORTS, 'max', 'ultra'].map((effort) => ({
+    model: 'gpt-6-sol',
+    effort,
+  })),
   ...STANDARD_SUPPORTED_CODEX_EFFORTS.map((effort) => ({
     model: 'gpt-5.6-luna',
     effort,

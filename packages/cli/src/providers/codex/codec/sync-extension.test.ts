@@ -336,7 +336,7 @@ describe('codex sync extension', () => {
     expect(plan.managedRoles).toEqual(
       expect.arrayContaining(['oat-phase-implementer', roleName]),
     );
-    expect(plan.managedRoles).toHaveLength(14);
+    expect(plan.managedRoles).toHaveLength(25);
 
     const applyResult = await applyCodexProjectExtensionPlan(root, plan);
     expect(applyResult.failed).toBe(0);
@@ -430,7 +430,7 @@ describe('codex sync extension', () => {
           ?.content,
       ).toContain('# oat-owner: project-config');
     }
-    expect(first.managedRoles).toHaveLength(32);
+    expect(first.managedRoles).toHaveLength(54);
 
     const applied = await applyCodexProjectExtensionPlan(root, first);
     expect(applied.failed).toBe(0);
@@ -504,7 +504,7 @@ describe('codex sync extension', () => {
         'oat-reviewer-gpt-5-6-luna-high',
       ]),
     );
-    expect(plan.managedRoles).toHaveLength(14);
+    expect(plan.managedRoles).toHaveLength(25);
   });
 
   it('generates materialized codex roles from active project state matrix targets', async () => {
@@ -585,7 +585,7 @@ describe('codex sync extension', () => {
     expect(plan.managedRoles).toEqual(
       expect.arrayContaining(['oat-phase-implementer', ...stateRoles]),
     );
-    expect(plan.managedRoles).toHaveLength(17);
+    expect(plan.managedRoles).toHaveLength(28);
     expect(
       plan.operations.some((operation) =>
         operation.roleName?.includes('claude-sonnet'),
@@ -846,7 +846,7 @@ describe('codex sync extension', () => {
     expect(plan.managedRoles).toEqual(
       expect.arrayContaining(['oat-reviewer', roleName]),
     );
-    expect(plan.managedRoles).toHaveLength(14);
+    expect(plan.managedRoles).toHaveLength(25);
 
     const applyResult = await applyCodexProjectExtensionPlan(root, plan);
     expect(applyResult.failed).toBe(0);
@@ -1035,8 +1035,8 @@ describe('codex sync extension', () => {
         role.startsWith('oat-reviewer-gpt-'),
     );
 
-    expect(pinnedRoles).toHaveLength(26);
-    expect(new Set(pinnedRoles)).toHaveLength(26);
+    expect(pinnedRoles).toHaveLength(48);
+    expect(new Set(pinnedRoles)).toHaveLength(48);
     expect(pinnedRoles).toContain('oat-phase-implementer-gpt-5-6-sol-max');
     expect(pinnedRoles).toContain('oat-reviewer-gpt-5-6-sol-max');
 

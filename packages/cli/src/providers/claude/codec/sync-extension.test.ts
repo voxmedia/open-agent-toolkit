@@ -55,13 +55,13 @@ describe('Claude effort sync extension', () => {
     await mkdir(join(root, '.oat'), { recursive: true });
     await writeFile(
       join(root, '.oat', 'config.json'),
-      config([{ harness: 'claude', model: 'claude-opus-5', effort: 'high' }]),
+      config([{ harness: 'claude', model: 'claude-opus-5-5', effort: 'high' }]),
     );
 
     const first = await computeClaudeProjectExtensionPlan(root, entries);
     expect(first.managedEntries).toEqual([
-      'oat-phase-implementer-claude-claude-opus-5-high',
-      'oat-reviewer-claude-claude-opus-5-high',
+      'oat-phase-implementer-claude-claude-opus-5-5-high',
+      'oat-reviewer-claude-claude-opus-5-5-high',
     ]);
     expect(first.operations.every(({ action }) => action === 'create')).toBe(
       true,
@@ -72,7 +72,7 @@ describe('Claude effort sync extension', () => {
           root,
           '.claude',
           'agents',
-          'oat-reviewer-claude-claude-opus-5-high.md',
+          'oat-reviewer-claude-claude-opus-5-5-high.md',
         ),
         'utf8',
       ),
@@ -163,7 +163,7 @@ describe('Claude effort sync extension', () => {
       join(root, '.oat', 'config.json'),
       config([{ harness: 'claude', model: 'opus', effort: 'high' }]),
     );
-    const pin = 'us.anthropic.claude-opus-5-v1:0';
+    const pin = 'us.anthropic.claude-opus-5-5-v1:0';
     const first = await computeClaudeProjectExtensionPlan(
       root,
       entries,
@@ -184,7 +184,7 @@ describe('Claude effort sync extension', () => {
       'oat-reviewer-claude-opus-high.md',
     );
     const before = await readFile(rolePath, 'utf8');
-    expect(before).toContain('"generation":"opus-5"');
+    expect(before).toContain('"generation":"opus-5-5"');
     expect(before).toContain('"supportedEfforts":["low","medium","high"]');
 
     const changed = await computeClaudeProjectExtensionPlan(
@@ -220,7 +220,7 @@ describe('Claude effort sync extension', () => {
     await mkdir(join(root, '.oat'), { recursive: true });
     await writeFile(
       join(root, '.oat', 'config.json'),
-      config([{ harness: 'claude', model: 'claude-opus-5', effort: 'high' }]),
+      config([{ harness: 'claude', model: 'claude-opus-5-5', effort: 'high' }]),
     );
     const initial = await computeClaudeProjectExtensionPlan(root, entries);
     await applyClaudeProjectExtensionPlan(root, initial);
@@ -234,7 +234,7 @@ describe('Claude effort sync extension', () => {
     expect(plan.operations).toEqual([
       expect.objectContaining({
         action: 'remove',
-        roleName: 'oat-reviewer-claude-claude-opus-5-high',
+        roleName: 'oat-reviewer-claude-claude-opus-5-5-high',
       }),
     ]);
     await expect(
@@ -246,18 +246,18 @@ describe('Claude effort sync extension', () => {
           root,
           '.claude',
           'agents',
-          'oat-phase-implementer-claude-claude-opus-5-high.md',
+          'oat-phase-implementer-claude-claude-opus-5-5-high.md',
         ),
         'utf8',
       ),
-    ).resolves.toContain('oat-phase-implementer-claude-claude-opus-5-high');
+    ).resolves.toContain('oat-phase-implementer-claude-claude-opus-5-5-high');
     await expect(
       readFile(
         join(
           root,
           '.claude',
           'agents',
-          'oat-reviewer-claude-claude-opus-5-high.md',
+          'oat-reviewer-claude-claude-opus-5-5-high.md',
         ),
         'utf8',
       ),
@@ -307,11 +307,11 @@ describe('Claude effort sync extension', () => {
     await mkdir(join(root, '.oat'), { recursive: true });
     await writeFile(
       join(root, '.oat', 'config.json'),
-      config([{ harness: 'claude', model: 'claude-opus-5', effort: 'high' }]),
+      config([{ harness: 'claude', model: 'claude-opus-5-5', effort: 'high' }]),
     );
     const path = join(root, '.claude', 'agents');
     await mkdir(path, { recursive: true });
-    const collision = join(path, 'oat-reviewer-claude-claude-opus-5-high.md');
+    const collision = join(path, 'oat-reviewer-claude-claude-opus-5-5-high.md');
     await writeFile(
       collision,
       '---\nname: unmanaged\ndescription: keep\n---\n',

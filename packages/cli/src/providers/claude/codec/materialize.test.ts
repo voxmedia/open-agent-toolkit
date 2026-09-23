@@ -29,36 +29,36 @@ describe('Claude effort materializer', () => {
     const role = materializeClaudeAgent({
       agent,
       target: {
-        model: 'claude-opus-5',
+        model: 'claude-opus-5-5',
         effort: 'high',
         owner: 'project-config',
       },
     });
     const match = /^---\n([\s\S]*?)\n---\n?/.exec(role.content)!;
     const parsed = YAML.parse(match[1]!) as Record<string, unknown>;
-    expect(role.roleName).toBe('oat-reviewer-claude-claude-opus-5-high');
+    expect(role.roleName).toBe('oat-reviewer-claude-claude-opus-5-5-high');
     expect(parsed).toMatchObject({
       name: role.roleName,
-      model: 'claude-opus-5',
+      model: 'claude-opus-5-5',
       effort: 'high',
       tools: 'Read',
     });
     expect(parsed.description).toContain(
-      'Claude-native claude-opus-5/high effort variant',
+      'Claude-native claude-opus-5-5/high effort variant',
     );
     expect(parsed).not.toHaveProperty('version');
     expect(role.content.slice(match[0].length)).toBe(agent.body);
     expect(role.target.capabilityEvidence).toMatchObject({
       source: 'explicit-model-id',
       exactModel: true,
-      generation: 'opus-5',
+      generation: 'opus-5-5',
     });
     expect(role.content).toContain('# oat-capability-evidence:');
   });
 
   it.each([
     ['claude-sonnet-5', 'xhigh', 'sonnet-5'],
-    ['claude-opus-5', 'low', 'opus-5'],
+    ['claude-opus-5-5', 'low', 'opus-5-5'],
     ['claude-fable-5-1', 'low', 'fable-5-1'],
     ['claude-fable-5', 'medium', 'fable-5'],
   ])(
@@ -101,6 +101,20 @@ describe('Claude effort materializer', () => {
         env: { ANTHROPIC_BASE_URL: 'https://gateway.example.test' },
       }),
     ).toThrow(/availableModels.*organization policy/iu);
+  });
+
+  it('does not attribute retired Opus generations to the new capability', () => {
+    const agent = parseCanonicalAgentMarkdown(
+      '---\nname: oat-reviewer\ndescription: Review changes.\n---\n\nBody',
+    );
+    for (const model of ['claude-opus-5', 'claude-opus-4-8']) {
+      expect(() =>
+        materializeClaudeAgent({
+          agent,
+          target: { model, effort: 'high', owner: 'project-config' },
+        }),
+      ).toThrow(/establish a documented Claude effort capability/iu);
+    }
   });
 
   it('honors host-managed precedence and requires Mantle alias pins', () => {
@@ -177,7 +191,7 @@ describe('Claude effort materializer', () => {
 
     for (const model of [
       'claude-sonnet-5',
-      'claude-opus-5',
+      'claude-opus-5-5',
       'claude-fable-5-1',
     ]) {
       expect(
@@ -255,7 +269,7 @@ describe('Claude effort materializer', () => {
       );
       const env = {
         CLAUDE_CODE_USE_BEDROCK: '1',
-        ANTHROPIC_DEFAULT_OPUS_MODEL: 'us.anthropic.claude-opus-5-v1:0',
+        ANTHROPIC_DEFAULT_OPUS_MODEL: 'us.anthropic.claude-opus-5-5-v1:0',
         ANTHROPIC_DEFAULT_OPUS_MODEL_SUPPORTED_CAPABILITIES: declaration,
       };
       const role = materializeClaudeAgent({
@@ -265,9 +279,9 @@ describe('Claude effort materializer', () => {
       });
       expect(role.target.capabilityEvidence).toEqual({
         source: 'family-pin-declaration',
-        modelReference: 'us.anthropic.claude-opus-5-v1:0',
+        modelReference: 'us.anthropic.claude-opus-5-5-v1:0',
         exactModel: false,
-        generation: 'opus-5',
+        generation: 'opus-5-5',
         capabilitiesSource:
           'ANTHROPIC_DEFAULT_OPUS_MODEL_SUPPORTED_CAPABILITIES',
         supportedEfforts: [...supportedEfforts],
@@ -363,7 +377,7 @@ describe('Claude effort materializer', () => {
   it('refuses unmanaged cross-directory collisions', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-claude-collision-'));
     roots.push(root);
-    const role = 'oat-reviewer-claude-claude-opus-5-high';
+    const role = 'oat-reviewer-claude-claude-opus-5-5-high';
     await mkdir(join(root, '.cursor', 'agents'), { recursive: true });
     await writeFile(
       join(root, '.cursor', 'agents', `${role}.md`),
@@ -377,14 +391,14 @@ describe('Claude effort materializer', () => {
   it('refuses normalized Codex TOML role collisions', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-claude-collision-'));
     roots.push(root);
-    const role = 'oat-reviewer-claude-claude-opus-5-high';
+    const role = 'oat-reviewer-claude-claude-opus-5-5-high';
     await mkdir(join(root, '.codex', 'agents'), { recursive: true });
     await writeFile(
       join(
         root,
         '.codex',
         'agents',
-        'OAT_Reviewer-Claude-Claude-Opus-5-High.toml',
+        'OAT_Reviewer-Claude-Claude-Opus-5-5-High.toml',
       ),
       'name = "unmanaged-collision"\n',
     );
@@ -401,17 +415,17 @@ describe('Claude effort materializer', () => {
     const claude = materializeClaudeAgent({
       agent,
       target: {
-        model: 'claude-opus-5',
+        model: 'claude-opus-5-5',
         effort: 'high',
         owner: 'project-config',
       },
     });
     const cursor = buildCursorMaterializedRoleName({
       agentName: agent.name,
-      ladderModelId: 'claude-opus-5-thinking-high',
+      ladderModelId: 'claude-sonnet-5-high',
     });
-    expect(claude.roleName).toBe('oat-reviewer-claude-claude-opus-5-high');
-    expect(cursor).toBe('oat-reviewer-claude-opus-5-thinking-high');
+    expect(claude.roleName).toBe('oat-reviewer-claude-claude-opus-5-5-high');
+    expect(cursor).toBe('oat-reviewer-claude-sonnet-5-high');
     expect(cursor).not.toBe(claude.roleName);
 
     expect(() =>
@@ -419,7 +433,7 @@ describe('Claude effort materializer', () => {
         agents: [agent, { ...agent, name: 'oat_reviewer' }],
         targets: [
           {
-            model: 'claude-opus-5',
+            model: 'claude-opus-5-5',
             effort: 'high',
             owner: 'project-config',
           },

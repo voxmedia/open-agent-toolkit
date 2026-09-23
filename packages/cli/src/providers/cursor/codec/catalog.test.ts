@@ -23,12 +23,6 @@ const APPROVED_G01_MAPPINGS = [
   ['claude-fable-5-thinking-high', 'claude-fable-5[effort=high]'],
   ['claude-fable-5-thinking-xhigh', 'claude-fable-5[effort=xhigh]'],
   ['claude-fable-5-xhigh', 'claude-fable-5[effort=xhigh]'],
-  ['claude-opus-5-thinking-low', 'claude-opus-5[effort=low]'],
-  ['claude-opus-5-thinking-medium', 'claude-opus-5[effort=medium]'],
-  ['claude-opus-5-thinking-high', 'claude-opus-5[effort=high]'],
-  ['claude-opus-5-thinking-xhigh', 'claude-opus-5[effort=xhigh]'],
-  ['claude-opus-5-thinking-max', 'claude-opus-5[effort=max]'],
-  ['claude-opus-4-8-thinking-xhigh', 'claude-opus-4-8[effort=xhigh]'],
   ['gpt-5.6-sol-xhigh', 'gpt-5.6-sol[reasoning=xhigh]'],
   ['gpt-5.6-sol-max', 'gpt-5.6-sol[reasoning=max]'],
 ] as const;
@@ -71,12 +65,19 @@ describe('cursor model pin catalogue', () => {
     }
   });
 
-  it('carries a probe record for every mapping approved by the 2026-07-25 probe', () => {
+  it('does not recycle historical Opus pin evidence for the new generation', () => {
     const probed = CURSOR_MODEL_PIN_MAPPINGS.filter(({ gateEvidence }) =>
       gateEvidence.probeName.startsWith('zz-pin-probe-'),
     );
 
-    expect(probed).toHaveLength(6);
+    expect(probed).toHaveLength(0);
+    expect(findCursorModelPinMapping('claude-opus-5-5-high')).toBeUndefined();
+    expect(
+      findCursorModelPinMapping('claude-opus-5-thinking-high'),
+    ).toBeUndefined();
+    expect(
+      findCursorModelPinMapping('claude-opus-4-8-thinking-xhigh'),
+    ).toBeUndefined();
     for (const mapping of probed) {
       expect(mapping.gateEvidence.probeRecord).toBeDefined();
     }
@@ -90,7 +91,7 @@ describe('cursor model pin catalogue', () => {
     expect(supported).not.toContain('composer-2.5-fast');
     expect(supported).not.toContain('cursor-grok-4.5-high-fast');
     expect(supported).not.toContain('claude-fable-5-xhigh');
-    expect(SUPPORTED_CURSOR_ROLE_TARGETS).toHaveLength(18);
+    expect(SUPPORTED_CURSOR_ROLE_TARGETS).toHaveLength(12);
   });
 
   it('materializes every Cursor candidate in the bundled recommendation', () => {

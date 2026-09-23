@@ -15,9 +15,8 @@ import {
 const generationSchema = z.enum([
   'fable-5-1',
   'fable-5',
-  'opus-5',
+  'opus-5-5',
   'sonnet-5',
-  'opus-4-8',
   'opus-4-7',
   'opus-4-6',
   'sonnet-4-6',
