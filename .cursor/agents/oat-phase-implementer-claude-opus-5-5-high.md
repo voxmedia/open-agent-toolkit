@@ -1,12 +1,12 @@
 ---
 # oat-managed: true
-# oat-role: oat-phase-implementer-claude-sonnet-5-high
+# oat-role: oat-phase-implementer-claude-opus-5-5-high
 # oat-owner: supported-catalogue
-name: oat-phase-implementer-claude-sonnet-5-high
+name: oat-phase-implementer-claude-opus-5-5-high
 description: Implements one plan phase end-to-end, commits each task separately,
   self-checks between tasks, and handles bounded review fixes when resumed by
   oat-project-implement.
-model: claude-sonnet-5[effort=high]
+model: claude-opus-5-5[effort=high]
 ---
 
 ## Role

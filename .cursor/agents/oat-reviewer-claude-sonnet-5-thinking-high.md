@@ -1,8 +1,8 @@
 ---
 # oat-managed: true
-# oat-role: oat-reviewer-claude-sonnet-5-high
+# oat-role: oat-reviewer-claude-sonnet-5-thinking-high
 # oat-owner: supported-catalogue
-name: oat-reviewer-claude-sonnet-5-high
+name: oat-reviewer-claude-sonnet-5-thinking-high
 description: Unified reviewer for OAT projects - mode-aware verification of
   requirements/design alignment and code quality. Writes a review artifact to
   disk by default, or returns structured findings in-memory when dispatched in

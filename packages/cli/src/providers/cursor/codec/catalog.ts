@@ -75,9 +75,94 @@ export const CURSOR_MODEL_PIN_MAPPINGS = [
     { catalogue: false },
   ),
   approvedMapping(
-    'claude-sonnet-5-high',
+    'claude-sonnet-5-thinking-high',
     'claude-sonnet-5[effort=high]',
     'claude-effort',
+    {
+      probeName: 'zz-pin-probe-sonnet5-high',
+      probeRecord: {
+        submittedSelector: 'claude-sonnet-5[effort=high]',
+        resolvedModel: 'claude-sonnet-5-thinking-high',
+        verifiedAt: '2026-09-23',
+        evidencePath:
+          '.oat/projects/shared/claude-effort-levels/references/opus55-cursor-pin-probe.md',
+      },
+    },
+  ),
+  approvedMapping(
+    'claude-opus-5-5-low',
+    'claude-opus-5-5[effort=low]',
+    'claude-effort',
+    {
+      probeName: 'zz-pin-probe-opus55-low',
+      probeRecord: {
+        submittedSelector: 'claude-opus-5-5[effort=low]',
+        resolvedModel: 'claude-opus-5-5-low',
+        verifiedAt: '2026-09-23',
+        evidencePath:
+          '.oat/projects/shared/claude-effort-levels/references/opus55-cursor-pin-probe.md',
+      },
+    },
+  ),
+  approvedMapping(
+    'claude-opus-5-5-medium',
+    'claude-opus-5-5[effort=medium]',
+    'claude-effort',
+    {
+      probeName: 'zz-pin-probe-opus55-medium',
+      probeRecord: {
+        submittedSelector: 'claude-opus-5-5[effort=medium]',
+        resolvedModel: 'claude-opus-5-5-medium',
+        verifiedAt: '2026-09-23',
+        evidencePath:
+          '.oat/projects/shared/claude-effort-levels/references/opus55-cursor-pin-probe.md',
+      },
+    },
+  ),
+  approvedMapping(
+    'claude-opus-5-5-high',
+    'claude-opus-5-5[effort=high]',
+    'claude-effort',
+    {
+      probeName: 'zz-pin-probe-opus55-high',
+      probeRecord: {
+        submittedSelector: 'claude-opus-5-5[effort=high]',
+        resolvedModel: 'claude-opus-5-5-high',
+        verifiedAt: '2026-09-23',
+        evidencePath:
+          '.oat/projects/shared/claude-effort-levels/references/opus55-cursor-pin-probe.md',
+      },
+    },
+  ),
+  approvedMapping(
+    'claude-opus-5-5-xhigh',
+    'claude-opus-5-5[effort=xhigh]',
+    'claude-effort',
+    {
+      probeName: 'zz-pin-probe-opus55-xhigh',
+      probeRecord: {
+        submittedSelector: 'claude-opus-5-5[effort=xhigh]',
+        resolvedModel: 'claude-opus-5-5-xhigh',
+        verifiedAt: '2026-09-23',
+        evidencePath:
+          '.oat/projects/shared/claude-effort-levels/references/opus55-cursor-pin-probe.md',
+      },
+    },
+  ),
+  approvedMapping(
+    'claude-opus-5-5-max',
+    'claude-opus-5-5[effort=max]',
+    'claude-effort',
+    {
+      probeName: 'zz-pin-probe-opus55-max',
+      probeRecord: {
+        submittedSelector: 'claude-opus-5-5[effort=max]',
+        resolvedModel: 'claude-opus-5-5-max',
+        verifiedAt: '2026-09-23',
+        evidencePath:
+          '.oat/projects/shared/claude-effort-levels/references/opus55-cursor-pin-probe.md',
+      },
+    },
   ),
   approvedMapping(
     'gpt-5.6-luna-high',

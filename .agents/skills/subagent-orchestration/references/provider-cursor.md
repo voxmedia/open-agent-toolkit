@@ -1,10 +1,10 @@
 ---
-guidance_version: 2026-09-22
-last_verified: 2026-09-22
+guidance_version: 2026-09-23
+last_verified: 2026-09-23
 review_after: 2026-12-22
 catalog_basis:
-  `agent models` reports Opus 5.5 effort IDs but the native pin selector is
-  unverified; GPT-6 Sol/Luna are absent from the Cursor catalog
+  Cursor desktop 3.20.14 resolved all five Opus 5.5 effort selectors in native
+  subagent hooks; GPT-6 Sol/Luna were absent from the observed Cursor catalog
 ---
 
 # Cursor Model Selection
@@ -44,19 +44,31 @@ does not by itself prove lower user-observed elapsed time.
 
 ## Dated Task-Class Matrix
 
-Use currently approved exact aliases from the Cursor catalogue. The new
-`claude-opus-5-5-*` IDs appear in `agent models`, but a native `subagentStart`
-hook probe was unavailable in the unauthenticated Cursor GUI on 2026-09-22.
-No 5.5 bracket selector is approved yet. GPT-6 Sol/Luna were absent from that
-catalogue, so their Codex availability does not authorize Cursor routes.
+Use currently approved exact aliases from the Cursor catalogue. On 2026-09-23,
+Cursor desktop 3.20.14 resolved all five `claude-opus-5-5[effort=...]`
+selectors to corresponding flat IDs in native hooks. See the
+probe record at `.oat/projects/shared/claude-effort-levels/references/opus55-cursor-pin-probe.md`.
+GPT-6 Sol/Luna were absent from the observed Cursor catalogue, so their Codex
+availability does not authorize Cursor routes.
 
 | Task class               | Default                                                             | Economy                                            | Escalation                                                  | Floor notes                                                                                                      |
 | ------------------------ | ------------------------------------------------------------------- | -------------------------------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | `mechanical-recon`       | `composer-2.5`                                                      | Same with mechanical verification                  | `gpt-5.6-luna-high`                                         | Fast aliases select service tier, not capability.                                                                |
 | `intelligent-recon`      | `cursor-grok-4.5-medium` or `gpt-5.6-sol-medium`                    | `gpt-5.6-terra-high`                               | `gpt-5.6-sol-high`                                          | Verify silent-miss-prone conclusions.                                                                            |
 | `default-implementation` | `gpt-5.6-sol-medium`                                                | `composer-2.5` for bounded, testable changes       | `gpt-5.6-sol-high`                                          | `cursor-grok-4.5-medium` remains an available judgment-heavy alternative.                                        |
-| `hard-reasoning`         | `gpt-5.6-sol-high`                                                  | `cursor-grok-4.5-high` with corroborating evidence | `gpt-5.6-sol-xhigh`                                         | The old Opus 5 pin has been retired; do not substitute an unprobed 5.5 pin.                                      |
+| `hard-reasoning`         | `gpt-5.6-sol-high`                                                  | `cursor-grok-4.5-high` with corroborating evidence | `gpt-5.6-sol-xhigh`                                         | Opus 5.5 high/xhigh are verified cross-family alternatives; qualify task performance separately.                 |
 | `consequential`          | An eligible high-effort author with independent cross-family review | No routine economy route                           | Sol xhigh for a depth bottleneck; max only after evaluation | If independent review cannot be met among approved Cursor mappings, use a separately qualified provider or stop. |
+
+## Current Opus 5.5 Pin Evidence
+
+Cursor desktop 3.20.14 resolved `claude-opus-5-5[effort=low|medium|high|xhigh|max]`
+to `claude-opus-5-5-low|medium|high|xhigh|max`, respectively, on 2026-09-23.
+Both the `subagentStart.subagent_model` and the subagent Shell `preToolUse.model`
+agreed for every rung. The Sonnet 5 high positive control resolved to
+`claude-sonnet-5-thinking-high`. An unknown family fell back to
+`cursor-grok-4.6-high-fast`; an unknown effort on Opus 5.5 fell back to
+`claude-opus-5-5-medium`. The redacted native probe record at `.oat/projects/shared/claude-effort-levels/references/opus55-cursor-pin-probe.md`
+contains the exact observations. Recheck live availability before launch.
 
 ## Historical Opus Cursor Probe Evidence (Retired)
 
@@ -81,9 +93,11 @@ Every rung resolves to the thinking variant. This is a verified fact, not an
 inference: the catalog carries distinct non-thinking IDs at low, medium, and
 high, and none were selected.
 
-That historical result cannot validate an Opus 5.5 selector, even when the
-requested effort has the same spelling. Preserve probe records as evidence of
-past behavior, but use only the current approved catalogue for dispatch.
+That historical result did not validate an Opus 5.5 selector; the 2026-09-23
+probe above independently qualifies its five selectors. Even where the
+requested effort has the same spelling across generations, preserve the old
+probe only as evidence of past behavior and use the current approved catalogue
+for dispatch.
 
 ### Unresolvable selectors fall back to a default, silently
 

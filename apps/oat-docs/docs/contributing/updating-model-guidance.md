@@ -50,14 +50,17 @@ in Cursor Agent Chat and compare the `subagentStart.subagent_model` hook value
 with the proposed flat ID, using positive and unknown-family/effort controls.
 Record the submitted selector, resolved model, time, and evidence path in the
 mapping. `agent models` proves catalog visibility only; CLI `agent -p` and
-remote runs do not emit the required native subagent hook. During this refresh,
-`agent models` listed `claude-opus-5-5-*` flat IDs, but
-`agent -p --mode ask --model 'claude-opus-5-5[effort=low]'` returned
-`Cannot use this model`; the flat `claude-opus-5-5-high` CLI call
-succeeded but reported no resolved model in its JSON result, and the desktop UI
-was signed out. The Opus 5.5 Cursor mapping therefore remains deferred. Do not infer one from the spelling of an
-existing Opus mapping. Likewise, do not add GPT-6 Cursor targets until that
-runtime lists and verifies them. See [Dispatch Policy](../workflows/projects/dispatch-ceiling.md#cursor-evidence-authority)
+remote runs do not emit the required native subagent hook.
+
+During this refresh, `agent models` listed `claude-opus-5-5-*` flat IDs.
+The CLI `agent -p` bracket selector returned `Cannot use this model`, but a
+later Cursor desktop 3.20.14 native hook probe (`.oat/projects/shared/claude-effort-levels/references/opus55-cursor-pin-probe.md`)
+resolved each of the five Opus 5.5 effort selectors to its matching flat ID.
+The positive Sonnet control resolved, while invalid family and effort controls
+fell back to defaults. Five Opus 5.5 mappings are now approved for desktop
+subagents; the CLI result alone does not establish that the same bracket syntax
+works as a CLI top-level `--model` argument. Likewise, do not add GPT-6
+Cursor targets until that runtime lists and verifies them. See [Dispatch Policy](../workflows/projects/dispatch-ceiling.md#cursor-evidence-authority)
 for the distinction between catalog, configured mapping, and runtime identity.
 
 ## Change and Validate

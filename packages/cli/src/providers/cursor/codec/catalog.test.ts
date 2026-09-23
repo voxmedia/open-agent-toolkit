@@ -12,7 +12,12 @@ import {
 const APPROVED_G01_MAPPINGS = [
   ['composer-2.5', 'composer-2.5[fast=true]'],
   ['composer-2.5-fast', 'composer-2.5[fast=true]'],
-  ['claude-sonnet-5-high', 'claude-sonnet-5[effort=high]'],
+  ['claude-sonnet-5-thinking-high', 'claude-sonnet-5[effort=high]'],
+  ['claude-opus-5-5-low', 'claude-opus-5-5[effort=low]'],
+  ['claude-opus-5-5-medium', 'claude-opus-5-5[effort=medium]'],
+  ['claude-opus-5-5-high', 'claude-opus-5-5[effort=high]'],
+  ['claude-opus-5-5-xhigh', 'claude-opus-5-5[effort=xhigh]'],
+  ['claude-opus-5-5-max', 'claude-opus-5-5[effort=max]'],
   ['gpt-5.6-luna-high', 'gpt-5.6-luna[reasoning=high]'],
   ['gpt-5.6-luna-xhigh', 'gpt-5.6-luna[reasoning=xhigh]'],
   ['cursor-grok-4.5-high', 'grok-4.5[effort=high,fast=false]'],
@@ -65,13 +70,18 @@ describe('cursor model pin catalogue', () => {
     }
   });
 
-  it('does not recycle historical Opus pin evidence for the new generation', () => {
+  it('requires new Opus 5.5 evidence without recycling retired generations', () => {
     const probed = CURSOR_MODEL_PIN_MAPPINGS.filter(({ gateEvidence }) =>
       gateEvidence.probeName.startsWith('zz-pin-probe-'),
     );
 
-    expect(probed).toHaveLength(0);
-    expect(findCursorModelPinMapping('claude-opus-5-5-high')).toBeUndefined();
+    expect(probed).toHaveLength(6);
+    expect(probed.map(({ ladderModelId }) => ladderModelId)).toEqual([
+      'claude-sonnet-5-thinking-high',
+      ...['low', 'medium', 'high', 'xhigh', 'max'].map(
+        (effort) => `claude-opus-5-5-${effort}`,
+      ),
+    ]);
     expect(
       findCursorModelPinMapping('claude-opus-5-thinking-high'),
     ).toBeUndefined();
@@ -83,6 +93,114 @@ describe('cursor model pin catalogue', () => {
     }
   });
 
+  it('matches the Opus 5.5 mappings to the captured native desktop observations', () => {
+    const evidencePath =
+      '.oat/projects/shared/claude-effort-levels/references/opus55-cursor-pin-probe.jsonl';
+    const records = readFileSync(
+      join(process.cwd(), '..', '..', evidencePath),
+      'utf8',
+    )
+      .trim()
+      .split('\n')
+      .map(
+        (line) =>
+          JSON.parse(line) as {
+            agent: string;
+            submitted_selector: string;
+            subagent_start_model: string;
+            shell_model: string;
+            stop_model: string;
+            cursor_version: string;
+            shell_command: string;
+          },
+      );
+    expect(records).toHaveLength(8);
+    const nativeEvents = readFileSync(
+      join(
+        process.cwd(),
+        '..',
+        '..',
+        '.oat/projects/shared/claude-effort-levels/references/opus55-cursor-pin-probe-events.jsonl',
+      ),
+      'utf8',
+    )
+      .trim()
+      .split('\n')
+      .map(
+        (line) =>
+          JSON.parse(line) as {
+            hook_event_name: string;
+            tool_name?: string;
+            subagent_type?: string;
+            call_ref?: string;
+            model: string;
+            subagent_model?: string;
+            shell_command?: string;
+            status?: string;
+          },
+      );
+    expect(nativeEvents).toHaveLength(32);
+    for (const record of records) {
+      const events = nativeEvents.filter(
+        (event) =>
+          event.subagent_type === record.agent ||
+          event.shell_command === record.shell_command,
+      );
+      expect(
+        events.map(({ hook_event_name, tool_name }) =>
+          tool_name ? `${hook_event_name}:${tool_name}` : hook_event_name,
+        ),
+      ).toEqual([
+        'preToolUse:Task',
+        'subagentStart',
+        'preToolUse:Shell',
+        'subagentStop',
+      ]);
+      const [task, start, shell, stop] = events;
+      expect(task.call_ref).toBe(start.call_ref);
+      expect(stop.call_ref).toBe(start.call_ref);
+      expect(start.subagent_model).toBe(record.subagent_start_model);
+      expect(start.model).toBe(record.subagent_start_model);
+      expect(shell.model).toBe(record.shell_model);
+      expect(stop.model).toBe(record.stop_model);
+      expect(stop.status).toBe('completed');
+    }
+    for (const effort of ['low', 'medium', 'high', 'xhigh', 'max']) {
+      const mapping = findCursorModelPinMapping(`claude-opus-5-5-${effort}`);
+      const captured = records.find(
+        ({ agent }) => agent === `zz-pin-probe-opus55-${effort}`,
+      );
+      expect(captured).toMatchObject({
+        submitted_selector: mapping?.frontmatterModel,
+        subagent_start_model: mapping?.ladderModelId,
+        shell_model: mapping?.ladderModelId,
+        stop_model: mapping?.ladderModelId,
+        cursor_version: '3.20.14',
+        shell_command: `echo PIN-PROBE zz-pin-probe-opus55-${effort}`,
+      });
+    }
+    expect(
+      records.find(({ agent }) => agent === 'zz-pin-probe-sonnet5-high'),
+    ).toMatchObject({
+      submitted_selector: 'claude-sonnet-5[effort=high]',
+      subagent_start_model: 'claude-sonnet-5-thinking-high',
+      shell_model: 'claude-sonnet-5-thinking-high',
+      stop_model: 'claude-sonnet-5-thinking-high',
+    });
+    expect(
+      records.find(({ agent }) => agent === 'zz-pin-probe-bogus-family'),
+    ).toMatchObject({
+      submitted_selector: 'claude-opus-9[effort=high]',
+      subagent_start_model: 'cursor-grok-4.6-high-fast',
+    });
+    expect(
+      records.find(({ agent }) => agent === 'zz-pin-probe-bogus-effort'),
+    ).toMatchObject({
+      submitted_selector: 'claude-opus-5-5[effort=ultra]',
+      subagent_start_model: 'claude-opus-5-5-medium',
+    });
+  });
+
   it('keeps approved aliases materializable outside the supported catalogue', () => {
     const supported = new Set(
       SUPPORTED_CURSOR_ROLE_TARGETS.map(({ ladderModelId }) => ladderModelId),
@@ -91,7 +209,7 @@ describe('cursor model pin catalogue', () => {
     expect(supported).not.toContain('composer-2.5-fast');
     expect(supported).not.toContain('cursor-grok-4.5-high-fast');
     expect(supported).not.toContain('claude-fable-5-xhigh');
-    expect(SUPPORTED_CURSOR_ROLE_TARGETS).toHaveLength(12);
+    expect(SUPPORTED_CURSOR_ROLE_TARGETS).toHaveLength(17);
   });
 
   it('materializes every Cursor candidate in the bundled recommendation', () => {

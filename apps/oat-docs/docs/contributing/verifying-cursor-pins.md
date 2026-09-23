@@ -57,6 +57,14 @@ flag) is empty and `model_id` is absent. Thinking is therefore established by
 the resolved slug itself, which is sound because the non-thinking IDs are
 distinct.
 
+The 2026-09-23 Opus 5.5 desktop probe is an example: all five
+`claude-opus-5-5[effort=...]` selectors resolved to matching flat IDs in
+Cursor 3.20.14, while `effort=ultra` fell back to medium. The Sonnet 5 high control
+resolved to `claude-sonnet-5-thinking-high`, correcting an older flat ID. Its
+redacted summary and 32 correlated native events are at `.oat/projects/shared/claude-effort-levels/references/opus55-cursor-pin-probe.md`
+in the OAT repository. Re-run this procedure for a new family or changed
+provider behavior.
+
 ## Prerequisites
 
 - Cursor desktop app, with the repository open as a workspace.

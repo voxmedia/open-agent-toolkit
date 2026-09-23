@@ -84,8 +84,9 @@ Version `2026-09-23.1` is the current bundled recommendation. It prefers
 GPT-6 Luna and Sol in Codex and Opus 5.5 in Claude. GPT-5.6 targets remain
 supported for explicit Codex and Cursor configurations. Cursor's preferred
 ladder uses existing verified GPT-5.6, Grok, Composer, and Fable mappings;
-Cursor Opus 5.5 awaits a native desktop mapping probe. Rerunning adoption
-preserves any explicit older cell unchanged. For the complete maintenance
+Cursor Opus 5.5 now has five approved desktop mappings, but the bundled
+Cursor preference order remains unchanged. Rerunning adoption preserves any
+explicit older cell unchanged. For the complete maintenance
 procedure, see [Updating Model Guidance](../../contributing/updating-model-guidance.md).
 
 The terminal Fable target may require model access from the executing provider.
@@ -235,11 +236,11 @@ The bundled ladder is a curated subset of the supported targets:
   GPT-5.6 variants remain available outside this preferred ladder.
 - **Claude:** `haiku` and Sonnet 5 at Economy/Balanced, Opus 5.5 at High and
   Frontier, and Fable 5.1 at Frontier.
-- **Cursor:** approved Composer 2.5, GPT-5.6, Grok 4.5, and Fable 5 targets.
-  The catalogue maps each flat ladder ID to its separately verified
-  bracket-form frontmatter model. Opus 5.5 catalog visibility has not yet
-  yielded an approved mapping; see
-  [Verifying Cursor Pins](../../contributing/verifying-cursor-pins.md).
+- **Cursor:** the preferred ladder uses approved Composer 2.5, GPT-5.6, Grok
+  4.5, and Fable 5 targets. The catalogue maps each flat ladder ID to its
+  separately verified bracket-form frontmatter model. Opus 5.5 has five
+  approved effort mappings from a [native desktop probe](../../contributing/verifying-cursor-pins.md);
+  they are available for explicit selection outside the bundled preference.
 
 The final candidate in a named tier defines that tier's reviewer ceiling. Lower
 reviewer selection requires a separate reviewed contract; a normal reviewer

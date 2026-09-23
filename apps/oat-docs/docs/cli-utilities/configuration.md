@@ -491,8 +491,8 @@ Model-only Claude aliases remain compatible through the per-call model argument
 and report `effortAxis: not-applicable` because the Agent API exposes no
 per-call effort argument. The recommendation carries 10 Cursor candidates
 across four tiers, drawn from a materialization
-catalogue with 12 catalogued multi-family flat IDs spanning Composer, Claude
-(Sonnet, Opus, and Fable), GPT, and Grok; the two figures differ because some
+catalogue with 17 catalogued multi-family flat IDs spanning Composer, Claude
+(Sonnet, Opus 5.5, and Fable), GPT, and Grok; the two figures differ because some
 approved mappings stay materializable without being recommended. An explicit
 mapping connects each flat ladder ID to a separate bracket-form frontmatter
 model; configuration and skills never derive or normalize either form.

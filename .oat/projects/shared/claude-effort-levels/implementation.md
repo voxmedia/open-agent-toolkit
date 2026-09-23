@@ -255,7 +255,7 @@ The independent p-rev1 narrow re-review found one Medium tracking inconsistency 
 
 ## Deviations from Plan / Design
 
-The revision worker committed three task changes before the required separate task-bookkeeping commits. Its automatic post-commit recovery could not proceed because the original launch request and exact target were not persisted in the phase ledger. Root repaired failing fixtures in `bd3035ef4` and `8c98c8df2`, then reconciled tracking here. This records the missed bookkeeping boundary without inventing a recovery attempt or dispatch provenance. The model-update documentation and current guidance are the source of truth for the refreshed catalogue. Cursor Opus 5.5 subagent mapping remains deferred pending native `subagentStart` evidence.
+The revision worker committed three task changes before the required separate task-bookkeeping commits. Its automatic post-commit recovery could not proceed because the original launch request and exact target were not persisted in the phase ledger. Root repaired failing fixtures in `bd3035ef4` and `8c98c8df2`, then reconciled tracking here. This records the missed bookkeeping boundary without inventing a recovery attempt or dispatch provenance. The model-update documentation and current guidance are the source of truth for the refreshed catalogue. Cursor Opus 5.5 was deferred at that review boundary; the 2026-09-23 native desktop probe subsequently approved all five effort mappings and corrected the Sonnet 5 high control target. See `references/opus55-cursor-pin-probe.md` and its correlated redacted events.
 
 No design artifact is required for this quick workflow. The p03 phase worker recorded release evidence in `tools/smoke/verification/` while the root workflow retained ownership of project tracking files; this preserves the execution contract without changing product behavior.
 
@@ -316,7 +316,7 @@ After phase p05 passed, the same complete sequence was rerun against the documen
 
 ## Final Summary (for PR/docs)
 
-The revision adds GPT-6 Sol and Luna to the Codex catalogue and recommendations while retaining GPT-5.6. Claude guidance and role generation use Opus 5.5 in place of Opus 5/4.8. The contributing model-update guide documents catalogue ownership, pin evidence, generation, adoption, and release checks. Cursor Opus 5.5 native subagent mapping remains deferred: CLI catalogues list flat selectors, but the successful CLI probe did not report a native subagent model pin.
+The revision adds GPT-6 Sol and Luna to the Codex catalogue and recommendations while retaining GPT-5.6. Claude guidance and role generation use Opus 5.5 in place of Opus 5/4.8. The contributing model-update guide documents catalogue ownership, pin evidence, generation, adoption, and release checks. Cursor Opus 5.5 native subagent mapping was subsequently verified through Cursor desktop 3.20.14 lifecycle hooks for low, medium, high, xhigh, and max. The earlier CLI probe did not report a native subagent model pin; the desktop probe and its redacted events are retained under `references/`. The Sonnet 5 high control resolved to its thinking-qualified ID and the Cursor catalogue was corrected accordingly.
 
 Claude managed dispatch now treats model and effort as separate target axes, materializes effort-pinned reviewer and implementer variants, validates the exact generated definition and launch payload through the shipped dispatch-record boundary, and records runtime divergence when environment or settings precedence changes the observed effort.
 
