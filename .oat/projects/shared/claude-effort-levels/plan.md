@@ -387,7 +387,7 @@ The independent p-rev1 review at `599f066b1` found one High and two Medium findi
 
 ## Implementation Complete
 
-Seventeen original and revision tasks are implemented; three accepted review-fix tasks remain. The original fourteen-task implementation passed its prior closeout; the three model-refresh tasks are complete and await revision review and a fresh configured exit gate. PR #315 remains open.
+All twenty original, revision, and review-fix tasks are implemented. The original fourteen-task implementation passed its prior closeout; the three model-refresh tasks are complete and await revision review and a fresh configured exit gate. PR #315 remains open.
 
 - Phase 1: 2 tasks — resolver and generated-role lifecycle.
 - Phase 2: 4 tasks — awareness, recommendations, documentation/decision alignment, and relevant lifecycle-gate prompts.

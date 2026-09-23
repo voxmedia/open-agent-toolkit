@@ -15,7 +15,7 @@ oat_phase_recovery_policy:
     p04:
       used_attempts: 0
       pending_attempt: null
-oat_current_task: prev1-t04
+oat_current_task: null
 oat_last_commit: 8c98c8df2263756c751ead2efa63ef9599d1de97
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -152,13 +152,13 @@ oat_project_recap:
 
 # Project State: claude-effort-levels
 
-**Status:** Revision review fixes in progress; PR open
+**Status:** Revision fixes complete; re-review pending; PR open
 **Started:** 2026-09-20
 **Last Updated:** 2026-09-22
 
 ## Current Phase
 
-The first three revision tasks are complete; three accepted phase-review fixes remain. Final review and configured exit gate are pending; PR #315 remains open and unmerged.
+All twenty tasks are complete, including the three accepted phase-review fixes. Independent re-review and final review and configured exit gate are pending; PR #315 remains open and unmerged.
 
 ## Artifacts
 
