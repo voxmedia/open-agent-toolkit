@@ -152,13 +152,13 @@ oat_project_recap:
 
 # Project State: claude-effort-levels
 
-**Status:** Second gate findings fixed; repository gates and final review pending; PR open
+**Status:** Second gate findings fixed; repository gates passed; final review pending; PR open
 **Started:** 2026-09-20
 **Last Updated:** 2026-09-23
 
 ## Current Phase
 
-All twenty-six tasks are complete, including the five fixes from the first configured final gate and three from the second. Both gates passed their High threshold; fresh repository gates and a final independent review remain pending. PR #315 remains open and unmerged.
+All twenty-six tasks are complete, including the five fixes from the first configured final gate and three from the second. Both gates passed their High threshold; fresh repository gates passed and a final independent review remains pending. PR #315 remains open and unmerged.
 
 ## Artifacts
 
@@ -187,6 +187,6 @@ None.
 
 ## Next Milestone
 
-Run the full repository gates, repeat the configured final gate at the post-fix head, then update PR #315 and verify current-head checks.
+Repeat the configured final gate at the post-fix head, then update PR #315 and verify current-head checks.
 
 - After the new closeout passes, refresh PR #315 and assess merge readiness.
