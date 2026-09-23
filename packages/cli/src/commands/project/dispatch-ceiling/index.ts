@@ -183,6 +183,10 @@ const CODEX_VALUES: readonly WorkflowCodexDispatchCeiling[] = [
   ...VALID_CODEX_DISPATCH_CEILINGS,
 ];
 
+// Exact model-plus-effort candidates can reach ultra; the project-wide scalar
+// ceiling remains capped at max.
+const CODEX_CANDIDATE_EFFORTS = [...CODEX_VALUES, 'ultra'] as const;
+
 const CLAUDE_VALUES: readonly WorkflowClaudeDispatchCeiling[] = [
   ...VALID_CLAUDE_DISPATCH_CEILINGS,
 ];
@@ -899,7 +903,7 @@ function candidatePrimaryTarget(
     targetAdapter.selectionAxis === 'model-effort' &&
     (!target.model ||
       !target.effort ||
-      !CODEX_VALUES.includes(target.effort as WorkflowCodexDispatchCeiling))
+      !CODEX_CANDIDATE_EFFORTS.includes(target.effort as never))
   ) {
     throw new Error(
       `Malformed ${provider} candidate ordering in ${tier}: Codex candidates require a model and supported effort.`,
@@ -977,9 +981,7 @@ function assertCandidateOrder(
     }
 
     if (target.harness === 'codex' && target.model && target.effort) {
-      const rank = CODEX_VALUES.indexOf(
-        target.effort as WorkflowCodexDispatchCeiling,
-      );
+      const rank = CODEX_CANDIDATE_EFFORTS.indexOf(target.effort as never);
       const previousRank = codexRanksByModel.get(target.model);
       if (previousRank !== undefined && rank < previousRank) {
         throw new Error(
@@ -1033,8 +1035,8 @@ function assertTierCeilingsNondecreasing(
     previous.model === current.model &&
     previous.effort &&
     current.effort &&
-    CODEX_VALUES.indexOf(current.effort as WorkflowCodexDispatchCeiling) <
-      CODEX_VALUES.indexOf(previous.effort as WorkflowCodexDispatchCeiling)
+    CODEX_CANDIDATE_EFFORTS.indexOf(current.effort as never) <
+      CODEX_CANDIDATE_EFFORTS.indexOf(previous.effort as never)
   ) {
     throw new Error(
       `Malformed ${provider} candidate ordering in ${tier}: named tier ceilings must be nondecreasing.`,
@@ -1680,9 +1682,9 @@ function normalizeRequestedCandidate(
         '--candidate-effort is required for an exact Codex candidate.',
       );
     }
-    if (!CODEX_VALUES.includes(effort as WorkflowCodexDispatchCeiling)) {
+    if (!CODEX_CANDIDATE_EFFORTS.includes(effort as never)) {
       throw new Error(
-        `Invalid Codex candidate effort "${effort}". Valid values: ${CODEX_VALUES.join(', ')}.`,
+        `Invalid Codex candidate effort "${effort}". Valid values: ${CODEX_CANDIDATE_EFFORTS.join(', ')}.`,
       );
     }
     return { model, effort };
@@ -1754,7 +1756,7 @@ function normalizeClassification(
     );
   }
   const validTaskEfforts =
-    provider === 'claude' ? CLAUDE_EFFORT_ORDER : CODEX_VALUES;
+    provider === 'claude' ? CLAUDE_EFFORT_ORDER : CODEX_CANDIDATE_EFFORTS;
   if (hasTaskEffort && !validTaskEfforts.includes(taskEffort as never)) {
     throw new Error(
       `Invalid ${provider === 'claude' ? 'Claude' : 'Codex'} task effort "${taskEffort}". Valid values: ${validTaskEfforts.join(', ')}.`,

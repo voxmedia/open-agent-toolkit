@@ -9,7 +9,11 @@ import {
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
 import { resolveEffectiveConfig } from '@config/resolve';
-import { buildCodexMaterializedTargetRoleName } from '@providers/codex/codec/shared';
+import { getCeilingAdapter } from '@providers/ceiling/registry';
+import {
+  buildCodexMaterializedTargetRoleName,
+  SUPPORTED_CODEX_ROLE_TARGETS,
+} from '@providers/codex/codec/shared';
 import type { DispatchReportV1 } from '@providers/identity/dispatch-report';
 import { formatDispatchStamp } from '@providers/identity/stamp';
 import { Command } from 'commander';
@@ -4217,6 +4221,89 @@ describe('oat project dispatch-ceiling resolve', () => {
     expect(capture.jsonPayloads[0]).toMatchObject({ status: 'error' });
     expect(capture.jsonPayloads[0]?.message).toContain(
       'requires a configured candidate ladder',
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('accepts each catalogued Codex effort as an exact candidate', () => {
+    const adapter = getCeilingAdapter('codex');
+    for (const { model, effort } of SUPPORTED_CODEX_ROLE_TARGETS) {
+      expect(
+        adapter.compileToDispatchArgs(effort, 'implementer', {
+          target: { harness: 'codex', model, effort },
+        }),
+      ).toEqual({
+        variant: buildCodexMaterializedTargetRoleName({
+          agentName: 'oat-phase-implementer',
+          model,
+          effort,
+        }),
+      });
+    }
+  });
+
+  it('resolves Sol ultra as an exact frontier candidate but rejects reversed effort order', async () => {
+    const { root, home } = await setup();
+    const configPath = join(root, '.oat', 'config.json');
+    const candidates = [
+      { harness: 'codex', model: 'gpt-6-sol', effort: 'max' },
+      { harness: 'codex', model: 'gpt-6-sol', effort: 'ultra' },
+    ];
+    await writeJson(configPath, {
+      version: 1,
+      workflow: {
+        dispatchPolicy: { mode: 'managed', policy: 'frontier' },
+        dispatchCeiling: { providers: { codex: { frontier: { candidates } } } },
+      },
+    });
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, [
+      '--provider',
+      'codex',
+      '--candidate-model',
+      'gpt-6-sol',
+      '--candidate-effort',
+      'ultra',
+      '--json',
+    ]);
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
+      providers: {
+        codex: {
+          dispatchArgs: { variant: 'oat-phase-implementer-gpt-6-sol-ultra' },
+          selection: {
+            requestedCandidate: { model: 'gpt-6-sol', effort: 'ultra' },
+          },
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+
+    await writeJson(configPath, {
+      version: 1,
+      workflow: {
+        dispatchPolicy: { mode: 'managed', policy: 'frontier' },
+        dispatchCeiling: {
+          providers: {
+            codex: { frontier: { candidates: [...candidates].reverse() } },
+          },
+        },
+      },
+    });
+    process.exitCode = 0;
+    const rejected = createHarness({ cwd: root, home });
+    await runCommand(rejected.command, [
+      '--provider',
+      'codex',
+      '--candidate-model',
+      'gpt-6-sol',
+      '--candidate-effort',
+      'ultra',
+      '--json',
+    ]);
+    expect(rejected.capture.jsonPayloads[0]).toMatchObject({ status: 'error' });
+    expect(rejected.capture.jsonPayloads[0]?.message).toContain(
+      'nondecreasing',
     );
     expect(process.exitCode).toBe(1);
   });

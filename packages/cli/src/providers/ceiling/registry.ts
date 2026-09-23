@@ -95,7 +95,10 @@ const codexAdapter: ProviderCeilingAdapter = {
   mechanism: 'pinned-variant',
   selectionAxis: 'model-effort',
   compileToDispatchArgs(value, role, ctx) {
-    if (!VALID_CODEX_DISPATCH_CEILINGS.includes(value as never)) {
+    if (
+      !VALID_CODEX_DISPATCH_CEILINGS.includes(value as never) &&
+      !(value === 'ultra' && ctx.target?.effort === 'ultra')
+    ) {
       return null;
     }
     const target = ctx.target;
