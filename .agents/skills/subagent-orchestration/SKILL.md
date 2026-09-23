@@ -4,7 +4,7 @@ description: Use when delegating work to subagents or choosing a model for a tas
 compatibility: Self-contained; no OAT installation required.
 user-invocable: true
 metadata:
-  version: 1.0.5
+  version: 1.0.6
 ---
 
 # Subagent Orchestration

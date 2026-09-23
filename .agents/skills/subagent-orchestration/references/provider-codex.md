@@ -1,7 +1,7 @@
 ---
-guidance_version: 2026-07-25
-last_verified: 2026-07-25
-review_after: 2026-09-08
+guidance_version: 2026-09-23
+last_verified: 2026-09-22
+review_after: 2026-12-22
 ---
 
 # Codex and OpenAI Model Selection
@@ -13,12 +13,14 @@ model examples below. Launch mechanics for OAT dispatch live in
 
 ## Current Families
 
-Use the GPT-5.6 family for new general coding and knowledge work unless an
-existing evaluated workflow requires an older snapshot:
+Use the verified GPT-6 Sol/Luna model IDs for new Codex work:
 
-- `gpt-5.6-sol`: frontier capability;
-- `gpt-5.6-terra`: intelligence and cost balance;
-- `gpt-5.6-luna`: cost-sensitive, high-volume work.
+- `gpt-6-sol`: high-capability implementation and reasoning route;
+- `gpt-6-luna`: cost-sensitive, bounded work.
+
+The GPT-5.6 Sol/Luna/Terra targets remain supported for explicit configurations
+and established workloads. Re-evaluate economics and qualitative routing on
+representative work before carrying over GPT-5.6-specific comparisons.
 
 Direct API specialist routes:
 
@@ -33,36 +35,30 @@ name includes `codex`.
 
 ## Dated Task-Class Matrix
 
-| Task class               | Default                                        | Economy                                                                                            | Escalation                                                                                                       | Floor notes                                                                                     |
-| ------------------------ | ---------------------------------------------- | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `mechanical-recon`       | `gpt-5.6-luna`, `high`                         | Direct API only: `gpt-5.4-mini` medium; `gpt-5.4-nano` medium for strict extraction/classification | `gpt-5.6-terra`, medium or high                                                                                  | Do not use Luna none/low for broad repository work.                                             |
-| `intelligent-recon`      | `gpt-5.6-terra`, `high`                        | Terra `medium` with tight scope and verification                                                   | Sol `medium`, then `high`                                                                                        | A silent miss disqualifies Terra none/low.                                                      |
-| `default-implementation` | `gpt-5.6-sol`, `medium`                        | Terra `high` for independently bounded, strongly tested work                                       | Sol `high`                                                                                                       | Luna is not the normal implementation lead.                                                     |
-| `hard-reasoning`         | `gpt-5.6-sol`, `high`                          | Sol `medium` only after narrowing the problem                                                      | Sol `xhigh`                                                                                                      | Do not automatically escalate Terra to xhigh/max; move to Sol.                                  |
-| `consequential`          | `gpt-5.6-sol`, `high`, plus independent review | No routine economy route                                                                           | Sol `xhigh` when deeper reasoning is required; `max` or a separately evaluated `pro` route only after evaluation | Consequence adds review and root authorization; it does not automatically require xhigh or max. |
+These are current task-class starting points, not an evaluated ordering across
+providers or a promise about relative GPT-6 latency and price. All shown
+model/effort pairs are in the local Codex catalogue.
 
-`reasoning.mode: "pro"` is a separate quality/latency/cost control on GPT-5.6,
-not a model slug and not an effort label. Record it independently. Evaluate it
-against max or xhigh on representative consequential work before adopting it.
+| Task class               | Default                                    | Escalation                                                            | Floor notes                                                                   |
+| ------------------------ | ------------------------------------------ | --------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `mechanical-recon`       | `gpt-6-luna`, high                         | `gpt-6-sol`, medium                                                   | Lower effort is suitable only when a miss is cheap and mechanically detected. |
+| `intelligent-recon`      | `gpt-6-sol`, medium                        | Sol high                                                              | Preserve verification for silent-miss-prone reconnaissance.                   |
+| `default-implementation` | `gpt-6-sol`, medium                        | Sol high                                                              | Luna is for independently bounded, strongly verified work.                    |
+| `hard-reasoning`         | `gpt-6-sol`, high                          | Sol xhigh                                                             | Narrow the problem before raising effort.                                     |
+| `consequential`          | `gpt-6-sol`, high, plus independent review | Sol xhigh for a reasoning-depth bottleneck; max only after evaluation | The root retains consequential authorization.                                 |
 
-The task-class ladder is work-shape based. Sol is the code-first,
-trajectory-efficient route for implementation and hard reasoning; this does
-not establish a provider-independent ranking against interpretation-heavy
-models in other harnesses. Consequential work requires independent review and
-root-owned authorization. It does not automatically force Sol xhigh or max:
-choose effort from reasoning depth, then add the consequence controls.
+The bundled frontier ladder ends at Sol max. Sol ultra is present in the local
+Codex capability catalogue but is not a routine recommendation; validate its
+need with a workload-specific sweep. GPT-5.6 `reasoning.mode: "pro"` is a
+separate quality/latency/cost control on that older model, not a GPT-6 effort
+label or model slug.
 
 ## Long-Context Floor
 
-For very large context, prefer Sol or Terra. Published GPT-5.6 results show a
-large Luna retention drop in the 256K-to-1M range. Large context does not change
-the task class, but it may disqualify Luna, mini, or nano.
-
-For Sol requests above 272K input tokens, the current direct-API price step is
-2× input and 1.5× output. Apply the threshold to the whole request and verify
-the live pricing contract before cost-sensitive dispatch. Crossing this
-threshold can change the economical route even when Sol remains the capability
-choice.
+The former 256K-to-1M Luna retention observation and Sol 272K price step
+pertain to GPT-5.6. Do not extrapolate either to GPT-6. Verify GPT-6 context
+and pricing contracts against current official documentation and the actual
+runtime before cost-sensitive or very large-context dispatch.
 
 ## Trajectory Economics
 

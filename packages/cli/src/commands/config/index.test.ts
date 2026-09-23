@@ -2925,36 +2925,33 @@ describe('oat config', () => {
         ),
       ) as Record<string, unknown>;
 
-      expect(recommendation.version).toBe('2026-09-21.1');
+      expect(recommendation.version).toBe('2026-09-23.1');
       expect(recommendation.providers).toMatchObject({
         codex: {
           economy: {
             candidates: [
-              { model: 'gpt-5.6-luna', effort: 'low' },
-              { model: 'gpt-5.6-luna', effort: 'medium' },
-              { model: 'gpt-5.6-luna', effort: 'high' },
+              { model: 'gpt-6-luna', effort: 'low' },
+              { model: 'gpt-6-luna', effort: 'medium' },
+              { model: 'gpt-6-luna', effort: 'high' },
             ],
           },
           balanced: {
             candidates: [
-              { model: 'gpt-5.6-luna', effort: 'xhigh' },
-              { model: 'gpt-5.6-terra', effort: 'low' },
-              { model: 'gpt-5.6-terra', effort: 'medium' },
-              { model: 'gpt-5.6-terra', effort: 'high' },
-              { model: 'gpt-5.6-terra', effort: 'xhigh' },
+              { model: 'gpt-6-luna', effort: 'xhigh' },
+              { model: 'gpt-6-luna', effort: 'max' },
             ],
           },
           high: {
             candidates: [
-              { model: 'gpt-5.6-sol', effort: 'low' },
-              { model: 'gpt-5.6-sol', effort: 'medium' },
-              { model: 'gpt-5.6-sol', effort: 'high' },
+              { model: 'gpt-6-sol', effort: 'low' },
+              { model: 'gpt-6-sol', effort: 'medium' },
+              { model: 'gpt-6-sol', effort: 'high' },
             ],
           },
           frontier: {
             candidates: [
-              { model: 'gpt-5.6-sol', effort: 'xhigh' },
-              { model: 'gpt-5.6-sol', effort: 'max' },
+              { model: 'gpt-6-sol', effort: 'xhigh' },
+              { model: 'gpt-6-sol', effort: 'max' },
             ],
           },
         },
@@ -2970,14 +2967,14 @@ describe('oat config', () => {
           },
           high: {
             candidates: [
-              { model: 'claude-opus-5', effort: 'medium' },
-              { model: 'claude-opus-5', effort: 'high' },
+              { model: 'claude-opus-5-5', effort: 'medium' },
+              { model: 'claude-opus-5-5', effort: 'high' },
             ],
           },
           frontier: {
             candidates: [
-              { model: 'claude-opus-5', effort: 'xhigh' },
-              { model: 'claude-opus-5', effort: 'max' },
+              { model: 'claude-opus-5-5', effort: 'xhigh' },
+              { model: 'claude-opus-5-5', effort: 'max' },
               { model: 'claude-fable-5-1', effort: 'high' },
             ],
           },
@@ -2991,24 +2988,14 @@ describe('oat config', () => {
             ],
           },
           balanced: {
-            candidates: [
-              'cursor-grok-4.5-high',
-              'gpt-5.6-terra-high',
-              'claude-opus-5-thinking-low',
-            ],
+            candidates: ['cursor-grok-4.5-high', 'gpt-5.6-terra-high'],
           },
           high: {
-            candidates: [
-              'claude-opus-5-thinking-medium',
-              'gpt-5.6-sol-medium',
-              'claude-opus-5-thinking-high',
-              'gpt-5.6-sol-high',
-            ],
+            candidates: ['gpt-5.6-sol-medium', 'gpt-5.6-sol-high'],
           },
           frontier: {
             candidates: [
               'gpt-5.6-sol-xhigh',
-              'claude-opus-5-thinking-xhigh',
               'gpt-5.6-sol-max',
               'claude-fable-5-thinking-high',
             ],
@@ -3032,9 +3019,9 @@ describe('oat config', () => {
       ],
       [
         'high',
-        'claude-opus-5',
+        'claude-opus-5-5',
         'high',
-        'oat-reviewer-claude-claude-opus-5-high',
+        'oat-reviewer-claude-claude-opus-5-5-high',
       ],
       [
         'frontier',

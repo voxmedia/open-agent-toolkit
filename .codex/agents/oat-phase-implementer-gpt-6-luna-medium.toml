@@ -1,13 +1,9 @@
----
 # oat-managed: true
-# oat-role: oat-phase-implementer-claude-opus-5-thinking-xhigh
+# oat-role: oat-phase-implementer-gpt-6-luna-medium
 # oat-owner: supported-catalogue
-name: oat-phase-implementer-claude-opus-5-thinking-xhigh
-description: Implements one plan phase end-to-end, commits each task separately,
-  self-checks between tasks, and handles bounded review fixes when resumed by
-  oat-project-implement.
-model: claude-opus-5[effort=xhigh]
----
+model = "gpt-6-luna"
+model_reasoning_effort = "medium"
+developer_instructions = """
 
 ## Role
 
@@ -597,7 +593,7 @@ continuation.
    else
      CAPTURE_SCRIPT=""
      REPO_ROOT=$(git -C "$PHASE_WORKTREE" rev-parse --show-toplevel 2>/dev/null || true)
-     for CAPTURE_ROOT in "${HOME:-}/.agents/skills/oat-project-implement" \
+     for CAPTURE_ROOT in "${HOME:-}/.agents/skills/oat-project-implement" \\
        "${REPO_ROOT:+$REPO_ROOT/.agents/skills/oat-project-implement}"; do
        [ -n "$CAPTURE_ROOT" ] || continue
        [ -f "$CAPTURE_ROOT/scripts/capture-dirty-tree.mjs" ] || continue
@@ -610,10 +606,10 @@ continuation.
      }
 
      EXPECTED_HEAD=$(git -C "$PHASE_WORKTREE" rev-parse --verify HEAD)
-     node "$CAPTURE_SCRIPT" --verify \
-       --artifact-dir "$ARTIFACT_DIR" \
-       --manifest-digest "$MANIFEST_DIGEST" \
-       --size "$ARTIFACT_SIZE" \
+     node "$CAPTURE_SCRIPT" --verify \\
+       --artifact-dir "$ARTIFACT_DIR" \\
+       --manifest-digest "$MANIFEST_DIGEST" \\
+       --size "$ARTIFACT_SIZE" \\
        --expected-head "$EXPECTED_HEAD"
    fi
    ```
@@ -761,3 +757,5 @@ Fix mode is a continuation of a successfully completed phase, not a replay.
   target, axes, selection, or acceptance fields.
 - **COMPACT RETURNS.** Report commits, verification, optional dispatches, and
   concerns without quoting full files.
+"""
+sandbox_mode = "workspace-write"

@@ -1,14 +1,9 @@
----
 # oat-managed: true
-# oat-role: oat-reviewer-claude-opus-5-thinking-medium
+# oat-role: oat-reviewer-gpt-6-luna-high
 # oat-owner: supported-catalogue
-name: oat-reviewer-claude-opus-5-thinking-medium
-description: Unified reviewer for OAT projects - mode-aware verification of
-  requirements/design alignment and code quality. Writes a review artifact to
-  disk by default, or returns structured findings in-memory when dispatched in
-  structured-output mode.
-model: claude-opus-5[effort=medium]
----
+model = "gpt-6-luna"
+model_reasoning_effort = "high"
+developer_instructions = """
 
 ## Role
 
@@ -603,3 +598,5 @@ Default behavior is unaffected: when `oat_output_mode` is absent or set to anyth
 ```
 
 ```
+"""
+sandbox_mode = "workspace-write"
