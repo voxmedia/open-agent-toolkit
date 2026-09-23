@@ -3147,7 +3147,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-plan-writing/SKILL.md',
     );
 
-    expect(readDeclaredVersion(shared)).toBe('1.2.27');
+    expect(readDeclaredVersion(shared)).toBe('1.2.28');
     expect(shared).toContain(
       '${WORKFLOWS_AGENT_PROVIDER_ROOT}/agents/oat-reviewer.md',
     );
@@ -3192,7 +3192,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-plan-writing/SKILL.md',
     );
 
-    expect(readDeclaredVersion(shared)).toBe('1.2.27');
+    expect(readDeclaredVersion(shared)).toBe('1.2.28');
     expect(shared).toMatch(/Planning-Time Artifact Formatting Contract/);
     expect(shared).toMatch(
       /applicable[\s\S]{0,120}`AGENTS\.md`[\s\S]{0,40}`CLAUDE\.md`[\s\S]{0,160}relevant package\s+manifests/i,
@@ -3272,10 +3272,10 @@ describe('validateOatSkills', () => {
     expect(shared).toContain('ladderCompleteness.missingCells');
     expect(shared).toMatch(/unresolvedReason` is `ladder` or `both`/);
     expect(shared).toMatch(
-      /Codex[\s\S]{0,500}Luna\/low[\s\S]{0,120}Luna\/medium[\s\S]{0,120}Luna\/high[\s\S]{0,500}Terra\/xhigh[\s\S]{0,500}Sol\/max/i,
+      /Codex[\s\S]{0,500}Luna\/low[\s\S]{0,120}Luna\/medium[\s\S]{0,120}Luna\/high[\s\S]{0,500}Luna\/max[\s\S]{0,500}Sol\/max/i,
     );
     expect(shared).toMatch(
-      /Claude[\s\S]{0,500}haiku[\s\S]{0,200}claude-sonnet-5[\s\S]{0,200}claude-opus-5[\s\S]{0,200}claude-fable-5-1/i,
+      /Claude[\s\S]{0,500}haiku[\s\S]{0,200}claude-sonnet-5[\s\S]{0,200}claude-opus-5-5[\s\S]{0,200}claude-fable-5-1/i,
     );
     for (const cursorTarget of [
       'composer-2.5',
@@ -3334,7 +3334,7 @@ describe('validateOatSkills', () => {
     expect(adoptionContract).toMatch(
       /when adoption is required[\s\S]{0,200}bundled recommendation/i,
     );
-    expect(readDeclaredVersion(shared)).toBe('1.2.27');
+    expect(readDeclaredVersion(shared)).toBe('1.2.28');
   });
 
   it('auto-selects an existing dispatch-ladder scope only under explicit autonomy', async () => {
@@ -4887,7 +4887,7 @@ describe('validateOatSkills', () => {
 
   it('defines append-ordered monotonic review events across lifecycle skills', async () => {
     const expectedVersions = [
-      ['oat-project-plan-writing', '1.2.27'],
+      ['oat-project-plan-writing', '1.2.28'],
       ['oat-project-review-provide', '1.5.10'],
       ['oat-project-review-receive', '1.6.7'],
       ['oat-project-review-receive-remote', '1.5.3'],
@@ -6133,7 +6133,7 @@ describe('validateOatSkills', () => {
       /non-interactive planning leaves it unresolved[\s\S]{0,160}implementation preflight/i,
     );
     expect(dispatchPolicy).toMatch(
-      /Codex[\s\S]{0,240}Luna[\s\S]{0,80}`low`[\s\S]{0,80}`medium`[\s\S]{0,80}`high`[\s\S]{0,80}`xhigh`[\s\S]{0,240}Sol[\s\S]{0,140}`max`/i,
+      /Codex[\s\S]{0,240}Luna[\s\S]{0,120}`low`[\s\S]{0,120}`max`[\s\S]{0,240}Sol[\s\S]{0,140}`max`/i,
     );
 
     expect(
@@ -6222,7 +6222,7 @@ describe('validateOatSkills', () => {
 
   it('tracks the p04 planning skill contract versions', async () => {
     const expectedVersions = [
-      ['oat-project-plan-writing', '1.2.27'],
+      ['oat-project-plan-writing', '1.2.28'],
       ['oat-project-plan', '1.4.14'],
       ['oat-project-quick-start', '2.3.15'],
       ['oat-project-import-plan', '1.4.17'],

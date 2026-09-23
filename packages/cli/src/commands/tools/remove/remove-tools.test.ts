@@ -1282,7 +1282,7 @@ describe('removeTools', () => {
                   candidates: [
                     {
                       harness: 'claude',
-                      model: 'claude-opus-5',
+                      model: 'claude-opus-5-5',
                       effort: 'high',
                     },
                   ],
@@ -1336,7 +1336,7 @@ describe('removeTools', () => {
       extensionResults: [
         expect.objectContaining({
           provider: 'claude',
-          path: '.claude/agents/oat-reviewer-claude-claude-opus-5-high.md',
+          path: '.claude/agents/oat-reviewer-claude-claude-opus-5-5-high.md',
           status: 'changed',
         }),
       ],
@@ -1348,7 +1348,7 @@ describe('removeTools', () => {
           scopeRoot,
           '.claude',
           'agents',
-          'oat-reviewer-claude-claude-opus-5-high.md',
+          'oat-reviewer-claude-claude-opus-5-5-high.md',
         ),
       ),
     ).resolves.toBe(false);
@@ -1358,7 +1358,7 @@ describe('removeTools', () => {
           scopeRoot,
           '.claude',
           'agents',
-          'oat-phase-implementer-claude-claude-opus-5-high.md',
+          'oat-phase-implementer-claude-claude-opus-5-5-high.md',
         ),
       ),
     ).resolves.toBe(true);

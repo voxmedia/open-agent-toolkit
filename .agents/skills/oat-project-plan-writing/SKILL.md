@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: false
 allowed-tools: Read, Write, Glob, Grep
 metadata:
-  version: 1.2.27
+  version: 1.2.28
 ---
 
 # Plan Writing Contract
@@ -119,11 +119,11 @@ Route from the resolver fields, not from hand-inspected config keys:
 When adoption is required, show the complete bundled recommendation before
 asking to write anything:
 
-| Provider        | Economy                                                   | Balanced                                                                   | High                                                                                                     | Frontier                                                                                               |
-| --------------- | --------------------------------------------------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| Codex           | Luna/low, Luna/medium, Luna/high                          | Luna/xhigh, Terra/low, Terra/medium, Terra/high, Terra/xhigh               | Sol/low, Sol/medium, Sol/high                                                                            | Sol/xhigh, Sol/max                                                                                     |
-| Claude          | haiku, claude-sonnet-5/medium                             | claude-sonnet-5/high                                                       | claude-opus-5/medium, claude-opus-5/high                                                                 | claude-opus-5/xhigh, claude-opus-5/max, claude-fable-5-1/high                                          |
-| Cursor (opaque) | `composer-2.5`, `gpt-5.6-luna-high`, `gpt-5.6-luna-xhigh` | `cursor-grok-4.5-high`, `gpt-5.6-terra-high`, `claude-opus-5-thinking-low` | `claude-opus-5-thinking-medium`, `gpt-5.6-sol-medium`, `claude-opus-5-thinking-high`, `gpt-5.6-sol-high` | `gpt-5.6-sol-xhigh`, `claude-opus-5-thinking-xhigh`, `gpt-5.6-sol-max`, `claude-fable-5-thinking-high` |
+| Provider        | Economy                                                   | Balanced                                     | High                                         | Frontier                                                               |
+| --------------- | --------------------------------------------------------- | -------------------------------------------- | -------------------------------------------- | ---------------------------------------------------------------------- |
+| Codex           | Luna/low, Luna/medium, Luna/high                          | Luna/xhigh, Luna/max                         | Sol/low, Sol/medium, Sol/high                | Sol/xhigh, Sol/max                                                     |
+| Claude          | haiku, claude-sonnet-5/medium                             | claude-sonnet-5/high                         | claude-opus-5-5/medium, claude-opus-5-5/high | claude-opus-5-5/xhigh, claude-opus-5-5/max, claude-fable-5-1/high      |
+| Cursor (opaque) | `composer-2.5`, `gpt-5.6-luna-high`, `gpt-5.6-luna-xhigh` | `cursor-grok-4.5-high`, `gpt-5.6-terra-high` | `gpt-5.6-sol-medium`, `gpt-5.6-sol-high`     | `gpt-5.6-sol-xhigh`, `gpt-5.6-sol-max`, `claude-fable-5-thinking-high` |
 
 In an interactive run, ask the user to select the owning scope explicitly
 before any adoption write:

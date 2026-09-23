@@ -163,16 +163,16 @@ describe('provider ceiling adapters', () => {
     it('compiles an effort-pinned Claude target to a role variant', () => {
       expect(
         claude.compileToDispatchArgs('opus', 'implementer', {
-          target: { model: 'claude-opus-5', effort: 'high' },
+          target: { model: 'claude-opus-5-5', effort: 'high' },
         }),
       ).toEqual({
-        variant: 'oat-phase-implementer-claude-claude-opus-5-high',
+        variant: 'oat-phase-implementer-claude-claude-opus-5-5-high',
       });
       expect(
         claude.compileToDispatchArgs('opus', 'reviewer', {
-          target: { model: 'claude-opus-5', effort: 'high' },
+          target: { model: 'claude-opus-5-5', effort: 'high' },
         }),
-      ).toEqual({ variant: 'oat-reviewer-claude-claude-opus-5-high' });
+      ).toEqual({ variant: 'oat-reviewer-claude-claude-opus-5-5-high' });
     });
 
     it('refuses unsupported Claude model-effort pairs', () => {

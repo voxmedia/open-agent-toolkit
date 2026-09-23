@@ -1,5 +1,5 @@
 ---
-guidance_version: 2026-09-23
+guidance_version: 2026-09-22
 last_verified: 2026-09-22
 review_after: 2026-12-22
 ---
@@ -86,7 +86,7 @@ consequence, or a directly relevant Fable strength exposes a failure mode that
 Fable is expected to catch and eligibility permits it. This named Fable
 instantiation is provisional.
 
-A consequential classification by itself is insufficient.
+A stronger safety classifier is a specialist consideration, not an exception that inverts the general Opus-first policy. A consequential classification by itself is insufficient.
 
 ## Conditional and Specialist Routes
 
