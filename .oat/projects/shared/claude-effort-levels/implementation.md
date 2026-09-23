@@ -10,7 +10,7 @@ oat_template: false
 
 # Implementation: claude-effort-levels
 
-All twenty implementation tasks are complete; the review-fix rerun remains. The September 22 model refresh added verified GPT-6 Sol/Luna and Opus 5.5 targets while retaining GPT-5.6; the new maintenance page documents the next update cycle. The revision phase and final reviews and configured exit gate remain pending for this head. PR #315 remains open and unmerged.
+All twenty-one implementation tasks are complete; the final narrow re-review passed. The September 22 model refresh added verified GPT-6 Sol/Luna and Opus 5.5 targets while retaining GPT-5.6; the new maintenance page documents the next update cycle. The revision phase and final independent reviews passed; the configured exit gate remains pending. PR #315 remains open and unmerged.
 
 ## Progress Overview
 
@@ -21,9 +21,9 @@ All twenty implementation tasks are complete; the review-fix rerun remains. The 
 | p03 — Verification and release readiness    | completed | 3     | 3/3       |
 | p04 — Final review fixes                    | completed | 2     | 2/2       |
 | p05 — Capability documentation alignment    | completed | 3     | 3/3       |
-| p-rev1 — Model refresh and maintenance docs | completed | 3     | 3/3       |
+| p-rev1 — Model refresh and maintenance docs | completed | 7     | 7/7       |
 
-**Total: 20/20 tasks completed.**
+**Total: 21/21 tasks completed.**
 
 ## Task Status
 
@@ -50,6 +50,7 @@ All twenty implementation tasks are complete; the review-fix rerun remains. The 
 | prev1-t04 | completed | `c113bdce1` |
 | prev1-t05 | completed | `2725d4bf1` |
 | prev1-t06 | completed | `6317d2470` |
+| prev1-t07 | completed | `b60d3e036` |
 
 ## Orchestration Runs
 
@@ -380,3 +381,7 @@ The user explicitly requested including the recurring irrelevant-mode prompt fix
 **New tasks added:** prev1-t01, prev1-t02, prev1-t03.
 
 **Next:** Execute the revision tasks with oat-project-implement and refresh PR #315.
+
+### Final review follow-up: candidate-effort provider message
+
+The final review at `c5132af88` found one Low CLI message inconsistency. Accepted and fixed in `b60d3e036`: the Cursor candidate error identifies Codex and Claude as effort-capable, and unreachable Claude validation was removed. The narrow re-review at `b60d3e036` passed with no findings. Both artifacts are archived; the configured exit gate remains pending.

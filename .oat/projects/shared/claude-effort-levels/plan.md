@@ -324,6 +324,9 @@ Then run each separately with its own captured exit code: `pnpm test:smoke`, `pn
 | p-rev1 | code | fixes_completed | 2026-09-23 | reviews/archived/p-rev1-review-2026-09-23T010920Z.md | bf1eb0cc943d302d76ad6f87c08d4901f95b9af2 | phase | oat-reviewer-gpt-5-6-sol-high |
 | p-rev1 | code | passed | 2026-09-23 | reviews/archived/p-rev1-review-2026-09-23T011458Z.md | 128e3a57063cea1c3186ac2fe77fbaf4464dcc2e | phase | oat-reviewer-gpt-5-6-sol-high |
 
+| final | code | fixes_completed | 2026-09-23 | reviews/archived/final-review-2026-09-23T012702Z.md | c5132af882bbccaecbee6ebf7a5030955215a9fe | manual | oat-reviewer-gpt-5-6-sol-high |
+| final | code | passed | 2026-09-23 | reviews/archived/final-review-2026-09-23T013315Z.md | b60d3e036da3817b44bf715d9456cda3a73925d4 | manual | oat-reviewer-gpt-5-6-sol-high |
+
 Spec and design rows are retained from the scaffold for compatibility and are not required in this quick workflow. Native structured artifact review passed after one revision. The replacement configured implementation gate passed its High threshold with 0 Critical, 0 High, 0 Medium, and 2 Low findings. Root received the corroborated artifact and addressed both Low bookkeeping findings in the passing-gate judgment sweep: the older consumed final review is archived, and stale closeout wording now matches project state. The prior p-rev1 review fixes are complete; its narrowed re-reviews are received and passed.
 
 Phase p02 passed with 0 Critical, 0 High, 0 Medium, and 1 Low after all five first-round findings were resolved. Phase p03 closed that reporting drift, added the shipped launch/record boundary and durable live evidence, and passed its third review cycle with zero findings after two bounded fix rounds.
@@ -390,9 +393,19 @@ The independent p-rev1 review at `599f066b1` found one High and two Medium findi
 
 **Verify:** Docs build and stale-model search.
 
+### Task prev1-t07: Correct candidate-effort provider guidance
+
+**Files:** `packages/cli/src/commands/project/dispatch-ceiling/index.ts`, `index.test.ts`.
+
+**Steps:** Fix the final review's Low finding: the Cursor candidate error names both Codex and Claude as effort-capable providers; remove the unreachable duplicate Claude validation branch.
+
+**Verify:** Focused CLI candidate-request tests and narrow independent re-review.
+
+**Commit:** `fix(dispatch): clarify candidate effort providers` (`b60d3e036`).
+
 ## Implementation Complete
 
-All twenty original, revision, and review-fix tasks are implemented. The original fourteen-task implementation passed its prior closeout; the three model-refresh tasks are complete and await revision review and a fresh configured exit gate. PR #315 remains open.
+All twenty-one original, revision, and review-fix tasks are implemented. The original fourteen-task implementation passed its prior closeout; the model-refresh phase and final independent review passed, and the configured exit gate remains pending. PR #315 remains open.
 
 - Phase 1: 2 tasks — resolver and generated-role lifecycle.
 - Phase 2: 4 tasks — awareness, recommendations, documentation/decision alignment, and relevant lifecycle-gate prompts.
@@ -400,7 +413,7 @@ All twenty original, revision, and review-fix tasks are implemented. The origina
 - Phase 4: 2 tasks — version-aware Claude effort validation and provider-registry guidance.
 - Phase 5: 3 tasks — align shipped guidance with the fail-closed capability contract and correct the uncapped Claude effort selection path.
 
-**Total: 20 tasks; 20 implemented; phase re-review passed.**
+**Total: 21 tasks; 21 implemented; phase and final re-reviews passed.**
 
 ## References
 
