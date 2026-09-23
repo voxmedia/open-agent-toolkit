@@ -9,7 +9,10 @@ import {
   type ClaudeCapabilityEvidence,
   validateClaudeDispatchCapability,
 } from '@providers/claude/targets';
-import { buildCodexMaterializedTargetRoleName } from '@providers/codex/codec/shared';
+import {
+  buildCodexMaterializedTargetRoleName,
+  SUPPORTED_CODEX_ROLE_TARGETS,
+} from '@providers/codex/codec/shared';
 import { findCursorModelPinMapping } from '@providers/cursor/codec/catalog';
 import { buildCursorMaterializedRoleName } from '@providers/cursor/codec/shared';
 
@@ -97,7 +100,12 @@ const codexAdapter: ProviderCeilingAdapter = {
   compileToDispatchArgs(value, role, ctx) {
     if (
       !VALID_CODEX_DISPATCH_CEILINGS.includes(value as never) &&
-      !(value === 'ultra' && ctx.target?.effort === 'ultra')
+      !SUPPORTED_CODEX_ROLE_TARGETS.some(
+        (candidate) =>
+          candidate.model === ctx.target?.model &&
+          candidate.effort === value &&
+          ctx.target?.effort === value,
+      )
     ) {
       return null;
     }

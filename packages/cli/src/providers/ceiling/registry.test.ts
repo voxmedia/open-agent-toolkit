@@ -111,6 +111,11 @@ describe('provider ceiling adapters', () => {
       expect(
         codex.compileToDispatchArgs('ultra', 'implementer', {}),
       ).toBeNull();
+      expect(
+        codex.compileToDispatchArgs('ultra', 'implementer', {
+          target: { model: 'gpt-6-luna', effort: 'ultra' },
+        }),
+      ).toBeNull();
       expect(codex.compileToDispatchArgs('high', 'implementer', {})).toBeNull();
     });
 

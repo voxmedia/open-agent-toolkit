@@ -68,6 +68,7 @@ import {
   validateClaudeDispatchCapability,
   validateClaudeDispatchTarget,
 } from '@providers/claude/targets';
+import { SUPPORTED_CODEX_ROLE_TARGETS } from '@providers/codex/codec/shared';
 import {
   buildDispatchReport,
   formatDispatchReport,
@@ -183,9 +184,11 @@ const CODEX_VALUES: readonly WorkflowCodexDispatchCeiling[] = [
   ...VALID_CODEX_DISPATCH_CEILINGS,
 ];
 
-// Exact model-plus-effort candidates can reach ultra; the project-wide scalar
-// ceiling remains capped at max.
-const CODEX_CANDIDATE_EFFORTS = [...CODEX_VALUES, 'ultra'] as const;
+// Catalogue order is low to high within each model; the scalar ceiling
+// remains separately capped by CODEX_VALUES.
+const CODEX_CANDIDATE_EFFORTS = [
+  ...new Set(SUPPORTED_CODEX_ROLE_TARGETS.map((target) => target.effort)),
+];
 
 const CLAUDE_VALUES: readonly WorkflowClaudeDispatchCeiling[] = [
   ...VALID_CLAUDE_DISPATCH_CEILINGS,
@@ -400,6 +403,9 @@ function validManagedPolicyList(): string {
 }
 
 function validProviderValueList(provider: DispatchCeilingProvider): string {
+  if (provider === 'codex') {
+    return CODEX_VALUES.join(', ');
+  }
   return providerValueOrder(provider)?.join(', ') ?? 'none';
 }
 
@@ -1585,7 +1591,7 @@ function providerValueOrder(
   provider: DispatchCeilingProvider,
 ): readonly DispatchCeilingValue[] | null {
   if (provider === 'codex') {
-    return CODEX_VALUES;
+    return CODEX_CANDIDATE_EFFORTS;
   }
   if (provider === 'claude') {
     return CLAUDE_VALUES;
@@ -1612,7 +1618,9 @@ function normalizePreferredValue(
   }
 
   if (!isValidProviderValue(provider, normalized)) {
-    const validValues = order.join(', ');
+    const validValues = (provider === 'codex' ? CODEX_VALUES : order).join(
+      ', ',
+    );
     throw new Error(
       `Invalid preferred dispatch value "${normalized}" for ${provider}. Valid values: ${validValues}.`,
     );

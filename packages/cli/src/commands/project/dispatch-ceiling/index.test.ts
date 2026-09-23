@@ -4308,6 +4308,76 @@ describe('oat project dispatch-ceiling resolve', () => {
     expect(process.exitCode).toBe(1);
   });
 
+  it.each(['max', 'ultra'])(
+    'honors a lower preferred Codex effort beneath a %s frontier candidate',
+    async (ceilingEffort) => {
+      const { root, home } = await setup();
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: {
+          dispatchPolicy: { mode: 'managed', policy: 'frontier' },
+          dispatchCeiling: {
+            providers: {
+              codex: {
+                frontier: {
+                  candidates: [
+                    { harness: 'codex', model: 'gpt-6-sol', effort: 'max' },
+                    ...(ceilingEffort === 'ultra'
+                      ? [
+                          {
+                            harness: 'codex',
+                            model: 'gpt-6-sol',
+                            effort: 'ultra',
+                          },
+                        ]
+                      : []),
+                  ],
+                },
+              },
+            },
+          },
+        },
+      });
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'codex',
+        '--role',
+        'implementer',
+        '--preferred',
+        'high',
+        '--json',
+      ]);
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'resolved',
+        providers: {
+          codex: {
+            dispatchArgs: { variant: 'oat-phase-implementer-gpt-6-sol-high' },
+            selection: { preferredValue: 'high', selectedValue: 'high' },
+          },
+        },
+      });
+      expect(process.exitCode).toBe(0);
+    },
+  );
+
+  it('keeps ultra unavailable as a legacy preferred scalar', async () => {
+    const { root, home } = await setup();
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, [
+      '--provider',
+      'codex',
+      '--preferred',
+      'ultra',
+      '--json',
+    ]);
+    expect(capture.jsonPayloads[0]).toMatchObject({ status: 'error' });
+    expect(capture.jsonPayloads[0]?.message).toContain(
+      'Valid values: low, medium, high, xhigh, max',
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
   it('resolves a lower exact candidate from a project-state named ceiling', async () => {
     const { root, home } = await setup();
     await writeFile(
