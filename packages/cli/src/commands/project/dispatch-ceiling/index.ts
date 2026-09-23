@@ -1701,18 +1701,9 @@ function normalizeRequestedCandidate(
 
   if (effort) {
     throw new Error(
-      `--candidate-effort is only valid for Codex; ${provider} candidates use --candidate-model only.`,
+      `--candidate-effort is only valid for Codex or Claude; ${provider} candidates use --candidate-model only.`,
     );
   }
-  if (
-    provider === 'claude' &&
-    !CLAUDE_VALUES.includes(model as WorkflowClaudeDispatchCeiling)
-  ) {
-    throw new Error(
-      `Invalid Claude candidate model "${model}". Valid values: ${CLAUDE_VALUES.join(', ')}.`,
-    );
-  }
-
   return { model };
 }
 

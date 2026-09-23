@@ -4137,6 +4137,17 @@ describe('oat project dispatch-ceiling resolve', () => {
     {
       args: [
         '--provider',
+        'cursor',
+        '--candidate-model',
+        'composer-2-5',
+        '--candidate-effort',
+        'high',
+      ],
+      message: '--candidate-effort is only valid for Codex or Claude',
+    },
+    {
+      args: [
+        '--provider',
         'codex',
         '--candidate-model',
         'gpt-5.6-sol',
