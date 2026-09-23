@@ -324,7 +324,7 @@ Then run each separately with its own captured exit code: `pnpm test:smoke`, `pn
 | final  | code     | fixes_completed | 2026-09-23 | reviews/archived/final-review-2026-09-23T012702Z.md         | c5132af882bbccaecbee6ebf7a5030955215a9fe | manual     | -                     |
 | final  | code     | passed          | 2026-09-23 | reviews/archived/final-review-2026-09-23T013315Z.md         | b60d3e036da3817b44bf715d9456cda3a73925d4 | manual     | -                     |
 | final  | code     | fixes_completed | 2026-09-23 | reviews/archived/final-review-2026-09-23T014530Z.md         | 33deb0d0aba348f62e00b23c5fc928748ab50785 | gate       | cursor-fable-5-1-high |
-| final  | code     | received        | 2026-09-23 | reviews/final-review-2026-09-23T021854Z.md                  | 60ccb2bb90038282a6320cb5cbf773817ccd46a2 | gate       | cursor-fable-5-1-high |
+| final  | code     | fixes_completed | 2026-09-23 | reviews/archived/final-review-2026-09-23T021854Z.md         | 60ccb2bb90038282a6320cb5cbf773817ccd46a2 | gate       | cursor-fable-5-1-high |
 
 Spec and design rows are retained from the scaffold for compatibility and are not required in this quick workflow. Native structured artifact review passed after one revision. The replacement configured implementation gate passed its High threshold with 0 Critical, 0 High, 0 Medium, and 2 Low findings. Root received the corroborated artifact and addressed both Low bookkeeping findings in the passing-gate judgment sweep: the older consumed final review is archived, and stale closeout wording now matches project state. The prior p-rev1 review fixes are complete; its narrowed re-reviews are received and passed.
 
@@ -426,9 +426,27 @@ The independent p-rev1 review at `599f066b1` found one High and two Medium findi
 
 **Verify:** Docs build, plan table check, and fresh independent final review.
 
+### Task prev1-t11: Preserve lower preferred Codex effort under an ultra candidate
+
+**Files:** `packages/cli/src/commands/project/dispatch-ceiling/index.ts`, its tests, `packages/cli/src/providers/ceiling/registry.ts`, and its tests.
+
+**Steps:** Order exact Codex candidate efforts from the catalogue while retaining the scalar project ceiling and legacy preferred values through `max`. Cap a preferred `high` below a frontier `ultra` candidate and require exact catalogue membership for nonstandard adapter efforts.
+
+**Verify:** The pre-fix `ultra` preferred-effort regression fails, then passes after the fix; `max` control, rejected `--preferred ultra`, and unsupported Luna `ultra` also pass.
+
+**Commit:** `60f2f197c` (`fix(dispatch): cap preferred effort beneath ultra candidates`).
+
+### Task prev1-t12: Receive the second configured gate review and verify
+
+**Files:** Project plan, implementation, state, and `reviews/archived/final-review-2026-09-23T021854Z.md`.
+
+**Steps:** Record the accepted Medium and two Low findings, correct the task count, archive the consumed artifact, rerun repository gates, and request a fresh configured final gate at the fixed head.
+
+**Verify:** Ordered repository gates and independent configured final review.
+
 ## Implementation Complete
 
-All twenty-four original, revision, and review-fix tasks are implemented. The original fourteen-task implementation passed its prior closeout; the model-refresh phase and final independent review passed, and the configured exit gate requires a fresh post-fix run. PR #315 remains open.
+All twenty-six original, revision, and review-fix tasks are implemented. The original fourteen-task implementation passed its prior closeout; the model-refresh phase and final independent review passed, and the configured exit gate requires a fresh post-fix run. PR #315 remains open.
 
 - Phase 1: 2 tasks — resolver and generated-role lifecycle.
 - Phase 2: 4 tasks — awareness, recommendations, documentation/decision alignment, and relevant lifecycle-gate prompts.
@@ -436,7 +454,7 @@ All twenty-four original, revision, and review-fix tasks are implemented. The or
 - Phase 4: 2 tasks — version-aware Claude effort validation and provider-registry guidance.
 - Phase 5: 3 tasks — align shipped guidance with the fail-closed capability contract and correct the uncapped Claude effort selection path.
 
-**Total: 24 tasks; 24 implemented; fresh final gate review pending.**
+**Total: 26 tasks; 26 implemented; fresh final gate review pending.**
 
 ## References
 
