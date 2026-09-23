@@ -357,9 +357,37 @@ Source: inline feedback (2026-09-22). Keep GPT-5.6 available while adding GPT-6 
 
 **Commit:** `docs(prev1-t03): document model update procedure`.
 
+### Review-fix tasks for p-rev1
+
+The independent p-rev1 review at `599f066b1` found one High and two Medium findings. All three are accepted; see `reviews/p-rev1-review-2026-09-23T005530Z.md`.
+
+### Task prev1-t04: Refresh evidence routing for current generations
+
+**Files:** `.agents/skills/subagent-orchestration/references/evidence-and-refresh.md`, skill version and relevant tests.
+
+**Steps:** Replace current Opus 5/4.8 route text with verified Opus 5.5 and update the dated GPT-6 evidence summary, retaining clearly historical benchmark observations.
+
+**Verify:** Focused stale-route search and skill validation.
+
+### Task prev1-t05: Show exact generation in planning adoption table
+
+**Files:** `.agents/skills/oat-project-plan-writing/SKILL.md`, associated contract tests.
+
+**Steps:** Spell Codex recommendation cells with exact `gpt-6-luna` and `gpt-6-sol` IDs and pin the display in tests.
+
+**Verify:** Focused contract tests.
+
+### Task prev1-t06: Update live docs examples and citation
+
+**Files:** `apps/oat-docs/docs/provider-sync/providers.md`, `apps/oat-docs/docs/cli-utilities/workflow-gates.md`, `apps/oat-docs/docs/contributing/updating-model-guidance.md`.
+
+**Steps:** Replace active retired Opus examples; point the Opus 5.5 evidence link to Anthropic's launch page.
+
+**Verify:** Docs build and stale-model search.
+
 ## Implementation Complete
 
-All seventeen planned tasks are implemented. The original fourteen-task implementation passed its prior closeout; the three model-refresh tasks are complete and await revision review and a fresh configured exit gate. PR #315 remains open.
+Seventeen original and revision tasks are implemented; three accepted review-fix tasks remain. The original fourteen-task implementation passed its prior closeout; the three model-refresh tasks are complete and await revision review and a fresh configured exit gate. PR #315 remains open.
 
 - Phase 1: 2 tasks — resolver and generated-role lifecycle.
 - Phase 2: 4 tasks — awareness, recommendations, documentation/decision alignment, and relevant lifecycle-gate prompts.
@@ -367,7 +395,7 @@ All seventeen planned tasks are implemented. The original fourteen-task implemen
 - Phase 4: 2 tasks — version-aware Claude effort validation and provider-registry guidance.
 - Phase 5: 3 tasks — align shipped guidance with the fail-closed capability contract and correct the uncapped Claude effort selection path.
 
-**Total: 17 tasks; 17 implemented; revision review pending.**
+**Total: 20 tasks; 17 implemented; three review fixes pending.**
 
 ## References
 

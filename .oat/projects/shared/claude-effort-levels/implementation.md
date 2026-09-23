@@ -1,16 +1,16 @@
 ---
 oat_status: in_progress
-oat_ready_for: null
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-09-22
-oat_current_task_id: null
+oat_current_task_id: prev1-t04
 oat_generated: false
 oat_template: false
 ---
 
 # Implementation: claude-effort-levels
 
-All seventeen implementation tasks are complete. The September 22 model refresh added verified GPT-6 Sol/Luna and Opus 5.5 targets while retaining GPT-5.6; the new maintenance page documents the next update cycle. The revision phase and final reviews and configured exit gate remain pending for this head. PR #315 remains open and unmerged.
+Seventeen implementation tasks are complete; three review-fix tasks remain. The September 22 model refresh added verified GPT-6 Sol/Luna and Opus 5.5 targets while retaining GPT-5.6; the new maintenance page documents the next update cycle. The revision phase and final reviews and configured exit gate remain pending for this head. PR #315 remains open and unmerged.
 
 ## Progress Overview
 
@@ -23,7 +23,7 @@ All seventeen implementation tasks are complete. The September 22 model refresh 
 | p05 — Capability documentation alignment    | completed | 3     | 3/3       |
 | p-rev1 — Model refresh and maintenance docs | completed | 3     | 3/3       |
 
-**Total: 17/17 tasks completed.**
+**Total: 17/20 tasks completed.**
 
 ## Task Status
 
@@ -47,6 +47,9 @@ All seventeen implementation tasks are complete. The September 22 model refresh 
 | prev1-t01 | completed | `b3631dfc9` |
 | prev1-t02 | completed | `bd90d58d2` |
 | prev1-t03 | completed | `8966287d6` |
+| prev1-t04 | pending | - |
+| prev1-t05 | pending | - |
+| prev1-t06 | pending | - |
 
 ## Orchestration Runs
 
@@ -232,6 +235,10 @@ The user approved the final HiLL closeout checkpoint after exact-head verificati
 - User disabled additional phase gate review. The plan leaves `oat_phase_review_gate` absent as required by the setup contract. Built-in per-phase root reviews and final review remain required.
 - Existing user lifecycle gates are configured. User explicitly selected Keep for all five configured lifecycle gates. No project override map is written. Final readiness awaits project dispatch policy selection, plan review, and the configured quick-start gate.
 - Read-only recon reused the existing `claude_effort_scope` child, returning source references for recommendation/adoption and sync lifecycle integration. No implementation edits were delegated.
+
+### Revision phase review
+
+The independent Sol/high review at `599f066b1` found 1 High and 2 Medium findings. All three are accepted for bounded fixes in prev1-t04–t06; the review artifact is `reviews/p-rev1-review-2026-09-23T005530Z.md`. The earlier 17-task completion and full gate results apply to that reviewed basis; a fresh review and checks follow these fixes.
 
 ## Deviations from Plan / Design
 
