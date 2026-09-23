@@ -42,14 +42,14 @@ function completeClaudeMatrix() {
     },
     high: {
       candidates: [
-        { harness: 'claude', model: 'claude-opus-5', effort: 'medium' },
-        { harness: 'claude', model: 'claude-opus-5', effort: 'high' },
+        { harness: 'claude', model: 'claude-opus-5-5', effort: 'medium' },
+        { harness: 'claude', model: 'claude-opus-5-5', effort: 'high' },
       ],
     },
     frontier: {
       candidates: [
-        { harness: 'claude', model: 'claude-opus-5', effort: 'xhigh' },
-        { harness: 'claude', model: 'claude-opus-5', effort: 'max' },
+        { harness: 'claude', model: 'claude-opus-5-5', effort: 'xhigh' },
+        { harness: 'claude', model: 'claude-opus-5-5', effort: 'max' },
         { harness: 'claude', model: 'claude-fable-5-1', effort: 'high' },
       ],
     },
@@ -189,7 +189,7 @@ test('config to resolver to generated definition to launch payload to dispatch r
     '--ceiling-tier',
     'high',
     '--candidate-model',
-    'claude-opus-5',
+    'claude-opus-5-5',
     '--candidate-effort',
     'high',
     '--task-class',
@@ -226,15 +226,15 @@ test('config to resolver to generated definition to launch payload to dispatch r
     [
       'oat-phase-implementer',
       implementer.payload,
-      'oat-phase-implementer-claude-claude-opus-5-high',
+      'oat-phase-implementer-claude-claude-opus-5-5-high',
     ],
     [
       'oat-reviewer',
       reviewer.payload,
-      'oat-reviewer-claude-claude-opus-5-high',
+      'oat-reviewer-claude-claude-opus-5-5-high',
     ],
   ]) {
-    const definition = definitionFor(role, 'claude-opus-5', 'high');
+    const definition = definitionFor(role, 'claude-opus-5-5', 'high');
     const record = productionRecord({
       role,
       resolution,
@@ -243,7 +243,7 @@ test('config to resolver to generated definition to launch payload to dispatch r
     });
     assert.deepEqual(configuredInvocationForObservation(record), {
       role: [role, expectedVariant],
-      model: 'claude-opus-5',
+      model: 'claude-opus-5-5',
       effort: 'high',
       serviceTier: null,
     });
@@ -259,7 +259,7 @@ test('same-model candidates resolve by effort and refuse absent or conflicting l
     '--ceiling-tier',
     'high',
     '--candidate-model',
-    'claude-opus-5',
+    'claude-opus-5-5',
     '--candidate-effort',
     'medium',
     '--task-class',
@@ -279,7 +279,7 @@ test('same-model candidates resolve by effort and refuse absent or conflicting l
     '--ceiling-tier',
     'high',
     '--candidate-model',
-    'claude-opus-5',
+    'claude-opus-5-5',
     '--candidate-effort',
     'high',
     '--task-class',
@@ -303,11 +303,11 @@ test('same-model candidates resolve by effort and refuse absent or conflicting l
   );
   assert.equal(
     medium.payload.providers.claude.dispatchArgs.variant,
-    'oat-phase-implementer-claude-claude-opus-5-medium',
+    'oat-phase-implementer-claude-claude-opus-5-5-medium',
   );
   assert.equal(
     high.payload.providers.claude.dispatchArgs.variant,
-    'oat-phase-implementer-claude-claude-opus-5-high',
+    'oat-phase-implementer-claude-claude-opus-5-5-high',
   );
   assert.notEqual(
     medium.payload.providers.claude.dispatchArgs.variant,
@@ -316,7 +316,7 @@ test('same-model candidates resolve by effort and refuse absent or conflicting l
 
   const highDefinition = definitionFor(
     'oat-phase-implementer',
-    'claude-opus-5',
+    'claude-opus-5-5',
     'high',
   );
   assert.throws(
@@ -344,7 +344,7 @@ test('same-model candidates resolve by effort and refuse absent or conflicting l
   // native variant for a high selection on the same model.
   const effortBlind = structuredClone(high.payload);
   effortBlind.providers.claude.dispatchArgs.variant =
-    'oat-phase-implementer-claude-claude-opus-5-medium';
+    'oat-phase-implementer-claude-claude-opus-5-5-medium';
   assert.throws(
     () =>
       productionRecord({
@@ -352,11 +352,11 @@ test('same-model candidates resolve by effort and refuse absent or conflicting l
         resolution: effortBlind,
         definition: definitionFor(
           'oat-phase-implementer',
-          'claude-opus-5',
+          'claude-opus-5-5',
           'medium',
         ).content,
         payload: {
-          variant: 'oat-phase-implementer-claude-claude-opus-5-medium',
+          variant: 'oat-phase-implementer-claude-claude-opus-5-5-medium',
         },
       }),
     /resolver variant .* does not match selected target/u,
@@ -442,7 +442,7 @@ test('versioned capabilities fail closed while model-only and inherit paths rema
     '--role',
     'implementer',
     '--candidate-model',
-    'claude-opus-5',
+    'claude-opus-5-5',
     '--candidate-effort',
     'extreme',
   ]);
@@ -508,16 +508,16 @@ test('existing captured Claude transcript metadata stays observation-only', () =
     productionRecord({
       role: 'oat-reviewer',
       resolution: resolution.payload,
-      definition: definitionFor('oat-reviewer', 'claude-opus-5', 'high')
+      definition: definitionFor('oat-reviewer', 'claude-opus-5-5', 'high')
         .content,
-      payload: { variant: 'oat-reviewer-claude-claude-opus-5-high' },
+      payload: { variant: 'oat-reviewer-claude-claude-opus-5-5-high' },
     }),
   );
   assert.equal(
     compareObservedRuntimeMetadata(metadata, configured),
     'mismatching',
   );
-  assert.equal(configured.role[1], 'oat-reviewer-claude-claude-opus-5-high');
+  assert.equal(configured.role[1], 'oat-reviewer-claude-claude-opus-5-5-high');
   assert.equal(
     readFileSync(
       join(
