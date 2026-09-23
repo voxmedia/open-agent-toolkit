@@ -4308,6 +4308,20 @@ describe('oat project dispatch-ceiling resolve', () => {
     expect(process.exitCode).toBe(1);
   });
 
+  it('keeps the Codex catalogue effort order ascending for candidate ranking', () => {
+    const firstSeenEfforts = [
+      ...new Set(SUPPORTED_CODEX_ROLE_TARGETS.map((target) => target.effort)),
+    ];
+    expect(firstSeenEfforts).toEqual([
+      'low',
+      'medium',
+      'high',
+      'xhigh',
+      'max',
+      'ultra',
+    ]);
+  });
+
   it.each(['max', 'ultra'])(
     'honors a lower preferred Codex effort beneath a %s frontier candidate',
     async (ceilingEffort) => {
