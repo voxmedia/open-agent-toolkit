@@ -34,8 +34,12 @@ probe records can still describe past behavior, clearly labeled as historical.
 
 Check the provider's official model documentation and the local runtime before
 editing an ID or effort range. The [OpenAI model catalog](https://developers.openai.com/api/docs/models)
-lists GPT-6 Sol and Luna; compare it with the installed Codex runtime model
-cache for the exact names and local effort set. The
+lists GPT-6 Astra, Sol, and Luna. The
+[Astra model page](https://developers.openai.com/api/docs/models/gpt-6-astra)
+names `gpt-6-astra` and documents `low`, `medium`, `high`, `xhigh`, and `max`;
+compare it with the installed Codex runtime model cache for the exact names and
+local effort set. Catalog presence establishes support, not relative task
+quality. The
 [Anthropic Opus 5.5 documentation](https://www.anthropic.com/claude-opus-5-5)
 names `claude-opus-5-5`; confirm a Claude Code invocation reports that exact
 assistant model before admitting it to the Claude catalog. Claude subagent
@@ -74,6 +78,9 @@ for the distinction between catalog, configured mapping, and runtime identity.
 2. Update the bundled recommendation's ordered candidate cells and version.
    Check the _last_ candidate in each tier: it determines that tier's pinned
    self-review target. Keep the ladder within its provider's supported catalog.
+   A recommendation may reflect an explicit operator preference before a
+   workload comparison exists; label that boundary instead of presenting the
+   preference as measured superiority or accepted portfolio policy.
 3. Update the provider selection references and bump the canonical skill
    version once for the PR. Search the repository for the old and new IDs,
    including schemas, fixtures, examples, and generated projections. Replace

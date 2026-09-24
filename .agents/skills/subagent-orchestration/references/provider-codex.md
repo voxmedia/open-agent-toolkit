@@ -1,6 +1,6 @@
 ---
-guidance_version: 2026-09-22
-last_verified: 2026-09-22
+guidance_version: 2026-09-24
+last_verified: 2026-09-24
 review_after: 2026-12-22
 ---
 
@@ -13,10 +13,18 @@ model examples below. Launch mechanics for OAT dispatch live in
 
 ## Current Families
 
-Use the verified GPT-6 Sol/Luna model IDs for new Codex work:
+Use the verified GPT-6 Astra/Sol/Luna model IDs for new Codex work:
 
+- `gpt-6-astra`: Frontier candidate for especially demanding work; the bundled
+  recommendation uses high and xhigh, while the supported catalogue also
+  permits low, medium, and max;
 - `gpt-6-sol`: high-capability implementation and reasoning route;
 - `gpt-6-luna`: cost-sensitive, bounded work.
+
+Astra's local task advantage remains unmeasured. Its Frontier inclusion is a
+user-directed preference, not acceptance by the separately maintained
+model-selection policy. Keep the Sol task-class defaults below until relevant
+harness evaluation supports a broader change.
 
 The GPT-5.6 Sol/Luna/Terra targets remain supported for explicit configurations
 and established workloads. Re-evaluate economics and qualitative routing on
@@ -47,7 +55,10 @@ model/effort pairs are in the local Codex catalogue.
 | `hard-reasoning`         | `gpt-6-sol`, high                          | Sol xhigh                                                             | Narrow the problem before raising effort.                                     |
 | `consequential`          | `gpt-6-sol`, high, plus independent review | Sol xhigh for a reasoning-depth bottleneck; max only after evaluation | The root retains consequential authorization.                                 |
 
-The bundled frontier ladder and the supported Sol effort set end at max.
+The bundled Frontier ladder ends with Astra xhigh after Sol xhigh and Astra
+high. The supported Astra and Sol effort sets both end at max, so Sol max
+remains available for explicit configuration even though it is no longer in
+the bundled Frontier recommendation.
 GPT-5.6 `reasoning.mode: "pro"` is a
 separate quality/latency/cost control on that older model, not a GPT-6 effort
 label or model slug.

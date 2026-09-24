@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: false
 allowed-tools: Read, Write, Glob, Grep
 metadata:
-  version: 1.2.30
+  version: 1.2.31
 ---
 
 # Plan Writing Contract
@@ -121,7 +121,7 @@ asking to write anything:
 
 | Provider        | Economy                                                   | Balanced                                     | High                                                              | Frontier                                                               |
 | --------------- | --------------------------------------------------------- | -------------------------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| Codex           | gpt-6-luna/low, gpt-6-luna/medium, gpt-6-luna/high        | gpt-6-luna/xhigh, gpt-6-luna/max             | gpt-6-sol/low, gpt-6-sol/medium, gpt-6-sol/high                   | gpt-6-sol/xhigh, gpt-6-sol/max                                         |
+| Codex           | gpt-6-luna/low, gpt-6-luna/medium, gpt-6-luna/high        | gpt-6-luna/xhigh, gpt-6-luna/max             | gpt-6-sol/low, gpt-6-sol/medium, gpt-6-sol/high                   | gpt-6-sol/xhigh, gpt-6-astra/high, gpt-6-astra/xhigh                   |
 | Claude          | haiku, claude-sonnet-5/medium                             | claude-opus-5-5/low                          | claude-opus-5-5/low, claude-opus-5-5/medium, claude-opus-5-5/high | claude-opus-5-5/xhigh, claude-opus-5-5/max, claude-fable-5-1/high      |
 | Cursor (opaque) | `composer-2.5`, `gpt-5.6-luna-high`, `gpt-5.6-luna-xhigh` | `cursor-grok-4.5-high`, `gpt-5.6-terra-high` | `gpt-5.6-sol-medium`, `gpt-5.6-sol-high`                          | `gpt-5.6-sol-xhigh`, `gpt-5.6-sol-max`, `claude-fable-5-thinking-high` |
 

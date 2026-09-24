@@ -75,6 +75,31 @@ Recorded before the p01-t01 catalog edit on 2026-09-24:
 
 ---
 
+## Documentation Delta Analysis
+
+Recorded before the p01-t02 documentation edit:
+
+- The bundled recommendation and copied planning table currently end Codex
+  Frontier with `gpt-6-sol/xhigh`, `gpt-6-sol/max`. The approved delta is
+  `gpt-6-sol/xhigh`, `gpt-6-astra/high`, `gpt-6-astra/xhigh`; no Claude,
+  Cursor, Economy, Balanced, or High cell changes.
+- The dispatch-policy page currently describes GPT-6 Sol through `max` across
+  High and Frontier. It must distinguish retained Sol `max` catalog support
+  from the new Frontier preference, name Astra's five admitted efforts, and
+  preserve populated user-owned cells during adoption.
+- The updating-model-guidance page currently cites only GPT-6 Sol and Luna.
+  It must add the official Astra model page and local Codex cache as capability
+  evidence, while stating that catalog presence does not measure task quality.
+- The Codex provider and evidence references currently have no Astra route.
+  They must document Astra as an exact selectable Frontier candidate whose
+  local task advantage is unmeasured and whose inclusion is a user-directed
+  preference, not acceptance by the separate model-selection policy.
+- Both pages already appear in their parent `## Contents` lists and neither
+  page has its own `## Contents` section. Those authored links remain
+  unchanged; only the generated root index is regenerated.
+
+---
+
 ## Phase 1: {Phase Name}
 
 **Status:** in_progress
