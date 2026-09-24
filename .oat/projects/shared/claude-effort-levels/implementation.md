@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-09-22
+oat_last_updated: 2026-09-24
 oat_current_task_id: null
 oat_generated: false
 oat_template: false
@@ -10,7 +10,7 @@ oat_template: false
 
 # Implementation: claude-effort-levels
 
-All twenty-seven implementation tasks are complete; the final narrow re-review passed. The September 22 model refresh added verified GPT-6 Sol/Luna and Opus 5.5 targets while retaining GPT-5.6; the new maintenance page documents the next update cycle. The revision phase and final independent reviews passed; the configured exit gate passed its High threshold at the earlier head, and the received Medium/Low findings are fixed. A fresh post-fix review remains pending. PR #315 remains open and unmerged.
+All twenty-seven implementation tasks are complete; the final narrow re-review passed. The September 22 model refresh added verified GPT-6 Sol/Luna and Opus 5.5 targets while retaining GPT-5.6; the new maintenance page documents the next update cycle. The revision phase and earlier independent reviews passed. The latest configured gate review passed its High threshold at `2cfb86bf7` with two Low findings; both are fixed locally. The user explicitly declined another review after the final routing change. PR #315 remains open and unmerged.
 
 ## Progress Overview
 
@@ -407,3 +407,7 @@ The configured Cursor gate reviewed `cfd458ca4`, exited 0 at the High threshold,
 ### Fourth configured final-gate findings resolved
 
 The configured Cursor gate reviewed `51805cb2d`, exited 1 at the High threshold, and reported one High, one Medium, and two Low findings in `reviews/archived/final-review-2026-09-23T232251Z.md`. All four were accepted and fixed in `32d42d3d4` plus this bookkeeping commit. The eight-record and 32-event redacted native probe fixtures now live under the package-owned Cursor codec `__fixtures__/` path so archival of this OAT project cannot break the test; the mapping evidence paths and reusable runbook point there. The prior `claude-sonnet-5-high` ID remains a non-catalogue compatibility alias for explicitly configured cells, while the verified `claude-sonnet-5-thinking-high` is the canonical catalogue target. The duplicate prior-review ledger row was removed and the Claude/Cursor coexistence fixture uses the canonical target. The Claude provider guide now names Fable 5.1 consistently with the bundled recommendation. A negative control that temporarily removed the package-owned native-events fixture failed the focused test with `ENOENT`; restoring it passed 25/25 focused tests. Ordered repository gates passed: check, type-check, test (7,527 CLI tests executed), build, skill bumps, version check against fetched `origin/main`, release validation, docs build, lint, and format. A new configured independent final review is next.
+
+### Claude intelligent-recon routing and latest review disposition
+
+The final configured review at `2cfb86bf7` exited 0 at the High threshold with 0 Critical/High/Medium and 2 Low findings. `3c52dbd75` adds the requested resolver-level legacy Cursor alias test and corrects the native-probe provenance pointers. `9dcea2628` changes the bundled Claude Balanced ladder from Sonnet 5 high to the sole Opus 5.5 low candidate, adds Opus 5.5 low below the High project ceiling for bounded intelligent recon, and updates guidance, the shipped asset, and exact resolver tests. Codex Sol intelligent recon remains at medium. The focused CLI suite passed 564/564; the full repository gates passed in order: check, type-check, test (7,528 CLI tests executed), build, skill bumps, version check after fetching `origin/main`, release validation, docs build, lint, and format. The user declined a further independent review after this change, so the reviewed head remains `2cfb86bf7` and the later commits carry local validation only.
