@@ -39,8 +39,9 @@ match the generated definition. Model-only candidates retain their existing
 native model argument behavior, and inherited targets leave both axes to the
 host.
 
-- Opus 5.5: use medium for normal substantive work and high for hard reasoning,
-  architecture, ambiguity, and deep review. Use xhigh only when reasoning depth
+- Opus 5.5: use low for bounded intelligent recon with source checks, medium
+  for normal substantive work, and high for hard reasoning, architecture,
+  ambiguity, and deep review. Use xhigh only when reasoning depth
   is the bottleneck or an evaluated long-horizon workload benefits. Max is
   exceptional and requires a workload-specific effort sweep or an explicit
   quality-first exception.
@@ -67,7 +68,7 @@ stable.
 | Task class               | Default                               | Economy                                                | Escalation                                            | Floor notes                                                                                     |
 | ------------------------ | ------------------------------------- | ------------------------------------------------------ | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | `mechanical-recon`       | Haiku 4.5                             | Same, with strict output and mechanical verification   | Opus 5.5 medium                                       | Haiku is below floor for semantic audits and silent-miss-prone exploration.                     |
-| `intelligent-recon`      | Opus 5.5 medium                       | Sonnet 5 medium/high only when its measured route wins | Opus 5.5 high                                         | Do not use Sonnet low for coding or open-ended recon.                                           |
+| `intelligent-recon`      | Opus 5.5 low                          | Sonnet 5 medium/high only when its measured route wins | Opus 5.5 medium; high when deeper reasoning is needed | Verify silent-miss-prone conclusions; do not use Sonnet low for open-ended recon.               |
 | `default-implementation` | Opus 5.5 medium                       | Sonnet 5 medium/high for evaluated bounded throughput  | Opus 5.5 high                                         | Fable is not a routine implementation or economy route.                                         |
 | `hard-reasoning`         | Opus 5.5 high                         | Opus 5.5 medium only after narrowing and evaluation    | Opus 5.5 xhigh for a reasoning-depth bottleneck       | Use max only after a workload-specific effort sweep.                                            |
 | `consequential`          | Opus 5.5 high plus independent review | No routine economy route                               | Opus 5.5 xhigh when deeper reasoning is also required | Consequence adds review and root authorization; it does not automatically require xhigh or max. |

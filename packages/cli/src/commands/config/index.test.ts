@@ -2925,7 +2925,7 @@ describe('oat config', () => {
         ),
       ) as Record<string, unknown>;
 
-      expect(recommendation.version).toBe('2026-09-23.1');
+      expect(recommendation.version).toBe('2026-09-23.2');
       expect(recommendation.providers).toMatchObject({
         codex: {
           economy: {
@@ -2963,10 +2963,11 @@ describe('oat config', () => {
             ],
           },
           balanced: {
-            candidates: [{ model: 'claude-sonnet-5', effort: 'high' }],
+            candidates: [{ model: 'claude-opus-5-5', effort: 'low' }],
           },
           high: {
             candidates: [
+              { model: 'claude-opus-5-5', effort: 'low' },
               { model: 'claude-opus-5-5', effort: 'medium' },
               { model: 'claude-opus-5-5', effort: 'high' },
             ],
@@ -3013,9 +3014,9 @@ describe('oat config', () => {
       ],
       [
         'balanced',
-        'claude-sonnet-5',
-        'high',
-        'oat-reviewer-claude-claude-sonnet-5-high',
+        'claude-opus-5-5',
+        'low',
+        'oat-reviewer-claude-claude-opus-5-5-low',
       ],
       [
         'high',

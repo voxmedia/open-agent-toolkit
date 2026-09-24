@@ -227,7 +227,7 @@ describe('cursor model pin catalogue', () => {
       };
     };
 
-    expect(recommendation.version).toBe('2026-09-23.1');
+    expect(recommendation.version).toBe('2026-09-23.2');
     const candidates = Object.values(recommendation.providers.cursor).flatMap(
       ({ candidates: tierCandidates }) => tierCandidates,
     );

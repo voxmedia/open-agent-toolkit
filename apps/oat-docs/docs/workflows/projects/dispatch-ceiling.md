@@ -80,8 +80,10 @@ To pick up a new version, compare your
 `workflow.dispatchCeiling.recommendationVersion` against the bundled version,
 then either edit the affected cells by hand or clear them and re-adopt.
 
-Version `2026-09-23.1` is the current bundled recommendation. It prefers
-GPT-6 Luna and Sol in Codex and Opus 5.5 in Claude. GPT-5.6 targets remain
+Version `2026-09-23.2` is the current bundled recommendation. It prefers
+GPT-6 Luna and Sol in Codex and Opus 5.5 low/medium/high in Claude High.
+The Claude low option suits bounded intelligent recon in Balanced or High;
+medium remains the implementation starting point under High. GPT-5.6 targets remain
 supported for explicit Codex and Cursor configurations. Cursor's preferred
 ladder uses existing verified GPT-5.6, Grok, Composer, and Fable mappings;
 Cursor Opus 5.5 now has five approved desktop mappings, but the bundled
