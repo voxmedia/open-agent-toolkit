@@ -60,6 +60,21 @@ review is `reviews/archived/artifact-plan-review-2026-09-24T150841Z.md`.
 
 ---
 
+## Astra Capability Evidence
+
+Recorded before the p01-t01 catalog edit on 2026-09-24:
+
+- The official OpenAI model page identifies the exact model as `gpt-6-astra`
+  and documents `low`, `medium`, `high`, `xhigh`, and `max` reasoning efforts.
+- The local Codex model cache was fetched at `2026-09-24T15:13:11.243882Z` by
+  client `0.155.1`. Its `gpt-6-astra` entry reports `low`, `medium`, `high`,
+  `xhigh`, `max`, and `ultra`.
+- The sources agree on every admitted pair: `gpt-6-astra` at `low`, `medium`,
+  `high`, `xhigh`, and `max`. `ultra` remains excluded by the project's
+  explicit five-level product contract.
+
+---
+
 ## Phase 1: {Phase Name}
 
 **Status:** in_progress
