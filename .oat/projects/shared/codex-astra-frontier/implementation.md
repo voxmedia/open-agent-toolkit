@@ -100,6 +100,32 @@ Recorded before the p01-t02 documentation edit:
 
 ---
 
+## Model Guidance Audit
+
+Read-only audit performed on 2026-09-24 against the stable vault notes `Model
+Selection`, `Model Decision Matrix`, `CHANGELOG`, `September frontier releases:
+early evidence pass`, and `GPT-6 Astra comparator addendum (Codex)`.
+
+| Provider | OAT route                                                                                                                                                                                                                        | Accepted route                                                                                                                                                                                | Source status                                                                                | Classification     |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ------------------ |
+| Codex    | Intelligent reconnaissance and default implementation use `gpt-6-sol/medium`; hard and consequential work use `gpt-6-sol/high`. The bundled Frontier ladder is now `gpt-6-sol/xhigh` → `gpt-6-astra/high` → `gpt-6-astra/xhigh`. | Intelligent reconnaissance uses GPT-5.6 Terra high, implementation uses Sol medium/high, and Astra medium/high remains evaluation-gated for hard reasoning, migration, and long-horizon work. | accepted 2026-09-08 baseline; review-pending 2026-09-23/24 release packet and Astra addendum | pending evidence   |
+| Claude   | Intelligent reconnaissance uses `claude-opus-5-5/low`, default implementation uses `claude-opus-5-5/medium`, and hard or consequential work uses `claude-opus-5-5/high`.                                                         | Opus 5 medium covers intelligent reconnaissance and normal substantive work; Opus 5 high covers harder or consequential work.                                                                 | accepted 2026-09-08 baseline; review-pending 2026-09-23 release packet                       | separate follow-up |
+| Cursor   | Intelligent reconnaissance can use `cursor-grok-4.5-medium`; normal implementation remains `gpt-5.6-sol-medium`; `cursor-grok-4.5-high` is a corroborated hard-reasoning alternative.                                            | Grok 4.6 medium is the provisional intelligent and normal Cursor-native route, with Grok 4.6 high for harder work and a live-selector requirement.                                            | accepted 2026-09-08 baseline; review-pending 2026-09-23 release packet                       | separate follow-up |
+
+- Official Codex capability data and the local model cache establish Astra's
+  exact selectable efforts; they do not establish a task-quality advantage.
+  The user-directed Frontier preference is therefore an OAT product exception,
+  not a change to the accepted vault policy.
+- The review-pending Astra comparator is exposed author analysis, not an
+  independent result. Its disposition retains Astra as an evaluation-gated
+  escalation and makes no global or default-route promotion.
+- The Claude and Cursor differences are recorded without changing either
+  provider's ladder. Cursor's direct-provider model names do not establish
+  Cursor selector syntax or resolved identity; each mapping still requires a
+  current native-catalog or hook probe that detects silent fallback.
+
+---
+
 ## Phase 1: {Phase Name}
 
 **Status:** in_progress
@@ -251,24 +277,46 @@ Track test execution during implementation.
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- Added `gpt-6-astra` at `low`, `medium`, `high`, `xhigh`, and `max` to both
+  Codex phase-implementer and reviewer catalogs.
+- Changed only the Codex Frontier recommendation to Sol `xhigh`, Astra `high`,
+  and Astra `xhigh`, with exact terminal order and user-cell preservation.
+- Generated and registered the ten Astra role variants, refreshed bundled
+  recommendation assets, and advanced the public package set to `0.3.3`.
+- Updated the approved model-guidance documentation and recorded the vault
+  policy comparison without promoting review-pending research.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- Codex dispatch can now bind exact Astra model/effort pairs for phase
+  implementation and review, while recommendation adoption preserves every
+  populated user-owned cell.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `packages/cli/src/providers/codex/codec/shared.ts` - canonical Astra effort
+  catalog entries.
+- `packages/cli/src/config/dispatch-matrix-recommendation.json` - canonical
+  Frontier recommendation.
+- `.codex/agents/` and `.codex/config.toml` - generated Astra roles and project
+  registrations.
+- `.agents/skills/subagent-orchestration/` - dated capability and routing
+  guidance.
+- `apps/oat-docs/docs/` - approved public model-guidance updates.
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- Focused Codex catalog, recommendation, generated-bundle, and documentation
+  checks passed.
+- The repository check, type-check, test, build, skill-version, release-version,
+  release-validation, docs-build, lint, and format gates passed.
+- Project sync dry-run reported zero pending changes after generation.
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- This quick project has no separate design artifact. Astra `ultra` remains
+  excluded by the explicit five-level product contract, and accepted vault
+  guidance remains unchanged pending independent evaluation.
 
 ## References
 
