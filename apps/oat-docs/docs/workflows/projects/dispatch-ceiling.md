@@ -234,8 +234,8 @@ oat_dispatch_policy:
 The bundled ladder is a curated subset of the supported targets:
 
 - **Codex:** GPT-6 Luna at `low` through `max` across Economy and Balanced;
-  GPT-6 Sol at `low` through `max` across High and Frontier. Sol `ultra` and
-  GPT-5.6 variants remain available outside this preferred ladder.
+  GPT-6 Sol at `low` through `max` across High and Frontier. GPT-5.6
+  variants remain available outside this preferred ladder.
 - **Claude:** `haiku` and Sonnet 5 at Economy/Balanced, Opus 5.5 at High and
   Frontier, and Fable 5.1 at Frontier.
 - **Cursor:** the preferred ladder uses approved Composer 2.5, GPT-5.6, Grok

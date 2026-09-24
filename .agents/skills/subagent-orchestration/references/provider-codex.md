@@ -47,9 +47,8 @@ model/effort pairs are in the local Codex catalogue.
 | `hard-reasoning`         | `gpt-6-sol`, high                          | Sol xhigh                                                             | Narrow the problem before raising effort.                                     |
 | `consequential`          | `gpt-6-sol`, high, plus independent review | Sol xhigh for a reasoning-depth bottleneck; max only after evaluation | The root retains consequential authorization.                                 |
 
-The bundled frontier ladder ends at Sol max. Sol ultra is present in the local
-Codex capability catalogue but is not a routine recommendation; validate its
-need with a workload-specific sweep. GPT-5.6 `reasoning.mode: "pro"` is a
+The bundled frontier ladder and the supported Sol effort set end at max.
+GPT-5.6 `reasoning.mode: "pro"` is a
 separate quality/latency/cost control on that older model, not a GPT-6 effort
 label or model slug.
 

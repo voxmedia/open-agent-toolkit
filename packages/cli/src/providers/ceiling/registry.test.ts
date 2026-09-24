@@ -107,7 +107,7 @@ describe('provider ceiling adapters', () => {
         codex.compileToDispatchArgs('ultra', 'implementer', {
           target: { harness: 'codex', model: 'gpt-6-sol', effort: 'ultra' },
         }),
-      ).toEqual({ variant: 'oat-phase-implementer-gpt-6-sol-ultra' });
+      ).toBeNull();
       expect(
         codex.compileToDispatchArgs('ultra', 'implementer', {}),
       ).toBeNull();

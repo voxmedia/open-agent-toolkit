@@ -3147,11 +3147,11 @@ describe('oat-config', () => {
         expect(config.workflow).toEqual({ archiveOnComplete: true });
       });
 
-      it('round-trips a Sol ultra candidate without accepting ultra as a scalar ceiling', async () => {
+      it('round-trips a supported Sol max frontier candidate', async () => {
         const repoRoot = await createRepoRoot();
         const candidates = [
           { harness: 'codex', model: 'gpt-6-sol', effort: 'max' },
-          { harness: 'codex', model: 'gpt-6-sol', effort: 'ultra' },
+          { harness: 'codex', model: 'gpt-6-sol', effort: 'max' },
         ];
         await writeOatConfig(repoRoot, {
           version: 1,

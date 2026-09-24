@@ -164,10 +164,6 @@ config_file = "agents/oat-phase-implementer-gpt-6-sol-max.toml"
 description = "Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement."
 config_file = "agents/oat-phase-implementer-gpt-6-sol-medium.toml"
 
-[agents.oat-phase-implementer-gpt-6-sol-ultra]
-description = "Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement."
-config_file = "agents/oat-phase-implementer-gpt-6-sol-ultra.toml"
-
 [agents.oat-phase-implementer-gpt-6-sol-xhigh]
 description = "Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement."
 config_file = "agents/oat-phase-implementer-gpt-6-sol-xhigh.toml"
@@ -207,10 +203,6 @@ config_file = "agents/oat-reviewer-gpt-6-sol-max.toml"
 [agents.oat-reviewer-gpt-6-sol-medium]
 description = "Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode."
 config_file = "agents/oat-reviewer-gpt-6-sol-medium.toml"
-
-[agents.oat-reviewer-gpt-6-sol-ultra]
-description = "Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode."
-config_file = "agents/oat-reviewer-gpt-6-sol-ultra.toml"
 
 [agents.oat-reviewer-gpt-6-sol-xhigh]
 description = "Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode."
