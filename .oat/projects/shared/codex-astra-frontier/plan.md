@@ -107,26 +107,32 @@ src/commands/config/index.test.ts`.
 
 ### Task p01-t04: Record the model-guidance alignment audit
 
-**Files:** `implementation.md` final summary and the follow-up PR body.
+**Files:** `implementation.md` model-guidance audit and final summary.
 
-1. Compare all current Codex, Claude, and Cursor bundled tiers and dated
-   task-class guidance with the accepted September 8 model-selection matrix,
-   its durable qualification rules and changelog, and the September 23 packet's
-   explicit review-pending status. Identify exact model/effort disagreements,
-   intentional user-directed changes, unverified harness selectors, and
-   accepted versus draft policy boundaries. Do not copy private vault paths or
-   unpublished benchmark details into the public PR.
-2. Record a concise findings table in `implementation.md` and the PR body,
-   with a detailed source-aware explanation in the user-facing final response.
-   Classify each difference as intentional, pending evidence, or a separate
-   follow-up; make no unrelated ladder change in this PR.
-3. Verify the summary contains Codex, Claude, and Cursor rows plus the
-   accepted/draft distinction with `rg -n 'Codex|Claude|Cursor|accepted|draft'
-.oat/projects/shared/codex-astra-frontier/implementation.md`, and inspect
-   the exact PR body with `gh pr view --json body --jq .body` after creation.
+1. Resolve the private policy evidence from the user's Model Selection vault
+   README using these stable note titles: `Model Selection`, `Model Decision
+Matrix`, `CHANGELOG`, and `September Frontier Releases Early Pass/README`.
+   Compare each current Codex, Claude, and Cursor bundled tier and dated
+   task-class reference with the September 8 accepted matrix and the September
+   23 review-pending packet. Identify model/effort disagreements, unverified
+   harness selectors, and accepted versus draft policy boundaries. Do not copy
+   private absolute paths or unpublished benchmark details into this PR.
+2. Record a `## Model Guidance Audit` table in `implementation.md` with a
+   distinct row per provider, exact OAT and accepted routes, a source-status
+   column, and a classification of intentional, pending evidence, or separate
+   follow-up. Explain the requested Astra Frontier exception and the scope of
+   any unverified route. Make no unrelated ladder change in this PR.
+3. Verify the audit shape and required distinctions with separate commands:
+   `rg -n '^## Model Guidance Audit$' .oat/projects/shared/codex-astra-frontier/implementation.md`,
+   `rg -n '^\| Codex \|' .oat/projects/shared/codex-astra-frontier/implementation.md`,
+   `rg -n '^\| Claude \|' .oat/projects/shared/codex-astra-frontier/implementation.md`,
+   `rg -n '^\| Cursor \|' .oat/projects/shared/codex-astra-frontier/implementation.md`,
+   `rg -n 'accepted|review-pending|unverified' .oat/projects/shared/codex-astra-frontier/implementation.md`.
 4. Format the project artifact with `pnpm exec oxfmt --write
 .oat/projects/shared/codex-astra-frontier/implementation.md`. Commit as
-   `docs(p01-t04): record model-guidance audit`.
+   `docs(p01-t04): record model-guidance audit`. The final PR handoff copies
+   the public-safe audit summary into the PR body and verifies it with
+   `gh pr view --json body --jq .body`; that PR does not exist during this task.
 
 ## Reviews
 
@@ -137,7 +143,7 @@ src/commands/config/index.test.ts`.
 | spec   | artifact | pending         | -          | -                                                           | -             | -          | -                        |
 | design | artifact | pending         | -          | -                                                           | -             | -          | -                        |
 | plan   | artifact | fixes_completed | 2026-09-24 | reviews/archived/artifact-plan-review-2026-09-24T144531Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received        | 2026-09-24 | reviews/artifact-plan-review-2026-09-24T145158Z.md          | -             | -          | -                        |
+| plan   | artifact | fixes_completed | 2026-09-24 | reviews/archived/artifact-plan-review-2026-09-24T145158Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 
 ## Implementation Complete
 

@@ -39,6 +39,14 @@ kept locally at
 `reviews/archived/artifact-plan-review-2026-09-24T144531Z.md`; a new plan
 review must verify the revised artifact before the plan is marked ready.
 
+The second gate review found that the audit task depended on a PR that will
+not exist until after implementation, and that its private source lookup and
+verification were too vague. The plan now makes `implementation.md` the task
+output, uses stable vault note titles, requires separate provider rows and
+source-status checks, and defers PR-body read-back to the final PR handoff.
+That review is archived locally at
+`reviews/archived/artifact-plan-review-2026-09-24T145158Z.md`.
+
 ---
 
 ## Phase 1: {Phase Name}
