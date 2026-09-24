@@ -44,6 +44,10 @@ Entries are chronological and append-only.
 
 target=cursor-gpt-5-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:1,low:0 exit=1 status=blocked artifact=.oat/projects/shared/codex-astra-frontier/reviews/artifact-plan-review-2026-09-24T144531Z.md run=d83d6337-bc2b-4a9f-9f9e-65f9f444246d
 
+### 2026-09-24 · structural · oat gate review · plan
+
+target=cursor-gpt-5-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:1,low:0 exit=1 status=blocked artifact=.oat/projects/shared/codex-astra-frontier/reviews/artifact-plan-review-2026-09-24T145158Z.md run=9f62ddde-50b4-47fd-8909-317e762948e5
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
