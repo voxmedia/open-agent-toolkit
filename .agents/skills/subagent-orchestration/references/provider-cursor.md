@@ -67,8 +67,9 @@ Both the `subagentStart.subagent_model` and the subagent Shell `preToolUse.model
 agreed for every rung. The Sonnet 5 high positive control resolved to
 `claude-sonnet-5-thinking-high`. An unknown family fell back to
 `cursor-grok-4.6-high-fast`; an unknown effort on Opus 5.5 fell back to
-`claude-opus-5-5-medium`. The redacted native probe record at `packages/cli/src/providers/cursor/codec/__fixtures__/README.md`
-contains the exact observations. Recheck live availability before launch.
+`claude-opus-5-5-medium`. The provenance summary at `packages/cli/src/providers/cursor/codec/__fixtures__/README.md`
+links the adjacent redacted summary and native-event JSONL records containing
+the exact observations. Recheck live availability before launch.
 
 ## Historical Opus Cursor Probe Evidence (Retired)
 

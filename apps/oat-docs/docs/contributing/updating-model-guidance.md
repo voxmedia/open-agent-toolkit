@@ -54,8 +54,10 @@ remote runs do not emit the required native subagent hook.
 
 During this refresh, `agent models` listed `claude-opus-5-5-*` flat IDs.
 The CLI `agent -p` bracket selector returned `Cannot use this model`, but a
-later Cursor desktop 3.20.14 native hook probe (`packages/cli/src/providers/cursor/codec/__fixtures__/README.md`)
-resolved each of the five Opus 5.5 effort selectors to its matching flat ID.
+later Cursor desktop 3.20.14 native hook probe (provenance at
+`packages/cli/src/providers/cursor/codec/__fixtures__/README.md`, observations
+in adjacent JSONL records) resolved each of the five Opus 5.5 effort
+selectors to its matching flat ID.
 The positive Sonnet control resolved, while invalid family and effort controls
 fell back to defaults. Five Opus 5.5 mappings are now approved for desktop
 subagents; the CLI result alone does not establish that the same bracket syntax

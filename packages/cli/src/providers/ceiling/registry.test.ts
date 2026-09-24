@@ -280,6 +280,19 @@ describe('provider ceiling adapters', () => {
       });
     });
 
+    it('keeps legacy Sonnet high as an enforced reviewer variant alongside the canonical ID', () => {
+      expect(
+        cursor.compileToDispatchArgs('claude-sonnet-5-high', 'reviewer', {}),
+      ).toEqual({ variant: 'oat-reviewer-claude-sonnet-5-high' });
+      expect(
+        cursor.compileToDispatchArgs(
+          'claude-sonnet-5-thinking-high',
+          'reviewer',
+          {},
+        ),
+      ).toEqual({ variant: 'oat-reviewer-claude-sonnet-5-thinking-high' });
+    });
+
     it('returns null for blank model values', () => {
       expect(cursor.compileToDispatchArgs('', 'implementer', {})).toBeNull();
       expect(cursor.compileToDispatchArgs('   ', 'reviewer', {})).toBeNull();
