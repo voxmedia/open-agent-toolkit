@@ -6194,7 +6194,13 @@ describe('validateOatSkills', () => {
     expect(scope).not.toMatch(/user-scope role generation remains.*deferred/i);
 
     expect(providers).toMatch(
-      /Project sync (?:writes|maintains)[\s\S]{0,120}version-controlled[\s\S]{0,320}26 pinned variants/i,
+      /Project sync (?:writes|maintains)[\s\S]{0,120}version-controlled[\s\S]{0,180}GPT-6 Luna, Sol, and Astra[\s\S]{0,350}56 pinned variants/i,
+    );
+    expect(providers).toMatch(
+      /Codex `max`[\s\S]{0,120}GPT-6 Luna, Sol, and Astra[\s\S]{0,100}GPT-5\.6 Sol/i,
+    );
+    expect(providers).not.toMatch(
+      /26 pinned variants|max.*only for the Sol family/i,
     );
     expect(providers).not.toMatch(
       /Project sync commits the supported catalogue/i,
