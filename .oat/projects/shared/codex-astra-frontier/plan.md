@@ -97,13 +97,13 @@ manifests and `pnpm-lock.yaml`.
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date | Artifact | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | ------- | ---- | -------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending | -    | -        | -             | -          | -           |
-| final  | code     | pending | -    | -        | -             | -          | -           |
-| spec   | artifact | pending | -    | -        | -             | -          | -           |
-| design | artifact | pending | -    | -        | -             | -          | -           |
-| plan   | artifact | pending | -    | -        | -             | -          | -           |
+| Scope  | Type     | Status   | Date       | Artifact                                           | Reviewed Head | Invocation | Gate Target |
+| ------ | -------- | -------- | ---------- | -------------------------------------------------- | ------------- | ---------- | ----------- |
+| p01    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| final  | code     | pending  | -          | -                                                  | -             | -          | -           |
+| spec   | artifact | pending  | -          | -                                                  | -             | -          | -           |
+| design | artifact | pending  | -          | -                                                  | -             | -          | -           |
+| plan   | artifact | received | 2026-09-24 | reviews/artifact-plan-review-2026-09-24T144531Z.md | -             | -          | -           |
 
 ## Implementation Complete
 
