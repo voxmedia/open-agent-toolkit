@@ -7,7 +7,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 2.3.14
+  version: 2.3.15
 ---
 
 # Quick Start Project
@@ -744,11 +744,13 @@ starts the plan artifact review, invoke the `Shared Lifecycle Gate Posture Setup
 `oat-project-plan-writing`: load the current
 `oat-project-plan-writing/SKILL.md` and follow that contract as written. This
 runs adjacent to, but independently from, the phase gate review setup above.
+Supply exactly this relevant set: `oat-project-quick-start` and
+`oat-project-implement`.
 
 If `"$PROJECT_PATH/state.md"` already contains an explicit
 `oat_skill_gate_overrides` map, preserve it through the shared contract without
-probing, prompting, or mutation. Otherwise let the contract probe the configured
-gate-aware skills and offer a keep-or-disable choice for each configured gate
+probing, prompting, or mutation. Otherwise let the contract probe only the
+caller-supplied relevant set and offer a keep-or-disable choice for each configured gate
 independently.
 
 Persist only disabled choices, and only in `"$PROJECT_PATH/state.md"`. Keeping
@@ -793,7 +795,8 @@ Apply the shared loop exactly:
   materialized variant must first be launched as the exact native `agent_type`;
   only a recorded actual pre-start role-selection rejection permits a fresh
   child pinned to the resolved model and effort. Claude uses the exact
-  resolver-returned `providers.claude.dispatchArgs.model` value. Cursor
+  resolver-returned generated variant for an effort-pinned target, or the exact
+  `providers.claude.dispatchArgs.model` for a legacy model-only target. Cursor
   launches the exact resolver-returned
   `providers.cursor.dispatchArgs.variant` native reviewer variant first;
   Cursor model strings remain opaque inside the mapping and resolver. Only a

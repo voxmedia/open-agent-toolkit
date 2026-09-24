@@ -475,12 +475,24 @@ even when the reusable ladder is user-owned.
 The example above is illustrative rather than a copy of the bundled ladder; its
 tiers are trimmed for readability.
 
-The bundled recommendation covers 13 Codex model/effort combinations: Luna and
-Terra at `low`, `medium`, `high`, and `xhigh`, plus Sol at those efforts and
-`max`. Claude covers `haiku`, `sonnet`, `opus`, and `fable`. The recommendation
-carries 14 Cursor candidates across four tiers, drawn from a materialization
-catalogue with 18 catalogued multi-family flat IDs spanning Composer, Claude
-(Sonnet, Opus, and Fable), GPT, and Grok; the two figures differ because some
+The bundled recommendation covers 10 Codex model/effort combinations: GPT-6
+Luna at `low` through `max`, and GPT-6 Sol at the same efforts.
+Claude covers `haiku`, plus explicit Sonnet, Opus, and Fable
+model/effort pairs. Effort-pinned Claude cells require a recognized versioned
+model ID (`fable-5-1`, `fable-5`, `opus-5-5`, `sonnet-5`,
+`opus-4-7`, `opus-4-6`, or `sonnet-4-6`) or a matching
+`ANTHROPIC_DEFAULT_<FAMILY>_MODEL` pin. A custom provider pin must declare
+matching capability through `<PIN>_SUPPORTED_CAPABILITIES`: `effort` enables
+`low`, `medium`, and `high`, while `xhigh_effort` and `max_effort` add those
+rungs. A present declaration is authoritative. Host-managed routing through
+`CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST` takes precedence over family pins, and a
+bare effort-pinned alias fails closed when its generation cannot be proven.
+Model-only Claude aliases remain compatible through the per-call model argument
+and report `effortAxis: not-applicable` because the Agent API exposes no
+per-call effort argument. The recommendation carries 10 Cursor candidates
+across four tiers, drawn from a materialization
+catalogue with 17 catalogued multi-family flat IDs spanning Composer, Claude
+(Sonnet, Opus 5.5, and Fable), GPT, and Grok; the two figures differ because some
 approved mappings stay materializable without being recommended. An explicit
 mapping connects each flat ladder ID to a separate bracket-form frontmatter
 model; configuration and skills never derive or normalize either form.
@@ -598,7 +610,7 @@ not the exact managed phase-agent path.
 | Provider | Exact phase-agent or optional-child mechanism                                                        |
 | -------- | ---------------------------------------------------------------------------------------------------- |
 | Codex    | `providers.codex.dispatchArgs.variant` as `agent_type`, or a fresh child pinned to model plus effort |
-| Claude   | `providers.claude.dispatchArgs.model` as the actual Agent `model`                                    |
+| Claude   | `providers.claude.dispatchArgs.variant` for effort-pinned targets; exact `model` for legacy targets  |
 | Cursor   | `providers.cursor.dispatchArgs.variant` as the exact native agent type first                         |
 
 Project sync materializes the supported Codex and Cursor catalogues and every
@@ -617,7 +629,7 @@ ownership. Cleanup reconciles only the current owner. Cursor's mapping registry
 rejects unknown flat IDs instead of writing unverified frontmatter.
 
 Reviewer resolution uses the final candidate at the configured review ceiling.
-Codex and Cursor select exact native reviewer variants; Claude passes the
+Codex, Cursor, and effort-pinned Claude targets select exact native reviewer variants; legacy Claude passes the
 resolver's exact model argument. Timeout retries preserve the same complete
 payload. A lower reviewer candidate requires a separate reviewed contract.
 

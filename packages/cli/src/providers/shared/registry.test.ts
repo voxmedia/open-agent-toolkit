@@ -83,7 +83,7 @@ describe('provider registry', () => {
       loadRegistrations().flatMap(({ extensions }) =>
         extensions.map(({ provider }) => provider),
       ),
-    ).toEqual(['cursor', 'codex']);
+    ).toEqual(['claude', 'cursor', 'codex']);
   });
 
   it('records explicit scope/content support, projections, extensions, collections, and refresh policy', () => {
@@ -92,6 +92,19 @@ describe('provider registry', () => {
       ({ adapter }) => adapter.name === 'codex',
     )!;
     expect(codex.extensions.map(({ provider }) => provider)).toEqual(['codex']);
+    const claude = registrations.find(
+      ({ adapter }) => adapter.name === 'claude',
+    )!;
+    expect(claude.extensions.map(({ provider }) => provider)).toEqual([
+      'claude',
+    ]);
+    expect(
+      claude.capabilities.find(
+        ({ scope, contentKind }) => scope === 'user' && contentKind === 'agent',
+      ),
+    ).toMatchObject({
+      projectionModes: ['entry-sync', 'materialization-extension'],
+    });
     expect(
       codex.capabilities.find(
         ({ scope, contentKind }) => scope === 'user' && contentKind === 'agent',

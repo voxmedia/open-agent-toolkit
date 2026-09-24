@@ -101,12 +101,17 @@ Before each phase:
 
 Codex first uses the resolver-returned materialized implementer variant as
 native `agent_type`; only explicit pre-start role rejection permits the exact
-pinned fresh-child route. Claude passes the exact resolver model argument.
-Cursor launches the exact `providers.cursor.dispatchArgs.variant` native agent
-type first; only explicit pre-start native role-selection rejection permits
-another target-preserving route. After acceptance, missing telemetry, timeout,
-`BLOCKED`, or any other terminal outcome cannot trigger fallback or
-replacement.
+pinned fresh-child route. For Claude, an effort-pinned target launches the exact
+generated `providers.claude.dispatchArgs.variant` as the native agent type only
+after the mandatory validation-only managed-Claude record boundary in
+`dispatch-and-dry-run.md` accepts the resolver, generated definition, and exact
+payload; a
+legacy model-only target passes `providers.claude.dispatchArgs.model` as the
+exact model argument. Cursor launches the exact
+`providers.cursor.dispatchArgs.variant` native agent type first; only explicit
+pre-start native role-selection rejection permits another target-preserving
+route. After acceptance, missing telemetry, timeout, `BLOCKED`, or any other
+terminal outcome cannot trigger fallback or replacement.
 
 The phase recovery limit is not a route retry limit. Implementation recovery
 must not use route escalation, route-level advancement, model/provider
@@ -700,12 +705,15 @@ artifact under the project's `reviews/` directory.
 
 For a managed capped review, bind the exact provider argument to the actual
 invocation: `providers.codex.dispatchArgs.variant`,
-`providers.claude.dispatchArgs.model`, or
+`providers.claude.dispatchArgs.variant` for an effort-pinned target,
+`providers.claude.dispatchArgs.model` for a legacy model-only target, or
 `providers.cursor.dispatchArgs.variant`. Cursor must launch that exact
 resolver-selected native reviewer variant first and must not normalize its
 mapped model or attach a Task-level model argument. If the root cannot apply,
 pass, or bind the required model, variant, or role control, fail closed before
-launch.
+launch. A managed effort-pinned Claude reviewer also passes the real reviewer
+resolver result, generated definition, and proposed payload through the same
+mandatory validation-only managed-Claude record boundary before launch.
 
 After acceptance, poll, nudge, or continue only through the accepted reviewer
 handle. Only explicit pre-start rejection allows another route. Timeout,

@@ -37,7 +37,7 @@ volatile, so never hard-code a model name as a durable fact.
 | Harness    | Verified headless shape                                                                                          | Controllable axes                                                                                                      | Caveats                                                                                              |
 | ---------- | ---------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
 | Codex      | `codex exec --ephemeral --sandbox read-only --model '<model>' -c 'model_reasoning_effort="<effort>"' '<prompt>'` | agent type, model + reasoning effort, service tier, forked context, max nesting depth, sandbox + scoped writable roots | Model and effort are separate configured axes; native nesting grants no filesystem authority         |
-| Claude     | `claude -p --model '<model-alias-or-id>' '<prompt>'`                                                             | agent type, model (alias or full ID), CLI effort when exposed                                                          | No effort axis on the native Agent surface — record it as `not-exposed`, not `not-applicable`        |
+| Claude     | `claude -p --model '<model-alias-or-id>' '<prompt>'`                                                             | generated agent variant with model + effort frontmatter; legacy model argument; CLI effort when exposed                | Agent has no per-call effort field; managed effort is definition-bound                               |
 | Cursor CLI | `cursor-agent --trust --print --model '<exact-opaque-model>' '<prompt>'`                                         | opaque model selector from the account catalog                                                                         | Opaque strings pass byte-for-byte; distinct flavor from Cursor IDE — do not infer one from the other |
 | Cursor IDE | (native session; no headless CLI shape)                                                                          | native Task/Subagent schema, UI role configuration                                                                     | Any CLI task dispatch from an IDE root is a recorded pre-start selection                             |
 
@@ -50,8 +50,9 @@ Notes per harness:
   effort, sandbox, and route as configured-invocation evidence; a successful
   process alone does not prove runtime identity.
 - **Claude** has three native control surfaces — the native Agent tool (agent
-  type plus optional model), agent-definition frontmatter (default model), and
-  `claude -p` (alias or full model ID plus CLI effort). Model resolution follows
+  type plus optional matching model), agent-definition frontmatter (model and
+  effort), and `claude -p` (alias or full model ID plus CLI effort). Managed
+  OAT effort targets launch the exact generated definition. Model resolution follows
   explicit-call model > agent-definition model > parent/session inheritance.
   Never omit a worker model unless inheritance is the recorded policy.
 - **Cursor** keeps three control surfaces that must not be conflated: the native

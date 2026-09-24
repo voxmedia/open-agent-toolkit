@@ -3147,6 +3147,26 @@ describe('oat-config', () => {
         expect(config.workflow).toEqual({ archiveOnComplete: true });
       });
 
+      it('round-trips a supported Sol max frontier candidate', async () => {
+        const repoRoot = await createRepoRoot();
+        const candidates = [
+          { harness: 'codex', model: 'gpt-6-sol', effort: 'max' },
+          { harness: 'codex', model: 'gpt-6-sol', effort: 'max' },
+        ];
+        await writeOatConfig(repoRoot, {
+          version: 1,
+          workflow: {
+            dispatchCeiling: {
+              providers: { codex: { frontier: { candidates } } },
+            },
+          },
+        });
+        const config = await readOatConfig(repoRoot);
+        expect(config.workflow?.dispatchCeiling?.providers).toEqual({
+          codex: { frontier: { candidates } },
+        });
+      });
+
       it('round-trips preset + providers in shared config', async () => {
         const repoRoot = await createRepoRoot();
 

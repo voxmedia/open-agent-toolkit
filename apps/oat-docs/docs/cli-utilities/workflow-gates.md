@@ -605,7 +605,7 @@ that candidate's model and is not double-pinned.
             "model": "composer-2.5",
             "reasoningEffort": "provider-default"
           },
-          "models": ["composer-2.5", "gpt-5.5-xhigh", "claude-opus-4-8"],
+          "models": ["composer-2.5", "gpt-5.5-xhigh", "claude-opus-5-5"],
           "availabilityCommand": [
             "sh",
             "-c",

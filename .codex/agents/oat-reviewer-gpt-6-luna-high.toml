@@ -1,14 +1,9 @@
----
 # oat-managed: true
-# oat-role: oat-reviewer-claude-opus-5-thinking-max
+# oat-role: oat-reviewer-gpt-6-luna-high
 # oat-owner: supported-catalogue
-name: oat-reviewer-claude-opus-5-thinking-max
-description: Unified reviewer for OAT projects - mode-aware verification of
-  requirements/design alignment and code quality. Writes a review artifact to
-  disk by default, or returns structured findings in-memory when dispatched in
-  structured-output mode.
-model: claude-opus-5[effort=max]
----
+model = "gpt-6-luna"
+model_reasoning_effort = "high"
+developer_instructions = """
 
 ## Role
 
@@ -76,7 +71,12 @@ The orchestrator owns dispatch control. Do not read `plan.md` Dispatch Profile r
 
 For Codex, deterministic review dispatch under a capped managed policy uses the materialized Codex role name returned by `providers.codex.dispatchArgs.variant`; the orchestrator also supplies `providers.codex.selection.target` context when available and should derive `model_axis` and `effort_axis` from resolver output. Managed `Uncapped` and inherit/default policies have no reviewer target, so the base `oat-reviewer` role is used only when the resolver returns no `dispatchArgs.variant`, as a provider-default/unpinned fallback. If you are running as the base role, report any provided `provider_default_effort` as context but do not treat it as managed uncapped selection or an OAT cap. Use base `oat-reviewer` only when the resolver returns no `dispatchArgs.variant`.
 
-For Claude Code, review dispatch is model-axis based and the effort axis is `not-applicable`.
+For Claude Code, an effort-pinned managed review launches the exact generated
+variant returned by `providers.claude.dispatchArgs.variant`; the variant's
+frontmatter applies both model and effort because the Agent call has no effort
+field. Any per-call model must match the definition. Derive both selected axes
+from resolver output and the launcher payload. Legacy model-only and inherited
+routes retain their existing provider-default or inherited effort behavior.
 
 ## Bounded Reviewer Reconnaissance
 
@@ -598,3 +598,5 @@ Default behavior is unaffected: when `oat_output_mode` is absent or set to anyth
 ```
 
 ```
+"""
+sandbox_mode = "workspace-write"

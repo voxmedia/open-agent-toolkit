@@ -57,11 +57,18 @@ import TOML from '@iarna/toml';
 import {
   getCeilingAdapter,
   isDirectDispatchRoleName,
-  CLAUDE_TIER_ORDER,
   type CeilingDispatchArgs,
   type CeilingRole,
   type EnforcementMechanism,
 } from '@providers/ceiling/registry';
+import {
+  claudeTargetRank,
+  CLAUDE_EFFORT_ORDER,
+  type ClaudeCapabilityEvidence,
+  validateClaudeDispatchCapability,
+  validateClaudeDispatchTarget,
+} from '@providers/claude/targets';
+import { SUPPORTED_CODEX_ROLE_TARGETS } from '@providers/codex/codec/shared';
 import {
   buildDispatchReport,
   formatDispatchReport,
@@ -177,6 +184,12 @@ const CODEX_VALUES: readonly WorkflowCodexDispatchCeiling[] = [
   ...VALID_CODEX_DISPATCH_CEILINGS,
 ];
 
+// Catalogue order is low to high within each model; the scalar ceiling
+// remains separately capped by CODEX_VALUES.
+const CODEX_CANDIDATE_EFFORTS = [
+  ...new Set(SUPPORTED_CODEX_ROLE_TARGETS.map((target) => target.effort)),
+];
+
 const CLAUDE_VALUES: readonly WorkflowClaudeDispatchCeiling[] = [
   ...VALID_CLAUDE_DISPATCH_CEILINGS,
 ];
@@ -209,6 +222,7 @@ interface ResolvedDispatchRouteTarget {
   harness: string;
   model?: string;
   effort?: string;
+  capabilityEvidence?: ClaudeCapabilityEvidence;
   crossHarness: boolean;
   routeIndex: number;
   routeLength: number;
@@ -389,6 +403,9 @@ function validManagedPolicyList(): string {
 }
 
 function validProviderValueList(provider: DispatchCeilingProvider): string {
+  if (provider === 'codex') {
+    return CODEX_VALUES.join(', ');
+  }
   return providerValueOrder(provider)?.join(', ') ?? 'none';
 }
 
@@ -601,6 +618,54 @@ function routeTargetFromObject(
   };
 }
 
+function resolveClaudeTargetCapability(
+  target: ResolvedDispatchRouteTarget | null | undefined,
+  env: NodeJS.ProcessEnv,
+): ResolvedDispatchRouteTarget | null | undefined {
+  if (
+    !target ||
+    target.harness !== 'claude' ||
+    !target.model ||
+    !target.effort
+  ) {
+    return target;
+  }
+  const validation = validateClaudeDispatchCapability(
+    {
+      model: target.model,
+      effort: target.effort,
+      ...(target.capabilityEvidence
+        ? { capabilityEvidence: target.capabilityEvidence }
+        : {}),
+    },
+    env,
+  );
+  if (!validation.valid || !validation.capabilityEvidence) {
+    throw new Error(
+      validation.reason ??
+        'Claude effort target has no established model capability.',
+    );
+  }
+  return { ...target, capabilityEvidence: validation.capabilityEvidence };
+}
+
+function resolveClaudePolicyCapabilities(
+  policy: ResolvedDispatchPolicy | null,
+  env: NodeJS.ProcessEnv,
+): ResolvedDispatchPolicy | null {
+  if (!policy) return policy;
+  return {
+    ...policy,
+    target: resolveClaudeTargetCapability(policy.target, env) ?? null,
+    ...(policy.ceilingTarget !== undefined
+      ? {
+          ceilingTarget:
+            resolveClaudeTargetCapability(policy.ceilingTarget, env) ?? null,
+        }
+      : {}),
+  };
+}
+
 function resolveRouteMatrixCell(
   provider: DispatchCeilingProvider,
   route: WorkflowDispatchRoute,
@@ -682,6 +747,7 @@ function resolveProviderCellFromValue(
   }
 
   if (isWorkflowDispatchCandidateLadder(cell)) {
+    if (provider === 'claude') assertCandidateOrder(provider, tier, cell);
     const ceiling = cell.candidates.at(-1);
     if (ceiling === undefined) {
       return null;
@@ -843,7 +909,7 @@ function candidatePrimaryTarget(
     targetAdapter.selectionAxis === 'model-effort' &&
     (!target.model ||
       !target.effort ||
-      !CODEX_VALUES.includes(target.effort as WorkflowCodexDispatchCeiling))
+      !CODEX_CANDIDATE_EFFORTS.includes(target.effort as never))
   ) {
     throw new Error(
       `Malformed ${provider} candidate ordering in ${tier}: Codex candidates require a model and supported effort.`,
@@ -857,6 +923,17 @@ function candidatePrimaryTarget(
     throw new Error(
       `Malformed ${provider} candidate ordering in ${tier}: model-argument candidates require a model.`,
     );
+  }
+  if (target.harness === 'claude' && target.model) {
+    const validation = validateClaudeDispatchTarget({
+      model: target.model,
+      ...(target.effort ? { effort: target.effort } : {}),
+    });
+    if (!validation.valid) {
+      throw new Error(
+        `Malformed ${provider} candidate ordering in ${tier}: ${validation.reason}`,
+      );
+    }
   }
 
   return target;
@@ -896,12 +973,11 @@ function assertCandidateOrder(
     seen.add(key);
 
     if (target.harness === 'claude' && target.model) {
-      const rank = CLAUDE_TIER_ORDER.indexOf(target.model);
-      if (rank < 0) {
-        throw new Error(
-          `Malformed ${provider} candidate ordering in ${tier}: unsupported Claude model ${JSON.stringify(target.model)}.`,
-        );
-      }
+      const [modelRank, effortRank] = claudeTargetRank({
+        model: target.model,
+        ...(target.effort ? { effort: target.effort } : {}),
+      });
+      const rank = modelRank * CLAUDE_EFFORT_ORDER.length + effortRank;
       if (previousClaudeRank !== null && rank < previousClaudeRank) {
         throw new Error(
           `Malformed ${provider} candidate ordering in ${tier}: Claude candidates must be nondecreasing.`,
@@ -911,9 +987,7 @@ function assertCandidateOrder(
     }
 
     if (target.harness === 'codex' && target.model && target.effort) {
-      const rank = CODEX_VALUES.indexOf(
-        target.effort as WorkflowCodexDispatchCeiling,
-      );
+      const rank = CODEX_CANDIDATE_EFFORTS.indexOf(target.effort as never);
       const previousRank = codexRanksByModel.get(target.model);
       if (previousRank !== undefined && rank < previousRank) {
         throw new Error(
@@ -943,8 +1017,20 @@ function assertTierCeilingsNondecreasing(
     current.harness === 'claude' &&
     previous.model &&
     current.model &&
-    CLAUDE_TIER_ORDER.indexOf(current.model) <
-      CLAUDE_TIER_ORDER.indexOf(previous.model)
+    (() => {
+      const [previousModel, previousEffort] = claudeTargetRank({
+        model: previous.model!,
+        ...(previous.effort ? { effort: previous.effort } : {}),
+      });
+      const [currentModel, currentEffort] = claudeTargetRank({
+        model: current.model!,
+        ...(current.effort ? { effort: current.effort } : {}),
+      });
+      return (
+        currentModel < previousModel ||
+        (currentModel === previousModel && currentEffort < previousEffort)
+      );
+    })()
   ) {
     throw new Error(
       `Malformed ${provider} candidate ordering in ${tier}: named tier ceilings must be nondecreasing.`,
@@ -955,8 +1041,8 @@ function assertTierCeilingsNondecreasing(
     previous.model === current.model &&
     previous.effort &&
     current.effort &&
-    CODEX_VALUES.indexOf(current.effort as WorkflowCodexDispatchCeiling) <
-      CODEX_VALUES.indexOf(previous.effort as WorkflowCodexDispatchCeiling)
+    CODEX_CANDIDATE_EFFORTS.indexOf(current.effort as never) <
+      CODEX_CANDIDATE_EFFORTS.indexOf(previous.effort as never)
   ) {
     throw new Error(
       `Malformed ${provider} candidate ordering in ${tier}: named tier ceilings must be nondecreasing.`,
@@ -972,14 +1058,17 @@ function requestedCandidateMatches(
   if (target.harness !== provider || target.model !== requested.model) {
     return false;
   }
-  return provider !== 'codex' || target.effort === requested.effort;
+  return (
+    (provider !== 'codex' && provider !== 'claude') ||
+    target.effort === requested.effort
+  );
 }
 
 function formatRequestedCandidate(
   provider: DispatchCeilingProvider,
   requested: RequestedDispatchCandidate,
 ): string {
-  return provider === 'codex'
+  return provider === 'codex' || requested.effort !== undefined
     ? `${requested.model}/${requested.effort}`
     : requested.model;
 }
@@ -1502,7 +1591,7 @@ function providerValueOrder(
   provider: DispatchCeilingProvider,
 ): readonly DispatchCeilingValue[] | null {
   if (provider === 'codex') {
-    return CODEX_VALUES;
+    return CODEX_CANDIDATE_EFFORTS;
   }
   if (provider === 'claude') {
     return CLAUDE_VALUES;
@@ -1529,7 +1618,9 @@ function normalizePreferredValue(
   }
 
   if (!isValidProviderValue(provider, normalized)) {
-    const validValues = order.join(', ');
+    const validValues = (provider === 'codex' ? CODEX_VALUES : order).join(
+      ', ',
+    );
     throw new Error(
       `Invalid preferred dispatch value "${normalized}" for ${provider}. Valid values: ${validValues}.`,
     );
@@ -1599,28 +1690,30 @@ function normalizeRequestedCandidate(
         '--candidate-effort is required for an exact Codex candidate.',
       );
     }
-    if (!CODEX_VALUES.includes(effort as WorkflowCodexDispatchCeiling)) {
+    if (!CODEX_CANDIDATE_EFFORTS.includes(effort as never)) {
       throw new Error(
-        `Invalid Codex candidate effort "${effort}". Valid values: ${CODEX_VALUES.join(', ')}.`,
+        `Invalid Codex candidate effort "${effort}". Valid values: ${CODEX_CANDIDATE_EFFORTS.join(', ')}.`,
       );
     }
     return { model, effort };
   }
 
-  if (effort) {
-    throw new Error(
-      `--candidate-effort is only valid for Codex; ${provider} candidates use --candidate-model only.`,
-    );
-  }
-  if (
-    provider === 'claude' &&
-    !CLAUDE_VALUES.includes(model as WorkflowClaudeDispatchCeiling)
-  ) {
-    throw new Error(
-      `Invalid Claude candidate model "${model}". Valid values: ${CLAUDE_VALUES.join(', ')}.`,
-    );
+  if (provider === 'claude') {
+    const validation = validateClaudeDispatchTarget({
+      model,
+      ...(effort ? { effort } : {}),
+    });
+    if (!validation.valid) {
+      throw new Error(validation.reason);
+    }
+    return effort ? { model, effort } : { model };
   }
 
+  if (effort) {
+    throw new Error(
+      `--candidate-effort is only valid for Codex or Claude; ${provider} candidates use --candidate-model only.`,
+    );
+  }
   return { model };
 }
 
@@ -1665,17 +1758,16 @@ function normalizeClassification(
   }
 
   const taskEffort = options.taskEffort?.trim() ?? '';
-  if (hasTaskEffort && provider !== 'codex') {
+  if (hasTaskEffort && provider !== 'codex' && provider !== 'claude') {
     throw new Error(
-      `--task-effort is only valid for Codex; received ${provider}.`,
+      `--task-effort is only valid for Codex or Claude; received ${provider}.`,
     );
   }
-  if (
-    hasTaskEffort &&
-    !CODEX_VALUES.includes(taskEffort as WorkflowCodexDispatchCeiling)
-  ) {
+  const validTaskEfforts =
+    provider === 'claude' ? CLAUDE_EFFORT_ORDER : CODEX_CANDIDATE_EFFORTS;
+  if (hasTaskEffort && !validTaskEfforts.includes(taskEffort as never)) {
     throw new Error(
-      `Invalid Codex task effort "${taskEffort}". Valid values: ${CODEX_VALUES.join(', ')}.`,
+      `Invalid ${provider === 'claude' ? 'Claude' : 'Codex'} task effort "${taskEffort}". Valid values: ${validTaskEfforts.join(', ')}.`,
     );
   }
 
@@ -1920,6 +2012,7 @@ function buildProviderResolution(
   role: CeilingRole,
   orchestratorTier: string | undefined,
   preferredValue: DispatchCeilingValue | null,
+  env: NodeJS.ProcessEnv,
 ): ProviderResolution {
   const adapter = getCeilingAdapter(provider);
 
@@ -1963,6 +2056,7 @@ function buildProviderResolution(
       ? adapter.compileToDispatchArgs(dispatchValue, role, {
           orchestratorTier,
           target: selection.target,
+          env,
         })
       : null;
 
@@ -1978,13 +2072,17 @@ function buildProviderResolution(
   return {
     value: policy.value,
     mode,
-    mechanism: adapter.mechanism,
+    mechanism: hasVariantDispatchArgs(dispatchArgs)
+      ? 'pinned-variant'
+      : adapter.mechanism,
     dispatchArgs,
     modelAxis: modelAxis(provider, selection, dispatchArgs),
     effortAxis:
       provider === 'codex'
         ? codexEffortAxis(selection, dispatchArgs)
-        : 'not-applicable',
+        : provider === 'claude' && selection.target?.effort
+          ? `selected:${selection.target.effort}`
+          : 'not-applicable',
     verifyOnDispatch:
       dispatchValue && !isCrossHarness
         ? adapter.verifyOnDispatch(dispatchValue, {
@@ -2224,16 +2322,19 @@ async function resolveDispatchCeiling(
   const policyResolution =
     readResolvedConfigCeiling(provider, resolvedConfig) ??
     (await resolveProjectStateCeiling(provider, projectPath, dependencies));
-  const resolvedValue = await resolveCeilingValue(
-    provider,
-    resolvedConfig,
-    projectPath,
-    dependencies,
-    escalationLevel,
-    role,
-    preferredValue,
-    requestedCandidate,
-    ceilingTier,
+  const resolvedValue = resolveClaudePolicyCapabilities(
+    await resolveCeilingValue(
+      provider,
+      resolvedConfig,
+      projectPath,
+      dependencies,
+      escalationLevel,
+      role,
+      preferredValue,
+      requestedCandidate,
+      ceilingTier,
+    ),
+    dependencies.processEnv,
   );
   for (const warning of resolvedValue?.warnings ?? []) {
     context.logger.warn(warning);
@@ -2245,6 +2346,7 @@ async function resolveDispatchCeiling(
     role,
     orchestratorTier,
     preferredValue,
+    dependencies.processEnv,
   );
   const providers: Record<string, ProviderResolution> = {
     [provider]: providerResolution,
@@ -2725,7 +2827,9 @@ function writeHumanResolution(
       );
     }
   } else {
-    context.logger.info('Effort axis: not-applicable');
+    context.logger.info(
+      `Effort axis: ${providerResolution?.effortAxis ?? 'not-applicable'}`,
+    );
     if (providerResolution?.selection.selectionMode === 'inherit-default') {
       context.logger.info(
         'Note: OAT will not select a Claude model; Task dispatch inherits host/provider behavior.',
@@ -3035,7 +3139,7 @@ export function createProjectDispatchCeilingCommand(
       )
       .option(
         '--candidate-effort <effort>',
-        'Exact configured Codex candidate effort paired with --candidate-model',
+        'Exact configured Codex or Claude candidate effort paired with --candidate-model',
       )
       .option(
         '--task-class <class>',
@@ -3043,7 +3147,7 @@ export function createProjectDispatchCeilingCommand(
       )
       .option(
         '--task-effort <effort>',
-        'Codex-only task effort classification provenance; does not select a candidate',
+        'Codex or Claude task effort classification provenance; does not select a candidate',
       )
       .option(
         '--escalation-level <level>',

@@ -1,9 +1,9 @@
 # Evidence and Refresh Policy
 
 ```yaml
-guidance_version: 2026-07-25
-last_verified: 2026-07-25
-review_after: 2026-09-08
+guidance_version: 2026-09-23
+last_verified: 2026-09-23
+review_after: 2026-10-08
 stale_after: 2026-10-23
 ```
 
@@ -17,11 +17,11 @@ authorization boundary.
 - `review-required`: older than 45 days, a newer family is observed, or a material control, price, tool, context, alias, or harness change is detected.
 - `stale`: older than 90 days, named models are unavailable or deprecated, or the launching surface can no longer express the recorded controls.
 
-Provider mappings in this package become review-required on 2026-09-08 and
-stale on 2026-10-23 unless re-verified earlier, or on the earlier date a
-reference states in its own header. `provider-cursor.md` carries an earlier
-2026-09-04 review date because its catalog was not re-verified in the
-2026-07-25 refresh.
+The named routes were refreshed against provider catalogues on 2026-09-23.
+The benchmark observations below remain dated to 2026-07-25 and require
+review before making a new cross-provider performance claim. Each provider
+reference carries its own verification date; availability refresh does not
+turn earlier benchmark comparisons into fresh measurements.
 
 ## Immediate Review Triggers
 
@@ -78,15 +78,16 @@ publish a provider-independent effort conversion.
 
 ## Current Evidence Summary
 
-- OpenAI positions GPT-5.6 Sol as frontier, Terra as balanced, and Luna as
-  high-volume. Official guidance starts at medium generally, but independent
-  coding-agent data shows meaningful Luna/Terra quality cliffs below high for
-  repository work. The dated mechanical Codex floor is therefore Luna high.
-- Post-release Opus 5 evidence supports medium for normal substantive Claude
-  work and high for hard reasoning. Use xhigh for a reasoning-depth bottleneck
-  or evaluated long-horizon gain; max is selective and requires an effort
-  sweep. Consequence adds independent review rather than automatically raising
-  effort.
+- GPT-6 Sol and Luna are selectable in the current Codex catalogue and are
+  the default new-work routes in `provider-codex.md`. GPT-5.6 Sol/Luna/Terra
+  remain supported for explicit configurations. The July independent coding
+  data on GPT-5.6 Luna/Terra supported a mechanical floor of Luna high; this
+  is historical evidence, not a measured GPT-6 performance comparison.
+- Opus 5.5 is the current substantive Claude route. Start at medium for
+  normal work and high for hard reasoning; xhigh and max require task-specific
+  evidence. Earlier Opus 5 effort observations are historical and do not
+  establish an Opus 5.5 benchmark result. Consequence adds independent review
+  rather than automatically raising effort.
 - Sonnet 5 is a conditional route when measured latency, throughput, access,
   rate limits, or end-to-end workload economics win. Fable 5 is an
   eligibility-gated specialist; its missing-domain-concept or long-horizon
@@ -95,18 +96,18 @@ publish a provider-independent effort conversion.
 - CursorBench supports Composer 2.5 as an economical bounded coding worker.
   Cursor explicitly documents Composer fast as the same intelligence at a
   higher latency tier price.
-- Mechanical reconnaissance remains harness-specific: Luna high in Codex,
+- Mechanical reconnaissance remains harness-specific: GPT-6 Luna high in Codex,
   Haiku 4.5 in Claude, and Composer 2.5 in Cursor. Direct API mini or nano
   routes are limited to strict extraction, classification, or similarly
   mechanically verified work.
-- OpenAI's long-context evidence disqualifies Luna for some very large-context
-  work even when Luna's nominal context window accepts the input. Sol's current
-  direct-API requests above 272K input tokens carry a 2× input and 1.5× output
-  price step.
-- Sol's measured advantage is trajectory efficiency, not universal list-price
-  leadership. Opus output token pricing can be lower while Sol costs less per
-  completed task through fewer tokens, steps, turns, or recoveries.
-- Two independent benchmarks show top-end Opus effort is non-monotonic:
+- OpenAI's historical GPT-5.6 long-context evidence cautions against
+  assuming Luna is suitable for every large-context workload. Confirm current
+  GPT-6 context and pricing in the provider catalogue before quoting a limit
+  or price step.
+- Earlier GPT-5.6 Sol trajectory measurements illustrated that list price
+  alone does not determine cost per completed task. Re-measure GPT-6 against
+  Opus 5.5 before claiming an economic advantage.
+- Historical Opus 5 measurements showed non-monotonic top-end effort:
   Artificial Analysis Coding Agent Index (xhigh 67, max 66) and Frontier-Bench
   (xhigh 44.4%, max 43.3%), both retrieved 2026-07-25. Frontier-Bench is
   vendor-operated and its figure rests on a single self-reported row with no
@@ -116,9 +117,9 @@ publish a provider-independent effort conversion.
   marginal cost per score point is roughly 3.75x worse above high than below
   it. Together these support treating max as a route requiring justification,
   not a strictly better rung.
-- Cyber-sensitive and valid dual-use work should start on Opus 5 with
-  documented fallback handling where safeguards block the workflow. Opus 4.8
-  remains a compatibility fallback, not the universal primary.
+- Cyber-sensitive and valid dual-use work should start on Opus 5.5 with
+  documented fallback handling where safeguards block the workflow. Do not
+  route current work to retired Opus 5 or 4.8 by default.
 - Cursor disclosed that Cursor repository data entered Grok 4.5's training
   mixture. Its CursorBench ranking is evidence of competitiveness, not proof
   of superiority over nearby frontier models. Practical use supports Grok 4.5

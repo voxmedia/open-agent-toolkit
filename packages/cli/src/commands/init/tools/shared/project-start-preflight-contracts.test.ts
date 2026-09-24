@@ -301,7 +301,7 @@ describe('project-start preflight contracts', () => {
       const contract = readPostureContract();
 
       expect(flat(contract)).toContain(
-        'present each configured gate separately',
+        'present each configured relevant gate separately',
       );
       expect(contract).toContain('Granularity is per skill');
       expect(contract).toContain('no single answer disables');

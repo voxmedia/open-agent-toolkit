@@ -8,16 +8,18 @@ policy for this provider lives in
 
 | Surface           | Controls                                   | Qualification                                          |
 | ----------------- | ------------------------------------------ | ------------------------------------------------------ |
-| Native agent tool | Agent type plus optional model             | Effort may not be exposed on this surface.             |
-| Agent definition  | Default model in frontmatter               | Between explicit call selection and inheritance.       |
+| Native agent tool | Agent type plus optional matching model    | Effort has no per-call Agent field.                    |
+| Agent definition  | Default model and effort in frontmatter    | Managed effort targets use generated named variants.   |
 | Workflow agent    | Agent type, model, and effort when exposed | Use only controls present in the live schema.          |
 | `claude -p`       | Alias or full model ID plus CLI effort     | Verify current CLI help before constructing a route.   |
 | Continuation      | Existing child handle through message send | Preserves context; a new launch creates another child. |
 
 Native model resolution commonly follows explicit call model, agent-definition
 model, then parent/session inheritance. Treat omission as a deliberate
-inheritance selection. Never omit a worker model when inheritance is not the
-recorded policy.
+inheritance selection. For a managed model-plus-effort target, launch the exact
+resolver-returned generated variant. Any per-call model must match that
+variant's definition; there is no per-call Agent effort argument. Never omit a
+worker target when inheritance is not the recorded policy.
 
 ## Native Topology
 
@@ -56,10 +58,21 @@ prohibited. Record the exact selector and `floor_satisfaction`.
 ## Surface-Aware Selection
 
 - Select an exact accepted alias from the native enum for native dispatch.
-- Select a CLI route before launch when a full model ID or explicit effort is
-  required and native controls cannot express it.
+- Select the exact generated agent variant before launch when managed effort is
+  required. Effort-pinned targets must use a recognized versioned model ID or a
+  family alias whose matching `ANTHROPIC_DEFAULT_<FAMILY>_MODEL` pin establishes
+  capability. A custom pin requires matching `<PIN>_SUPPORTED_CAPABILITIES`;
+  `CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST` takes precedence, so bare aliases fail
+  closed when their generation cannot be proven. A CLI route remains available
+  only when the selected target cannot be expressed by native dispatch and the
+  caller's fallback contract permits it.
 - Record selector granularity such as `tier-alias` or `exact-model-id`.
-- Record native effort as `not-exposed`, not globally `not-applicable`.
+- Record generated-definition effort as `selected:<effort>`. Use `not-exposed`
+  only for an unpinned native surface whose active schema cannot report effort;
+  do not turn that observation into a global `not-applicable` claim.
+- Legacy model-only aliases remain compatible through the per-call model
+  argument. Their per-call effort axis is `not-applicable` because Agent exposes
+  no per-call effort argument; this does not claim that Claude lacks effort.
 - Record service tier separately; fast Claude routes are latency purchases.
 - Keep acceptance, outcome, runtime identity, and continuation separate.
 - Record the provider-guidance version and freshness state.

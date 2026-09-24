@@ -3,7 +3,16 @@ import {
   VALID_CODEX_DISPATCH_CEILINGS,
 } from '@config/oat-config';
 import { getOwnKey } from '@config/own-keys';
-import { buildCodexMaterializedTargetRoleName } from '@providers/codex/codec/shared';
+import {
+  buildClaudeEffortVariantName,
+  CLAUDE_MODEL_ORDER,
+  type ClaudeCapabilityEvidence,
+  validateClaudeDispatchCapability,
+} from '@providers/claude/targets';
+import {
+  buildCodexMaterializedTargetRoleName,
+  SUPPORTED_CODEX_ROLE_TARGETS,
+} from '@providers/codex/codec/shared';
 import { findCursorModelPinMapping } from '@providers/cursor/codec/catalog';
 import { buildCursorMaterializedRoleName } from '@providers/cursor/codec/shared';
 
@@ -18,8 +27,9 @@ import { buildCursorMaterializedRoleName } from '@providers/cursor/codec/shared'
  * to produce concrete dispatch args — skills never re-implement this logic.
  *
  * Codex enforces via sync-time materialized role variants selected from matrix
- * model+effort targets. Claude enforces via the per-call Task `model` argument
- * (no variant files). Every other provider is advisory by default.
+ * model+effort targets. Claude effort routes use materialized model-and-effort
+ * variants, while legacy model-only routes keep the per-call Task `model`
+ * argument. Every other provider is advisory by default.
  */
 
 export type EnforcementMechanism = 'pinned-variant' | 'model-arg' | 'none';
@@ -30,9 +40,12 @@ export type CeilingRole = 'implementer' | 'reviewer';
 export interface CeilingCompileContext {
   /** The orchestrator's own tier, used to detect above-orchestrator upgrades. */
   orchestratorTier?: string;
+  /** Provider environment used by the resolver's capability derivation. */
+  env?: NodeJS.ProcessEnv;
   target?: {
     model?: string;
     effort?: string;
+    capabilityEvidence?: ClaudeCapabilityEvidence;
   } | null;
 }
 
@@ -76,12 +89,7 @@ const CODEX_IMPLEMENTER_ROLE = 'oat-phase-implementer';
 const CODEX_REVIEWER_ROLE = 'oat-reviewer';
 
 /** Claude tier order, low → high, for above-orchestrator comparison. */
-export const CLAUDE_TIER_ORDER: readonly string[] = [
-  'haiku',
-  'sonnet',
-  'opus',
-  'fable',
-];
+export const CLAUDE_TIER_ORDER: readonly string[] = [...CLAUDE_MODEL_ORDER];
 
 const codexAdapter: ProviderCeilingAdapter = {
   provider: 'codex',
@@ -90,7 +98,15 @@ const codexAdapter: ProviderCeilingAdapter = {
   mechanism: 'pinned-variant',
   selectionAxis: 'model-effort',
   compileToDispatchArgs(value, role, ctx) {
-    if (!VALID_CODEX_DISPATCH_CEILINGS.includes(value as never)) {
+    if (
+      !VALID_CODEX_DISPATCH_CEILINGS.includes(value as never) &&
+      !SUPPORTED_CODEX_ROLE_TARGETS.some(
+        (candidate) =>
+          candidate.model === ctx.target?.model &&
+          candidate.effort === value &&
+          ctx.target?.effort === value,
+      )
+    ) {
       return null;
     }
     const target = ctx.target;
@@ -139,14 +155,43 @@ const claudeAdapter: ProviderCeilingAdapter = {
   validValues: [...VALID_CLAUDE_DISPATCH_CEILINGS],
   mechanism: 'model-arg',
   selectionAxis: 'tier',
-  compileToDispatchArgs(value) {
+  compileToDispatchArgs(value, role, ctx) {
+    if (isDirectDispatchRoleName(value)) return null;
+    const target = ctx.target;
+    if (target?.effort) {
+      const model = target.model ?? value;
+      if (
+        !validateClaudeDispatchCapability(
+          {
+            model,
+            effort: target.effort,
+            ...(target.capabilityEvidence
+              ? { capabilityEvidence: target.capabilityEvidence }
+              : {}),
+          },
+          ctx.env,
+        ).valid
+      ) {
+        return null;
+      }
+      return {
+        variant: buildClaudeEffortVariantName({
+          agentName:
+            role === 'reviewer' ? CODEX_REVIEWER_ROLE : CODEX_IMPLEMENTER_ROLE,
+          model,
+          effort: target.effort,
+        }),
+      };
+    }
+    const model = target?.model ?? value;
     if (
-      isDirectDispatchRoleName(value) ||
+      !target?.model &&
       !VALID_CLAUDE_DISPATCH_CEILINGS.includes(value as never)
     ) {
       return null;
     }
-    return { model: value };
+    if (!validateClaudeDispatchCapability({ model }).valid) return null;
+    return { model };
   },
   // Verify only when the request is above the orchestrator tier (upgrade path).
   verifyOnDispatch(value, ctx) {

@@ -201,19 +201,23 @@ Resolution order:
 
 Read `providers.<active-provider>` from the `--json` response for the concrete
 dispatch controls. `dispatchArgs` carries the provider-specific argument to
-pass through (Codex: `variant` name; Claude: `model` string; Cursor:
-materialized `variant` name). `selection` carries `role`, `selectedValue`, `capped`,
-`selectionMode`, and policy fields; `selection.target` and an optional
-`providers.<provider>.target` carry route data. For implementer/fix dispatch,
-use exactly one of two mutually exclusive selection paths:
+pass through (Codex: `providers.codex.dispatchArgs.variant`; Claude:
+`providers.claude.dispatchArgs.variant` for an effort-pinned target or
+`providers.claude.dispatchArgs.model` for a legacy model-only target; Cursor:
+`providers.cursor.dispatchArgs.variant`). `selection` carries `role`,
+`selectedValue`, `capped`, `selectionMode`, and policy fields;
+`selection.target` and an optional `providers.<provider>.target` carry route
+data. For implementer/fix dispatch, use exactly one of two mutually exclusive
+selection paths:
 
-1. **Preferred-selection branch:** pass `--preferred <preferred-value>` when
-   asking the resolver to choose from a preference under an uncapped or other
-   preference-driven policy. Do not include `--candidate-model` or
+1. **Preferred-selection branch:** pass `--preferred <preferred-value>` for a
+   legacy scalar ceiling, another preference-driven policy, or managed
+   `Uncapped` model-only compatibility. Do not include `--candidate-model` or
    `--candidate-effort`.
 2. **Exact-candidate branch:** pass `--candidate-model` and, when applicable,
    `--candidate-effort` after selecting a concrete configured candidate for a
-   managed-capped route. This branch must not include `--preferred`.
+   managed-capped route or for managed `Uncapped` with an explicit model/effort
+   choice. This branch must not include `--preferred`.
 
 Use `selection.selectedValue` as the selected axis value when it is present.
 Never re-derive these controls from the policy label or a ceiling-only variant
@@ -266,8 +270,9 @@ At minimum, preserve these semantics in any fallback text:
   Implementation preflight must block until a policy resolves.
 
 OAT applies managed policies where the provider exposes a reliable mechanism
-(Codex: pinned variants; Claude: Task model parameter). Other providers may
-treat managed policies as advisory.
+(Codex: pinned variants; Claude: generated agent variants for effort-pinned
+targets and the Task model parameter for legacy model-only targets). Other
+providers may treat managed policies as advisory.
 
 **Managed capped policy selection** persists only `mode: managed`, the named
 maximum `policy`, and `source`. The named maximum leaves lower configured
@@ -397,7 +402,11 @@ All project-aware launch paths record the launch in the project's run record.
 Construct and redact the complete generic record plus OAT role event before the
 native host call; when the call returns `accepted` or `blocked-before-start`,
 write the request ID, the `Dispatch:` stamp, the launch status, and later the
-terminal outcome into the run record in `implementation.md`. Writing a per-dispatch file with `oat project dispatch record` is optional and off by default: no lifecycle skill or command consumes those files, so do not write them unless the host has explicitly opted in. A rejected
+terminal outcome into the run record in `implementation.md`. Writing a
+per-dispatch file with `oat project dispatch record` is optional and off by
+default: no lifecycle skill or command consumes those files, so do not persist
+one unless the host has explicitly opted in. The managed Claude validation-only
+call below is mandatory and does not persist a file. A rejected
 launch must attest `provesNoChildStarted: true`; only it permits one
 exact-target approximation with a fresh request ID. Preserve exact model,
 effort, reasoning, service tier, route, authority, and provider controls.
@@ -465,29 +474,77 @@ requested; never silently downgrade to it.
 
 Claude rules:
 
-- Claude policy selection is model-based: `haiku < sonnet < opus < fable`.
+- Claude policy selection compares configured model and effort independently.
+  Model families remain ordered `haiku < sonnet < opus < fable`; within one
+  model, configured effort follows the provider-supported order.
 - Implementer/fix dispatch chooses one selection branch:
-  - Managed `Uncapped`: use the preferred-selection branch with
-    `--preferred <preferred-model>` so the resolver selects the classified
-    model with no cap.
+  - Managed `Uncapped` with an explicit effort: use the exact-candidate branch.
+    Pass
+    `--candidate-model <preferred-model> --candidate-effort <preferred-effort>`
+    and include `--task-effort <preferred-effort>` as matching classification
+    provenance. Do not combine this branch with `--preferred`.
+  - Managed `Uncapped` with a model-only choice: use the preferred-selection
+    branch with `--preferred <preferred-model>`; this intentionally preserves
+    the legacy model-only route with no selected effort.
   - Capped managed policy: use the exact-candidate branch below. The
     `--candidate-model` call replaces the preferred-selection call and must not
     include `--preferred`.
   - Inherit/default: use neither selection branch; the resolver returns no
-    selected model, so omit `model` and inherit host/default behavior.
+    selected target, so omit managed variant/model controls and inherit
+    host/default behavior.
 - Review dispatch:
   - Capped managed policy: target the configured policy cap directly.
-  - Managed `Uncapped` or inherit/default: no reviewer target exists; omit `model` and log inherited/default model behavior.
+  - Managed `Uncapped` or inherit/default: no reviewer target exists; omit
+    managed variant/model controls and log inherited/default behavior.
 - For managed capped phase-implementer/fix dispatch, call
-  `oat project dispatch-ceiling resolve --provider claude --role implementer --ceiling-tier <project-or-phase-tier> --candidate-model <model> --task-class <task-class> --orchestrator-tier <current-orchestrator-tier> --escalation-level <route-level> --report-scope <phase-id> --report-action implementation --json`.
+  `oat project dispatch-ceiling resolve --provider claude --role implementer --ceiling-tier <project-or-phase-tier> --candidate-model <model> [--candidate-effort <effort>] --task-class <task-class> --orchestrator-tier <current-orchestrator-tier> --escalation-level <route-level> --report-scope <phase-id> --report-action implementation --json`.
   For bounded fixes, reuse the exact phase target and task classification with a
   bounded fix scope.
   For review dispatch, call the resolver with
   `--role reviewer --report-scope <phase-or-review-scope> --report-action review --json`
-  and no candidate flags. Read `providers.claude.dispatchArgs.model` and pass it
-  exactly on the actual Task invocation.
-- Pass `model: "<value>"` when `model_axis=selected:<value>` on the Task tool call.
-- Keep `effort_axis=not-applicable`; Claude Code has no separate per-dispatch effort axis.
+  and no candidate flags. For an effort-pinned result, require
+  `providers.claude.dispatchArgs.variant` and launch that exact generated native
+  agent type. For a legacy model-only result, read
+  `providers.claude.dispatchArgs.model` and pass it exactly on the actual Agent
+  invocation.
+- An effort-pinned launch gets effort from generated agent frontmatter; the
+  Agent call has no per-call effort field. If the call also includes `model`, it
+  must equal the definition's model.
+- Before any managed effort-pinned Claude launch, pass the real completed
+  resolver JSON, the selected generated `.claude/agents/<variant>.md`
+  definition, and the exact proposed payload through the shipped record
+  producer. Use its managed input form:
+
+  ```json
+  {
+    "claudeLaunch": {
+      "resolution": { "<complete-resolver-field>": "<value>" },
+      "definition": "<the exact generated definition text>",
+      "payload": { "variant": "<the exact native variant>" }
+    },
+    "recordBase": { "<generic-nonderived-field>": "<value>" },
+    "event": { "<canonical-role-resolution-field>": "<value>" }
+  }
+  ```
+
+  Construct this JSON with a JSON-aware tool such as `jq --slurpfile` and
+  `--rawfile`; the placeholder keys illustrate object shapes and are never
+  literal input. Set the pre-launch record base to `launch_status: planned` and
+  `child_outcome: null`, then run
+  `oat project dispatch record --event-file <input> --json` without
+  `--project`. Require `status: validated-only`. Launch only
+  `record.payload.variant` (and `record.payload.model` when present) from that
+  result. The producer rejects a missing or stale variant, an absent or drifted
+  generated definition, and a conflicting per-call model. After the terminal
+  child outcome, rebuild through the same managed input with the terminal
+  status; persistence remains subject to the opt-in rule above. Never copy
+  model, effort, selector, candidate, or payload fields into the record base:
+  the accepted envelope owns and derives them.
+
+- Derive `model_axis=selected:<model>` and `effort_axis=selected:<effort>` from
+  resolver output and the constructed variant payload. Legacy model-only
+  targets retain provider-default effort; inherited targets retain inherited
+  axes.
 
 Cursor rules:
 
@@ -668,7 +725,7 @@ Dispatch policy: {policy}; selected={selected value | none}; cap={value | none} 
 ```text
 Dispatch policy: balanced; selected=xhigh; cap=xhigh (codex, enforced — variant oat-phase-implementer-gpt-5-6-terra-xhigh)
 Dispatch policy: inherit host defaults; selected=none; cap=none (codex, advisory — base role follows provider default)
-Dispatch policy: balanced; selected=sonnet; cap=sonnet (claude, enforced — Task model arg)
+Dispatch policy: balanced; selected=claude-sonnet-5/high; cap=claude-sonnet-5/high (claude, enforced — native variant oat-phase-implementer-claude-claude-sonnet-5-high)
 Cursor materialized-variant example: Dispatch policy: frontier; selected=gpt-5.6-sol-max; cap=gpt-5.6-sol-max (cursor, enforced — native variant oat-phase-implementer-gpt-5-6-sol-max)
 Dispatch policy: unresolved; selected=none; cap=none (codex, advisory — policy set but no value resolved)
 ```

@@ -76,7 +76,11 @@ Before a native launch, the root constructs and redacts the complete generic
 dispatch record and OAT role event. When the host returns, it writes the
 request ID, the `Dispatch:` stamp, and the accepted or `blocked-before-start`
 result into the run record in `implementation.md`; persisting a per-dispatch
-file with `oat project dispatch record` is optional and off by default. An accepted launch closes
+file with `oat project dispatch record` is optional and off by default. Before
+an effort-pinned managed Claude launch, the root must still run that command
+without `--project` as a validation-only boundary. It supplies the real
+resolver result, generated definition, and proposed launch payload, and launches
+only the payload returned by the accepted envelope. An accepted launch closes
 replacement. Only an explicit rejection proving no child started permits one
 fresh request that preserves the exact target and controls and is labeled as
 an approximation. Timeout, `BLOCKED`, refusal after acceptance, runtime
@@ -367,9 +371,10 @@ Optional nested work also resolves an exact bounded target. If no nested work is
 needed, OAT does not probe or require third-tier capacity.
 
 Provider controls remain exact: Codex uses
-`providers.codex.dispatchArgs.variant`, Claude uses
-`providers.claude.dispatchArgs.model`, and Cursor uses
-`providers.cursor.dispatchArgs.variant`. Cursor launches that exact
+`providers.codex.dispatchArgs.variant`; Claude uses the generated
+`providers.claude.dispatchArgs.variant` for an effort-pinned target and
+`providers.claude.dispatchArgs.model` only for a legacy model-only target; and
+Cursor uses `providers.cursor.dispatchArgs.variant`. Cursor launches that exact
 resolver-selected native agent type first; the flat ID and bracket-form pin
 remain inside the explicit mapping and are never normalized by workflow prose.
 The launcher records this selection as `configured`, while runtime identity

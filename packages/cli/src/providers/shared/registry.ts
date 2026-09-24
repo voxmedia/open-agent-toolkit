@@ -2,6 +2,7 @@ import { join } from 'node:path';
 
 import type { SyncConfig } from '@config/sync-config';
 import { claudeAdapter } from '@providers/claude';
+import { claudeMaterializationExtension } from '@providers/claude/codec/sync-extension';
 import { codexAdapter } from '@providers/codex';
 import { codexMaterializationExtension } from '@providers/codex/codec/sync-extension';
 import { copilotAdapter } from '@providers/copilot';
@@ -227,8 +228,10 @@ function capabilitiesFor(
 const REGISTRATIONS: readonly ProviderRegistration[] = [
   {
     adapter: claudeAdapter,
-    extensions: [],
-    capabilities: capabilitiesFor(claudeAdapter),
+    get extensions() {
+      return [claudeMaterializationExtension];
+    },
+    capabilities: capabilitiesFor(claudeAdapter, ['agent']),
   },
   {
     adapter: cursorAdapter,

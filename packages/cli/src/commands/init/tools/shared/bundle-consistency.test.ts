@@ -674,7 +674,7 @@ describe('bundle asset inventory consistency', () => {
 
         expect(recommendation).toEqual(sourceRecommendation);
         expect(checkedInAsset).toEqual(sourceRecommendation);
-        expect(recommendation.version).toBe('2026-07-27.1');
+        expect(recommendation.version).toBe('2026-09-23.2');
         expect(recommendation.providers?.codex).toBeDefined();
         expect(recommendation.providers?.claude).toBeDefined();
         expect(recommendation.providers?.cursor).toEqual({
@@ -686,24 +686,14 @@ describe('bundle asset inventory consistency', () => {
             ],
           },
           balanced: {
-            candidates: [
-              'cursor-grok-4.5-high',
-              'gpt-5.6-terra-high',
-              'claude-opus-5-thinking-low',
-            ],
+            candidates: ['cursor-grok-4.5-high', 'gpt-5.6-terra-high'],
           },
           high: {
-            candidates: [
-              'claude-opus-5-thinking-medium',
-              'gpt-5.6-sol-medium',
-              'claude-opus-5-thinking-high',
-              'gpt-5.6-sol-high',
-            ],
+            candidates: ['gpt-5.6-sol-medium', 'gpt-5.6-sol-high'],
           },
           frontier: {
             candidates: [
               'gpt-5.6-sol-xhigh',
-              'claude-opus-5-thinking-xhigh',
               'gpt-5.6-sol-max',
               'claude-fable-5-thinking-high',
             ],

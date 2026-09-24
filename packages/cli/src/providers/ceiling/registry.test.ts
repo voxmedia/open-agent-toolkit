@@ -103,6 +103,19 @@ describe('provider ceiling adapters', () => {
     );
 
     it('does not compile bare legacy effort values to deterministic dispatch args', () => {
+      expect(
+        codex.compileToDispatchArgs('ultra', 'implementer', {
+          target: { harness: 'codex', model: 'gpt-6-sol', effort: 'ultra' },
+        }),
+      ).toBeNull();
+      expect(
+        codex.compileToDispatchArgs('ultra', 'implementer', {}),
+      ).toBeNull();
+      expect(
+        codex.compileToDispatchArgs('ultra', 'implementer', {
+          target: { model: 'gpt-6-luna', effort: 'ultra' },
+        }),
+      ).toBeNull();
       expect(codex.compileToDispatchArgs('high', 'implementer', {})).toBeNull();
     });
 
@@ -158,6 +171,42 @@ describe('provider ceiling adapters', () => {
       expect(claude.compileToDispatchArgs('fable', 'reviewer', {})).toEqual({
         model: 'fable',
       });
+    });
+
+    it('compiles an effort-pinned Claude target to a role variant', () => {
+      expect(
+        claude.compileToDispatchArgs('opus', 'implementer', {
+          target: { model: 'claude-opus-5-5', effort: 'high' },
+        }),
+      ).toEqual({
+        variant: 'oat-phase-implementer-claude-claude-opus-5-5-high',
+      });
+      expect(
+        claude.compileToDispatchArgs('opus', 'reviewer', {
+          target: { model: 'claude-opus-5-5', effort: 'high' },
+        }),
+      ).toEqual({ variant: 'oat-reviewer-claude-claude-opus-5-5-high' });
+    });
+
+    it('refuses unsupported Claude model-effort pairs', () => {
+      expect(
+        claude.compileToDispatchArgs('haiku', 'implementer', {
+          target: { model: 'haiku', effort: 'high' },
+        }),
+      ).toBeNull();
+      expect(
+        claude.compileToDispatchArgs('sonnet', 'implementer', {
+          target: {
+            model: 'claude-sonnet-4-6',
+            effort: 'xhigh',
+          },
+        }),
+      ).toBeNull();
+      expect(
+        claude.compileToDispatchArgs('sonnet', 'implementer', {
+          target: { model: 'sonnet', effort: 'high' },
+        }),
+      ).toBeNull();
     });
 
     it('returns null for an invalid value', () => {
@@ -229,6 +278,19 @@ describe('provider ceiling adapters', () => {
       ).toEqual({
         variant: 'oat-reviewer-gpt-5-6-sol-high',
       });
+    });
+
+    it('keeps legacy Sonnet high as an enforced reviewer variant alongside the canonical ID', () => {
+      expect(
+        cursor.compileToDispatchArgs('claude-sonnet-5-high', 'reviewer', {}),
+      ).toEqual({ variant: 'oat-reviewer-claude-sonnet-5-high' });
+      expect(
+        cursor.compileToDispatchArgs(
+          'claude-sonnet-5-thinking-high',
+          'reviewer',
+          {},
+        ),
+      ).toEqual({ variant: 'oat-reviewer-claude-sonnet-5-thinking-high' });
     });
 
     it('returns null for blank model values', () => {

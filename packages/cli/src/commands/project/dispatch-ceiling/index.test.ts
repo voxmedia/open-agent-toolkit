@@ -9,7 +9,11 @@ import {
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
 import { resolveEffectiveConfig } from '@config/resolve';
-import { buildCodexMaterializedTargetRoleName } from '@providers/codex/codec/shared';
+import { getCeilingAdapter } from '@providers/ceiling/registry';
+import {
+  buildCodexMaterializedTargetRoleName,
+  SUPPORTED_CODEX_ROLE_TARGETS,
+} from '@providers/codex/codec/shared';
 import type { DispatchReportV1 } from '@providers/identity/dispatch-report';
 import { formatDispatchStamp } from '@providers/identity/stamp';
 import { Command } from 'commander';
@@ -2833,7 +2837,7 @@ describe('oat project dispatch-ceiling resolve', () => {
     {
       args: [
         '--provider',
-        'claude',
+        'cursor',
         '--task-effort',
         'high',
         '--report-scope',
@@ -2841,7 +2845,7 @@ describe('oat project dispatch-ceiling resolve', () => {
         '--report-action',
         'implementation',
       ],
-      message: '--task-effort is only valid for Codex',
+      message: '--task-effort is only valid for Codex or Claude',
     },
     {
       args: [
@@ -3408,6 +3412,699 @@ describe('oat project dispatch-ceiling resolve', () => {
     },
   );
 
+  it('distinguishes Claude candidates with the same model and different efforts', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchPolicy: { mode: 'managed', policy: 'high' },
+        dispatchCeiling: {
+          providers: {
+            claude: {
+              high: {
+                candidates: [
+                  {
+                    harness: 'claude',
+                    model: 'claude-opus-5-5',
+                    effort: 'medium',
+                  },
+                  {
+                    harness: 'claude',
+                    model: 'claude-opus-5-5',
+                    effort: 'high',
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, [
+      '--provider',
+      'claude',
+      '--candidate-model',
+      'claude-opus-5-5',
+      '--candidate-effort',
+      'high',
+      '--task-class',
+      'hard-reasoning',
+      '--task-effort',
+      'high',
+      '--report-scope',
+      'p01-t01',
+      '--report-action',
+      'implementation',
+      '--json',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
+      providers: {
+        claude: {
+          dispatchArgs: {
+            variant: 'oat-phase-implementer-claude-claude-opus-5-5-high',
+          },
+          modelAxis: 'selected:claude-opus-5-5',
+          effortAxis: 'selected:high',
+          selection: {
+            requestedCandidate: { model: 'claude-opus-5-5', effort: 'high' },
+            candidateIndex: 1,
+            selectedValue: 'claude-opus-5-5',
+            target: { model: 'claude-opus-5-5', effort: 'high' },
+          },
+        },
+      },
+      dispatchReport: {
+        classification: {
+          taskClass: 'hard-reasoning',
+          preferredEffort: 'high',
+        },
+        requestedControls: {
+          model: { value: 'claude-opus-5-5' },
+          effort: { value: 'high', mechanism: 'materialized-role' },
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('uses the terminal Claude effort candidate for reviewer selection', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchPolicy: { mode: 'managed', policy: 'high' },
+        dispatchCeiling: {
+          providers: {
+            claude: {
+              high: {
+                candidates: [
+                  {
+                    harness: 'claude',
+                    model: 'claude-opus-5-5',
+                    effort: 'medium',
+                  },
+                  {
+                    harness: 'claude',
+                    model: 'claude-opus-5-5',
+                    effort: 'high',
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, [
+      '--provider',
+      'claude',
+      '--role',
+      'reviewer',
+      '--json',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      providers: {
+        claude: {
+          dispatchArgs: { variant: 'oat-reviewer-claude-claude-opus-5-5-high' },
+          effortAxis: 'selected:high',
+          selection: {
+            selectedValue: 'claude-opus-5-5',
+            target: { model: 'claude-opus-5-5', effort: 'high' },
+          },
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('selects an exact effort-pinned Claude candidate under uncapped policy', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchPolicy: { mode: 'managed', policy: 'uncapped' },
+        dispatchCeiling: {
+          providers: {
+            claude: {
+              high: {
+                candidates: [
+                  {
+                    harness: 'claude',
+                    model: 'claude-opus-5-5',
+                    effort: 'medium',
+                  },
+                  {
+                    harness: 'claude',
+                    model: 'claude-opus-5-5',
+                    effort: 'high',
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, [
+      '--provider',
+      'claude',
+      '--role',
+      'implementer',
+      '--candidate-model',
+      'claude-opus-5-5',
+      '--candidate-effort',
+      'medium',
+      '--task-class',
+      'hard-reasoning',
+      '--task-effort',
+      'medium',
+      '--report-scope',
+      'p05-t03',
+      '--report-action',
+      'fix',
+      '--json',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      policy: 'uncapped',
+      providers: {
+        claude: {
+          dispatchArgs: {
+            variant: 'oat-phase-implementer-claude-claude-opus-5-5-medium',
+          },
+          modelAxis: 'selected:claude-opus-5-5',
+          effortAxis: 'selected:medium',
+          selection: {
+            requestedCandidate: { model: 'claude-opus-5-5', effort: 'medium' },
+            candidateIndex: 0,
+            target: {
+              harness: 'claude',
+              model: 'claude-opus-5-5',
+              effort: 'medium',
+              crossHarness: false,
+            },
+          },
+        },
+      },
+      dispatchReport: {
+        route: { scope: 'p05-t03', action: 'fix', role: 'fix' },
+        classification: {
+          taskClass: 'hard-reasoning',
+          preferredEffort: 'medium',
+          source: 'caller',
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it.each([
+    {
+      model: 'claude-sonnet-5',
+      effort: 'xhigh',
+      evidence: {
+        source: 'explicit-model-id',
+        exactModel: true,
+        generation: 'sonnet-5',
+      },
+    },
+    {
+      model: 'claude-sonnet-5',
+      effort: 'low',
+      evidence: {
+        source: 'explicit-model-id',
+        exactModel: true,
+        generation: 'sonnet-5',
+      },
+    },
+    {
+      model: 'claude-sonnet-4-6',
+      effort: 'max',
+      evidence: {
+        source: 'explicit-model-id',
+        exactModel: true,
+        generation: 'sonnet-4-6',
+      },
+    },
+    {
+      model: 'claude-opus-5-5',
+      effort: 'low',
+      evidence: {
+        source: 'explicit-model-id',
+        exactModel: true,
+        generation: 'opus-5-5',
+      },
+    },
+    {
+      model: 'claude-fable-5-1',
+      effort: 'xhigh',
+      evidence: {
+        source: 'explicit-model-id',
+        exactModel: true,
+        generation: 'fable-5-1',
+      },
+    },
+  ])(
+    'resolves documented Claude capability $model/$effort without overstating exactness',
+    async ({ model, effort, evidence }) => {
+      const { root, home } = await setup();
+      const candidates = [{ harness: 'claude', model, effort }];
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: {
+          dispatchPolicy: { mode: 'managed', policy: 'high' },
+          dispatchCeiling: { providers: { claude: { high: { candidates } } } },
+        },
+      });
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'claude',
+        '--candidate-model',
+        model,
+        '--candidate-effort',
+        effort,
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'resolved',
+        providers: {
+          claude: {
+            target: { model, effort, capabilityEvidence: evidence },
+            selection: {
+              target: { model, effort, capabilityEvidence: evidence },
+            },
+          },
+        },
+      });
+      expect(process.exitCode).toBe(0);
+    },
+  );
+
+  it('refuses a bare Sonnet effort alias that availableModels may substitute to Sonnet 4.5', async () => {
+    const { root, home } = await setup();
+    const candidates = [{ harness: 'claude', model: 'sonnet', effort: 'high' }];
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchPolicy: { mode: 'managed', policy: 'high' },
+        dispatchCeiling: { providers: { claude: { high: { candidates } } } },
+      },
+    });
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, [
+      '--provider',
+      'claude',
+      '--candidate-model',
+      'sonnet',
+      '--candidate-effort',
+      'high',
+      '--json',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({ status: 'error' });
+    expect(capture.jsonPayloads[0]?.message).toMatch(
+      /availableModels.*organization policy.*versioned model ID/iu,
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('resolves custom family pins from declared capabilities', async () => {
+    const { root, home } = await setup();
+    const candidates = [{ harness: 'claude', model: 'opus', effort: 'xhigh' }];
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchPolicy: { mode: 'managed', policy: 'high' },
+        dispatchCeiling: { providers: { claude: { high: { candidates } } } },
+      },
+    });
+    const pin =
+      'arn:aws:bedrock:us-east-1:123456789012:inference-profile/custom-opus';
+    const { command, capture } = createHarness({
+      cwd: root,
+      home,
+      processEnv: {
+        CLAUDE_CODE_USE_BEDROCK: '1',
+        ANTHROPIC_DEFAULT_OPUS_MODEL: pin,
+        ANTHROPIC_DEFAULT_OPUS_MODEL_SUPPORTED_CAPABILITIES:
+          'effort,xhigh_effort',
+      },
+    });
+    await runCommand(command, [
+      '--provider',
+      'claude',
+      '--candidate-model',
+      'opus',
+      '--candidate-effort',
+      'xhigh',
+      '--json',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
+      providers: {
+        claude: {
+          mode: 'enforced',
+          dispatchArgs: {
+            variant: 'oat-phase-implementer-claude-opus-xhigh',
+          },
+          target: {
+            capabilityEvidence: {
+              source: 'family-pin-declaration',
+              modelReference: pin,
+              capabilitiesSource:
+                'ANTHROPIC_DEFAULT_OPUS_MODEL_SUPPORTED_CAPABILITIES',
+              supportedEfforts: ['low', 'medium', 'high', 'xhigh'],
+            },
+          },
+          selection: {
+            target: {
+              capabilityEvidence: {
+                source: 'family-pin-declaration',
+                modelReference: pin,
+              },
+            },
+          },
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it.each([
+    ['effort', 'high', ['low', 'medium', 'high']],
+    ['effort,xhigh_effort', 'xhigh', ['low', 'medium', 'high', 'xhigh']],
+    ['effort,max_effort', 'max', ['low', 'medium', 'high', 'max']],
+  ] as const)(
+    'resolves recognized family pins using authoritative %s capabilities',
+    async (declaration, effort, supportedEfforts) => {
+      const { root, home } = await setup();
+      const candidates = [{ harness: 'claude', model: 'opus', effort }];
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: {
+          dispatchPolicy: { mode: 'managed', policy: 'high' },
+          dispatchCeiling: { providers: { claude: { high: { candidates } } } },
+        },
+      });
+      const pin = 'us.anthropic.claude-opus-5-5-v1:0';
+      const { command, capture } = createHarness({
+        cwd: root,
+        home,
+        processEnv: {
+          CLAUDE_CODE_USE_BEDROCK: '1',
+          ANTHROPIC_DEFAULT_OPUS_MODEL: pin,
+          ANTHROPIC_DEFAULT_OPUS_MODEL_SUPPORTED_CAPABILITIES: declaration,
+        },
+      });
+      await runCommand(command, [
+        '--provider',
+        'claude',
+        '--candidate-model',
+        'opus',
+        '--candidate-effort',
+        effort,
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'resolved',
+        providers: {
+          claude: {
+            target: {
+              capabilityEvidence: {
+                source: 'family-pin-declaration',
+                modelReference: pin,
+                generation: 'opus-5-5',
+                capabilitiesSource:
+                  'ANTHROPIC_DEFAULT_OPUS_MODEL_SUPPORTED_CAPABILITIES',
+                supportedEfforts,
+              },
+            },
+          },
+        },
+      });
+      expect(process.exitCode).toBe(0);
+    },
+  );
+
+  it('does not inflate a recognized family pin beyond its capability declaration', async () => {
+    const { root, home } = await setup();
+    const candidates = [{ harness: 'claude', model: 'opus', effort: 'xhigh' }];
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchPolicy: { mode: 'managed', policy: 'high' },
+        dispatchCeiling: { providers: { claude: { high: { candidates } } } },
+      },
+    });
+    const { command, capture } = createHarness({
+      cwd: root,
+      home,
+      processEnv: {
+        CLAUDE_CODE_USE_BEDROCK: '1',
+        ANTHROPIC_DEFAULT_OPUS_MODEL: 'us.anthropic.claude-opus-5-5-v1:0',
+        ANTHROPIC_DEFAULT_OPUS_MODEL_SUPPORTED_CAPABILITIES: 'effort',
+      },
+    });
+    await runCommand(command, [
+      '--provider',
+      'claude',
+      '--candidate-model',
+      'opus',
+      '--candidate-effort',
+      'xhigh',
+      '--json',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({ status: 'error' });
+    expect(capture.jsonPayloads[0]?.message).toMatch(
+      /does not support effort "xhigh"/iu,
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
+  it.each([
+    { CLAUDE_CODE_USE_BEDROCK: '1' },
+    { CLAUDE_CODE_USE_VERTEX: '1' },
+    { CLAUDE_CODE_USE_FOUNDRY: '1' },
+  ])(
+    'rejects provider-mapped Sonnet 4.5 aliases: $CLAUDE_CODE_USE_BEDROCK$CLAUDE_CODE_USE_VERTEX$CLAUDE_CODE_USE_FOUNDRY',
+    async (processEnv) => {
+      const { root, home } = await setup();
+      const candidates = [
+        { harness: 'claude', model: 'sonnet', effort: 'high' },
+      ];
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: {
+          dispatchPolicy: { mode: 'managed', policy: 'high' },
+          dispatchCeiling: { providers: { claude: { high: { candidates } } } },
+        },
+      });
+      const { command, capture } = createHarness({
+        cwd: root,
+        home,
+        processEnv,
+      });
+      await runCommand(command, [
+        '--provider',
+        'claude',
+        '--candidate-model',
+        'sonnet',
+        '--candidate-effort',
+        'high',
+        '--json',
+      ]);
+      expect(capture.jsonPayloads[0]).toMatchObject({ status: 'error' });
+      expect(capture.jsonPayloads[0]?.message).toMatch(
+        /availableModels.*organization policy/iu,
+      );
+      expect(process.exitCode).toBe(1);
+    },
+  );
+
+  it('rejects a provider-ambiguous alias capability without an explicit family pin', async () => {
+    const { root, home } = await setup();
+    const candidates = [
+      { harness: 'claude', model: 'sonnet', effort: 'xhigh' },
+    ];
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchPolicy: { mode: 'managed', policy: 'high' },
+        dispatchCeiling: { providers: { claude: { high: { candidates } } } },
+      },
+    });
+
+    const { command, capture } = createHarness({
+      cwd: root,
+      home,
+      processEnv: { ANTHROPIC_BASE_URL: 'https://gateway.example.test' },
+    });
+    await runCommand(command, [
+      '--provider',
+      'claude',
+      '--candidate-model',
+      'sonnet',
+      '--candidate-effort',
+      'xhigh',
+      '--json',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({ status: 'error' });
+    expect(capture.jsonPayloads[0]?.message).toMatch(
+      /availableModels.*organization policy.*ANTHROPIC_DEFAULT_SONNET_MODEL/u,
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('does not let a family pin override host-managed model routing', async () => {
+    const { root, home } = await setup();
+    const candidates = [
+      { harness: 'claude', model: 'sonnet', effort: 'xhigh' },
+    ];
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchPolicy: { mode: 'managed', policy: 'high' },
+        dispatchCeiling: { providers: { claude: { high: { candidates } } } },
+      },
+    });
+
+    const { command, capture } = createHarness({
+      cwd: root,
+      home,
+      processEnv: {
+        CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST: '1',
+        ANTHROPIC_DEFAULT_SONNET_MODEL: 'claude-sonnet-5',
+      },
+    });
+    await runCommand(command, [
+      '--provider',
+      'claude',
+      '--candidate-model',
+      'sonnet',
+      '--candidate-effort',
+      'xhigh',
+      '--json',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({ status: 'error' });
+    expect(capture.jsonPayloads[0]?.message).toMatch(
+      /host-managed.*takes precedence.*ANTHROPIC_DEFAULT_SONNET_MODEL/iu,
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
+  it.each([
+    {
+      candidates: [
+        { harness: 'claude', model: 'opus', effort: 'high' },
+        { harness: 'claude', model: 'opus', effort: 'medium' },
+      ],
+      message: 'Claude candidates must be nondecreasing',
+      candidateModel: 'opus',
+      candidateEffort: 'high',
+    },
+    {
+      candidates: [
+        {
+          harness: 'claude',
+          model: 'claude-sonnet-4-6',
+          effort: 'xhigh',
+        },
+      ],
+      message: 'does not support effort',
+      candidateModel: 'claude-sonnet-4-6',
+      candidateEffort: 'xhigh',
+    },
+  ])(
+    'rejects invalid Claude effort ladders: $message',
+    async ({ candidates, message, candidateModel, candidateEffort }) => {
+      const { root, home } = await setup();
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: {
+          dispatchPolicy: { mode: 'managed', policy: 'high' },
+          dispatchCeiling: { providers: { claude: { high: { candidates } } } },
+        },
+      });
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'claude',
+        '--candidate-model',
+        candidateModel,
+        '--candidate-effort',
+        candidateEffort,
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({ status: 'error' });
+      expect(capture.jsonPayloads[0]?.message).toContain(message);
+      expect(process.exitCode).toBe(1);
+    },
+  );
+
+  it.each([
+    {
+      candidates: [
+        { harness: 'claude', model: 'opus', effort: 'high' },
+        { harness: 'claude', model: 'opus', effort: 'medium' },
+      ],
+      message: 'Claude candidates must be nondecreasing',
+    },
+    {
+      candidates: [
+        {
+          harness: 'claude',
+          model: 'claude-sonnet-4-6',
+          effort: 'xhigh',
+        },
+      ],
+      message: 'does not support effort',
+    },
+  ])(
+    'rejects invalid Claude reviewer ladders before terminal selection: $message',
+    async ({ candidates, message }) => {
+      const { root, home } = await setup();
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: {
+          dispatchPolicy: { mode: 'managed', policy: 'high' },
+          dispatchCeiling: { providers: { claude: { high: { candidates } } } },
+        },
+      });
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'claude',
+        '--role',
+        'reviewer',
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({ status: 'error' });
+      expect(capture.jsonPayloads[0]?.message).toContain(message);
+      expect(process.exitCode).toBe(1);
+    },
+  );
+
   it('rejects malformed closed-provider candidate ordering', async () => {
     const { root, home } = await setup();
     await writeJson(join(root, '.oat', 'config.json'), {
@@ -3441,6 +4138,17 @@ describe('oat project dispatch-ceiling resolve', () => {
   });
 
   it.each([
+    {
+      args: [
+        '--provider',
+        'cursor',
+        '--candidate-model',
+        'composer-2-5',
+        '--candidate-effort',
+        'high',
+      ],
+      message: '--candidate-effort is only valid for Codex or Claude',
+    },
     {
       args: [
         '--provider',
@@ -3513,6 +4221,185 @@ describe('oat project dispatch-ceiling resolve', () => {
     expect(capture.jsonPayloads[0]).toMatchObject({ status: 'error' });
     expect(capture.jsonPayloads[0]?.message).toContain(
       'requires a configured candidate ladder',
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('accepts each catalogued Codex effort as an exact candidate', () => {
+    const adapter = getCeilingAdapter('codex');
+    for (const { model, effort } of SUPPORTED_CODEX_ROLE_TARGETS) {
+      expect(
+        adapter.compileToDispatchArgs(effort, 'implementer', {
+          target: { harness: 'codex', model, effort },
+        }),
+      ).toEqual({
+        variant: buildCodexMaterializedTargetRoleName({
+          agentName: 'oat-phase-implementer',
+          model,
+          effort,
+        }),
+      });
+    }
+  });
+
+  it('rejects unsupported ultra candidates while accepting max as the Frontier ceiling', async () => {
+    const { root, home } = await setup();
+    const configPath = join(root, '.oat', 'config.json');
+    await writeJson(configPath, {
+      version: 1,
+      workflow: {
+        dispatchPolicy: { mode: 'managed', policy: 'frontier' },
+        dispatchCeiling: {
+          providers: {
+            codex: {
+              frontier: {
+                candidates: [
+                  { harness: 'codex', model: 'gpt-6-sol', effort: 'max' },
+                ],
+              },
+            },
+          },
+        },
+      },
+    });
+    const valid = createHarness({ cwd: root, home });
+    await runCommand(valid.command, [
+      '--provider',
+      'codex',
+      '--candidate-model',
+      'gpt-6-sol',
+      '--candidate-effort',
+      'max',
+      '--json',
+    ]);
+    expect(valid.capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
+      providers: {
+        codex: {
+          dispatchArgs: { variant: 'oat-phase-implementer-gpt-6-sol-max' },
+          selection: {
+            requestedCandidate: { model: 'gpt-6-sol', effort: 'max' },
+          },
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+
+    process.exitCode = 0;
+    const invalid = createHarness({ cwd: root, home });
+    await runCommand(invalid.command, [
+      '--provider',
+      'codex',
+      '--candidate-model',
+      'gpt-6-sol',
+      '--candidate-effort',
+      'ultra',
+      '--json',
+    ]);
+    expect(invalid.capture.jsonPayloads[0]).toMatchObject({ status: 'error' });
+    expect(invalid.capture.jsonPayloads[0]?.message).toContain(
+      'Invalid Codex candidate effort',
+    );
+    expect(process.exitCode).toBe(1);
+
+    await writeJson(configPath, {
+      version: 1,
+      workflow: {
+        dispatchPolicy: { mode: 'managed', policy: 'frontier' },
+        dispatchCeiling: {
+          providers: {
+            codex: {
+              frontier: {
+                candidates: [
+                  { harness: 'codex', model: 'gpt-6-sol', effort: 'ultra' },
+                ],
+              },
+            },
+          },
+        },
+      },
+    });
+    process.exitCode = 0;
+    const configuredInvalid = createHarness({ cwd: root, home });
+    await runCommand(configuredInvalid.command, [
+      '--provider',
+      'codex',
+      '--candidate-model',
+      'gpt-6-sol',
+      '--candidate-effort',
+      'max',
+      '--json',
+    ]);
+    expect(configuredInvalid.capture.jsonPayloads[0]).toMatchObject({
+      status: 'error',
+    });
+    expect(configuredInvalid.capture.jsonPayloads[0]?.message).toContain(
+      'Codex candidates require a model and supported effort.',
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('keeps the Codex catalogue effort order ascending for candidate ranking', () => {
+    const firstSeenEfforts = [
+      ...new Set(SUPPORTED_CODEX_ROLE_TARGETS.map((target) => target.effort)),
+    ];
+    expect(firstSeenEfforts).toEqual(['low', 'medium', 'high', 'xhigh', 'max']);
+  });
+
+  it('honors a lower preferred Codex effort beneath a max frontier candidate', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchPolicy: { mode: 'managed', policy: 'frontier' },
+        dispatchCeiling: {
+          providers: {
+            codex: {
+              frontier: {
+                candidates: [
+                  { harness: 'codex', model: 'gpt-6-sol', effort: 'max' },
+                ],
+              },
+            },
+          },
+        },
+      },
+    });
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, [
+      '--provider',
+      'codex',
+      '--role',
+      'implementer',
+      '--preferred',
+      'high',
+      '--json',
+    ]);
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
+      providers: {
+        codex: {
+          dispatchArgs: { variant: 'oat-phase-implementer-gpt-6-sol-high' },
+          selection: { preferredValue: 'high', selectedValue: 'high' },
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('keeps ultra unavailable as a legacy preferred scalar', async () => {
+    const { root, home } = await setup();
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, [
+      '--provider',
+      'codex',
+      '--preferred',
+      'ultra',
+      '--json',
+    ]);
+    expect(capture.jsonPayloads[0]).toMatchObject({ status: 'error' });
+    expect(capture.jsonPayloads[0]?.message).toContain(
+      'Valid values: low, medium, high, xhigh, max',
     );
     expect(process.exitCode).toBe(1);
   });
@@ -4561,6 +5448,37 @@ describe('oat project dispatch-ceiling resolve', () => {
     expect(capture.info).toContain('Mode: enforced (model-arg)');
     expect(capture.info).toContain('Selection: capped');
     expect(capture.info).toContain('Effort axis: not-applicable');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('prints the selected Claude effort axis for an effort-pinned target', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchPolicy: { mode: 'managed', policy: 'high' },
+        dispatchCeiling: {
+          providers: {
+            claude: {
+              high: {
+                candidates: [
+                  {
+                    harness: 'claude',
+                    model: 'claude-opus-5-5',
+                    effort: 'high',
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, ['--provider', 'claude']);
+
+    expect(capture.info).toContain('Effort axis: selected:high');
     expect(process.exitCode).toBe(0);
   });
 

@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: false
 allowed-tools: Read
 metadata:
-  version: 1.2.8
+  version: 1.2.9
 ---
 
 # Dispatching OAT Subagents

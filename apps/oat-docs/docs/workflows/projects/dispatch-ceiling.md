@@ -80,20 +80,16 @@ To pick up a new version, compare your
 `workflow.dispatchCeiling.recommendationVersion` against the bundled version,
 then either edit the affected cells by hand or clear them and re-adopt.
 
-Version `2026-07-27.1` is a live example. It interleaves the Cursor `high` and
-`frontier` tiers so each alternates a GPT rung with a Claude rung, ending `high`
-at `gpt-5.6-sol-high` and `frontier` at `claude-fable-5-thinking-high`. It also
-drops `claude-opus-5-thinking-max` and `claude-fable-5-thinking-xhigh` from
-`frontier`. Dropping the Opus max rung follows the non-monotonic top-end Opus
-evidence recorded in `subagent-orchestration/references/evidence-and-refresh.md`,
-which treats max as a route requiring justification rather than a strictly
-better rung. Dropping the Fable xhigh rung is a recommendation judgment rather
-than a measured finding: `subagent-orchestration/references/provider-claude.md`
-permits either Fable rung for a qualified specialist case, and this ladder takes
-the cheaper one absent a comparison favoring xhigh. The evidence record above
-does not compare the two rungs. Both models remain in the pin catalog and stay
-available to a hand-edited ladder. An adopter still on the prior version keeps their existing
-Cursor tiers untouched until they take one of the actions above.
+Version `2026-09-23.2` is the current bundled recommendation. It prefers
+GPT-6 Luna and Sol in Codex and Opus 5.5 low/medium/high in Claude High.
+The Claude low option suits bounded intelligent recon in Balanced or High;
+medium remains the implementation starting point under High. GPT-5.6 targets remain
+supported for explicit Codex and Cursor configurations. Cursor's preferred
+ladder uses existing verified GPT-5.6, Grok, Composer, and Fable mappings;
+Cursor Opus 5.5 now has five approved desktop mappings, but the bundled
+Cursor preference order remains unchanged. Rerunning adoption preserves any
+explicit older cell unchanged. For the complete maintenance
+procedure, see [Updating Model Guidance](../../contributing/updating-model-guidance.md).
 
 The terminal Fable target may require model access from the executing provider.
 The adopting organization is responsible for confirming its applicable
@@ -171,17 +167,17 @@ An ordered candidate cell uses `candidates`:
             "candidates": [
               {
                 "harness": "codex",
-                "model": "gpt-5.6-terra",
+                "model": "gpt-6-luna",
                 "effort": "low"
               },
               {
                 "harness": "codex",
-                "model": "gpt-5.6-terra",
+                "model": "gpt-6-luna",
                 "effort": "medium"
               },
               {
                 "harness": "codex",
-                "model": "gpt-5.6-terra",
+                "model": "gpt-6-luna",
                 "effort": "high"
               }
             ]
@@ -192,11 +188,7 @@ An ordered candidate cell uses `candidates`:
         },
         "cursor": {
           "balanced": {
-            "candidates": [
-              "gpt-5.6-terra-low",
-              "gpt-5.6-terra-medium",
-              "gpt-5.6-terra-high"
-            ]
+            "candidates": ["gpt-5.6-terra-high"]
           }
         }
       }
@@ -239,22 +231,18 @@ oat_dispatch_policy:
 
 ## Complete Bundled Recommendation
 
-The bundled ladder contains every supported candidate, not only the final
-candidate in each tier:
+The bundled ladder is a curated subset of the supported targets:
 
-- **Codex:** Luna at `low`, `medium`, `high`, and `xhigh`; Terra at `low`,
-  `medium`, `high`, and `xhigh`; Sol at `low`, `medium`, `high`, `xhigh`, and
-  `max`.
-- **Claude:** `haiku`, `sonnet`, `opus`, and `fable` across the ordered named
-  tiers.
-- **Cursor:** verified multi-family flat IDs across Composer, Claude (Sonnet,
-  Opus, and Fable), GPT, and Grok. Two counts apply and they differ: the
-  bundled recommendation carries 14 Cursor candidates across the four tiers,
-  while the materialization catalogue carries 18 flat IDs. The four extra
-  entries are approved mappings deliberately kept out of the recommendation but
-  still materializable. The catalogue maps each flat ladder ID to a separate
-  bracket-form frontmatter model; OAT does not derive or normalize either
-  value.
+- **Codex:** GPT-6 Luna at `low` through `max` across Economy and Balanced;
+  GPT-6 Sol at `low` through `max` across High and Frontier. GPT-5.6
+  variants remain available outside this preferred ladder.
+- **Claude:** `haiku` and Sonnet 5 at Economy/Balanced, Opus 5.5 at High and
+  Frontier, and Fable 5.1 at Frontier.
+- **Cursor:** the preferred ladder uses approved Composer 2.5, GPT-5.6, Grok
+  4.5, and Fable 5 targets. The catalogue maps each flat ladder ID to its
+  separately verified bracket-form frontmatter model. Opus 5.5 has five
+  approved effort mappings from a [native desktop probe](../../contributing/verifying-cursor-pins.md);
+  they are available for explicit selection outside the bundled preference.
 
 The final candidate in a named tier defines that tier's reviewer ceiling. Lower
 reviewer selection requires a separate reviewed contract; a normal reviewer
@@ -290,12 +278,13 @@ oat project dispatch-ceiling resolve \
   --report-action implementation \
   --json
 
-# Claude: exact model argument
+# Claude: exact model and effort candidate
 oat project dispatch-ceiling resolve \
   --provider claude \
   --role implementer \
   --ceiling-tier high \
-  --candidate-model sonnet \
+  --candidate-model claude-opus-5-5 \
+  --candidate-effort medium \
   --task-class default-implementation \
   --report-scope p02 \
   --report-action implementation \
@@ -342,23 +331,51 @@ candidate before launch even though the command retains exit code `0`.
 Implementer and fix resolution has two mutually exclusive selection branches:
 
 - **Preferred selection:** pass `--preferred` for legacy scalar ceilings or
-  managed `Uncapped` compatibility. Do not include `--candidate-model` or
-  `--candidate-effort`.
+  managed `Uncapped` model-only compatibility. Do not include
+  `--candidate-model` or `--candidate-effort`.
 - **Exact-candidate selection:** pass `--candidate-model` and, where applicable,
-  `--candidate-effort` for a managed capped phase or fix. Do not include
-  `--preferred`.
+  `--candidate-effort` for a managed capped phase or fix, or for managed
+  `Uncapped` with an explicit model/effort choice. Do not include `--preferred`.
 
 Never combine the branches in one resolver invocation. The exact-candidate
 branch replaces, rather than supplements, preferred selection.
 
+### Claude effort capability evidence
+
+An effort-pinned Claude candidate must establish the exact generation and that
+generation's supported effort. Current directly recognized generations include
+`claude-fable-5-1`, `claude-fable-5`, `claude-opus-5-5`, `claude-sonnet-5`,
+`claude-opus-4-7`, `claude-opus-4-6`, and `claude-sonnet-4-6`.
+Opus 5.5 supports `low`, `medium`, `high`, `xhigh`, and `max`; consult the
+[updating guide](../../contributing/updating-model-guidance.md) before adding
+further generations or rungs. Retired Opus 5.0 and 4.8 are no longer directly
+recognized for effort-pinned dispatch.
+
+A family alias can also establish capability through its matching
+`ANTHROPIC_DEFAULT_<FAMILY>_MODEL` pin. A recognized versioned model ID in that
+pin supplies generation evidence. A custom provider model ID additionally
+requires the matching `<PIN>_SUPPORTED_CAPABILITIES` declaration: `effort`
+enables `low`, `medium`, and `high`, while `xhigh_effort` and `max_effort` add
+those respective rungs. When a declaration is present, it is authoritative and
+must include `effort`; it cannot claim a different family.
+
+`CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST` takes precedence over family pins, so an
+effort-pinned bare alias fails closed under host-managed routing. A bare alias
+without a usable pin also fails closed because provider routing,
+`availableModels`, or organization policy can substitute another generation.
+Use a recognized versioned model ID when the host owns routing. Model-only
+aliases remain compatible through the Agent API's per-call model argument. They
+report the per-call effort axis as `not-applicable` because that API has no
+per-call effort argument; this does not claim that Claude itself lacks effort.
+
 ## Provider Enforcement
 
-| Provider | Exact phase-agent or optional-child invocation                                                                                     | Failure behavior                          |
-| -------- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
-| Codex    | Use `providers.codex.dispatchArgs.variant` as `agent_type`; otherwise launch a fresh child pinned to the returned model and effort | Block if neither exact route is usable    |
-| Claude   | Pass `providers.claude.dispatchArgs.model` as the actual Task `model`                                                              | Block if the model cannot be applied      |
-| Cursor   | Launch `providers.cursor.dispatchArgs.variant` as the exact native agent type first                                                | Block rather than normalize or substitute |
-| Other    | Use a registered provider adapter when it can compile exact controls                                                               | Unsupported providers remain advisory     |
+| Provider | Exact phase-agent or optional-child invocation                                                                                     | Failure behavior                            |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| Codex    | Use `providers.codex.dispatchArgs.variant` as `agent_type`; otherwise launch a fresh child pinned to the returned model and effort | Block if neither exact route is usable      |
+| Claude   | Launch `providers.claude.dispatchArgs.variant` for effort-pinned targets; pass the exact model for legacy targets                  | Block if the exact target cannot be applied |
+| Cursor   | Launch `providers.cursor.dispatchArgs.variant` as the exact native agent type first                                                | Block rather than normalize or substitute   |
+| Other    | Use a registered provider adapter when it can compile exact controls                                                               | Unsupported providers remain advisory       |
 
 Materialized Codex and Cursor roles exist before phase dispatch after
 project/user sync. Cursor definitions carry `supported-catalogue`,

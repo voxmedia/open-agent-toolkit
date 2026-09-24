@@ -1,7 +1,7 @@
 ---
-guidance_version: 2026-07-25
-last_verified: 2026-07-25
-review_after: 2026-09-08
+guidance_version: 2026-09-23
+last_verified: 2026-09-23
+review_after: 2026-12-22
 ---
 
 # Claude Model Selection
@@ -15,15 +15,13 @@ the dated model examples below. Launch mechanics for OAT dispatch live in
 
 - `claude-haiku-4-5`: fastest economical class for straightforward,
   high-volume, mechanically verified work.
-- `claude-opus-5`: normal substantive route and the default for
+- `claude-opus-5-5`: normal substantive route and the default for
   interpretation-heavy implementation, hard reasoning, and consequential work.
 - `claude-sonnet-5`: conditional route when measured latency, throughput,
   access, rate limits, or established-workflow economics beat the relevant
   Opus route.
-- `claude-fable-5`: eligibility-gated specialist for a directly relevant
+- `claude-fable-5-1`: eligibility-gated specialist for a directly relevant
   failure mode, not a universal escalation above Opus.
-- `claude-opus-4-8`: compatibility or documented safeguard fallback, not the
-  current general primary.
 
 Claude Mythos 5 is invitation-only and intended for approved defensive cyber
 work. It is not a general routing candidate unless the organization explicitly
@@ -33,22 +31,31 @@ provisions and authorizes it.
 
 Never normalize Claude effort against OpenAI or Cursor labels.
 
-- Opus 5: use medium for normal substantive work and high for hard reasoning,
-  architecture, ambiguity, and deep review. Use xhigh only when reasoning depth
+For OAT-managed Claude reviewers and phase implementers, explicit effort is
+definition-bound. Classify the task here, choose an eligible configured
+model/effort pair, resolve it, and launch the exact generated agent variant.
+The Agent call has no effort field. If it also supplies a model, that model must
+match the generated definition. Model-only candidates retain their existing
+native model argument behavior, and inherited targets leave both axes to the
+host.
+
+- Opus 5.5: use low for bounded intelligent recon with source checks, medium
+  for normal substantive work, and high for hard reasoning, architecture,
+  ambiguity, and deep review. Use xhigh only when reasoning depth
   is the bottleneck or an evaluated long-horizon workload benefits. Max is
   exceptional and requires a workload-specific effort sweep or an explicit
   quality-first exception.
 - Sonnet 5: use medium or high only when measured latency, throughput, access,
   or workload economics justify the conditional route. Do not preserve xhigh
   or max as generic workhorse settings.
-- Fable 5: use high or xhigh only for a qualified specialist case. Max is
+- Fable 5.1: use high or xhigh only for a qualified specialist case. Max is
   exceptional; medium or low are not routine economy substitutes for Opus.
 - Haiku 4.5 does not expose the same adaptive-effort surface. Use only controls
   present in the live schema.
 
 Effort changes tool-call behavior as well as prose. Record it independently.
-Opus 5 adaptive thinking is on by default; current direct-API behavior rejects
-disabling thinking at xhigh or max. Verify the live schema before launch.
+Opus 5.5 adaptive thinking is always on in the current direct API. Verify the
+live schema before launch.
 Changing effort or speed can invalidate prompt caches. Fable adaptive thinking
 is always on in the current API.
 
@@ -58,13 +65,13 @@ These routes are dated guidance and benchmark-derived routing hypotheses.
 Evaluate them on representative local work before treating fine boundaries as
 stable.
 
-| Task class               | Default                             | Economy                                                | Escalation                                          | Floor notes                                                                                     |
-| ------------------------ | ----------------------------------- | ------------------------------------------------------ | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `mechanical-recon`       | Haiku 4.5                           | Same, with strict output and mechanical verification   | Opus 5 medium                                       | Haiku is below floor for semantic audits and silent-miss-prone exploration.                     |
-| `intelligent-recon`      | Opus 5 medium                       | Sonnet 5 medium/high only when its measured route wins | Opus 5 high                                         | Do not use Sonnet low for coding or open-ended recon.                                           |
-| `default-implementation` | Opus 5 medium                       | Sonnet 5 medium/high for evaluated bounded throughput  | Opus 5 high                                         | Fable is not a routine implementation or economy route.                                         |
-| `hard-reasoning`         | Opus 5 high                         | Opus 5 medium only after narrowing and evaluation      | Opus 5 xhigh for a reasoning-depth bottleneck       | Use max only after a workload-specific effort sweep.                                            |
-| `consequential`          | Opus 5 high plus independent review | No routine economy route                               | Opus 5 xhigh when deeper reasoning is also required | Consequence adds review and root authorization; it does not automatically require xhigh or max. |
+| Task class               | Default                               | Economy                                                | Escalation                                            | Floor notes                                                                                     |
+| ------------------------ | ------------------------------------- | ------------------------------------------------------ | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `mechanical-recon`       | Haiku 4.5                             | Same, with strict output and mechanical verification   | Opus 5.5 medium                                       | Haiku is below floor for semantic audits and silent-miss-prone exploration.                     |
+| `intelligent-recon`      | Opus 5.5 low                          | Sonnet 5 medium/high only when its measured route wins | Opus 5.5 medium; high when deeper reasoning is needed | Verify silent-miss-prone conclusions; do not use Sonnet low for open-ended recon.               |
+| `default-implementation` | Opus 5.5 medium                       | Sonnet 5 medium/high for evaluated bounded throughput  | Opus 5.5 high                                         | Fable is not a routine implementation or economy route.                                         |
+| `hard-reasoning`         | Opus 5.5 high                         | Opus 5.5 medium only after narrowing and evaluation    | Opus 5.5 xhigh for a reasoning-depth bottleneck       | Use max only after a workload-specific effort sweep.                                            |
+| `consequential`          | Opus 5.5 high plus independent review | No routine economy route                               | Opus 5.5 xhigh when deeper reasoning is also required | Consequence adds review and root authorization; it does not automatically require xhigh or max. |
 
 ## Root and Subagent Cost Posture
 
@@ -80,7 +87,7 @@ consequence, or a directly relevant Fable strength exposes a failure mode that
 Fable is expected to catch and eligibility permits it. This named Fable
 instantiation is provisional.
 
-A consequential classification by itself is insufficient.
+A stronger safety classifier is a specialist consideration, not an exception that inverts the general Opus-first policy. A consequential classification by itself is insufficient.
 
 ## Conditional and Specialist Routes
 
@@ -101,16 +108,17 @@ verified before selection.
 
 Eligibility filters the candidate set before capability or economy is compared.
 A route that fails one of these gates is unavailable regardless of benchmark
-standing. These are dated facts verified 2026-07-25; reverify against the live
-schema and the organization's actual plan before launch.
+standing. The non-Opus constraints are dated observations; reverify against the live
+schema and the organization's actual plan before launch. Do not transfer Opus 5
+service-tier or retention claims to Opus 5.5 without fresh evidence.
 
-| Constraint          | Opus 5                 | Sonnet 5      | Fable 5                    | Haiku 4.5     |
-| ------------------- | ---------------------- | ------------- | -------------------------- | ------------- |
-| Zero data retention | eligible               | eligible      | **unavailable**, needs 30d | eligible      |
-| Priority Tier       | not supported          | not supported | supported                  | verify live   |
-| Fast mode           | gated research preview | no            | no                         | no            |
-| Long context        | 1M at standard rates   | 1M standard   | 1M standard                | verify live   |
-| Claude Code minimum | version-gated          | version-gated | version-gated              | version-gated |
+| Constraint          | Opus 5.5      | Sonnet 5      | Fable 5.1                  | Haiku 4.5     |
+| ------------------- | ------------- | ------------- | -------------------------- | ------------- |
+| Zero data retention | verify live   | eligible      | **unavailable**, needs 30d | eligible      |
+| Priority Tier       | verify live   | not supported | supported                  | verify live   |
+| Fast mode           | verify live   | no            | no                         | no            |
+| Long context        | verify live   | 1M standard   | 1M standard                | verify live   |
+| Claude Code minimum | version-gated | version-gated | version-gated              | version-gated |
 
 - Zero data retention removes Fable from the route set outright. Check the
   retention requirement before selecting a specialist reviewer.
@@ -129,13 +137,10 @@ from `model-selection-principles.md`.
 ## Cyber-Sensitive Evidence
 
 For security review, vulnerability triage, auth boundaries, permissions, and
-other valid dual-use workflows, start with Opus 5 at the effort warranted by
+other valid dual-use workflows, start with Opus 5.5 at the effort warranted by
 reasoning depth and pair consequential findings with an independent provider
 review.
 
 If a safeguard blocks a valid workflow, record the refusal, preserve the
-authorization boundary, and use a documented compatible fallback. Opus 4.8 is
-the current fallback target where necessary, not the universal cyber primary.
-Do not infer that a stronger safety classifier is a capability weakness. It is
-evidence about predictable workflow completion and refusal behavior, not an
-exception that inverts the general Opus-first policy.
+authorization boundary, and choose only a currently supported, authorized
+compatible route. Retired Opus 4.8/5.0 generations are not active fallbacks.

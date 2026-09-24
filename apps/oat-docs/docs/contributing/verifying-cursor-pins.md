@@ -6,8 +6,8 @@ description: 'Runbook for probe-verifying a Cursor model pin before shipping it:
 # Verifying Cursor Pins
 
 A Cursor model pin maps an OAT ladder model ID to the frontmatter selector that
-materialized role files carry, for example `claude-opus-5-thinking-medium` to
-`claude-opus-5[effort=medium]`. Adding one to
+materialized role files carry, for example `gpt-5.6-sol-medium` to
+`gpt-5.6-sol[reasoning=medium]`. Adding one to
 `packages/cli/src/providers/cursor/codec/catalog.ts` requires evidence that
 Cursor actually resolves that selector to the intended model.
 
@@ -26,7 +26,7 @@ that look like evidence are not:
   ask.
 
 The catalog alone is also insufficient wherever a family carries both a
-thinking and a non-thinking flat ID at the same rung. Opus 5 carries both at
+thinking and a non-thinking flat ID at the same rung. Historically, Opus 5 carried both at
 low, medium, and high, so the bracket selector is genuinely ambiguous there and
 only a probe can resolve it. At rungs where only one variant exists, the
 catalog settles the question without a probe — but you still need the probe to
@@ -56,6 +56,15 @@ As of Cursor 3.12.30, `model_params` (which would carry an explicit `thinking`
 flag) is empty and `model_id` is absent. Thinking is therefore established by
 the resolved slug itself, which is sound because the non-thinking IDs are
 distinct.
+
+The 2026-09-23 Opus 5.5 desktop probe is an example: all five
+`claude-opus-5-5[effort=...]` selectors resolved to matching flat IDs in
+Cursor 3.20.14, while `effort=ultra` fell back to medium. The Sonnet 5 high control
+resolved to `claude-sonnet-5-thinking-high`, correcting an older flat ID. The provenance summary at
+`packages/cli/src/providers/cursor/codec/__fixtures__/README.md` identifies
+the adjacent redacted summary and 32-event native JSONL records in the OAT
+repository. Re-run this procedure for a new family or changed
+provider behavior.
 
 ## Prerequisites
 
@@ -133,10 +142,10 @@ the probe is the hook payload, not anything the agent produces.
 ````markdown
 ---
 # TEMPORARY pin probe - not oat-managed. Delete after probing.
-# Class: subject - expect claude-opus-5-thinking-medium
-name: zz-pin-probe-opus5-medium
-description: Temporary pin probe (subject) for claude-opus-5[effort=medium]. Delete after use.
-model: claude-opus-5[effort=medium]
+# Class: subject - expect gpt-5.6-sol-medium
+name: zz-pin-probe-sol56-medium
+description: Temporary pin probe (subject) for gpt-5.6-sol[reasoning=medium]. Delete after use.
+model: gpt-5.6-sol[reasoning=medium]
 ---
 
 ## Role
@@ -144,7 +153,7 @@ model: claude-opus-5[effort=medium]
 You are a throwaway pin probe. Run exactly one command and then stop:
 
 ```bash
-echo PIN-PROBE zz-pin-probe-opus5-medium
+echo PIN-PROBE zz-pin-probe-sol56-medium
 ```
 
 Then reply with the single word `done`. Do not read files or use any
@@ -162,12 +171,12 @@ corroborating `preToolUse` event.
 Probe every rung you intend to pin. Then add controls, which are what make the
 subject results interpretable:
 
-| Class            | Example selector               | Proves                                                           |
-| ---------------- | ------------------------------ | ---------------------------------------------------------------- |
-| Subject          | `claude-opus-5[effort=medium]` | The mapping resolves as intended                                 |
-| Positive control | `claude-sonnet-5[effort=high]` | Reproduces an already-verified mapping                           |
-| Negative control | `claude-opus-9[effort=high]`   | Unknown family — the channel reports resolution, not the request |
-| Negative control | `claude-opus-5[effort=ultra]`  | Unknown effort — exposes rung-level fallback                     |
+| Class            | Example selector                 | Proves                                                           |
+| ---------------- | -------------------------------- | ---------------------------------------------------------------- |
+| Subject          | `gpt-5.6-sol[reasoning=medium]`  | The mapping resolves as intended                                 |
+| Positive control | `claude-sonnet-5[effort=high]`   | Reproduces an already-verified mapping                           |
+| Negative control | `claude-opus-9[effort=high]`     | Unknown family — the channel reports resolution, not the request |
+| Negative control | `gpt-5.6-sol[reasoning=unknown]` | Unknown effort — exposes rung-level fallback                     |
 
 The negative controls carry most of the interpretive weight. Without them you
 cannot distinguish a hook that reports what Cursor actually resolved from one
@@ -193,6 +202,9 @@ PY
 ```
 
 ## Interpreting results
+
+The following Opus 5 observations document earlier probes; Opus 5 is retired
+from current mappings. Use the current live catalogue for new selectors.
 
 ### Unresolvable components fall back silently
 
@@ -240,10 +252,10 @@ approved it:
 
 ```ts
 approvedMapping(
-  'claude-opus-5-thinking-medium',
-  'claude-opus-5[effort=medium]',
-  'claude-effort',
-  { probeName: 'zz-pin-probe-opus5-medium', verifiedAt: '2026-07-25', evidencePath: '...' },
+  'gpt-5.6-sol-medium',
+  'gpt-5.6-sol[reasoning=medium]',
+  'gpt-reasoning',
+  { probeName: 'zz-pin-probe-sol56-medium', verifiedAt: '2026-07-25', evidencePath: '...' },
 ),
 ```
 

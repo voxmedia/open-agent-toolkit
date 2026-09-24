@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: false
 allowed-tools: Read, Write, Glob, Grep
 metadata:
-  version: 1.2.26
+  version: 1.2.30
 ---
 
 # Plan Writing Contract
@@ -119,11 +119,11 @@ Route from the resolver fields, not from hand-inspected config keys:
 When adoption is required, show the complete bundled recommendation before
 asking to write anything:
 
-| Provider        | Economy                                                        | Balanced                                                                                                       | High                                                        | Frontier                               |
-| --------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | -------------------------------------- |
-| Codex           | Luna/low, Luna/medium, Luna/high                               | Luna/xhigh, Terra/low, Terra/medium, Terra/high, Terra/xhigh                                                   | Sol/low, Sol/medium, Sol/high                               | Sol/xhigh, Sol/max                     |
-| Claude          | haiku, sonnet                                                  | sonnet                                                                                                         | opus                                                        | fable                                  |
-| Cursor (opaque) | `gpt-5.6-luna-low`, `gpt-5.6-luna-medium`, `gpt-5.6-luna-high` | `gpt-5.6-luna-xhigh`, `gpt-5.6-terra-low`, `gpt-5.6-terra-medium`, `gpt-5.6-terra-high`, `gpt-5.6-terra-xhigh` | `gpt-5.6-sol-low`, `gpt-5.6-sol-medium`, `gpt-5.6-sol-high` | `gpt-5.6-sol-xhigh`, `gpt-5.6-sol-max` |
+| Provider        | Economy                                                   | Balanced                                     | High                                                              | Frontier                                                               |
+| --------------- | --------------------------------------------------------- | -------------------------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Codex           | gpt-6-luna/low, gpt-6-luna/medium, gpt-6-luna/high        | gpt-6-luna/xhigh, gpt-6-luna/max             | gpt-6-sol/low, gpt-6-sol/medium, gpt-6-sol/high                   | gpt-6-sol/xhigh, gpt-6-sol/max                                         |
+| Claude          | haiku, claude-sonnet-5/medium                             | claude-opus-5-5/low                          | claude-opus-5-5/low, claude-opus-5-5/medium, claude-opus-5-5/high | claude-opus-5-5/xhigh, claude-opus-5-5/max, claude-fable-5-1/high      |
+| Cursor (opaque) | `composer-2.5`, `gpt-5.6-luna-high`, `gpt-5.6-luna-xhigh` | `cursor-grok-4.5-high`, `gpt-5.6-terra-high` | `gpt-5.6-sol-medium`, `gpt-5.6-sol-high`                          | `gpt-5.6-sol-xhigh`, `gpt-5.6-sol-max`, `claude-fable-5-thinking-high` |
 
 In an interactive run, ask the user to select the owning scope explicitly
 before any adoption write:
@@ -233,8 +233,12 @@ over generic tier availability.
   the complete target and no child has started. If another route cannot
   preserve the target, use only a verified-equivalent inline route or block the
   review.
-- Claude: require a non-empty `providers.claude.dispatchArgs.model` and put
-  that exact value in the actual provider invocation as its `model` argument.
+- Claude: for an effort-pinned target, require a non-empty
+  `providers.claude.dispatchArgs.variant` and launch that exact generated agent
+  type; effort comes from its frontmatter because Agent has no effort field.
+  For a legacy model-only target, require and pass the exact
+  `providers.claude.dispatchArgs.model`. Any model supplied with a variant must
+  match the definition.
 - Cursor: require a non-empty `providers.cursor.dispatchArgs.variant` and
   launch that exact resolver-returned native reviewer variant as the native
   agent type first. Keep Cursor model strings opaque inside the resolver and
@@ -414,7 +418,11 @@ same boundary the phase gate review setup uses. It runs adjacent to, but
 independently from, that setup: neither contract reads, writes, or
 satisfies the other's setting. The calling skill owns the prompt and the write
 to `"$PROJECT_PATH/state.md"`; this section owns the shared eligibility,
-preservation, validation, and non-interactive behavior.
+preservation, validation, and non-interactive behavior. The caller MUST supply
+one exact relevant set containing its own planning entry-point skill plus
+`oat-project-implement`. This procedure probes and offers choices only for that
+caller-supplied set. A later workflow transition supplies and evaluates its own
+newly relevant set when that workflow is actually entered.
 
 This contract governs the configured lifecycle gates declared with
 `oat_gateable: true` in skill frontmatter. It never reads or writes
@@ -434,10 +442,13 @@ Lifecycle gate posture: preserved existing oat_skill_gate_overrides setting.
 A malformed map is never silently repaired, replaced, or dropped. Stop and
 report the offending project state path so the operator can correct it.
 
-### 2. Probe configured gate-aware skills
+### 2. Probe only the caller-supplied relevant set
 
-When no explicit map exists, probe each gate-aware skill read-only. The probe
-resolves configuration and never launches a gate:
+Only after section 1 confirms that no explicit map exists, validate that the
+caller supplied exactly its own planning entry point plus
+`oat-project-implement`. Probe each skill in that relevant set read-only. Do not
+probe any other gate-aware skill, and do not speculate about a workflow that has
+not been entered. The probe resolves configuration and never launches a gate:
 
 ```bash
 oat gate resolve <gate-aware-skill> --project "$PROJECT_PATH" --json
@@ -462,8 +473,9 @@ Lifecycle gate posture: no configured lifecycle gates; nothing to disable.
 
 ### 3. Offer one choice per configured gate
 
-When at least one gate is configured and an interactive user-response channel is
-available, present each configured gate separately and let the user keep or
+When at least one relevant-set gate is configured and an interactive
+user-response channel is available, present each configured relevant gate
+separately and let the user keep or
 disable it independently. Granularity is per skill; no single answer disables
 every gate at once.
 
@@ -523,7 +535,7 @@ Use this loop after an artifact has been written and before the calling skill ha
 
 3. **Dispatch `oat-reviewer` in structured mode**
    - Default: after the parent-at-or-above-ceiling check succeeds, omit the child model deliberately and record `selection_reason: inherit`. Tier 1 uses the configured `oat-reviewer` subagent; Tier 2 runs the same structured prompt in the planning parent.
-   - Exception: when the planning parent is unknown or below the ceiling, use the resolver's concrete ceiling target. Codex uses its exact registered reviewer or a fresh child pinned to the same model, effort, and canonical instructions after pre-start role rejection. Claude requires the exact `providers.claude.dispatchArgs.model` value on the actual invocation. Cursor requires the exact `providers.cursor.dispatchArgs.variant` native reviewer variant first; skills keep its mapped model opaque, and only a pre-start native role-selection rejection permits another route. If the host cannot preserve that target, block unless inline execution has verified equivalent controls.
+   - Exception: when the planning parent is unknown or below the ceiling, use the resolver's concrete ceiling target. Codex uses its exact registered reviewer or a fresh child pinned to the same model, effort, and canonical instructions after pre-start role rejection. Claude uses the exact generated `providers.claude.dispatchArgs.variant` for an effort-pinned target and the exact `providers.claude.dispatchArgs.model` only for a legacy model-only target. Cursor requires the exact `providers.cursor.dispatchArgs.variant` native reviewer variant first; skills keep its mapped model opaque, and only a pre-start native role-selection rejection permits another route. If the host cannot preserve that target, block unless inline execution has verified equivalent controls.
    - If an accepted child does not conclude, continue only through its existing handle. A terminal timeout blocks or escalates and cannot launch a replacement child.
    - Always set `oat_output_mode: structured`; the loop consumes `StructuredFindings` in-memory and the reviewer writes no artifact.
    - Do not downgrade the selected inheritance/exception policy or checklist when changing execution mechanics.
@@ -535,7 +547,7 @@ Use this loop after an artifact has been written and before the calling skill ha
    - If a finding cannot be fixed within the artifact boundary, preserve it as residual and surface it before handoff.
 
 5. **Rewrite and re-dispatch within the bound**
-   - After applying fixes, rewrite the artifact and start a new review attempt with the same deliberate inheritance policy or complete exception payload, including the exact Claude `dispatchArgs.model` argument or Cursor `dispatchArgs.variant`.
+   - After applying fixes, rewrite the artifact and start a new review attempt with the same deliberate inheritance policy or complete exception payload, including the exact Claude effort variant or legacy `dispatchArgs.model`, or Cursor `dispatchArgs.variant`.
    - Each rewrite/re-dispatch cycle consumes one retry.
    - Stop when the reviewer returns no findings or when the retry bound is exhausted.
 

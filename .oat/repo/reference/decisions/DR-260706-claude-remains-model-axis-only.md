@@ -2,7 +2,7 @@
 id: DR-260706-claude-remains-model-axis-only
 title: Claude remains model-axis only
 date: 2026-07-06
-status: accepted
+status: superseded
 legacy_id: null
 ---
 
