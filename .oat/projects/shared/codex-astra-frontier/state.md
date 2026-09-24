@@ -21,7 +21,7 @@ oat_hill_checkpoints: [p01] # Configured: which phases require human-in-the-loop
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 oat_implement_exit_gate:
   status: allowed
   resolution: configured
@@ -36,7 +36,7 @@ oat_implement_exit_gate:
   reviewed_head: 066c5868658a500b5aa1949966ada5f0336f8d75
   implementation_base_ref: origin/main
   implementation_fingerprint: sha256:effective-delta-v1:c8368f693ef78572c6b01dd83cdf2a391757aa4a08ba903c41b86f2f1e4c47f0
-  freshness_head: bf61f4d96afa0e4b295e282a25e52011c34fc1b3
+  freshness_head: 2ea1bc915bc21ba3de26686516c1c22e13936f3c
   freshness_fingerprint: sha256:effective-delta-v1:d047919c2a2d1f659992d046d332e0257867924108885603c8e210687877d733
   launch_state: result_persisted
   launch_attempt_id: a0133ea7-07d2-4728-970b-641db774496e
@@ -57,7 +57,7 @@ oat_implement_exit_gate:
   receive_eligible: true
   receive_completed: true
   failure: null
-  updated_at: '2026-09-24T16:42:12Z'
+  updated_at: '2026-09-24T16:43:33Z'
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -120,11 +120,11 @@ oat_workflow_origin: native # native | imported
 #   failure: null
 #   updated_at: '2026-07-18T00:00:00Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
-oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/317 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-24T14:35:38.301Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-24T16:42:12Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-24T16:43:33Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -136,8 +136,8 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Four tasks and both final reviews complete; the configured
-implementation exit gate passed. PR handoff is next.
+PR open - Four tasks and both final reviews complete; the configured
+implementation exit gate passed. CI and the release dry run are pending.
 
 ## Artifacts
 
@@ -154,6 +154,7 @@ implementation exit gate passed. PR handoff is next.
 - ✓ Final independent review passed with no Critical or High findings; its
   lifecycle-artifact finding was corrected before the configured exit gate
 - ✓ Configured cross-runtime exit gate passed; two Low wording findings resolved
+- ✓ Follow-up PR #317 opened at `2ea1bc915bc21ba3de26686516c1c22e13936f3c`
 
 ## Blockers
 
@@ -161,4 +162,4 @@ None
 
 ## Next Milestone
 
-Open the follow-up PR and record its exact head and checks
+Monitor PR #317 checks; final HiLL closeout remains pending
