@@ -88,20 +88,20 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-24T14:35:38.301Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-24T16:04:40Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-24T16:22:36Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: codex-astra-frontier
 
-**Status:** Discovery
+**Status:** Implementation closeout
 **Started:** 2026-09-24
 **Last Updated:** 2026-09-24
 
 ## Current Phase
 
-Implementation - Four tasks complete; awaiting final review and configured
-implementation exit gate.
+Implementation - Four tasks and final independent review complete; awaiting
+the configured implementation exit gate.
 
 ## Artifacts
 
@@ -115,7 +115,9 @@ implementation exit gate.
 
 - ✓ Discovery and plan complete
 - ✓ Phase p01 tasks and phase review complete
-- ⧗ Awaiting final review and configured implementation exit gate
+- ✓ Final independent review passed with no Critical or High findings; its
+  lifecycle-artifact finding was corrected before the configured exit gate
+- ⧗ Awaiting configured implementation exit gate
 
 ## Blockers
 
@@ -123,4 +125,4 @@ None
 
 ## Next Milestone
 
-Complete final review, configured gate, and PR handoff
+Complete configured gate and PR handoff

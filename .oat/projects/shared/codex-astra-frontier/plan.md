@@ -190,7 +190,7 @@ Matrix`, `CHANGELOG`, and `September Frontier Releases Early Pass/README`.
 | Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target |
 | ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
 | p01    | code     | fixes_completed | 2026-09-24 | reviews/archived/p01-review-2026-09-24T155712Z.md           | 4440e2cb22b81693dc7016e432ae51383af8098a | manual     | -           |
-| final  | code     | pending         | -          | -                                                           | -                                        | -          | -           |
+| final  | code     | passed          | 2026-09-24 | reviews/archived/final-review-2026-09-24T161719Z.md         | a0120f35150245d623748c0d2c55db71e11f66fd | manual     | -           |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -           |
 | design | artifact | pending         | -          | -                                                           | -                                        | -          | -           |
 | plan   | artifact | fixes_completed | 2026-09-24 | reviews/archived/artifact-plan-review-2026-09-24T144531Z.md | -                                        | -          | -           |
