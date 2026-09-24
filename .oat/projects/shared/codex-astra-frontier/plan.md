@@ -5,208 +5,115 @@ oat_blockers: []
 oat_last_updated: 2026-09-24
 oat_phase: plan
 oat_phase_status: in_progress
-oat_plan_hill_phases: [] # phases to pause AFTER completing (empty = every phase)
-oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
-oat_plan_source: spec-driven # spec-driven | quick | imported | lite
-oat_import_reference: null # e.g., references/imported-plan.md
-oat_import_source_path: null # original source path provided by user
-oat_import_provider: null # codex | cursor | claude | null
+oat_plan_parallel_groups: []
+oat_plan_source: quick
+oat_import_reference: null
+oat_import_source_path: null
+oat_import_provider: null
 oat_generated: false
+oat_template: true
 ---
 
 # Implementation Plan: codex-astra-frontier
 
-> Execute this plan using `oat-project-implement` — sequential by default, parallel when `oat_plan_parallel_groups` is declared.
+**Goal:** Ship a separate Codex Frontier recommendation of Sol xhigh, Astra high,
+and Astra xhigh, with exact supported agent variants and an honest vault-guidance
+comparison.
 
-**Goal:** {Brief goal statement from spec}
+**Architecture:** Extend the Codex supported model/effort catalog, then update
+the bundled ordered recommendation and its human guidance. Rebuild the CLI
+bundle and project-scoped Codex agent projections from the canonical sources.
 
-**Architecture:** {1-2 sentence architecture summary from design}
-
-**Tech Stack:** {Key technologies from design}
-
-**Commit Convention:** `{type}({scope}): {description}` - e.g., `feat(p01-t01): add user auth endpoint`
+**Tech stack:** TypeScript ESM, Vitest, JSON recommendation asset, TOML agent
+projections, Markdown guidance, pnpm workspace.
 
 ## Planning Checklist
 
-- [ ] Confirmed HiLL checkpoints with user
-- [ ] Set `oat_plan_hill_phases` in frontmatter
-- [ ] Evaluated phases for parallelism opportunities
-- [ ] Set `oat_plan_parallel_groups` in frontmatter
-
----
+- [x] Discovery synthesized from the conversation and validated by the CLI.
+- [x] Source and generated ownership identified; accepted vault policy kept
+      distinct from review-pending research.
+- [x] Phase dependencies and write sets evaluated.
+- [x] No parallel phase group; no additional cross-runtime phase review gate.
+- HiLL implementation checkpoints are resolved at implementation entry.
 
 ## Parallelism
 
-Phases that have no overlapping file modifications may run concurrently. To declare parallelism:
+The one phase is sequential. Catalog support must exist before the recommended
+candidates can validate. Agent projections and bundle output depend on the
+final catalog and recommendation. There is no independent, file-disjoint phase
+boundary worth a worktree merge.
 
-```yaml
-oat_plan_parallel_groups: [['p02', 'p03']]
-```
+## Phase 1: Codex Astra Frontier
 
-Each inner array is a group of phases that execute in parallel (each in its own worktree) and merge back in plan order after all pass. Groups themselves run sequentially.
+### Task p01-t01: Admit Astra to the Codex supported catalog
 
-Default is `[]` (fully sequential, no worktrees). Only declare parallelism when phases are genuinely file-disjoint — overlap will produce merge conflicts that stop the run.
+**Files:** `packages/cli/src/providers/codex/codec/shared.ts`, catalog and
+resolver tests under `packages/cli/src/providers/codex/codec/` and
+`packages/cli/src/commands/project/dispatch-ceiling/`.
 
----
+1. Add verified Astra low, medium, high, xhigh, and max catalog pairs; keep Sol
+   max supported and ultra unsupported. Test exact generated variant names and
+   lower preferred efforts beneath an Astra xhigh Frontier ceiling.
+2. Format changed source and tests with `pnpm exec oxfmt --write <changed paths>`.
+3. Verify with `pnpm --filter @open-agent-toolkit/cli exec vitest run
+src/providers/codex/codec/catalog.test.ts
+src/commands/project/dispatch-ceiling/index.test.ts`.
+4. Commit as `feat(p01-t01): support Codex Astra effort variants`.
 
-## Dispatch Profile
+### Task p01-t02: Update the Frontier recommendation and guidance
 
-_Optional override surface. Use only for explicit user-authored constraints or preferences. Omit this section when runtime selection should choose the lowest confident tier._
+**Files:** `packages/cli/config/dispatch-matrix-recommendation.json`,
+recommendation/config tests, `.agents/skills/oat-project-plan-writing/SKILL.md`,
+`.agents/skills/subagent-orchestration/` references and entrypoint,
+`apps/oat-docs/docs/` model-guidance and dispatch-ceiling pages.
 
-Blank or `auto` means there is no explicit constraint for that provider. Do not generate rows by default; a missing phase row uses runtime selection.
+1. Set Codex Frontier order to Sol xhigh, Astra high, Astra xhigh and bump the
+   recommendation version. Test exact adoption output and Frontier resolution;
+   preserve explicitly configured Sol max cells and other provider ladders.
+2. Align the copied planning table and Codex guidance. State that Astra's
+   task advantage remains unmeasured locally and its Frontier inclusion is a
+   user-directed preference, not vault-policy acceptance. Bump each changed
+   canonical skill version once.
+3. Format changed files with `pnpm exec oxfmt --write <changed paths>` and run
+   the focused CLI config, resolver, and skill validation tests.
+4. Commit as `feat(p01-t02): recommend Astra in Codex Frontier`.
 
-| Phase | Claude model                     | Codex effort                   | Rationale                     |
-| ----- | -------------------------------- | ------------------------------ | ----------------------------- |
-| pNN   | haiku\|sonnet\|opus\|fable\|auto | low\|medium\|high\|xhigh\|auto | why this constraint is needed |
+### Task p01-t03: Regenerate projections and validate the release
 
-Codex effort values are preferred controls. `oat-project-implement` caps them when a capped managed dispatch policy exists, selects them directly under managed `Uncapped`, and maps selected efforts to pinned implementer variants when available. Codex provider default effort is informational only for explicit inherit/default behavior or base/unpinned fallback paths.
+**Files:** Generated `packages/cli/assets/config/` recommendation,
+`.codex/agents/` Astra roles, `.codex/config.toml`, five public package
+manifests and `pnpm-lock.yaml`.
 
----
-
-RED/GREEN/Refactor is the recommended default where work is testable, not a validator requirement. Other task-body shapes, including non-TDD shapes, are allowed when appropriate, provided the plan preserves stable `pNN-tNN` IDs, per-task verification, and atomic commits.
-
-## Phase 1: {Phase Name}
-
-### Task p01-t01: {Task Name}
-
-**Files:**
-
-- Create: `{path/to/file.ts}`
-- Modify: `{path/to/existing.ts}`
-
-**Step 1: Write test (RED)**
-
-```typescript
-// {path/to/file.test.ts}
-describe('{feature}', () => {
-  it('{test case}', () => {
-    // Test implementation
-  });
-});
-```
-
-Run: `pnpm --filter {package-name} exec vitest run {path/to/file.test.ts}`
-Expected: Test fails (RED)
-
-**Step 2: Implement (GREEN)**
-
-```typescript
-// {path/to/file.ts}
-// Implementation code or interface signatures
-```
-
-Run: `pnpm --filter {package-name} exec vitest run {path/to/file.test.ts}`
-Expected: Test passes (GREEN)
-
-Use the actual runner command that scopes to the intended file or test target. Do not write a package-level shortcut unless it truly executes only the scope the task claims.
-
-**Step 3: Refactor**
-
-{Any cleanup or improvements while tests stay green}
-
-**Step 4: Verify**
-
-Run: `pnpm lint && pnpm type-check`
-Expected: No errors
-
-**Step 5: Commit**
-
-```bash
-git add {files}
-git commit -m "feat(p01-t01): {description}"
-```
-
----
-
-### Task p01-t02: {Task Name}
-
-**Files:**
-
-- {File list}
-
-**Step 1: Write test (RED)**
-
-{Test code}
-
-**Step 2: Implement (GREEN)**
-
-{Implementation code or signatures}
-
-**Step 3: Refactor**
-
-{Optional cleanup}
-
-**Step 4: Verify**
-
-Run: `{verification command}`
-Expected: {output}
-
-Verification commands should be behaviorally accurate. If the task claims a file-scoped or test-scoped check, use the concrete runner invocation that really scopes to that target.
-
-**Step 5: Commit**
-
-```bash
-git add {files}
-git commit -m "feat(p01-t02): {description}"
-```
-
----
-
-## Phase 2: {Phase Name}
-
-### Task p02-t01: {Task Name}
-
-{Continue TDD pattern...}
-
----
+1. Bump the five lockstep publishable package versions. Build the CLI bundle,
+   run project-scoped `oat sync`, and verify a second sync dry run is empty.
+2. Verify exact Astra model and effort in both role types, and run focused sync,
+   asset-consistency, and adoption tests.
+3. Run required gates in repository order: `pnpm check`, `pnpm type-check`,
+   `pnpm test`, `pnpm build`, `pnpm run check:skill-bumps`, fetch `origin/main`,
+   `pnpm release:check-versions`, `pnpm release:validate`, `pnpm build:docs`;
+   also run `pnpm lint` and `pnpm format` for skill changes. Record exits and
+   cache replay honestly.
+4. Commit as `chore(p01-t03): bundle Astra agents and release versions`.
 
 ## Reviews
-
-{Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
-
-{Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
 | Scope  | Type     | Status  | Date | Artifact | Reviewed Head | Invocation | Gate Target |
 | ------ | -------- | ------- | ---- | -------- | ------------- | ---------- | ----------- |
 | p01    | code     | pending | -    | -        | -             | -          | -           |
-| p02    | code     | pending | -    | -        | -             | -          | -           |
 | final  | code     | pending | -    | -        | -             | -          | -           |
 | spec   | artifact | pending | -    | -        | -             | -          | -           |
 | design | artifact | pending | -    | -        | -             | -          | -           |
-
-For code-review events, `Reviewed Head` is the full 40-character SHA at the
-head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
-`Gate Target` is populated only for gate events. Legacy five-column rows remain
-valid. Writers must preserve every existing row and every unknown trailing
-cell; never truncate a widened row back to five columns.
-
-**Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
-
-**Meaning:**
-
-- `received`: review artifact exists (not yet converted into fix tasks)
-- `fixes_added`: fix tasks were added to the plan (work queued)
-- `fixes_completed`: fix tasks implemented, awaiting re-review
-- `passed`: re-review run and recorded as passing (no Critical/High)
-
----
+| plan   | artifact | pending | -    | -        | -             | -          | -           |
 
 ## Implementation Complete
 
-**Summary:**
-
-- Phase 1: {N} tasks - {Description}
-- Phase 2: {N} tasks - {Description}
-
-**Total: {N} tasks**
-
-Ready for code review and merge.
-
----
+- Phase 1: 3 tasks — Codex support, recommendation/guidance, generated outputs
+  and validation.
+- Total: 3 tasks.
 
 ## References
 
-- Design: `design.md` (required in spec-driven mode; optional in quick/import mode)
-- Spec: `spec.md` (required in spec-driven mode; optional in quick/import mode)
-- Discovery: `discovery.md`
-- Imported Source: `references/imported-plan.md` (when `oat_plan_source: imported`)
+- Discovery: `discovery.md`.
+- Official Astra model documentation and the local Codex model catalog are the
+  capability sources; the separately maintained vault is a dated policy
+  comparison, not a catalog source.
