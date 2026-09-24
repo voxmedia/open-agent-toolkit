@@ -64,6 +64,10 @@ astra-p01-20260924: phase verified; review attempted two bounded recon waves, 0 
 
 Final review passed with 0 Critical/High and one resolved Medium lifecycle-artifact finding; see reviews/archived/final-review-2026-09-24T161719Z.md. astra-final-review-20260924
 
+### 2026-09-24 · structural · oat gate review · final
+
+target=cursor-fable-5-1-high threshold=high findings=critical:0,high:0,medium:0,low:2 exit=0 status=ok artifact=.oat/projects/shared/codex-astra-frontier/reviews/final-review-2026-09-24T162937Z.md run=a0133ea7-07d2-4728-970b-641db774496e
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
