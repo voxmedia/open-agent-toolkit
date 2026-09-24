@@ -292,6 +292,23 @@ _- Outstanding Items_
 - Final independent review found no Critical or High product findings. Its
   single Medium lifecycle-artifact consistency finding is resolved in the
   closeout bookkeeping before the configured exit gate.
+- The configured cross-runtime exit gate passed with zero Critical, High, or
+  Medium findings. Its two Low wording findings were addressed in the plan
+  review note and Codex provider guidance without another review run; see
+  `reviews/archived/final-review-2026-09-24T162937Z.md`.
+
+### Review Received: final configured gate
+
+**Date:** 2026-09-24
+
+**Review artifact:** `reviews/archived/final-review-2026-09-24T162937Z.md`
+
+**Findings:** 0 Critical, 0 High, 0 Medium, 2 Low.
+
+**Disposition:** Both Low findings addressed now. The plan note names the
+fourth plan artifact gate explicitly, and the Codex guidance lead distinguishes
+routine Sol/Luna routing from Astra's supported Frontier candidacy. No fix
+tasks or deferred findings were added.
 
 ---
 

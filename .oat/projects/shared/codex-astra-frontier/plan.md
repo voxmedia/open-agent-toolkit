@@ -191,7 +191,7 @@ Matrix`, `CHANGELOG`, and `September Frontier Releases Early Pass/README`.
 | ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | --------------------- |
 | p01    | code     | fixes_completed | 2026-09-24 | reviews/archived/p01-review-2026-09-24T155712Z.md           | 4440e2cb22b81693dc7016e432ae51383af8098a | manual     | -                     |
 | final  | code     | passed          | 2026-09-24 | reviews/archived/final-review-2026-09-24T161719Z.md         | a0120f35150245d623748c0d2c55db71e11f66fd | manual     | -                     |
-| final  | code     | received        | 2026-09-24 | reviews/final-review-2026-09-24T162937Z.md                  | 066c5868658a500b5aa1949966ada5f0336f8d75 | gate       | cursor-fable-5-1-high |
+| final  | code     | passed          | 2026-09-24 | reviews/archived/final-review-2026-09-24T162937Z.md         | 066c5868658a500b5aa1949966ada5f0336f8d75 | gate       | cursor-fable-5-1-high |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                     |
 | design | artifact | pending         | -          | -                                                           | -                                        | -          | -                     |
 | plan   | artifact | fixes_completed | 2026-09-24 | reviews/archived/artifact-plan-review-2026-09-24T144531Z.md | -                                        | -          | -                     |
@@ -199,7 +199,7 @@ Matrix`, `CHANGELOG`, and `September Frontier Releases Early Pass/README`.
 | plan   | artifact | fixes_completed | 2026-09-24 | reviews/archived/artifact-plan-review-2026-09-24T150001Z.md | -                                        | -          | -                     |
 | plan   | artifact | fixes_completed | 2026-09-24 | reviews/archived/artifact-plan-review-2026-09-24T150841Z.md | -                                        | -          | -                     |
 
-The final configured gate exited successfully with two Medium residuals:
+The fourth plan artifact gate exited successfully with two Medium residuals:
 concrete per-task format commands and a runnable audit-table validator. Both
 were added before implementation; this is a fixes-completed disposition, not a
 clean-review claim.

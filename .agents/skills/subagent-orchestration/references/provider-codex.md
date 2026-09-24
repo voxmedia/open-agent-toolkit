@@ -13,7 +13,8 @@ model examples below. Launch mechanics for OAT dispatch live in
 
 ## Current Families
 
-Use the verified GPT-6 Astra/Sol/Luna model IDs for new Codex work:
+Use verified GPT-6 Sol/Luna model IDs for routine new Codex work. GPT-6 Astra
+is a supported Frontier candidate:
 
 - `gpt-6-astra`: Frontier candidate for especially demanding work; the bundled
   recommendation uses high and xhigh, while the supported catalogue also
