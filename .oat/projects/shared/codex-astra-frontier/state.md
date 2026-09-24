@@ -22,6 +22,42 @@ oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_implement_exit_gate:
+  status: allowed
+  resolution: configured
+  disposition: passed
+  config_fingerprint: sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324
+  resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
+  resolved_description: Semantic cross-family final implementation review before oat-project-implement exits.
+  project_override: null
+  on_failure: block
+  max_attempts: 2
+  attempts_completed: 1
+  reviewed_head: 066c5868658a500b5aa1949966ada5f0336f8d75
+  implementation_base_ref: origin/main
+  implementation_fingerprint: sha256:effective-delta-v1:c8368f693ef78572c6b01dd83cdf2a391757aa4a08ba903c41b86f2f1e4c47f0
+  freshness_head: 70ce0ab5a3903e74908f3d48f63a54b15832d2fe
+  freshness_fingerprint: sha256:effective-delta-v1:0d14b57216581ff990af1235a24ac862773f3e2e76c73b9bc11ca0b08bd323db
+  launch_state: result_persisted
+  launch_attempt_id: a0133ea7-07d2-4728-970b-641db774496e
+  launch_started_at: null
+  launch_result_receipt: reviews/archived/exit-gate-2026-09-24.jsonl
+  gate_run_marker: reviews/archived/exit-gate-2026-09-24.stderr
+  gate_run_id: a0133ea7-07d2-4728-970b-641db774496e
+  envelope_status: ok
+  artifact: reviews/archived/final-review-2026-09-24T162937Z.md
+  handoff: corroborated gate artifact with two Low findings
+  receive_state: completed
+  receive_correlation: run/project/invocation matched
+  receive_source_artifact: reviews/final-review-2026-09-24T162937Z.md
+  receive_archived_artifact: reviews/archived/final-review-2026-09-24T162937Z.md
+  receive_event_identity: a0133ea7-07d2-4728-970b-641db774496e:final-review-2026-09-24T162937Z.md
+  receive_pre_head: aa8ba989bbfa24c71daa818667962179c3420bbd
+  receive_commit: 70ce0ab5a3903e74908f3d48f63a54b15832d2fe
+  receive_eligible: true
+  receive_completed: true
+  failure: null
+  updated_at: '2026-09-24T16:35:36Z'
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -88,7 +124,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-24T14:35:38.301Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-24T16:22:36Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-24T16:35:36Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -100,8 +136,8 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Four tasks and final independent review complete; awaiting
-the configured implementation exit gate.
+Implementation - Four tasks and both final reviews complete; the configured
+implementation exit gate passed. PR handoff is next.
 
 ## Artifacts
 
@@ -117,7 +153,7 @@ the configured implementation exit gate.
 - ✓ Phase p01 tasks and phase review complete
 - ✓ Final independent review passed with no Critical or High findings; its
   lifecycle-artifact finding was corrected before the configured exit gate
-- ⧗ Awaiting configured implementation exit gate
+- ✓ Configured cross-runtime exit gate passed; two Low wording findings resolved
 
 ## Blockers
 
@@ -125,4 +161,4 @@ None
 
 ## Next Milestone
 
-Complete configured gate and PR handoff
+Open the follow-up PR and record its exact head and checks
