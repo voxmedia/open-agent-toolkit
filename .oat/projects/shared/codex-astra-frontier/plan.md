@@ -51,9 +51,18 @@ boundary worth a worktree merge.
 resolver tests under `packages/cli/src/providers/codex/codec/` and
 `packages/cli/src/commands/project/dispatch-ceiling/`.
 
-1. Add verified Astra low, medium, high, xhigh, and max catalog pairs; keep Sol
-   max supported and ultra unsupported. Test exact generated variant names and
-   lower preferred efforts beneath an Astra xhigh Frontier ceiling.
+1. **Before editing**, record capability evidence in `implementation.md`: the
+   official `https://developers.openai.com/api/docs/models/gpt-6-astra` lists
+   exact ID `gpt-6-astra` and low, medium, high, xhigh, max; run
+   `jq -r '.fetched_at, .client_version, (.models[] | select(.slug == "gpt-6-astra") | .slug, (.supported_reasoning_levels[].effort))' ~/.codex/models_cache.json`
+   and retain its observed timestamp, client version, ID, and effort list.
+   Require both sources to agree on every admitted pair; absent or conflicting
+   evidence blocks catalog admission. The cache also lists ultra, which this
+   project excludes by explicit user decision and the published five-level
+   contract. Then add Astra low, medium, high, xhigh, and max; keep Sol max
+   supported. Test exact generated variant names and lower preferred efforts
+   beneath an Astra xhigh Frontier ceiling. Self-authored tests verify the
+   implementation, not provider capability.
 2. Format changed source and tests with `pnpm exec oxfmt --write <changed paths>`.
 3. Verify with `pnpm --filter @open-agent-toolkit/cli exec vitest run
 src/providers/codex/codec/catalog.test.ts
@@ -70,10 +79,20 @@ recommendation/config tests, `.agents/skills/oat-project-plan-writing/SKILL.md`,
 1. Set Codex Frontier order to Sol xhigh, Astra high, Astra xhigh and bump the
    recommendation version. Test exact adoption output and Frontier resolution;
    preserve explicitly configured Sol max cells and other provider ladders.
-2. Align the copied planning table and Codex guidance. State that Astra's
+2. Before changing docs, compare the existing `updating-model-guidance.md`
+   and `dispatch-ceiling.md` against the project artifacts and implemented
+   catalog/recommendation, and record the exact evidence-backed content delta
+   in `implementation.md`. The user requested this model-guidance update and
+   review; confine substantive docs content to that approved scope, and obtain
+   user approval before any additional substantive content. Align the copied
+   planning table and Codex guidance. State that Astra's
    task advantage remains unmeasured locally and its Frontier inclusion is a
    user-directed preference, not vault-policy acceptance. Bump each changed
-   canonical skill version once.
+   canonical skill version once. This updates existing pages, so compare
+   their authored `## Contents` links before and after and keep navigation
+   stable; `oat docs nav sync` is MkDocs-only and does not apply to this
+   Fumadocs app. Regenerate its derived navigation/index with
+   `pnpm -w run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md`.
 3. Format changed files with `pnpm exec oxfmt --write <changed paths>`.
    Verify with `pnpm --filter @open-agent-toolkit/cli exec vitest run
 src/commands/config/index.test.ts
@@ -122,12 +141,14 @@ Matrix`, `CHANGELOG`, and `September Frontier Releases Early Pass/README`.
    column, and a classification of intentional, pending evidence, or separate
    follow-up. Explain the requested Astra Frontier exception and the scope of
    any unverified route. Make no unrelated ladder change in this PR.
-3. Verify the audit shape and required distinctions with separate commands:
-   `rg -n '^## Model Guidance Audit$' .oat/projects/shared/codex-astra-frontier/implementation.md`,
-   `rg -n '^\| Codex \|' .oat/projects/shared/codex-astra-frontier/implementation.md`,
-   `rg -n '^\| Claude \|' .oat/projects/shared/codex-astra-frontier/implementation.md`,
-   `rg -n '^\| Cursor \|' .oat/projects/shared/codex-astra-frontier/implementation.md`,
-   `rg -n 'accepted|review-pending|unverified' .oat/projects/shared/codex-astra-frontier/implementation.md`.
+3. Parse the Markdown table in a one-off inline check. Require exactly one or
+   more rows for each of Codex, Claude, and Cursor; for every such row, split on
+   `|`, reject empty OAT route, accepted route, source status, or classification
+   cells, and require source status to name `accepted` or `review-pending` and
+   classification to be `intentional`, `pending evidence`, or `separate
+follow-up`. Fail on a missing provider or malformed row. Run this check
+   against the completed artifact; it is a task-local check, not a reusable
+   script.
 4. Format the project artifact with `pnpm exec oxfmt --write
 .oat/projects/shared/codex-astra-frontier/implementation.md`. Commit as
    `docs(p01-t04): record model-guidance audit`. The final PR handoff copies
@@ -136,15 +157,15 @@ Matrix`, `CHANGELOG`, and `September Frontier Releases Early Pass/README`.
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target              |
-| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ------------------------ |
-| p01    | code     | pending         | -          | -                                                           | -             | -          | -                        |
-| final  | code     | pending         | -          | -                                                           | -             | -          | -                        |
-| spec   | artifact | pending         | -          | -                                                           | -             | -          | -                        |
-| design | artifact | pending         | -          | -                                                           | -             | -          | -                        |
-| plan   | artifact | fixes_completed | 2026-09-24 | reviews/archived/artifact-plan-review-2026-09-24T144531Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | fixes_completed | 2026-09-24 | reviews/archived/artifact-plan-review-2026-09-24T145158Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received        | 2026-09-24 | reviews/artifact-plan-review-2026-09-24T150001Z.md          | -             | -          | -                        |
+| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ----------- |
+| p01    | code     | pending         | -          | -                                                           | -             | -          | -           |
+| final  | code     | pending         | -          | -                                                           | -             | -          | -           |
+| spec   | artifact | pending         | -          | -                                                           | -             | -          | -           |
+| design | artifact | pending         | -          | -                                                           | -             | -          | -           |
+| plan   | artifact | fixes_completed | 2026-09-24 | reviews/archived/artifact-plan-review-2026-09-24T144531Z.md | -             | -          | -           |
+| plan   | artifact | fixes_completed | 2026-09-24 | reviews/archived/artifact-plan-review-2026-09-24T145158Z.md | -             | -          | -           |
+| plan   | artifact | fixes_completed | 2026-09-24 | reviews/archived/artifact-plan-review-2026-09-24T150001Z.md | -             | -          | -           |
 
 ## Implementation Complete
 

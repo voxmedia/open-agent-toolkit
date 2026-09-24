@@ -47,6 +47,12 @@ source-status checks, and defers PR-body read-back to the final PR handoff.
 That review is archived locally at
 `reviews/archived/artifact-plan-review-2026-09-24T145158Z.md`.
 
+The third gate review required pre-edit Astra capability provenance, the
+Fumadocs project-doc update sequence, row-level audit validation, and artifact
+ledger metadata cleanup. Those requirements are now explicit in `plan.md`.
+Its review is archived locally at
+`reviews/archived/artifact-plan-review-2026-09-24T150001Z.md`.
+
 ---
 
 ## Phase 1: {Phase Name}
