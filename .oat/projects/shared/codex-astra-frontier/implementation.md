@@ -24,12 +24,20 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase   | Status  | Tasks | Completed |
+| ------- | ------- | ----- | --------- |
+| Phase 1 | pending | 4     | 0/4       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/4 tasks completed
+
+## Planning Review Received
+
+The September 24 plan gate found one High gap (no explicit model-guidance
+audit task) and one Medium gap (verification commands were not executable).
+Both were resolved in the plan before implementation. The consumed review is
+kept locally at
+`reviews/archived/artifact-plan-review-2026-09-24T144531Z.md`; a new plan
+review must verify the revised artifact before the plan is marked ready.
 
 ---
 

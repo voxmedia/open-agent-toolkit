@@ -74,8 +74,13 @@ recommendation/config tests, `.agents/skills/oat-project-plan-writing/SKILL.md`,
    task advantage remains unmeasured locally and its Frontier inclusion is a
    user-directed preference, not vault-policy acceptance. Bump each changed
    canonical skill version once.
-3. Format changed files with `pnpm exec oxfmt --write <changed paths>` and run
-   the focused CLI config, resolver, and skill validation tests.
+3. Format changed files with `pnpm exec oxfmt --write <changed paths>`.
+   Verify with `pnpm --filter @open-agent-toolkit/cli exec vitest run
+src/commands/config/index.test.ts
+src/commands/project/dispatch-ceiling/index.test.ts
+src/validation/autonomy-gate-inventory.test.ts` and
+   `pnpm oat:validate-skills`. Assert both the bundled candidate order and
+   preservation of a populated user-owned Frontier cell.
 4. Commit as `feat(p01-t02): recommend Astra in Codex Frontier`.
 
 ### Task p01-t03: Regenerate projections and validate the release
@@ -84,10 +89,15 @@ recommendation/config tests, `.agents/skills/oat-project-plan-writing/SKILL.md`,
 `.codex/agents/` Astra roles, `.codex/config.toml`, five public package
 manifests and `pnpm-lock.yaml`.
 
-1. Bump the five lockstep publishable package versions. Build the CLI bundle,
-   run project-scoped `oat sync`, and verify a second sync dry run is empty.
-2. Verify exact Astra model and effort in both role types, and run focused sync,
-   asset-consistency, and adoption tests.
+1. Bump the five lockstep publishable package versions. Run `pnpm build`,
+   `pnpm run cli -- sync --scope project --json`, then
+   `pnpm run cli -- sync --scope project --dry-run --json`; require zero planned
+   operations on the dry run.
+2. Verify exact Astra model and effort in both role types. Run
+   `pnpm --filter @open-agent-toolkit/cli exec vitest run
+src/providers/codex/codec/sync-extension.test.ts
+src/commands/init/tools/shared/bundle-consistency.test.ts
+src/commands/config/index.test.ts`.
 3. Run required gates in repository order: `pnpm check`, `pnpm type-check`,
    `pnpm test`, `pnpm build`, `pnpm run check:skill-bumps`, fetch `origin/main`,
    `pnpm release:check-versions`, `pnpm release:validate`, `pnpm build:docs`;
@@ -95,21 +105,44 @@ manifests and `pnpm-lock.yaml`.
    cache replay honestly.
 4. Commit as `chore(p01-t03): bundle Astra agents and release versions`.
 
+### Task p01-t04: Record the model-guidance alignment audit
+
+**Files:** `implementation.md` final summary and the follow-up PR body.
+
+1. Compare all current Codex, Claude, and Cursor bundled tiers and dated
+   task-class guidance with the accepted September 8 model-selection matrix,
+   its durable qualification rules and changelog, and the September 23 packet's
+   explicit review-pending status. Identify exact model/effort disagreements,
+   intentional user-directed changes, unverified harness selectors, and
+   accepted versus draft policy boundaries. Do not copy private vault paths or
+   unpublished benchmark details into the public PR.
+2. Record a concise findings table in `implementation.md` and the PR body,
+   with a detailed source-aware explanation in the user-facing final response.
+   Classify each difference as intentional, pending evidence, or a separate
+   follow-up; make no unrelated ladder change in this PR.
+3. Verify the summary contains Codex, Claude, and Cursor rows plus the
+   accepted/draft distinction with `rg -n 'Codex|Claude|Cursor|accepted|draft'
+.oat/projects/shared/codex-astra-frontier/implementation.md`, and inspect
+   the exact PR body with `gh pr view --json body --jq .body` after creation.
+4. Format the project artifact with `pnpm exec oxfmt --write
+.oat/projects/shared/codex-astra-frontier/implementation.md`. Commit as
+   `docs(p01-t04): record model-guidance audit`.
+
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                           | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | -------- | ---------- | -------------------------------------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| final  | code     | pending  | -          | -                                                  | -             | -          | -           |
-| spec   | artifact | pending  | -          | -                                                  | -             | -          | -           |
-| design | artifact | pending  | -          | -                                                  | -             | -          | -           |
-| plan   | artifact | received | 2026-09-24 | reviews/artifact-plan-review-2026-09-24T144531Z.md | -             | -          | -           |
+| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target              |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ------------------------ |
+| p01    | code     | pending         | -          | -                                                           | -             | -          | -                        |
+| final  | code     | pending         | -          | -                                                           | -             | -          | -                        |
+| spec   | artifact | pending         | -          | -                                                           | -             | -          | -                        |
+| design | artifact | pending         | -          | -                                                           | -             | -          | -                        |
+| plan   | artifact | fixes_completed | 2026-09-24 | reviews/archived/artifact-plan-review-2026-09-24T144531Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 
 ## Implementation Complete
 
-- Phase 1: 3 tasks — Codex support, recommendation/guidance, generated outputs
-  and validation.
-- Total: 3 tasks.
+- Phase 1: 4 tasks — Codex support, recommendation/guidance, generated
+  outputs and validation, model-guidance audit.
+- Total: 4 tasks.
 
 ## References
 
