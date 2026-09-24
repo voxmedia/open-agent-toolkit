@@ -166,6 +166,7 @@ follow-up`. Fail on a missing provider or malformed row. Run this check
 | plan   | artifact | fixes_completed | 2026-09-24 | reviews/archived/artifact-plan-review-2026-09-24T144531Z.md | -             | -          | -           |
 | plan   | artifact | fixes_completed | 2026-09-24 | reviews/archived/artifact-plan-review-2026-09-24T145158Z.md | -             | -          | -           |
 | plan   | artifact | fixes_completed | 2026-09-24 | reviews/archived/artifact-plan-review-2026-09-24T150001Z.md | -             | -          | -           |
+| plan   | artifact | received        | 2026-09-24 | reviews/artifact-plan-review-2026-09-24T150841Z.md          | -             | -          | -           |
 
 ## Implementation Complete
 
