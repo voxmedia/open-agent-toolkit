@@ -187,16 +187,16 @@ Matrix`, `CHANGELOG`, and `September Frontier Releases Early Pass/README`.
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending         | -          | -                                                           | -             | -          | -           |
-| final  | code     | pending         | -          | -                                                           | -             | -          | -           |
-| spec   | artifact | pending         | -          | -                                                           | -             | -          | -           |
-| design | artifact | pending         | -          | -                                                           | -             | -          | -           |
-| plan   | artifact | fixes_completed | 2026-09-24 | reviews/archived/artifact-plan-review-2026-09-24T144531Z.md | -             | -          | -           |
-| plan   | artifact | fixes_completed | 2026-09-24 | reviews/archived/artifact-plan-review-2026-09-24T145158Z.md | -             | -          | -           |
-| plan   | artifact | fixes_completed | 2026-09-24 | reviews/archived/artifact-plan-review-2026-09-24T150001Z.md | -             | -          | -           |
-| plan   | artifact | fixes_completed | 2026-09-24 | reviews/archived/artifact-plan-review-2026-09-24T150841Z.md | -             | -          | -           |
+| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
+| p01    | code     | fixes_completed | 2026-09-24 | reviews/archived/p01-review-2026-09-24T155712Z.md           | 4440e2cb22b81693dc7016e432ae51383af8098a | manual     | -           |
+| final  | code     | pending         | -          | -                                                           | -                                        | -          | -           |
+| spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -           |
+| design | artifact | pending         | -          | -                                                           | -                                        | -          | -           |
+| plan   | artifact | fixes_completed | 2026-09-24 | reviews/archived/artifact-plan-review-2026-09-24T144531Z.md | -                                        | -          | -           |
+| plan   | artifact | fixes_completed | 2026-09-24 | reviews/archived/artifact-plan-review-2026-09-24T145158Z.md | -                                        | -          | -           |
+| plan   | artifact | fixes_completed | 2026-09-24 | reviews/archived/artifact-plan-review-2026-09-24T150001Z.md | -                                        | -          | -           |
+| plan   | artifact | fixes_completed | 2026-09-24 | reviews/archived/artifact-plan-review-2026-09-24T150841Z.md | -                                        | -          | -           |
 
 The final configured gate exited successfully with two Medium residuals:
 concrete per-task format commands and a runnable audit-table validator. Both

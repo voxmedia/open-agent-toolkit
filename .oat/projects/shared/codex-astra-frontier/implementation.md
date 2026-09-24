@@ -24,11 +24,11 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 4     | 4/4       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 4     | 4/4       |
 
-**Total:** 4/4 tasks completed; phase review pending.
+**Total:** 4/4 tasks completed; phase review finding fixed.
 
 ## Planning Review Received
 
@@ -176,7 +176,7 @@ Bundled-tier reconciliation (twelve provider/tier rows):
 
 ## Phase 1: Codex Astra Frontier
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-09-24
 
 **Outcome:** Codex now supports five exact Astra effort pins and recommends
@@ -188,7 +188,8 @@ The read-only vault audit above records the intentionally divergent policy.
 executed 10/10 Turbo tasks without cache replay, including 7,532 CLI tests.
 The later `pnpm test` and docs build replayed successful cached results. Sync
 dry-run reported zero planned operations. `git diff --check` passed for the
-phase range. Phase review remains pending.
+phase range. The independent p01 review had no Critical or High findings; its
+one Medium docs/test alignment finding was corrected in `b8834e1fa`.
 
 ### Task p01-t01: Admit Astra to the Codex supported catalog
 
@@ -253,13 +254,22 @@ _- Outstanding Items_
   preferred effort high, because the phase spans catalog, recommendation,
   generated roles, release validation, and policy reconciliation.
 - Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
-- Phase outcome: implementation verified; independent review pending.
+- Phase outcome: implementation verified; independent p01 review received and
+  its single Medium finding corrected.
+- Phase review: `reviews/archived/p01-review-2026-09-24T155712Z.md` reviewed
+  head `4440e2cb22b81693dc7016e432ae51383af8098a`; 0 Critical, 0 High,
+  1 Medium. The stale provider-sync catalog description and count assertion
+  were fixed in `b8834e1fa`. Focused 242-test suite, `pnpm check`, and
+  `pnpm build:docs` exited 0 after the correction.
+- Root-inline phase review correction: p01; the original phase implementer
+  had completed its run, and the Medium finding was a two-file docs/test
+  correction within the approved scope. Root Codex GPT-6 applied the bounded
+  fix and left the final independent review to cover its new commit.
 - Recovery: `astra-p01-20260924-p01-t04-recovery-01` completed in
   `645312b46`, attempt 1/10; root validated the original and recovery commits,
   completed marker, clean worktree, and task-local check evidence before
   clearing the pending marker.
-- Outstanding: root-owned p01 review, final review and configured final gate,
-  PR handoff.
+- Outstanding: final review and configured final gate, PR handoff.
 
 <!-- orchestration-runs-end -->
 

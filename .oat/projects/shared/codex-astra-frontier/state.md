@@ -9,7 +9,7 @@ oat_phase_recovery_policy:
       used_attempts: 1
       pending_attempt: null
 oat_current_task: null
-oat_last_commit: 645312b4673ed3a9bc275766dba0c7539cc44e5b
+oat_last_commit: b8834e1facf2aa68645a70bbac34bd51ad6bfe02
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
