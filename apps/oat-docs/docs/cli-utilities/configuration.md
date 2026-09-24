@@ -475,8 +475,9 @@ even when the reusable ladder is user-owned.
 The example above is illustrative rather than a copy of the bundled ladder; its
 tiers are trimmed for readability.
 
-The bundled recommendation covers 10 Codex model/effort combinations: GPT-6
-Luna at `low` through `max`, and GPT-6 Sol at the same efforts.
+The bundled recommendation covers 11 Codex model/effort combinations: GPT-6
+Luna at `low` through `max`, GPT-6 Sol at `low` through `high` plus `xhigh`,
+and GPT-6 Astra at `high` and `xhigh`.
 Claude covers `haiku`, plus explicit Sonnet, Opus, and Fable
 model/effort pairs. Effort-pinned Claude cells require a recognized versioned
 model ID (`fable-5-1`, `fable-5`, `opus-5-5`, `sonnet-5`,

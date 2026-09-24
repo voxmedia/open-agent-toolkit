@@ -674,7 +674,7 @@ describe('bundle asset inventory consistency', () => {
 
         expect(recommendation).toEqual(sourceRecommendation);
         expect(checkedInAsset).toEqual(sourceRecommendation);
-        expect(recommendation.version).toBe('2026-09-23.2');
+        expect(recommendation.version).toBe('2026-09-24.1');
         expect(recommendation.providers?.codex).toBeDefined();
         expect(recommendation.providers?.claude).toBeDefined();
         expect(recommendation.providers?.cursor).toEqual({
