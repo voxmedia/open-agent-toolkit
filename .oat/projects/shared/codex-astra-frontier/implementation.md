@@ -112,6 +112,54 @@ early evidence pass`, and `GPT-6 Astra comparator addendum (Codex)`.
 | Claude   | Intelligent reconnaissance uses `claude-opus-5-5/low`, default implementation uses `claude-opus-5-5/medium`, and hard or consequential work uses `claude-opus-5-5/high`.                                                         | Opus 5 medium covers intelligent reconnaissance and normal substantive work; Opus 5 high covers harder or consequential work.                                                                 | accepted 2026-09-08 baseline; review-pending 2026-09-23 release packet                       | separate follow-up |
 | Cursor   | Intelligent reconnaissance can use `cursor-grok-4.5-medium`; normal implementation remains `gpt-5.6-sol-medium`; `cursor-grok-4.5-high` is a corroborated hard-reasoning alternative.                                            | Grok 4.6 medium is the provisional intelligent and normal Cursor-native route, with Grok 4.6 high for harder work and a live-selector requirement.                                            | accepted 2026-09-08 baseline; review-pending 2026-09-23 release packet                       | separate follow-up |
 
+Bundled-tier reconciliation (twelve provider/tier rows):
+
+- **Codex / Economy:** `gpt-6-luna/low`, `/medium`, `/high`. The accepted
+  baseline uses GPT-5.6 Luna high only for bounded mechanical work; the GPT-6
+  substitution is review-pending and classified as pending evidence.
+- **Codex / Balanced:** `gpt-6-luna/xhigh`, `/max`. The accepted baseline has
+  no corresponding Luna default above high; the GPT-6 release packet is
+  review-pending, so this remains pending evidence.
+- **Codex / High:** `gpt-6-sol/low`, `/medium`, `/high`. The accepted baseline
+  uses GPT-5.6 Sol medium/high for implementation and harder work; the GPT-6
+  family update is review-pending and classified as pending evidence.
+- **Codex / Frontier:** `gpt-6-sol/xhigh`, `gpt-6-astra/high`,
+  `gpt-6-astra/xhigh`. The accepted baseline permits Sol high/xhigh by depth
+  and Astra medium/high only as evaluation-gated escalation. The Astra ladder
+  is a user-directed exception, and its source status remains review-pending
+  and pending evidence.
+- **Claude / Economy:** `haiku`, `claude-sonnet-5/medium`. This matches the
+  accepted Haiku mechanical route and conditional Sonnet throughput route;
+  the accepted 2026-09-08 baseline makes the relationship intentional.
+- **Claude / Balanced:** `claude-opus-5-5/low`. The accepted baseline starts
+  intelligent work on Opus 5 medium. Opus 5.5 is review-pending, so the
+  difference is a separate follow-up.
+- **Claude / High:** `claude-opus-5-5/low`, `/medium`, `/high`. The accepted
+  baseline uses Opus 5 medium/high for substantive and hard work. The 5.5
+  family update is review-pending and remains a separate follow-up.
+- **Claude / Frontier:** `claude-opus-5-5/xhigh`, `/max`,
+  `claude-fable-5-1/high`. The accepted baseline keeps Opus 5 high primary,
+  raises effort only for demonstrated depth, and treats Fable as an evaluated
+  specialist. Opus 5.5 is review-pending; reconciliation is a separate
+  follow-up.
+- **Cursor / Economy:** `composer-2.5`, `gpt-5.6-luna-high`,
+  `gpt-5.6-luna-xhigh`. Composer matches the accepted bounded operational
+  route. Luna is not the accepted Cursor mechanical default, so exact native
+  selectors need current verification; this is an intentional retained OAT
+  tier with a selector-verification limit.
+- **Cursor / Balanced:** `cursor-grok-4.5-high`, `gpt-5.6-terra-high`. The
+  accepted baseline uses Grok 4.6 medium/high and permits live-verified Terra
+  high. OAT's older Grok family is a separate follow-up under the accepted
+  2026-09-08 baseline.
+- **Cursor / High:** `gpt-5.6-sol-medium`, `gpt-5.6-sol-high`. This matches the
+  accepted live-verified Sol implementation route and is intentional under the
+  accepted 2026-09-08 baseline.
+- **Cursor / Frontier:** `gpt-5.6-sol-xhigh`, `gpt-5.6-sol-max`,
+  `claude-fable-5-thinking-high`. The accepted baseline permits Sol escalation
+  by depth but requires live verification for cross-family selectors and does
+  not infer Cursor Fable qualification from direct-provider availability. The
+  remaining selector scope is a separate follow-up.
+
 - Official Codex capability data and the local model cache establish Astra's
   exact selectable efforts; they do not establish a task-quality advantage.
   The user-directed Frontier preference is therefore an OAT product exception,
