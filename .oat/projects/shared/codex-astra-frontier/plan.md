@@ -1,17 +1,17 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-09-24
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_parallel_groups: []
 oat_plan_source: quick
 oat_import_reference: null
 oat_import_source_path: null
 oat_import_provider: null
 oat_generated: false
-oat_template: true
+oat_template: false
 ---
 
 # Implementation Plan: codex-astra-frontier
@@ -63,7 +63,8 @@ resolver tests under `packages/cli/src/providers/codex/codec/` and
    supported. Test exact generated variant names and lower preferred efforts
    beneath an Astra xhigh Frontier ceiling. Self-authored tests verify the
    implementation, not provider capability.
-2. Format changed source and tests with `pnpm exec oxfmt --write <changed paths>`.
+2. Format source and tests with
+   `pnpm exec oxfmt --write packages/cli/src/providers/codex/codec/shared.ts packages/cli/src/providers/codex/codec/catalog.test.ts packages/cli/src/commands/project/dispatch-ceiling/index.test.ts`.
 3. Verify with `pnpm --filter @open-agent-toolkit/cli exec vitest run
 src/providers/codex/codec/catalog.test.ts
 src/commands/project/dispatch-ceiling/index.test.ts`.
@@ -93,7 +94,8 @@ recommendation/config tests, `.agents/skills/oat-project-plan-writing/SKILL.md`,
    stable; `oat docs nav sync` is MkDocs-only and does not apply to this
    Fumadocs app. Regenerate its derived navigation/index with
    `pnpm -w run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md`.
-3. Format changed files with `pnpm exec oxfmt --write <changed paths>`.
+3. Format hand-edited files with
+   `pnpm exec oxfmt --write packages/cli/config/dispatch-matrix-recommendation.json packages/cli/src/commands/config/index.test.ts .agents/skills/oat-project-plan-writing/SKILL.md .agents/skills/subagent-orchestration/SKILL.md .agents/skills/subagent-orchestration/references/provider-codex.md .agents/skills/subagent-orchestration/references/evidence-and-refresh.md apps/oat-docs/docs/contributing/updating-model-guidance.md apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md`.
    Verify with `pnpm --filter @open-agent-toolkit/cli exec vitest run
 src/commands/config/index.test.ts
 src/commands/project/dispatch-ceiling/index.test.ts
@@ -112,7 +114,12 @@ manifests and `pnpm-lock.yaml`.
    `pnpm run cli -- sync --scope project --json`, then
    `pnpm run cli -- sync --scope project --dry-run --json`; require zero planned
    operations on the dry run.
-2. Verify exact Astra model and effort in both role types. Run
+2. Format the five hand-edited manifests with
+   `pnpm exec oxfmt --write packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json`.
+   Refresh `pnpm-lock.yaml` with `pnpm install --lockfile-only`; the generated
+   TOML and CLI asset are formatted by their generators and controlled by the
+   zero-operation sync check. Verify exact Astra model and effort in both role
+   types. Run
    `pnpm --filter @open-agent-toolkit/cli exec vitest run
 src/providers/codex/codec/sync-extension.test.ts
 src/commands/init/tools/shared/bundle-consistency.test.ts
@@ -141,14 +148,35 @@ Matrix`, `CHANGELOG`, and `September Frontier Releases Early Pass/README`.
    column, and a classification of intentional, pending evidence, or separate
    follow-up. Explain the requested Astra Frontier exception and the scope of
    any unverified route. Make no unrelated ladder change in this PR.
-3. Parse the Markdown table in a one-off inline check. Require exactly one or
-   more rows for each of Codex, Claude, and Cursor; for every such row, split on
-   `|`, reject empty OAT route, accepted route, source status, or classification
-   cells, and require source status to name `accepted` or `review-pending` and
-   classification to be `intentional`, `pending evidence`, or `separate
-follow-up`. Fail on a missing provider or malformed row. Run this check
-   against the completed artifact; it is a task-local check, not a reusable
-   script.
+3. Run this task-local table validator against the completed artifact:
+
+   ```bash
+   node <<'NODE'
+   const fs = require('node:fs');
+   const file = '.oat/projects/shared/codex-astra-frontier/implementation.md';
+   const source = fs.readFileSync(file, 'utf8');
+   const section = source.split(/^## Model Guidance Audit\s*$/m)[1]?.split(/^## /m)[0];
+   if (!section) throw new Error('missing Model Guidance Audit section');
+   const lines = section.split('\n').filter((line) => /^\|/.test(line.trim()));
+   const cells = (line) => line.trim().slice(1, -1).split('|').map((value) => value.trim());
+   const rows = lines.map(cells).filter((row) => !row.every((cell) => /^[-: ]+$/.test(cell)));
+   const headers = rows.shift()?.map((header) => header.toLowerCase());
+   const names = ['provider', 'oat route', 'accepted route', 'source status', 'classification'];
+   const indexes = names.map((name) => headers?.indexOf(name) ?? -1);
+   if (indexes.some((index) => index < 0)) throw new Error('missing required audit column');
+   const seen = new Set();
+   for (const row of rows) {
+     const [provider, oat, accepted, status, classification] = indexes.map((index) => row[index]);
+     if (!provider || !oat || !accepted || !status || !classification) throw new Error(`empty audit cell: ${row}`);
+     if (!['Codex', 'Claude', 'Cursor'].includes(provider)) throw new Error(`unknown provider: ${provider}`);
+     if (!/accepted|review-pending/.test(status)) throw new Error(`invalid source status: ${status}`);
+     if (!['intentional', 'pending evidence', 'separate follow-up'].includes(classification)) throw new Error(`invalid classification: ${classification}`);
+     seen.add(provider);
+   }
+   for (const provider of ['Codex', 'Claude', 'Cursor']) if (!seen.has(provider)) throw new Error(`missing provider: ${provider}`);
+   NODE
+   ```
+
 4. Format the project artifact with `pnpm exec oxfmt --write
 .oat/projects/shared/codex-astra-frontier/implementation.md`. Commit as
    `docs(p01-t04): record model-guidance audit`. The final PR handoff copies
@@ -166,7 +194,12 @@ follow-up`. Fail on a missing provider or malformed row. Run this check
 | plan   | artifact | fixes_completed | 2026-09-24 | reviews/archived/artifact-plan-review-2026-09-24T144531Z.md | -             | -          | -           |
 | plan   | artifact | fixes_completed | 2026-09-24 | reviews/archived/artifact-plan-review-2026-09-24T145158Z.md | -             | -          | -           |
 | plan   | artifact | fixes_completed | 2026-09-24 | reviews/archived/artifact-plan-review-2026-09-24T150001Z.md | -             | -          | -           |
-| plan   | artifact | received        | 2026-09-24 | reviews/artifact-plan-review-2026-09-24T150841Z.md          | -             | -          | -           |
+| plan   | artifact | fixes_completed | 2026-09-24 | reviews/archived/artifact-plan-review-2026-09-24T150841Z.md | -             | -          | -           |
+
+The final configured gate exited successfully with two Medium residuals:
+concrete per-task format commands and a runnable audit-table validator. Both
+were added before implementation; this is a fixes-completed disposition, not a
+clean-review claim.
 
 ## Implementation Complete
 

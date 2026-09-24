@@ -53,6 +53,11 @@ ledger metadata cleanup. Those requirements are now explicit in `plan.md`.
 Its review is archived locally at
 `reviews/archived/artifact-plan-review-2026-09-24T150001Z.md`.
 
+The fourth configured gate exited successfully with no Critical or High
+findings. Its two Medium findings requested executable format commands and an
+inline audit-table validator; both were added to the plan. The preserved
+review is `reviews/archived/artifact-plan-review-2026-09-24T150841Z.md`.
+
 ---
 
 ## Phase 1: {Phase Name}
