@@ -22,10 +22,13 @@ is a supported Frontier candidate:
 - `gpt-6-sol`: high-capability implementation and reasoning route;
 - `gpt-6-luna`: cost-sensitive, bounded work.
 
-Astra's local task advantage remains unmeasured. Its Frontier inclusion is a
-user-directed preference, not acceptance by the separately maintained
-model-selection policy. Keep the Sol task-class defaults below until relevant
-harness evaluation supports a broader change.
+Public engineering benchmarks show task-dependent Astra gains over Sol, with
+cost and runtime tradeoffs; they do not establish a universal replacement. The
+September frontier-release comparison remains review-pending in the separate
+model-selection vault, and no matched OAT workload evaluation has qualified a
+routine default change. Astra's Frontier inclusion is a user-directed
+preference. Keep the Sol task-class defaults below while that evidence is
+reconciled and local task fit is evaluated.
 
 The GPT-5.6 Sol/Luna/Terra targets remain supported for explicit configurations
 and established workloads. Re-evaluate economics and qualitative routing on
