@@ -341,8 +341,9 @@ Track test execution during implementation.
   and Astra `xhigh`, with exact terminal order and user-cell preservation.
 - Generated and registered the ten Astra role variants, refreshed bundled
   recommendation assets, and advanced the public package set to `0.3.3`.
-- Updated the approved model-guidance documentation and recorded the vault
-  policy comparison without promoting review-pending research.
+- Updated model-guidance and provider-sync documentation, corrected its
+  catalog-count contract test, and recorded all twelve bundled-tier comparisons
+  against accepted and review-pending vault guidance.
 
 **Behavioral changes (user-facing):**
 
@@ -354,7 +355,7 @@ Track test execution during implementation.
 
 - `packages/cli/src/providers/codex/codec/shared.ts` - canonical Astra effort
   catalog entries.
-- `packages/cli/src/config/dispatch-matrix-recommendation.json` - canonical
+- `packages/cli/config/dispatch-matrix-recommendation.json` - canonical
   Frontier recommendation.
 - `.codex/agents/` and `.codex/config.toml` - generated Astra roles and project
   registrations.
@@ -365,9 +366,11 @@ Track test execution during implementation.
 **Verification performed:**
 
 - Focused Codex catalog, recommendation, generated-bundle, and documentation
-  checks passed.
+  checks passed, including 242 tests after the provider-sync review fix.
 - The repository check, type-check, test, build, skill-version, release-version,
-  release-validation, docs-build, lint, and format gates passed.
+  release-validation, docs-build, lint, and format gates passed. A full test run
+  executed 10/10 Turbo tasks uncached and passed 7,532 CLI tests; later
+  reruns included cache replay and were not counted as fresh evidence.
 - Project sync dry-run reported zero pending changes after generation.
 
 **Design deltas (if any):**
