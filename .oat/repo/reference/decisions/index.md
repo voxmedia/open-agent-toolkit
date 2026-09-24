@@ -10,6 +10,9 @@
 
 | ID                                       | Date       | Status     | Title                                                                                                  | Legacy  |
 | ---------------------------------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------ | ------- |
+| DR-260924-astra-effort-catalog-and-sol   | 2026-09-24 | accepted   | Astra effort catalog and Sol max support                                                               | -       |
+| DR-260924-astra-frontier-placement-is    | 2026-09-24 | accepted   | Astra Frontier placement is user-directed                                                              | -       |
+| DR-260924-model-guidance-source-status   | 2026-09-24 | accepted   | Model guidance source status separation                                                                | -       |
 | DR-260921-claude-effort-aware-dispatch   | 2026-09-21 | accepted   | Claude effort-aware dispatch                                                                           | -       |
 | DR-260915-doctor-is-read-only-with-one   | 2026-09-15 | accepted   | Doctor is read-only with one approved-command carve-out                                                | -       |
 | DR-260915-one-doctor-router-instead      | 2026-09-15 | accepted   | One doctor router instead of a family of doctor skills                                                 | -       |
