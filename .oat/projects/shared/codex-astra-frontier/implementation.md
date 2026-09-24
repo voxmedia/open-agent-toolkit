@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-24
-oat_current_task_id: p01-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,11 +24,11 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status  | Tasks | Completed |
-| ------- | ------- | ----- | --------- |
-| Phase 1 | pending | 4     | 0/4       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | in_progress | 4     | 4/4       |
 
-**Total:** 0/4 tasks completed
+**Total:** 4/4 tasks completed; phase review pending.
 
 ## Planning Review Received
 
@@ -174,78 +174,62 @@ Bundled-tier reconciliation (twelve provider/tier rows):
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Codex Astra Frontier
 
 **Status:** in_progress
 **Started:** 2026-09-24
 
-### Phase Summary (fill when phase is complete)
+**Outcome:** Codex now supports five exact Astra effort pins and recommends
+Sol xhigh, Astra high, and Astra xhigh in Frontier. Sol max remains selectable.
+Generated agent views, bundled assets, versions, tests, and docs were updated.
+The read-only vault audit above records the intentionally divergent policy.
 
-**Outcome (what changed):**
+**Verification:** All prescribed gates exited 0. The evidence-grade test run
+executed 10/10 Turbo tasks without cache replay, including 7,532 CLI tests.
+The later `pnpm test` and docs build replayed successful cached results. Sync
+dry-run reported zero planned operations. `git diff --check` passed for the
+phase range. Phase review remains pending.
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+### Task p01-t01: Admit Astra to the Codex supported catalog
 
-**Key files touched:**
+**Status:** completed
+**Commit:** `6e0732f55`
 
-- `{path}` - {why}
+The catalog and resolver tests cover Astra low through max, reject ultra, and
+retain Sol max. Official model documentation and the local runtime cache were
+recorded above before the catalog edit. Focused tests: 172 passed.
 
-**Verification:**
+### Task p01-t02: Update the Frontier recommendation and guidance
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+**Status:** completed
+**Commit:** `bb46093d5`
 
-**Notes / Decisions:**
+The bundled order and human guidance now reflect the user-directed Astra
+Frontier choice. Claude and Cursor ladders stayed unchanged; populated user
+cells remain preserved. Focused tests: 423 passed; skill validation and docs
+checks passed.
 
-- {trade-offs or deviations discovered during implementation}
+### Task p01-t03: Regenerate projections and validate the release
 
-### Task p01-t01: {Task Name}
+**Status:** completed
+**Commit:** `297610e4c`
 
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
+Ten generated Astra roles and registration entries match the exact model and
+effort pairs. The five public packages were bumped together to 0.3.3.
+Release, build, lint, format, sync parity, and test gates passed. Mechanical
+count/version test and configuration-doc updates followed the expanded
+catalog; stale expectations were corrected before the task commit.
 
-**Outcome (required when completed):**
+### Task p01-t04: Record the model-guidance alignment audit
 
-- {what materially changed (not “did task”, but “system now does X”)}
+**Status:** completed
+**Commit:** `b00fa8d38`; bounded recovery `645312b46`
 
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
-
----
-
-### Task p01-t02: {Task Name}
-
-**Status:** pending
-**Commit:** -
-
-**Notes:**
-
-- {Notes will be added during implementation}
-
----
-
-## Phase 2: {Phase Name}
-
-**Status:** pending
-**Started:** -
-
-### Task p02-t01: {Task Name}
-
-**Status:** pending
-**Commit:** -
+The audit distinguishes accepted guidance, review-pending research, and OAT's
+user-directed exception. A post-commit root audit found that the first version
+omitted explicit Economy/Balanced/High/Frontier reconciliation. Recovery
+attempt 1/10 added all twelve provider/tier comparisons. The exact table
+validator and formatting checks passed before and after the recovery commit.
 
 ---
 
@@ -259,7 +243,23 @@ _- Outstanding Items_
 
 <!-- orchestration-runs-start -->
 
-_Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
+### Run 1 — 2026-09-24, feat/codex-astra-frontier
+
+- Phase p01 implementer request: `astra-p01-20260924`; base
+  `f03834c1d`, terminal phase head `645312b46`; four task commits plus one
+  recovered audit-completeness correction.
+- Tier 1 native role: `oat-phase-implementer-gpt-5-6-sol-high`, under the
+  project's managed High ceiling. Classification: default implementation,
+  preferred effort high, because the phase spans catalog, recommendation,
+  generated roles, release validation, and policy reconciliation.
+- Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+- Phase outcome: implementation verified; independent review pending.
+- Recovery: `astra-p01-20260924-p01-t04-recovery-01` completed in
+  `645312b46`, attempt 1/10; root validated the original and recovery commits,
+  completed marker, clean worktree, and task-local check evidence before
+  clearing the pending marker.
+- Outstanding: root-owned p01 review, final review and configured final gate,
+  PR handoff.
 
 <!-- orchestration-runs-end -->
 

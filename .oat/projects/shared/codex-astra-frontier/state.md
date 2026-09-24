@@ -7,18 +7,9 @@ oat_phase_recovery_policy:
   phase_attempt_usage:
     p01:
       used_attempts: 1
-      pending_attempt:
-        attempt: 1
-        event_id: astra-p01-20260924-p01-t04-recovery-01
-        original_request_id: astra-p01-20260924
-        original_task_id: p01-t04
-        original_commit: b00fa8d38214a32c5ffa42238417b503557ee076
-        discovered_by: post-commit root audit of plan.md p01-t04 step 1
-        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
-        reservation_head: b00fa8d38214a32c5ffa42238417b503557ee076
-        status: completed
-oat_current_task: p01-t01
-oat_last_commit: null
+      pending_attempt: null
+oat_current_task: null
+oat_last_commit: 645312b4673ed3a9bc275766dba0c7539cc44e5b
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
