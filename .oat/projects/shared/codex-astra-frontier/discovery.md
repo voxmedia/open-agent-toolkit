@@ -1,142 +1,65 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-quick-start
 oat_blockers: []
 oat_last_updated: 2026-09-24
 oat_generated: false
 ---
 
-# Discovery: codex-astra-frontier
-
-## Phase Guardrails (Discovery)
-
-Discovery is for requirements and decisions, not implementation details.
-
-- Prefer outcomes and constraints over concrete deliverables (no specific scripts, file paths, or function names).
-- If an implementation detail comes up, capture it as an **Open Question** for design (or a constraint), not as a deliverable list.
+# Discovery: Codex Astra Frontier
 
 ## Initial Request
 
-{Copy of user's initial request}
-
-## Clarifying Questions
-
-### Question 1: {Topic}
-
-**Q:** {Question}
-**A:** {User's answer}
-**Decision:** {What this means for the project}
-
-## Solution Space
-
-_Include this section only when the request is exploratory or multiple viable approaches exist. For well-understood requests with an obvious approach, omit or replace with a single sentence stating the chosen direction._
-
-{Divergent exploration of the problem space before converging on an approach. Capture genuinely distinct strategies, not minor variations. Include 2-3 approaches as needed.}
-
-### Approach 1: {Strategy Name} _(Recommended)_
-
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
-
-### Approach 2: {Strategy Name}
-
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
-
-### Chosen Direction
-
-**Approach:** {Which approach was selected}
-**Rationale:** {Why this approach over the alternatives}
-**User validated:** {Yes/No — explicit buy-in before proceeding}
-
-## Options Considered
-
-{Specific implementation options within the chosen approach. More granular than Solution Space — captures decisions about libraries, patterns, data formats, etc.}
-
-### Option A: {Option Name}
-
-**Description:** {What this option involves}
-
-**Pros:**
-
-- {Benefit 1}
-- {Benefit 2}
-
-**Cons:**
-
-- {Drawback 1}
-- {Drawback 2}
-
-**Chosen:** {A/B/Neither}
-
-**Summary:** {1-2 sentence summary of the chosen option and why}
+After merging the Claude effort and model-guidance PR, create a separate branch
+and follow-up PR for Codex Frontier. Replace the recommended Sol max candidate
+with Astra high and Astra xhigh, retaining Sol xhigh first. Review the current
+default dispatch ladders and model guidance against the separately maintained
+accepted model-selection policy, and identify inconsistencies.
 
 ## Key Decisions
 
-1. **{Decision Category}:** {Decision made and why}
-2. **{Decision Category}:** {Decision made and why}
+1. **Recommendation:** Codex Frontier candidates are Sol xhigh, Astra high,
+   then Astra xhigh. The final candidate is the Frontier reviewer target.
+2. **Support versus preference:** Remove Sol max from the recommended Frontier
+   cell only. Keep it selectable in the Codex supported catalog. Add documented
+   Astra efforts low through max to the catalog so lower preferred efforts
+   remain valid; recommend only high and xhigh in Frontier. Do not add ultra.
+3. **Policy boundary:** The accepted portfolio policy predates the latest
+   release-specific OAT defaults. A newer research packet is review-pending.
+   Record meaningful differences without treating draft research as approved
+   policy or automatically rewriting the other ladders.
+4. **Release boundary:** This is a new branch and PR based on the merged mainline.
+   Keep the prior PR unchanged and avoid committing local review archives.
 
 ## Constraints
 
-- {Constraint 1}
-- {Constraint 2}
+- Confirm exact Astra model ID and effort support against official documentation
+  and the local Codex catalog; do not infer a Cursor selector from API support.
+- Regenerate checked-in Codex agent views and the CLI bundle from canonical
+  sources. Update affected tests, guidance, and release versions.
+- Existing adopted dispatch cells remain user-owned; a new bundled default must
+  not silently overwrite them.
+- Do not claim a live paid dispatch or workload evaluation from catalog presence.
 
 ## Success Criteria
 
-- {Criterion 1}
-- {Criterion 2}
+- Fresh adopters see Sol xhigh, Astra high, Astra xhigh in Codex Frontier order.
+- Astra targets resolve to exact pinned reviewer and implementer variants;
+  lower preferred efforts remain valid under the Frontier ceiling.
+- Sol max remains supported for explicit configuration, but is absent from the
+  bundled Frontier recommendation.
+- Focused tests and required repository gates pass; the separate PR is open.
+- The user receives a source-status-aware audit of the current ladder and
+  guidance differences, with unverified routes clearly identified.
 
 ## Out of Scope
 
-- {Thing we explicitly decided not to do}
-- {Thing we explicitly decided not to include in this phase}
-
-## Deferred Ideas
-
-{Ideas that came up during discovery but are intentionally out of scope for now}
-
-- {Idea 1} - {Why deferred}
-- {Idea 2} - {Why deferred}
-
-## Open Questions
-
-{Questions that need resolution before or during specification (and later design)}
-
-- **{Question Category}:** {Question that needs answering}
-- **{Question Category}:** {Question that needs answering}
-
-## Assumptions
-
-{Assumptions we're making that need validation}
-
-- {Assumption 1}
-- {Assumption 2}
-
-## Risks
-
-{Potential risks identified during discovery}
-
-- **{Risk Name}:** {Description}
-  - **Likelihood:** Low / Medium / High
-  - **Impact:** Low / Medium / High
-  - **Mitigation Ideas:** {How to address}
+- Rewriting the independently owned model-selection corpus or declaring its
+  review-pending research accepted.
+- Broad retuning of Claude or Cursor ladders in this Astra PR.
+- A paid provider probe or claims about production workload performance.
 
 ## Next Steps
 
-Use this discovery artifact to drive the next workflow step:
-
-- **Spec-driven mode:** continue to `oat-project-design` (which confirms
-  requirements and produces both `spec.md` and `design.md`).
-- **Spec-driven mode → formalize-only:** use `oat-project-spec` standalone
-  if you want a formalized requirements artifact but aren't ready to
-  design yet.
-- **Quick mode → straight to plan:** proceed directly to `plan.md` when
-  scope is clear and no architecture decisions remain.
-- **Quick mode → optional lightweight design:** produce a focused
-  `design.md` (architecture, components, data flow, testing) before
-  planning. Choose this when discovery surfaced architecture choices
-  or component boundaries.
-- **Quick mode → promote:** escalate to spec-driven if discovery revealed
-  the scope is larger or more complex than expected.
+Proceed directly to a quick-mode implementation plan for the bounded Codex
+catalog, recommendation, generated-view, test, and documentation changes.
