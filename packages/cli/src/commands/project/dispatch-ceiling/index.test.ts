@@ -4387,6 +4387,56 @@ describe('oat project dispatch-ceiling resolve', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it.each(['low', 'medium', 'high'])(
+    'honors preferred Codex effort %s beneath an Astra xhigh Frontier ceiling',
+    async (preferred) => {
+      const { root, home } = await setup();
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: {
+          dispatchPolicy: { mode: 'managed', policy: 'frontier' },
+          dispatchCeiling: {
+            providers: {
+              codex: {
+                frontier: {
+                  candidates: [
+                    {
+                      harness: 'codex',
+                      model: 'gpt-6-astra',
+                      effort: 'xhigh',
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        },
+      });
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'codex',
+        '--role',
+        'implementer',
+        '--preferred',
+        preferred,
+        '--json',
+      ]);
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'resolved',
+        providers: {
+          codex: {
+            dispatchArgs: {
+              variant: `oat-phase-implementer-gpt-6-astra-${preferred}`,
+            },
+            selection: { preferredValue: preferred, selectedValue: preferred },
+          },
+        },
+      });
+      expect(process.exitCode).toBe(0);
+    },
+  );
+
   it('keeps ultra unavailable as a legacy preferred scalar', async () => {
     const { root, home } = await setup();
     const { command, capture } = createHarness({ cwd: root, home });

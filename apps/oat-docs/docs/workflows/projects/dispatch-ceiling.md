@@ -80,8 +80,11 @@ To pick up a new version, compare your
 `workflow.dispatchCeiling.recommendationVersion` against the bundled version,
 then either edit the affected cells by hand or clear them and re-adopt.
 
-Version `2026-09-23.2` is the current bundled recommendation. It prefers
-GPT-6 Luna and Sol in Codex and Opus 5.5 low/medium/high in Claude High.
+Version `2026-09-24.1` is the current bundled recommendation. It prefers
+GPT-6 Luna and Sol in Codex, then Sol xhigh, Astra high, and Astra xhigh in
+Codex Frontier. Astra's task advantage has not been measured locally; this is
+an explicit user-directed preference, not acceptance by the separately
+maintained model-selection policy. Opus 5.5 low/medium/high remains in Claude High.
 The Claude low option suits bounded intelligent recon in Balanced or High;
 medium remains the implementation starting point under High. GPT-5.6 targets remain
 supported for explicit Codex and Cursor configurations. Cursor's preferred
@@ -234,8 +237,10 @@ oat_dispatch_policy:
 The bundled ladder is a curated subset of the supported targets:
 
 - **Codex:** GPT-6 Luna at `low` through `max` across Economy and Balanced;
-  GPT-6 Sol at `low` through `max` across High and Frontier. GPT-5.6
-  variants remain available outside this preferred ladder.
+  GPT-6 Sol at `low` through `high` in High and `xhigh` in Frontier; then
+  GPT-6 Astra at `high` and `xhigh` in Frontier. Astra and Sol remain supported
+  at `low`, `medium`, `high`, `xhigh`, and `max`, while GPT-5.6 variants remain
+  available outside this preferred ladder.
 - **Claude:** `haiku` and Sonnet 5 at Economy/Balanced, Opus 5.5 at High and
   Frontier, and Fable 5.1 at Frontier.
 - **Cursor:** the preferred ladder uses approved Composer 2.5, GPT-5.6, Grok

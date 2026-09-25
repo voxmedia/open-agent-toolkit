@@ -2925,7 +2925,7 @@ describe('oat config', () => {
         ),
       ) as Record<string, unknown>;
 
-      expect(recommendation.version).toBe('2026-09-23.2');
+      expect(recommendation.version).toBe('2026-09-24.1');
       expect(recommendation.providers).toMatchObject({
         codex: {
           economy: {
@@ -2951,7 +2951,8 @@ describe('oat config', () => {
           frontier: {
             candidates: [
               { model: 'gpt-6-sol', effort: 'xhigh' },
-              { model: 'gpt-6-sol', effort: 'max' },
+              { model: 'gpt-6-astra', effort: 'high' },
+              { model: 'gpt-6-astra', effort: 'xhigh' },
             ],
           },
         },
@@ -3090,6 +3091,62 @@ describe('oat config', () => {
         expect(process.exitCode).toBe(0);
       },
     );
+
+    it('resolves the bundled Codex Frontier terminal reviewer to Astra xhigh', async () => {
+      const root = await createRepoRoot();
+      const home = await createHome();
+      const recommendation = await readFile(
+        join(process.cwd(), 'config', 'dispatch-matrix-recommendation.json'),
+        'utf8',
+      );
+      const adoption = createHarness({
+        cwd: root,
+        home,
+        validateMatrixCell: vi.fn(async () => 'valid' as const),
+        assetFiles: {
+          '/tmp/assets/config/dispatch-matrix-recommendation.json':
+            recommendation,
+        },
+      });
+      await runCommand(adoption.command, [
+        'adopt',
+        'dispatch-matrix',
+        '--shared',
+      ]);
+
+      const target = join(root, '.oat', 'config.json');
+      const adopted = JSON.parse(await readFile(target, 'utf8'));
+      adopted.workflow.dispatchPolicy = { mode: 'managed', policy: 'frontier' };
+      await writeFile(target, `${JSON.stringify(adopted, null, 2)}\n`, 'utf8');
+
+      const resolver = createResolverHarness({ cwd: root, home });
+      await runResolverCommand(resolver.command, [
+        '--provider',
+        'codex',
+        '--role',
+        'reviewer',
+      ]);
+
+      expect(resolver.capture.jsonPayloads[0]).toMatchObject({
+        status: 'resolved',
+        policy: 'frontier',
+        providers: {
+          codex: {
+            dispatchArgs: {
+              variant: 'oat-reviewer-gpt-6-astra-xhigh',
+            },
+            modelAxis: 'selected:gpt-6-astra',
+            effortAxis: 'selected:xhigh',
+            selection: {
+              ceilingTier: 'frontier',
+              selectedValue: 'xhigh',
+              target: { model: 'gpt-6-astra', effort: 'xhigh' },
+            },
+          },
+        },
+      });
+      expect(process.exitCode).toBe(0);
+    });
 
     it('rejects invalid closed-provider values during dispatch matrix recommendation adoption', async () => {
       const root = await createRepoRoot();
@@ -3456,6 +3513,49 @@ describe('oat config', () => {
         },
       });
       expect(capture.error).toHaveLength(0);
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('preserves a populated Codex Frontier cell while adopting the new recommendation version', async () => {
+      const root = await createRepoRoot();
+      const existingFrontier = {
+        candidates: [{ harness: 'codex', model: 'gpt-6-sol', effort: 'max' }],
+      };
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        `${JSON.stringify({
+          version: 1,
+          workflow: {
+            dispatchCeiling: {
+              recommendationVersion: 'old',
+              providers: { codex: { frontier: existingFrontier } },
+            },
+          },
+        })}\n`,
+        'utf8',
+      );
+      const recommendation = await readFile(
+        join(process.cwd(), 'config', 'dispatch-matrix-recommendation.json'),
+        'utf8',
+      );
+      const { command } = createHarness({
+        cwd: root,
+        validateMatrixCell: vi.fn(async () => 'valid' as const),
+        assetFiles: {
+          '/tmp/assets/config/dispatch-matrix-recommendation.json':
+            recommendation,
+        },
+      });
+
+      await runCommand(command, ['adopt', 'dispatch-matrix', '--shared']);
+
+      const adopted = JSON.parse(
+        await readFile(join(root, '.oat', 'config.json'), 'utf8'),
+      );
+      expect(adopted.workflow.dispatchCeiling).toMatchObject({
+        recommendationVersion: '2026-09-24.1',
+        providers: { codex: { frontier: existingFrontier } },
+      });
       expect(process.exitCode).toBe(0);
     });
 

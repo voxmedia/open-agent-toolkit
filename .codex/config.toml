@@ -207,3 +207,43 @@ config_file = "agents/oat-reviewer-gpt-6-sol-medium.toml"
 [agents.oat-reviewer-gpt-6-sol-xhigh]
 description = "Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode."
 config_file = "agents/oat-reviewer-gpt-6-sol-xhigh.toml"
+
+[agents.oat-phase-implementer-gpt-6-astra-high]
+description = "Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement."
+config_file = "agents/oat-phase-implementer-gpt-6-astra-high.toml"
+
+[agents.oat-phase-implementer-gpt-6-astra-low]
+description = "Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement."
+config_file = "agents/oat-phase-implementer-gpt-6-astra-low.toml"
+
+[agents.oat-phase-implementer-gpt-6-astra-max]
+description = "Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement."
+config_file = "agents/oat-phase-implementer-gpt-6-astra-max.toml"
+
+[agents.oat-phase-implementer-gpt-6-astra-medium]
+description = "Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement."
+config_file = "agents/oat-phase-implementer-gpt-6-astra-medium.toml"
+
+[agents.oat-phase-implementer-gpt-6-astra-xhigh]
+description = "Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement."
+config_file = "agents/oat-phase-implementer-gpt-6-astra-xhigh.toml"
+
+[agents.oat-reviewer-gpt-6-astra-high]
+description = "Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode."
+config_file = "agents/oat-reviewer-gpt-6-astra-high.toml"
+
+[agents.oat-reviewer-gpt-6-astra-low]
+description = "Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode."
+config_file = "agents/oat-reviewer-gpt-6-astra-low.toml"
+
+[agents.oat-reviewer-gpt-6-astra-max]
+description = "Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode."
+config_file = "agents/oat-reviewer-gpt-6-astra-max.toml"
+
+[agents.oat-reviewer-gpt-6-astra-medium]
+description = "Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode."
+config_file = "agents/oat-reviewer-gpt-6-astra-medium.toml"
+
+[agents.oat-reviewer-gpt-6-astra-xhigh]
+description = "Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode."
+config_file = "agents/oat-reviewer-gpt-6-astra-xhigh.toml"

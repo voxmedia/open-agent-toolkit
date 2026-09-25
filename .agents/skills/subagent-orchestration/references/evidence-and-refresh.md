@@ -1,8 +1,8 @@
 # Evidence and Refresh Policy
 
 ```yaml
-guidance_version: 2026-09-23
-last_verified: 2026-09-23
+guidance_version: 2026-09-24
+last_verified: 2026-09-24
 review_after: 2026-10-08
 stale_after: 2026-10-23
 ```
@@ -78,6 +78,11 @@ publish a provider-independent effort conversion.
 
 ## Current Evidence Summary
 
+- GPT-6 Astra is selectable in the current Codex catalogue at low through max.
+  The bundled Frontier preference uses Astra high and xhigh after Sol xhigh by
+  explicit user direction. No local task evaluation establishes an Astra
+  advantage, and this preference is not acceptance by the separately
+  maintained model-selection policy.
 - GPT-6 Sol and Luna are selectable in the current Codex catalogue and are
   the default new-work routes in `provider-codex.md`. GPT-5.6 Sol/Luna/Terra
   remain supported for explicit configurations. The July independent coding

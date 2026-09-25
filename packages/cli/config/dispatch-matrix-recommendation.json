@@ -1,5 +1,5 @@
 {
-  "version": "2026-09-23.2",
+  "version": "2026-09-24.1",
   "providers": {
     "codex": {
       "economy": {
@@ -63,8 +63,13 @@
           },
           {
             "harness": "codex",
-            "model": "gpt-6-sol",
-            "effort": "max"
+            "model": "gpt-6-astra",
+            "effort": "high"
+          },
+          {
+            "harness": "codex",
+            "model": "gpt-6-astra",
+            "effort": "xhigh"
           }
         ]
       }
