@@ -72,6 +72,13 @@ export interface MaterializationExtension<
     MaterializationContext<unknown>,
 > {
   provider: TPlan['provider'];
+  /**
+   * True when this extension writes the provider's base built-in managed roles
+   * itself (for example Codex `oat-reviewer.toml`). Core user sync then skips
+   * those canonical roles for the provider. Extensions that only write model or
+   * effort variants leave this unset so core sync still projects the base role.
+   */
+  materializesBuiltInManagedRoles?: boolean;
   computePlan(context: TContext): Promise<TPlan>;
   applyPlan(
     scopeRoot: string,

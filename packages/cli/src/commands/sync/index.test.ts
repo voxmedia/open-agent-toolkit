@@ -460,6 +460,7 @@ function createHarness(options: HarnessOptions = {}): {
     getMaterializationExtensions: () => [
       {
         provider: 'codex',
+        materializesBuiltInManagedRoles: true,
         async computePlan(context) {
           const plan = await computeCodexProjectExtensionPlan(
             context.scopeRoot,
@@ -3681,6 +3682,86 @@ describe('createSyncCommand', () => {
         ],
         undefined,
         expect.objectContaining({ userConfigDir: '/tmp/home/.oat' }),
+      );
+    });
+
+    it('reserves built-in managed roles only for extensions that materialize them', async () => {
+      const claude = createAdapter('claude');
+      const codex = createCodexAdapter();
+      const variantOnlyClaudeExtension: SyncMaterializationExtension = {
+        provider: 'claude',
+        async computePlan() {
+          return {
+            provider: 'claude',
+            operations: [],
+            managedEntries: [],
+            aggregateHash: 'hash',
+            metadata: {},
+          };
+        },
+        async applyPlan() {
+          return { applied: 0, failed: 0, skipped: 0 };
+        },
+      };
+      const { command, computeSyncPlan } = createHarness({
+        adapters: [claude, codex],
+        configAwareResults: [
+          {
+            activeAdapters: [claude, codex],
+            detectedUnset: [],
+            detectedDisabled: [],
+          },
+        ],
+        canonicalEntriesByScope: {
+          user: [createAgentCanonicalEntry('oat-reviewer.md', '/tmp/home')],
+        },
+        extraMaterializationExtensions: [variantOnlyClaudeExtension],
+      });
+
+      await runSyncCommand(command, {
+        globalArgs: ['--scope', 'user'],
+        commandArgs: ['--dry-run'],
+      });
+
+      expect(computeSyncPlan).toHaveBeenCalledWith(
+        expect.objectContaining({
+          scope: 'user',
+          extensionOwnedCanonicalPathsByProvider: {
+            codex: [
+              '.agents/agents/oat-phase-implementer.md',
+              '.agents/agents/oat-reviewer.md',
+            ],
+          },
+        }),
+      );
+    });
+
+    it('plans an installed user-materializable agent once for ordinary sync', async () => {
+      const adapter = createAdapter('claude');
+      const reconWorker = createAgentCanonicalEntry(
+        'recon-worker.md',
+        '/tmp/home',
+      );
+      const { command, computeSyncPlan } = createHarness({
+        adapters: [adapter],
+        configAwareResults: [
+          {
+            activeAdapters: [adapter],
+            detectedUnset: [],
+            detectedDisabled: [],
+          },
+        ],
+        canonicalEntriesByScope: { user: [reconWorker] },
+        bundledManagedAgents: [{ ...reconWorker }],
+      });
+
+      await runSyncCommand(command, {
+        globalArgs: ['--scope', 'user'],
+        commandArgs: ['--dry-run'],
+      });
+
+      expect(computeSyncPlan).toHaveBeenCalledWith(
+        expect.objectContaining({ scope: 'user', canonical: [reconWorker] }),
       );
     });
 

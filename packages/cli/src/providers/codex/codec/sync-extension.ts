@@ -938,6 +938,7 @@ export const codexMaterializationExtension: MaterializationExtension<
   MaterializationContext<CodexMaterializationTargetOptions>
 > = {
   provider: 'codex',
+  materializesBuiltInManagedRoles: true,
   computePlan(context) {
     return computeCodexProjectExtensionPlan(
       context.scopeRoot,
