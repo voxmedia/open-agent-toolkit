@@ -320,12 +320,15 @@ function intentDiagnostic(diagnostic: PackIntentDiagnostic): PackDiagnostic {
 
 /**
  * User-scope canonical agents are installed into `~/.agents/agents/`, while
- * native provider-role materialization is caller-resolved from the active
- * config-aware adapter set. When that capability is active, it supplies the
+ * provider coverage is caller-resolved from the active config-aware adapter
+ * set. Callers suppress this diagnostic when an active provider entry-syncs or
+ * natively reads user agents, which every registered adapter does. It remains
+ * for two cases: no active provider covers user agents (every present agent is
+ * listed), or only extension-backed coverage is active, which supplies the
  * bundled managed role file set plus explicitly user-materializable pack
- * agents. Completeness alone therefore cannot describe native materialization,
- * so the remaining gap is named here instead of staying silent. Canonical
- * instruction-read availability is a separate contract.
+ * agents. Completeness alone cannot describe either gap, so it is named here
+ * instead of staying silent. Canonical instruction-read availability is a
+ * separate contract.
  */
 function userAgentMaterializationDiagnostics(
   pack: PackName,
@@ -349,7 +352,9 @@ function userAgentMaterializationDiagnostics(
   return [
     {
       code: 'user-agent-unmaterialized',
-      message: `Pack ${pack} installs user-scope canonical agents without native provider-role materialization for the active provider set; canonical instruction reads are unaffected. Active Codex or Cursor materialization supplies only built-in managed roles and manifest-declared user-materializable agents. Install this pack at project scope to materialize the affected agents.`,
+      message: managedRoleMaterialization
+        ? `Pack ${pack} installs user-scope canonical agents that the active provider set does not project; canonical instruction reads are unaffected. The active providers cover user-scope agents only through materialization extensions, which supply built-in managed roles and manifest-declared user-materializable agents. Enable a provider that syncs or reads user-scope agents with \`oat providers set --scope user --enabled <provider>\`, then run \`oat sync --scope user\`.`
+        : `Pack ${pack} installs user-scope canonical agents, but no active provider projects user-scope agents; canonical instruction reads are unaffected. Enable a provider for user sync with \`oat providers set --scope user --enabled <provider>\`, then run \`oat sync --scope user\`.`,
       paths: unmaterialized.map(({ path }) => path),
     },
   ];
