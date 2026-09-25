@@ -320,10 +320,11 @@ visibility, and recovery guidance. Human output names the provider on its own
 line and on any provider-attributed diagnostic. Reachability is never inferred
 from the presence of a provider directory on disk.
 
-The four inventory surfaces agree on managed user-scope roles. `list` and
-`info` resolve the same provider surface as `status` and `doctor`, so an
-active Codex or Cursor adapter that supplies managed roles suppresses the
-unmaterialized-user-agent report on all four rather than only two.
+The four inventory surfaces agree on user-scope agent coverage. `list` and
+`info` resolve the same provider surface as `status` and `doctor`, so any
+active adapter that entry-syncs or natively reads user-scope agents — every
+registered adapter does — suppresses the unmaterialized-user-agent report on
+all four rather than only two.
 
 Each provider state maps to exactly one row below. Pack evidence status and
 the lifecycle exit code derive from the **severity** column, never from the

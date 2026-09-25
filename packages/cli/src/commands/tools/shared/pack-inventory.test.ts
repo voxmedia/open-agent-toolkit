@@ -541,6 +541,10 @@ describe('pack inventory', () => {
     expect(diagnostic!.message).toContain(
       'manifest-declared user-materializable agents',
     );
+    expect(diagnostic!.message).toContain(
+      'oat providers set --scope user --enabled <provider>',
+    );
+    expect(diagnostic!.message).not.toMatch(/Codex|Cursor|project scope/);
   });
 
   it('reports every present user agent when no native materialization extension is active', async () => {
@@ -562,6 +566,10 @@ describe('pack inventory', () => {
       join(userRoot, '.agents', 'agents', 'oat-phase-implementer.md'),
       join(userRoot, '.agents', 'agents', 'oat-reviewer.md'),
     ]);
+    expect(diagnostic!.message).toContain(
+      'no active provider projects user-scope agents',
+    );
+    expect(diagnostic!.message).not.toMatch(/Codex|Cursor|project scope/);
   });
 
   it('excludes bundled managed roles only when native materialization is active and always excludes project scope', async () => {

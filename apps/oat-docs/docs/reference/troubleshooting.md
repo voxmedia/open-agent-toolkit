@@ -167,14 +167,17 @@ Both commands report managed pack state with a scoped recovery command:
   place and your edits are gone. The finding is informational and carries no
   recovery command for exactly that reason.
 - `user-agent-unmaterialized` — the pack installed canonical agents into
-  `~/.agents/agents/`, but active native Codex/Cursor adapters materialize only
-  the bundled managed role files at user scope. Other pack-owned agents remain
-  unmaterialized; when neither adapter is active, the managed roles do too.
-  Provider access to canonical instructions through loaded, user, and project
-  reads is a separate contract and does not clear this native-role finding.
-  `oat tools update` cannot fix it. Install the pack at project scope
-  (`oat tools install <pack> --scope project`) when you need its native roles. See
-  [Tool packs](../cli-utilities/tool-packs.md) for the full limitation.
+  `~/.agents/agents/`, but no active provider projects them at user scope.
+  Every registered adapter (Claude, Cursor, Codex, Gemini, Copilot) syncs or
+  natively reads user-scope agents, so while any of them is active for user
+  sync the finding is suppressed. It appears when no provider is enabled for
+  user sync, in which case every installed agent is listed. Provider access to
+  canonical instructions through loaded, user, and project reads is a separate
+  contract and does not clear this finding. `oat tools update` cannot fix it.
+  Enable a provider with `oat providers set --scope user --enabled <provider>`
+  and run `oat sync --scope user`; reinstalling at project scope is not
+  required. See [Tool packs](../cli-utilities/tool-packs.md) for how
+  user-scope agents reach each provider.
 
 ## `status` or `doctor` reports `packs:inventory`
 
