@@ -66,7 +66,12 @@ The positive Sonnet control resolved, while invalid family and effort controls
 fell back to defaults. Five Opus 5.5 mappings are now approved for desktop
 subagents; the CLI result alone does not establish that the same bracket syntax
 works as a CLI top-level `--model` argument. Likewise, do not add GPT-6
-Cursor targets until that runtime lists and verifies them. See [Dispatch Policy](../workflows/projects/dispatch-ceiling.md#cursor-evidence-authority)
+Cursor targets until that runtime lists and verifies them.
+
+A 2026-09-25 desktop 3.21.18 probe added Grok 4.6 and Fable 5.1 mappings
+and moved the bundled Cursor ladder to them. The same probe showed Grok 4.7
+resolves only bare flat IDs, never bracket selectors, so it stays out of the
+catalogue; see [Verifying Cursor Pins](verifying-cursor-pins.md). See [Dispatch Policy](../workflows/projects/dispatch-ceiling.md#cursor-evidence-authority)
 for the distinction between catalog, configured mapping, and runtime identity.
 
 ## Change and Validate

@@ -674,7 +674,7 @@ describe('bundle asset inventory consistency', () => {
 
         expect(recommendation).toEqual(sourceRecommendation);
         expect(checkedInAsset).toEqual(sourceRecommendation);
-        expect(recommendation.version).toBe('2026-09-24.1');
+        expect(recommendation.version).toBe('2026-09-25.1');
         expect(recommendation.providers?.codex).toBeDefined();
         expect(recommendation.providers?.claude).toBeDefined();
         expect(recommendation.providers?.cursor).toEqual({
@@ -686,16 +686,28 @@ describe('bundle asset inventory consistency', () => {
             ],
           },
           balanced: {
-            candidates: ['cursor-grok-4.5-high', 'gpt-5.6-terra-high'],
+            candidates: [
+              'cursor-grok-4.6-medium',
+              'gpt-5.6-terra-high',
+              'claude-opus-5-5-low',
+            ],
           },
           high: {
-            candidates: ['gpt-5.6-sol-medium', 'gpt-5.6-sol-high'],
+            candidates: [
+              'gpt-5.6-sol-medium',
+              'claude-opus-5-5-low',
+              'gpt-5.6-sol-high',
+              'claude-opus-5-5-medium',
+              'claude-opus-5-5-high',
+            ],
           },
           frontier: {
             candidates: [
               'gpt-5.6-sol-xhigh',
               'gpt-5.6-sol-max',
-              'claude-fable-5-thinking-high',
+              'claude-opus-5-5-high',
+              'claude-opus-5-5-xhigh',
+              'claude-fable-5-1-thinking-high',
             ],
           },
         });

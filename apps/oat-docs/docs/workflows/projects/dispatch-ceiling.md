@@ -80,7 +80,7 @@ To pick up a new version, compare your
 `workflow.dispatchCeiling.recommendationVersion` against the bundled version,
 then either edit the affected cells by hand or clear them and re-adopt.
 
-Version `2026-09-24.1` is the current bundled recommendation. It prefers
+Version `2026-09-25.1` is the current bundled recommendation. It prefers
 GPT-6 Luna and Sol in Codex, then Sol xhigh, Astra high, and Astra xhigh in
 Codex Frontier. Astra's task advantage has not been measured locally; this is
 an explicit user-directed preference, not acceptance by the separately
@@ -88,9 +88,15 @@ maintained model-selection policy. Opus 5.5 low/medium/high remains in Claude Hi
 The Claude low option suits bounded intelligent recon in Balanced or High;
 medium remains the implementation starting point under High. GPT-5.6 targets remain
 supported for explicit Codex and Cursor configurations. Cursor's preferred
-ladder uses existing verified GPT-5.6, Grok, Composer, and Fable mappings;
-Cursor Opus 5.5 now has five approved desktop mappings, but the bundled
-Cursor preference order remains unchanged. Rerunning adoption preserves any
+ladder interleaves verified GPT-5.6 and Opus 5.5 mappings: Balanced adds
+Opus 5.5 low above Terra high, High orders Sol medium, Opus low, Sol high,
+Opus medium, then Opus high, and Frontier places Opus high and xhigh between
+Sol max and Fable 5.1. Grok 4.6 medium replaces Grok 4.5 high at the bottom of
+Balanced, and Fable 5.1 thinking high replaces Fable 5 as Frontier's terminal
+target. The ordering is an explicit user-directed preference informed by
+vendor benchmarks and the model-selection matrix, not a local workload
+comparison. Grok 4.5 and Fable 5 stay supported for explicit configurations.
+Rerunning adoption preserves any
 explicit older cell unchanged. For the complete maintenance
 procedure, see [Updating Model Guidance](../../contributing/updating-model-guidance.md).
 
@@ -244,10 +250,12 @@ The bundled ladder is a curated subset of the supported targets:
 - **Claude:** `haiku` and Sonnet 5 at Economy/Balanced, Opus 5.5 at High and
   Frontier, and Fable 5.1 at Frontier.
 - **Cursor:** the preferred ladder uses approved Composer 2.5, GPT-5.6, Grok
-  4.5, and Fable 5 targets. The catalogue maps each flat ladder ID to its
-  separately verified bracket-form frontmatter model. Opus 5.5 has five
-  approved effort mappings from a [native desktop probe](../../contributing/verifying-cursor-pins.md);
-  they are available for explicit selection outside the bundled preference.
+  4.6, Opus 5.5, and Fable 5.1 targets. The catalogue maps each flat ladder ID
+  to its separately verified bracket-form frontmatter model. Grok 4.6 (`low`
+  through `xhigh`) and Fable 5.1 (`low` through `max`, thinking variants) were
+  approved from a 2026-09-25 [native desktop probe](../../contributing/verifying-cursor-pins.md);
+  targets outside the ladder remain available for explicit selection. Grok
+  4.7 has no approved mapping because it ignores bracket selectors.
 
 The final candidate in a named tier defines that tier's reviewer ceiling. Lower
 reviewer selection requires a separate reviewed contract; a normal reviewer

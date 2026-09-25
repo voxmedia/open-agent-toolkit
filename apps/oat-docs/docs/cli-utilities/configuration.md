@@ -463,7 +463,7 @@ even when the reusable ladder is user-owned.
         },
         "cursor": {
           "balanced": {
-            "candidates": ["cursor-grok-4.5-high", "gpt-5.6-terra-high"]
+            "candidates": ["cursor-grok-4.6-medium", "gpt-5.6-terra-high"]
           }
         }
       }
@@ -490,10 +490,10 @@ rungs. A present declaration is authoritative. Host-managed routing through
 bare effort-pinned alias fails closed when its generation cannot be proven.
 Model-only Claude aliases remain compatible through the per-call model argument
 and report `effortAxis: not-applicable` because the Agent API exposes no
-per-call effort argument. The recommendation carries 10 Cursor candidates
+per-call effort argument. The recommendation carries 16 Cursor candidates
 across four tiers, drawn from a materialization
-catalogue with 17 catalogued multi-family flat IDs spanning Composer, Claude
-(Sonnet, Opus 5.5, and Fable), GPT, and Grok; the two figures differ because some
+catalogue with 26 catalogued multi-family flat IDs spanning Composer, Claude
+(Sonnet, Opus 5.5, Fable 5, and Fable 5.1), GPT, and Grok 4.5 and 4.6; the two figures differ because some
 approved mappings stay materializable without being recommended. An explicit
 mapping connects each flat ladder ID to a separate bracket-form frontmatter
 model; configuration and skills never derive or normalize either form.
