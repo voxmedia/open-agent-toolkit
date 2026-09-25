@@ -288,9 +288,13 @@ an unset adapter follows detection. Provider mappings and registered
 materialization extensions then determine the output: entry sync, native read,
 extension-owned role materialization, or explicit unsupported evidence.
 
-Core sync does not write extension-owned role paths. Codex and Cursor own their
-generated managed-role outputs through provider extensions, while other user
-agents continue through each active adapter's declared mapping. Per-asset sync
+Core sync does not write extension-owned role paths. At user scope only Codex
+owns the base `oat-phase-implementer` and `oat-reviewer` roles, because its
+extension renders them as native `.toml` roles. Claude and Cursor extensions
+generate only model- or effort-pinned variants, so core sync still projects
+their base roles from `~/.agents/agents/` alongside those variants, exactly as it
+does at project scope. Other user agents continue through each active adapter's
+declared mapping. Per-asset sync
 results distinguish changed, current, missing, failed, unsupported, and unknown
 outcomes, so one failed or unsupported asset does not erase evidence for its
 siblings.

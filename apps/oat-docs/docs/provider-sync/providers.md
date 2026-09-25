@@ -15,6 +15,7 @@ description: 'Provider-specific path mappings for Claude, Cursor, Copilot, Gemin
     - Managed effort-pinned phase implementers and reviewers use the exact generated candidate returned as `providers.claude.dispatchArgs.variant`; its frontmatter carries model and effort because Agent has no per-call effort field. Legacy model-only candidates retain `providers.claude.dispatchArgs.model`, and any model supplied alongside a variant must match its definition.
     - Generated names preserve the full normalized configured model ID after the provider token. A versioned ID such as `claude-opus-5-5` therefore produces the deterministic slug `oat-reviewer-claude-claude-opus-5-5-high`. This doubled `claude-` is the current managed-role contract, not a request to rename existing roles.
     - Project variants live under `.claude/agents/`; user variants live under `~/.claude/agents/`. Sync removes stale managed variants for the reconciled owner while preserving base roles and unmanaged agents.
+    - Base `oat-phase-implementer` and `oat-reviewer` roles sync like any other canonical agent at both scopes, so legacy model-only dispatch and base-role fallback resolve after a pack moves to user scope.
     - Claude's official subagent contract says existing agent directories are watched and changes load within seconds. It describes a conditional restart for the first agent added to a directory that was absent when the session started, for agents added through `--add-dir`, and when Claude starts with `--disable-slash-commands`. OAT cannot observe those session-start and launch-mode facts. After a successful provider-visible file change, the generic OAT repository policy therefore conservatively advises starting a new provider session; it does not claim that Claude hot-reloaded the file or that the application process must restart. The provider semantics were verified against [Claude Code subagent documentation](https://code.claude.com/docs/en/sub-agents) on 2026-08-31.
 
 === "Cursor"
@@ -25,7 +26,7 @@ description: 'Provider-specific path mappings for Claude, Cursor, Copilot, Gemin
     - Interactive `oat init` and `oat status` ask for an individual disposition for each unresolved Cursor-local skill: adopt it into `.agents/skills` or keep it Cursor-only and remember the exact path in sync config
     - Keep-local is blocked when a canonical skill has the same name because Cursor does not document a safe duplicate-resolution order
     - During upgrades, OAT removes only verified clean legacy managed skill views. Changed or replaced views are preserved, detached from manifest ownership, and offered for migration.
-    - Sync materializes pinned Markdown definitions for both `oat-phase-implementer` and `oat-reviewer`. Each generated name keeps the configured flat ladder ID, while an explicit verified mapping writes the separate bracket-form frontmatter model. OAT never derives one form from the other.
+    - Sync materializes pinned Markdown definitions for both `oat-phase-implementer` and `oat-reviewer` in addition to the base roles, which sync like any other canonical agent at both scopes. Each generated name keeps the configured flat ladder ID, while an explicit verified mapping writes the separate bracket-form frontmatter model. OAT never derives one form from the other.
     - Generated definitions carry `supported-catalogue`, `project-config`, or `user-config` ownership. Project and supported output lives in the tracked `.cursor/agents` view; user-owned output lives under `~/.cursor/agents`. Cleanup reconciles only the applicable owner.
     - Managed dispatch requires `providers.cursor.dispatchArgs.variant` and launches that exact resolver-selected native agent type first. Skills do not pass a Task-level model argument or normalize Cursor model strings.
     - Cursor may silently fallback when a definition pin cannot be honored. Variant acceptance therefore establishes launcher-owned `configured` provenance only; runtime identity remains `not-reported` unless independently observed.
@@ -176,7 +177,7 @@ current-session catalog probe is still not proof of provider visibility.
 
 - Project scope: skills + agents + rules
 - User scope: skills plus capability-supported ordinary agents (provider mappings vary by adapter)
-- The two bundled managed roles separately participate in Codex and Cursor extension expansion for user-owned targets
+- The two bundled managed roles separately participate in Codex, Cursor, and Claude extension expansion for user-owned targets. Only Codex renders the base roles itself; Claude and Cursor receive base roles through ordinary agent sync with generated variants alongside
 - Rules are project-scoped only in this release
 - Codex user-scope sync materializes user-config custom roles under `~/.codex`; project-config and supported-catalogue output remains project-scoped and version controlled
 - Cursor user-scope sync materializes user-config variants under `~/.cursor/agents`; project-config and supported-catalogue output remains project-scoped and version controlled

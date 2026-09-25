@@ -397,12 +397,23 @@ async function computePlans(
       scope === 'user'
         ? await dependencies.scanBundledManagedAgents({ scopeRoot })
         : [];
+    // A user-materializable pack agent resolves to its installed copy, which
+    // the canonical scan already found; planning it twice turns the second
+    // symlink create into a copy fallback.
+    const scannedCanonicalPaths = new Set(
+      canonical.map(({ canonicalPath }) => canonicalPath),
+    );
     const ordinaryCanonical =
       scope === 'user'
         ? [
             ...canonical,
-            ...managedAgents.filter(({ canonicalPath }) =>
-              isPathWithin(join(scopeRoot, '.agents', 'agents'), canonicalPath),
+            ...managedAgents.filter(
+              ({ canonicalPath }) =>
+                !scannedCanonicalPaths.has(canonicalPath) &&
+                isPathWithin(
+                  join(scopeRoot, '.agents', 'agents'),
+                  canonicalPath,
+                ),
             ),
           ]
         : canonical;
@@ -436,10 +447,17 @@ async function computePlans(
         : dependencies.getMaterializationExtensions()
     ).filter((extension) => activeAdapterNames.includes(extension.provider));
     const extensionOwnedCanonicalPathsByProvider = Object.fromEntries(
-      enabledExtensions.map(({ provider }) => [
-        provider,
-        USER_SCOPE_MANAGED_AGENT_FILES.map((name) => `.agents/agents/${name}`),
-      ]),
+      enabledExtensions
+        .filter(
+          ({ materializesBuiltInManagedRoles }) =>
+            materializesBuiltInManagedRoles === true,
+        )
+        .map(({ provider }) => [
+          provider,
+          USER_SCOPE_MANAGED_AGENT_FILES.map(
+            (name) => `.agents/agents/${name}`,
+          ),
+        ]),
     );
     const activeAdapterNameSet = new Set(activeAdapterNames);
     const collectionAliasEligibleMappings =
