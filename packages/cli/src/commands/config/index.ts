@@ -1,5 +1,6 @@
 import { readFile as readFileDefault } from 'node:fs/promises';
 import { isAbsolute, join } from 'node:path';
+import { isDeepStrictEqual } from 'node:util';
 
 import { buildCommandContext, type CommandContext } from '@app/command-context';
 import { normalizeExcludedPaths } from '@commands/instructions/instructions.utils';
@@ -3134,13 +3135,51 @@ async function removeConfigPathOnDisk(
 
 interface AdoptDispatchMatrixOptions {
   surface: ConfigSurface;
+  replace: boolean;
+  dryRun: boolean;
 }
 
 interface AdoptDispatchMatrixResult {
   key: string;
   value: string;
   source: Exclude<ConfigSurface, 'auto'>;
+  versionWritten: boolean;
+  dryRun: boolean;
+  currentVersion: string | null;
+  filledCells: string[];
+  preservedCells: string[];
+  differingCells: string[];
+  replacedCells: string[];
+  droppedCells: string[];
   notices: DispatchNotice[];
+}
+
+interface DispatchMatrixApplication {
+  workflow: OatWorkflowConfig;
+  filledCells: string[];
+  preservedCells: string[];
+  differingCells: string[];
+  replacedCells: string[];
+  droppedCells: string[];
+  versionWritten: boolean;
+  writeRequired: boolean;
+}
+
+function warnBeforeReplacingCells(
+  application: DispatchMatrixApplication,
+  options: AdoptDispatchMatrixOptions,
+  context: CommandContext,
+): void {
+  if (
+    options.dryRun ||
+    context.json ||
+    application.replacedCells.length === 0
+  ) {
+    return;
+  }
+  context.logger.warn(
+    `Replacing ${application.replacedCells.length} populated dispatch matrix cells from the bundled recommendation: ${application.replacedCells.join(', ')}.${application.droppedCells.length > 0 ? ` Whole-provider replacements remove: ${application.droppedCells.join(', ')}.` : ''} Use --keep-existing to preserve them or --dry-run to preview.`,
+  );
 }
 
 async function loadDispatchMatrixRecommendation(
@@ -3207,11 +3246,76 @@ async function validateRecommendationCells(
 function applyDispatchMatrixRecommendation(
   workflow: OatWorkflowConfig | undefined,
   recommendation: DispatchMatrixRecommendation,
-): OatWorkflowConfig {
+  replace: boolean,
+): DispatchMatrixApplication {
   const existingProviders = workflow?.dispatchCeiling?.providers ?? {};
   const providers: Record<string, WorkflowDispatchProviderValue> = {
     ...recommendation.providers,
   };
+  const filledCells: string[] = [];
+  const preservedCells: string[] = [];
+  const differingCells: string[] = [];
+  const replacedCells: string[] = [];
+  const droppedCells: string[] = [];
+
+  for (const [provider, recommendedValue] of Object.entries(
+    recommendation.providers,
+  )) {
+    const path = `${DISPATCH_CEILING_PROVIDER_KEY_PREFIX}${provider}`;
+    const existingValue = getOwnKey(existingProviders, provider);
+    if (existingValue === undefined) {
+      if (typeof recommendedValue === 'string') {
+        filledCells.push(path);
+      } else {
+        filledCells.push(
+          ...Object.keys(recommendedValue).map((tier) => `${path}.${tier}`),
+        );
+      }
+      continue;
+    }
+    if (
+      typeof recommendedValue === 'string' ||
+      typeof existingValue === 'string'
+    ) {
+      if (!isDeepStrictEqual(existingValue, recommendedValue)) {
+        differingCells.push(path);
+        if (replace) {
+          replacedCells.push(path);
+          if (
+            typeof recommendedValue === 'string' &&
+            typeof existingValue !== 'string'
+          ) {
+            droppedCells.push(
+              ...Object.keys(existingValue).map((tier) => `${path}.${tier}`),
+            );
+          }
+        } else {
+          preservedCells.push(path);
+        }
+      } else {
+        preservedCells.push(path);
+      }
+      continue;
+    }
+    for (const [tier, recommendedCell] of Object.entries(recommendedValue)) {
+      const cellPath = `${path}.${tier}`;
+      const existingCell = getOwnKey(existingValue, tier);
+      if (existingCell === undefined) {
+        filledCells.push(cellPath);
+      } else {
+        if (!isDeepStrictEqual(existingCell, recommendedCell)) {
+          differingCells.push(cellPath);
+          if (replace) {
+            replacedCells.push(cellPath);
+          } else {
+            preservedCells.push(cellPath);
+          }
+        } else {
+          preservedCells.push(cellPath);
+        }
+      }
+    }
+  }
 
   // `existingProviders` is a `normalizeDispatchMatrix` product, which now
   // keeps a provider literally named `__proto__` as an own key, so
@@ -3220,6 +3324,19 @@ function applyDispatchMatrixRecommendation(
   for (const [provider, existingValue] of Object.entries(existingProviders)) {
     const recommendedValue = getOwnKey(recommendation.providers, provider);
     if (
+      replace &&
+      recommendedValue &&
+      typeof recommendedValue !== 'string' &&
+      typeof existingValue !== 'string'
+    ) {
+      setOwnKey(providers, provider, {
+        ...existingValue,
+        ...recommendedValue,
+      });
+    } else if (replace && recommendedValue !== undefined) {
+      // A bare provider override is replaced as one configured cell.
+      setOwnKey(providers, provider, recommendedValue);
+    } else if (
       recommendedValue &&
       typeof recommendedValue !== 'string' &&
       typeof existingValue !== 'string'
@@ -3233,13 +3350,32 @@ function applyDispatchMatrixRecommendation(
     }
   }
 
+  const versionWritten = replace
+    ? filledCells.length > 0 ||
+      replacedCells.length > 0 ||
+      workflow?.dispatchCeiling?.recommendationVersion !==
+        recommendation.version
+    : filledCells.length > 0 && differingCells.length === 0;
+  const writeRequired =
+    filledCells.length > 0 || replacedCells.length > 0 || versionWritten;
   return {
-    ...(workflow ?? {}),
-    dispatchCeiling: {
-      ...workflow?.dispatchCeiling,
-      recommendationVersion: recommendation.version,
-      providers,
+    workflow: {
+      ...(workflow ?? {}),
+      dispatchCeiling: {
+        ...workflow?.dispatchCeiling,
+        ...(versionWritten
+          ? { recommendationVersion: recommendation.version }
+          : {}),
+        providers,
+      },
     },
+    filledCells,
+    preservedCells,
+    differingCells,
+    replacedCells,
+    droppedCells,
+    versionWritten,
+    writeRequired,
   };
 }
 
@@ -3290,23 +3426,41 @@ async function adoptDispatchMatrixRecommendation(
       dependencies,
       context.logger.warn,
     );
-    const workflow = applyDispatchMatrixRecommendation(
+    const application = applyDispatchMatrixRecommendation(
       userConfig.workflow,
       recommendation,
+      options.replace,
     );
-    await dependencies.writeUserConfig(userConfigDir, {
-      ...userConfig,
-      workflow,
-    });
+    warnBeforeReplacingCells(application, options, context);
+    if (application.writeRequired && !options.dryRun) {
+      await dependencies.writeUserConfig(userConfigDir, {
+        ...userConfig,
+        workflow: application.workflow,
+      });
+    }
     return {
       key: 'workflow.dispatchCeiling.providers',
       value: recommendation.version,
       source,
-      notices: await effectiveTerminalReviewerNotices(
-        repoRoot,
-        userConfigDir,
-        dependencies,
-      ),
+      versionWritten: application.versionWritten && !options.dryRun,
+      dryRun: options.dryRun,
+      currentVersion:
+        (options.dryRun
+          ? userConfig.workflow?.dispatchCeiling?.recommendationVersion
+          : application.workflow.dispatchCeiling?.recommendationVersion) ??
+        null,
+      filledCells: application.filledCells,
+      preservedCells: application.preservedCells,
+      differingCells: application.differingCells,
+      replacedCells: application.replacedCells,
+      droppedCells: application.droppedCells,
+      notices: options.dryRun
+        ? []
+        : await effectiveTerminalReviewerNotices(
+            repoRoot,
+            userConfigDir,
+            dependencies,
+          ),
     };
   }
 
@@ -3318,23 +3472,41 @@ async function adoptDispatchMatrixRecommendation(
       dependencies,
       context.logger.warn,
     );
-    const workflow = applyDispatchMatrixRecommendation(
+    const application = applyDispatchMatrixRecommendation(
       localConfig.workflow,
       recommendation,
+      options.replace,
     );
-    await dependencies.writeOatLocalConfig(repoRoot, {
-      ...localConfig,
-      workflow,
-    });
+    warnBeforeReplacingCells(application, options, context);
+    if (application.writeRequired && !options.dryRun) {
+      await dependencies.writeOatLocalConfig(repoRoot, {
+        ...localConfig,
+        workflow: application.workflow,
+      });
+    }
     return {
       key: 'workflow.dispatchCeiling.providers',
       value: recommendation.version,
       source,
-      notices: await effectiveTerminalReviewerNotices(
-        repoRoot,
-        userConfigDir,
-        dependencies,
-      ),
+      versionWritten: application.versionWritten && !options.dryRun,
+      dryRun: options.dryRun,
+      currentVersion:
+        (options.dryRun
+          ? localConfig.workflow?.dispatchCeiling?.recommendationVersion
+          : application.workflow.dispatchCeiling?.recommendationVersion) ??
+        null,
+      filledCells: application.filledCells,
+      preservedCells: application.preservedCells,
+      differingCells: application.differingCells,
+      replacedCells: application.replacedCells,
+      droppedCells: application.droppedCells,
+      notices: options.dryRun
+        ? []
+        : await effectiveTerminalReviewerNotices(
+            repoRoot,
+            userConfigDir,
+            dependencies,
+          ),
     };
   }
 
@@ -3345,23 +3517,40 @@ async function adoptDispatchMatrixRecommendation(
     dependencies,
     context.logger.warn,
   );
-  const workflow = applyDispatchMatrixRecommendation(
+  const application = applyDispatchMatrixRecommendation(
     sharedConfig.workflow,
     recommendation,
+    options.replace,
   );
-  await dependencies.writeOatConfig(repoRoot, {
-    ...sharedConfig,
-    workflow,
-  });
+  warnBeforeReplacingCells(application, options, context);
+  if (application.writeRequired && !options.dryRun) {
+    await dependencies.writeOatConfig(repoRoot, {
+      ...sharedConfig,
+      workflow: application.workflow,
+    });
+  }
   return {
     key: 'workflow.dispatchCeiling.providers',
     value: recommendation.version,
     source,
-    notices: await effectiveTerminalReviewerNotices(
-      repoRoot,
-      userConfigDir,
-      dependencies,
-    ),
+    versionWritten: application.versionWritten && !options.dryRun,
+    dryRun: options.dryRun,
+    currentVersion:
+      (options.dryRun
+        ? sharedConfig.workflow?.dispatchCeiling?.recommendationVersion
+        : application.workflow.dispatchCeiling?.recommendationVersion) ?? null,
+    filledCells: application.filledCells,
+    preservedCells: application.preservedCells,
+    differingCells: application.differingCells,
+    replacedCells: application.replacedCells,
+    droppedCells: application.droppedCells,
+    notices: options.dryRun
+      ? []
+      : await effectiveTerminalReviewerNotices(
+          repoRoot,
+          userConfigDir,
+          dependencies,
+        ),
   };
 }
 
@@ -3646,11 +3835,56 @@ async function runAdopt(
       context.logger.json({
         status: 'ok',
         ...result,
+        ...jsonWarnings(
+          result.replacedCells.length > 0 && !result.dryRun
+            ? [
+                `Replaced ${result.replacedCells.length} populated dispatch matrix cells from the bundled recommendation.${result.droppedCells.length > 0 ? ` Removed whole-provider tier cells: ${result.droppedCells.join(', ')}.` : ''} Use --keep-existing to preserve them.`,
+              ]
+            : [],
+        ),
       });
     } else {
-      context.logger.info(
-        `Adopted dispatch matrix recommendation ${result.value} to ${result.source} config.`,
-      );
+      if (result.dryRun) {
+        context.logger.info(
+          `Dry run for ${result.source} config using recommendation ${result.value}: would fill ${result.filledCells.length} cells and replace ${result.replacedCells.length} cells; no config changed.`,
+        );
+      } else if (
+        result.versionWritten ||
+        result.filledCells.length > 0 ||
+        result.replacedCells.length > 0
+      ) {
+        context.logger.info(
+          `Applied dispatch matrix recommendation ${result.value} to ${result.source} config: filled ${result.filledCells.length} cells and replaced ${result.replacedCells.length} cells.`,
+        );
+      } else {
+        context.logger.info(
+          `No missing dispatch matrix cells in ${result.source} config; recommendation version remains ${result.currentVersion ?? 'unset'}.`,
+        );
+      }
+      if (result.replacedCells.length > 0) {
+        context.logger.info(
+          `${result.dryRun ? 'Would replace' : 'Replaced'}: ${result.replacedCells.join(', ')}.`,
+        );
+        if (result.droppedCells.length > 0) {
+          context.logger.warn(
+            `${result.dryRun ? 'Would remove' : 'Removed'} whole-provider tier cells: ${result.droppedCells.join(', ')}.`,
+          );
+        }
+      } else if (result.differingCells.length > 0) {
+        context.logger.warn(
+          `Preserved cells differ from recommendation ${result.value}: ${result.differingCells.join(', ')}. Review and update those cells explicitly if you want the new ladder.`,
+        );
+      }
+      if (
+        !result.dryRun &&
+        !result.versionWritten &&
+        result.filledCells.length > 0 &&
+        result.differingCells.length > 0
+      ) {
+        context.logger.warn(
+          `Recommendation version remains ${result.currentVersion ?? 'unset'} because preserved cells differ from ${result.value}.`,
+        );
+      }
       if (result.notices.length > 0) {
         context.logger.info(formatDispatchNotices(result.notices));
       }
@@ -3864,8 +4098,13 @@ export function createConfigCommand(
         .option('--user', 'Write to the user-level config (~/.oat/config.json)')
         .option(
           '--yes',
-          'Compatibility flag; adoption always preserves explicit existing cells',
+          'Compatibility flag; adoption does not require confirmation',
         )
+        .option(
+          '--keep-existing',
+          'Fill missing cells without replacing populated cells',
+        )
+        .option('--dry-run', 'Preview cell changes without writing config')
         .action(
           async (
             template: string,
@@ -3874,6 +4113,8 @@ export function createConfigCommand(
               local?: boolean;
               user?: boolean;
               yes?: boolean;
+              keepExisting?: boolean;
+              dryRun?: boolean;
             },
             command: Command,
           ) => {
@@ -3882,7 +4123,16 @@ export function createConfigCommand(
             );
             try {
               const surface = resolveSurfaceFlags(options);
-              await runAdopt(template, { surface }, context, dependencies);
+              await runAdopt(
+                template,
+                {
+                  surface,
+                  replace: !(options.keepExisting ?? false),
+                  dryRun: options.dryRun ?? false,
+                },
+                context,
+                dependencies,
+              );
             } catch (error) {
               const message =
                 error instanceof Error ? error.message : String(error);

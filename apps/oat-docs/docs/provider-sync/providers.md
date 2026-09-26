@@ -89,6 +89,10 @@ oat config adopt dispatch-matrix --local
 oat config adopt dispatch-matrix --user
 ```
 
+These commands replace bundled cells in the chosen scope and warn about
+replacements. Add `--dry-run` to preview or `--keep-existing` to fill only
+missing cells.
+
 Project-config candidates materialize into the tracked, version-controlled
 project `.codex` and `.cursor` views. User-config candidates materialize under
 `~/.codex` and `~/.cursor`. OAT does not auto-ignore project output or create

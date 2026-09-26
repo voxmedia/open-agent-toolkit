@@ -83,7 +83,7 @@ provider-level scalar in that scope or remain shadowed by one at higher
 precedence. It always tries the next authorized compatible candidate and stops
 without mutation only when none remains.
 
-The planner runs exactly one matching `oat config adopt dispatch-matrix`
+The planner runs exactly one matching `oat config adopt dispatch-matrix --keep-existing`
 command, records file-existence and compatibility evidence plus the selected
 scope, and re-runs dispatch preflight. Existing explicit cells remain unchanged;
 their provenance does not select the persistence scope. No authorized

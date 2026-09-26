@@ -58,27 +58,32 @@ oat config adopt dispatch-matrix --local
 oat config adopt dispatch-matrix --user
 ```
 
-Adoption fills missing provider/tier cells and records
-`workflow.dispatchCeiling.recommendationVersion`; it does not replace explicit
-existing cells. Planning shows the complete recommendation before asking which
-scope should own it. If the resulting ladder is still missing or incomplete,
-planning remains blocked rather than replacing the user's explicit values.
-The recommendation version describes only the bundled recommendation. After
-preserving existing cells, OAT resolves the effective ladder and uses that
-effective result—not the recommendation version—for dispatch targets and
-runtime disclosure.
+Adoption replaces populated cells from the bundled recommendation in the
+chosen scope, fills missing cells, and retains extra custom tiers when the
+bundled provider remains a tier map. A bundled provider-level scalar replaces
+the whole provider, including custom tiers. It warns about replaced or
+removed cells and reports their paths. Use `--dry-run` to preview. For
+fill-only setup, `--keep-existing` preserves populated cells; if it fills
+nothing, both config and version remain unchanged. When it fills missing
+cells but preserves divergent cells, the version also stays unchanged. Planning always uses
+`--keep-existing` after showing the complete recommendation and asking which
+scope should own it. If the resulting effective ladder remains incomplete,
+planning blocks. The version identifies the bundle last written by adoption;
+it does not prove the effective ladder matches it. OAT resolves the effective
+ladder for dispatch targets and runtime disclosure.
 
 ### Upgrading to a newer recommendation version
 
-Preservation applies to whole cells, which has a consequence worth stating
-plainly: when a new recommendation version adds candidates to a tier you have
-already populated, re-running adoption will not give them to you. The existing
-cell is kept intact rather than merged candidate by candidate. Removals are not
-propagated either.
+A new bundled recommendation does not change an adopted config by itself.
+To update the chosen scope, first preview its affected cells:
 
-To pick up a new version, compare your
-`workflow.dispatchCeiling.recommendationVersion` against the bundled version,
-then either edit the affected cells by hand or clear them and re-adopt.
+```bash
+oat config adopt dispatch-matrix --user --dry-run
+```
+
+Run the same command without `--dry-run` to replace bundled cells. Use
+`--shared` or `--local` instead when that scope owns the ladder. Add
+`--keep-existing` to fill only missing cells and preserve existing choices.
 
 Version `2026-09-25.1` is the current bundled recommendation. It prefers
 GPT-6 Luna and Sol in Codex, then Sol xhigh, Astra high, and Astra xhigh in
@@ -96,9 +101,10 @@ Balanced, and Fable 5.1 thinking high replaces Fable 5 as Frontier's terminal
 target. The ordering is an explicit user-directed preference informed by
 vendor benchmarks and the model-selection matrix, not a local workload
 comparison. Grok 4.5 and Fable 5 stay supported for explicit configurations.
-Rerunning adoption preserves any
-explicit older cell unchanged. For the complete maintenance
-procedure, see [Updating Model Guidance](../../contributing/updating-model-guidance.md).
+Rerunning adoption replaces the bundled cells in the chosen scope; use
+`--keep-existing` to preserve explicit older cells. For the complete
+maintenance procedure, see
+[Updating Model Guidance](../../contributing/updating-model-guidance.md).
 
 The terminal Fable target may require model access from the executing provider.
 The adopting organization is responsible for confirming its applicable
