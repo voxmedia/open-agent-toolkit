@@ -61,7 +61,11 @@ function config(policy = 'high', matrix = completeClaudeMatrix()) {
     version: 1,
     workflow: {
       dispatchPolicy: { mode: 'managed', policy },
-      dispatchCeiling: { providers: { claude: matrix } },
+      // Keep the fixture complete so a developer's user-level matrix cannot
+      // fill missing tiers and change the ordering under test.
+      dispatchCeiling: {
+        providers: { claude: { ...completeClaudeMatrix(), ...matrix } },
+      },
     },
   };
 }
@@ -452,7 +456,10 @@ test('versioned capabilities fail closed while model-only and inherit paths rema
 
   const modelOnly = resolveDispatch(
     config('balanced', {
+      economy: { candidates: ['haiku'] },
       balanced: { candidates: ['sonnet'] },
+      high: { candidates: ['opus'] },
+      frontier: { candidates: ['fable'] },
     }),
     [
       '--provider',
