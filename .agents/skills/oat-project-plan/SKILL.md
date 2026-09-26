@@ -6,7 +6,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.4.14
+  version: 1.4.15
 ---
 
 # Planning Phase
@@ -408,9 +408,9 @@ recommendation and ask the user to choose the owning scope before running
 exactly one of:
 
 ```bash
-oat config adopt dispatch-matrix --shared
-oat config adopt dispatch-matrix --local
-oat config adopt dispatch-matrix --user
+oat config adopt dispatch-matrix --shared --keep-existing
+oat config adopt dispatch-matrix --local --keep-existing
+oat config adopt dispatch-matrix --user --keep-existing
 ```
 
 Adoption fills missing cells but preserves explicit values. Re-run the resolver

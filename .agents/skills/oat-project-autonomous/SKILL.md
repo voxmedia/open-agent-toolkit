@@ -6,7 +6,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: 1.0.16
+  version: 1.0.17
 ---
 
 # Autonomous OAT Project
@@ -375,7 +375,7 @@ provider scalar or is shadowed by one at higher precedence, and block without
 mutation only when no authorized adoption-compatible scope remains. Existing
 explicit matrix cells are preserved by adoption; their provenance does not
 choose the persistence scope. Run exactly one matching
-`oat config adopt dispatch-matrix` command and re-run the reviewer preflight.
+`oat config adopt dispatch-matrix --keep-existing` command and re-run the reviewer preflight.
 Block when the ladder remains incomplete after adoption.
 
 At every required artifact or code review:

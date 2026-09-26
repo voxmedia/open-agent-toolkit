@@ -2512,7 +2512,12 @@ describe('oat config', () => {
         },
       });
 
-      await runCommand(command, ['adopt', 'dispatch-matrix', '--shared']);
+      await runCommand(command, [
+        'adopt',
+        'dispatch-matrix',
+        '--shared',
+        '--keep-existing',
+      ]);
 
       const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
       expect(JSON.parse(raw)).toMatchObject({
@@ -2848,7 +2853,12 @@ describe('oat config', () => {
         },
       });
 
-      await runCommand(command, ['adopt', 'dispatch-matrix', '--shared']);
+      await runCommand(command, [
+        'adopt',
+        'dispatch-matrix',
+        '--shared',
+        '--keep-existing',
+      ]);
       expect(process.exitCode).toBe(0);
 
       const raw = JSON.parse(
@@ -2908,7 +2918,12 @@ describe('oat config', () => {
         },
       });
 
-      await runCommand(command, ['adopt', 'dispatch-matrix', '--shared']);
+      await runCommand(command, [
+        'adopt',
+        'dispatch-matrix',
+        '--shared',
+        '--keep-existing',
+      ]);
 
       expect(capture.info.join('\n')).not.toContain(
         'terminal-reviewer-eligibility',
@@ -3249,7 +3264,12 @@ describe('oat config', () => {
         },
       });
 
-      await runCommand(command, ['adopt', 'dispatch-matrix', '--shared']);
+      await runCommand(command, [
+        'adopt',
+        'dispatch-matrix',
+        '--shared',
+        '--keep-existing',
+      ]);
 
       const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
       expect(JSON.parse(raw)).toMatchObject({
@@ -3500,13 +3520,18 @@ describe('oat config', () => {
         },
       });
 
-      await runCommand(command, ['adopt', 'dispatch-matrix', '--shared']);
+      await runCommand(command, [
+        'adopt',
+        'dispatch-matrix',
+        '--shared',
+        '--keep-existing',
+      ]);
 
       const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
       expect(JSON.parse(raw)).toMatchObject({
         workflow: {
           dispatchCeiling: {
-            recommendationVersion: 'new',
+            recommendationVersion: 'old',
             providers: {
               cursor: {
                 economy: { candidates: ['recommended-economy'] },
@@ -3525,10 +3550,13 @@ describe('oat config', () => {
         },
       });
       expect(capture.error).toHaveLength(0);
+      expect(capture.warn.join('\n')).toContain(
+        'Recommendation version remains old',
+      );
       expect(process.exitCode).toBe(0);
     });
 
-    it('preserves a populated Codex Frontier cell while adopting the new recommendation version', async () => {
+    it('preserves a populated Codex Frontier cell without restamping a divergent partial adoption', async () => {
       const root = await createRepoRoot();
       const existingFrontier = {
         candidates: [{ harness: 'codex', model: 'gpt-6-sol', effort: 'max' }],
@@ -3559,13 +3587,18 @@ describe('oat config', () => {
         },
       });
 
-      await runCommand(command, ['adopt', 'dispatch-matrix', '--shared']);
+      await runCommand(command, [
+        'adopt',
+        'dispatch-matrix',
+        '--shared',
+        '--keep-existing',
+      ]);
 
       const adopted = JSON.parse(
         await readFile(join(root, '.oat', 'config.json'), 'utf8'),
       );
       expect(adopted.workflow.dispatchCeiling).toMatchObject({
-        recommendationVersion: '2026-09-25.1',
+        recommendationVersion: 'old',
         providers: { codex: { frontier: existingFrontier } },
       });
       expect(process.exitCode).toBe(0);
@@ -3646,7 +3679,12 @@ describe('oat config', () => {
         };
         const { command, capture } = createHarness(harnessOptions);
 
-        await runCommand(command, ['adopt', 'dispatch-matrix', scope]);
+        await runCommand(command, [
+          'adopt',
+          'dispatch-matrix',
+          scope,
+          '--keep-existing',
+        ]);
         const firstSerialized = await readFile(target, 'utf8');
         const adopted = JSON.parse(firstSerialized);
         expect(adopted.workflow.dispatchCeiling.providers.claude).toMatchObject(
@@ -3660,11 +3698,16 @@ describe('oat config', () => {
           },
         );
         expect(adopted.workflow.dispatchCeiling.recommendationVersion).toBe(
-          'new',
+          'old',
         );
 
         const second = createHarness(harnessOptions);
-        await runCommand(second.command, ['adopt', 'dispatch-matrix', scope]);
+        await runCommand(second.command, [
+          'adopt',
+          'dispatch-matrix',
+          scope,
+          '--keep-existing',
+        ]);
         expect(await readFile(target, 'utf8')).toBe(firstSerialized);
         expect(capture.error).toEqual([]);
         expect(second.capture.error).toEqual([]);
@@ -3672,7 +3715,7 @@ describe('oat config', () => {
       },
     );
 
-    it('preserves explicit values even when --yes is supplied', async () => {
+    it('preserves explicit values without restamping when --yes fills no cells', async () => {
       const root = await createRepoRoot();
       await writeFile(
         join(root, '.oat', 'config.json'),
@@ -3687,7 +3730,7 @@ describe('oat config', () => {
         })}\n`,
         'utf8',
       );
-      const { command } = createHarness({
+      const { command, capture } = createHarness({
         cwd: root,
         confirmResponses: [true],
         validateMatrixCell: vi.fn(async () => 'valid' as const),
@@ -3705,19 +3748,274 @@ describe('oat config', () => {
         'dispatch-matrix',
         '--shared',
         '--yes',
+        '--keep-existing',
       ]);
 
       const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
       expect(JSON.parse(raw)).toMatchObject({
         workflow: {
           dispatchCeiling: {
-            recommendationVersion: 'new',
+            recommendationVersion: 'old',
             providers: {
-              cursor: { high: { candidates: ['existing-model'] } },
+              cursor: { high: 'existing-model' },
             },
           },
         },
       });
+      expect(capture.info[0]).toContain('No missing dispatch matrix cells');
+      expect(capture.warn[0]).toContain(
+        'workflow.dispatchCeiling.providers.cursor.high',
+      );
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('reports preserved differences in JSON without changing a full matrix or its stamp', async () => {
+      const root = await createRepoRoot();
+      const existing = {
+        version: 1,
+        workflow: {
+          dispatchCeiling: {
+            recommendationVersion: 'old',
+            providers: {
+              codex: {
+                high: {
+                  candidates: [
+                    { harness: 'codex', model: 'gpt-5.6-sol', effort: 'high' },
+                  ],
+                },
+              },
+              claude: { frontier: { candidates: ['fable'] } },
+            },
+          },
+        },
+      };
+      const configPath = join(root, '.oat', 'config.json');
+      const original = `${JSON.stringify(existing)}\n`;
+      await writeFile(configPath, original, 'utf8');
+      const { command, capture } = createHarness({
+        cwd: root,
+        validateMatrixCell: vi.fn(async () => 'valid' as const),
+        assetFiles: {
+          '/tmp/assets/config/dispatch-matrix-recommendation.json':
+            JSON.stringify({
+              version: 'new',
+              providers: {
+                codex: {
+                  high: {
+                    candidates: [
+                      { harness: 'codex', model: 'gpt-6-sol', effort: 'high' },
+                    ],
+                  },
+                },
+                claude: { frontier: { candidates: ['fable'] } },
+              },
+            }),
+        },
+      });
+
+      await runCommand(
+        command,
+        ['adopt', 'dispatch-matrix', '--shared', '--keep-existing'],
+        ['--json'],
+      );
+
+      expect(await readFile(configPath, 'utf8')).toBe(original);
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        value: 'new',
+        currentVersion: 'old',
+        versionWritten: false,
+        filledCells: [],
+        preservedCells: [
+          'workflow.dispatchCeiling.providers.codex.high',
+          'workflow.dispatchCeiling.providers.claude.frontier',
+        ],
+        differingCells: ['workflow.dispatchCeiling.providers.codex.high'],
+      });
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('previews and replaces bundled cells by default while retaining extra cells', async () => {
+      const root = await createRepoRoot();
+      const configPath = join(root, '.oat', 'config.json');
+      const original = `${JSON.stringify({
+        version: 1,
+        workflow: {
+          dispatchCeiling: {
+            recommendationVersion: 'old',
+            providers: {
+              codex: {
+                high: {
+                  candidates: [
+                    { harness: 'codex', model: 'gpt-5.6-sol', effort: 'high' },
+                  ],
+                },
+                frontier: {
+                  candidates: [
+                    { harness: 'codex', model: 'gpt-6-astra', effort: 'max' },
+                  ],
+                },
+              },
+            },
+          },
+        },
+      })}\n`;
+      await writeFile(configPath, original, 'utf8');
+      const harnessOptions = {
+        cwd: root,
+        validateMatrixCell: vi.fn(async () => 'valid' as const),
+        assetFiles: {
+          '/tmp/assets/config/dispatch-matrix-recommendation.json':
+            JSON.stringify({
+              version: 'new',
+              providers: {
+                codex: {
+                  balanced: {
+                    candidates: [
+                      {
+                        harness: 'codex',
+                        model: 'gpt-6-luna',
+                        effort: 'xhigh',
+                      },
+                    ],
+                  },
+                  high: {
+                    candidates: [
+                      { harness: 'codex', model: 'gpt-6-sol', effort: 'high' },
+                    ],
+                  },
+                },
+              },
+            }),
+        },
+      };
+      const preview = createHarness(harnessOptions);
+      await runCommand(
+        preview.command,
+        ['adopt', 'dispatch-matrix', '--shared', '--dry-run'],
+        ['--json'],
+      );
+      expect(await readFile(configPath, 'utf8')).toBe(original);
+      expect(preview.capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        dryRun: true,
+        versionWritten: false,
+        currentVersion: 'old',
+        filledCells: ['workflow.dispatchCeiling.providers.codex.balanced'],
+        replacedCells: ['workflow.dispatchCeiling.providers.codex.high'],
+      });
+
+      const applied = createHarness(harnessOptions);
+      await runCommand(applied.command, [
+        'adopt',
+        'dispatch-matrix',
+        '--shared',
+      ]);
+      expect(JSON.parse(await readFile(configPath, 'utf8'))).toMatchObject({
+        workflow: {
+          dispatchCeiling: {
+            recommendationVersion: 'new',
+            providers: {
+              codex: {
+                balanced: {
+                  candidates: [
+                    { harness: 'codex', model: 'gpt-6-luna', effort: 'xhigh' },
+                  ],
+                },
+                high: {
+                  candidates: [
+                    { harness: 'codex', model: 'gpt-6-sol', effort: 'high' },
+                  ],
+                },
+                frontier: {
+                  candidates: [
+                    { harness: 'codex', model: 'gpt-6-astra', effort: 'max' },
+                  ],
+                },
+              },
+            },
+          },
+        },
+      });
+      expect(applied.capture.info.join('\n')).toContain(
+        'workflow.dispatchCeiling.providers.codex.high',
+      );
+      expect(applied.capture.warn[0]).toContain(
+        'Replacing 1 populated dispatch matrix cells',
+      );
+
+      await writeFile(configPath, original, 'utf8');
+      const appliedJson = createHarness(harnessOptions);
+      await runCommand(
+        appliedJson.command,
+        ['adopt', 'dispatch-matrix', '--shared'],
+        ['--json'],
+      );
+      expect(appliedJson.capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        replacedCells: ['workflow.dispatchCeiling.providers.codex.high'],
+        warnings: [expect.stringContaining('Replaced 1 populated')],
+      });
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('reports custom tiers removed by a whole-provider scalar replacement', async () => {
+      const root = await createRepoRoot();
+      const configPath = join(root, '.oat', 'config.json');
+      await writeFile(
+        configPath,
+        `${JSON.stringify({
+          version: 1,
+          workflow: {
+            dispatchCeiling: {
+              providers: {
+                codex: {
+                  high: {
+                    candidates: [
+                      {
+                        harness: 'codex',
+                        model: 'gpt-5.6-sol',
+                        effort: 'high',
+                      },
+                    ],
+                  },
+                  frontier: {
+                    candidates: [
+                      { harness: 'codex', model: 'gpt-6-astra', effort: 'max' },
+                    ],
+                  },
+                },
+              },
+            },
+          },
+        })}\n`,
+        'utf8',
+      );
+      const { command, capture } = createHarness({
+        cwd: root,
+        validateMatrixCell: vi.fn(async () => 'valid' as const),
+        assetFiles: {
+          '/tmp/assets/config/dispatch-matrix-recommendation.json':
+            JSON.stringify({
+              version: 'new',
+              providers: { codex: 'high' },
+            }),
+        },
+      });
+
+      await runCommand(command, ['adopt', 'dispatch-matrix', '--shared']);
+
+      expect(JSON.parse(await readFile(configPath, 'utf8'))).toMatchObject({
+        workflow: {
+          dispatchCeiling: {
+            recommendationVersion: 'new',
+            providers: { codex: 'high' },
+          },
+        },
+      });
+      expect(capture.warn.join('\n')).toContain(
+        'workflow.dispatchCeiling.providers.codex.frontier',
+      );
       expect(process.exitCode).toBe(0);
     });
 

@@ -387,14 +387,14 @@ preference. For the full model, see
 
 ### Config keys
 
-| Key                                                    | Values                                                | Purpose                                                                                 |
-| ------------------------------------------------------ | ----------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| `workflow.dispatchPolicy.mode`                         | `managed`, `inherit`                                  | `managed` lets OAT select exact candidates; `inherit` leaves controls to the host       |
-| `workflow.dispatchPolicy.policy`                       | `economy`, `balanced`, `high`, `frontier`, `uncapped` | Default named maximum or explicit managed uncapped state                                |
-| `workflow.dispatchCeiling.providers.<provider>`        | tier map or legacy bare value                         | Reusable provider candidate column                                                      |
-| `workflow.dispatchCeiling.providers.<provider>.<tier>` | `candidates` cell, route, or legacy bare value        | One named tier in the provider ladder                                                   |
-| `workflow.dispatchCeiling.recommendationVersion`       | string                                                | Version written by `oat config adopt dispatch-matrix` for recommendation drift tracking |
-| `workflow.dispatchCeiling.preset`                      | `balanced`, `maximum`, `cost-conscious`               | Legacy policy setup alias                                                               |
+| Key                                                    | Values                                                | Purpose                                                                              |
+| ------------------------------------------------------ | ----------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `workflow.dispatchPolicy.mode`                         | `managed`, `inherit`                                  | `managed` lets OAT select exact candidates; `inherit` leaves controls to the host    |
+| `workflow.dispatchPolicy.policy`                       | `economy`, `balanced`, `high`, `frontier`, `uncapped` | Default named maximum or explicit managed uncapped state                             |
+| `workflow.dispatchCeiling.providers.<provider>`        | tier map or legacy bare value                         | Reusable provider candidate column                                                   |
+| `workflow.dispatchCeiling.providers.<provider>.<tier>` | `candidates` cell, route, or legacy bare value        | One named tier in the provider ladder                                                |
+| `workflow.dispatchCeiling.recommendationVersion`       | string                                                | Bundle version last written by adoption; does not prove the effective ladder matches |
+| `workflow.dispatchCeiling.preset`                      | `balanced`, `maximum`, `cost-conscious`               | Legacy policy setup alias                                                            |
 
 ### Adopt a complete ladder
 
@@ -406,14 +406,20 @@ oat config adopt dispatch-matrix --local
 oat config adopt dispatch-matrix --user
 ```
 
-Adoption fills missing provider/tier cells and preserves explicit existing
-values. Planning shows the complete bundled recommendation before asking for
-this scope, then rechecks the effective ladder. If explicit cells still leave
-the ladder incomplete, readiness blocks; OAT does not overwrite them.
-`workflow.dispatchCeiling.recommendationVersion` describes only the bundled
-recommendation that was adopted. Dispatch targets, structured notices, and
-runtime disclosure come from the effective ladder after explicit cells have
-been preserved.
+Adoption replaces populated cells from the bundled recommendation in the
+chosen scope, fills missing cells, and keeps extra custom tier cells when
+the bundled provider remains a tier map. A bundled provider-level scalar
+replaces the whole provider, including its custom tiers. It warns about
+replaced and removed cells and reports their paths in human and JSON output. Preview with
+`oat config adopt dispatch-matrix --user --dry-run` before writing user defaults.
+Add `--keep-existing` when you want only missing cells filled; a fill-only run
+with no missing cells leaves the config and version unchanged. If it fills
+missing cells while preserving differences, it leaves the version unchanged. Planning uses
+`--keep-existing` after showing the complete bundle and asking for the owning
+scope. If the resulting effective ladder remains incomplete, readiness blocks.
+The version records the bundle last written by adoption, not whether the
+effective ladder matches it. Dispatch targets, structured notices, and runtime
+disclosure come from the effective ladder.
 
 A recommended Fable target may require model access from the executing
 provider. The adopting organization is responsible for confirming its
@@ -700,7 +706,7 @@ Workflow preference keys live under the `workflow.*` namespace:
 - `workflow.dispatchCeiling.preset` — legacy compatibility alias (`balanced`, `maximum`, or `cost-conscious`) for capped managed policy setup.
 - `workflow.dispatchCeiling.providers.<provider>` — dispatch matrix provider column or legacy bare provider target.
 - `workflow.dispatchCeiling.providers.<provider>.<tier>` — one matrix cell for `economy`, `balanced`, `high`, or `frontier`.
-- `workflow.dispatchCeiling.recommendationVersion` — version of the adopted recommended matrix.
+- `workflow.dispatchCeiling.recommendationVersion` — bundle version last written by adoption; not an effective-ladder parity indicator.
 - `workflow.gates.skills` / `workflow.gates.execTargets` — structured per-skill final gate commands and exec-target registry. Use `oat gate set`, `oat gate target set`, `oat gate review`, and `oat gate cross-provider-exec`; do not use `oat config set` for these objects.
 - `workflow.gateTimeouts.code` / `workflow.gateTimeouts.artifact` — validated default gate-review budgets in milliseconds. Both resolve through `local > shared > user`.
 

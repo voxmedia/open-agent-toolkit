@@ -6,7 +6,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 2.0.0
+  version: 2.0.1
 ---
 
 # OAT Doctor
@@ -111,7 +111,7 @@ Each finding is one line with an **area**, a **severity**, a one-line **summary*
 - `activeProject` or `lastPausedProject` set to a path that does not exist → `error`; fix `oat config set activeProject ''` / `oat config set lastPausedProject ''` (the CLI refuses `unset` for these two lifecycle keys). `activeIdea` set to a missing path → `error`; fix `oat config unset activeIdea --local` (or `--user` for a user-level value).
 - A set key whose `describe` entry carries `deprecated` → `warning`; summary names the key and its `deprecated.supersededBy`; when `deprecated.legacyValues` is present the finding fires only when the set value is one of those values; fix = the entry's `owningCommand` for the successor.
 - A key set on a surface that is not one of the surfaces its `describe` entry's `file` names → `warning`; fix `oat config unset <key> --<surface>` then `oat config set <key> <value> --<right surface>`.
-- The `dispatch-matrix` recommendation is reported only through the `project:dispatch_matrix` check (command 1, config area); there is no separate rule for it, so one gap is one finding. Its fix is `oat config adopt dispatch-matrix --shared`, and the config dive explains it from `workflow.dispatchCeiling.recommendationVersion` in the dump.
+- The `project:dispatch_matrix` check (command 1, config area) reports target availability, not parity with the bundled recommendation. Do not infer parity from `workflow.dispatchCeiling.recommendationVersion`: it identifies the bundle last written by adoption. In the config dive, `oat config adopt dispatch-matrix --shared --keep-existing` fills missing cells and reports preserved differences; a direct adoption without `--keep-existing` replaces bundled cells in the chosen scope, so preview it with `--dry-run`.
 - A documented key group with nothing set on any surface → one `info` per group, expanded only in the dive.
 - Synced project health: `project:synced_tracked_artifacts`, `project:synced_gitignore`, `project:synced_projects`, `project:synced_editor_hint`, and per-project `project:synced_<slug>_<kind>` checks from command 1 → severity from status, summary from the message; report them without treating an absent checkout as proof that no synced project exists (an absent checkout is materialized by `oat project pull`, which the check's message names).
 

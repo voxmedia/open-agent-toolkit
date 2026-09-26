@@ -7,7 +7,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.4.17
+  version: 1.4.18
 ---
 
 # Import External Plan
@@ -291,9 +291,9 @@ show the complete bundled recommendation and ask for its owning scope before
 running exactly one of:
 
 ```bash
-oat config adopt dispatch-matrix --shared
-oat config adopt dispatch-matrix --local
-oat config adopt dispatch-matrix --user
+oat config adopt dispatch-matrix --shared --keep-existing
+oat config adopt dispatch-matrix --local --keep-existing
+oat config adopt dispatch-matrix --user --keep-existing
 ```
 
 Adoption preserves explicit cells. Re-run the resolver and completeness check.

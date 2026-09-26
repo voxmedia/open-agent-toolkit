@@ -7,7 +7,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 2.3.15
+  version: 2.3.16
 ---
 
 # Quick Start Project
@@ -659,9 +659,9 @@ show the full bundled recommendation and ask the user to select its owning
 scope before running exactly one command:
 
 ```bash
-oat config adopt dispatch-matrix --shared
-oat config adopt dispatch-matrix --local
-oat config adopt dispatch-matrix --user
+oat config adopt dispatch-matrix --shared --keep-existing
+oat config adopt dispatch-matrix --local --keep-existing
+oat config adopt dispatch-matrix --user --keep-existing
 ```
 
 The selected scope owns only the reusable ladders. A project-specific active

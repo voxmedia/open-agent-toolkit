@@ -108,11 +108,11 @@ Follow [Contributing Code](code.md) for the current validation and PR workflow.
 
 ## Adoption Is Separate
 
-The bundled ladder is a default for missing provider/tier cells. `oat config
-adopt dispatch-matrix --shared`, `--local`, or `--user` fills missing cells but
-does not replace populated explicit cells, even when its recommendation version
-changes. A user who wants the new model ordering must edit those cells or
-clear and re-adopt them deliberately. The active project's named ceiling is a
-separate policy in its `state.md`; a model update must not silently change it.
+A bundled ladder update does not mutate adopted user or repository config.
+`oat config adopt dispatch-matrix --shared`, `--local`, or `--user` replaces
+bundled cells in the chosen scope, with a warning and a `--dry-run` preview;
+extra custom cells remain. Add `--keep-existing` to fill only missing cells.
+The active project's named ceiling is a separate policy in its `state.md`;
+a model update must not silently change it.
 See [Dispatch Policy](../workflows/projects/dispatch-ceiling.md#ownership-and-adoption)
 for config precedence and examples.

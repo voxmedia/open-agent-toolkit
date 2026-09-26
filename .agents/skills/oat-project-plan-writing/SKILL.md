@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: false
 allowed-tools: Read, Write, Glob, Grep
 metadata:
-  version: 1.2.32
+  version: 1.2.33
 ---
 
 # Plan Writing Contract
@@ -129,11 +129,11 @@ In an interactive run, ask the user to select the owning scope explicitly
 before any adoption write:
 
 1. **Shared repository** - team-owned `.oat/config.json`; run
-   `oat config adopt dispatch-matrix --shared`.
+   `oat config adopt dispatch-matrix --shared --keep-existing`.
 2. **Repo-local checkout** - personal `.oat/config.local.json`; run
-   `oat config adopt dispatch-matrix --local`.
+   `oat config adopt dispatch-matrix --local --keep-existing`.
 3. **User** - cross-repository `~/.oat/config.json`; run
-   `oat config adopt dispatch-matrix --user`.
+   `oat config adopt dispatch-matrix --user --keep-existing`.
 4. **Do not adopt** - leave setup unresolved and block implementation
    readiness.
 
