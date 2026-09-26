@@ -1,10 +1,12 @@
 ---
-guidance_version: 2026-09-23
-last_verified: 2026-09-23
-review_after: 2026-12-22
+guidance_version: 2026-09-25
+last_verified: 2026-09-25
+review_after: 2026-12-24
 catalog_basis:
-  Cursor desktop 3.20.14 resolved all five Opus 5.5 effort selectors in native
-  subagent hooks; GPT-6 Sol/Luna were absent from the observed Cursor catalog
+  Cursor desktop 3.21.18 resolved Grok 4.6 and Fable 5.1 effort selectors in
+  native subagent hooks, and Grok 4.7 only as bare flat IDs; Cursor desktop
+  3.20.14 resolved all five Opus 5.5 effort selectors; GPT-6 Sol/Luna were
+  absent from the observed Cursor catalog
 ---
 
 # Cursor Model Selection
@@ -46,17 +48,18 @@ does not by itself prove lower user-observed elapsed time.
 
 Use currently approved exact aliases from the Cursor catalogue. On 2026-09-23,
 Cursor desktop 3.20.14 resolved all five `claude-opus-5-5[effort=...]`
-selectors to corresponding flat IDs in native hooks. See the
-probe record at `packages/cli/src/providers/cursor/codec/__fixtures__/README.md`.
+selectors to corresponding flat IDs in native hooks; on 2026-09-25, Cursor
+desktop 3.21.18 did the same for Grok 4.6 and Fable 5.1. See the
+probe records at `packages/cli/src/providers/cursor/codec/__fixtures__/README.md`.
 GPT-6 Sol/Luna were absent from the observed Cursor catalogue, so their Codex
 availability does not authorize Cursor routes.
 
 | Task class               | Default                                                             | Economy                                            | Escalation                                                  | Floor notes                                                                                                      |
 | ------------------------ | ------------------------------------------------------------------- | -------------------------------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | `mechanical-recon`       | `composer-2.5`                                                      | Same with mechanical verification                  | `gpt-5.6-luna-high`                                         | Fast aliases select service tier, not capability.                                                                |
-| `intelligent-recon`      | `cursor-grok-4.5-medium` or `gpt-5.6-sol-medium`                    | `gpt-5.6-terra-high`                               | `gpt-5.6-sol-high`                                          | Verify silent-miss-prone conclusions.                                                                            |
-| `default-implementation` | `gpt-5.6-sol-medium`                                                | `composer-2.5` for bounded, testable changes       | `gpt-5.6-sol-high`                                          | `cursor-grok-4.5-medium` remains an available judgment-heavy alternative.                                        |
-| `hard-reasoning`         | `gpt-5.6-sol-high`                                                  | `cursor-grok-4.5-high` with corroborating evidence | `gpt-5.6-sol-xhigh`                                         | Opus 5.5 high/xhigh are verified cross-family alternatives; qualify task performance separately.                 |
+| `intelligent-recon`      | `cursor-grok-4.6-medium` or `gpt-5.6-sol-medium`                    | `gpt-5.6-terra-high`                               | `gpt-5.6-sol-high`                                          | Verify silent-miss-prone conclusions.                                                                            |
+| `default-implementation` | `gpt-5.6-sol-medium`                                                | `composer-2.5` for bounded, testable changes       | `gpt-5.6-sol-high`                                          | `cursor-grok-4.6-medium` or `-high` is the Cursor-native alternative by difficulty.                              |
+| `hard-reasoning`         | `gpt-5.6-sol-high`                                                  | `cursor-grok-4.6-high` with corroborating evidence | `gpt-5.6-sol-xhigh`                                         | Opus 5.5 high/xhigh and Fable 5.1 thinking high are verified alternatives; qualify task performance separately.  |
 | `consequential`          | An eligible high-effort author with independent cross-family review | No routine economy route                           | Sol xhigh for a depth bottleneck; max only after evaluation | If independent review cannot be met among approved Cursor mappings, use a separately qualified provider or stop. |
 
 ## Current Opus 5.5 Pin Evidence
@@ -70,6 +73,25 @@ agreed for every rung. The Sonnet 5 high positive control resolved to
 `claude-opus-5-5-medium`. The provenance summary at `packages/cli/src/providers/cursor/codec/__fixtures__/README.md`
 links the adjacent redacted summary and native-event JSONL records containing
 the exact observations. Recheck live availability before launch.
+
+## Current Grok 4.6, Fable 5.1, and Grok 4.7 Pin Evidence
+
+Cursor desktop 3.21.18 resolved `grok-4.6[effort=low|medium|high|xhigh,fast=false]`
+to `cursor-grok-4.6-low|medium|high|xhigh` and
+`claude-fable-5-1[effort=low|medium|high|xhigh|max]` to
+`claude-fable-5-1-thinking-low|medium|high|xhigh|max` on 2026-09-25, with the
+subagent Shell `preToolUse.model` agreeing for every rung. Fable 5.1 selectors
+always resolve to thinking variants; its unknown-effort control fell back to
+`claude-fable-5-1-thinking-high`. Sonnet 5 high and Grok 4.5 high positive
+controls reproduced their approved mappings, and the unknown-family control
+fell back to the account default, `grok-4.7-high-fast`.
+
+Grok 4.7 has no approved mapping. Every bracket spelling tried
+(`grok-4.7[effort=...]` with and without `fast`, `reasoning=`, and
+`grok-4-7[...]`) fell back to that same account default, which is easy to
+mistake for success because it is itself a Grok 4.7 model. Only bare flat IDs
+such as `grok-4.7-medium` resolved as requested, and the approved catalogue
+does not emit bare IDs. Do not pin Grok 4.7 until a mapping is approved.
 
 ## Historical Opus Cursor Probe Evidence (Retired)
 
@@ -133,21 +155,28 @@ and non-thinking variants.
 
 ## Broader Cursor Routes
 
-- `cursor-grok-4.5-medium`: primary alternative for intelligent recon and
+- `cursor-grok-4.6-medium`: primary alternative for intelligent recon and
   general implementation; strong for code exploration, brainstorming, research
   synthesis, debugging, broad knowledge work, and judgment-heavy tool
-  workflows.
-- `cursor-grok-4.5-high`: economy route for hard reasoning, architecture,
-  ambiguous debugging, and incident diagnosis.
-- `cursor-grok-4.5-low`: simpler tool workflows; prefer `composer-2.5` for
+  workflows. Prefer medium to xhigh by default: medium scores higher on
+  DeepSWE at lower cost and runtime.
+- `cursor-grok-4.6-high`: economy route for hard reasoning, architecture,
+  ambiguous debugging, and incident diagnosis. Use xhigh only after an effort
+  comparison shows it helps.
+- `cursor-grok-4.6-low`: simpler tool workflows; prefer `composer-2.5` for
   highly mechanical work on cost.
+- `cursor-grok-4.5-*`: still approved for explicit configurations, superseded
+  by Grok 4.6 in the bundled preference.
 - Grok is never the sole final authority for a consequential factual, security,
   incident, or architectural conclusion. Require tool evidence, citations,
   logs, query results, or file references for load-bearing Grok claims, or
   pair it with an eligible independent cross-family reviewer.
 - CursorBench caveat: Cursor disclosed that Cursor repository data entered
-  Grok 4.5's training mixture. Treat its ranking as evidence of
-  competitiveness, not proof of superiority over nearby frontier models.
+  Grok 4.5's training mixture. Do not carry that caveat onto Grok 4.6, whose
+  CursorBench results are current but still harness-specific evidence.
+- `claude-fable-5-1-thinking-high`: eligible specialist for hard reasoning and
+  the bundled Frontier terminal target; xhigh only for evaluated long-horizon
+  work. Cursor lists Fable as "NO ZDR"; confirm retention eligibility.
 - `claude-sonnet-5-thinking-high`: strong provider-diversity alternative for
   normal implementation and agentic work when available.
 - `gpt-5.4-mini-medium`: economical general tool and coding worker.

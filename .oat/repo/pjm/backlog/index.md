@@ -4,6 +4,11 @@
 
 ## Curated Overview
 
+- 2026-09-25: `BL-260925-add-grok-4-7-cursor-pin` records a deferred Cursor
+  pin gap. Grok 4.7 resolves only bare flat IDs, which
+  `DR-260718-explicit-cursor-pin-mapping` does not allow, and its quality
+  versus Grok 4.6 is still unsettled. The bundled Cursor ladder moved to
+  Grok 4.6 and Fable 5.1 in the same change.
 - 2026-09-15: `BL-260911-make-oat-doctor` shipped through `oat-doctor-router`
   (PR #300): `oat-doctor` is now one collaborative router over config, PJM,
   agent instructions, docs, and tools. Its docs dive hands off to
@@ -298,6 +303,7 @@
 | BL-260708-verify-cursor-gpt-5-6-subagent | Verify Cursor GPT-5.6 subagent model slugs                                                            | open   | medium   | task       | S        |
 | BL-260830-wire-bounded-durable-reference | Wire bounded durable-reference reads into lifecycle skills                                            | open   | medium   | feature    | M        |
 | BL-260830-wire-provide-remote-skills     | Wire provide-remote skills to the review-remote helper CLI                                            | open   | medium   | feature    | L        |
+| BL-260925-add-grok-4-7-cursor-pin        | Add Grok 4.7 Cursor pin mappings                                                                      | open   | low      | task       | S        |
 | BL-260909-add-a-grep-by-shape-control    | Add a grep-by-shape control for own-key sweeps keyed to variable names                                | open   | low      | task       | S        |
 | BL-260830-add-per-claude-md-adoption-opt | Add per-CLAUDE.md adoption opt-out for instruction sync                                               | open   | low      | feature    | M        |
 | BL-260728-additional-visual-workflows    | Additional visual workflows                                                                           | open   | low      | feature    | L        |

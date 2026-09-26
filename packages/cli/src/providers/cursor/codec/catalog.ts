@@ -192,6 +192,66 @@ export const CURSOR_MODEL_PIN_MAPPINGS = [
     { catalogue: false },
   ),
   approvedMapping(
+    'cursor-grok-4.6-low',
+    'grok-4.6[effort=low,fast=false]',
+    'grok-effort-fast',
+    {
+      probeName: 'zz-pin-probe-grok46-low',
+      probeRecord: {
+        submittedSelector: 'grok-4.6[effort=low,fast=false]',
+        resolvedModel: 'cursor-grok-4.6-low',
+        verifiedAt: '2026-09-25',
+        evidencePath:
+          'packages/cli/src/providers/cursor/codec/__fixtures__/README.md',
+      },
+    },
+  ),
+  approvedMapping(
+    'cursor-grok-4.6-medium',
+    'grok-4.6[effort=medium,fast=false]',
+    'grok-effort-fast',
+    {
+      probeName: 'zz-pin-probe-grok46-medium',
+      probeRecord: {
+        submittedSelector: 'grok-4.6[effort=medium,fast=false]',
+        resolvedModel: 'cursor-grok-4.6-medium',
+        verifiedAt: '2026-09-25',
+        evidencePath:
+          'packages/cli/src/providers/cursor/codec/__fixtures__/README.md',
+      },
+    },
+  ),
+  approvedMapping(
+    'cursor-grok-4.6-high',
+    'grok-4.6[effort=high,fast=false]',
+    'grok-effort-fast',
+    {
+      probeName: 'zz-pin-probe-grok46-high',
+      probeRecord: {
+        submittedSelector: 'grok-4.6[effort=high,fast=false]',
+        resolvedModel: 'cursor-grok-4.6-high',
+        verifiedAt: '2026-09-25',
+        evidencePath:
+          'packages/cli/src/providers/cursor/codec/__fixtures__/README.md',
+      },
+    },
+  ),
+  approvedMapping(
+    'cursor-grok-4.6-xhigh',
+    'grok-4.6[effort=xhigh,fast=false]',
+    'grok-effort-fast',
+    {
+      probeName: 'zz-pin-probe-grok46-xhigh',
+      probeRecord: {
+        submittedSelector: 'grok-4.6[effort=xhigh,fast=false]',
+        resolvedModel: 'cursor-grok-4.6-xhigh',
+        verifiedAt: '2026-09-25',
+        evidencePath:
+          'packages/cli/src/providers/cursor/codec/__fixtures__/README.md',
+      },
+    },
+  ),
+  approvedMapping(
     'gpt-5.6-terra-high',
     'gpt-5.6-terra[reasoning=high]',
     'gpt-reasoning',
@@ -221,6 +281,81 @@ export const CURSOR_MODEL_PIN_MAPPINGS = [
     'claude-fable-5[effort=xhigh]',
     'claude-effort',
     { catalogue: false },
+  ),
+  approvedMapping(
+    'claude-fable-5-1-thinking-low',
+    'claude-fable-5-1[effort=low]',
+    'claude-effort',
+    {
+      probeName: 'zz-pin-probe-fable51-low',
+      probeRecord: {
+        submittedSelector: 'claude-fable-5-1[effort=low]',
+        resolvedModel: 'claude-fable-5-1-thinking-low',
+        verifiedAt: '2026-09-25',
+        evidencePath:
+          'packages/cli/src/providers/cursor/codec/__fixtures__/README.md',
+      },
+    },
+  ),
+  approvedMapping(
+    'claude-fable-5-1-thinking-medium',
+    'claude-fable-5-1[effort=medium]',
+    'claude-effort',
+    {
+      probeName: 'zz-pin-probe-fable51-medium',
+      probeRecord: {
+        submittedSelector: 'claude-fable-5-1[effort=medium]',
+        resolvedModel: 'claude-fable-5-1-thinking-medium',
+        verifiedAt: '2026-09-25',
+        evidencePath:
+          'packages/cli/src/providers/cursor/codec/__fixtures__/README.md',
+      },
+    },
+  ),
+  approvedMapping(
+    'claude-fable-5-1-thinking-high',
+    'claude-fable-5-1[effort=high]',
+    'claude-effort',
+    {
+      probeName: 'zz-pin-probe-fable51-high',
+      probeRecord: {
+        submittedSelector: 'claude-fable-5-1[effort=high]',
+        resolvedModel: 'claude-fable-5-1-thinking-high',
+        verifiedAt: '2026-09-25',
+        evidencePath:
+          'packages/cli/src/providers/cursor/codec/__fixtures__/README.md',
+      },
+    },
+  ),
+  approvedMapping(
+    'claude-fable-5-1-thinking-xhigh',
+    'claude-fable-5-1[effort=xhigh]',
+    'claude-effort',
+    {
+      probeName: 'zz-pin-probe-fable51-xhigh',
+      probeRecord: {
+        submittedSelector: 'claude-fable-5-1[effort=xhigh]',
+        resolvedModel: 'claude-fable-5-1-thinking-xhigh',
+        verifiedAt: '2026-09-25',
+        evidencePath:
+          'packages/cli/src/providers/cursor/codec/__fixtures__/README.md',
+      },
+    },
+  ),
+  approvedMapping(
+    'claude-fable-5-1-thinking-max',
+    'claude-fable-5-1[effort=max]',
+    'claude-effort',
+    {
+      probeName: 'zz-pin-probe-fable51-max',
+      probeRecord: {
+        submittedSelector: 'claude-fable-5-1[effort=max]',
+        resolvedModel: 'claude-fable-5-1-thinking-max',
+        verifiedAt: '2026-09-25',
+        evidencePath:
+          'packages/cli/src/providers/cursor/codec/__fixtures__/README.md',
+      },
+    },
   ),
   approvedMapping(
     'gpt-5.6-sol-xhigh',

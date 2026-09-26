@@ -66,6 +66,26 @@ the adjacent redacted summary and 32-event native JSONL records in the OAT
 repository. Re-run this procedure for a new family or changed
 provider behavior.
 
+The 2026-09-25 probe on Cursor 3.21.18 approved Grok 4.6
+(`grok-4.6[effort=...,fast=false]`) and Fable 5.1
+(`claude-fable-5-1[effort=...]`, which always resolves to the `-thinking-`
+flat IDs). It also found a family that ignores bracket selectors entirely:
+every Grok 4.7 bracket spelling tried resolved to `grok-4.7-high-fast`, the
+account default that the unknown-family control also received, while bare
+flat IDs such as `grok-4.7-medium` resolved exactly. Two lessons follow:
+
+- **Do not assume a new version keeps its predecessor's selector syntax.**
+  Probe the syntax, not just the rungs.
+- **A fallback can look like success.** When the account default belongs to
+  the family under test, compare every subject row with the unknown-family
+  control and probe non-default rungs. Here even `effort=low,fast=false`
+  landed on the high-fast default.
+
+Approved mappings are bracket-form only
+(`DR-260718-explicit-cursor-pin-mapping`), so Grok 4.7 has no mapping until
+that decision is revisited. The redacted evidence is in the same fixtures
+directory.
+
 ## Prerequisites
 
 - Cursor desktop app, with the repository open as a workspace.
