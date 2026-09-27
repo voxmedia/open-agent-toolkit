@@ -2066,13 +2066,115 @@ export async function readOatLocalConfig(
   }
 }
 
+/**
+ * Reads the existing config file as plain JSON for ordering and no-op checks.
+ *
+ * Deliberately bypasses the normalizer, which throws on the malformed values
+ * repair flows exist to remove. A missing or unparsable file yields
+ * `undefined`, so the caller always writes it.
+ */
+async function readRawJsonForWrite(filePath: string): Promise<unknown> {
+  let raw: string;
+  try {
+    raw = await readFile(filePath, 'utf8');
+  } catch {
+    return undefined;
+  }
+  try {
+    return JSON.parse(raw) as unknown;
+  } catch {
+    return undefined;
+  }
+}
+
+function isPlainJsonObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/**
+ * Orders `value` like `template`, recursively: keys already present in the
+ * template keep their existing position, and new keys follow in the
+ * normalizer's order. Arrays keep their own element order.
+ */
+function orderLike(value: unknown, template: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((element, index) =>
+      orderLike(element, Array.isArray(template) ? template[index] : undefined),
+    );
+  }
+  if (!isPlainJsonObject(value)) return value;
+  const templateObject = isPlainJsonObject(template) ? template : {};
+  const ordered: Record<string, unknown> = {};
+  // Define rather than assign: a config key named `__proto__` is data and must
+  // never replace the output object's prototype.
+  const place = (key: string, next: unknown): void => {
+    Object.defineProperty(ordered, key, {
+      value: next,
+      enumerable: true,
+      writable: true,
+      configurable: true,
+    });
+  };
+  for (const key of Object.keys(templateObject)) {
+    if (Object.hasOwn(value, key) && value[key] !== undefined) {
+      place(key, orderLike(value[key], templateObject[key]));
+    }
+  }
+  for (const key of Object.keys(value)) {
+    if (!Object.hasOwn(ordered, key) && value[key] !== undefined) {
+      place(key, orderLike(value[key], undefined));
+    }
+  }
+  return ordered;
+}
+
+function jsonDeepEqual(left: unknown, right: unknown): boolean {
+  if (Array.isArray(left) || Array.isArray(right)) {
+    return (
+      Array.isArray(left) &&
+      Array.isArray(right) &&
+      left.length === right.length &&
+      left.every((element, index) => jsonDeepEqual(element, right[index]))
+    );
+  }
+  if (isPlainJsonObject(left) || isPlainJsonObject(right)) {
+    if (!isPlainJsonObject(left) || !isPlainJsonObject(right)) return false;
+    const leftKeys = Object.keys(left);
+    return (
+      leftKeys.length === Object.keys(right).length &&
+      leftKeys.every(
+        (key) =>
+          Object.hasOwn(right, key) && jsonDeepEqual(left[key], right[key]),
+      )
+    );
+  }
+  return Object.is(left, right);
+}
+
+/**
+ * Writes the shared config, preserving the existing file's key order and
+ * skipping writes that would not change its JSON value (GitHub #329, #311).
+ *
+ * Formatting-only differences (indentation, trailing newline) therefore leave
+ * the file byte-identical, while repairs, raw-disk removals, and rewrites of a
+ * malformed or unparsable file always land.
+ */
 export async function writeOatConfig(
   repoRoot: string,
   config: OatConfig,
 ): Promise<void> {
   const configPath = getConfigPath(repoRoot);
   const normalized = normalizeOatConfig(config, configPath);
-  await atomicWriteJson(configPath, normalized);
+  const existing = await readRawJsonForWrite(configPath);
+  // Round-trip through JSON so the comparison sees exactly what would be
+  // serialized (undefined-valued keys dropped).
+  const output = JSON.parse(
+    JSON.stringify(
+      existing === undefined ? normalized : orderLike(normalized, existing),
+    ),
+  ) as unknown;
+  if (existing !== undefined && jsonDeepEqual(existing, output)) return;
+  await atomicWriteJson(configPath, output);
 }
 
 export async function writeOatLocalConfig(

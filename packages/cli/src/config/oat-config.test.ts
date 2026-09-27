@@ -844,6 +844,132 @@ describe('oat-config', () => {
     });
   });
 
+  describe('writeOatConfig key order and no-op writes', () => {
+    // GitHub #329 / #311 (BL-260927-preserve-oat-config-json-key).
+    const configPathFor = (repoRoot: string) =>
+      join(repoRoot, '.oat', 'config.json');
+
+    it('leaves a file byte-identical when the write carries no semantic change', async () => {
+      const repoRoot = await createRepoRoot();
+      // `git` precedes `projects`, the reverse of the normalizer's order.
+      const raw = `${JSON.stringify(
+        {
+          version: 1,
+          git: { defaultBranch: 'main' },
+          projects: { root: '.oat/projects/shared' },
+          documentation: { tooling: 'fumadocs', root: 'apps/docs' },
+        },
+        null,
+        2,
+      )}\n`;
+      await writeFile(configPathFor(repoRoot), raw, 'utf8');
+
+      await writeOatConfig(repoRoot, await readOatConfig(repoRoot));
+
+      await expect(readFile(configPathFor(repoRoot), 'utf8')).resolves.toBe(
+        raw,
+      );
+    });
+
+    it('leaves a hand-formatted file byte-identical on a no-op write', async () => {
+      const repoRoot = await createRepoRoot();
+      const raw = JSON.stringify(
+        { git: { defaultBranch: 'main' }, version: 1 },
+        null,
+        4,
+      );
+      await writeFile(configPathFor(repoRoot), raw, 'utf8');
+
+      await writeOatConfig(repoRoot, await readOatConfig(repoRoot));
+
+      await expect(readFile(configPathFor(repoRoot), 'utf8')).resolves.toBe(
+        raw,
+      );
+    });
+
+    it('preserves the existing order of untouched keys recursively and appends new keys', async () => {
+      const repoRoot = await createRepoRoot();
+      await writeFile(
+        configPathFor(repoRoot),
+        `${JSON.stringify(
+          {
+            version: 1,
+            git: { defaultBranch: 'main' },
+            projects: { root: '.oat/projects/shared' },
+            documentation: { tooling: 'fumadocs', root: 'apps/docs' },
+          },
+          null,
+          2,
+        )}\n`,
+        'utf8',
+      );
+      const current = await readOatConfig(repoRoot);
+
+      await writeOatConfig(repoRoot, {
+        ...current,
+        documentation: {
+          ...current.documentation,
+          root: 'apps/site',
+          index: 'apps/site/index.md',
+        },
+        worktrees: { root: '.worktrees' },
+      });
+
+      const written = JSON.parse(
+        await readFile(configPathFor(repoRoot), 'utf8'),
+      ) as Record<string, Record<string, unknown>>;
+      expect(Object.keys(written)).toEqual([
+        'version',
+        'git',
+        'projects',
+        'documentation',
+        'worktrees',
+      ]);
+      expect(Object.keys(written.documentation!)).toEqual([
+        'tooling',
+        'root',
+        'index',
+      ]);
+      expect(written.documentation).toEqual({
+        tooling: 'fumadocs',
+        root: 'apps/site',
+        index: 'apps/site/index.md',
+      });
+    });
+
+    it('still writes a raw-disk removal of a warn-dropped value', async () => {
+      const repoRoot = await createRepoRoot();
+      await writeFile(
+        configPathFor(repoRoot),
+        `${JSON.stringify({
+          version: 1,
+          documentation: { root: 5, tooling: 'fumadocs' },
+        })}\n`,
+        'utf8',
+      );
+
+      await writeOatConfig(repoRoot, await readOatConfig(repoRoot));
+
+      expect(
+        JSON.parse(await readFile(configPathFor(repoRoot), 'utf8')),
+      ).toEqual({ version: 1, documentation: { tooling: 'fumadocs' } });
+    });
+
+    it('always rewrites an unparsable existing file', async () => {
+      const repoRoot = await createRepoRoot();
+      await writeFile(configPathFor(repoRoot), '{ not json', 'utf8');
+
+      await writeOatConfig(repoRoot, {
+        version: 1,
+        git: { defaultBranch: 'main' },
+      });
+
+      expect(
+        JSON.parse(await readFile(configPathFor(repoRoot), 'utf8')),
+      ).toEqual({ version: 1, git: { defaultBranch: 'main' } });
+    });
+  });
+
   it('reads and writes shared PJM remote policy and storage config', async () => {
     const repoRoot = await createRepoRoot();
 
