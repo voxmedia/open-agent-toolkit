@@ -83,28 +83,37 @@ observation recorded under p01-t01).
 
 ### Task p02-t01: Name the file in canonical rule parse errors and accept alwaysApply
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** f19a8d5bc
 
 ### Task p02-t02: Stop sync --scope all reporting "No changes required." beside a failed scope
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** eafaf8a51
 
 ### Task p02-t03: Validate the catalog-refresh policy in sync evidence
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 41bec1d0d
 
 ### Task p02-t04: Reject wrong-typed nested values in the strict pjm.remote reader
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 67e1f4e0d
 
 ### Task p02-t05: Preserve .oat/config.json key order and skip no-op writes
 
+**Status:** completed
+**Commit:** 9541287ad
+
+### Task p02-t06: (review) Close p02 review findings M1, M2, L1, L2, L3
+
 **Status:** pending
 **Commit:** -
+
+**Review received (p02, auto):** `reviews/archived/p02-review-2026-09-27T051543Z.md`
+at head `9541287ad`: 0 Critical, 0 High, 2 Medium, 3 Low. Disposition: all five
+converted to p02-t06.
 
 ---
 

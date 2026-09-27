@@ -732,6 +732,56 @@ git commit -m "fix(p02-t05): preserve config key order and skip no-op config wri
 
 ---
 
+### Task p02-t06: (review) Close p02 review findings M1, M2, L1, L2, L3
+
+Source: `reviews/archived/p02-review-2026-09-27T051543Z.md` (auto phase review,
+0 Critical, 0 High, 2 Medium, 3 Low).
+
+**Files:**
+
+- Modify: `packages/cli/src/config/oat-config.ts`, `oat-config.test.ts`
+- Modify: `apps/oat-docs/docs/cli-utilities/configuration.md`
+- Modify: `packages/cli/src/commands/sync/index.test.ts` (and `apply.ts` only
+  if a discriminating case needs it)
+- Modify: `packages/cli/src/commands/tools/shared/sync-evidence.ts` and its
+  test
+
+**Step 1: Write test (RED)**
+
+- M1: a config file with trailing commas stays byte-identical after a
+  same-value write; `writeOatConfig` reads the existing file with the same
+  tolerant parser as the config readers (`parseJsonConfig`).
+- L2: a wrong-typed `pjm.remote.schemaVersion` fails with the structure error
+  instead of silently dropping the remote tree.
+- L1: the backlog item requires a test that pins the `failed === 0` conjunct
+  across scopes; add a case that fails when that conjunct is removed, or, if no
+  output can depend on it after the fix, simplify the condition and record the
+  reason.
+
+**Step 2: Implement (GREEN)**
+
+Fix the above; correct `configuration.md` (exit code 1, and unknown keys are
+reported by path); make `sync-evidence.ts` reuse the registry's
+provenance-kind set and validation instead of a copy (L3).
+
+**Step 3: Refactor**
+
+None expected.
+
+**Step 4: Verify**
+
+Run: `HOME=$(mktemp -d) pnpm exec turbo run test --force --filter=@open-agent-toolkit/cli`
+Expected: pass.
+
+**Step 5: Commit**
+
+```bash
+git add packages/cli/src/config packages/cli/src/commands/sync packages/cli/src/commands/tools/shared apps/oat-docs/docs/cli-utilities/configuration.md
+git commit -m "fix(p02-t06): close p02 review findings for config parsing, docs, and sync evidence"
+```
+
+---
+
 ## Phase 3: Managed Claude dispatch-record input
 
 Backlog: `BL-260927-make-the-managed-claude` (GitHub #326). The journal
@@ -1133,7 +1183,7 @@ git commit -m "chore(p04-t03): record definition-of-done gate results"
 | Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target       |
 | ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------- |
 | p01    | code     | fixes_added     | 2026-09-27 | reviews/archived/p01-review-2026-09-27T051536Z.md           | 9bf1f8325d87d74201ff4749ae8058a1b2d43316 | auto       | -                 |
-| p02    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| p02    | code     | fixes_added     | 2026-09-27 | reviews/archived/p02-review-2026-09-27T051543Z.md           | 9541287ad041954c11233300301fe9edf36a8580 | auto       | -                 |
 | p03    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | p04    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | final  | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
@@ -1198,11 +1248,11 @@ different-family): `ok`, 0 Critical, 0 High, 0 Medium, 0 Low; received as
 **Summary:**
 
 - Phase 1: 4 tasks - Bundled skill and script fixes
-- Phase 2: 5 tasks - CLI sync, config, and tools correctness
+- Phase 2: 6 tasks - CLI sync, config, and tools correctness
 - Phase 3: 5 tasks - Managed Claude dispatch-record input
 - Phase 4: 3 tasks - Release and backlog fan-in
 
-**Total: 17 tasks**
+**Total: 18 tasks**
 
 Ready for code review and merge.
 
