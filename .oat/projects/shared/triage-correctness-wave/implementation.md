@@ -195,6 +195,17 @@ converted to p02-t06.
   entries
 - Ledger: settled by the root to `pending_attempt: null`, `used_attempts: 1`
 
+### Task p03-t06: (review) Close p03 review findings H1, M1, L1-L3
+
+**Status:** pending
+**Commit:** -
+
+**Review received (p03, auto):** `reviews/archived/p03-review-2026-09-27T061910Z.md`
+at head `c4ef806fb`: 0 Critical, 1 High, 1 Medium, 3 Low. H1 is a
+secret-echo regression in the single-run violation report (reproduced by the
+reviewer with the built CLI). All five converted to p03-t06; the implementer's
+three concerns were assessed as acceptable.
+
 ---
 
 ## Phase 4: Release and backlog fan-in

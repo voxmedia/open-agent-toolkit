@@ -1065,6 +1065,42 @@ git commit -m "docs(p03-t05): replace dispatch-record placeholders with the prod
 
 ---
 
+### Task p03-t06: (review) Close p03 review findings H1, M1, L1-L3
+
+Source: `reviews/archived/p03-review-2026-09-27T061910Z.md` (auto phase review,
+0 Critical, 1 High, 1 Medium, 3 Low).
+
+**Files:** `packages/cli/src/commands/project/dispatch/index.ts` (the shared
+error-redaction step) and `record.ts`, `packages/cli/src/providers/claude/dispatch-envelope.ts`,
+their tests; `.agents/skills/oat-project-implement/references/dispatch-and-dry-run.md`;
+`.agents/skills/oat-dispatch-subagents/references/record-schema.md` (versions
+already bumped in this PR).
+
+**Step 1 (RED):**
+
+- H1: a secret-looking token (for example a `ghp_…` value) in a rejected enum
+  field such as `recordBase.launch_status` or `event.evidence.tier` never
+  appears in the error output; the test fails when secret scrubbing is
+  disabled. Cover the older value-echoing messages (action/role conflict,
+  launch-variant mismatch) too.
+- M1: when a required `recordBase` field is missing, the report still runs or
+  explicitly names the skipped cross-field rules; payload variant/model checks
+  skipped by a failed payload parse are named on the skipped-checks line.
+
+**Step 2 (GREEN):** scrub secret patterns in the shared redaction step (reuse
+the existing sensitive-content detector) so no violation line echoes a secret;
+run or name every dependent check.
+
+**Step 3:** fix L1 (implement skill: show a `missing` result's recovery
+commands), L2 (`record-schema.md` "three keys" wording), L3 (regeneration note
+names the fixture layout that yields `<user>`/`<loaded>` tiers).
+
+**Step 4 (Verify):** `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/claude/ src/commands/project/dispatch/ src/providers/identity/ src/validation/skills.test.ts` then `pnpm build && node --test tools/smoke/verification/claude-effort-dispatch.test.mjs`
+
+**Step 5 (Commit):** `fix(p03-t06): scrub secrets from dispatch-record violation reports and name skipped checks`
+
+---
+
 ## Phase 4: Release and backlog fan-in
 
 ### Task p04-t01: Bump the lockstep public package versions
@@ -1212,7 +1248,7 @@ git commit -m "chore(p04-t03): record definition-of-done gate results"
 | p02    | code     | passed          | 2026-09-27 | reviews/archived/p02-review-2026-09-27T052321Z.md           | 8c4102a024e34fcea7f1ac451ed828b83063604d | auto       | -                 |
 | p02    | code     | received        | 2026-09-27 | reviews/archived/p02-review-2026-09-27T054138Z.md           | d6a7d00a866e3c96eab31a4f968da21e135bf167 | gate       | codex-6-sol-xhigh |
 | p02    | code     | passed          | 2026-09-27 | reviews/archived/p02-review-2026-09-27T054914Z.md           | 16b7b968c04f1a610d1537a7f979c933d02556d9 | gate       | codex-6-sol-xhigh |
-| p03    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| p03    | code     | fixes_added     | 2026-09-27 | reviews/archived/p03-review-2026-09-27T061910Z.md           | c4ef806fb7c5c1bcdc1e66f71f29a77c78b4a260 | auto       | -                 |
 | p04    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | final  | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
@@ -1294,10 +1330,10 @@ reviewer was Codex, so the achieved review was cross-family.
 
 - Phase 1: 5 tasks - Bundled skill and script fixes
 - Phase 2: 6 tasks - CLI sync, config, and tools correctness
-- Phase 3: 5 tasks - Managed Claude dispatch-record input
+- Phase 3: 6 tasks - Managed Claude dispatch-record input
 - Phase 4: 3 tasks - Release and backlog fan-in
 
-**Total: 19 tasks**
+**Total: 20 tasks**
 
 Ready for code review and merge.
 
