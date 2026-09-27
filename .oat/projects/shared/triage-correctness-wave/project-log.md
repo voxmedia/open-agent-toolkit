@@ -52,6 +52,10 @@ target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:
 
 target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/triage-correctness-wave/reviews/artifact-plan-review-2026-09-27T045257Z.md run=7eea2a8f-4bd2-4aba-a786-621c59a9bf71
 
+### 2026-09-27 · structural · oat gate review · p01
+
+target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/triage-correctness-wave/reviews/p01-review-2026-09-27T053801Z.md run=2d553f20-46af-49e9-bb41-e979d2e1425e
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
