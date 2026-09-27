@@ -1,3 +1,5 @@
+import type { ProviderAdapter } from '@providers/shared/adapter.types';
+import type { ProviderScopeContext } from '@providers/shared/registry';
 import { describe, expect, it } from 'vitest';
 
 import type {
@@ -7,10 +9,12 @@ import type {
 import type { ScopedPackInventory } from './pack-inventory';
 import {
   applyUserAgentCoverage,
+  lifecycleProviderEvidence,
   packAssetsByContentKind,
   unmaterializedAssetsByContentKind,
   withLifecycleProviderEvidence,
 } from './pack-provider-evidence';
+import { normalizeSyncEvidence } from './sync-evidence';
 import type { PackAssetKind } from './types';
 
 function scoped(input: {
@@ -288,4 +292,81 @@ describe('applyUserAgentCoverage', () => {
       ).toHaveLength(1);
     },
   );
+});
+
+describe('lifecycleProviderEvidence refresh advice', () => {
+  function userContext(): ProviderScopeContext {
+    return {
+      scope: 'user',
+      configSource: '~/.oat/sync/config.json',
+      activeProviders: ['claude'],
+      detectedProviders: ['claude'],
+      mismatches: { detectedUnset: [], detectedDisabled: [] },
+      activation: [
+        {
+          provider: 'claude',
+          state: 'active',
+          source: 'config-enabled',
+          reason: 'Explicitly enabled in sync config',
+        },
+      ],
+      registrations: [
+        {
+          adapter: { name: 'claude' } as ProviderAdapter,
+          extensions: [],
+          capabilities: [
+            {
+              scope: 'user',
+              contentKind: 'skill',
+              support: 'supported',
+              projectionModes: ['entry-sync'],
+              nativeRoleSurface: false,
+              collectionAlias: 'unsupported',
+              catalogRefresh: {
+                state: 'live',
+                provenance: {
+                  kind: 'repository-decision',
+                  reference: 'DR-000000-example',
+                  verifiedAt: '2026-09-01',
+                },
+              },
+            },
+          ],
+        },
+      ],
+    } as unknown as ProviderScopeContext;
+  }
+
+  it('never throws inside a lifecycle projection for advice with an unknown policy state', () => {
+    // The `never` default in `visibilityFor` must stay compile-time-only: an
+    // unrecognized state arriving in sync advice is dropped at normalization,
+    // so the registered capability policy applies instead.
+    const run = normalizeSyncEvidence('user', {
+      providerRefreshAdvice: [
+        {
+          scope: 'user',
+          provider: 'claude',
+          contentKind: 'skill',
+          visibility: { policy: { state: 'eventually', reason: 'x' } },
+        },
+      ],
+    });
+
+    let providers: ProviderReachabilityEvidence[] = [];
+    expect(() => {
+      providers = lifecycleProviderEvidence({
+        pack: 'research',
+        scopedInventories: [
+          scoped({
+            assets: [{ id: 'analyze', kind: 'skill', status: 'current' }],
+          }),
+        ],
+        providerContexts: [userContext()],
+        sync: { synced: true, scopes: ['user'], error: null, evidence: [run] },
+      });
+    }).not.toThrow();
+
+    expect(providers).toHaveLength(1);
+    expect(providers[0]?.visibility.state).toBe('live');
+  });
 });

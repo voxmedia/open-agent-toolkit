@@ -68,6 +68,70 @@ function asString(value: unknown): string | undefined {
   return typeof value === 'string' ? value : undefined;
 }
 
+const SOURCED_REFRESH_STATES: ReadonlySet<string> = new Set([
+  'live',
+  'manual-refresh',
+  'restart-required',
+]);
+const REFRESH_PROVENANCE_KINDS: ReadonlySet<string> = new Set([
+  'official-contract',
+  'validated-local-behavior',
+  'repository-decision',
+]);
+
+/**
+ * Validates a catalog-refresh policy from sync advice.
+ *
+ * The advice policy outranks the registered capability policy in the
+ * lifecycle projection, and `visibilityFor` switches exhaustively over its
+ * state with a `never` default that throws. An unrecognized state or a policy
+ * missing its required fields must therefore never reach that switch: it is
+ * dropped here so the projection falls back to the registry policy.
+ */
+function asRefreshPolicy(
+  value: unknown,
+): ProviderCatalogRefreshPolicy | undefined {
+  const policy = asRecord(value);
+  const state = asString(policy?.state);
+  if (!policy || state === undefined) return undefined;
+
+  if (state === 'unknown') {
+    const reason = asString(policy.reason);
+    return reason === undefined ? undefined : { state, reason };
+  }
+
+  if (!SOURCED_REFRESH_STATES.has(state)) return undefined;
+  const provenance = asRecord(policy.provenance);
+  const kind = asString(provenance?.kind);
+  const reference = asString(provenance?.reference);
+  const verifiedAt = asString(provenance?.verifiedAt);
+  if (
+    !provenance ||
+    kind === undefined ||
+    !REFRESH_PROVENANCE_KINDS.has(kind) ||
+    reference === undefined ||
+    verifiedAt === undefined ||
+    (provenance.providerVersion !== undefined &&
+      asString(provenance.providerVersion) === undefined)
+  ) {
+    return undefined;
+  }
+  return {
+    state: state as 'live' | 'manual-refresh' | 'restart-required',
+    provenance: {
+      kind: kind as Extract<
+        ProviderCatalogRefreshPolicy,
+        { provenance: unknown }
+      >['provenance']['kind'],
+      reference,
+      verifiedAt,
+      ...(asString(provenance.providerVersion) !== undefined
+        ? { providerVersion: asString(provenance.providerVersion)! }
+        : {}),
+    },
+  };
+}
+
 /**
  * Normalizes a captured sync JSON payload into reachability inputs.
  *
@@ -164,6 +228,7 @@ export function normalizeSyncEvidence(
         return [];
       }
       const visibility = asRecord(advice.visibility);
+      const policy = asRefreshPolicy(visibility?.policy);
       return [
         {
           provider,
@@ -178,12 +243,7 @@ export function normalizeSyncEvidence(
                   ...(asString(visibility.reason) !== undefined
                     ? { reason: asString(visibility.reason)! }
                     : {}),
-                  ...(asRecord(visibility.policy)
-                    ? {
-                        policy:
-                          visibility.policy as ProviderCatalogRefreshPolicy,
-                      }
-                    : {}),
+                  ...(policy !== undefined ? { policy } : {}),
                 },
               }
             : {}),

@@ -88,7 +88,20 @@ describe('inProcessSyncDependencies', () => {
             scope: 'project',
             provider: 'claude',
             contentKind: 'skill',
-            visibility: { state: 'visible', policy: { state: 'live' } },
+            // The producer (`buildProviderRefreshAdvice` in sync/apply.ts)
+            // forwards the registered capability policy, so a sourced state
+            // always carries its provenance.
+            visibility: {
+              state: 'visible',
+              policy: {
+                state: 'live',
+                provenance: {
+                  kind: 'repository-decision',
+                  reference: 'DR-000000-example',
+                  verifiedAt: '2026-09-01',
+                },
+              },
+            },
           },
         ],
       });
@@ -110,6 +123,11 @@ describe('inProcessSyncDependencies', () => {
     });
     expect(evidence?.refreshAdvice[0]?.visibility?.policy).toEqual({
       state: 'live',
+      provenance: {
+        kind: 'repository-decision',
+        reference: 'DR-000000-example',
+        verifiedAt: '2026-09-01',
+      },
     });
   });
 
@@ -271,5 +289,69 @@ describe('normalizeSyncEvidence required fields', () => {
 
     expect(evidence?.operationResults).toHaveLength(1);
     expect(evidence?.operationResults[0]?.contentKind).toBe('skill');
+  });
+
+  describe('catalog-refresh policy validation', () => {
+    const provenance = {
+      kind: 'repository-decision',
+      reference: 'DR-000000-example',
+      verifiedAt: '2026-09-01',
+    };
+
+    function adviceWithPolicy(policy: unknown) {
+      return {
+        providerRefreshAdvice: [
+          {
+            scope: 'project',
+            provider: 'claude',
+            contentKind: 'skill',
+            visibility: {
+              state: 'restart-required',
+              reason: 'claude needs a new session',
+              policy,
+            },
+          },
+        ],
+      };
+    }
+
+    it.each([
+      ['an unrecognized state', { state: 'eventually', provenance }],
+      ['a missing state', { provenance }],
+      ['a sourced state without provenance', { state: 'live' }],
+      [
+        'a sourced state with malformed provenance',
+        { state: 'manual-refresh', provenance: { kind: 'hearsay' } },
+      ],
+      ['an unknown state without a reason', { state: 'unknown' }],
+    ])(
+      'drops a policy with %s but keeps the advice entry',
+      async (_label, policy) => {
+        const evidence = await evidenceFor(adviceWithPolicy(policy));
+
+        expect(evidence?.refreshAdvice).toHaveLength(1);
+        expect(evidence?.refreshAdvice[0]?.visibility).toEqual({
+          state: 'restart-required',
+          reason: 'claude needs a new session',
+        });
+      },
+    );
+
+    it.each([
+      ['live', { state: 'live', provenance }],
+      [
+        'manual-refresh with a provider version',
+        {
+          state: 'manual-refresh',
+          provenance: { ...provenance, providerVersion: '1.2.3' },
+        },
+      ],
+      ['restart-required', { state: 'restart-required', provenance }],
+      ['unknown', { state: 'unknown', reason: 'no contract registered' }],
+    ])('keeps a well-formed %s policy', async (_label, policy) => {
+      const evidence = await evidenceFor(adviceWithPolicy(policy));
+
+      expect(evidence?.refreshAdvice[0]?.visibility?.policy).toEqual(policy);
+    });
   });
 });
