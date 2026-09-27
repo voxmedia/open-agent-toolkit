@@ -105,9 +105,12 @@ sequential phases grouped by shared write sets, one PR.
 6. **Read-only guidance emission:** A read-only command prints the managed OAT
    tools guidance block (human and `--json`) without installing or upgrading
    assets; `oat-doctor` hints point at it.
-7. **Inbound-reference AC3:** No executable "readiness contract" check exists;
-   the criterion is satisfied when this wave's own archives leave no dangling
-   `.oat/repo` links to `pjm/backlog/items/<id>.md` on the tip.
+7. **Inbound-reference AC3:** The executable bidirectional-link check is the
+   external-plan contract test in `skills-bundled-docs-contract.test.ts`
+   ("every current external plan is accepted under its date-selected mode"),
+   which enforces plan-to-item backlinks. It is run on the tip after this
+   wave's archives, alongside a sweep for remaining `pjm/backlog/items/<id>.md`
+   references.
 8. **Version bumps:** One lockstep bump (0.3.8 → 0.3.9) in the fan-in; one
    `metadata.version` bump per changed skill and one top-level `version:` bump
    per changed agent role across the whole PR.
