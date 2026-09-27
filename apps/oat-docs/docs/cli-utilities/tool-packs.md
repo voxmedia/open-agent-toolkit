@@ -11,7 +11,7 @@ This page covers CLI commands that manage bundled OAT tool packs and installed O
 
 - What it does: explains how bundled OAT packs are installed, updated, inspected, and removed.
 - When to use it: when you need to add capabilities to a repo, update installed skills, or understand which packs own which tools.
-- Primary commands: `oat tools list`, `oat tools has`, `oat tools install`, `oat tools update`, `oat tools remove`, `oat tools migrate`
+- Primary commands: `oat tools list`, `oat tools has`, `oat tools guidance`, `oat tools install`, `oat tools update`, `oat tools remove`, `oat tools migrate`
 - Coming from an earlier CLI: read [Upgrading from an earlier CLI](#upgrading-from-an-earlier-cli) for the changed install-scope default, PJM adoption gating, sparse `tools` config map, and per-pack `--json` shape
 
 ## Bundled packs at a glance
@@ -667,6 +667,32 @@ Examples:
 oat tools has project-management
 oat tools has brainstorm --scope user
 oat --json tools has workflows
+```
+
+### `oat tools guidance`
+
+Purpose:
+
+- Print the managed `OAT tools` `AGENTS.md` block for the packs installed now,
+  without installing, upgrading, or writing anything
+
+Key behavior:
+
+- Reads installed pack placement at project and user scope (user scope only
+  outside a Git repository) and renders the same block, markers included,
+  that `--project-guidance` would create or append
+- Never touches `AGENTS.md`, pack assets, or config, so it is the safe way to
+  obtain the block for a manual edit, such as when an existing `OAT tools`
+  section differs and guidance prints a manual patch
+- `--json` returns `status`, `sectionKey` (`tools`), `target` (`AGENTS.md`),
+  `packs` (each `pack` with its `scope`), and `managedBlock`
+- Exits `0` on success and `1` when pack state cannot be read
+
+Examples:
+
+```bash
+oat tools guidance
+oat --json tools guidance
 ```
 
 ### `oat tools install`

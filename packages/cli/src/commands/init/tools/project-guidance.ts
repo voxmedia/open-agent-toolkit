@@ -2,6 +2,7 @@ import { join } from 'node:path';
 
 import {
   type AgentsMdManualPatch,
+  buildAgentsMdManagedBlock,
   formatAgentsMdGuidanceResult,
 } from '@commands/shared/agents-md';
 import type { PromptContext } from '@commands/shared/shared.prompts';
@@ -141,6 +142,13 @@ export function buildToolPacksSectionBody(
   }
 
   return lines.join('\n');
+}
+
+/** The complete managed `OAT tools` block, markers included. */
+export function renderToolPacksManagedBlock(
+  packs: readonly ProjectGuidancePack[],
+): string {
+  return buildAgentsMdManagedBlock('tools', buildToolPacksSectionBody(packs));
 }
 
 export function parseProjectGuidanceFlags(

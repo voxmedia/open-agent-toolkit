@@ -1344,6 +1344,8 @@ describe('help output snapshots', () => {
         outdated [options]       Show tools with available updates
         info [options] <name>    Show details for an installed tool
         has [options] <pack>     Check whether a bundled tool pack is available
+        guidance                 Print the managed OAT tools AGENTS.md guidance block
+                                 without installing or writing anything
         update [options] [name]  Update installed tools to bundled versions
         migrate [options]        Move an installed tool pack between scopes safely
         remove [options] [name]  Remove installed tools

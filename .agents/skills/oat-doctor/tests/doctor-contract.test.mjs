@@ -363,3 +363,18 @@ test('the lifecycle pointer repairs the skill prescribes are accepted by the CLI
     /Cannot unset state key/,
   );
 });
+
+test('the Tool Packs hints name the read-only guidance command, never a pack reinstall', async () => {
+  // Both hint sites (the Agent instructions finding rule and its dive) must
+  // name a command that actually produces the OAT tools block.
+  const rule = skill
+    .split('\n')
+    .find((line) => line.includes('no `## Tool Packs` while'));
+  assert.ok(rule, 'Tool Packs finding rule missing');
+  assert.match(rule, /`oat tools guidance`/);
+  const dive = section('#### Agent instructions dive');
+  assert.match(dive, /`oat tools guidance`/);
+  assert.match(dive, /`oat pjm init`/);
+  assert.doesNotMatch(skill, /oat tools install <pack> --project-guidance/);
+  await usageLine('tools guidance', []);
+});

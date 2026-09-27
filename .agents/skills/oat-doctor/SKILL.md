@@ -6,7 +6,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 2.0.1
+  version: 2.0.2
 ---
 
 # OAT Doctor
@@ -125,7 +125,7 @@ Each finding is one line with an **area**, a **severity**, a one-line **summary*
 
 - An entry with status `missing` or `content_mismatch` (the entry literal; the summary counter is spelled `contentMismatch`) → `error`; fix `oat instructions sync` (`--force` for a content mismatch the person confirms is stale).
 - An entry with status `stray` → `warning`; fix `oat instructions sync` after the person decides whether the stray file should exist.
-- A CLI-written heading absent while its capability is present → `warning`: no `## Tool Packs` while any pack is installed at project scope (fix `oat tools install <pack> --project-guidance`); no `### Project Management` or `### Decision Records` while PJM adoption is `declared` (fix `oat pjm init`, which rewrites the guidance); no `## Documentation` while a docs surface exists (fix: `oat-docs-bootstrap`).
+- A CLI-written heading absent while its capability is present → `warning`: no `## Tool Packs` while any pack is installed at project scope (fix `oat tools guidance`, which prints the managed `OAT tools` block for the installed packs without installing, upgrading, or writing anything, for the person to add to `AGENTS.md`); no `### Project Management` or `### Decision Records` while PJM adoption is `declared` (fix `oat pjm init`, which rewrites the guidance); no `## Documentation` while a docs surface exists (fix: `oat-docs-bootstrap`).
 - Content quality beyond presence is not judged here; route to `oat-agent-instructions-analyze`.
 
 **Docs**
@@ -221,7 +221,7 @@ State the adoption state (`declared`, `inferred-legacy`, `partial-initialization
 
 #### Agent instructions dive
 
-Explain the sync strategy in use (`oat instructions validate --json` `.summary`) and each non-`ok` entry with its path. Explain each missing heading: what the CLI writes there and why an agent needs it (`cli-utilities/bootstrap.md` for `## Tool Packs`; `cli-utilities/backlog-lifecycle.md` § Adoption comes first for the PJM sections). Offer `oat instructions sync`, `oat tools install <pack> --project-guidance`, or `oat pjm init` as the finding names; for wording and coverage beyond presence, hand off to `oat-agent-instructions-analyze` then `oat-agent-instructions-apply`.
+Explain the sync strategy in use (`oat instructions validate --json` `.summary`) and each non-`ok` entry with its path. Explain each missing heading: what the CLI writes there and why an agent needs it (`cli-utilities/bootstrap.md` for `## Tool Packs`; `cli-utilities/backlog-lifecycle.md` § Adoption comes first for the PJM sections). Offer `oat instructions sync`, `oat tools guidance` (read-only: prints the `OAT tools` block to add), or `oat pjm init` (appends absent PJM blocks) as the finding names; for wording and coverage beyond presence, hand off to `oat-agent-instructions-analyze` then `oat-agent-instructions-apply`.
 
 #### Docs dive
 

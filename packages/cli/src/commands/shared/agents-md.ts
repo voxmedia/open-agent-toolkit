@@ -101,6 +101,14 @@ function buildSection(key: string, body: string): string {
   return `${sectionStart(key)}\n${body}\n${sectionEnd(key)}`;
 }
 
+/**
+ * Renders one managed block exactly as the writer creates or appends it, so
+ * read-only surfaces print the same bytes the writer would produce.
+ */
+export function buildAgentsMdManagedBlock(key: string, body: string): string {
+  return buildSection(key, body);
+}
+
 function identityOf(stat: Awaited<ReturnType<typeof lstat>>): FileIdentity {
   return { device: String(stat.dev), inode: String(stat.ino) };
 }

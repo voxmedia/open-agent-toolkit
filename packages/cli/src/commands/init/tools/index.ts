@@ -926,6 +926,48 @@ async function applyProjectGuidance(
   }
 }
 
+async function realizedGuidancePacks(
+  context: CommandContext,
+  repoRoot: string | null,
+  assetsRoot: string,
+  dependencies: InitToolsDependencies,
+): Promise<ProjectGuidancePack[]> {
+  const userRoot = dependencies.resolveScopeRoot(
+    'user',
+    context.cwd,
+    context.home,
+  );
+  const finalPackStates = await loadInstalledPackStates(
+    repoRoot,
+    userRoot,
+    assetsRoot,
+    dependencies,
+  );
+  return ALL_TOOL_PACKS.flatMap((pack) => {
+    const scope = finalPackStates[pack].location;
+    return scope === 'not-installed'
+      ? []
+      : [{ pack, scope } satisfies ProjectGuidancePack];
+  });
+}
+
+/**
+ * Reads the realized pack placement the OAT tools block describes. Read-only:
+ * it inventories installed packs and never installs, upgrades, or writes.
+ */
+export async function loadRealizedGuidancePacks(
+  context: CommandContext,
+  projectRoot: string | null,
+  overrides: Partial<InitToolsDependencies> = {},
+): Promise<ProjectGuidancePack[]> {
+  const dependencies: InitToolsDependencies = {
+    ...DEFAULT_DEPENDENCIES,
+    ...overrides,
+  };
+  const assetsRoot = await dependencies.resolveAssetsRoot();
+  return realizedGuidancePacks(context, projectRoot, assetsRoot, dependencies);
+}
+
 async function planAndApplyProjectGuidanceAfterInstall(
   context: CommandContext,
   assetsRoot: string,
@@ -946,23 +988,12 @@ async function planAndApplyProjectGuidanceAfterInstall(
     const repoRoot =
       installedProjectRoot ??
       (await dependencies.resolveProjectRoot(context.cwd));
-    const userRoot = dependencies.resolveScopeRoot(
-      'user',
-      context.cwd,
-      context.home,
-    );
-    const finalPackStates = await loadInstalledPackStates(
+    const realizedPacks = await realizedGuidancePacks(
+      context,
       repoRoot,
-      userRoot,
       assetsRoot,
       dependencies,
     );
-    const realizedPacks = ALL_TOOL_PACKS.flatMap((pack) => {
-      const scope = finalPackStates[pack].location;
-      return scope === 'not-installed'
-        ? []
-        : [{ pack, scope } satisfies ProjectGuidancePack];
-    });
     const completePlan = await dependencies.planProjectGuidance({
       repoRoot,
       packs: realizedPacks,
