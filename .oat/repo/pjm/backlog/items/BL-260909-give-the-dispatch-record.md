@@ -30,6 +30,11 @@ option can no longer delete them outright; only persistence to the
 `<project>/dispatch/` journal still lacks a reader. Making that validation
 input producible is tracked in `BL-260927-make-the-managed-claude`.
 
+Decided 2026-09-27 in `DR-260927-dispatch-record-validates`: take the removal
+path for persistence only. Keep the validate-only command and its schema
+modules; remove `--project`, the `<project>/dispatch/` journal writer and
+contract, and the persistence docs. Only the removal-path criteria below apply.
+
 ## Acceptance Criteria
 
 - A decision record states which path was taken (consumer or removal) and why.
