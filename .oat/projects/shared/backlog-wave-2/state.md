@@ -85,6 +85,10 @@ oat_project_created: '2026-09-27T14:29:05.687Z' # ISO 8601 UTC timestamp — set
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
 oat_project_state_updated: '2026-09-27T14:29:05.687Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
+oat_project_recap:
+  decision: generate
+  source: autonomous_policy
+  decided_at: '2026-09-27T14:32:46.795Z'
 ---
 
 # Project State: backlog-wave-2
