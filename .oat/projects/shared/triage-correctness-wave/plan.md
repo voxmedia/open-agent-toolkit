@@ -440,6 +440,29 @@ git commit -m "fix(p01-t04): close p01 review findings for audit-line recognitio
 
 ---
 
+### Task p01-t05: (review) Narrow trailing text after a backtick-wrapped audit stamp
+
+Source: `reviews/archived/p01-review-2026-09-27T052717Z.md` Low 1 (round 2
+passed with 0 Critical, 0 High, 0 Medium). Low 2 (Linux branch of the EOF test)
+is verified on the PR's CI run.
+
+**Files:** `packages/cli/src/commands/gate/review-verdict.ts` and its test;
+`apps/oat-docs/docs/cli-utilities/workflow-gates.md`; the review-provide
+paragraph and its remote twin if they describe trailing text.
+
+**Step 1 (RED):** a labeled bullet with a backtick-wrapped stamp followed by
+prose (for example under `## Summary`) is not an audit line; trailing
+punctuation or one parenthetical is still recognized.
+
+**Step 2 (GREEN):** allow only trailing punctuation or a single parenthetical
+after the closing backtick; tighten the docs wording.
+
+**Step 4 (Verify):** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/`
+
+**Step 5 (Commit):** `fix(p01-t05): narrow trailing text after backtick-wrapped audit stamps`
+
+---
+
 ## Phase 2: CLI sync, config, and tools correctness
 
 ### Task p02-t01: Name the file in canonical rule parse errors and accept alwaysApply
@@ -1182,7 +1205,8 @@ git commit -m "chore(p04-t03): record definition-of-done gate results"
 
 | Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target       |
 | ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------- |
-| p01    | code     | fixes_added     | 2026-09-27 | reviews/archived/p01-review-2026-09-27T051536Z.md           | 9bf1f8325d87d74201ff4749ae8058a1b2d43316 | auto       | -                 |
+| p01    | code     | fixes_completed | 2026-09-27 | reviews/archived/p01-review-2026-09-27T051536Z.md           | 9bf1f8325d87d74201ff4749ae8058a1b2d43316 | auto       | -                 |
+| p01    | code     | passed          | 2026-09-27 | reviews/archived/p01-review-2026-09-27T052717Z.md           | 3778dfc88cc4f9c74ed84476978b58dfaa2ce924 | auto       | -                 |
 | p02    | code     | fixes_completed | 2026-09-27 | reviews/archived/p02-review-2026-09-27T051543Z.md           | 9541287ad041954c11233300301fe9edf36a8580 | auto       | -                 |
 | p02    | code     | passed          | 2026-09-27 | reviews/archived/p02-review-2026-09-27T052321Z.md           | 8c4102a024e34fcea7f1ac451ed828b83063604d | auto       | -                 |
 | p03    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
@@ -1248,12 +1272,12 @@ different-family): `ok`, 0 Critical, 0 High, 0 Medium, 0 Low; received as
 
 **Summary:**
 
-- Phase 1: 4 tasks - Bundled skill and script fixes
+- Phase 1: 5 tasks - Bundled skill and script fixes
 - Phase 2: 6 tasks - CLI sync, config, and tools correctness
 - Phase 3: 5 tasks - Managed Claude dispatch-record input
 - Phase 4: 3 tasks - Release and backlog fan-in
 
-**Total: 18 tasks**
+**Total: 19 tasks**
 
 Ready for code review and merge.
 

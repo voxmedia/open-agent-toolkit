@@ -80,6 +80,19 @@ at head `9bf1f8325`: 0 Critical, 0 High, 2 Medium, 3 Low. Disposition: M1, M2,
 L1, and L3 converted to p01-t04; L2 resolved in root bookkeeping (PTY
 observation recorded under p01-t01).
 
+### Task p01-t05: (review) Narrow trailing text after a backtick-wrapped audit stamp
+
+**Status:** pending
+**Commit:** -
+
+**Review received (p01 round 2, auto):** `reviews/archived/p01-review-2026-09-27T052717Z.md`
+at head `3778dfc88`: 0 Critical, 0 High, 0 Medium, 2 Low; passed. Low 1
+converted to p01-t05 (no re-review required for a Low-only fix; the p01 phase
+gate covers it). Low 2 deferred to CI: the util-linux branch of the
+resolve-providers EOF test first runs on the PR's Linux CI; if it fails there,
+restrict it to macOS rather than weakening the assertion. The regression probe
+over 137 local gate artifacts found no false failures.
+
 ---
 
 ## Phase 2: CLI sync, config, and tools correctness
