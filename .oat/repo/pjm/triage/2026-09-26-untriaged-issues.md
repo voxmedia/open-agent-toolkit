@@ -1,10 +1,10 @@
 ---
 oat_triage_record: true
 schema_version: 1
-status: approved
+status: pr_open
 scope: Twenty open GitHub issues without a disposition label (#295–#297, #305–#307, #310–#314, #316, #322–#329), plus a resolution check of open issues labeled tracked-in-backlog
 baseline_sha: 82cce7f89c12c4f9443536595e410c65ff3a0ed4
-triage_pr: null
+triage_pr: https://github.com/voxmedia/open-agent-toolkit/pull/330
 created: 2026-09-26
 updated: 2026-09-26
 ---
@@ -810,7 +810,7 @@ open. No action.
 After the triage PR merges, invoke:
 
 ```text
-/triage-oat-issues resume post-merge PR #<triage PR>
+/triage-oat-issues resume post-merge PR #330
 ```
 
 The resume run applies only the approved rows above, idempotently:
