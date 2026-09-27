@@ -84,8 +84,7 @@ disjoint. `p01` edits bundled skills (`oat-agent-instructions-analyze`,
 `apps/oat-docs/docs/cli-utilities/workflow-gates.md`. `p02` edits
 `packages/cli/src/rules/**`, the three `rule-transform.ts` files,
 `packages/cli/src/engine/compute-plan.ts`, `packages/cli/src/commands/sync/**`,
-`packages/cli/src/config/**`, `packages/cli/src/commands/config/index.ts` and
-`index.test.ts`,
+`packages/cli/src/config/**`, `packages/cli/src/commands/config/index.test.ts`,
 `packages/cli/src/commands/docs/index-generate/index.test.ts`,
 `packages/cli/src/commands/tools/shared/**`, and the provider-sync and
 configuration docs pages. No file appears in both sets, and neither phase's
@@ -238,8 +237,10 @@ axes are provider-default by documented design
 (`apps/oat-docs/docs/cli-utilities/workflow-gates.md:326-330`).
 
 - Skill rule: gate-originated reviews (`oat_review_invocation: gate`) write the
-  resolver stamp with the literal prefix `Dispatch (policy view):` instead of
-  `Dispatch:`. Non-gate reviews are unchanged.
+  resolver stamp as
+  `**Dispatch audit (policy view):** \`Dispatch: …\``, keeping the literal
+`Dispatch:` token so the shared stamp parser still reads it. Non-gate reviews
+  are unchanged.
 - Validation, applied only to gate artifacts: recognize audit lines by shape.
   After stripping a list marker, an optional bold or plain label ending in `:`
   (for example `**Dispatch audit:**`, `Dispatch stamp:`, or
@@ -255,19 +256,17 @@ axes are provider-default by documented design
   other unlabeled reviewer stamp fails the gate with the new cause
   `gate_dispatch_audit_mismatched`; its message names `oat tools update` as the
   recovery for artifacts written by older installed skills. A stamp counts as
-  labeled, and is not checked, when it carries the `Dispatch (policy view):`
-  prefix or when its leading label contains the words `policy view`
-  (case-insensitive), as in the quick-start gate artifact of this project,
+  labeled, and is not checked, when the label text before its `Dispatch:`
+  token contains the words `policy view` (case-insensitive), as in the quick-start gate artifact of this project,
   `reviews/archived/artifact-plan-review-2026-09-27T043735Z.md`
   (`**Resolver policy view:**` followed by a backtick-wrapped `Dispatch:` stamp
   under `## Dispatch Audit`). Artifacts without an audit stamp are not
   affected.
-- Extraction: `parseDispatchStamps` (`packages/cli/src/providers/identity/stamp.ts:166-169`)
-  only matches the literal `Dispatch:`, so policy-view lines are extracted by a
-  small label-aware helper in `review-verdict.ts` that strips the
-  `Dispatch (policy view):` prefix and reuses the same token parsing.
-  `parseDispatchStamps` itself is unchanged, so producer-identity reads
-  (`gate/index.ts:1510`) are unaffected.
+- Extraction: `parseDispatchStamps`
+  (`packages/cli/src/providers/identity/stamp.ts:166-169`) already finds every
+  `Dispatch:` stamp, labeled or not; the audit-line rule only classifies each
+  recognized line by its label text. `parseDispatchStamps` is unchanged
+  (complexity review: no second extraction path).
 
 **Files:**
 
@@ -337,13 +336,14 @@ axes are provider-default by documented design
     `selected:high` fails (the effort clause can fail on its own);
   - an unlabeled stamp with `target=codex-6-sol-xhigh` and
     `effort_axis=selected:xhigh` passes;
-  - the same policy stamp labeled `Dispatch (policy view):` passes;
+  - the same policy stamp written as
+    `**Dispatch audit (policy view):** \`Dispatch: …\`` passes;
   - no audit stamp passes;
   - quoted implementer or fenced reviewer stamps in findings do not change the
     result.
     Model on the mismatched-invocation test near `index.test.ts:4682`.
 - Skill contract: review-provide and the remote twin require the
-  `Dispatch (policy view):` prefix for gate-originated reviews.
+  `**Dispatch audit (policy view):**` label for gate-originated reviews.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/review-verdict.test.ts src/commands/gate/index.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts`
 Expected: new cases fail.
@@ -554,9 +554,6 @@ Backlog: `BL-260909-reject-malformed-nested-values`.
   near 1122, `collectPjmRemoteAuthorityFindings` near 1223, storage and
   description branches)
 - Modify: `packages/cli/src/config/oat-config.test.ts` (near 847-1010)
-- Modify: `packages/cli/src/commands/config/index.ts` (the pjm.remote strict
-  barrier near 2923-2925, `setConfigValue` near 2293-2294, and the
-  `ConfigCommandDependencies` reader interface near 259-267)
 - Modify: `packages/cli/src/commands/config/index.test.ts` (unset cases near 5667)
 - Modify: `apps/oat-docs/docs/cli-utilities/configuration.md` (lines 105-124:
   document that wrong-typed `pjm.remote` leaves fail config reads closed and how
@@ -578,11 +575,10 @@ Backlog: `BL-260909-reject-malformed-nested-values`.
 - Blast radius (plan review M7): the closed-structure guard runs in the shared
   reader, so a wrong-typed leaf makes ordinary config reads fail closed with
   the same categorical error, exactly as unknown `pjm.remote` keys already do.
-  Document that in `configuration.md`. The malformed leaf itself must stay
-  repairable: `oat config unset pjm.remote.policy.authority.default` (and
-  `oat config set` of a valid value) on the malformed file succeeds, using a
-  repair reader in the style of `readOatConfigFor*Repair`
-  (`oat-config.ts:1855, 1939, 1971`) if needed.
+  Document in `configuration.md` that a wrong-typed `pjm.remote` leaf is
+  repaired by editing `.oat/config.json` by hand, as for unknown keys; the
+  error message must not prescribe a CLI repair. No repair reader is added
+  (complexity review: no acceptance criterion requires one).
 - The criterion "red-then-green control recorded in the test" is met inside
   the test file: the negative control (malformed sibling refused, bytes
   unchanged) and the positive control (valid tree unsets) sit side by side.
@@ -596,11 +592,7 @@ Expected: fail.
 
 **Step 2: Implement (GREEN)**
 
-Add leaf type findings to the closed-structure collectors. Add a path-targeted
-repair reader that drops only the targeted `pjm.remote` leaf before the
-closed-structure assertion (so a malformed sibling of a different leaf is still
-refused), add it to `ConfigCommandDependencies`, and use it at the unset barrier
-and in the set path for `pjm.remote` keys.
+Add leaf type findings to the closed-structure collectors.
 
 **Step 3: Refactor**
 
@@ -614,7 +606,7 @@ Expected: pass.
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/config/oat-config.ts packages/cli/src/config/oat-config.test.ts packages/cli/src/commands/config/index.ts packages/cli/src/commands/config/index.test.ts apps/oat-docs/docs/cli-utilities/configuration.md
+git add packages/cli/src/config/oat-config.ts packages/cli/src/config/oat-config.test.ts packages/cli/src/commands/config/index.test.ts apps/oat-docs/docs/cli-utilities/configuration.md
 git commit -m "fix(p02-t04): reject wrong-typed nested pjm.remote values"
 ```
 
@@ -748,7 +740,8 @@ git commit -m "fix(p03-t01): state the expected pattern in dispatch-record valid
   (`parseDispatchRecordInput` 259-365; event validation currently runs later in
   `augmentDispatchRecord`)
 - Modify: `packages/cli/src/commands/project/dispatch/index.ts` (JSON error
-  output 153-165: add an additive `violations` array; exit code stays 1)
+  output 153-165 only if needed to carry the multi-line message; no new JSON
+  field; exit code stays 1)
 - Modify: `packages/cli/src/commands/project/dispatch/record.test.ts`
 - Modify: `tools/smoke/verification/claude-effort-dispatch.test.mjs` (its event
   fixture at lines 173-174 uses `<repo>/agents/<role>.md`, which fails
@@ -759,12 +752,13 @@ git commit -m "fix(p03-t01): state the expected pattern in dispatch-record valid
 
 One validation run over an input with several derived fields present, several
 missing required fields, a wrong action for the role, an unredacted path, and
-an invalid event reports every one of those violations with its stage, path,
-and message. Checks that depend on a failed parse are skipped and documented as
+an invalid event reports every one of those violations, one
+`stage path: message` line each, in the single error message (no new
+`violations` JSON field; complexity review deferral). Checks that depend on a failed parse are skipped and documented as
 dependent; every independent violation is reported. A valid managed input still
 returns `status: validated-only`. Every violation message passes through the
 command's `redactDispatchMessage` boundary; a test with an absolute-path
-violation asserts the JSON output contains no absolute path.
+violation asserts the error message contains no absolute path.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/claude/dispatch-envelope.test.ts src/commands/project/dispatch/record.test.ts`
 Expected: fail.
@@ -863,19 +857,18 @@ git commit -m "feat(p03-t03): add a canonical-role evidence producer for dispatc
 **Step 1: Write test (RED)**
 
 The test loads the published example and asserts both role inputs return
-`status: validated-only` as-is; the embedded definitions match what
-`materializeClaudeAgent` generates, so the example cannot drift.
+`status: validated-only` as-is, which pins it against validator drift.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/dispatch/managed-claude-example.test.ts`
 Expected: fail (file absent).
 
 **Step 2: Implement (GREEN)**
 
-Generate the example from fixture agents (not the canonical
+Build the example from fixture agents (not the canonical
 `.agents/agents/*.md` roles, so future role edits do not force an example
-rewrite and skill bump), and add a documented regeneration path in the test
-file (for example an environment flag that rewrites the JSON). Write the
-reference section. Bump the skill version and both pins.
+rewrite and skill bump). In the reference section, add a short prose note on
+regenerating it (run `canonical-role` and the Claude materializer). Bump the
+skill version and both pins.
 
 **Step 3: Refactor**
 
@@ -904,7 +897,7 @@ git commit -m "docs(p03-t04): publish a validated managed Claude dispatch-record
   to the example; `oat-project-implement` `metadata.version` 2.3.12 → 2.3.13 in
   its `SKILL.md`)
 - Modify: `apps/oat-docs/docs/reference/cli-reference.md` (near 156: document
-  `canonical-role` and the `violations` array)
+  `canonical-role` and single-run violation reporting)
 - Modify: `packages/cli/src/validation/skills.test.ts` (implement-text pins near
   4685-4722 and the eight `oat-project-implement` version pins at 2166, 2647,
   2977, 3066, 3568, 4924, 6335, and 8451)
@@ -1123,6 +1116,16 @@ artifact as a fixture. Re-review follows per REVIEWRECEIVE-07.
 Quick-start gate attempt 2 (run `6f15dc62-3341-4492-a28b-20f304d4c79d`,
 target `codex-6-sol-xhigh`, different-family): `ok`, 0 Critical, 0 High,
 0 Medium, 0 Low; received as `passed`.
+
+Complexity review (`complexity-review` 1.0.2, fresh Opus reviewer, after gate
+attempt 2): Partially compliant. Applied all four recommendations: p01-t03 uses
+a `**Dispatch audit (policy view):**` label that keeps the `Dispatch:` token (no
+second extraction path); p02-t04 drops the repair reader (repair by editing the
+file, as for unknown keys); p03-t02 reports every violation in one redacted
+multi-line message instead of a new `violations` JSON field; p03-t04 pins the
+example by validating it as-is. Deferral triggers are recorded in the
+complexity report. These are material plan changes, so the unchanged
+quick-start gate runs once more under the orchestration retry limit.
 
 ---
 
