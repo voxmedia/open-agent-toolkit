@@ -40,14 +40,17 @@ Current OAT surface (mapped 2026-09-27):
 
 Overlap: absorbs `BL-260830-persist-instruction-sync` (persist the strategy in config and init); that item's "migration preserves existing installations" criterion conflicts with the new default and must be resolved here. Adjacent: `BL-260830-add-per-claude-md-adoption-opt` (per-file adoption opt-out, same sync area).
 
+Decided 2026-09-27 in `DR-260927-claude-md-shims-are-opt`. Scheduled into
+Wave 2 by the operator.
+
 ## Acceptance Criteria
 
 - A persisted `.oat/config.json` setting (for example an instruction-sync strategy with values `none`, `pointer`, `symlink`, `copy`; the exact key is settled in planning and replaces the CLI-flag-only strategy) controls shim creation. The default when the key is absent is `none`: `oat instructions sync` creates no CLAUDE.md. The `--strategy` flag still works as a one-run override. `oat config set` and the docs cover the key.
 - With `none`, `missing` is no longer drift: `oat instructions validate` exits 0 for an AGENTS.md without a CLAUDE.md, and `oat-doctor` does not report it as an error. With a shim strategy configured, today's behavior is unchanged (negative control: a configured `pointer` repository still reports `missing`).
-- No partial-coverage state is reachable through OAT. Under `none`, sync reports OAT-managed shims (exact `@AGENTS.md` pointer content, a symlink to the sibling AGENTS.md, or a byte-identical copy) as removable and removes them on a non-dry-run sync; hand-written or modified CLAUDE.md files are reported, never deleted. The plan states whether removal is automatic or needs a flag, and the release notes say so.
+- No partial-coverage state is reachable through OAT. Under `none`, a non-dry-run sync removes OAT-managed shims (exact `@AGENTS.md` pointer content, a symlink to the sibling AGENTS.md, or a byte-identical copy) automatically; `--dry-run` lists them; hand-written or modified CLAUDE.md files are reported, never deleted; the release notes call out the removal (decided in `DR-260927-claude-md-shims-are-opt`).
 - Stray adoption under `none` moves a lone CLAUDE.md's content into AGENTS.md and does not leave a CLAUDE.md behind (or reports why it kept one), so adoption does not make Claude Code's plugin stand down.
 - `oat-agent-instructions-analyze` and `oat-agent-instructions-apply` recommend or ensure the `@AGENTS.md` import only when shims are configured; `resolve-providers.sh` still detects Claude in a no-shim repository (for example from `.claude/` or sync config, not only a root CLAUDE.md). Skill versions are bumped.
 - Docs explain the new default and when to opt in: Claude Code releases before the built-in `agents-md` plugin, users who set `instructionFiles` to `claude-md`, and the nested-file gaps the plugin documents. They note that a project cannot set `instructionFiles` (user or managed settings only) and that any root `CLAUDE.md` or `CLAUDE.local.md` makes the default mode ignore AGENTS.md.
 - `BL-260830-persist-instruction-sync` is closed as absorbed (or re-scoped to only what remains), with its migration criterion resolved explicitly.
-- This repository decides whether to keep its own shims (configure a strategy) or remove them, in the same PR.
+- This repository drops its own shims in the same PR (operator decision 2026-09-27), and its sync runs clean under the default.
 - Lockstep public package bump; tests cover the default `none`, each configured strategy, managed-shim removal, hand-written CLAUDE.md preservation, and stray adoption, all with an isolated `HOME`.

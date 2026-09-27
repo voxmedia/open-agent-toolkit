@@ -11,6 +11,7 @@
 | ID                                       | Date       | Status     | Title                                                                                                  | Legacy  |
 | ---------------------------------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------ | ------- |
 | DR-260927-accept-alwaysapply             | 2026-09-27 | accepted   | Accept alwaysApply as a canonical rule activation alias                                                | -       |
+| DR-260927-claude-md-shims-are-opt        | 2026-09-27 | accepted   | CLAUDE.md shims are opt-in                                                                             | -       |
 | DR-260927-dispatch-record-validates      | 2026-09-27 | accepted   | Dispatch record validates without persisting                                                           | -       |
 | DR-260927-label-gate-dispatch-audit      | 2026-09-27 | accepted   | Label gate dispatch audit stamp as policy view                                                         | -       |
 | DR-260927-one-decision-point-at-review   | 2026-09-27 | accepted   | One decision point at review and gate exhaustion                                                       | -       |
