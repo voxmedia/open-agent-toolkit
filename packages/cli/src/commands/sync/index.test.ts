@@ -1750,6 +1750,82 @@ describe('createSyncCommand', () => {
     ]);
   });
 
+  it('--scope all: never reports No changes required beside a failed scope', async () => {
+    // The project scope fails a real operation while the user scope planned
+    // nothing. The whole run exits 1, so no scope body may claim that nothing
+    // was required. Joined rather than element-wise: the plan body logs one
+    // multi-line string per run.
+    const { capture, command } = createHarness({
+      plans: [createPlan('create_symlink', 'project'), createEmptyPlan('user')],
+      executeResults: [
+        { applied: 0, failed: 1, skipped: 0 },
+        { applied: 0, failed: 0, skipped: 0 },
+      ],
+      useRealSyncPlanFormatter: true,
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'all'],
+    });
+
+    const output = capture.info.join('\n');
+    expect(output).toContain('Scope: user');
+    expect(output).not.toContain('No changes required.');
+    expect(capture.warn).toContain('\nSync completed with partial failures.');
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('--scope all: a failed run with zero planned operations is never restamp-only (failed === 0 conjunct)', async () => {
+    // Both scopes are skewed and neither plans an operation, but a rejected
+    // collection in the project scope fails the run. Only the `failed === 0`
+    // conjunct keeps this multi-scope run from being described as a
+    // restamp-only no-op.
+    const { capture, command } = createHarness({
+      loadedManifests: [
+        createManifest({ oatVersion: '0.0.1' }),
+        createManifest({ oatVersion: '0.0.1' }),
+      ],
+      plans: [
+        createCollectionPlan('reject-collection'),
+        createEmptyPlan('user'),
+      ],
+      executeResults: [
+        { applied: 0, failed: 1, skipped: 0 },
+        { applied: 0, failed: 0, skipped: 0 },
+      ],
+      useRealSyncPlanFormatter: true,
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'all'],
+    });
+
+    const output = capture.info.join('\n');
+    expect(output).toContain('Scope: user');
+    expect(output).not.toContain('Manifest version refreshed');
+    expect(output).not.toContain('No changes required.');
+    expect(capture.warn).toContain('\nSync completed with partial failures.');
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('--scope all: keeps No changes required when every scope is empty and nothing failed (control)', async () => {
+    const { capture, command } = createHarness({
+      plans: [createEmptyPlan('project'), createEmptyPlan('user')],
+      executeResults: [
+        { applied: 0, failed: 0, skipped: 0 },
+        { applied: 0, failed: 0, skipped: 0 },
+      ],
+      useRealSyncPlanFormatter: true,
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'all'],
+    });
+
+    expect(capture.info.join('\n')).toContain('No changes required.');
+    expect(process.exitCode).toBe(0);
+  });
+
   it('handles partial failure gracefully', async () => {
     const { capture, command } = createHarness({
       plans: [createPlan('create_symlink')],

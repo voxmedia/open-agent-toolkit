@@ -280,6 +280,7 @@ function formatCoreResults(
   evidence: CoreApplyEvidence | undefined,
   dependencies: SyncCommandDependencies,
   restampOnly: boolean,
+  runFailed: boolean,
 ): string {
   const operations = [...plan.entries, ...plan.removals];
   if (operations.length === 0) {
@@ -287,14 +288,20 @@ function formatCoreResults(
       return 'Core results\nNo per-entry operations.';
     }
     const planOutput = dependencies.formatSyncPlan(plan, true);
-    if (!restampOnly || !planOutput.endsWith(EMPTY_PLAN_SUFFIX)) {
+    if (
+      !(restampOnly || runFailed) ||
+      !planOutput.endsWith(EMPTY_PLAN_SUFFIX)
+    ) {
       return planOutput;
     }
     // `formatSyncPlan` appends "No changes required." to its heading for any
     // empty plan, and it is shared with dry-run and other callers, so it stays
     // untouched. On the restamp-only path that sentence would contradict the
-    // trailing message two lines later, so the command layer drops exactly that
-    // known suffix and lets the trailing message be the run's single claim.
+    // trailing message two lines later, and on a failed run (for example
+    // `--scope all` with one failed scope beside an empty one) it would
+    // contradict the partial-failure warning and exit code 1. In both cases the
+    // command layer drops exactly that known suffix and lets the trailing
+    // message be the run's single claim.
     // Removing only a matching suffix, rather than keeping the first line,
     // means an injected formatter's other content is never truncated.
     return planOutput.slice(0, -EMPTY_PLAN_SUFFIX.length);
@@ -336,6 +343,9 @@ function formatAppliedOutput(
   // summary message, so with `--scope all` every scope's body is empty and at
   // least one of them was restamped.
   restampOnly: boolean,
+  // True when any scope failed. Also a whole-run state: an empty scope beside
+  // a failed one must not claim that no changes were required.
+  runFailed: boolean,
 ): string {
   if (scopePlans.length === 0) {
     return dependencies.formatSyncPlan(
@@ -355,6 +365,7 @@ function formatAppliedOutput(
         coreApplyEvidence.find((evidence) => evidence.plan === scopePlan.plan),
         dependencies,
         restampOnly,
+        runFailed,
       );
       const collectionOutput = formatCollectionLifecycle(
         buildCollectionLifecycle(
@@ -587,6 +598,7 @@ export async function runSyncApply(
         coreApplyEvidence,
         dependencies,
         restampOnly,
+        summary.failed > 0,
       ),
     );
     if (summary.failed > 0) {
