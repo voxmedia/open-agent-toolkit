@@ -9,7 +9,6 @@ labels:
   - gate
   - freshness
   - policy
-  - needs-discussion
 assignee: null
 created: 2026-09-02T23:48:33.763Z
 updated: 2026-09-02T23:49:54Z
@@ -22,6 +21,8 @@ external_plans: []
 ## Description
 
 `oat-project-implement` closeout treats any test-file descendant as `stale` and demands a new configured exit-gate generation, even for a four-line test-harness mock with no shipped behavior change. Decide between a closeout-only or test-only freshness exception and an explicit human-waiver field that keeps `allowed` without rewriting provenance. This is a policy decision; do not plan implementation until it is made. Source: GitHub issue #237 (retro item UP-01 of synced-project-scope).
+
+Decided 2026-09-27 in `DR-260927-operator-waiver-for-test-only`.
 
 ## Acceptance Criteria
 
