@@ -1139,6 +1139,11 @@ function assertClosedPjmRemoteSharedConfig(
     'pjm.remote',
     findings,
   );
+  if ('schemaVersion' in value && typeof value.schemaVersion !== 'number') {
+    findings.push(
+      `pjm.remote.schemaVersion (expected number, received ${describePjmRemoteStructure(value.schemaVersion)})`,
+    );
+  }
   if (
     'storage' in value &&
     collectPjmRemoteExpectedObject(
@@ -1153,6 +1158,12 @@ function assertClosedPjmRemoteSharedConfig(
       'pjm.remote.storage',
       findings,
     );
+    collectPjmRemoteStringLeaf(
+      value.storage,
+      'state',
+      'pjm.remote.storage',
+      findings,
+    );
   }
   if (
     'policy' in value &&
@@ -1161,6 +1172,12 @@ function assertClosedPjmRemoteSharedConfig(
     collectUnknownPjmRemoteKeys(
       value.policy,
       ['description', 'authority', 'providers'],
+      'pjm.remote.policy',
+      findings,
+    );
+    collectPjmRemoteStringLeaf(
+      value.policy,
+      'description',
       'pjm.remote.policy',
       findings,
     );
@@ -1203,6 +1220,12 @@ function assertClosedPjmRemoteSharedConfig(
           `pjm.remote.policy.providers.${provider}`,
           findings,
         );
+        collectPjmRemoteStringLeaf(
+          providerPolicy,
+          'description',
+          `pjm.remote.policy.providers.${provider}`,
+          findings,
+        );
         if ('authority' in providerPolicy) {
           collectPjmRemoteAuthorityFindings(
             providerPolicy.authority,
@@ -1227,6 +1250,7 @@ function collectPjmRemoteAuthorityFindings(
 ): void {
   if (!collectPjmRemoteExpectedObject(value, path, findings)) return;
   collectUnknownPjmRemoteKeys(value, ['default', 'operations'], path, findings);
+  collectPjmRemoteStringLeaf(value, 'default', path, findings);
   if (
     'operations' in value &&
     collectPjmRemoteExpectedObject(
@@ -1241,7 +1265,34 @@ function collectPjmRemoteAuthorityFindings(
       `${path}.operations`,
       findings,
     );
+    for (const operation of PJM_REMOTE_OPERATION_CLASSES) {
+      collectPjmRemoteStringLeaf(
+        value.operations,
+        operation,
+        `${path}.operations`,
+        findings,
+      );
+    }
   }
+}
+
+/**
+ * Records a present leaf whose value is not a string.
+ *
+ * Only the *type* is checked: an unrecognized string keeps its documented
+ * coercion in the normalizer. The finding names the structure type, never the
+ * value, so a secret pasted into the wrong field cannot leak into the error.
+ */
+function collectPjmRemoteStringLeaf(
+  value: Record<string, unknown>,
+  key: string,
+  path: string,
+  findings: string[],
+): void {
+  if (!(key in value) || typeof value[key] === 'string') return;
+  findings.push(
+    `${path}.${key} (expected string, received ${describePjmRemoteStructure(value[key])})`,
+  );
 }
 
 function collectPjmRemoteExpectedObject(
@@ -2020,13 +2071,118 @@ export async function readOatLocalConfig(
   }
 }
 
+/**
+ * Reads the existing config file as raw JSON for ordering and no-op checks.
+ *
+ * Parses through `parseJsonConfig`, the same tolerant parser every config
+ * reader uses (trailing commas accepted, `__proto__` kept as data), so a file
+ * the readers accept is never treated as unparsable here. Deliberately
+ * bypasses the normalizer, which throws on the malformed values repair flows
+ * exist to remove. A missing or unparsable file yields `undefined`, so the
+ * caller always writes it.
+ */
+async function readRawJsonForWrite(filePath: string): Promise<unknown> {
+  let raw: string;
+  try {
+    raw = await readFile(filePath, 'utf8');
+  } catch {
+    return undefined;
+  }
+  try {
+    return parseJsonConfig(raw, filePath);
+  } catch {
+    return undefined;
+  }
+}
+
+function isPlainJsonObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/**
+ * Orders `value` like `template`, recursively: keys already present in the
+ * template keep their existing position, and new keys follow in the
+ * normalizer's order. Arrays keep their own element order.
+ */
+function orderLike(value: unknown, template: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((element, index) =>
+      orderLike(element, Array.isArray(template) ? template[index] : undefined),
+    );
+  }
+  if (!isPlainJsonObject(value)) return value;
+  const templateObject = isPlainJsonObject(template) ? template : {};
+  const ordered: Record<string, unknown> = {};
+  // Define rather than assign: a config key named `__proto__` is data and must
+  // never replace the output object's prototype.
+  const place = (key: string, next: unknown): void => {
+    Object.defineProperty(ordered, key, {
+      value: next,
+      enumerable: true,
+      writable: true,
+      configurable: true,
+    });
+  };
+  for (const key of Object.keys(templateObject)) {
+    if (Object.hasOwn(value, key) && value[key] !== undefined) {
+      place(key, orderLike(value[key], templateObject[key]));
+    }
+  }
+  for (const key of Object.keys(value)) {
+    if (!Object.hasOwn(ordered, key) && value[key] !== undefined) {
+      place(key, orderLike(value[key], undefined));
+    }
+  }
+  return ordered;
+}
+
+function jsonDeepEqual(left: unknown, right: unknown): boolean {
+  if (Array.isArray(left) || Array.isArray(right)) {
+    return (
+      Array.isArray(left) &&
+      Array.isArray(right) &&
+      left.length === right.length &&
+      left.every((element, index) => jsonDeepEqual(element, right[index]))
+    );
+  }
+  if (isPlainJsonObject(left) || isPlainJsonObject(right)) {
+    if (!isPlainJsonObject(left) || !isPlainJsonObject(right)) return false;
+    const leftKeys = Object.keys(left);
+    return (
+      leftKeys.length === Object.keys(right).length &&
+      leftKeys.every(
+        (key) =>
+          Object.hasOwn(right, key) && jsonDeepEqual(left[key], right[key]),
+      )
+    );
+  }
+  return Object.is(left, right);
+}
+
+/**
+ * Writes the shared config, preserving the existing file's key order and
+ * skipping writes that would not change its JSON value (GitHub #329, #311).
+ *
+ * Formatting-only differences (indentation, trailing newline) therefore leave
+ * the file byte-identical, while repairs, raw-disk removals, and rewrites of a
+ * malformed or unparsable file always land.
+ */
 export async function writeOatConfig(
   repoRoot: string,
   config: OatConfig,
 ): Promise<void> {
   const configPath = getConfigPath(repoRoot);
   const normalized = normalizeOatConfig(config, configPath);
-  await atomicWriteJson(configPath, normalized);
+  const existing = await readRawJsonForWrite(configPath);
+  // Round-trip through JSON so the comparison sees exactly what would be
+  // serialized (undefined-valued keys dropped).
+  const output = JSON.parse(
+    JSON.stringify(
+      existing === undefined ? normalized : orderLike(normalized, existing),
+    ),
+  ) as unknown;
+  if (existing !== undefined && jsonDeepEqual(existing, output)) return;
+  await atomicWriteJson(configPath, output);
 }
 
 export async function writeOatLocalConfig(

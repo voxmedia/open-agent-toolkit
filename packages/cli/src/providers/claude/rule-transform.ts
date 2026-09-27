@@ -22,7 +22,7 @@ export function transformCanonicalToClaudeRule(
   canonicalContent: string,
   canonicalPath?: string,
 ): string {
-  const rule = parseCanonicalRuleMarkdown(canonicalContent);
+  const rule = parseCanonicalRuleMarkdown(canonicalContent, canonicalPath);
   const frontmatter =
     rule.activation === 'glob' && rule.globs ? { paths: rule.globs } : null;
 

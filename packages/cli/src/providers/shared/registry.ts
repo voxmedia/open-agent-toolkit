@@ -153,6 +153,48 @@ function hasValidRefreshProvenance(
   );
 }
 
+const CATALOG_REFRESH_STATES: ReadonlySet<string> = new Set([
+  'live',
+  'manual-refresh',
+  'restart-required',
+  'unknown',
+]);
+
+/**
+ * Validates an untrusted catalog-refresh policy (for example one read back
+ * from a sync JSON payload) with the same provenance rules the registry
+ * applies to its own policies.
+ */
+export function isValidCatalogRefreshPolicy(
+  value: unknown,
+): value is ProviderCatalogRefreshPolicy {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false;
+  }
+  const candidate = value as {
+    state?: unknown;
+    reason?: unknown;
+    provenance?: unknown;
+  };
+  if (
+    typeof candidate.state !== 'string' ||
+    !CATALOG_REFRESH_STATES.has(candidate.state)
+  ) {
+    return false;
+  }
+  if (candidate.state === 'unknown') {
+    return typeof candidate.reason === 'string';
+  }
+  if (
+    typeof candidate.provenance !== 'object' ||
+    candidate.provenance === null ||
+    Array.isArray(candidate.provenance)
+  ) {
+    return false;
+  }
+  return hasValidRefreshProvenance(value as ProviderCatalogRefreshPolicy);
+}
+
 export type UserAgentMaterializationCoverage = 'none' | 'bundled' | 'all';
 
 export function userAgentMaterializationCoverage(input: {

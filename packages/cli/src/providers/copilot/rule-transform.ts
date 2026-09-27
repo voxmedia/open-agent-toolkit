@@ -56,7 +56,7 @@ export function transformCanonicalToCopilotRule(
   canonicalContent: string,
   canonicalPath?: string,
 ): string {
-  const rule = parseCanonicalRuleMarkdown(canonicalContent);
+  const rule = parseCanonicalRuleMarkdown(canonicalContent, canonicalPath);
   if (rule.activation === 'glob' && rule.globs) {
     assertCopilotGlobsAreRepresentable(rule.globs);
   }

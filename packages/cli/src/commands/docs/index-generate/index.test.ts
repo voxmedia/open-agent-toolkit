@@ -981,6 +981,44 @@ describe('createDocsGenerateIndexCommand', () => {
       expect(config.documentation?.index).toBe('apps/docs/index.md');
     });
 
+    it('records documentation.index as the only config change (GitHub #311)', async () => {
+      const repo = await createRealRepo({
+        root: 'apps/docs',
+        tooling: 'fumadocs',
+      });
+      const configPath = join(repo.repoRoot, '.oat', 'config.json');
+      // `git` precedes `projects`, the reverse of the normalizer's fixed
+      // order, so a normalizing rewrite would reorder unrelated keys.
+      const before = {
+        version: 1,
+        git: { defaultBranch: 'main' },
+        projects: { root: '.oat/projects/shared' },
+        documentation: { tooling: 'fumadocs', root: 'apps/docs' },
+      };
+      await writeFile(
+        configPath,
+        `${JSON.stringify(before, null, 2)}\n`,
+        'utf8',
+      );
+
+      await runCommand(repo.command);
+
+      expect(process.exitCode).toBe(0);
+      expect(await readFile(configPath, 'utf8')).toBe(
+        `${JSON.stringify(
+          {
+            ...before,
+            documentation: {
+              ...before.documentation,
+              index: 'apps/docs/index.md',
+            },
+          },
+          null,
+          2,
+        )}\n`,
+      );
+    });
+
     it('drops configured and flag exclusions from the real manifest', async () => {
       const repo = await createRealRepo({
         root: 'apps/docs',

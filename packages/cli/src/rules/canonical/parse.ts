@@ -96,6 +96,50 @@ function parseActivation(value: unknown, filePath: string): RuleActivation {
   );
 }
 
+function isEmptyCursorGlobs(value: unknown): boolean {
+  return (
+    value === undefined ||
+    value === null ||
+    (typeof value === 'string' && value.trim() === '') ||
+    (Array.isArray(value) && value.length === 0)
+  );
+}
+
+/**
+ * Resolves the rule activation. An explicit `activation` always wins. Without
+ * one, a Cursor-style `alwaysApply: true` (written by third-party installers
+ * such as `argent init`, GitHub issue #316) is accepted as an alias for
+ * `activation: always`. Canonical rules keep globs only for
+ * `activation: glob`, so under the alias a null or empty Cursor-style `globs`
+ * is ignored and a non-empty one is rejected. Any other `alwaysApply` value
+ * without `activation` stays an activation error.
+ */
+function resolveActivation(
+  frontmatter: Record<string, unknown>,
+  filePath: string,
+): { activation: RuleActivation; ignoreGlobs: boolean } {
+  if (frontmatter.activation !== undefined) {
+    return {
+      activation: parseActivation(frontmatter.activation, filePath),
+      ignoreGlobs: false,
+    };
+  }
+
+  if (frontmatter.alwaysApply === true) {
+    if (!isEmptyCursorGlobs(frontmatter.globs)) {
+      throw new CliError(
+        `Frontmatter field "globs" in ${filePath} is not valid with "alwaysApply: true"; canonical rules keep globs only when activation is glob.`,
+      );
+    }
+    return { activation: 'always', ignoreGlobs: true };
+  }
+
+  return {
+    activation: parseActivation(frontmatter.activation, filePath),
+    ignoreGlobs: false,
+  };
+}
+
 export function stripTrailingOatMarker(content: string): string {
   return content.replace(OAT_MARKER_PATTERN, '').trimEnd();
 }
@@ -132,12 +176,16 @@ export function parseCanonicalRuleMarkdown(
   const { frontmatter, body } = parseMarkdownFrontmatter(markdown, filePath);
 
   if (!frontmatter) {
-    throw new CliError('Rule markdown must include YAML frontmatter.');
+    throw new CliError(
+      `Rule markdown in ${filePath} must include YAML frontmatter.`,
+    );
   }
 
-  const activation = parseActivation(frontmatter.activation, filePath);
+  const { activation, ignoreGlobs } = resolveActivation(frontmatter, filePath);
   const description = parseDescription(frontmatter.description, filePath);
-  const globs = parseGlobs(frontmatter.globs, filePath);
+  const globs = ignoreGlobs
+    ? undefined
+    : parseGlobs(frontmatter.globs, filePath);
 
   if (activation === 'glob' && (!globs || globs.length === 0)) {
     throw new CliError(
