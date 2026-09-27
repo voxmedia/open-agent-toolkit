@@ -23,3 +23,15 @@ Append-only log of reusable observations from this autonomous run.
 **Observation:** Every wave item is internal to this repository (CLI source, bundled skills, tests); no external service, protocol, or adjacent repository is implicated.
 **Impact:** Step 3 research is limited to checked-out sources and the verified triage record `.oat/repo/pjm/triage/2026-09-26-untriaged-issues.md`.
 **Recommendation:** None.
+
+## 2026-09-27T05:10:00Z - efficiency - Managed Claude dispatch record built from the real resolver in one pass
+
+**Observation:** The mandatory validation-only `oat project dispatch record` input (documented only with placeholders) validated on the first try when built by a small script that combined the real resolver JSON, the generated definition under `~/.claude/agents/`, the `record.test.ts` record-base fields, and a canonical-role event computed with the built `resolveCanonicalRole`.
+**Impact:** This is the manual workaround for GitHub #326; `BL-260927-make-the-managed-claude` (p03) replaces it with a producer and a published example.
+**Recommendation:** Until p03 ships, reuse `.oat/repo/analysis/tackle-2026-09-26/managed-input.mjs` for managed Claude launches.
+
+## 2026-09-27T05:10:00Z - decision - Worktree bootstrap used the repository init without all-scope sync
+
+**Observation:** `oat-worktree-bootstrap-auto` Step 4 runs `oat sync --scope all`, which rewrites user-scope provider directories. The p01 and p02 worktrees were bootstrapped with the repository-declared `pnpm run worktree:init` (which runs project sync) and the sync-manifest version refresh was restored, leaving both worktrees clean at the expected base.
+**Impact:** No user-scope provider state was changed by phase bootstrap.
+**Recommendation:** Consider scoping the bootstrap skill's sync to `--scope project` for phase worktrees.
