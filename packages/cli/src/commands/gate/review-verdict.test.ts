@@ -1871,4 +1871,29 @@ describe('parseReviewGateVerdict dispatch audit lines', () => {
 
     expect(verdict).not.toHaveProperty('dispatchAudit');
   });
+
+  it.each([
+    ['## Summary', '- AC2: `STAMP` now fails.'],
+    ['## Requirements/Design Alignment', '- AC2: `STAMP` now fails the gate.'],
+    ['## Summary', '- Resolver stamp: `STAMP` (project policy, not the gate).'],
+  ])(
+    'ignores a labeled stamp followed by prose in %s',
+    async (heading, template) => {
+      const verdict = await parse(
+        [
+          gateFrontmatter('codex-6-sol-xhigh', 'xhigh'),
+          '',
+          '# Review',
+          '',
+          heading,
+          '',
+          template.replace('STAMP', POLICY_STAMP),
+          '',
+          CLEAN_FINDINGS,
+        ].join('\n'),
+      );
+
+      expect(verdict).not.toHaveProperty('dispatchAudit');
+    },
+  );
 });

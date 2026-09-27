@@ -376,6 +376,8 @@ const SEVERITY_SECTION_HEADING =
 const LIST_MARKER = /^(?:[-*+]|\d+[.)])\s+/;
 const DISPATCH_TOKEN = /(^|[\s`])Dispatch:/;
 const POLICY_VIEW_LABEL = /policy\s+view/i;
+/** After a closing backtick: nothing, punctuation, or one parenthetical. */
+const ALLOWED_TRAILING_TEXT = /^\s*(?:[.,;:!?]+|\([^()`]*\))?\s*$/;
 
 interface ClassifiedAuditLine {
   stamp: DispatchStamp;
@@ -393,8 +395,9 @@ function frontmatterEnd(content: string): number {
  * Shape: an optional list marker, an optional bold or plain label ending in
  * `:` (the label may itself hold backtick spans), and a `Dispatch:` stamp that
  * is either bare to the end of the line or wrapped in one backtick pair, which
- * may be followed by trailing prose. The stamp must parse as a reviewer stamp
- * (`action=review role=reviewer`).
+ * may be followed only by punctuation or a single parenthetical. A wrapped
+ * stamp followed by other prose is a quotation, not an audit line. The stamp
+ * must parse as a reviewer stamp (`action=review role=reviewer`).
  */
 function classifyAuditLine(
   text: string,
@@ -415,8 +418,11 @@ function classifyAuditLine(
     if (closing === -1) {
       return null;
     }
-    // Trailing prose after the closing backtick is allowed; the stamp itself
-    // is confined to the backtick pair.
+    // Only punctuation or one parenthetical may follow the closing backtick;
+    // longer prose means the line quotes a stamp rather than records one.
+    if (!ALLOWED_TRAILING_TEXT.test(stamp.slice(closing + 1))) {
+      return null;
+    }
     stamp = stamp.slice(0, closing);
   } else if (stamp.includes('`')) {
     return null;

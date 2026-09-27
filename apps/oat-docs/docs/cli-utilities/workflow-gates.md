@@ -252,8 +252,11 @@ level-two (`##`) heading and in sections such as `## Dispatch Audit`,
 `## Dispatch Metadata`, `## Review Dispatch Audit`, `## Review Scope`, and
 `## Dispatch Evidence`. An audit line is an optional list marker, an optional
 label ending in `:`, and a `Dispatch:` stamp that is either bare or wrapped in
-one backtick pair, which may be followed by trailing text. Fenced code blocks
-and prose that quotes a stamp are ignored. A stamp whose label contains
+one backtick pair, which may be followed only by punctuation or one
+parenthetical such as `(resolver)`. Fenced code blocks, table rows, and prose
+that quotes a stamp are ignored, including a labeled line where other prose
+follows the closing backtick. To cite a stamp as evidence, put it in a fenced
+block, a table, or a finding. A stamp whose label contains
 `policy view` is not checked. Every other audit stamp must agree with the
 frontmatter: its `target` equals `oat_gate_target`, and, when
 `oat_invocation_reasoning_effort` is a concrete effort (not `unknown`,
