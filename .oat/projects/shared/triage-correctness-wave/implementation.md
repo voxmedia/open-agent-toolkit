@@ -144,7 +144,7 @@ converted to p02-t06.
 
 ## Phase 3: Managed Claude dispatch-record input
 
-**Status:** completed
+**Status:** in_progress
 **Started:** -
 
 ### Task p03-t01: State the expected pattern in dispatch-record validation messages
@@ -189,6 +189,17 @@ top-level keys, request IDs, legacy input, `canonical-role`, JSON and text
 output) with no over-redaction. The Low is converted to p03-t07; a
 pre-existing `JSON.parse` excerpt of at most a few characters is covered by the
 documented best-effort wording.
+
+### Task p03-t08: (review) Include runtime-observation errors in the single-run report
+
+**Status:** pending
+**Commit:** -
+
+**p03 phase gate (run `010e23d8-6317-4ca5-b397-73346cf8caf1`,
+`codex-6-sol-xhigh`):** `ok`, 0 Critical, 0 High, 1 Medium, 0 Low; received in
+judgment-sweep mode. Disposition: address now (contained to `record.ts`,
+low risk) as p03-t08; no re-gate for an address-now fix, and the final review
+covers it.
 
 ### Recovery Event p03-rec-01
 

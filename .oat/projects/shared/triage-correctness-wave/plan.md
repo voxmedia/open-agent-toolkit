@@ -1124,6 +1124,30 @@ the private-key match at the end of the line.
 
 ---
 
+### Task p03-t08: (review) Include runtime-observation errors in the single-run report
+
+Source: `reviews/archived/p03-review-2026-09-27T064005Z.md` (p03 phase gate
+passed, 0 Critical, 0 High, 1 Medium; addressed now under the passing-gate
+judgment sweep).
+
+**Files:** `packages/cli/src/commands/project/dispatch/record.ts`
+(`collectManagedEventViolations` near 302) and `record.test.ts`.
+
+**Step 1 (RED):** a managed input with one `recordBase` error and a malformed
+`runtime-observation` event (bad `observation.observedAt`, missing outer
+`source`) reports all of them in one run; the test fails when event collection
+is removed.
+
+**Step 2 (GREEN):** validate the caller form of `runtime-observation` events in
+the collect-all pass; name any checks that genuinely depend on the built
+record as skipped.
+
+**Step 4 (Verify):** `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/dispatch/ src/providers/`
+
+**Step 5 (Commit):** `fix(p03-t08): report runtime-observation event errors in the single-run violation report`
+
+---
+
 ## Phase 4: Release and backlog fan-in
 
 ### Task p04-t01: Bump the lockstep public package versions
@@ -1273,7 +1297,7 @@ git commit -m "chore(p04-t03): record definition-of-done gate results"
 | p02    | code     | passed          | 2026-09-27 | reviews/archived/p02-review-2026-09-27T054914Z.md           | 16b7b968c04f1a610d1537a7f979c933d02556d9 | gate       | codex-6-sol-xhigh |
 | p03    | code     | fixes_completed | 2026-09-27 | reviews/archived/p03-review-2026-09-27T061910Z.md           | c4ef806fb7c5c1bcdc1e66f71f29a77c78b4a260 | auto       | -                 |
 | p03    | code     | passed          | 2026-09-27 | reviews/archived/p03-review-2026-09-27T062955Z.md           | 54cea0878dc10bb42ae199758ad050dc5754d22f | auto       | -                 |
-| p03    | code     | received        | 2026-09-27 | reviews/p03-review-2026-09-27T064005Z.md                    | de48e25a55b2e2e0af608a1f45dc0c7eb50d3715 | gate       | codex-6-sol-xhigh |
+| p03    | code     | passed          | 2026-09-27 | reviews/archived/p03-review-2026-09-27T064005Z.md           | de48e25a55b2e2e0af608a1f45dc0c7eb50d3715 | gate       | codex-6-sol-xhigh |
 | p04    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | final  | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
@@ -1355,10 +1379,10 @@ reviewer was Codex, so the achieved review was cross-family.
 
 - Phase 1: 5 tasks - Bundled skill and script fixes
 - Phase 2: 6 tasks - CLI sync, config, and tools correctness
-- Phase 3: 7 tasks - Managed Claude dispatch-record input
+- Phase 3: 8 tasks - Managed Claude dispatch-record input
 - Phase 4: 3 tasks - Release and backlog fan-in
 
-**Total: 21 tasks**
+**Total: 22 tasks**
 
 Ready for code review and merge.
 
