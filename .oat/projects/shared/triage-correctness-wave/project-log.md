@@ -76,6 +76,10 @@ target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:
 
 target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:1 exit=0 status=ok artifact=.oat/projects/shared/triage-correctness-wave/reviews/final-review-2026-09-27T071850Z.md run=3d23848e-208f-4b8f-96a9-9ea83c666bbf
 
+### 2026-09-27 · structural · oat-project-retro · project-retro
+
+retro artifact=.oat/projects/shared/triage-correctness-wave/references/project-retro.md evidence_used=archived-review-markdown,lifecycle-artifacts,oat-execution-learnings,orchestrator-session-summary,project-log,repository-source,session-transcript evidence_unavailable=child-run-transcripts promotions=2 upstream=4 apply=deferred filing=deferred
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
