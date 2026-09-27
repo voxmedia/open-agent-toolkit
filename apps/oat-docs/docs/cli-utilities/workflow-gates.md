@@ -245,18 +245,22 @@ gate-originated artifacts label it as the policy view:
 ```
 
 The gate reads reviewer stamps (`action=review role=reviewer`) from audit lines
-in the metadata block before the first level-two (`##`) heading and in a
-`## Dispatch Audit` or `## Dispatch Metadata` section. An audit line is an
-optional list marker, an optional label ending in `:`, and a `Dispatch:` stamp,
-optionally wrapped in one backtick pair. Fenced code blocks, findings, and prose
-that quotes a stamp are ignored. A stamp whose label contains `policy view` is
-not checked. Every other audit stamp must agree with the frontmatter: its
-`target` equals `oat_gate_target`, and, when `oat_invocation_reasoning_effort`
-is a concrete effort (not `unknown`, `provider-default`, or `not-applicable`),
-its `effort_axis` equals `selected:<effort>`. A
-disagreeing stamp fails with `status: artifact_validation_failed` and cause
-`gate_dispatch_audit_mismatched`. Artifacts without an audit stamp are
-unaffected.
+anywhere in the artifact body except finding sections: `## Findings` with its
+subsections, and any `### Critical`, `### High`, `### Medium`, or `### Low`
+section. Reviewers place these lines in the metadata block before the first
+level-two (`##`) heading and in sections such as `## Dispatch Audit`,
+`## Dispatch Metadata`, `## Review Dispatch Audit`, `## Review Scope`, and
+`## Dispatch Evidence`. An audit line is an optional list marker, an optional
+label ending in `:`, and a `Dispatch:` stamp that is either bare or wrapped in
+one backtick pair, which may be followed by trailing text. Fenced code blocks
+and prose that quotes a stamp are ignored. A stamp whose label contains
+`policy view` is not checked. Every other audit stamp must agree with the
+frontmatter: its `target` equals `oat_gate_target`, and, when
+`oat_invocation_reasoning_effort` is a concrete effort (not `unknown`,
+`provider-default`, or `not-applicable`), its `effort_axis` equals
+`selected:<effort>`. A disagreeing stamp fails with
+`status: artifact_validation_failed` and cause `gate_dispatch_audit_mismatched`.
+Artifacts without an audit stamp are unaffected.
 
 ### Review producer identity
 

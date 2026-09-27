@@ -1692,7 +1692,7 @@ describe('parseReviewGateVerdict dispatch audit lines', () => {
     expect(verdict.dispatchAudit?.policyView).toHaveLength(1);
   });
 
-  it('ignores implementer stamps, fenced stamps, other sections, and finding prose', async () => {
+  it('ignores implementer stamps, fenced stamps, finding sections, and prose', async () => {
     const verdict = await parse(
       [
         gateFrontmatter('codex-6-sol-xhigh', 'xhigh'),
@@ -1714,7 +1714,7 @@ describe('parseReviewGateVerdict dispatch audit lines', () => {
         '',
         '## Summary',
         '',
-        `- ${POLICY_STAMP}`,
+        `Summary quotes \`${POLICY_STAMP}\` as context.`,
         '',
         '## Findings',
         '',
@@ -1730,10 +1730,141 @@ describe('parseReviewGateVerdict dispatch audit lines', () => {
         '',
         `- The audit line \`${POLICY_STAMP}\` disagrees with the target.`,
         `- ${POLICY_STAMP}`,
+        `  - Quoted audit: \`${POLICY_STAMP}\` (from the artifact).`,
         '',
         '### Low',
         '',
         'None',
+        '',
+      ].join('\n'),
+    );
+
+    expect(verdict).not.toHaveProperty('dispatchAudit');
+  });
+
+  it('reads a bare backtick stamp in a Review Dispatch Audit section', async () => {
+    // Excerpt of the machine-local (gitignored) artifact
+    // .oat/projects/archived/reviewer-parallelism/reviews/archived/artifact-plan-review-2026-07-18T194838Z.md:87-91
+    // (frontmatter: oat_gate_target: codex-5-6-sol-max,
+    // oat_invocation_reasoning_effort: max)
+    const verdict = await parse(
+      [
+        gateFrontmatter('codex-5-6-sol-max', 'max'),
+        '',
+        '# Artifact Review: plan',
+        '',
+        CLEAN_FINDINGS,
+        '## Review Dispatch Audit',
+        '',
+        "Gate route: `inline` (`runtime=codex`, `cliRoot=/Users/tstang/Code/open-agent-toolkit`). The gate-configured invocation is recorded immutably in frontmatter; the project resolver's separate managed reviewer report had `schemaVersion: 1`, and runtime identity was not reported.",
+        '',
+        '`Dispatch: scope=plan action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`',
+        '',
+      ].join('\n'),
+    );
+
+    expect(verdict.dispatchAudit?.policyView).toEqual([]);
+    expect(verdict.dispatchAudit?.unlabeled).toHaveLength(1);
+    expect(verdict.dispatchAudit?.unlabeled[0]?.target).toBe(
+      'oat-reviewer-gpt-5-6-sol-high',
+    );
+  });
+
+  it('reads a list stamp in a Review Scope section', async () => {
+    // Excerpt of .oat/projects/shared/migrate-skill-versions/reviews/archived/artifact-plan-review-2026-09-08T080653Z.md:24-31
+    // (frontmatter: oat_gate_target: codex-5-6-sol-xhigh,
+    // oat_invocation_reasoning_effort: xhigh)
+    const verdict = await parse(
+      [
+        gateFrontmatter('codex-5-6-sol-xhigh', 'xhigh'),
+        '',
+        '# Artifact Review: plan',
+        '',
+        '## Review Scope',
+        '',
+        '- Dispatch: scope=plan action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high',
+        '',
+        CLEAN_FINDINGS,
+      ].join('\n'),
+    );
+
+    expect(verdict.dispatchAudit?.unlabeled).toHaveLength(1);
+    expect(verdict.dispatchAudit?.unlabeled[0]?.effortAxis).toBe(
+      'selected:high',
+    );
+  });
+
+  it('reads a stamp after a fenced report in a Dispatch Evidence section', async () => {
+    // Excerpt of the machine-local (gitignored) artifact
+    // .oat/projects/archived/cli-scaffold-and-ergonomics-fixes/reviews/archived/p01-review-2026-07-14T010459Z.md:66-106
+    // (frontmatter: oat_gate_target: codex-5-6-sol-max,
+    // oat_invocation_reasoning_effort: max); the fenced report is abridged.
+    const verdict = await parse(
+      [
+        gateFrontmatter('codex-5-6-sol-max', 'max'),
+        '',
+        '# Code Review: p01',
+        '',
+        CLEAN_FINDINGS,
+        '## Dispatch Evidence',
+        '',
+        'The gate frontmatter records the immutable configured parent invocation. The nested managed reviewer resolver independently selected the registered high reviewer target with `dispatchReport.schemaVersion: 1`:',
+        '',
+        '```text',
+        'Dispatch Report V1',
+        'Route',
+        '  Scope: p01',
+        '  Action / role: review / reviewer',
+        '  Invocation target: oat-reviewer-gpt-5-6-sol-high',
+        '```',
+        '',
+        '`Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`',
+        '',
+      ].join('\n'),
+    );
+
+    expect(verdict.dispatchAudit?.unlabeled).toHaveLength(1);
+    expect(verdict.dispatchAudit?.unlabeled[0]?.lineNumber).toBeGreaterThan(0);
+  });
+
+  it.each([
+    ['a period', '.'],
+    ['a parenthetical', ' (resolver)'],
+  ])(
+    'reads a backtick-wrapped stamp followed by %s',
+    async (_label, trailing) => {
+      const verdict = await parse(
+        [
+          gateFrontmatter('cursor-fable-5-1-high', 'unknown'),
+          '',
+          '# Review',
+          '',
+          `**Dispatch audit:** \`${POLICY_STAMP}\`${trailing}`,
+          '',
+          CLEAN_FINDINGS,
+        ].join('\n'),
+      );
+
+      expect(verdict.dispatchAudit?.unlabeled).toHaveLength(1);
+      expect(verdict.dispatchAudit?.unlabeled[0]?.target).toBe(
+        'oat-reviewer-gpt-5-6-sol-high',
+      );
+    },
+  );
+
+  it('ignores stamps under severity headings outside a Findings section', async () => {
+    const verdict = await parse(
+      [
+        gateFrontmatter('codex-6-sol-xhigh', 'xhigh'),
+        '',
+        '# Review',
+        '',
+        CLEAN_FINDINGS,
+        '## Deferred',
+        '',
+        '### Medium',
+        '',
+        `- ${POLICY_STAMP}`,
         '',
       ].join('\n'),
     );

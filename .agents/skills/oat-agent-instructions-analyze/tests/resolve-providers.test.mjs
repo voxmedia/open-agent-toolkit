@@ -78,3 +78,54 @@ describe('resolve-providers.sh auto-detection', () => {
     }
   }
 });
+
+function ptyCommand() {
+  // Run the script under a pseudo-terminal so interactive_confirm takes the
+  // TTY branch. `script` differs between BSD (macOS) and util-linux.
+  const probe = spawnSync('script', ['--version'], { encoding: 'utf8' });
+  if (process.platform === 'darwin') {
+    return (scriptPath) => ['script', ['-q', '/dev/null', 'bash', scriptPath]];
+  }
+  if (probe.error) {
+    return null;
+  }
+  return (scriptPath) => [
+    'script',
+    ['-qec', `bash '${scriptPath}'`, '/dev/null'],
+  ];
+}
+
+describe('resolve-providers.sh interactive mode', () => {
+  const build = ptyCommand();
+
+  test(
+    'prints providers and exits 0 when stdin reaches EOF before the prompt read',
+    { skip: build ? false : 'script(1) is unavailable' },
+    () => {
+      const root = makeRepo(['AGENTS.md', '.claude/']);
+      const [command, args] = build(script);
+      // stdin is /dev/null (a pipe or socket breaks BSD script's tcgetattr):
+      // `script` forwards EOF to the terminal, so the prompt's `read` sees end
+      // of input with no answer.
+      const result = spawnSync(command, args, {
+        cwd: root,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+        timeout: 20_000,
+      });
+      const lines = result.stdout.replace(/\r/g, '').split('\n');
+      assert.ok(
+        lines.some((line) => line.includes('Detected providers:')),
+        `expected the interactive prompt; output: ${result.stdout}`,
+      );
+      assert.equal(
+        result.status,
+        0,
+        `expected exit 0, got ${result.status}; output: ${result.stdout}`,
+      );
+      // The unanswered prompt leaves no newline, so the provider list starts
+      // on the prompt line and is the tail of the terminal output.
+      assert.match(lines.join('\n').trimEnd(), /agents_md\nclaude$/);
+    },
+  );
+});

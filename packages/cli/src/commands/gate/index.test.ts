@@ -4752,6 +4752,8 @@ describe('oat gate', () => {
       'Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=codex-6-sol-xhigh';
     const AGREEING_STAMP =
       'Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6-sol effort_axis=selected:xhigh dispatch_policy=high dispatch_ceiling=high target=codex-6-sol-xhigh';
+    const OTHER_TARGET_XHIGH_STAMP =
+      'Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6-sol effort_axis=selected:xhigh dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-sol-xhigh';
     const IMPLEMENTER_STAMP =
       'Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=inherited effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-high';
 
@@ -4773,6 +4775,14 @@ describe('oat gate', () => {
                     reasoningEffort: 'xhigh',
                   },
                 },
+                // Non-concrete effort: only the target clause applies.
+                'codex-6-sol-default': {
+                  runtime: 'codex',
+                  baseCommand: ['codex', 'exec'],
+                  invocation: {
+                    model: 'gpt-6-sol',
+                  },
+                },
               },
             },
           },
@@ -4782,6 +4792,7 @@ describe('oat gate', () => {
     }
 
     async function runWithBody(options: {
+      target?: string;
       preFindingsBody?: string[];
       lowFindingLines?: string[];
       counts?: { critical: number; high: number; medium: number; low: number };
@@ -4790,14 +4801,15 @@ describe('oat gate', () => {
       const projectPath = await writeProject(root);
       await writeActiveProject(root, projectPath);
       await writeXhighTarget(root);
+      const { target = 'codex-6-sol-xhigh', ...artifactOptions } = options;
       const runner = createProcessRunner({
-        availableTargets: ['codex-default', 'codex-6-sol-xhigh'],
+        availableTargets: ['codex-default', target],
         onExecute: async () => {
           await writeReviewArtifact({
             root,
             projectPath,
             finding: 'clean',
-            ...options,
+            ...artifactOptions,
           });
         },
       });
@@ -4806,7 +4818,7 @@ describe('oat gate', () => {
         root,
         home,
         runProcess: runner.runProcess,
-        args: ['--target', 'codex-6-sol-xhigh', 'Review'],
+        args: ['--target', target, 'Review'],
       });
       return capture;
     }
@@ -4854,6 +4866,53 @@ describe('oat gate', () => {
       expectAuditMismatch(
         await runWithBody({
           preFindingsBody: [`- ${TARGET_STAMP_HIGH_EFFORT}`],
+        }),
+      );
+    });
+
+    it('rejects an unlabeled stamp whose effort matches but target differs', async () => {
+      expectAuditMismatch(
+        await runWithBody({
+          preFindingsBody: [
+            `**Dispatch audit:** \`${OTHER_TARGET_XHIGH_STAMP}\``,
+          ],
+        }),
+      );
+    });
+
+    it('rejects a differing target when the gate effort is not concrete', async () => {
+      const capture = await runWithBody({
+        target: 'codex-6-sol-default',
+        preFindingsBody: [`**Dispatch audit:** \`${POLICY_STAMP}\``],
+      });
+      expect(lastExecutePrompt).toContain(
+        'oat_invocation_reasoning_effort: unknown',
+      );
+      expectAuditMismatch(capture);
+    });
+
+    it('skips the effort clause when the gate effort is not concrete', async () => {
+      expectPassed(
+        await runWithBody({
+          target: 'codex-6-sol-default',
+          preFindingsBody: [
+            `**Dispatch audit:** \`${POLICY_STAMP.replace(
+              'target=oat-reviewer-gpt-6-sol-high',
+              'target=codex-6-sol-default',
+            )}\``,
+          ],
+        }),
+      );
+    });
+
+    it('checks an unlabeled stamp in a Review Dispatch Audit section', async () => {
+      expectAuditMismatch(
+        await runWithBody({
+          preFindingsBody: [
+            '## Review Dispatch Audit',
+            '',
+            `\`${POLICY_STAMP}\``,
+          ],
         }),
       );
     });

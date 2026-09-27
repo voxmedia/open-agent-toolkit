@@ -113,7 +113,8 @@ interactive_confirm() {
   echo "" >&2
   echo "Available providers: claude, cursor, copilot, cline, codex" >&2
   echo -n "Add any additional providers? (comma-separated, or Enter to skip): " >&2
-  read -r additional
+  # EOF (for example Ctrl-D) means no additional providers, not failure.
+  read -r additional || additional=""
 
   if [[ -n "$additional" ]]; then
     IFS=',' read -ra items <<< "$additional"

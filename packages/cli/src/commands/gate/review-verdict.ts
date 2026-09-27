@@ -369,8 +369,10 @@ function linesOutsideFences(content: string): MarkdownLine[] {
   return outsideFenceLines;
 }
 
-const AUDIT_SECTION_HEADING = /^##\s+Dispatch\s+(?:Audit|Metadata)\s*#*\s*$/i;
 const TOP_SECTION_HEADING = /^##\s+\S/;
+const FINDINGS_SECTION_HEADING = /^##\s+Findings\b/i;
+const SEVERITY_SECTION_HEADING =
+  /^#{3,6}\s+(?:Critical|High|Medium|Low)\s*#*\s*$/i;
 const LIST_MARKER = /^(?:[-*+]|\d+[.)])\s+/;
 const DISPATCH_TOKEN = /(^|[\s`])Dispatch:/;
 const POLICY_VIEW_LABEL = /policy\s+view/i;
@@ -390,8 +392,9 @@ function frontmatterEnd(content: string): number {
  *
  * Shape: an optional list marker, an optional bold or plain label ending in
  * `:` (the label may itself hold backtick spans), and a `Dispatch:` stamp that
- * is either bare or wrapped in exactly one backtick pair. The stamp must parse
- * as a reviewer stamp (`action=review role=reviewer`).
+ * is either bare to the end of the line or wrapped in one backtick pair, which
+ * may be followed by trailing prose. The stamp must parse as a reviewer stamp
+ * (`action=review role=reviewer`).
  */
 function classifyAuditLine(
   text: string,
@@ -408,12 +411,14 @@ function classifyAuditLine(
   const wrapped = label.endsWith('`');
   if (wrapped) {
     label = label.slice(0, -1);
-    if (!stamp.endsWith('`')) {
+    const closing = stamp.indexOf('`');
+    if (closing === -1) {
       return null;
     }
-    stamp = stamp.slice(0, -1);
-  }
-  if (stamp.includes('`')) {
+    // Trailing prose after the closing backtick is allowed; the stamp itself
+    // is confined to the backtick pair.
+    stamp = stamp.slice(0, closing);
+  } else if (stamp.includes('`')) {
     return null;
   }
 
@@ -441,25 +446,32 @@ function classifyAuditLine(
 }
 
 /**
- * Reviewer dispatch audit lines from the metadata block before the first `## `
- * heading and from `## Dispatch Audit` or `## Dispatch Metadata` sections.
- * Fenced code blocks, other sections (including findings), and prose that
- * merely quotes a stamp are ignored.
+ * Reviewer dispatch audit lines from every part of the artifact body except
+ * finding sections: `## Findings` (with its subsections) and any
+ * `### Critical`, `### High`, `### Medium`, or `### Low` section. Reviewers
+ * have placed audit stamps in the pre-heading metadata block and in sections
+ * such as `## Dispatch Audit`, `## Review Dispatch Audit`, `## Review Scope`,
+ * and `## Dispatch Evidence`, so recognition is by line shape, not section
+ * name. Fenced code blocks and prose that merely quotes a stamp are ignored.
  */
 export function extractDispatchAudit(content: string): ReviewDispatchAudit {
   const bodyStart = frontmatterEnd(content);
   const audit: ReviewDispatchAudit = { unlabeled: [], policyView: [] };
-  let inAuditRegion = true;
+  let inFindingSection = false;
 
   for (const line of linesOutsideFences(content)) {
     if (line.start < bodyStart) {
       continue;
     }
     if (TOP_SECTION_HEADING.test(line.text)) {
-      inAuditRegion = AUDIT_SECTION_HEADING.test(line.text);
+      inFindingSection = FINDINGS_SECTION_HEADING.test(line.text);
       continue;
     }
-    if (!inAuditRegion) {
+    if (SEVERITY_SECTION_HEADING.test(line.text)) {
+      inFindingSection = true;
+      continue;
+    }
+    if (inFindingSection) {
       continue;
     }
 
