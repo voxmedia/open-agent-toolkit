@@ -135,7 +135,7 @@ and the first owns the one version bump.
 |                                            | `BL-260830-persist-instruction-sync` absorbed                                                                               | p02-t06, p05-t05                                      |
 |                                            | This repository drops its shims; sync clean                                                                                 | p02-t06                                               |
 |                                            | Lockstep bump; tests for each strategy with isolated `HOME`                                                                 | p02-t02, p02-t03, p05-t04                             |
-|                                            | Release notes call out the automatic removal                                                                                | p05-t05 (PR Requirements)                             |
+|                                            | Release notes call out the automatic removal (via the PR title)                                                             | p05-t05 (PR Requirements)                             |
 | `BL-260907-route-quick-mode-discovery`     | Discovery rows name quick-start; pins; one bump each                                                                        | p03-t01                                               |
 | `BL-260907-record-absorbed-projects`       | Lite records both fields; contract test and scratch probe; `lifecycle.md` qualifier dropped                                 | p03-t02                                               |
 | `BL-260829-order-phase-bookkeeping-before` | Reviewer never sees a stale ledger; clean tree for the fix child preserved; relationship to `BL-260711` recorded            | p03-t03                                               |
@@ -202,6 +202,11 @@ Backlog: `BL-260903-close-manual-only-agents-md` (criteria 1, 2).
   at line ~76, `createMissingFile` ~443, the existing-file branch ~462-556,
   `formatAgentsMdGuidanceResult` ~396)
 - Modify: `packages/cli/src/commands/shared/agents-md.test.ts`
+- Modify: `packages/cli/src/commands/init/tools/project-guidance.ts`
+  (`AgentsGuidanceAction` gains `appended`; the prompt "Create missing or
+  propose manual repository AGENTS.md tool guidance?" and the "an existing file
+  requires a manual patch" reason strings, ~14-20, ~180, ~218, ~232, describe
+  the append path) and `packages/cli/src/commands/init/tools/index.test.ts`
 - Modify: every caller that switches on the action (search `'manual-required'`
   under all of `packages/cli/src`) so `appended` is handled wherever `created`
   is, including `packages/cli/src/commands/decision/index.ts` (~167) and
@@ -213,16 +218,18 @@ Backlog: `BL-260903-close-manual-only-agents-md` (criteria 1, 2).
   guidance truthfully", which seeds an AGENTS.md without the blocks and today
   expects exit 1 plus `manual-required`; under the new contract the absent-block
   cases become `appended` with exit 0, while present-but-different cases keep
-  the manual patch)
+  the manual patch; the tools-guidance cases at ~354-460, "keeps $entryPoint
+  ... guidance manual-only across reruns", flip the same way)
 
 **Step 1: Write tests (RED)**
 
 Cover the four-way contract for `upsertAgentsMdSections` against an existing
 file:
 
-- block absent → action `appended`, exit-code-bearing result is success, the
-  file equals the original bytes followed by the block (a newline is inserted
-  first only when the file does not end with one);
+- block absent → action `appended`, exit-code-bearing result is success, and
+  the file equals the original bytes, one separator newline (`\n`), then the
+  block, so the block marker always starts its own line regardless of how the
+  file (or a concurrent writer) ended;
 - block present and identical → `no-change`, file untouched;
 - block present but different → `manual-required` with the same manual patch
   as today, file untouched;
@@ -236,9 +243,18 @@ and the managed block are present afterwards with the original prefix
 byte-for-byte unchanged; (d) the same race where the concurrent append has no
 trailing newline: the managed block's opening marker still starts its own
 line, and a second `upsertAgentsMdSections` run returns `no-change` with
-exactly one managed block. Inject the concurrent write through an injectable
-filesystem dependency of `agents-md.ts` (the module already takes a
-`fileSystem` parameter) between the existence check and the append.
+exactly one managed block. Inject the concurrent write through a new `open` member on
+`AgentsMdFileSystem` (today it exposes only `lstat`, `readFile`, `readlink`,
+`realpath`, `writeFile`), between planning and the append. (e) Symlink swap:
+replace `AGENTS.md` with a symlink to a file outside the repository between
+planning and the open; expect `blocked`, zero bytes written, and the outside
+file byte-identical; prove it by neutralize-and-restore of the identity check.
+(f) Multi-section and legacy cases: tools block absent while the legacy
+`<!-- OAT workflows -->` block is present stays `manual-required` with zero
+writes (append cannot remove the legacy block); in a multi-section write
+(pjm init writes two sections in one call) with one block absent and the other
+present-but-different, append the absent block and report `manual-required`
+with a patch for only the different block and a non-zero exit.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/shared/agents-md.test.ts`
 Expected: the absent-block and concurrent cases fail.
@@ -246,11 +262,12 @@ Expected: the absent-block and concurrent cases fail.
 **Step 2: Implement (GREEN)**
 
 Add the `appended` action. For an existing regular file whose managed block is
-absent, open it with an append-only flag (`'a'`, which maps to `O_APPEND`),
-decide the separating newline from the opened descriptor immediately before
-writing (fstat for the size, then a positional read of the last byte), or
-always write a leading newline when the block marker must start a line, and
-write only the new block; never truncate, rename, or rewrite the file. State in
+absent, open it with `O_APPEND | O_NOFOLLOW` for a direct target (or open the
+already-approved in-repository resolved target), `fstat` the opened handle and
+compare `dev`/`ino` with the planned target identity, closing with `blocked`
+and zero bytes written on a mismatch; then
+always write one leading `\n` before the block marker (no last-byte read, so
+no read-to-write window), and write only that separator plus the new block; never truncate, rename, or rewrite the file. State in
 the commit body whether an in-repository symlinked `AGENTS.md` target (the e2e
 symlink cases) is appended through or keeps the manual patch; keep today's
 refusal for any target outside the repository. Keep the existing
@@ -287,13 +304,17 @@ Backlog: `BL-260903-close-manual-only-agents-md` (criteria 3, 4, 5).
 
 **Step 1: Write tests (RED)**
 
-- `oat pjm init` against a repo whose `AGENTS.md` lacks both managed blocks:
-  the combined guidance result is printed exactly once and the command exits 0
-  with both blocks appended.
-- A fresh temp repository: run the `oat init` path that creates `AGENTS.md`,
-  then `oat pjm init`; assert both managed blocks are present, the exit code is
-  0, and no manual patch is printed. Use the command runners the existing
-  tests use, with an isolated `HOME`.
+- `oat pjm init` against a repo whose `AGENTS.md` has both PJM blocks present
+  but different: the combined manual patch is printed exactly once (today it
+  prints once per writer) and the command exits non-zero. This fails before
+  the dedup fix.
+- A fresh temp repository: run an `oat init` path that actually writes
+  `AGENTS.md` non-interactively (for example `init --setup --project-guidance`
+  with a pack, or the tools-install guidance path), assert the file exists,
+  then run `oat pjm init`; assert the tools, project-management, and decisions
+  block markers are all present, the exit code is 0, and no manual patch is
+  printed. Use the command runners the existing tests use, with an isolated
+  `HOME`.
 
 **Step 2: Implement (GREEN)**
 
@@ -307,9 +328,8 @@ patch).
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm`
 Then build and probe in a temp repo inside one subshell so both commands share
 the isolated `HOME`:
-`pnpm build && (export HOME=$(mktemp -d); cd $(mktemp -d) && git init -q && node /Users/tstang/Code/open-agent-toolkit/packages/cli/dist/index.js init --scope project; echo "init exit=$?"; node /Users/tstang/Code/open-agent-toolkit/packages/cli/dist/index.js pjm init; echo "pjm exit=$?"; grep -n '^## ' AGENTS.md)`;
-record both exit codes and the resulting `AGENTS.md` block headings in
-`implementation.md`.
+`pnpm build && (export HOME=$(mktemp -d); cd $(mktemp -d) && git init -q && node /Users/tstang/Code/open-agent-toolkit/packages/cli/dist/index.js init --scope project --setup --project-guidance <same non-interactive flags the test uses>; echo "init exit=$?"; test -f AGENTS.md && echo "AGENTS.md exists"; node /Users/tstang/Code/open-agent-toolkit/packages/cli/dist/index.js pjm init; echo "pjm exit=$?"; grep -n '<!-- OAT' AGENTS.md)`;
+record the exit codes and the block markers in `implementation.md`.
 
 **Step 4: Commit**
 
@@ -455,7 +475,7 @@ Expected: green.
 
 ## Phase 2: CLAUDE.md shims
 
-### Task p02-t01: Persist the instruction sync strategy with a none default
+### Task p02-t01: Persist a configurable instruction sync strategy
 
 Backlog: `BL-260927-make-claude-md-shims-opt` (criterion 1);
 `DR-260927-claude-md-shims-are-opt`.
@@ -469,6 +489,9 @@ Backlog: `BL-260927-make-claude-md-shims-opt` (criterion 1);
   `documentation.instructionSyncStrategy`, then the built-in default; in this
   task the built-in default stays `pointer`, and p02-t02 flips it to `none`
   together with the `none` behavior so every intermediate commit is coherent)
+- Modify: `packages/cli/src/config/resolve.ts` (default row for
+  `documentation.instructionSyncStrategy` beside `instructionPointerExcludes`
+  ~76)
 - Modify: `packages/cli/src/config/oat-config.ts` (`OatDocumentationConfig`
   gains `instructionSyncStrategy`; parse and validate alongside
   `instructionPointerExcludes`, ~1523-1548 and ~1778-1783)
@@ -510,7 +533,7 @@ Expected: green.
 
 **Step 4: Commit**
 
-`feat(p02-t01): persist the instruction sync strategy with a none default`
+`feat(p02-t01): persist a configurable instruction sync strategy`
 
 ---
 
@@ -570,7 +593,7 @@ restoring.
 
 **Step 4: Commit**
 
-`feat(p02-t02): remove OAT-managed CLAUDE.md shims under the none strategy`
+`feat(p02-t02): default to no CLAUDE.md shims and remove OAT-managed ones`
 
 ---
 
@@ -703,8 +726,8 @@ v2.1.278.
 **Step 2: Verify**
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm`
-and `pnpm exec markdownlint-cli2 "apps/oat-docs/docs/**/*.md"` (or the
-repository's `pnpm check` markdownlint step). Expected: green.
+and `pnpm --filter oat-docs check` (the oxfmt and markdownlint check CI
+uses). Expected: green.
 
 **Step 3: Commit**
 
@@ -842,8 +865,11 @@ Backlog: `BL-260829-order-phase-bookkeeping-before` (criteria 1, 2, 4; criterion
 - Modify: `.agents/skills/oat-project-implement/references/phase-execution.md`
   (Per-Phase Review ~684-796, the deferral note ~756-758, Step 7 Root
   Bookkeeping ~880-916)
-- Modify: `.agents/skills/oat-project-implement/SKILL.md` (summary, if it
-  describes the order; `metadata.version` 2.3.13 → 2.3.14)
+- Bump: `.agents/skills/oat-project-implement/SKILL.md` `metadata.version`
+  2.3.13 → 2.3.14 (required: `references/phase-execution.md` is a bundled file
+  of the skill)
+- Modify: `.agents/skills/oat-project-implement/SKILL.md` summary, if it
+  describes the order
 - Modify: the implement skill contract tests that pin the review/bookkeeping
   order (search `packages/cli/src/commands/init/tools/shared/*.test.ts` and
   `.agents/skills/oat-project-implement/tests/` for `Step 7: Artifact Updates`
@@ -992,7 +1018,12 @@ list the envelope's required fields and their constraints for each lane.
 **Step 2: Write tests (RED)**
 
 The validator reports every missing or invalid field (not just the first) and
-exits non-zero on an invalid envelope; valid fixtures for both lanes pass.
+exits non-zero on an invalid envelope; valid fixtures for both lanes pass. Add
+a contract assertion (in `packages/cli/src/validation/skills.test.ts` or the
+existing agent-role contract tests) that `oat-reviewer.md` names
+`validate-assignment.mjs`, the user-then-repository probe order, the inline
+fallback with the `oat tools install research` recovery, and the
+accepted-handle correction rule; it fails before the edit.
 
 **Step 3: Implement (GREEN)**
 
@@ -1066,8 +1097,11 @@ Backlog: `BL-260909-rewrite-inbound-references` (criteria 1, 2).
 - Modify: `packages/cli/src/commands/backlog/archive.ts` (`archiveBacklogItem`
   ~200-321)
 - Modify: `packages/cli/src/commands/backlog/archive.test.ts`
-- Modify: `apps/oat-docs/docs/` backlog command docs and
-  `.oat/repo/pjm/AGENTS.md` (Backlog Lifecycle: note the rewrite)
+- Modify: `apps/oat-docs/docs/` backlog command docs,
+  `.oat/repo/pjm/AGENTS.md` (Backlog Lifecycle: note the rewrite), and the
+  shipped template `.oat/templates/pjm-agents.md` (primary path notes the
+  rewrite; the manual fallback adds "rewrite inbound `.oat/repo` links to
+  `archived/`")
 
 **Step 1: Write tests (RED)**
 
@@ -1218,13 +1252,15 @@ Record each exit code and the head SHA in `implementation.md`.
 
 ## PR Requirements
 
-GitHub generates this repository's release notes from the PR title and body
-(`.github/workflows/release.yml`), so the PR must carry the shim behavior
-change prominently:
+The release workflow (`.github/workflows/release.yml`) publishes a fixed body
+plus `generate_release_notes: true`, whose "What's Changed" list carries merged
+PR titles only, not PR bodies. The removal must therefore be stated in the PR
+title itself:
 
-- Title uses a Conventional Commit breaking marker, for example
-  `feat!: wave 2 backlog fixes and opt-in CLAUDE.md shims (lockstep 0.3.9)`.
-- The body opens with a **Behavior change** callout: `oat instructions sync` no
+- Title uses a Conventional Commit breaking marker and names the removal, for
+  example
+  `feat!: stop creating and auto-remove OAT-managed CLAUDE.md shims by default (wave 2, lockstep 0.3.9)`.
+- The body (for reviewers) opens with a **Behavior change** callout: `oat instructions sync` no
   longer creates `CLAUDE.md` shims by default and removes OAT-managed shims
   (exact `@AGENTS.md` pointer, sibling symlink, or identical copy) on its next
   run; hand-written `CLAUDE.md` files are kept and reported. Opt back in with
