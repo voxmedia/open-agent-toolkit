@@ -11,6 +11,11 @@ oat_plan_source: spec-driven # spec-driven | quick | imported | lite
 oat_import_reference: null # e.g., references/imported-plan.md
 oat_import_source_path: null # original source path provided by user
 oat_import_provider: null # codex | cursor | claude | null
+oat_phase_review_gate:
+  enabled: true
+  phases: []
+  review_type: code
+  exit_nonzero_on: high
 oat_generated: false
 ---
 
