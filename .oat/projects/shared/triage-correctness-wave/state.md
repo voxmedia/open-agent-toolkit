@@ -26,7 +26,7 @@ oat_post_implement_sequence:
   source: configured
   final_phase: p04
   pre_approval: [summary, document, pr]
-  pre_approval_completed: []
+  pre_approval_completed: [summary]
   approval: pending
   approval_source: null
   post_approval: []
@@ -46,8 +46,8 @@ oat_implement_exit_gate:
   reviewed_head: a44fcfe5c1685dc5449757f001e06694d8ab127d
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:bccc124e0c3dfb4687c2896c68d377cb1c44fcae80b3f9ab1588ab078c1c7464'
-  freshness_head: 466dd28eaed2810df582d6dd29e962124f0ee6e6
-  freshness_fingerprint: 'sha256:effective-delta-v1:fdcf9dde078929bfa18e74c721b89a89abe29e4043b887d8ae3eb6f60b25c0d5'
+  freshness_head: 95daab8d696d1c9c940431d1dcea61e18a67d961
+  freshness_fingerprint: 'sha256:effective-delta-v1:fc476a132cfdc83345df5976653faa4a255e9606fa970c557f3a60fae60506eb'
   launch_state: result_persisted
   launch_attempt_id: 'triage-wave-exit-gate-1-20260927T071611Z'
   launch_started_at: '2026-09-27T07:16:11Z'
@@ -67,7 +67,7 @@ oat_implement_exit_gate:
   receive_eligible: true
   receive_completed: true
   failure: null
-  updated_at: '2026-09-27T07:21:43Z'
+  updated_at: '2026-09-27T07:26:13Z'
 oat_phase_recovery_policy:
   default_attempt_limit: 10
   phase_attempt_limits: {}
