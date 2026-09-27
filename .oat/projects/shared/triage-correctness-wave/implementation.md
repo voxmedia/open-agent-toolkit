@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-27
-oat_current_task_id: p03-t01
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -28,10 +28,10 @@ oat_generated: false
 | --------------------------------------------- | --------- | ----- | --------- |
 | p01 — Bundled skill and script fixes          | completed | 5     | 5/5       |
 | p02 — CLI sync, config, and tools correctness | completed | 6     | 6/6       |
-| p03 — Managed Claude dispatch-record input    | completed | 7     | 7/7       |
+| p03 — Managed Claude dispatch-record input    | completed | 8     | 8/8       |
 | p04 — Release and backlog fan-in              | pending   | 3     | 0/3       |
 
-**Total:** 18/21 tasks completed
+**Total:** 19/22 tasks completed
 
 ---
 
@@ -144,7 +144,7 @@ converted to p02-t06.
 
 ## Phase 3: Managed Claude dispatch-record input
 
-**Status:** in_progress
+**Status:** completed
 **Started:** -
 
 ### Task p03-t01: State the expected pattern in dispatch-record validation messages
@@ -192,8 +192,11 @@ documented best-effort wording.
 
 ### Task p03-t08: (review) Include runtime-observation errors in the single-run report
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** ba9ccc0d8
+
+- Removing event collection from the single-run pass fails both new tests;
+  restored. Full CLI suite 7685/7685.
 
 **p03 phase gate (run `010e23d8-6317-4ca5-b397-73346cf8caf1`,
 `codex-6-sol-xhigh`):** `ok`, 0 Critical, 0 High, 1 Medium, 0 Low; received in
