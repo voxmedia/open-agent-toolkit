@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-27
@@ -414,6 +414,21 @@ bookkeeping.
   prose note under the table already records that the structured-mode auto
   loop wrote no artifact), commit, then resume the closeout `pr` step with
   `oat-project-pr-final`.
+
+### Closeout
+
+- Post-implement sequence (configured `[summary, document, pr]`): summary
+  `95daab8d6`, document `bb8e17b4e`, PR #331
+  (https://github.com/voxmedia/open-agent-toolkit/pull/331, open, not merged).
+- Project recap (autonomous policy `generate`): `built`, host rung, run
+  `78ed8b36-8c9f-432b-8c46-38061c180065`,
+  `explainers/triage-correctness-wave-recap/manifest.json`; terminal-outcome
+  guard `ok`.
+- Gate IMPLEMENT-16 (final HiLL approval): auto-approved under the autonomy
+  contract after the passing final review, the allowed exit gate, and all
+  pre-approval steps; `approval_source: oat-autonomous`. No post-approval steps.
+- `oat_phase_status` stays `pr_open` (set by `oat-project-pr-final`), matching
+  the `migrate-skill-versions` precedent while the PR is open.
 
 ## Orchestration Runs
 
