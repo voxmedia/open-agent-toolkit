@@ -53,3 +53,9 @@ Append-only log of reusable observations from this autonomous run.
 **Observation:** The p02 phase gate's Codex reviewer read review-provide Step 6.1 but never ran `"$OAT_GATE_CLI_PATH" gate route --json`, so no route receipt was written. The gate then failed at `postSelection.step: target-dispatch` ("Branch-local gate route did not return JSON.") even though the reviewer had completed with 0 findings and committed its artifact and `received` row. The p01 gate, with the same setup, ran the route command and passed.
 **Impact:** A clean review became `review_failed` and left a non-receive-eligible `received` row; one identical-payload gate retry was required.
 **Recommendation:** The post-selection recovery (#232 class) could recognize a missing route receipt as its own named cause, and the gate prompt could restate the route step, so reviewer non-compliance is diagnosed directly instead of as a JSON parse failure.
+
+## 2026-09-27T08:00:00Z - gotcha - Non-canonical Artifact cell blocked PR-final
+
+**Observation:** The root recorded the structured (in-memory) plan artifact review with `structured (no artifact)` in the `## Reviews` Artifact cell. `oat-project-pr-final` gate PRFINAL-05 treats every non-`-` Artifact cell as a path and stopped the PR step.
+**Impact:** One extra PR-final round trip late in closeout.
+**Recommendation:** Always record a no-artifact review event with `-` in the Artifact cell and explain it in prose under the table.
