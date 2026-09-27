@@ -410,6 +410,140 @@ describe('managed Claude launch production boundary', () => {
   });
 });
 
+describe('managed Claude single-run violation reporting', () => {
+  function everyViolationInput() {
+    const input = managedClaudeInput('implementer');
+    const {
+      caller: _caller,
+      deadline_seconds: _deadline,
+      ...base
+    } = managedClaudeRecordBase('review');
+    return {
+      ...input,
+      recordBase: {
+        ...base,
+        request_id: 'managed-claude-implementation',
+        scope: '/Users/alice/work/p03',
+        provider: 'claude',
+        effort_selector: 'high',
+        configured_invocation_evidence: [],
+      },
+      event: {
+        ...canonicalEvent('managed-claude-implementation'),
+        evidence: {
+          ...canonicalEvent().evidence,
+          canonicalPath: '<repo>/agents/oat-phase-implementer.md',
+          contentDigest: 'sha256:not-a-digest',
+        },
+      },
+    };
+  }
+
+  it('reports every violation across all stages in one error', () => {
+    let caught: unknown;
+    try {
+      parseDispatchRecordInput(everyViolationInput());
+    } catch (error) {
+      caught = error;
+    }
+    expect(caught).toBeInstanceOf(Error);
+    const lines = (caught as Error).message.split('\n');
+    expect(lines[0]).toBe('Managed Claude dispatch input has 9 violations:');
+    expect(lines.slice(1)).toEqual([
+      'recordBase provider: Managed Claude dispatch recordBase must omit derived field provider.',
+      'recordBase effort_selector: Managed Claude dispatch recordBase must omit derived field effort_selector.',
+      'recordBase configured_invocation_evidence: Managed Claude dispatch recordBase must omit derived field configured_invocation_evidence.',
+      'recordBase action: Managed Claude resolver role implementer conflicts with record action review.',
+      'recordBase caller: Required',
+      'recordBase deadline_seconds: Required',
+      'recordBase scope: A dispatch record must not carry an absolute filesystem path at scope.',
+      'event evidence.canonicalPath: expected <loaded|user|project>/agents/<name>.md',
+      'event evidence.contentDigest: expected sha256:<64 lowercase hex>',
+    ]);
+  });
+
+  it('reports launch, base, and event violations together, including a request mismatch', () => {
+    const input = managedClaudeInput('reviewer');
+    input.claudeLaunch.payload = {
+      variant: 'oat-reviewer-claude-claude-sonnet-5-medium',
+    };
+    (input.recordBase as Record<string, unknown>).role_selector = 'x';
+    input.event = canonicalEvent('some-other-request');
+    expect(() => parseDispatchRecordInput(input)).toThrow(
+      [
+        'Managed Claude dispatch input has 3 violations:',
+        'claudeLaunch payload.variant: Claude launch variant oat-reviewer-claude-claude-sonnet-5-medium does not match resolver-selected variant oat-reviewer-claude-claude-sonnet-5-high.',
+        'recordBase role_selector: Managed Claude dispatch recordBase must omit derived field role_selector.',
+        'event requestId: OAT event request ID must match the generic record.',
+      ].join('\n'),
+    );
+  });
+
+  it('still returns validated-only for a valid managed input', async () => {
+    const result = await recordProjectDispatch({
+      projectPath: null,
+      input: managedClaudeInput('reviewer'),
+    });
+    expect(result.status).toBe('validated-only');
+    expect(result.record.oat.canonicalRole).toMatchObject({
+      status: 'resolved',
+    });
+  });
+
+  it('never prints an absolute path in the single-run report', async () => {
+    const input = everyViolationInput();
+    input.claudeLaunch.payload = { variant: '/Users/alice/secret/variant' };
+    const json = vi.fn();
+    const previousExitCode = process.exitCode;
+    process.exitCode = undefined;
+    try {
+      const command = createProjectDispatchCommand({
+        buildCommandContext: () => ({
+          scope: 'all',
+          dryRun: false,
+          verbose: false,
+          json: true,
+          cwd: process.cwd(),
+          home: '/Users/alice',
+          interactive: false,
+          logger: {
+            debug: vi.fn(),
+            info: vi.fn(),
+            warn: vi.fn(),
+            error: vi.fn(),
+            success: vi.fn(),
+            json,
+          },
+        }),
+        resolveProjectRoot: async () => process.cwd(),
+        readFile: async () => {
+          throw new Error('event file should not be read');
+        },
+        readStdin: async () => JSON.stringify(input),
+      });
+      await command.parseAsync(['record', '--event-file', '-'], {
+        from: 'user',
+      });
+
+      const payload = json.mock.calls.at(-1)?.[0] as {
+        status?: string;
+        message?: string;
+      };
+      expect(Object.keys(payload).sort()).toEqual(['message', 'status']);
+      expect(payload.status).toBe('error');
+      expect(payload.message).toMatch(
+        /^Managed Claude dispatch input has \d+ violations:/,
+      );
+      expect(payload.message).toContain('claudeLaunch payload.variant:');
+      expect(payload.message).not.toContain('/Users/alice');
+      expect(payload.message).not.toContain(process.cwd());
+      expect(process.exitCode).toBe(1);
+    } finally {
+      process.exitCode = previousExitCode;
+    }
+  });
+});
+
 describe('recordProjectDispatch', () => {
   it('creates and updates one request journal atomically', async () => {
     const projectPath = await mkdtemp(join(tmpdir(), 'oat-dispatch-project-'));

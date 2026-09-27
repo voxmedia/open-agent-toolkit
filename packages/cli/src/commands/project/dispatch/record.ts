@@ -9,6 +9,11 @@ import {
 import {
   acceptClaudeLaunchEnvelope,
   buildClaudeDispatchRecord,
+  collectClaudeLaunchViolations,
+  collectClaudeRecordBaseViolations,
+  ManagedClaudeDispatchValidationError,
+  zodIssueViolations,
+  type ManagedClaudeViolation,
 } from '@providers/claude/dispatch-envelope';
 import {
   assertJournalIdentityHasNoAbsolutePath,
@@ -19,6 +24,7 @@ import { CODEX_OBSERVATION_SOURCE } from '@providers/identity/codex-runtime-obse
 import {
   assertBoundedDispatchRecordSize,
   assertNoSensitiveDispatchContent,
+  collectSensitiveDispatchContent,
   identityFieldsOf,
   parseGenericDispatchRecord,
   type GenericDispatchRecord,
@@ -30,6 +36,7 @@ import {
   configuredInvocationForObservation,
   parsePersistedOatDispatchRecord,
   parseRuntimeObservation,
+  safeParseOatDispatchEvidenceEvent,
   type OatDispatchEvidenceEvent,
   type ObservedRuntimeMetadata,
   type PersistedOatDispatchRecordV1,
@@ -256,6 +263,86 @@ function resolveObservationEvent(
   };
 }
 
+/**
+ * Event violations for a managed input: the event must be an object, carry no
+ * sensitive content, satisfy the evidence-event schema, and name the same
+ * request as `recordBase`. Raw provider `metadata` entries are exempt from the
+ * sensitive walk exactly as on the recording path, and a `runtime-observation`
+ * event is left to that path, because its caller form is rewritten (source and
+ * match derived) before the schema applies to it.
+ */
+function collectManagedEventViolations(
+  event: unknown,
+  recordBase: unknown,
+): ManagedClaudeViolation[] {
+  if (!isRecord(event)) {
+    return [
+      {
+        stage: 'event',
+        path: '<root>',
+        message: 'Dispatch record event must be a JSON object.',
+      },
+    ];
+  }
+  const violations: ManagedClaudeViolation[] = [];
+  const walked = isRecord(event.metadata)
+    ? { ...event, metadata: { ...event.metadata, entries: null } }
+    : event;
+  violations.push(
+    ...collectSensitiveDispatchContent(walked, 'event').map((violation) => ({
+      stage: 'event',
+      path: violation.path.slice('event.'.length) || '<root>',
+      message: violation.message,
+    })),
+  );
+  if (event.kind !== 'runtime-observation') {
+    const parsed = safeParseOatDispatchEvidenceEvent(event);
+    if (!parsed.success) {
+      violations.push(...zodIssueViolations('event', null, parsed.error));
+    }
+  }
+  const recordRequestId = isRecord(recordBase) ? recordBase.request_id : null;
+  if (
+    typeof event.requestId === 'string' &&
+    typeof recordRequestId === 'string' &&
+    event.requestId !== recordRequestId
+  ) {
+    violations.push({
+      stage: 'event',
+      path: 'requestId',
+      message: 'OAT event request ID must match the generic record.',
+    });
+  }
+  return violations;
+}
+
+/**
+ * The single-run pass for a managed Claude input. Every stage is validated
+ * independently and every violation is reported in one error, so a caller
+ * assembling the input fixes it in one round instead of one field per run.
+ * Checks that depend on a stage which failed to parse are skipped and named in
+ * the error; the recording path below still runs every check afterwards, so
+ * nothing this pass skips goes unchecked.
+ */
+function assertManagedClaudeInputValid(value: Record<string, unknown>): void {
+  const launch = collectClaudeLaunchViolations(value.claudeLaunch);
+  const base = collectClaudeRecordBaseViolations(
+    value.recordBase,
+    launch.resolverRole,
+  );
+  const violations = [
+    ...launch.violations,
+    ...base.violations,
+    ...collectManagedEventViolations(value.event, value.recordBase),
+  ];
+  if (violations.length > 0) {
+    throw new ManagedClaudeDispatchValidationError(violations, [
+      ...launch.skipped,
+      ...base.skipped,
+    ]);
+  }
+}
+
 export function parseDispatchRecordInput(value: unknown): DispatchRecordInput {
   if (!isRecord(value)) {
     throw new Error('Dispatch record input must be a JSON object.');
@@ -272,6 +359,9 @@ export function parseDispatchRecordInput(value: unknown): DispatchRecordInput {
     throw new Error(
       'Dispatch record input accepts record and event, or claudeLaunch, event, and recordBase.',
     );
+  }
+  if (isManagedClaudeInput) {
+    assertManagedClaudeInputValid(value);
   }
   if (!isRecord(value.event)) {
     throw new Error('Dispatch record event must be a JSON object.');
