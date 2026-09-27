@@ -1207,7 +1207,7 @@ git commit -m "chore(p04-t03): record definition-of-done gate results"
 | ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------- |
 | p01    | code     | fixes_completed | 2026-09-27 | reviews/archived/p01-review-2026-09-27T051536Z.md           | 9bf1f8325d87d74201ff4749ae8058a1b2d43316 | auto       | -                 |
 | p01    | code     | passed          | 2026-09-27 | reviews/archived/p01-review-2026-09-27T052717Z.md           | 3778dfc88cc4f9c74ed84476978b58dfaa2ce924 | auto       | -                 |
-| p01    | code     | passed          | 2026-09-27 | reviews/archived/p01-review-2026-09-27T053801Z.md           | -                                        | gate       | codex-6-sol-xhigh |
+| p01    | code     | passed          | 2026-09-27 | reviews/archived/p01-review-2026-09-27T053801Z.md           | d6a2d85010c0a2c255dd703b0d253f8ae5a068f7 | gate       | codex-6-sol-xhigh |
 | p02    | code     | fixes_completed | 2026-09-27 | reviews/archived/p02-review-2026-09-27T051543Z.md           | 9541287ad041954c11233300301fe9edf36a8580 | auto       | -                 |
 | p02    | code     | passed          | 2026-09-27 | reviews/archived/p02-review-2026-09-27T052321Z.md           | 8c4102a024e34fcea7f1ac451ed828b83063604d | auto       | -                 |
 | p02    | code     | received        | 2026-09-27 | reviews/p02-review-2026-09-27T054138Z.md                    | d6a7d00a866e3c96eab31a4f968da21e135bf167 | gate       | codex-6-sol-xhigh |
@@ -1267,6 +1267,15 @@ Quick-start gate attempt 3, after the complexity review (run
 `7eea2a8f-4bd2-4aba-a786-621c59a9bf71`, target `codex-6-sol-xhigh`,
 different-family): `ok`, 0 Critical, 0 High, 0 Medium, 0 Low; received as
 `passed`. The plan is implementation-ready.
+
+p02 phase gate attempt 1 (run `ee0f0803-ba85-415f-9e55-719351c330a7`,
+target `codex-6-sol-xhigh`): the reviewer completed with 0 findings and
+committed `reviews/p02-review-2026-09-27T054138Z.md` plus its `received` row,
+but the gate process ended `review_failed`
+(`unexpected_post_selection_failure`, `postSelection.step: target-dispatch`,
+"Branch-local gate route did not return JSON."). That row is not
+receive-eligible and stays `received`; the gate is retried once with an
+identical payload as an operational (not remediation) retry.
 
 ---
 
