@@ -84,6 +84,13 @@ Per-item statuses and frontmatter rollups make interrupted and repeated runs
 resumable. The promotions rollup covers RP apply-items; the filing rollup covers
 UP items plus RP file-items.
 
+Every run ends with a final report walkthrough that links the artifact and
+explains each `RP-*` and `UP-*` item (ID, title, summary, why it matters,
+current disposition and destination, and next action), grouped into apply,
+repository filing, and upstream filing items, or states that no items were
+proposed. It appears in interactive and non-interactive runs, whatever happened
+to apply and filing.
+
 ### Project-log receipt
 
 When a project log exists, generate mode appends this one-line structural
