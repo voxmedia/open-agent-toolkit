@@ -66,8 +66,14 @@ oat_generated: false
 
 ### Task p01-t04: (review) Close p01 review findings M1, M2, L1, L3
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 3778dfc88
+
+- M1 proof: replacing `stamp.target !== target ||` with `false ||` in
+  `gate/index.ts:740` failed exactly the two new target-clause tests; restored
+  byte-identical. `gate/index.ts` itself needed no change.
+- The new EOF test's util-linux `script` branch is unrun locally; the first
+  Linux CI run verifies it.
 
 **Review received (p01, auto):** `reviews/archived/p01-review-2026-09-27T051536Z.md`
 at head `9bf1f8325`: 0 Critical, 0 High, 2 Medium, 3 Low. Disposition: M1, M2,
