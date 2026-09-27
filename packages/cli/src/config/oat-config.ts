@@ -1139,6 +1139,11 @@ function assertClosedPjmRemoteSharedConfig(
     'pjm.remote',
     findings,
   );
+  if ('schemaVersion' in value && typeof value.schemaVersion !== 'number') {
+    findings.push(
+      `pjm.remote.schemaVersion (expected number, received ${describePjmRemoteStructure(value.schemaVersion)})`,
+    );
+  }
   if (
     'storage' in value &&
     collectPjmRemoteExpectedObject(
@@ -2067,11 +2072,14 @@ export async function readOatLocalConfig(
 }
 
 /**
- * Reads the existing config file as plain JSON for ordering and no-op checks.
+ * Reads the existing config file as raw JSON for ordering and no-op checks.
  *
- * Deliberately bypasses the normalizer, which throws on the malformed values
- * repair flows exist to remove. A missing or unparsable file yields
- * `undefined`, so the caller always writes it.
+ * Parses through `parseJsonConfig`, the same tolerant parser every config
+ * reader uses (trailing commas accepted, `__proto__` kept as data), so a file
+ * the readers accept is never treated as unparsable here. Deliberately
+ * bypasses the normalizer, which throws on the malformed values repair flows
+ * exist to remove. A missing or unparsable file yields `undefined`, so the
+ * caller always writes it.
  */
 async function readRawJsonForWrite(filePath: string): Promise<unknown> {
   let raw: string;
@@ -2081,7 +2089,7 @@ async function readRawJsonForWrite(filePath: string): Promise<unknown> {
     return undefined;
   }
   try {
-    return JSON.parse(raw) as unknown;
+    return parseJsonConfig(raw, filePath);
   } catch {
     return undefined;
   }

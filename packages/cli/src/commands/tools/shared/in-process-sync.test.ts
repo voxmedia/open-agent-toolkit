@@ -324,6 +324,25 @@ describe('normalizeSyncEvidence required fields', () => {
         { state: 'manual-refresh', provenance: { kind: 'hearsay' } },
       ],
       ['an unknown state without a reason', { state: 'unknown' }],
+      // The registry's provenance rules apply here too (p02 review L3).
+      [
+        'an empty provenance reference',
+        { state: 'live', provenance: { ...provenance, reference: '  ' } },
+      ],
+      [
+        'a verifiedAt that is not a calendar date',
+        {
+          state: 'restart-required',
+          provenance: { ...provenance, verifiedAt: '2026-02-30' },
+        },
+      ],
+      [
+        'an empty providerVersion',
+        {
+          state: 'live',
+          provenance: { ...provenance, providerVersion: '' },
+        },
+      ],
     ])(
       'drops a policy with %s but keeps the advice entry',
       async (_label, policy) => {

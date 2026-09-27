@@ -1775,11 +1775,13 @@ describe('createSyncCommand', () => {
     expect(process.exitCode).toBe(1);
   });
 
-  it('--scope all: a failed run with zero planned operations is never restamp-only (failed === 0 conjunct)', async () => {
+  it('--scope all: a failed run with zero planned operations reads as failed, not restamp-only or no-op', async () => {
     // Both scopes are skewed and neither plans an operation, but a rejected
-    // collection in the project scope fails the run. Only the `failed === 0`
-    // conjunct keeps this multi-scope run from being described as a
-    // restamp-only no-op.
+    // collection in the project scope fails the run. The run must read as
+    // failed: no restamp-only or no-op claim in any scope body or the trailing
+    // message. `runSyncApply` no longer carries a `failed === 0` conjunct in
+    // `restampOnly`; after the `runFailed` body strip no output could depend
+    // on it (p02 review L1), so this test pins the observable outcome.
     const { capture, command } = createHarness({
       loadedManifests: [
         createManifest({ oatVersion: '0.0.1' }),

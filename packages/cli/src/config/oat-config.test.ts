@@ -887,6 +887,40 @@ describe('oat-config', () => {
       );
     });
 
+    // Every config reader parses through `parseJsonConfig`, which accepts
+    // trailing commas, so the writer must read the existing file the same way
+    // (p02 review M1).
+    const trailingCommaRaw =
+      '{\n  "version": 1,\n  "git": { "defaultBranch": "main", },\n  "projects": { "root": ".oat/projects/shared" },\n}\n';
+
+    it('leaves a reader-accepted trailing-comma file byte-identical on a no-op write', async () => {
+      const repoRoot = await createRepoRoot();
+      await writeFile(configPathFor(repoRoot), trailingCommaRaw, 'utf8');
+
+      await writeOatConfig(repoRoot, await readOatConfig(repoRoot));
+
+      await expect(readFile(configPathFor(repoRoot), 'utf8')).resolves.toBe(
+        trailingCommaRaw,
+      );
+    });
+
+    it('keeps the key order of a trailing-comma file on a real change', async () => {
+      const repoRoot = await createRepoRoot();
+      await writeFile(configPathFor(repoRoot), trailingCommaRaw, 'utf8');
+      const current = await readOatConfig(repoRoot);
+
+      await writeOatConfig(repoRoot, {
+        ...current,
+        git: { defaultBranch: 'trunk' },
+      });
+
+      const written = JSON.parse(
+        await readFile(configPathFor(repoRoot), 'utf8'),
+      ) as Record<string, unknown>;
+      expect(Object.keys(written)).toEqual(['version', 'git', 'projects']);
+      expect(written.git).toEqual({ defaultBranch: 'trunk' });
+    });
+
     it('preserves the existing order of untouched keys recursively and appends new keys', async () => {
       const repoRoot = await createRepoRoot();
       await writeFile(
@@ -1348,6 +1382,16 @@ describe('oat-config', () => {
         },
       },
       /pjm\.remote\.policy\.providers\.linear\.authority\.operations\.delete.*expected string.*array/i,
+    ],
+    [
+      'schemaVersion string',
+      { schemaVersion: '1', policy: { description: 'replace' } },
+      /pjm\.remote\.schemaVersion.*expected number.*string/i,
+    ],
+    [
+      'schemaVersion boolean',
+      { schemaVersion: true },
+      /pjm\.remote\.schemaVersion.*expected number.*boolean/i,
     ],
     [
       'storage state number',

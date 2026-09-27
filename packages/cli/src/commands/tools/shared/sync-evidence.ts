@@ -1,3 +1,4 @@
+import { isValidCatalogRefreshPolicy } from '@providers/shared/registry';
 import type {
   ManagedContentKind,
   ProviderCatalogRefreshPolicy,
@@ -68,66 +69,33 @@ function asString(value: unknown): string | undefined {
   return typeof value === 'string' ? value : undefined;
 }
 
-const SOURCED_REFRESH_STATES: ReadonlySet<string> = new Set([
-  'live',
-  'manual-refresh',
-  'restart-required',
-]);
-const REFRESH_PROVENANCE_KINDS: ReadonlySet<string> = new Set([
-  'official-contract',
-  'validated-local-behavior',
-  'repository-decision',
-]);
-
 /**
  * Validates a catalog-refresh policy from sync advice.
  *
  * The advice policy outranks the registered capability policy in the
  * lifecycle projection, and `visibilityFor` switches exhaustively over its
  * state with a `never` default that throws. An unrecognized state or a policy
- * missing its required fields must therefore never reach that switch: it is
- * dropped here so the projection falls back to the registry policy.
+ * that fails the registry's own provenance rules must therefore never reach
+ * that switch: it is dropped here so the projection falls back to the
+ * registry policy. Validation is delegated to the registry so the two cannot
+ * drift; the accepted policy is rebuilt so unrecognized extra fields are not
+ * carried along.
  */
 function asRefreshPolicy(
   value: unknown,
 ): ProviderCatalogRefreshPolicy | undefined {
-  const policy = asRecord(value);
-  const state = asString(policy?.state);
-  if (!policy || state === undefined) return undefined;
-
-  if (state === 'unknown') {
-    const reason = asString(policy.reason);
-    return reason === undefined ? undefined : { state, reason };
+  if (!isValidCatalogRefreshPolicy(value)) return undefined;
+  if (value.state === 'unknown') {
+    return { state: 'unknown', reason: value.reason };
   }
-
-  if (!SOURCED_REFRESH_STATES.has(state)) return undefined;
-  const provenance = asRecord(policy.provenance);
-  const kind = asString(provenance?.kind);
-  const reference = asString(provenance?.reference);
-  const verifiedAt = asString(provenance?.verifiedAt);
-  if (
-    !provenance ||
-    kind === undefined ||
-    !REFRESH_PROVENANCE_KINDS.has(kind) ||
-    reference === undefined ||
-    verifiedAt === undefined ||
-    (provenance.providerVersion !== undefined &&
-      asString(provenance.providerVersion) === undefined)
-  ) {
-    return undefined;
-  }
+  const { kind, reference, verifiedAt, providerVersion } = value.provenance;
   return {
-    state: state as 'live' | 'manual-refresh' | 'restart-required',
+    state: value.state,
     provenance: {
-      kind: kind as Extract<
-        ProviderCatalogRefreshPolicy,
-        { provenance: unknown }
-      >['provenance']['kind'],
+      kind,
       reference,
       verifiedAt,
-      ...(asString(provenance.providerVersion) !== undefined
-        ? { providerVersion: asString(provenance.providerVersion)! }
-        : {}),
+      ...(providerVersion !== undefined ? { providerVersion } : {}),
     },
   };
 }

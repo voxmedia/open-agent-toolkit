@@ -338,10 +338,10 @@ function formatAppliedOutput(
   scopePlans: ScopeSyncPlan[],
   coreApplyEvidence: readonly CoreApplyEvidence[],
   dependencies: SyncCommandDependencies,
-  // True when the run planned no operation at all and the manifest restamp is
-  // the only mutation. It is a whole-run state, matching the single trailing
-  // summary message, so with `--scope all` every scope's body is empty and at
-  // least one of them was restamped.
+  // True when the run planned no operation at all and at least one scope's
+  // manifest was restamped. It is a whole-run state, matching the single
+  // trailing summary message, so with `--scope all` every scope's body is
+  // empty. A failed run may also set it; `runFailed` covers that case.
   restampOnly: boolean,
   // True when any scope failed. Also a whole-run state: an empty scope beside
   // a failed one must not claim that no changes were required.
@@ -581,17 +581,17 @@ export async function runSyncApply(
     // run just emitted, so the state is resolved once and threaded through
     // both the plan body and the trailing message.
     //
-    // `failed === 0` is load-bearing rather than defensive: a rejected
-    // collection is counted as a failure but is not a *planned* operation
-    // (`countPlannedOperations` admits only the mutating collection actions),
-    // so a run can fail with `plannedOperations === 0`. That run is not
-    // restamp-only and must never be described as needing no content changes.
-    // The trailing message below tests the failure arm first, so the branch
-    // order now enforces that outcome rather than leaving it to this conjunct.
+    // No `failed === 0` conjunct: a rejected collection counts as a failure
+    // but is not a *planned* operation, so a failed run can have
+    // `plannedOperations === 0`, yet no output can depend on excluding it
+    // here. `formatCoreResults` drops the empty-plan sentence whenever the run
+    // failed (`runFailed`), and the trailing message below tests the failure
+    // arm first. The conjunct was therefore unobservable and was removed
+    // rather than kept behind a test that could not fail without it (p02
+    // review L1); the failure arm is pinned by the `--scope all` failed-run
+    // tests instead.
     const restampOnly =
-      summary.plannedOperations === 0 &&
-      summary.failed === 0 &&
-      versionSkew.length > 0;
+      summary.plannedOperations === 0 && versionSkew.length > 0;
     context.logger.info(
       formatAppliedOutput(
         scopePlans,
