@@ -42,18 +42,37 @@ oat_generated: false
 
 ### Task p01-t01: Stop resolve-providers.sh aborting when the last auto-detect test is false
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 0d24884ff
+
+- Failing-first: 4 of 6 new cases failed before the fix (exit 1, no output for
+  `.claude`-only and `.cursor`-only, with and without `--non-interactive`).
+- PTY observation (interactive mode, macOS): in a fresh `git init` fixture with
+  `AGENTS.md` and `.claude/`,
+  `(sleep 1; printf '\n'; sleep 1) | script -q /dev/null bash .agents/skills/oat-agent-instructions-analyze/scripts/resolve-providers.sh`
+  printed `Detected providers: agents_md claude`, the prompt, then `agents_md`
+  and `claude`; exit 0. The pre-fix script exited 1 with no output. Reproduced
+  independently by the p01 reviewer.
 
 ### Task p01-t02: Require a per-item walkthrough of retro register items
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 972f8cb91
 
 ### Task p01-t03: Make the gate review dispatch audit line agree with the gate invocation
 
+**Status:** completed
+**Commit:** 9bf1f8325
+
+### Task p01-t04: (review) Close p01 review findings M1, M2, L1, L3
+
 **Status:** pending
 **Commit:** -
+
+**Review received (p01, auto):** `reviews/archived/p01-review-2026-09-27T051536Z.md`
+at head `9bf1f8325`: 0 Critical, 0 High, 2 Medium, 3 Low. Disposition: M1, M2,
+L1, and L3 converted to p01-t04; L2 resolved in root bookkeeping (PTY
+observation recorded under p01-t01).
 
 ---
 

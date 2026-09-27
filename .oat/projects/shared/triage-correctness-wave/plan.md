@@ -384,6 +384,62 @@ git commit -m "fix(p01-t03): label gate policy stamps and reject unlabeled audit
 
 ---
 
+### Task p01-t04: (review) Close p01 review findings M1, M2, L1, L3
+
+Source: `reviews/archived/p01-review-2026-09-27T051536Z.md` (auto phase review,
+0 Critical, 0 High, 2 Medium, 3 Low; L2 is root bookkeeping).
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/gate/index.ts`, `index.test.ts`
+- Modify: `packages/cli/src/commands/gate/review-verdict.ts`,
+  `review-verdict.test.ts`
+- Modify: `.agents/skills/oat-project-review-provide/SKILL.md`,
+  `.agents/skills/oat-project-review-provide-remote/SKILL.md`,
+  `apps/oat-docs/docs/cli-utilities/workflow-gates.md` (wording only; versions
+  already bumped in this PR)
+- Modify: `.agents/skills/oat-agent-instructions-analyze/scripts/resolve-providers.sh`
+  and its test (version already bumped in this PR)
+
+**Step 1: Write test (RED)**
+
+- M1: a gate test whose unlabeled stamp has a non-matching `target` and a
+  matching `effort_axis=selected:xhigh` fails with
+  `gate_dispatch_audit_mismatched`; a second case with a non-concrete gate
+  effort and a differing target also fails. Neutralize the `target` operand,
+  confirm both fail, restore.
+- M2: audit lines are recognized in every section except finding sections
+  (`## Findings` and the `### Critical/High/Medium/Low` headings) and fenced
+  code; a backtick-wrapped stamp followed by trailing text is still recognized.
+  Fixtures for `## Review Dispatch Audit`, `## Review Scope`, and
+  `## Dispatch Evidence` placements are recognized and checked; a stamp quoted
+  inside a finding stays ignored.
+- L1: in interactive mode, EOF on stdin before the prompt read no longer exits
+  1 (`read -r additional || additional=""`); add a test case.
+
+**Step 2: Implement (GREEN)**
+
+Implement the above; update the review-provide paragraph, its remote twin, and
+`workflow-gates.md` to describe the widened recognition (fixes L3).
+
+**Step 3: Refactor**
+
+None expected.
+
+**Step 4: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/ src/commands/init/tools/shared/review-skill-contracts.test.ts src/__tests__/skills/dispatch-stamp-contract.test.ts src/validation/skills.test.ts && node --test .agents/skills/oat-agent-instructions-analyze/tests/resolve-providers.test.mjs`
+Expected: pass.
+
+**Step 5: Commit**
+
+```bash
+git add packages/cli/src/commands/gate .agents/skills/oat-project-review-provide .agents/skills/oat-project-review-provide-remote .agents/skills/oat-agent-instructions-analyze apps/oat-docs/docs/cli-utilities/workflow-gates.md
+git commit -m "fix(p01-t04): close p01 review findings for audit-line recognition and resolve-providers EOF"
+```
+
+---
+
 ## Phase 2: CLI sync, config, and tools correctness
 
 ### Task p02-t01: Name the file in canonical rule parse errors and accept alwaysApply
@@ -1074,19 +1130,19 @@ git commit -m "chore(p04-t03): record definition-of-done gate results"
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target       |
-| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ----------------- |
-| p01    | code     | pending         | -          | -                                                           | -             | -          | -                 |
-| p02    | code     | pending         | -          | -                                                           | -             | -          | -                 |
-| p03    | code     | pending         | -          | -                                                           | -             | -          | -                 |
-| p04    | code     | pending         | -          | -                                                           | -             | -          | -                 |
-| final  | code     | pending         | -          | -                                                           | -             | -          | -                 |
-| spec   | artifact | pending         | -          | -                                                           | -             | -          | -                 |
-| design | artifact | pending         | -          | -                                                           | -             | -          | -                 |
-| plan   | artifact | fixes_completed | 2026-09-27 | structured (no artifact)                                    | -             | auto       | -                 |
-| plan   | artifact | fixes_completed | 2026-09-27 | reviews/archived/artifact-plan-review-2026-09-27T043735Z.md | -             | gate       | codex-6-sol-xhigh |
-| plan   | artifact | passed          | 2026-09-27 | reviews/archived/artifact-plan-review-2026-09-27T044626Z.md | -             | gate       | codex-6-sol-xhigh |
-| plan   | artifact | passed          | 2026-09-27 | reviews/archived/artifact-plan-review-2026-09-27T045257Z.md | -             | gate       | codex-6-sol-xhigh |
+| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target       |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------- |
+| p01    | code     | fixes_added     | 2026-09-27 | reviews/archived/p01-review-2026-09-27T051536Z.md           | 9bf1f8325d87d74201ff4749ae8058a1b2d43316 | auto       | -                 |
+| p02    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| p03    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| p04    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| final  | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
+| design | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
+| plan   | artifact | fixes_completed | 2026-09-27 | structured (no artifact)                                    | -                                        | auto       | -                 |
+| plan   | artifact | fixes_completed | 2026-09-27 | reviews/archived/artifact-plan-review-2026-09-27T043735Z.md | -                                        | gate       | codex-6-sol-xhigh |
+| plan   | artifact | passed          | 2026-09-27 | reviews/archived/artifact-plan-review-2026-09-27T044626Z.md | -                                        | gate       | codex-6-sol-xhigh |
+| plan   | artifact | passed          | 2026-09-27 | reviews/archived/artifact-plan-review-2026-09-27T045257Z.md | -                                        | gate       | codex-6-sol-xhigh |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
@@ -1141,12 +1197,12 @@ different-family): `ok`, 0 Critical, 0 High, 0 Medium, 0 Low; received as
 
 **Summary:**
 
-- Phase 1: 3 tasks - Bundled skill and script fixes
+- Phase 1: 4 tasks - Bundled skill and script fixes
 - Phase 2: 5 tasks - CLI sync, config, and tools correctness
 - Phase 3: 5 tasks - Managed Claude dispatch-record input
 - Phase 4: 3 tasks - Release and backlog fan-in
 
-**Total: 16 tasks**
+**Total: 17 tasks**
 
 Ready for code review and merge.
 
