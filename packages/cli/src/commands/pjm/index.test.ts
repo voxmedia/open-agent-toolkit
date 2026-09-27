@@ -16,7 +16,10 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import type { PjmAdoptionState } from './adoption';
 import { createPjmCommand } from './index';
-import { CANONICAL_REPO_REFERENCE_PATHS } from './init';
+import {
+  AGENTS_GUIDANCE_APPENDED_MESSAGE,
+  CANONICAL_REPO_REFERENCE_PATHS,
+} from './init';
 
 interface CliResult {
   stdout: string;
@@ -288,6 +291,103 @@ describe('oat pjm', () => {
       }
     },
   );
+
+  it('prints one combined AGENTS.md guidance patch for different existing blocks', async () => {
+    const root = await createWorkspace();
+    tempDirs.push(root);
+    const existing = [
+      '# Repository guidance',
+      '<!-- OAT project-management -->',
+      'stale PJM guidance',
+      '<!-- END OAT project-management -->',
+      '',
+      '<!-- OAT decisions -->',
+      'stale decision guidance',
+      '<!-- END OAT decisions -->',
+      '',
+    ].join('\n');
+    await writeFile(join(root, 'AGENTS.md'), existing, 'utf8');
+
+    const result = await runCli(root, ['pjm', 'init']);
+
+    const output = `${result.stdout}\n${result.stderr}`;
+    expect(result.exitCode).toBe(1);
+    expect(output.match(/Guidance status: manual-required/g)).toHaveLength(1);
+    expect(output.match(/Managed block:/g)).toHaveLength(1);
+    expect(output.match(/<!-- OAT project-management -->/g)).toHaveLength(1);
+    expect(output.match(/<!-- OAT decisions -->/g)).toHaveLength(1);
+    expect(output).toMatch(/requires manual action/i);
+    await expect(readFile(join(root, 'AGENTS.md'), 'utf8')).resolves.toBe(
+      existing,
+    );
+  });
+
+  it('appends absent PJM blocks and prints no manual patch', async () => {
+    const root = await createWorkspace();
+    tempDirs.push(root);
+    const existing = [
+      '# Repository guidance',
+      '<!-- OAT decisions -->',
+      'stale decision guidance',
+      '<!-- END OAT decisions -->',
+      '',
+    ].join('\n');
+    await writeFile(join(root, 'AGENTS.md'), existing, 'utf8');
+
+    const result = await runCli(root, ['pjm', 'init']);
+
+    const output = `${result.stdout}\n${result.stderr}`;
+    expect(result.exitCode).toBe(1);
+    expect(output).toContain(AGENTS_GUIDANCE_APPENDED_MESSAGE);
+    expect(output.match(/Managed block:/g)).toHaveLength(1);
+    expect(output.match(/<!-- OAT decisions -->/g)).toHaveLength(1);
+    expect(output).not.toContain('<!-- OAT project-management -->');
+    const guidance = await readFile(join(root, 'AGENTS.md'), 'utf8');
+    expect(guidance.startsWith(existing)).toBe(true);
+    expect(guidance.match(/<!-- OAT project-management -->/g)).toHaveLength(1);
+  });
+
+  it('ends a brand-new repository init then pjm init with every managed block and no manual action', async () => {
+    const root = await createWorkspace();
+    const home = await mkdtemp(join(tmpdir(), 'oat-pjm-fresh-home-'));
+    tempDirs.push(root, home);
+    const previousHome = process.env.HOME;
+    process.env.HOME = home;
+    try {
+      const init = await runCli(root, [
+        'init',
+        '--scope',
+        'project',
+        '--setup',
+        '--project-guidance',
+        '--no-hook',
+      ]);
+      expect(init.exitCode).toBe(0);
+      await expect(access(join(root, 'AGENTS.md'))).resolves.toBeUndefined();
+      await expect(
+        readFile(join(root, 'AGENTS.md'), 'utf8'),
+      ).resolves.toContain('<!-- OAT tools -->');
+
+      const pjm = await runCli(root, ['pjm', 'init']);
+
+      const output = `${pjm.stdout}\n${pjm.stderr}`;
+      expect(pjm.exitCode).toBe(0);
+      expect(output).not.toMatch(/manual-required|Managed block:/);
+      expect(output).toContain(AGENTS_GUIDANCE_APPENDED_MESSAGE);
+      const guidance = await readFile(join(root, 'AGENTS.md'), 'utf8');
+      for (const key of ['tools', 'project-management', 'decisions']) {
+        expect(
+          guidance.match(new RegExp(`<!-- OAT ${key} -->`, 'g')),
+        ).toHaveLength(1);
+        expect(
+          guidance.match(new RegExp(`<!-- END OAT ${key} -->`, 'g')),
+        ).toHaveLength(1);
+      }
+    } finally {
+      if (previousHome === undefined) delete process.env.HOME;
+      else process.env.HOME = previousHome;
+    }
+  });
 
   it('prints the instructions sync next-step hint after init', async () => {
     const root = await createWorkspace();

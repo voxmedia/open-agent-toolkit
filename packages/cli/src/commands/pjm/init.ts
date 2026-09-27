@@ -61,6 +61,16 @@ export const INSTRUCTIONS_SYNC_HINT =
   'Next step: run `oat instructions sync` to create CLAUDE.md shims for the ' +
   'repo-reference AGENTS.md files (preview with `oat instructions sync --dry-run`).';
 
+// AGENTS.md guidance messages printed by `oat pjm init`. An absent managed
+// block is appended to an existing AGENTS.md; only a block that is present but
+// differs from the managed version needs the printed manual patch.
+export const AGENTS_GUIDANCE_APPENDED_MESSAGE =
+  'AGENTS.md guidance: appended the absent OAT managed blocks to the existing AGENTS.md.';
+export const AGENTS_GUIDANCE_MANUAL_MESSAGE =
+  'PJM scaffold and adoption completed; AGENTS.md guidance requires manual action. ' +
+  'Absent managed blocks are appended automatically, but an existing block ' +
+  'differs from the managed version: apply the patch below, then rerun `oat pjm init`.';
+
 const BACKLOG_PATHS = [
   'pjm/backlog/index.md',
   'pjm/backlog/completed.md',
