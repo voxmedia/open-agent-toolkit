@@ -26,6 +26,27 @@ Decided 2026-09-27 in `DR-260927-operator-waiver-for-test-only`.
 
 ## Acceptance Criteria
 
-- A recorded decision chooses between a closeout-only or test-only freshness exception and an explicit human-waiver field that keeps `allowed` without rewriting provenance, or declines both with rationale.
-- The decision names the exact stale-classification code path and states how BL-260719, BL-260820-track-pr-closeout-evidence, and BL-260826-decide-whether-test-only-paths relate without overlapping.
-- Only after the decision is recorded does this item become plan-eligible; the `needs-discussion` label is removed at that point.
+Decision criteria (met 2026-09-27 by `DR-260927-operator-waiver-for-test-only`):
+explicit operator waiver, no automatic test-only exception; the stale
+classification path is the `effective-delta-v1` descendant rules in
+`oat-project-implement` `references/completion-and-closeout.md`; relationships to
+BL-260719, BL-260820-track-pr-closeout-evidence, and
+BL-260826-decide-whether-test-only-paths are stated in the record.
+
+Implementation criteria:
+
+- The exit-gate state accepts an append-only waiver record: who waived, the
+  reason, the covered descendant commit range, and a timestamp. The prior
+  fingerprints and `freshness_head` are not rewritten.
+- A waiver is written only on an explicit operator instruction; the skill never
+  infers or self-issues one, including under `OAT_AUTONOMOUS=1`.
+- A waived generation reads as `allowed` only while no substantive descendant
+  lands after the covered range; a later substantive change makes it `stale`
+  again (negative control).
+- The waiver appears in the project summary and the PR description's
+  verification section.
+- Tests (or skill contract tests) cover: a waived test-only descendant stays
+  allowed; an unwaived test-only descendant is stale; a waiver followed by a
+  new substantive commit is stale; a malformed waiver fails closed.
+- `oat-project-implement` (and any skill that reads the exit-gate state, such as
+  `oat-project-next`) is version-bumped.

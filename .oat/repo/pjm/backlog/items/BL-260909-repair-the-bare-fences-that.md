@@ -23,5 +23,7 @@ Wave-7 p10 (`2026-09-08-repair-stray-fences-in-lifecycle-skills.md`) repaired th
 
 ## Acceptance Criteria
 
-- {Outcome 1}
-- {Outcome 2}
+- Each of the five listed bare-fence instances is re-located at the current head (line numbers have drifted) and repaired with the wave-7 p10 treatment (opener, narrowed closers, balanced info strings); the swallowed headings, including `## Structured-Output Mode` in `oat-reviewer.md`, render as headings again.
+- The fence-scan inventory in `packages/cli/src/validation/named-skill-load-contract.test.ts` covers `.agents/agents` and `.oat/templates`, and fails on a seeded bare fence that swallows a heading in each tree (negative control, then restored).
+- Each changed versioned asset is bumped once (`oat-reviewer.md`, `oat-codebase-mapper.md`, and `skeptical-evaluator.md` top-level `version:`), plus the lockstep packages for the `.oat/templates` change.
+- The indent-laxity and heading-anchor narrowing and the inventory-headroom reduction are either done with tests or explicitly left out with a one-line reason.

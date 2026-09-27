@@ -22,6 +22,12 @@ external_plans: []
 
 Promoted from legacy backlog record bl-28ce. Persist the pointer, symlink, or copy strategy in configuration and expose the choice during initialization.
 
+Note 2026-09-27: `BL-260927-make-claude-md-shims-opt` changes the default
+strategy to no shims (operator direction) and persists the strategy in
+`.oat/config.json`. It expects to absorb this item; the migration criterion
+below conflicts with the new default and is resolved there. Do not plan this
+item separately.
+
 ## Acceptance Criteria
 
 - Project and user configuration can persist a validated pointer, symlink, or copy strategy.
