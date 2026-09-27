@@ -256,7 +256,7 @@ equal to `recordBase.request_id`, `source: canonical-role-resolver`, and
 `<loaded|user|project>/agents/<name>.md`, never an absolute or `<repo>` path,
 and `contentDigest` is `sha256:<64 lowercase hex>` of the canonical role file.
 Missing evidence has `status: missing`, the tier misses, and `recovery`
-commands; it validates, but it does not authorize a launch.
+commands; it validates, but a fallback claim requires resolved evidence.
 
 One run reports every violation it can find, one `stage path: message` line
 each, where `stage` is `claudeLaunch`, `recordBase`, or `event`. A check that
