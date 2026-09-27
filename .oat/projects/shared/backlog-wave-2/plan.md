@@ -1292,6 +1292,7 @@ title itself:
 | design | artifact | pending         | -          | -                                                           | -             | -          | -                 |
 | plan   | artifact | fixes_completed | 2026-09-27 | -                                                           | -             | auto       | -                 |
 | plan   | artifact | fixes_completed | 2026-09-27 | reviews/archived/artifact-plan-review-2026-09-27T150947Z.md | -             | gate       | codex-6-sol-xhigh |
+| plan   | artifact | received        | 2026-09-27 | reviews/artifact-plan-review-2026-09-27T151608Z.md          | -             | -          | -                 |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
