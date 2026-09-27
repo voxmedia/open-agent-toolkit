@@ -28,10 +28,10 @@ oat_generated: false
 | --------------------------------------------- | --------- | ----- | --------- |
 | p01 — Bundled skill and script fixes          | completed | 5     | 5/5       |
 | p02 — CLI sync, config, and tools correctness | completed | 6     | 6/6       |
-| p03 — Managed Claude dispatch-record input    | pending   | 5     | 0/5       |
+| p03 — Managed Claude dispatch-record input    | completed | 7     | 7/7       |
 | p04 — Release and backlog fan-in              | pending   | 3     | 0/3       |
 
-**Total:** 11/19 tasks completed
+**Total:** 18/21 tasks completed
 
 ---
 
@@ -144,7 +144,7 @@ converted to p02-t06.
 
 ## Phase 3: Managed Claude dispatch-record input
 
-**Status:** pending
+**Status:** completed
 **Started:** -
 
 ### Task p03-t01: State the expected pattern in dispatch-record validation messages
@@ -174,8 +174,13 @@ converted to p02-t06.
 
 ### Task p03-t07: (review) Keep the violation report intact around unterminated secrets
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** c7444a8a2
+
+- Each violation is scrubbed before joining; header and line count match with
+  an unterminated key. Removing the per-violation scrub fails 3 tests.
+  The fix lives in `providers/claude/dispatch-envelope.ts`, which owns the
+  report error class (outside the task's listed files).
 
 **Review received (p03 round 2, auto):** `reviews/archived/p03-review-2026-09-27T062955Z.md`
 at head `54cea0878`: 0 Critical, 0 High, 0 Medium, 1 Low; passed. H1 verified
