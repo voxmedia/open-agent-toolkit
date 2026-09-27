@@ -490,6 +490,80 @@ describe('managed Claude single-run violation reporting', () => {
     });
   });
 
+  const SECRET = 'ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
+  async function commandError(input: unknown): Promise<string> {
+    const json = vi.fn();
+    const previousExitCode = process.exitCode;
+    process.exitCode = undefined;
+    try {
+      const command = createProjectDispatchCommand({
+        buildCommandContext: () => ({
+          scope: 'all',
+          dryRun: false,
+          verbose: false,
+          json: true,
+          cwd: process.cwd(),
+          home: process.cwd(),
+          interactive: false,
+          logger: {
+            debug: vi.fn(),
+            info: vi.fn(),
+            warn: vi.fn(),
+            error: vi.fn(),
+            success: vi.fn(),
+            json,
+          },
+        }),
+        resolveProjectRoot: async () => process.cwd(),
+        readFile: async () => {
+          throw new Error('event file should not be read');
+        },
+        readStdin: async () => JSON.stringify(input),
+      });
+      await command.parseAsync(['record', '--event-file', '-'], {
+        from: 'user',
+      });
+      expect(process.exitCode).toBe(1);
+      const payload = json.mock.calls.at(-1)?.[0] as {
+        status?: string;
+        message?: string;
+      };
+      expect(payload.status).toBe('error');
+      return String(payload.message);
+    } finally {
+      process.exitCode = previousExitCode;
+    }
+  }
+
+  it('never echoes a secret from a rejected enum field', async () => {
+    const input = managedClaudeInput('implementer');
+    (input.recordBase as Record<string, unknown>).launch_status = SECRET;
+    (input.event.evidence as Record<string, unknown>).tier = SECRET;
+
+    // The producer itself still echoes the value; the command boundary is
+    // what must remove it.
+    expect(() => parseDispatchRecordInput(input)).toThrow(SECRET);
+
+    const message = await commandError(input);
+    expect(message).toContain('recordBase launch_status:');
+    expect(message).toContain('event evidence.tier:');
+    expect(message).toContain('<redacted-secret>');
+    expect(message).not.toContain(SECRET);
+    expect(message).not.toMatch(/ghp_/);
+  });
+
+  it('never echoes a secret through the action/role or variant messages', async () => {
+    const input = managedClaudeInput('implementer');
+    (input.recordBase as Record<string, unknown>).action = SECRET;
+    input.claudeLaunch.payload = { variant: SECRET };
+
+    const message = await commandError(input);
+    expect(message).toContain('recordBase action:');
+    expect(message).toContain('claudeLaunch payload.variant:');
+    expect(message).not.toMatch(/ghp_/);
+  });
+
   it('never prints an absolute path in the single-run report', async () => {
     const input = everyViolationInput();
     input.claudeLaunch.payload = { variant: '/Users/alice/secret/variant' };

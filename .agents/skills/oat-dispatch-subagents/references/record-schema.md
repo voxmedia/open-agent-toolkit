@@ -213,15 +213,16 @@ selection source.
 Before every managed, effort-pinned Claude implementer or reviewer launch,
 `oat-project-implement` runs `oat project dispatch record --event-file <file>
 --json` without `--project` and requires `status: validated-only`. That input
-replaces `record` with three keys:
+replaces `record` with three top-level keys:
 
-- `claudeLaunch.resolution`: the output of
-  `oat project dispatch-ceiling resolve --provider claude --role <implementer|reviewer> --json`,
-  verbatim.
-- `claudeLaunch.definition`: the full text of the generated Claude agent file
-  for the selected variant.
-- `claudeLaunch.payload`: the exact launch payload, `{ "variant": "<variant>" }`,
-  optionally with `model` equal to the selected model.
+- `claudeLaunch`, an object with three keys of its own:
+  - `resolution`: the output of
+    `oat project dispatch-ceiling resolve --provider claude --role <implementer|reviewer> --json`,
+    verbatim.
+  - `definition`: the full text of the generated Claude agent file for the
+    selected variant.
+  - `payload`: the exact launch payload, `{ "variant": "<variant>" }`,
+    optionally with `model` equal to the selected model.
 - `recordBase`: the caller-authored generic fields below.
 - `event`: the `canonical-role-resolution` event, produced rather than written
   by hand.
@@ -259,10 +260,14 @@ Missing evidence has `status: missing`, the tier misses, and `recovery`
 commands; it validates, but a fallback claim requires resolved evidence.
 
 One run reports every violation it can find, one `stage path: message` line
-each, where `stage` is `claudeLaunch`, `recordBase`, or `event`. A check that
-depends on a stage that failed to parse, such as the launch consistency checks
-when the resolution is malformed, is skipped and named on a final line; fix the
-reported violations and run again.
+each, where `stage` is `claudeLaunch`, `recordBase`, or `event`. The
+`recordBase` cross-field rules run even when a required field is missing. A
+check that needs a value that failed to parse is skipped and named on a final
+line: the launch consistency checks when the resolution is malformed, the
+payload variant and model checks when the payload is malformed, and the
+action/role check without a parsed resolution. Fix the reported violations and
+run again. Secret-shaped values are scrubbed from the report as
+`<redacted-secret>`, and absolute paths as `<redacted-path>`.
 
 [`managed-claude-example.json`](managed-claude-example.json) holds one complete
 input per role and validates as published. It is built from fixture agents
@@ -270,7 +275,13 @@ rather than the shipped roles, so its definition body, role version, and
 content digest are illustrative. To regenerate it, run `dispatch-ceiling
 resolve` for each role, materialize each definition from a fixture agent with
 the Claude materializer that `oat sync` uses, and run `canonical-role` against
-fixture role files; the CLI test that pins the example must still pass.
+fixture role files; the CLI test that pins the example must still pass. The
+published events come from a fixture home whose `.agents/agents/` holds both
+roles and whose `.agents/skills/oat-project-implement/` is the `--skill-dir`,
+so the loaded root is that home's `.agents`: expect `tier: loaded`,
+`selectedPath: <loaded>/agents/<role>.md`, and
+`canonicalPath: <user>/agents/<role>.md`. Another layout yields different but
+equally valid tier labels.
 
 ## Recon Wave
 

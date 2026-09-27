@@ -27,6 +27,7 @@ import {
   collectSensitiveDispatchContent,
   identityFieldsOf,
   parseGenericDispatchRecord,
+  redactSensitiveValues,
   type GenericDispatchRecord,
 } from '@providers/identity/generic-dispatch-record';
 import {
@@ -115,7 +116,10 @@ export function redactDispatchMessage(
     home?: string | null;
   } = {},
 ): string {
-  let redacted = message;
+  // Secrets first: a rejected value is echoed by some validation messages (a
+  // Zod enum issue repeats what it received), so a secret-shaped value must be
+  // scrubbed here even though the same run also reports it as sensitive.
+  let redacted = redactSensitiveValues(message);
   const labelled: readonly (readonly [string, string | null | undefined])[] = [
     ['<project>', roots.project],
     ['<repo>', roots.repo],

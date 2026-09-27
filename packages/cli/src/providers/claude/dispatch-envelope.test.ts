@@ -156,6 +156,20 @@ describe('collectClaudeLaunchViolations', () => {
     ]);
   });
 
+  it('names the payload checks a failed payload parse skips', () => {
+    const launch = claudeLaunch();
+    const { violations, skipped } = collectClaudeLaunchViolations({
+      ...launch,
+      payload: { model: 'claude-opus-5-5' },
+    });
+    expect(violations.map(({ stage, path }) => `${stage} ${path}`)).toEqual([
+      'claudeLaunch payload.variant',
+    ]);
+    expect(skipped).toEqual([
+      'claudeLaunch payload variant and model checks (need a parsed payload)',
+    ]);
+  });
+
   it('rejects a non-object launch without inventing dependent findings', () => {
     expect(collectClaudeLaunchViolations('nope')).toEqual({
       resolverRole: null,
@@ -241,6 +255,31 @@ describe('collectClaudeRecordBaseViolations', () => {
       violations: [],
       skipped: ['recordBase action/role check (needs a parsed resolution)'],
     });
+  });
+
+  it('reports cross-field rules in the same run as a missing field', () => {
+    const { caller: _caller, ...base } = recordBase();
+    const { violations, skipped } = collectClaudeRecordBaseViolations(
+      {
+        ...base,
+        launch_status: 'accepted',
+        child_outcome: null,
+        task_class: 'hard-reasoning',
+      },
+      'implementer',
+    );
+    expect(violations.map(({ stage, path }) => `${stage} ${path}`)).toEqual([
+      'recordBase caller',
+      'recordBase child_outcome',
+      'recordBase model_class_floor',
+    ]);
+    expect(violations[1]?.message).toBe(
+      'An accepted dispatch must report a child outcome.',
+    );
+    expect(violations[2]?.message).toMatch(
+      /requires every task-class field; missing model_class_floor/,
+    );
+    expect(skipped).toEqual([]);
   });
 
   it('reports cross-field rules once the base parses', () => {

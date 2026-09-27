@@ -366,6 +366,8 @@ export function acceptClaudeLaunchEnvelope(input: {
 
 const LAUNCH_CONSISTENCY_SKIPPED =
   'claudeLaunch consistency checks (need a parsed resolution)';
+const PAYLOAD_CHECKS_SKIPPED =
+  'claudeLaunch payload variant and model checks (need a parsed payload)';
 const ACTION_ROLE_SKIPPED =
   'recordBase action/role check (needs a parsed resolution)';
 
@@ -420,6 +422,7 @@ export function collectClaudeLaunchViolations(claudeLaunch: unknown): {
       skipped: [LAUNCH_CONSISTENCY_SKIPPED],
     };
   }
+  const skipped = launch.success ? [] : [PAYLOAD_CHECKS_SKIPPED];
   violations.push(
     ...launchConsistencyViolations(
       resolution.data,
@@ -430,7 +433,7 @@ export function collectClaudeLaunchViolations(claudeLaunch: unknown): {
   return {
     resolverRole: resolution.data.providers.claude.selection.role,
     violations,
-    skipped: [],
+    skipped,
   };
 }
 
@@ -440,13 +443,40 @@ const PROTECTED_FIELD_MASK = Object.fromEntries(
 
 /**
  * The caller-authored half of a managed record: the closed generic field set
- * with every derived field omitted, plus the same cross-field rules. Its
- * refinements only run once the object itself parses, so a cross-field rule
- * is reported on the run after a missing or mistyped field is fixed.
+ * with every derived field omitted. The cross-field rules are applied
+ * separately (see {@link crossFieldViolations}) because a Zod refinement never
+ * runs once the object parse aborts, which would push those rules to a later
+ * run.
  */
-const managedRecordBaseSchema = genericDispatchRecordBaseSchema
-  .omit(PROTECTED_FIELD_MASK)
-  .superRefine(refineGenericDispatchRecord);
+const managedRecordBaseSchema =
+  genericDispatchRecordBaseSchema.omit(PROTECTED_FIELD_MASK);
+
+/**
+ * Run the generic cross-field rules directly on the caller-owned fields,
+ * whether or not the object parse succeeded. The rules read every field
+ * defensively, so a missing or mistyped field elsewhere does not hide a
+ * cross-field violation until the next run.
+ */
+function crossFieldViolations(
+  callerOwned: Record<string, unknown>,
+): ManagedClaudeViolation[] {
+  const violations: ManagedClaudeViolation[] = [];
+  const context = {
+    path: [],
+    addIssue: (issue: { message?: string; path?: (string | number)[] }) => {
+      violations.push({
+        stage: 'recordBase',
+        path: formatIssuePath(null, issue.path ?? []),
+        message: issue.message ?? 'Invalid',
+      });
+    },
+  } as unknown as z.RefinementCtx;
+  refineGenericDispatchRecord(
+    callerOwned as Parameters<typeof refineGenericDispatchRecord>[0],
+    context,
+  );
+  return violations;
+}
 
 function actionConflict(
   resolverRole: ResolverRole,
@@ -517,6 +547,7 @@ export function collectClaudeRecordBaseViolations(
   if (!parsed.success) {
     violations.push(...zodIssueViolations('recordBase', null, parsed.error));
   }
+  violations.push(...crossFieldViolations(callerOwned));
   for (const [field, value] of Object.entries(
     identityFieldsOf(callerOwned as GenericDispatchRecord),
   )) {

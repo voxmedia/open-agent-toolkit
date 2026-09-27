@@ -531,6 +531,37 @@ const SENSITIVE_VALUE_PATTERNS: readonly RegExp[] = [
   /\b[a-z][a-z0-9+.-]*:\/\/[^\s:/?#@]+:[^\s:/?#@]+@/i,
 ];
 
+/** The stable stand-in for a scrubbed secret-shaped value. */
+export const REDACTED_SECRET = '<redacted-secret>';
+
+/**
+ * A private key block is multi-line, so the header pattern alone would leave
+ * its body behind; the whole block is replaced first.
+ */
+const PRIVATE_KEY_BLOCK =
+  /-----BEGIN (?:RSA |EC |DSA |OPENSSH |PGP )?PRIVATE KEY-----[\s\S]*?(?:-----END (?:RSA |EC |DSA |OPENSSH |PGP )?PRIVATE KEY-----|$)/gi;
+
+/**
+ * Scrub every secret-shaped value from outgoing text, using the same value
+ * detector the sensitive-content walk uses. Each match is extended to the end
+ * of its token, so a pattern that recognizes only a prefix (a JWT's header and
+ * payload, say) does not leave the rest behind. Like the detector, this is a
+ * best-effort layer: a value that no pattern recognizes survives.
+ */
+export function redactSensitiveValues(text: string): string {
+  let redacted = text.replace(PRIVATE_KEY_BLOCK, REDACTED_SECRET);
+  for (const pattern of SENSITIVE_VALUE_PATTERNS) {
+    const flags = pattern.flags.includes('g')
+      ? pattern.flags
+      : `${pattern.flags}g`;
+    redacted = redacted.replace(
+      new RegExp(`(?:${pattern.source})[^\\s'"\`,;)\\]}]*`, flags),
+      REDACTED_SECRET,
+    );
+  }
+  return redacted;
+}
+
 export function isSensitiveDispatchKey(key: string): boolean {
   const { normalized, unrecognized } = foldDispatchKey(key);
   // Fail closed: a key this normalizer cannot fully account for is treated as

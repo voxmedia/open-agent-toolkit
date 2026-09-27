@@ -521,7 +521,9 @@ Claude rules:
   which prints the `canonical-role-resolution` evidence (redacted paths,
   content digest, tier misses) the recorder accepts unchanged; never write that
   evidence by hand. A `missing` result is still valid evidence and carries the
-  recovery commands for the absent role. Copy the shape of
+  recovery commands for the absent role: surface those commands to the
+  operator, and note that a later fresh-child fallback still stops under the
+  canonical fallback role rule above. Copy the shape of
   `${DISPATCH_SKILLS_ROOT}/oat-dispatch-subagents/references/managed-claude-example.json`,
   one complete validated input per role; its `record-schema.md` section lists
   the `recordBase` fields and the derived fields `recordBase` must omit.

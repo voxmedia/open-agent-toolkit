@@ -140,3 +140,33 @@ describe('collecting absolute-path violations', () => {
     expect(collectAbsolutePathViolations({ ok: 'a/b' }, 'x')).toEqual([]);
   });
 });
+
+describe('message-boundary secret scrubbing', () => {
+  it.each([
+    ['a GitHub token', "received 'ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'"],
+    [
+      'an OpenAI-style key',
+      'variant sk-abcdefghijklmnopqrstuvwxyz does not match',
+    ],
+    [
+      'a whole JWT',
+      "received 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.c2lnbmF0dXJlLXZhbHVl'",
+    ],
+    [
+      'a private key block',
+      "received '-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBg\n-----END PRIVATE KEY-----'",
+    ],
+  ])('scrubs %s', (_name, message) => {
+    const redacted = redactDispatchMessage(message);
+    expect(redacted).toContain('<redacted-secret>');
+    expect(redacted).not.toMatch(
+      /ghp_|sk-abc|eyJ|c2lnbmF0dXJl|MIIEvQ|PRIVATE KEY/,
+    );
+  });
+
+  it('leaves ordinary identifiers alone', () => {
+    const message =
+      "recordBase launch_status: Invalid enum value. Expected 'planned' | 'accepted', received 'nope'";
+    expect(redactDispatchMessage(message)).toBe(message);
+  });
+});
