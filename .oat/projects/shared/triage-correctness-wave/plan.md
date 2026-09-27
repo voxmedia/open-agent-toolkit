@@ -1090,6 +1090,7 @@ git commit -m "chore(p04-t03): record definition-of-done gate results"
 | design | artifact | pending         | -          | -                                                           | -             | -          | -                 |
 | plan   | artifact | fixes_completed | 2026-09-27 | structured (no artifact)                                    | -             | auto       | -                 |
 | plan   | artifact | fixes_completed | 2026-09-27 | reviews/archived/artifact-plan-review-2026-09-27T043735Z.md | -             | gate       | codex-6-sol-xhigh |
+| plan   | artifact | received        | 2026-09-27 | reviews/artifact-plan-review-2026-09-27T044626Z.md          | -             | -          | -                 |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
