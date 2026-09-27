@@ -93,7 +93,7 @@ describe('decision AGENTS guidance', () => {
     expect(rootGuidance).toContain('`architecture/decisions/index.md`');
   });
 
-  it('preserves project-management guidance and proposes the decision block', async () => {
+  it('preserves project-management guidance and appends the absent decision block', async () => {
     const projectRoot = await mkdtemp(join(tmpdir(), 'oat-decision-agents-'));
     tempDirs.push(projectRoot);
     const decisionsRoot = join(projectRoot, 'architecture', 'decisions');
@@ -107,8 +107,30 @@ describe('decision AGENTS guidance', () => {
     });
 
     const rootGuidance = await readFile(join(projectRoot, 'AGENTS.md'), 'utf8');
-    expect(rootGuidance).toContain(pjmSection.trim());
-    expect(rootGuidance).not.toContain('<!-- OAT decisions -->');
+    expect(
+      rootGuidance.startsWith(`${pjmSection}\n<!-- OAT decisions -->\n`),
+    ).toBe(true);
+    expect(rootGuidance.endsWith('<!-- END OAT decisions -->\n')).toBe(true);
+    expect(rootGuidance.match(/<!-- OAT decisions -->/g)).toHaveLength(1);
+    expect(result.root).toEqual({ action: 'appended' });
+  });
+
+  it('preserves a different decision block and proposes the replacement', async () => {
+    const projectRoot = await mkdtemp(join(tmpdir(), 'oat-decision-agents-'));
+    tempDirs.push(projectRoot);
+    const decisionsRoot = join(projectRoot, 'architecture', 'decisions');
+    const existing =
+      '<!-- OAT project-management -->\nPJM guidance\n<!-- END OAT project-management -->\n\n<!-- OAT decisions -->\nstale\n<!-- END OAT decisions -->\n';
+    await writeFile(join(projectRoot, 'AGENTS.md'), existing, 'utf8');
+
+    const result = await initializeDecisionAgentsGuidance({
+      projectRoot,
+      decisionsRoot,
+    });
+
+    await expect(
+      readFile(join(projectRoot, 'AGENTS.md'), 'utf8'),
+    ).resolves.toBe(existing);
     expect(result.root).toMatchObject({
       action: 'manual-required',
       manualPatch: {

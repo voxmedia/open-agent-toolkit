@@ -15,6 +15,7 @@ export type AgentsGuidanceAction =
   | 'declined'
   | 'not-requested'
   | 'create'
+  | 'appended'
   | 'no-change'
   | 'manual-required'
   | 'blocked';
@@ -172,7 +173,7 @@ export async function planProjectGuidance(
     };
   } else {
     const accepted = await input.confirmAction(
-      'Create missing or propose manual repository AGENTS.md tool guidance?',
+      'Create or append repository AGENTS.md tool guidance (a different existing block prints a manual patch)?',
       { interactive: input.interactive },
     );
     choice = accepted
@@ -203,7 +204,7 @@ export async function planProjectGuidance(
       body,
       legacySectionAction: 'preserve',
       reason:
-        'Project guidance was not requested. Re-run with --project-guidance to create an absent AGENTS.md or print a manual patch for an existing one.',
+        'Project guidance was not requested. Re-run with --project-guidance to create an absent AGENTS.md, append an absent guidance block to an existing one, or print a manual patch for a different existing block.',
       choice,
     };
   }
@@ -229,7 +230,7 @@ export async function planProjectGuidance(
     body,
     legacySectionAction: 'remove',
     reason:
-      'Project guidance was accepted. An absent AGENTS.md may be created; an existing file requires a manual patch.',
+      'Project guidance was accepted. An absent AGENTS.md may be created and an absent guidance block appended; a different existing block requires a manual patch.',
     choice,
   };
 }

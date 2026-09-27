@@ -909,7 +909,12 @@ async function applyProjectGuidance(
     }
     return {
       ...plan,
-      action: sectionResult.action === 'created' ? 'create' : 'no-change',
+      action:
+        sectionResult.action === 'created'
+          ? 'create'
+          : sectionResult.action === 'appended'
+            ? 'appended'
+            : 'no-change',
       reason: `Accepted project guidance ${sectionResult.action}. Capability placement and PJM adoption were unchanged.`,
     };
   } catch (error) {

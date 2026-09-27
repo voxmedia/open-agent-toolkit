@@ -1,5 +1,7 @@
+import { constants } from 'node:fs';
 import {
   lstat,
+  open,
   readFile,
   readlink,
   realpath,
@@ -10,13 +12,16 @@ import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 /**
  * Plans repository AGENTS.md guidance without replacing existing paths.
  *
- * An absent root file may be created with one exclusive write. Existing files
- * and contained symlinks are read only: matching content returns no-change and
- * every required change is returned as a copy-pasteable manual patch.
+ * An absent root file may be created with one exclusive write. For an existing
+ * file (or its contained symlink target), matching content returns no-change,
+ * absent managed blocks are appended with one append-only write that never
+ * truncates, renames, or rewrites existing bytes, and a present-but-different
+ * block is returned as a zero-write, copy-pasteable manual patch.
  */
 
 export interface AgentsMdFileSystem {
   lstat: typeof lstat;
+  open: typeof open;
   readFile: typeof readFile;
   readlink: typeof readlink;
   realpath: typeof realpath;
@@ -30,6 +35,7 @@ export interface AgentsMdMutationOptions {
 
 const defaultFileSystem: AgentsMdFileSystem = {
   lstat,
+  open,
   readFile,
   readlink,
   realpath,
@@ -73,7 +79,7 @@ export interface AgentsMdBlocked {
 }
 
 export interface UpsertSectionResult {
-  action: 'created' | 'no-change' | 'manual-required' | 'blocked';
+  action: 'created' | 'appended' | 'no-change' | 'manual-required' | 'blocked';
   manualPatch?: AgentsMdManualPatch;
   blocked?: AgentsMdBlocked;
 }
@@ -459,6 +465,59 @@ async function createMissingFile(
   }
 }
 
+/**
+ * Open flags for the append-only write. A write access mode is required:
+ * `O_APPEND | O_NOFOLLOW` alone opens read-only and the write fails with
+ * `EBADF`. `O_NOFOLLOW` refuses a symlink swapped in at the final component.
+ */
+export const AGENTS_MD_APPEND_FLAGS =
+  constants.O_WRONLY | constants.O_APPEND | constants.O_NOFOLLOW;
+
+/**
+ * Appends absent managed blocks to an existing, already-approved target.
+ *
+ * The opened handle's device/inode must equal the planned target identity, so
+ * a target swapped in after planning (for example a hard link to a file
+ * outside the repository renamed over AGENTS.md) is refused with zero bytes
+ * written. The payload always starts with one newline, so the first marker
+ * starts its own line however the file (or a concurrent writer) ended, and
+ * `O_APPEND` places it after every byte already in the file.
+ */
+async function appendAbsentSections(
+  plan: AgentsMdPlan,
+  blocks: readonly string[],
+  fileSystem: AgentsMdFileSystem,
+): Promise<'appended' | 'blocked'> {
+  let handle: Awaited<ReturnType<typeof open>>;
+  try {
+    handle = await fileSystem.open(plan.targetPath, AGENTS_MD_APPEND_FLAGS);
+  } catch {
+    return 'blocked';
+  }
+  try {
+    const opened = await handle.stat();
+    if (!opened.isFile() || !hasIdentity(opened, plan.targetIdentity)) {
+      return 'blocked';
+    }
+    const payload = Buffer.from(`\n${blocks.join('\n\n')}\n`, 'utf8');
+    let offset = 0;
+    while (offset < payload.length) {
+      const { bytesWritten } = await handle.write(
+        payload,
+        offset,
+        payload.length - offset,
+      );
+      if (bytesWritten <= 0) return 'blocked';
+      offset += bytesWritten;
+    }
+    return 'appended';
+  } catch {
+    return 'blocked';
+  } finally {
+    await handle.close();
+  }
+}
+
 async function upsertSectionsInternal(
   repoRoot: string,
   sections: readonly AgentsMdSectionInput[],
@@ -529,6 +588,49 @@ async function upsertSectionsInternal(
     if (changed.length === 0 && legacy.length === 0) {
       return Object.fromEntries(
         desired.map(({ key }) => [key, { action: 'no-change' }]),
+      );
+    }
+
+    // Appending cannot remove a legacy block, so any legacy block keeps the
+    // whole request on the zero-write manual patch.
+    if (legacy.length === 0) {
+      const absent = managed.filter(({ range }) => !range);
+      const different = managed.filter(
+        ({ block, range }) =>
+          range !== undefined &&
+          content.slice(range.start, range.end) !== block,
+      );
+      if (absent.length > 0) {
+        const appended = await appendAbsentSections(
+          plan,
+          absent.map(({ block }) => block),
+          fileSystem,
+        );
+        if (appended === 'blocked') {
+          throw new Error(
+            'Repository or AGENTS.md identity changed during planning.',
+          );
+        }
+      }
+      const differentPatch =
+        different.length > 0
+          ? createManualPatch(
+              plan,
+              different.map(({ block }) => block),
+              [],
+            )
+          : undefined;
+      return Object.fromEntries(
+        managed.map(({ key, range }) => {
+          if (!range) return [key, { action: 'appended' }];
+          if (differentPatch && different.some((entry) => entry.key === key)) {
+            return [
+              key,
+              { action: 'manual-required', manualPatch: differentPatch },
+            ];
+          }
+          return [key, { action: 'no-change' }];
+        }),
       );
     }
 

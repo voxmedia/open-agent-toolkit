@@ -1437,6 +1437,34 @@ describe('createInitToolsCommand', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it.each([false, true])(
+    'reports appended guidance as a successful outcome in json=%s mode',
+    async (json) => {
+      const { command, capture, upsertAgentsMdSection } = createHarness({
+        interactive: false,
+        useLifecycle: true,
+      });
+      upsertAgentsMdSection.mockResolvedValueOnce({ action: 'appended' });
+
+      await runCommand(
+        command,
+        ['--project-guidance'],
+        json ? ['--json', '--scope', 'all'] : ['--scope', 'all'],
+      );
+
+      if (json) {
+        expect(capture.jsonPayloads.at(-1)).toMatchObject({
+          status: 'ok',
+          projectGuidance: { action: 'appended' },
+        });
+      } else {
+        expect(capture.info.join('\n')).toContain('Project guidance: appended');
+        expect(capture.warn.join('\n')).not.toContain('Project guidance');
+      }
+      expect(process.exitCode).toBe(0);
+    },
+  );
+
   it('reports unsafe guidance as blocked without rewriting pack lifecycle evidence', async () => {
     const { command, capture, upsertAgentsMdSection } = createHarness({
       interactive: false,
