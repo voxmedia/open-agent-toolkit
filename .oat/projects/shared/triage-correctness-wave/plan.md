@@ -1329,7 +1329,7 @@ retro banner count for the new Step 7.
 | final  | code     | passed          | 2026-09-27 | reviews/archived/final-review-2026-09-27T071850Z.md         | 234ee8a8b8c90c47f3cf659a15d5b2eb0765dc72 | gate       | codex-6-sol-xhigh |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
 | design | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
-| plan   | artifact | fixes_completed | 2026-09-27 | structured (no artifact)                                    | -                                        | auto       | -                 |
+| plan   | artifact | fixes_completed | 2026-09-27 | -                                                           | -                                        | auto       | -                 |
 | plan   | artifact | fixes_completed | 2026-09-27 | reviews/archived/artifact-plan-review-2026-09-27T043735Z.md | -                                        | gate       | codex-6-sol-xhigh |
 | plan   | artifact | passed          | 2026-09-27 | reviews/archived/artifact-plan-review-2026-09-27T044626Z.md | -                                        | gate       | codex-6-sol-xhigh |
 | plan   | artifact | passed          | 2026-09-27 | reviews/archived/artifact-plan-review-2026-09-27T045257Z.md | -                                        | gate       | codex-6-sol-xhigh |
