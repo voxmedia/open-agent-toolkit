@@ -1101,6 +1101,29 @@ names the fixture layout that yields `<user>`/`<loaded>` tiers).
 
 ---
 
+### Task p03-t07: (review) Keep the violation report intact around unterminated secrets
+
+Source: `reviews/archived/p03-review-2026-09-27T062955Z.md` Low (round 2 passed
+with 0 Critical, 0 High, 0 Medium).
+
+**Files:** `packages/cli/src/providers/identity/generic-dispatch-record.ts`
+(`redactSensitiveValues`, near 541-552), `packages/cli/src/commands/project/dispatch/record.ts`,
+their tests.
+
+**Step 1 (RED):** a rejected value containing an unterminated
+`-----BEGIN PRIVATE KEY-----` yields a report whose line count matches its
+violation header, with no secret text; a trailing period after a scrubbed
+value is preserved.
+
+**Step 2 (GREEN):** scrub each violation message before joining lines, or stop
+the private-key match at the end of the line.
+
+**Step 4 (Verify):** `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/identity/ src/commands/project/dispatch/`
+
+**Step 5 (Commit):** `fix(p03-t07): scrub each violation line so unterminated secrets cannot hide later lines`
+
+---
+
 ## Phase 4: Release and backlog fan-in
 
 ### Task p04-t01: Bump the lockstep public package versions
@@ -1248,7 +1271,8 @@ git commit -m "chore(p04-t03): record definition-of-done gate results"
 | p02    | code     | passed          | 2026-09-27 | reviews/archived/p02-review-2026-09-27T052321Z.md           | 8c4102a024e34fcea7f1ac451ed828b83063604d | auto       | -                 |
 | p02    | code     | received        | 2026-09-27 | reviews/archived/p02-review-2026-09-27T054138Z.md           | d6a7d00a866e3c96eab31a4f968da21e135bf167 | gate       | codex-6-sol-xhigh |
 | p02    | code     | passed          | 2026-09-27 | reviews/archived/p02-review-2026-09-27T054914Z.md           | 16b7b968c04f1a610d1537a7f979c933d02556d9 | gate       | codex-6-sol-xhigh |
-| p03    | code     | fixes_added     | 2026-09-27 | reviews/archived/p03-review-2026-09-27T061910Z.md           | c4ef806fb7c5c1bcdc1e66f71f29a77c78b4a260 | auto       | -                 |
+| p03    | code     | fixes_completed | 2026-09-27 | reviews/archived/p03-review-2026-09-27T061910Z.md           | c4ef806fb7c5c1bcdc1e66f71f29a77c78b4a260 | auto       | -                 |
+| p03    | code     | passed          | 2026-09-27 | reviews/archived/p03-review-2026-09-27T062955Z.md           | 54cea0878dc10bb42ae199758ad050dc5754d22f | auto       | -                 |
 | p04    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | final  | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
@@ -1330,10 +1354,10 @@ reviewer was Codex, so the achieved review was cross-family.
 
 - Phase 1: 5 tasks - Bundled skill and script fixes
 - Phase 2: 6 tasks - CLI sync, config, and tools correctness
-- Phase 3: 6 tasks - Managed Claude dispatch-record input
+- Phase 3: 7 tasks - Managed Claude dispatch-record input
 - Phase 4: 3 tasks - Release and backlog fan-in
 
-**Total: 20 tasks**
+**Total: 21 tasks**
 
 Ready for code review and merge.
 

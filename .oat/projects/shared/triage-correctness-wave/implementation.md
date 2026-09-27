@@ -172,6 +172,19 @@ converted to p02-t06.
 **Status:** completed
 **Commit:** 782e2d49b
 
+### Task p03-t07: (review) Keep the violation report intact around unterminated secrets
+
+**Status:** pending
+**Commit:** -
+
+**Review received (p03 round 2, auto):** `reviews/archived/p03-review-2026-09-27T062955Z.md`
+at head `54cea0878`: 0 Critical, 0 High, 0 Medium, 1 Low; passed. H1 verified
+across every echo path the reviewer probed (enum, conflict, variant, nested,
+top-level keys, request IDs, legacy input, `canonical-role`, JSON and text
+output) with no over-redaction. The Low is converted to p03-t07; a
+pre-existing `JSON.parse` excerpt of at most a few characters is covered by the
+documented best-effort wording.
+
 ### Recovery Event p03-rec-01
 
 - Phase/task: p03 / p03-t04
