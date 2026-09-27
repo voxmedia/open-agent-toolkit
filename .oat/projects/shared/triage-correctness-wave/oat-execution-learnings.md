@@ -47,3 +47,9 @@ Append-only log of reusable observations from this autonomous run.
 **Observation:** `oat gate review` resolves through the globally installed CLI 0.3.7 (gate route `cliRoot` is the global pnpm store), so the new `gate_dispatch_audit_mismatched` check from p01-t03 is not enforced during this wave's own gates. The user-scope `oat-project-review-provide` copy is 1.5.10 while the branch ships 1.5.11.
 **Impact:** The plan's M2 rollout risk (stale installed review-provide failing this wave's gates) does not materialize here; the new check first applies once the released CLI includes it.
 **Recommendation:** After release, refresh installed skills (`oat tools update`) before running gates, so reviewers write the `**Dispatch audit (policy view):**` label the new CLI expects.
+
+## 2026-09-27T05:55:00Z - gotcha - Gate reviewer skipped the headless route step, so the gate failed after a clean review
+
+**Observation:** The p02 phase gate's Codex reviewer read review-provide Step 6.1 but never ran `"$OAT_GATE_CLI_PATH" gate route --json`, so no route receipt was written. The gate then failed at `postSelection.step: target-dispatch` ("Branch-local gate route did not return JSON.") even though the reviewer had completed with 0 findings and committed its artifact and `received` row. The p01 gate, with the same setup, ran the route command and passed.
+**Impact:** A clean review became `review_failed` and left a non-receive-eligible `received` row; one identical-payload gate retry was required.
+**Recommendation:** The post-selection recovery (#232 class) could recognize a missing route receipt as its own named cause, and the gate prompt could restate the route step, so reviewer non-compliance is diagnosed directly instead of as a JSON parse failure.
