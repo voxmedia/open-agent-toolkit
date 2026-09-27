@@ -398,6 +398,23 @@ bookkeeping.
   now in bookkeeping. Artifact:
   `reviews/archived/final-review-2026-09-27T071850Z.md`.
 
+### Final PR boundary (PRFINAL-05)
+
+- 2026-09-27, `oat-project-pr-final` 1.6.6 (autonomous, closeout `pr` step):
+  stopped at boundary `PRFINAL-05` (`boundary:unresolved-critical-findings`)
+  before push and PR creation. Not auto-resolved: the autonomy contract says
+  this gate is never auto-resolved and repairing the row is the only route
+  forward.
+- Offending ledger row: `scope=plan type=artifact artifact=structured (no artifact)`.
+  The Step 5 ledger-path guard reads that Artifact cell as a path and
+  reports `artifact file does not exist`; only the `-` placeholder is skipped.
+  Every other `## Reviews` row resolved. Step 2 passed (latest `final | code`
+  event is `passed`); Step 0.5 had nothing to archive.
+- Operator action: change that row's Artifact cell in `plan.md` to `-` (the
+  prose note under the table already records that the structured-mode auto
+  loop wrote no artifact), commit, then resume the closeout `pr` step with
+  `oat-project-pr-final`.
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
