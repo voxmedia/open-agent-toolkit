@@ -17,6 +17,7 @@
 | DR-260927-operator-waiver-for-test-only  | 2026-09-27 | accepted   | Operator waiver for test-only gate staleness                                                           | -       |
 | DR-260927-preserve-config-key-order      | 2026-09-27 | accepted   | Preserve config key order and skip no-op writes                                                        | -       |
 | DR-260927-report-dispatch-record         | 2026-09-27 | accepted   | Report dispatch-record violations in one redacted message                                              | -       |
+| DR-260927-templates-resolve-repository   | 2026-09-27 | accepted   | Templates resolve repository first                                                                     | -       |
 | DR-260927-test-only-paths-skip           | 2026-09-27 | accepted   | Test-only paths skip the lockstep bump                                                                 | -       |
 | DR-260924-astra-effort-catalog-and-sol   | 2026-09-24 | accepted   | Astra effort catalog and Sol max support                                                               | -       |
 | DR-260924-astra-frontier-placement-is    | 2026-09-24 | accepted   | Astra Frontier placement is user-directed                                                              | -       |

@@ -22,7 +22,9 @@
   `BL-260818-distinguish-operator-directed`, closing
   `BL-260927-record-owner-overrides` and `BL-260901-add-corrective-revision` as
   superseded and carving out `BL-260927-persist-quick-start-prompt` and
-  `BL-260927-mark-gate-findings-as-new-or`.
+  `BL-260927-mark-gate-findings-as-new-or`; and
+  `DR-260927-templates-resolve-repository` sets template precedence to
+  repository, user, bundle (`BL-260927-expose-a-scoped-template`).
 - 2026-09-27: `BL-260927-export-only-the-recap-page` records that archive
   copies the whole recap run (QA screenshots, fact base, ledger, manifest,
   theme) into tracked `.oat/repo/reference/project-recaps/`, where nothing

@@ -23,6 +23,9 @@ external_plans: []
 
 About nine lifecycle skills (project-retro, discover, design, plan, spec, summary, quick-start, import-plan, promote-spec-driven) copy `.oat/templates/<name>.md` directly. A user-scope `oat tools install workflows` puts templates under `$HOME/.oat/templates/` and creates no repository `.oat/templates/`, so those paths do not exist (reproduced 2026-09-26). Two internal resolvers exist and disagree on precedence: `resolveTemplateSource` in `commands/project/new/scaffold.ts` checks user, then repository, then bundle; `resolvePjmTemplate` in `commands/pjm/template-source.ts` checks repository, then user, then bundle. No command exposes either. The ideas skills already use a scope-aware `TEMPLATES_ROOT`. Source: GitHub issue #296.
 
+Decided 2026-09-27 in `DR-260927-templates-resolve-repository`: repository, then
+user, then bundle.
+
 ## Acceptance Criteria
 
 - One documented precedence order is shared by the project scaffold, PJM, and the new command, and the choice is recorded.
