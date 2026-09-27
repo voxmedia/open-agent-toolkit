@@ -1280,23 +1280,39 @@ title itself:
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                           | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | -------- | ---------- | -------------------------------------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p02    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p03    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p04    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p05    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| final  | code     | pending  | -          | -                                                  | -             | -          | -           |
-| spec   | artifact | pending  | -          | -                                                  | -             | -          | -           |
-| design | artifact | pending  | -          | -                                                  | -             | -          | -           |
-| plan   | artifact | received | 2026-09-27 | reviews/artifact-plan-review-2026-09-27T150947Z.md | -             | -          | -           |
+| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target       |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ----------------- |
+| p01    | code     | pending         | -          | -                                                           | -             | -          | -                 |
+| p02    | code     | pending         | -          | -                                                           | -             | -          | -                 |
+| p03    | code     | pending         | -          | -                                                           | -             | -          | -                 |
+| p04    | code     | pending         | -          | -                                                           | -             | -          | -                 |
+| p05    | code     | pending         | -          | -                                                           | -             | -          | -                 |
+| final  | code     | pending         | -          | -                                                           | -             | -          | -                 |
+| spec   | artifact | pending         | -          | -                                                           | -             | -          | -                 |
+| design | artifact | pending         | -          | -                                                           | -             | -          | -                 |
+| plan   | artifact | fixes_completed | 2026-09-27 | -                                                           | -             | auto       | -                 |
+| plan   | artifact | fixes_completed | 2026-09-27 | reviews/archived/artifact-plan-review-2026-09-27T150947Z.md | -             | gate       | codex-6-sol-xhigh |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
 `Gate Target` is populated only for gate events. Legacy five-column rows remain
 valid. Writers must preserve every existing row and every unknown trailing
 cell; never truncate a widened row back to five columns.
+
+Plan artifact review dispositions: the automatic structured review (Opus 5.5
+high, exception route because the planning parent's effort was unknown) ran
+three attempts within the retry bound of 2; attempts 1-2 findings (M1-M13,
+L1-L4; M1-M5, L1-L6) were applied and re-reviewed, and attempt 3's two findings
+(M1 control split, L1 trailing newline) were applied after the bound without a
+further structured pass and are covered by the configured gate. Gate attempt 1
+(`codex-6-sol-xhigh`, QS-12, `onFailure: block`) returned H1 (apply-time
+re-verification before shim removal), H2 (repository-wide leftover detection
+independent of exclusions), and M1 (`none` accepted only with its behavior);
+all three were resolved in the plan, together with the complexity-review
+simplifications (p01-t01 repro deleted; one target-swap control; no `--json`
+source field; existing doctor pins and resolve-providers fixture reused; Lite
+probe run once; scanner narrowing deferred with a trigger; reviewer probe
+reuse; explicit `scripts.lint` pin; rewrite-all archive references).
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
