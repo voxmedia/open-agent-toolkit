@@ -541,9 +541,12 @@ describe('managed Claude single-run violation reporting', () => {
     (input.recordBase as Record<string, unknown>).launch_status = SECRET;
     (input.event.evidence as Record<string, unknown>).tier = SECRET;
 
-    // The producer itself still echoes the value; the command boundary is
-    // what must remove it.
-    expect(() => parseDispatchRecordInput(input)).toThrow(SECRET);
+    // The report scrubs each violation itself; the command boundary remains
+    // the backstop for every other message.
+    expect(() => parseDispatchRecordInput(input)).toThrow(
+      /launch_status: Invalid enum value/,
+    );
+    expect(() => parseDispatchRecordInput(input)).not.toThrow(SECRET);
 
     const message = await commandError(input);
     expect(message).toContain('recordBase launch_status:');
@@ -562,6 +565,34 @@ describe('managed Claude single-run violation reporting', () => {
     expect(message).toContain('recordBase action:');
     expect(message).toContain('claudeLaunch payload.variant:');
     expect(message).not.toMatch(/ghp_/);
+    // Scrubbing a value keeps the sentence's own closing period.
+    expect(message).toContain(
+      'conflicts with record action <redacted-secret>.',
+    );
+  });
+
+  it('keeps every report line when a rejected value holds an unterminated private key', async () => {
+    const input = managedClaudeInput('implementer');
+    const base = input.recordBase as Record<string, unknown>;
+    base.launch_status = '-----BEGIN PRIVATE KEY-----';
+    base.caller = 5;
+    (input.event.evidence as Record<string, unknown>).tier =
+      'npm_abcdefghijklmnopqrstuvwxyz0123456789';
+
+    const message = await commandError(input);
+    const lines = message.split('\n');
+    const count = Number(/has (\d+) violations?:/.exec(lines[0] ?? '')?.[1]);
+    const violationLines = lines
+      .slice(1)
+      .filter((line) => !line.startsWith('Skipped until'));
+    expect(count).toBeGreaterThanOrEqual(5);
+    expect(violationLines).toHaveLength(count);
+    for (const line of violationLines) {
+      expect(line).toMatch(/^(claudeLaunch|recordBase|event) \S+: /);
+    }
+    expect(message).toContain('recordBase caller:');
+    expect(message).toContain('event evidence.tier:');
+    expect(message).not.toMatch(/PRIVATE KEY|npm_/);
   });
 
   it('never prints an absolute path in the single-run report', async () => {

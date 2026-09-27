@@ -4,6 +4,7 @@ import {
   genericDispatchRecordBaseSchema,
   identityFieldsOf,
   parseGenericDispatchRecord,
+  redactSensitiveValues,
   refineGenericDispatchRecord,
   type GenericDispatchRecord,
 } from '@providers/identity/generic-dispatch-record';
@@ -568,6 +569,10 @@ export function collectClaudeRecordBaseViolations(
   return { violations, skipped };
 }
 
+function oneLine(text: string): string {
+  return text.replace(/\r?\n/g, ' ');
+}
+
 /**
  * One error for a whole validation run: a header, then one
  * `stage path: message` line per violation, then the checks that were skipped
@@ -581,9 +586,19 @@ export class ManagedClaudeDispatchValidationError extends Error {
     violations: readonly ManagedClaudeViolation[],
     skipped: readonly string[] = [],
   ) {
+    // Scrub each violation on its own before joining. A scrub over the joined
+    // text lets one unterminated secret (a private-key header with no END
+    // marker) consume every later line; per violation it ends with that
+    // violation. Echoed newlines are folded so each violation stays one line
+    // and the line count matches the header.
+    const scrubbed = violations.map((violation) => ({
+      stage: violation.stage,
+      path: oneLine(redactSensitiveValues(violation.path)),
+      message: oneLine(redactSensitiveValues(violation.message)),
+    }));
     const lines = [
-      `Managed Claude dispatch input has ${violations.length} violation${violations.length === 1 ? '' : 's'}:`,
-      ...violations.map(
+      `Managed Claude dispatch input has ${scrubbed.length} violation${scrubbed.length === 1 ? '' : 's'}:`,
+      ...scrubbed.map(
         ({ stage, path, message }) => `${stage} ${path}: ${message}`,
       ),
     ];
@@ -592,7 +607,7 @@ export class ManagedClaudeDispatchValidationError extends Error {
     }
     super(lines.join('\n'));
     this.name = 'ManagedClaudeDispatchValidationError';
-    this.violations = violations;
+    this.violations = scrubbed;
     this.skipped = skipped;
   }
 }

@@ -320,4 +320,22 @@ describe('ManagedClaudeDispatchValidationError', () => {
     );
     expect(error.violations).toHaveLength(2);
   });
+
+  it('scrubs each violation so an unterminated key cannot hide later lines', () => {
+    const error = new ManagedClaudeDispatchValidationError([
+      {
+        stage: 'recordBase',
+        path: 'launch_status',
+        message:
+          "Invalid enum value, received '-----BEGIN PRIVATE KEY-----\nMIIEvQ'",
+      },
+      { stage: 'recordBase', path: 'caller', message: 'Required' },
+    ]);
+    expect(error.message.split('\n')).toEqual([
+      'Managed Claude dispatch input has 2 violations:',
+      "recordBase launch_status: Invalid enum value, received '<redacted-secret>",
+      'recordBase caller: Required',
+    ]);
+    expect(error.violations[0]?.message).not.toMatch(/PRIVATE KEY|MIIEvQ/);
+  });
 });

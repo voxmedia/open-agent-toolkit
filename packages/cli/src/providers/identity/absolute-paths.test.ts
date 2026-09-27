@@ -164,6 +164,14 @@ describe('message-boundary secret scrubbing', () => {
     );
   });
 
+  it('keeps the closing period after a scrubbed value', () => {
+    expect(
+      redactDispatchMessage(
+        'conflicts with record action ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.',
+      ),
+    ).toBe('conflicts with record action <redacted-secret>.');
+  });
+
   it('leaves ordinary identifiers alone', () => {
     const message =
       "recordBase launch_status: Invalid enum value. Expected 'planned' | 'accepted', received 'nope'";

@@ -536,7 +536,11 @@ export const REDACTED_SECRET = '<redacted-secret>';
 
 /**
  * A private key block is multi-line, so the header pattern alone would leave
- * its body behind; the whole block is replaced first.
+ * its body behind; the whole block is replaced first. An unterminated block
+ * runs to the end of the text, which fails safe (no body line survives) but
+ * also consumes everything after it. Callers joining several messages should
+ * therefore scrub each message before joining, as the managed Claude report
+ * does, and keep this pass as the backstop.
  */
 const PRIVATE_KEY_BLOCK =
   /-----BEGIN (?:RSA |EC |DSA |OPENSSH |PGP )?PRIVATE KEY-----[\s\S]*?(?:-----END (?:RSA |EC |DSA |OPENSSH |PGP )?PRIVATE KEY-----|$)/gi;
@@ -556,7 +560,9 @@ export function redactSensitiveValues(text: string): string {
       : `${pattern.flags}g`;
     redacted = redacted.replace(
       new RegExp(`(?:${pattern.source})[^\\s'"\`,;)\\]}]*`, flags),
-      REDACTED_SECRET,
+      // Extending to the token end also takes a sentence's closing period;
+      // give it back so the scrubbed message still reads as a sentence.
+      (match) => `${REDACTED_SECRET}${/\.+$/.exec(match)?.[0] ?? ''}`,
     );
   }
   return redacted;
