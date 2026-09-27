@@ -12,8 +12,10 @@ labels:
   - residue
 assignee: null
 created: 2026-09-03T00:56:30.158Z
-updated: 2026-09-08T00:32:59.000Z
-associated_issues: []
+updated: 2026-09-27T03:40:00Z
+associated_issues:
+  - type: github
+    ref: https://github.com/voxmedia/open-agent-toolkit/issues/322
 external_plans: []
 ---
 
@@ -29,6 +31,16 @@ Smaller items from the same assessment: `oat init --project-guidance` is silentl
 
 Raised to medium on 2026-09-08: on a brand-new repository `oat init` creates `AGENTS.md` and `oat pjm init`, run seconds later, already finds an existing file and falls back to the manual patch for blocks that are simply absent — the operator hit this immediately. Appending an absent managed block is not the replacement case the fail-closed decision covers: an append-only write (`O_APPEND`, with the trailing-newline check) never touches existing bytes, so there is nothing for a concurrent writer to lose. Proposed contract: block absent in an existing file → append it and report `appended` (exit 0); block present and identical → no-op; block present but different → today's zero-write manual patch and non-zero exit; file absent → exclusive create as today. Separately, `oat pjm init` prints the guidance result once per writer (project-management and decisions), so the identical combined patch appears twice — print it once.
 
+Refined by the 2026-09-26 issue triage (GitHub issue #322,
+`.oat/repo/pjm/triage/2026-09-26-untriaged-issues.md`): guidance works for
+`oat init tools workflows`, whole-set `oat init tools`, `oat tools install
+workflows`, and `oat init --setup`, but the seven other pack commands accept the
+inherited `--project-guidance` flag and silently ignore it (guidance is planned
+only when `pack === 'workflows'` in `commands/init/tools/index.ts`), as does
+`oat init` without `--setup`. `oat-doctor` recommends
+`oat tools install <pack> --project-guidance`, which is a no-op for seven of
+eight packs. Obtaining the block today also re-applies outdated assets.
+
 ## Acceptance Criteria
 
 - [ ] `oat pjm init` (and every other `AGENTS.md` guidance writer) appends an absent managed block to an existing `AGENTS.md` with an append-only write and reports `appended` with exit 0; a present-but-different block still yields the manual patch and non-zero exit; a present-and-identical block is a no-op; an absent file is still created exclusively
@@ -36,3 +48,7 @@ Raised to medium on 2026-09-08: on a brand-new repository `oat init` creates `AG
 - [ ] The brand-new-repo sequence `oat init` → `oat pjm init` ends with both managed blocks in `AGENTS.md` and no manual action
 - [ ] The guidance result is printed once per command, not once per writer
 - [ ] Docs and the `oat pjm init` next-step message describe the append behavior
+- [ ] Every command that accepts `--project-guidance` acts on it or rejects it with a clear message; none exits 0 while silently ignoring it
+- [ ] `oat init` without `--setup` honors `--project-guidance` or warns that it was ignored
+- [ ] A read-only way to emit the managed guidance block exists that does not reinstall or upgrade assets
+- [ ] `oat-doctor` fix hints name a command that actually produces guidance

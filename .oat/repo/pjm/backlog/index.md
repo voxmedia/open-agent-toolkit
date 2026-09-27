@@ -4,6 +4,19 @@
 
 ## Curated Overview
 
+- 2026-09-26 issue triage
+  ([record](../triage/2026-09-26-untriaged-issues.md)) verified the twenty
+  untriaged issues (#295–#297, #305–#307, #310–#314, #316, #322–#329) and
+  created fifteen `BL-260927-*` items. Two are high:
+  `BL-260927-stop-resolve-providers-sh-from` (Stop resolve-providers.sh from
+  aborting when the last auto-detect test is false), which breaks
+  agent-instructions analyze and apply in most repositories, and
+  `BL-260927-make-the-managed-claude` (Make the managed Claude dispatch-record
+  input producible and self-describing), a mandatory pre-launch check that
+  cannot be satisfied from the documentation. The same pass refined
+  `BL-260903-close-manual-only-agents-md`, `BL-260820-bind-each-gate-review`,
+  and `BL-260909-give-the-dispatch-record`, and found ten `tracked-in-backlog`
+  issues whose work had already merged; they close after the triage PR merges.
 - 2026-09-25: `BL-260925-add-grok-4-7-cursor-pin` records a deferred Cursor
   pin gap. Grok 4.7 resolves only bare flat IDs, which
   `DR-260718-explicit-cursor-pin-mapping` does not allow, and its quality
@@ -252,8 +265,10 @@
 | BL-260718-harden-full-surface-gate       | Harden full-surface gate reviews against budget and recursive dispatch                                | open   | high     | feature    | M        |
 | BL-260729-implement-reviewplan-first     | Implement ReviewPlan-first reviewer workflow                                                          | open   | high     | feature    | L        |
 | BL-260911-make-docs-bootstrap-a-front    | Make docs bootstrap a front door for existing docs and support the docs-directory convention          | open   | high     | feature    | M        |
+| BL-260927-make-the-managed-claude        | Make the managed Claude dispatch-record input producible and self-describing                          | open   | high     | feature    | M        |
 | BL-260829-order-phase-bookkeeping-before | Order phase bookkeeping before per-phase review dispatch                                              | open   | high     | task       | M        |
 | BL-260908-restore-recon-s-cheap-fan-out  | Restore recon's cheap-fan-out intent with per-wave routing under one approval envelope                | open   | high     | feature    | L        |
+| BL-260927-stop-resolve-providers-sh-from | Stop resolve-providers.sh from aborting when the last auto-detect test is false                       | open   | high     | task       | XS       |
 | BL-260724-support-provider-directory     | Support provider directory symlinks as full collection sync                                           | open   | high     | feature    | M        |
 | BL-260820-track-pr-closeout-evidence     | Track PR-closeout evidence freshness against the current head                                         | open   | high     | feature    | L        |
 | BL-260901-add-corrective-revision        | Add corrective-revision transition after review exhaustion                                            | open   | medium   | feature    | M        |
@@ -268,11 +283,16 @@
 | BL-260830-complete-control-plane-backed  | Complete control-plane-backed lifecycle reads                                                         | open   | medium   | initiative | M        |
 | BL-260830-decide-generic-oat-ownership   | Decide generic OAT ownership of Jira backlog refinement                                               | open   | medium   | idea       | L        |
 | BL-260902-decide-test-only-freshness     | Decide test-only freshness exception for the implement exit gate                                      | open   | medium   | idea       | S        |
+| BL-260927-derive-current-lifecycle-state | Derive current lifecycle state from one authority for review, phase, and publication status           | open   | medium   | feature    | L        |
+| BL-260927-derive-or-label-the-dispatch   | Derive or label the dispatch audit line from the gate invocation in gate-originated reviews           | open   | medium   | task       | S        |
+| BL-260927-detect-unfilled-placeholders   | Detect unfilled placeholders and frontmatter-body drift at PR-final and completion                    | open   | medium   | task       | M        |
 | BL-260818-distinguish-operator-directed  | Distinguish operator-directed review rounds from failed fix cycles in the review-cycle cap            | open   | medium   | task       | M        |
 | BL-260718-document-execution-program     | Document execution-program artifact as stable OAT contract                                            | open   | medium   | feature    | M        |
 | BL-260912-evaluate-replacing-explainer   | Evaluate replacing Explainer Kit authoring guidance with a pinned Effective HTML subset               | open   | medium   | task       | M        |
+| BL-260927-expose-a-scoped-template       | Expose a scoped template resolver command and route lifecycle skills through it                       | open   | medium   | feature    | M        |
 | BL-260902-file-deferred-repository       | File deferred repository follow-ups from a passing receive                                            | open   | medium   | feature    | M        |
 | BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs                                     | open   | medium   | feature    | L        |
+| BL-260927-give-gate-receipts-portable    | Give gate receipts portable ownership, path-neutral identities, and a shipped ignore rule             | open   | medium   | feature    | M        |
 | BL-260909-give-packages-control-plane    | Give packages/control-plane a check script so its formatting is CI-gated                              | open   | medium   | task       | XS       |
 | BL-260830-integrate-recon-across         | Integrate recon across analysis and research workflows                                                | open   | medium   | feature    | L        |
 | BL-260830-integrate-recon-with-oat       | Integrate recon with OAT discovery and quick start                                                    | open   | medium   | feature    | M        |
@@ -281,6 +301,7 @@
 | BL-260909-make-oat-sync-scope-all-report | Make oat sync --scope all report a sibling scope's failure in the plan body                           | open   | medium   | task       | S        |
 | BL-260904-make-quick-the-default-oat     | Make quick the default OAT workflow mode and spec-driven the explicit larger mode                     | open   | medium   | feature    | L        |
 | BL-260906-make-the-dispatch-stamp        | Make the dispatch-stamp contract helper reject bold-step boundaries and normal-path shim permissions  | open   | medium   | task       | S        |
+| BL-260927-name-the-file-in-canonical     | Name the file in canonical rule parse errors and keep one bad rule from aborting sync                 | open   | medium   | task       | S        |
 | BL-260830-persist-instruction-sync       | Persist instruction sync strategy in config and init                                                  | open   | medium   | feature    | M        |
 | BL-260830-re-evaluate-same-target-gate   | Re-evaluate same-target gate execution                                                                | open   | medium   | idea       | L        |
 | BL-260906-re-evaluate-universal-plan     | Re-evaluate universal plan proof strategy and test-first guidance                                     | open   | medium   | feature    | L        |
@@ -289,22 +310,26 @@
 | BL-260827-refresh-provider-codex-md      | Refresh provider-codex.md for the ultra effort tier, the GPT-5.4 retirement, and per-subcommand flags | open   | medium   | task       | S        |
 | BL-260908-remove-the-top-level-skill     | Remove the top-level skill version read after the alias error has been quiet                          | open   | medium   | task       | S        |
 | BL-260909-repair-the-bare-fences-that    | Repair the bare fences that swallow headings outside .agents/skills                                   | open   | medium   | task       | S        |
+| BL-260927-require-a-per-item-walkthrough | Require a per-item walkthrough of retro register items in the final report                            | open   | medium   | task       | S        |
 | BL-260909-restamp-a-stale-copy-strategy  | Restamp a stale copy-strategy contentHash on skip and retire the pre-framing digest bridge            | open   | medium   | task       | M        |
 | BL-260908-retire-the-top-level-skill     | Retire the top-level skill version alias on the recorded schedule                                     | open   | medium   | task       | S        |
 | BL-260718-rewrite-worktree-bootstrap     | Rewrite worktree bootstrap-group as tested TypeScript command                                         | open   | medium   | feature    | M        |
 | BL-260713-root-agent-judgment-logging    | Root-agent judgment logging responsibility for project log                                            | open   | medium   | feature    | S        |
+| BL-260927-share-one-hook-safe-exact-path | Share one hook-safe exact-path commit primitive across CLI and skill lifecycle commits                | open   | medium   | feature    | L        |
 | BL-260827-span-based-prose-guards        | Span-based prose guards, anchored probe records, and a shared probe runner for skill contract tests   | open   | medium   | task       | S        |
 | BL-260718-support-fumadocs-in-oat-docs   | Support Fumadocs in oat docs nav sync (currently MkDocs-only)                                         | open   | medium   | task       |          |
 | BL-260911-support-per-tool-scope         | Support per-tool scope migration in oat tools migrate                                                 | open   | medium   | task       | S        |
 | BL-260909-surface-config-warnings        | Surface config warnings on every reader path and document the warnings field                          | open   | medium   | task       | M        |
 | BL-260907-type-check-cli-test-files      | Type-check CLI test files with a test-scoped tsconfig gate                                            | open   | medium   | task       | M        |
 | BL-260726-validate-cursor-pin-effort     | Validate Cursor pin effort rungs at sync time                                                         | open   | medium   | task       | S        |
+| BL-260927-validate-recon-worker          | Validate recon-worker assignment envelopes deterministically before launch                            | open   | medium   | task       | S        |
 | BL-260908-validate-the-catalog-refresh   | Validate the catalog-refresh policy state in normalizeSyncEvidence                                    | open   | medium   | task       | XS       |
 | BL-260708-verify-cursor-gpt-5-6-subagent | Verify Cursor GPT-5.6 subagent model slugs                                                            | open   | medium   | task       | S        |
 | BL-260830-wire-bounded-durable-reference | Wire bounded durable-reference reads into lifecycle skills                                            | open   | medium   | feature    | M        |
 | BL-260830-wire-provide-remote-skills     | Wire provide-remote skills to the review-remote helper CLI                                            | open   | medium   | feature    | L        |
 | BL-260925-add-grok-4-7-cursor-pin        | Add Grok 4.7 Cursor pin mappings                                                                      | open   | low      | task       | S        |
 | BL-260909-add-a-grep-by-shape-control    | Add a grep-by-shape control for own-key sweeps keyed to variable names                                | open   | low      | task       | S        |
+| BL-260927-add-a-side-effect-free-dry-run | Add a side-effect-free dry run to oat project log append                                              | open   | low      | task       | S        |
 | BL-260830-add-per-claude-md-adoption-opt | Add per-CLAUDE.md adoption opt-out for instruction sync                                               | open   | low      | feature    | M        |
 | BL-260728-additional-visual-workflows    | Additional visual workflows                                                                           | open   | low      | feature    | L        |
 | BL-260908-align-the-provider-view-json   | Align the provider-view JSON, evidence states, and docs with the human row                            | open   | low      | task       | XS       |
@@ -322,8 +347,11 @@
 | BL-260909-make-findsection-comment-aware | Make findSection comment-aware in the bundled-docs contract test                                      | open   | low      | task       | S        |
 | BL-260906-make-the-phase-implementer     | Make the phase-implementer sweep contract test negation-aware                                         | open   | low      | task       | S        |
 | BL-260830-memory-subsystem-ownership     | Memory subsystem ownership decision for OAT                                                           | open   | low      | idea       | XL       |
+| BL-260927-name-only-installed-pack       | Name only installed pack locations in the OAT tools guidance block                                    | open   | low      | task       | S        |
+| BL-260927-preserve-oat-config-json-key   | Preserve .oat/config.json key order and skip no-op config writes                                      | open   | low      | task       | S        |
 | BL-260906-project-journal-reservation    | Project journal reservation state into the smoke evidence bundle                                      | open   | low      | task       | S        |
 | BL-260909-re-source-the-surviving-codex  | Re-source the surviving Codex provider claims and repair the dead provider-reference URLs             | open   | low      | task       | S        |
+| BL-260927-record-owner-overrides         | Record owner overrides of exhausted configured gates as structured state                              | open   | low      | task       | M        |
 | BL-260909-reject-malformed-nested-values | Reject malformed nested values in the strict pjm.remote shared reader                                 | open   | low      | task       | S        |
 | BL-260908-repair-or-exempt-archived      | Repair or exempt archived project ledgers that fail the pr-final path guard                           | open   | low      | task       | S        |
 | BL-260906-report-errno-for-asset-root    | Report errno for asset root stat failures and reset the statRedirects test seam                       | open   | low      | task       | XS       |
