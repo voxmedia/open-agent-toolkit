@@ -37,6 +37,24 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- CLI `0.3.8` (`triage-correctness-wave`, branch `wave/2026-09-26-backlog`)
+  closes nine correctness items from the 2026-09-26 triage.
+  `resolve-providers.sh` no longer aborts when the last auto-detect test is
+  false. `oat-project-retro` requires a per-item register walkthrough in every
+  final report. Gate-originated reviews label the resolver stamp
+  `**Dispatch audit (policy view):**`, and `oat gate review` rejects a
+  disagreeing unlabeled stamp as `gate_dispatch_audit_mismatched`. Canonical
+  rule parse errors name the file, one sync reports every invalid rule, and
+  `alwaysApply: true` aliases `activation: always`. `oat sync --scope all`
+  never prints `No changes required.` beside a failed scope. Shared
+  `.oat/config.json` writes keep key order and skip no-op writes, and the
+  strict `pjm.remote` reader rejects wrong-typed nested values.
+  `oat project dispatch record` reports every violation in one scrubbed run,
+  and the new
+  read-only `oat project dispatch canonical-role` produces
+  canonical-role-resolution evidence; `oat-dispatch-subagents` ships a
+  validated `managed-claude-example.json`. After release, run
+  `oat tools update` so installed review skills write the policy-view label.
 - CLI `0.2.76` (`oat-doctor-router`, PR #300) rewrites `oat-doctor` (2.0.0)
   as a read-only router: one sweep over config, PJM, agent instructions, docs,
   and tools from seven projected `--json` commands and four file checks, one

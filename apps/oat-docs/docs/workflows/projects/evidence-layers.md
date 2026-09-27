@@ -86,7 +86,11 @@ before launch. That validation-only call derives the configured invocation and
 does not persist a journal file. When a host opts in, the generic snake-case
 fields remain authoritative. A namespaced `oat` block adds
 only canonical-role identity, proven pre-start rejection, fallback linkage,
-and optional runtime observation. `DispatchReportV1` and the parseable
+and optional runtime observation. `oat project dispatch canonical-role`
+prints the canonical-role-resolution event read-only, so callers do not
+hand-author it; a validated managed Claude input per role is published at
+`.agents/skills/oat-dispatch-subagents/references/managed-claude-example.json`.
+`DispatchReportV1` and the parseable
 `Dispatch:` compatibility stamp keep their existing byte shape.
 
 The launcher constructs and redacts the complete payload before calling the
