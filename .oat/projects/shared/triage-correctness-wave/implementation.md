@@ -388,6 +388,16 @@ bookkeeping.
 
 ---
 
+### Implementation exit gate
+
+- Gate `oat-project-implement` (configured, `onFailure: block`,
+  `maxAttempts: 2`), attempt 1, run `3d23848e-208f-4b8f-96a9-9ea83c666bbf`,
+  target `codex-6-sol-xhigh` (different-family from the declared Claude
+  producer): `ok`, 0 Critical, 0 High, 0 Medium, 1 Low; received in
+  judgment-sweep mode. The Low (state body task count 22 vs 23) was addressed
+  now in bookkeeping. Artifact:
+  `reviews/archived/final-review-2026-09-27T071850Z.md`.
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->

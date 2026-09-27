@@ -149,7 +149,7 @@ Implementation - Tasks complete; awaiting final review.
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode; straight to plan)
-- **Plan:** `plan.md` (complete; 22 tasks across 4 phases)
+- **Plan:** `plan.md` (complete; 23 tasks across 4 phases)
 - **Implementation:** `implementation.md` (all tasks complete)
 
 ## Progress
