@@ -6409,7 +6409,7 @@ describe('validateOatSkills', () => {
     ];
 
     expect(engine).toMatch(/^name:\s*oat-dispatch-subagents$/m);
-    expect(readDeclaredVersion(engine)).toBe('1.2.9');
+    expect(readDeclaredVersion(engine)).toBe('1.2.10');
     expect(engine).toMatch(/^user-invocable:\s*false$/m);
     expect(adapter).toMatch(/^name:\s*oat-project-dispatch-subagents$/m);
     expect(readDeclaredVersion(adapter)).toBe('1.1.6');
@@ -6568,7 +6568,7 @@ describe('validateOatSkills', () => {
 
   it('pins portable utility-pack callers to installed-root sibling reads', async () => {
     const callers = [
-      ['.agents/skills/oat-dispatch-subagents/SKILL.md', '1.2.9'],
+      ['.agents/skills/oat-dispatch-subagents/SKILL.md', '1.2.10'],
       ['.agents/skills/oat-repo-improve/SKILL.md', '2.1.5'],
       ['.agents/skills/oat-review-provide-remote/SKILL.md', '1.1.4'],
     ] as const;
