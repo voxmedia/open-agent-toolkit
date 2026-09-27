@@ -224,19 +224,21 @@ oat_generated: false
 
 ## Orchestration Runs
 
-_Each run from `oat-project-implement` appends an entry below with:_
-_- Run header (number, timestamp, branch, tier, policy, phase counts)_
-_- Phase Outcomes table_
-_- Parallel Groups list_
-_- Outstanding Items_
+### Run 1
 
-<!-- orchestration-runs-start -->
-
-_Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
-
-<!-- orchestration-runs-end -->
-
----
+- Started: 2026-09-27; autonomous (`oat-project-autonomous`), Tier 1 subagents.
+- Gate `IMPLEMENT-03`: HiLL checkpoints resolved to `['p05']` (final phase,
+  first run, field absent) with `oat_auto_review_at_hill_checkpoints: true`.
+- Gate `IMPLEMENT-08`: not needed; Claude Code Task-tool dispatch of the
+  generated `oat-phase-implementer` and `oat-reviewer` variants is available
+  without extra authorization.
+- Phase review gate: `oat_phase_review_gate` enabled for every phase
+  (`review_type: code`, `exit_nonzero_on: high`), configured target resolves
+  to `codex-6-sol-xhigh`.
+- Dispatch policy: managed `high` from project state; implementer and reviewer
+  launches use the resolver-returned Claude variants after a validation-only
+  `oat project dispatch record` (`status: validated-only`) with the branch CLI,
+  because the installed 0.3.7 CLI lacks `canonical-role`.
 
 ## Implementation Log
 

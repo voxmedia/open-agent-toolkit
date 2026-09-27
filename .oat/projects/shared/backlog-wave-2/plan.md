@@ -6,6 +6,8 @@ oat_last_updated: 2026-09-27
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_parallel_groups: []
+oat_plan_hill_phases: ['p05']
+oat_auto_review_at_hill_checkpoints: true
 oat_plan_source: quick
 oat_import_reference: null
 oat_import_source_path: null
@@ -46,7 +48,7 @@ under `.agents/skills` and agent roles under `.agents/agents` (markdown plus
 
 - [x] Confirmed HiLL checkpoints with user (autonomous run; phase gates on all
       phases replace per-phase pauses; `p05` is the fan-in checkpoint)
-- [ ] Set `oat_plan_hill_phases` in frontmatter (confirmed at implementation
+- [x] Set `oat_plan_hill_phases` in frontmatter (confirmed at implementation
       start)
 - [x] Evaluated phases for parallelism opportunities
 - [x] Set `oat_plan_parallel_groups` in frontmatter
