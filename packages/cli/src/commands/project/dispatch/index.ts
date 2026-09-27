@@ -11,6 +11,7 @@ import { fileExists } from '@fs/io';
 import { resolveProjectRoot, validateRealPathWithinScope } from '@fs/paths';
 import { Command } from 'commander';
 
+import { createCanonicalRoleCommand } from './canonical-role';
 import {
   recordProjectDispatch,
   redactDispatchMessage,
@@ -193,5 +194,6 @@ export function createProjectDispatchCommand(
             await runRecordCommand(options, context, dependencies);
           },
         ),
-    );
+    )
+    .addCommand(createCanonicalRoleCommand(dependencies));
 }
