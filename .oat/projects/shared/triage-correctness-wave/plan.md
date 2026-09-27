@@ -1299,7 +1299,7 @@ git commit -m "chore(p04-t03): record definition-of-done gate results"
 | p03    | code     | passed          | 2026-09-27 | reviews/archived/p03-review-2026-09-27T062955Z.md           | 54cea0878dc10bb42ae199758ad050dc5754d22f | auto       | -                 |
 | p03    | code     | passed          | 2026-09-27 | reviews/archived/p03-review-2026-09-27T064005Z.md           | de48e25a55b2e2e0af608a1f45dc0c7eb50d3715 | gate       | codex-6-sol-xhigh |
 | p04    | code     | passed          | 2026-09-27 | reviews/archived/p04-review-2026-09-27T065739Z.md           | 74bcdf452d2d35427714fcb67db25e66ec74937b | auto       | -                 |
-| p04    | code     | received        | 2026-09-27 | reviews/p04-review-2026-09-27T070131Z.md                    | 25a21073c17ad711ab63cbeb685197ee43b37026 | gate       | codex-6-sol-xhigh |
+| p04    | code     | passed          | 2026-09-27 | reviews/archived/p04-review-2026-09-27T070131Z.md           | 25a21073c17ad711ab63cbeb685197ee43b37026 | gate       | codex-6-sol-xhigh |
 | final  | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
 | design | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |

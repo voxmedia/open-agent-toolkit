@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-27
-oat_current_task_id: p04-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -447,16 +447,97 @@ on the PR's CI run.
 
 ## Test Results
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| p01   | -         | -      | -      | -        |
-| p02   | -         | -      | -      | -        |
-| p03   | -         | -      | -      | -        |
-| p04   | -         | -      | -      | -        |
+| Phase | Tests Run                                                                                                                       | Passed     | Failed | Coverage |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------ | -------- |
+| p01   | CLI vitest (isolated HOME) + skill script tests                                                                                 | 7577 + 7   | 0      | -        |
+| p02   | CLI vitest forced (isolated HOME)                                                                                               | 7596       | 0      | -        |
+| p03   | CLI vitest forced + smoke                                                                                                       | 7685 + 163 | 0      | -        |
+| p04   | Full DoD: forced turbo test (cli 7685, control-plane 151, docs-config 10, docs-transforms 31), smoke 163, scripts 1, skills 657 | all        | 0      | -        |
 
 ## Final Summary (for PR/docs)
 
-_Filled at completion from the shipped changes._
+**What shipped:**
+
+- `resolve-providers.sh` no longer exits 1 with no output when the last
+  provider auto-detect test is false (repositories without `.cline/` or a sync
+  config), and interactive mode survives end of input.
+- `oat project dispatch record` reports every independent managed Claude input
+  violation in one run (derived, missing, forbidden, unredacted, event, and
+  runtime-observation errors), names checks it had to skip, states the expected
+  pattern for path and digest errors, and scrubs secret-shaped values from every
+  violation line.
+- New read-only `oat project dispatch canonical-role` produces
+  canonical-role-resolution evidence; a validated managed Claude example for the
+  implementer and reviewer roles is published in `oat-dispatch-subagents` and
+  pinned by a test; the implement skill references them instead of placeholders.
+- Canonical rule parse errors name the file for all three providers; one sync
+  run reports every invalid rule; `alwaysApply: true` is accepted as an alias
+  for `activation: always`.
+- Gate-originated reviews label the resolver stamp
+  `**Dispatch audit (policy view):**`; `oat gate review` rejects an unlabeled
+  audit stamp that disagrees with the gate frontmatter
+  (`gate_dispatch_audit_mismatched`), recognized by shape outside finding
+  sections.
+- `oat-project-retro` requires a per-item walkthrough of every register item in
+  its final report, including non-interactive and empty-register cases, and
+  names the leaf `workflow.retro.filing.*` keys.
+- `.oat/config.json` writes preserve existing key order and skip no-op writes
+  (byte-identical), including JSONC trailing commas and the one-time
+  `documentation.index` write.
+- The strict `pjm.remote` reader rejects wrong-typed nested values and a
+  wrong-typed `schemaVersion`.
+- `oat sync --scope all` never prints `No changes required.` beside a failed
+  scope.
+- Sync evidence validates catalog-refresh policy states against the registry,
+  so an unknown state cannot throw inside a succeeded lifecycle command.
+- Lockstep public packages bumped to 0.3.8; ten backlog items archived.
+
+**Behavioral changes (user-facing):**
+
+- Config reads fail closed on wrong-typed `pjm.remote` leaves (exit 1), as for
+  unknown keys; repair by editing the file.
+- Gate reviews from older installed `oat-project-review-provide` copies may
+  fail the new audit-line check once the released CLI includes it; run
+  `oat tools update` to refresh.
+
+**Key files / modules:**
+
+- `packages/cli/src/providers/identity/`, `providers/claude/dispatch-envelope.ts`,
+  `commands/project/dispatch/` - dispatch-record validation, scrub, producer
+- `packages/cli/src/commands/gate/review-verdict.ts`, `gate/index.ts` - audit
+  line recognition and agreement check
+- `packages/cli/src/rules/canonical/parse.ts`, `engine/compute-plan.ts`,
+  `providers/*/rule-transform.ts` - rule errors
+- `packages/cli/src/config/oat-config.ts` - config writer and strict reader
+- `packages/cli/src/commands/sync/apply.ts`,
+  `commands/tools/shared/sync-evidence.ts`, `providers/shared/registry.ts`
+- Skills: `oat-agent-instructions-analyze` 1.12.3, `oat-project-retro` 1.0.7,
+  `oat-project-review-provide` 1.5.11, `oat-project-review-provide-remote`
+  1.1.8, `oat-dispatch-subagents` 1.2.10, `oat-project-implement` 2.3.13
+
+**Verification performed:**
+
+- Every defect fix proven failing-first; the H1 secret scrub and the p01-t03
+  target clause proven by neutralize-and-restore.
+- Per-phase root reviews (Claude Opus 5.5 high) with fix loops, plus Codex
+  `codex-6-sol-xhigh` phase gates on every phase.
+- Full Definition of Done at `a90da4f49`: `pnpm check`, `type-check`, forced
+  `turbo run test` (0/10 cached), `build` (forced), `test:smoke` 163/163,
+  `test:scripts`, `test:skills` 657/657, `check:skill-bumps`,
+  `release:check-versions`, `release:validate`, `build:docs` (forced), `lint`,
+  `format`; all exit 0.
+- Pending: the util-linux branch of the resolve-providers EOF test first runs
+  on the PR's Linux CI.
+
+**Design deltas (if any):**
+
+- p01-t03 uses the backlog item's labeling branch (policy-view label) instead
+  of a gate-built stamp; recognition was widened by review to every non-finding
+  section.
+- `failed === 0` conjunct in sync `restampOnly` removed as dead after p02-t02;
+  the outcome test covers the criterion's intent.
+- `providers/shared/registry.ts` exports `isValidCatalogRefreshPolicy` (outside
+  the declared p02 write set).
 
 ## References
 
