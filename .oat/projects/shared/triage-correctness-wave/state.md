@@ -27,16 +27,7 @@ oat_phase_recovery_policy:
   phase_attempt_usage:
     p03:
       used_attempts: 1
-      pending_attempt:
-        attempt: 1
-        event_id: p03-rec-01
-        original_request_id: triage-wave-p03-impl
-        original_task_id: p03-t04
-        original_commit: 3a53b0172
-        discovered_by: 'src/validation/autonomy-gate-inventory.test.ts > keeps all sixteen autonomous skill roots mapped at repository HEAD'
-        dispatch_target: oat-phase-implementer-claude-claude-opus-5-5-high
-        reservation_head: 83aba024fe2ca4b0399ae8dab7d119417dd62f43
-        status: completed
+      pending_attempt: null
 oat_dispatch_policy:
   mode: managed
   policy: high

@@ -149,28 +149,51 @@ converted to p02-t06.
 
 ### Task p03-t01: State the expected pattern in dispatch-record validation messages
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** df349d563
 
 ### Task p03-t02: Report every managed Claude dispatch-record violation in one run
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 19e7dbda1
 
 ### Task p03-t03: Add a producer for canonical-role-resolution evidence
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** df7046bdc
 
 ### Task p03-t04: Publish a validated managed Claude example and pin it
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 3a53b0172
 
 ### Task p03-t05: Point the implement skill and CLI reference at the example and producer
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 782e2d49b
+
+### Recovery Event p03-rec-01
+
+- Phase/task: p03 / p03-t04
+- Original request: `triage-wave-p03-impl`
+- Original commit: `3a53b0172` (immutable, same history position)
+- Defect class: composition
+- Discovered by: `src/validation/autonomy-gate-inventory.test.ts` ("keeps all
+  sixteen autonomous skill roots mapped at repository HEAD") in the full CLI
+  suite
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 1/10 (reserved at `83aba024f`; ledger initialized by the root)
+- Dispatch target: `oat-phase-implementer-claude-claude-opus-5-5-high`
+- Recovery commit: `c4ef806fb`
+- Verification: focused test 5/5; full CLI suite 7670/7670; smoke 163/163;
+  `check:skill-bumps`, `oat:validate-skills`, `format:root` pass, all rerun
+  against the committed head
+- Reason: a `record-schema.md` field-list line naming `runtime_confirmation`
+  matched the inventory's prompt-site scan; mapped as `NG` in
+  `.agents/docs/autonomy-contract.md` like the row's four existing field-name
+  entries
+- Ledger: settled by the root to `pending_attempt: null`, `used_attempts: 1`
 
 ---
 
