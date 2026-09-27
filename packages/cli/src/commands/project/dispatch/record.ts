@@ -49,6 +49,7 @@ import {
   projectRuntimeObservation,
   providerSupportsRuntimeObservation,
 } from '@providers/identity/runtime-observation';
+import { ZodError } from 'zod';
 
 const REQUEST_ID_PATTERN = /^[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}$/;
 const DISPATCH_LOCK_NAME = '.dispatch-lock';
@@ -144,6 +145,8 @@ const OBSERVATION_SOURCE_BY_PROVIDER: Readonly<Record<string, string>> = {
   claude: CLAUDE_OBSERVATION_SOURCE,
 };
 const CALLER_ASSERTED_OBSERVATION_SOURCE = 'caller-asserted';
+/** A managed Claude record's provider is derived, and always this value. */
+const MANAGED_CLAUDE_PROVIDER = 'claude';
 
 export interface DispatchRecordInput {
   record: GenericDispatchRecord;
@@ -268,6 +271,74 @@ function resolveObservationEvent(
 }
 
 /**
+ * Project a caller-form `runtime-observation` event onto the shape the event
+ * schema checks, so the single-run pass reports its errors alongside every
+ * other stage instead of on a later run.
+ *
+ * The caller controls the envelope (`kind`, `requestId`, `source`, unknown
+ * keys) and either a finished `observation` or a `metadata` envelope, and
+ * both are checked here. The recording path derives an observation's
+ * `source`, `match`, and `comparedAxes` from the record, so those are filled
+ * with valid stand-ins rather than demanded from the caller; the metadata
+ * form's projection and request-correlation guard degrade to `not-reported`
+ * rather than fail, so they contribute no violation. The provider binding is
+ * checked directly: a managed record's provider is always `claude`.
+ */
+function runtimeObservationCallerForm(
+  event: Record<string, unknown>,
+  violations: ManagedClaudeViolation[],
+): Record<string, unknown> {
+  if ('metadata' in event) {
+    if ('observation' in event) {
+      violations.push({
+        stage: 'event',
+        path: '<root>',
+        message:
+          'A runtime observation event carries either observation or metadata, not both.',
+      });
+    }
+    try {
+      parseRuntimeObservationEnvelope(event.metadata);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        violations.push(...zodIssueViolations('event', 'metadata', error));
+      } else {
+        violations.push({
+          stage: 'event',
+          path: 'metadata',
+          message: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+    const { metadata: _metadata, observation: _observation, ...rest } = event;
+    return { ...rest, observation: { status: 'not-reported' } };
+  }
+
+  const observation = event.observation;
+  if (!isRecord(observation) || observation.status !== 'reported') {
+    return event;
+  }
+  if (observation.provider !== MANAGED_CLAUDE_PROVIDER) {
+    violations.push({
+      stage: 'event',
+      path: 'observation.provider',
+      message:
+        'A runtime observation must name the same provider as its dispatch record.',
+    });
+  }
+  return {
+    ...event,
+    observation: {
+      ...observation,
+      provider: MANAGED_CLAUDE_PROVIDER,
+      source: CALLER_ASSERTED_OBSERVATION_SOURCE,
+      match: 'not-comparable',
+      comparedAxes: [],
+    },
+  };
+}
+
+/**
  * Event violations for a managed input: the event must be an object, carry no
  * sensitive content, satisfy the evidence-event schema, and name the same
  * request as `recordBase`. Raw provider `metadata` entries are exempt from the
@@ -299,11 +370,13 @@ function collectManagedEventViolations(
       message: violation.message,
     })),
   );
-  if (event.kind !== 'runtime-observation') {
-    const parsed = safeParseOatDispatchEvidenceEvent(event);
-    if (!parsed.success) {
-      violations.push(...zodIssueViolations('event', null, parsed.error));
-    }
+  const parsed = safeParseOatDispatchEvidenceEvent(
+    event.kind === 'runtime-observation'
+      ? runtimeObservationCallerForm(event, violations)
+      : event,
+  );
+  if (!parsed.success) {
+    violations.push(...zodIssueViolations('event', null, parsed.error));
   }
   const recordRequestId = isRecord(recordBase) ? recordBase.request_id : null;
   if (

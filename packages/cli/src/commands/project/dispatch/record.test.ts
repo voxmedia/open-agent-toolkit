@@ -595,6 +595,66 @@ describe('managed Claude single-run violation reporting', () => {
     expect(message).not.toMatch(/PRIVATE KEY|npm_/);
   });
 
+  it('reports runtime-observation event errors in the same run as recordBase errors', async () => {
+    const input = managedClaudeInput('implementer') as Record<string, unknown>;
+    (input.recordBase as Record<string, unknown>).caller = 7;
+    input.event = {
+      kind: 'runtime-observation',
+      requestId: 'managed-claude-implementation',
+      observation: {
+        status: 'reported',
+        provider: 'codex',
+        model: 'claude-sonnet-5',
+        observedAt: 'not-a-date',
+      },
+    };
+
+    const message = await commandError(input);
+    expect(message).toMatch(/^Managed Claude dispatch input has 4 violations:/);
+    expect(message).toContain('recordBase caller:');
+    expect(message).toContain('event source:');
+    expect(message).toContain('event observation.observedAt: Invalid datetime');
+    expect(message).toContain(
+      'event observation.provider: A runtime observation must name the same provider as its dispatch record.',
+    );
+  });
+
+  it('reports metadata-form observation errors in the same run as recordBase errors', async () => {
+    const input = managedClaudeInput('implementer') as Record<string, unknown>;
+    (input.recordBase as Record<string, unknown>).caller = 7;
+    input.event = {
+      kind: 'runtime-observation',
+      requestId: 'managed-claude-implementation',
+      source: 'runtime-observer',
+      extra: true,
+      metadata: { provider: 'claude', observedAt: 'not-a-date', entries: [] },
+    };
+
+    const message = await commandError(input);
+    expect(message).toContain('recordBase caller:');
+    expect(message).toContain('event metadata.observedAt: Invalid datetime');
+    expect(message).toContain('event <root>: Unrecognized key(s)');
+    expect(message).not.toContain('event observation');
+  });
+
+  it('still validates a well-formed finished observation without source or match', async () => {
+    const input = managedClaudeInput('implementer') as Record<string, unknown>;
+    input.event = {
+      kind: 'runtime-observation',
+      requestId: 'managed-claude-implementation',
+      source: 'runtime-observer',
+      observation: {
+        status: 'reported',
+        provider: 'claude',
+        model: 'claude-sonnet-5',
+        observedAt: '2026-09-27T00:00:00.000Z',
+      },
+    };
+    const result = await recordProjectDispatch({ projectPath: null, input });
+    expect(result.status).toBe('validated-only');
+    expect(result.runtimeIdentity.match).toBe('matching');
+  });
+
   it('never prints an absolute path in the single-run report', async () => {
     const input = everyViolationInput();
     input.claudeLaunch.payload = { variant: '/Users/alice/secret/variant' };
