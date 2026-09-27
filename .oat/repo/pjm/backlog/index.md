@@ -4,6 +4,13 @@
 
 ## Curated Overview
 
+- 2026-09-27: `BL-260927-export-only-the-recap-page` records that archive
+  copies the whole recap run (QA screenshots, fact base, ledger, manifest,
+  theme) into tracked `.oat/repo/reference/project-recaps/`, where nothing
+  reads it after archive. The four exports total about 8.6 MB, 5.3 MB of it
+  QA PNGs from the latest one. The latest page also has six relative source
+  links that are broken at the export location. The fix keeps the verified
+  run in the archived project and tracks only the page.
 - 2026-09-27: the `triage-correctness-wave` project closed nine items from the
   2026-09-26 triage and backlog review: `BL-260927-stop-resolve-providers-sh-from`,
   `BL-260927-make-the-managed-claude`, `BL-260927-name-the-file-in-canonical`,
@@ -297,6 +304,7 @@
 | BL-260818-distinguish-operator-directed  | Distinguish operator-directed review rounds from failed fix cycles in the review-cycle cap            | open   | medium   | task       | M        |
 | BL-260718-document-execution-program     | Document execution-program artifact as stable OAT contract                                            | open   | medium   | feature    | M        |
 | BL-260912-evaluate-replacing-explainer   | Evaluate replacing Explainer Kit authoring guidance with a pinned Effective HTML subset               | open   | medium   | task       | M        |
+| BL-260927-export-only-the-recap-page     | Export only the recap page to project-recaps and fix its broken source links                          | open   | medium   | feature    | M        |
 | BL-260927-expose-a-scoped-template       | Expose a scoped template resolver command and route lifecycle skills through it                       | open   | medium   | feature    | M        |
 | BL-260902-file-deferred-repository       | File deferred repository follow-ups from a passing receive                                            | open   | medium   | feature    | M        |
 | BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs                                     | open   | medium   | feature    | L        |
