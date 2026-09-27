@@ -125,6 +125,18 @@ and purpose field grants intersect to narrow outbound fields. No configured
 layer bypasses hard approval floors or current caller-owned authority evidence;
 missing, stale, or mismatched evidence fails closed.
 
+The shared `pjm.remote` tree is closed. An unknown key, a non-object where an
+object is expected, or a wrong-typed leaf (for example `authority.default: 5`,
+or a number, boolean, array, object, or `null` where a string is expected)
+makes every shared config read fail closed with exit code `2` and an
+`Invalid PJM remote policy structure` error that names each offending field
+path and its structure type, never its value. This includes ordinary reads such
+as `oat config get` and `oat config unset` of an unrelated `pjm.remote` child,
+which refuses and leaves the file byte-identical. Repair the named fields by
+editing `.oat/config.json` by hand. A well-typed but unrecognized string is not
+rejected: it keeps its documented coercion to `none` for descriptions and
+`read-only` for authority.
+
 Tool-pack intent example:
 
 ```bash

@@ -1160,6 +1160,135 @@ describe('oat-config', () => {
     },
   );
 
+  // Wrong-typed leaves fail closed with the same categorical structure error
+  // as unknown keys (BL-260909-reject-malformed-nested-values). Only wrong
+  // *types* are rejected: an invalid string keeps its documented coercion (see
+  // 'fails closed when malformed narrowing policy is combined with permissive
+  // defaults' above).
+  it.each([
+    [
+      'repository authority default number',
+      { policy: { authority: { default: 5 } } },
+      /pjm\.remote\.policy\.authority\.default.*expected string.*number/i,
+    ],
+    [
+      'repository authority default array',
+      {
+        policy: {
+          authority: { default: ['ghp_structure_value_must_not_leak'] },
+        },
+      },
+      /pjm\.remote\.policy\.authority\.default.*expected string.*array/i,
+    ],
+    [
+      'repository operation null',
+      {
+        policy: {
+          authority: { default: 'read-only', operations: { create: null } },
+        },
+      },
+      /pjm\.remote\.policy\.authority\.operations\.create.*expected string.*null/i,
+    ],
+    [
+      'repository description object',
+      {
+        policy: {
+          description: { value: 'ghp_structure_value_must_not_leak' },
+        },
+      },
+      /pjm\.remote\.policy\.description.*expected string.*object/i,
+    ],
+    [
+      'provider description boolean',
+      { policy: { providers: { github: { description: true } } } },
+      /pjm\.remote\.policy\.providers\.github\.description.*expected string.*boolean/i,
+    ],
+    [
+      'provider authority default number',
+      { policy: { providers: { jira: { authority: { default: 5 } } } } },
+      /pjm\.remote\.policy\.providers\.jira\.authority\.default.*expected string.*number/i,
+    ],
+    [
+      'provider operation array',
+      {
+        policy: {
+          providers: {
+            linear: {
+              authority: {
+                operations: { delete: ['ghp_structure_value_must_not_leak'] },
+              },
+            },
+          },
+        },
+      },
+      /pjm\.remote\.policy\.providers\.linear\.authority\.operations\.delete.*expected string.*array/i,
+    ],
+    [
+      'storage state number',
+      { storage: { state: 5 } },
+      /pjm\.remote\.storage\.state.*expected string.*number/i,
+    ],
+  ] as const)(
+    'rejects a wrong-typed %s leaf without exposing values',
+    async (_kind, remote, expectedMessage) => {
+      const repoRoot = await createRepoRoot();
+      await writeFile(
+        join(repoRoot, '.oat', 'config.json'),
+        JSON.stringify({
+          version: 1,
+          pjm: { remote: { schemaVersion: 1, ...remote } },
+        }),
+        'utf8',
+      );
+
+      let failure: unknown;
+      try {
+        await readOatConfig(repoRoot);
+      } catch (error) {
+        failure = error;
+      }
+      expect(failure).toBeInstanceOf(Error);
+      const message = failure instanceof Error ? failure.message : '';
+      expect(message).toMatch(/Invalid PJM remote policy structure/);
+      expect(message).toMatch(expectedMessage);
+      expect(message).not.toContain('ghp_structure_value_must_not_leak');
+    },
+  );
+
+  it('reads a valid pjm.remote tree with absent description and default', async () => {
+    const repoRoot = await createRepoRoot();
+    await writeFile(
+      join(repoRoot, '.oat', 'config.json'),
+      JSON.stringify({
+        version: 1,
+        pjm: {
+          remote: {
+            schemaVersion: 1,
+            policy: {
+              authority: { operations: { create: 'user-approved' } },
+              providers: { github: { authority: {} } },
+            },
+          },
+        },
+      }),
+      'utf8',
+    );
+
+    await expect(readOatConfig(repoRoot)).resolves.toMatchObject({
+      pjm: {
+        remote: {
+          policy: {
+            description: 'none',
+            authority: {
+              default: 'read-only',
+              operations: { create: 'user-approved' },
+            },
+          },
+        },
+      },
+    });
+  });
+
   it('rejects retired execution preferences from local and user PJM config', async () => {
     const repoRoot = await createRepoRoot();
     const userConfigDir = await mkdtemp(join(tmpdir(), 'oat-user-remote-'));

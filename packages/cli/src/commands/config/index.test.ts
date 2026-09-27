@@ -6238,6 +6238,71 @@ describe('oat config', () => {
       expect(await readFile(configPath, 'utf8')).toBe(before);
     });
 
+    // BL-260909-reject-malformed-nested-values. Negative and positive controls
+    // side by side. Red-then-green provenance:
+    //   pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/config/index.test.ts -t 'wrong-typed'
+    //   before the fix: the negative control failed (exit 0, the wrong-typed
+    //   `authority.default: 5` sibling was accepted and raw-written back);
+    //   after the fix: both controls pass.
+    it('unset of a pjm.remote child refuses while a nested sibling is wrong-typed (negative control)', async () => {
+      const root = await createRepoRoot();
+      await writeSharedConfig(root, {
+        pjm: {
+          remote: {
+            schemaVersion: 1,
+            storage: { state: 'local' },
+            policy: {
+              description: 'managed-section',
+              authority: { default: 5 },
+            },
+          },
+        },
+      });
+      const configPath = join(root, '.oat', 'config.json');
+      const before = await readFile(configPath, 'utf8');
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, ['unset', 'pjm.remote.policy.description']);
+
+      expect(process.exitCode).toBe(1);
+      expect(capture.error[0]).toContain('Invalid PJM remote policy structure');
+      expect(capture.error[0]).toContain(
+        'pjm.remote.policy.authority.default (expected string, received number)',
+      );
+      expect(await readFile(configPath, 'utf8')).toBe(before);
+    });
+
+    it('unset of a pjm.remote child proceeds on a valid tree without description or default (positive control)', async () => {
+      const root = await createRepoRoot();
+      await writeSharedConfig(root, {
+        pjm: {
+          remote: {
+            schemaVersion: 1,
+            storage: { state: 'local' },
+            policy: {
+              authority: { operations: { create: 'user-approved' } },
+            },
+          },
+        },
+      });
+      const { command } = createHarness({ cwd: root });
+
+      await runCommand(command, ['unset', 'pjm.remote.storage.state']);
+
+      expect(process.exitCode).toBe(0);
+      expect(await readSharedConfig(root)).toEqual({
+        version: 1,
+        pjm: {
+          remote: {
+            schemaVersion: 1,
+            policy: {
+              authority: { operations: { create: 'user-approved' } },
+            },
+          },
+        },
+      });
+    });
+
     it('unset still reports already-unset when the key is absent from disk', async () => {
       const root = await createRepoRoot();
       await writeSharedConfig(root, {

@@ -1153,6 +1153,12 @@ function assertClosedPjmRemoteSharedConfig(
       'pjm.remote.storage',
       findings,
     );
+    collectPjmRemoteStringLeaf(
+      value.storage,
+      'state',
+      'pjm.remote.storage',
+      findings,
+    );
   }
   if (
     'policy' in value &&
@@ -1161,6 +1167,12 @@ function assertClosedPjmRemoteSharedConfig(
     collectUnknownPjmRemoteKeys(
       value.policy,
       ['description', 'authority', 'providers'],
+      'pjm.remote.policy',
+      findings,
+    );
+    collectPjmRemoteStringLeaf(
+      value.policy,
+      'description',
       'pjm.remote.policy',
       findings,
     );
@@ -1203,6 +1215,12 @@ function assertClosedPjmRemoteSharedConfig(
           `pjm.remote.policy.providers.${provider}`,
           findings,
         );
+        collectPjmRemoteStringLeaf(
+          providerPolicy,
+          'description',
+          `pjm.remote.policy.providers.${provider}`,
+          findings,
+        );
         if ('authority' in providerPolicy) {
           collectPjmRemoteAuthorityFindings(
             providerPolicy.authority,
@@ -1227,6 +1245,7 @@ function collectPjmRemoteAuthorityFindings(
 ): void {
   if (!collectPjmRemoteExpectedObject(value, path, findings)) return;
   collectUnknownPjmRemoteKeys(value, ['default', 'operations'], path, findings);
+  collectPjmRemoteStringLeaf(value, 'default', path, findings);
   if (
     'operations' in value &&
     collectPjmRemoteExpectedObject(
@@ -1241,7 +1260,34 @@ function collectPjmRemoteAuthorityFindings(
       `${path}.operations`,
       findings,
     );
+    for (const operation of PJM_REMOTE_OPERATION_CLASSES) {
+      collectPjmRemoteStringLeaf(
+        value.operations,
+        operation,
+        `${path}.operations`,
+        findings,
+      );
+    }
   }
+}
+
+/**
+ * Records a present leaf whose value is not a string.
+ *
+ * Only the *type* is checked: an unrecognized string keeps its documented
+ * coercion in the normalizer. The finding names the structure type, never the
+ * value, so a secret pasted into the wrong field cannot leak into the error.
+ */
+function collectPjmRemoteStringLeaf(
+  value: Record<string, unknown>,
+  key: string,
+  path: string,
+  findings: string[],
+): void {
+  if (!(key in value) || typeof value[key] === 'string') return;
+  findings.push(
+    `${path}.${key} (expected string, received ${describePjmRemoteStructure(value[key])})`,
+  );
 }
 
 function collectPjmRemoteExpectedObject(
