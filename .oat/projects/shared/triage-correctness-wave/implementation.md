@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-27
-oat_current_task_id: p04-t04
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -29,9 +29,9 @@ oat_generated: false
 | p01 — Bundled skill and script fixes          | completed | 5     | 5/5       |
 | p02 — CLI sync, config, and tools correctness | completed | 6     | 6/6       |
 | p03 — Managed Claude dispatch-record input    | completed | 8     | 8/8       |
-| p04 — Release and backlog fan-in              | completed | 3     | 3/3       |
+| p04 — Release and backlog fan-in              | completed | 4     | 4/4       |
 
-**Total:** 22/22 tasks completed
+**Total:** 23/23 tasks completed
 
 ---
 
@@ -249,7 +249,7 @@ three concerns were assessed as acceptable.
 
 ## Phase 4: Release and backlog fan-in
 
-**Status:** in_progress
+**Status:** completed
 **Started:** -
 
 ### Task p04-t01: Bump the lockstep public package versions
@@ -375,8 +375,8 @@ exit code captured explicitly; test suites ran under a fresh `mktemp -d` HOME.
 
 ### Task p04-t04: (review) Close final review findings M1, L1, L2
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 5479c9a1c
 
 **Final review received (auto):** `reviews/archived/final-review-2026-09-27T070931Z.md`
 at head `db06db72d`: 0 Critical, 0 High, 1 Medium, 3 Low. Gate IMPLEMENT-11:
