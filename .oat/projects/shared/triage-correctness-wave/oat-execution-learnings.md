@@ -41,3 +41,9 @@ Append-only log of reusable observations from this autonomous run.
 **Observation:** The root copied the expected base as a hand-expanded 40-character SHA instead of the value from `git rev-parse`, so both phase briefs named a nonexistent commit. The p02 implementer correctly blocked at its base check; the root corrected both briefs through the accepted handles as a context-only continuation.
 **Impact:** One wasted p02 round trip; no work lost.
 **Recommendation:** Populate `phase_base_head` and `expected_base_sha` only by pasting `git rev-parse HEAD` output (or reading a file written by it).
+
+## 2026-09-27T05:45:00Z - environment-limited - Phase gates run the released CLI, not the branch build
+
+**Observation:** `oat gate review` resolves through the globally installed CLI 0.3.7 (gate route `cliRoot` is the global pnpm store), so the new `gate_dispatch_audit_mismatched` check from p01-t03 is not enforced during this wave's own gates. The user-scope `oat-project-review-provide` copy is 1.5.10 while the branch ships 1.5.11.
+**Impact:** The plan's M2 rollout risk (stale installed review-provide failing this wave's gates) does not materialize here; the new check first applies once the released CLI includes it.
+**Recommendation:** After release, refresh installed skills (`oat tools update`) before running gates, so reviewers write the `**Dispatch audit (policy view):**` label the new CLI expects.
