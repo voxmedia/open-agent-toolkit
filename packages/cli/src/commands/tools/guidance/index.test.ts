@@ -13,7 +13,7 @@ import type { CommandContext, GlobalOptions } from '@app/command-context';
 import { createLoggerCapture } from '@commands/__tests__/helpers';
 import {
   type InitToolsDependencies,
-  loadRealizedGuidancePacks,
+  loadRealizedGuidanceState,
 } from '@commands/init/tools';
 import {
   buildToolPacksSectionBody,
@@ -94,7 +94,10 @@ describe('oat tools guidance', () => {
     const command = createToolsGuidanceCommand({
       buildCommandContext: contextBuilder(capture),
       resolveProjectRoot: vi.fn(async () => '/tmp/workspace'),
-      loadGuidancePacks: vi.fn(async () => PACKS),
+      loadGuidanceState: vi.fn(async () => ({
+        packs: PACKS,
+        otherProjectSkills: [],
+      })),
     });
 
     await run(command);
@@ -114,7 +117,10 @@ describe('oat tools guidance', () => {
     const command = createToolsGuidanceCommand({
       buildCommandContext: contextBuilder(capture),
       resolveProjectRoot: vi.fn(async () => '/tmp/workspace'),
-      loadGuidancePacks: vi.fn(async () => PACKS),
+      loadGuidanceState: vi.fn(async () => ({
+        packs: PACKS,
+        otherProjectSkills: [],
+      })),
     });
 
     await run(command, ['--json']);
@@ -125,6 +131,7 @@ describe('oat tools guidance', () => {
         sectionKey: 'tools',
         target: 'AGENTS.md',
         packs: PACKS,
+        otherProjectSkills: [],
         managedBlock: `<!-- OAT tools -->\n${buildToolPacksSectionBody(PACKS)}\n<!-- END OAT tools -->`,
       },
     ]);
@@ -133,20 +140,21 @@ describe('oat tools guidance', () => {
 
   it('renders user-scope packs outside a repository', async () => {
     const capture = createLoggerCapture();
-    const loadGuidancePacks = vi.fn(async () => [
-      { pack: 'core', scope: 'user' } as const,
-    ]);
+    const loadGuidanceState = vi.fn(async () => ({
+      packs: [{ pack: 'core', scope: 'user' } as const],
+      otherProjectSkills: [],
+    }));
     const command = createToolsGuidanceCommand({
       buildCommandContext: contextBuilder(capture),
       resolveProjectRoot: vi.fn(async () => {
         throw new Error('not a repository');
       }),
-      loadGuidancePacks,
+      loadGuidanceState,
     });
 
     await run(command, ['--json']);
 
-    expect(loadGuidancePacks).toHaveBeenCalledWith(expect.anything(), null);
+    expect(loadGuidanceState).toHaveBeenCalledWith(expect.anything(), null);
     expect(capture.jsonPayloads[0]).toMatchObject({ status: 'ok' });
     expect(process.exitCode).toBe(0);
   });
@@ -178,8 +186,8 @@ describe('oat tools guidance', () => {
         home,
       }),
       resolveProjectRoot: vi.fn(async () => root),
-      loadGuidancePacks: (context, projectRoot) =>
-        loadRealizedGuidancePacks(context, projectRoot, {
+      loadGuidanceState: (context, projectRoot) =>
+        loadRealizedGuidanceState(context, projectRoot, {
           resolveAssetsRoot: vi.fn(async () => '/tmp/assets'),
           resolveScopeRoot: vi.fn(() => home),
           inventoryPack: inventoryPack as unknown as NonNullable<
@@ -208,7 +216,7 @@ describe('oat tools guidance', () => {
     const command = createToolsGuidanceCommand({
       buildCommandContext: contextBuilder(capture),
       resolveProjectRoot: vi.fn(async () => '/tmp/workspace'),
-      loadGuidancePacks: vi.fn(async () => {
+      loadGuidanceState: vi.fn(async () => {
         throw new Error('inventory failed');
       }),
     });

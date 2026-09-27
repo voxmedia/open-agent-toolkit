@@ -684,8 +684,14 @@ Key behavior:
 - Never touches `AGENTS.md`, pack assets, or config, so it is the safe way to
   obtain the block for a manual edit, such as when an existing `OAT tools`
   section differs and guidance prints a manual patch
+- The block names `.agents/skills/` only when a pack is installed at project
+  scope and `~/.agents/skills/` only when a pack is installed at user scope,
+  each with its packs, deciding by pack membership rather than by whether the
+  directory exists. Project skills that belong to no OAT pack are described
+  on a separate line, never as pack skills
 - `--json` returns `status`, `sectionKey` (`tools`), `target` (`AGENTS.md`),
-  `packs` (each `pack` with its `scope`), and `managedBlock`
+  `packs` (each `pack` with its `scope`), `otherProjectSkills` (names of
+  project skills that belong to no pack), and `managedBlock`
 - Exits `0` on success and `1` when pack state cannot be read
 
 Examples:

@@ -1504,9 +1504,10 @@ describe('createInitToolsCommand', () => {
 
     await runCommand(command, [], ['--scope', 'all']);
 
-    // Initial placement, post-install project-config reconciliation, then the
-    // complete project+user evidence refresh used by guidance planning.
-    expect(scanTools).toHaveBeenCalledTimes(5);
+    // Initial placement, post-install project-config reconciliation, the
+    // complete project+user evidence refresh used by guidance planning, then
+    // the project scan that finds skills belonging to no pack.
+    expect(scanTools).toHaveBeenCalledTimes(6);
     expect(writeOatConfig).toHaveBeenCalledWith(
       '/tmp/workspace',
       expect.objectContaining({

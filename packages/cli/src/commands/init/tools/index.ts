@@ -926,12 +926,18 @@ async function applyProjectGuidance(
   }
 }
 
-async function realizedGuidancePacks(
+export interface RealizedGuidanceState {
+  packs: ProjectGuidancePack[];
+  /** Project skills that belong to no OAT pack, by name. */
+  otherProjectSkills: string[];
+}
+
+async function realizedGuidanceState(
   context: CommandContext,
   repoRoot: string | null,
   assetsRoot: string,
   dependencies: InitToolsDependencies,
-): Promise<ProjectGuidancePack[]> {
+): Promise<RealizedGuidanceState> {
   const userRoot = dependencies.resolveScopeRoot(
     'user',
     context.cwd,
@@ -943,29 +949,59 @@ async function realizedGuidancePacks(
     assetsRoot,
     dependencies,
   );
-  return ALL_TOOL_PACKS.flatMap((pack) => {
+  const packs = ALL_TOOL_PACKS.flatMap((pack) => {
     const scope = finalPackStates[pack].location;
     return scope === 'not-installed'
       ? []
       : [{ pack, scope } satisfies ProjectGuidancePack];
   });
+  return {
+    packs,
+    otherProjectSkills: await otherProjectSkillNames(
+      repoRoot,
+      assetsRoot,
+      dependencies,
+    ),
+  };
 }
 
 /**
- * Reads the realized pack placement the OAT tools block describes. Read-only:
- * it inventories installed packs and never installs, upgrades, or writes.
+ * Project skills whose names belong to no bundled pack. Pack membership, not
+ * directory existence, decides what is "other".
  */
-export async function loadRealizedGuidancePacks(
+async function otherProjectSkillNames(
+  repoRoot: string | null,
+  assetsRoot: string,
+  dependencies: InitToolsDependencies,
+): Promise<string[]> {
+  if (!repoRoot) return [];
+  const projectTools = await dependencies.scanTools({
+    scope: 'project',
+    scopeRoot: repoRoot,
+    assetsRoot,
+  });
+  return projectTools
+    .filter(({ type, pack }) => type === 'skill' && pack === 'custom')
+    .map(({ name }) => name)
+    .sort();
+}
+
+/**
+ * Reads the realized pack placement (and unrelated project skills) the OAT
+ * tools block describes. Read-only: it inventories and scans installed state
+ * and never installs, upgrades, or writes.
+ */
+export async function loadRealizedGuidanceState(
   context: CommandContext,
   projectRoot: string | null,
   overrides: Partial<InitToolsDependencies> = {},
-): Promise<ProjectGuidancePack[]> {
+): Promise<RealizedGuidanceState> {
   const dependencies: InitToolsDependencies = {
     ...DEFAULT_DEPENDENCIES,
     ...overrides,
   };
   const assetsRoot = await dependencies.resolveAssetsRoot();
-  return realizedGuidancePacks(context, projectRoot, assetsRoot, dependencies);
+  return realizedGuidanceState(context, projectRoot, assetsRoot, dependencies);
 }
 
 async function planAndApplyProjectGuidanceAfterInstall(
@@ -988,7 +1024,7 @@ async function planAndApplyProjectGuidanceAfterInstall(
     const repoRoot =
       installedProjectRoot ??
       (await dependencies.resolveProjectRoot(context.cwd));
-    const realizedPacks = await realizedGuidancePacks(
+    const realized = await realizedGuidanceState(
       context,
       repoRoot,
       assetsRoot,
@@ -996,7 +1032,8 @@ async function planAndApplyProjectGuidanceAfterInstall(
     );
     const completePlan = await dependencies.planProjectGuidance({
       repoRoot,
-      packs: realizedPacks,
+      packs: realized.packs,
+      otherProjectSkills: realized.otherProjectSkills,
       explicitChoice: true,
       interactive: false,
       confirmAction: dependencies.confirmAction,
@@ -1641,6 +1678,11 @@ export async function runInitTools(
     const plannedGuidance = await dependencies.planProjectGuidance({
       repoRoot: projectRoot,
       packs: realizedPacks,
+      otherProjectSkills: await otherProjectSkillNames(
+        projectRoot,
+        assetsRoot,
+        dependencies,
+      ),
       explicitChoice: explicitProjectGuidance,
       interactive: context.interactive,
       confirmAction: dependencies.confirmAction,

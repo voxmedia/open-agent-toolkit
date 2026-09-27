@@ -28,3 +28,7 @@ The managed `OAT tools` block always leads with `Skills directory: .agents/skill
 - Project skills that belong to no pack are described separately when present.
 - Fixtures cover all-user, all-project, mixed, and user-plus-unrelated-project-skill repositories.
 - A decision on `oat tools where` is recorded: ship it or defer it explicitly.
+
+## Notes
+
+- 2026-09-27 (backlog-wave-2, p01-t06): `oat tools where` deferred by the operator on 2026-09-27. `oat tools list --json` and `oat tools info` already report scope, and the scope-aware guidance block (directories named by pack membership, unrelated project skills described separately) plus p01-t05's read-only `oat tools guidance` command cover the reported confusion. Revisit only if a lookup by skill or pack is still requested.

@@ -1,9 +1,9 @@
 import { buildCommandContext, type CommandContext } from '@app/command-context';
-import { loadRealizedGuidancePacks } from '@commands/init/tools';
 import {
-  type ProjectGuidancePack,
-  renderToolPacksManagedBlock,
-} from '@commands/init/tools/project-guidance';
+  loadRealizedGuidanceState,
+  type RealizedGuidanceState,
+} from '@commands/init/tools';
+import { renderToolPacksManagedBlock } from '@commands/init/tools/project-guidance';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
@@ -11,17 +11,17 @@ import { Command } from 'commander';
 export interface ToolsGuidanceDependencies {
   buildCommandContext: typeof buildCommandContext;
   resolveProjectRoot: (cwd: string) => Promise<string>;
-  loadGuidancePacks: (
+  loadGuidanceState: (
     context: CommandContext,
     projectRoot: string | null,
-  ) => Promise<ProjectGuidancePack[]>;
+  ) => Promise<RealizedGuidanceState>;
 }
 
 const defaultDependencies: ToolsGuidanceDependencies = {
   buildCommandContext,
   resolveProjectRoot,
-  loadGuidancePacks: (context, projectRoot) =>
-    loadRealizedGuidancePacks(context, projectRoot),
+  loadGuidanceState: (context, projectRoot) =>
+    loadRealizedGuidanceState(context, projectRoot),
 };
 
 /**
@@ -48,17 +48,18 @@ export function createToolsGuidanceCommand(
         const projectRoot = await dependencies
           .resolveProjectRoot(context.cwd)
           .catch(() => null);
-        const packs = await dependencies.loadGuidancePacks(
-          context,
-          projectRoot,
-        );
-        const managedBlock = renderToolPacksManagedBlock(packs);
+        const { packs, otherProjectSkills } =
+          await dependencies.loadGuidanceState(context, projectRoot);
+        const managedBlock = renderToolPacksManagedBlock(packs, {
+          otherProjectSkills,
+        });
         if (context.json) {
           context.logger.json({
             status: 'ok',
             sectionKey: 'tools',
             target: 'AGENTS.md',
             packs,
+            otherProjectSkills,
             managedBlock,
           });
         } else {
