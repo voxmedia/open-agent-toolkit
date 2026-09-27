@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Glob, Grep, Write, Edit, Bash(git:*), Bash(oat:*), Bash(pnpm:*), Bash(mkdir:*), Bash(date:*), Bash(realpath:*), Bash(awk:*), AskUserQuestion
 metadata:
-  version: 1.5.10
+  version: 1.5.11
 ---
 
 # Request Review
@@ -1033,6 +1033,8 @@ When `oat-project-implement` spawns this skill for auto-review at checkpoints, i
 When `oat gate review` invokes this skill, it includes gate-originated context instructing the reviewer to write `oat_review_invocation: gate`. Honor that instruction in the artifact frontmatter.
 
 The gate prompt also supplies exact values for `oat_gate_run_id`, `oat_gate_target`, `oat_gate_runtime`, `oat_invocation_model`, `oat_invocation_reasoning_effort`, and `oat_invocation_source`. Copy all six values verbatim for gate-originated artifacts. These fields record OAT's configured invocation; do not derive them from `baseCommand`, the target id, model self-identification, or surrounding dispatch prose. Optional observed/self-reported identity is separate and non-authoritative.
+
+For gate-originated artifacts (`oat_review_invocation: gate`), write the Step 6.0 resolver stamp on a line labeled `**Dispatch audit (policy view):**`, with the stamp in one backtick pair so the literal `Dispatch:` token stays readable, for example ``**Dispatch audit (policy view):** `Dispatch: scope=p01 action=review role=reviewer …` ``. The resolver stamp records the project reviewer policy, and the six gate frontmatter fields record the gate's actual invocation; the label keeps both accurate. `oat gate review` checks every other reviewer audit stamp anywhere outside `## Findings`, the severity sections, and fenced code (for example in the metadata block, `## Dispatch Audit`, or `## Review Scope`), including a backtick-wrapped stamp followed only by punctuation or one parenthetical, against the frontmatter: its `target` must equal `oat_gate_target`, and its `effort_axis` must equal `selected:<oat_invocation_reasoning_effort>` when that effort is concrete. A disagreeing stamp fails the gate with `gate_dispatch_audit_mismatched`. Manual and auto reviews keep their audit line unlabeled.
 
 For all other invocations (user-triggered, fresh session), use `manual`.
 

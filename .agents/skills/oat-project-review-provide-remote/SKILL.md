@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, Task, AskUserQuestion
 metadata:
-  version: 1.1.7
+  version: 1.1.8
 ---
 
 # Remote Review Provide (Project-Scoped GitHub PR)
@@ -407,6 +407,8 @@ oat_gate_target: <exact configured gate target; omit for lifecycle>
 ```
 
 `oat_project` carries the resolved project path so machine A's `oat-project-review-receive-remote` routes findings into the right project's plan tasks. Preserve the current invocation lineage in the GitHub marker: omit `oat_gate_target` for lifecycle reviews and include the exact target for gate reviews. Verdict: `REQUEST_CHANGES` when any critical or high finding exists; `COMMENT` otherwise (including a clean, zero-findings review — never auto-`APPROVE`).
+
+For gate reviews (`oat_review_invocation: gate`), write the resolver stamp in the posted review's dispatch audit metadata on a line labeled `**Dispatch audit (policy view):**`, with the stamp in one backtick pair so the literal `Dispatch:` token stays readable. The resolver stamp records the project reviewer policy, while `oat_gate_target` names the gate's actual invocation; the label keeps both accurate. Any other reviewer audit stamp outside `## Findings`, the severity sections, and fenced code must name `oat_gate_target` as its `target` and carry `effort_axis=selected:<effort>` for a concrete gate effort, because `oat gate review` rejects a disagreeing unlabeled stamp with `gate_dispatch_audit_mismatched`. Lifecycle reviews keep their audit line unlabeled.
 
 ### Step 8: Post the Review + Clean Up
 

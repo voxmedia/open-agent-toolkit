@@ -86,7 +86,10 @@ import {
   type IdentityProvenance,
   type IdentityRecord,
 } from '@providers/identity/provenance';
-import { parseDispatchStamps } from '@providers/identity/stamp';
+import {
+  parseDispatchStamps,
+  type DispatchStamp,
+} from '@providers/identity/stamp';
 import { Command } from 'commander';
 import YAML from 'yaml';
 
@@ -706,6 +709,37 @@ function gateInvocationPromptContext(
     'Gate invocation metadata (copy these exact values into the gate review artifact frontmatter):',
     frontmatter,
   ].join('\n');
+}
+
+const NON_CONCRETE_REASONING_EFFORTS = new Set([
+  'unknown',
+  'provider-default',
+  'not-applicable',
+]);
+
+/**
+ * Unlabeled reviewer audit stamps that disagree with the gate frontmatter.
+ *
+ * The frontmatter (`oat_gate_target`, `oat_invocation_*`) is the authority for
+ * the gate's actual invocation. A stamp labeled as the reviewer policy view is
+ * exempt; any other audit stamp must name the gate target and, when the gate
+ * recorded a concrete reasoning effort, carry `effort_axis=selected:<effort>`.
+ */
+function disagreeingDispatchAuditStamps(
+  verdict: ReviewGateVerdict,
+): DispatchStamp[] {
+  const unlabeled = verdict.dispatchAudit?.unlabeled ?? [];
+  const target = verdict.gateInvocation?.targetId ?? null;
+  const effort = verdict.gateInvocation?.reasoningEffort ?? null;
+  const expectedEffortAxis =
+    effort && !NON_CONCRETE_REASONING_EFFORTS.has(effort)
+      ? `selected:${effort}`
+      : null;
+  return unlabeled.filter(
+    (stamp) =>
+      stamp.target !== target ||
+      (expectedEffortAxis !== null && stamp.effortAxis !== expectedEffortAxis),
+  );
 }
 
 function corroborateGateInvocation(
@@ -3725,7 +3759,8 @@ type ReviewArtifactIneligibilityCause =
   | 'artifact_verdict_unparsable'
   | 'gate_invocation_metadata_missing'
   | 'gate_invocation_metadata_mismatched'
-  | 'gate_invocation_marker_missing';
+  | 'gate_invocation_marker_missing'
+  | 'gate_dispatch_audit_mismatched';
 
 /**
  * What `postSelection.code` reports when a committed artifact was found: either
@@ -3984,6 +4019,33 @@ async function disposeValidatedReviewArtifact(
           message:
             'Review artifact is missing the required gate invocation marker `oat_review_invocation: gate`.',
           recovery: `Set oat_review_invocation: gate in ${snapshot.path}, then run oat-project-review-receive only after the artifact validates.`,
+          gateInvocation: identity.gateInvocation,
+          dispatchReport: identity.dispatchReport,
+          corroboration,
+        });
+      },
+    };
+  }
+
+  const disagreeingAudit = disagreeingDispatchAuditStamps(verdict);
+  if (disagreeingAudit.length > 0) {
+    const lines = disagreeingAudit.map((stamp) => stamp.lineNumber).join(', ');
+    const effort = verdict.gateInvocation?.reasoningEffort ?? 'unknown';
+    return {
+      eligible: false,
+      status: 'artifact_validation_failed',
+      cause: 'gate_dispatch_audit_mismatched',
+      verdict,
+      writeEnvelope: (context) => {
+        writeReviewGateArtifactValidationFailure(context, {
+          runId: identity.runId,
+          target: identity.target,
+          project: identity.project,
+          projectResolutionSource: identity.projectResolutionSource,
+          artifactPath: snapshot.path,
+          generatedAt: snapshot.generatedAt,
+          message: `Review artifact dispatch audit line (line ${lines}) does not agree with the gate invocation frontmatter (oat_gate_target: ${verdict.gateInvocation?.targetId ?? 'unknown'}, oat_invocation_reasoning_effort: ${effort}). An unlabeled audit stamp must describe the gate invocation; label the reviewer policy stamp \`**Dispatch audit (policy view):**\`. Artifacts written by an older installed review skill need \`oat tools update\`.`,
+          recovery: `Label the reviewer policy stamp in ${snapshot.path} as \`**Dispatch audit (policy view):**\`, or correct the stamp to the gate target and effort, then rerun the gate. If an older installed oat-project-review-provide wrote the unlabeled line, refresh installed skills with \`oat tools update\` and rerun the gate.`,
           gateInvocation: identity.gateInvocation,
           dispatchReport: identity.dispatchReport,
           corroboration,

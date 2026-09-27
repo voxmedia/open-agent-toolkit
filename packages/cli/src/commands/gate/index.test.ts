@@ -547,6 +547,10 @@ describe('oat gate', () => {
       oat_invocation_reasoning_effort: string;
       oat_invocation_source: string;
     }>;
+    /** Body lines written between the title and `## Findings`. */
+    preFindingsBody?: string[];
+    /** Replaces the Low section content (pair with explicit counts). */
+    lowFindingLines?: string[];
   }): Promise<string> {
     const relativePath = `${options.projectPath}/reviews/${options.fileName ?? 'p01-review.md'}`;
     await mkdir(join(options.root, dirname(relativePath)), {
@@ -557,9 +561,10 @@ describe('oat gate', () => {
         ? ['- High finding that should block.']
         : ['None.'];
     const lowContent =
-      options.finding === 'low'
+      options.lowFindingLines ??
+      (options.finding === 'low'
         ? ['- Low finding that still needs disposition.']
-        : ['None.'];
+        : ['None.']);
     const countLines = options.counts
       ? [
           `oat_review_critical_count: ${options.counts.critical}`,
@@ -625,6 +630,7 @@ describe('oat gate', () => {
         '',
         '# Review',
         '',
+        ...(options.preFindingsBody ? [...options.preFindingsBody, ''] : []),
         '## Findings',
         '',
         '### Critical',
@@ -4737,6 +4743,254 @@ describe('oat gate', () => {
       ).dispatchReport.gateInvocation.model,
     ).not.toBe('self-reported-different-model');
     expect(process.exitCode).toBe(1);
+  });
+
+  describe('dispatch audit agreement', () => {
+    const POLICY_STAMP =
+      'Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-sol-high';
+    const TARGET_STAMP_HIGH_EFFORT =
+      'Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=codex-6-sol-xhigh';
+    const AGREEING_STAMP =
+      'Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6-sol effort_axis=selected:xhigh dispatch_policy=high dispatch_ceiling=high target=codex-6-sol-xhigh';
+    const OTHER_TARGET_XHIGH_STAMP =
+      'Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6-sol effort_axis=selected:xhigh dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-sol-xhigh';
+    const IMPLEMENTER_STAMP =
+      'Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=inherited effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-high';
+
+    // Gate target whose effort (xhigh) differs from the project reviewer
+    // ceiling (high) that the policy stamp records.
+    async function writeXhighTarget(root: string): Promise<void> {
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        `${JSON.stringify({
+          version: 1,
+          workflow: {
+            gates: {
+              execTargets: {
+                'codex-6-sol-xhigh': {
+                  runtime: 'codex',
+                  baseCommand: ['codex', 'exec'],
+                  invocation: {
+                    model: 'gpt-6-sol',
+                    reasoningEffort: 'xhigh',
+                  },
+                },
+                // Non-concrete effort: only the target clause applies.
+                'codex-6-sol-default': {
+                  runtime: 'codex',
+                  baseCommand: ['codex', 'exec'],
+                  invocation: {
+                    model: 'gpt-6-sol',
+                  },
+                },
+              },
+            },
+          },
+        })}\n`,
+        'utf8',
+      );
+    }
+
+    async function runWithBody(options: {
+      target?: string;
+      preFindingsBody?: string[];
+      lowFindingLines?: string[];
+      counts?: { critical: number; high: number; medium: number; low: number };
+    }) {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      await writeXhighTarget(root);
+      const { target = 'codex-6-sol-xhigh', ...artifactOptions } = options;
+      const runner = createProcessRunner({
+        availableTargets: ['codex-default', target],
+        onExecute: async () => {
+          await writeReviewArtifact({
+            root,
+            projectPath,
+            finding: 'clean',
+            ...artifactOptions,
+          });
+        },
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        args: ['--target', target, 'Review'],
+      });
+      return capture;
+    }
+
+    function expectAuditMismatch(capture: LoggerCapture): void {
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'artifact_validation_failed',
+        receiveEligible: false,
+        message: expect.stringContaining('dispatch audit'),
+        recovery: expect.stringContaining('oat tools update'),
+        corroboration: { run: 'matched', invocation: 'matched' },
+      });
+      expect(
+        (capture.jsonPayloads[0] as { message: string }).message,
+      ).toContain('oat tools update');
+      expect(process.exitCode).toBe(1);
+    }
+
+    function expectPassed(capture: LoggerCapture): void {
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        outcome: 'review_completed_gate_passed',
+        receiveEligible: true,
+      });
+    }
+
+    it('records the xhigh gate invocation in the artifact frontmatter', async () => {
+      const capture = await runWithBody({});
+      expectPassed(capture);
+      expect(lastExecutePrompt).toContain('oat_gate_target: codex-6-sol-xhigh');
+      expect(lastExecutePrompt).toContain(
+        'oat_invocation_reasoning_effort: xhigh',
+      );
+    });
+
+    it('rejects an unlabeled policy stamp whose target and effort differ', async () => {
+      expectAuditMismatch(
+        await runWithBody({
+          preFindingsBody: [`**Dispatch audit:** \`${POLICY_STAMP}\``],
+        }),
+      );
+    });
+
+    it('rejects an unlabeled stamp whose target matches but effort differs', async () => {
+      expectAuditMismatch(
+        await runWithBody({
+          preFindingsBody: [`- ${TARGET_STAMP_HIGH_EFFORT}`],
+        }),
+      );
+    });
+
+    it('rejects an unlabeled stamp whose effort matches but target differs', async () => {
+      expectAuditMismatch(
+        await runWithBody({
+          preFindingsBody: [
+            `**Dispatch audit:** \`${OTHER_TARGET_XHIGH_STAMP}\``,
+          ],
+        }),
+      );
+    });
+
+    it('rejects a differing target when the gate effort is not concrete', async () => {
+      const capture = await runWithBody({
+        target: 'codex-6-sol-default',
+        preFindingsBody: [`**Dispatch audit:** \`${POLICY_STAMP}\``],
+      });
+      expect(lastExecutePrompt).toContain(
+        'oat_invocation_reasoning_effort: unknown',
+      );
+      expectAuditMismatch(capture);
+    });
+
+    it('skips the effort clause when the gate effort is not concrete', async () => {
+      expectPassed(
+        await runWithBody({
+          target: 'codex-6-sol-default',
+          preFindingsBody: [
+            `**Dispatch audit:** \`${POLICY_STAMP.replace(
+              'target=oat-reviewer-gpt-6-sol-high',
+              'target=codex-6-sol-default',
+            )}\``,
+          ],
+        }),
+      );
+    });
+
+    it('checks an unlabeled stamp in a Review Dispatch Audit section', async () => {
+      expectAuditMismatch(
+        await runWithBody({
+          preFindingsBody: [
+            '## Review Dispatch Audit',
+            '',
+            `\`${POLICY_STAMP}\``,
+          ],
+        }),
+      );
+    });
+
+    it('accepts an unlabeled stamp that agrees with the gate frontmatter', async () => {
+      expectPassed(
+        await runWithBody({
+          preFindingsBody: [`**Dispatch audit:** \`${AGREEING_STAMP}\``],
+        }),
+      );
+    });
+
+    it('accepts the policy stamp under the policy-view label', async () => {
+      expectPassed(
+        await runWithBody({
+          preFindingsBody: [
+            '## Dispatch Audit',
+            '',
+            `**Dispatch audit (policy view):** \`${POLICY_STAMP}\``,
+          ],
+        }),
+      );
+    });
+
+    it('accepts an artifact without an audit stamp', async () => {
+      expectPassed(await runWithBody({ preFindingsBody: ['Reviewed: p01'] }));
+    });
+
+    it('ignores quoted implementer and fenced reviewer stamps in findings', async () => {
+      const capture = await runWithBody({
+        counts: { critical: 0, high: 0, medium: 0, low: 1 },
+        lowFindingLines: [
+          `- The implementation note quotes \`${IMPLEMENTER_STAMP}\` and this reviewer stamp:`,
+          '',
+          '  ```text',
+          `  ${POLICY_STAMP}`,
+          '  ```',
+        ],
+      });
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        outcome: 'review_completed_gate_passed',
+        counts: { critical: 0, high: 0, medium: 0, low: 1 },
+      });
+    });
+
+    it('reports gate_dispatch_audit_mismatched as the post-selection cause', async () => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      await writeXhighTarget(root);
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          await writeReviewArtifact({
+            root,
+            projectPath,
+            finding: 'clean',
+            preFindingsBody: [`**Dispatch audit:** \`${POLICY_STAMP}\``],
+          });
+        },
+      });
+      const transient = createTransientPostSelectionParse();
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        parseReviewGateVerdict: transient.parse,
+        args: ['--target', 'codex-6-sol-xhigh', 'Review'],
+      });
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'review_failed',
+        outcome: 'unexpected_post_selection_failure',
+        postSelection: { code: 'gate_dispatch_audit_mismatched' },
+      });
+      expect(process.exitCode).toBe(1);
+    });
   });
 
   it.each([

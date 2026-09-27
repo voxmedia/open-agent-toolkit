@@ -2,6 +2,10 @@ import { createHash } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
 
 import { getFrontmatterBlock } from '@commands/shared/frontmatter';
+import {
+  parseDispatchStamps,
+  type DispatchStamp,
+} from '@providers/identity/stamp';
 import YAML from 'yaml';
 
 export interface ReviewGateVerdict {
@@ -11,6 +15,8 @@ export interface ReviewGateVerdict {
   invocation: string | null;
   project: string | null;
   gateInvocation?: ReviewArtifactGateInvocation;
+  /** Present only when the artifact carries at least one audit line. */
+  dispatchAudit?: ReviewDispatchAudit;
   counts: {
     critical: number;
     high: number;
@@ -31,6 +37,16 @@ export interface ReviewArtifactGateInvocation {
   model: string | null;
   reasoningEffort: string | null;
   source: string | null;
+}
+
+/**
+ * Reviewer dispatch stamps found on audit lines. `policyView` holds stamps
+ * whose label names the project reviewer policy view; every other audit stamp
+ * is `unlabeled` and must agree with the gate invocation frontmatter.
+ */
+export interface ReviewDispatchAudit {
+  unlabeled: DispatchStamp[];
+  policyView: DispatchStamp[];
 }
 
 export type Severity = keyof ReviewGateVerdict['counts'];
@@ -351,6 +367,133 @@ function linesOutsideFences(content: string): MarkdownLine[] {
   }
 
   return outsideFenceLines;
+}
+
+const TOP_SECTION_HEADING = /^##\s+\S/;
+const FINDINGS_SECTION_HEADING = /^##\s+Findings\b/i;
+const SEVERITY_SECTION_HEADING =
+  /^#{3,6}\s+(?:Critical|High|Medium|Low)\s*#*\s*$/i;
+const LIST_MARKER = /^(?:[-*+]|\d+[.)])\s+/;
+const DISPATCH_TOKEN = /(^|[\s`])Dispatch:/;
+const POLICY_VIEW_LABEL = /policy\s+view/i;
+/** After a closing backtick: nothing, punctuation, or one parenthetical. */
+const ALLOWED_TRAILING_TEXT = /^\s*(?:[.,;:!?]+|\([^()`]*\))?\s*$/;
+
+interface ClassifiedAuditLine {
+  stamp: DispatchStamp;
+  policyView: boolean;
+}
+
+function frontmatterEnd(content: string): number {
+  const match = content.match(/^---\n[\s\S]*?\n---(?:\n|$)/);
+  return match ? match[0].length : 0;
+}
+
+/**
+ * Classifies one line as a reviewer dispatch audit line.
+ *
+ * Shape: an optional list marker, an optional bold or plain label ending in
+ * `:` (the label may itself hold backtick spans), and a `Dispatch:` stamp that
+ * is either bare to the end of the line or wrapped in one backtick pair, which
+ * may be followed only by punctuation or a single parenthetical. A wrapped
+ * stamp followed by other prose is a quotation, not an audit line. The stamp
+ * must parse as a reviewer stamp (`action=review role=reviewer`).
+ */
+function classifyAuditLine(
+  text: string,
+  lineNumber: number,
+): ClassifiedAuditLine | null {
+  const remainder = text.trim().replace(LIST_MARKER, '');
+  const token = DISPATCH_TOKEN.exec(remainder);
+  if (!token) {
+    return null;
+  }
+
+  let label = remainder.slice(0, token.index + (token[1] ?? '').length);
+  let stamp = remainder.slice(token.index + (token[1] ?? '').length);
+  const wrapped = label.endsWith('`');
+  if (wrapped) {
+    label = label.slice(0, -1);
+    const closing = stamp.indexOf('`');
+    if (closing === -1) {
+      return null;
+    }
+    // Only punctuation or one parenthetical may follow the closing backtick;
+    // longer prose means the line quotes a stamp rather than records one.
+    if (!ALLOWED_TRAILING_TEXT.test(stamp.slice(closing + 1))) {
+      return null;
+    }
+    stamp = stamp.slice(0, closing);
+  } else if (stamp.includes('`')) {
+    return null;
+  }
+
+  const trimmedLabel = label.trim();
+  if (trimmedLabel && !/:(?:\*{1,2}|_{1,2})?$/.test(trimmedLabel)) {
+    return null;
+  }
+
+  const parsed = parseDispatchStamps(stamp);
+  const first = parsed[0];
+  if (
+    parsed.length !== 1 ||
+    !first ||
+    first.legacy ||
+    first.action !== 'review' ||
+    first.role !== 'reviewer'
+  ) {
+    return null;
+  }
+
+  return {
+    stamp: { ...first, line: text, lineNumber },
+    policyView: POLICY_VIEW_LABEL.test(trimmedLabel),
+  };
+}
+
+/**
+ * Reviewer dispatch audit lines from every part of the artifact body except
+ * finding sections: `## Findings` (with its subsections) and any
+ * `### Critical`, `### High`, `### Medium`, or `### Low` section. Reviewers
+ * have placed audit stamps in the pre-heading metadata block and in sections
+ * such as `## Dispatch Audit`, `## Review Dispatch Audit`, `## Review Scope`,
+ * and `## Dispatch Evidence`, so recognition is by line shape, not section
+ * name. Fenced code blocks and prose that merely quotes a stamp are ignored.
+ */
+export function extractDispatchAudit(content: string): ReviewDispatchAudit {
+  const bodyStart = frontmatterEnd(content);
+  const audit: ReviewDispatchAudit = { unlabeled: [], policyView: [] };
+  let inFindingSection = false;
+
+  for (const line of linesOutsideFences(content)) {
+    if (line.start < bodyStart) {
+      continue;
+    }
+    if (TOP_SECTION_HEADING.test(line.text)) {
+      inFindingSection = FINDINGS_SECTION_HEADING.test(line.text);
+      continue;
+    }
+    if (SEVERITY_SECTION_HEADING.test(line.text)) {
+      inFindingSection = true;
+      continue;
+    }
+    if (inFindingSection) {
+      continue;
+    }
+
+    const lineNumber = content.slice(0, line.start).split('\n').length;
+    const classified = classifyAuditLine(line.text, lineNumber);
+    if (!classified) {
+      continue;
+    }
+    if (classified.policyView) {
+      audit.policyView.push(classified.stamp);
+    } else {
+      audit.unlabeled.push(classified.stamp);
+    }
+  }
+
+  return audit;
 }
 
 function findFindingsSection(content: string): FindingsSection | null {
@@ -862,6 +1005,9 @@ export async function parseReviewGateVerdict(
   }
 
   const gateInvocation = readGateInvocation(frontmatter);
+  const dispatchAudit = extractDispatchAudit(content);
+  const hasDispatchAudit =
+    dispatchAudit.unlabeled.length > 0 || dispatchAudit.policyView.length > 0;
 
   if (options.artifactSnapshot) {
     await assertArtifactContentCurrent(
@@ -877,6 +1023,7 @@ export async function parseReviewGateVerdict(
     invocation: stringOrNull(frontmatter['oat_review_invocation']),
     project: stringOrNull(frontmatter['oat_project']),
     ...(gateInvocation ? { gateInvocation } : {}),
+    ...(hasDispatchAudit ? { dispatchAudit } : {}),
     counts,
     blocking: hasBlockingFindings(counts),
     ...(insertedSeverities.length > 0
