@@ -163,6 +163,25 @@ Chronological log of implementation progress.
 
 ---
 
+## Plan Gate Feedback (quick-start, QS-12)
+
+The configured quick-start gate (`oat-project-quick-start`, `onFailure: block`,
+`maxAttempts: 2`, target `codex-6-sol-xhigh`, inline Codex runtime) blocked on
+both attempts; every finding was resolved in `plan.md`:
+
+- Attempt 1 (`reviews/archived/artifact-plan-review-2026-09-27T150947Z.md`):
+  H1 re-verify identity and exact managed content at apply time before removing
+  a CLAUDE.md shim (with changed-content and symlink-replacement controls); H2
+  make leftover CLAUDE.md detection repository-wide and independent of the
+  mutation exclusions at sync, `--json`, validate, and doctor; M1 accept `none`
+  only in the same task as its behavior (p02-t02).
+- Attempt 2 (`reviews/archived/artifact-plan-review-2026-09-27T151608Z.md`):
+  H1 open the existing `AGENTS.md` with `O_WRONLY | O_APPEND | O_NOFOLLOW`
+  (the flags as written opened read-only and failed with `EBADF`), plus a
+  real-filesystem success assertion.
+
+Attempts are exhausted, so plan readiness is an operator decision.
+
 ## Deviations from Plan / Design
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.

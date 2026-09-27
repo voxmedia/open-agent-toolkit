@@ -219,6 +219,8 @@ Backlog: `BL-260903-close-manual-only-agents-md` (criteria 1, 2).
 Cover the four-way contract for `upsertAgentsMdSections` against an existing
 file:
 
+- the real-filesystem append (no injected seam) uses the exact open flags from
+  Step 2 and succeeds;
 - block absent → action `appended`, exit-code-bearing result is success, and
   the file equals the original bytes, one separator newline (`\n`), the absent
   blocks joined by `\n\n`, and a trailing `\n` (matching `createMissingFile`),
@@ -259,8 +261,9 @@ Expected: the absent-block and concurrent cases fail.
 **Step 2: Implement (GREEN)**
 
 Add the `appended` action. For an existing regular file whose managed block is
-absent, open it with `O_APPEND | O_NOFOLLOW` for a direct target (or open the
-already-approved in-repository resolved target), `fstat` the opened handle and
+absent, open it with `O_WRONLY | O_APPEND | O_NOFOLLOW` (a write access mode is required; `O_APPEND | O_NOFOLLOW` alone opens read-only and the write fails with `EBADF`) for a direct target (or open the
+already-approved in-repository resolved target with an equivalent writable
+append mode), `fstat` the opened handle and
 compare `dev`/`ino` with the planned target identity, closing with `blocked`
 and zero bytes written on a mismatch; then
 always write one leading `\n` before the block marker (no last-byte read, so
@@ -1292,7 +1295,7 @@ title itself:
 | design | artifact | pending         | -          | -                                                           | -             | -          | -                 |
 | plan   | artifact | fixes_completed | 2026-09-27 | -                                                           | -             | auto       | -                 |
 | plan   | artifact | fixes_completed | 2026-09-27 | reviews/archived/artifact-plan-review-2026-09-27T150947Z.md | -             | gate       | codex-6-sol-xhigh |
-| plan   | artifact | received        | 2026-09-27 | reviews/artifact-plan-review-2026-09-27T151608Z.md          | -             | -          | -                 |
+| plan   | artifact | fixes_completed | 2026-09-27 | reviews/archived/artifact-plan-review-2026-09-27T151608Z.md | -             | gate       | codex-6-sol-xhigh |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
@@ -1314,6 +1317,12 @@ simplifications (p01-t01 repro deleted; one target-swap control; no `--json`
 source field; existing doctor pins and resolve-providers fixture reused; Lite
 probe run once; scanner narrowing deferred with a trigger; reviewer probe
 reuse; explicit `scripts.lint` pin; rewrite-all archive references).
+
+Gate attempt 2 (`codex-6-sol-xhigh`) returned one High: the append open flags
+lacked a write access mode (`EBADF`). Resolved in p01-t02 (`O_WRONLY | O_APPEND
+| O_NOFOLLOW` plus a real-filesystem success assertion). The configured gate's
+`maxAttempts: 2` is exhausted, so readiness waits on an operator decision
+(QS-12 boundary).
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
