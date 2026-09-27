@@ -26,82 +26,196 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase 1 | in_progress | 6     | 0/6       |
+| Phase 2 | pending     | 6     | 0/6       |
+| Phase 3 | pending     | 3     | 0/3       |
+| Phase 4 | pending     | 2     | 0/2       |
+| Phase 5 | pending     | 6     | 0/6       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/23 tasks completed
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: AGENTS.md guidance
 
 **Status:** in_progress
 **Started:** 2026-09-27
 
-### Phase Summary (fill when phase is complete)
-
-**Outcome (what changed):**
-
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
-
-**Key files touched:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {trade-offs or deviations discovered during implementation}
-
-### Task p01-t01: {Task Name}
-
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
-
-**Outcome (required when completed):**
-
-- {what materially changed (not “did task”, but “system now does X”)}
-
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
-
----
-
-### Task p01-t02: {Task Name}
+### Task p01-t01: Give each unsafe-directory variant its own outside directory
 
 **Status:** pending
 **Commit:** -
 
-**Notes:**
+---
 
-- {Notes will be added during implementation}
+### Task p01-t02: Append absent managed blocks to an existing AGENTS.md
+
+**Status:** pending
+**Commit:** -
 
 ---
 
-## Phase 2: {Phase Name}
+### Task p01-t03: Print guidance once and prove the fresh-repo sequence
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p01-t04: Make every --project-guidance consumer act or reject
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p01-t05: Add read-only guidance emission and fix the oat-doctor hint
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p01-t06: Name only installed pack locations in the guidance block
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 2: CLAUDE.md shims
 
 **Status:** pending
 **Started:** -
 
-### Task p02-t01: {Task Name}
+### Task p02-t01: Persist a configurable instruction sync strategy
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p02-t02: Stop creating shims and remove OAT-managed shims under none
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p02-t03: Warn about leftover CLAUDE.md files and adopt strays without shims
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p02-t04: Update doctor, instructions skills, and provider detection
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p02-t05: Document the no-shim default and the pjm init hint
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p02-t06: Drop this repository's shims
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 3: Lifecycle skill routing and bookkeeping
+
+**Status:** pending
+**Started:** -
+
+### Task p03-t01: Route quick-mode discovery rows straight to quick-start
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p03-t02: Record absorbed projects in Lite consolidations
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p03-t03: Commit phase bookkeeping before per-phase review dispatch
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 4: Agent roles and recon validation
+
+**Status:** pending
+**Started:** -
+
+### Task p04-t01: Repair bare fences outside .agents/skills and extend the scanner
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p04-t02: Validate recon assignment envelopes before launch
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 5: CI and backlog tooling, release fan-in
+
+**Status:** pending
+**Started:** -
+
+### Task p05-t01: Give packages/control-plane a check script
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p05-t02: Rewrite inbound references when a backlog item is archived
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p05-t03: Record ten uncached runs of the collection-detach test
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p05-t04: Bump the lockstep public package versions
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p05-t05: Archive the shipped backlog items
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p05-t06: Run the full Definition of Done
 
 **Status:** pending
 **Commit:** -
@@ -180,7 +294,9 @@ both attempts; every finding was resolved in `plan.md`:
   (the flags as written opened read-only and failed with `EBADF`), plus a
   real-filesystem success assertion.
 
-Attempts are exhausted, so plan readiness is an operator decision.
+Attempts are exhausted, so plan readiness is an operator decision. Operator
+decision (2026-09-27): proceed to implementation with the findings resolved in
+the plan.
 
 ## Deviations from Plan / Design
 

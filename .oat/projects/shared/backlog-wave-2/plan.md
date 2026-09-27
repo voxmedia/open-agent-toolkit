@@ -1,16 +1,16 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-09-27
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_parallel_groups: []
 oat_plan_source: quick
 oat_import_reference: null
 oat_import_source_path: null
 oat_import_provider: null
-oat_template: true
+oat_template: false
 oat_generated: false
 oat_phase_review_gate:
   enabled: true
@@ -1323,6 +1323,11 @@ lacked a write access mode (`EBADF`). Resolved in p01-t02 (`O_WRONLY | O_APPEND
 | O_NOFOLLOW` plus a real-filesystem success assertion). The configured gate's
 `maxAttempts: 2` is exhausted, so readiness waits on an operator decision
 (QS-12 boundary).
+
+Operator disposition (2026-09-27): with the gate's attempts exhausted and its
+last finding resolved in the plan, the operator approved proceeding to
+implementation (QS-12 boundary resolved by explicit operator decision; recorded
+in `implementation.md`). Phase gates and the final review still run.
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
