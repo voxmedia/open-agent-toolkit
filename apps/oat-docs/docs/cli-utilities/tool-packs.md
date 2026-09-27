@@ -246,7 +246,13 @@ Tool-pack setup separates three decisions that do not imply one another:
    `AGENTS.md`, append an absent managed `OAT tools` section to an existing
    one, or print a manual patch when that section exists but differs. Use
    `--project-guidance` to accept or `--no-project-guidance` to decline on
-   `oat init --setup`, `oat init tools`, and `oat tools install` flows. The
+   `oat init`, `oat init tools`, and `oat tools install`, including every
+   per-pack subcommand such as `oat tools install docs --project-guidance`:
+   the `OAT tools` block describes every installed pack, so any pack install
+   can write it. The `workflows` pack also offers guidance without the flag;
+   other pack commands plan it only when the flag is given. `oat init` without
+   `--setup` applies an explicit `--project-guidance` for the packs already
+   installed, because guided setup is not there to do it. The
    interactive prompt defaults to decline. Non-interactive runs perform no
    guidance write unless `--project-guidance` is present and report the exact
    opt-in command instead. When `AGENTS.md` already exists or is a contained

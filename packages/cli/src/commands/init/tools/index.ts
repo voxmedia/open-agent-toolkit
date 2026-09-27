@@ -980,6 +980,31 @@ async function planAndApplyProjectGuidanceAfterInstall(
   }
 }
 
+/**
+ * Plans and applies the OAT tools guidance block for the packs already
+ * installed, without installing or upgrading anything. `oat init` uses it to
+ * honor `--project-guidance` when guided setup does not run.
+ */
+export async function applyProjectGuidanceForInstalledPacks(
+  context: CommandContext,
+  projectRoot: string | null,
+  explicitChoice: boolean,
+  overrides: Partial<InitToolsDependencies> = {},
+): Promise<AgentsGuidancePlan> {
+  const dependencies: InitToolsDependencies = {
+    ...DEFAULT_DEPENDENCIES,
+    ...overrides,
+  };
+  const assetsRoot = await dependencies.resolveAssetsRoot();
+  return planAndApplyProjectGuidanceAfterInstall(
+    context,
+    assetsRoot,
+    projectRoot,
+    explicitChoice,
+    dependencies,
+  );
+}
+
 function initProviderVisibility(
   syncScopes: readonly ConcreteScope[],
 ): ProviderVisibilityEvidence | null {
@@ -1791,10 +1816,9 @@ function createReconciledPackCommand(
   };
   const base = new Command(pack).description(descriptions[pack]);
   const scopedCommand = pack === 'core' ? base : withScopeOption(base);
-  const packCommand =
-    pack === 'workflows'
-      ? withProjectGuidanceOptions(scopedCommand)
-      : scopedCommand;
+  // Every pack command acts on --project-guidance: the OAT tools block
+  // describes every installed pack, so any pack install can plan it.
+  const packCommand = withProjectGuidanceOptions(scopedCommand);
   return packCommand
     .allowUnknownOption(false)
     .action(async (_options: unknown, command: Command) => {
@@ -1805,10 +1829,7 @@ function createReconciledPackCommand(
       let selection: PackLifecycleOutcome['selection'] | null = null;
       let providerContexts: ProviderScopeContext[] = [];
       try {
-        const explicitProjectGuidance =
-          pack === 'workflows'
-            ? commandProjectGuidanceChoice(command)
-            : undefined;
+        const explicitProjectGuidance = commandProjectGuidanceChoice(command);
         const assetsRoot = await dependencies.resolveAssetsRoot();
         const explicitScope =
           command.getOptionValueSourceWithGlobals('scope') === 'cli';
@@ -1941,8 +1962,10 @@ function createReconciledPackCommand(
             .filter(({ plan }) => plan.operations.length > 0)
             .map(({ request }) => request.scope),
         );
+        // `workflows` offers guidance on every run (prompting when
+        // interactive); other packs plan it only when the flag is given.
         const projectGuidance =
-          pack === 'workflows'
+          pack === 'workflows' || explicitProjectGuidance !== undefined
             ? await planAndApplyProjectGuidanceAfterInstall(
                 context,
                 assetsRoot,

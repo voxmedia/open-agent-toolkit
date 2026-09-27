@@ -124,11 +124,16 @@ import {
 } from './detect-docs';
 import {
   type ToolPack,
+  applyProjectGuidanceForInstalledPacks,
   createInitToolsCommand,
   runInitToolsWithDefaults,
 } from './tools';
 import {
+  type AgentsGuidancePlan,
   commandProjectGuidanceChoice,
+  isProjectGuidanceIncomplete,
+  reportableProjectGuidance,
+  reportProjectGuidancePlan,
   withProjectGuidanceOptions,
 } from './tools/project-guidance';
 
@@ -276,6 +281,14 @@ interface InitDependencies {
     explicitProjectGuidance?: boolean,
   ) => Promise<ToolPack[]>;
   runProviderSync: (projectRoot: string) => Promise<void>;
+  /**
+   * Applies accepted OAT tools guidance for the already-installed packs when
+   * `--project-guidance` is given and guided setup does not run.
+   */
+  applyProjectGuidance: (
+    context: CommandContext,
+    projectRoot: string | null,
+  ) => Promise<AgentsGuidancePlan>;
 }
 
 interface InitScopeSummary {
@@ -297,6 +310,8 @@ interface InitJsonPayload {
    * therefore restamped by this run.
    */
   manifestVersionRestamps: ManifestVersionRestamp<ConcreteScope>[];
+  /** Present only when `--project-guidance` was applied without setup. */
+  projectGuidance?: ReturnType<typeof reportableProjectGuidance>;
 }
 
 async function ensureCanonicalDirectories(
@@ -488,6 +503,8 @@ function createDependencies(): InitDependencies {
     applyNativeSkillDisposition,
     runGuidedSetup: runGuidedSetupImpl,
     runToolPacks: runInitToolsWithDefaults,
+    applyProjectGuidance: (context, projectRoot) =>
+      applyProjectGuidanceForInstalledPacks(context, projectRoot, true),
     async runProviderSync(projectRoot: string) {
       execSync('oat sync --scope project', {
         cwd: projectRoot,
@@ -1282,6 +1299,18 @@ async function runInitCommand(
     projectRoot,
     hookFlag,
   );
+  const freshInit = projectRoot !== null && !oatDirExistedBefore;
+  const setupMayRun = !!setupFlag || (context.interactive && freshInit);
+  // Guided setup owns guidance when it runs. Otherwise an explicit
+  // --project-guidance is applied directly for the installed packs, so the
+  // flag is never silently dropped (--no-project-guidance needs no write).
+  let directGuidance: AgentsGuidancePlan | null = null;
+  if (explicitProjectGuidance === true && !setupMayRun) {
+    directGuidance = await dependencies.applyProjectGuidance(
+      context,
+      projectRoot,
+    );
+  }
   if (context.json) {
     const payload: InitJsonPayload = {
       scope: context.scope,
@@ -1297,14 +1326,16 @@ async function runInitCommand(
       hookInstalled,
       scopes: scopeSummaries,
       manifestVersionRestamps,
+      ...(directGuidance
+        ? { projectGuidance: reportableProjectGuidance(directGuidance) }
+        : {}),
     };
     context.logger.json(payload);
   }
 
   process.exitCode = 0;
 
-  const freshInit = projectRoot !== null && !oatDirExistedBefore;
-  if (setupFlag || (context.interactive && freshInit)) {
+  if (setupMayRun) {
     let shouldRunSetup = !!setupFlag;
     if (!shouldRunSetup && freshInit) {
       shouldRunSetup = await dependencies.confirmAction(
@@ -1322,6 +1353,20 @@ async function runInitCommand(
           explicitProjectGuidance,
         );
       }
+    } else if (explicitProjectGuidance === true) {
+      directGuidance = await dependencies.applyProjectGuidance(
+        context,
+        projectRoot,
+      );
+    }
+  }
+
+  if (directGuidance) {
+    if (!context.json) {
+      reportProjectGuidancePlan(context.logger, directGuidance);
+    }
+    if (isProjectGuidanceIncomplete(directGuidance)) {
+      process.exitCode = 1;
     }
   }
 }

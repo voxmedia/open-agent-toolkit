@@ -5,6 +5,7 @@ import type {
   MultiSelectChoice,
   SelectChoice,
 } from '@commands/shared/shared.prompts';
+import { createToolsInstallCommand } from '@commands/tools/install';
 import type { PackLifecycleRequest } from '@commands/tools/shared/pack-lifecycle';
 import { createToolsUpdateCommand } from '@commands/tools/update';
 import type { Scope } from '@shared/types';
@@ -2021,6 +2022,121 @@ describe('createInitToolsCommand', () => {
         projectGuidance: { action: 'create' },
       });
       expect(process.exitCode).toBe(0);
+    },
+  );
+
+  describe.each(['init tools', 'tools install'] as const)(
+    '--project-guidance on non-workflows pack commands via %s',
+    (entryPoint) => {
+      const nonWorkflowsPacks = [
+        'core',
+        'ideas',
+        'docs',
+        'project-management',
+        'utility',
+        'research',
+        'brainstorm',
+      ] as const;
+
+      async function runEntryPoint(
+        command: Command,
+        args: string[],
+        globalArgs: string[],
+      ): Promise<void> {
+        if (entryPoint === 'init tools') {
+          await runCommand(command, args, globalArgs);
+          return;
+        }
+        const program = new Command()
+          .name('oat')
+          .option('--json')
+          .option('--verbose')
+          .option('--scope <scope>')
+          .option('--cwd <path>')
+          .exitOverride();
+        const tools = new Command('tools');
+        tools.addCommand(
+          createToolsInstallCommand(undefined, {}, () => command),
+        );
+        program.addCommand(tools);
+        await program.parseAsync(
+          [...globalArgs, 'tools', 'install', ...args, '--no-sync'],
+          { from: 'user' },
+        );
+      }
+
+      it.each(nonWorkflowsPacks)(
+        'plans and writes the OAT tools guidance block for %s',
+        async (pack) => {
+          const { command, capture, upsertAgentsMdSection } = createHarness({
+            interactive: false,
+            useLifecycle: true,
+            toolsByScope: { project: [], user: [] },
+          });
+
+          await runEntryPoint(
+            command,
+            [pack, '--project-guidance'],
+            ['--json', '--scope', 'user'],
+          );
+
+          expect(upsertAgentsMdSection).toHaveBeenCalledTimes(1);
+          expect(upsertAgentsMdSection).toHaveBeenCalledWith(
+            '/tmp/workspace',
+            'tools',
+            expect.stringContaining(`**${pack}**`),
+            { removeSectionKeys: ['workflows'] },
+          );
+          expect(capture.jsonPayloads.at(-1)).toMatchObject({
+            status: 'ok',
+            pack,
+            projectGuidance: { action: 'create' },
+          });
+          expect(process.exitCode).toBe(0);
+        },
+      );
+
+      it.each(nonWorkflowsPacks)(
+        'honors --no-project-guidance for %s without writing',
+        async (pack) => {
+          const { command, capture, upsertAgentsMdSection } = createHarness({
+            interactive: false,
+            useLifecycle: true,
+            toolsByScope: { project: [], user: [] },
+          });
+
+          await runEntryPoint(
+            command,
+            [pack, '--no-project-guidance'],
+            ['--json', '--scope', 'user'],
+          );
+
+          expect(upsertAgentsMdSection).not.toHaveBeenCalled();
+          expect(capture.jsonPayloads.at(-1)).toMatchObject({
+            status: 'ok',
+            projectGuidance: { action: 'declined' },
+          });
+          expect(process.exitCode).toBe(0);
+        },
+      );
+
+      it('leaves guidance unplanned for a non-workflows pack without the flag', async () => {
+        const { command, capture, confirmAction, upsertAgentsMdSection } =
+          createHarness({
+            interactive: false,
+            useLifecycle: true,
+            toolsByScope: { project: [], user: [] },
+          });
+
+        await runEntryPoint(command, ['docs'], ['--json', '--scope', 'user']);
+
+        expect(upsertAgentsMdSection).not.toHaveBeenCalled();
+        expect(confirmAction).not.toHaveBeenCalled();
+        expect(capture.jsonPayloads.at(-1)).not.toHaveProperty(
+          'projectGuidance',
+        );
+        expect(process.exitCode).toBe(0);
+      });
     },
   );
 

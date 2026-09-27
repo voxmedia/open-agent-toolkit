@@ -34,6 +34,7 @@ import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createInitCommand, type InitStrayCandidate } from './index';
+import type { AgentsGuidancePlan } from './tools/project-guidance';
 
 interface HarnessOptions {
   interactive?: boolean;
@@ -182,6 +183,7 @@ function createHarness(options: HarnessOptions = {}): {
   uninstallHook: ReturnType<typeof vi.fn>;
   runGuidedSetup: ReturnType<typeof vi.fn>;
   runToolPacks: ReturnType<typeof vi.fn>;
+  applyProjectGuidance: ReturnType<typeof vi.fn>;
   addLocalPaths: ReturnType<typeof vi.fn>;
   applyGitignore: ReturnType<typeof vi.fn>;
 } {
@@ -247,6 +249,18 @@ function createHarness(options: HarnessOptions = {}): {
   const uninstallHook = vi.fn(async () => undefined);
   const dirExistsFn = vi.fn(async () => options.oatDirExists ?? true);
   const runGuidedSetup = vi.fn(async () => undefined);
+  const applyProjectGuidance = vi.fn(
+    async (): Promise<AgentsGuidancePlan> => ({
+      repoRoot: '/tmp/workspace',
+      target: '/tmp/workspace/AGENTS.md',
+      action: 'create',
+      sectionKey: 'tools',
+      body: '## Tool Packs',
+      legacySectionAction: 'remove',
+      reason: 'Accepted project guidance created.',
+      choice: { choice: 'accepted', source: 'flag' },
+    }),
+  );
   const runToolPacks = vi.fn(
     async () => options.toolPacksResult ?? ['ideas', 'workflows', 'utility'],
   );
@@ -368,6 +382,7 @@ function createHarness(options: HarnessOptions = {}): {
     addLocalPaths: addLocalPathsFn,
     applyGitignore: applyGitignoreFn,
     runProviderSync: vi.fn(async () => undefined),
+    applyProjectGuidance,
     // Guided-setup tests must not shell out: production detectDefaultBranch
     // runs `gh repo view` with a 10s timeout, which exceeds Vitest's 5s
     // default and flakes in CI where `gh` is authenticated.
@@ -416,6 +431,7 @@ function createHarness(options: HarnessOptions = {}): {
     uninstallHook,
     runGuidedSetup,
     runToolPacks,
+    applyProjectGuidance,
     addLocalPaths: addLocalPathsFn,
     applyGitignore: applyGitignoreFn,
     applyOatCoreGitattributes,
@@ -2169,6 +2185,116 @@ config_file = "agents/reviewer.toml"
         true,
       );
     });
+
+    it.each([false, true])(
+      'applies --project-guidance without --setup on a non-fresh repo in json=%s mode',
+      async (json) => {
+        const { capture, command, runGuidedSetup, applyProjectGuidance } =
+          createHarness({
+            interactive: false,
+            hookInstalled: true,
+            oatDirExists: true,
+          });
+
+        await runInitCommand(command, {
+          globalArgs: [...(json ? ['--json'] : []), '--scope', 'project'],
+          commandArgs: ['--project-guidance'],
+        });
+
+        expect(runGuidedSetup).not.toHaveBeenCalled();
+        expect(applyProjectGuidance).toHaveBeenCalledTimes(1);
+        expect(applyProjectGuidance).toHaveBeenCalledWith(
+          expect.objectContaining({ json }),
+          '/tmp/workspace',
+        );
+        if (json) {
+          expect(capture.jsonPayloads.at(-1)).toMatchObject({
+            projectGuidance: {
+              action: 'create',
+              choice: { choice: 'accepted' },
+            },
+          });
+        } else {
+          expect(capture.info.join('\n')).toContain('Project guidance: create');
+        }
+        expect(process.exitCode).toBe(0);
+      },
+    );
+
+    it('reports a manual guidance patch from init without --setup as a non-zero exit', async () => {
+      const { capture, command, applyProjectGuidance } = createHarness({
+        interactive: false,
+        hookInstalled: true,
+        oatDirExists: true,
+      });
+      applyProjectGuidance.mockResolvedValueOnce({
+        repoRoot: '/tmp/workspace',
+        target: '/tmp/workspace/AGENTS.md',
+        action: 'manual-required',
+        sectionKey: 'tools',
+        body: '## Tool Packs',
+        legacySectionAction: 'remove',
+        reason: 'Accepted project guidance requires the reported manual patch.',
+        choice: { choice: 'accepted', source: 'flag' },
+        manualPatch: {
+          target: 'AGENTS.md',
+          managedBlock: '<!-- OAT tools -->\nTools\n<!-- END OAT tools -->',
+          legacyBlockAction: 'preserve',
+          instructions: ['Open AGENTS.md.'],
+        },
+      });
+
+      await runInitCommand(command, {
+        globalArgs: ['--scope', 'project'],
+        commandArgs: ['--project-guidance'],
+      });
+
+      expect(capture.warn.join('\n')).toContain(
+        'Project guidance: manual-required',
+      );
+      expect(capture.info.join('\n')).toContain('Managed block:');
+      expect(process.exitCode).toBe(1);
+    });
+
+    it('applies --project-guidance after a declined fresh-init setup prompt', async () => {
+      const { command, runGuidedSetup, applyProjectGuidance } = createHarness({
+        interactive: true,
+        hookInstalled: true,
+        oatDirExists: false,
+        confirmResponses: [false],
+        providerSelectResponses: [['claude']],
+      });
+
+      await runInitCommand(command, {
+        globalArgs: ['--scope', 'project'],
+        commandArgs: ['--project-guidance'],
+      });
+
+      expect(runGuidedSetup).not.toHaveBeenCalled();
+      expect(applyProjectGuidance).toHaveBeenCalledTimes(1);
+    });
+
+    it.each([
+      ['--setup owns guidance', ['--setup', '--project-guidance']],
+      ['--no-project-guidance needs no write', ['--no-project-guidance']],
+      ['no flag is given', []],
+    ])(
+      'does not apply guidance directly when %s',
+      async (_case, commandArgs) => {
+        const { command, applyProjectGuidance } = createHarness({
+          interactive: false,
+          hookInstalled: true,
+          oatDirExists: true,
+        });
+
+        await runInitCommand(command, {
+          globalArgs: ['--scope', 'project'],
+          commandArgs,
+        });
+
+        expect(applyProjectGuidance).not.toHaveBeenCalled();
+      },
+    );
 
     it('rejects conflicting project guidance flags', async () => {
       const { command } = createHarness({ interactive: false });

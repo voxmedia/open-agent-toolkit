@@ -65,8 +65,11 @@ Hook install note:
 # Explicit guided setup on an existing repo
 oat init --setup --scope project
 
-# Install capabilities and create or propose repository guidance
+# Install capabilities and create, append, or propose repository guidance
 oat init --setup --project-guidance
+
+# Write guidance for the packs already installed, without guided setup
+oat init --project-guidance
 
 # Fresh init — guided setup is offered automatically
 oat init --scope project

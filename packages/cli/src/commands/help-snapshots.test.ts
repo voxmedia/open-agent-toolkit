@@ -198,8 +198,8 @@ describe('help output snapshots', () => {
       Options:
         --scope <scope>        Limit execution scope (choices: "project", "user",
                                "all", default: "all")
-        --project-guidance     Create missing or print manual repository AGENTS.md
-                               tool guidance
+        --project-guidance     Create or append repository AGENTS.md tool guidance,
+                               or print a manual patch
         --no-project-guidance  Decline repository AGENTS.md tool guidance
         --hook                 Install optional pre-commit hook
         --no-hook              Skip optional pre-commit hook install
@@ -1415,8 +1415,8 @@ describe('help output snapshots', () => {
       project-management, research, brainstorm)
 
       Options:
-        --project-guidance            Create missing or print manual repository
-                                      AGENTS.md tool guidance
+        --project-guidance            Create or append repository AGENTS.md tool
+                                      guidance, or print a manual patch
         --no-project-guidance         Decline repository AGENTS.md tool guidance
         --scope <scope>               Limit execution scope (choices: "project",
                                       "user", "all", default: "all")
@@ -1430,7 +1430,7 @@ describe('help output snapshots', () => {
         --cwd <path>                  Override working directory
 
       Commands:
-        core                          Install OAT core skills (diagnostics, docs)
+        core [options]                Install OAT core skills (diagnostics, docs)
         ideas [options]               Install OAT ideas skills, templates, and idea
                                       workflow files
         docs [options]                Install OAT docs workflow skills

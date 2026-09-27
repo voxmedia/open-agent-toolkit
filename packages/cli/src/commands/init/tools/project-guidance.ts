@@ -1,6 +1,9 @@
 import { join } from 'node:path';
 
-import type { AgentsMdManualPatch } from '@commands/shared/agents-md';
+import {
+  type AgentsMdManualPatch,
+  formatAgentsMdGuidanceResult,
+} from '@commands/shared/agents-md';
 import type { PromptContext } from '@commands/shared/shared.prompts';
 import type { PackName } from '@commands/tools/shared/types';
 import { CliError } from '@errors/index';
@@ -52,6 +55,31 @@ export function reportableProjectGuidance(plan: AgentsGuidancePlan) {
     reason: plan.reason,
     ...(plan.manualPatch ? { manualPatch: plan.manualPatch } : {}),
   };
+}
+
+export function isProjectGuidanceIncomplete(plan: AgentsGuidancePlan): boolean {
+  return plan.action === 'blocked' || plan.action === 'manual-required';
+}
+
+/** Prints one guidance plan in the human form every guidance surface uses. */
+export function reportProjectGuidancePlan(
+  logger: { info: (message: string) => void; warn: (message: string) => void },
+  plan: AgentsGuidancePlan,
+): void {
+  const message = `Project guidance: ${plan.action} — ${plan.reason}`;
+  if (!isProjectGuidanceIncomplete(plan)) {
+    logger.info(message);
+    return;
+  }
+  logger.warn(message);
+  if (plan.manualPatch) {
+    for (const line of formatAgentsMdGuidanceResult({
+      action: 'manual-required',
+      manualPatch: plan.manualPatch,
+    })) {
+      logger.info(line);
+    }
+  }
 }
 
 const PACK_DESCRIPTIONS: Record<PackName, string> = {
@@ -146,7 +174,7 @@ export function withProjectGuidanceOptions<TCommand extends Command>(
   if (!command.options.some(({ long }) => long === '--project-guidance')) {
     command.option(
       '--project-guidance',
-      'Create missing or print manual repository AGENTS.md tool guidance',
+      'Create or append repository AGENTS.md tool guidance, or print a manual patch',
     );
   }
   if (!command.options.some(({ long }) => long === '--no-project-guidance')) {
