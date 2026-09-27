@@ -24,20 +24,20 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                         | Status      | Tasks | Completed |
-| --------------------------------------------- | ----------- | ----- | --------- |
-| p01 — Bundled skill and script fixes          | in_progress | 3     | 0/3       |
-| p02 — CLI sync, config, and tools correctness | in_progress | 5     | 0/5       |
-| p03 — Managed Claude dispatch-record input    | pending     | 5     | 0/5       |
-| p04 — Release and backlog fan-in              | pending     | 3     | 0/3       |
+| Phase                                         | Status    | Tasks | Completed |
+| --------------------------------------------- | --------- | ----- | --------- |
+| p01 — Bundled skill and script fixes          | completed | 5     | 5/5       |
+| p02 — CLI sync, config, and tools correctness | completed | 6     | 6/6       |
+| p03 — Managed Claude dispatch-record input    | pending   | 5     | 0/5       |
+| p04 — Release and backlog fan-in              | pending   | 3     | 0/3       |
 
-**Total:** 0/16 tasks completed
+**Total:** 11/19 tasks completed
 
 ---
 
 ## Phase 1: Bundled skill and script fixes
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-09-27
 
 ### Task p01-t01: Stop resolve-providers.sh aborting when the last auto-detect test is false
@@ -82,8 +82,14 @@ observation recorded under p01-t01).
 
 ### Task p01-t05: (review) Narrow trailing text after a backtick-wrapped audit stamp
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 5afc6f703
+
+- Failing-first: three new quoted-shape cases failed against `3778dfc88`.
+- Deferred Low (recorded, not fixed): a blockquote line with a
+  backtick-wrapped stamp and a bullet under a flat `## High` heading are still
+  read as audit lines. No false failures in the 137-artifact probe; revisit if
+  a real gate artifact trips on either shape.
 
 **Review received (p01 round 2, auto):** `reviews/archived/p01-review-2026-09-27T052717Z.md`
 at head `3778dfc88`: 0 Critical, 0 High, 0 Medium, 2 Low; passed. Low 1
@@ -97,7 +103,7 @@ over 137 local gate artifacts found no false failures.
 
 ## Phase 2: CLI sync, config, and tools correctness
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-09-27
 
 ### Task p02-t01: Name the file in canonical rule parse errors and accept alwaysApply
@@ -228,6 +234,19 @@ converted to p02-t06.
 - p02 `Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-medium`
 - Dispatch policy: high; selected=claude-opus-5-5/medium; cap=claude-opus-5-5/high (claude, enforced — native variant oat-phase-implementer-claude-claude-opus-5-5-medium)
 
+#### Group [p01, p02] outcome
+
+| Phase | Verdict | Task commits                                                                           | Review rounds                                          | Fix loops            | Merge                          |
+| ----- | ------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------ | -------------------- | ------------------------------ |
+| p01   | pass    | `0d24884ff`, `972f8cb91`, `9bf1f8325`, `3778dfc88` (p01-t04), `5afc6f703` (p01-t05)    | 2 (round 1: 0C/0H/2M/3L; round 2: 0C/0H/0M/2L, passed) | 2 (p01-t04, p01-t05) | `51e219eed` (`--no-ff`, clean) |
+| p02   | pass    | `f19a8d5bc`, `eafaf8a51`, `41bec1d0d`, `67e1f4e0d`, `9541287ad`, `8c4102a02` (p02-t06) | 2 (round 1: 0C/0H/2M/3L; round 2: clean, passed)       | 1 (p02-t06)          | `500f25fe8` (`--no-ff`, clean) |
+
+- Reviewer launches: `triage-wave-p01-review`, `triage-wave-p01-rereview`,
+  `triage-wave-p02-review`, `triage-wave-p02-rereview`, all
+  `oat-reviewer-claude-claude-opus-5-5-high`, managed record `validated-only`,
+  reconnaissance not attempted.
+- Outstanding: the Linux branch of the resolve-providers EOF test is verified
+on the PR's CI run.
 <!-- orchestration-runs-end -->
 
 ---
