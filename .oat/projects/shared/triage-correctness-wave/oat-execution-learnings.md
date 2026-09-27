@@ -35,3 +35,9 @@ Append-only log of reusable observations from this autonomous run.
 **Observation:** `oat-worktree-bootstrap-auto` Step 4 runs `oat sync --scope all`, which rewrites user-scope provider directories. The p01 and p02 worktrees were bootstrapped with the repository-declared `pnpm run worktree:init` (which runs project sync) and the sync-manifest version refresh was restored, leaving both worktrees clean at the expected base.
 **Impact:** No user-scope provider state was changed by phase bootstrap.
 **Recommendation:** Consider scoping the bootstrap skill's sync to `--scope project` for phase worktrees.
+
+## 2026-09-27T05:20:00Z - gotcha - Root hand-expanded a short SHA into the phase scope
+
+**Observation:** The root copied the expected base as a hand-expanded 40-character SHA instead of the value from `git rev-parse`, so both phase briefs named a nonexistent commit. The p02 implementer correctly blocked at its base check; the root corrected both briefs through the accepted handles as a context-only continuation.
+**Impact:** One wasted p02 round trip; no work lost.
+**Recommendation:** Populate `phase_base_head` and `expected_base_sha` only by pasting `git rev-parse HEAD` output (or reading a file written by it).

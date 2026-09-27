@@ -164,7 +164,7 @@ oat_generated: false
 
 - **Worktrees:** `.worktrees/triage-wave-p01` (`wave/2026-09-26-backlog-p01`)
   and `.worktrees/triage-wave-p02` (`wave/2026-09-26-backlog-p02`), both at
-  expected base `9542a94567ba0d7ae8ef8a8e1bd3ee1d6ed7ed43`, bootstrapped with
+  expected base `9542a9456a25f76dbcc5ae542df452a43e530b18`, bootstrapped with
   `pnpm run worktree:init` (see execution learnings for the sync-scope
   deviation).
 
