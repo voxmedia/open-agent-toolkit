@@ -29,9 +29,9 @@ oat_generated: false
 | p01 — Bundled skill and script fixes          | completed | 5     | 5/5       |
 | p02 — CLI sync, config, and tools correctness | completed | 6     | 6/6       |
 | p03 — Managed Claude dispatch-record input    | completed | 8     | 8/8       |
-| p04 — Release and backlog fan-in              | pending   | 3     | 0/3       |
+| p04 — Release and backlog fan-in              | completed | 3     | 3/3       |
 
-**Total:** 19/22 tasks completed
+**Total:** 22/22 tasks completed
 
 ---
 
@@ -249,18 +249,18 @@ three concerns were assessed as acceptable.
 
 ## Phase 4: Release and backlog fan-in
 
-**Status:** pending
+**Status:** completed
 **Started:** -
 
 ### Task p04-t01: Bump the lockstep public package versions
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** ba3fa25ab
 
 ### Task p04-t02: Archive the shipped backlog items and reconcile the completed recon item
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** a90da4f49
 
 ### Backlog acceptance evidence
 
@@ -346,8 +346,8 @@ All ten items meet every criterion and were archived with
 
 ### Task p04-t03: Run the full Definition of Done
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 74bcdf452
 
 ### Definition of Done results
 
