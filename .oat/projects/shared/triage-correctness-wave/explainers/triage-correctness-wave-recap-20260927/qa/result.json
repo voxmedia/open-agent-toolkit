@@ -1,0 +1,36 @@
+{
+  "artifactSha256": "sha256:468fb262d7d09626bc3cbb35a9af2dcdf9f509c76c4e8de12c814cfd22d3fe89",
+  "checks": {
+    "parse": {
+      "status": "pass"
+    },
+    "requiredNarrative": {
+      "status": "pass"
+    },
+    "structure": {
+      "status": "pass"
+    },
+    "sourceDumping": {
+      "status": "pass"
+    },
+    "shellScripts": {
+      "status": "pass"
+    },
+    "ledgerToPage": {
+      "status": "pass"
+    },
+    "pageToLedger": {
+      "status": "pass"
+    }
+  },
+  "rung": "host",
+  "screenshots": [
+    "qa/320.png",
+    "qa/768.png",
+    "qa/1440.png"
+  ],
+  "visual": {
+    "verdict": "pass",
+    "notes": "Host Chrome (DevTools device-metrics emulation) at true 320, 768, and 1440 CSS px; full-page segments inspected. No page-level horizontal overflow (scrollWidth equals viewport at every width); all six required sections render; headings readable at 320; no overlapping text. Wide tables and the lane diagram scroll inside bounded containers on narrow widths by design."
+  }
+}
