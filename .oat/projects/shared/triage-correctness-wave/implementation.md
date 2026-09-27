@@ -162,6 +162,23 @@ oat_generated: false
   (`review_type: code`, `exit_nonzero_on: high`); configured targets resolve to
   `codex-6-sol-xhigh` by priority with same-family avoidance.
 
+- **Worktrees:** `.worktrees/triage-wave-p01` (`wave/2026-09-26-backlog-p01`)
+  and `.worktrees/triage-wave-p02` (`wave/2026-09-26-backlog-p02`), both at
+  expected base `9542a94567ba0d7ae8ef8a8e1bd3ee1d6ed7ed43`, bootstrapped with
+  `pnpm run worktree:init` (see execution learnings for the sync-scope
+  deviation).
+
+#### Dispatch records
+
+| Request ID             | Scope | Role        | Launch   | Target                                                | Selection                                                                           | Terminal outcome |
+| ---------------------- | ----- | ----------- | -------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------- | ---------------- |
+| `triage-wave-p01-impl` | p01   | implementer | accepted | `oat-phase-implementer-claude-claude-opus-5-5-medium` | native-catalog; candidate `claude-opus-5-5/medium`; managed record `validated-only` | pending          |
+| `triage-wave-p02-impl` | p02   | implementer | accepted | `oat-phase-implementer-claude-claude-opus-5-5-medium` | native-catalog; candidate `claude-opus-5-5/medium`; managed record `validated-only` | pending          |
+
+- p01 `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-medium`
+- p02 `Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-medium`
+- Dispatch policy: high; selected=claude-opus-5-5/medium; cap=claude-opus-5-5/high (claude, enforced — native variant oat-phase-implementer-claude-claude-opus-5-5-medium)
+
 <!-- orchestration-runs-end -->
 
 ---
