@@ -1287,6 +1287,7 @@ git commit -m "chore(p04-t03): record definition-of-done gate results"
 ### Task p04-t04: (review) Close final review findings M1, L1, L2
 
 Source: `reviews/archived/final-review-2026-09-27T070931Z.md` (final code
+| final | code | passed | 2026-09-27 | reviews/archived/final-review-2026-09-27T071422Z.md | a44fcfe5c1685dc5449757f001e06694d8ab127d | auto | - |
 review, 0 Critical, 0 High, 1 Medium, 3 Low; L3 is root bookkeeping).
 
 **Files:** `packages/cli/src/commands/gate/index.ts` (`REVIEW_GATE_CONTEXT_NOTE`
@@ -1324,7 +1325,7 @@ retro banner count for the new Step 7.
 | p03    | code     | passed          | 2026-09-27 | reviews/archived/p03-review-2026-09-27T064005Z.md           | de48e25a55b2e2e0af608a1f45dc0c7eb50d3715 | gate       | codex-6-sol-xhigh |
 | p04    | code     | passed          | 2026-09-27 | reviews/archived/p04-review-2026-09-27T065739Z.md           | 74bcdf452d2d35427714fcb67db25e66ec74937b | auto       | -                 |
 | p04    | code     | passed          | 2026-09-27 | reviews/archived/p04-review-2026-09-27T070131Z.md           | 25a21073c17ad711ab63cbeb685197ee43b37026 | gate       | codex-6-sol-xhigh |
-| final  | code     | fixes_added     | 2026-09-27 | reviews/archived/final-review-2026-09-27T070931Z.md         | db06db72de18b2a5743b6813ace78afa540e4a8a | auto       | -                 |
+| final  | code     | fixes_completed | 2026-09-27 | reviews/archived/final-review-2026-09-27T070931Z.md         | db06db72de18b2a5743b6813ace78afa540e4a8a | auto       | -                 |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
 | design | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
 | plan   | artifact | fixes_completed | 2026-09-27 | structured (no artifact)                                    | -                                        | auto       | -                 |
