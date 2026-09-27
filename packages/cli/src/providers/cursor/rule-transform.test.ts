@@ -77,4 +77,46 @@ activation: manual
     expect(rendered.startsWith('---')).toBe(false);
     expect(parseCursorRuleToCanonical(rendered)).toBe(canonical);
   });
+
+  it('names the canonical file in parse errors', () => {
+    expect(() =>
+      transformCanonicalToCursorRule(
+        `---
+activation: sometimes
+---
+
+# Bad`,
+        '.agents/rules/bad.md',
+      ),
+    ).toThrow(/\.agents\/rules\/bad\.md/);
+    expect(() =>
+      transformCanonicalToCursorRule('# Bare', '.agents/rules/bare.md'),
+    ).toThrow(/\.agents\/rules\/bare\.md/);
+    expect(() =>
+      transformCanonicalToCursorRule(
+        `---
+activation: sometimes
+---
+
+# Bad`,
+        '.agents/rules/bad.md',
+      ),
+    ).not.toThrow(/<inline>/);
+  });
+
+  it('renders an alwaysApply: true rule without activation as always', () => {
+    // Provenance: GitHub issue #316 (\`argent init\` writes this shape).
+    const rendered = transformCanonicalToCursorRule(
+      `---
+description: Argent agent guidance
+alwaysApply: true
+---
+
+# Argent`,
+      '.agents/rules/argent.md',
+    );
+
+    expect(rendered).toContain('# Argent');
+    expect(rendered).toContain('alwaysApply: true');
+  });
 });

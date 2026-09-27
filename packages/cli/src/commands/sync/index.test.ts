@@ -1626,6 +1626,24 @@ describe('createSyncCommand', () => {
     expect(capture.jsonPayloads).toHaveLength(0);
   });
 
+  it('fails the run naming every invalid canonical rule and applies nothing', async () => {
+    const ruleError = new CliError(
+      'Sync stopped: 2 invalid canonical rules. Fix them and re-run oat sync:\n' +
+        '  - Frontmatter field "activation" in .agents/rules/a.md must be one of always, glob, agent-requested, manual.\n' +
+        '  - Rule markdown in .agents/rules/b.md must include YAML frontmatter.',
+    );
+    const { capture, command, computeSyncPlan, executeSyncPlan } =
+      createHarness();
+    computeSyncPlan.mockRejectedValueOnce(ruleError);
+
+    await expect(
+      runSyncCommand(command, { globalArgs: ['--scope', 'project'] }),
+    ).rejects.toThrow(/\.agents\/rules\/a\.md[\s\S]*\.agents\/rules\/b\.md/);
+
+    expect(executeSyncPlan).not.toHaveBeenCalled();
+    expect(capture.info.join('\n')).not.toContain('No changes required.');
+  });
+
   it('couples the advisory and the manifest restamp for equal, older, and newer versions', async () => {
     // `runSyncApply` derives `shouldRefreshManifestVersion` from the same
     // diagnostic that drives the advisory. With an empty plan the restamp is

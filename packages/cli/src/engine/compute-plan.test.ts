@@ -3,9 +3,13 @@ import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
 
 import { DEFAULT_SYNC_CONFIG as AUTO_SYNC_CONFIG } from '@config/sync-config';
+import { CliError } from '@errors/index';
 import { computeDirectoryHash } from '@manifest/hash';
 import { createEmptyManifest } from '@manifest/manager';
 import type { Manifest, ManifestEntry } from '@manifest/manifest.types';
+import { transformCanonicalToClaudeRule } from '@providers/claude/rule-transform';
+import { transformCanonicalToCopilotRule } from '@providers/copilot/rule-transform';
+import { transformCanonicalToCursorRule } from '@providers/cursor/rule-transform';
 import type { ProviderAdapter } from '@providers/shared/adapter.types';
 import { afterEach, describe, expect, it } from 'vitest';
 
@@ -717,6 +721,94 @@ describe('computeSyncPlan', () => {
       providerPath: join(root, '.cursor', 'rules', 'react-components.mdc'),
       renderedContent: '# rendered rule\n',
     });
+  });
+
+  it('fails once naming every invalid canonical rule across all rule transforms', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+    tempDirs.push(root);
+    await mkdir(join(root, '.agents', 'rules'), { recursive: true });
+    await mkdir(join(root, '.agents', 'skills', 'skill-one'), {
+      recursive: true,
+    });
+    await writeFile(
+      join(root, '.agents', 'skills', 'skill-one', 'SKILL.md'),
+      '# skill\n',
+      'utf8',
+    );
+    await writeFile(
+      join(root, '.agents', 'rules', 'bad-activation.md'),
+      '---\nactivation: sometimes\n---\n\n# Bad\n',
+      'utf8',
+    );
+    await writeFile(
+      join(root, '.agents', 'rules', 'no-frontmatter.md'),
+      '# No frontmatter\n',
+      'utf8',
+    );
+    await writeFile(
+      join(root, '.agents', 'rules', 'valid.md'),
+      '---\nactivation: always\n---\n\n# Valid\n',
+      'utf8',
+    );
+
+    const ruleAdapter = (
+      name: string,
+      providerDir: string,
+      transformCanonical: (content: string, path?: string) => string,
+    ): ProviderAdapter =>
+      createTestAdapter({
+        name,
+        defaultStrategy: 'symlink',
+        projectMappings: [
+          {
+            contentType: 'skill',
+            canonicalDir: '.agents/skills',
+            providerDir: `${providerDir}/skills`,
+            nativeRead: false,
+          },
+          {
+            contentType: 'rule',
+            canonicalDir: '.agents/rules',
+            providerDir: `${providerDir}/rules`,
+            nativeRead: false,
+            transformCanonical,
+          },
+        ],
+        userMappings: [],
+      });
+
+    const error = await computeSyncPlan({
+      canonical: [
+        createCanonicalEntry(root, 'skill', 'skill-one'),
+        createCanonicalEntry(root, 'rule', 'bad-activation.md'),
+        createCanonicalEntry(root, 'rule', 'no-frontmatter.md'),
+        createCanonicalEntry(root, 'rule', 'valid.md'),
+      ],
+      adapters: [
+        ruleAdapter('claude', '.claude', transformCanonicalToClaudeRule),
+        ruleAdapter('cursor', '.cursor', transformCanonicalToCursorRule),
+        ruleAdapter(
+          'github-copilot',
+          '.github',
+          transformCanonicalToCopilotRule,
+        ),
+      ],
+      manifest: createEmptyManifest(),
+      scope: 'project',
+      config: DEFAULT_SYNC_CONFIG,
+      scopeRoot: root,
+    }).then(
+      () => undefined,
+      (caught: unknown) => caught,
+    );
+
+    expect(error).toBeInstanceOf(CliError);
+    const message = (error as Error).message;
+    expect(message).toMatch(/2 invalid canonical rules/);
+    expect(message.split('.agents/rules/bad-activation.md')).toHaveLength(2);
+    expect(message.split('.agents/rules/no-frontmatter.md')).toHaveLength(2);
+    expect(message).not.toContain('.agents/rules/valid.md');
+    expect(message).not.toContain('<inline>');
   });
 
   it('skips transformed rule copies when rendered provider output already matches', async () => {

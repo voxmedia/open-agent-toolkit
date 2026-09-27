@@ -155,4 +155,46 @@ applyTo: src/{components,pages}/**/*.tsx
       ),
     );
   });
+
+  it('names the canonical file in parse errors', () => {
+    expect(() =>
+      transformCanonicalToCopilotRule(
+        `---
+activation: sometimes
+---
+
+# Bad`,
+        '.agents/rules/bad.md',
+      ),
+    ).toThrow(/\.agents\/rules\/bad\.md/);
+    expect(() =>
+      transformCanonicalToCopilotRule('# Bare', '.agents/rules/bare.md'),
+    ).toThrow(/\.agents\/rules\/bare\.md/);
+    expect(() =>
+      transformCanonicalToCopilotRule(
+        `---
+activation: sometimes
+---
+
+# Bad`,
+        '.agents/rules/bad.md',
+      ),
+    ).not.toThrow(/<inline>/);
+  });
+
+  it('renders an alwaysApply: true rule without activation as always', () => {
+    // Provenance: GitHub issue #316 (\`argent init\` writes this shape).
+    const rendered = transformCanonicalToCopilotRule(
+      `---
+description: Argent agent guidance
+alwaysApply: true
+---
+
+# Argent`,
+      '.agents/rules/argent.md',
+    );
+
+    expect(rendered).toContain('# Argent');
+    expect(rendered).toContain("applyTo: '**'");
+  });
 });
