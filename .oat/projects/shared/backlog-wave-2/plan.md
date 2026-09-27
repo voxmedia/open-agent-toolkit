@@ -161,32 +161,25 @@ Backlog: `BL-260909-fix-the-agents-md-unsafe`.
 - Modify: `packages/cli/src/commands/shared/agents-md.test.ts` (the `it.each`
   "unsafe %s target" block, lines ~296-321)
 
-**Step 1: Record the shared path**
+**Step 1: Isolate (GREEN)**
 
 The block computes `const outside = join(root, '..', 'outside.md')` (line
 ~310), and `root` is a fresh `mkdtemp(tmpdir(), 'agents-md-test-')`, so every
 variant, and every concurrent test process, uses the same `$TMPDIR/outside.md`.
-Try to reproduce the race by running the file in two concurrent processes in a
-loop (for example ten iterations of two backgrounded
-`vitest run src/commands/shared/agents-md.test.ts` invocations) and record the
-result in `implementation.md` whether or not it fails; the race is timing
-dependent, so a green pre-fix run does not block the fix.
-
-**Step 2: Isolate (GREEN)**
 
 Create a second `mkdtemp` directory per variant for the outside target, point
 the `external` symlink at that directory's `outside.md` with a path that still
 leaves `root`, and clean it up with the variant. Remove every other reference to
 the shared `outside.md` path in the file.
 
-**Step 3: Verify**
+**Step 2: Verify**
 
 Run twenty times with explicit exit codes (vitest 4 has no `--repeat`):
 `for i in $(seq 1 20); do HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/shared/agents-md.test.ts > /tmp/agents-md-r$i.log 2>&1; echo "run=$i exit=$?"; done`
 Expected: all twenty exit 0; record the exit codes in `implementation.md`. Also `rg -n "'\.\.', 'outside\.md'|\.\./outside\.md" packages/cli/src/commands/shared/agents-md.test.ts`
 returns no shared-path use.
 
-**Step 4: Commit**
+**Step 3: Commit**
 
 `test(p01-t01): isolate the agents-md unsafe-target fixtures per variant`
 
@@ -246,16 +239,13 @@ trailing newline: the managed block's opening marker still starts its own
 line, and a second `upsertAgentsMdSections` run returns `no-change` with
 exactly one managed block. Inject the concurrent write through a new `open` member on
 `AgentsMdFileSystem` (today it exposes only `lstat`, `readFile`, `readlink`,
-`realpath`, `writeFile`), between planning and the append. (e1) Symlink swap:
-replace `AGENTS.md` with a symlink to a file outside the repository between
-planning and the open; expect `blocked`, zero bytes written, and the outside
-file byte-identical; this pins `O_NOFOLLOW` (prove it by neutralizing
-`O_NOFOLLOW` together with the identity check). (e2) Regular-file swap:
+`realpath`, `writeFile`), between planning and the append. (e) Target swap:
 rename a hard link to a file outside the repository (in a sibling `mkdtemp` on
 the same filesystem) over `AGENTS.md` between planning and the open; expect
 `blocked`, zero bytes written, and the outside file byte-identical; prove it by
-neutralize-and-restore of the `fstat` `dev`/`ino` identity check alone, since
-only that check can reject this swap.
+neutralize-and-restore of the `fstat` `dev`/`ino` identity check, since only
+that check can reject this swap (`O_NOFOLLOW` stays in Step 2 as defense in
+depth without a separate proof).
 (f) Multi-section and legacy cases: tools block absent while the legacy
 `<!-- OAT workflows -->` block is present stays `manual-required` with zero
 writes (append cannot remove the legacy block); in a multi-section write
@@ -490,8 +480,8 @@ Backlog: `BL-260927-make-claude-md-shims-opt` (criterion 1);
 
 **Files:**
 
-- Modify: `packages/cli/src/commands/instructions/instructions.types.ts`
-  (`INSTRUCTION_SYNC_STRATEGIES` gains `none`)
+- Modify: `packages/cli/src/commands/instructions/instructions.types.ts` only if
+  the resolver needs a type; `none` is not added in this task
 - Modify: `packages/cli/src/commands/instructions/instructions.utils.ts` (add
   the config-aware resolver: `--strategy` flag, then
   `documentation.instructionSyncStrategy`, then the built-in default; in this
@@ -510,29 +500,28 @@ set/get/unset` support, following the `instructionPointerExcludes` pattern at
   `validate/validate.ts` (~42-44): remove the Commander
   `.default(DEFAULT_INSTRUCTION_SYNC_STRATEGY)` on `--strategy`, which would
   otherwise always fill the option and hide the config; read the resolved
-  strategy instead, and report the effective strategy and its source (flag,
-  config, or default) in `--json` output
+  strategy instead, and report the effective strategy in `--json` output
 - Modify: tests: `src/config/oat-config.test.ts`, `src/config/resolve.test.ts`,
   `src/commands/config/index.test.ts`, `src/commands/instructions/**/*.test.ts`,
   `src/commands/help-snapshots.test.ts` (`instructions --help` block ~861)
 
 **Step 1: Write tests (RED)**
 
-- Config: the key accepts `none`, `pointer`, `symlink`, `copy`; rejects other
-  values with the existing validation style; `oat config set/get/unset` round
-  trip.
+- Config: the key accepts `pointer`, `symlink`, `copy`; rejects other values
+  (including `none`, which p02-t02 adds together with its behavior) with the
+  existing validation style; `oat config set/get/unset` round trip.
 - Resolution: flag beats config beats default.
 - CLI level (not only the resolver): with `documentation.instructionSyncStrategy:
 copy` in config and no flag, `instructions sync --dry-run --json` and
-  `instructions validate --json` report the effective strategy `copy` with
-  source `config`; with `--strategy symlink` they report `symlink` with source
-  `flag`. This fails before the fix because Commander's default fills the
+  `instructions validate --json` report the effective strategy `copy`; with
+  `--strategy symlink` they report `symlink`. This fails before the fix because Commander's default fills the
   option.
 
 **Step 2: Implement (GREEN)**
 
-Add the key and resolver. `none` is accepted as a value, but its behavior and
-the default flip belong to p02-t02.
+Add the key and resolver for the three existing strategies. Accepting `none`,
+its behavior, and the default flip all land together in p02-t02, so no commit
+exposes a `none` value that still creates shims.
 
 **Step 3: Verify**
 
@@ -574,6 +563,10 @@ With the strategy resolved to `none` (isolated `HOME`, temp repos):
   `@AGENTS.md` → never removed (p02-t03 warns about them).
 - a pointer shim inside an excluded directory or the documentation content
   tree → never removed.
+- a planned shim that is replaced with hand-written content between planning
+  and removal → kept byte-identical and reported; the same for a planned shim
+  replaced by a symlink between planning and removal (inject the change through
+  the sync apply path's filesystem seam).
 
 Negative control: with `pointer` configured, a missing CLAUDE.md is still
 reported as `missing` drift and created by sync, exactly as today; each of
@@ -581,7 +574,9 @@ reported as `missing` drift and created by sync, exactly as today; each of
 
 **Step 2: Implement (GREEN)**
 
-Flip the built-in default to `none` (`DEFAULT_INSTRUCTION_SYNC_STRATEGY`) and
+Add `none` to `INSTRUCTION_SYNC_STRATEGIES` and to the config key's accepted
+values (with the `oat config set` test), flip the built-in default to `none`
+(`DEFAULT_INSTRUCTION_SYNC_STRATEGY`), and
 update existing tests that relied on the implicit `pointer` default to pass
 `--strategy pointer` or configure it. Add `none` handling everywhere the
 strategy is switched on (`sync.ts` ~60-62, `getSyncedDetail`). Add a removal
@@ -590,14 +585,19 @@ unchanged. Removal only ever targets a file named `CLAUDE.md` whose sibling is
 `AGENTS.md`, inside the set the scanner already walks; it never touches
 `CLAUDE.local.md`, `.claude/CLAUDE.md`, files in
 `documentation.instructionPointerExcludes` or the documentation content tree,
-or anything that is not an exact managed shape.
+or anything that is not an exact managed shape. Removal fails closed at apply
+time: immediately before deleting, re-`lstat` the target and re-verify both its
+identity (the `dev`/`ino` or symlink target recorded at planning) and its exact
+managed content; on any change, skip the deletion and report the file as
+changed-since-planning.
 
 **Step 3: Verify**
 
 Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/instructions`
 Expected: green. Prove the hand-written-preservation and foreign-symlink
-controls by neutralizing the exact-shape check, observing the tests fail, and
-restoring.
+controls by neutralizing the exact-shape check, and the changed-since-planning
+control by neutralizing the apply-time re-verification, observing each test
+fail, and restoring.
 
 **Step 4: Commit**
 
@@ -637,9 +637,14 @@ Under `none`:
   content differs after adoption, the kept file is reported with the reason).
 
 Under a configured shim strategy, no leftover warning is emitted and stray
-adoption behaves as today. State in the commit body whether the leftover
-warning covers excluded and documentation trees (recommended: yes, because
-Claude Code's walk does not honor OAT's excludes).
+adoption behaves as today. Leftover detection is a separate, read-only,
+repository-wide walk that is independent of the mutation exclusions
+(`documentation.instructionPointerExcludes` and the documentation content root
+limit removal only, never the warning), because Claude Code's walk does not
+honor OAT's excludes. Add a case with a leftover `CLAUDE.md` in an excluded
+directory and one under the documentation root, asserted at the public command
+boundaries: `instructions sync` (human and `--json`) and
+`instructions validate --json`; p02-t04 pins the doctor surface.
 
 **Step 2: Implement (GREEN)**
 
@@ -670,13 +675,12 @@ Backlog: `BL-260927-make-claude-md-shims-opt` (criteria 4 doctor half, 6).
 - Modify: `.agents/skills/oat-agent-instructions-analyze/references/analysis-artifact-template.md`
   (~124: the "Claude import shim" recommendation row fires only when a shim
   strategy is configured) and `references/quality-checklist.md` (~30, ~47)
-- Verify/pin: `.agents/skills/oat-agent-instructions-analyze/scripts/resolve-providers.sh`
+- Verify: `.agents/skills/oat-agent-instructions-analyze/scripts/resolve-providers.sh`
   (~83) already detects Claude from `.claude/` or from `.oat/sync/config.json`
-  `providers.claude.enabled` (~26, ~62-76) without a root CLAUDE.md; add
-  fixtures to `tests/resolve-providers.test.mjs` that pin both no-shim paths
-  (these are pinning tests and may pass before any change; record that the
-  criterion is met by existing behavior). Change the script only if a fixture
-  fails.
+  `providers.claude.enabled` (~26, ~62-76) without a root CLAUDE.md, and
+  `tests/resolve-providers.test.mjs` (~48-50, "AGENTS.md plus .claude/ only")
+  already proves the `.claude/`-only path; record that the criterion is met by
+  existing behavior. Change the script only if that evidence fails.
 - Modify: `.agents/skills/oat-agent-instructions-apply/SKILL.md` (~207, 243;
   `metadata.version` 1.7.2 → 1.7.3)
 - Modify: version pins (`packages/cli/src/validation/skills.test.ts`,
@@ -685,10 +689,9 @@ Backlog: `BL-260927-make-claude-md-shims-opt` (criteria 4 doctor half, 6).
 
 **Step 1: Write tests (RED)**
 
-Contract tests pin the conditional wording in doctor, analyze (including the
-artifact template row), and apply; these fail before the edit. The
-`resolve-providers.sh` pinning fixtures cover `.claude/` only and sync-config
-only, both without a root CLAUDE.md.
+Update the existing doctor contract pins (`doctor-contract.test.mjs` ~20, 29, 278) to the conditional wording and to the leftover-CLAUDE.md warning; they
+fail before the doctor edit. Analyze, the artifact template row, and apply are
+prose edits verified by review and the version-bump gate.
 
 **Step 2: Implement (GREEN)**
 
@@ -762,7 +765,7 @@ Backlog: `BL-260927-make-claude-md-shims-opt` (criteria 8, 9).
   persistence dropped because shims are a per-repository choice under the new
   default; the init prompt dropped because the default is `none` and opting in
   is one `oat config set`; effective-strategy reporting delivered by p02-t01's
-  `--json` source field; the migration criterion superseded by
+  `--json` effective strategy field; the migration criterion superseded by
   `DR-260927-claude-md-shims-are-opt` automatic removal)
 - Modify: any test or smoke fixture that asserts this repository's shims exist
   (search `tools/smoke` and `packages/cli/src` for repository-root CLAUDE.md
@@ -849,8 +852,9 @@ probe on the quick-start harness in `review-skill-contracts.test.ts`
 `SKILL.md`, run it verbatim in a scratch repository through the built CLI,
 assert that `state.md` carries `absorbed_projects` and `absorbed_backlog_ids`
 in quick-start's shapes, and apply the sweep's documented input predicate
-(non-empty fields) as the "reaches the semantic checks" assertion. Keep it as a
-test case, not a one-off.
+(non-empty fields) as the "reaches the semantic checks" assertion. Run it once in a
+scratch repository and record the result in `implementation.md`; the Step 1
+contract pin stays the durable guard.
 
 **Step 4: Verify**
 
@@ -903,8 +907,7 @@ for the review outcome). State why this keeps the fix-child preflight clean:
 the pre-review writes are committed, so the tree is clean when a bounded fix
 child is dispatched. The pre-review commit reuses Step 7's scope-resolving
 commit branch, including the synced-scope `oat project push` path, and the
-Optional External Phase Review Gate (~797) sees the same committed ledger; pin
-both in the contract test.
+Optional External Phase Review Gate (~797) sees the same committed ledger.
 
 **Step 3: Record relationships and status**
 
@@ -969,9 +972,10 @@ the result in `implementation.md`.
 
 **Step 4: Decide the laxity narrowing**
 
-Either narrow the scanner's `^\s*` indent laxity and column-0 heading anchor
-toward CommonMark and reduce the inventory headroom with tests, or record in
-`implementation.md` and the item a one-line reason for leaving it.
+Record in `implementation.md` and the item a one-line reason for leaving the
+scanner's `^\s*` indent laxity, column-0 heading anchor, and inventory headroom
+as they are (latent, not live, per the wave-7 p10 root review). Reintroduce the
+narrowing when a heading-swallowing fence the current scanner misses is found.
 
 **Step 5: Verify**
 
@@ -1004,12 +1008,11 @@ Backlog: `BL-260927-validate-recon-worker` (all criteria; GitHub #295).
 - Modify: `.agents/agents/oat-reviewer.md` (~101: run the validator before
   launch; when a launched child's envelope is found invalid after acceptance,
   correct it through the accepted handle instead of relaunching). The reviewer
-  ships in the `workflows` pack and the validator in the `research` pack, so
-  specify resolution: probe
-  `${HOME}/.agents/skills/recon/scripts/validate-assignment.mjs`, then
-  `<repo-root>/.agents/skills/recon/scripts/validate-assignment.mjs`; on a miss,
-  do not launch the recon worker, cover the lane inline, and name
-  `oat tools install research --scope <scope>`
+  ships in the `workflows` pack and the validator in the `research` pack: add
+  `recon` to the reviewer's existing sibling-skill probe (~89, user scope then
+  repository) with recovery `oat tools install research --scope <scope>`; the
+  existing "cannot be constructed → do not launch, cover the lane inline" rule
+  (~101) covers a miss
 - Modify: `packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts`
   (~469-476: add `['skills','recon','scripts','validate-assignment.mjs']` to the
   recon scripts that must ship)
@@ -1029,9 +1032,8 @@ The validator reports every missing or invalid field (not just the first) and
 exits non-zero on an invalid envelope; valid fixtures for both lanes pass. Add
 a contract assertion (in `packages/cli/src/validation/skills.test.ts` or the
 existing agent-role contract tests) that `oat-reviewer.md` names
-`validate-assignment.mjs`, the user-then-repository probe order, the inline
-fallback with the `oat tools install research` recovery, and the
-accepted-handle correction rule; it fails before the edit.
+`validate-assignment.mjs` and the accepted-handle correction rule; it fails
+before the edit.
 
 **Step 3: Implement (GREEN)**
 
@@ -1062,11 +1064,8 @@ Backlog: `BL-260909-give-packages-control-plane` (criteria 1, 2, 4).
 - Modify: `AGENTS.md` (both passages naming the gap: the `pnpm check`
   description ~40 and the control-plane paragraphs ~113-136)
 - Modify: `tools/smoke/verification/lint-enrollment.test.mjs` (assert
-  explicitly that `packages/control-plane/package.json` defines `scripts.lint`,
-  and that `pnpm exec turbo run lint --dry-run=json` lists
-  `@open-agent-toolkit/control-plane#lint` as a real task rather than
-  `<NONEXISTENT>`; a universal "every package with a lint script" check alone
-  passes vacuously when the script is deleted)
+  explicitly that `packages/control-plane/package.json` defines `scripts.lint`;
+  the test's existing `pnpm lint` shell-out proves turbo reaches it)
 
 **Step 1: Red control**
 
@@ -1118,16 +1117,16 @@ item link to `pjm/backlog/items/<id>.md` (relative paths from their own
 locations); after archive, each link points at `pjm/backlog/archived/<id>.md`
 with a correct relative path, and the command output lists the rewritten
 files. Include a repository-root path reference in external-plan frontmatter
-(`oat_external_plan_sources: - .oat/repo/pjm/backlog/items/<id>.md`) and either
-rewrite it or state in the commit body why it is reported instead. Links inside
+(`oat_external_plan_sources: - .oat/repo/pjm/backlog/items/<id>.md`) and assert it is
+rewritten. Links inside
 the archived item itself and in `completed.md` stay correct.
 
 **Step 2: Implement (GREEN)**
 
-Scan tracked Markdown under `.oat/repo/**` for links resolving to the moved
-item and rewrite them in place; report each rewritten path. If a reference
-cannot be rewritten safely (for example a non-link mention), list it as a
-warning instead of editing it.
+Scan tracked Markdown under `.oat/repo/**` and rewrite every link or path
+string (including repository-root frontmatter paths) that resolves to the moved
+item; report each rewritten path, and warn only on forms that cannot be
+resolved.
 
 **Step 3: Verify**
 
@@ -1211,9 +1210,8 @@ After `pnpm build`, run `node packages/cli/dist/index.js backlog archive <id>
 **Step 2: Verify no dangling links**
 
 Run `rg -n "pjm/backlog/items/(<archived ids joined by |>)\.md" .oat/repo`;
-every remaining match must be a non-link mention that the archive command
-reported as a warning, and each is listed in `implementation.md` (no file-class
-exemptions). Then run the executable bidirectional-link check,
+expect no matches; any match is a defect in p05-t02 to fix before
+continuing. Then run the executable bidirectional-link check,
 `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts -t "every current external plan"`,
 as the `BL-260909-rewrite-inbound-references` criterion 3 evidence. Note in
 `implementation.md` that no external plan links to this wave's items, so the
