@@ -4,6 +4,19 @@
 
 ## Curated Overview
 
+- 2026-09-27 decisions pass (Wave 4 decision track, taken early):
+  `DR-260927-dispatch-record-validates` keeps `oat project dispatch record`
+  validate-only and removes journal persistence
+  (`BL-260909-give-the-dispatch-record`); `DR-260927-test-only-paths-skip`
+  exempts non-shipped test files from the lockstep bump
+  (`BL-260826-decide-whether-test-only-paths`);
+  `DR-260927-operator-waiver-for-test-only` keeps gate staleness for test edits
+  but adds an explicit operator waiver (`BL-260902-decide-test-only-freshness`);
+  `DR-260927-one-decision-point-at-review` merges the three review-cap items into
+  `BL-260818-distinguish-operator-directed`, closing
+  `BL-260927-record-owner-overrides` and `BL-260901-add-corrective-revision` as
+  superseded and carving out `BL-260927-persist-quick-start-prompt` and
+  `BL-260927-mark-gate-findings-as-new-or`.
 - 2026-09-27: `BL-260927-export-only-the-recap-page` records that archive
   copies the whole recap run (QA screenshots, fact base, ledger, manifest,
   theme) into tracked `.oat/repo/reference/project-recaps/`, where nothing
@@ -287,7 +300,6 @@
 | BL-260829-order-phase-bookkeeping-before | Order phase bookkeeping before per-phase review dispatch                                              | open   | high     | task       | M        |
 | BL-260724-support-provider-directory     | Support provider directory symlinks as full collection sync                                           | open   | high     | feature    | M        |
 | BL-260820-track-pr-closeout-evidence     | Track PR-closeout evidence freshness against the current head                                         | open   | high     | feature    | L        |
-| BL-260901-add-corrective-revision        | Add corrective-revision transition after review exhaustion                                            | open   | medium   | feature    | M        |
 | BL-260718-add-generated-runbook          | Add generated-runbook verification command pass                                                       | open   | medium   | feature    | M        |
 | BL-260719-add-pinned-recon-agents        | Add pinned recon agents for reusable orchestration                                                    | open   | medium   | feature    | M        |
 | BL-260830-add-remote-review-respond      | Add remote review respond and summarize skill set                                                     | open   | medium   | feature    | L        |
@@ -300,8 +312,8 @@
 | BL-260830-decide-generic-oat-ownership   | Decide generic OAT ownership of Jira backlog refinement                                               | open   | medium   | idea       | L        |
 | BL-260902-decide-test-only-freshness     | Decide test-only freshness exception for the implement exit gate                                      | open   | medium   | idea       | S        |
 | BL-260927-derive-current-lifecycle-state | Derive current lifecycle state from one authority for review, phase, and publication status           | open   | medium   | feature    | L        |
+| BL-260818-distinguish-operator-directed  | Design the budget-exhausted decision point for reviews and gates review-cycle cap                     | open   | medium   | task       | L        |
 | BL-260927-detect-unfilled-placeholders   | Detect unfilled placeholders and frontmatter-body drift at PR-final and completion                    | open   | medium   | task       | M        |
-| BL-260818-distinguish-operator-directed  | Distinguish operator-directed review rounds from failed fix cycles in the review-cycle cap            | open   | medium   | task       | M        |
 | BL-260718-document-execution-program     | Document execution-program artifact as stable OAT contract                                            | open   | medium   | feature    | M        |
 | BL-260912-evaluate-replacing-explainer   | Evaluate replacing Explainer Kit authoring guidance with a pinned Effective HTML subset               | open   | medium   | task       | M        |
 | BL-260927-export-only-the-recap-page     | Export only the recap page to project-recaps and fix its broken source links                          | open   | medium   | feature    | M        |
@@ -316,7 +328,9 @@
 | BL-260830-make-documentation-aware       | Make documentation-aware discovery prerequisites configurable                                         | open   | medium   | feature    | M        |
 | BL-260904-make-quick-the-default-oat     | Make quick the default OAT workflow mode and spec-driven the explicit larger mode                     | open   | medium   | feature    | L        |
 | BL-260906-make-the-dispatch-stamp        | Make the dispatch-stamp contract helper reject bold-step boundaries and normal-path shim permissions  | open   | medium   | task       | S        |
+| BL-260927-mark-gate-findings-as-new-or   | Mark gate findings as new or carried over between attempts                                            | open   | medium   | feature    | M        |
 | BL-260830-persist-instruction-sync       | Persist instruction sync strategy in config and init                                                  | open   | medium   | feature    | M        |
+| BL-260927-persist-quick-start-prompt     | Persist quick-start prompt approvals like implement                                                   | open   | medium   | task       | S        |
 | BL-260830-re-evaluate-same-target-gate   | Re-evaluate same-target gate execution                                                                | open   | medium   | idea       | L        |
 | BL-260906-re-evaluate-universal-plan     | Re-evaluate universal plan proof strategy and test-first guidance                                     | open   | medium   | feature    | L        |
 | BL-260907-recognize-phase-level          | Recognize phase-level completion records so bullet-list revision phases do not read as incomplete     | open   | medium   | task       | S        |
@@ -362,7 +376,6 @@
 | BL-260927-name-only-installed-pack       | Name only installed pack locations in the OAT tools guidance block                                    | open   | low      | task       | S        |
 | BL-260906-project-journal-reservation    | Project journal reservation state into the smoke evidence bundle                                      | open   | low      | task       | S        |
 | BL-260909-re-source-the-surviving-codex  | Re-source the surviving Codex provider claims and repair the dead provider-reference URLs             | open   | low      | task       | S        |
-| BL-260927-record-owner-overrides         | Record owner overrides of exhausted configured gates as structured state                              | open   | low      | task       | M        |
 | BL-260908-repair-or-exempt-archived      | Repair or exempt archived project ledgers that fail the pr-final path guard                           | open   | low      | task       | S        |
 | BL-260906-report-errno-for-asset-root    | Report errno for asset root stat failures and reset the statRedirects test seam                       | open   | low      | task       | XS       |
 | BL-260908-restructure-the-authoring      | Restructure the authoring skills for progressive disclosure and decide proactive invocation           | open   | low      | feature    | M        |

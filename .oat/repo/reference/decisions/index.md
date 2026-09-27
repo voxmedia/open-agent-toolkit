@@ -13,6 +13,7 @@
 | DR-260927-accept-alwaysapply             | 2026-09-27 | accepted   | Accept alwaysApply as a canonical rule activation alias                                                | -       |
 | DR-260927-dispatch-record-validates      | 2026-09-27 | accepted   | Dispatch record validates without persisting                                                           | -       |
 | DR-260927-label-gate-dispatch-audit      | 2026-09-27 | accepted   | Label gate dispatch audit stamp as policy view                                                         | -       |
+| DR-260927-one-decision-point-at-review   | 2026-09-27 | accepted   | One decision point at review and gate exhaustion                                                       | -       |
 | DR-260927-operator-waiver-for-test-only  | 2026-09-27 | accepted   | Operator waiver for test-only gate staleness                                                           | -       |
 | DR-260927-preserve-config-key-order      | 2026-09-27 | accepted   | Preserve config key order and skip no-op writes                                                        | -       |
 | DR-260927-report-dispatch-record         | 2026-09-27 | accepted   | Report dispatch-record violations in one redacted message                                              | -       |

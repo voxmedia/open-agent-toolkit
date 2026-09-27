@@ -1,7 +1,7 @@
 ---
 id: BL-260927-record-owner-overrides
 title: Record owner overrides of exhausted configured gates as structured state
-status: open
+status: closed
 priority: low
 scope: task
 scope_estimate: M
@@ -11,7 +11,7 @@ labels:
   - state
 assignee: null
 created: 2026-09-27T03:35:38.263Z
-updated: 2026-09-27T03:35:38.263Z
+updated: '2026-09-27T13:45:31Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/327

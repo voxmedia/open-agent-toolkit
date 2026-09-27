@@ -1,7 +1,7 @@
 ---
 id: BL-260901-add-corrective-revision
 title: Add corrective-revision transition after review exhaustion
-status: open
+status: closed
 priority: medium
 scope: feature
 scope_estimate: M
@@ -11,7 +11,7 @@ labels:
   - revisions
 assignee: null
 created: 2026-09-01T20:02:34.731Z
-updated: 2026-09-01T20:02:34.731Z
+updated: '2026-09-27T13:45:31Z'
 associated_issues: []
 external_plans: []
 ---

@@ -8,6 +8,8 @@
 
 ## Completed Items
 
+- 2026-09-27 — BL-260901-add-corrective-revision — Add corrective-revision transition after review exhaustion — Superseded by BL-260818-distinguish-operator-directed (DR-260927-one-decision-point-at-review)
+- 2026-09-27 — BL-260927-record-owner-overrides — Record owner overrides of exhausted configured gates as structured state — Superseded by BL-260818-distinguish-operator-directed (DR-260927-one-decision-point-at-review); quick-start approval and finding-marking gaps carved out
 - 2026-09-27 — BL-260908-restore-recon-s-cheap-fan-out — Restore recon's cheap-fan-out intent with per-wave routing under one approval envelope — All acceptance criteria checked; shipped by PR #285 (restore economical per-wave recon routing), merged 2026-09-12, with DR-260910-restore-economical-recon and DR-260911-use-session-local-recon.
 - 2026-09-27 — BL-260908-validate-the-catalog-refresh — Validate the catalog-refresh policy state in normalizeSyncEvidence — Triage correctness wave p02-t03/t06: normalizeSyncEvidence validates the advice catalog-refresh policy through the registry's isValidCatalogRefreshPolicy and drops unknown states instead of casting; a control proves unknown-state advice never throws inside a lifecycle projection.
 - 2026-09-27 — BL-260909-make-oat-sync-scope-all-report — Make oat sync --scope all report a sibling scope's failure in the plan body — Triage correctness wave p02-t02/t06: oat sync --scope all never prints No changes required beside a failed scope; single-scope output unchanged. AC2 is met by the multi-scope failed-run outcome test plus removal of the now-dead failed === 0 conjunct, which no output depended on after the fix.
