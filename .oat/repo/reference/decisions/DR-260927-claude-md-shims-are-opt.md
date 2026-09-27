@@ -33,12 +33,12 @@ project's `.claude/settings.json`. Tracked by
   byte-identical copy) automatically on a non-dry-run sync. Hand-written or
   modified CLAUDE.md files are reported and never deleted. The release notes
   call out the removal.
-- Under the default, any CLAUDE.md sync leaves in place (hand-written,
-  modified, or a personal `CLAUDE.local.md`) is reported with a warning that
-  Claude Code will ignore the project's AGENTS.md files while it exists, and
-  the warning suggests configuring a shim strategy and rerunning sync, or
-  folding the file into AGENTS.md. `oat instructions validate` and
-  `oat-doctor` report the same warning.
+- Under the default, any CLAUDE.md sync finds (hand-written, modified, or a
+  personal `CLAUDE.local.md`) is reported with a warning that Claude Code will
+  ignore the project's AGENTS.md files while it exists. The warning gives two
+  options: remove the file, or change `.oat/config.json` to a shim strategy and
+  rerun sync to add shims back. `oat instructions validate` and `oat-doctor`
+  report the same warning.
 - This repository drops its own shims in the implementing PR, dogfooding the
   default.
 
