@@ -6092,6 +6092,79 @@ describe('oat config', () => {
       );
     });
 
+    it('a same-value set leaves a hand-formatted shared file byte-identical', async () => {
+      // GitHub #329: a same-value `oat config set` used to rewrite the file in
+      // the normalizer's fixed order, moving `git` below `projects`.
+      const root = await createRepoRoot();
+      const configPath = join(root, '.oat', 'config.json');
+      const raw = JSON.stringify(
+        {
+          version: 1,
+          git: { defaultBranch: 'main' },
+          projects: { root: '.oat/projects/shared' },
+        },
+        null,
+        4,
+      );
+      await writeFile(configPath, raw, 'utf8');
+      const { command } = createHarness({ cwd: root });
+
+      await runCommand(command, ['set', 'git.defaultBranch', 'main']);
+
+      expect(process.exitCode).toBe(0);
+      expect(await readFile(configPath, 'utf8')).toBe(raw);
+    });
+
+    it('a real set change preserves the order of untouched keys', async () => {
+      const root = await createRepoRoot();
+      const configPath = join(root, '.oat', 'config.json');
+      await writeFile(
+        configPath,
+        `${JSON.stringify(
+          {
+            version: 1,
+            git: { defaultBranch: 'main' },
+            projects: { root: '.oat/projects/shared' },
+          },
+          null,
+          2,
+        )}\n`,
+        'utf8',
+      );
+      const { command } = createHarness({ cwd: root });
+
+      await runCommand(command, ['set', 'git.defaultBranch', 'trunk']);
+
+      expect(process.exitCode).toBe(0);
+      expect(await readFile(configPath, 'utf8')).toBe(
+        `${JSON.stringify(
+          {
+            version: 1,
+            git: { defaultBranch: 'trunk' },
+            projects: { root: '.oat/projects/shared' },
+          },
+          null,
+          2,
+        )}\n`,
+      );
+    });
+
+    it('unset removes a warn-dropped documentation.root from disk', async () => {
+      const root = await createRepoRoot();
+      await writeSharedConfig(root, {
+        documentation: { root: 5, tooling: 'fumadocs' },
+      });
+      const { command } = createHarness({ cwd: root });
+
+      await runCommand(command, ['unset', 'documentation.root']);
+
+      expect(process.exitCode).toBe(0);
+      expect(await readSharedConfig(root)).toEqual({
+        version: 1,
+        documentation: { tooling: 'fumadocs' },
+      });
+    });
+
     it('unset removes a malformed documentation.instructionPointerExcludes', async () => {
       const root = await createRepoRoot();
       await writeSharedConfig(root, {
@@ -6236,6 +6309,71 @@ describe('oat config', () => {
       expect(process.exitCode).toBe(1);
       expect(capture.error[0]).toContain('Invalid documentation.excludes');
       expect(await readFile(configPath, 'utf8')).toBe(before);
+    });
+
+    // BL-260909-reject-malformed-nested-values. Negative and positive controls
+    // side by side. Red-then-green provenance:
+    //   pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/config/index.test.ts -t 'wrong-typed'
+    //   before the fix: the negative control failed (exit 0, the wrong-typed
+    //   `authority.default: 5` sibling was accepted and raw-written back);
+    //   after the fix: both controls pass.
+    it('unset of a pjm.remote child refuses while a nested sibling is wrong-typed (negative control)', async () => {
+      const root = await createRepoRoot();
+      await writeSharedConfig(root, {
+        pjm: {
+          remote: {
+            schemaVersion: 1,
+            storage: { state: 'local' },
+            policy: {
+              description: 'managed-section',
+              authority: { default: 5 },
+            },
+          },
+        },
+      });
+      const configPath = join(root, '.oat', 'config.json');
+      const before = await readFile(configPath, 'utf8');
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, ['unset', 'pjm.remote.policy.description']);
+
+      expect(process.exitCode).toBe(1);
+      expect(capture.error[0]).toContain('Invalid PJM remote policy structure');
+      expect(capture.error[0]).toContain(
+        'pjm.remote.policy.authority.default (expected string, received number)',
+      );
+      expect(await readFile(configPath, 'utf8')).toBe(before);
+    });
+
+    it('unset of a pjm.remote child proceeds on a valid tree without description or default (positive control)', async () => {
+      const root = await createRepoRoot();
+      await writeSharedConfig(root, {
+        pjm: {
+          remote: {
+            schemaVersion: 1,
+            storage: { state: 'local' },
+            policy: {
+              authority: { operations: { create: 'user-approved' } },
+            },
+          },
+        },
+      });
+      const { command } = createHarness({ cwd: root });
+
+      await runCommand(command, ['unset', 'pjm.remote.storage.state']);
+
+      expect(process.exitCode).toBe(0);
+      expect(await readSharedConfig(root)).toEqual({
+        version: 1,
+        pjm: {
+          remote: {
+            schemaVersion: 1,
+            policy: {
+              authority: { operations: { create: 'user-approved' } },
+            },
+          },
+        },
+      });
     });
 
     it('unset still reports already-unset when the key is absent from disk', async () => {

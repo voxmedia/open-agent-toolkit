@@ -4,6 +4,7 @@ import { z } from 'zod';
 import {
   assertNoAbsolutePath,
   redactAbsolutePathsDeep,
+  type DispatchValueViolation,
 } from './absolute-paths';
 
 /**
@@ -24,7 +25,7 @@ const requestIdSchema = z
   .string()
   .regex(
     /^[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}$/,
-    'request_id must be a stable contained identifier',
+    'request_id must be a stable contained identifier: expected [a-zA-Z0-9] followed by up to 127 of [a-zA-Z0-9._-]',
   );
 
 const catalogSnapshotSchema = z
@@ -192,7 +193,13 @@ const TASK_CLASS_FIELDS = [
   'floor_satisfaction',
 ] as const;
 
-export const genericDispatchRecordSchema = z
+/**
+ * The closed field set before cross-field refinement. Exported so a caller
+ * that validates a partial record — the managed Claude `recordBase`, whose
+ * derived fields are omitted — can report every missing, mistyped, or unknown
+ * field in one pass instead of discovering them one run at a time.
+ */
+export const genericDispatchRecordBaseSchema = z
   .object({
     request_id: requestIdSchema,
     caller: identifier(),
@@ -259,65 +266,77 @@ export const genericDispatchRecordSchema = z
     verification_evidence: proseText().optional(),
     escalate_when: z.array(reasonText()).optional(),
   })
-  .strict()
-  .superRefine((record, context) => {
-    if (record.launch_status === 'accepted' && record.child_outcome === null) {
+  .strict();
+
+/**
+ * Cross-field rules over the base object. Every field is read defensively, so
+ * the same rules apply to a partial projection of the record (for example one
+ * with the managed Claude derived fields omitted).
+ */
+export function refineGenericDispatchRecord(
+  record: Partial<z.infer<typeof genericDispatchRecordBaseSchema>>,
+  context: z.RefinementCtx,
+): void {
+  if (record.launch_status === 'accepted' && record.child_outcome === null) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'An accepted dispatch must report a child outcome.',
+      path: ['child_outcome'],
+    });
+  }
+
+  for (const field of BOUNDED_PROJECTION_FIELDS) {
+    const violation =
+      boundedProjectionViolation(record[field], field, 1) ??
+      projectionAggregateViolation(record[field], field);
+    if (violation) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'An accepted dispatch must report a child outcome.',
-        path: ['child_outcome'],
+        message: `Dispatch ${field} must stay inside the closed control projection: ${violation}.`,
+        path: [field],
       });
     }
+  }
 
-    for (const field of BOUNDED_PROJECTION_FIELDS) {
-      const violation =
-        boundedProjectionViolation(record[field], field, 1) ??
-        projectionAggregateViolation(record[field], field);
-      if (violation) {
-        context.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: `Dispatch ${field} must stay inside the closed control projection: ${violation}.`,
-          path: [field],
-        });
-      }
-    }
-
-    const presentClassFields = TASK_CLASS_FIELDS.filter(
-      (field) => record[field] !== undefined,
+  const presentClassFields = TASK_CLASS_FIELDS.filter(
+    (field) => record[field] !== undefined,
+  );
+  if (
+    presentClassFields.length !== 0 &&
+    presentClassFields.length !== TASK_CLASS_FIELDS.length
+  ) {
+    const missing = TASK_CLASS_FIELDS.filter(
+      (field) => record[field] === undefined,
     );
-    if (
-      presentClassFields.length !== 0 &&
-      presentClassFields.length !== TASK_CLASS_FIELDS.length
-    ) {
-      const missing = TASK_CLASS_FIELDS.filter(
-        (field) => record[field] === undefined,
-      );
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: `A class-constrained dispatch record requires every task-class field; missing ${missing.join(', ')}. A legacy record omits all five.`,
-        path: [missing[0] ?? 'task_class'],
-      });
-      return;
-    }
-    if (presentClassFields.length === 0) {
-      return;
-    }
-    if (record.classification_source !== 'caller') {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Task-class classification_source must be caller.',
-        path: ['classification_source'],
-      });
-    }
-    if (record.model_class_floor !== record.task_class) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        message:
-          'model_class_floor must equal the requested task_class; a floor may never be recorded below the requested class.',
-        path: ['model_class_floor'],
-      });
-    }
-  });
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: `A class-constrained dispatch record requires every task-class field; missing ${missing.join(', ')}. A legacy record omits all five.`,
+      path: [missing[0] ?? 'task_class'],
+    });
+    return;
+  }
+  if (presentClassFields.length === 0) {
+    return;
+  }
+  if (record.classification_source !== 'caller') {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Task-class classification_source must be caller.',
+      path: ['classification_source'],
+    });
+  }
+  if (record.model_class_floor !== record.task_class) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message:
+        'model_class_floor must equal the requested task_class; a floor may never be recorded below the requested class.',
+      path: ['model_class_floor'],
+    });
+  }
+}
+
+export const genericDispatchRecordSchema =
+  genericDispatchRecordBaseSchema.superRefine(refineGenericDispatchRecord);
 
 export type GenericDispatchRecord = z.infer<typeof genericDispatchRecordSchema>;
 
@@ -512,6 +531,43 @@ const SENSITIVE_VALUE_PATTERNS: readonly RegExp[] = [
   /\b[a-z][a-z0-9+.-]*:\/\/[^\s:/?#@]+:[^\s:/?#@]+@/i,
 ];
 
+/** The stable stand-in for a scrubbed secret-shaped value. */
+export const REDACTED_SECRET = '<redacted-secret>';
+
+/**
+ * A private key block is multi-line, so the header pattern alone would leave
+ * its body behind; the whole block is replaced first. An unterminated block
+ * runs to the end of the text, which fails safe (no body line survives) but
+ * also consumes everything after it. Callers joining several messages should
+ * therefore scrub each message before joining, as the managed Claude report
+ * does, and keep this pass as the backstop.
+ */
+const PRIVATE_KEY_BLOCK =
+  /-----BEGIN (?:RSA |EC |DSA |OPENSSH |PGP )?PRIVATE KEY-----[\s\S]*?(?:-----END (?:RSA |EC |DSA |OPENSSH |PGP )?PRIVATE KEY-----|$)/gi;
+
+/**
+ * Scrub every secret-shaped value from outgoing text, using the same value
+ * detector the sensitive-content walk uses. Each match is extended to the end
+ * of its token, so a pattern that recognizes only a prefix (a JWT's header and
+ * payload, say) does not leave the rest behind. Like the detector, this is a
+ * best-effort layer: a value that no pattern recognizes survives.
+ */
+export function redactSensitiveValues(text: string): string {
+  let redacted = text.replace(PRIVATE_KEY_BLOCK, REDACTED_SECRET);
+  for (const pattern of SENSITIVE_VALUE_PATTERNS) {
+    const flags = pattern.flags.includes('g')
+      ? pattern.flags
+      : `${pattern.flags}g`;
+    redacted = redacted.replace(
+      new RegExp(`(?:${pattern.source})[^\\s'"\`,;)\\]}]*`, flags),
+      // Extending to the token end also takes a sentence's closing period;
+      // give it back so the scrubbed message still reads as a sentence.
+      (match) => `${REDACTED_SECRET}${/\.+$/.exec(match)?.[0] ?? ''}`,
+    );
+  }
+  return redacted;
+}
+
 export function isSensitiveDispatchKey(key: string): boolean {
   const { normalized, unrecognized } = foldDispatchKey(key);
   // Fail closed: a key this normalizer cannot fully account for is treated as
@@ -523,33 +579,52 @@ export function isSensitiveDispatchKey(key: string): boolean {
   return SENSITIVE_KEY_FAMILIES.some((family) => normalized.includes(family));
 }
 
+/**
+ * Collect every sensitive key and value, in the same depth-first order
+ * {@link assertNoSensitiveDispatchContent} visits them. A sensitive key is
+ * reported once and not descended into: everything beneath it is already
+ * forbidden, and its content must not be echoed back in a report.
+ */
+export function collectSensitiveDispatchContent(
+  value: unknown,
+  path = '<record>',
+): DispatchValueViolation[] {
+  if (typeof value === 'string') {
+    return SENSITIVE_VALUE_PATTERNS.some((pattern) => pattern.test(value))
+      ? [
+          {
+            path,
+            message: `Sensitive dispatch content is forbidden at ${path}.`,
+          },
+        ]
+      : [];
+  }
+  if (Array.isArray(value)) {
+    return value.flatMap((entry, index) =>
+      collectSensitiveDispatchContent(entry, `${path}[${index}]`),
+    );
+  }
+  if (value === null || typeof value !== 'object') {
+    return [];
+  }
+  return Object.entries(value).flatMap(([key, entry]) =>
+    isSensitiveDispatchKey(key)
+      ? [
+          {
+            path: `${path}.${key}`,
+            message: `Sensitive dispatch content is forbidden at ${path}.${key}.`,
+          },
+        ]
+      : collectSensitiveDispatchContent(entry, `${path}.${key}`),
+  );
+}
+
 export function assertNoSensitiveDispatchContent(
   value: unknown,
   path = '<record>',
 ): void {
-  if (typeof value === 'string') {
-    if (SENSITIVE_VALUE_PATTERNS.some((pattern) => pattern.test(value))) {
-      throw new Error(`Sensitive dispatch content is forbidden at ${path}.`);
-    }
-    return;
-  }
-  if (Array.isArray(value)) {
-    value.forEach((entry, index) =>
-      assertNoSensitiveDispatchContent(entry, `${path}[${index}]`),
-    );
-    return;
-  }
-  if (value === null || typeof value !== 'object') {
-    return;
-  }
-  for (const [key, entry] of Object.entries(value)) {
-    if (isSensitiveDispatchKey(key)) {
-      throw new Error(
-        `Sensitive dispatch content is forbidden at ${path}.${key}.`,
-      );
-    }
-    assertNoSensitiveDispatchContent(entry, `${path}.${key}`);
-  }
+  const [first] = collectSensitiveDispatchContent(value, path);
+  if (first) throw new Error(first.message);
 }
 
 /**

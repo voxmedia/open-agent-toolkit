@@ -45,6 +45,8 @@ Rules are currently project-scoped canonical content. Unlike skills and agents, 
 - `oat providers codex materialize`
 - `oat project dispatch record` (project-aware dispatch evidence only; never a
   provider launcher)
+- `oat project dispatch canonical-role` (read-only; prints the
+  canonical-role-resolution event that `oat project dispatch record` accepts)
 
 ## Adjacent CLI commands (commonly used with provider interop)
 

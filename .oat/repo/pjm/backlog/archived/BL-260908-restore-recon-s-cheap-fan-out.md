@@ -2,7 +2,7 @@
 id: BL-260908-restore-recon-s-cheap-fan-out
 title: Restore recon's cheap-fan-out intent with per-wave routing under one
   approval envelope
-status: open
+status: closed
 priority: high
 scope: feature
 scope_estimate: L
@@ -13,7 +13,7 @@ labels:
   - routing
 assignee: null
 created: 2026-09-08T16:54:21.407Z
-updated: 2026-09-12T00:30:00.000Z
+updated: '2026-09-27T06:50:00Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/274

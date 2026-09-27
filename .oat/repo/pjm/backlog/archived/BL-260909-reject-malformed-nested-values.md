@@ -1,7 +1,7 @@
 ---
 id: BL-260909-reject-malformed-nested-values
 title: Reject malformed nested values in the strict pjm.remote shared reader
-status: open
+status: closed
 priority: low
 scope: task
 scope_estimate: S
@@ -11,7 +11,7 @@ labels:
   - wave-7-followup
 assignee: null
 created: 2026-09-09T08:35:36.324Z
-updated: 2026-09-09T08:35:36.324Z
+updated: '2026-09-27T06:50:00Z'
 associated_issues: []
 external_plans: []
 ---

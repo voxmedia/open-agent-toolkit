@@ -1,7 +1,7 @@
 ---
 id: BL-260909-make-oat-sync-scope-all-report
 title: Make oat sync --scope all report a sibling scope's failure in the plan body
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: S
@@ -11,7 +11,7 @@ labels:
   - wave-7-followup
 assignee: null
 created: 2026-09-09T08:35:43.452Z
-updated: 2026-09-09T08:35:43.452Z
+updated: '2026-09-27T06:50:00Z'
 associated_issues: []
 external_plans: []
 ---

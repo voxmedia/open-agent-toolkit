@@ -666,6 +666,117 @@ describe('retro skill content contracts', () => {
     ]);
   });
 
+  describe('final report walkthrough', () => {
+    const walkthroughHeading = '### Step 7: Final Report Walkthrough';
+
+    function walkthroughSection(): string {
+      const start = retroSkill.indexOf(walkthroughHeading);
+      expect(start).toBeGreaterThan(-1);
+      const end = retroSkill.indexOf('\n## ', start);
+      return retroSkill.slice(start, end === -1 ? undefined : end);
+    }
+
+    function successCriteria(): string {
+      const start = retroSkill.indexOf('## Success Criteria');
+      expect(start).toBeGreaterThan(-1);
+      return retroSkill.slice(start);
+    }
+
+    it('places the walkthrough after artifact validation', () => {
+      const verify = retroSkill.indexOf(
+        '### Step 6: Format, Verify, and Commit',
+      );
+      const walkthrough = retroSkill.indexOf(walkthroughHeading);
+      expect(verify).toBeGreaterThan(-1);
+      expect(walkthrough).toBeGreaterThan(verify);
+      expect(walkthroughSection()).toMatch(/after the artifact passes Step 6/i);
+    });
+
+    it('walks through every RP and UP item with the required fields', () => {
+      const section = walkthroughSection();
+      expect(section).toMatch(/every `RP-\*` and `UP-\*` item/);
+      for (const field of [
+        /ID and a short title/i,
+        /plain-language summary/i,
+        /why it matters/i,
+        /current disposition and destination/i,
+        /next available action/i,
+      ]) {
+        expect(section).toMatch(field);
+      }
+    });
+
+    it('groups apply, repository filing, and upstream filing items', () => {
+      const section = walkthroughSection();
+      expect(section).toMatch(
+        /apply items[\s\S]*?repository filing items[\s\S]*?upstream filing items/i,
+      );
+    });
+
+    it('applies whether actions ran or not, including non-interactive runs', () => {
+      const section = walkthroughSection();
+      expect(section).toMatch(/interactive and non-interactive/i);
+      for (const state of ['deferred', 'skipped', 'automatic', 'unanswered']) {
+        expect(section).toContain(state);
+      }
+    });
+
+    it('states an explicit no-items summary for empty registers', () => {
+      expect(walkthroughSection()).toMatch(
+        /both registers are empty[\s\S]*?explicit no-items summary/i,
+      );
+    });
+
+    it('includes a worked example with mixed register items', () => {
+      const section = walkthroughSection();
+      expect(section).toMatch(/worked example/i);
+      const example = section.slice(section.search(/worked example/i));
+      expect(example).toMatch(/RP-\d\d[^\n]*[\s\S]*?Disposition: apply/);
+      expect(example).toMatch(/RP-\d\d[^\n]*[\s\S]*?Disposition: file/);
+      expect(example).toMatch(/UP-\d\d/);
+      expect(example).toMatch(/Why it matters:/);
+      expect(example).toMatch(/Next action:/);
+    });
+
+    it('links the artifact instead of reproducing it', () => {
+      expect(walkthroughSection()).toMatch(
+        /link the artifact[\s\S]*?instead of reproducing it/i,
+      );
+    });
+
+    it('references the walkthrough from both Step 4 branches', () => {
+      const start = retroSkill.indexOf(
+        '### Step 4: Resolve Post-Generation Consent',
+      );
+      const step4 = retroSkill.slice(
+        start,
+        retroSkill.indexOf('### Step 5: Record the Run'),
+      );
+      const interactive = step4.slice(
+        step4.indexOf('**Interactive run:**'),
+        step4.indexOf('**Non-interactive run:**'),
+      );
+      const nonInteractive = step4.slice(
+        step4.indexOf('**Non-interactive run:**'),
+      );
+      expect(interactive).toContain('Step 7');
+      expect(nonInteractive).toContain('Step 7');
+    });
+
+    it('requires the walkthrough in the success criteria', () => {
+      expect(successCriteria()).toMatch(
+        /final response walks through every `RP-\*` and `UP-\*` item/i,
+      );
+      expect(successCriteria()).toMatch(/no-items summary/i);
+    });
+
+    it('names the retro filing leaf keys instead of the parent key', () => {
+      expect(retroSkill).toContain('`workflow.retro.filing.repo`');
+      expect(retroSkill).toContain('`workflow.retro.filing.upstream`');
+      expect(retroSkill).not.toMatch(/`workflow\.retro\.filing`/);
+    });
+  });
+
   it('keeps final revision contracts on durable shipped surfaces', () => {
     expect(retroSkill).toContain('--producer oat-project-retro');
     expect(retroSkill).toContain('--ref project-retro');

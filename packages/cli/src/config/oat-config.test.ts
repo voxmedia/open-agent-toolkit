@@ -844,6 +844,166 @@ describe('oat-config', () => {
     });
   });
 
+  describe('writeOatConfig key order and no-op writes', () => {
+    // GitHub #329 / #311 (BL-260927-preserve-oat-config-json-key).
+    const configPathFor = (repoRoot: string) =>
+      join(repoRoot, '.oat', 'config.json');
+
+    it('leaves a file byte-identical when the write carries no semantic change', async () => {
+      const repoRoot = await createRepoRoot();
+      // `git` precedes `projects`, the reverse of the normalizer's order.
+      const raw = `${JSON.stringify(
+        {
+          version: 1,
+          git: { defaultBranch: 'main' },
+          projects: { root: '.oat/projects/shared' },
+          documentation: { tooling: 'fumadocs', root: 'apps/docs' },
+        },
+        null,
+        2,
+      )}\n`;
+      await writeFile(configPathFor(repoRoot), raw, 'utf8');
+
+      await writeOatConfig(repoRoot, await readOatConfig(repoRoot));
+
+      await expect(readFile(configPathFor(repoRoot), 'utf8')).resolves.toBe(
+        raw,
+      );
+    });
+
+    it('leaves a hand-formatted file byte-identical on a no-op write', async () => {
+      const repoRoot = await createRepoRoot();
+      const raw = JSON.stringify(
+        { git: { defaultBranch: 'main' }, version: 1 },
+        null,
+        4,
+      );
+      await writeFile(configPathFor(repoRoot), raw, 'utf8');
+
+      await writeOatConfig(repoRoot, await readOatConfig(repoRoot));
+
+      await expect(readFile(configPathFor(repoRoot), 'utf8')).resolves.toBe(
+        raw,
+      );
+    });
+
+    // Every config reader parses through `parseJsonConfig`, which accepts
+    // trailing commas, so the writer must read the existing file the same way
+    // (p02 review M1).
+    const trailingCommaRaw =
+      '{\n  "version": 1,\n  "git": { "defaultBranch": "main", },\n  "projects": { "root": ".oat/projects/shared" },\n}\n';
+
+    it('leaves a reader-accepted trailing-comma file byte-identical on a no-op write', async () => {
+      const repoRoot = await createRepoRoot();
+      await writeFile(configPathFor(repoRoot), trailingCommaRaw, 'utf8');
+
+      await writeOatConfig(repoRoot, await readOatConfig(repoRoot));
+
+      await expect(readFile(configPathFor(repoRoot), 'utf8')).resolves.toBe(
+        trailingCommaRaw,
+      );
+    });
+
+    it('keeps the key order of a trailing-comma file on a real change', async () => {
+      const repoRoot = await createRepoRoot();
+      await writeFile(configPathFor(repoRoot), trailingCommaRaw, 'utf8');
+      const current = await readOatConfig(repoRoot);
+
+      await writeOatConfig(repoRoot, {
+        ...current,
+        git: { defaultBranch: 'trunk' },
+      });
+
+      const written = JSON.parse(
+        await readFile(configPathFor(repoRoot), 'utf8'),
+      ) as Record<string, unknown>;
+      expect(Object.keys(written)).toEqual(['version', 'git', 'projects']);
+      expect(written.git).toEqual({ defaultBranch: 'trunk' });
+    });
+
+    it('preserves the existing order of untouched keys recursively and appends new keys', async () => {
+      const repoRoot = await createRepoRoot();
+      await writeFile(
+        configPathFor(repoRoot),
+        `${JSON.stringify(
+          {
+            version: 1,
+            git: { defaultBranch: 'main' },
+            projects: { root: '.oat/projects/shared' },
+            documentation: { tooling: 'fumadocs', root: 'apps/docs' },
+          },
+          null,
+          2,
+        )}\n`,
+        'utf8',
+      );
+      const current = await readOatConfig(repoRoot);
+
+      await writeOatConfig(repoRoot, {
+        ...current,
+        documentation: {
+          ...current.documentation,
+          root: 'apps/site',
+          index: 'apps/site/index.md',
+        },
+        worktrees: { root: '.worktrees' },
+      });
+
+      const written = JSON.parse(
+        await readFile(configPathFor(repoRoot), 'utf8'),
+      ) as Record<string, Record<string, unknown>>;
+      expect(Object.keys(written)).toEqual([
+        'version',
+        'git',
+        'projects',
+        'documentation',
+        'worktrees',
+      ]);
+      expect(Object.keys(written.documentation!)).toEqual([
+        'tooling',
+        'root',
+        'index',
+      ]);
+      expect(written.documentation).toEqual({
+        tooling: 'fumadocs',
+        root: 'apps/site',
+        index: 'apps/site/index.md',
+      });
+    });
+
+    it('still writes a raw-disk removal of a warn-dropped value', async () => {
+      const repoRoot = await createRepoRoot();
+      await writeFile(
+        configPathFor(repoRoot),
+        `${JSON.stringify({
+          version: 1,
+          documentation: { root: 5, tooling: 'fumadocs' },
+        })}\n`,
+        'utf8',
+      );
+
+      await writeOatConfig(repoRoot, await readOatConfig(repoRoot));
+
+      expect(
+        JSON.parse(await readFile(configPathFor(repoRoot), 'utf8')),
+      ).toEqual({ version: 1, documentation: { tooling: 'fumadocs' } });
+    });
+
+    it('always rewrites an unparsable existing file', async () => {
+      const repoRoot = await createRepoRoot();
+      await writeFile(configPathFor(repoRoot), '{ not json', 'utf8');
+
+      await writeOatConfig(repoRoot, {
+        version: 1,
+        git: { defaultBranch: 'main' },
+      });
+
+      expect(
+        JSON.parse(await readFile(configPathFor(repoRoot), 'utf8')),
+      ).toEqual({ version: 1, git: { defaultBranch: 'main' } });
+    });
+  });
+
   it('reads and writes shared PJM remote policy and storage config', async () => {
     const repoRoot = await createRepoRoot();
 
@@ -1159,6 +1319,145 @@ describe('oat-config', () => {
       expect(message).not.toContain('ghp_structure_value_must_not_leak');
     },
   );
+
+  // Wrong-typed leaves fail closed with the same categorical structure error
+  // as unknown keys (BL-260909-reject-malformed-nested-values). Only wrong
+  // *types* are rejected: an invalid string keeps its documented coercion (see
+  // 'fails closed when malformed narrowing policy is combined with permissive
+  // defaults' above).
+  it.each([
+    [
+      'repository authority default number',
+      { policy: { authority: { default: 5 } } },
+      /pjm\.remote\.policy\.authority\.default.*expected string.*number/i,
+    ],
+    [
+      'repository authority default array',
+      {
+        policy: {
+          authority: { default: ['ghp_structure_value_must_not_leak'] },
+        },
+      },
+      /pjm\.remote\.policy\.authority\.default.*expected string.*array/i,
+    ],
+    [
+      'repository operation null',
+      {
+        policy: {
+          authority: { default: 'read-only', operations: { create: null } },
+        },
+      },
+      /pjm\.remote\.policy\.authority\.operations\.create.*expected string.*null/i,
+    ],
+    [
+      'repository description object',
+      {
+        policy: {
+          description: { value: 'ghp_structure_value_must_not_leak' },
+        },
+      },
+      /pjm\.remote\.policy\.description.*expected string.*object/i,
+    ],
+    [
+      'provider description boolean',
+      { policy: { providers: { github: { description: true } } } },
+      /pjm\.remote\.policy\.providers\.github\.description.*expected string.*boolean/i,
+    ],
+    [
+      'provider authority default number',
+      { policy: { providers: { jira: { authority: { default: 5 } } } } },
+      /pjm\.remote\.policy\.providers\.jira\.authority\.default.*expected string.*number/i,
+    ],
+    [
+      'provider operation array',
+      {
+        policy: {
+          providers: {
+            linear: {
+              authority: {
+                operations: { delete: ['ghp_structure_value_must_not_leak'] },
+              },
+            },
+          },
+        },
+      },
+      /pjm\.remote\.policy\.providers\.linear\.authority\.operations\.delete.*expected string.*array/i,
+    ],
+    [
+      'schemaVersion string',
+      { schemaVersion: '1', policy: { description: 'replace' } },
+      /pjm\.remote\.schemaVersion.*expected number.*string/i,
+    ],
+    [
+      'schemaVersion boolean',
+      { schemaVersion: true },
+      /pjm\.remote\.schemaVersion.*expected number.*boolean/i,
+    ],
+    [
+      'storage state number',
+      { storage: { state: 5 } },
+      /pjm\.remote\.storage\.state.*expected string.*number/i,
+    ],
+  ] as const)(
+    'rejects a wrong-typed %s leaf without exposing values',
+    async (_kind, remote, expectedMessage) => {
+      const repoRoot = await createRepoRoot();
+      await writeFile(
+        join(repoRoot, '.oat', 'config.json'),
+        JSON.stringify({
+          version: 1,
+          pjm: { remote: { schemaVersion: 1, ...remote } },
+        }),
+        'utf8',
+      );
+
+      let failure: unknown;
+      try {
+        await readOatConfig(repoRoot);
+      } catch (error) {
+        failure = error;
+      }
+      expect(failure).toBeInstanceOf(Error);
+      const message = failure instanceof Error ? failure.message : '';
+      expect(message).toMatch(/Invalid PJM remote policy structure/);
+      expect(message).toMatch(expectedMessage);
+      expect(message).not.toContain('ghp_structure_value_must_not_leak');
+    },
+  );
+
+  it('reads a valid pjm.remote tree with absent description and default', async () => {
+    const repoRoot = await createRepoRoot();
+    await writeFile(
+      join(repoRoot, '.oat', 'config.json'),
+      JSON.stringify({
+        version: 1,
+        pjm: {
+          remote: {
+            schemaVersion: 1,
+            policy: {
+              authority: { operations: { create: 'user-approved' } },
+              providers: { github: { authority: {} } },
+            },
+          },
+        },
+      }),
+      'utf8',
+    );
+
+    await expect(readOatConfig(repoRoot)).resolves.toMatchObject({
+      pjm: {
+        remote: {
+          policy: {
+            description: 'none',
+            authority: {
+              default: 'read-only',
+              operations: { create: 'user-approved' },
+            },
+          },
+        },
+      },
+    });
+  });
 
   it('rejects retired execution preferences from local and user PJM config', async () => {
     const repoRoot = await createRepoRoot();

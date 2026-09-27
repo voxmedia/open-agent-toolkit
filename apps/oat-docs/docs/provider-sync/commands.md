@@ -71,6 +71,12 @@ Key behavior:
   symlinks retain their existing behavior. Explicit `symlink` and `copy` remain
   per-entry modes; `oat sync` does not add a `--strategy` option.
 - Provider enable/disable honored via sync config
+- Invalid canonical rules stop the run before anything is applied. Sync
+  checks every rule first and fails once with a message that names each
+  invalid rule file exactly once, even though several provider transforms
+  read the same rule, so one run surfaces every file to fix. See
+  [Canonical rule frontmatter](providers.md#canonical-rule-frontmatter) for
+  the accepted `alwaysApply: true` alias.
 - Cursor skills are native-read from canonical `.agents/skills`; sync does not
   create `.cursor/skills` mirrors
 - Copilot skills are native-read from canonical `.agents/skills`; sync does not

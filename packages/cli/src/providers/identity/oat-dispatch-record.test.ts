@@ -11,6 +11,7 @@ import {
   IMMUTABLE_FALLBACK_CONTROL_FIELDS,
   MUTABLE_FALLBACK_CONTROL_FIELDS,
   parsePersistedOatDispatchRecord,
+  safeParseOatDispatchEvidenceEvent,
   type ExactTargetRef,
 } from './oat-dispatch-record';
 
@@ -1008,5 +1009,72 @@ describe('configuredInvocationForObservation', () => {
     expect(
       compareObservedRuntimeMetadata({ role: 'anything' }, { role: [] }),
     ).toBe('not-comparable');
+  });
+});
+
+describe('dispatch evidence pattern messages', () => {
+  function canonicalRoleEvent(evidence: Record<string, unknown>) {
+    return {
+      kind: 'canonical-role-resolution',
+      requestId: 'dispatch-native-1',
+      source: 'canonical-role-resolver',
+      evidence: { ...roleEvidence, ...evidence },
+    };
+  }
+
+  function issuesFor(value: unknown) {
+    const parsed = safeParseOatDispatchEvidenceEvent(value);
+    return parsed.success
+      ? []
+      : parsed.error.issues.map((issue) => ({
+          path: issue.path.join('.'),
+          message: issue.message,
+        }));
+  }
+
+  it('states the redacted role path form a malformed path must take', () => {
+    expect(
+      issuesFor(
+        canonicalRoleEvent({
+          canonicalPath: '<repo>/agents/oat-phase-implementer.md',
+          selectedPath: '/Users/alice/.agents/agents/oat-phase-implementer.md',
+        }),
+      ),
+    ).toEqual([
+      {
+        path: 'evidence.canonicalPath',
+        message: 'expected <loaded|user|project>/agents/<name>.md',
+      },
+      {
+        path: 'evidence.selectedPath',
+        message: 'expected <loaded|user|project>/agents/<name>.md',
+      },
+    ]);
+  });
+
+  it('states the digest form a malformed content digest must take', () => {
+    expect(
+      issuesFor(canonicalRoleEvent({ contentDigest: 'sha256:ABC' })),
+    ).toEqual([
+      {
+        path: 'evidence.contentDigest',
+        message: 'expected sha256:<64 lowercase hex>',
+      },
+    ]);
+  });
+
+  it('carries the expected form through the throwing augmentation path', () => {
+    expect(() =>
+      augmentDispatchRecord({
+        record: genericRecord(),
+        event: canonicalRoleEvent({
+          canonicalPath: '<repo>/agents/oat-phase-implementer.md',
+        }) as never,
+      }),
+    ).toThrow('expected <loaded|user|project>/agents/<name>.md');
+  });
+
+  it('accepts a well-formed canonical role event', () => {
+    expect(issuesFor(canonicalRoleEvent({}))).toEqual([]);
   });
 });

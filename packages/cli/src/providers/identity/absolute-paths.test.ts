@@ -1,7 +1,12 @@
 import { redactDispatchMessage } from '@commands/project/dispatch/record';
 import { describe, expect, it } from 'vitest';
 
-import { containsAbsolutePath, redactAbsolutePaths } from './absolute-paths';
+import {
+  assertNoAbsolutePath,
+  collectAbsolutePathViolations,
+  containsAbsolutePath,
+  redactAbsolutePaths,
+} from './absolute-paths';
 
 describe('absolute path detection', () => {
   it.each([
@@ -106,5 +111,70 @@ describe('absolute path detection', () => {
     expect(redactDispatchMessage('<user>/agents/oat-reviewer.md')).toBe(
       '<user>/agents/oat-reviewer.md',
     );
+  });
+});
+
+describe('collecting absolute-path violations', () => {
+  it('reports every absolute path by field, without echoing the value', () => {
+    const value = {
+      scope: '/Users/alice/private',
+      list: ['fine', 'C:/Users/alice'],
+      nested: { deep: 'file:///etc/passwd', ok: 'a/b' },
+    };
+    const violations = collectAbsolutePathViolations(value, 'recordBase');
+    expect(violations.map((violation) => violation.path)).toEqual([
+      'recordBase.scope',
+      'recordBase.list[1]',
+      'recordBase.nested.deep',
+    ]);
+    for (const violation of violations) {
+      expect(violation.message).toBe(
+        `A dispatch record must not carry an absolute filesystem path at ${violation.path}.`,
+      );
+      expect(containsAbsolutePath(violation.message)).toBe(false);
+    }
+    // The throwing helper keeps its first-hit behavior for existing callers.
+    expect(() => assertNoAbsolutePath(value, 'recordBase')).toThrow(
+      'A dispatch record must not carry an absolute filesystem path at recordBase.scope.',
+    );
+    expect(collectAbsolutePathViolations({ ok: 'a/b' }, 'x')).toEqual([]);
+  });
+});
+
+describe('message-boundary secret scrubbing', () => {
+  it.each([
+    ['a GitHub token', "received 'ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'"],
+    [
+      'an OpenAI-style key',
+      'variant sk-abcdefghijklmnopqrstuvwxyz does not match',
+    ],
+    [
+      'a whole JWT',
+      "received 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.c2lnbmF0dXJlLXZhbHVl'",
+    ],
+    [
+      'a private key block',
+      "received '-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBg\n-----END PRIVATE KEY-----'",
+    ],
+  ])('scrubs %s', (_name, message) => {
+    const redacted = redactDispatchMessage(message);
+    expect(redacted).toContain('<redacted-secret>');
+    expect(redacted).not.toMatch(
+      /ghp_|sk-abc|eyJ|c2lnbmF0dXJl|MIIEvQ|PRIVATE KEY/,
+    );
+  });
+
+  it('keeps the closing period after a scrubbed value', () => {
+    expect(
+      redactDispatchMessage(
+        'conflicts with record action ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.',
+      ),
+    ).toBe('conflicts with record action <redacted-secret>.');
+  });
+
+  it('leaves ordinary identifiers alone', () => {
+    const message =
+      "recordBase launch_status: Invalid enum value. Expected 'planned' | 'accepted', received 'nope'";
+    expect(redactDispatchMessage(message)).toBe(message);
   });
 });

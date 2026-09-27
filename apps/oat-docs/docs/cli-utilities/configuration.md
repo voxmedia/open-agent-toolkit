@@ -51,7 +51,7 @@ What each command is for:
 
 - `oat config list` shows the currently resolved command-surface values for shared and repo-local keys.
 - `oat config get <key>` reads one supported key value.
-- `oat config set <key> <value>` updates supported shared or repo-local keys.
+- `oat config set <key> <value>` updates supported shared or repo-local keys. Writes to the shared `.oat/config.json` keep the file's existing key order, and a write that would not change any value leaves the file byte-identical.
 - `oat config unset <key>` removes a supported key from one surface, using the same `--shared`/`--local`/`--user` flags and per-key restrictions as `set`. The resolved value then falls back to the next surface down, or to the built-in default. A key the surface does not hold exits 0 as already-unset (`--json` adds a `removed` boolean to tell the two apart). Unknown keys, lifecycle state, `tools.*` pack intent, aggregate read views, read-only remote-policy structure, and environment-shadowed keys with nothing stored are refused with exit 1 — see [CLI Reference](../reference/cli-reference.md#oat-config-surface-flags).
 - `oat config describe` shows the supported config catalog across shared repo, repo-local, user, and sync/provider surfaces.
 - `oat config describe <key>` shows file, scope, default, mutability, owning command, and description for one key. A deprecated key also prints `Deprecated: prefer <successor>`, and `--json` carries the same fact as a `deprecated` object (`supersededBy`, plus `note` and `legacyValues` where they apply).
@@ -124,6 +124,20 @@ that result. Binding defaults and operation restrictions then clamp authority,
 and purpose field grants intersect to narrow outbound fields. No configured
 layer bypasses hard approval floors or current caller-owned authority evidence;
 missing, stale, or mismatched evidence fails closed.
+
+The shared `pjm.remote` tree is closed. An unknown key, a non-object where an
+object is expected, or a wrong-typed leaf (for example `authority.default: 5`,
+a string `schemaVersion`, or a number, boolean, array, object, or `null` where a
+string is expected) makes every shared config read fail closed with an
+`Invalid PJM remote policy structure` error. The error names each offending
+field path: unknown keys by path alone, and wrong-typed values by path and
+structure type, never by value. This includes ordinary reads such as
+`oat config get` and `oat config unset` of an unrelated `pjm.remote` child: the
+`oat config` subcommands report the error and exit with code `1`, and `unset`
+leaves the file byte-identical. Repair the named fields by editing
+`.oat/config.json` by hand. A well-typed but unrecognized string is not
+rejected: it keeps its documented coercion to `none` for descriptions and
+`read-only` for authority.
 
 Tool-pack intent example:
 

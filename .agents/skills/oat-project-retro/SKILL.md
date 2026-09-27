@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(jq:*), Bash(pnpm:*), Bash(oat config:*), Bash(oat decision:*), Bash(oat project log:*), Bash(oat project push:*), Bash(oat project scope:*), Bash(oat tools:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.0.6
+  version: 1.0.7
 ---
 
 # Project Retrospective
@@ -53,8 +53,9 @@ OAT ▸ PROJECT RETRO
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-Use `[1/6] Resolving project and mode…` through `[6/6] Formatting and
-committing…`. Name evidence inventory, synthesis, disposition, and project-log
+Use `[1/7] Resolving project and mode…` through `[7/7] Walking through
+register items…`, with `[6/7] Formatting and committing…` before the final
+walkthrough. Name evidence inventory, synthesis, disposition, and project-log
 steps as they begin.
 
 ## Artifact Hygiene
@@ -165,7 +166,9 @@ provenance.
 
 ### Step 4: Resolve Post-Generation Consent
 
-Read effective `workflow.retro.apply` and `workflow.retro.filing` configuration.
+Read effective `workflow.retro.apply`, `workflow.retro.filing.repo`, and
+`workflow.retro.filing.upstream` configuration. Read each filing leaf key on its
+own; the filing namespace has no single readable value.
 
 **Interactive run:**
 
@@ -173,16 +176,19 @@ Read effective `workflow.retro.apply` and `workflow.retro.filing` configuration.
 2. Ask whether to apply eligible RP apply-items now.
 3. If unfiled UP or RP file-items exist, offer the `oat-project-retro-file`
    skill.
+4. Close the run with the Step 7 walkthrough, whatever the user answered.
 
 **Non-interactive run:**
 
 - Apply only when `workflow.retro.apply` is `auto`.
 - `ask` or absent means propose-only.
-- Chain to `oat-project-retro-file` only when at least one
-  `workflow.retro.filing` destination is explicitly configured; chaining means
+- Chain to `oat-project-retro-file` only when `workflow.retro.filing.repo` or
+  `workflow.retro.filing.upstream` is explicitly configured; chaining means
   loading the current `oat-project-retro-file/SKILL.md` and following it, or
   dispatching a child that carries it.
 - Without filing config, file nothing and report that proposals remain.
+- Close the run with the Step 7 walkthrough even though no one answered a
+  prompt.
 
 All applications follow the apply procedure. Filing remains owned by
 `oat-project-retro-file`; generate/apply mode does not file tracker items.
@@ -298,6 +304,61 @@ Commit the artifact, project-log append, and any approved apply outputs. Use
 one reviewed batch when items are tightly coupled; otherwise use one commit per
 item as described in the apply procedure. Never stage unrelated changes.
 
+### Step 7: Final Report Walkthrough
+
+After the artifact passes Step 6 validation, end the final response with a
+walkthrough of every `RP-*` and `UP-*` item so the user can decide what to apply
+or file without opening the retro. Link the artifact by its repo-relative path
+instead of reproducing it; the walkthrough explains items, it does not copy
+their bodies.
+
+For each item, state:
+
+- its ID and a short title;
+- a plain-language summary of what it proposes;
+- why it matters for future runs;
+- its current disposition and destination, read from the register fields after
+  every action in this run; and
+- the next available action, or that none remains.
+
+Group items in this order: apply items (RP `Disposition: apply`), repository
+filing items (RP `Disposition: file`), and upstream filing items (UP). Give an
+empty group a one-line "none" note rather than dropping it.
+
+The walkthrough is required in interactive and non-interactive runs alike, and
+whether apply or filing was performed, declined, deferred, skipped, automatic,
+or unanswered. When both registers are empty, give an explicit no-items summary
+such as "No repo improvements or upstream feedback items were proposed."
+
+Worked example:
+
+```markdown
+Retro: `.oat/projects/shared/example/references/project-retro.md`
+
+**Apply items**
+
+- **RP-01 — Isolate HOME in template tests.** Summary: run template-resolving
+  tests with a temporary HOME. Why it matters: they read the maintainer's user
+  templates and fail locally while passing in CI. Disposition: apply; Status:
+  applied; Applied-ref: `abc1234`. Next action: none.
+
+**Repository filing items**
+
+- **RP-02 — Document the cache-replay trap.** Summary: warn that a green turbo
+  run can be a cache replay. Why it matters: two sessions reported replays as
+  real passes. Disposition: file; Status: proposed; Destination: — because
+  filing was deferred, and `workflow.retro.filing.repo` routes it to the
+  backlog. Next action: run retro filing to create the backlog item.
+
+**Upstream filing items**
+
+- **UP-01 — Name the file in rule parse errors.** Summary: include the rule path
+  in canonical parse failures. Why it matters: the error named no file, so
+  diagnosis needed a full scan. Status: proposed; Destination: — because
+  `workflow.retro.filing.upstream` is unset. Next action: set that key or file
+  it interactively.
+```
+
 ## Success Criteria
 
 - The resolved mode matches explicit user/config intent.
@@ -311,3 +372,6 @@ item as described in the apply procedure. Never stage unrelated changes.
 - No promotion is applied or item filed without interactive approval or
   explicit non-interactive configuration.
 - The project log and commit preserve the outcome without unrelated changes.
+- The final response walks through every `RP-*` and `UP-*` item, grouped into
+  apply, repository filing, and upstream filing items, or gives an explicit
+  no-items summary, and links the artifact instead of reproducing it.

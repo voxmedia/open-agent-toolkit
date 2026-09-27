@@ -238,10 +238,12 @@ function resolveRoleIdentity(
 }
 
 /**
- * Deliberately a library for skill-side callers: dispatch protocols resolve
- * role identity before the native launch and hand the resulting evidence to
- * `oat project dispatch record`, which validates it. There is intentionally no
- * production call site inside the CLI.
+ * Resolve canonical role identity before a native launch. Its production
+ * caller is `oat project dispatch canonical-role`
+ * (`commands/project/dispatch/canonical-role.ts`), which prints the evidence
+ * as a `canonical-role-resolution` event for `oat project dispatch record` to
+ * validate, so skill-side callers never hand-assemble redacted paths or a
+ * content digest.
  */
 export function resolveCanonicalRole(
   input: ResolveCanonicalRoleInput,

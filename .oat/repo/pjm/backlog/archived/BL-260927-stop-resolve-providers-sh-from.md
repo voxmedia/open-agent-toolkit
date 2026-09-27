@@ -1,7 +1,7 @@
 ---
 id: BL-260927-stop-resolve-providers-sh-from
 title: Stop resolve-providers.sh from aborting when the last auto-detect test is false
-status: open
+status: closed
 priority: high
 scope: task
 scope_estimate: XS
@@ -11,7 +11,7 @@ labels:
   - bug
 assignee: null
 created: 2026-09-27T03:35:27.620Z
-updated: 2026-09-27T03:35:27.620Z
+updated: '2026-09-27T06:49:58Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/324

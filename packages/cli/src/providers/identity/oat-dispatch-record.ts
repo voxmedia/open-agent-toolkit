@@ -238,7 +238,10 @@ function differingControlFields(
 
 const redactedPathSchema = z
   .string()
-  .regex(/^<(?:loaded|user|project)>\/agents\/[a-z0-9][a-z0-9_-]*\.md$/);
+  .regex(
+    /^<(?:loaded|user|project)>\/agents\/[a-z0-9][a-z0-9_-]*\.md$/,
+    'expected <loaded|user|project>/agents/<name>.md',
+  );
 const candidateMissSchema = z
   .object({
     tier: z.enum(['loaded', 'user', 'project']),
@@ -263,7 +266,9 @@ const resolvedRoleSchema = z
     canonicalPath: redactedPathSchema,
     selectedPath: redactedPathSchema,
     roleVersion: z.string().min(1),
-    contentDigest: z.string().regex(/^sha256:[a-f0-9]{64}$/),
+    contentDigest: z
+      .string()
+      .regex(/^sha256:[a-f0-9]{64}$/, 'expected sha256:<64 lowercase hex>'),
     candidateMisses: z.array(candidateMissSchema),
   })
   .strict();
@@ -664,6 +669,16 @@ const oatDispatchEvidenceEventSchema = z.discriminatedUnion('kind', [
 export type OatDispatchEvidenceEvent = z.infer<
   typeof oatDispatchEvidenceEventSchema
 >;
+
+/**
+ * Non-throwing event validation, so a caller can report every event issue
+ * alongside violations found in other stages of the same input.
+ */
+export function safeParseOatDispatchEvidenceEvent(
+  value: unknown,
+): z.SafeParseReturnType<unknown, OatDispatchEvidenceEvent> {
+  return oatDispatchEvidenceEventSchema.safeParse(value);
+}
 
 function initialOatRecord(): PersistedOatDispatchRecordV1['oat'] {
   return {

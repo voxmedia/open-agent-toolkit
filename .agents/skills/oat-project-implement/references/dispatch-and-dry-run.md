@@ -513,33 +513,35 @@ Claude rules:
 - Before any managed effort-pinned Claude launch, pass the real completed
   resolver JSON, the selected generated `.claude/agents/<variant>.md`
   definition, and the exact proposed payload through the shipped record
-  producer. Use its managed input form:
+  producer. Its managed input has three keys: `claudeLaunch` (`resolution`,
+  the resolver's `--json` output verbatim; `definition`, the generated
+  definition text; `payload`, `{ "variant": "<variant>" }`), `recordBase`, and
+  `event`. Produce `event` with
+  `oat project dispatch canonical-role --role <oat-phase-implementer|oat-reviewer> --request-id <recordBase.request_id> --skill-dir "${SKILL_DIR}" --json`,
+  which prints the `canonical-role-resolution` evidence (redacted paths,
+  content digest, tier misses) the recorder accepts unchanged; never write that
+  evidence by hand. A `missing` result is still valid evidence and carries the
+  recovery commands for the absent role: surface those commands to the
+  operator, and note that a later fresh-child fallback still stops under the
+  canonical fallback role rule above. Copy the shape of
+  `${DISPATCH_SKILLS_ROOT}/oat-dispatch-subagents/references/managed-claude-example.json`,
+  one complete validated input per role; its `record-schema.md` section lists
+  the `recordBase` fields and the derived fields `recordBase` must omit.
 
-  ```json
-  {
-    "claudeLaunch": {
-      "resolution": { "<complete-resolver-field>": "<value>" },
-      "definition": "<the exact generated definition text>",
-      "payload": { "variant": "<the exact native variant>" }
-    },
-    "recordBase": { "<generic-nonderived-field>": "<value>" },
-    "event": { "<canonical-role-resolution-field>": "<value>" }
-  }
-  ```
-
-  Construct this JSON with a JSON-aware tool such as `jq --slurpfile` and
-  `--rawfile`; the placeholder keys illustrate object shapes and are never
-  literal input. Set the pre-launch record base to `launch_status: planned` and
+  Assemble the input with a JSON-aware tool such as `jq --slurpfile` and
+  `--rawfile`. Set the pre-launch record base to `launch_status: planned` and
   `child_outcome: null`, then run
   `oat project dispatch record --event-file <input> --json` without
   `--project`. Require `status: validated-only`. Launch only
   `record.payload.variant` (and `record.payload.model` when present) from that
   result. The producer rejects a missing or stale variant, an absent or drifted
-  generated definition, and a conflicting per-call model. After the terminal
-  child outcome, rebuild through the same managed input with the terminal
-  status; persistence remains subject to the opt-in rule above. Never copy
-  model, effort, selector, candidate, or payload fields into the record base:
-  the accepted envelope owns and derives them.
+  generated definition, and a conflicting per-call model. It reports every
+  violation it finds in one run, one `stage path: message` line each, so fix
+  them together and rerun. After the terminal child outcome, rebuild through
+  the same managed input with the terminal status; persistence remains subject
+  to the opt-in rule above. Never copy model, effort, selector, candidate, or
+  payload fields into the record base: the accepted envelope owns and derives
+  them.
 
 - Derive `model_axis=selected:<model>` and `effort_axis=selected:<effort>` from
   resolver output and the constructed variant payload. Legacy model-only

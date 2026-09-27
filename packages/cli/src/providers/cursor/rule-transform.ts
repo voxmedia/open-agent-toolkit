@@ -45,7 +45,7 @@ export function transformCanonicalToCursorRule(
   canonicalContent: string,
   canonicalPath?: string,
 ): string {
-  const rule = parseCanonicalRuleMarkdown(canonicalContent);
+  const rule = parseCanonicalRuleMarkdown(canonicalContent, canonicalPath);
   const frontmatter = buildCursorFrontmatter(
     rule.activation,
     rule.description,

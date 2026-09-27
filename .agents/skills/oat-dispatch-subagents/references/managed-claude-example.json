@@ -1,0 +1,387 @@
+{
+  "description": "Managed Claude validation-only inputs for `oat project dispatch record --event-file <file> --json` (no --project). Each role key is one complete input. claudeLaunch.resolution is `oat project dispatch-ceiling resolve --provider claude --role <role> --json` output verbatim; claudeLaunch.definition is the generated Claude agent file content; claudeLaunch.payload is the exact launch payload; event is `oat project dispatch canonical-role --json` output. Built from fixture agents, so the definition body, role version, and content digest are illustrative. See record-schema.md, Managed Claude Validation Input.",
+  "implementer": {
+    "claudeLaunch": {
+      "resolution": {
+        "status": "resolved",
+        "provider": "claude",
+        "value": "claude-opus-5-5",
+        "policyMode": "managed",
+        "policy": "high",
+        "source": "repo-config",
+        "preset": "high",
+        "unresolved": false,
+        "projectPath": null,
+        "providerDefaultEffort": "not-applicable",
+        "matrix": {
+          "claude": {
+            "economy": {
+              "candidates": [
+                {
+                  "harness": "claude",
+                  "model": "claude-sonnet-5",
+                  "effort": "medium"
+                }
+              ]
+            },
+            "balanced": {
+              "candidates": [
+                {
+                  "harness": "claude",
+                  "model": "claude-sonnet-5",
+                  "effort": "high"
+                }
+              ]
+            },
+            "high": {
+              "candidates": [
+                {
+                  "harness": "claude",
+                  "model": "claude-opus-5-5",
+                  "effort": "high"
+                }
+              ]
+            },
+            "frontier": {
+              "candidates": [
+                {
+                  "harness": "claude",
+                  "model": "claude-opus-5-5",
+                  "effort": "xhigh"
+                }
+              ]
+            }
+          }
+        },
+        "ladderCompleteness": {
+          "complete": false,
+          "missingCells": [
+            "codex.economy",
+            "codex.balanced",
+            "codex.high",
+            "codex.frontier",
+            "cursor.economy",
+            "cursor.balanced",
+            "cursor.high",
+            "cursor.frontier"
+          ]
+        },
+        "providers": {
+          "claude": {
+            "value": "claude-opus-5-5",
+            "mode": "enforced",
+            "mechanism": "pinned-variant",
+            "dispatchArgs": {
+              "variant": "oat-phase-implementer-claude-claude-opus-5-5-high"
+            },
+            "modelAxis": "selected:claude-opus-5-5",
+            "effortAxis": "selected:high",
+            "verifyOnDispatch": false,
+            "cellSource": "repo-config",
+            "target": {
+              "harness": "claude",
+              "model": "claude-opus-5-5",
+              "effort": "high",
+              "crossHarness": false,
+              "routeIndex": 0,
+              "routeLength": 1,
+              "capabilityEvidence": {
+                "source": "explicit-model-id",
+                "modelReference": "claude-opus-5-5",
+                "exactModel": true,
+                "generation": "opus-5-5",
+                "capabilitiesSource": "dispatch-target-model",
+                "supportedEfforts": ["low", "medium", "high", "xhigh", "max"]
+              }
+            },
+            "selection": {
+              "role": "implementer",
+              "policyMode": "managed",
+              "policy": "high",
+              "cellSource": "repo-config",
+              "target": {
+                "harness": "claude",
+                "model": "claude-opus-5-5",
+                "effort": "high",
+                "crossHarness": false,
+                "routeIndex": 0,
+                "routeLength": 1,
+                "capabilityEvidence": {
+                  "source": "explicit-model-id",
+                  "modelReference": "claude-opus-5-5",
+                  "exactModel": true,
+                  "generation": "opus-5-5",
+                  "capabilitiesSource": "dispatch-target-model",
+                  "supportedEfforts": ["low", "medium", "high", "xhigh", "max"]
+                }
+              },
+              "requestedCandidate": null,
+              "candidateTier": null,
+              "candidateIndex": null,
+              "ceilingTier": "high",
+              "ceilingTarget": {
+                "harness": "claude",
+                "model": "claude-opus-5-5",
+                "effort": "high",
+                "crossHarness": false,
+                "routeIndex": 0,
+                "routeLength": 1,
+                "capabilityEvidence": {
+                  "source": "explicit-model-id",
+                  "modelReference": "claude-opus-5-5",
+                  "exactModel": true,
+                  "generation": "opus-5-5",
+                  "capabilitiesSource": "dispatch-target-model",
+                  "supportedEfforts": ["low", "medium", "high", "xhigh", "max"]
+                }
+              },
+              "preferredValue": null,
+              "selectedValue": "claude-opus-5-5",
+              "capped": false,
+              "selectionMode": "capped",
+              "selectionBranch": "matrix-pinned",
+              "family": "claude"
+            }
+          }
+        }
+      },
+      "definition": "---\n# oat-managed: true\n# oat-role: oat-phase-implementer-claude-claude-opus-5-5-high\n# oat-owner: user-config\n# oat-provider: claude\n# oat-capability-evidence: {\"source\":\"explicit-model-id\",\"modelReference\":\"claude-opus-5-5\",\"exactModel\":true,\"generation\":\"opus-5-5\",\"capabilitiesSource\":\"dispatch-target-model\",\"supportedEfforts\":[\"low\",\"medium\",\"high\",\"xhigh\",\"max\"]}\nname: oat-phase-implementer-claude-claude-opus-5-5-high\ndescription: Example fixture role for the managed Claude dispatch-record\n  example. Claude-native claude-opus-5-5/high effort variant managed by OAT.\nmodel: claude-opus-5-5\neffort: high\n---\n\n## Role\n\nFixture body; `oat sync` generates the real definition.\n",
+      "payload": {
+        "variant": "oat-phase-implementer-claude-claude-opus-5-5-high"
+      }
+    },
+    "recordBase": {
+      "request_id": "example-p01-implementation",
+      "caller": "oat-project-implement",
+      "scope": "p01",
+      "objective": "Implement phase p01",
+      "action": "implementation",
+      "role_class": "implementation",
+      "dispatch_context": "phase-dispatch",
+      "catalog_snapshot": {
+        "id": "claude-generated-role-catalog",
+        "source": "user-sync",
+        "observed_at": "2026-09-27T00:00:00.000Z"
+      },
+      "authority": "phase-files",
+      "reasoning_mode_selector": null,
+      "service_tier_selector": null,
+      "deadline_seconds": 7200,
+      "retry_limit": 0,
+      "launch_status": "planned",
+      "child_outcome": null,
+      "runtime_confirmation": "not-reported",
+      "diagnostics": [],
+      "continuation_events": []
+    },
+    "event": {
+      "kind": "canonical-role-resolution",
+      "requestId": "example-p01-implementation",
+      "source": "canonical-role-resolver",
+      "evidence": {
+        "status": "resolved",
+        "dependency": "workflows",
+        "canonicalRole": "oat-phase-implementer",
+        "tier": "loaded",
+        "validation": "direct-canonical",
+        "canonicalPath": "<user>/agents/oat-phase-implementer.md",
+        "selectedPath": "<loaded>/agents/oat-phase-implementer.md",
+        "roleVersion": "1.0.0",
+        "contentDigest": "sha256:9df1dbd23a835f2329a63bbf7f75b1db0c6a5d14ffd703ec47f4a199abe2c506",
+        "candidateMisses": []
+      }
+    }
+  },
+  "reviewer": {
+    "claudeLaunch": {
+      "resolution": {
+        "status": "resolved",
+        "provider": "claude",
+        "value": "claude-opus-5-5",
+        "policyMode": "managed",
+        "policy": "high",
+        "source": "repo-config",
+        "preset": "high",
+        "unresolved": false,
+        "projectPath": null,
+        "providerDefaultEffort": "not-applicable",
+        "matrix": {
+          "claude": {
+            "economy": {
+              "candidates": [
+                {
+                  "harness": "claude",
+                  "model": "claude-sonnet-5",
+                  "effort": "medium"
+                }
+              ]
+            },
+            "balanced": {
+              "candidates": [
+                {
+                  "harness": "claude",
+                  "model": "claude-sonnet-5",
+                  "effort": "high"
+                }
+              ]
+            },
+            "high": {
+              "candidates": [
+                {
+                  "harness": "claude",
+                  "model": "claude-opus-5-5",
+                  "effort": "high"
+                }
+              ]
+            },
+            "frontier": {
+              "candidates": [
+                {
+                  "harness": "claude",
+                  "model": "claude-opus-5-5",
+                  "effort": "xhigh"
+                }
+              ]
+            }
+          }
+        },
+        "ladderCompleteness": {
+          "complete": false,
+          "missingCells": [
+            "codex.economy",
+            "codex.balanced",
+            "codex.high",
+            "codex.frontier",
+            "cursor.economy",
+            "cursor.balanced",
+            "cursor.high",
+            "cursor.frontier"
+          ]
+        },
+        "providers": {
+          "claude": {
+            "value": "claude-opus-5-5",
+            "mode": "enforced",
+            "mechanism": "pinned-variant",
+            "dispatchArgs": {
+              "variant": "oat-reviewer-claude-claude-opus-5-5-high"
+            },
+            "modelAxis": "selected:claude-opus-5-5",
+            "effortAxis": "selected:high",
+            "verifyOnDispatch": false,
+            "cellSource": "repo-config",
+            "target": {
+              "harness": "claude",
+              "model": "claude-opus-5-5",
+              "effort": "high",
+              "crossHarness": false,
+              "routeIndex": 0,
+              "routeLength": 1,
+              "capabilityEvidence": {
+                "source": "explicit-model-id",
+                "modelReference": "claude-opus-5-5",
+                "exactModel": true,
+                "generation": "opus-5-5",
+                "capabilitiesSource": "dispatch-target-model",
+                "supportedEfforts": ["low", "medium", "high", "xhigh", "max"]
+              }
+            },
+            "selection": {
+              "role": "reviewer",
+              "policyMode": "managed",
+              "policy": "high",
+              "cellSource": "repo-config",
+              "target": {
+                "harness": "claude",
+                "model": "claude-opus-5-5",
+                "effort": "high",
+                "crossHarness": false,
+                "routeIndex": 0,
+                "routeLength": 1,
+                "capabilityEvidence": {
+                  "source": "explicit-model-id",
+                  "modelReference": "claude-opus-5-5",
+                  "exactModel": true,
+                  "generation": "opus-5-5",
+                  "capabilitiesSource": "dispatch-target-model",
+                  "supportedEfforts": ["low", "medium", "high", "xhigh", "max"]
+                }
+              },
+              "requestedCandidate": null,
+              "candidateTier": null,
+              "candidateIndex": null,
+              "ceilingTier": "high",
+              "ceilingTarget": {
+                "harness": "claude",
+                "model": "claude-opus-5-5",
+                "effort": "high",
+                "crossHarness": false,
+                "routeIndex": 0,
+                "routeLength": 1,
+                "capabilityEvidence": {
+                  "source": "explicit-model-id",
+                  "modelReference": "claude-opus-5-5",
+                  "exactModel": true,
+                  "generation": "opus-5-5",
+                  "capabilitiesSource": "dispatch-target-model",
+                  "supportedEfforts": ["low", "medium", "high", "xhigh", "max"]
+                }
+              },
+              "preferredValue": null,
+              "selectedValue": "claude-opus-5-5",
+              "capped": false,
+              "selectionMode": "review-target",
+              "selectionBranch": "matrix-pinned",
+              "family": "claude"
+            }
+          }
+        }
+      },
+      "definition": "---\n# oat-managed: true\n# oat-role: oat-reviewer-claude-claude-opus-5-5-high\n# oat-owner: user-config\n# oat-provider: claude\n# oat-capability-evidence: {\"source\":\"explicit-model-id\",\"modelReference\":\"claude-opus-5-5\",\"exactModel\":true,\"generation\":\"opus-5-5\",\"capabilitiesSource\":\"dispatch-target-model\",\"supportedEfforts\":[\"low\",\"medium\",\"high\",\"xhigh\",\"max\"]}\nname: oat-reviewer-claude-claude-opus-5-5-high\ndescription: Example fixture role for the managed Claude dispatch-record\n  example. Claude-native claude-opus-5-5/high effort variant managed by OAT.\nmodel: claude-opus-5-5\neffort: high\n---\n\n## Role\n\nFixture body; `oat sync` generates the real definition.\n",
+      "payload": {
+        "variant": "oat-reviewer-claude-claude-opus-5-5-high"
+      }
+    },
+    "recordBase": {
+      "request_id": "example-p01-review",
+      "caller": "oat-project-implement",
+      "scope": "p01",
+      "objective": "Review phase p01",
+      "action": "review",
+      "role_class": "review",
+      "dispatch_context": "phase-dispatch",
+      "catalog_snapshot": {
+        "id": "claude-generated-role-catalog",
+        "source": "user-sync",
+        "observed_at": "2026-09-27T00:00:00.000Z"
+      },
+      "authority": "review-artifact",
+      "reasoning_mode_selector": null,
+      "service_tier_selector": null,
+      "deadline_seconds": 7200,
+      "retry_limit": 0,
+      "launch_status": "planned",
+      "child_outcome": null,
+      "runtime_confirmation": "not-reported",
+      "diagnostics": [],
+      "continuation_events": []
+    },
+    "event": {
+      "kind": "canonical-role-resolution",
+      "requestId": "example-p01-review",
+      "source": "canonical-role-resolver",
+      "evidence": {
+        "status": "resolved",
+        "dependency": "workflows",
+        "canonicalRole": "oat-reviewer",
+        "tier": "loaded",
+        "validation": "direct-canonical",
+        "canonicalPath": "<user>/agents/oat-reviewer.md",
+        "selectedPath": "<loaded>/agents/oat-reviewer.md",
+        "roleVersion": "1.0.0",
+        "contentDigest": "sha256:0d33889c3fc61be27d6ce8c7516d74830f70d42c2eab89a627a5e649f51a2ec3",
+        "candidateMisses": []
+      }
+    }
+  }
+}

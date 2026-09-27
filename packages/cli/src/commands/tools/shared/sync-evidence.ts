@@ -1,3 +1,4 @@
+import { isValidCatalogRefreshPolicy } from '@providers/shared/registry';
 import type {
   ManagedContentKind,
   ProviderCatalogRefreshPolicy,
@@ -66,6 +67,37 @@ function asArray(value: unknown): unknown[] {
 
 function asString(value: unknown): string | undefined {
   return typeof value === 'string' ? value : undefined;
+}
+
+/**
+ * Validates a catalog-refresh policy from sync advice.
+ *
+ * The advice policy outranks the registered capability policy in the
+ * lifecycle projection, and `visibilityFor` switches exhaustively over its
+ * state with a `never` default that throws. An unrecognized state or a policy
+ * that fails the registry's own provenance rules must therefore never reach
+ * that switch: it is dropped here so the projection falls back to the
+ * registry policy. Validation is delegated to the registry so the two cannot
+ * drift; the accepted policy is rebuilt so unrecognized extra fields are not
+ * carried along.
+ */
+function asRefreshPolicy(
+  value: unknown,
+): ProviderCatalogRefreshPolicy | undefined {
+  if (!isValidCatalogRefreshPolicy(value)) return undefined;
+  if (value.state === 'unknown') {
+    return { state: 'unknown', reason: value.reason };
+  }
+  const { kind, reference, verifiedAt, providerVersion } = value.provenance;
+  return {
+    state: value.state,
+    provenance: {
+      kind,
+      reference,
+      verifiedAt,
+      ...(providerVersion !== undefined ? { providerVersion } : {}),
+    },
+  };
 }
 
 /**
@@ -164,6 +196,7 @@ export function normalizeSyncEvidence(
         return [];
       }
       const visibility = asRecord(advice.visibility);
+      const policy = asRefreshPolicy(visibility?.policy);
       return [
         {
           provider,
@@ -178,12 +211,7 @@ export function normalizeSyncEvidence(
                   ...(asString(visibility.reason) !== undefined
                     ? { reason: asString(visibility.reason)! }
                     : {}),
-                  ...(asRecord(visibility.policy)
-                    ? {
-                        policy:
-                          visibility.policy as ProviderCatalogRefreshPolicy,
-                      }
-                    : {}),
+                  ...(policy !== undefined ? { policy } : {}),
                 },
               }
             : {}),

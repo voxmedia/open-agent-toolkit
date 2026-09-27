@@ -1,7 +1,7 @@
 ---
 id: BL-260908-validate-the-catalog-refresh
 title: Validate the catalog-refresh policy state in normalizeSyncEvidence
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: XS
@@ -11,7 +11,7 @@ labels:
   - wave-6-followup
 assignee: null
 created: 2026-09-08T05:07:58.933Z
-updated: 2026-09-08T05:07:58.933Z
+updated: '2026-09-27T06:50:00Z'
 associated_issues: []
 external_plans: []
 ---

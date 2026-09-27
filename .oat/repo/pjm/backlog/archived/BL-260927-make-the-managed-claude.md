@@ -1,7 +1,7 @@
 ---
 id: BL-260927-make-the-managed-claude
 title: Make the managed Claude dispatch-record input producible and self-describing
-status: open
+status: closed
 priority: high
 scope: feature
 scope_estimate: M
@@ -11,7 +11,7 @@ labels:
   - skills
 assignee: null
 created: 2026-09-27T03:35:36.101Z
-updated: 2026-09-27T03:35:36.101Z
+updated: '2026-09-27T06:49:59Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/326

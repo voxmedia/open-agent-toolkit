@@ -186,6 +186,26 @@ current-session catalog probe is still not proof of provider visibility.
 - Codex user-scope sync materializes user-config custom roles under `~/.codex`; project-config and supported-catalogue output remains project-scoped and version controlled
 - Cursor user-scope sync materializes user-config variants under `~/.cursor/agents`; project-config and supported-catalogue output remains project-scoped and version controlled
 
+## Canonical rule frontmatter
+
+Canonical rules in `.agents/rules/*.md` declare `activation` as one of
+`always`, `glob`, `agent-requested`, or `manual`; `globs` is valid only with
+`activation: glob`.
+
+Third-party installers sometimes write Cursor-style rules straight into
+`.agents/rules/` (for example `argent init`, reported in GitHub issue #316).
+OAT accepts that shape through one narrow alias:
+
+- `alwaysApply: true` with no `activation` is read as `activation: always`.
+- Under that alias a null or empty `globs` value is ignored, and a non-empty
+  `globs` value is an error naming the file, because canonical rules keep globs
+  only for `activation: glob`.
+- An explicit `activation` always wins over `alwaysApply`.
+- `alwaysApply: false`, or any value other than `true`, without `activation`
+  stays an activation error that names the file.
+
+Every canonical rule parse error names the repository-relative rule file.
+
 ## Adoption model
 
 - Stray adoption is available in `oat init` and `oat status`.

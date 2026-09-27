@@ -9,6 +9,7 @@ import {
 } from 'node:path';
 
 import type { SyncConfig } from '@config/sync-config';
+import { CliError } from '@errors/index';
 import { computeContentHash, computeStringHash } from '@manifest/hash';
 import { findEntry } from '@manifest/manager';
 import type {
@@ -551,6 +552,7 @@ export async function computeSyncPlan({
   const collections: CollectionProjectionPlan[] = [];
   const scopeRoot = resolveScopeRoot(canonical, explicitScopeRoot);
   const seenCanonicalKeys = new Set<string>();
+  const transformFailures = new Map<string, string>();
   const activeProviderNames = new Set<string>();
   const activeMappingsByProvider = new Map<string, PathMapping[]>();
   const manifestV2 = manifest as unknown as ManifestV2;
@@ -829,13 +831,32 @@ export async function computeSyncPlan({
           continue;
         }
 
-        const renderedContent =
-          mapping.transformCanonical && canonicalEntry.isFile
-            ? mapping.transformCanonical(
-                await readFile(canonicalEntry.canonicalPath, 'utf8'),
-                relativeCanonicalPath.replaceAll('\\', '/'),
-              )
-            : undefined;
+        let renderedContent: string | undefined;
+        if (mapping.transformCanonical && canonicalEntry.isFile) {
+          const displayPath = relativeCanonicalPath.replaceAll('\\', '/');
+          try {
+            renderedContent = mapping.transformCanonical(
+              await readFile(canonicalEntry.canonicalPath, 'utf8'),
+              displayPath,
+            );
+          } catch (error) {
+            if (!(error instanceof CliError)) {
+              throw error;
+            }
+            // Every provider transform parses the same canonical file, so key
+            // the failure by path and report each invalid file exactly once.
+            const failureKey = normalize(relativeCanonicalPath);
+            if (!transformFailures.has(failureKey)) {
+              transformFailures.set(
+                failureKey,
+                error.message.includes(displayPath)
+                  ? error.message
+                  : `${displayPath}: ${error.message}`,
+              );
+            }
+            continue;
+          }
+        }
 
         const entryScopeRoot = scopeRoot
           ? scopeRoot
@@ -901,6 +922,19 @@ export async function computeSyncPlan({
         );
       }
     }
+  }
+
+  if (transformFailures.size > 0) {
+    const count = transformFailures.size;
+    throw new CliError(
+      `Sync stopped: ${count} invalid canonical ${
+        count === 1 ? 'rule' : 'rules'
+      }. Fix ${count === 1 ? 'it' : 'them'} and re-run oat sync:\n${[
+        ...transformFailures.values(),
+      ]
+        .map((message) => `  - ${message}`)
+        .join('\n')}`,
+    );
   }
 
   if (!scopeRoot) {

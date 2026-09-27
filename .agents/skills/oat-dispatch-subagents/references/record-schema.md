@@ -208,6 +208,81 @@ otherwise agent-proposed alternate route approved for the current run. For
 `configured_invocation_evidence`. CLI or SDK availability alone is never a
 selection source.
 
+## Managed Claude Validation Input
+
+Before every managed, effort-pinned Claude implementer or reviewer launch,
+`oat-project-implement` runs `oat project dispatch record --event-file <file>
+--json` without `--project` and requires `status: validated-only`. That input
+replaces `record` with three top-level keys:
+
+- `claudeLaunch`, an object with three keys of its own:
+  - `resolution`: the output of
+    `oat project dispatch-ceiling resolve --provider claude --role <implementer|reviewer> --json`,
+    verbatim.
+  - `definition`: the full text of the generated Claude agent file for the
+    selected variant.
+  - `payload`: the exact launch payload, `{ "variant": "<variant>" }`,
+    optionally with `model` equal to the selected model.
+- `recordBase`: the caller-authored generic fields below.
+- `event`: the `canonical-role-resolution` event, produced rather than written
+  by hand.
+
+The command derives these fields from the accepted launch, and `recordBase`
+must omit them: `provider`, `dispatch_policy`, `dispatch_ceiling`,
+`role_name`, `role_selector`, `model_selector`,
+`model_selector_granularity`, `effort_selector`, `selection_source`,
+`candidates_considered`, `selection_reason`, `selected_route`, `payload`, and
+`configured_invocation_evidence`. `recordBase` supplies every other required
+generic field: `request_id`, `caller`, `scope`, `objective`, `action`,
+`role_class`, `dispatch_context`, `catalog_snapshot`, `authority`,
+`deadline_seconds`, `retry_limit`, `launch_status`, `child_outcome`,
+`runtime_confirmation`, `diagnostics`, and `continuation_events`. `action` is
+`implementation` or `fix` for the implementer and `review` for the reviewer.
+
+Produce the event with the resolver itself:
+
+```bash
+oat project dispatch canonical-role --role <oat-phase-implementer|oat-reviewer> \
+  --request-id <recordBase.request_id> --skill-dir <loaded oat-project-implement dir> --json
+```
+
+`--skill-dir` is required because the loaded tier is derived from it; the user
+tier is `$HOME/.agents` and the project tier is `<repo>/.agents`. The command
+is read-only. Its event carries `kind: canonical-role-resolution`, `requestId`
+equal to `recordBase.request_id`, `source: canonical-role-resolver`, and
+`evidence`. Resolved evidence has `dependency`, `canonicalRole`, `tier`,
+`validation` (`direct-canonical` or `exact-canonical-symlink`),
+`canonicalPath`, `selectedPath`, `roleVersion`, `contentDigest`, and
+`candidateMisses`. Paths use the redacted form
+`<loaded|user|project>/agents/<name>.md`, never an absolute or `<repo>` path,
+and `contentDigest` is `sha256:<64 lowercase hex>` of the canonical role file.
+Missing evidence has `status: missing`, the tier misses, and `recovery`
+commands; it validates, but a fallback claim requires resolved evidence.
+
+One run reports every violation it can find, one `stage path: message` line
+each, where `stage` is `claudeLaunch`, `recordBase`, or `event`. The
+`recordBase` cross-field rules run even when a required field is missing. A
+check that needs a value that failed to parse is skipped and named on a final
+line: the launch consistency checks when the resolution is malformed, the
+payload variant and model checks when the payload is malformed, and the
+action/role check without a parsed resolution. Fix the reported violations and
+run again. Secret-shaped values are scrubbed from the report as
+`<redacted-secret>`, and absolute paths as `<redacted-path>`.
+
+[`managed-claude-example.json`](managed-claude-example.json) holds one complete
+input per role and validates as published. It is built from fixture agents
+rather than the shipped roles, so its definition body, role version, and
+content digest are illustrative. To regenerate it, run `dispatch-ceiling
+resolve` for each role, materialize each definition from a fixture agent with
+the Claude materializer that `oat sync` uses, and run `canonical-role` against
+fixture role files; the CLI test that pins the example must still pass. The
+published events come from a fixture home whose `.agents/agents/` holds both
+roles and whose `.agents/skills/oat-project-implement/` is the `--skill-dir`,
+so the loaded root is that home's `.agents`: expect `tier: loaded`,
+`selectedPath: <loaded>/agents/<role>.md`, and
+`canonicalPath: <user>/agents/<role>.md`. Another layout yields different but
+equally valid tier labels.
+
 ## Recon Wave
 
 ```yaml

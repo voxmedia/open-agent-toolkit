@@ -2,7 +2,7 @@
 id: BL-260927-derive-or-label-the-dispatch
 title: Derive or label the dispatch audit line from the gate invocation in
   gate-originated reviews
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: S
@@ -12,7 +12,7 @@ labels:
   - provenance
 assignee: null
 created: 2026-09-27T03:35:37.866Z
-updated: 2026-09-27T03:35:37.866Z
+updated: '2026-09-27T06:49:59Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/325

@@ -1626,6 +1626,24 @@ describe('createSyncCommand', () => {
     expect(capture.jsonPayloads).toHaveLength(0);
   });
 
+  it('fails the run naming every invalid canonical rule and applies nothing', async () => {
+    const ruleError = new CliError(
+      'Sync stopped: 2 invalid canonical rules. Fix them and re-run oat sync:\n' +
+        '  - Frontmatter field "activation" in .agents/rules/a.md must be one of always, glob, agent-requested, manual.\n' +
+        '  - Rule markdown in .agents/rules/b.md must include YAML frontmatter.',
+    );
+    const { capture, command, computeSyncPlan, executeSyncPlan } =
+      createHarness();
+    computeSyncPlan.mockRejectedValueOnce(ruleError);
+
+    await expect(
+      runSyncCommand(command, { globalArgs: ['--scope', 'project'] }),
+    ).rejects.toThrow(/\.agents\/rules\/a\.md[\s\S]*\.agents\/rules\/b\.md/);
+
+    expect(executeSyncPlan).not.toHaveBeenCalled();
+    expect(capture.info.join('\n')).not.toContain('No changes required.');
+  });
+
   it('couples the advisory and the manifest restamp for equal, older, and newer versions', async () => {
     // `runSyncApply` derives `shouldRefreshManifestVersion` from the same
     // diagnostic that drives the advisory. With an empty plan the restamp is
@@ -1730,6 +1748,84 @@ describe('createSyncCommand', () => {
       versionSkewWarning('0.0.1', 'project'),
       versionSkewWarning('999.0.0', 'user'),
     ]);
+  });
+
+  it('--scope all: never reports No changes required beside a failed scope', async () => {
+    // The project scope fails a real operation while the user scope planned
+    // nothing. The whole run exits 1, so no scope body may claim that nothing
+    // was required. Joined rather than element-wise: the plan body logs one
+    // multi-line string per run.
+    const { capture, command } = createHarness({
+      plans: [createPlan('create_symlink', 'project'), createEmptyPlan('user')],
+      executeResults: [
+        { applied: 0, failed: 1, skipped: 0 },
+        { applied: 0, failed: 0, skipped: 0 },
+      ],
+      useRealSyncPlanFormatter: true,
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'all'],
+    });
+
+    const output = capture.info.join('\n');
+    expect(output).toContain('Scope: user');
+    expect(output).not.toContain('No changes required.');
+    expect(capture.warn).toContain('\nSync completed with partial failures.');
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('--scope all: a failed run with zero planned operations reads as failed, not restamp-only or no-op', async () => {
+    // Both scopes are skewed and neither plans an operation, but a rejected
+    // collection in the project scope fails the run. The run must read as
+    // failed: no restamp-only or no-op claim in any scope body or the trailing
+    // message. `runSyncApply` no longer carries a `failed === 0` conjunct in
+    // `restampOnly`; after the `runFailed` body strip no output could depend
+    // on it (p02 review L1), so this test pins the observable outcome.
+    const { capture, command } = createHarness({
+      loadedManifests: [
+        createManifest({ oatVersion: '0.0.1' }),
+        createManifest({ oatVersion: '0.0.1' }),
+      ],
+      plans: [
+        createCollectionPlan('reject-collection'),
+        createEmptyPlan('user'),
+      ],
+      executeResults: [
+        { applied: 0, failed: 1, skipped: 0 },
+        { applied: 0, failed: 0, skipped: 0 },
+      ],
+      useRealSyncPlanFormatter: true,
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'all'],
+    });
+
+    const output = capture.info.join('\n');
+    expect(output).toContain('Scope: user');
+    expect(output).not.toContain('Manifest version refreshed');
+    expect(output).not.toContain('No changes required.');
+    expect(capture.warn).toContain('\nSync completed with partial failures.');
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('--scope all: keeps No changes required when every scope is empty and nothing failed (control)', async () => {
+    const { capture, command } = createHarness({
+      plans: [createEmptyPlan('project'), createEmptyPlan('user')],
+      executeResults: [
+        { applied: 0, failed: 0, skipped: 0 },
+        { applied: 0, failed: 0, skipped: 0 },
+      ],
+      useRealSyncPlanFormatter: true,
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'all'],
+    });
+
+    expect(capture.info.join('\n')).toContain('No changes required.');
+    expect(process.exitCode).toBe(0);
   });
 
   it('handles partial failure gracefully', async () => {
