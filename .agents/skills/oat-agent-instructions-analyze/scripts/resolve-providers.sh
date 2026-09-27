@@ -78,11 +78,21 @@ resolve_from_sync_config() {
 }
 
 resolve_from_auto_detect() {
-  # Scan for provider directories
-  [[ -d "${REPO_ROOT}/.claude" || -f "${REPO_ROOT}/CLAUDE.md" ]] && providers+=("claude")
-  [[ -d "${REPO_ROOT}/.cursor" ]] && providers+=("cursor")
-  [[ -d "${REPO_ROOT}/.github/instructions" || -f "${REPO_ROOT}/.github/copilot-instructions.md" ]] && providers+=("copilot")
-  [[ -d "${REPO_ROOT}/.cline" ]] && providers+=("cline")
+  # Scan for provider directories. Each test is an `if` block so a false test
+  # never becomes the function's exit status under `set -e`.
+  if [[ -d "${REPO_ROOT}/.claude" || -f "${REPO_ROOT}/CLAUDE.md" ]]; then
+    providers+=("claude")
+  fi
+  if [[ -d "${REPO_ROOT}/.cursor" ]]; then
+    providers+=("cursor")
+  fi
+  if [[ -d "${REPO_ROOT}/.github/instructions" || -f "${REPO_ROOT}/.github/copilot-instructions.md" ]]; then
+    providers+=("copilot")
+  fi
+  if [[ -d "${REPO_ROOT}/.cline" ]]; then
+    providers+=("cline")
+  fi
+  return 0
 }
 
 interactive_confirm() {
