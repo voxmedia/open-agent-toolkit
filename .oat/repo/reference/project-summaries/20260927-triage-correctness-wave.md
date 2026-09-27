@@ -197,8 +197,10 @@ Archived in p04-t02 (`a90da4f49`):
 ## Explainer Outcome
 
 - Project recap: `built` (host browser rung, visual verdict pass), run
-  `78ed8b36-8c9f-432b-8c46-38061c180065`, package
-  `explainers/triage-correctness-wave-recap/manifest.json`.
+  `bb64ea32-d55b-47b9-9612-a1843856e52c`, regenerated at completion from the
+  final inputs:
+  [.oat/repo/reference/project-recaps/20260927-triage-correctness-wave/site/index.html](https://github.com/voxmedia/open-agent-toolkit/blob/wave/2026-09-26-backlog/.oat/repo/reference/project-recaps/20260927-triage-correctness-wave/site/index.html)
+  (manifest [.oat/repo/reference/project-recaps/20260927-triage-correctness-wave/manifest.json](https://github.com/voxmedia/open-agent-toolkit/blob/wave/2026-09-26-backlog/.oat/repo/reference/project-recaps/20260927-triage-correctness-wave/manifest.json)).
 
 ## Workflow Observations
 
@@ -237,3 +239,7 @@ target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:
 ### 2026-09-27 · structural · oat gate review · final
 
 target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:1 exit=0 status=ok artifact=.oat/projects/shared/triage-correctness-wave/reviews/final-review-2026-09-27T071850Z.md run=3d23848e-208f-4b8f-96a9-9ea83c666bbf
+
+### 2026-09-27 · structural · oat-project-retro · project-retro
+
+retro artifact=.oat/projects/shared/triage-correctness-wave/references/project-retro.md evidence_used=archived-review-markdown,lifecycle-artifacts,oat-execution-learnings,orchestrator-session-summary,project-log,repository-source,session-transcript evidence_unavailable=child-run-transcripts promotions=2 upstream=4 apply=deferred filing=deferred
