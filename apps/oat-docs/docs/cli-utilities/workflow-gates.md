@@ -236,6 +236,28 @@ model that ran, and the reviewer must not replace them with self-identification.
 The CLI compares the copied values with its gate-owned record before it applies
 the severity threshold.
 
+The gate frontmatter is also the authority for the artifact's dispatch audit
+line. The reviewer's resolver stamp describes the project reviewer policy, so
+gate-originated artifacts label it as the policy view:
+
+```markdown
+**Dispatch audit (policy view):** `Dispatch: scope=p01 action=review role=reviewer ... target=oat-reviewer-gpt-6-sol-high`
+```
+
+The gate reads reviewer stamps (`action=review role=reviewer`) from audit lines
+in the metadata block before the first level-two (`##`) heading and in a
+`## Dispatch Audit` or `## Dispatch Metadata` section. An audit line is an
+optional list marker, an optional label ending in `:`, and a `Dispatch:` stamp,
+optionally wrapped in one backtick pair. Fenced code blocks, findings, and prose
+that quotes a stamp are ignored. A stamp whose label contains `policy view` is
+not checked. Every other audit stamp must agree with the frontmatter: its
+`target` equals `oat_gate_target`, and, when `oat_invocation_reasoning_effort`
+is a concrete effort (not `unknown`, `provider-default`, or `not-applicable`),
+its `effort_axis` equals `selected:<effort>`. A
+disagreeing stamp fails with `status: artifact_validation_failed` and cause
+`gate_dispatch_audit_mismatched`. Artifacts without an audit stamp are
+unaffected.
+
 ### Review producer identity
 
 Dynamic planning workflows can declare their current parent model to a review
@@ -328,6 +350,14 @@ Configured target values, requested controls, producer stamps, and reviewer
 self-report are not interchangeable. The human report is rendered from the
 versioned object, and any parseable `Dispatch:` compatibility line is derived
 from that same report rather than rebuilt from target IDs or model names.
+
+Because the resolver stamp and the gate invocation can name different targets
+and efforts, a gate artifact writes the resolver stamp under the
+`**Dispatch audit (policy view):**` label (see
+[Review gates](#review-gates) above for the agreement rule). An unlabeled stamp that disagrees with the frontmatter fails with
+`gate_dispatch_audit_mismatched`. When an older installed
+`oat-project-review-provide` wrote the unlabeled line, refresh installed skills
+with `oat tools update` and rerun the gate instead of editing findings.
 
 ### Review project resolution and corroboration
 

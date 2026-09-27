@@ -1512,3 +1512,232 @@ This artifact has no verdict fields and no findings sections.
     );
   });
 });
+
+describe('parseReviewGateVerdict dispatch audit lines', () => {
+  const tempDirs: string[] = [];
+
+  afterEach(async () => {
+    await Promise.all(
+      tempDirs.map(async (dir) => rm(dir, { recursive: true, force: true })),
+    );
+    tempDirs.length = 0;
+  });
+
+  const POLICY_STAMP =
+    'Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high';
+
+  function gateFrontmatter(target: string, effort: string): string {
+    return [
+      '---',
+      'oat_review_type: code',
+      'oat_review_scope: final',
+      'oat_review_invocation: gate',
+      'oat_project: .oat/projects/shared/demo',
+      'oat_gate_run_id: 11111111-1111-4111-8111-111111111111',
+      `oat_gate_target: ${target}`,
+      'oat_gate_runtime: cursor',
+      'oat_invocation_model: unknown',
+      `oat_invocation_reasoning_effort: ${effort}`,
+      'oat_invocation_source: exec-target-config',
+      '---',
+    ].join('\n');
+  }
+
+  const CLEAN_FINDINGS = [
+    '## Findings',
+    '',
+    '### Critical',
+    '',
+    'None',
+    '',
+    '### High',
+    '',
+    'None',
+    '',
+    '### Medium',
+    '',
+    'None',
+    '',
+    '### Low',
+    '',
+    'None',
+    '',
+  ].join('\n');
+
+  async function parse(content: string) {
+    const root = await mkdtemp(join(tmpdir(), 'oat-review-audit-'));
+    tempDirs.push(root);
+    const artifactPath = join(root, 'review.md');
+    await writeFile(artifactPath, content, 'utf8');
+    return parseReviewGateVerdict(artifactPath);
+  }
+
+  it('reads a plain pre-heading list stamp as unlabeled', async () => {
+    // Excerpt of .oat/projects/shared/recon-rework/reviews/archived/final-review-2026-09-11T155617Z.md:21-35
+    const verdict = await parse(
+      [
+        gateFrontmatter('cursor-fable-5-1-high', 'unknown'),
+        '',
+        '# Code Review: final',
+        '',
+        '- Workflow mode: quick',
+        `- ${POLICY_STAMP}`,
+        '- Dispatch audit note: the resolver report above is the managed reviewer',
+        '  ceiling for `cursor`.',
+        '',
+        CLEAN_FINDINGS,
+      ].join('\n'),
+    );
+
+    expect(verdict.dispatchAudit?.policyView).toEqual([]);
+    expect(verdict.dispatchAudit?.unlabeled).toHaveLength(1);
+    expect(verdict.dispatchAudit?.unlabeled[0]).toMatchObject({
+      action: 'review',
+      role: 'reviewer',
+      target: 'oat-reviewer-gpt-5-6-sol-high',
+      effortAxis: 'not-applicable',
+      lineNumber: 17,
+    });
+  });
+
+  it('reads a backtick-wrapped bold-labeled stamp as unlabeled', async () => {
+    // Excerpt of .oat/projects/shared/recon-rework/reviews/archived/final-review-2026-09-11T020623Z.md:21-34
+    const verdict = await parse(
+      [
+        gateFrontmatter('cursor-fable-5-1-high', 'unknown'),
+        '',
+        '# Code Review: final',
+        '',
+        '**Reviewed:** 2026-09-11T02:06:23Z',
+        `**Dispatch audit:** \`${POLICY_STAMP}\``,
+        '',
+        CLEAN_FINDINGS,
+      ].join('\n'),
+    );
+
+    expect(verdict.dispatchAudit?.policyView).toEqual([]);
+    expect(verdict.dispatchAudit?.unlabeled).toHaveLength(1);
+    expect(verdict.dispatchAudit?.unlabeled[0]?.target).toBe(
+      'oat-reviewer-gpt-5-6-sol-high',
+    );
+  });
+
+  it('reads a labeled bullet inside a Dispatch Audit section whose label holds a backtick span', async () => {
+    // Verbatim excerpt of the machine-local (gitignored) artifact
+    // .oat/projects/shared/claude-effort-levels/reviews/archived/final-review-2026-09-21T232436Z.md:29-33
+    // (frontmatter: oat_gate_target: cursor-fable-5-1-high,
+    // oat_invocation_reasoning_effort: unknown)
+    const verdict = await parse(
+      [
+        gateFrontmatter('cursor-fable-5-1-high', 'unknown'),
+        '',
+        '# Code Review: final',
+        '',
+        '## Dispatch Audit',
+        '- Managed reviewer resolver (audit surface, `dispatchReport.schemaVersion: 1`): `Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high`',
+        '',
+        CLEAN_FINDINGS,
+      ].join('\n'),
+    );
+
+    expect(verdict.dispatchAudit?.policyView).toEqual([]);
+    expect(verdict.dispatchAudit?.unlabeled).toHaveLength(1);
+    expect(verdict.dispatchAudit?.unlabeled[0]?.target).toBe(
+      'oat-reviewer-gpt-5-6-sol-high',
+    );
+  });
+
+  it('classifies a prose policy-view label as labeled', async () => {
+    // Verbatim excerpt of the machine-local (gitignored) artifact
+    // .oat/projects/shared/triage-correctness-wave/reviews/archived/artifact-plan-review-2026-09-27T043735Z.md
+    // (frontmatter: oat_gate_target: codex-6-sol-xhigh,
+    // oat_invocation_reasoning_effort: xhigh)
+    const verdict = await parse(
+      [
+        gateFrontmatter('codex-6-sol-xhigh', 'xhigh'),
+        '',
+        '# Artifact Review: plan',
+        '',
+        '## Dispatch Audit',
+        '**Resolver policy view:** `Dispatch: scope=plan action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-sol-high`',
+        '',
+        CLEAN_FINDINGS,
+      ].join('\n'),
+    );
+
+    expect(verdict.dispatchAudit?.unlabeled).toEqual([]);
+    expect(verdict.dispatchAudit?.policyView).toHaveLength(1);
+    expect(verdict.dispatchAudit?.policyView[0]).toMatchObject({
+      target: 'oat-reviewer-gpt-6-sol-high',
+      effortAxis: 'selected:high',
+    });
+  });
+
+  it('accepts the Dispatch Metadata section and the skill policy-view label', async () => {
+    const verdict = await parse(
+      [
+        gateFrontmatter('codex-6-sol-xhigh', 'xhigh'),
+        '',
+        '# Review',
+        '',
+        '## Dispatch Metadata',
+        '',
+        `**Dispatch audit (policy view):** \`${POLICY_STAMP}\``,
+        '',
+        CLEAN_FINDINGS,
+      ].join('\n'),
+    );
+
+    expect(verdict.dispatchAudit?.unlabeled).toEqual([]);
+    expect(verdict.dispatchAudit?.policyView).toHaveLength(1);
+  });
+
+  it('ignores implementer stamps, fenced stamps, other sections, and finding prose', async () => {
+    const verdict = await parse(
+      [
+        gateFrontmatter('codex-6-sol-xhigh', 'xhigh'),
+        '',
+        '# Review',
+        '',
+        '- Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=inherited effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-high',
+        `The resolver printed \`${POLICY_STAMP}\` during setup.`,
+        '',
+        '```text',
+        POLICY_STAMP,
+        '```',
+        '',
+        '## Dispatch Audit',
+        '',
+        '```text',
+        `**Dispatch audit:** \`${POLICY_STAMP}\``,
+        '```',
+        '',
+        '## Summary',
+        '',
+        `- ${POLICY_STAMP}`,
+        '',
+        '## Findings',
+        '',
+        '### Critical',
+        '',
+        'None',
+        '',
+        '### High',
+        '',
+        'None',
+        '',
+        '### Medium',
+        '',
+        `- The audit line \`${POLICY_STAMP}\` disagrees with the target.`,
+        `- ${POLICY_STAMP}`,
+        '',
+        '### Low',
+        '',
+        'None',
+        '',
+      ].join('\n'),
+    );
+
+    expect(verdict).not.toHaveProperty('dispatchAudit');
+  });
+});

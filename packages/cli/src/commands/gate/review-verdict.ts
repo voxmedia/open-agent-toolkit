@@ -2,6 +2,10 @@ import { createHash } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
 
 import { getFrontmatterBlock } from '@commands/shared/frontmatter';
+import {
+  parseDispatchStamps,
+  type DispatchStamp,
+} from '@providers/identity/stamp';
 import YAML from 'yaml';
 
 export interface ReviewGateVerdict {
@@ -11,6 +15,8 @@ export interface ReviewGateVerdict {
   invocation: string | null;
   project: string | null;
   gateInvocation?: ReviewArtifactGateInvocation;
+  /** Present only when the artifact carries at least one audit line. */
+  dispatchAudit?: ReviewDispatchAudit;
   counts: {
     critical: number;
     high: number;
@@ -31,6 +37,16 @@ export interface ReviewArtifactGateInvocation {
   model: string | null;
   reasoningEffort: string | null;
   source: string | null;
+}
+
+/**
+ * Reviewer dispatch stamps found on audit lines. `policyView` holds stamps
+ * whose label names the project reviewer policy view; every other audit stamp
+ * is `unlabeled` and must agree with the gate invocation frontmatter.
+ */
+export interface ReviewDispatchAudit {
+  unlabeled: DispatchStamp[];
+  policyView: DispatchStamp[];
 }
 
 export type Severity = keyof ReviewGateVerdict['counts'];
@@ -351,6 +367,115 @@ function linesOutsideFences(content: string): MarkdownLine[] {
   }
 
   return outsideFenceLines;
+}
+
+const AUDIT_SECTION_HEADING = /^##\s+Dispatch\s+(?:Audit|Metadata)\s*#*\s*$/i;
+const TOP_SECTION_HEADING = /^##\s+\S/;
+const LIST_MARKER = /^(?:[-*+]|\d+[.)])\s+/;
+const DISPATCH_TOKEN = /(^|[\s`])Dispatch:/;
+const POLICY_VIEW_LABEL = /policy\s+view/i;
+
+interface ClassifiedAuditLine {
+  stamp: DispatchStamp;
+  policyView: boolean;
+}
+
+function frontmatterEnd(content: string): number {
+  const match = content.match(/^---\n[\s\S]*?\n---(?:\n|$)/);
+  return match ? match[0].length : 0;
+}
+
+/**
+ * Classifies one line as a reviewer dispatch audit line.
+ *
+ * Shape: an optional list marker, an optional bold or plain label ending in
+ * `:` (the label may itself hold backtick spans), and a `Dispatch:` stamp that
+ * is either bare or wrapped in exactly one backtick pair. The stamp must parse
+ * as a reviewer stamp (`action=review role=reviewer`).
+ */
+function classifyAuditLine(
+  text: string,
+  lineNumber: number,
+): ClassifiedAuditLine | null {
+  const remainder = text.trim().replace(LIST_MARKER, '');
+  const token = DISPATCH_TOKEN.exec(remainder);
+  if (!token) {
+    return null;
+  }
+
+  let label = remainder.slice(0, token.index + (token[1] ?? '').length);
+  let stamp = remainder.slice(token.index + (token[1] ?? '').length);
+  const wrapped = label.endsWith('`');
+  if (wrapped) {
+    label = label.slice(0, -1);
+    if (!stamp.endsWith('`')) {
+      return null;
+    }
+    stamp = stamp.slice(0, -1);
+  }
+  if (stamp.includes('`')) {
+    return null;
+  }
+
+  const trimmedLabel = label.trim();
+  if (trimmedLabel && !/:(?:\*{1,2}|_{1,2})?$/.test(trimmedLabel)) {
+    return null;
+  }
+
+  const parsed = parseDispatchStamps(stamp);
+  const first = parsed[0];
+  if (
+    parsed.length !== 1 ||
+    !first ||
+    first.legacy ||
+    first.action !== 'review' ||
+    first.role !== 'reviewer'
+  ) {
+    return null;
+  }
+
+  return {
+    stamp: { ...first, line: text, lineNumber },
+    policyView: POLICY_VIEW_LABEL.test(trimmedLabel),
+  };
+}
+
+/**
+ * Reviewer dispatch audit lines from the metadata block before the first `## `
+ * heading and from `## Dispatch Audit` or `## Dispatch Metadata` sections.
+ * Fenced code blocks, other sections (including findings), and prose that
+ * merely quotes a stamp are ignored.
+ */
+export function extractDispatchAudit(content: string): ReviewDispatchAudit {
+  const bodyStart = frontmatterEnd(content);
+  const audit: ReviewDispatchAudit = { unlabeled: [], policyView: [] };
+  let inAuditRegion = true;
+
+  for (const line of linesOutsideFences(content)) {
+    if (line.start < bodyStart) {
+      continue;
+    }
+    if (TOP_SECTION_HEADING.test(line.text)) {
+      inAuditRegion = AUDIT_SECTION_HEADING.test(line.text);
+      continue;
+    }
+    if (!inAuditRegion) {
+      continue;
+    }
+
+    const lineNumber = content.slice(0, line.start).split('\n').length;
+    const classified = classifyAuditLine(line.text, lineNumber);
+    if (!classified) {
+      continue;
+    }
+    if (classified.policyView) {
+      audit.policyView.push(classified.stamp);
+    } else {
+      audit.unlabeled.push(classified.stamp);
+    }
+  }
+
+  return audit;
 }
 
 function findFindingsSection(content: string): FindingsSection | null {
@@ -862,6 +987,9 @@ export async function parseReviewGateVerdict(
   }
 
   const gateInvocation = readGateInvocation(frontmatter);
+  const dispatchAudit = extractDispatchAudit(content);
+  const hasDispatchAudit =
+    dispatchAudit.unlabeled.length > 0 || dispatchAudit.policyView.length > 0;
 
   if (options.artifactSnapshot) {
     await assertArtifactContentCurrent(
@@ -877,6 +1005,7 @@ export async function parseReviewGateVerdict(
     invocation: stringOrNull(frontmatter['oat_review_invocation']),
     project: stringOrNull(frontmatter['oat_project']),
     ...(gateInvocation ? { gateInvocation } : {}),
+    ...(hasDispatchAudit ? { dispatchAudit } : {}),
     counts,
     blocking: hasBlockingFindings(counts),
     ...(insertedSeverities.length > 0

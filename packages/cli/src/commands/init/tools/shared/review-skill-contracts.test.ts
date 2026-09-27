@@ -5043,3 +5043,23 @@ describe('durable archive active-pointer deferral', () => {
     }
   });
 });
+
+describe('gate dispatch audit policy-view label', () => {
+  it.each([
+    '.agents/skills/oat-project-review-provide/SKILL.md',
+    '.agents/skills/oat-project-review-provide-remote/SKILL.md',
+  ])('%s labels the gate resolver stamp as the policy view', (path) => {
+    const content = readRepoFile(path);
+    const labelIndex = content.indexOf('`**Dispatch audit (policy view):**`');
+    expect(labelIndex, `${path} policy-view label`).toBeGreaterThan(-1);
+    const paragraph = content.slice(
+      content.lastIndexOf('\n\n', labelIndex),
+      content.indexOf('\n\n', labelIndex),
+    );
+    expect(paragraph).toContain('`oat_review_invocation: gate`');
+    expect(paragraph).toContain('`Dispatch:`');
+    expect(paragraph).toContain('`oat_gate_target`');
+    expect(paragraph).toContain('`gate_dispatch_audit_mismatched`');
+    expect(paragraph).toMatch(/selected:<[^>]+>/);
+  });
+});
