@@ -194,6 +194,12 @@ Archived in p04-t02 (`a90da4f49`):
 - `BL-260908-validate-the-catalog-refresh`
 - `BL-260908-restore-recon-s-cheap-fan-out` (reconciled; shipped by PR #285)
 
+## Explainer Outcome
+
+- Project recap: `built` (host browser rung, visual verdict pass), run
+  `78ed8b36-8c9f-432b-8c46-38061c180065`, package
+  `explainers/triage-correctness-wave-recap/manifest.json`.
+
 ## Workflow Observations
 
 ### 2026-09-27 · structural · oat gate review · plan
