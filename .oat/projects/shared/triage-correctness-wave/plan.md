@@ -1090,7 +1090,7 @@ git commit -m "chore(p04-t03): record definition-of-done gate results"
 | design | artifact | pending         | -          | -                                                           | -             | -          | -                 |
 | plan   | artifact | fixes_completed | 2026-09-27 | structured (no artifact)                                    | -             | auto       | -                 |
 | plan   | artifact | fixes_completed | 2026-09-27 | reviews/archived/artifact-plan-review-2026-09-27T043735Z.md | -             | gate       | codex-6-sol-xhigh |
-| plan   | artifact | received        | 2026-09-27 | reviews/artifact-plan-review-2026-09-27T044626Z.md          | -             | -          | -                 |
+| plan   | artifact | passed          | 2026-09-27 | reviews/archived/artifact-plan-review-2026-09-27T044626Z.md | -             | gate       | codex-6-sol-xhigh |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
@@ -1119,6 +1119,10 @@ interactive observation). Receive-time addition: the gate artifact's
 `**Resolver policy view:**` audit line showed that p01-t03's labeled-stamp rule
 must accept prose `policy view` labels, so p01-t03 now does and uses that
 artifact as a fixture. Re-review follows per REVIEWRECEIVE-07.
+
+Quick-start gate attempt 2 (run `6f15dc62-3341-4492-a28b-20f304d4c79d`,
+target `codex-6-sol-xhigh`, different-family): `ok`, 0 Critical, 0 High,
+0 Medium, 0 Low; received as `passed`.
 
 ---
 
