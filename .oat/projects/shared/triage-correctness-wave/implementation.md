@@ -262,6 +262,88 @@ three concerns were assessed as acceptable.
 **Status:** pending
 **Commit:** -
 
+### Backlog acceptance evidence
+
+Verified on `wave/2026-09-26-backlog` at `ba3fa25ab` (after p04-t01) with the
+branch-built CLI (0.3.8). Focused rerun: 33 vitest files / 2089 tests pass
+under an isolated HOME (rule parse, compute-plan, three rule transforms, sync,
+in-process-sync, pack-provider-evidence, oat-config, config, docs
+index-generate, gate index and review-verdict, retro and review skill
+contracts, project dispatch, dispatch-envelope, identity, skills validation);
+`node --test` on `resolve-providers.test.mjs` passes 7/7.
+
+- **BL-260927-stop-resolve-providers-sh-from** (p01-t01 `0d24884ff`, p01-t04
+  `3778dfc88`): every auto-detect test is an `if` block and the function ends
+  with `return 0`; script tests cover `AGENTS.md` + `.claude/`, `.cursor/`
+  only, and `.cline/`, each with and without `--non-interactive`; 4 of 6 failed
+  pre-fix, including the `.claude` case. Non-interactive output is pinned by
+  the tests; interactive mode by the recorded PTY observation under p01-t01
+  (reproduced by the p01 reviewer) plus the EOF test, whose util-linux
+  `script` branch is pending the first Linux CI run. Skill 1.12.2 → 1.12.3; the
+  bundled mirror matches (`diff -r -x tests`).
+- **BL-260927-make-the-managed-claude** (p03-t01..t08): published
+  `oat-dispatch-subagents/references/managed-claude-example.json` covers the
+  implementer and reviewer roles with `canonical-role-resolution` events and is
+  validated as-is by `managed-claude-example.test.ts` (p03-t04 `3a53b0172`);
+  one run reports every violation across stages (`record.test.ts` "reports
+  every violation across all stages in one error", p03-t02 `19e7dbda1`, with
+  runtime-observation errors added by p03-t08 `ba9ccc0d8`); pattern failures
+  state `expected <loaded|user|project>/agents/<name>.md` (p03-t01
+  `df349d563`); `oat project dispatch canonical-role` produces the evidence
+  (p03-t03 `df7046bdc`); `oat-project-implement`'s
+  `dispatch-and-dry-run.md` points at the producer and the example (p03-t05
+  `782e2d49b`).
+- **BL-260927-name-the-file-in-canonical** (p02-t01 `f19a8d5bc`): parse errors
+  name the repository-relative file for missing frontmatter and invalid fields
+  (`parse.test.ts`) and in all three provider transforms
+  (`{claude,copilot,cursor}/rule-transform.test.ts`); the recorded choice is
+  accepting `alwaysApply: true` as `activation: always`
+  (`provider-sync/providers.md`, tested); `compute-plan.test.ts` "fails once
+  naming every invalid canonical rule across all rule transforms".
+- **BL-260927-derive-or-label-the-dispatch** (p01-t03 `9bf1f8325`, p01-t04,
+  p01-t05 `5afc6f703`): gate artifacts label the resolver stamp
+  `**Dispatch audit (policy view):**` in both review-provide skills;
+  `oat gate review` rejects a disagreeing unlabeled stamp with
+  `gate_dispatch_audit_mismatched`; the `dispatch audit agreement` tests in
+  `gate/index.test.ts` use an xhigh gate target against a high project
+  ceiling.
+- **BL-260927-require-a-per-item-walkthrough** (p01-t02 `972f8cb91`):
+  `oat-project-retro` Step 7 requires the per-item walkthrough with every
+  listed field, grouping, all run modes, the empty-register summary, a worked
+  example, and an artifact link; the leaf keys
+  `workflow.retro.filing.repo`/`.upstream` are named; the
+  `retro-skill-contracts.test.ts` "final report walkthrough" block covers mixed
+  items and the empty case; skill 1.0.6 → 1.0.7.
+- **BL-260927-preserve-oat-config-json-key** (p02-t05 `9541287ad`, p02-t06
+  `8c4102a02`): same-value set is byte-identical, a real change keeps
+  untouched key order, and `oat docs generate-index` records
+  `documentation.index` as the only change (`config/index.test.ts`,
+  `oat-config.test.ts`, `index-generate/index.test.ts`).
+- **BL-260909-reject-malformed-nested-values** (p02-t04 `67e1f4e0d`, p02-t06):
+  `config/index.test.ts` negative control refuses `unset` on a wrong-typed
+  sibling with `Invalid PJM remote policy structure` (path-typed) and a
+  byte-identical file; the positive control unsets a valid tree; the
+  red-then-green provenance is recorded in the test comment.
+- **BL-260909-make-oat-sync-scope-all-report** (p02-t02 `eafaf8a51`, p02-t06):
+  `--scope all` with a failed scope never prints `No changes required.`
+  (`sync/index.test.ts`); an all-empty success control keeps it, and the
+  single-scope tests are unchanged. AC2 ("a test pins the `failed === 0`
+  conjunct") is met by the outcome test plus the removal of the dead
+  conjunct, which no output depended on after p02-t02 (see Deviations, p02-t06
+  L1).
+- **BL-260908-validate-the-catalog-refresh** (p02-t03 `41bec1d0d`, p02-t06):
+  `normalizeSyncEvidence` validates the advice policy through the registry's
+  `isValidCatalogRefreshPolicy` and drops unknown states instead of casting;
+  `pack-provider-evidence.test.ts` "never throws inside a lifecycle projection
+  for advice with an unknown policy state" is the control.
+- **BL-260908-restore-recon-s-cheap-fan-out**: all seven criteria are already
+  checked in the item; shipped by PR #285 (`gh pr view 285`: MERGED
+  2026-09-12T02:35:23Z); `DR-260910-restore-economical-recon` and
+  `DR-260911-use-session-local-recon` exist.
+
+All ten items meet every criterion and were archived with
+`node packages/cli/dist/index.js backlog archive`.
+
 ### Task p04-t03: Run the full Definition of Done
 
 **Status:** pending

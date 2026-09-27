@@ -1,7 +1,7 @@
 ---
 id: BL-260927-require-a-per-item-walkthrough
 title: Require a per-item walkthrough of retro register items in the final report
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: S
@@ -10,7 +10,7 @@ labels:
   - skills
 assignee: null
 created: 2026-09-27T03:35:36.683Z
-updated: 2026-09-27T03:35:36.683Z
+updated: '2026-09-27T06:49:59Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/313
