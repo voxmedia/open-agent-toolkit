@@ -306,8 +306,29 @@ axes are provider-default by documented design
   and a prose policy-view label
   (`.oat/projects/shared/triage-correctness-wave/reviews/archived/artifact-plan-review-2026-09-27T043735Z.md`,
   `**Resolver policy view:**`), which must be classified as labeled.
+  Only the two recon-rework artifacts are tracked; the claude-effort-levels
+  artifact and this project's gate artifact are machine-local (archived
+  reviews are gitignored), so the tests must carry these verbatim excerpts
+  inline rather than reading those files:
+
+  ```text
+  # claude-effort-levels final-review-2026-09-21T232436Z.md (frontmatter:
+  # oat_gate_target: cursor-fable-5-1-high, oat_invocation_reasoning_effort: unknown)
+  ## Dispatch Audit
+  - Managed reviewer resolver (audit surface, `dispatchReport.schemaVersion: 1`): `Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high`
+
+  # triage-correctness-wave artifact-plan-review-2026-09-27T043735Z.md (frontmatter:
+  # oat_gate_target: codex-6-sol-xhigh, oat_invocation_reasoning_effort: xhigh)
+  ## Dispatch Audit
+  **Resolver policy view:** `Dispatch: scope=plan action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-sol-high`
+  ```
+
+  The first label itself contains a backtick span, so label stripping must
+  tolerate backticks inside the label. The first is an unlabeled stamp that
+  disagrees (target differs); the second is labeled.
   Ignore an implementer stamp, a reviewer stamp inside a fenced block, and a
   stamp quoted inside a finding.
+
 - Gate, with frontmatter `oat_gate_target: codex-6-sol-xhigh` and
   `oat_invocation_reasoning_effort: xhigh` under a project `high` ceiling:
   - an unlabeled policy stamp (`target=oat-reviewer-...-high`,
