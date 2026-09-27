@@ -470,7 +470,7 @@ const VALID_IDENTITY_PROVENANCES: readonly IdentityProvenance[] = [
   'unknown',
 ];
 const REVIEW_GATE_CONTEXT_NOTE = [
-  'This review is gate-originated. If you run `oat-project-review-provide`, set `oat_review_invocation: gate` in the review artifact. Write a canonical review artifact with `### Critical`, `### High`, `### Medium`, and `### Low` headings in that order, using `None` for empty sections.',
+  "This review is gate-originated. If you run `oat-project-review-provide`, set `oat_review_invocation: gate` in the review artifact. Write a canonical review artifact with `### Critical`, `### High`, `### Medium`, and `### Low` headings in that order, using `None` for empty sections. Gate-originated reviews write the resolver dispatch stamp on a line labeled `**Dispatch audit (policy view):**`, with the stamp in one backtick pair, because an unlabeled audit stamp must name this gate's target and effort.",
   'Complete the review, artifact write, and required bookkeeping inline or through a synchronously awaited child before this headless process exits. Do not start background tasks, monitors, or waiters that outlive this turn.',
   "Artifact hygiene contract: Before finishing or committing, format every file you created or edited. Use the concrete write/fix formatting command supplied by the governing plan, task, or brief. If none is usable, discover the repository's documented write/fix command from applicable `AGENTS.md`/`CLAUDE.md` instructions and relevant package manifests; do not infer or hardcode a formatter. Prefer a file-scoped invocation when supported, and avoid rewriting unrelated files. If no command is discoverable, warn once with `no format command discovered in repo instructions; skipping`, then continue.",
 ].join('\n\n');

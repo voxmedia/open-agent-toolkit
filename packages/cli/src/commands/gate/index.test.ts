@@ -4504,6 +4504,7 @@ describe('oat gate', () => {
       baseArgs: ['exec'],
       promptSnippets: [
         'This review is gate-originated. If you run `oat-project-review-provide`, set `oat_review_invocation: gate` in the review artifact.',
+        "Gate-originated reviews write the resolver dispatch stamp on a line labeled `**Dispatch audit (policy view):**`, with the stamp in one backtick pair, because an unlabeled audit stamp must name this gate's target and effort.",
         EXPECTED_RUNTIME_ARTIFACT_HYGIENE_CONTRACT,
         `Resolved OAT project path: ${projectPath}. Run the review for this project path.`,
         'Project resolution source: active-project.',

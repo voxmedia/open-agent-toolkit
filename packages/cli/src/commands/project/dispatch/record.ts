@@ -342,9 +342,11 @@ function runtimeObservationCallerForm(
  * Event violations for a managed input: the event must be an object, carry no
  * sensitive content, satisfy the evidence-event schema, and name the same
  * request as `recordBase`. Raw provider `metadata` entries are exempt from the
- * sensitive walk exactly as on the recording path, and a `runtime-observation`
- * event is left to that path, because its caller form is rewritten (source and
- * match derived) before the schema applies to it.
+ * sensitive walk exactly as on the recording path. A `runtime-observation`
+ * event is validated here too: `runtimeObservationCallerForm` projects its
+ * caller form onto the schema shape, filling the fields the recording path
+ * derives (source, match, compared axes) with valid stand-ins, so its errors
+ * join this single-run report.
  */
 function collectManagedEventViolations(
   event: unknown,

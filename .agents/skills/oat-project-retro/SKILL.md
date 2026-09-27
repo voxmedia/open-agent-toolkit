@@ -53,8 +53,9 @@ OAT ▸ PROJECT RETRO
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-Use `[1/6] Resolving project and mode…` through `[6/6] Formatting and
-committing…`. Name evidence inventory, synthesis, disposition, and project-log
+Use `[1/7] Resolving project and mode…` through `[7/7] Walking through
+register items…`, with `[6/7] Formatting and committing…` before the final
+walkthrough. Name evidence inventory, synthesis, disposition, and project-log
 steps as they begin.
 
 ## Artifact Hygiene
