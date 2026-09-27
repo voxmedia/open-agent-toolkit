@@ -80,10 +80,12 @@ disjoint. `p01` edits bundled skills (`oat-agent-instructions-analyze`,
 `oat-project-retro`, `oat-project-review-provide`,
 `oat-project-review-provide-remote`), `packages/cli/src/commands/gate/**`,
 `packages/cli/src/validation/skills.test.ts`, skill contract tests under
-`packages/cli/src/commands/init/tools/shared/`, and the retro docs page. `p02` edits
+`packages/cli/src/commands/init/tools/shared/`, the retro docs page, and
+`apps/oat-docs/docs/cli-utilities/workflow-gates.md`. `p02` edits
 `packages/cli/src/rules/**`, the three `rule-transform.ts` files,
 `packages/cli/src/engine/compute-plan.ts`, `packages/cli/src/commands/sync/**`,
-`packages/cli/src/config/**`, `packages/cli/src/commands/config/index.test.ts`,
+`packages/cli/src/config/**`, `packages/cli/src/commands/config/index.ts` and
+`index.test.ts`,
 `packages/cli/src/commands/docs/index-generate/index.test.ts`,
 `packages/cli/src/commands/tools/shared/**`, and the provider-sync and
 configuration docs pages. No file appears in both sets, and neither phase's
@@ -223,41 +225,51 @@ git commit -m "feat(p01-t02): require a per-item walkthrough in the retro final 
 
 Backlog: `BL-260927-derive-or-label-the-dispatch` (GitHub #325).
 
-Design (plan review H1): the gate is the single source of the gate-originated
-stamp. The body stamp `target` is a role variant while `oat_gate_target` is a
-gate exec-target id, so the check compares the body stamp against the stamp the
-gate itself builds, field by field, never against frontmatter strings.
+Design (plan reviews H1 in both rounds): use the backlog item's labeling
+branch. The resolver stamp is the project reviewer policy view, and the gate
+frontmatter (`oat_gate_target`, `oat_invocation_*`) is the authority for the
+gate's actual invocation. A gate-built stamp is not used: its model and effort
+axes are provider-default by documented design
+(`apps/oat-docs/docs/cli-utilities/workflow-gates.md:326-330`).
 
-- The gate adds `formatDispatchStamp(buildGateDispatchReport(invocation, scope))`
-  (`packages/cli/src/providers/identity/stamp.ts:97-99`;
-  `packages/cli/src/commands/gate/index.ts:630-690`) to the reviewer prompt's
-  invocation-metadata context (`gateInvocationPromptContext` near 693 and
-  `REVIEW_GATE_CONTEXT_NOTE` near 469).
-- `oat-project-review-provide` (and the remote twin) tell gate-originated
-  reviews to copy that gate-supplied `Dispatch:` line byte-for-byte as the audit
-  line, in a separate paragraph outside the Step 6.0 contract paragraph. A
-  project-policy stamp, if also written, must use the literal prefix
-  `Dispatch (policy view):`.
-- Validation: when a gate artifact's body carries an unlabeled `Dispatch:` stamp
-  that differs field-by-field from the gate-built stamp, the gate fails with the
-  new cause `gate_dispatch_audit_mismatched`, whose message names
-  `oat tools update` as the recovery for artifacts produced by older installed
-  skills. A `Dispatch (policy view):` line is ignored by this check. An artifact
-  with no body stamp is unaffected.
+- Skill rule: gate-originated reviews (`oat_review_invocation: gate`) write the
+  resolver stamp with the literal prefix `Dispatch (policy view):` instead of
+  `Dispatch:`. Non-gate reviews are unchanged.
+- Validation, applied only to gate artifacts: collect reviewer stamps
+  (`action=review role=reviewer`) from the audit metadata block before the first
+  `## ` heading, skipping fenced code blocks and backtick-quoted spans. An
+  unlabeled reviewer stamp agrees with the frontmatter only when its `target`
+  equals `oat_gate_target` and, when `oat_invocation_reasoning_effort` is a
+  concrete effort, its `effort_axis` equals `selected:<that effort>`. Any
+  other unlabeled reviewer stamp fails the gate with the new cause
+  `gate_dispatch_audit_mismatched`; its message names `oat tools update` as the
+  recovery for artifacts written by older installed skills. Labeled
+  policy-view stamps and artifacts without an audit stamp are not affected.
+- Extraction: `parseDispatchStamps` (`packages/cli/src/providers/identity/stamp.ts:166-169`)
+  only matches the literal `Dispatch:`, so policy-view lines are extracted by a
+  small label-aware helper in `review-verdict.ts` that strips the
+  `Dispatch (policy view):` prefix and reuses the same token parsing.
+  `parseDispatchStamps` itself is unchanged, so producer-identity reads
+  (`gate/index.ts:1510`) are unaffected.
 
 **Files:**
 
-- Modify: `packages/cli/src/commands/gate/index.ts` (prompt context; the check
-  after `corroborateGateInvocation` near 3931 and its `cause`)
 - Modify: `packages/cli/src/commands/gate/review-verdict.ts`
-  (`parseReviewGateVerdict` near 794: expose the unlabeled and policy-view
-  stamps using `parseDispatchStamps`, `stamp.ts:229`)
-- Modify: `.agents/skills/oat-project-review-provide/SKILL.md`
-  (`metadata.version` 1.5.10 → 1.5.11)
-- Modify: `.agents/skills/oat-project-review-provide-remote/SKILL.md`
-  (stamp-copy text near 289-299 and 322-323; 1.1.7 → 1.1.8)
+  (`parseReviewGateVerdict` near 794: expose unlabeled reviewer stamps and
+  policy-view stamps from the audit metadata block)
+- Modify: `packages/cli/src/commands/gate/index.ts` (the agreement check after
+  `corroborateGateInvocation` near 3931 and the new `cause`)
+- Modify: `.agents/skills/oat-project-review-provide/SKILL.md` (place the
+  gate rule beside the gate-invocation frontmatter guidance near 1033-1035, not
+  right after the Step 6.0 contract paragraph; phrase it positively;
+  `metadata.version` 1.5.10 → 1.5.11)
+- Modify: `.agents/skills/oat-project-review-provide-remote/SKILL.md` (same
+  rule beside its gate lineage text near 405-409; 1.1.7 → 1.1.8)
+- Modify: `apps/oat-docs/docs/cli-utilities/workflow-gates.md` (near 220-236 and
+  314-330: document the policy-view prefix, the agreement rule, and the new
+  cause with its recovery)
 - Modify: `packages/cli/src/commands/gate/index.test.ts` (extend
-  `writeReviewArtifact` near 524-540 with an optional body audit line)
+  `writeReviewArtifact` near 524-540 with an optional body)
 - Modify: `packages/cli/src/commands/gate/review-verdict.test.ts`
 - Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
 - Modify: `packages/cli/src/validation/skills.test.ts` (five review-provide
@@ -265,33 +277,38 @@ gate itself builds, field by field, never against frontmatter strings.
 
 **Step 1: Write test (RED)**
 
-- Parser: extracts an unlabeled `Dispatch:` stamp and a
-  `Dispatch (policy view):` stamp separately; use a fixture shaped like the real
-  archived gate artifact
+- Parser: from a fixture shaped like the real archived gate artifact
   `.oat/projects/shared/recon-rework/reviews/archived/final-review-2026-09-11T155617Z.md`
-  (frontmatter lines 14-17, audit line 34), noting that provenance in the
-  fixture comment.
-- Gate: the prompt context contains the gate-built stamp; a gate target whose
-  effort differs from the project dispatch ceiling (for example an `xhigh`
-  target under a `high` ceiling) fails with `gate_dispatch_audit_mismatched`
-  when the unlabeled audit stamp is the policy stamp, and passes when the audit
-  stamp equals the gate-built stamp, when the policy stamp is labeled
-  `Dispatch (policy view):`, and when no stamp is present. Model on the
-  existing mismatched-invocation test near `index.test.ts:4682`.
-- Skill contract: review-provide and the remote twin require copying the
-  gate-supplied stamp for gate-originated reviews and define the policy-view
-  prefix.
+  (frontmatter lines 14-17, audit line 34; record that provenance in a fixture
+  comment), extract unlabeled reviewer stamps and policy-view stamps
+  separately; ignore an implementer stamp, a reviewer stamp inside a fenced
+  block, and a backtick-quoted stamp in a finding.
+- Gate, with frontmatter `oat_gate_target: codex-6-sol-xhigh` and
+  `oat_invocation_reasoning_effort: xhigh` under a project `high` ceiling:
+  - an unlabeled policy stamp (`target=oat-reviewer-...-high`,
+    `effort_axis=selected:high`) fails with `gate_dispatch_audit_mismatched`;
+  - an unlabeled stamp whose `target` matches but whose `effort_axis` is
+    `selected:high` fails (the effort clause can fail on its own);
+  - an unlabeled stamp with `target=codex-6-sol-xhigh` and
+    `effort_axis=selected:xhigh` passes;
+  - the same policy stamp labeled `Dispatch (policy view):` passes;
+  - no audit stamp passes;
+  - quoted implementer or fenced reviewer stamps in findings do not change the
+    result.
+    Model on the mismatched-invocation test near `index.test.ts:4682`.
+- Skill contract: review-provide and the remote twin require the
+  `Dispatch (policy view):` prefix for gate-originated reviews.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/review-verdict.test.ts src/commands/gate/index.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts`
 Expected: new cases fail.
 
 **Step 2: Implement (GREEN)**
 
-Implement the prompt context, parser fields, check, and skill paragraphs. Do not
-edit the Step 6.0 byte-for-byte copy paragraph:
-`expectDispatchStampFieldContract`
-(`packages/cli/src/__tests__/skills/dispatch-stamp-contract.ts`) requires it
-exactly once and rejects qualifying words near it.
+Implement the extraction, the agreement check, the skill paragraphs, and the
+docs. Keep the new skill paragraph away from the 1000-character window after
+the Step 6.0 anchor that `expectDispatchStampFieldContract`
+(`packages/cli/src/__tests__/skills/dispatch-stamp-contract.ts:33, 131`)
+scans, and do not repeat its anchor phrase.
 
 **Step 3: Refactor**
 
@@ -302,11 +319,19 @@ Bump both skill versions and update the six pins.
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/ src/commands/init/tools/shared/review-skill-contracts.test.ts src/__tests__/skills/dispatch-stamp-contract.test.ts src/validation/skills.test.ts src/commands/init/tools/shared/bundle-consistency.test.ts`
 Expected: pass.
 
+Rollout note for this wave's own gates (plan review M2): from the p01 phase
+gate on, the branch CLI enforces the new check, but the Codex reviewer may load
+an installed `oat-project-review-provide` older than 1.5.11. Before each later
+gate, record which review-provide copy the reviewer resolves. A
+`gate_dispatch_audit_mismatched` result caused by a stale installed copy is
+resolved by refreshing that installed skill and rerunning the gate, not by a
+review-receive fix cycle.
+
 **Step 5: Commit**
 
 ```bash
-git add .agents/skills/oat-project-review-provide .agents/skills/oat-project-review-provide-remote packages/cli/src/commands/gate packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts packages/cli/src/validation/skills.test.ts
-git commit -m "fix(p01-t03): make gate review audit lines agree with the gate-built stamp"
+git add .agents/skills/oat-project-review-provide .agents/skills/oat-project-review-provide-remote apps/oat-docs/docs/cli-utilities/workflow-gates.md packages/cli/src/commands/gate packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts packages/cli/src/validation/skills.test.ts
+git commit -m "fix(p01-t03): label gate policy stamps and reject unlabeled audit lines that disagree"
 ```
 
 ---
@@ -347,7 +372,9 @@ Backlog: `BL-260927-name-the-file-in-canonical` (GitHub #316).
   no `activation`, a null or empty `globs` is ignored; a non-empty `globs` is an
   error naming the file, because canonical rules keep globs only for
   `activation: glob` (`parse.ts:62-77, 148-151`). An explicit `activation`
-  always wins over `alwaysApply`.
+  always wins over `alwaysApply`. `alwaysApply: false` (or any non-true value)
+  without `activation` stays an activation error that names the file; add that
+  case to the tests.
 - A plan with two invalid rules and valid skills fails once with a message
   naming both rule files, each exactly once even though three provider
   transforms parse every rule (key collected failures by the normalized
@@ -481,9 +508,13 @@ Backlog: `BL-260909-reject-malformed-nested-values`.
   near 1122, `collectPjmRemoteAuthorityFindings` near 1223, storage and
   description branches)
 - Modify: `packages/cli/src/config/oat-config.test.ts` (near 847-1010)
+- Modify: `packages/cli/src/commands/config/index.ts` (the pjm.remote strict
+  barrier near 2923-2925, `setConfigValue` near 2293-2294, and the
+  `ConfigCommandDependencies` reader interface near 259-267)
 - Modify: `packages/cli/src/commands/config/index.test.ts` (unset cases near 5667)
-- Modify: `apps/oat-docs/docs/cli-utilities/configuration.md` (lines 105-124,
-  only if the documented fallback wording changes)
+- Modify: `apps/oat-docs/docs/cli-utilities/configuration.md` (lines 105-124:
+  document that wrong-typed `pjm.remote` leaves fail config reads closed and how
+  to repair them)
 
 **Step 1: Write test (RED)**
 
@@ -516,7 +547,11 @@ Expected: fail.
 
 **Step 2: Implement (GREEN)**
 
-Add leaf type findings to the closed-structure collectors.
+Add leaf type findings to the closed-structure collectors. Add a path-targeted
+repair reader that drops only the targeted `pjm.remote` leaf before the
+closed-structure assertion (so a malformed sibling of a different leaf is still
+refused), add it to `ConfigCommandDependencies`, and use it at the unset barrier
+and in the set path for `pjm.remote` keys.
 
 **Step 3: Refactor**
 
@@ -530,7 +565,7 @@ Expected: pass.
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/config/oat-config.ts packages/cli/src/config/oat-config.test.ts packages/cli/src/commands/config/index.test.ts apps/oat-docs/docs/cli-utilities/configuration.md
+git add packages/cli/src/config/oat-config.ts packages/cli/src/config/oat-config.test.ts packages/cli/src/commands/config/index.ts packages/cli/src/commands/config/index.test.ts apps/oat-docs/docs/cli-utilities/configuration.md
 git commit -m "fix(p02-t04): reject wrong-typed nested pjm.remote values"
 ```
 
@@ -556,8 +591,12 @@ Backlog: `BL-260927-preserve-oat-config-json-key` (GitHub #329, #311).
 - A real change preserves the existing order of untouched keys, recursively,
   and places new keys deterministically.
 - A same-value `oat config set` leaves the file byte-identical, including a
-  hand-formatted file (different indentation, no trailing newline) and a file
-  containing a key the normalizer drops.
+  hand-formatted file (different indentation, no trailing newline).
+- Repairs and removals still write: `oat config unset` of a warn-dropped key
+  (for example `documentation.root: 5`) removes it from disk; the existing
+  repair test near `commands/config/index.test.ts:6068` (unset of a malformed
+  `documentation.excludes`) stays green; a malformed or unparsable existing
+  file is always rewritten.
 - The one-time `documentation.index` write by `oat docs generate-index` changes
   only that key.
 
@@ -566,11 +605,13 @@ Expected: fail.
 
 **Step 2: Implement (GREEN)**
 
-In `writeOatConfig`, read and parse the existing file when present, normalize
-it with the same normalizer, and skip the write when the normalized values are
-deeply equal (semantic equality, not text equality). Otherwise serialize the
-normalized output ordered by the existing key order (recursively; new keys
-after existing ones).
+In `writeOatConfig`, build the output as the normalized config ordered by the
+existing raw file's key order (recursively; new keys after existing ones). Read
+the existing file with `JSON.parse` only, never through the normalizer (the
+normalizer throws on malformed values that repair flows are fixing). Skip the
+write only when the existing file parses and its raw JSON value deep-equals the
+output object; otherwise write. This keeps formatting-only differences
+byte-identical while repairs and raw-disk removals always land.
 
 **Step 3: Refactor**
 
