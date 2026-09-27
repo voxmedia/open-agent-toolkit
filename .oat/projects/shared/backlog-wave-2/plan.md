@@ -227,9 +227,10 @@ Cover the four-way contract for `upsertAgentsMdSections` against an existing
 file:
 
 - block absent → action `appended`, exit-code-bearing result is success, and
-  the file equals the original bytes, one separator newline (`\n`), then the
-  block, so the block marker always starts its own line regardless of how the
-  file (or a concurrent writer) ended;
+  the file equals the original bytes, one separator newline (`\n`), the absent
+  blocks joined by `\n\n`, and a trailing `\n` (matching `createMissingFile`),
+  so the block marker always starts its own line regardless of how the file
+  (or a concurrent writer) ended;
 - block present and identical → `no-change`, file untouched;
 - block present but different → `manual-required` with the same manual patch
   as today, file untouched;
@@ -245,10 +246,16 @@ trailing newline: the managed block's opening marker still starts its own
 line, and a second `upsertAgentsMdSections` run returns `no-change` with
 exactly one managed block. Inject the concurrent write through a new `open` member on
 `AgentsMdFileSystem` (today it exposes only `lstat`, `readFile`, `readlink`,
-`realpath`, `writeFile`), between planning and the append. (e) Symlink swap:
+`realpath`, `writeFile`), between planning and the append. (e1) Symlink swap:
 replace `AGENTS.md` with a symlink to a file outside the repository between
 planning and the open; expect `blocked`, zero bytes written, and the outside
-file byte-identical; prove it by neutralize-and-restore of the identity check.
+file byte-identical; this pins `O_NOFOLLOW` (prove it by neutralizing
+`O_NOFOLLOW` together with the identity check). (e2) Regular-file swap:
+rename a hard link to a file outside the repository (in a sibling `mkdtemp` on
+the same filesystem) over `AGENTS.md` between planning and the open; expect
+`blocked`, zero bytes written, and the outside file byte-identical; prove it by
+neutralize-and-restore of the `fstat` `dev`/`ino` identity check alone, since
+only that check can reject this swap.
 (f) Multi-section and legacy cases: tools block absent while the legacy
 `<!-- OAT workflows -->` block is present stays `manual-required` with zero
 writes (append cannot remove the legacy block); in a multi-section write
@@ -267,7 +274,8 @@ already-approved in-repository resolved target), `fstat` the opened handle and
 compare `dev`/`ino` with the planned target identity, closing with `blocked`
 and zero bytes written on a mismatch; then
 always write one leading `\n` before the block marker (no last-byte read, so
-no read-to-write window), and write only that separator plus the new block; never truncate, rename, or rewrite the file. State in
+no read-to-write window), then the absent blocks joined by `\n\n` and a
+trailing `\n`, and nothing else; never truncate, rename, or rewrite the file. State in
 the commit body whether an in-repository symlinked `AGENTS.md` target (the e2e
 symlink cases) is appended through or keeps the manual patch; keep today's
 refusal for any target outside the repository. Keep the existing
