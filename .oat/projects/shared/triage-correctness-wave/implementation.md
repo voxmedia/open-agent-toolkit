@@ -197,8 +197,15 @@ converted to p02-t06.
 
 ### Task p03-t06: (review) Close p03 review findings H1, M1, L1-L3
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 54cea0878
+
+- H1 proof: removing the scrub call from `redactDispatchMessage` failed 6
+  tests; restored. Root probe with the built CLI: a `ghp_` token in
+  `recordBase.launch_status` and `event.evidence.tier` appears 0 times; the
+  lines read `<redacted-secret>`.
+- Deviation: `apps/oat-docs/docs/reference/cli-reference.md` sentence updated to
+  match the skip and scrub behavior.
 
 **Review received (p03, auto):** `reviews/archived/p03-review-2026-09-27T061910Z.md`
 at head `c4ef806fb`: 0 Critical, 1 High, 1 Medium, 3 Low. H1 is a
