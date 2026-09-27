@@ -24,84 +24,119 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase                                         | Status      | Tasks | Completed |
+| --------------------------------------------- | ----------- | ----- | --------- |
+| p01 — Bundled skill and script fixes          | in_progress | 3     | 0/3       |
+| p02 — CLI sync, config, and tools correctness | in_progress | 5     | 0/5       |
+| p03 — Managed Claude dispatch-record input    | pending     | 5     | 0/5       |
+| p04 — Release and backlog fan-in              | pending     | 3     | 0/3       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/16 tasks completed
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Bundled skill and script fixes
 
 **Status:** in_progress
 **Started:** 2026-09-27
 
-### Phase Summary (fill when phase is complete)
-
-**Outcome (what changed):**
-
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
-
-**Key files touched:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {trade-offs or deviations discovered during implementation}
-
-### Task p01-t01: {Task Name}
-
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
-
-**Outcome (required when completed):**
-
-- {what materially changed (not “did task”, but “system now does X”)}
-
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
-
----
-
-### Task p01-t02: {Task Name}
+### Task p01-t01: Stop resolve-providers.sh aborting when the last auto-detect test is false
 
 **Status:** pending
 **Commit:** -
 
-**Notes:**
+### Task p01-t02: Require a per-item walkthrough of retro register items
 
-- {Notes will be added during implementation}
+**Status:** pending
+**Commit:** -
+
+### Task p01-t03: Make the gate review dispatch audit line agree with the gate invocation
+
+**Status:** pending
+**Commit:** -
 
 ---
 
-## Phase 2: {Phase Name}
+## Phase 2: CLI sync, config, and tools correctness
+
+**Status:** in_progress
+**Started:** 2026-09-27
+
+### Task p02-t01: Name the file in canonical rule parse errors and accept alwaysApply
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t02: Stop sync --scope all reporting "No changes required." beside a failed scope
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t03: Validate the catalog-refresh policy in sync evidence
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t04: Reject wrong-typed nested values in the strict pjm.remote reader
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t05: Preserve .oat/config.json key order and skip no-op writes
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 3: Managed Claude dispatch-record input
 
 **Status:** pending
 **Started:** -
 
-### Task p02-t01: {Task Name}
+### Task p03-t01: State the expected pattern in dispatch-record validation messages
+
+**Status:** pending
+**Commit:** -
+
+### Task p03-t02: Report every managed Claude dispatch-record violation in one run
+
+**Status:** pending
+**Commit:** -
+
+### Task p03-t03: Add a producer for canonical-role-resolution evidence
+
+**Status:** pending
+**Commit:** -
+
+### Task p03-t04: Publish a validated managed Claude example and pin it
+
+**Status:** pending
+**Commit:** -
+
+### Task p03-t05: Point the implement skill and CLI reference at the example and producer
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 4: Release and backlog fan-in
+
+**Status:** pending
+**Started:** -
+
+### Task p04-t01: Bump the lockstep public package versions
+
+**Status:** pending
+**Commit:** -
+
+### Task p04-t02: Archive the shipped backlog items and reconcile the completed recon item
+
+**Status:** pending
+**Commit:** -
+
+### Task p04-t03: Run the full Definition of Done
 
 **Status:** pending
 **Commit:** -
@@ -110,15 +145,22 @@ oat_generated: false
 
 ## Orchestration Runs
 
-_Each run from `oat-project-implement` appends an entry below with:_
-_- Run header (number, timestamp, branch, tier, policy, phase counts)_
-_- Phase Outcomes table_
-_- Parallel Groups list_
-_- Outstanding Items_
-
 <!-- orchestration-runs-start -->
 
-_Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
+### Run 1
+
+- **Started:** 2026-09-27
+- **Branch:** `wave/2026-09-26-backlog`
+- **Tier:** 1 — Subagents (Claude Code exposes `oat-phase-implementer` and
+  `oat-reviewer` generated variants; available without authorization)
+- **Dispatch policy:** managed `high` (source: project state)
+- **Schedule:** `[p01, p02]` (parallel group, worktrees) → `[p03]` → `[p04]`
+- **Gate IMPLEMENT-03 (autonomous checkpoints):** first run with
+  `oat_plan_hill_phases` absent; resolved to `['p04']` (final phase) with
+  `oat_auto_review_at_hill_checkpoints: true`.
+- **Phase gate:** `oat_phase_review_gate` enabled for all phases
+  (`review_type: code`, `exit_nonzero_on: high`); configured targets resolve to
+  `codex-6-sol-xhigh` by priority with same-family avoidance.
 
 <!-- orchestration-runs-end -->
 
@@ -126,46 +168,15 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 ## Implementation Log
 
-Chronological log of implementation progress.
-
 ### 2026-09-27
 
-**Session Start:** {time}
-
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
-
-**What changed (high level):**
-
-- {short bullets suitable for PR/docs}
-
-**Decisions:**
-
-- {Decision made and rationale}
-
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
-
-**Blockers:**
-
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
-
----
-
-### 2026-09-27
-
-**Session Start:** {time}
-
-{Continue log...}
+- Quick-start completed: plan gate passed three times on `codex-6-sol-xhigh`
+  (attempt 1: 2 Medium, received; attempts 2 and 3: clean), plus a complexity
+  review whose four simplifications were applied.
 
 ---
 
 ## Deviations from Plan / Design
-
-Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
 | Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
 | ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
@@ -173,38 +184,19 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 ## Test Results
 
-Track test execution during implementation.
-
 | Phase | Tests Run | Passed | Failed | Coverage |
 | ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+| p01   | -         | -      | -      | -        |
+| p02   | -         | -      | -      | -        |
+| p03   | -         | -      | -      | -        |
+| p04   | -         | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
-**What shipped:**
-
-- {capability 1}
-- {capability 2}
-
-**Behavioral changes (user-facing):**
-
-- {bullet}
-
-**Key files / modules:**
-
-- `{path}` - {purpose}
-
-**Verification performed:**
-
-- {tests/lint/typecheck/build/manual steps}
-
-**Design deltas (if any):**
-
-- {what changed vs design.md and why}
+_Filled at completion from the shipped changes._
 
 ## References
 
 - Plan: `plan.md`
-- Design: `design.md`
-- Spec: `spec.md`
+- Discovery: `discovery.md`
+- Triage evidence: `.oat/repo/pjm/triage/2026-09-26-untriaged-issues.md`
