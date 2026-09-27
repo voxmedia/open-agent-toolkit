@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import {
   assertNoSensitiveDispatchContent,
+  collectSensitiveDispatchContent,
+  genericDispatchRecordBaseSchema,
   isSensitiveDispatchKey,
   normalizeDispatchKey,
   parseGenericDispatchRecord,
@@ -496,5 +498,60 @@ describe('parseGenericDispatchRecord', () => {
         child_outcome: null,
       }),
     ).toThrow(/accepted dispatch/i);
+  });
+});
+
+describe('collecting validation helpers', () => {
+  it('reports every sensitive key and value, not only the first', () => {
+    const value = {
+      nested: { password: 'hunter2' },
+      token: 'opaque',
+      list: ['fine', 'Authorization: Bearer abc123'],
+    };
+    expect(collectSensitiveDispatchContent(value, '<input>')).toEqual([
+      {
+        path: '<input>.nested.password',
+        message:
+          'Sensitive dispatch content is forbidden at <input>.nested.password.',
+      },
+      {
+        path: '<input>.token',
+        message: 'Sensitive dispatch content is forbidden at <input>.token.',
+      },
+      {
+        path: '<input>.list[1]',
+        message: 'Sensitive dispatch content is forbidden at <input>.list[1].',
+      },
+    ]);
+    // The throwing helper keeps its first-hit behavior for existing callers.
+    expect(() => assertNoSensitiveDispatchContent(value, '<input>')).toThrow(
+      'Sensitive dispatch content is forbidden at <input>.nested.password.',
+    );
+    expect(collectSensitiveDispatchContent({ ok: 'plain' })).toEqual([]);
+  });
+
+  it('exports the pre-refine base object so a partial record can be checked', () => {
+    const base = genericDispatchRecordBaseSchema.omit({
+      provider: true,
+      role_name: true,
+    });
+    const { provider: _provider, role_name: _role, ...rest } = genericRecord();
+    expect(base.safeParse(rest).success).toBe(true);
+    const missing = base.safeParse({ ...rest, caller: undefined, scope: 7 });
+    expect(missing.success).toBe(false);
+    expect(
+      missing.success ? [] : missing.error.issues.map((issue) => issue.path),
+    ).toEqual([['caller'], ['scope']]);
+  });
+
+  it('states the expected request_id form', () => {
+    const parsed = genericDispatchRecordBaseSchema.safeParse({
+      ...genericRecord(),
+      request_id: '../outside',
+    });
+    expect(parsed.success).toBe(false);
+    expect(parsed.success ? '' : parsed.error.issues[0]?.message).toMatch(
+      /expected .*\[a-zA-Z0-9\]/,
+    );
   });
 });

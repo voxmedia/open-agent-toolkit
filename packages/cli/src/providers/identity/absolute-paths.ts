@@ -118,30 +118,52 @@ export function redactAbsolutePathsDeep<T>(value: T): T {
   return value;
 }
 
+/** One located validation violation. The message never echoes the value. */
+export interface DispatchValueViolation {
+  path: string;
+  message: string;
+}
+
+/**
+ * Collect every absolute path in an identity or control value, in the same
+ * depth-first order {@link assertNoAbsolutePath} visits them, so a caller that
+ * reports all violations at once and one that stops at the first agree on
+ * which hit comes first. Each message names the field, never the path found
+ * there, so the report itself cannot disclose it.
+ */
+export function collectAbsolutePathViolations(
+  value: unknown,
+  path: string,
+): DispatchValueViolation[] {
+  if (typeof value === 'string') {
+    return containsAbsolutePath(value)
+      ? [
+          {
+            path,
+            message: `A dispatch record must not carry an absolute filesystem path at ${path}.`,
+          },
+        ]
+      : [];
+  }
+  if (Array.isArray(value)) {
+    return value.flatMap((entry, index) =>
+      collectAbsolutePathViolations(entry, `${path}[${index}]`),
+    );
+  }
+  if (value === null || typeof value !== 'object') return [];
+  return Object.entries(value as Record<string, unknown>).flatMap(
+    ([key, entry]) => collectAbsolutePathViolations(entry, `${path}.${key}`),
+  );
+}
+
 /**
  * Recursively reject any absolute path. Used for identity and control fields,
  * where a path is never a legitimate value and silently rewriting one would
  * corrupt the identifier it claims to be.
  */
 export function assertNoAbsolutePath(value: unknown, path: string): void {
-  if (typeof value === 'string') {
-    if (containsAbsolutePath(value)) {
-      throw new Error(
-        `A dispatch record must not carry an absolute filesystem path at ${path}.`,
-      );
-    }
-    return;
-  }
-  if (Array.isArray(value)) {
-    value.forEach((entry, index) =>
-      assertNoAbsolutePath(entry, `${path}[${index}]`),
-    );
-    return;
-  }
-  if (value === null || typeof value !== 'object') return;
-  for (const [key, entry] of Object.entries(value as Record<string, unknown>)) {
-    assertNoAbsolutePath(entry, `${path}.${key}`);
-  }
+  const [first] = collectAbsolutePathViolations(value, path);
+  if (first) throw new Error(first.message);
 }
 
 /**
