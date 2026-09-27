@@ -4,6 +4,12 @@
 
 ## Curated Overview
 
+- 2026-09-27: `BL-260927-make-claude-md-shims-opt` (high) makes CLAUDE.md shims
+  opt-in through `.oat/config.json` now that Claude Code's built-in `agents-md`
+  plugin reads AGENTS.md by default (v2.1.278). The plugin ignores every
+  AGENTS.md once any CLAUDE.md exists on the path, so the change must remove
+  managed shims rather than only stop creating them. It absorbs
+  `BL-260830-persist-instruction-sync`.
 - 2026-09-27 decisions pass (Wave 4 decision track, taken early):
   `DR-260927-dispatch-record-validates` keeps `oat project dispatch record`
   validate-only and removes journal persistence
@@ -296,6 +302,7 @@
 | BL-260906-harden-dispatch-launch         | Harden dispatch launch baselines and terminal reconciliation                                          | open   | high     | feature    | M        |
 | BL-260718-harden-full-surface-gate       | Harden full-surface gate reviews against budget and recursive dispatch                                | open   | high     | feature    | M        |
 | BL-260729-implement-reviewplan-first     | Implement ReviewPlan-first reviewer workflow                                                          | open   | high     | feature    | L        |
+| BL-260927-make-claude-md-shims-opt       | Make CLAUDE.md shims opt-in now that Claude Code reads AGENTS.md                                      | open   | high     | feature    | M        |
 | BL-260911-make-docs-bootstrap-a-front    | Make docs bootstrap a front door for existing docs and support the docs-directory convention          | open   | high     | feature    | M        |
 | BL-260829-order-phase-bookkeeping-before | Order phase bookkeeping before per-phase review dispatch                                              | open   | high     | task       | M        |
 | BL-260724-support-provider-directory     | Support provider directory symlinks as full collection sync                                           | open   | high     | feature    | M        |
