@@ -235,9 +235,15 @@ axes are provider-default by documented design
 - Skill rule: gate-originated reviews (`oat_review_invocation: gate`) write the
   resolver stamp with the literal prefix `Dispatch (policy view):` instead of
   `Dispatch:`. Non-gate reviews are unchanged.
-- Validation, applied only to gate artifacts: collect reviewer stamps
-  (`action=review role=reviewer`) from the audit metadata block before the first
-  `## ` heading, skipping fenced code blocks and backtick-quoted spans. An
+- Validation, applied only to gate artifacts: recognize audit lines by shape.
+  After stripping a list marker, an optional bold or plain label ending in `:`
+  (for example `**Dispatch audit:**`, `Dispatch stamp:`, or
+  `Managed reviewer resolver (...):`), and at most one backtick pair around the
+  whole stamp, a line whose remainder starts with `Dispatch:` and parses as a
+  reviewer stamp (`action=review role=reviewer`) is an audit line. Accept audit
+  lines in the metadata block before the first `## ` heading and inside a
+  `## Dispatch Audit` or `## Dispatch Metadata` section; ignore fenced code
+  blocks and any stamp inside finding sections or finding prose. An
   unlabeled reviewer stamp agrees with the frontmatter only when its `target`
   equals `oat_gate_target` and, when `oat_invocation_reasoning_effort` is a
   concrete effort, its `effort_axis` equals `selected:<that effort>`. Any
@@ -277,12 +283,17 @@ axes are provider-default by documented design
 
 **Step 1: Write test (RED)**
 
-- Parser: from a fixture shaped like the real archived gate artifact
-  `.oat/projects/shared/recon-rework/reviews/archived/final-review-2026-09-11T155617Z.md`
-  (frontmatter lines 14-17, audit line 34; record that provenance in a fixture
-  comment), extract unlabeled reviewer stamps and policy-view stamps
-  separately; ignore an implementer stamp, a reviewer stamp inside a fenced
-  block, and a backtick-quoted stamp in a finding.
+- Parser: using fixtures copied from real archived gate artifacts, with the
+  source path recorded in each fixture comment, extract unlabeled reviewer
+  stamps and policy-view stamps separately from all three real shapes:
+  a plain pre-heading line
+  (`.oat/projects/shared/recon-rework/reviews/archived/final-review-2026-09-11T155617Z.md:34`),
+  a backtick-wrapped `**Dispatch audit:**` line
+  (`.../recon-rework/reviews/archived/final-review-2026-09-11T020623Z.md:34`),
+  and a labeled bullet inside a `## Dispatch Audit` section
+  (`.oat/projects/shared/claude-effort-levels/reviews/archived/final-review-2026-09-21T232436Z.md:29-33`).
+  Ignore an implementer stamp, a reviewer stamp inside a fenced block, and a
+  stamp quoted inside a finding.
 - Gate, with frontmatter `oat_gate_target: codex-6-sol-xhigh` and
   `oat_invocation_reasoning_effort: xhigh` under a project `high` ceiling:
   - an unlabeled policy stamp (`target=oat-reviewer-...-high`,
@@ -1030,16 +1041,16 @@ git commit -m "chore(p04-t03): record definition-of-done gate results"
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date | Artifact | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | ------- | ---- | -------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending | -    | -        | -             | -          | -           |
-| p02    | code     | pending | -    | -        | -             | -          | -           |
-| p03    | code     | pending | -    | -        | -             | -          | -           |
-| p04    | code     | pending | -    | -        | -             | -          | -           |
-| final  | code     | pending | -    | -        | -             | -          | -           |
-| spec   | artifact | pending | -    | -        | -             | -          | -           |
-| design | artifact | pending | -    | -        | -             | -          | -           |
-| plan   | artifact | pending | -    | -        | -             | -          | -           |
+| Scope  | Type     | Status          | Date       | Artifact                 | Reviewed Head | Invocation | Gate Target |
+| ------ | -------- | --------------- | ---------- | ------------------------ | ------------- | ---------- | ----------- |
+| p01    | code     | pending         | -          | -                        | -             | -          | -           |
+| p02    | code     | pending         | -          | -                        | -             | -          | -           |
+| p03    | code     | pending         | -          | -                        | -             | -          | -           |
+| p04    | code     | pending         | -          | -                        | -             | -          | -           |
+| final  | code     | pending         | -          | -                        | -             | -          | -           |
+| spec   | artifact | pending         | -          | -                        | -             | -          | -           |
+| design | artifact | pending         | -          | -                        | -             | -          | -           |
+| plan   | artifact | fixes_completed | 2026-09-27 | structured (no artifact) | -             | auto       | -           |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
@@ -1047,6 +1058,17 @@ head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
 existing row and every unknown trailing cell.
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
+
+Plan artifact review (auto loop, `oat-reviewer-claude-claude-opus-5-5-high`,
+structured mode, `selection_reason: exception-parent-effort-unknown`): attempt
+1 at `b75fa230c` returned 3 High, 8 Medium, 10 Low; attempt 2 at `eac84a28a`
+returned 3 High, 2 Medium, 4 Low; attempt 3 at `2e6ebd6b3` returned 1 High
+(audit-line recognition skipped real artifact shapes). All findings were
+applied, including Medium and Low under the autonomous run. Residual: the
+attempt-3 High fix (shape-based audit-line recognition in p01-t03) was applied
+after the retry bound (`oat_orchestration_retry_limit` default 2) and was not
+re-reviewed by the auto loop; the configured independent quick-start gate
+reviews the full bundle next.
 
 ---
 
