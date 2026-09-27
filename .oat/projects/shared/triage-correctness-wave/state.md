@@ -21,6 +21,13 @@ oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 #     pNN:
 #       used_attempts: 0
 #       pending_attempt: null # null or {attempt, event_id, original_request_id, original_task_id, original_commit, discovered_by, dispatch_target, reservation_head, status}
+oat_phase_recovery_policy:
+  default_attempt_limit: 10
+  phase_attempt_limits: {}
+  phase_attempt_usage:
+    p03:
+      used_attempts: 0
+      pending_attempt: null
 oat_dispatch_policy:
   mode: managed
   policy: high
