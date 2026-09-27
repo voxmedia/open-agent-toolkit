@@ -108,8 +108,8 @@ observation recorded under p01-t01).
 
 ### Task p02-t06: (review) Close p02 review findings M1, M2, L1, L2, L3
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 8c4102a02
 
 **Review received (p02, auto):** `reviews/archived/p02-review-2026-09-27T051543Z.md`
 at head `9541287ad`: 0 Critical, 0 High, 2 Medium, 3 Low. Disposition: all five
@@ -225,9 +225,10 @@ converted to p02-t06.
 
 ## Deviations from Plan / Design
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review | Source Artifact                                | Planned / Documented                                    | Actual / Accepted                                                                                                                                       | Reason                                                              | Source of Truth | Follow-up                                                                                             |
+| ------------- | ---------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- | --------------- | ----------------------------------------------------------------------------------------------------- |
+| p02-t06 (L3)  | plan.md Parallelism p02 write set              | p02 edits limited to the declared write set             | `packages/cli/src/providers/shared/registry.ts` gained an `isValidCatalogRefreshPolicy` export                                                          | Reuse the registry's provenance validation instead of a weaker copy | Implementation  | None; p01 does not touch the file, so the parallel group stays write-disjoint                         |
+| p02-t06 (L1)  | `BL-260909-make-oat-sync-scope-all-report` AC2 | "A test pins the `failed === 0` conjunct across scopes" | The conjunct was removed from `restampOnly` because after p02-t02 no output depends on it; the multi-scope failure test now pins the observable outcome | A test that cannot fail is not a pin                                | Implementation  | p04-t02 closeout states that AC2 is met by the outcome test and the conjunct's removal, not literally |
 
 ## Test Results
 
