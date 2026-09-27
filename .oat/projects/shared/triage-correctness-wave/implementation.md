@@ -349,6 +349,28 @@ All ten items meet every criterion and were archived with
 **Status:** pending
 **Commit:** -
 
+### Definition of Done results
+
+Run 2026-09-27 from the repository root at `a90da4f49` (after p04-t02), each
+exit code captured explicitly; test suites ran under a fresh `mktemp -d` HOME.
+`origin/main` was `88907ec4c` (lockstep 0.3.7) after `git fetch origin main`.
+
+| Gate                                                   | Exit | Notes                                                                                                   |
+| ------------------------------------------------------ | ---- | ------------------------------------------------------------------------------------------------------- |
+| `pnpm check`                                           | 0    | 0 cached of 10                                                                                          |
+| `pnpm type-check`                                      | 0    | 5 cached of 10                                                                                          |
+| `HOME=$(mktemp -d) pnpm exec turbo run test --force`   | 0    | 0 cached of 10, no `FULL TURBO`; cli 7685, control-plane 151, docs-config 10, docs-transforms 31 passed |
+| `pnpm build`                                           | 0    | `FULL TURBO` replay; rerun with `turbo run build --filter='!oat-docs' --force`: exit 0, 0 cached of 5   |
+| `pnpm test:smoke`                                      | 0    | 163/163                                                                                                 |
+| `pnpm test:scripts`                                    | 0    | 1/1                                                                                                     |
+| `pnpm test:skills`                                     | 0    | 657/657                                                                                                 |
+| `pnpm run check:skill-bumps`                           | 0    | 6 changed skill/agent version bumps validated against `origin/main`                                     |
+| `git fetch origin main && pnpm release:check-versions` | 0    | 0.3.8 > 0.3.7                                                                                           |
+| `pnpm release:validate`                                | 0    | 5 public packages packed and validated at 0.3.8                                                         |
+| `pnpm build:docs`                                      | 0    | `FULL TURBO` replay; rerun with `turbo run build --filter=oat-docs... --force`: exit 0, 0 cached of 6   |
+| `pnpm lint`                                            | 0    | includes root `oxlint tools/smoke .agents/skills`                                                       |
+| `pnpm format`                                          | 0    | includes `format:root` and control-plane `oxfmt --check`                                                |
+
 ---
 
 ## Orchestration Runs
