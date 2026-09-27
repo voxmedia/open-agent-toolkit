@@ -427,6 +427,9 @@ bookkeeping.
 - Gate IMPLEMENT-16 (final HiLL approval): auto-approved under the autonomy
   contract after the passing final review, the allowed exit gate, and all
   pre-approval steps; `approval_source: oat-autonomous`. No post-approval steps.
+- PR #331 CI (run `36304484801`): `ci`, `release-dry-run`, and Cursor Bugbot
+  all pass; the util-linux branch of the resolve-providers EOF test ran on
+  Linux and passed, closing the last pending verification item.
 - `oat_phase_status` stays `pr_open` (set by `oat-project-pr-final`), matching
   the `migrate-skill-versions` precedent while the PR is open.
 
