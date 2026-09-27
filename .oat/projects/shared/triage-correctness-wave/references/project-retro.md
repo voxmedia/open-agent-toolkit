@@ -18,7 +18,7 @@ oat_retro_evidence_sources:
     status: used
   - source: session-transcript
     status: used
-oat_retro_promotions: proposed
+oat_retro_promotions: complete
 oat_retro_filing: proposed
 oat_generated: true
 oat_template: false
@@ -83,15 +83,14 @@ self-referential gate changes as untested by their own gates.
 
 ## Current State
 
-- **Promotions:** `proposed`. RP-01 and RP-02 are `proposed` apply-items
-  (target `AGENTS.md`). Apply was deferred because `workflow.retro.apply` is
-  `ask` and this run was non-interactive.
+- **Promotions:** `complete`. RP-01 and RP-02 are `applied` to `AGENTS.md`
+  (Development Workflow) with interactive approval during completion.
 - **Filing:** `proposed`. UP-01 through UP-04 are `proposed` with no
   destination. Filing was deferred because neither
   `workflow.retro.filing.repo` nor `workflow.retro.filing.upstream` is
   configured.
-- **Unsettled items:** RP-01 and RP-02 need an apply decision (run retro apply
-  mode). UP-01 through UP-04 need filing (`oat-project-retro-file`).
+- **Unsettled items:** UP-01 through UP-04 need filing
+  (`oat-project-retro-file`).
 
 ## What Went Well
 
@@ -283,9 +282,9 @@ reviewer's offline probe over 141 artifacts, not by a live gate.
 
 - **Type:** agents-instruction
 - **Disposition:** apply
-- **Status:** proposed
+- **Status:** applied
 - **Target:** `AGENTS.md`
-- **Applied-ref:** —
+- **Applied-ref:** `AGENTS.md` (Development Workflow)
 - **Disposition-note:** —
 
 Problem: `.lintstagedrc.mjs` runs `oxfmt --write` on every staged `*.md`. It
@@ -304,9 +303,9 @@ match table rows by cell content rather than padding, and to confirm
 
 - **Type:** agents-instruction
 - **Disposition:** apply
-- **Status:** proposed
+- **Status:** applied
 - **Target:** `AGENTS.md`
-- **Applied-ref:** —
+- **Applied-ref:** `AGENTS.md` (Development Workflow)
 - **Disposition-note:** —
 
 Problem: the configured gate command invokes `oat` from PATH. The branch-local

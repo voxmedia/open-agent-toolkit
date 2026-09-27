@@ -143,6 +143,20 @@ smoke path.
 - `pnpm run cli -- help` - Run the OAT CLI help from repo root
 - `pnpm run cli -- <command> [options]` - Execute specific OAT CLI commands during local testing
 - After creating or switching to a worktree, run `pnpm run worktree:init` before using the CLI workflow.
+- The pre-commit hook (lint-staged) runs `oxfmt --write` on staged Markdown,
+  JSON, and JS/TS files, so a committed file can differ from the text you last
+  wrote: Markdown tables are re-padded and YAML scalars may be re-quoted. After
+  committing, re-read a file before any exact-text edit, match table rows by
+  cell content rather than padding, and confirm `git status --short` is clean.
+  A file the hook leaves modified after a successful commit is tracked by
+  `BL-260927-share-one-hook-safe-exact-path`.
+- `oat gate review` runs the `oat` on your PATH, and gate reviewers load the
+  installed (often user-scope) skills, so a project's own gates exercise the
+  released gate and review-provide behavior, not the branch's. When a change
+  touches `packages/cli/src/commands/gate/**` or the `oat-project-review-provide*`
+  skills, probe the new behavior with the branch build where feasible — for
+  example `node packages/cli/dist/index.js --json gate review …` against a
+  scratch project, or the changed parser run over committed gate artifacts.
 
 ### Web Retrieval Convention
 
