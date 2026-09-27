@@ -127,8 +127,13 @@ directory as `cwd`:
 - `.cline/` present → stdout lists `cline`, exit 0.
 - Run each case with `--non-interactive` and with no flag. Under `node --test`
   stdin is not a TTY, so the no-flag case exercises only the non-TTY fallback of
-  `interactive_confirm`; record in the test and `implementation.md` that the
-  real TTY prompt path is not driven by this suite.
+  `interactive_confirm`. The backlog criterion also requires the interactive
+  mode to print providers, so before archiving the item record a PTY-backed
+  observation in `implementation.md`: run the script under a pseudo-terminal
+  (for example `script -q /dev/null bash <script>` on macOS or
+  `script -qec "bash <script>" /dev/null` on Linux) in the `.claude`-only
+  fixture, answer the prompt, and record the command, the printed providers,
+  and the exit status.
 
 Run: `node --test .agents/skills/oat-agent-instructions-analyze/tests/resolve-providers.test.mjs`
 Expected: the `.claude`-only and `.cursor`-only cases fail (no output, exit 1).
@@ -249,8 +254,14 @@ axes are provider-default by documented design
   concrete effort, its `effort_axis` equals `selected:<that effort>`. Any
   other unlabeled reviewer stamp fails the gate with the new cause
   `gate_dispatch_audit_mismatched`; its message names `oat tools update` as the
-  recovery for artifacts written by older installed skills. Labeled
-  policy-view stamps and artifacts without an audit stamp are not affected.
+  recovery for artifacts written by older installed skills. A stamp counts as
+  labeled, and is not checked, when it carries the `Dispatch (policy view):`
+  prefix or when its leading label contains the words `policy view`
+  (case-insensitive), as in the quick-start gate artifact of this project,
+  `reviews/archived/artifact-plan-review-2026-09-27T043735Z.md`
+  (`**Resolver policy view:**` followed by a backtick-wrapped `Dispatch:` stamp
+  under `## Dispatch Audit`). Artifacts without an audit stamp are not
+  affected.
 - Extraction: `parseDispatchStamps` (`packages/cli/src/providers/identity/stamp.ts:166-169`)
   only matches the literal `Dispatch:`, so policy-view lines are extracted by a
   small label-aware helper in `review-verdict.ts` that strips the
@@ -290,8 +301,11 @@ axes are provider-default by documented design
   (`.oat/projects/shared/recon-rework/reviews/archived/final-review-2026-09-11T155617Z.md:34`),
   a backtick-wrapped `**Dispatch audit:**` line
   (`.../recon-rework/reviews/archived/final-review-2026-09-11T020623Z.md:34`),
-  and a labeled bullet inside a `## Dispatch Audit` section
-  (`.oat/projects/shared/claude-effort-levels/reviews/archived/final-review-2026-09-21T232436Z.md:29-33`).
+  a labeled bullet inside a `## Dispatch Audit` section
+  (`.oat/projects/shared/claude-effort-levels/reviews/archived/final-review-2026-09-21T232436Z.md:29-33`),
+  and a prose policy-view label
+  (`.oat/projects/shared/triage-correctness-wave/reviews/archived/artifact-plan-review-2026-09-27T043735Z.md`,
+  `**Resolver policy view:**`), which must be classified as labeled.
   Ignore an implementer stamp, a reviewer stamp inside a fenced block, and a
   stamp quoted inside a finding.
 - Gate, with frontmatter `oat_gate_target: codex-6-sol-xhigh` and
@@ -550,8 +564,11 @@ Backlog: `BL-260909-reject-malformed-nested-values`.
   (`oat-config.ts:1855, 1939, 1971`) if needed.
 - The criterion "red-then-green control recorded in the test" is met inside
   the test file: the negative control (malformed sibling refused, bytes
-  unchanged) and the positive control (valid tree unsets) sit side by side
-  with a comment recording that the negative case passed before the fix.
+  unchanged) and the positive control (valid tree unsets) sit side by side.
+  The negative test must fail against the pre-fix code (the wrong-typed
+  sibling is accepted and raw-written back) and pass after the fix; record the
+  command and both results in the test's provenance comment and in
+  `implementation.md`.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/oat-config.test.ts src/commands/config/index.test.ts`
 Expected: fail.
@@ -1041,17 +1058,17 @@ git commit -m "chore(p04-t03): record definition-of-done gate results"
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                           | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | --------------- | ---------- | -------------------------------------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending         | -          | -                                                  | -             | -          | -           |
-| p02    | code     | pending         | -          | -                                                  | -             | -          | -           |
-| p03    | code     | pending         | -          | -                                                  | -             | -          | -           |
-| p04    | code     | pending         | -          | -                                                  | -             | -          | -           |
-| final  | code     | pending         | -          | -                                                  | -             | -          | -           |
-| spec   | artifact | pending         | -          | -                                                  | -             | -          | -           |
-| design | artifact | pending         | -          | -                                                  | -             | -          | -           |
-| plan   | artifact | fixes_completed | 2026-09-27 | structured (no artifact)                           | -             | auto       | -           |
-| plan   | artifact | received        | 2026-09-27 | reviews/artifact-plan-review-2026-09-27T043735Z.md | -             | -          | -           |
+| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target       |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ----------------- |
+| p01    | code     | pending         | -          | -                                                           | -             | -          | -                 |
+| p02    | code     | pending         | -          | -                                                           | -             | -          | -                 |
+| p03    | code     | pending         | -          | -                                                           | -             | -          | -                 |
+| p04    | code     | pending         | -          | -                                                           | -             | -          | -                 |
+| final  | code     | pending         | -          | -                                                           | -             | -          | -                 |
+| spec   | artifact | pending         | -          | -                                                           | -             | -          | -                 |
+| design | artifact | pending         | -          | -                                                           | -             | -          | -                 |
+| plan   | artifact | fixes_completed | 2026-09-27 | structured (no artifact)                                    | -             | auto       | -                 |
+| plan   | artifact | fixes_completed | 2026-09-27 | reviews/archived/artifact-plan-review-2026-09-27T043735Z.md | -             | gate       | codex-6-sol-xhigh |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
@@ -1070,6 +1087,16 @@ attempt-3 High fix (shape-based audit-line recognition in p01-t03) was applied
 after the retry bound (`oat_orchestration_retry_limit` default 2) and was not
 re-reviewed by the auto loop; the configured independent quick-start gate
 reviews the full bundle next.
+
+Quick-start gate attempt 1 (run `cfbed9d4-31b9-4c43-b9b6-ab39c958f7d9`,
+target `codex-6-sol-xhigh`, different-family from the declared Claude
+producer): `ok`, 0 Critical, 0 High, 2 Medium, receive-eligible. Received per
+REVIEWRECEIVE-01: both Mediums resolved in the artifact (p02-t04 pre-fix proof
+now requires a failing-then-passing negative test; p01-t01 adds a PTY-backed
+interactive observation). Receive-time addition: the gate artifact's
+`**Resolver policy view:**` audit line showed that p01-t03's labeled-stamp rule
+must accept prose `policy view` labels, so p01-t03 now does and uses that
+artifact as a fixture. Re-review follows per REVIEWRECEIVE-07.
 
 ---
 
