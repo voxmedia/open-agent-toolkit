@@ -1284,6 +1284,30 @@ git commit -m "chore(p04-t03): record definition-of-done gate results"
 
 ---
 
+### Task p04-t04: (review) Close final review findings M1, L1, L2
+
+Source: `reviews/archived/final-review-2026-09-27T070931Z.md` (final code
+review, 0 Critical, 0 High, 1 Medium, 3 Low; L3 is root bookkeeping).
+
+**Files:** `packages/cli/src/commands/gate/index.ts` (`REVIEW_GATE_CONTEXT_NOTE`
+near 469-473) and `index.test.ts`; `packages/cli/src/commands/project/dispatch/record.ts`
+(doc comment near 341); `.agents/skills/oat-project-retro/SKILL.md` (progress
+banner near 56; version already bumped in this PR).
+
+**Step 1 (RED):** the gate prompt context states the dispatch-audit labeling
+rule (`**Dispatch audit (policy view):**` for the resolver stamp in
+gate-originated reviews); a test asserts the sentence is present.
+
+**Step 2 (GREEN):** add the sentence; fix the stale `record.ts` comment
+(runtime-observation events are validated in the single-run pass); update the
+retro banner count for the new Step 7.
+
+**Step 4 (Verify):** `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/ src/commands/project/dispatch/ src/commands/init/tools/shared/retro-skill-contracts.test.ts`
+
+**Step 5 (Commit):** `fix(p04-t04): state the dispatch-audit label in the gate prompt and fix stale text`
+
+---
+
 ## Reviews
 
 | Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target       |
@@ -1300,7 +1324,7 @@ git commit -m "chore(p04-t03): record definition-of-done gate results"
 | p03    | code     | passed          | 2026-09-27 | reviews/archived/p03-review-2026-09-27T064005Z.md           | de48e25a55b2e2e0af608a1f45dc0c7eb50d3715 | gate       | codex-6-sol-xhigh |
 | p04    | code     | passed          | 2026-09-27 | reviews/archived/p04-review-2026-09-27T065739Z.md           | 74bcdf452d2d35427714fcb67db25e66ec74937b | auto       | -                 |
 | p04    | code     | passed          | 2026-09-27 | reviews/archived/p04-review-2026-09-27T070131Z.md           | 25a21073c17ad711ab63cbeb685197ee43b37026 | gate       | codex-6-sol-xhigh |
-| final  | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| final  | code     | fixes_added     | 2026-09-27 | reviews/archived/final-review-2026-09-27T070931Z.md         | db06db72de18b2a5743b6813ace78afa540e4a8a | auto       | -                 |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
 | design | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
 | plan   | artifact | fixes_completed | 2026-09-27 | structured (no artifact)                                    | -                                        | auto       | -                 |
@@ -1381,9 +1405,9 @@ reviewer was Codex, so the achieved review was cross-family.
 - Phase 1: 5 tasks - Bundled skill and script fixes
 - Phase 2: 6 tasks - CLI sync, config, and tools correctness
 - Phase 3: 8 tasks - Managed Claude dispatch-record input
-- Phase 4: 3 tasks - Release and backlog fan-in
+- Phase 4: 4 tasks - Release and backlog fan-in
 
-**Total: 22 tasks**
+**Total: 23 tasks**
 
 Ready for code review and merge.
 

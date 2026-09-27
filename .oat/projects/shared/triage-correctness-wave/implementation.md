@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-27
-oat_current_task_id: null
+oat_current_task_id: p04-t04
 oat_generated: false
 ---
 
@@ -249,7 +249,7 @@ three concerns were assessed as acceptable.
 
 ## Phase 4: Release and backlog fan-in
 
-**Status:** completed
+**Status:** in_progress
 **Started:** -
 
 ### Task p04-t01: Bump the lockstep public package versions
@@ -373,6 +373,21 @@ exit code captured explicitly; test suites ran under a fresh `mktemp -d` HOME.
 
 ---
 
+### Task p04-t04: (review) Close final review findings M1, L1, L2
+
+**Status:** pending
+**Commit:** -
+
+**Final review received (auto):** `reviews/archived/final-review-2026-09-27T070931Z.md`
+at head `db06db72d`: 0 Critical, 0 High, 1 Medium, 3 Low. Gate IMPLEMENT-11:
+route `oat-reviewer-claude-claude-opus-5-5-high`, managed record
+`validated-only`, independence from the Claude implementers is context-only
+(same family); the configured Codex exit gate supplies cross-family coverage.
+M1, L1, L2 converted to p04-t04; L3 (stale dispatch rows) fixed in root
+bookkeeping.
+
+---
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -404,8 +419,17 @@ exit code captured explicitly; test suites ran under a fresh `mktemp -d` HOME.
 | ------------------------ | ----- | ----------- | -------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | `triage-wave-p01-impl`   | p01   | implementer | accepted | `oat-phase-implementer-claude-claude-opus-5-5-medium` | native-catalog; candidate `claude-opus-5-5/medium`; managed record `validated-only` | DONE; 3/3 tasks; `0d24884ff..9bf1f8325`                                                                                       |
 | `triage-wave-p02-impl`   | p02   | implementer | accepted | `oat-phase-implementer-claude-claude-opus-5-5-medium` | native-catalog; candidate `claude-opus-5-5/medium`; managed record `validated-only` | BLOCKED on a mistyped base SHA, context-only continuation, then DONE_WITH_CONCERNS (minor); 5/5 tasks; `f19a8d5bc..9541287ad` |
-| `triage-wave-p01-review` | p01   | reviewer    | accepted | `oat-reviewer-claude-claude-opus-5-5-high`            | native-catalog; managed record `validated-only`                                     | pending                                                                                                                       |
-| `triage-wave-p02-review` | p02   | reviewer    | accepted | `oat-reviewer-claude-claude-opus-5-5-high`            | native-catalog; managed record `validated-only`                                     | pending                                                                                                                       |
+| `triage-wave-p01-review` | p01   | reviewer    | accepted | `oat-reviewer-claude-claude-opus-5-5-high`            | native-catalog; managed record `validated-only`                                     | completed; round 1 0C/0H/2M/3L                                                                                                |
+| `triage-wave-p02-review` | p02   | reviewer    | accepted | `oat-reviewer-claude-claude-opus-5-5-high`            | native-catalog; managed record `validated-only`                                     | completed; round 1 0C/0H/2M/3L                                                                                                |
+
+| `triage-wave-p01-rereview` | p01 | reviewer | accepted | `oat-reviewer-claude-claude-opus-5-5-high` | native-catalog; managed record `validated-only` | completed; round 2 passed (0C/0H/0M/2L) |
+| `triage-wave-p02-rereview` | p02 | reviewer | accepted | `oat-reviewer-claude-claude-opus-5-5-high` | native-catalog; managed record `validated-only` | completed; round 2 passed (clean) |
+| `triage-wave-p03-impl` | p03 | implementer | accepted | `oat-phase-implementer-claude-claude-opus-5-5-high` | native-catalog; candidate `claude-opus-5-5/high`; managed record `validated-only` | DONE after recovery p03-rec-01 and fixes p03-t06..t08 |
+| `triage-wave-p03-review` | p03 | reviewer | accepted | `oat-reviewer-claude-claude-opus-5-5-high` | native-catalog; managed record `validated-only` | completed; round 1 0C/1H/1M/3L |
+| `triage-wave-p03-rereview` | p03 | reviewer | accepted | `oat-reviewer-claude-claude-opus-5-5-high` | native-catalog; managed record `validated-only` | completed; round 2 passed (0C/0H/0M/1L) |
+| `triage-wave-p04-impl` | p04 | implementer | accepted | `oat-phase-implementer-claude-claude-opus-5-5-medium` | native-catalog; candidate `claude-opus-5-5/medium`; managed record `validated-only` | DONE; 3/3 tasks |
+| `triage-wave-p04-review` | p04 | reviewer | accepted | `oat-reviewer-claude-claude-opus-5-5-high` | native-catalog; managed record `validated-only` | completed; passed (clean) |
+| `triage-wave-final-review` | final | reviewer | accepted | `oat-reviewer-claude-claude-opus-5-5-high` | native-catalog; managed record `validated-only` | completed; 0C/0H/1M/3L |
 
 - p01 `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-medium`
 - p02 `Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-medium`
