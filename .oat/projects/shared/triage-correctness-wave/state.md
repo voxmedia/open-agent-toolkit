@@ -21,6 +21,42 @@ oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 #     pNN:
 #       used_attempts: 0
 #       pending_attempt: null # null or {attempt, event_id, original_request_id, original_task_id, original_commit, discovered_by, dispatch_target, reservation_head, status}
+oat_implement_exit_gate:
+  status: pending
+  resolution: configured
+  disposition: null
+  config_fingerprint: 'sha256:76eaea5d632f8612107755e2770d20d1331e61ca9d7d4859dfd20a64932869f2'
+  resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
+  resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
+  project_override: null
+  on_failure: block
+  max_attempts: 2
+  attempts_completed: 0
+  reviewed_head: a44fcfe5c1685dc5449757f001e06694d8ab127d
+  implementation_base_ref: origin/main
+  implementation_fingerprint: 'sha256:effective-delta-v1:bccc124e0c3dfb4687c2896c68d377cb1c44fcae80b3f9ab1588ab078c1c7464'
+  freshness_head: 30d2a7aa5352ebc87fffbb48244c9d6b4f082b42
+  freshness_fingerprint: 'sha256:effective-delta-v1:a54d179337d7314fed652922f3763c120c6e215587644fb2917c70fcb2c91e66'
+  launch_state: intent_persisted
+  launch_attempt_id: 'triage-wave-exit-gate-1-20260927T071611Z'
+  launch_started_at: '2026-09-27T07:16:11Z'
+  launch_result_receipt: null
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_state: not_started
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
+  failure: null
+  updated_at: '2026-09-27T07:16:11Z'
 oat_phase_recovery_policy:
   default_attempt_limit: 10
   phase_attempt_limits: {}
