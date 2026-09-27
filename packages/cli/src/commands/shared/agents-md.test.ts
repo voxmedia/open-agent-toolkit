@@ -12,7 +12,7 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -295,7 +295,11 @@ describe('manual-only AGENTS.md guidance', () => {
   });
 
   it.each([
-    ['external', async (path: string) => symlink('../outside.md', path)],
+    [
+      'external',
+      async (path: string, outside: string) =>
+        symlink(relative(root, outside), path),
+    ],
     ['broken', async (path: string) => symlink('missing.md', path)],
     ['cyclic', async (path: string) => symlink('AGENTS.md', path)],
     [
@@ -305,20 +309,30 @@ describe('manual-only AGENTS.md guidance', () => {
         await symlink('guidance', path);
       },
     ],
-  ])('returns blocked for an unsafe %s target', async (_case, seed) => {
-    await setup();
-    const outside = join(root, '..', 'outside.md');
-    await writeFile(outside, '# Outside\n', 'utf8');
-    try {
-      await seed(join(root, 'AGENTS.md'));
-      const result = await upsertAgentsMdSection(root, 'tools', 'replacement');
-      expect(result).toMatchObject({ action: 'blocked' });
-      expect(JSON.stringify(result)).not.toContain(root);
-      await expect(readFile(outside, 'utf8')).resolves.toBe('# Outside\n');
-    } finally {
-      await rm(outside, { force: true });
-    }
-  });
+  ] as const)(
+    'returns blocked for an unsafe %s target',
+    async (_case, seed) => {
+      await setup();
+      // Each variant owns a private sibling directory for the outside target, so
+      // concurrent variants and test processes never share one outside file.
+      const outsideDir = await mkdtemp(join(tmpdir(), 'agents-md-outside-'));
+      const outside = join(outsideDir, 'outside.md');
+      await writeFile(outside, '# Outside\n', 'utf8');
+      try {
+        await seed(join(root, 'AGENTS.md'), outside);
+        const result = await upsertAgentsMdSection(
+          root,
+          'tools',
+          'replacement',
+        );
+        expect(result).toMatchObject({ action: 'blocked' });
+        expect(JSON.stringify(result)).not.toContain(root);
+        await expect(readFile(outside, 'utf8')).resolves.toBe('# Outside\n');
+      } finally {
+        await rm(outsideDir, { recursive: true, force: true });
+      }
+    },
+  );
 
   it.each(['direct', 'symlink'] as const)(
     'blocks a late in-place edit while preserving its bytes for a %s target',
