@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-27
-oat_current_task_id: p01-t07
+oat_current_task_id: p01-t08
 oat_generated: false
 ---
 
@@ -32,7 +32,7 @@ oat_generated: false
 | Phase 4 | pending     | 2     | 0/2       |
 | Phase 5 | pending     | 6     | 0/6       |
 
-**Total:** 7/24 tasks completed
+**Total:** 7/25 tasks completed
 
 ---
 
@@ -87,6 +87,13 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** 1ea888506
+
+---
+
+### Task p01-t08: (review) Close p01 round-2 Low findings L1-L3
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -264,6 +271,12 @@ oat_generated: false
   plus patch; partial writes distinguished), L2 (`O_NONBLOCK`, non-regular
   refused), L3 (doctor wording), L4 (test title); failing-first and
   neutralize-and-restore evidence in the commit body; 2492 tests green.
+- Request `bw2-p01-review-2` (round 2, `oat-reviewer-claude-claude-opus-5-5-high`,
+  reconnaissance not-attempted): `reviews/archived/p01-review-2026-09-28T000859Z.md`
+  passed with 0 Critical/High/Medium; all six round-1 findings verified fixed;
+  three new Lows converted to `p01-t08`. The M2 fix landed in
+  `init/tools/index.ts` rather than the plan's `init/index.ts` (plan wording
+  only).
 - Implementer-reported deviations: evidence lives in commit bodies (root owns
   `implementation.md`); the e2e legacy-workflows-block cases stay
   `manual-required` (control (f)); no test pinned oat-doctor 2.0.1.

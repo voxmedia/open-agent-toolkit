@@ -521,6 +521,37 @@ and `node --test .agents/skills/oat-doctor/tests/*.test.mjs`. Expected: green.
 
 ---
 
+### Task p01-t08: (review) Close p01 round-2 Low findings L1-L3
+
+Source: `reviews/archived/p01-review-2026-09-28T000859Z.md` (auto review,
+passing: 0 Critical/High/Medium, 3 Low).
+
+**Files:** `packages/cli/src/commands/pjm/index.ts` (or the shared guidance
+formatter) and tests; `apps/oat-docs/docs/cli-utilities/tool-packs.md`;
+`packages/cli/src/commands/shared/agents-md.ts` and tests;
+`packages/cli/src/commands/tools/guidance/index.ts` and tests.
+
+**Step 1: Fix**
+
+- L1: when a zero-write refusal happens (hard link, permission denied, and so
+  on), `oat pjm init`'s header states the refusal, not "an existing block
+  differs"; fix `tool-packs.md` (~736) to match.
+- L2: a directory swapped in before the append is reported as an identity
+  change, not a write refusal.
+- L3: `oat tools guidance` with no installed packs prints a clear "no packs
+  installed" message (and `--json` says so) instead of an empty placeholder
+  block.
+
+**Step 2: Verify**
+
+Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/shared src/commands/pjm src/commands/tools src/commands/init`.
+
+**Step 3: Commit**
+
+`fix(p01-t08): close p01 round-2 review findings`
+
+---
+
 ## Phase 2: CLAUDE.md shims
 
 ### Task p02-t01: Persist a configurable instruction sync strategy
@@ -1333,6 +1364,7 @@ title itself:
 | Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target       |
 | ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------- |
 | p01    | code     | fixes_completed | 2026-09-27 | reviews/archived/p01-review-2026-09-27T235828Z.md           | 6aa11df62600cd72e41559a611697afb873893d7 | auto       | -                 |
+| p01    | code     | passed          | 2026-09-28 | reviews/archived/p01-review-2026-09-28T000859Z.md           | 80d514bbdf342391944b6580b3341a6e074b8a84 | auto       | -                 |
 | p02    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | p03    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | p04    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
@@ -1391,13 +1423,13 @@ in `implementation.md`). Phase gates and the final review still run.
 
 **Summary:**
 
-- Phase 1: 7 tasks - AGENTS.md guidance
+- Phase 1: 8 tasks - AGENTS.md guidance
 - Phase 2: 6 tasks - CLAUDE.md shims
 - Phase 3: 3 tasks - Lifecycle skill routing and bookkeeping
 - Phase 4: 2 tasks - Agent roles and recon validation
 - Phase 5: 6 tasks - CI and backlog tooling, release fan-in
 
-**Total: 24 tasks**
+**Total: 25 tasks**
 
 Ready for code review and merge.
 
