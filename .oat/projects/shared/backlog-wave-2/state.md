@@ -129,26 +129,26 @@ oat_implement_exit_gate:
   implementation_fingerprint: 'sha256:effective-delta-v1:69c9247dcd1956c986e01771d0adba5521894a301fdcae44be0b519163c795f7'
   freshness_head: b1d8ab9cbd915d9172215b44e6ed09b46a8dfcbc
   freshness_fingerprint: 'sha256:effective-delta-v1:69c9247dcd1956c986e01771d0adba5521894a301fdcae44be0b519163c795f7'
-  launch_state: intent_persisted
+  launch_state: result_persisted
   launch_attempt_id: 'bw2-exit-gate-g2-1-20260928T165451Z'
   launch_started_at: '2026-09-28T16:54:51Z'
   launch_result_receipt: '.oat/repo/analysis/backlog-wave-2/exit-gate-g2-1.json'
   gate_run_marker: null
-  gate_run_id: null
-  envelope_status: null
-  artifact: null
-  handoff: null
-  receive_state: not_started
-  receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
+  gate_run_id: d34bae3b-fe9f-4259-b98b-18a6a4e91b5b
+  envelope_status: ok
+  artifact: '.oat/projects/shared/backlog-wave-2/reviews/final-review-2026-09-28T165830Z.md'
+  handoff: 'Gate passed at the high threshold, but the final review still contains non-blocking findings (medium=2). Run oat-project-review-receive for .oat/projects/shared/backlog-wave-2/reviews/final-review-2026-09-28T165830Z.md to disposition them before marking the final review row passed.'
+  receive_state: intent_persisted
+  receive_correlation: 'run=d34bae3b-fe9f-4259-b98b-18a6a4e91b5b; handoff=receive; source=reviews/final-review-2026-09-28T165830Z.md; scope=final; type=code'
+  receive_source_artifact: '.oat/projects/shared/backlog-wave-2/reviews/final-review-2026-09-28T165830Z.md'
+  receive_archived_artifact: '.oat/projects/shared/backlog-wave-2/reviews/archived/final-review-2026-09-28T165830Z.md'
+  receive_event_identity: 'final | code | final-review-2026-09-28T165830Z.md'
+  receive_pre_head: f3c0caffc4dbc3cd5f5eab53409580d46fe26cd5
   receive_commit: null
-  receive_eligible: false
+  receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-09-28T16:54:51Z'
+  updated_at: '2026-09-28T17:01:18Z'
 ---
 
 # Project State: backlog-wave-2
