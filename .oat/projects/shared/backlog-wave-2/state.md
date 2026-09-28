@@ -1,6 +1,6 @@
 ---
-oat_current_task: p05-t12
-oat_last_commit: 0d029f9e4
+oat_current_task: null
+oat_last_commit: 2e28e2994
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -100,7 +100,7 @@ oat_project_recap:
   source: autonomous_policy
   decided_at: '2026-09-27T14:32:46.795Z'
 oat_implement_exit_gate:
-  status: blocked
+  status: stale
   resolution: configured
   disposition: null
   config_fingerprint: 'sha256:76eaea5d632f8612107755e2770d20d1331e61ca9d7d4859dfd20a64932869f2'
@@ -134,7 +134,7 @@ oat_implement_exit_gate:
   receive_eligible: true
   receive_completed: true
   failure: 'blocked: H1 archive rewriter writes through a hard link to a file outside .oat/repo; remediation p05-t12 (attempt 1 of 2 consumed)'
-  updated_at: '2026-09-28T11:39:55Z'
+  updated_at: '2026-09-28T11:41:43Z'
 ---
 
 # Project State: backlog-wave-2

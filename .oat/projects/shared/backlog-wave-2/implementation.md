@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-27
-oat_current_task_id: p05-t12
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,15 +24,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 8     | 8/8       |
-| Phase 2 | complete    | 8     | 8/8       |
-| Phase 3 | complete    | 5     | 5/5       |
-| Phase 4 | complete    | 7     | 7/7       |
-| Phase 5 | in_progress | 12    | 11/12     |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 8     | 8/8       |
+| Phase 2 | complete | 8     | 8/8       |
+| Phase 3 | complete | 5     | 5/5       |
+| Phase 4 | complete | 7     | 7/7       |
+| Phase 5 | complete | 12    | 12/12     |
 
-**Total:** 39/40 tasks completed
+**Total:** 40/40 tasks completed
 
 ---
 
@@ -336,8 +336,8 @@ oat_generated: false
 
 ### Task p05-t12: (review) Replace rewritten files atomically so hard links are never written through
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 2e28e2994
 
 ---
 
@@ -726,6 +726,11 @@ oat_generated: false
   intent write and the launch ran in one batch and the write failed a
   substring guard); the accepted run was kept, never replaced, and its state
   was persisted from the result receipt afterwards.
+
+- Remediation `p05-t12` (`2e28e2994`): rewritten files are replaced through
+  an `O_EXCL | O_NOFOLLOW` temporary file and rename in the verified parent
+  after an `lstat` device/inode re-check; hard-link fixture proven by
+  neutralize-and-restore. Generation 1 basis marked stale; Steps 12-13 rerun.
 
 ### PR Requirements (hand-off to oat-project-pr-final)
 
