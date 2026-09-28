@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-27
-oat_current_task_id: p05-t07
+oat_current_task_id: p05-t08
 oat_generated: false
 ---
 
@@ -30,9 +30,9 @@ oat_generated: false
 | Phase 2 | complete    | 8     | 8/8       |
 | Phase 3 | complete    | 5     | 5/5       |
 | Phase 4 | complete    | 7     | 7/7       |
-| Phase 5 | in_progress | 7     | 7/7       |
+| Phase 5 | in_progress | 8     | 7/8       |
 
-**Total:** 35/35 tasks completed
+**Total:** 35/36 tasks completed
 
 ---
 
@@ -303,6 +303,13 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** 6da8ac2f8
+
+---
+
+### Task p05-t08: (review) Close p05 gate findings H1, M1, M2
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -619,6 +626,11 @@ oat_generated: false
   retryable rewrite, help and docs, macOS/Linux evidence note citing Linux CI
   runs 34081195164 and 34081580680); 148 vitest, check, lint, format,
   type-check green.
+
+- Phase gate attempt 1 (`codex-6-sol-xhigh`): `reviews/archived/p05-review-2026-09-28T104612Z.md` status
+  `blocked`: H1 (tracked Markdown symlink lets the rewriter write outside
+  `.oat/repo`), M1 (suffix fallback rewrites URLs and unrelated paths), M2
+  (angle-bracket links malformed). Converted to `p05-t08` (gate round 1 of 2).
 
 ### PR Requirements (hand-off to oat-project-pr-final)
 

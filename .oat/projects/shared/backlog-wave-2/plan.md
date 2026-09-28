@@ -1659,6 +1659,33 @@ Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run sr
 
 ---
 
+### Task p05-t08: (review) Close p05 gate findings H1, M1, M2
+
+Source: `reviews/archived/p05-review-2026-09-28T104612Z.md` (phase gate
+`codex-6-sol-xhigh`, blocked: 1 High, 2 Medium).
+
+**Step 1: Fix (failing-first)**
+
+- H1: never read or write through a symlink in the rewrite scan (`lstat`, or
+  resolve and require the real target inside `.oat/repo`); a Git-tracked
+  symlink fixture proves an outside target stays unchanged.
+- M1: rewrite only tokens whose resolved target is the archived item's former
+  path; leave URLs unchanged; warn on unresolved local forms; pin a remote URL
+  and an unrelated `../../elsewhere/backlog/items/<id>.md` path as unchanged.
+- M2: parse optional angle delimiters separately in inline links and
+  reassemble after rebasing; assert an angle-bracket sibling link.
+
+**Step 2: Verify**
+
+Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/backlog`
+and type-check.
+
+**Step 3: Commit**
+
+`fix(p05-t08): bound backlog reference rewriting to real in-repo targets`
+
+---
+
 ## PR Requirements
 
 The release workflow (`.github/workflows/release.yml`) publishes a fixed body
@@ -1705,7 +1732,7 @@ title itself:
 | p04    | code     | fixes_completed | 2026-09-28 | reviews/archived/p04-review-2026-09-28T023246Z.md           | 53346a3878ed3a4ed6f2d81b0e683e2893954bdb | auto       | -                 |
 | p04    | code     | fixes_completed | 2026-09-28 | reviews/archived/p04-review-2026-09-28T024124Z.md           | de61806bc4789e7901dd0b90b0ee5579e4bca8e9 | gate       | codex-6-sol-xhigh |
 | p04    | code     | fixes_completed | 2026-09-28 | reviews/archived/p04-review-2026-09-28T025845Z.md           | 7342fc69d8e9ee79929221a885d56a8e63a24f87 | auto       | -                 |
-| p05    | code     | received        | 2026-09-28 | reviews/p05-review-2026-09-28T104612Z.md                    | 3c64d9e225a789e50caa1ba4edb153e943331365 | gate       | codex-6-sol-xhigh |
+| p05    | code     | fixes_added     | 2026-09-28 | reviews/archived/p05-review-2026-09-28T104612Z.md           | 3c64d9e225a789e50caa1ba4edb153e943331365 | gate       | codex-6-sol-xhigh |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
@@ -1758,9 +1785,9 @@ in `implementation.md`). Phase gates and the final review still run.
 - Phase 2: 8 tasks - CLAUDE.md shims
 - Phase 3: 5 tasks - Lifecycle skill routing and bookkeeping
 - Phase 4: 7 tasks - Agent roles and recon validation
-- Phase 5: 7 tasks - CI and backlog tooling, release fan-in
+- Phase 5: 8 tasks - CI and backlog tooling, release fan-in
 
-**Total: 35 tasks**
+**Total: 36 tasks**
 
 Ready for code review and merge.
 
