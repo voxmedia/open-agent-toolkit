@@ -10,6 +10,12 @@
 
 | ID                                       | Date       | Status     | Title                                                                                                  | Legacy  |
 | ---------------------------------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------ | ------- |
+| DR-260928-agents-md-guidance-appends     | 2026-09-28 | accepted   | AGENTS.md guidance appends absent managed blocks                                                       | -       |
+| DR-260928-backlog-archive-rewrites       | 2026-09-28 | accepted   | Backlog archive rewrites inbound references                                                            | -       |
+| DR-260928-commit-the-phase-task-ledger   | 2026-09-28 | accepted   | Commit the phase task ledger before per-phase review dispatch                                          | -       |
+| DR-260928-defer-the-oat-tools-where      | 2026-09-28 | accepted   | Defer the oat tools where command                                                                      | -       |
+| DR-260928-persist-the-instruction-sync   | 2026-09-28 | accepted   | Persist the instruction sync strategy in project config                                                | -       |
+| DR-260928-validate-recon-assignments     | 2026-09-28 | accepted   | Validate recon assignments before launch in the recon skill                                            | -       |
 | DR-260927-accept-alwaysapply             | 2026-09-27 | accepted   | Accept alwaysApply as a canonical rule activation alias                                                | -       |
 | DR-260927-claude-md-shims-are-opt        | 2026-09-27 | accepted   | CLAUDE.md shims are opt-in                                                                             | -       |
 | DR-260927-dispatch-record-validates      | 2026-09-27 | accepted   | Dispatch record validates without persisting                                                           | -       |
