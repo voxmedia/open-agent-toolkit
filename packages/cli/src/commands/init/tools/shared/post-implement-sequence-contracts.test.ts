@@ -1564,10 +1564,42 @@ describe('phase bookkeeping ordering around per-phase review', () => {
       'The task rows, resume pointer, and recovery settlement do not depend on the review outcome',
     );
     expect(post).toContain(
-      "set the phase's `implementation.md` row to its terminal status from the review outcome: `complete` on pass, `blocked` on retry exhaustion",
+      "set the phase's `implementation.md` row from the review outcome: `blocked` on retry exhaustion",
     );
     expect(post).toContain(
       'update the phase summary for any review-fix commits',
+    );
+  });
+
+  it('keeps the phase row nonterminal until review dispositions and any selected gate settle', () => {
+    const route = readPhaseExecution();
+    const post = normalizeWhitespace(postReviewHalf(route));
+    const gate = normalizeWhitespace(
+      requiredSlice(
+        route,
+        '### Optional External Phase Review Gate',
+        '#### Reviews Ledger Mutation Contract',
+      ),
+    );
+
+    // A passing root review is not yet a complete phase.
+    expect(post).not.toContain('`complete` on pass');
+    expect(post).toContain(
+      'on a passing review, keep the row nonterminal (`in_progress`) while any review-fix task added by review-receive is open or a selected Optional External Phase Review Gate has not yet passed',
+    );
+    expect(post).toContain(
+      'Set the row `complete` only when every review disposition is settled and every selected phase gate has passed',
+    );
+    // An added fix task and a blocked gate each have a defined transition.
+    expect(post).toContain(
+      'An added review-fix task keeps the row `in_progress` and names the queued task',
+    );
+    expect(post).toContain(
+      'A `blocked` gate keeps the row `in_progress` through the bounded fix loop; gate retry exhaustion sets it `blocked`',
+    );
+    // The gate section agrees about who flips the row.
+    expect(gate).toContain(
+      'The phase row stays `in_progress` until this gate passes',
     );
   });
 

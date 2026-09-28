@@ -835,6 +835,11 @@ and `handoff` is non-null.
   implementer under the bounded loop, then re-run root review and the gate.
 - target execution, artifact validation, or missing-artifact failure: stop.
 
+The phase row stays `in_progress` until this gate passes and every review
+disposition is settled; the bookkeeping that records the passing gate sets it
+`complete`, and gate retry exhaustion sets it `blocked` (see Step 7b's phase
+row transitions).
+
 Gate retry rounds use the same orchestration retry limit. Gate independence,
 configured provenance, liveness telemetry, and fail-closed behavior are
 unchanged.
@@ -925,12 +930,13 @@ review outcome, which is why they can move ahead of the review; the recovery
 settlement is validated from the phase report, not from the review. A
 terminal-stop branch that ends without a review (`failed-attempt`,
 `direction-required`, or `BLOCKED`) records its event and marker disposition
-through the Step 7a commit block and then stops; it has no Step 7b. Commit it through the same scope-resolving branch as Step 7b,
-including the synced-scope `oat project push` path. Why this keeps the fix-child
+through the Step 7a commit block and then stops; it has no Step 7b. Commit it
+through the same scope-resolving branch as Step 7b, including the synced-scope
+`oat project push` path. Why this keeps the fix-child
 preflight clean: the pre-review writes are committed before the reviewer is
 dispatched, so the tree is clean when a bounded fix child is dispatched after
-the review. The Optional External Phase Review Gate later sees the same
-committed ledger.
+the review. The Optional External Phase Review Gate later sees this committed
+ledger plus Step 7b's writes.
 
 Pre-review bookkeeping is mandatory:
 
@@ -966,14 +972,29 @@ Write the review-outcome bookkeeping that Step 7a leaves out:
   move an event status backward;
 - apply the Reviews Ledger Mutation Contract above before every disposition or
   archive re-point;
-- set the phase's `implementation.md` row to its terminal status from the
-  review outcome: `complete` on pass, `blocked` on retry exhaustion; and
-  update the phase summary for any review-fix commits;
+- set the phase's `implementation.md` row from the review outcome: `blocked`
+  on retry exhaustion; on a passing review, keep the row nonterminal
+  (`in_progress`) while any review-fix task added by review-receive is open or
+  a selected Optional External Phase Review Gate has not yet passed, and set
+  `complete` only under the rule below; update the phase summary for any
+  review-fix commits;
 - append the deferred phase-outcome and review-orchestration entries through
   `oat project log append`;
 - update `state.md` last commit and timestamp for any review-fix commit, and
   its current task when the phase outcome changes it; and
 - preserve any configured retry override.
+
+Phase row transitions: a passing root review (zero Critical and zero High) can
+still queue Medium or Low fix tasks through review-receive, and the selected
+phase gate runs after this step, so neither makes the phase complete by itself.
+An added review-fix task keeps the row `in_progress` and names the queued task;
+the bookkeeping that completes that task re-evaluates the row. A `blocked` gate
+keeps the row `in_progress` through the bounded fix loop; gate retry exhaustion
+sets it `blocked`. Set the row `complete` only when every review disposition is
+settled and every selected phase gate has passed, in whichever bookkeeping
+commit observes that last condition: this Step 7b commit when nothing is
+queued and no gate is selected, otherwise the commit that records the final
+review-fix task or the passing gate.
 
 Bookkeeping is mandatory:
 
