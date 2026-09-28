@@ -36,6 +36,9 @@ function createHarness(): {
       completedEntry: 'written' as const,
       movedTo: `/tmp/workspace/repo/.oat/repo/pjm/backlog/archived/${id}.md`,
       indexRegenerated: true,
+      rewrittenReferences: [
+        '.oat/repo/reference/external-plans/2026-07-05-demo.md',
+      ] as string[],
       warnings: [] as string[],
     }),
   );
@@ -304,6 +307,9 @@ describe('createBacklogCommand', () => {
       { wontDo: true, summary: 'Not pursuing' },
     );
     expect(capture.success.join('\n')).toContain('Archived BL-260705-demo');
+    expect(capture.info.join('\n')).toContain(
+      'Rewrote references in .oat/repo/reference/external-plans/2026-07-05-demo.md',
+    );
     expect(process.exitCode).toBe(0);
   });
 
@@ -318,6 +324,9 @@ describe('createBacklogCommand', () => {
       status: 'closed',
       completedEntry: 'written',
       indexRegenerated: true,
+      rewrittenReferences: [
+        '.oat/repo/reference/external-plans/2026-07-05-demo.md',
+      ],
     });
     expect(process.exitCode).toBe(0);
   });
@@ -332,6 +341,7 @@ describe('createBacklogCommand', () => {
       movedTo:
         '/tmp/workspace/repo/.oat/repo/pjm/backlog/archived/BL-260705-demo.md',
       indexRegenerated: false,
+      rewrittenReferences: [],
       warnings: ['Backlog item BL-260705-demo is already archived'],
     });
 

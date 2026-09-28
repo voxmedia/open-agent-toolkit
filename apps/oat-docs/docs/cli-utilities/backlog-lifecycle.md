@@ -56,7 +56,8 @@ A single `oat backlog archive` run performs the whole close-out so its parts can
 1. Sets the terminal `status` (`closed` by default, `wont_do` with `--wont-do`) and stamps `updated`.
 2. Validates and trims a nonblank `--summary` before mutating a `closed` item, then appends its canonical newest-first `completed.md` entry. `wont_do` items may omit the summary and get an entry only when one is provided.
 3. Moves `items/<id>.md` into `archived/` — with `git mv` inside a work tree, or a plain rename outside git.
-4. Regenerates the managed backlog index.
+4. Rewrites inbound references to the moved file across Markdown under `.oat/repo/**` — external plans, decision records, and other backlog items — so no link dangles at `items/<id>.md`, and reports each rewritten file. A reference it cannot resolve is left alone with a warning.
+5. Regenerates the managed backlog index.
 
 The command is safe to re-run: an item already in `archived/` produces a no-op warning with no writes. A missing closed-item summary or an out-of-enum current status (for example a hand-set `done`) is a hard error before mutation and includes recovery guidance. See the [command reference](config-and-local-state.md#oat-backlog-archive) for exit codes and the `--json` payload.
 

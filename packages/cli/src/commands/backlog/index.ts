@@ -326,6 +326,9 @@ export function createBacklogCommand(
             context.logger.success(
               `Archived ${id} as ${result.status} (moved to ${result.movedTo}).`,
             );
+            for (const path of result.rewrittenReferences) {
+              context.logger.info(`Rewrote references in ${path}`);
+            }
           }
         }
         process.exitCode = 0;

@@ -35,9 +35,10 @@ commit/PR as the work whenever practical.
 for abandoned work and `--summary "<text>"` to record the outcome. The command
 performs the whole close-out atomically: it flips `status` to the terminal
 value and bumps `updated`, appends the canonical `backlog/completed.md` entry
-(always for `closed`; for `wont_do` only when `--summary` is given), moves the
-item file from `backlog/items/` to `backlog/archived/`, and regenerates
-`backlog/index.md`. Stage the resulting changes with the shipping commit/PR.
+(always for `closed`; for `wont_do` only when `--summary` is given), moves the item file from
+`backlog/items/` to `backlog/archived/`, rewrites inbound `.oat/repo` links and
+path references to the moved file (reporting each rewritten file), and
+regenerates `backlog/index.md`. Stage the resulting changes with the shipping commit/PR.
 
 **Manual fallback.** These are the steps the command automates — follow them, in
 order, only when closing out by hand:
@@ -46,7 +47,9 @@ order, only when closing out by hand:
 2. Append a summary entry to `backlog/completed.md` (newest first; entry format
    is documented at the top of that file). Add the entry for a `wont_do` item
    only when the abandonment itself is worth recording (an explicit summary).
-3. `git mv` the item file from `backlog/items/` to `backlog/archived/`.
+3. `git mv` the item file from `backlog/items/` to `backlog/archived/`, then
+   rewrite inbound `.oat/repo` links to `archived/` (plans, decision records,
+   other items, and repository-root paths such as `oat_external_plan_sources`).
 4. Run `oat backlog regenerate-index` and stage the regenerated
    `backlog/index.md`.
 5. If the completion changes the operating picture, refresh

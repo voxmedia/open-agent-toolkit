@@ -7,6 +7,7 @@ import { getFrontmatterBlock } from '@commands/shared/frontmatter';
 import YAML from 'yaml';
 
 import { regenerateBacklogIndex } from './regenerate-index';
+import { rewriteInboundReferences } from './rewrite-references';
 import {
   BACKLOG_ITEM_STATUSES,
   type BacklogItemStatus,
@@ -39,6 +40,12 @@ export interface ArchiveBacklogItemResult {
   completedEntry: 'written' | 'scaffolded' | 'skipped';
   movedTo: string | null;
   indexRegenerated: boolean;
+  /**
+   * Markdown files under `.oat/repo/**` whose references to
+   * `items/<id>.md` were rewritten to `archived/<id>.md`, relative to the
+   * repository root.
+   */
+  rewrittenReferences: string[];
   warnings: string[];
 }
 
@@ -194,7 +201,8 @@ async function moveItemFile(
 /**
  * Atomic backlog close-out. Validates the current status, sets the terminal
  * status and `updated`, records a canonical `completed.md` entry, moves the
- * item file into `archived/`, and regenerates the index. Idempotent when the
+ * item file into `archived/`, rewrites inbound `.oat/repo` references to the
+ * moved file, and regenerates the index. Idempotent when the
  * item is already archived.
  */
 export async function archiveBacklogItem(
@@ -236,6 +244,7 @@ export async function archiveBacklogItem(
       completedEntry: 'skipped',
       movedTo: archivedPath,
       indexRegenerated: false,
+      rewrittenReferences: [],
       warnings,
     };
   }
@@ -305,7 +314,15 @@ export async function archiveBacklogItem(
   // 6. Move items/<id>.md -> archived/<id>.md (git mv with rename fallback).
   await moveItemFile(backlogRoot, itemsPath, archivedPath, warnings);
 
-  // 7. Regenerate the index via the exported core.
+  // 7. Rewrite inbound references so no `.oat/repo` link dangles at items/.
+  const references = await rewriteInboundReferences(
+    backlogRoot,
+    itemsPath,
+    archivedPath,
+  );
+  warnings.push(...references.warnings);
+
+  // 8. Regenerate the index via the exported core.
   const regeneration = await regenerateBacklogIndex(backlogRoot);
   warnings.push(...regeneration.warnings);
 
@@ -316,6 +333,7 @@ export async function archiveBacklogItem(
     completedEntry,
     movedTo: archivedPath,
     indexRegenerated: true,
+    rewrittenReferences: references.rewritten,
     warnings,
   };
 }

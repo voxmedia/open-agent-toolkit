@@ -1,7 +1,14 @@
 import { execFileSync } from 'node:child_process';
-import { mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  stat,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
@@ -504,5 +511,174 @@ describe('archiveBacklogItem', () => {
       indexRegenerated: true,
     });
     expect(Array.isArray(result.warnings)).toBe(true);
+  });
+
+  describe('inbound reference rewriting', () => {
+    const id = 'BL-260705-linked';
+    const otherId = 'BL-260705-other';
+
+    async function writeRepoFile(
+      root: string,
+      relativePath: string,
+      content: string,
+    ): Promise<void> {
+      const path = join(root, relativePath);
+      await mkdir(dirname(path), { recursive: true });
+      await writeFile(path, content, 'utf8');
+    }
+
+    async function linkedRepository(
+      options: { git: boolean } = { git: true },
+    ): Promise<{ root: string; backlogRoot: string }> {
+      const root = await mkdtemp(join(tmpdir(), 'oat-archive-links-'));
+      tempDirs.push(root);
+      const backlogRoot = join(root, '.oat', 'repo', 'pjm', 'backlog');
+      await initializeBacklog(backlogRoot);
+      await seedItem(backlogRoot, otherId);
+      await writeFile(
+        join(backlogRoot, 'items', `${id}.md`),
+        [
+          '---',
+          `id: ${id}`,
+          "title: 'Linked Item'",
+          'status: open',
+          "updated: '2026-07-01T00:00:00Z'",
+          '---',
+          '',
+          `See [sibling](./${otherId}.md), [self](./${id}.md), and [index](../index.md).`,
+          '',
+        ].join('\n'),
+        'utf8',
+      );
+      await writeRepoFile(
+        root,
+        '.oat/repo/reference/external-plans/2026-07-01-plan.md',
+        [
+          '---',
+          'oat_external_plan_sources:',
+          `  - .oat/repo/pjm/backlog/items/${id}.md`,
+          '---',
+          '',
+          `| Source | [${id}](../../pjm/backlog/items/${id}.md#acceptance-criteria) |`,
+          '',
+        ].join('\n'),
+      );
+      await writeRepoFile(
+        root,
+        '.oat/repo/reference/decisions/DR-260705-demo.md',
+        `Tracked by [the item](../../pjm/backlog/items/${id}.md).\n`,
+      );
+      await writeRepoFile(
+        root,
+        `.oat/repo/pjm/backlog/items/${otherId}.md`,
+        `${await readFile(join(backlogRoot, 'items', `${otherId}.md`), 'utf8')}\nDepends on [linked](./${id}.md) and [bare](${id}.md).\n`,
+      );
+      await writeRepoFile(
+        root,
+        '.oat/repo/reference/notes.md',
+        `Prose mention of ${id}.md stays.\nBroken \`wrong/items/${id}.md\` form.\n`,
+      );
+      await writeRepoFile(
+        root,
+        'docs/outside.md',
+        `[out of scope](../.oat/repo/pjm/backlog/items/${id}.md)\n`,
+      );
+      if (options.git) {
+        execFileSync('git', ['init', '-q'], { cwd: root });
+        execFileSync('git', ['config', 'user.email', 'a@b.co'], { cwd: root });
+        execFileSync('git', ['config', 'user.name', 'tester'], { cwd: root });
+        execFileSync('git', ['add', '.'], { cwd: root });
+        execFileSync('git', ['commit', '-qm', 'seed'], { cwd: root });
+      }
+      return { root, backlogRoot };
+    }
+
+    it.each([{ git: true }, { git: false }])(
+      'rewrites every resolvable .oat/repo reference to the archived path (git: $git)',
+      async (options) => {
+        const { root, backlogRoot } = await linkedRepository(options);
+
+        const result = await archiveBacklogItem(backlogRoot, id, {
+          summary: 'Linked work shipped',
+          now: FIXED_NOW,
+        });
+
+        const read = (relativePath: string) =>
+          readFile(join(root, relativePath), 'utf8');
+
+        const plan = await read(
+          '.oat/repo/reference/external-plans/2026-07-01-plan.md',
+        );
+        expect(plan).toContain(`  - .oat/repo/pjm/backlog/archived/${id}.md`);
+        expect(plan).toContain(
+          `[${id}](../../pjm/backlog/archived/${id}.md#acceptance-criteria)`,
+        );
+        expect(
+          await read('.oat/repo/reference/decisions/DR-260705-demo.md'),
+        ).toBe(`Tracked by [the item](../../pjm/backlog/archived/${id}.md).\n`);
+        const other = await read(`.oat/repo/pjm/backlog/items/${otherId}.md`);
+        expect(other).toContain(
+          `Depends on [linked](../archived/${id}.md) and [bare](../archived/${id}.md).`,
+        );
+
+        // The moved item's own relative links still resolve from archived/.
+        const archived = await read(`.oat/repo/pjm/backlog/archived/${id}.md`);
+        expect(archived).toContain(
+          `See [sibling](../items/${otherId}.md), [self](./${id}.md), and [index](../index.md).`,
+        );
+
+        // Prose and out-of-scope files are untouched; the unresolvable form warns.
+        const notes = await read('.oat/repo/reference/notes.md');
+        expect(notes).toContain(`Prose mention of ${id}.md stays.`);
+        expect(notes).toContain(`\`wrong/items/${id}.md\``);
+        expect(await read('docs/outside.md')).toContain(
+          `pjm/backlog/items/${id}.md`,
+        );
+        expect(
+          result.warnings.some(
+            (warning) =>
+              warning.includes('.oat/repo/reference/notes.md') &&
+              warning.includes(`wrong/items/${id}.md`),
+          ),
+        ).toBe(true);
+
+        expect([...result.rewrittenReferences].sort()).toEqual(
+          [
+            `.oat/repo/pjm/backlog/archived/${id}.md`,
+            `.oat/repo/pjm/backlog/items/${otherId}.md`,
+            '.oat/repo/reference/decisions/DR-260705-demo.md',
+            '.oat/repo/reference/external-plans/2026-07-01-plan.md',
+          ].sort(),
+        );
+
+        // Acceptance criterion: nothing under .oat/repo still links items/<id>.md.
+        const scanned = await Promise.all(
+          [
+            '.oat/repo/reference/external-plans/2026-07-01-plan.md',
+            '.oat/repo/reference/decisions/DR-260705-demo.md',
+            `.oat/repo/pjm/backlog/items/${otherId}.md`,
+            `.oat/repo/pjm/backlog/archived/${id}.md`,
+            '.oat/repo/pjm/backlog/completed.md',
+            '.oat/repo/pjm/backlog/index.md',
+          ].map(read),
+        );
+        for (const content of scanned) {
+          expect(content).not.toContain(`pjm/backlog/items/${id}.md`);
+        }
+      },
+    );
+
+    it('reports no rewrites when nothing links the item', async () => {
+      const backlogRoot = await freshBacklog();
+      const lonely = 'BL-260705-lonely';
+      await seedItem(backlogRoot, lonely);
+
+      const result = await archiveBacklogItem(backlogRoot, lonely, {
+        summary: 'done',
+        now: FIXED_NOW,
+      });
+
+      expect(result.rewrittenReferences).toEqual([]);
+    });
   });
 });

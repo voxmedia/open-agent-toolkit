@@ -17,7 +17,7 @@ Use the `oat backlog` group when you want direct CLI support for the file-backed
 - `oat backlog new <title>` - validate and create a file-backed backlog item from the canonical template, then regenerate the managed index
 - `oat backlog generate-id <title>` - generate a deterministic `BL-YYMMDD-slug` backlog ID from a title
 - `oat backlog generate-id <title> --created-at <timestamp>` - generate a reproducible ID for a known creation timestamp
-- `oat backlog archive <id>` - atomic close-out: set a terminal status, record the completion in `completed.md`, move the item into `archived/`, and regenerate the index in one step
+- `oat backlog archive <id>` - atomic close-out: set a terminal status, record the completion in `completed.md`, move the item into `archived/`, rewrite inbound `.oat/repo` references to the moved file, and regenerate the index in one step
 - `oat backlog regenerate-index` - rebuild the managed backlog index table from item frontmatter
 
 Backlog IDs are deterministic date+slug identifiers (`BL-YYMMDD-slug`) derived from the creation date and title, so two machines or worktrees produce the same ID for the same record without scanning the local checkout. The slug is capped at 30 characters at the last whole-word boundary (with trailing stop-words trimmed), so prefer concise, meaningful titles. Index regeneration is deterministic and safe to re-run when resolving an index merge conflict.
@@ -52,6 +52,7 @@ The command validates all inputs before creating the scaffold or writing an item
 - For the default `closed` path, validates and trims a nonblank `--summary` before any file or index mutation. The `wont_do` path may omit the summary and completion-ledger entry.
 - Rewrites only the `status:` and `updated:` frontmatter lines (preserving any inline enum comment), then moves the item from `items/` to `archived/` with `git mv` inside a work tree, falling back to a plain rename (with a warning) outside git or if `git mv` fails.
 - `closed` archives append a canonical newest-first `completed.md` entry (`YYYY-MM-DD — <id> — Title — summary`). `wont_do` archives append an entry only when `--summary` is provided. A missing `completed.md` is scaffolded from the starter template; a missing `## Completed Items` heading is scaffolded with a warning.
+- Rewrites inbound references to the moved file across tracked Markdown under `.oat/repo/**` (external plans, decision records, other backlog items): relative links, `.oat/repo`-relative and repository-root path strings (including `oat_external_plan_sources` frontmatter) that resolve to `items/<id>.md` now point at `archived/<id>.md`, and the moved item's own relative links are rebased so they keep resolving. Each rewritten file is reported; a reference that names `items/<id>.md` but cannot be resolved is left untouched with a warning.
 - Regenerates the managed backlog index after the move.
 - Idempotent: re-running on an item already in `archived/` is a no-op warning with no writes.
 
@@ -73,11 +74,14 @@ On success the payload is the archive result object:
   "completedEntry": "written",
   "movedTo": ".oat/repo/pjm/backlog/archived/BL-260705-example.md",
   "indexRegenerated": true,
+  "rewrittenReferences": [
+    ".oat/repo/reference/external-plans/2026-07-05-example-plan.md"
+  ],
   "warnings": []
 }
 ```
 
-`result` is `archived` or `noop` (already archived); `completedEntry` is `written`, `scaffolded`, or `skipped` (e.g. a `wont_do` archive without `--summary`); `movedTo` is the destination path or `null`. On an actionable failure the payload is `{ "result": "error", "id": "<id>", "message": "<why + fix>" }`.
+`result` is `archived` or `noop` (already archived); `completedEntry` is `written`, `scaffolded`, or `skipped` (e.g. a `wont_do` archive without `--summary`); `movedTo` is the destination path or `null`; `rewrittenReferences` lists the repository-relative Markdown files whose references to the moved item were rewritten (empty for a no-op). On an actionable failure the payload is `{ "result": "error", "id": "<id>", "message": "<why + fix>" }`.
 
 For full project-management repo-reference setup, use [`oat pjm init`](tool-packs.md#install-vs-initialize). It scaffolds the two-layer PJM surface (`pjm/current-state.md`, `pjm/roadmap.md`, `reference/decisions/`, and AGENTS guides) and delegates the backlog sub-surface to `oat backlog init`.
 
