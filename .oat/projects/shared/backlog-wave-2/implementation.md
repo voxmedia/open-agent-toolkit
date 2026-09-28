@@ -31,9 +31,9 @@ oat_generated: false
 | Phase 3      | complete    | 5     | 5/5       |
 | Phase 4      | complete    | 7     | 7/7       |
 | Phase 5      | complete    | 12    | 12/12     |
-| Phase p-rev1 | in_progress | 4     | 0/4       |
+| Phase p-rev1 | in_progress | 7     | 0/7       |
 
-**Total:** 40/44 tasks completed
+**Total:** 40/47 tasks completed
 
 ---
 
@@ -363,6 +363,21 @@ oat_generated: false
 **Commit:** -
 
 ### Task prev1-t04: (revision) Exclude project and repository records from exit-gate freshness
+
+**Status:** pending
+**Commit:** -
+
+### Task prev1-t05: (revision) Take recon-worker out of oat-reviewer
+
+**Status:** pending
+**Commit:** -
+
+### Task prev1-t06: (revision) Restore the recon skill to main
+
+**Status:** pending
+**Commit:** -
+
+### Task prev1-t07: (revision) Correct the recon records
 
 **Status:** pending
 **Commit:** -
@@ -835,10 +850,14 @@ oat_generated: false
   test.
 - `effective-delta-v2`: changes only under `.oat/projects/**` and
   `.oat/repo/**` no longer make the exit gate stale.
+- Only the `recon` skill uses `recon-worker`: remove the reviewer's
+  `recon-worker` path, restore the recon skill to `main` (dropping this wave's
+  ~1,900-line assignment validator, which also blocked Codex recon lanes), and
+  correct the recon records; rescope the Codex follow-up to a live check.
 - Declined after discussion: repointing old links to already-archived backlog
   items; a new `keep` strategy value.
 
-**New tasks added:** prev1-t01, prev1-t02, prev1-t03, prev1-t04
+**New tasks added:** prev1-t01 through prev1-t07
 
 **Next:** Execute revision tasks via `oat-project-implement`, then a new final
 review and exit-gate generation, update PR #332 (title, Behavior change

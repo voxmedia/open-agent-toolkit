@@ -1928,6 +1928,99 @@ Expected: all exit 0.
 git commit -m "feat(prev1-t04): exclude project and repository records from gate freshness"
 ```
 
+### Task prev1-t05: (revision) Take recon-worker out of oat-reviewer
+
+**Files:**
+
+- Modify: `.agents/agents/oat-reviewer.md` (already 1.2.10 in this PR; no
+  further bump) and its regenerated `.codex/agents` and `.cursor/agents` views
+  (`pnpm build && pnpm run cli -- sync --scope project`; never `--scope all`;
+  revert any `.oat/sync/manifest.json` restamp)
+- Modify: reviewer contract assertions in
+  `packages/cli/src/validation/skills.test.ts` and any other pin of the removed
+  prose
+
+**Step 1:** Operator direction: only the `recon` skill uses `recon-worker`,
+because it owns the evidence-packet machinery. Remove every path by which
+`oat-reviewer` launches the canonical `recon-worker`: the Assignment Gate
+envelope instructions, the sibling recon-skill probe, the validator step, and
+the "recon-worker lane never runs commands" wording. Reviewer lanes remain
+optional, bounded, read-only, and use ordinary sub-agents only (how every
+recorded use worked). Keep the p04 bare-fence repairs. This resolves GitHub
+#295 by removal. Failing-first: a contract assertion that `oat-reviewer.md`
+never names `recon-worker` or `validate-assignment`.
+
+**Step 2: Verify**
+Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation src/commands/init/tools/shared`,
+`node packages/cli/dist/index.js status --scope project`.
+Expected: exit 0; views in sync.
+
+**Step 3: Commit**
+
+```bash
+git commit -m "fix(prev1-t05): take recon-worker out of oat-reviewer"
+```
+
+### Task prev1-t06: (revision) Restore the recon skill to main
+
+**Files:**
+
+- Revert: `.agents/skills/recon/**` to `origin/main` exactly (removes
+  `scripts/validate-assignment.mjs`, its tests and fixtures, and this wave's
+  `SKILL.md`, `worker-contract.md`, `packet-contract.md`, and test edits,
+  including the 1.1.6 bump)
+- Modify: `packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts`
+  (drop the `validate-assignment.mjs` entry)
+- Modify: `apps/oat-docs/docs/workflows/skills/recon.md` (remove the "Validate
+  Worker Assignments" section)
+
+**Step 1:** `git checkout origin/main -- .agents/skills/recon` and remove any
+file this wave added under it; confirm `git diff origin/main -- .agents/skills/recon`
+is empty. Confirm on `main` that Codex runs `recon-worker` lanes as
+`contract-enforced` (recon `SKILL.md` authority rules) and that nothing else
+in the repository references `validate-assignment`.
+
+**Step 2: Verify**
+Run: `node --test .agents/skills/recon/tests/*.test.mjs`,
+`HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`,
+`pnpm run check:skill-bumps`, `pnpm --filter oat-docs check`,
+`rg -n "validate-assignment" . --glob '!**/node_modules/**' --glob '!.oat/**/reviews/**'`.
+Expected: exit 0; the sweep finds nothing outside history.
+
+**Step 3: Commit**
+
+```bash
+git commit -m "revert(prev1-t06): restore the recon skill to main"
+```
+
+### Task prev1-t07: (revision) Correct the recon records
+
+**Files:**
+
+- Delete: `.oat/repo/reference/decisions/DR-260928-validate-recon-assignments.md`
+  (never shipped), then `node packages/cli/dist/index.js decision regenerate-index`
+- Modify: `.oat/repo/pjm/backlog/archived/BL-260927-validate-recon-worker.md`
+  and its `backlog/completed.md` entry: resolved by removing the reviewer's
+  `recon-worker` path, not by a validator
+- Modify: `.oat/repo/pjm/backlog/items/BL-260928-settle-codex-read-authority.md`:
+  rescope to a live check that `/recon` with Codex workers launches
+  `contract-enforced` lanes on the released CLI (title, description, criteria)
+- Modify: the `.oat/repo/pjm/backlog/index.md` curated note and
+  `.oat/repo/pjm/current-state.md` if they mention the validator
+
+**Step 1:** Make the edits; regenerate the backlog index.
+
+**Step 2: Verify**
+Run: `node packages/cli/dist/index.js pjm doctor --json` (no new warnings),
+`rg -n "validate-assignment|validate-recon-assignments" .oat/repo`.
+Expected: no live references outside history.
+
+**Step 3: Commit**
+
+```bash
+git commit -m "chore(prev1-t07): correct the recon records"
+```
+
 ---
 
 ## PR Requirements
@@ -2036,9 +2129,9 @@ in `implementation.md`). Phase gates and the final review still run.
 - Phase 3: 5 tasks - Lifecycle skill routing and bookkeeping
 - Phase 4: 7 tasks - Agent roles and recon validation
 - Phase 5: 12 tasks - CI and backlog tooling, release fan-in
-- Phase p-rev1: 4 tasks - Revision 1 (operator feedback on PR #332)
+- Phase p-rev1: 7 tasks - Revision 1 (operator feedback on PR #332)
 
-**Total: 44 tasks**
+**Total: 47 tasks**
 
 Ready for code review and merge.
 
