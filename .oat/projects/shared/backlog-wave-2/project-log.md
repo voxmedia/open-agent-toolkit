@@ -100,6 +100,10 @@ target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:1,low:
 
 bw2-p05-outcome p05 pass after 1 blocked gate attempt, 3 review-fix rounds, 1 sweep fix; all 38 tasks complete
 
+### 2026-09-28 · structural · oat gate review · final
+
+target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:0,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-2/reviews/final-review-2026-09-28T113721Z.md run=0415d270-2faa-4559-901c-65430d5c405d
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
