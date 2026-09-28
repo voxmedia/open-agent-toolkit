@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-27
@@ -837,6 +837,19 @@ oat_generated: false
   `0c5dbb3e-18a9-4059-a857-ca4209e3b9e4`) and all pre-approval steps. No
   post-approval steps. Implementation complete; the project stays `pr_open`
   for revise or completion.
+
+- Revision 1 closeout sequence (configured `[summary, document, pr]`,
+  post-approval `[]`): summary `80fc9a4f4` (full regeneration), document
+  `564c0b8f3`, PR #332 title and body refreshed in place (state `316f53e55`),
+  project recap `built` (`cc232ad8c`, run
+  `d9a93b10-dde6-4ee0-b111-28e01c32c837`, terminal-outcome check ok). Each
+  step was followed by a state-only freshness checkpoint; the exit gate
+  stayed `allowed/passed`.
+- Gate `IMPLEMENT-16` (Revision 1): final HiLL approval auto-approved under
+  the autonomy contract (`approval_source: oat-autonomous`) after the passing
+  final review (`final-review-2026-09-28T165830Z.md`, exit gate generation 2
+  run `d34bae3b-fe9f-4259-b98b-18a6a4e91b5b`) and all pre-approval steps. No
+  post-approval steps. Implementation complete; the project stays `pr_open`.
 
 ### PR Requirements (hand-off to oat-project-pr-final)
 
