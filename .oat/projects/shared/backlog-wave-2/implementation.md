@@ -31,9 +31,9 @@ oat_generated: false
 | Phase 3      | complete    | 5     | 5/5       |
 | Phase 4      | complete    | 7     | 7/7       |
 | Phase 5      | complete    | 12    | 12/12     |
-| Phase p-rev1 | in_progress | 8     | 7/8       |
+| Phase p-rev1 | in_progress | 8     | 8/8       |
 
-**Total:** 47/48 tasks completed
+**Total:** 48/48 tasks completed
 
 ---
 
@@ -384,8 +384,8 @@ oat_generated: false
 
 ### Task prev1-t08: (review) Close p-rev1 review findings M1, M2, L1, L2
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 4f30b57cb
 
 ---
 
@@ -897,7 +897,12 @@ the keys were renamed), and refresh the Final Summary and summary.md.
   reviewer confirmed both tests fail against the pre-change files (the v2 test
   asserts the three exclusion pathspecs extracted from the skill text; the
   reviewer test asserts `not.toContain('recon-worker')`, which the
-  pre-change `oat-reviewer.md` contained).
+  pre-change `oat-reviewer.md` contained).- prev1-t08 (resume of `bw2-prev1-impl-1`, DONE) at `4f30b57cb`: M1 `linkedBy`
+  per blocker with replace-then-remove advice; M2 per-file leftover warnings
+  suppressed for `wouldRemove` while blocked; L1 wording; L2 docs. Failing
+  first recorded in the commit body (vitest 2 failed, oat-doctor 2 failed).
+  Removal set unchanged (probes keep every shim). `pnpm check` 0/11 cached,
+  instructions+sync 226/226, oat-doctor 11/11.
 
 ## Implementation Log
 
