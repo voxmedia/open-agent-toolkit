@@ -192,11 +192,17 @@ function sweepTable() {
 }
 
 const OPTIONAL_ITEM_FIELDS = new Set(['deprecated']);
+// Top-level arrays the CLI omits when empty (`oat instructions validate
+// --json` `.warnings`); proven on a seeded payload instead.
+const OPTIONAL_TOP_LEVEL_FIELDS = new Set(['warnings']);
 
-function requireFields(payload, fields, label) {
+function requireFields(payload, fields, label, { seeded = false } = {}) {
   for (const field of fields) {
     const [head, ...rest] = field.split('.');
     const key = head.replace('[]', '');
+    if (!seeded && OPTIONAL_TOP_LEVEL_FIELDS.has(key) && !(key in payload)) {
+      continue;
+    }
     assert.ok(payload && key in payload, `${label}: missing ${key}`);
     if (!head.endsWith('[]')) continue;
     const items = payload[key];
@@ -261,6 +267,21 @@ test('every field the sweep projects exists in the built CLI output, on every it
       assert.ok(seeded.tools.length >= 1, 'seeded outdated tool not reported');
       requireFields(seeded, fields, `${label} (seeded)`);
     }
+    if (command[0] === 'instructions' && command[1] === 'validate') {
+      // A repository with a hand-written CLAUDE.md under the default
+      // strategy, so the `.warnings[]` projection is proven on a real item.
+      const repo = await mkdtemp(join(tmpdir(), 'oat-doctor-leftover-'));
+      await execFileAsync('git', ['init', '-q', repo]);
+      await writeFile(join(repo, 'AGENTS.md'), '# instructions\n');
+      await writeFile(join(repo, 'CLAUDE.md'), '# hand-written\n');
+      const seeded = await runJson([...command, '--cwd', repo], {
+        ...process.env,
+        HOME: home,
+      });
+      assert.equal(seeded.strategy, 'none');
+      assert.ok(seeded.warnings?.length >= 1, 'leftover warning not reported');
+      requireFields(seeded, fields, `${label} (seeded)`, { seeded: true });
+    }
   }
   // Rows that name more than one projection must yield all of them.
   const byLabel = Object.fromEntries(
@@ -282,6 +303,49 @@ test('every field the sweep projects exists in the built CLI output, on every it
     byLabel['oat instructions validate --json'].includes('entries[].status'),
     'instructions validate: entries[] not parsed',
   );
+  assert.ok(
+    byLabel['oat instructions validate --json'].includes('strategy'),
+    'instructions validate: strategy not parsed',
+  );
+  assert.ok(
+    byLabel['oat instructions validate --json'].includes('warnings[].path'),
+    'instructions validate: warnings[] not parsed',
+  );
+});
+
+test('a missing CLAUDE.md is an error only under a shim strategy, and leftover CLAUDE.md files are warned about', () => {
+  const lines = skill.split('\n');
+  const missing = lines.find((line) => line.includes('status `missing`'));
+  assert.ok(missing, 'missing-entry rule missing');
+  assert.match(missing, /only when a shim strategy is configured/);
+  assert.match(missing, /`none`/);
+  assert.doesNotMatch(
+    skill,
+    /status `missing` or `content_mismatch`[^\n]*→ `error`/,
+    'missing must not be an unconditional error',
+  );
+
+  const managed = lines.find((line) => line.includes('status `managed_shim`'));
+  assert.ok(managed, 'managed-shim rule missing');
+  assert.match(managed, /`oat instructions sync`/);
+
+  const leftover = lines.find((line) =>
+    line.includes('`claude_md_hides_agents_md`'),
+  );
+  assert.ok(leftover, 'leftover CLAUDE.md warning rule missing');
+  assert.match(leftover, /→ `warning`/);
+  assert.match(leftover, /ignores every AGENTS\.md/);
+  // Exactly the two fixes the CLI names: remove the file, or opt back in.
+  assert.match(leftover, /removes the file/);
+  assert.match(
+    leftover,
+    /`oat config set documentation\.instructionSyncStrategy pointer`/,
+  );
+  assert.match(leftover, /`oat instructions sync`/);
+
+  const dive = section('#### Agent instructions dive');
+  assert.match(dive, /`\.strategy`/);
+  assert.match(dive, /`none`/);
 });
 
 test('every cited docs page exists, with or without a section', async () => {

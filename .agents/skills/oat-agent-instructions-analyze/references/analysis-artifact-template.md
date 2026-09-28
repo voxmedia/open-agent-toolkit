@@ -119,11 +119,11 @@ None | {numbered list}
 
 Missing always-on provider compatibility files that should exist even when no corresponding file was discovered during inventory.
 
-| #   | Provider  | Required Path                     | Format             | Reason                                             | Evidence     | Severity      |
-| --- | --------- | --------------------------------- | ------------------ | -------------------------------------------------- | ------------ | ------------- |
-| 1   | `claude`  | `CLAUDE.md`                       | Claude import shim | {claude active + AGENTS.md present + shim missing} | {exact refs} | {High/Medium} |
-| 2   | `copilot` | `.github/copilot-instructions.md` | Copilot shim       | {copilot active + shim missing}                    | {exact refs} | {High/Medium} |
-| ... |           |                                   |                    |                                                    |              |               |
+| #   | Provider  | Required Path                     | Format             | Reason                                                                                                                                | Evidence     | Severity      |
+| --- | --------- | --------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ------------- |
+| 1   | `claude`  | `CLAUDE.md`                       | Claude import shim | {claude active + shim strategy configured (`documentation.instructionSyncStrategy` is not `none`) + AGENTS.md present + shim missing} | {exact refs} | {High/Medium} |
+| 2   | `copilot` | `.github/copilot-instructions.md` | Copilot shim       | {copilot active + shim missing}                                                                                                       | {exact refs} | {High/Medium} |
+| ... |           |                                   |                    |                                                                                                                                       |              |               |
 
 {Or: "No provider baseline gaps identified."}
 
