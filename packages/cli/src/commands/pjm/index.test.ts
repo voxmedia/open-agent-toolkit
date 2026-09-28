@@ -1,5 +1,6 @@
 import {
   access,
+  chmod,
   mkdir,
   mkdtemp,
   readdir,
@@ -345,6 +346,28 @@ describe('oat pjm', () => {
     const guidance = await readFile(join(root, 'AGENTS.md'), 'utf8');
     expect(guidance.startsWith(existing)).toBe(true);
     expect(guidance.match(/<!-- OAT project-management -->/g)).toHaveLength(1);
+  });
+
+  it('names the append refusal, not a differing block, when OAT cannot write AGENTS.md', async () => {
+    const root = await createWorkspace();
+    tempDirs.push(root);
+    const existing = '# Read-only repository guidance\n';
+    await writeFile(join(root, 'AGENTS.md'), existing, 'utf8');
+    await chmod(join(root, 'AGENTS.md'), 0o444);
+
+    const result = await runCli(root, ['pjm', 'init']);
+
+    const output = `${result.stdout}\n${result.stderr}`;
+    expect(result.exitCode).toBe(1);
+    expect(output).toContain(
+      'OAT could not append the absent guidance blocks to AGENTS.md',
+    );
+    expect(output).not.toMatch(/differs from the managed version/);
+    expect(output.match(/Managed block:/g)).toHaveLength(1);
+    await chmod(join(root, 'AGENTS.md'), 0o644);
+    await expect(readFile(join(root, 'AGENTS.md'), 'utf8')).resolves.toBe(
+      existing,
+    );
   });
 
   it('ends a brand-new repository init then pjm init with every managed block and no manual action', async () => {

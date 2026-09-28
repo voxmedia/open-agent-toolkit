@@ -71,6 +71,11 @@ export interface AgentsMdManualPatch {
   managedBlock: string;
   legacyBlockAction: 'preserve' | 'remove-manually';
   instructions: readonly string[];
+  /**
+   * Present when OAT refused to append absent blocks (zero bytes written);
+   * names the cause so callers do not claim an existing block differs.
+   */
+  appendRefusal?: string;
 }
 
 export interface AgentsMdBlocked {
@@ -446,6 +451,7 @@ function createManualPatch(
     target,
     managedBlock: managedBlocks.join('\n\n'),
     legacyBlockAction: legacyKeys.length > 0 ? 'remove-manually' : 'preserve',
+    ...(appendRefusal ? { appendRefusal } : {}),
     instructions: [
       ...(appendRefusal
         ? [
@@ -547,7 +553,17 @@ async function appendAbsentSections(
     handle = await fileSystem.open(plan.targetPath, AGENTS_MD_APPEND_FLAGS);
   } catch (error) {
     const code = errorCode(error);
-    if (code === 'ELOOP' || code === 'ENOENT') {
+    // The planned path was a regular file; any of these means something else
+    // now sits at it (a symlink, a directory, or nothing), so it is an
+    // identity change, not a write refusal. EMLINK is the BSD O_NOFOLLOW
+    // error for a symlink.
+    if (
+      code === 'ELOOP' ||
+      code === 'EMLINK' ||
+      code === 'ENOENT' ||
+      code === 'EISDIR' ||
+      code === 'ENOTDIR'
+    ) {
       return { kind: 'blocked', reason: IDENTITY_CHANGED };
     }
     if (code === 'ENXIO') {

@@ -743,6 +743,19 @@ describe('append-only AGENTS.md guidance', () => {
       expect(JSON.stringify(result)).not.toContain(outside);
     });
 
+    it('records the append refusal on the manual patch for callers', async () => {
+      await setup('# Read only\n');
+      await chmod(join(root, 'AGENTS.md'), 0o444);
+
+      const result = await upsertAgentsMdSection(
+        root,
+        'tools',
+        'Tool guidance',
+      );
+
+      expect(result.manualPatch?.appendRefusal).toBe('permission denied');
+    });
+
     it('gives an in-repository hard link the same zero-write manual patch', async () => {
       await setup('# Shared\n');
       await link(join(root, 'AGENTS.md'), join(root, 'CLAUDE.md'));
@@ -900,6 +913,33 @@ describe('append-only AGENTS.md guidance', () => {
       await expect(readAgentsMd()).resolves.toBe(
         '# Original\n\n<!-- OAT tools -->\nTool guidance\n<!-- END OAT tools -->\n',
       );
+    });
+
+    it('reports a directory swapped in before the open as an identity change', async () => {
+      await setup('# Original\n');
+      const agentsPath = join(root, 'AGENTS.md');
+      const fileSystem = withFileSystem({
+        open: vi.fn(async (...args: Parameters<typeof open>) => {
+          await rm(agentsPath);
+          await mkdir(agentsPath);
+          return open(...args);
+        }) as AgentsMdFileSystem['open'],
+      });
+
+      const result = await upsertAgentsMdSection(
+        root,
+        'tools',
+        'Tool guidance',
+        { fileSystem },
+      );
+
+      expect(result).toMatchObject({
+        action: 'blocked',
+        blocked: {
+          reason: 'Repository or AGENTS.md identity changed during planning.',
+        },
+      });
+      expect(result.manualPatch).toBeUndefined();
     });
 
     it('fails fast instead of hanging on a FIFO swapped in before the open', async () => {

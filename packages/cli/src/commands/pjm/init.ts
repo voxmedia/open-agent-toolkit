@@ -62,14 +62,26 @@ export const INSTRUCTIONS_SYNC_HINT =
   'repo-reference AGENTS.md files (preview with `oat instructions sync --dry-run`).';
 
 // AGENTS.md guidance messages printed by `oat pjm init`. An absent managed
-// block is appended to an existing AGENTS.md; only a block that is present but
-// differs from the managed version needs the printed manual patch.
+// block is appended to an existing AGENTS.md. The printed manual patch is
+// needed when a block is present but differs from the managed version, or
+// when OAT refuses to append at all (for example a hard-linked or unwritable
+// AGENTS.md); the refusal gets its own header.
 export const AGENTS_GUIDANCE_APPENDED_MESSAGE =
   'AGENTS.md guidance: appended the absent OAT managed blocks to the existing AGENTS.md.';
 export const AGENTS_GUIDANCE_MANUAL_MESSAGE =
   'PJM scaffold and adoption completed; AGENTS.md guidance requires manual action. ' +
   'Absent managed blocks are appended automatically, but an existing block ' +
   'differs from the managed version: apply the patch below, then rerun `oat pjm init`.';
+export function agentsGuidanceRefusalMessage(
+  target: string,
+  cause: string,
+): string {
+  return (
+    'PJM scaffold and adoption completed; AGENTS.md guidance requires manual action. ' +
+    `OAT could not append the absent guidance blocks to ${target} (${cause}), ` +
+    'so nothing was written: apply the patch below, then rerun `oat pjm init`.'
+  );
+}
 
 const BACKLOG_PATHS = [
   'pjm/backlog/index.md',

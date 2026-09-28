@@ -159,6 +159,42 @@ describe('oat tools guidance', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it.each([false, true])(
+    'says no OAT pack is installed instead of printing a placeholder block in json=%s mode',
+    async (json) => {
+      const capture = createLoggerCapture();
+      const command = createToolsGuidanceCommand({
+        buildCommandContext: contextBuilder(capture),
+        resolveProjectRoot: vi.fn(async () => '/tmp/workspace'),
+        loadGuidanceState: vi.fn(async () => ({
+          packs: [],
+          otherProjectSkills: [],
+        })),
+      });
+
+      await run(command, json ? ['--json'] : []);
+
+      if (json) {
+        expect(capture.jsonPayloads).toEqual([
+          {
+            status: 'no-packs',
+            sectionKey: 'tools',
+            target: 'AGENTS.md',
+            packs: [],
+            otherProjectSkills: [],
+            managedBlock: null,
+            message: expect.stringContaining('No OAT tool pack is installed'),
+          },
+        ]);
+      } else {
+        const output = [...capture.info, ...capture.warn].join('\n');
+        expect(output).toContain('No OAT tool pack is installed');
+        expect(output).not.toContain('<!-- OAT tools -->');
+      }
+      expect(process.exitCode).toBe(0);
+    },
+  );
+
   it('writes nothing and never reaches the install, upgrade, or AGENTS.md write path', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-tools-guidance-repo-'));
     const home = await mkdtemp(join(tmpdir(), 'oat-tools-guidance-home-'));
@@ -207,7 +243,9 @@ describe('oat tools guidance', () => {
     expect(installWorkflows).not.toHaveBeenCalled();
     expect(await snapshotTree(root)).toEqual(beforeRoot);
     expect(await snapshotTree(home)).toEqual(beforeHome);
-    expect(capture.info.join('\n')).toContain('<!-- OAT tools -->');
+    // No pack is realized in this fixture, so the read-only path ends in the
+    // no-packs note rather than a block.
+    expect(capture.warn.join('\n')).toContain('No OAT tool pack is installed');
     expect(process.exitCode).toBe(0);
   });
 

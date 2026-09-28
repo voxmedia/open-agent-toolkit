@@ -695,6 +695,9 @@ Key behavior:
 - `--json` returns `status`, `sectionKey` (`tools`), `target` (`AGENTS.md`),
   `packs` (each `pack` with its `scope`), `otherProjectSkills` (names of
   project skills that belong to no pack), and `managedBlock`
+- With no OAT pack installed it prints no block, only a note that there is
+  nothing to add (an empty block would be a stale placeholder); `--json`
+  returns `status: "no-packs"`, `managedBlock: null`, and a `message`
 - Exits `0` on success and `1` when pack state cannot be read
 
 Examples:
@@ -733,7 +736,7 @@ Key behavior:
   intent reconciliation, not repository PJM adoption
 - A user-only capability install needs no Git repository and performs no repository writes unless `--project-guidance` explicitly requests the separate repository guidance update
 - Offers repository `AGENTS.md` guidance independently of capability scope. Pass `--project-guidance` to create an absent file, append an absent managed `OAT tools` section to an existing file/symlink target, or print a manual patch for a section that exists but differs, or `--no-project-guidance` to decline; the interactive prompt defaults to decline and non-interactive runs write nothing without the explicit opt-in
-- Repository `AGENTS.md` guidance for project management is owned by adoption, not by pack placement. Installing the `project-management` pack never writes the section. `oat pjm init` creates the root file when it is absent and appends the absent `OAT project-management` and `OAT decisions` sections to an existing file (reported as `appended`, exit 0). Only a section that exists but differs from the managed version completes scaffold/adoption with one combined manual patch, printed once, and a non-zero exit, without changing the existing file or symlink
+- Repository `AGENTS.md` guidance for project management is owned by adoption, not by pack placement. Installing the `project-management` pack never writes the section. `oat pjm init` creates the root file when it is absent and appends the absent `OAT project-management` and `OAT decisions` sections to an existing file (reported as `appended`, exit 0). A section that exists but differs from the managed version, or an `AGENTS.md` OAT will not append to (more than one hard link, or not writable), completes scaffold/adoption with one combined manual patch, printed once, and a non-zero exit, without changing the existing file or symlink; the header names the refusal cause when OAT could not append
 - Interactive runs can prompt to update selected outdated skills
 - Successful installs report the final scope chosen for each pack, including `project + user` when a pack is installed in both, and auto-sync only the scopes actually changed by the install so untouched scopes are never re-synced or pruned
 - Install-triggered auto-sync limits removal planning to the canonical entries from the pack that was just installed, so stale manifest drift in unrelated packs does not delete other provider views

@@ -50,6 +50,27 @@ export function createToolsGuidanceCommand(
           .catch(() => null);
         const { packs, otherProjectSkills } =
           await dependencies.loadGuidanceState(context, projectRoot);
+        if (packs.length === 0) {
+          // An empty block is a stale placeholder: pasting it turns the first
+          // real `--project-guidance` install into a manual patch.
+          const message =
+            'No OAT tool pack is installed, so there is no OAT tools guidance block to add to AGENTS.md. Install a pack first, for example `oat tools install <pack> --project-guidance`.';
+          if (context.json) {
+            context.logger.json({
+              status: 'no-packs',
+              sectionKey: 'tools',
+              target: 'AGENTS.md',
+              packs,
+              otherProjectSkills,
+              managedBlock: null,
+              message,
+            });
+          } else {
+            context.logger.warn(message);
+          }
+          process.exitCode = 0;
+          return;
+        }
         const managedBlock = renderToolPacksManagedBlock(packs, {
           otherProjectSkills,
         });

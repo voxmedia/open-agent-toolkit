@@ -13,6 +13,7 @@ import { runPjmDoctorChecks } from './doctor';
 import {
   AGENTS_GUIDANCE_APPENDED_MESSAGE,
   AGENTS_GUIDANCE_MANUAL_MESSAGE,
+  agentsGuidanceRefusalMessage,
   initializeRepoReference,
   INSTRUCTIONS_SYNC_HINT,
 } from './init';
@@ -215,7 +216,17 @@ export function createPjmCommand(
             context.logger.info(AGENTS_GUIDANCE_APPENDED_MESSAGE);
           }
           if (guidanceIncomplete) {
-            context.logger.warn(AGENTS_GUIDANCE_MANUAL_MESSAGE);
+            const refusedPatch = guidanceResults.find(
+              ({ manualPatch }) => manualPatch?.appendRefusal !== undefined,
+            )?.manualPatch;
+            context.logger.warn(
+              refusedPatch?.appendRefusal
+                ? agentsGuidanceRefusalMessage(
+                    refusedPatch.target,
+                    refusedPatch.appendRefusal,
+                  )
+                : AGENTS_GUIDANCE_MANUAL_MESSAGE,
+            );
             // Both writers share one combined patch; print each distinct
             // guidance result once per command, not once per writer.
             const printed = new Set<string>();
