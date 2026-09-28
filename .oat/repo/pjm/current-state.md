@@ -37,6 +37,23 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- CLI `0.3.9` (`backlog-wave-2`, branch `wave/2026-09-27-backlog-wave-2`)
+  closes twelve backlog items. `CLAUDE.md` shims are opt-in:
+  `documentation.instructionSyncStrategy` (`none | pointer | symlink | copy`,
+  default `none`) persists the strategy, `oat instructions sync` removes only
+  exact OAT-created shims under `none`, and a repository-wide warning names
+  every remaining `CLAUDE.md` that makes Claude Code ignore `AGENTS.md`
+  (`DR-260927-claude-md-shims-are-opt`). AGENTS.md guidance writers append an
+  absent managed block after identity checks instead of printing a manual
+  patch; every `--project-guidance` consumer acts or rejects, and the new
+  read-only `oat tools guidance [--json]` prints the block.
+  `oat backlog archive` rewrites inbound `.oat/repo` references to the moved
+  item. The recon skill ships `scripts/validate-assignment.mjs`, which `oat-reviewer`
+  runs before launching a `recon-worker` lane. Quick-mode discovery routes to
+  quick-start, Lite records absorbed projects, and implement commits the phase
+  task ledger before dispatching the phase reviewer. `packages/control-plane`
+  gains a `check` script. After upgrading, run `oat instructions sync` to
+  remove old shims; `oat instructions validate` exits 1 until then.
 - CLI `0.3.8` (`triage-correctness-wave`, branch `wave/2026-09-26-backlog`)
   closes nine correctness items from the 2026-09-26 triage.
   `resolve-providers.sh` no longer aborts when the last auto-detect test is

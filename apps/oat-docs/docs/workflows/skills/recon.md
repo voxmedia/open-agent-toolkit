@@ -130,6 +130,33 @@ check, so direct and symlinked invocations execute identically. They do not
 launch a worker, rank model names, attest actual runtime identity, or measure
 cost.
 
+### Validate Worker Assignments
+
+Before recording an accepted launch, the controller validates each lane's
+assignment envelope (`kind: recon.assignment`, schema version 1), or one JSON
+array for a whole wave. Pass `-` to read the envelope from standard input so no
+envelope file is written:
+
+```bash
+node .agents/skills/recon/scripts/validate-assignment.mjs - < assignment.json
+```
+
+The validator reports every missing, unknown, or invalid field in one pass. It
+requires one homogeneous wave per array, with unique lane IDs and write paths,
+and a worker mode that matches the wave mode. Read sources must sit inside the
+allowed inputs and included scope and outside every exclusion; exclusions
+ignore case, so both directions fail closed. It rejects sources it cannot bind
+lexically (absolute, `~`, backslash, or `..` paths, `file:` and other non-HTTP
+schemes, and URLs with credentials), any tool outside the read-only allowlist,
+and write paths outside the artifact kind's packet folder or on
+controller-owned files, whose names match regardless of case or Unicode
+normalization. The output schema must be the approved packet-contract
+reference for the artifact kind; inline schemas are not accepted. It exits `0` for a valid envelope, `1`
+for an invalid one, and `2` for a usage error or unreadable input. The
+`oat-reviewer` role runs the same check before launching a canonical
+`recon-worker` lane. The full envelope shape is in the skill's
+`references/worker-contract.md`.
+
 ### Bounded Conditional Evidence
 
 Standard and thorough may each predeclare at most one conditional

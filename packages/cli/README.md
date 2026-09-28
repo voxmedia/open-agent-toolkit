@@ -2,7 +2,7 @@
 
 Open Agent Toolkit command-line interface for provider sync, docs tooling, workflow utilities, and diagnostics.
 
-The CLI also supports project-scoped instruction sync for nested `AGENTS.md` / `CLAUDE.md` files, including pointer, symlink, and hard-copy repair strategies plus Claude-only adoption.
+The CLI also supports project-scoped instruction sync for nested `AGENTS.md` files. By default it creates no `CLAUDE.md` shims, because Claude Code reads `AGENTS.md` itself, and removes the shims OAT created earlier; pointer, symlink, and hard-copy shim strategies are opt-in through `documentation.instructionSyncStrategy`, and Claude-only `CLAUDE.md` files are adopted into `AGENTS.md`.
 
 ## Install
 
@@ -28,8 +28,8 @@ oat config describe
 Additional useful entry points:
 
 - `oat tools install`
-- `oat instructions validate --strategy pointer`
-- `oat instructions sync --dry-run --strategy symlink`
+- `oat instructions validate`
+- `oat instructions sync --dry-run`
 - `oat docs init --app-name my-docs`
 - `oat pjm init` - initialize the project-management repo-reference surface after installing the pack
 - `oat config dump --json`

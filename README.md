@@ -6,7 +6,7 @@ It helps you:
 
 - define canonical agent assets once
 - sync those assets across providers
-- keep nested project `AGENTS.md` and `CLAUDE.md` files aligned with pointer, symlink, or hard-copy strategies
+- keep nested project `AGENTS.md` files valid, with no `CLAUDE.md` shims by default (Claude Code reads `AGENTS.md` itself) and opt-in pointer, symlink, or hard-copy shims
 - use provider-agnostic CLI utilities and skills
 - optionally run tracked, human-in-the-loop project workflows on top
 
@@ -32,7 +32,7 @@ pnpm run cli -- status --scope all
 Useful next commands:
 
 - `pnpm run cli -- sync --scope all`
-- `pnpm run cli -- instructions validate --strategy symlink`
+- `pnpm run cli -- instructions validate`
 - `pnpm run cli -- tools install`
 - `pnpm run cli -- docs init --app-name my-docs`
 - `pnpm run cli -- config describe`
