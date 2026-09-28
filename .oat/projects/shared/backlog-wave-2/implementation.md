@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-27
-oat_current_task_id: p03-t01
+oat_current_task_id: p03-t04
 oat_generated: false
 ---
 
@@ -28,11 +28,11 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 8     | 8/8       |
 | Phase 2 | complete    | 8     | 8/8       |
-| Phase 3 | in_progress | 3     | 3/3       |
+| Phase 3 | in_progress | 4     | 3/4       |
 | Phase 4 | pending     | 2     | 0/2       |
 | Phase 5 | pending     | 6     | 0/6       |
 
-**Total:** 19/27 tasks completed
+**Total:** 19/28 tasks completed
 
 ---
 
@@ -181,6 +181,13 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** 2938214b8
+
+---
+
+### Task p03-t04: (review) Close p03 review findings M1, M2, L2-L4
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -411,6 +418,13 @@ oat_generated: false
 - Recovery commit: e4a7c7219
 - Verification: focused 34 and phase 882 passing before and after commit
 - Reason: a new Lite sentence used a load-contract execution verb ("use"); reworded without changing meaning. Root validated the committed `completed` marker and cleared it (`used_attempts: 1`, `pending_attempt: null`).
+
+- Request `bw2-p03-review-1` (`oat-reviewer-claude-claude-opus-5-5-high`,
+  reconnaissance not-attempted): `reviews/archived/p03-review-2026-09-28T014814Z.md` passed the phase
+  threshold (0 Critical/High), 2 Medium, 4 Low. M1, M2, L2-L4 converted to
+  `p03-t04`. L1 (the control-plane recommender `router.ts:66-67` and the
+  dashboard `state/generate.ts:411-414` still route quick-mode discovery to
+  `oat-project-plan`) deferred to a follow-up backlog item at closeout.
 
 ## Implementation Log
 

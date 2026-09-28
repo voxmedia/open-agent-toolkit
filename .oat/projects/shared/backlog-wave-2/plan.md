@@ -1082,6 +1082,43 @@ Expected: green.
 
 ---
 
+### Task p03-t04: (review) Close p03 review findings M1, M2, L2-L4
+
+Source: `reviews/archived/p03-review-2026-09-28T014814Z.md` (auto review,
+passing: 0 Critical/High, 2 Medium, 4 Low; L1 deferred to a follow-up backlog
+item at closeout because it touches CLI routers outside the item's scope).
+
+**Step 1: Fix**
+
+- M1: state that settling a completed recovery marker (clearing
+  `pending_attempt`, recording its canonical event) belongs to Step 7a, before
+  reviewer dispatch; state which commit owns bookkeeping for stops that end
+  without a review.
+- M2: Step 7a records task completion and the resume pointer but not the
+  phase's pass status; the phase status is set in Step 7b from the review
+  outcome (and corrected on retry exhaustion). Fix the "nothing here depends
+  on the review outcome" sentence.
+- L2: correct the gate sentence for parallel groups and after a fix loop, and
+  lead Per-Phase Review with the parallel-group exception.
+- L3: update `apps/oat-docs/docs/workflows/projects/implementation-execution.md`
+  to show the split and the reviewer-brief scope.
+- L4: pin the parallel-group "task ledger out of scope" clause and the new
+  `SKILL.md` sentence with failing-first contract assertions.
+
+No second version bump (`oat-project-implement` is already 2.3.14 in this PR).
+
+**Step 2: Verify**
+
+Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation src/commands/init/tools/shared`,
+`node --test .agents/skills/oat-project-implement/tests/*.test.mjs`,
+`pnpm run check:skill-bumps`, `pnpm --filter oat-docs check`.
+
+**Step 3: Commit**
+
+`fix(p03-t04): close p03 review findings`
+
+---
+
 ## Phase 4: Agent roles and recon validation
 
 ### Task p04-t01: Repair bare fences outside .agents/skills and extend the scanner
@@ -1440,7 +1477,7 @@ title itself:
 | p02    | code     | fixes_completed | 2026-09-28 | reviews/archived/p02-review-2026-09-28T005842Z.md           | 8724f5b4ff88c132909cf900fd0bf31b3e0e2948 | auto       | -                 |
 | p02    | code     | passed          | 2026-09-28 | reviews/archived/p02-review-2026-09-28T011221Z.md           | c5886c1bf65cd776eba7051cd22ae5cb52ba352b | auto       | -                 |
 | p02    | code     | passed          | 2026-09-28 | reviews/archived/p02-review-2026-09-28T013003Z.md           | 01055b7963a8e6931762a0780ffed5ee46168f19 | gate       | codex-6-sol-xhigh |
-| p03    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| p03    | code     | fixes_added     | 2026-09-28 | reviews/archived/p03-review-2026-09-28T014814Z.md           | bfc92754bd4ed05afd5a2f7da173edad7e82fccb | auto       | -                 |
 | p04    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | p05    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | final  | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
@@ -1499,11 +1536,11 @@ in `implementation.md`). Phase gates and the final review still run.
 
 - Phase 1: 8 tasks - AGENTS.md guidance
 - Phase 2: 8 tasks - CLAUDE.md shims
-- Phase 3: 3 tasks - Lifecycle skill routing and bookkeeping
+- Phase 3: 4 tasks - Lifecycle skill routing and bookkeeping
 - Phase 4: 2 tasks - Agent roles and recon validation
 - Phase 5: 6 tasks - CI and backlog tooling, release fan-in
 
-**Total: 27 tasks**
+**Total: 28 tasks**
 
 Ready for code review and merge.
 
