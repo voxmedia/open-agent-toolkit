@@ -1364,6 +1364,32 @@ Run: `node --test .agents/skills/recon/tests/*.test.mjs` and
 
 ---
 
+### Task p04-t06: (review) Restrict read-only tool authority to an allowlist
+
+Source: `reviews/archived/p04-review-2026-09-28T024124Z.md` (phase gate
+attempt 2, blocked: 1 High). Operator direction (2026-09-28): fix, run one
+root re-review, record an override of the exhausted gate budget, continue.
+
+**Step 1: Fix (failing-first)**
+
+`readSources.tools` accepts only an explicit set of supported read-only tool
+names across providers (for example `Read`, `Grep`, `Glob`, and their
+provider equivalents); shell or execution tools (`Bash`, `exec_command`, and
+so on) and unknown names are rejected. Add negative controls for a shell tool
+and an unknown tool beside the valid fixture; they must fail against the
+current validator.
+
+**Step 2: Verify**
+
+Run: `node --test .agents/skills/recon/tests/*.test.mjs` and
+`HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation src/commands/init/tools/shared`.
+
+**Step 3: Commit**
+
+`fix(p04-t06): restrict recon read-only tool authority to an allowlist`
+
+---
+
 ## Phase 5: CI and backlog tooling, release fan-in
 
 ### Task p05-t01: Give packages/control-plane a check script
@@ -1613,7 +1639,7 @@ title itself:
 | p03    | code     | passed          | 2026-09-28 | reviews/archived/p03-review-2026-09-28T015614Z.md           | 91066575de14dab6df77a52dcb1e967bfad91890 | gate       | codex-6-sol-xhigh |
 | p04    | code     | fixes_completed | 2026-09-28 | reviews/archived/p04-review-2026-09-28T022315Z.md           | 8e34aae0ccb86f9af3e1f26648a50a556ae92144 | gate       | codex-6-sol-xhigh |
 | p04    | code     | fixes_completed | 2026-09-28 | reviews/archived/p04-review-2026-09-28T023246Z.md           | 53346a3878ed3a4ed6f2d81b0e683e2893954bdb | auto       | -                 |
-| p04    | code     | received        | 2026-09-28 | reviews/archived/p04-review-2026-09-28T024124Z.md           | de61806bc4789e7901dd0b90b0ee5579e4bca8e9 | gate       | codex-6-sol-xhigh |
+| p04    | code     | fixes_added     | 2026-09-28 | reviews/archived/p04-review-2026-09-28T024124Z.md           | de61806bc4789e7901dd0b90b0ee5579e4bca8e9 | gate       | codex-6-sol-xhigh |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
@@ -1665,10 +1691,10 @@ in `implementation.md`). Phase gates and the final review still run.
 - Phase 1: 8 tasks - AGENTS.md guidance
 - Phase 2: 8 tasks - CLAUDE.md shims
 - Phase 3: 5 tasks - Lifecycle skill routing and bookkeeping
-- Phase 4: 5 tasks - Agent roles and recon validation
+- Phase 4: 6 tasks - Agent roles and recon validation
 - Phase 5: 6 tasks - CI and backlog tooling, release fan-in
 
-**Total: 32 tasks**
+**Total: 33 tasks**
 
 Ready for code review and merge.
 

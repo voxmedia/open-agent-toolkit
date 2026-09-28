@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-27
-oat_current_task_id: p04-t05
+oat_current_task_id: p04-t06
 oat_generated: false
 ---
 
@@ -29,10 +29,10 @@ oat_generated: false
 | Phase 1 | complete    | 8     | 8/8       |
 | Phase 2 | complete    | 8     | 8/8       |
 | Phase 3 | complete    | 5     | 5/5       |
-| Phase 4 | in_progress | 5     | 5/5       |
+| Phase 4 | in_progress | 6     | 5/6       |
 | Phase 5 | pending     | 6     | 0/6       |
 
-**Total:** 26/32 tasks completed
+**Total:** 26/33 tasks completed
 
 ---
 
@@ -235,6 +235,13 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** 7c1e07245
+
+---
+
+### Task p04-t06: (review) Restrict read-only tool authority to an allowlist
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -528,6 +535,10 @@ oat_generated: false
   `readSources.tools`). Review-fix and gate rounds for p04 are exhausted
   (`oat_orchestration_retry_limit` 2), so the run stopped at the gate-policy
   boundary for operator direction.
+
+- Operator disposition (2026-09-28) for the exhausted p04 gate budget: fix
+  the High in `p04-t06`, run one root re-review, then continue to p05 without
+  a third gate run; the final review covers p04.
 
 ## Implementation Log
 
