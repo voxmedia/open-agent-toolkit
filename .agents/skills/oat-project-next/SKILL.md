@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Glob, Grep, Bash(git:*), Bash(oat:*), Skill
 metadata:
-  version: 1.1.2
+  version: 1.1.3
 ---
 
 # Project Next
@@ -253,8 +253,8 @@ Otherwise, look up the target skill from the routing table for the current `oat_
 | Current Phase | Phase Status | Boundary Tier | Quick Plan Readiness | Target Skill               |
 | ------------- | ------------ | ------------- | -------------------- | -------------------------- |
 | discovery     | in_progress  | tier 3        | —                    | `oat-project-discover`     |
-| discovery     | in_progress  | tier 2        | —                    | `oat-project-plan`         |
-| discovery     | complete     | tier 1        | —                    | `oat-project-plan`         |
+| discovery     | in_progress  | tier 2        | —                    | `oat-project-quick-start`  |
+| discovery     | complete     | tier 1        | —                    | `oat-project-quick-start`  |
 | plan          | in_progress  | tier 3        | not ready            | `oat-project-quick-start`  |
 | plan          | in_progress  | tier 2        | not ready            | `oat-project-quick-start`  |
 | plan          | in_progress  | tier 1        | not ready            | `oat-project-quick-start`  |

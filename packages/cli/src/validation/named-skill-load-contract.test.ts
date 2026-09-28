@@ -2829,6 +2829,46 @@ describe('named-skill execution contract', () => {
     expect(normalized).toContain('**explicit capability fallback**');
   });
 
+  it('routes quick-mode discovery rows straight to oat-project-quick-start', async () => {
+    const repoRoot = resolve(process.cwd(), '..', '..');
+    const read = (skill: string): Promise<string> =>
+      readFile(join(repoRoot, '.agents', 'skills', skill, 'SKILL.md'), 'utf8');
+    const tableRows = (section: string, phase: string): string[][] =>
+      section
+        .split('\n')
+        .filter((line) => new RegExp(`^\\|\\s*${phase}\\s*\\|`).test(line))
+        .map((line) =>
+          line
+            .split('|')
+            .slice(1, -1)
+            .map((cell) => cell.trim()),
+        );
+
+    // next: the quick-mode discovery rows past tier 3 name quick-start, not
+    // `oat-project-plan` (which only forwards to quick-start in quick mode).
+    const next = await read('oat-project-next');
+    const nextQuick = next.slice(
+      next.indexOf('**Quick Mode:**'),
+      next.indexOf('**Import Mode:**'),
+    );
+    expect(tableRows(nextQuick, 'discovery')).toEqual([
+      ['discovery', 'in_progress', 'tier 3', '—', '`oat-project-discover`'],
+      ['discovery', 'in_progress', 'tier 2', '—', '`oat-project-quick-start`'],
+      ['discovery', 'complete', 'tier 1', '—', '`oat-project-quick-start`'],
+    ]);
+
+    // progress: the quick-mode discovery row agrees with its sibling plan rows.
+    const progress = await read('oat-project-progress');
+    const progressQuick = progress.slice(
+      progress.indexOf('**Quick mode'),
+      progress.indexOf('**Import mode'),
+    );
+    expect(tableRows(progressQuick, 'discovery')).toEqual([
+      ['discovery', 'in_progress', 'Continue `oat-project-discover`'],
+      ['discovery', 'complete', '`oat-project-quick-start`'],
+    ]);
+  });
+
   it('accepts a compliant execution boundary', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-named-skill-load-'));
     tempDirs.push(root);
