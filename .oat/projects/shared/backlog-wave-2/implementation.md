@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-27
-oat_current_task_id: p02-t01
+oat_current_task_id: p02-t07
 oat_generated: false
 ---
 
@@ -27,12 +27,12 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 8     | 8/8       |
-| Phase 2 | in_progress | 6     | 6/6       |
+| Phase 2 | in_progress | 7     | 6/7       |
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 2     | 0/2       |
 | Phase 5 | pending     | 6     | 0/6       |
 
-**Total:** 14/25 tasks completed
+**Total:** 14/26 tasks completed
 
 ---
 
@@ -141,6 +141,13 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** 5d54d89c6
+
+---
+
+### Task p02-t07: (review) Close p02 review findings C1, M1, M2, L1-L3
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -328,6 +335,13 @@ oat_generated: false
 - Recovery commit: 02fbaa486
 - Verification: focused `config-write.test.ts` exit 0 before and after commit; full CLI suite exit 0 before and after commit (397 files, 7833 tests)
 - Reason: test-only mock fix (`importOriginal`); root validated the committed `completed` marker, then cleared it (`used_attempts: 1`, `pending_attempt: null`).
+
+- Request `bw2-p02-review-1` (`oat-reviewer-claude-claude-opus-5-5-high`,
+  reconnaissance not-attempted): `reviews/archived/p02-review-2026-09-28T005842Z.md` 1 Critical, 2 Medium,
+  3 Low; blocking. C1: default sync deletes a hand-written `CLAUDE.md` when
+  `AGENTS.md` is a symlink to it (copy check compares the file with itself),
+  reproduced by the reviewer. Converted all six to `p02-t07` (fix round 1 of
+  the retry limit 2).
 
 ## Implementation Log
 

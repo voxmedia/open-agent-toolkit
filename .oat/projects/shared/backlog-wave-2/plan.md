@@ -872,6 +872,45 @@ leftover warning) and `node packages/cli/dist/index.js instructions sync
 
 ---
 
+### Task p02-t07: (review) Close p02 review findings C1, M1, M2, L1-L3
+
+Source: `reviews/archived/p02-review-2026-09-28T005842Z.md` (auto review:
+1 Critical, 2 Medium, 3 Low).
+
+**Step 1: Fix (failing-first for C1 and M1; neutralize-and-restore for C1)**
+
+- C1: never treat a `CLAUDE.md` as a managed copy when the sibling `AGENTS.md`
+  is a symlink that resolves to that `CLAUDE.md` (or when both resolve to the
+  same file or inode); such a `CLAUDE.md` is the source of truth and is kept
+  and reported. Compare the copy shape against a distinct regular `AGENTS.md`
+  only. Add tests for `AGENTS.md -> CLAUDE.md` (hand-written) and the reverse
+  shapes; prove the guard by neutralize-and-restore.
+- M1: sync, validate, and the leftover walk stop at nested git checkouts
+  (a directory containing `.git`, including submodules and nested worktrees
+  such as `.claude/worktrees/<name>`); add a failing-first test.
+- M2: update the analyze skill's bundled `.agents/docs/rules-files.md`
+  (sections 2.6, 5.4) to the new Claude Code `agents-md` facts and the
+  conditional shim guidance; bump that file's owning skill only if not already
+  bumped in this PR.
+- L1: word the leftover warning precisely for a subdirectory `CLAUDE.md`
+  (it disables the plugin for Claude Code sessions started in that directory or
+  below).
+- L2: correct `instruction-sync.md` (`CLAUDE.local.md` reporting; the
+  `--add-dir` claim).
+- L3: include `CLAUDE.local.md` in the analyze skill's discovered file list.
+
+**Step 2: Verify**
+
+Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run`
+(full CLI suite), `node --test .agents/skills/oat-agent-instructions-analyze/tests/*.test.mjs .agents/skills/oat-doctor/tests/*.test.mjs`,
+`pnpm --filter oat-docs check`, `pnpm run check:skill-bumps`.
+
+**Step 3: Commit**
+
+`fix(p02-t07): close p02 review findings`
+
+---
+
 ## Phase 3: Lifecycle skill routing and bookkeeping
 
 ### Task p03-t01: Route quick-mode discovery rows straight to quick-start
@@ -1366,7 +1405,7 @@ title itself:
 | p01    | code     | fixes_completed | 2026-09-27 | reviews/archived/p01-review-2026-09-27T235828Z.md           | 6aa11df62600cd72e41559a611697afb873893d7 | auto       | -                 |
 | p01    | code     | passed          | 2026-09-28 | reviews/archived/p01-review-2026-09-28T000859Z.md           | 80d514bbdf342391944b6580b3341a6e074b8a84 | auto       | -                 |
 | p01    | code     | passed          | 2026-09-28 | reviews/archived/p01-review-2026-09-28T001719Z.md           | 4905ae61b93f3011d368258f5eda6297904d4184 | gate       | codex-6-sol-xhigh |
-| p02    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| p02    | code     | fixes_added     | 2026-09-28 | reviews/archived/p02-review-2026-09-28T005842Z.md           | 8724f5b4ff88c132909cf900fd0bf31b3e0e2948 | auto       | -                 |
 | p03    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | p04    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | p05    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
@@ -1425,12 +1464,12 @@ in `implementation.md`). Phase gates and the final review still run.
 **Summary:**
 
 - Phase 1: 8 tasks - AGENTS.md guidance
-- Phase 2: 6 tasks - CLAUDE.md shims
+- Phase 2: 7 tasks - CLAUDE.md shims
 - Phase 3: 3 tasks - Lifecycle skill routing and bookkeeping
 - Phase 4: 2 tasks - Agent roles and recon validation
 - Phase 5: 6 tasks - CI and backlog tooling, release fan-in
 
-**Total: 25 tasks**
+**Total: 26 tasks**
 
 Ready for code review and merge.
 
