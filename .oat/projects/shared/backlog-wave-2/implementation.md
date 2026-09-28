@@ -29,10 +29,10 @@ oat_generated: false
 | Phase 1 | complete    | 8     | 8/8       |
 | Phase 2 | complete    | 8     | 8/8       |
 | Phase 3 | complete    | 5     | 5/5       |
-| Phase 4 | in_progress | 4     | 3/4       |
+| Phase 4 | in_progress | 4     | 4/4       |
 | Phase 5 | pending     | 6     | 0/6       |
 
-**Total:** 24/31 tasks completed
+**Total:** 25/31 tasks completed
 
 ---
 
@@ -226,8 +226,8 @@ oat_generated: false
 
 ### Task p04-t04: (review) Close p04 gate findings H1, M1
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** d9240c2c1
 
 ---
 
@@ -496,6 +496,12 @@ oat_generated: false
   `blocked`, receive-eligible: H1 (read sources not bounded by allowed and
   excluded inputs) and M1 (arbitrary output schema accepted). Converted to
   `p04-t04` (gate fix round 1 of 2); root review and gate rerun after the fix.
+
+- Continuation `cont-backlog-wave-2-p04-fix-2`: `d9240c2c1` closed gate H1
+  (read sources must sit inside allowed inputs and included scope, outside
+  exclusions, segment-aware; unverifiable forms rejected) and M1 (output
+  schema must be the approved packet-contract reference or a closed inline
+  schema); 352 recon node tests, 897 vitest.
 
 ## Implementation Log
 
