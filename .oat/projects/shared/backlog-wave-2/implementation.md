@@ -28,11 +28,11 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 8     | 8/8       |
 | Phase 2 | complete    | 8     | 8/8       |
-| Phase 3 | in_progress | 4     | 3/4       |
+| Phase 3 | in_progress | 4     | 4/4       |
 | Phase 4 | pending     | 2     | 0/2       |
 | Phase 5 | pending     | 6     | 0/6       |
 
-**Total:** 19/28 tasks completed
+**Total:** 20/28 tasks completed
 
 ---
 
@@ -186,8 +186,8 @@ oat_generated: false
 
 ### Task p03-t04: (review) Close p03 review findings M1, M2, L2-L4
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 794b76561
 
 ---
 
@@ -425,6 +425,11 @@ oat_generated: false
   `p03-t04`. L1 (the control-plane recommender `router.ts:66-67` and the
   dashboard `state/generate.ts:411-414` still route quick-mode discovery to
   `oat-project-plan`) deferred to a follow-up backlog item at closeout.
+
+- Continuation `cont-backlog-wave-2-p03-fix-1`: `794b76561` closed M1
+  (Step 7a settles recovery markers; no-review stops commit through 7a), M2
+  (phase status set in 7b from the review outcome), L2-L4; 893 vitest and 37
+  node tests green.
 
 ## Implementation Log
 
