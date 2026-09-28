@@ -407,8 +407,10 @@ and `:(exclude,literal).oat/repo`, not globs. A literal directory pathspec
 excludes that directory and everything beneath it, never a sibling whose name
 merely starts the same way. `.oat/templates/`, `.oat/scripts/`,
 `.oat/config*.json`, and `.oat/sync/` stay fingerprinted, as does every other
-path. Validate the state carrier independently as the structured transition
-above.
+path. The `.oat/projects` exclusion names the default location literally; a
+project whose configured `projects.root` lies outside `.oat/projects/` keeps
+its other artifacts fingerprinted (more staleness, never less). Validate the
+state carrier independently as the structured transition above.
 
 Stored `sha256:effective-delta-v1:<digest>` values keep v1 semantics and are
 never reinterpreted: recompute them with the `effective-delta-v1\0` prefix and

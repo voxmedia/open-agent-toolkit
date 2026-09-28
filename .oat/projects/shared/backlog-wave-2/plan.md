@@ -2106,20 +2106,28 @@ Run: `node --test .agents/skills/oat-agent-instructions-analyze/tests/*.test.mjs
 
 The release workflow (`.github/workflows/release.yml`) publishes a fixed body
 plus `generate_release_notes: true`, whose "What's Changed" list carries merged
-PR titles only, not PR bodies. The removal must therefore be stated in the PR
-title itself:
+PR titles only, not PR bodies. The removal and the key rename must therefore
+be stated in the PR title itself:
 
-- Title uses a Conventional Commit breaking marker and names the removal, for
-  example
-  `feat!: stop creating and auto-remove OAT-managed CLAUDE.md shims by default (wave 2, lockstep 0.3.9)`.
+- Title uses a Conventional Commit breaking marker and names the removal and
+  the rename, for example
+  `feat!: stop creating CLAUDE.md shims by default and rename shim config to instructions.claude.* (wave 2, lockstep 0.3.9)`.
 - The body (for reviewers) opens with a **Behavior change** callout matching
   `implementation.md` PR Requirements: default no shims, OAT-managed shims
-  removed on the next sync, hand-written and linked `CLAUDE.md` kept, a lone
-  `CLAUDE.md` adopted into `AGENTS.md` and removed, `validate` exits 1 on
-  upgraded repositories until sync, and the opt-back-in command.
+  removed on the next sync, all-or-nothing removal while any `CLAUDE.md` has
+  content (`sync`/`validate` exit 1 with the fixes), a lone `CLAUDE.md`
+  adopted into `AGENTS.md` and removed, `validate` exits 1 on upgraded
+  repositories until sync, and the opt-back-in command
+  (`oat config set instructions.claude.shims pointer`).
+- The body calls out the clean rename of `documentation.instructionSyncStrategy`
+  and `documentation.instructionPointerExcludes` to
+  `instructions.claude.shims` and `instructions.claude.excludes` (old keys
+  ignored), with the upgrade notice to re-set a released
+  `instructionPointerExcludes` list before the first sync.
 - The body also lists the other user-visible changes (append-only AGENTS.md
-  guidance, `--project-guidance` behavior, the read-only guidance command, and
-  backlog archive link rewriting).
+  guidance, `--project-guidance` behavior, the read-only guidance command,
+  backlog archive link rewriting, and `oat-reviewer` no longer launching
+  `recon-worker`).
 
 ---
 
@@ -2155,7 +2163,8 @@ title itself:
 | final  | code     | fixes_completed | 2026-09-28 | reviews/archived/final-review-2026-09-28T113721Z.md         | 1973af8f083c86fdb172eb67d8233eefd002333b | gate       | codex-6-sol-xhigh |
 | final  | code     | passed          | 2026-09-28 | reviews/archived/final-review-2026-09-28T114422Z.md         | ba69e205235f000acf4958e57bc12085c8294f8f | auto       | -                 |
 | final  | code     | passed          | 2026-09-28 | reviews/archived/final-review-2026-09-28T114805Z.md         | b54d67306e12e5abed8e23983f957f7f77c0ad8c | gate       | codex-6-sol-xhigh |
-| final  | code     | fixes_added     | 2026-09-28 | reviews/archived/final-review-2026-09-28T163142Z.md         | 11008080c4853e133ee380d34d14c0f3d60f51d1 | auto       | -                 |
+| final  | code     | fixes_completed | 2026-09-28 | reviews/archived/final-review-2026-09-28T163142Z.md         | 11008080c4853e133ee380d34d14c0f3d60f51d1 | auto       | -                 |
+| final  | code     | fixes_completed | 2026-09-28 | reviews/archived/final-review-2026-09-28T163513Z.md         | 11008080c4853e133ee380d34d14c0f3d60f51d1 | auto       | -                 |
 | p-rev1 | code     | passed          | 2026-09-28 | reviews/archived/p-rev1-review-2026-09-28T160943Z.md        | f4599bec32e5b235e699f7504feb33d348a7cfea | gate       | codex-6-sol-xhigh |
 | p-rev1 | code     | passed          | 2026-09-28 | reviews/archived/p-rev1-review-2026-09-28T162038Z.md        | 71aef4127c537309157d3d81680e6738c9f99f73 | gate       | codex-6-sol-xhigh |
 

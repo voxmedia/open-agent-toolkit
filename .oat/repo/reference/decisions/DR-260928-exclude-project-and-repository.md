@@ -14,7 +14,7 @@ The implementation exit gate binds a passed final review to an `effective-delta-
 
 ## Decision
 
-New gate generations persist `sha256:effective-delta-v2:<digest>`. v2 is identical to v1 (prefix `effective-delta-v2\0`, Git `--raw -z --no-renames --no-abbrev` from the unique merge base) except that its exclusion set is the exact `$PROJECT_PATH/state.md` plus every path under `.oat/projects/` and `.oat/repo/`, expressed as literal exclusion pathspecs, never globs, so sibling names such as `.oat/projects-archive` stay included. `.oat/templates/`, `.oat/scripts/`, `.oat/config*.json`, and `.oat/sync/` stay fingerprinted. A stored `sha256:effective-delta-v1:<digest>` value keeps v1 semantics (only the `state.md` carrier excluded) and is never reinterpreted; its replacement generation after it goes stale uses v2.
+New gate generations persist `sha256:effective-delta-v2:<digest>`. v2 is identical to v1 (prefix `effective-delta-v2\0`, Git `--raw -z --no-renames --no-abbrev` from the unique merge base) except that its exclusion set is the exact `$PROJECT_PATH/state.md` plus every path under `.oat/projects/` and `.oat/repo/`, expressed as literal exclusion pathspecs, never globs, so sibling names such as `.oat/projects-archive` stay included. The `.oat/projects` exclusion is the default location taken literally, not the configured `projects.root`; a projects root outside `.oat/projects/` keeps its artifacts fingerprinted, which errs toward staleness. `.oat/templates/`, `.oat/scripts/`, `.oat/config*.json`, and `.oat/sync/` stay fingerprinted. A stored `sha256:effective-delta-v1:<digest>` value keeps v1 semantics (only the `state.md` carrier excluded) and is never reinterpreted; its replacement generation after it goes stale uses v2.
 
 ## Consequences
 

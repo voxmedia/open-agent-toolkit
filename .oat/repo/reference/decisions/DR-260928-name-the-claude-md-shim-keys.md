@@ -10,7 +10,7 @@ legacy_id: null
 
 ## Context
 
-DR-260927-claude-md-shims-are-opt made CLAUDE.md shims opt-in and DR-260928-persist-the-instruction-sync persisted the strategy as documentation.instructionSyncStrategy beside documentation.instructionPointerExcludes. Neither key is about documentation: both govern how oat instructions sync and oat instructions validate treat Claude Code's CLAUDE.md files, and the documentation namespace made them hard to find. Most repositories run on the defaults, so few configs carry either key.
+DR-260927-claude-md-shims-are-opt made CLAUDE.md shims opt-in and DR-260928-persist-the-instruction-sync first persisted the strategy, as implemented in this PR before release, as documentation.instructionSyncStrategy beside the released documentation.instructionPointerExcludes (shipped in 0.2.63); that record now names the renamed key. Neither key is about documentation: both govern how oat instructions sync and oat instructions validate treat Claude Code's CLAUDE.md files, and the documentation namespace made them hard to find. Most repositories run on the defaults, so few configs carry either key.
 
 ## Decision
 
@@ -18,4 +18,4 @@ Amends DR-260927-claude-md-shims-are-opt. The strategy key is instructions.claud
 
 ## Consequences
 
-A repository that set a documentation-namespaced key must set the instructions.claude key instead; until it does, the built-in default applies (none, no extra exclusions). oat config set/get/unset/describe, the instruction commands' messages and --json, the agent-instructions and doctor skills, and the docs name only the new keys. The release notes call out the rename.
+A repository that set a documentation-namespaced key must set the instructions.claude key instead; until it does, the built-in default applies (none, no extra exclusions). A released instructionPointerExcludes list is therefore ignored: sync scans the formerly excluded directories and adopts and removes a lone CLAUDE.md there, so the upgrade notice tells users to re-set the list under instructions.claude.excludes before their first sync. oat config set/get/unset/describe, the instruction commands' messages and --json, the agent-instructions and doctor skills, and the docs name only the new keys. The release notes call out the rename through the PR title (they list merged PR titles only), and the PR body carries the upgrade notice.
