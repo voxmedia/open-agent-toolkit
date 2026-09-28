@@ -867,6 +867,28 @@ describe('archiveBacklogItem', () => {
       );
     });
 
+    it('leaves a multiline code span in the moved item exactly as written', async () => {
+      const span = ['Example: `', `[ref]: ./${otherId}.md`, '`.'];
+      const { read } = await archiveWith({}, span);
+
+      expect(await read(`.oat/repo/pjm/backlog/archived/${id}.md`)).toContain(
+        `${span.join('\n')}\n`,
+      );
+    });
+
+    it('rebases moved-item links that carry a query string', async () => {
+      const { read } = await archiveWith({}, [
+        `Raw [raw](./${otherId}.md?raw=1#notes) view.`,
+        `[query]: ./${otherId}.md?raw=1`,
+      ]);
+
+      const archived = await read(`.oat/repo/pjm/backlog/archived/${id}.md`);
+      expect(archived).toContain(
+        `Raw [raw](../items/${otherId}.md?raw=1#notes) view.`,
+      );
+      expect(archived).toContain(`[query]: ../items/${otherId}.md?raw=1\n`);
+    });
+
     it('does not let a stray backtick hide links in later paragraphs', async () => {
       const { read } = await archiveWith({
         '.oat/repo/reference/stray.md': [

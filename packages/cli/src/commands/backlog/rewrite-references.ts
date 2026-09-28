@@ -458,12 +458,12 @@ function rebaseTarget(target: string, context: RewriteContext): string {
   return relativeFrom(context.currentDirectory, absolute, target);
 }
 
-/** Rebase `path#anchor`, keeping the anchor. */
+/** Rebase `path?query#anchor`, keeping the query and anchor as written. */
 function rebaseWithAnchor(target: string, context: RewriteContext): string {
-  const hash = target.indexOf('#');
-  const path = hash === -1 ? target : target.slice(0, hash);
-  const anchor = hash === -1 ? '' : target.slice(hash);
-  return path.length === 0 ? target : `${rebaseTarget(path, context)}${anchor}`;
+  const split = target.search(/[?#]/u);
+  const path = split === -1 ? target : target.slice(0, split);
+  const suffix = split === -1 ? '' : target.slice(split);
+  return path.length === 0 ? target : `${rebaseTarget(path, context)}${suffix}`;
 }
 
 /** A CommonMark link title: `"…"`, `'…'`, or `(…)`. */
@@ -506,24 +506,36 @@ function rebaseMovedItemDefinitions(
   content: string,
   context: RewriteContext,
 ): string {
-  return splitMarkdownCode(content)
-    .map((segment) =>
-      segment.kind === 'fence'
-        ? segment.text
-        : segment.text.replace(
-            REFERENCE_DEFINITION,
-            (
-              _match,
-              prefix: string,
-              angled: string | undefined,
-              bare: string | undefined,
-              rest: string,
-            ) =>
-              angled !== undefined
-                ? `${prefix}<${rebaseWithAnchor(angled, context)}>${rest}`
-                : `${prefix}${rebaseWithAnchor(bare!, context)}${rest}`,
-          ),
-    )
+  const segments = splitMarkdownCode(content);
+  return segments
+    .map((segment, index) => {
+      // Code spans and fences stay exactly as written.
+      if (segment.kind !== 'prose') {
+        return segment.text;
+      }
+      // A prose segment that follows a code span mid-line does not start a
+      // line, so a match at its offset 0 is not a definition.
+      const previous = index === 0 ? null : segments[index - 1]!.text;
+      const startsLine = previous === null || previous.endsWith('\n');
+      return segment.text.replace(
+        REFERENCE_DEFINITION,
+        (
+          match: string,
+          prefix: string,
+          angled: string | undefined,
+          bare: string | undefined,
+          rest: string,
+          offset: number,
+        ) => {
+          if (offset === 0 && !startsLine) {
+            return match;
+          }
+          return angled !== undefined
+            ? `${prefix}<${rebaseWithAnchor(angled, context)}>${rest}`
+            : `${prefix}${rebaseWithAnchor(bare!, context)}${rest}`;
+        },
+      );
+    })
     .join('');
 }
 
