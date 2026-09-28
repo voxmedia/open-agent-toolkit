@@ -29,6 +29,10 @@ import {
   findLinksThrough,
   inspectManagedShim,
   buildLeftoverClaudeWarnings,
+  buildShimRemovalBlockWarning,
+  describeShimRemovalBlock,
+  findShimRemovalBlockers,
+  markBlockedShimEntries,
   scanInstructionFiles,
   verifyManagedShimUnchanged,
 } from '@commands/instructions/instructions.utils';
@@ -646,11 +650,40 @@ export function createInstructionsSyncCommand(
             excludedPaths: exclusions.configured,
             strategy,
           });
-          const plannedActions = planSyncActions({
+          // Removal under `none` is all or nothing: while any CLAUDE.md,
+          // .claude/CLAUDE.md, or CLAUDE.local.md has content of its own, a
+          // partial removal would leave some directories without their
+          // AGENTS.md instructions, so every planned removal is held back.
+          // Read-only and repository-wide, like the leftover warnings below.
+          const leftoversBeforeSync =
+            strategy === 'none'
+              ? await dependencies.findLeftoverClaudeFiles(repoRoot)
+              : [];
+          const blockers = findShimRemovalBlockers(
+            entries,
+            leftoversBeforeSync,
+          );
+          const unblockedActions = planSyncActions({
             entries,
             force: options.force ?? false,
             strategy,
           });
+          const heldBack = unblockedActions
+            .filter((action) => action.type === 'remove')
+            .map((action) => action.target);
+          const blocked = blockers.length > 0 && heldBack.length > 0;
+          const plannedActions = blocked
+            ? unblockedActions.map((action) =>
+                action.type === 'remove'
+                  ? {
+                      type: 'skip' as const,
+                      target: action.target,
+                      reason: describeShimRemovalBlock(repoRoot, blockers),
+                      result: 'skipped' as const,
+                    }
+                  : action,
+              )
+            : unblockedActions;
 
           const dryRun = options.dryRun ?? false;
           const actions = dryRun
@@ -673,26 +706,41 @@ export function createInstructionsSyncCommand(
               .map((action) => action.target),
           );
           const leftoverClaudeFiles =
-            strategy === 'none'
-              ? (await dependencies.findLeftoverClaudeFiles(repoRoot)).filter(
-                  (leftover) => !dryRun || !plannedRemovals.has(leftover.path),
-                )
-              : [];
+            strategy !== 'none'
+              ? []
+              : dryRun
+                ? leftoversBeforeSync.filter(
+                    (leftover) => !plannedRemovals.has(leftover.path),
+                  )
+                : await dependencies.findLeftoverClaudeFiles(repoRoot);
 
+          const mode = dryRun ? 'dry-run' : 'apply';
+          const reportedEntries = dryRun
+            ? entries
+            : getPostSyncEntries(entries, actions, strategy);
           const payload = buildInstructionsPayload({
-            mode: dryRun ? 'dry-run' : 'apply',
+            mode,
             strategy,
-            entries: dryRun
-              ? entries
-              : getPostSyncEntries(entries, actions, strategy),
+            entries: blocked
+              ? markBlockedShimEntries(reportedEntries)
+              : reportedEntries,
             actions,
             excludedPaths: exclusions.configured,
             effectiveExcludedPaths: exclusions.effective,
             exclusionWarnings: exclusions.warnings,
-            warnings: buildLeftoverClaudeWarnings(
-              repoRoot,
-              leftoverClaudeFiles,
-            ),
+            warnings: [
+              ...(blocked
+                ? [
+                    buildShimRemovalBlockWarning(
+                      repoRoot,
+                      blockers,
+                      heldBack,
+                      mode,
+                    ),
+                  ]
+                : []),
+              ...buildLeftoverClaudeWarnings(repoRoot, leftoverClaudeFiles),
+            ],
           });
 
           if (context.json) {

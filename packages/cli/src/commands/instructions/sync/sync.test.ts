@@ -105,6 +105,7 @@ function createHarness(options: HarnessOptions = {}): {
       (options.leftoverClaudeFiles ?? []).map((path) => ({
         path,
         linkedBy: [],
+        exactShim: false,
       })),
     ),
     lstat,

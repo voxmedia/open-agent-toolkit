@@ -2150,6 +2150,231 @@ describe('instructions command integration', () => {
       });
     });
 
+    describe('all or nothing: a CLAUDE.md with content blocks every removal', () => {
+      const BLOCK_CODE = 'claude_md_blocks_shim_removal';
+      const DOCS_LINK =
+        'https://github.com/voxmedia/open-agent-toolkit/blob/main/apps/oat-docs/docs/provider-sync/instruction-sync.md#claude-code-and-agentsmd';
+
+      interface BlockWarning {
+        code: string;
+        paths: string[];
+        wouldRemove: string[];
+        message: string;
+      }
+
+      function blockWarning(payload: {
+        warnings?: Array<{ code: string }>;
+      }): BlockWarning | undefined {
+        return payload.warnings?.find(
+          (warning): warning is BlockWarning => warning.code === BLOCK_CODE,
+        );
+      }
+
+      async function seedShims(root: string): Promise<void> {
+        await writePair(root, 'pkg/pointer', EXPECTED_CLAUDE_CONTENT);
+        await writePair(root, 'pkg/linked', { link: 'AGENTS.md' });
+      }
+
+      const SHIMS = ['pkg/linked/CLAUDE.md', 'pkg/pointer/CLAUDE.md'];
+
+      async function expectShimsKept(root: string): Promise<void> {
+        await expect(
+          readFile(join(root, 'pkg', 'pointer', 'CLAUDE.md'), 'utf8'),
+        ).resolves.toBe(EXPECTED_CLAUDE_CONTENT);
+        await expect(
+          readlink(join(root, 'pkg', 'linked', 'CLAUDE.md')),
+        ).resolves.toBe('AGENTS.md');
+      }
+
+      it('removes nothing while a root CLAUDE.md has content, and says why', async () => {
+        const root = await createWorkspace();
+        tempDirs.push(root);
+        await writePair(root, '.', '# the real project instructions\n');
+        await seedShims(root);
+
+        const dryRun = await runCli(
+          root,
+          ['instructions', 'sync', '--dry-run', '--json'],
+          ['--json'],
+        );
+        const dryRunPayload = JSON.parse(dryRun.stdout);
+        expect(
+          dryRunPayload.actions.map(
+            (action: { type: string; target: string; result: string }) => [
+              action.type,
+              action.target.slice(root.length + 1),
+              action.result,
+            ],
+          ),
+        ).toEqual(SHIMS.map((path) => ['skip', path, 'skipped']));
+        expect(blockWarning(dryRunPayload)?.wouldRemove).toEqual(SHIMS);
+
+        const apply = await runCli(
+          root,
+          ['instructions', 'sync', '--json'],
+          ['--json'],
+        );
+        expect(apply.exitCode).toBe(1);
+        const payload = JSON.parse(apply.stdout);
+        await expectShimsKept(root);
+        await expect(readFile(join(root, 'CLAUDE.md'), 'utf8')).resolves.toBe(
+          '# the real project instructions\n',
+        );
+        expect(payload.summary).toMatchObject({ removed: 0, skipped: 2 });
+        for (const action of payload.actions) {
+          expect(action.reason).toContain('CLAUDE.md has content');
+        }
+
+        // The warning is first and carries the whole explanation.
+        expect(payload.warnings[0].code).toBe(BLOCK_CODE);
+        const warning = blockWarning(payload)!;
+        expect(warning.paths).toEqual(['CLAUDE.md']);
+        expect(warning.wouldRemove).toEqual(SHIMS);
+        expect(warning.message).toContain(
+          `would remove 2 OAT-managed CLAUDE.md shims (${SHIMS.join(', ')})`,
+        );
+        expect(warning.message).toContain(
+          'none were removed because CLAUDE.md has content',
+        );
+        expect(warning.message).toContain(
+          'Any CLAUDE.md makes Claude Code ignore AGENTS.md',
+        );
+        expect(warning.message).toContain(DOCS_LINK);
+        expect(warning.message).toContain(
+          'remove CLAUDE.md or move its content into an AGENTS.md and rerun `oat instructions sync`',
+        );
+        expect(warning.message).toContain(
+          'set instructions.claude.shims to a shim strategy (pointer, symlink, or copy) to keep CLAUDE.md files',
+        );
+
+        const human = await runCli(root, ['instructions', 'sync']);
+        expect(human.exitCode).toBe(1);
+        expect(human.stderr).toContain(warning.message);
+        await expectShimsKept(root);
+      });
+
+      it('reports the same finding from validate, without the misleading fix line', async () => {
+        const root = await createWorkspace();
+        tempDirs.push(root);
+        await writePair(root, '.', '# the real project instructions\n');
+        await seedShims(root);
+
+        const json = await runCli(
+          root,
+          ['instructions', 'validate', '--json'],
+          ['--json'],
+        );
+        expect(json.exitCode).toBe(1);
+        const payload = JSON.parse(json.stdout);
+        const warning = blockWarning(payload)!;
+        expect(warning.paths).toEqual(['CLAUDE.md']);
+        expect(warning.wouldRemove).toEqual(SHIMS);
+        expect(warning.message).toContain('none will be removed');
+        for (const entry of payload.entries.filter(
+          (candidate: { status: string }) =>
+            candidate.status === 'managed_shim',
+        )) {
+          expect(entry.detail).toContain(
+            'not removed while another CLAUDE.md has content',
+          );
+        }
+
+        const human = await runCli(root, ['instructions', 'validate']);
+        expect(human.exitCode).toBe(1);
+        expect(human.stderr).toContain(warning.message);
+        expect(human.stdout).not.toContain('Fix with: oat instructions sync');
+      });
+
+      it('treats a content-bearing CLAUDE.local.md or .claude/CLAUDE.md the same way', async () => {
+        for (const blocker of ['CLAUDE.local.md', '.claude/CLAUDE.md']) {
+          const root = await createWorkspace();
+          tempDirs.push(root);
+          await writeFile(join(root, 'AGENTS.md'), '# root instructions\n');
+          await mkdir(join(root, '.claude'), { recursive: true });
+          await writeFile(join(root, blocker), '# personal notes\n');
+          await seedShims(root);
+
+          const apply = await runCli(
+            root,
+            ['instructions', 'sync', '--json'],
+            ['--json'],
+          );
+          expect(apply.exitCode, blocker).toBe(1);
+          await expectShimsKept(root);
+          const warning = blockWarning(JSON.parse(apply.stdout));
+          expect(warning?.paths, blocker).toEqual([blocker]);
+        }
+      });
+
+      it('counts a content-bearing CLAUDE.md in an excluded tree too', async () => {
+        const root = await createWorkspace();
+        tempDirs.push(root);
+        await writeSharedConfig(root, {
+          instructions: { claude: { excludes: ['vendor'] } },
+        });
+        await writePair(root, 'vendor/lib', '# vendored notes\n');
+        await seedShims(root);
+
+        const apply = await runCli(
+          root,
+          ['instructions', 'sync', '--json'],
+          ['--json'],
+        );
+        expect(apply.exitCode).toBe(1);
+        await expectShimsKept(root);
+        expect(blockWarning(JSON.parse(apply.stdout))?.paths).toEqual([
+          'vendor/lib/CLAUDE.md',
+        ]);
+      });
+
+      it('adopts a stray but keeps its CLAUDE.md while another file blocks removal', async () => {
+        const root = await createWorkspace();
+        tempDirs.push(root);
+        await writePair(root, '.', '# the real project instructions\n');
+        await mkdir(join(root, 'lone'), { recursive: true });
+        await writeFile(join(root, 'lone', 'CLAUDE.md'), '# lone notes\n');
+
+        const apply = await runCli(
+          root,
+          ['instructions', 'sync', '--json'],
+          ['--json'],
+        );
+        expect(apply.exitCode).toBe(1);
+        await expect(
+          readFile(join(root, 'lone', 'AGENTS.md'), 'utf8'),
+        ).resolves.toBe('# lone notes\n');
+        await expect(
+          readFile(join(root, 'lone', 'CLAUDE.md'), 'utf8'),
+        ).resolves.toBe('# lone notes\n');
+        const warning = blockWarning(JSON.parse(apply.stdout))!;
+        // The stray itself never blocks: it is adopted, not left behind.
+        expect(warning.paths).toEqual(['CLAUDE.md']);
+        expect(warning.wouldRemove).toEqual(['lone/CLAUDE.md']);
+      });
+
+      it('negative control: with only exact shims, removal proceeds and nothing blocks', async () => {
+        const root = await createWorkspace();
+        tempDirs.push(root);
+        await writePair(root, '.', EXPECTED_CLAUDE_CONTENT);
+        await seedShims(root);
+        await mkdir(join(root, 'lone'), { recursive: true });
+        await writeFile(join(root, 'lone', 'CLAUDE.md'), '# lone notes\n');
+
+        const apply = await runCli(
+          root,
+          ['instructions', 'sync', '--json'],
+          ['--json'],
+        );
+        expect(apply.exitCode).toBe(0);
+        const payload = JSON.parse(apply.stdout);
+        expect(payload).not.toHaveProperty('warnings');
+        expect(payload.summary).toMatchObject({ removed: 4, skipped: 0 });
+        for (const path of ['CLAUDE.md', ...SHIMS, 'lone/CLAUDE.md']) {
+          await expect(pathExists(join(root, path)), path).resolves.toBe(false);
+        }
+      });
+    });
+
     describe('stray adoption', () => {
       it('adopts a lone CLAUDE.md into AGENTS.md and leaves no CLAUDE.md behind', async () => {
         const root = await createWorkspace();

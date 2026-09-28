@@ -231,7 +231,7 @@ Key behavior:
 
 - Mutates by default; use `--dry-run` to preview changes
 - Supports `--strategy none|pointer|symlink|copy` as a one-run override of `instructions.claude.shims` (default `none`)
-- Under `none`, removes the `CLAUDE.md` shims OAT created (exact `@AGENTS.md` pointer, symlink to the sibling `AGENTS.md`, or byte-identical copy), re-verifying each immediately before deletion; hand-written or modified `CLAUDE.md` files are reported, never deleted
+- Under `none`, removes the `CLAUDE.md` shims OAT created (exact `@AGENTS.md` pointer, symlink to the sibling `AGENTS.md`, or byte-identical copy), re-verifying each immediately before deletion; hand-written or modified `CLAUDE.md` files are reported, never deleted, and while any `CLAUDE.md`, `.claude/CLAUDE.md`, or `CLAUDE.local.md` has content of its own, nothing is removed (`claude_md_blocks_shim_removal`)
 - Under a shim strategy, creates missing `CLAUDE.md` files using that strategy
 - Adopts Claude-only stray files by writing canonical `AGENTS.md` content first, then regenerating `CLAUDE.md` (shim strategies) or removing it (`none`)
 - Under a shim strategy, skips mismatched files unless `--force` is provided

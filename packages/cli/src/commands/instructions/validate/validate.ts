@@ -7,7 +7,11 @@ import {
 import {
   buildInstructionsPayload,
   buildLeftoverClaudeWarnings,
+  buildShimRemovalBlockWarning,
   findLeftoverClaudeFiles,
+  findShimRemovalBlockers,
+  listShimRemovals,
+  markBlockedShimEntries,
   formatInstructionsReport,
   readConfiguredInstructionSyncStrategy,
   resolveInstructionPointerExcludes,
@@ -72,21 +76,37 @@ export function createInstructionsValidateCommand(
             excludedPaths: exclusions.configured,
             strategy,
           });
+          const leftovers =
+            strategy === 'none'
+              ? await dependencies.findLeftoverClaudeFiles(repoRoot)
+              : [];
+          // The same all-or-nothing rule sync applies: while a CLAUDE.md has
+          // content of its own, sync removes none of the shims below.
+          const blockers = findShimRemovalBlockers(entries, leftovers);
+          const wouldRemove = listShimRemovals(entries);
+          const blocked = blockers.length > 0 && wouldRemove.length > 0;
           const payload = buildInstructionsPayload({
             mode: 'validate',
             strategy,
-            entries,
+            entries: blocked ? markBlockedShimEntries(entries) : entries,
             actions: [],
             excludedPaths: exclusions.configured,
             effectiveExcludedPaths: exclusions.effective,
             exclusionWarnings: exclusions.warnings,
-            // A warning, never drift: it does not change the exit code.
-            warnings: buildLeftoverClaudeWarnings(
-              repoRoot,
-              strategy === 'none'
-                ? await dependencies.findLeftoverClaudeFiles(repoRoot)
-                : [],
-            ),
+            // Warnings, never drift: they do not change the exit code.
+            warnings: [
+              ...(blocked
+                ? [
+                    buildShimRemovalBlockWarning(
+                      repoRoot,
+                      blockers,
+                      wouldRemove,
+                      'validate',
+                    ),
+                  ]
+                : []),
+              ...buildLeftoverClaudeWarnings(repoRoot, leftovers),
+            ],
           });
 
           if (context.json) {
@@ -96,7 +116,9 @@ export function createInstructionsValidateCommand(
             for (const warning of payload.warnings ?? []) {
               context.logger.warn(warning.message);
             }
-            if (payload.status === 'drift') {
+            // While the block holds, sync cannot clear this drift; the
+            // warning above names what can.
+            if (payload.status === 'drift' && !blocked) {
               // Repeat the flag only when this run was given one: without it,
               // a bare sync resolves the same configured or default strategy.
               const fixCommand =

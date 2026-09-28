@@ -356,6 +356,21 @@ test('a missing CLAUDE.md is an error only under a shim strategy, and leftover C
   );
   assert.match(leftover, /`oat instructions sync`/);
 
+  // Removal under `none` is all or nothing: while any CLAUDE.md has content,
+  // sync removes no shim, and the doctor reports why instead of sending the
+  // person to a sync that cannot clear the managed shims.
+  const blocked = lines.find((line) =>
+    line.includes('item with code `claude_md_blocks_shim_removal`'),
+  );
+  assert.ok(blocked, 'blocked-removal rule missing');
+  assert.match(blocked, /→ `warning`/);
+  assert.match(blocked, /`paths`/);
+  assert.match(blocked, /`wouldRemove`/);
+  assert.match(blocked, /moves its content into an AGENTS\.md/);
+  assert.match(blocked, /`oat instructions sync`/);
+  assert.match(blocked, /`pointer`, `symlink`, or `copy`/);
+  assert.match(managed, /`claude_md_blocks_shim_removal`/);
+
   const dive = section('#### Agent instructions dive');
   assert.match(dive, /`\.strategy`/);
   assert.match(dive, /`none`/);

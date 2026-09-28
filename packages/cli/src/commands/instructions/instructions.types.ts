@@ -68,12 +68,13 @@ export interface InstructionActionRecord {
 export type InstructionsMode = 'validate' | 'dry-run' | 'apply';
 
 /**
- * A finding that never changes the exit code. `claude_md_hides_agents_md`:
- * under strategy `none`, a `CLAUDE.md`, `.claude/CLAUDE.md`, or
- * `CLAUDE.local.md` that makes Claude Code's default `agents-md` mode ignore
- * every AGENTS.md in the project while it exists.
+ * A finding that never changes the exit code by itself.
+ *
+ * `claude_md_hides_agents_md`: under strategy `none`, a `CLAUDE.md`,
+ * `.claude/CLAUDE.md`, or `CLAUDE.local.md` that makes Claude Code's default
+ * `agents-md` mode ignore every AGENTS.md in the project while it exists.
  */
-export interface InstructionsWarning {
+export interface ClaudeMdHidesAgentsMdWarning {
   code: 'claude_md_hides_agents_md';
   /** Repository-relative POSIX path. */
   path: string;
@@ -85,6 +86,26 @@ export interface InstructionsWarning {
   linkedBy: string[];
   message: string;
 }
+
+/**
+ * `claude_md_blocks_shim_removal`: under strategy `none`, removal is all or
+ * nothing. While any `CLAUDE.md`, `.claude/CLAUDE.md`, or `CLAUDE.local.md`
+ * is not an exact OAT shim, sync removes no CLAUDE.md at all; this finding
+ * names those files and the removals held back. Sync reports each held-back
+ * removal as a skipped action, which is what sets its exit code.
+ */
+export interface ClaudeMdBlocksShimRemovalWarning {
+  code: 'claude_md_blocks_shim_removal';
+  /** Repository-relative POSIX paths of the files with their own content. */
+  paths: string[];
+  /** Repository-relative POSIX paths of the CLAUDE.md files kept because of them. */
+  wouldRemove: string[];
+  message: string;
+}
+
+export type InstructionsWarning =
+  | ClaudeMdHidesAgentsMdWarning
+  | ClaudeMdBlocksShimRemovalWarning;
 
 export interface InstructionsSummary {
   scanned: number;
@@ -208,11 +229,12 @@ export interface InstructionsValidateCommandDependencies {
   ) => Promise<InstructionSyncStrategy | undefined>;
   /**
    * Every `CLAUDE.md` and `CLAUDE.local.md` in the repository (absolute
-   * paths), from a read-only walk that ignores the mutation exclusions.
+   * paths), from a read-only walk that ignores the mutation exclusions, each
+   * classified as an exact OAT shim or not.
    */
   findLeftoverClaudeFiles: (
     repoRoot: string,
-  ) => Promise<Array<{ path: string; linkedBy: string[] }>>;
+  ) => Promise<Array<{ path: string; linkedBy: string[]; exactShim: boolean }>>;
   /**
    * The single exclusion path both commands resolve through. Sync inherits it
    * from this interface rather than resolving its own, so validate can never

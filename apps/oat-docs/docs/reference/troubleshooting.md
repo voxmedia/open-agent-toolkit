@@ -60,10 +60,16 @@ when a same-name canonical skill exists; rename one package before retrying.
 
 - Check the effective strategy (`strategy:` in the output). The default is `none`, which expects no `CLAUDE.md`; `missing` is only reported under a configured shim strategy.
 - Run `oat instructions sync --dry-run` to preview changes.
-- Under `none`, `managed_shim` entries are `CLAUDE.md` files OAT created; `oat instructions sync` removes them.
+- Under `none`, `managed_shim` entries are `CLAUDE.md` files OAT created; `oat instructions sync` removes them, unless a `CLAUDE.md` with its own content blocks removal (see below).
 - To keep shims instead, run `oat config set instructions.claude.shims pointer` (or `symlink` / `copy`) and then `oat instructions sync`.
 - Under a shim strategy, if mismatched `CLAUDE.md` files should be overwritten, run `oat instructions sync --force`.
 - If `stray` is reported, `oat instructions sync` will adopt the Claude-only file into `AGENTS.md`, then regenerate `CLAUDE.md` under a shim strategy or remove it under `none`.
+
+## `instructions sync` removed no shims because a `CLAUDE.md` has content
+
+- Under `none`, removal is all or nothing: while any `CLAUDE.md`, `.claude/CLAUDE.md`, or `CLAUDE.local.md` has content of its own, sync removes no `CLAUDE.md` at all, reports each held-back removal as skipped, and exits `1`. The finding (`claude_md_blocks_shim_removal` under `--json`) names the files with content (`paths`) and the shims kept (`wouldRemove`); `oat instructions validate` reports the same finding.
+- Either remove each named file or move its content into an `AGENTS.md`, then rerun `oat instructions sync`; or set `instructions.claude.shims` to `pointer`, `symlink`, or `copy` to keep `CLAUDE.md` files.
+- See [Instruction Sync](../provider-sync/instruction-sync.md#all-or-nothing).
 
 ## `instructions sync` warns that a `CLAUDE.md` makes Claude Code ignore every `AGENTS.md`
 

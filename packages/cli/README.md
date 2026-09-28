@@ -2,7 +2,7 @@
 
 Open Agent Toolkit command-line interface for provider sync, docs tooling, workflow utilities, and diagnostics.
 
-The CLI also supports project-scoped instruction sync for nested `AGENTS.md` files. By default it creates no `CLAUDE.md` shims, because Claude Code reads `AGENTS.md` itself, and removes the shims OAT created earlier; pointer, symlink, and hard-copy shim strategies are opt-in through `instructions.claude.shims`, and Claude-only `CLAUDE.md` files are adopted into `AGENTS.md`.
+The CLI also supports project-scoped instruction sync for nested `AGENTS.md` files. By default it creates no `CLAUDE.md` shims, because Claude Code reads `AGENTS.md` itself, and removes the shims OAT created earlier once no `CLAUDE.md` with its own content remains; pointer, symlink, and hard-copy shim strategies are opt-in through `instructions.claude.shims`, and Claude-only `CLAUDE.md` files are adopted into `AGENTS.md`.
 
 ## Install
 

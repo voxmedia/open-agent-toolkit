@@ -15,6 +15,8 @@ import {
 } from '@config/oat-config';
 
 import type {
+  ClaudeMdBlocksShimRemovalWarning,
+  ClaudeMdHidesAgentsMdWarning,
   InstructionSyncStrategy,
   InstructionActionRecord,
   InstructionEntry,
@@ -1320,6 +1322,14 @@ export interface LeftoverClaudeFile {
   path: string;
   /** Absolute paths of every `AGENTS.md` whose symlink chain reaches `path`. */
   linkedBy: string[];
+  /**
+   * Whether the file is an exact OAT shim of its sibling AGENTS.md (pointer,
+   * sibling symlink, or identical copy), judged by `inspectManagedShim`. Any
+   * other file -- `CLAUDE.local.md`, `.claude/CLAUDE.md`, a hand-written or
+   * modified `CLAUDE.md`, one without a sibling AGENTS.md, or one that cannot
+   * be read -- has content of its own.
+   */
+  exactShim: boolean;
 }
 
 /**
@@ -1342,7 +1352,7 @@ export async function findLeftoverClaudeFiles(
   overrides: Partial<
     Pick<
       InstructionsScanDependencies,
-      'readdir' | 'lstat' | 'readlink' | 'realpath'
+      'readdir' | 'lstat' | 'readlink' | 'realpath' | 'readFileBytes'
     >
   > = {},
 ): Promise<LeftoverClaudeFile[]> {
@@ -1351,6 +1361,10 @@ export async function findLeftoverClaudeFiles(
     lstat: overrides.lstat ?? lstat,
     readlink: overrides.readlink ?? readlink,
     realpath: overrides.realpath ?? realpath,
+  };
+  const inspectionDependencies: ManagedShimInspectionDependencies = {
+    ...linkDependencies,
+    readFileBytes: overrides.readFileBytes ?? readFileBytesDefault,
   };
   const queue = [repoRoot];
   const found: string[] = [];
@@ -1397,12 +1411,138 @@ export async function findLeftoverClaudeFiles(
 
   const leftovers: LeftoverClaudeFile[] = [];
   for (const path of found.sort((left, right) => left.localeCompare(right))) {
+    // `inspectManagedShim` already refuses `CLAUDE.local.md` and anything in
+    // `.claude`, so it alone decides. A file that vanished since the walk
+    // (`absent`) holds nothing and cannot block anything.
+    const inspection = await inspectManagedShim(
+      path,
+      join(dirname(path), 'AGENTS.md'),
+      inspectionDependencies,
+    );
     leftovers.push({
       path,
       linkedBy: await findLinksThrough(path, agentsFiles, linkDependencies),
+      exactShim: inspection.kind === 'managed' || inspection.kind === 'absent',
     });
   }
   return leftovers;
+}
+
+/**
+ * Where the docs explain why any CLAUDE.md makes Claude Code ignore AGENTS.md.
+ * Absolute, because the message is read in terminals and JSON consumers that
+ * cannot resolve a repository-relative docs path.
+ */
+export const CLAUDE_CODE_AGENTS_MD_DOCS_URL =
+  'https://github.com/voxmedia/open-agent-toolkit/blob/main/apps/oat-docs/docs/provider-sync/instruction-sync.md#claude-code-and-agentsmd';
+
+/**
+ * Under strategy `none`, removal is all or nothing: the leftover files with
+ * content of their own (anything but an exact OAT shim) that hold back every
+ * CLAUDE.md removal while they exist.
+ *
+ * A stray the scan will adopt (a lone `CLAUDE.md` with no sibling AGENTS.md)
+ * never blocks: its content moves into a new AGENTS.md, so it is not left
+ * behind. Every other file counts wherever it is, including excluded and
+ * documentation trees, because Claude Code's walk does not honor OAT's
+ * exclusions. An unreadable file counts too: blocking is the safe direction.
+ */
+export function findShimRemovalBlockers(
+  entries: readonly InstructionEntry[],
+  leftovers: readonly LeftoverClaudeFile[],
+): string[] {
+  const adoptedStrays = new Set(
+    entries
+      .filter((entry) => entry.status === 'stray')
+      .map((entry) => entry.claudePath),
+  );
+  return leftovers
+    .filter((leftover) => !leftover.exactShim)
+    .map((leftover) => leftover.path)
+    .filter((path) => !adoptedStrays.has(path));
+}
+
+/** The CLAUDE.md files strategy `none` removes: managed shims and adopted strays. */
+export function listShimRemovals(
+  entries: readonly InstructionEntry[],
+): string[] {
+  return entries
+    .filter(
+      (entry) => entry.status === 'managed_shim' || entry.status === 'stray',
+    )
+    .map((entry) => entry.claudePath)
+    .sort((left, right) => left.localeCompare(right));
+}
+
+/** `a` / `a and b` / `a, b, and c`. */
+function joinList(items: readonly string[]): string {
+  if (items.length <= 2) {
+    return items.join(' and ');
+  }
+  return `${items.slice(0, -1).join(', ')}, and ${items.at(-1)}`;
+}
+
+/** The skip reason sync records for each removal the block holds back. */
+export function describeShimRemovalBlock(
+  repoRoot: string,
+  blockers: readonly string[],
+): string {
+  const paths = blockers.map((path) => toPosixPath(relative(repoRoot, path)));
+  return (
+    `kept: strategy none removes no CLAUDE.md while ${joinList(paths)} ` +
+    `${paths.length === 1 ? 'has' : 'have'} content (see warnings)`
+  );
+}
+
+/**
+ * The single finding for a blocked removal: which shims the configuration
+ * would remove, that none were removed and which files are why, why any
+ * CLAUDE.md matters, and what to do next.
+ */
+export function buildShimRemovalBlockWarning(
+  repoRoot: string,
+  blockers: readonly string[],
+  wouldRemove: readonly string[],
+  mode: InstructionsMode,
+): ClaudeMdBlocksShimRemovalWarning {
+  const paths = blockers.map((path) => toPosixPath(relative(repoRoot, path)));
+  const removals = wouldRemove.map((path) =>
+    toPosixPath(relative(repoRoot, path)),
+  );
+  const one = paths.length === 1;
+  return {
+    code: 'claude_md_blocks_shim_removal',
+    paths,
+    wouldRemove: removals,
+    message:
+      `Strategy none would remove ${removals.length} OAT-managed CLAUDE.md ` +
+      `${removals.length === 1 ? 'shim' : 'shims'} (${removals.join(', ')}), ` +
+      `but ${mode === 'apply' ? 'none were removed' : 'none will be removed'} ` +
+      `because ${joinList(paths)} ${one ? 'has' : 'have'} content that is not an OAT shim. ` +
+      'Any CLAUDE.md makes Claude Code ignore AGENTS.md ' +
+      `(${CLAUDE_CODE_AGENTS_MD_DOCS_URL}), so OAT keeps every shim until no ` +
+      'CLAUDE.md with content remains rather than leave a mix. ' +
+      `To finish, remove ${joinList(paths)} or move ${one ? 'its' : 'their'} content into an AGENTS.md ` +
+      'and rerun `oat instructions sync`, or set instructions.claude.shims to a shim strategy ' +
+      '(pointer, symlink, or copy) to keep CLAUDE.md files.',
+  };
+}
+
+/**
+ * Restate each managed shim's detail while the block holds: sync will not
+ * remove it, so "sync removes it" would be false.
+ */
+export function markBlockedShimEntries(
+  entries: readonly InstructionEntry[],
+): InstructionEntry[] {
+  return entries.map((entry) =>
+    entry.status === 'managed_shim' && entry.managedShim
+      ? {
+          ...entry,
+          detail: `${describeManagedShim(entry.managedShim)}; not removed while another CLAUDE.md has content`,
+        }
+      : entry,
+  );
 }
 
 /**
@@ -1433,8 +1573,8 @@ function leftoverScopeDirectory(relativePath: string): string {
  */
 export function buildLeftoverClaudeWarnings(
   repoRoot: string,
-  leftovers: readonly LeftoverClaudeFile[],
-): InstructionsWarning[] {
+  leftovers: readonly Pick<LeftoverClaudeFile, 'path' | 'linkedBy'>[],
+): ClaudeMdHidesAgentsMdWarning[] {
   return leftovers.map(({ path, linkedBy }) => {
     const relativePath = toPosixPath(relative(repoRoot, path));
     const scopeDirectory = leftoverScopeDirectory(relativePath);
