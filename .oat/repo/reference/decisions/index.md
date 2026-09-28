@@ -14,6 +14,7 @@
 | DR-260928-backlog-archive-rewrites       | 2026-09-28 | accepted   | Backlog archive rewrites inbound references                                                            | -       |
 | DR-260928-commit-the-phase-task-ledger   | 2026-09-28 | accepted   | Commit the phase task ledger before per-phase review dispatch                                          | -       |
 | DR-260928-defer-the-oat-tools-where      | 2026-09-28 | accepted   | Defer the oat tools where command                                                                      | -       |
+| DR-260928-exclude-project-and-repository | 2026-09-28 | accepted   | Exclude project and repository records from exit-gate freshness                                        | -       |
 | DR-260928-name-the-claude-md-shim-keys   | 2026-09-28 | accepted   | Name the CLAUDE.md shim keys under instructions.claude                                                 | -       |
 | DR-260928-persist-the-instruction-sync   | 2026-09-28 | accepted   | Persist the instruction sync strategy in project config                                                | -       |
 | DR-260928-remove-no-claude-md-shim-while | 2026-09-28 | accepted   | Remove no CLAUDE.md shim while any CLAUDE.md has content                                               | -       |

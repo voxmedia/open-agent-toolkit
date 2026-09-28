@@ -82,11 +82,30 @@ function git(cwd: string, ...args: string[]): string {
   }).trim();
 }
 
+/**
+ * The Git exclusion pathspecs the implement skill prescribes for
+ * `effective-delta-v2`, read from the skill itself so the git-level test below
+ * exercises the exact text an agent follows.
+ */
+function effectiveDeltaV2Exclusions(projectPath: string): string[] {
+  const skill = normalizeWhitespace(readImplementSkill());
+  const sentence = skill.match(
+    /Use Git's literal exclusion pathspecs ([^.]*(?:\.[^ ][^.]*)*), not globs\./,
+  );
+  if (!sentence) {
+    throw new Error('Missing effective-delta-v2 exclusion pathspecs');
+  }
+  return [...sentence[1]!.matchAll(/`(:\(exclude,literal\)[^`]+)`/g)].map(
+    (match) => match[1]!.replace('$PROJECT_PATH', projectPath),
+  );
+}
+
 function effectiveDeltaFingerprint(
   cwd: string,
   baseRef: string,
   head: string,
   stateCarrier = '.oat/project/state.md',
+  version: 'v1' | 'v2' = 'v1',
 ): string {
   const mergeBases = git(cwd, 'merge-base', '--all', baseRef, head)
     .split('\n')
@@ -107,7 +126,9 @@ function effectiveDeltaFingerprint(
       head,
       '--',
       '.',
-      `:(exclude,literal)${stateCarrier}`,
+      ...(version === 'v1'
+        ? [`:(exclude,literal)${stateCarrier}`]
+        : effectiveDeltaV2Exclusions(stateCarrier.replace(/\/state\.md$/, ''))),
     ],
     {
       cwd,
@@ -117,7 +138,7 @@ function effectiveDeltaFingerprint(
   );
 
   return createHash('sha256')
-    .update(Buffer.from('effective-delta-v1\0'))
+    .update(Buffer.from(`effective-delta-${version}\0`))
     .update(raw)
     .digest('hex');
 }
@@ -766,7 +787,10 @@ describe('post-implementation sequence contracts', () => {
     const next = normalizeWhitespace(readNextSkill());
 
     expect(skill).toContain(
-      'New generations persist `implementation_fingerprint` as `sha256:effective-delta-v1:<digest>`.',
+      'New generations persist `implementation_fingerprint` as `sha256:effective-delta-v2:<digest>`.',
+    );
+    expect(skill).toContain(
+      'Prefix the fingerprint input with the bytes `effective-delta-v2\\0`.',
     );
     expect(skill).toContain(
       'Persist the logical base ref as `implementation_base_ref`; require exactly one merge base between that ref and each compared HEAD.',
@@ -778,7 +802,19 @@ describe('post-implementation sequence contracts', () => {
       'Set `freshness_head` to `reviewed_head` and `freshness_fingerprint` to `implementation_fingerprint` when the generation starts.',
     );
     expect(skill).toContain(
-      'Exclude only the exact `$PROJECT_PATH/state.md` checkpoint carrier to avoid a self-referential digest.',
+      'Exclude the exact `$PROJECT_PATH/state.md` checkpoint carrier, which would make the digest self-referential, and every path under `.oat/projects/` and `.oat/repo/`, whose project artifacts and repository records never make the gate stale.',
+    );
+    expect(skill).toContain(
+      "Use Git's literal exclusion pathspecs `:(exclude,literal)$PROJECT_PATH/state.md`, `:(exclude,literal).oat/projects`, and `:(exclude,literal).oat/repo`, not globs.",
+    );
+    expect(skill).toContain(
+      '`.oat/templates/`, `.oat/scripts/`, `.oat/config*.json`, and `.oat/sync/` stay fingerprinted, as does every other path.',
+    );
+    expect(skill).toContain(
+      'Stored `sha256:effective-delta-v1:<digest>` values keep v1 semantics and are never reinterpreted: recompute them with the `effective-delta-v1\\0` prefix and only the exact `$PROJECT_PATH/state.md` exclusion.',
+    );
+    expect(skill).toContain(
+      'For a qualified `sha256:effective-delta-v2:<digest>` or `sha256:effective-delta-v1:<digest>` value, require the persisted `implementation_base_ref`, `freshness_head`, one current merge base, and 64-character lowercase hexadecimal implementation and freshness digests.',
     );
     expect(skill).toContain(
       'After a corroborated closeout-only transition, hash the complete current effective delta and persist the rolling freshness checkpoint.',
@@ -885,6 +921,69 @@ describe('post-implementation sequence contracts', () => {
       expect(effectiveDeltaFingerprint(cwd, 'main', 'HEAD')).not.toBe(
         closeoutFingerprint,
       );
+    } finally {
+      rmSync(cwd, { recursive: true, force: true });
+    }
+  });
+
+  it('excludes project and repository records from effective-delta-v2 only', () => {
+    const cwd = mkdtempSync(join(tmpdir(), 'oat-effective-delta-v2-'));
+    const carrier = '.oat/projects/shared/demo/state.md';
+    const v1 = (head = 'HEAD') =>
+      effectiveDeltaFingerprint(cwd, 'main', head, carrier, 'v1');
+    const v2 = (head = 'HEAD') =>
+      effectiveDeltaFingerprint(cwd, 'main', head, carrier, 'v2');
+    const commit = (path: string, content: string) => {
+      mkdirSync(join(cwd, path, '..'), { recursive: true });
+      writeFileSync(join(cwd, path), content);
+      git(cwd, 'add', path);
+      git(cwd, 'commit', '-m', `change ${path}`);
+    };
+
+    try {
+      expect(effectiveDeltaV2Exclusions('.oat/projects/shared/demo')).toEqual([
+        ':(exclude,literal).oat/projects/shared/demo/state.md',
+        ':(exclude,literal).oat/projects',
+        ':(exclude,literal).oat/repo',
+      ]);
+
+      git(cwd, 'init', '-b', 'main');
+      git(cwd, 'config', 'user.name', 'OAT Test');
+      git(cwd, 'config', 'user.email', 'oat-test@example.com');
+      writeFileSync(join(cwd, 'app.txt'), 'base\n');
+      git(cwd, 'add', '.');
+      git(cwd, 'commit', '-m', 'base');
+      git(cwd, 'checkout', '-b', 'feature');
+      commit('app.txt', 'feature\n');
+      const reviewedV1 = v1();
+      const reviewedV2 = v2();
+      expect(reviewedV2).not.toBe(reviewedV1);
+
+      // Project artifacts and repository records: v2 unchanged, v1 changes.
+      commit('.oat/projects/shared/demo/reviews/final.md', 'review\n');
+      commit('.oat/projects/shared/demo/summary.md', 'summary\n');
+      commit('.oat/repo/pjm/backlog/index.md', 'backlog\n');
+      commit('.oat/repo/reference/decisions/DR-1.md', 'decision\n');
+      commit(carrier, 'checkpoint\n');
+      expect(v2()).toBe(reviewedV2);
+      expect(v1()).not.toBe(reviewedV1);
+
+      // Every other .oat path stays fingerprinted under v2, including a
+      // sibling whose name merely starts with an excluded directory's name.
+      let previous = v2();
+      for (const path of [
+        '.oat/templates/state.md',
+        '.oat/scripts/helper.sh',
+        '.oat/config.json',
+        '.oat/sync/manifest.json',
+        '.oat/projects-archive/notes.md',
+        '.oat/repository.md',
+      ]) {
+        commit(path, `${path}\n`);
+        const current = v2();
+        expect(current, path).not.toBe(previous);
+        previous = current;
+      }
     } finally {
       rmSync(cwd, { recursive: true, force: true });
     }
