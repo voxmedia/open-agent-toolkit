@@ -1,6 +1,6 @@
 {
   "schemaVersion": "explainer-kit.fact-base/v1",
-  "generatedAt": "2026-09-28T17:14:56.419Z",
+  "generatedAt": "2026-09-28T17:27:45.239Z",
   "mode": "supplied",
   "freshnessPolicy": "live-wins",
   "sources": [
@@ -8,13 +8,13 @@
       "id": "source-f13dd30d608d",
       "kind": "file",
       "locator": "summary.md",
-      "hash": "sha256:1f0f7c09ad2ef1e903f65d2e29b2648ca33e58ec1dc83f35b29aca04ab720be9"
+      "hash": "sha256:9294455de6e20ec2d5f59e7c84d1e0385c21bd05459b800909f43bc741099014"
     },
     {
       "id": "source-9f74c1a0c743",
       "kind": "file",
       "locator": "implementation.md",
-      "hash": "sha256:751c5003bf40c2855b11ee952d313d79a6fecc17433605bc17797bcfa6b8e7b0"
+      "hash": "sha256:b2e331d287e43fe50183f8050b2065e2f0314f5536b5ae527b54bc69b62d7815"
     },
     {
       "id": "source-780bd28eb0ce",
@@ -2369,8 +2369,8 @@
       ]
     },
     {
-      "id": "claim-a95b941a0da98710",
-      "text": "- **project-recap:** generated — `explainers/backlog-wave-2-recap/` (run",
+      "id": "claim-a554b676e8e05cbc",
+      "text": "- **project-recap:** rebuilt after Revision 1 at completion; the run ID,",
       "status": "confirmed",
       "citations": [
         {
@@ -2380,8 +2380,8 @@
       ]
     },
     {
-      "id": "claim-89ea65eeb08848f7",
-      "text": "`def695e7-4da2-4fb9-97ff-9a2f10df0294`, built before Revision 1; closeout",
+      "id": "claim-30123df70920ddd8",
+      "text": "outcome, and QA verdict are recorded in the exported recap's",
       "status": "confirmed",
       "citations": [
         {
@@ -2391,8 +2391,8 @@
       ]
     },
     {
-      "id": "claim-0af7fe99d2cd21f0",
-      "text": "rebuilds it from this summary)",
+      "id": "claim-08238e4ad99eaee7",
+      "text": "`manifest.json` and `qa/result.json` (this section names no run, so the",
       "status": "confirmed",
       "citations": [
         {
@@ -2402,19 +2402,19 @@
       ]
     },
     {
-      "id": "claim-c376c2cc2d10d621",
-      "text": "- `BL-260928-serialize-concurrent-agents-md` — concurrent guidance appends can",
+      "id": "claim-c7a870edc14129ab",
+      "text": "recap's own inputs stay unchanged after it is built).",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:258-258"
+          "locator": "summary.md:255-255"
         }
       ]
     },
     {
-      "id": "claim-f9740fed25d898d4",
-      "text": "duplicate a managed block (p01 gate M1).",
+      "id": "claim-8c6e36b94a70bbff",
+      "text": "- `BL-260928-serialize-concurrent-agents-md` — concurrent guidance appends can",
       "status": "confirmed",
       "citations": [
         {
@@ -2424,8 +2424,8 @@
       ]
     },
     {
-      "id": "claim-9d292e4145a4996b",
-      "text": "- `BL-260928-keep-instructions-sync-force` — with a shim strategy,",
+      "id": "claim-0036d46b610efd69",
+      "text": "duplicate a managed block (p01 gate M1).",
       "status": "confirmed",
       "citations": [
         {
@@ -2435,8 +2435,8 @@
       ]
     },
     {
-      "id": "claim-3b54cc34f7ceaaa5",
-      "text": "`--strategy pointer --force` can overwrite the only `CLAUDE.md` in the",
+      "id": "claim-a963800631896a08",
+      "text": "- `BL-260928-keep-instructions-sync-force` — with a shim strategy,",
       "status": "confirmed",
       "citations": [
         {
@@ -2446,8 +2446,8 @@
       ]
     },
     {
-      "id": "claim-8bc100b98409dc00",
-      "text": "`AGENTS.md -> CLAUDE.md` layout (pre-existing).",
+      "id": "claim-7e886b26afde8f38",
+      "text": "`--strategy pointer --force` can overwrite the only `CLAUDE.md` in the",
       "status": "confirmed",
       "citations": [
         {
@@ -2457,8 +2457,8 @@
       ]
     },
     {
-      "id": "claim-c2312f46e84ba626",
-      "text": "- `BL-260928-route-quick-mode-discovery` — the control-plane recommender and",
+      "id": "claim-05e92748bd100296",
+      "text": "`AGENTS.md -> CLAUDE.md` layout (pre-existing).",
       "status": "confirmed",
       "citations": [
         {
@@ -2468,8 +2468,8 @@
       ]
     },
     {
-      "id": "claim-b766a93ccf58c285",
-      "text": "dashboard still route quick-mode discovery to `oat-project-plan` (p03 L1).",
+      "id": "claim-2bc00f4bf1ec6ff2",
+      "text": "- `BL-260928-route-quick-mode-discovery` — the control-plane recommender and",
       "status": "confirmed",
       "citations": [
         {
@@ -2479,8 +2479,8 @@
       ]
     },
     {
-      "id": "claim-12868f5c081d3ee5",
-      "text": "- `BL-260928-settle-codex-read-authority` — rescoped in Revision 1 to a live",
+      "id": "claim-2267592148ca8661",
+      "text": "dashboard still route quick-mode discovery to `oat-project-plan` (p03 L1).",
       "status": "confirmed",
       "citations": [
         {
@@ -2490,8 +2490,8 @@
       ]
     },
     {
-      "id": "claim-c917174ade7d62ad",
-      "text": "check that `/recon` launches Codex worker lanes as `contract-enforced` on the",
+      "id": "claim-91a311910f6bec94",
+      "text": "- `BL-260928-settle-codex-read-authority` — rescoped in Revision 1 to a live",
       "status": "confirmed",
       "citations": [
         {
@@ -2501,8 +2501,8 @@
       ]
     },
     {
-      "id": "claim-c1f5cb100fbbcf64",
-      "text": "released CLI.",
+      "id": "claim-f67cf8d9363bbb2f",
+      "text": "check that `/recon` launches Codex worker lanes as `contract-enforced` on the",
       "status": "confirmed",
       "citations": [
         {
@@ -2512,8 +2512,8 @@
       ]
     },
     {
-      "id": "claim-48b4efbe2c163a3a",
-      "text": "- `BL-260928-harden-the-backlog-reference` — atomic-replace edge cases:",
+      "id": "claim-65ccacb648362bd7",
+      "text": "released CLI.",
       "status": "confirmed",
       "citations": [
         {
@@ -2523,8 +2523,8 @@
       ]
     },
     {
-      "id": "claim-845d833886259725",
-      "text": "ownership change, same-inode concurrent edit, long temporary names.",
+      "id": "claim-cfcab63f4b3acc1f",
+      "text": "- `BL-260928-harden-the-backlog-reference` — atomic-replace edge cases:",
       "status": "confirmed",
       "citations": [
         {
@@ -2534,8 +2534,8 @@
       ]
     },
     {
-      "id": "claim-f48562a53fefcedf",
-      "text": "- `BL-260829-order-phase-bookkeeping-before` stays open for live observation.",
+      "id": "claim-59156d7ace98742d",
+      "text": "ownership change, same-inode concurrent edit, long temporary names.",
       "status": "confirmed",
       "citations": [
         {
@@ -2545,8 +2545,8 @@
       ]
     },
     {
-      "id": "claim-8ddec9a350b75c46",
-      "text": "- Not filed: the pr-final ledger guard parses a prose line that starts with `|`",
+      "id": "claim-a5b8e591927685f7",
+      "text": "- `BL-260829-order-phase-bookkeeping-before` stays open for live observation.",
       "status": "confirmed",
       "citations": [
         {
@@ -2556,8 +2556,8 @@
       ]
     },
     {
-      "id": "claim-12f3458f5c165aa5",
-      "text": "under `## Reviews` as a malformed row (PRFINAL-05 false positive).",
+      "id": "claim-59782163847d6f6f",
+      "text": "- Not filed: the pr-final ledger guard parses a prose line that starts with `|`",
       "status": "confirmed",
       "citations": [
         {
@@ -2567,470 +2567,481 @@
       ]
     },
     {
-      "id": "claim-5e9e0131f75f1e16",
+      "id": "claim-cec889499fe6a1c5",
+      "text": "under `## Reviews` as a malformed row (PRFINAL-05 false positive).",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-f13dd30d608d",
+          "locator": "summary.md:273-273"
+        }
+      ]
+    },
+    {
+      "id": "claim-5ddc56a90b6cafe4",
       "text": "2026-09-27 · structural · oat gate review · plan",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:276-276"
+          "locator": "summary.md:277-277"
         }
       ]
     },
     {
-      "id": "claim-516fbbae0b3a7794",
+      "id": "claim-ba06ecab56e59f7f",
       "text": "target=codex-6-sol-xhigh threshold=high findings=critical:0,high:2,medium:1,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-2/reviews/artifact-plan-review-2026-09-27T150947Z.md run=8f69f414-ff48-4fc6-b22a-64dca2027e62",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:278-278"
+          "locator": "summary.md:279-279"
         }
       ]
     },
     {
-      "id": "claim-e28c696eb21dc452",
+      "id": "claim-846940dacf4c78e2",
       "text": "2026-09-27 · structural · oat gate review · plan",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:280-280"
+          "locator": "summary.md:281-281"
         }
       ]
     },
     {
-      "id": "claim-a441c570969b481e",
+      "id": "claim-7a4dd35087bb7d6d",
       "text": "target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:0,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-2/reviews/artifact-plan-review-2026-09-27T151608Z.md run=685e7775-8f4f-4c4e-b08d-bd172ad8f3d9",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:282-282"
+          "locator": "summary.md:283-283"
         }
       ]
     },
     {
-      "id": "claim-21a040a7eccba5d8",
+      "id": "claim-6bcbc7a18e1c5150",
       "text": "2026-09-28 · structural · oat gate review · p01",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:284-284"
+          "locator": "summary.md:285-285"
         }
       ]
     },
     {
-      "id": "claim-a7e7c664d90cec7b",
+      "id": "claim-5f1552ef427954dd",
       "text": "target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:1,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-2/reviews/p01-review-2026-09-28T001719Z.md run=6da2a8cf-79c3-4fbd-96a2-01d7485a9e93",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:286-286"
+          "locator": "summary.md:287-287"
         }
       ]
     },
     {
-      "id": "claim-a4a3844f4eb21201",
+      "id": "claim-8576bf7d640c5149",
       "text": "2026-09-28 · structural · oat-project-implement · p01",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:288-288"
+          "locator": "summary.md:289-289"
         }
       ]
     },
     {
-      "id": "claim-cd6142dd6c4bb9b8",
+      "id": "claim-39caef812d684c21",
       "text": "bw2-p01-outcome p01 pass after 2 fix rounds (p01-t07, p01-t08); gate codex-6-sol-xhigh ok, 1 Medium deferred to final; see implementation.md Orchestration Runs",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:290-290"
+          "locator": "summary.md:291-291"
         }
       ]
     },
     {
-      "id": "claim-b3ee4f6a8afbe84d",
+      "id": "claim-21e0c57a4d28074f",
       "text": "2026-09-28 · structural · oat gate review · p02",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:292-292"
+          "locator": "summary.md:293-293"
         }
       ]
     },
     {
-      "id": "claim-ffe178cd3db66ebc",
+      "id": "claim-abbb31920b21c1a9",
       "text": "target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:1 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-2/reviews/p02-review-2026-09-28T013003Z.md run=c8b28cc4-1645-498f-9290-c5c34552a079",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:294-294"
+          "locator": "summary.md:295-295"
         }
       ]
     },
     {
-      "id": "claim-059ed58847a55bb1",
+      "id": "claim-9583b1948e81d454",
       "text": "2026-09-28 · structural · oat-project-implement · p02",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:296-296"
+          "locator": "summary.md:297-297"
         }
       ]
     },
     {
-      "id": "claim-2e4bc1b49a0e50f9",
+      "id": "claim-180413f11a7e4962",
       "text": "bw2-p02-outcome p02 pass after 1 recovery and 2 fix rounds (C1 symlink data-loss fixed); gate codex-6-sol-xhigh ok, 1 Low addressed now; see implementation.md",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:298-298"
+          "locator": "summary.md:299-299"
         }
       ]
     },
     {
-      "id": "claim-2ca6da0137deb57f",
+      "id": "claim-0b1b69db280b02b8",
       "text": "2026-09-28 · structural · oat gate review · p03",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:300-300"
+          "locator": "summary.md:301-301"
         }
       ]
     },
     {
-      "id": "claim-079a5b596ac3df23",
+      "id": "claim-f9209a8eb8ac20ec",
       "text": "target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:2,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-2/reviews/p03-review-2026-09-28T015614Z.md run=ab142cc6-10a3-44bb-b645-46ebd5561db5",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:302-302"
+          "locator": "summary.md:303-303"
         }
       ]
     },
     {
-      "id": "claim-9b4a25125dd5fee2",
+      "id": "claim-0e35c44758872d41",
       "text": "2026-09-28 · structural · oat-project-implement · p03",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:304-304"
+          "locator": "summary.md:305-305"
         }
       ]
     },
     {
-      "id": "claim-91142eddbc419ba3",
+      "id": "claim-17d821d3172e3478",
       "text": "bw2-p03-outcome p03 pass after 1 recovery, 1 review fix round, 1 gate sweep fix; gate codex-6-sol-xhigh ok; see implementation.md",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:306-306"
+          "locator": "summary.md:307-307"
         }
       ]
     },
     {
-      "id": "claim-0cfe976d2fb49af6",
+      "id": "claim-01147dbdf37c0fb1",
       "text": "2026-09-28 · structural · oat gate review · p04",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:308-308"
+          "locator": "summary.md:309-309"
         }
       ]
     },
     {
-      "id": "claim-eeeef180a6541c93",
+      "id": "claim-306a127a96ce4696",
       "text": "target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:1,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-2/reviews/p04-review-2026-09-28T022315Z.md run=43f7cea9-d98d-4f4b-90e7-89537f0df389",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:310-310"
+          "locator": "summary.md:311-311"
         }
       ]
     },
     {
-      "id": "claim-bf7ba728398abefd",
+      "id": "claim-1b4bdb2c549fab5c",
       "text": "2026-09-28 · structural · oat gate review · p04",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:312-312"
+          "locator": "summary.md:313-313"
         }
       ]
     },
     {
-      "id": "claim-d51a3ae6772f9b4d",
+      "id": "claim-c83495b776dca859",
       "text": "target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:0,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-2/reviews/p04-review-2026-09-28T024124Z.md run=c9813e05-1215-4615-abcb-bef0fdfbf6d0",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:314-314"
+          "locator": "summary.md:315-315"
         }
       ]
     },
     {
-      "id": "claim-46e9eb49aafc39f5",
+      "id": "claim-954f0221026d8888",
       "text": "2026-09-28 · structural · oat-project-implement · p04",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:316-316"
+          "locator": "summary.md:317-317"
         }
       ]
     },
     {
-      "id": "claim-eacb1128e6240619",
+      "id": "claim-19740d4f7951d753",
       "text": "bw2-p04-stop-1 p04 gate attempt 2 blocked (1 High: read-only tool authority); retry limit exhausted; stopped for operator direction",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:318-318"
+          "locator": "summary.md:319-319"
         }
       ]
     },
     {
-      "id": "claim-e5702800421b10ba",
+      "id": "claim-41f08a51ceae576a",
       "text": "2026-09-28 · structural · oat-project-implement · p04",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:320-320"
+          "locator": "summary.md:321-321"
         }
       ]
     },
     {
-      "id": "claim-fa9ea59f83b90d78",
+      "id": "claim-a5a9bab8df4f48f0",
       "text": "bw2-p04-outcome p04 complete under operator override after 2 blocked gate attempts and 5 fix rounds; follow-ups filed; see implementation.md",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:322-322"
+          "locator": "summary.md:323-323"
         }
       ]
     },
     {
-      "id": "claim-e564b13cebf60ec0",
+      "id": "claim-6b09ed24e4eccdd4",
       "text": "2026-09-28 · structural · oat gate review · p05",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:324-324"
+          "locator": "summary.md:325-325"
         }
       ]
     },
     {
-      "id": "claim-92e5223f2e34fc2c",
+      "id": "claim-653810a0825e536b",
       "text": "target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:2,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-2/reviews/p05-review-2026-09-28T104612Z.md run=9dc0deb0-d3d9-4a35-9b5a-8c111634a460",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:326-326"
+          "locator": "summary.md:327-327"
         }
       ]
     },
     {
-      "id": "claim-bc6a13b8cd3b7b84",
+      "id": "claim-a66ef2ddfa15edf0",
       "text": "2026-09-28 · structural · oat gate review · p05",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:328-328"
+          "locator": "summary.md:329-329"
         }
       ]
     },
     {
-      "id": "claim-420d61b242980287",
+      "id": "claim-8bed91947c330373",
       "text": "target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:1,low:1 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-2/reviews/p05-review-2026-09-28T111050Z.md run=138c0018-3da4-473a-ab58-e2a99ba608ab",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:330-330"
+          "locator": "summary.md:331-331"
         }
       ]
     },
     {
-      "id": "claim-bdc6a83f06e73ad6",
+      "id": "claim-125a19409ec05772",
       "text": "2026-09-28 · structural · oat-project-implement · p05",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:332-332"
+          "locator": "summary.md:333-333"
         }
       ]
     },
     {
-      "id": "claim-d6dde75af96367d2",
+      "id": "claim-1743acbd171c84d4",
       "text": "bw2-p05-outcome p05 pass after 1 blocked gate attempt, 3 review-fix rounds, 1 sweep fix; all 38 tasks complete",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:334-334"
+          "locator": "summary.md:335-335"
         }
       ]
     },
     {
-      "id": "claim-18f97f2ac49dafae",
+      "id": "claim-e037f8578fa3f0c2",
       "text": "2026-09-28 · structural · oat gate review · final",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:336-336"
+          "locator": "summary.md:337-337"
         }
       ]
     },
     {
-      "id": "claim-cf3656a0e7c96dff",
+      "id": "claim-13eecc01475a73e4",
       "text": "target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:0,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-2/reviews/final-review-2026-09-28T113721Z.md run=0415d270-2faa-4559-901c-65430d5c405d",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:338-338"
+          "locator": "summary.md:339-339"
         }
       ]
     },
     {
-      "id": "claim-c29f412e9bd83a5c",
+      "id": "claim-59f1f9523ddd8e77",
       "text": "2026-09-28 · structural · oat gate review · final",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:340-340"
+          "locator": "summary.md:341-341"
         }
       ]
     },
     {
-      "id": "claim-1e1b7fd4fd5401dd",
+      "id": "claim-d1ad9c15d2826b95",
       "text": "target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-2/reviews/final-review-2026-09-28T114805Z.md run=0c5dbb3e-18a9-4059-a857-ca4209e3b9e4",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:342-342"
+          "locator": "summary.md:343-343"
         }
       ]
     },
     {
-      "id": "claim-8982e1faa47e4898",
+      "id": "claim-10fe4cab533d7bdb",
       "text": "2026-09-28 · structural · oat gate review · p-rev1",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:344-344"
+          "locator": "summary.md:345-345"
         }
       ]
     },
     {
-      "id": "claim-7b5263683caca0fa",
+      "id": "claim-206eecef247e6dbf",
       "text": "target=codex-6-sol-xhigh threshold=high exit=1 status=review_failed run=b282ca69-45c4-4d01-9b68-9b8e1a71d833",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:346-346"
+          "locator": "summary.md:347-347"
         }
       ]
     },
     {
-      "id": "claim-9c9e66535d6bdc5f",
+      "id": "claim-d7e147c0ff6f7a32",
       "text": "2026-09-28 · structural · oat gate review · p-rev1",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:348-348"
+          "locator": "summary.md:349-349"
         }
       ]
     },
     {
-      "id": "claim-7e24fcfbbe5fed18",
+      "id": "claim-b3b05dcd6a988626",
       "text": "target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:1 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-2/reviews/p-rev1-review-2026-09-28T162038Z.md run=22b3f5cf-b81d-4d85-bc8d-766a6cb611e6",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:350-350"
+          "locator": "summary.md:351-351"
         }
       ]
     },
     {
-      "id": "claim-7d9e48eefcd3999d",
+      "id": "claim-8d5a212309b7604a",
       "text": "2026-09-28 · structural · oat gate review · final",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:352-352"
+          "locator": "summary.md:353-353"
         }
       ]
     },
     {
-      "id": "claim-7019d2b402e8d0a0",
+      "id": "claim-925ecff271bc2753",
       "text": "target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:2,low:2 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-2/reviews/final-review-2026-09-28T164247Z.md run=5c3729d3-0488-4ae1-84c5-fd7b86e49418",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:354-354"
+          "locator": "summary.md:355-355"
         }
       ]
     },
     {
-      "id": "claim-6b1456b1c7c5e304",
+      "id": "claim-0df0ca9de35e6a83",
       "text": "2026-09-28 · structural · oat gate review · final",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:356-356"
+          "locator": "summary.md:357-357"
         }
       ]
     },
     {
-      "id": "claim-7fe1e018cc34bf39",
+      "id": "claim-2a8ee457067f3856",
       "text": "target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:2,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-2/reviews/final-review-2026-09-28T165830Z.md run=d34bae3b-fe9f-4259-b98b-18a6a4e91b5b",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:358-358"
+          "locator": "summary.md:359-359"
         }
       ]
     },
     {
-      "id": "claim-1f0ae3841dd677df",
-      "text": "oat_status: in_progress",
+      "id": "claim-1e9507600a5c0401",
+      "text": "oat_status: complete",
       "status": "confirmed",
       "citations": [
         {
@@ -8738,8 +8749,30 @@
       ]
     },
     {
-      "id": "claim-63e60a2147cf12bb",
-      "text": "- Title names the removal and the key rename with a breaking marker, for",
+      "id": "claim-e8321dd822dafb98",
+      "text": "- Revision 1 closeout sequence (configured `[summary, document, pr]`,",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:841-841"
+        }
+      ]
+    },
+    {
+      "id": "claim-6915d3e33d7e1113",
+      "text": "post-approval `[]`): summary `80fc9a4f4` (full regeneration), document",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:842-842"
+        }
+      ]
+    },
+    {
+      "id": "claim-a62c0ed72437eed2",
+      "text": "`564c0b8f3`, PR #332 title and body refreshed in place (state `316f53e55`),",
       "status": "confirmed",
       "citations": [
         {
@@ -8749,8 +8782,8 @@
       ]
     },
     {
-      "id": "claim-1df35dbb2ee26a45",
-      "text": "example",
+      "id": "claim-f7142d5323936469",
+      "text": "project recap `built` (`cc232ad8c`, run",
       "status": "confirmed",
       "citations": [
         {
@@ -8760,8 +8793,8 @@
       ]
     },
     {
-      "id": "claim-bc12dee5595219ad",
-      "text": "`feat!: stop creating CLAUDE.md shims by default and rename shim config to instructions.claude.* (wave 2, lockstep 0.3.9)`;",
+      "id": "claim-b1b3fd92415fb469",
+      "text": "`d9a93b10-dde6-4ee0-b111-28e01c32c837`, terminal-outcome check ok). Each",
       "status": "confirmed",
       "citations": [
         {
@@ -8771,8 +8804,8 @@
       ]
     },
     {
-      "id": "claim-9da4d2176241a253",
-      "text": "GitHub release notes list PR titles only.",
+      "id": "claim-42c9fd96215fa57e",
+      "text": "step was followed by a state-only freshness checkpoint; the exit gate",
       "status": "confirmed",
       "citations": [
         {
@@ -8782,8 +8815,8 @@
       ]
     },
     {
-      "id": "claim-3c9e6f34ea0add6d",
-      "text": "- Body opens with a **Behavior change** callout: `oat instructions sync` no",
+      "id": "claim-fb25d4ffc761bc57",
+      "text": "stayed `allowed/passed`.",
       "status": "confirmed",
       "citations": [
         {
@@ -8793,8 +8826,8 @@
       ]
     },
     {
-      "id": "claim-265d1fed26453eb0",
-      "text": "longer creates `CLAUDE.md` shims by default and removes OAT-managed shims",
+      "id": "claim-595a721d92f4c8c4",
+      "text": "- Gate `IMPLEMENT-16` (Revision 1): final HiLL approval auto-approved under",
       "status": "confirmed",
       "citations": [
         {
@@ -8804,8 +8837,8 @@
       ]
     },
     {
-      "id": "claim-4914b500f434d16e",
-      "text": "(exact `@AGENTS.md` pointer, sibling symlink, or identical copy) on its next",
+      "id": "claim-85eb2faab77c1004",
+      "text": "the autonomy contract (`approval_source: oat-autonomous`) after the passing",
       "status": "confirmed",
       "citations": [
         {
@@ -8815,8 +8848,8 @@
       ]
     },
     {
-      "id": "claim-988dfba1707a021f",
-      "text": "run. Removal is all or nothing: while any `CLAUDE.md`, `CLAUDE.local.md`, or",
+      "id": "claim-494f302444cf4dfd",
+      "text": "final review (`final-review-2026-09-28T165830Z.md`, exit gate generation 2",
       "status": "confirmed",
       "citations": [
         {
@@ -8826,8 +8859,8 @@
       ]
     },
     {
-      "id": "claim-f96c7f988f21647f",
-      "text": "`.claude/CLAUDE.md` with its own content exists, sync removes no shim and",
+      "id": "claim-75840b318487edb6",
+      "text": "run `d34bae3b-fe9f-4259-b98b-18a6a4e91b5b`) and all pre-approval steps. No",
       "status": "confirmed",
       "citations": [
         {
@@ -8837,8 +8870,8 @@
       ]
     },
     {
-      "id": "claim-16470325e4789ef2",
-      "text": "`sync`/`validate` exit 1, naming the file, the shims it would remove, a docs",
+      "id": "claim-939ee873804ab31f",
+      "text": "post-approval steps. Implementation complete; the project stays `pr_open`.",
       "status": "confirmed",
       "citations": [
         {
@@ -8848,41 +8881,8 @@
       ]
     },
     {
-      "id": "claim-965f7ae4125b50a8",
-      "text": "link, and the fixes (move the content into `AGENTS.md` and remove the file,",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:853-853"
-        }
-      ]
-    },
-    {
-      "id": "claim-9cf191db01bf4f30",
-      "text": "or set `instructions.claude.shims`). A lone `CLAUDE.md` with no `AGENTS.md`",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:854-854"
-        }
-      ]
-    },
-    {
-      "id": "claim-9aa10d5b417ccec0",
-      "text": "is adopted: its content moves into a new `AGENTS.md` and the `CLAUDE.md` is",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:855-855"
-        }
-      ]
-    },
-    {
-      "id": "claim-fbff67a2416bd9bf",
-      "text": "removed (unless an `AGENTS.md` elsewhere links to it). After upgrading,",
+      "id": "claim-6cc8aecea716b0e3",
+      "text": "- Title names the removal and the key rename with a breaking marker, for",
       "status": "confirmed",
       "citations": [
         {
@@ -8892,8 +8892,8 @@
       ]
     },
     {
-      "id": "claim-65469e221239c1f8",
-      "text": "`oat instructions validate` exits 1 in a repository that still has shims",
+      "id": "claim-73e5372a8b513daa",
+      "text": "example",
       "status": "confirmed",
       "citations": [
         {
@@ -8903,8 +8903,8 @@
       ]
     },
     {
-      "id": "claim-2936436f55d51bb9",
-      "text": "from the old default until `oat instructions sync` runs, so CI that runs",
+      "id": "claim-f5c41b281fe0ca75",
+      "text": "`feat!: stop creating CLAUDE.md shims by default and rename shim config to instructions.claude.* (wave 2, lockstep 0.3.9)`;",
       "status": "confirmed",
       "citations": [
         {
@@ -8914,8 +8914,8 @@
       ]
     },
     {
-      "id": "claim-8728ffd420085226",
-      "text": "validate goes red until then. Opt back in with",
+      "id": "claim-078f6e7b43362ebe",
+      "text": "GitHub release notes list PR titles only.",
       "status": "confirmed",
       "citations": [
         {
@@ -8925,8 +8925,8 @@
       ]
     },
     {
-      "id": "claim-a24b7a5d051a1324",
-      "text": "`oat config set instructions.claude.shims pointer` and rerun",
+      "id": "claim-dc5f0b612bdb73a8",
+      "text": "- Body opens with a **Behavior change** callout: `oat instructions sync` no",
       "status": "confirmed",
       "citations": [
         {
@@ -8936,8 +8936,8 @@
       ]
     },
     {
-      "id": "claim-8b4453aa10be182f",
-      "text": "`oat instructions sync`.",
+      "id": "claim-0c4ec9a002cb0262",
+      "text": "longer creates `CLAUDE.md` shims by default and removes OAT-managed shims",
       "status": "confirmed",
       "citations": [
         {
@@ -8947,8 +8947,8 @@
       ]
     },
     {
-      "id": "claim-59f4aeefd4dec1f5",
-      "text": "- Body calls out the rename: `documentation.instructionSyncStrategy` and",
+      "id": "claim-16b4a40f600dc50c",
+      "text": "(exact `@AGENTS.md` pointer, sibling symlink, or identical copy) on its next",
       "status": "confirmed",
       "citations": [
         {
@@ -8958,8 +8958,8 @@
       ]
     },
     {
-      "id": "claim-9d37978898a66c16",
-      "text": "`documentation.instructionPointerExcludes` become",
+      "id": "claim-72369da9c1830a34",
+      "text": "run. Removal is all or nothing: while any `CLAUDE.md`, `CLAUDE.local.md`, or",
       "status": "confirmed",
       "citations": [
         {
@@ -8969,8 +8969,8 @@
       ]
     },
     {
-      "id": "claim-ce7c76d59c7d9b15",
-      "text": "`instructions.claude.shims` and `instructions.claude.excludes`, with no",
+      "id": "claim-9eda2b17d9aaec49",
+      "text": "`.claude/CLAUDE.md` with its own content exists, sync removes no shim and",
       "status": "confirmed",
       "citations": [
         {
@@ -8980,8 +8980,8 @@
       ]
     },
     {
-      "id": "claim-907eaafead2838a8",
-      "text": "compatibility read; the old keys are ignored and are dropped on the next",
+      "id": "claim-7617dd671e16c16f",
+      "text": "`sync`/`validate` exit 1, naming the file, the shims it would remove, a docs",
       "status": "confirmed",
       "citations": [
         {
@@ -8991,8 +8991,8 @@
       ]
     },
     {
-      "id": "claim-ac5c04046600352f",
-      "text": "`oat config set`. Upgrade notice: a repository that set",
+      "id": "claim-263c475c156e8f0f",
+      "text": "link, and the fixes (move the content into `AGENTS.md` and remove the file,",
       "status": "confirmed",
       "citations": [
         {
@@ -9002,8 +9002,8 @@
       ]
     },
     {
-      "id": "claim-0f695904797bd044",
-      "text": "`documentation.instructionPointerExcludes` must re-set the list as",
+      "id": "claim-ade07a45c9c8bb57",
+      "text": "or set `instructions.claude.shims`). A lone `CLAUDE.md` with no `AGENTS.md`",
       "status": "confirmed",
       "citations": [
         {
@@ -9013,8 +9013,8 @@
       ]
     },
     {
-      "id": "claim-35af8ee14393e28b",
-      "text": "`instructions.claude.excludes` before its first sync; until then sync scans",
+      "id": "claim-7e25f258ae0666f6",
+      "text": "is adopted: its content moves into a new `AGENTS.md` and the `CLAUDE.md` is",
       "status": "confirmed",
       "citations": [
         {
@@ -9024,8 +9024,8 @@
       ]
     },
     {
-      "id": "claim-9937bf540d548374",
-      "text": "the formerly excluded directories and adopts and removes a lone `CLAUDE.md`",
+      "id": "claim-e2bab1b206acebb6",
+      "text": "removed (unless an `AGENTS.md` elsewhere links to it). After upgrading,",
       "status": "confirmed",
       "citations": [
         {
@@ -9035,8 +9035,8 @@
       ]
     },
     {
-      "id": "claim-3a8e0f1604eb30b3",
-      "text": "there.",
+      "id": "claim-bdb7e501ef35427f",
+      "text": "`oat instructions validate` exits 1 in a repository that still has shims",
       "status": "confirmed",
       "citations": [
         {
@@ -9046,8 +9046,8 @@
       ]
     },
     {
-      "id": "claim-4b941e43c829c9ae",
-      "text": "- Body also lists: append-only AGENTS.md guidance, `--project-guidance`",
+      "id": "claim-dc6593613f1e6ea5",
+      "text": "from the old default until `oat instructions sync` runs, so CI that runs",
       "status": "confirmed",
       "citations": [
         {
@@ -9057,8 +9057,8 @@
       ]
     },
     {
-      "id": "claim-90b91317a90fc968",
-      "text": "honored or rejected everywhere, `oat tools guidance`, backlog archive link",
+      "id": "claim-022b9226131e8374",
+      "text": "validate goes red until then. Opt back in with",
       "status": "confirmed",
       "citations": [
         {
@@ -9068,8 +9068,8 @@
       ]
     },
     {
-      "id": "claim-633d99f98240e5e5",
-      "text": "rewriting, `oat-reviewer` no longer launching `recon-worker` (recon skill",
+      "id": "claim-eac7a74ee3312825",
+      "text": "`oat config set instructions.claude.shims pointer` and rerun",
       "status": "confirmed",
       "citations": [
         {
@@ -9079,8 +9079,8 @@
       ]
     },
     {
-      "id": "claim-820de49be3528a5b",
-      "text": "unchanged from `main`), `effective-delta-v2` exit-gate freshness,",
+      "id": "claim-a23af16267309243",
+      "text": "`oat instructions sync`.",
       "status": "confirmed",
       "citations": [
         {
@@ -9090,8 +9090,8 @@
       ]
     },
     {
-      "id": "claim-1d879abb5f4598af",
-      "text": "control-plane `check`.",
+      "id": "claim-87a0d5b85c733f26",
+      "text": "- Body calls out the rename: `documentation.instructionSyncStrategy` and",
       "status": "confirmed",
       "citations": [
         {
@@ -9101,8 +9101,41 @@
       ]
     },
     {
-      "id": "claim-dbe620df3d91f75e",
-      "text": "**Date:** 2026-09-28",
+      "id": "claim-eac4a132ea690e2c",
+      "text": "`documentation.instructionPointerExcludes` become",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:876-876"
+        }
+      ]
+    },
+    {
+      "id": "claim-e4d8e04622a041a4",
+      "text": "`instructions.claude.shims` and `instructions.claude.excludes`, with no",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:877-877"
+        }
+      ]
+    },
+    {
+      "id": "claim-65c7f97ae87300a1",
+      "text": "compatibility read; the old keys are ignored and are dropped on the next",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:878-878"
+        }
+      ]
+    },
+    {
+      "id": "claim-0fa670bcb4680420",
+      "text": "`oat config set`. Upgrade notice: a repository that set",
       "status": "confirmed",
       "citations": [
         {
@@ -9112,8 +9145,8 @@
       ]
     },
     {
-      "id": "claim-7688470b814f1a07",
-      "text": "**Source:** inline conversation (operator, after PR #332 opened)",
+      "id": "claim-34390353440036d7",
+      "text": "`documentation.instructionPointerExcludes` must re-set the list as",
       "status": "confirmed",
       "citations": [
         {
@@ -9123,8 +9156,19 @@
       ]
     },
     {
-      "id": "claim-fb20e15958f6ae2d",
-      "text": "**Changes requested:**",
+      "id": "claim-696e0c659ff36883",
+      "text": "`instructions.claude.excludes` before its first sync; until then sync scans",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:881-881"
+        }
+      ]
+    },
+    {
+      "id": "claim-e0c1750a679e3063",
+      "text": "the formerly excluded directories and adopts and removes a lone `CLAUDE.md`",
       "status": "confirmed",
       "citations": [
         {
@@ -9134,8 +9178,19 @@
       ]
     },
     {
-      "id": "claim-64596f6dc4f4430d",
-      "text": "- Clean-rename the shim keys: `instructions.claude.shims` and",
+      "id": "claim-edc8d4b73ceb933d",
+      "text": "there.",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:883-883"
+        }
+      ]
+    },
+    {
+      "id": "claim-f96c53320213418a",
+      "text": "- Body also lists: append-only AGENTS.md guidance, `--project-guidance`",
       "status": "confirmed",
       "citations": [
         {
@@ -9145,8 +9200,8 @@
       ]
     },
     {
-      "id": "claim-7438ea8bfc0c4a2c",
-      "text": "`instructions.claude.excludes` (no compatibility read).",
+      "id": "claim-0338a1d47954479c",
+      "text": "honored or rejected everywhere, `oat tools guidance`, backlog archive link",
       "status": "confirmed",
       "citations": [
         {
@@ -9156,8 +9211,8 @@
       ]
     },
     {
-      "id": "claim-82eaf1ecf7a18a81",
-      "text": "- Under `none`, remove nothing while any `CLAUDE.md`, `.claude/CLAUDE.md`, or",
+      "id": "claim-9d47704d4584dcdb",
+      "text": "rewriting, `oat-reviewer` no longer launching `recon-worker` (recon skill",
       "status": "confirmed",
       "citations": [
         {
@@ -9167,8 +9222,8 @@
       ]
     },
     {
-      "id": "claim-67eb63ff6f9bb5f4",
-      "text": "`CLAUDE.local.md` has real content; explain why, link the docs, and point to",
+      "id": "claim-bb008975ffc8df3e",
+      "text": "unchanged from `main`), `effective-delta-v2` exit-gate freshness,",
       "status": "confirmed",
       "citations": [
         {
@@ -9178,8 +9233,8 @@
       ]
     },
     {
-      "id": "claim-11b1b2e5464551bf",
-      "text": "removing or moving the file or setting a shim strategy.",
+      "id": "claim-127cfb85b1cb1245",
+      "text": "control-plane `check`.",
       "status": "confirmed",
       "citations": [
         {
@@ -9189,41 +9244,8 @@
       ]
     },
     {
-      "id": "claim-35a2ca2b67f5b17f",
-      "text": "- Keep rules and provider sync independent of the shim setting, pinned by a",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:889-889"
-        }
-      ]
-    },
-    {
-      "id": "claim-97815ceded069781",
-      "text": "test.",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:890-890"
-        }
-      ]
-    },
-    {
-      "id": "claim-53d2965e134c81d7",
-      "text": "- `effective-delta-v2`: changes only under `.oat/projects/**` and",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:891-891"
-        }
-      ]
-    },
-    {
-      "id": "claim-ca37eb675edb9da4",
-      "text": "`.oat/repo/**` no longer make the exit gate stale.",
+      "id": "claim-b6b86b48b8745a99",
+      "text": "**Date:** 2026-09-28",
       "status": "confirmed",
       "citations": [
         {
@@ -9233,8 +9255,8 @@
       ]
     },
     {
-      "id": "claim-bb913cee9f14ba56",
-      "text": "- Only the `recon` skill uses `recon-worker`: remove the reviewer's",
+      "id": "claim-129fc80b7c823260",
+      "text": "**Source:** inline conversation (operator, after PR #332 opened)",
       "status": "confirmed",
       "citations": [
         {
@@ -9244,19 +9266,8 @@
       ]
     },
     {
-      "id": "claim-1da46bd30dabf3eb",
-      "text": "`recon-worker` path, restore the recon skill to `main` (dropping this wave's",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:894-894"
-        }
-      ]
-    },
-    {
-      "id": "claim-5794c5c6a8a832db",
-      "text": "~1,900-line assignment validator, which also blocked Codex recon lanes), and",
+      "id": "claim-71405b7691ec7e28",
+      "text": "**Changes requested:**",
       "status": "confirmed",
       "citations": [
         {
@@ -9266,19 +9277,8 @@
       ]
     },
     {
-      "id": "claim-c27f4fb3c203292b",
-      "text": "correct the recon records; rescope the Codex follow-up to a live check.",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:896-896"
-        }
-      ]
-    },
-    {
-      "id": "claim-6dbca4fce988d94a",
-      "text": "- Declined after discussion: repointing old links to already-archived backlog",
+      "id": "claim-46833c336d7cdd6e",
+      "text": "- Clean-rename the shim keys: `instructions.claude.shims` and",
       "status": "confirmed",
       "citations": [
         {
@@ -9288,8 +9288,8 @@
       ]
     },
     {
-      "id": "claim-f71fb4c7815aa945",
-      "text": "items; a new `keep` strategy value.",
+      "id": "claim-0fdb94b2209f703e",
+      "text": "`instructions.claude.excludes` (no compatibility read).",
       "status": "confirmed",
       "citations": [
         {
@@ -9299,8 +9299,19 @@
       ]
     },
     {
-      "id": "claim-7e2c4272a3f84a09",
-      "text": "**New tasks added:** prev1-t01 through prev1-t07",
+      "id": "claim-172fea27cc95aa15",
+      "text": "- Under `none`, remove nothing while any `CLAUDE.md`, `.claude/CLAUDE.md`, or",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:899-899"
+        }
+      ]
+    },
+    {
+      "id": "claim-f32e9805c7292071",
+      "text": "`CLAUDE.local.md` has real content; explain why, link the docs, and point to",
       "status": "confirmed",
       "citations": [
         {
@@ -9310,8 +9321,19 @@
       ]
     },
     {
-      "id": "claim-0d0e2453dbef5659",
-      "text": "**Next:** Execute revision tasks via `oat-project-implement`, then a new final",
+      "id": "claim-a18f30e78afb8678",
+      "text": "removing or moving the file or setting a shim strategy.",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:901-901"
+        }
+      ]
+    },
+    {
+      "id": "claim-c62f27caa6014a9f",
+      "text": "- Keep rules and provider sync independent of the shim setting, pinned by a",
       "status": "confirmed",
       "citations": [
         {
@@ -9321,8 +9343,8 @@
       ]
     },
     {
-      "id": "claim-3001966235887760",
-      "text": "review and exit-gate generation, update PR #332 (title, Behavior change",
+      "id": "claim-2b8a7fc262388fc6",
+      "text": "test.",
       "status": "confirmed",
       "citations": [
         {
@@ -9332,8 +9354,8 @@
       ]
     },
     {
-      "id": "claim-855c34bd9a085e66",
-      "text": "callout with the new key names and the all-or-nothing rule, release note that",
+      "id": "claim-1ee61b659c833a9f",
+      "text": "- `effective-delta-v2`: changes only under `.oat/projects/**` and",
       "status": "confirmed",
       "citations": [
         {
@@ -9343,8 +9365,8 @@
       ]
     },
     {
-      "id": "claim-217ecbb5570a3919",
-      "text": "the keys were renamed), and refresh the Final Summary and summary.md.",
+      "id": "claim-f7ac336e28bda1e0",
+      "text": "`.oat/repo/**` no longer make the exit gate stale.",
       "status": "confirmed",
       "citations": [
         {
@@ -9354,8 +9376,41 @@
       ]
     },
     {
-      "id": "claim-fab0249a341cf8ee",
-      "text": "- Request `bw2-prev1-impl-1` (`oat-phase-implementer-claude-claude-opus-5-5-high`,",
+      "id": "claim-468e0f5f3b67835e",
+      "text": "- Only the `recon` skill uses `recon-worker`: remove the reviewer's",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:906-906"
+        }
+      ]
+    },
+    {
+      "id": "claim-cb7d2448f6a54860",
+      "text": "`recon-worker` path, restore the recon skill to `main` (dropping this wave's",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:907-907"
+        }
+      ]
+    },
+    {
+      "id": "claim-172a4870b348e194",
+      "text": "~1,900-line assignment validator, which also blocked Codex recon lanes), and",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:908-908"
+        }
+      ]
+    },
+    {
+      "id": "claim-3fd7c1f034a49013",
+      "text": "correct the recon records; rescope the Codex follow-up to a live check.",
       "status": "confirmed",
       "citations": [
         {
@@ -9365,8 +9420,8 @@
       ]
     },
     {
-      "id": "claim-41949c153b2b0be2",
-      "text": "hard-reasoning): interrupted when the previous session ended after",
+      "id": "claim-ce2a4636bc0d499f",
+      "text": "- Declined after discussion: repointing old links to already-archived backlog",
       "status": "confirmed",
       "citations": [
         {
@@ -9376,8 +9431,8 @@
       ]
     },
     {
-      "id": "claim-660e827b007722b4",
-      "text": "prev1-t03 with prev1-t04 uncommitted; resumed on the same handle (the agent",
+      "id": "claim-686e4f8897f9c7ca",
+      "text": "items; a new `keep` strategy value.",
       "status": "confirmed",
       "citations": [
         {
@@ -9387,19 +9442,8 @@
       ]
     },
     {
-      "id": "claim-6619e12555b423bc",
-      "text": "owned the in-progress edits), returned `DONE_WITH_CONCERNS`. Commits",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:912-912"
-        }
-      ]
-    },
-    {
-      "id": "claim-254d250683e1e194",
-      "text": "`54e8fa4a1`, recovery `0f53a5cea`, `789be2615`, `8f5d9589c`, `ae6b09d98`,",
+      "id": "claim-7136d11473a32ef5",
+      "text": "**New tasks added:** prev1-t01 through prev1-t07",
       "status": "confirmed",
       "citations": [
         {
@@ -9409,19 +9453,8 @@
       ]
     },
     {
-      "id": "claim-f90f5fc169b396eb",
-      "text": "`67a46703d`, `0da130fdb`, `512493326`. Full Definition of Done at",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:914-914"
-        }
-      ]
-    },
-    {
-      "id": "claim-82c05975adfa40f9",
-      "text": "`512493326` all exit 0 (tests 0/10 cached; test:skills 660/660).",
+      "id": "claim-a1f8c837aa2eb019",
+      "text": "**Next:** Execute revision tasks via `oat-project-implement`, then a new final",
       "status": "confirmed",
       "citations": [
         {
@@ -9431,8 +9464,8 @@
       ]
     },
     {
-      "id": "claim-2c29a2cec75a5d3d",
-      "text": "`Dispatch: scope=p-rev1 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`",
+      "id": "claim-6003ad7920088a2f",
+      "text": "review and exit-gate generation, update PR #332 (title, Behavior change",
       "status": "confirmed",
       "citations": [
         {
@@ -9442,8 +9475,8 @@
       ]
     },
     {
-      "id": "claim-2427103d91d0181b",
-      "text": "- Recovery event `bw2-prev1-rec-1` (prev1-t01, lint, `no-useless-concat` in a",
+      "id": "claim-08119bd588247e2a",
+      "text": "callout with the new key names and the all-or-nothing rule, release note that",
       "status": "confirmed",
       "citations": [
         {
@@ -9453,8 +9486,8 @@
       ]
     },
     {
-      "id": "claim-ffc42c9e8bf0da94",
-      "text": "test file) recovered in `0f53a5cea`, attempt 1/10; root validated and",
+      "id": "claim-21e580d7fd5f0bd3",
+      "text": "the keys were renamed), and refresh the Final Summary and summary.md.",
       "status": "confirmed",
       "citations": [
         {
@@ -9464,41 +9497,8 @@
       ]
     },
     {
-      "id": "claim-c420905a19a6d58b",
-      "text": "cleared the `completed` marker.",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:919-919"
-        }
-      ]
-    },
-    {
-      "id": "claim-bce639687ff189ef",
-      "text": "- Verified by root: `git diff origin/main -- .agents/skills/recon` is empty;",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:920-920"
-        }
-      ]
-    },
-    {
-      "id": "claim-9c2f0e8923393d31",
-      "text": "`oat-reviewer.md` no longer names `recon-worker` or `validate-assignment`;",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:921-921"
-        }
-      ]
-    },
-    {
-      "id": "claim-e4de3174b203f760",
-      "text": "the old key names survive only in historical explainer-kit test fixtures.",
+      "id": "claim-784a8389ea97b3af",
+      "text": "- Request `bw2-prev1-impl-1` (`oat-phase-implementer-claude-claude-opus-5-5-high`,",
       "status": "confirmed",
       "citations": [
         {
@@ -9508,8 +9508,8 @@
       ]
     },
     {
-      "id": "claim-dffed09a673e3214",
-      "text": "`summary.md` and the recap are stale and are regenerated at closeout.",
+      "id": "claim-5ec2f452aa57c59c",
+      "text": "hard-reasoning): interrupted when the previous session ended after",
       "status": "confirmed",
       "citations": [
         {
@@ -9519,8 +9519,8 @@
       ]
     },
     {
-      "id": "claim-788f59b5ccc23f4b",
-      "text": "- Exit gate generation 1 marked `stale` (substantive changes after the",
+      "id": "claim-9f006cebe2babb08",
+      "text": "prev1-t03 with prev1-t04 uncommitted; resumed on the same handle (the agent",
       "status": "confirmed",
       "citations": [
         {
@@ -9530,8 +9530,8 @@
       ]
     },
     {
-      "id": "claim-b12033636e3f4ed8",
-      "text": "allowed result); a new final review and gate generation run at closeout.",
+      "id": "claim-59e6546d8d4e0ed2",
+      "text": "owned the in-progress edits), returned `DONE_WITH_CONCERNS`. Commits",
       "status": "confirmed",
       "citations": [
         {
@@ -9541,8 +9541,19 @@
       ]
     },
     {
-      "id": "claim-2e15ced128f2e0a5",
-      "text": "- Review `bw2-prev1-review-1` (`oat-reviewer-claude-claude-opus-5-5-high`,",
+      "id": "claim-2791814e15d0a0d5",
+      "text": "`54e8fa4a1`, recovery `0f53a5cea`, `789be2615`, `8f5d9589c`, `ae6b09d98`,",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:926-926"
+        }
+      ]
+    },
+    {
+      "id": "claim-ba3c4e04d8566390",
+      "text": "`67a46703d`, `0da130fdb`, `512493326`. Full Definition of Done at",
       "status": "confirmed",
       "citations": [
         {
@@ -9552,8 +9563,8 @@
       ]
     },
     {
-      "id": "claim-de27d2c1a9e4e3d7",
-      "text": "auto) at `091873d80`: 0 Critical/High, 2 Medium, 3 Low",
+      "id": "claim-10fb41b30ce16005",
+      "text": "`512493326` all exit 0 (tests 0/10 cached; test:skills 660/660).",
       "status": "confirmed",
       "citations": [
         {
@@ -9563,8 +9574,8 @@
       ]
     },
     {
-      "id": "claim-a2b59f69c27c2282",
-      "text": "(`reviews/archived/p-rev1-review-2026-09-28T155753Z.md`). Reconnaissance:",
+      "id": "claim-1769b58b5495b6ba",
+      "text": "`Dispatch: scope=p-rev1 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`",
       "status": "confirmed",
       "citations": [
         {
@@ -9574,8 +9585,8 @@
       ]
     },
     {
-      "id": "claim-2a0ef6b8c3fa618d",
-      "text": "not-attempted. M1, M2, L1, L2 converted to prev1-t08. L3 recorded here: the",
+      "id": "claim-adcfceb09b591ed3",
+      "text": "- Recovery event `bw2-prev1-rec-1` (prev1-t01, lint, `no-useless-concat` in a",
       "status": "confirmed",
       "citations": [
         {
@@ -9585,8 +9596,8 @@
       ]
     },
     {
-      "id": "claim-969fd9f423ba9aa4",
-      "text": "prev1-t04 and prev1-t05 commit bodies lack failing-first records; the",
+      "id": "claim-fac12092a42838ba",
+      "text": "test file) recovered in `0f53a5cea`, attempt 1/10; root validated and",
       "status": "confirmed",
       "citations": [
         {
@@ -9596,8 +9607,8 @@
       ]
     },
     {
-      "id": "claim-5d511090a5f3e1da",
-      "text": "reviewer confirmed both tests fail against the pre-change files (the v2 test",
+      "id": "claim-2084645ecb8a7dbb",
+      "text": "cleared the `completed` marker.",
       "status": "confirmed",
       "citations": [
         {
@@ -9607,8 +9618,8 @@
       ]
     },
     {
-      "id": "claim-5b525a3eb9b20cca",
-      "text": "asserts the three exclusion pathspecs extracted from the skill text; the",
+      "id": "claim-6a3055cbc5131dcc",
+      "text": "- Verified by root: `git diff origin/main -- .agents/skills/recon` is empty;",
       "status": "confirmed",
       "citations": [
         {
@@ -9618,8 +9629,8 @@
       ]
     },
     {
-      "id": "claim-a7adca1e5df8b2ae",
-      "text": "reviewer test asserts `not.toContain('recon-worker')`, which the",
+      "id": "claim-d187a0232e44edf2",
+      "text": "`oat-reviewer.md` no longer names `recon-worker` or `validate-assignment`;",
       "status": "confirmed",
       "citations": [
         {
@@ -9629,8 +9640,8 @@
       ]
     },
     {
-      "id": "claim-740a4c2890561dbe",
-      "text": "pre-change `oat-reviewer.md` contained).- prev1-t08 (resume of `bw2-prev1-impl-1`, DONE) at `4f30b57cb`: M1 `linkedBy`",
+      "id": "claim-14a5d6490a7b565d",
+      "text": "the old key names survive only in historical explainer-kit test fixtures.",
       "status": "confirmed",
       "citations": [
         {
@@ -9640,8 +9651,8 @@
       ]
     },
     {
-      "id": "claim-dddc35a870ed56ca",
-      "text": "per blocker with replace-then-remove advice; M2 per-file leftover warnings",
+      "id": "claim-1220c08556dc4330",
+      "text": "`summary.md` and the recap are stale and are regenerated at closeout.",
       "status": "confirmed",
       "citations": [
         {
@@ -9651,8 +9662,8 @@
       ]
     },
     {
-      "id": "claim-578a274dab60c352",
-      "text": "suppressed for `wouldRemove` while blocked; L1 wording; L2 docs. Failing",
+      "id": "claim-f6ec158db775ecc0",
+      "text": "- Exit gate generation 1 marked `stale` (substantive changes after the",
       "status": "confirmed",
       "citations": [
         {
@@ -9662,8 +9673,8 @@
       ]
     },
     {
-      "id": "claim-34064d526724d931",
-      "text": "first recorded in the commit body (vitest 2 failed, oat-doctor 2 failed).",
+      "id": "claim-b1549245f4c7f9de",
+      "text": "allowed result); a new final review and gate generation run at closeout.",
       "status": "confirmed",
       "citations": [
         {
@@ -9673,19 +9684,8 @@
       ]
     },
     {
-      "id": "claim-d2e733837900a0b9",
-      "text": "Removal set unchanged (probes keep every shim). `pnpm check` 0/11 cached,",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:939-939"
-        }
-      ]
-    },
-    {
-      "id": "claim-4b3ea8279d08a557",
-      "text": "instructions+sync 226/226, oat-doctor 11/11.",
+      "id": "claim-815088a340fb3762",
+      "text": "- Review `bw2-prev1-review-1` (`oat-reviewer-claude-claude-opus-5-5-high`,",
       "status": "confirmed",
       "citations": [
         {
@@ -9695,8 +9695,8 @@
       ]
     },
     {
-      "id": "claim-c03c77272627fb2f",
-      "text": "- Gate run `b282ca69` (`codex-6-sol-xhigh`) at `f4599bec3`: the reviewer wrote",
+      "id": "claim-9b1a442b678dfacc",
+      "text": "auto) at `091873d80`: 0 Critical/High, 2 Medium, 3 Low",
       "status": "confirmed",
       "citations": [
         {
@@ -9706,8 +9706,8 @@
       ]
     },
     {
-      "id": "claim-5dbf186b986e6967",
-      "text": "`reviews/archived/p-rev1-review-2026-09-28T160943Z.md` (0 findings) but never",
+      "id": "claim-ac7f1896c7443ece",
+      "text": "(`reviews/archived/p-rev1-review-2026-09-28T155753Z.md`). Reconnaissance:",
       "status": "confirmed",
       "citations": [
         {
@@ -9717,8 +9717,8 @@
       ]
     },
     {
-      "id": "claim-b07dc06a3ebea4ef",
-      "text": "ran the branch-local `gate route` step, so no route receipt existed and the",
+      "id": "claim-12dc7038fdc3cf93",
+      "text": "not-attempted. M1, M2, L1, L2 converted to prev1-t08. L3 recorded here: the",
       "status": "confirmed",
       "citations": [
         {
@@ -9728,8 +9728,8 @@
       ]
     },
     {
-      "id": "claim-276d0617e21045f7",
-      "text": "gate failed closed (`review_failed`, `unexpected_post_selection_failure`).",
+      "id": "claim-bd9f967f88866a6d",
+      "text": "prev1-t04 and prev1-t05 commit bodies lack failing-first records; the",
       "status": "confirmed",
       "citations": [
         {
@@ -9739,8 +9739,8 @@
       ]
     },
     {
-      "id": "claim-fd7d93d7d859b63c",
-      "text": "Not accepted as gate evidence; the gate reruns once.",
+      "id": "claim-b3c8a60c28b32f86",
+      "text": "reviewer confirmed both tests fail against the pre-change files (the v2 test",
       "status": "confirmed",
       "citations": [
         {
@@ -9750,8 +9750,8 @@
       ]
     },
     {
-      "id": "claim-67afce775020dc40",
-      "text": "- Gate run 2 (`codex-6-sol-xhigh`, route `inline` from the installed 0.3.7",
+      "id": "claim-c9d16892f5397a75",
+      "text": "asserts the three exclusion pathspecs extracted from the skill text; the",
       "status": "confirmed",
       "citations": [
         {
@@ -9761,8 +9761,8 @@
       ]
     },
     {
-      "id": "claim-702c22dc463a553e",
-      "text": "`gate route`) at `71aef4127`: `review_completed_gate_passed`, 0 Critical,",
+      "id": "claim-e9e200ba623a43c8",
+      "text": "reviewer test asserts `not.toContain('recon-worker')`, which the",
       "status": "confirmed",
       "citations": [
         {
@@ -9772,8 +9772,8 @@
       ]
     },
     {
-      "id": "claim-9f349983406f550e",
-      "text": "High and Medium, 1 Low (this log's joined list item, fixed by root). The",
+      "id": "claim-b8cd0d49aa46f0f5",
+      "text": "pre-change `oat-reviewer.md` contained).- prev1-t08 (resume of `bw2-prev1-impl-1`, DONE) at `4f30b57cb`: M1 `linkedBy`",
       "status": "confirmed",
       "citations": [
         {
@@ -9783,8 +9783,8 @@
       ]
     },
     {
-      "id": "claim-692bcd4fa1a8d87a",
-      "text": "rerun narrowed to the bookkeeping delta; product code through `4f30b57cb`",
+      "id": "claim-8bc9950ab7716109",
+      "text": "per blocker with replace-then-remove advice; M2 per-file leftover warnings",
       "status": "confirmed",
       "citations": [
         {
@@ -9794,8 +9794,8 @@
       ]
     },
     {
-      "id": "claim-7e1ff78e995cf7cd",
-      "text": "was covered by run 1's 0-finding review. Both runs' artifacts are archived",
+      "id": "claim-73664ae437b3d69d",
+      "text": "suppressed for `wouldRemove` while blocked; L1 wording; L2 docs. Failing",
       "status": "confirmed",
       "citations": [
         {
@@ -9805,8 +9805,8 @@
       ]
     },
     {
-      "id": "claim-fdada7b016d13369",
-      "text": "locally; both ledger rows are `passed`.",
+      "id": "claim-01b728d90b7a34df",
+      "text": "first recorded in the commit body (vitest 2 failed, oat-doctor 2 failed).",
       "status": "confirmed",
       "citations": [
         {
@@ -9816,8 +9816,8 @@
       ]
     },
     {
-      "id": "claim-0707df1ab1272a71",
-      "text": "- Final review `bw2-final-review-3` (`oat-reviewer-claude-claude-opus-5-5-high`,",
+      "id": "claim-31e43d6d8ae2c137",
+      "text": "Removal set unchanged (probes keep every shim). `pnpm check` 0/11 cached,",
       "status": "confirmed",
       "citations": [
         {
@@ -9827,8 +9827,8 @@
       ]
     },
     {
-      "id": "claim-4bded6c60f87f880",
-      "text": "auto, whole PR `5bb73dd08..11008080c`, weighted to the revision delta):",
+      "id": "claim-3f17e5e02ee64ef7",
+      "text": "instructions+sync 226/226, oat-doctor 11/11.",
       "status": "confirmed",
       "citations": [
         {
@@ -9838,8 +9838,8 @@
       ]
     },
     {
-      "id": "claim-7375d976a19a457a",
-      "text": "0 Critical/High, 2 Medium, 4 Low",
+      "id": "claim-60835cd8d6c879a4",
+      "text": "- Gate run `b282ca69` (`codex-6-sol-xhigh`) at `f4599bec3`: the reviewer wrote",
       "status": "confirmed",
       "citations": [
         {
@@ -9849,8 +9849,8 @@
       ]
     },
     {
-      "id": "claim-a351be5c5eff74bd",
-      "text": "(`reviews/archived/final-review-2026-09-28T163142Z.md`); reconnaissance",
+      "id": "claim-dc2a7aff465174cc",
+      "text": "`reviews/archived/p-rev1-review-2026-09-28T160943Z.md` (0 findings) but never",
       "status": "confirmed",
       "citations": [
         {
@@ -9860,8 +9860,8 @@
       ]
     },
     {
-      "id": "claim-24ded81bd274a720",
-      "text": "not-attempted; removal-block neutralization breaks 5 tests. Root fixed M1",
+      "id": "claim-e4b442dc2d60dc25",
+      "text": "ran the branch-local `gate route` step, so no route receipt existed and the",
       "status": "confirmed",
       "citations": [
         {
@@ -9871,8 +9871,8 @@
       ]
     },
     {
-      "id": "claim-8c70cd3fd0bb39f1",
-      "text": "(PR hand-off and plan PR Requirements: title names the rename, body carries",
+      "id": "claim-9f4b1a3928d22187",
+      "text": "gate failed closed (`review_failed`, `unexpected_post_selection_failure`).",
       "status": "confirmed",
       "citations": [
         {
@@ -9882,8 +9882,8 @@
       ]
     },
     {
-      "id": "claim-e3fc60fab3ba74aa",
-      "text": "all-or-nothing and the rename), L1 (Final Summary proofs and follow-ups), and",
+      "id": "claim-d913bba4d9064e80",
+      "text": "Not accepted as gate evidence; the gate reruns once.",
       "status": "confirmed",
       "citations": [
         {
@@ -9893,8 +9893,8 @@
       ]
     },
     {
-      "id": "claim-523d978dd187c731",
-      "text": "L4 (Deviations row). M2 is a closeout requirement: `summary.md` is fully",
+      "id": "claim-08ec15a42d958971",
+      "text": "- Gate run 2 (`codex-6-sol-xhigh`, route `inline` from the installed 0.3.7",
       "status": "confirmed",
       "citations": [
         {
@@ -9904,8 +9904,8 @@
       ]
     },
     {
-      "id": "claim-985e034f5b49dda7",
-      "text": "regenerated (Key Decisions, Integration Notes, and Tradeoffs included, not",
+      "id": "claim-adfb321c50e3eb5f",
+      "text": "`gate route`) at `71aef4127`: `review_completed_gate_passed`, 0 Critical,",
       "status": "confirmed",
       "citations": [
         {
@@ -9915,8 +9915,8 @@
       ]
     },
     {
-      "id": "claim-6c4958c4cef6bc3a",
-      "text": "only the incremental revision sections) with",
+      "id": "claim-841599233cc681a9",
+      "text": "High and Medium, 1 Low (this log's joined list item, fixed by root). The",
       "status": "confirmed",
       "citations": [
         {
@@ -9926,8 +9926,8 @@
       ]
     },
     {
-      "id": "claim-be2b5eaa8dffc13f",
-      "text": "`oat_summary_includes_revisions: [p-rev1]`, the recap is rebuilt from the",
+      "id": "claim-957025b88e3c2de0",
+      "text": "rerun narrowed to the bookkeeping delta; product code through `4f30b57cb`",
       "status": "confirmed",
       "citations": [
         {
@@ -9937,8 +9937,8 @@
       ]
     },
     {
-      "id": "claim-28401b7b75f83675",
-      "text": "refreshed facts, and",
+      "id": "claim-614042bf671e58ce",
+      "text": "was covered by run 1's 0-finding review. Both runs' artifacts are archived",
       "status": "confirmed",
       "citations": [
         {
@@ -9948,8 +9948,8 @@
       ]
     },
     {
-      "id": "claim-798367b9d70db0c6",
-      "text": "`rg -n \"instructionSyncStrategy|instructionPointerExcludes|validate-assignment\"`",
+      "id": "claim-c0144f49cfc4f96e",
+      "text": "locally; both ledger rows are `passed`.",
       "status": "confirmed",
       "citations": [
         {
@@ -9959,8 +9959,8 @@
       ]
     },
     {
-      "id": "claim-0276e1760c4e2070",
-      "text": "over `summary.md` and `explainers/` returns nothing. L2 and L3 became",
+      "id": "claim-2e4945f0d7485509",
+      "text": "- Final review `bw2-final-review-3` (`oat-reviewer-claude-claude-opus-5-5-high`,",
       "status": "confirmed",
       "citations": [
         {
@@ -9970,8 +9970,8 @@
       ]
     },
     {
-      "id": "claim-d08816cee716cd95",
-      "text": "prev1-t09.",
+      "id": "claim-2c1e4f0d70d2ae01",
+      "text": "auto, whole PR `5bb73dd08..11008080c`, weighted to the revision delta):",
       "status": "confirmed",
       "citations": [
         {
@@ -9981,8 +9981,8 @@
       ]
     },
     {
-      "id": "claim-7cd6ec61c80e63eb",
-      "text": "- The same final reviewer left a second artifact",
+      "id": "claim-1bb5a5e0dce98c36",
+      "text": "0 Critical/High, 2 Medium, 4 Low",
       "status": "confirmed",
       "citations": [
         {
@@ -9992,8 +9992,8 @@
       ]
     },
     {
-      "id": "claim-48de701dd2dfb8ca",
-      "text": "(`reviews/archived/final-review-2026-09-28T163513Z.md`, 0 Critical/High,",
+      "id": "claim-c54f648fb19f1951",
+      "text": "(`reviews/archived/final-review-2026-09-28T163142Z.md`); reconnaissance",
       "status": "confirmed",
       "citations": [
         {
@@ -10003,8 +10003,8 @@
       ]
     },
     {
-      "id": "claim-75f889cea3b2b5b8",
-      "text": "1 Medium, 5 Low) overlapping the first, with three additions, all fixed by",
+      "id": "claim-f0f467b67e2da1c9",
+      "text": "not-attempted; removal-block neutralization breaks 5 tests. Root fixed M1",
       "status": "confirmed",
       "citations": [
         {
@@ -10014,8 +10014,8 @@
       ]
     },
     {
-      "id": "claim-b4bf983422fa4aa6",
-      "text": "root: the PR upgrade notice (a released `instructionPointerExcludes` list is",
+      "id": "claim-7eae860e4de6f6ea",
+      "text": "(PR hand-off and plan PR Requirements: title names the rename, body carries",
       "status": "confirmed",
       "citations": [
         {
@@ -10025,8 +10025,8 @@
       ]
     },
     {
-      "id": "claim-9b25a2770f930d73",
-      "text": "ignored, so sync adopts and removes a lone `CLAUDE.md` in formerly excluded",
+      "id": "claim-d02e39f368790046",
+      "text": "all-or-nothing and the rename), L1 (Final Summary proofs and follow-ups), and",
       "status": "confirmed",
       "citations": [
         {
@@ -10036,8 +10036,8 @@
       ]
     },
     {
-      "id": "claim-67adfaed4ad01615",
-      "text": "directories until the list is re-set under `instructions.claude.excludes`),",
+      "id": "claim-96d46586d3afab39",
+      "text": "L4 (Deviations row). M2 is a closeout requirement: `summary.md` is fully",
       "status": "confirmed",
       "citations": [
         {
@@ -10047,8 +10047,8 @@
       ]
     },
     {
-      "id": "claim-46e3335343f1a5f2",
-      "text": "the `effective-delta-v2` literal `.oat/projects` assumption (stated in the",
+      "id": "claim-0000cfa103e4cb09",
+      "text": "regenerated (Key Decisions, Integration Notes, and Tradeoffs included, not",
       "status": "confirmed",
       "citations": [
         {
@@ -10058,8 +10058,8 @@
       ]
     },
     {
-      "id": "claim-15334c7fff9033b5",
-      "text": "completion reference and `DR-260928-exclude-project-and-repository`), and",
+      "id": "claim-6a79467423da7a92",
+      "text": "only the incremental revision sections) with",
       "status": "confirmed",
       "citations": [
         {
@@ -10069,8 +10069,8 @@
       ]
     },
     {
-      "id": "claim-0c8a240e6a984a17",
-      "text": "`DR-260928-name-the-claude-md-shim-keys` Context wording plus its release",
+      "id": "claim-ff4d81d3d0977348",
+      "text": "`oat_summary_includes_revisions: [p-rev1]`, the recap is rebuilt from the",
       "status": "confirmed",
       "citations": [
         {
@@ -10080,8 +10080,8 @@
       ]
     },
     {
-      "id": "claim-54e62c3f9485c838",
-      "text": "note location (PR title). Its stale-DoD Low is closed by the closeout DoD.",
+      "id": "claim-71dc244ec1255af3",
+      "text": "refreshed facts, and",
       "status": "confirmed",
       "citations": [
         {
@@ -10091,8 +10091,8 @@
       ]
     },
     {
-      "id": "claim-8dbd27d8661f5c94",
-      "text": "- prev1-t09 (resume of `bw2-prev1-impl-1`, DONE) at `b7536b1be`: L2 docs and",
+      "id": "claim-e837a538573e4cb9",
+      "text": "`rg -n \"instructionSyncStrategy|instructionPointerExcludes|validate-assignment\"`",
       "status": "confirmed",
       "citations": [
         {
@@ -10102,8 +10102,8 @@
       ]
     },
     {
-      "id": "claim-9f550c0d98ccb622",
-      "text": "`current-state.md`; L3 analyze skill reports `claude_md_blocks_shim_removal`",
+      "id": "claim-b291be86df510e5b",
+      "text": "over `summary.md` and `explainers/` returns nothing. L2 and L3 became",
       "status": "confirmed",
       "citations": [
         {
@@ -10113,8 +10113,8 @@
       ]
     },
     {
-      "id": "claim-df27fe0dca580bda",
-      "text": "(failing first, 6/6 after); apply has no gap. `pnpm check` 0/11 cached,",
+      "id": "claim-dd6b7ac8d5d2c732",
+      "text": "prev1-t09.",
       "status": "confirmed",
       "citations": [
         {
@@ -10124,8 +10124,8 @@
       ]
     },
     {
-      "id": "claim-9ff03beb76ffce4c",
-      "text": "`pnpm lint` exit 0.",
+      "id": "claim-a4c90f8156cd2c30",
+      "text": "- The same final reviewer left a second artifact",
       "status": "confirmed",
       "citations": [
         {
@@ -10135,8 +10135,8 @@
       ]
     },
     {
-      "id": "claim-7ac3bcb082dec190",
-      "text": "- Final gate re-review (`codex-6-sol-xhigh`, threshold high) at `7b389c5af`:",
+      "id": "claim-b1409af7f37e439a",
+      "text": "(`reviews/archived/final-review-2026-09-28T163513Z.md`, 0 Critical/High,",
       "status": "confirmed",
       "citations": [
         {
@@ -10146,8 +10146,8 @@
       ]
     },
     {
-      "id": "claim-14f728f1877d9047",
-      "text": "`review_completed_gate_passed`, 0 Critical/High, 2 Medium, 2 Low",
+      "id": "claim-ac233f5b54b36e32",
+      "text": "1 Medium, 5 Low) overlapping the first, with three additions, all fixed by",
       "status": "confirmed",
       "citations": [
         {
@@ -10157,8 +10157,8 @@
       ]
     },
     {
-      "id": "claim-89d4acb42ddded0e",
-      "text": "(`reviews/archived/final-review-2026-09-28T164247Z.md`). M1 (live PR title",
+      "id": "claim-9e52e21832622a94",
+      "text": "root: the PR upgrade notice (a released `instructionPointerExcludes` list is",
       "status": "confirmed",
       "citations": [
         {
@@ -10168,8 +10168,8 @@
       ]
     },
     {
-      "id": "claim-1872ace0f6012385",
-      "text": "and body stale) and M2 (summary and recap stale) and L2 (DoD record predates",
+      "id": "claim-13bff28f4cd7d0b1",
+      "text": "ignored, so sync adopts and removes a lone `CLAUDE.md` in formerly excluded",
       "status": "confirmed",
       "citations": [
         {
@@ -10179,8 +10179,8 @@
       ]
     },
     {
-      "id": "claim-ebbf64059eb41081",
-      "text": "the revision) are the pending closeout steps: summary and recap are fully",
+      "id": "claim-33f87ee4290c9a39",
+      "text": "directories until the list is re-set under `instructions.claude.excludes`),",
       "status": "confirmed",
       "citations": [
         {
@@ -10190,8 +10190,8 @@
       ]
     },
     {
-      "id": "claim-a5208cfe2783e605",
-      "text": "regenerated and the live PR is refreshed from the hand-off before the exit",
+      "id": "claim-d7530e9b32deb874",
+      "text": "the `effective-delta-v2` literal `.oat/projects` assumption (stated in the",
       "status": "confirmed",
       "citations": [
         {
@@ -10201,8 +10201,8 @@
       ]
     },
     {
-      "id": "claim-22acd757edfbb698",
-      "text": "gate, and the DoD is rerun at the final head. L1 (two joined log items)",
+      "id": "claim-ccb0cf5b069c9627",
+      "text": "completion reference and `DR-260928-exclude-project-and-repository`), and",
       "status": "confirmed",
       "citations": [
         {
@@ -10212,8 +10212,8 @@
       ]
     },
     {
-      "id": "claim-0be2275db51d3ef6",
-      "text": "fixed by root.",
+      "id": "claim-09e92054e4d93253",
+      "text": "`DR-260928-name-the-claude-md-shim-keys` Context wording plus its release",
       "status": "confirmed",
       "citations": [
         {
@@ -10223,8 +10223,41 @@
       ]
     },
     {
-      "id": "claim-e24a834a5ab6e412",
-      "text": "Chronological execution is recorded per phase under Orchestration Runs above",
+      "id": "claim-fb0b4a6fb9ce8d33",
+      "text": "note location (PR title). Its stale-DoD Low is closed by the closeout DoD.",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:989-989"
+        }
+      ]
+    },
+    {
+      "id": "claim-597918227ab71d4e",
+      "text": "- prev1-t09 (resume of `bw2-prev1-impl-1`, DONE) at `b7536b1be`: L2 docs and",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:990-990"
+        }
+      ]
+    },
+    {
+      "id": "claim-a8794d281da5ccac",
+      "text": "`current-state.md`; L3 analyze skill reports `claude_md_blocks_shim_removal`",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:991-991"
+        }
+      ]
+    },
+    {
+      "id": "claim-1b0890291c943d7b",
+      "text": "(failing first, 6/6 after); apply has no gap. `pnpm check` 0/11 cached,",
       "status": "confirmed",
       "citations": [
         {
@@ -10234,8 +10267,8 @@
       ]
     },
     {
-      "id": "claim-3aaa2c8a07033403",
-      "text": "(dispatch requests, commits, reviews, gates, recovery events, and operator",
+      "id": "claim-7157ded2daef91f0",
+      "text": "`pnpm lint` exit 0.",
       "status": "confirmed",
       "citations": [
         {
@@ -10245,8 +10278,8 @@
       ]
     },
     {
-      "id": "claim-989155440da493b0",
-      "text": "dispositions). Sessions: 2026-09-27 (planning, p01) and 2026-09-28 (p01 gate",
+      "id": "claim-7ade631f3f976c00",
+      "text": "- Final gate re-review (`codex-6-sol-xhigh`, threshold high) at `7b389c5af`:",
       "status": "confirmed",
       "citations": [
         {
@@ -10256,8 +10289,8 @@
       ]
     },
     {
-      "id": "claim-5d0b8ab1d7a1940c",
-      "text": "through closeout).",
+      "id": "claim-c635033edcf2eb45",
+      "text": "`review_completed_gate_passed`, 0 Critical/High, 2 Medium, 2 Low",
       "status": "confirmed",
       "citations": [
         {
@@ -10267,8 +10300,19 @@
       ]
     },
     {
-      "id": "claim-494f599f3930035c",
-      "text": "Plan Gate Feedback (quick-start, QS-12)",
+      "id": "claim-81f5e9d979c21e35",
+      "text": "(`reviews/archived/final-review-2026-09-28T164247Z.md`). M1 (live PR title",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:996-996"
+        }
+      ]
+    },
+    {
+      "id": "claim-791d83368fdb1b76",
+      "text": "and body stale) and M2 (summary and recap stale) and L2 (DoD record predates",
       "status": "confirmed",
       "citations": [
         {
@@ -10278,8 +10322,19 @@
       ]
     },
     {
-      "id": "claim-c4f7943c2203d20a",
-      "text": "The configured quick-start gate (`oat-project-quick-start`, `onFailure: block`,",
+      "id": "claim-eac70be2c7f87c4a",
+      "text": "the revision) are the pending closeout steps: summary and recap are fully",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:998-998"
+        }
+      ]
+    },
+    {
+      "id": "claim-d66adace71229895",
+      "text": "regenerated and the live PR is refreshed from the hand-off before the exit",
       "status": "confirmed",
       "citations": [
         {
@@ -10289,8 +10344,8 @@
       ]
     },
     {
-      "id": "claim-4e93626873a2c351",
-      "text": "`maxAttempts: 2`, target `codex-6-sol-xhigh`, inline Codex runtime) blocked on",
+      "id": "claim-dc9389463a53f334",
+      "text": "gate, and the DoD is rerun at the final head. L1 (two joined log items)",
       "status": "confirmed",
       "citations": [
         {
@@ -10300,8 +10355,8 @@
       ]
     },
     {
-      "id": "claim-e3b1d09a8c3db128",
-      "text": "both attempts; every finding was resolved in `plan.md`:",
+      "id": "claim-f68888a7aad8b13b",
+      "text": "fixed by root.",
       "status": "confirmed",
       "citations": [
         {
@@ -10311,30 +10366,8 @@
       ]
     },
     {
-      "id": "claim-3ae83343a8e33949",
-      "text": "- Attempt 1 (`reviews/archived/artifact-plan-review-2026-09-27T150947Z.md`):",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:1003-1003"
-        }
-      ]
-    },
-    {
-      "id": "claim-8c003865a7fe0a6c",
-      "text": "H1 re-verify identity and exact managed content at apply time before removing",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:1004-1004"
-        }
-      ]
-    },
-    {
-      "id": "claim-2256ad602ac91e96",
-      "text": "a CLAUDE.md shim (with changed-content and symlink-replacement controls); H2",
+      "id": "claim-e2cdd1c323e93161",
+      "text": "Chronological execution is recorded per phase under Orchestration Runs above",
       "status": "confirmed",
       "citations": [
         {
@@ -10344,8 +10377,8 @@
       ]
     },
     {
-      "id": "claim-d0eb217b47211435",
-      "text": "make leftover CLAUDE.md detection repository-wide and independent of the",
+      "id": "claim-8c3aca5e1db08862",
+      "text": "(dispatch requests, commits, reviews, gates, recovery events, and operator",
       "status": "confirmed",
       "citations": [
         {
@@ -10355,8 +10388,8 @@
       ]
     },
     {
-      "id": "claim-6d597b356a72e318",
-      "text": "mutation exclusions at sync, `--json`, validate, and doctor; M1 accept `none`",
+      "id": "claim-d9bc7b83d8c750bb",
+      "text": "dispositions). Sessions: 2026-09-27 (planning, p01) and 2026-09-28 (p01 gate",
       "status": "confirmed",
       "citations": [
         {
@@ -10366,8 +10399,8 @@
       ]
     },
     {
-      "id": "claim-ba43ea42548619b3",
-      "text": "only in the same task as its behavior (p02-t02).",
+      "id": "claim-d347dacca824514b",
+      "text": "through closeout).",
       "status": "confirmed",
       "citations": [
         {
@@ -10377,19 +10410,8 @@
       ]
     },
     {
-      "id": "claim-30d0ed9ab70d9aed",
-      "text": "- Attempt 2 (`reviews/archived/artifact-plan-review-2026-09-27T151608Z.md`):",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:1009-1009"
-        }
-      ]
-    },
-    {
-      "id": "claim-451c8b843a8b51ba",
-      "text": "H1 open the existing `AGENTS.md` with `O_WRONLY | O_APPEND | O_NOFOLLOW`",
+      "id": "claim-328e250e4e72b7a1",
+      "text": "Plan Gate Feedback (quick-start, QS-12)",
       "status": "confirmed",
       "citations": [
         {
@@ -10399,19 +10421,8 @@
       ]
     },
     {
-      "id": "claim-d7bf49f16cc6d1c1",
-      "text": "(the flags as written opened read-only and failed with `EBADF`), plus a",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:1011-1011"
-        }
-      ]
-    },
-    {
-      "id": "claim-b2c376518c51f66b",
-      "text": "real-filesystem success assertion.",
+      "id": "claim-78253db1e33a1d7f",
+      "text": "The configured quick-start gate (`oat-project-quick-start`, `onFailure: block`,",
       "status": "confirmed",
       "citations": [
         {
@@ -10421,8 +10432,19 @@
       ]
     },
     {
-      "id": "claim-5efce2c32838950f",
-      "text": "Attempts are exhausted, so plan readiness is an operator decision. Operator",
+      "id": "claim-830933a1e0273954",
+      "text": "`maxAttempts: 2`, target `codex-6-sol-xhigh`, inline Codex runtime) blocked on",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:1013-1013"
+        }
+      ]
+    },
+    {
+      "id": "claim-808cb96ee2bd6a36",
+      "text": "both attempts; every finding was resolved in `plan.md`:",
       "status": "confirmed",
       "citations": [
         {
@@ -10432,19 +10454,8 @@
       ]
     },
     {
-      "id": "claim-79177fecc03c5da7",
-      "text": "decision (2026-09-27): proceed to implementation with the findings resolved in",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:1015-1015"
-        }
-      ]
-    },
-    {
-      "id": "claim-45abd915aa7f750f",
-      "text": "the plan.",
+      "id": "claim-a41497f90f68ba22",
+      "text": "- Attempt 1 (`reviews/archived/artifact-plan-review-2026-09-27T150947Z.md`):",
       "status": "confirmed",
       "citations": [
         {
@@ -10454,8 +10465,19 @@
       ]
     },
     {
-      "id": "claim-fd11242ac3e25706",
-      "text": "Deferred Findings (Medium)",
+      "id": "claim-1d13ec753bb62271",
+      "text": "H1 re-verify identity and exact managed content at apply time before removing",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:1017-1017"
+        }
+      ]
+    },
+    {
+      "id": "claim-d41152a697eb69fc",
+      "text": "a CLAUDE.md shim (with changed-content and symlink-replacement controls); H2",
       "status": "confirmed",
       "citations": [
         {
@@ -10465,8 +10487,19 @@
       ]
     },
     {
-      "id": "claim-bfc517460b595e23",
-      "text": "- p04 re-review M2 (`reviews/archived/p04-review-2026-09-28T025845Z.md`) and",
+      "id": "claim-bce6d4e56bc25cda",
+      "text": "make leftover CLAUDE.md detection repository-wide and independent of the",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:1019-1019"
+        }
+      ]
+    },
+    {
+      "id": "claim-7b132e0249098757",
+      "text": "mutation exclusions at sync, `--json`, validate, and doctor; M1 accept `none`",
       "status": "confirmed",
       "citations": [
         {
@@ -10476,8 +10509,8 @@
       ]
     },
     {
-      "id": "claim-155a420b59e9a0ec",
-      "text": "L1-L3: moot after revision 1 withdrew the recon validator;",
+      "id": "claim-e371b0f37ebd8ecd",
+      "text": "only in the same task as its behavior (p02-t02).",
       "status": "confirmed",
       "citations": [
         {
@@ -10487,8 +10520,8 @@
       ]
     },
     {
-      "id": "claim-46ae60ca6ae95329",
-      "text": "`BL-260928-settle-codex-read-authority` was rescoped to a live check that",
+      "id": "claim-67d0ea02fdb9fd38",
+      "text": "- Attempt 2 (`reviews/archived/artifact-plan-review-2026-09-27T151608Z.md`):",
       "status": "confirmed",
       "citations": [
         {
@@ -10498,8 +10531,8 @@
       ]
     },
     {
-      "id": "claim-32b78637a4289e98",
-      "text": "Codex `/recon` lanes launch `contract-enforced` on the released CLI.",
+      "id": "claim-a526fa3426a88792",
+      "text": "H1 open the existing `AGENTS.md` with `O_WRONLY | O_APPEND | O_NOFOLLOW`",
       "status": "confirmed",
       "citations": [
         {
@@ -10509,8 +10542,19 @@
       ]
     },
     {
-      "id": "claim-b7cbe888a778fd89",
-      "text": "- p01 gate M1 (`reviews/archived/p01-review-2026-09-28T001719Z.md`): two concurrent guidance invocations",
+      "id": "claim-08daefdc50d4e038",
+      "text": "(the flags as written opened read-only and failed with `EBADF`), plus a",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:1024-1024"
+        }
+      ]
+    },
+    {
+      "id": "claim-ec49fac4446a708f",
+      "text": "real-filesystem success assertion.",
       "status": "confirmed",
       "citations": [
         {
@@ -10520,19 +10564,8 @@
       ]
     },
     {
-      "id": "claim-59b70db8b0f117b0",
-      "text": "can both pass the absent-block check and append the same managed block",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:1026-1026"
-        }
-      ]
-    },
-    {
-      "id": "claim-567c154c4d1bd20e",
-      "text": "twice; the duplicate markers make later runs return `blocked` until the file",
+      "id": "claim-76aaf925b1c0795e",
+      "text": "Attempts are exhausted, so plan readiness is an operator decision. Operator",
       "status": "confirmed",
       "citations": [
         {
@@ -10542,8 +10575,8 @@
       ]
     },
     {
-      "id": "claim-a93238e69e69337e",
-      "text": "is repaired by hand. Deferred because a correct fix needs cross-process",
+      "id": "claim-1c5185465971cd63",
+      "text": "decision (2026-09-27): proceed to implementation with the findings resolved in",
       "status": "confirmed",
       "citations": [
         {
@@ -10553,8 +10586,8 @@
       ]
     },
     {
-      "id": "claim-ffc4839d0ff49aac",
-      "text": "coordination on `AGENTS.md` (a lock file plus a re-read under the lock),",
+      "id": "claim-8707487379b6e8e4",
+      "text": "the plan.",
       "status": "confirmed",
       "citations": [
         {
@@ -10564,19 +10597,8 @@
       ]
     },
     {
-      "id": "claim-d4c05fc3c94fe87f",
-      "text": "which is larger than a sweep fix; the pre-wave behavior never wrote an",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:1030-1030"
-        }
-      ]
-    },
-    {
-      "id": "claim-0f553ca6017cf90b",
-      "text": "existing file, and concurrent `oat` guidance runs against one checkout are",
+      "id": "claim-668e900580858d06",
+      "text": "Deferred Findings (Medium)",
       "status": "confirmed",
       "citations": [
         {
@@ -10586,19 +10608,41 @@
       ]
     },
     {
-      "id": "claim-82712bd9cec5b1fc",
-      "text": "rare. Resurface at final review; if not fixed in-wave, file a backlog item.",
+      "id": "claim-dc5d5b100eb3b812",
+      "text": "- p04 re-review M2 (`reviews/archived/p04-review-2026-09-28T025845Z.md`) and",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:1032-1032"
+          "locator": "implementation.md:1033-1033"
         }
       ]
     },
     {
-      "id": "claim-d6ce1ec880854661",
-      "text": "- p02 gate Low address-now fix (analyze/apply nested `CLAUDE.md` wording) is",
+      "id": "claim-33116bc6dacb0ad6",
+      "text": "L1-L3: moot after revision 1 withdrew the recon validator;",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:1034-1034"
+        }
+      ]
+    },
+    {
+      "id": "claim-a77f9793c96fcd1b",
+      "text": "`BL-260928-settle-codex-read-authority` was rescoped to a live check that",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:1035-1035"
+        }
+      ]
+    },
+    {
+      "id": "claim-72665e4634c88af2",
+      "text": "Codex `/recon` lanes launch `contract-enforced` on the released CLI.",
       "status": "confirmed",
       "citations": [
         {
@@ -10608,19 +10652,8 @@
       ]
     },
     {
-      "id": "claim-d3b2b3d1b141c483",
-      "text": "in bookkeeping commit `e13fa06cd`, not a separate `fix(p02)` commit (its",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:1037-1037"
-        }
-      ]
-    },
-    {
-      "id": "claim-d157eab1b68cb7df",
-      "text": "commit was rejected by commitlint's 100-character body line limit and the",
+      "id": "claim-7421e0d75aad9072",
+      "text": "- p01 gate M1 (`reviews/archived/p01-review-2026-09-28T001719Z.md`): two concurrent guidance invocations",
       "status": "confirmed",
       "citations": [
         {
@@ -10630,8 +10663,8 @@
       ]
     },
     {
-      "id": "claim-7640f9d9115ca332",
-      "text": "staged files rode along with the next commit). History was not rewritten.",
+      "id": "claim-4ad4df0b0359ef5d",
+      "text": "can both pass the absent-block check and append the same managed block",
       "status": "confirmed",
       "citations": [
         {
@@ -10641,8 +10674,19 @@
       ]
     },
     {
-      "id": "claim-54453dd6d874ea1a",
-      "text": "Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.",
+      "id": "claim-ec62f0a830dba19a",
+      "text": "twice; the duplicate markers make later runs return `blocked` until the file",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:1040-1040"
+        }
+      ]
+    },
+    {
+      "id": "claim-f59cd379268cb1ae",
+      "text": "is repaired by hand. Deferred because a correct fix needs cross-process",
       "status": "confirmed",
       "citations": [
         {
@@ -10652,8 +10696,19 @@
       ]
     },
     {
-      "id": "claim-1c76f49c3fc35dd8",
-      "text": "| Task / Review         | Source Artifact                                                   | Planned / Documented                                               | Actual / Accepted                                                                              | Reason                                                                                                               | Source of Truth                          | Follow-up                                          |",
+      "id": "claim-1b00e0dedf849b96",
+      "text": "coordination on `AGENTS.md` (a lock file plus a re-read under the lock),",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:1042-1042"
+        }
+      ]
+    },
+    {
+      "id": "claim-f260e21f4da4a85b",
+      "text": "which is larger than a sweep fix; the pre-wave behavior never wrote an",
       "status": "confirmed",
       "citations": [
         {
@@ -10663,8 +10718,19 @@
       ]
     },
     {
-      "id": "claim-cd14efc942f560ee",
-      "text": "| p03-t03 / p03 reviews | discovery.md Key Decision 4                                       | Commit the task ledger before reviewer dispatch                    | Recovery-marker settlement also pre-review; phase row nonterminal until fixes and gates settle | p03 review M1/M2 and gate M2                                                                                         | Implementation                           | None                                               |",
+      "id": "claim-1458569224747b06",
+      "text": "existing file, and concurrent `oat` guidance runs against one checkout are",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:1044-1044"
+        }
+      ]
+    },
+    {
+      "id": "claim-2d1d37aedb0ac6ff",
+      "text": "rare. Resurface at final review; if not fixed in-wave, file a backlog item.",
       "status": "confirmed",
       "citations": [
         {
@@ -10674,41 +10740,8 @@
       ]
     },
     {
-      "id": "claim-da872fcc1a33efcf",
-      "text": "| p04-t02 / p04 reviews | plan.md p04-t02                                                   | Validator checks envelope fields                                   | Also enforces read, write, tool, and schema authority; inline output schemas dropped           | Four p04 review and gate rounds                                                                                      | Implementation                           | `BL-260928-settle-codex-read-authority`            |",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:1046-1046"
-        }
-      ]
-    },
-    {
-      "id": "claim-881994b1531ab1b1",
-      "text": "| p04 gate              | plan.md Reviews                                                   | Gate passes within its retry budget                                | Completed under operator override after two blocked attempts                                   | Operator decision 2026-09-28                                                                                         | Implementation (final review covers p04) | None                                               |",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:1047-1047"
-        }
-      ]
-    },
-    {
-      "id": "claim-8d0be791edaaacdc",
-      "text": "| p02-t03               | backlog item AC4                                                  | Warn about leftover CLAUDE.md files                                | Case variants deliberately not warned about                                                    | Case-insensitive match flagged real provider docs                                                                    | Implementation                           | None                                               |",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:1048-1048"
-        }
-      ]
-    },
-    {
-      "id": "claim-12517548b0f04621",
-      "text": "| p-rev1 (revision)     | plan.md p04-t02                                                   | Recon validator ships; reviewer validates recon lanes              | Validator withdrawn; recon restored to `main`; reviewer no longer launches `recon-worker`      | Operator direction 2026-09-28                                                                                        | Implementation                           | `BL-260928-settle-codex-read-authority` (rescoped) |",
+      "id": "claim-400f9205b79e508a",
+      "text": "- p02 gate Low address-now fix (analyze/apply nested `CLAUDE.md` wording) is",
       "status": "confirmed",
       "citations": [
         {
@@ -10718,8 +10751,8 @@
       ]
     },
     {
-      "id": "claim-2f037efe0b797169",
-      "text": "| p-rev1 (revision)     | discovery.md Key Decision 2 / `DR-260927-claude-md-shims-are-opt` | `documentation.*` keys; unconditional removal of OAT-managed shims | `instructions.claude.*` keys; all-or-nothing removal                                           | Operator direction 2026-09-28 (`DR-260928-name-the-claude-md-shim-keys`, `DR-260928-remove-no-claude-md-shim-while`) | Implementation                           | None                                               |",
+      "id": "claim-75a5bc3cc7cb9389",
+      "text": "in bookkeeping commit `e13fa06cd`, not a separate `fix(p02)` commit (its",
       "status": "confirmed",
       "citations": [
         {
@@ -10729,8 +10762,30 @@
       ]
     },
     {
-      "id": "claim-991454ef0dd42f1f",
-      "text": "Final verification (Step 12) after Revision 1 at `c95e17aad`, full Definition",
+      "id": "claim-10a172be04a26f40",
+      "text": "commit was rejected by commitlint's 100-character body line limit and the",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:1051-1051"
+        }
+      ]
+    },
+    {
+      "id": "claim-dd26438cf4381029",
+      "text": "staged files rode along with the next commit). History was not rewritten.",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:1052-1052"
+        }
+      ]
+    },
+    {
+      "id": "claim-3ebeb47c4e34843c",
+      "text": "Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.",
       "status": "confirmed",
       "citations": [
         {
@@ -10740,19 +10795,8 @@
       ]
     },
     {
-      "id": "claim-4f56c6b29b3d33f4",
-      "text": "of Done in CI order, every gate exit 0: `pnpm check`, `pnpm type-check`,",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:1055-1055"
-        }
-      ]
-    },
-    {
-      "id": "claim-28ee0f1da3128acd",
-      "text": "`HOME=$(mktemp -d) pnpm exec turbo run test --force` (10/10 tasks, 0 cached,",
+      "id": "claim-8cde3ee869ad333f",
+      "text": "| Task / Review         | Source Artifact                                                   | Planned / Documented                                               | Actual / Accepted                                                                              | Reason                                                                                                               | Source of Truth                          | Follow-up                                          |",
       "status": "confirmed",
       "citations": [
         {
@@ -10762,19 +10806,8 @@
       ]
     },
     {
-      "id": "claim-cdb3e008d6747138",
-      "text": "no replays), `pnpm build`, `check:skill-bumps`, `release:check-versions`",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:1057-1057"
-        }
-      ]
-    },
-    {
-      "id": "claim-423b8f8b070eed4c",
-      "text": "(after `git fetch origin main`), `release:validate`, `build:docs`,",
+      "id": "claim-0087c487fa272fea",
+      "text": "| p03-t03 / p03 reviews | discovery.md Key Decision 4                                       | Commit the task ledger before reviewer dispatch                    | Recovery-marker settlement also pre-review; phase row nonterminal until fixes and gates settle | p03 review M1/M2 and gate M2                                                                                         | Implementation                           | None                                               |",
       "status": "confirmed",
       "citations": [
         {
@@ -10784,8 +10817,8 @@
       ]
     },
     {
-      "id": "claim-bada7db751a1a2d0",
-      "text": "`test:smoke` 163/163, `test:skills` 660/660, `test:scripts`, `pnpm lint`,",
+      "id": "claim-24e9161a82d92ffe",
+      "text": "| p04-t02 / p04 reviews | plan.md p04-t02                                                   | Validator checks envelope fields                                   | Also enforces read, write, tool, and schema authority; inline output schemas dropped           | Four p04 review and gate rounds                                                                                      | Implementation                           | `BL-260928-settle-codex-read-authority`            |",
       "status": "confirmed",
       "citations": [
         {
@@ -10795,8 +10828,8 @@
       ]
     },
     {
-      "id": "claim-f2e9c4bf66d1f421",
-      "text": "`pnpm format`. The pre-revision run at `f0901755c` is superseded.",
+      "id": "claim-8d5087c9d45d3d38",
+      "text": "| p04 gate              | plan.md Reviews                                                   | Gate passes within its retry budget                                | Completed under operator override after two blocked attempts                                   | Operator decision 2026-09-28                                                                                         | Implementation (final review covers p04) | None                                               |",
       "status": "confirmed",
       "citations": [
         {
@@ -10806,8 +10839,8 @@
       ]
     },
     {
-      "id": "claim-646ef4b152ebe08c",
-      "text": "Per-phase verification is recorded under Orchestration Runs.",
+      "id": "claim-99db78bfee0f26ea",
+      "text": "| p02-t03               | backlog item AC4                                                  | Warn about leftover CLAUDE.md files                                | Case variants deliberately not warned about                                                    | Case-insensitive match flagged real provider docs                                                                    | Implementation                           | None                                               |",
       "status": "confirmed",
       "citations": [
         {
@@ -10817,19 +10850,30 @@
       ]
     },
     {
-      "id": "claim-4d6fd0ea2bcc3417",
-      "text": "**What shipped:**",
+      "id": "claim-b456ab60831c1ab0",
+      "text": "| p-rev1 (revision)     | plan.md p04-t02                                                   | Recon validator ships; reviewer validates recon lanes              | Validator withdrawn; recon restored to `main`; reviewer no longer launches `recon-worker`      | Operator direction 2026-09-28                                                                                        | Implementation                           | `BL-260928-settle-codex-read-authority` (rescoped) |",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:1065-1065"
+          "locator": "implementation.md:1062-1062"
         }
       ]
     },
     {
-      "id": "claim-6645f5258e5ed875",
-      "text": "- **CLAUDE.md shims are opt-in.** `instructions.claude.shims` in",
+      "id": "claim-89ce183aaf04eb42",
+      "text": "| p-rev1 (revision)     | discovery.md Key Decision 2 / `DR-260927-claude-md-shims-are-opt` | `documentation.*` keys; unconditional removal of OAT-managed shims | `instructions.claude.*` keys; all-or-nothing removal                                           | Operator direction 2026-09-28 (`DR-260928-name-the-claude-md-shim-keys`, `DR-260928-remove-no-claude-md-shim-while`) | Implementation                           | None                                               |",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:1063-1063"
+        }
+      ]
+    },
+    {
+      "id": "claim-f58dc977d27e6638",
+      "text": "Final verification (Step 12) after Revision 1 at `c95e17aad`, full Definition",
       "status": "confirmed",
       "citations": [
         {
@@ -10839,8 +10883,8 @@
       ]
     },
     {
-      "id": "claim-b9522aa444e9b35a",
-      "text": "`.oat/config.json` (`none | pointer | symlink | copy`, default `none`)",
+      "id": "claim-0774a35011dcc8cf",
+      "text": "of Done in CI order, every gate exit 0: `pnpm check`, `pnpm type-check`,",
       "status": "confirmed",
       "citations": [
         {
@@ -10850,8 +10894,8 @@
       ]
     },
     {
-      "id": "claim-888d5746a8a6defa",
-      "text": "persists the choice and `instructions.claude.excludes` lists directories",
+      "id": "claim-53e9d7c7c90e399a",
+      "text": "`HOME=$(mktemp -d) pnpm exec turbo run test --force` (10/10 tasks, 0 cached,",
       "status": "confirmed",
       "citations": [
         {
@@ -10861,8 +10905,8 @@
       ]
     },
     {
-      "id": "claim-3ec0c9042e2a1fbd",
-      "text": "sync leaves alone (clean rename of the earlier `documentation.*` keys, no",
+      "id": "claim-659422fc4bc86cd6",
+      "text": "no replays), `pnpm build`, `check:skill-bumps`, `release:check-versions`",
       "status": "confirmed",
       "citations": [
         {
@@ -10872,8 +10916,8 @@
       ]
     },
     {
-      "id": "claim-e06f640ac9e92318",
-      "text": "compatibility read); `--strategy` overrides one run. Under `none`, `oat instructions sync` creates",
+      "id": "claim-8b85054544194983",
+      "text": "(after `git fetch origin main`), `release:validate`, `build:docs`,",
       "status": "confirmed",
       "citations": [
         {
@@ -10883,8 +10927,8 @@
       ]
     },
     {
-      "id": "claim-2fb6f1a2bfe27c58",
-      "text": "no `CLAUDE.md`, removes only exact OAT-created shims (pointer, sibling",
+      "id": "claim-b711986140482377",
+      "text": "`test:smoke` 163/163, `test:skills` 660/660, `test:scripts`, `pnpm lint`,",
       "status": "confirmed",
       "citations": [
         {
@@ -10894,8 +10938,8 @@
       ]
     },
     {
-      "id": "claim-74e2f1b8275bb704",
-      "text": "symlink, identical copy) after apply-time identity and content re-checks,",
+      "id": "claim-4db36144ddc0b74e",
+      "text": "`pnpm format`. The pre-revision run at `f0901755c` is superseded.",
       "status": "confirmed",
       "citations": [
         {
@@ -10905,8 +10949,8 @@
       ]
     },
     {
-      "id": "claim-b2a6dee2e79b51de",
-      "text": "and never removes a hand-written `CLAUDE.md` beside an `AGENTS.md`,",
+      "id": "claim-ebe293b7ec48726a",
+      "text": "Per-phase verification is recorded under Orchestration Runs.",
       "status": "confirmed",
       "citations": [
         {
@@ -10916,41 +10960,8 @@
       ]
     },
     {
-      "id": "claim-f1a1a20d0bac9416",
-      "text": "`CLAUDE.local.md`, `.claude/CLAUDE.md`,",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:1075-1075"
-        }
-      ]
-    },
-    {
-      "id": "claim-2a0fe8413d8e8f6f",
-      "text": "excluded or docs trees, nested git checkouts, or any `CLAUDE.md` an",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:1076-1076"
-        }
-      ]
-    },
-    {
-      "id": "claim-a4e84dded4a77176",
-      "text": "`AGENTS.md` resolves to (a lone `CLAUDE.md` with no `AGENTS.md` is adopted",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:1077-1077"
-        }
-      ]
-    },
-    {
-      "id": "claim-7c7c1e99272105f5",
-      "text": "into a new `AGENTS.md` and removed). A repository-wide warning names every remaining",
+      "id": "claim-d7a97592e6de88a5",
+      "text": "**What shipped:**",
       "status": "confirmed",
       "citations": [
         {
@@ -10960,19 +10971,8 @@
       ]
     },
     {
-      "id": "claim-02b8a1539c13bf9a",
-      "text": "`CLAUDE.md` that would make Claude Code ignore AGENTS.md, with two options",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:1079-1079"
-        }
-      ]
-    },
-    {
-      "id": "claim-aea812ca2fcff02b",
-      "text": "(remove it, or set a shim strategy and rerun sync), and names linking",
+      "id": "claim-af37213a93d5bb19",
+      "text": "- **CLAUDE.md shims are opt-in.** `instructions.claude.shims` in",
       "status": "confirmed",
       "citations": [
         {
@@ -10982,8 +10982,8 @@
       ]
     },
     {
-      "id": "claim-f2a7ac5dca190752",
-      "text": "`AGENTS.md` files first. Validate, doctor, and the agent-instructions skills",
+      "id": "claim-6aa958254ef13d0a",
+      "text": "`.oat/config.json` (`none | pointer | symlink | copy`, default `none`)",
       "status": "confirmed",
       "citations": [
         {
@@ -10993,8 +10993,8 @@
       ]
     },
     {
-      "id": "claim-eee556e46f1fecfa",
-      "text": "follow the same rules; this repository's 11 shims were removed.",
+      "id": "claim-43eb5d8453c5fd65",
+      "text": "persists the choice and `instructions.claude.excludes` lists directories",
       "status": "confirmed",
       "citations": [
         {
@@ -11004,8 +11004,8 @@
       ]
     },
     {
-      "id": "claim-3cd31b8060bedfab",
-      "text": "Removal is all or nothing: while any `CLAUDE.md`, `CLAUDE.local.md`, or",
+      "id": "claim-b19d5993fd012486",
+      "text": "sync leaves alone (clean rename of the earlier `documentation.*` keys, no",
       "status": "confirmed",
       "citations": [
         {
@@ -11015,8 +11015,8 @@
       ]
     },
     {
-      "id": "claim-1325e6a36d5202f4",
-      "text": "`.claude/CLAUDE.md` with its own content exists (including in excluded",
+      "id": "claim-22f87557569d1d0e",
+      "text": "compatibility read); `--strategy` overrides one run. Under `none`, `oat instructions sync` creates",
       "status": "confirmed",
       "citations": [
         {
@@ -11026,8 +11026,8 @@
       ]
     },
     {
-      "id": "claim-347c909dead27534",
-      "text": "trees), sync removes no shim and reports `claude_md_blocks_shim_removal`",
+      "id": "claim-954e648fa7351efc",
+      "text": "no `CLAUDE.md`, removes only exact OAT-created shims (pointer, sibling",
       "status": "confirmed",
       "citations": [
         {
@@ -11037,8 +11037,8 @@
       ]
     },
     {
-      "id": "claim-c0b07faa2d4454c7",
-      "text": "with the files it would have removed, a docs link, and the fixes (move the",
+      "id": "claim-0e4aeb72a51d89bd",
+      "text": "symlink, identical copy) after apply-time identity and content re-checks,",
       "status": "confirmed",
       "citations": [
         {
@@ -11048,8 +11048,8 @@
       ]
     },
     {
-      "id": "claim-8c8d18f1e1a5494b",
-      "text": "content into `AGENTS.md` and remove the file, or set a shim strategy); a",
+      "id": "claim-476d0bd05a148722",
+      "text": "and never removes a hand-written `CLAUDE.md` beside an `AGENTS.md`,",
       "status": "confirmed",
       "citations": [
         {
@@ -11059,8 +11059,8 @@
       ]
     },
     {
-      "id": "claim-7a66f54676361067",
-      "text": "blocker an `AGENTS.md` links to gets replace-then-remove advice, and kept",
+      "id": "claim-d01d022d8556bae0",
+      "text": "`CLAUDE.local.md`, `.claude/CLAUDE.md`,",
       "status": "confirmed",
       "citations": [
         {
@@ -11070,8 +11070,8 @@
       ]
     },
     {
-      "id": "claim-3afbb6957c62a67a",
-      "text": "shims get no per-file \"remove it\" advice. Rules and provider sync",
+      "id": "claim-5cddda8371503c66",
+      "text": "excluded or docs trees, nested git checkouts, or any `CLAUDE.md` an",
       "status": "confirmed",
       "citations": [
         {
@@ -11081,8 +11081,8 @@
       ]
     },
     {
-      "id": "claim-06c0e8362e208a51",
-      "text": "(`.claude/rules`, skills, agents) are independent of the shim setting.",
+      "id": "claim-c402f940c1b04650",
+      "text": "`AGENTS.md` resolves to (a lone `CLAUDE.md` with no `AGENTS.md` is adopted",
       "status": "confirmed",
       "citations": [
         {
@@ -11092,8 +11092,8 @@
       ]
     },
     {
-      "id": "claim-4f77b6cdcd9e1d25",
-      "text": "- **AGENTS.md guidance appends instead of demanding manual patches.** An",
+      "id": "claim-47c23383ce602f70",
+      "text": "into a new `AGENTS.md` and removed). A repository-wide warning names every remaining",
       "status": "confirmed",
       "citations": [
         {
@@ -11103,8 +11103,8 @@
       ]
     },
     {
-      "id": "claim-6c70fc47c193f53e",
-      "text": "absent managed block is appended with `O_WRONLY | O_APPEND | O_NOFOLLOW`",
+      "id": "claim-6ee8d0a02aed9473",
+      "text": "`CLAUDE.md` that would make Claude Code ignore AGENTS.md, with two options",
       "status": "confirmed",
       "citations": [
         {
@@ -11114,8 +11114,8 @@
       ]
     },
     {
-      "id": "claim-3b5554a317006d19",
-      "text": "after `fstat` identity checks; hard-linked, unwritable, swapped, or",
+      "id": "claim-b9f792786ac09ad1",
+      "text": "(remove it, or set a shim strategy and rerun sync), and names linking",
       "status": "confirmed",
       "citations": [
         {
@@ -11125,8 +11125,8 @@
       ]
     },
     {
-      "id": "claim-c8a88230ff4d7a32",
-      "text": "non-regular targets get the zero-write manual patch with the real cause.",
+      "id": "claim-54e9e9d395fe21ef",
+      "text": "`AGENTS.md` files first. Validate, doctor, and the agent-instructions skills",
       "status": "confirmed",
       "citations": [
         {
@@ -11136,8 +11136,8 @@
       ]
     },
     {
-      "id": "claim-c2406347fcffca1e",
-      "text": "`oat pjm init` prints guidance once; every `--project-guidance` consumer acts",
+      "id": "claim-feafb0715245e225",
+      "text": "follow the same rules; this repository's 11 shims were removed.",
       "status": "confirmed",
       "citations": [
         {
@@ -11147,8 +11147,8 @@
       ]
     },
     {
-      "id": "claim-befc6572be3607f6",
-      "text": "or rejects; `oat init` without `--setup` honors it; zero-pack guidance is",
+      "id": "claim-581edcb2424e49c8",
+      "text": "Removal is all or nothing: while any `CLAUDE.md`, `CLAUDE.local.md`, or",
       "status": "confirmed",
       "citations": [
         {
@@ -11158,8 +11158,8 @@
       ]
     },
     {
-      "id": "claim-113a14f0fe841907",
-      "text": "skipped; new read-only `oat tools guidance [--json]`; the tools block names",
+      "id": "claim-98e5685468571de5",
+      "text": "`.claude/CLAUDE.md` with its own content exists (including in excluded",
       "status": "confirmed",
       "citations": [
         {
@@ -11169,8 +11169,8 @@
       ]
     },
     {
-      "id": "claim-d647faa571004d40",
-      "text": "only the skills directories installed packs use.",
+      "id": "claim-319efdec2d9aedfd",
+      "text": "trees), sync removes no shim and reports `claude_md_blocks_shim_removal`",
       "status": "confirmed",
       "citations": [
         {
@@ -11180,8 +11180,8 @@
       ]
     },
     {
-      "id": "claim-75ce6e6b3c269dc7",
-      "text": "- **Backlog archive rewrites inbound references.** `oat backlog archive`",
+      "id": "claim-bab7d911fb6fd315",
+      "text": "with the files it would have removed, a docs link, and the fixes (move the",
       "status": "confirmed",
       "citations": [
         {
@@ -11191,8 +11191,8 @@
       ]
     },
     {
-      "id": "claim-d63d451815f58ecc",
-      "text": "rewrites `.oat/repo` Markdown links, repository-root path strings, and",
+      "id": "claim-629a628856719b44",
+      "text": "content into `AGENTS.md` and remove the file, or set a shim strategy); a",
       "status": "confirmed",
       "citations": [
         {
@@ -11202,8 +11202,8 @@
       ]
     },
     {
-      "id": "claim-31a579ef013dd1b9",
-      "text": "whole-span code citations to the moved item (URLs, symlinks, fenced code,",
+      "id": "claim-0585df734d3d3cc6",
+      "text": "blocker an `AGENTS.md` links to gets replace-then-remove advice, and kept",
       "status": "confirmed",
       "citations": [
         {
@@ -11213,8 +11213,8 @@
       ]
     },
     {
-      "id": "claim-c71c9df574eaeb10",
-      "text": "and working links elsewhere are left alone; unresolvable local forms warn)",
+      "id": "claim-a207ce81621b0919",
+      "text": "shims get no per-file \"remove it\" advice. Rules and provider sync",
       "status": "confirmed",
       "citations": [
         {
@@ -11224,8 +11224,8 @@
       ]
     },
     {
-      "id": "claim-bef9f3b8f7d051c6",
-      "text": "and retries on re-run.",
+      "id": "claim-ea7639675f79bd63",
+      "text": "(`.claude/rules`, skills, agents) are independent of the shim setting.",
       "status": "confirmed",
       "citations": [
         {
@@ -11235,8 +11235,8 @@
       ]
     },
     {
-      "id": "claim-988117dcc1b4226d",
-      "text": "- **Recon.** `oat-reviewer` no longer launches `recon-worker`; only the",
+      "id": "claim-ebdde5154508eea5",
+      "text": "- **AGENTS.md guidance appends instead of demanding manual patches.** An",
       "status": "confirmed",
       "citations": [
         {
@@ -11246,8 +11246,8 @@
       ]
     },
     {
-      "id": "claim-49b6ed4066177a9b",
-      "text": "`recon` skill does, with its evidence-packet machinery. The recon skill is",
+      "id": "claim-977f1beb5ed249fd",
+      "text": "absent managed block is appended with `O_WRONLY | O_APPEND | O_NOFOLLOW`",
       "status": "confirmed",
       "citations": [
         {
@@ -11257,8 +11257,8 @@
       ]
     },
     {
-      "id": "claim-937df64bd322105b",
-      "text": "unchanged from `main` (the validator built in p04 was withdrawn in the",
+      "id": "claim-94f767d16c202f51",
+      "text": "after `fstat` identity checks; hard-linked, unwritable, swapped, or",
       "status": "confirmed",
       "citations": [
         {
@@ -11268,8 +11268,8 @@
       ]
     },
     {
-      "id": "claim-fdc9a80ef332f4b3",
-      "text": "revision).",
+      "id": "claim-28ae27989d3b59da",
+      "text": "non-regular targets get the zero-write manual patch with the real cause.",
       "status": "confirmed",
       "citations": [
         {
@@ -11279,8 +11279,8 @@
       ]
     },
     {
-      "id": "claim-428451d90733b9f2",
-      "text": "- **Lifecycle skills.** Quick-mode discovery routes straight to quick-start in",
+      "id": "claim-d5bda81b840c6b81",
+      "text": "`oat pjm init` prints guidance once; every `--project-guidance` consumer acts",
       "status": "confirmed",
       "citations": [
         {
@@ -11290,8 +11290,8 @@
       ]
     },
     {
-      "id": "claim-8ef7d0ad7417bb2a",
-      "text": "next and progress; Lite records `absorbed_projects` /",
+      "id": "claim-980461205abfaa08",
+      "text": "or rejects; `oat init` without `--setup` honors it; zero-pack guidance is",
       "status": "confirmed",
       "citations": [
         {
@@ -11301,8 +11301,8 @@
       ]
     },
     {
-      "id": "claim-061b6a10be389f3f",
-      "text": "`absorbed_backlog_ids`; implement commits the phase task ledger before the",
+      "id": "claim-58d2fd6d3e4e8d28",
+      "text": "skipped; new read-only `oat tools guidance [--json]`; the tools block names",
       "status": "confirmed",
       "citations": [
         {
@@ -11312,8 +11312,8 @@
       ]
     },
     {
-      "id": "claim-ded3b72b631a17a6",
-      "text": "per-phase reviewer is dispatched and keeps the phase row nonterminal until",
+      "id": "claim-988863a1dd12eda8",
+      "text": "only the skills directories installed packs use.",
       "status": "confirmed",
       "citations": [
         {
@@ -11323,8 +11323,8 @@
       ]
     },
     {
-      "id": "claim-b3a45912a7cfe4a7",
-      "text": "review fixes and gates settle. Exit-gate freshness uses",
+      "id": "claim-bdb2d26c42f978f6",
+      "text": "- **Backlog archive rewrites inbound references.** `oat backlog archive`",
       "status": "confirmed",
       "citations": [
         {
@@ -11334,8 +11334,8 @@
       ]
     },
     {
-      "id": "claim-0765ace77e1d24b0",
-      "text": "`effective-delta-v2`, which ignores `.oat/projects/**` and `.oat/repo/**`",
+      "id": "claim-cfccf039b82c4eeb",
+      "text": "rewrites `.oat/repo` Markdown links, repository-root path strings, and",
       "status": "confirmed",
       "citations": [
         {
@@ -11345,8 +11345,8 @@
       ]
     },
     {
-      "id": "claim-8bee2e466ab56443",
-      "text": "record changes; v1 generations keep their rules.",
+      "id": "claim-3695477ade5cdf47",
+      "text": "whole-span code citations to the moved item (URLs, symlinks, fenced code,",
       "status": "confirmed",
       "citations": [
         {
@@ -11356,8 +11356,8 @@
       ]
     },
     {
-      "id": "claim-f0005e2369cc777e",
-      "text": "- **Repairs and CI.** Five heading-swallowing bare fences repaired in agent",
+      "id": "claim-186b70224869600b",
+      "text": "and working links elsewhere are left alone; unresolvable local forms warn)",
       "status": "confirmed",
       "citations": [
         {
@@ -11367,8 +11367,8 @@
       ]
     },
     {
-      "id": "claim-11ff25de3403ecd4",
-      "text": "roles and templates, with the fence scanner extended to `.agents/agents`",
+      "id": "claim-15e9740b19228fd5",
+      "text": "and retries on re-run.",
       "status": "confirmed",
       "citations": [
         {
@@ -11378,8 +11378,8 @@
       ]
     },
     {
-      "id": "claim-6237f058fe67af5c",
-      "text": "and `.oat/templates`; `packages/control-plane` gains `check`, `check:fix`,",
+      "id": "claim-808551f99b05dc16",
+      "text": "- **Recon.** `oat-reviewer` no longer launches `recon-worker`; only the",
       "status": "confirmed",
       "citations": [
         {
@@ -11389,8 +11389,8 @@
       ]
     },
     {
-      "id": "claim-bd3f9a7a44b26a52",
-      "text": "and `lint:fix`, pinned by the lint-enrollment test; the agents-md",
+      "id": "claim-7f3878d4fb33dd14",
+      "text": "`recon` skill does, with its evidence-packet machinery. The recon skill is",
       "status": "confirmed",
       "citations": [
         {
@@ -11400,8 +11400,8 @@
       ]
     },
     {
-      "id": "claim-0cc47eae402c1b8a",
-      "text": "unsafe-target test race is fixed.",
+      "id": "claim-0ddb85555bbfc148",
+      "text": "unchanged from `main` (the validator built in p04 was withdrawn in the",
       "status": "confirmed",
       "citations": [
         {
@@ -11411,8 +11411,8 @@
       ]
     },
     {
-      "id": "claim-254e4e8474280777",
-      "text": "- Lockstep public packages bumped to 0.3.9; fourteen backlog items archived:",
+      "id": "claim-aaca02dc64ec0d33",
+      "text": "revision).",
       "status": "confirmed",
       "citations": [
         {
@@ -11422,8 +11422,8 @@
       ]
     },
     {
-      "id": "claim-929f84027f9f469c",
-      "text": "twelve shipped by this wave, plus `BL-260927-record-owner-overrides` and",
+      "id": "claim-b80c97f7f545671e",
+      "text": "- **Lifecycle skills.** Quick-mode discovery routes straight to quick-start in",
       "status": "confirmed",
       "citations": [
         {
@@ -11433,8 +11433,8 @@
       ]
     },
     {
-      "id": "claim-e90b7299db8db7de",
-      "text": "`BL-260901-add-corrective-revision` closed as superseded by the review-cap",
+      "id": "claim-29e487c2c5ce4e54",
+      "text": "next and progress; Lite records `absorbed_projects` /",
       "status": "confirmed",
       "citations": [
         {
@@ -11444,8 +11444,8 @@
       ]
     },
     {
-      "id": "claim-29fc74358402e1c8",
-      "text": "consolidation in the pre-wave decisions pass. The branch also carries that",
+      "id": "claim-9fe7a68d48ad4287",
+      "text": "`absorbed_backlog_ids`; implement commits the phase task ledger before the",
       "status": "confirmed",
       "citations": [
         {
@@ -11455,8 +11455,8 @@
       ]
     },
     {
-      "id": "claim-68c7b23967f3ff58",
-      "text": "pass's six decision records (`DR-260927-*`) and the new backlog items it",
+      "id": "claim-0bf9e57023f4009b",
+      "text": "per-phase reviewer is dispatched and keeps the phase row nonterminal until",
       "status": "confirmed",
       "citations": [
         {
@@ -11466,8 +11466,8 @@
       ]
     },
     {
-      "id": "claim-93238706c0c25299",
-      "text": "created.",
+      "id": "claim-8d8c9da974a832d9",
+      "text": "review fixes and gates settle. Exit-gate freshness uses",
       "status": "confirmed",
       "citations": [
         {
@@ -11477,8 +11477,19 @@
       ]
     },
     {
-      "id": "claim-4723080bded87dfa",
-      "text": "**Behavioral changes (user-facing):**",
+      "id": "claim-4bf91bb0dc41b110",
+      "text": "`effective-delta-v2`, which ignores `.oat/projects/**` and `.oat/repo/**`",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:1126-1126"
+        }
+      ]
+    },
+    {
+      "id": "claim-a36407e418eb8032",
+      "text": "record changes; v1 generations keep their rules.",
       "status": "confirmed",
       "citations": [
         {
@@ -11488,8 +11499,19 @@
       ]
     },
     {
-      "id": "claim-6567f9e68fada93e",
-      "text": "- `oat instructions sync` no longer creates `CLAUDE.md` shims by default and",
+      "id": "claim-ea13933c7e4cbc04",
+      "text": "- **Repairs and CI.** Five heading-swallowing bare fences repaired in agent",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:1128-1128"
+        }
+      ]
+    },
+    {
+      "id": "claim-ee84fc5568d5a832",
+      "text": "roles and templates, with the fence scanner extended to `.agents/agents`",
       "status": "confirmed",
       "citations": [
         {
@@ -11499,8 +11521,8 @@
       ]
     },
     {
-      "id": "claim-2a534cf2c50497d2",
-      "text": "removes OAT-created ones on its next run; a lone `CLAUDE.md` is adopted into",
+      "id": "claim-bd4b9f75e6b29896",
+      "text": "and `.oat/templates`; `packages/control-plane` gains `check`, `check:fix`,",
       "status": "confirmed",
       "citations": [
         {
@@ -11510,8 +11532,8 @@
       ]
     },
     {
-      "id": "claim-5c86ae5691f36cc4",
-      "text": "a new `AGENTS.md` and removed; opt back in with",
+      "id": "claim-4fc9a6dc6df31474",
+      "text": "and `lint:fix`, pinned by the lint-enrollment test; the agents-md",
       "status": "confirmed",
       "citations": [
         {
@@ -11521,8 +11543,8 @@
       ]
     },
     {
-      "id": "claim-110f7d2e4ad5d873",
-      "text": "`oat config set instructions.claude.shims pointer`.",
+      "id": "claim-143c0f061a284afa",
+      "text": "unsafe-target test race is fixed.",
       "status": "confirmed",
       "citations": [
         {
@@ -11532,8 +11554,8 @@
       ]
     },
     {
-      "id": "claim-54d2e6c25d44ed22",
-      "text": "- Removal is all or nothing: while a `CLAUDE.md` with its own content exists,",
+      "id": "claim-483b628649c78ebd",
+      "text": "- Lockstep public packages bumped to 0.3.9; fourteen backlog items archived:",
       "status": "confirmed",
       "citations": [
         {
@@ -11543,8 +11565,8 @@
       ]
     },
     {
-      "id": "claim-2c0192c15bfa78c9",
-      "text": "sync removes no shim and `sync`/`validate` exit 1 with the reason and fixes.",
+      "id": "claim-b335bda3a74046dc",
+      "text": "twelve shipped by this wave, plus `BL-260927-record-owner-overrides` and",
       "status": "confirmed",
       "citations": [
         {
@@ -11554,8 +11576,8 @@
       ]
     },
     {
-      "id": "claim-f162d6330247f112",
-      "text": "- `documentation.instructionSyncStrategy` and",
+      "id": "claim-73283e09e50e15eb",
+      "text": "`BL-260901-add-corrective-revision` closed as superseded by the review-cap",
       "status": "confirmed",
       "citations": [
         {
@@ -11565,8 +11587,8 @@
       ]
     },
     {
-      "id": "claim-f8a74d1fffd301b0",
-      "text": "`documentation.instructionPointerExcludes` are renamed to",
+      "id": "claim-299418bbaf54bf46",
+      "text": "consolidation in the pre-wave decisions pass. The branch also carries that",
       "status": "confirmed",
       "citations": [
         {
@@ -11576,8 +11598,8 @@
       ]
     },
     {
-      "id": "claim-a887d1ac1df9c41d",
-      "text": "`instructions.claude.shims` and `instructions.claude.excludes`; the old keys",
+      "id": "claim-73d2c633789acdda",
+      "text": "pass's six decision records (`DR-260927-*`) and the new backlog items it",
       "status": "confirmed",
       "citations": [
         {
@@ -11587,8 +11609,8 @@
       ]
     },
     {
-      "id": "claim-4c9c705c479968dd",
-      "text": "are ignored.",
+      "id": "claim-1024afcee5d1532a",
+      "text": "created.",
       "status": "confirmed",
       "citations": [
         {
@@ -11598,19 +11620,8 @@
       ]
     },
     {
-      "id": "claim-fa25232f99b1d7d9",
-      "text": "- After upgrading, `oat instructions validate` exits 1 while old shims remain,",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:1139-1139"
-        }
-      ]
-    },
-    {
-      "id": "claim-fc45091e02cc96d7",
-      "text": "until `oat instructions sync` removes them.",
+      "id": "claim-2b6707f31a829c85",
+      "text": "**Behavioral changes (user-facing):**",
       "status": "confirmed",
       "citations": [
         {
@@ -11620,19 +11631,8 @@
       ]
     },
     {
-      "id": "claim-db6224778b832021",
-      "text": "- `oat instructions validate` no longer reports a missing `CLAUDE.md` as drift",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:1141-1141"
-        }
-      ]
-    },
-    {
-      "id": "claim-6a896edde81febe3",
-      "text": "under the default; it warns about leftover `CLAUDE.md` files instead.",
+      "id": "claim-bb70fc58305c91a0",
+      "text": "- `oat instructions sync` no longer creates `CLAUDE.md` shims by default and",
       "status": "confirmed",
       "citations": [
         {
@@ -11642,8 +11642,8 @@
       ]
     },
     {
-      "id": "claim-246e5ad77485c1de",
-      "text": "- AGENTS.md guidance writers append absent blocks (exit 0) instead of printing",
+      "id": "claim-7b5b2c0f2375ba47",
+      "text": "removes OAT-created ones on its next run; a lone `CLAUDE.md` is adopted into",
       "status": "confirmed",
       "citations": [
         {
@@ -11653,8 +11653,8 @@
       ]
     },
     {
-      "id": "claim-4f5ffc863e8f0e0a",
-      "text": "a manual patch and exiting 1.",
+      "id": "claim-846bcfcc249f478e",
+      "text": "a new `AGENTS.md` and removed; opt back in with",
       "status": "confirmed",
       "citations": [
         {
@@ -11664,8 +11664,8 @@
       ]
     },
     {
-      "id": "claim-70b0c305ea3255c8",
-      "text": "- `oat backlog archive` edits other `.oat/repo` files to repoint links.",
+      "id": "claim-84455380af05f251",
+      "text": "`oat config set instructions.claude.shims pointer`.",
       "status": "confirmed",
       "citations": [
         {
@@ -11675,8 +11675,19 @@
       ]
     },
     {
-      "id": "claim-79dc036747ce6808",
-      "text": "**Key files / modules:**",
+      "id": "claim-dffcc0197372fa42",
+      "text": "- Removal is all or nothing: while a `CLAUDE.md` with its own content exists,",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:1146-1146"
+        }
+      ]
+    },
+    {
+      "id": "claim-3ca6d5d20a09a213",
+      "text": "sync removes no shim and `sync`/`validate` exit 1 with the reason and fixes.",
       "status": "confirmed",
       "citations": [
         {
@@ -11686,8 +11697,19 @@
       ]
     },
     {
-      "id": "claim-ee3421e13b1637ca",
-      "text": "- `packages/cli/src/commands/instructions/**`, `packages/cli/src/config/oat-config.ts`,",
+      "id": "claim-fb27ba5a833455b6",
+      "text": "- `documentation.instructionSyncStrategy` and",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:1148-1148"
+        }
+      ]
+    },
+    {
+      "id": "claim-631bb6f20b642c98",
+      "text": "`documentation.instructionPointerExcludes` are renamed to",
       "status": "confirmed",
       "citations": [
         {
@@ -11697,8 +11719,8 @@
       ]
     },
     {
-      "id": "claim-33ba6fe4e80d38b5",
-      "text": "`packages/cli/src/config/resolve.ts` - shim strategy, removal, warnings",
+      "id": "claim-68992c3255da1ee4",
+      "text": "`instructions.claude.shims` and `instructions.claude.excludes`; the old keys",
       "status": "confirmed",
       "citations": [
         {
@@ -11708,8 +11730,8 @@
       ]
     },
     {
-      "id": "claim-221360cb08291fa0",
-      "text": "- `packages/cli/src/commands/shared/agents-md.ts`,",
+      "id": "claim-c32efe6f6092e78f",
+      "text": "are ignored.",
       "status": "confirmed",
       "citations": [
         {
@@ -11719,8 +11741,8 @@
       ]
     },
     {
-      "id": "claim-5ff4a1610e317935",
-      "text": "`packages/cli/src/commands/init/**`, `packages/cli/src/commands/pjm/**`,",
+      "id": "claim-a6d8849e47f94913",
+      "text": "- After upgrading, `oat instructions validate` exits 1 while old shims remain,",
       "status": "confirmed",
       "citations": [
         {
@@ -11730,8 +11752,8 @@
       ]
     },
     {
-      "id": "claim-aad66c5ee73ff27b",
-      "text": "`packages/cli/src/commands/tools/guidance/**` - guidance append and emission",
+      "id": "claim-026fd1bf8a47d4ce",
+      "text": "until `oat instructions sync` removes them.",
       "status": "confirmed",
       "citations": [
         {
@@ -11741,8 +11763,8 @@
       ]
     },
     {
-      "id": "claim-4f0ec0896a8b0328",
-      "text": "- `packages/cli/src/commands/backlog/{archive.ts,rewrite-references.ts}` -",
+      "id": "claim-b61fd6ceb7eeae82",
+      "text": "- `oat instructions validate` no longer reports a missing `CLAUDE.md` as drift",
       "status": "confirmed",
       "citations": [
         {
@@ -11752,8 +11774,8 @@
       ]
     },
     {
-      "id": "claim-b8e670d41c1e2178",
-      "text": "reference rewriting",
+      "id": "claim-906d31d2da9462fe",
+      "text": "under the default; it warns about leftover `CLAUDE.md` files instead.",
       "status": "confirmed",
       "citations": [
         {
@@ -11763,8 +11785,8 @@
       ]
     },
     {
-      "id": "claim-c1b8549655b2f82f",
-      "text": "- Skills: oat-doctor 2.0.2, oat-agent-instructions-analyze 1.12.4,",
+      "id": "claim-445f39ea92dc6e05",
+      "text": "- AGENTS.md guidance writers append absent blocks (exit 0) instead of printing",
       "status": "confirmed",
       "citations": [
         {
@@ -11774,8 +11796,8 @@
       ]
     },
     {
-      "id": "claim-ce1b562c89e8dbfc",
-      "text": "oat-agent-instructions-apply 1.7.3, oat-project-next 1.1.3,",
+      "id": "claim-009909ffe929d720",
+      "text": "a manual patch and exiting 1.",
       "status": "confirmed",
       "citations": [
         {
@@ -11785,8 +11807,8 @@
       ]
     },
     {
-      "id": "claim-9769c955d22afbc4",
-      "text": "oat-project-progress 1.4.3, oat-project-lite 1.1.6, oat-project-implement",
+      "id": "claim-82c8fe606f8a2594",
+      "text": "- `oat backlog archive` edits other `.oat/repo` files to repoint links.",
       "status": "confirmed",
       "citations": [
         {
@@ -11796,19 +11818,8 @@
       ]
     },
     {
-      "id": "claim-2174f963bbe718b4",
-      "text": "2.3.14; agent roles oat-reviewer 1.2.10, oat-codebase-mapper",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:1159-1159"
-        }
-      ]
-    },
-    {
-      "id": "claim-b69c2022a9d673b4",
-      "text": "1.0.2, skeptical-evaluator 1.0.1",
+      "id": "claim-d7fb6214766ae8bc",
+      "text": "**Key files / modules:**",
       "status": "confirmed",
       "citations": [
         {
@@ -11818,8 +11829,8 @@
       ]
     },
     {
-      "id": "claim-e327a68357a30ca2",
-      "text": "**Verification performed:**",
+      "id": "claim-bdadd24f7beacd11",
+      "text": "- `packages/cli/src/commands/instructions/**`, `packages/cli/src/config/oat-config.ts`,",
       "status": "confirmed",
       "citations": [
         {
@@ -11829,8 +11840,19 @@
       ]
     },
     {
-      "id": "claim-20a044b83e13f10c",
-      "text": "- Failing-first tests for every behavior change; neutralize-and-restore proofs",
+      "id": "claim-ba6bef32326ed36c",
+      "text": "`packages/cli/src/config/resolve.ts` - shim strategy, removal, warnings",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:1163-1163"
+        }
+      ]
+    },
+    {
+      "id": "claim-b55e9e408a034365",
+      "text": "- `packages/cli/src/commands/shared/agents-md.ts`,",
       "status": "confirmed",
       "citations": [
         {
@@ -11840,8 +11862,8 @@
       ]
     },
     {
-      "id": "claim-3c562389288c8876",
-      "text": "for every named negative control (append identity checks, shim deletion",
+      "id": "claim-58e5befcbbc2164c",
+      "text": "`packages/cli/src/commands/init/**`, `packages/cli/src/commands/pjm/**`,",
       "status": "confirmed",
       "citations": [
         {
@@ -11851,8 +11873,8 @@
       ]
     },
     {
-      "id": "claim-5ccb7ccc75aed376",
-      "text": "guards, the all-or-nothing removal block, rewriter symlink and resolution guards,",
+      "id": "claim-256d258e8a494ec3",
+      "text": "`packages/cli/src/commands/tools/guidance/**` - guidance append and emission",
       "status": "confirmed",
       "citations": [
         {
@@ -11862,8 +11884,8 @@
       ]
     },
     {
-      "id": "claim-a04ca73028c5878e",
-      "text": "lint and check pins); failing-first pins for the reviewer",
+      "id": "claim-64720fe3ac6098d4",
+      "text": "- `packages/cli/src/commands/backlog/{archive.ts,rewrite-references.ts}` -",
       "status": "confirmed",
       "citations": [
         {
@@ -11873,8 +11895,8 @@
       ]
     },
     {
-      "id": "claim-516a9c35e6030807",
-      "text": "`recon-worker` removal and the `effective-delta-v2` pathspecs.",
+      "id": "claim-d9c282870a504e20",
+      "text": "reference rewriting",
       "status": "confirmed",
       "citations": [
         {
@@ -11884,8 +11906,8 @@
       ]
     },
     {
-      "id": "claim-7694ab5ad1839b78",
-      "text": "- Per-phase Opus 5.5 high root reviews with fix loops and Codex",
+      "id": "claim-12c42c42bf98a091",
+      "text": "- Skills: oat-doctor 2.0.2, oat-agent-instructions-analyze 1.12.4,",
       "status": "confirmed",
       "citations": [
         {
@@ -11895,8 +11917,8 @@
       ]
     },
     {
-      "id": "claim-d86d8cd9d018d5ba",
-      "text": "`codex-6-sol-xhigh` phase gates on every phase, including revision p-rev1",
+      "id": "claim-a317213d424c6a27",
+      "text": "oat-agent-instructions-apply 1.7.3, oat-project-next 1.1.3,",
       "status": "confirmed",
       "citations": [
         {
@@ -11906,8 +11928,8 @@
       ]
     },
     {
-      "id": "claim-dde8258bba858820",
-      "text": "(p04 completed under an operator override after its gate budget was",
+      "id": "claim-c427d8a8a4bd7b76",
+      "text": "oat-project-progress 1.4.3, oat-project-lite 1.1.6, oat-project-implement",
       "status": "confirmed",
       "citations": [
         {
@@ -11917,8 +11939,8 @@
       ]
     },
     {
-      "id": "claim-72b397bc55b7b63b",
-      "text": "exhausted).",
+      "id": "claim-17d2c189bc3b3eab",
+      "text": "2.3.14; agent roles oat-reviewer 1.2.10, oat-codebase-mapper",
       "status": "confirmed",
       "citations": [
         {
@@ -11928,8 +11950,8 @@
       ]
     },
     {
-      "id": "claim-176f2e54138bdf44",
-      "text": "- Full Definition of Done re-run after Revision 1 at `c95e17aad`, all gates",
+      "id": "claim-d7eddf6dbc4d668c",
+      "text": "1.0.2, skeptical-evaluator 1.0.1",
       "status": "confirmed",
       "citations": [
         {
@@ -11939,30 +11961,30 @@
       ]
     },
     {
-      "id": "claim-b2945359b3b6e15f",
-      "text": "exit 0 with 0 of 10 test tasks cached (see Test Results).",
+      "id": "claim-85d6267450e695e8",
+      "text": "**Verification performed:**",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:1174-1174"
+          "locator": "implementation.md:1175-1175"
         }
       ]
     },
     {
-      "id": "claim-e8bdc39b4ba8a635",
-      "text": "**Design deltas (if any):**",
+      "id": "claim-d0be60b77a835b57",
+      "text": "- Failing-first tests for every behavior change; neutralize-and-restore proofs",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:1176-1176"
+          "locator": "implementation.md:1177-1177"
         }
       ]
     },
     {
-      "id": "claim-20b2ff81773f4cc8",
-      "text": "- Key decision 4's pre-review bookkeeping was refined during p03 review:",
+      "id": "claim-5b41ff2c4a71d227",
+      "text": "for every named negative control (append identity checks, shim deletion",
       "status": "confirmed",
       "citations": [
         {
@@ -11972,8 +11994,8 @@
       ]
     },
     {
-      "id": "claim-e4d34a277e439562",
-      "text": "recovery-marker settlement belongs to the pre-review commit, and the phase",
+      "id": "claim-d29deb32a98bdb43",
+      "text": "guards, the all-or-nothing removal block, rewriter symlink and resolution guards,",
       "status": "confirmed",
       "citations": [
         {
@@ -11983,8 +12005,8 @@
       ]
     },
     {
-      "id": "claim-1992731125b44901",
-      "text": "row stays nonterminal until review fixes and gates settle.",
+      "id": "claim-897957e66a7d1357",
+      "text": "lint and check pins); failing-first pins for the reviewer",
       "status": "confirmed",
       "citations": [
         {
@@ -11994,8 +12016,8 @@
       ]
     },
     {
-      "id": "claim-6514ab61278b02de",
-      "text": "- Revision 1 (operator feedback on PR #332): renamed the shim keys under",
+      "id": "claim-aee717d02d330230",
+      "text": "`recon-worker` removal and the `effective-delta-v2` pathspecs.",
       "status": "confirmed",
       "citations": [
         {
@@ -12005,8 +12027,8 @@
       ]
     },
     {
-      "id": "claim-5ccc1a6ded072502",
-      "text": "`instructions.claude`, made removal all or nothing, pinned rules-sync",
+      "id": "claim-d3142b762ff1fdc5",
+      "text": "- Per-phase Opus 5.5 high root reviews with fix loops and Codex",
       "status": "confirmed",
       "citations": [
         {
@@ -12016,8 +12038,8 @@
       ]
     },
     {
-      "id": "claim-38c76f46cc31886e",
-      "text": "independence, added `effective-delta-v2`, and withdrew the recon validator",
+      "id": "claim-25419c95bcbf7edc",
+      "text": "`codex-6-sol-xhigh` phase gates on every phase, including revision p-rev1",
       "status": "confirmed",
       "citations": [
         {
@@ -12027,8 +12049,8 @@
       ]
     },
     {
-      "id": "claim-3e4fa8098abf8cba",
-      "text": "and the reviewer's `recon-worker` path (recon restored to `main`).",
+      "id": "claim-b29ef0e1c5dddc1b",
+      "text": "(p04 completed under an operator override after its gate budget was",
       "status": "confirmed",
       "citations": [
         {
@@ -12038,8 +12060,8 @@
       ]
     },
     {
-      "id": "claim-64a07ba1de2fcd46",
-      "text": "- Case variants of `CLAUDE.md` are deliberately not warned about (they matched",
+      "id": "claim-d70b974ca2d0d9c2",
+      "text": "exhausted).",
       "status": "confirmed",
       "citations": [
         {
@@ -12049,8 +12071,8 @@
       ]
     },
     {
-      "id": "claim-ac2feb9b1352c111",
-      "text": "real provider docs); documented.",
+      "id": "claim-3168c5668b034603",
+      "text": "- Full Definition of Done re-run after Revision 1 at `c95e17aad`, all gates",
       "status": "confirmed",
       "citations": [
         {
@@ -12060,8 +12082,8 @@
       ]
     },
     {
-      "id": "claim-bb623c7f30d32249",
-      "text": "- Follow-ups filed: `BL-260928-serialize-concurrent-agents-md`,",
+      "id": "claim-4df2012fc8620a76",
+      "text": "exit 0 with 0 of 10 test tasks cached (see Test Results).",
       "status": "confirmed",
       "citations": [
         {
@@ -12071,19 +12093,8 @@
       ]
     },
     {
-      "id": "claim-3da0b9f27df8c948",
-      "text": "`BL-260928-keep-instructions-sync-force`,",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:1188-1188"
-        }
-      ]
-    },
-    {
-      "id": "claim-aea9042a1a06a7c4",
-      "text": "`BL-260928-route-quick-mode-discovery`,",
+      "id": "claim-28e128ea76dbe7e3",
+      "text": "**Design deltas (if any):**",
       "status": "confirmed",
       "citations": [
         {
@@ -12093,19 +12104,8 @@
       ]
     },
     {
-      "id": "claim-e35247944e596a81",
-      "text": "`BL-260928-settle-codex-read-authority`,",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:1190-1190"
-        }
-      ]
-    },
-    {
-      "id": "claim-1ea97740e1eacba9",
-      "text": "`BL-260928-harden-the-backlog-reference`; `BL-260829-order-phase-bookkeeping-before`",
+      "id": "claim-06480f92c338a28e",
+      "text": "- Key decision 4's pre-review bookkeeping was refined during p03 review:",
       "status": "confirmed",
       "citations": [
         {
@@ -12115,8 +12115,8 @@
       ]
     },
     {
-      "id": "claim-d09a3e18696c75f6",
-      "text": "stays open for live observation.",
+      "id": "claim-f18d3902e6fbf8f5",
+      "text": "recovery-marker settlement belongs to the pre-review commit, and the phase",
       "status": "confirmed",
       "citations": [
         {
@@ -12126,8 +12126,41 @@
       ]
     },
     {
-      "id": "claim-9e97355464ddbbd8",
-      "text": "- Plan: `plan.md`",
+      "id": "claim-41de0c45f5c34c2e",
+      "text": "row stays nonterminal until review fixes and gates settle.",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:1193-1193"
+        }
+      ]
+    },
+    {
+      "id": "claim-7ef4aff610b212cf",
+      "text": "- Revision 1 (operator feedback on PR #332): renamed the shim keys under",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:1194-1194"
+        }
+      ]
+    },
+    {
+      "id": "claim-a3b09171d5aa1882",
+      "text": "`instructions.claude`, made removal all or nothing, pinned rules-sync",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:1195-1195"
+        }
+      ]
+    },
+    {
+      "id": "claim-c895acb1657dcb26",
+      "text": "independence, added `effective-delta-v2`, and withdrew the recon validator",
       "status": "confirmed",
       "citations": [
         {
@@ -12137,8 +12170,8 @@
       ]
     },
     {
-      "id": "claim-eebdb61068e7a743",
-      "text": "- Discovery: `discovery.md`",
+      "id": "claim-2f9c22ed9d881993",
+      "text": "and the reviewer's `recon-worker` path (recon restored to `main`).",
       "status": "confirmed",
       "citations": [
         {
@@ -12148,8 +12181,8 @@
       ]
     },
     {
-      "id": "claim-0894aca35f20a766",
-      "text": "- Decision: `.oat/repo/reference/decisions/DR-260927-claude-md-shims-are-opt.md`",
+      "id": "claim-6dd149069b1f3de3",
+      "text": "- Case variants of `CLAUDE.md` are deliberately not warned about (they matched",
       "status": "confirmed",
       "citations": [
         {
@@ -12159,13 +12192,123 @@
       ]
     },
     {
-      "id": "claim-79a4940ebbbb2aec",
-      "text": "- Backlog review: `.oat/repo/pjm/backlog/reviews/backlog-and-roadmap-review.md`",
+      "id": "claim-70c56b1dee789b57",
+      "text": "real provider docs); documented.",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-9f74c1a0c743",
           "locator": "implementation.md:1199-1199"
+        }
+      ]
+    },
+    {
+      "id": "claim-c5d2c5c065153846",
+      "text": "- Follow-ups filed: `BL-260928-serialize-concurrent-agents-md`,",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:1200-1200"
+        }
+      ]
+    },
+    {
+      "id": "claim-8746dacdbf897d33",
+      "text": "`BL-260928-keep-instructions-sync-force`,",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:1201-1201"
+        }
+      ]
+    },
+    {
+      "id": "claim-19ef61a38dbbb436",
+      "text": "`BL-260928-route-quick-mode-discovery`,",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:1202-1202"
+        }
+      ]
+    },
+    {
+      "id": "claim-de1e1f73843454f8",
+      "text": "`BL-260928-settle-codex-read-authority`,",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:1203-1203"
+        }
+      ]
+    },
+    {
+      "id": "claim-0f1c8a1dca064ce2",
+      "text": "`BL-260928-harden-the-backlog-reference`; `BL-260829-order-phase-bookkeeping-before`",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:1204-1204"
+        }
+      ]
+    },
+    {
+      "id": "claim-13845b423036c292",
+      "text": "stays open for live observation.",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:1205-1205"
+        }
+      ]
+    },
+    {
+      "id": "claim-0b2c8c0f584a9f87",
+      "text": "- Plan: `plan.md`",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:1209-1209"
+        }
+      ]
+    },
+    {
+      "id": "claim-c77be7db42e6e8be",
+      "text": "- Discovery: `discovery.md`",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:1210-1210"
+        }
+      ]
+    },
+    {
+      "id": "claim-cc944d5d52480392",
+      "text": "- Decision: `.oat/repo/reference/decisions/DR-260927-claude-md-shims-are-opt.md`",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:1211-1211"
+        }
+      ]
+    },
+    {
+      "id": "claim-c9926e0bcee69372",
+      "text": "- Backlog review: `.oat/repo/pjm/backlog/reviews/backlog-and-roadmap-review.md`",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:1212-1212"
         }
       ]
     },

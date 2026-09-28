@@ -212,9 +212,10 @@
 - and match YAML keys at line start. A substring guard failed on a commented
 - template and the gate ran without persisted intent.
 - ([2026-09-28T11:40Z — gotcha — Exit-gate intent persistence must be sequential, not parallel](oat-execution-learnings.md#2026-09-28t1140z---gotcha---exit-gate-intent-persistence-must-be-sequential-not-parallel))
-- - **project-recap:** generated — `explainers/backlog-wave-2-recap/` (run
-- `def695e7-4da2-4fb9-97ff-9a2f10df0294`, built before Revision 1; closeout
-- rebuilds it from this summary)
+- - **project-recap:** rebuilt after Revision 1 at completion; the run ID,
+- outcome, and QA verdict are recorded in the exported recap's
+- `manifest.json` and `qa/result.json` (this section names no run, so the
+- recap's own inputs stay unchanged after it is built).
 - - `BL-260928-serialize-concurrent-agents-md` — concurrent guidance appends can
 - duplicate a managed block (p01 gate M1).
 - - `BL-260928-keep-instructions-sync-force` — with a shim strategy,
@@ -272,7 +273,7 @@
 - target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:2,low:2 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-2/reviews/final-review-2026-09-28T164247Z.md run=5c3729d3-0488-4ae1-84c5-fd7b86e49418
 - 2026-09-28 · structural · oat gate review · final
 - target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:2,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-2/reviews/final-review-2026-09-28T165830Z.md run=d34bae3b-fe9f-4259-b98b-18a6a4e91b5b
-- oat_status: in_progress
+- oat_status: complete
 - oat_ready_for: null
 - oat_blockers: []
 - oat_last_updated: 2026-09-27
@@ -791,6 +792,18 @@
 - `0c5dbb3e-18a9-4059-a857-ca4209e3b9e4`) and all pre-approval steps. No
 - post-approval steps. Implementation complete; the project stays `pr_open`
 - for revise or completion.
+- - Revision 1 closeout sequence (configured `[summary, document, pr]`,
+- post-approval `[]`): summary `80fc9a4f4` (full regeneration), document
+- `564c0b8f3`, PR #332 title and body refreshed in place (state `316f53e55`),
+- project recap `built` (`cc232ad8c`, run
+- `d9a93b10-dde6-4ee0-b111-28e01c32c837`, terminal-outcome check ok). Each
+- step was followed by a state-only freshness checkpoint; the exit gate
+- stayed `allowed/passed`.
+- - Gate `IMPLEMENT-16` (Revision 1): final HiLL approval auto-approved under
+- the autonomy contract (`approval_source: oat-autonomous`) after the passing
+- final review (`final-review-2026-09-28T165830Z.md`, exit gate generation 2
+- run `d34bae3b-fe9f-4259-b98b-18a6a4e91b5b`) and all pre-approval steps. No
+- post-approval steps. Implementation complete; the project stays `pr_open`.
 - - Title names the removal and the key rename with a breaking marker, for
 - example
 - `feat!: stop creating CLAUDE.md shims by default and rename shim config to instructions.claude.* (wave 2, lockstep 0.3.9)`;
