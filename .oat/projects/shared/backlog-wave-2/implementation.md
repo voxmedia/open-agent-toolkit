@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-27
-oat_current_task_id: p04-t03
+oat_current_task_id: p04-t04
 oat_generated: false
 ---
 
@@ -29,10 +29,10 @@ oat_generated: false
 | Phase 1 | complete    | 8     | 8/8       |
 | Phase 2 | complete    | 8     | 8/8       |
 | Phase 3 | complete    | 5     | 5/5       |
-| Phase 4 | in_progress | 3     | 3/3       |
+| Phase 4 | in_progress | 4     | 3/4       |
 | Phase 5 | pending     | 6     | 0/6       |
 
-**Total:** 24/30 tasks completed
+**Total:** 24/31 tasks completed
 
 ---
 
@@ -221,6 +221,13 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** 28d9ced4e
+
+---
+
+### Task p04-t04: (review) Close p04 gate findings H1, M1
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -484,6 +491,11 @@ oat_generated: false
 - Continuation `cont-backlog-wave-2-p04-fix-1`: `28d9ced4e` closed M1
   (`WAVE_MISMATCH` across run, wave, wave mode, mode, task class) and L1-L7;
   347 recon node tests, 897 vitest, skill bumps, provider status clean.
+
+- Phase gate attempt 1 (`codex-6-sol-xhigh`): `reviews/archived/p04-review-2026-09-28T022315Z.md` status
+  `blocked`, receive-eligible: H1 (read sources not bounded by allowed and
+  excluded inputs) and M1 (arbitrary output schema accepted). Converted to
+  `p04-t04` (gate fix round 1 of 2); root review and gate rerun after the fix.
 
 ## Implementation Log
 

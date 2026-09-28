@@ -1302,6 +1302,36 @@ Run: `node --test .agents/skills/recon/tests/*.test.mjs`,
 
 ---
 
+### Task p04-t04: (review) Close p04 gate findings H1, M1
+
+Source: `reviews/archived/p04-review-2026-09-28T022315Z.md` (phase gate
+`codex-6-sol-xhigh`, blocked: 1 High, 1 Medium).
+
+**Step 1: Fix (failing-first negative controls)**
+
+- H1: every `readSources.sources` entry must resolve inside the declared
+  allowed inputs and scope and outside excluded inputs and scope (excluded
+  directories exclude descendants), using the contract's path or locator
+  semantics; reject authority that cannot be verified before launch. Add a
+  valid nested-source control and negative controls for an unrelated absolute
+  path and an excluded descendant.
+- M1: `artifact.outputSchema` must resolve to an approved packet-contract
+  schema reference or be a closed inline schema; add unknown-reference and
+  open-object negative controls beside the documented valid reference.
+
+No further version bumps (recon 1.1.6 already in this PR).
+
+**Step 2: Verify**
+
+Run: `node --test .agents/skills/recon/tests/*.test.mjs` and
+`HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation src/commands/init/tools/shared`.
+
+**Step 3: Commit**
+
+`fix(p04-t04): bound recon read sources and output schemas`
+
+---
+
 ## Phase 5: CI and backlog tooling, release fan-in
 
 ### Task p05-t01: Give packages/control-plane a check script
@@ -1549,7 +1579,7 @@ title itself:
 | plan   | artifact | fixes_completed | 2026-09-27 | reviews/archived/artifact-plan-review-2026-09-27T150947Z.md | -                                        | gate       | codex-6-sol-xhigh |
 | plan   | artifact | fixes_completed | 2026-09-27 | reviews/archived/artifact-plan-review-2026-09-27T151608Z.md | -                                        | gate       | codex-6-sol-xhigh |
 | p03    | code     | passed          | 2026-09-28 | reviews/archived/p03-review-2026-09-28T015614Z.md           | 91066575de14dab6df77a52dcb1e967bfad91890 | gate       | codex-6-sol-xhigh |
-| p04    | code     | received        | 2026-09-28 | reviews/p04-review-2026-09-28T022315Z.md                    | 8e34aae0ccb86f9af3e1f26648a50a556ae92144 | gate       | codex-6-sol-xhigh |
+| p04    | code     | fixes_added     | 2026-09-28 | reviews/archived/p04-review-2026-09-28T022315Z.md           | 8e34aae0ccb86f9af3e1f26648a50a556ae92144 | gate       | codex-6-sol-xhigh |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
@@ -1601,10 +1631,10 @@ in `implementation.md`). Phase gates and the final review still run.
 - Phase 1: 8 tasks - AGENTS.md guidance
 - Phase 2: 8 tasks - CLAUDE.md shims
 - Phase 3: 5 tasks - Lifecycle skill routing and bookkeeping
-- Phase 4: 3 tasks - Agent roles and recon validation
+- Phase 4: 4 tasks - Agent roles and recon validation
 - Phase 5: 6 tasks - CI and backlog tooling, release fan-in
 
-**Total: 30 tasks**
+**Total: 31 tasks**
 
 Ready for code review and merge.
 
