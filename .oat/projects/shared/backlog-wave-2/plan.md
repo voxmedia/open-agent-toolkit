@@ -1866,8 +1866,8 @@ probe run once; scanner narrowing deferred with a trigger; reviewer probe
 reuse; explicit `scripts.lint` pin; rewrite-all archive references).
 
 Gate attempt 2 (`codex-6-sol-xhigh`) returned one High: the append open flags
-lacked a write access mode (`EBADF`). Resolved in p01-t02 (`O_WRONLY | O_APPEND
-| O_NOFOLLOW` plus a real-filesystem success assertion). The configured gate's
+lacked a write access mode (`EBADF`). Resolved in p01-t02 (`O_WRONLY`, `O_APPEND`, and
+`O_NOFOLLOW` plus a real-filesystem success assertion). The configured gate's
 `maxAttempts: 2` is exhausted, so readiness waits on an operator decision
 (QS-12 boundary).
 

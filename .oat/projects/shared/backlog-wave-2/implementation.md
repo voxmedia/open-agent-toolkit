@@ -743,6 +743,14 @@ oat_generated: false
   `reviews/archived/final-review-2026-09-28T114805Z.md` status `ok`, 0 findings; deferred Mediums reconfirmed
   as acceptable follow-ups. Received; exit gate `allowed/passed`.
 
+- PR step (pre-approval `pr`) stopped at PRFINAL-05: a root-written prose
+  note under `plan.md` `## Reviews` wrapped an inline-code flag list so a line
+  began with `|`, which the ledger guard parses as a malformed row. Root
+  repaired its own bookkeeping note (flags listed without pipes; project
+  tracking, closeout-only), recorded a freshness checkpoint, and reran the PR
+  step. The guard treating prose pipes as rows is a pr-final false positive
+  worth a follow-up.
+
 ### PR Requirements (hand-off to oat-project-pr-final)
 
 - Title names the removal with a breaking marker, for example
