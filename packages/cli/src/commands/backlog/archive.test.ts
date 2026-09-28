@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import {
   chmod,
   mkdir,
+  symlink,
   mkdtemp,
   readFile,
   rm,
@@ -519,6 +520,14 @@ describe('archiveBacklogItem', () => {
     const id = 'BL-260705-linked';
     const otherId = 'BL-260705-other';
     const IGNORED = `[ignored](../pjm/backlog/items/${id}.md)\n`;
+    const LINKED_TARGET = `[through a symlink](../pjm/backlog/items/${id}.md)\n`;
+    const NOTES = [
+      `Prose mention of ${id}.md stays.`,
+      `Broken wrong/items/${id}.md form.`,
+      `Remote https://example.com/backlog/items/${id}.md stays.`,
+      `Unrelated ../../elsewhere/backlog/items/${id}.md stays.`,
+      '',
+    ].join('\n');
     // Recorded commands keep their meaning: code is never rewritten.
     const CODE_ONLY = [
       `Run \`git mv .oat/repo/pjm/backlog/items/${id}.md elsewhere.md\` once.`,
@@ -560,6 +569,7 @@ describe('archiveBacklogItem', () => {
           '---',
           '',
           `See [sibling](./${otherId}.md), [self](./${id}.md), and [index](../index.md).`,
+          `Angle [angle](<./${otherId}.md#notes>) link.`,
           '',
           `[ref]: ./${otherId}.md`,
           '[top]: <../index.md>',
@@ -590,10 +600,13 @@ describe('archiveBacklogItem', () => {
         `.oat/repo/pjm/backlog/items/${otherId}.md`,
         `${await readFile(join(backlogRoot, 'items', `${otherId}.md`), 'utf8')}\nDepends on [linked](./${id}.md) and [bare](${id}.md).\n`,
       );
-      await writeRepoFile(
-        root,
-        '.oat/repo/reference/notes.md',
-        `Prose mention of ${id}.md stays.\nBroken wrong/items/${id}.md form.\n`,
+      await writeRepoFile(root, '.oat/repo/reference/notes.md', NOTES);
+      // A tracked symlink inside .oat/repo whose target lives outside it: the
+      // scan must never read or write through it.
+      await writeRepoFile(root, 'docs/linked-target.md', LINKED_TARGET);
+      await symlink(
+        '../../../docs/linked-target.md',
+        join(root, '.oat/repo/reference/linked.md'),
       );
       await writeRepoFile(
         root,
@@ -666,6 +679,12 @@ describe('archiveBacklogItem', () => {
         );
         expect(archived).toContain(`[ref]: ../items/${otherId}.md`);
         expect(archived).toContain('[top]: <../index.md>');
+        expect(archived).toContain(
+          `Angle [angle](<../items/${otherId}.md#notes>) link.`,
+        );
+
+        // Nothing is read or written through a symlink out of .oat/repo.
+        expect(await read('docs/linked-target.md')).toBe(LINKED_TARGET);
 
         // Other depths resolve against the referencing file's own directory.
         expect(await read('.oat/repo/reference/a/b/c/deep.md')).toBe(
@@ -679,9 +698,19 @@ describe('archiveBacklogItem', () => {
         expect(await read('.oat/repo/reference/commands.md')).toBe(CODE_ONLY);
 
         // Prose and out-of-scope files are untouched; the unresolvable form warns.
-        const notes = await read('.oat/repo/reference/notes.md');
-        expect(notes).toContain(`Prose mention of ${id}.md stays.`);
-        expect(notes).toContain(`Broken wrong/items/${id}.md form.`);
+        // Only tokens resolving to the old items/ path change: URLs and
+        // unrelated backlog/items paths are left alone.
+        expect(await read('.oat/repo/reference/notes.md')).toBe(NOTES);
+        expect(
+          result.warnings.some((warning) =>
+            warning.includes(`../../elsewhere/backlog/items/${id}.md`),
+          ),
+        ).toBe(true);
+        expect(
+          result.warnings.some((warning) =>
+            warning.includes('https://example.com'),
+          ),
+        ).toBe(false);
         expect(await read('docs/outside.md')).toContain(
           `pjm/backlog/items/${id}.md`,
         );

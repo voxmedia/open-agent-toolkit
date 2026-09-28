@@ -1,5 +1,6 @@
 import { execFile } from 'node:child_process';
-import { readdir, readFile, stat, writeFile } from 'node:fs/promises';
+import { constants as fsConstants } from 'node:fs';
+import { lstat, open as openFile, readdir, realpath } from 'node:fs/promises';
 import { basename, dirname, join, relative, resolve, sep } from 'node:path';
 import { promisify } from 'node:util';
 
@@ -89,11 +90,46 @@ async function isInsideGitWorkTree(cwd: string): Promise<boolean> {
   }
 }
 
-async function isFile(path: string): Promise<boolean> {
+/**
+ * True only for a regular file (never a symlink) whose real path stays inside
+ * `realScanRoot`, so the scan can never read or write outside `.oat/repo`.
+ */
+async function isRegularFileInside(
+  path: string,
+  realScanRoot: string,
+): Promise<boolean> {
   try {
-    return (await stat(path)).isFile();
+    if (!(await lstat(path)).isFile()) {
+      return false;
+    }
+    const real = await realpath(path);
+    return real === realScanRoot || real.startsWith(`${realScanRoot}${sep}`);
   } catch {
     return false;
+  }
+}
+
+/** `O_NOFOLLOW` where the platform has it: refuse to open through a symlink. */
+const NO_FOLLOW = fsConstants.O_NOFOLLOW ?? 0;
+
+async function readNoFollow(path: string): Promise<string> {
+  const handle = await openFile(path, fsConstants.O_RDONLY | NO_FOLLOW);
+  try {
+    return await handle.readFile('utf8');
+  } finally {
+    await handle.close();
+  }
+}
+
+async function writeNoFollow(path: string, content: string): Promise<void> {
+  const handle = await openFile(
+    path,
+    fsConstants.O_WRONLY | fsConstants.O_TRUNC | NO_FOLLOW,
+  );
+  try {
+    await handle.writeFile(content, 'utf8');
+  } finally {
+    await handle.close();
   }
 }
 
@@ -118,6 +154,7 @@ async function walkMarkdown(directory: string): Promise<string[]> {
  * ignored files inside a Git work tree, or a filesystem walk outside Git.
  */
 async function listMarkdownFiles(scanRoot: string): Promise<string[]> {
+  const realScanRoot = await realpath(scanRoot);
   if (await isInsideGitWorkTree(scanRoot)) {
     const { stdout } = await execFileAsync(
       'git',
@@ -136,13 +173,19 @@ async function listMarkdownFiles(scanRoot: string): Promise<string[]> {
     const files: string[] = [];
     for (const relativePath of unique) {
       const path = join(scanRoot, relativePath);
-      if (await isFile(path)) {
+      if (await isRegularFileInside(path, realScanRoot)) {
         files.push(path);
       }
     }
     return files;
   }
-  return walkMarkdown(scanRoot);
+  const walked: string[] = [];
+  for (const path of await walkMarkdown(scanRoot)) {
+    if (await isRegularFileInside(path, realScanRoot)) {
+      walked.push(path);
+    }
+  }
+  return walked;
 }
 
 function isRelativeTarget(target: string): boolean {
@@ -200,18 +243,15 @@ function rewriteItemToken(
     }
   }
 
-  // Canonical backlog layout: `archived/` is a sibling of `items/`, so any
-  // `.../backlog/items/<id>.md` form keeps its base when the segment swaps.
-  // Only `/`-separated forms are recognized: the token scan requires `/` or a
+  // Only a token that resolves to the former items/ path is rewritten. URLs
+  // (any scheme) are never touched or reported; an unresolved local form that
+  // still names `items/<id>.md` is reported for a manual fix. Only
+  // `/`-separated forms are recognized: the token scan requires `/` or a
   // delimiter before the file name, so backslash paths never reach here.
   const itemsSuffix = `items/${itemFile}`;
-  if (
-    token === `backlog/${itemsSuffix}` ||
-    token.endsWith(`/backlog/${itemsSuffix}`)
-  ) {
-    return `${token.slice(0, -itemsSuffix.length)}archived/${itemFile}`;
+  if (/^[A-Za-z][A-Za-z0-9+.-]*:/u.test(token)) {
+    return null;
   }
-
   if (token === itemsSuffix || token.endsWith(`/${itemsSuffix}`)) {
     context.warnings.push(
       `${context.fileName} references \`${token}\`, which names archived backlog item ${basename(itemFile, '.md')} but does not resolve to its old items/ path; update it by hand.`,
@@ -364,9 +404,23 @@ function rebaseMovedItemLinks(
 ): string {
   return content
     .replace(
-      /\]\(([^)\s#]+)((?:#[^)\s]*)?(?:\s+"[^"]*")?)\)/gu,
-      (_match, target: string, rest: string) =>
-        `](${rebaseTarget(target, context)}${rest})`,
+      /\]\((?:<([^<>\n]*)>|([^)\s#<]+)((?:#[^)\s]*)?))((?:\s+"[^"]*")?)\)/gu,
+      (
+        _match,
+        angled: string | undefined,
+        bare: string | undefined,
+        bareAnchor: string | undefined,
+        title: string,
+      ) => {
+        if (angled !== undefined) {
+          // `[text](<path#anchor> "title")`: rebase the inner path only.
+          const hash = angled.indexOf('#');
+          const path = hash === -1 ? angled : angled.slice(0, hash);
+          const anchor = hash === -1 ? '' : angled.slice(hash);
+          return `](<${rebaseTarget(path, context)}${anchor}>${title})`;
+        }
+        return `](${rebaseTarget(bare!, context)}${bareAnchor ?? ''}${title})`;
+      },
     )
     .replace(
       /^( {0,3}\[[^\]\n]+\]:[ \t]*<?)([^\s>#]+)/gmu,
@@ -409,7 +463,7 @@ export async function rewriteInboundReferences(
   for (const file of files) {
     const absoluteFile = resolve(file);
     const moved = rebaseMovedItem && absoluteFile === absoluteArchivedPath;
-    const content = await readFile(absoluteFile, 'utf8');
+    const content = await readNoFollow(absoluteFile);
     const context: RewriteContext = {
       layout,
       itemsPath: absoluteItemsPath,
@@ -426,7 +480,7 @@ export async function rewriteInboundReferences(
       next = mapProse(next, (text) => rebaseMovedItemLinks(text, context));
     }
     if (next !== content) {
-      await writeFile(absoluteFile, next, 'utf8');
+      await writeNoFollow(absoluteFile, next);
       rewritten.push(context.fileName);
     }
   }
