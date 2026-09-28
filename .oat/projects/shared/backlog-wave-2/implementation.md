@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-27
-oat_current_task_id: null
+oat_current_task_id: p05-t12
 oat_generated: false
 ---
 
@@ -24,15 +24,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 8     | 8/8       |
-| Phase 2 | complete | 8     | 8/8       |
-| Phase 3 | complete | 5     | 5/5       |
-| Phase 4 | complete | 7     | 7/7       |
-| Phase 5 | complete | 11    | 11/11     |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 8     | 8/8       |
+| Phase 2 | complete    | 8     | 8/8       |
+| Phase 3 | complete    | 5     | 5/5       |
+| Phase 4 | complete    | 7     | 7/7       |
+| Phase 5 | in_progress | 12    | 11/12     |
 
-**Total:** 39/39 tasks completed
+**Total:** 39/40 tasks completed
 
 ---
 
@@ -331,6 +331,13 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** 0d029f9e4
+
+---
+
+### Task p05-t12: (review) Replace rewritten files atomically so hard links are never written through
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -705,6 +712,20 @@ oat_generated: false
   against the branch CLI; two bookkeeping Lows (a stale "never touches
   hand-written files" sentence; the placeholder Deviations row and References)
   fixed in root bookkeeping.
+
+### Implementation exit gate
+
+- Generation 1, attempt 1 (`codex-6-sol-xhigh`, run
+  `0415d270-2faa-4559-901c-65430d5c405d`, reviewed head `1973af8f0`):
+  `reviews/archived/final-review-2026-09-28T113721Z.md` status `blocked`, receive-eligible: H1 (the archive
+  rewriter truncates in place, so an in-tree file hard-linked to an outside
+  file rewrites the outside file). Both deferred Mediums judged acceptable as
+  filed follow-ups. `on_failure: block`: attempt 1 of 2 consumed; remediation
+  `p05-t12`; the basis becomes stale and Steps 12-13 rerun before attempt 2.
+- Deviation: the launch intent was not persisted before this launch (the
+  intent write and the launch ran in one batch and the write failed a
+  substring guard); the accepted run was kept, never replaced, and its state
+  was persisted from the result receipt afterwards.
 
 ### PR Requirements (hand-off to oat-project-pr-final)
 

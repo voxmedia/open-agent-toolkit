@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p05-t12
 oat_last_commit: 0d029f9e4
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -99,6 +99,42 @@ oat_project_recap:
   decision: generate
   source: autonomous_policy
   decided_at: '2026-09-27T14:32:46.795Z'
+oat_implement_exit_gate:
+  status: blocked
+  resolution: configured
+  disposition: null
+  config_fingerprint: 'sha256:76eaea5d632f8612107755e2770d20d1331e61ca9d7d4859dfd20a64932869f2'
+  resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
+  resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
+  project_override: null
+  on_failure: block
+  max_attempts: 2
+  attempts_completed: 1
+  reviewed_head: 1973af8f083c86fdb172eb67d8233eefd002333b
+  implementation_base_ref: origin/main
+  implementation_fingerprint: 'sha256:effective-delta-v1:402c5ace1bd66fe7ba3439875075cdce326f02c8fe8e97ac95a946fa45f036e5'
+  freshness_head: 1973af8f083c86fdb172eb67d8233eefd002333b
+  freshness_fingerprint: 'sha256:effective-delta-v1:402c5ace1bd66fe7ba3439875075cdce326f02c8fe8e97ac95a946fa45f036e5'
+  launch_state: result_persisted
+  launch_attempt_id: 'bw2-exit-gate-1-20260928T113500Z'
+  launch_started_at: '2026-09-28T11:35:00Z'
+  launch_result_receipt: '.oat/repo/analysis/backlog-wave-2/exit-gate-1.json'
+  gate_run_marker: null
+  gate_run_id: 0415d270-2faa-4559-901c-65430d5c405d
+  envelope_status: blocked
+  artifact: '.oat/projects/shared/backlog-wave-2/reviews/archived/final-review-2026-09-28T113721Z.md'
+  handoff: 'Run oat-project-review-receive for .oat/projects/shared/backlog-wave-2/reviews/final-review-2026-09-28T113721Z.md before treating this gate review as consumed.'
+  receive_state: completed
+  receive_correlation: 'run=0415d270-2faa-4559-901c-65430d5c405d; handoff=receive; source=reviews/final-review-2026-09-28T113721Z.md; scope=final; type=code'
+  receive_source_artifact: '.oat/projects/shared/backlog-wave-2/reviews/final-review-2026-09-28T113721Z.md'
+  receive_archived_artifact: '.oat/projects/shared/backlog-wave-2/reviews/archived/final-review-2026-09-28T113721Z.md'
+  receive_event_identity: 'final | code | final-review-2026-09-28T113721Z.md'
+  receive_pre_head: 6b7e9ead5ffaf3a945d95ef60c4e4b2a79a28da2
+  receive_commit: pending-this-commit
+  receive_eligible: true
+  receive_completed: true
+  failure: 'blocked: H1 archive rewriter writes through a hard link to a file outside .oat/repo; remediation p05-t12 (attempt 1 of 2 consumed)'
+  updated_at: '2026-09-28T11:39:55Z'
 ---
 
 # Project State: backlog-wave-2

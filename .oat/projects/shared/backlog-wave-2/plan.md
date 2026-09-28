@@ -1767,6 +1767,30 @@ and `node --test .agents/skills/recon/tests/*.test.mjs`.
 
 ---
 
+### Task p05-t12: (review) Replace rewritten files atomically so hard links are never written through
+
+Source: `reviews/archived/final-review-2026-09-28T113721Z.md` (implementation
+exit gate, blocked: 1 High).
+
+**Step 1: Fix (failing-first)**
+
+Write each rewritten file through a new temporary file in the verified
+in-tree parent directory, then rename it over the original (never truncate
+the existing inode), re-verifying path identity at the write boundary. A
+hard-link fixture asserts that an outside alias stays byte-identical while a
+normal in-tree reference is rewritten; prove the guard by neutralize-and-restore.
+
+**Step 2: Verify**
+
+Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/backlog`,
+type-check, lint.
+
+**Step 3: Commit**
+
+`fix(p05-t12): replace rewritten backlog references atomically`
+
+---
+
 ## PR Requirements
 
 The release workflow (`.github/workflows/release.yml`) publishes a fixed body
@@ -1816,7 +1840,7 @@ title itself:
 | p05    | code     | fixes_completed | 2026-09-28 | reviews/archived/p05-review-2026-09-28T104612Z.md           | 3c64d9e225a789e50caa1ba4edb153e943331365 | gate       | codex-6-sol-xhigh |
 | p05    | code     | fixes_completed | 2026-09-28 | reviews/archived/p05-review-2026-09-28T105839Z.md           | 7085ab58146ade146e41617e3cdef15b0b9694d9 | auto       | -                 |
 | p05    | code     | passed          | 2026-09-28 | reviews/archived/p05-review-2026-09-28T111050Z.md           | 3a38ce1a00570619de6bf0ff3b068138d8915c56 | gate       | codex-6-sol-xhigh |
-| final  | code     | received        | 2026-09-28 | reviews/final-review-2026-09-28T113721Z.md                  | 1973af8f083c86fdb172eb67d8233eefd002333b | gate       | codex-6-sol-xhigh |
+| final  | code     | fixes_added     | 2026-09-28 | reviews/archived/final-review-2026-09-28T113721Z.md         | 1973af8f083c86fdb172eb67d8233eefd002333b | gate       | codex-6-sol-xhigh |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
@@ -1869,9 +1893,9 @@ in `implementation.md`). Phase gates and the final review still run.
 - Phase 2: 8 tasks - CLAUDE.md shims
 - Phase 3: 5 tasks - Lifecycle skill routing and bookkeeping
 - Phase 4: 7 tasks - Agent roles and recon validation
-- Phase 5: 11 tasks - CI and backlog tooling, release fan-in
+- Phase 5: 12 tasks - CI and backlog tooling, release fan-in
 
-**Total: 39 tasks**
+**Total: 40 tasks**
 
 Ready for code review and merge.
 

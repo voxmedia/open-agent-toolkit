@@ -30,3 +30,9 @@ UTC-dated and never record secrets or active autonomy signals.
 **Observation:** A `git commit -qm` whose body had lines over 100 characters was rejected by the commit-msg hook, but `| tail -1` showed only lint-staged's "[COMPLETED] Cleaning up temporary files..." line, so the failure went unnoticed and the staged files were swept into the next (bookkeeping) commit.
 **Impact:** A code fix landed inside a bookkeeping commit; pushed history could not be cleanly corrected.
 **Recommendation:** Check the commit exit code (and `git log -1`) after every commit instead of tailing hook output; wrap commit bodies at 100 characters.
+
+## 2026-09-28T11:40Z - gotcha - Exit-gate intent persistence must be sequential, not parallel
+
+**Observation:** The root launched `oat --json gate review` in the same tool batch as the script that persists `oat_implement_exit_gate` launch intent; the persistence script failed its guard (the state frontmatter carries a commented `# oat_implement_exit_gate:` template that matched a substring check), so the gate ran with no persisted intent.
+**Impact:** The launch-acceptance contract (intent before launch) was violated for one run; the accepted run was kept (no replacement) and its state was persisted afterwards from the result receipt, recorded as a deviation.
+**Recommendation:** Never batch a gate launch with its intent persistence; persist, verify the committed state, then launch. Match YAML keys at line start (`^oat_implement_exit_gate:`), not by substring.
