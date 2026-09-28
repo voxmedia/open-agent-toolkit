@@ -43,3 +43,12 @@ verified explicitly.
 - The `partial` outcome is reproduced deterministically (under load, with seeded ordering, or by tracing the detach path) and its cause is recorded in the item.
 - Either the detach-collection status is made deterministic for a same-target user replacement, or the assertion accepts the legitimate outcome with a comment explaining why both statuses are correct.
 - The case passes ten consecutive uncached runs (`HOME=$(mktemp -d) pnpm exec turbo run test --force` or a focused loop) before the item closes.
+
+## Notes
+
+- 2026-09-28 (backlog-wave-2 p05-t03): criterion 3 verified. The named case
+  passed ten consecutive uncached runs, each with an isolated `HOME`, via
+  `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/engine/engine.integration.test.ts -t "preserves a same-target user replacement during disablement"`:
+  runs 1-10 all `exit=0` (`1 passed | 31 skipped`), head
+  `c8454ecf62e8dc0aa6e8029a33681a0d6c34485d`, Darwin 25.4.0 arm64,
+  Node v24.18.0. Criteria 1-2 were met by `ddddba079`.
