@@ -27,12 +27,12 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 8     | 8/8       |
-| Phase 2 | in_progress | 8     | 7/8       |
+| Phase 2 | in_progress | 8     | 8/8       |
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 2     | 0/2       |
 | Phase 5 | pending     | 6     | 0/6       |
 
-**Total:** 15/27 tasks completed
+**Total:** 16/27 tasks completed
 
 ---
 
@@ -153,8 +153,8 @@ oat_generated: false
 
 ### Task p02-t08: (review) Close p02 round-2 findings M1, M2, L1
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** e64ec3dd5
 
 ---
 
@@ -365,6 +365,14 @@ oat_generated: false
   variants. Two new Mediums (cross-directory dangling link; unsafe "remove the
   file" advice when `AGENTS.md` links to the `CLAUDE.md`) and one Low (case
   variants) converted to `p02-t08` (fix round 2 of 2).
+
+- Continuation `cont-backlog-wave-2-p02-fix-2`: `e64ec3dd5` closed M1
+  (planning- and apply-time `findLinksThrough` check keeps any `CLAUDE.md` a
+  scanned instruction file links through; stray layout is not adopted), M2
+  (`linkedBy` in the leftover warning; replace-the-link advice in CLI, doctor,
+  analyze, docs); L1 dispositioned as not reported (case-insensitive matching
+  flagged real provider docs such as `tools/smoke/protocols/claude.md`;
+  documented and pinned). Full CLI suite 7846 green; repository clean.
 
 ## Implementation Log
 
