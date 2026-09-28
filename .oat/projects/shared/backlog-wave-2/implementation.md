@@ -1036,13 +1036,14 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 ## Test Results
 
-Final verification (Step 12) at `f0901755c`, full Definition of Done in CI
-order, every gate exit 0: `pnpm check`, `pnpm type-check`,
+Final verification (Step 12) after Revision 1 at `c95e17aad`, full Definition
+of Done in CI order, every gate exit 0: `pnpm check`, `pnpm type-check`,
 `HOME=$(mktemp -d) pnpm exec turbo run test --force` (10/10 tasks, 0 cached,
 no replays), `pnpm build`, `check:skill-bumps`, `release:check-versions`
 (after `git fetch origin main`), `release:validate`, `build:docs`,
-`test:smoke` 163/163, `test:skills` 690/690, `test:scripts`, `pnpm lint`,
-`pnpm format`. Per-phase verification is recorded under Orchestration Runs.
+`test:smoke` 163/163, `test:skills` 660/660, `test:scripts`, `pnpm lint`,
+`pnpm format`. The pre-revision run at `f0901755c` is superseded.
+Per-phase verification is recorded under Orchestration Runs.
 
 ## Final Summary (for PR/docs)
 
@@ -1154,8 +1155,8 @@ no replays), `pnpm build`, `check:skill-bumps`, `release:check-versions`
   `codex-6-sol-xhigh` phase gates on every phase, including revision p-rev1
   (p04 completed under an operator override after its gate budget was
   exhausted).
-- Full Definition of Done re-run at `f0901755c`, all gates exit 0 with 0 of 10
-  test tasks cached (see Test Results).
+- Full Definition of Done re-run after Revision 1 at `c95e17aad`, all gates
+  exit 0 with 0 of 10 test tasks cached (see Test Results).
 
 **Design deltas (if any):**
 
