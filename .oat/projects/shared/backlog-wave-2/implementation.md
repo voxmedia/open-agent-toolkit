@@ -32,7 +32,7 @@ oat_generated: false
 | Phase 4 | pending     | 2     | 0/2       |
 | Phase 5 | pending     | 6     | 0/6       |
 
-**Total:** 7/25 tasks completed
+**Total:** 8/25 tasks completed
 
 ---
 
@@ -92,8 +92,8 @@ oat_generated: false
 
 ### Task p01-t08: (review) Close p01 round-2 Low findings L1-L3
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** bb44a14ff
 
 ---
 
@@ -277,6 +277,11 @@ oat_generated: false
   three new Lows converted to `p01-t08`. The M2 fix landed in
   `init/tools/index.ts` rather than the plan's `init/index.ts` (plan wording
   only).
+- Continuation `cont-backlog-wave-2-p01-fix-2`: `bb44a14ff` closed round-2
+  L1 (refusal header names the cause via `appendRefusal`), L2 (`EISDIR`,
+  `ENOTDIR`, `EMLINK` open errors report an identity change), L3
+  (`oat tools guidance` with no packs prints a note; `--json` status
+  `no-packs`); 2557 tests green.
 - Implementer-reported deviations: evidence lives in commit bodies (root owns
   `implementation.md`); the e2e legacy-workflows-block cases stay
   `manual-required` (control (f)); no test pinned oat-doctor 2.0.1.
