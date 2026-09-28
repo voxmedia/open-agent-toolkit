@@ -29,10 +29,10 @@ oat_generated: false
 | Phase 1 | complete    | 8     | 8/8       |
 | Phase 2 | complete    | 8     | 8/8       |
 | Phase 3 | complete    | 5     | 5/5       |
-| Phase 4 | in_progress | 5     | 4/5       |
+| Phase 4 | in_progress | 5     | 5/5       |
 | Phase 5 | pending     | 6     | 0/6       |
 
-**Total:** 25/32 tasks completed
+**Total:** 26/32 tasks completed
 
 ---
 
@@ -233,8 +233,8 @@ oat_generated: false
 
 ### Task p04-t05: (review) Close p04 round-2 findings M1-M3, L1-L2
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 7c1e07245
 
 ---
 
@@ -515,6 +515,12 @@ oat_generated: false
   findings verified fixed; adversarial probing found 3 Medium (scheme-without-
   slashes URLs, case-variant exclusion bypass, schema anchors that do not
   resolve) and 2 Low, converted to `p04-t05` before gate attempt 2.
+
+- Continuation `cont-backlog-wave-2-p04-fix-3`: `7c1e07245` closed M1 (any
+  `scheme:` string is a URL; only http/https accepted, compared by origin),
+  M2 (case-insensitive exclusion, exact inclusion), M3 (stable per-kind
+  anchors in `packet-contract.md`, tested), L1, L2 (inline output schemas
+  dropped; the artifact kind fixes the schema); 355 recon node tests.
 
 ## Implementation Log
 
