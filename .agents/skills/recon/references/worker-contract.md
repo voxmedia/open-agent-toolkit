@@ -7,23 +7,28 @@ the complete assignment; a worker does not infer broader authority.
 
 The assignment must declare:
 
+- `kind: recon.assignment` and `schemaVersion: 1`;
 - `runId`, `waveId`, `laneId`, the approved manifest wave mode, and exactly one
   worker assignment mode;
+- the lane's `taskClass`;
 - bounded objective, included scope, and excluded scope;
 - allowed inputs and excluded inputs;
 - source-read authority in `readSources`, including allowed read-only tools;
 - sole `writePath`, contained by the packet directory and unique to the lane;
 - required artifact `kind`, `schemaVersion`, and output schema;
 - enforcement level and deadline; and
-- whether failure should be recorded as required, optional, or conditional.
+- whether failure should be recorded as required, optional, or conditional;
+  and
+- an `escalation` path for a lane that cannot complete.
 
 Reject an incomplete or contradictory assignment before reading sources. Never
 request credentials, mutate an investigated source, broaden scope, or choose an
 alternate write path.
 
-The controller writes the envelope as one closed JSON object (or a JSON array
-for one wave) and validates it with `scripts/validate-assignment.mjs` before
-recording an accepted launch:
+The controller builds the envelope as one closed JSON object (or a JSON array
+for one homogeneous wave) and validates it with `scripts/validate-assignment.mjs`
+before recording an accepted launch. Pass `-` to read the envelope from
+standard input so no envelope file is written:
 
 ```json
 {
@@ -53,12 +58,16 @@ recording an accepted launch:
 ```
 
 The validator reports every missing, unknown, or invalid field in one pass and
-exits non-zero, so the controller can correct or replace a request that never
-reached a worker. It rejects a worker mode that does not match the wave mode,
-an allowed input or read source that is also excluded, a file-editing tool in
-`readSources.tools`, a write path that is absolute or escapes the packet, a
-controller-owned artifact kind, `unavailable` enforcement, and, across a wave,
-a repeated lane ID or write path. Once a launch is accepted, correct its
+exits 1, so the controller can correct or replace a request that never reached
+a worker; an unreadable envelope path is `UNREADABLE_ENVELOPE` with exit 2, not
+an invalid envelope. It rejects a worker mode that does not match the wave
+mode, an allowed input or read source that is also excluded, a file-editing
+tool in `readSources.tools` (compared case-insensitively across providers, for
+example `Write`, `Edit`, or `apply_patch`), a write path that is absolute,
+escapes the packet, or names no file, a controller-owned artifact kind, and
+`unavailable` enforcement. Across an array it rejects a lane whose run, wave,
+wave mode, worker mode, or task class differs from the first lane, and a
+repeated lane ID or write path. Once a launch is accepted, correct its
 envelope through the accepted handle; acceptance never authorizes a
 replacement worker.
 

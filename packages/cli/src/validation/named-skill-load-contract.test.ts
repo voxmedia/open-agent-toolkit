@@ -763,7 +763,7 @@ function formatReport(report: ContractReport): string {
   }
   if (report.fenceDefects.length > 0) {
     lines.push(
-      'Fenced-code defects in the fence-scan inventory (.agents/skills, plus the in-repository files its markdown symlinks resolve to; a stray fence hides directives from this scanner):',
+      'Fenced-code defects in the fence-scan inventory (.agents/skills, .agents/agents, .oat/templates, plus the in-repository files their markdown symlinks resolve to; a stray fence hides directives from this scanner):',
     );
     for (const defect of report.fenceDefects) {
       lines.push(

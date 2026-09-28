@@ -106,23 +106,89 @@ test('reports every contradictory or invalid field of an envelope', async () => 
 
 test('rejects a wave whose lanes share a write path or lane ID', async () => {
   const first = await loadFixture('valid-mechanical-recon.json');
-  const second = {
-    ...(await loadFixture('valid-intelligent-recon.json')),
-    laneId: first.laneId,
-    writePath: first.writePath,
-  };
+  const second = { ...first, objective: 'A second bounded objective.' };
   const result = validateAssignmentValue([first, second]);
   assert.equal(result.valid, false);
   assert.deepEqual(codesAt(result.errors), [
     'DUPLICATE_LANE_ID $[1].laneId',
     'DUPLICATE_WRITE_PATH $[1].writePath',
   ]);
+});
 
-  const wave = validateAssignmentValue([
-    first,
-    await loadFixture('valid-intelligent-recon.json'),
+test('accepts an array only as one homogeneous wave', async () => {
+  const first = await loadFixture('valid-mechanical-recon.json');
+  // Accepted control: a second lane of the same run, wave, wave mode, and
+  // task class, with its own lane ID and write path.
+  const sameWave = {
+    ...first,
+    laneId: 'lane-docs-parity',
+    writePath: 'raw/dossiers/lane-docs-parity.json',
+  };
+  assert.deepEqual(validateAssignmentValue([first, sameWave]).errors, []);
+
+  // Mixed task classes need separate waves (oat-reviewer.md), so the
+  // intelligent lane from another run cannot ride the mechanical lane's wave.
+  const mixed = {
+    ...(await loadFixture('valid-intelligent-recon.json')),
+    runId: 'review-p04-other',
+  };
+  const result = validateAssignmentValue([first, mixed]);
+  assert.equal(result.valid, false);
+  assert.deepEqual(codesAt(result.errors), [
+    'WAVE_MISMATCH $[1].runId',
+    'WAVE_MISMATCH $[1].waveId',
+    'WAVE_MISMATCH $[1].waveMode',
+    'WAVE_MISMATCH $[1].mode',
+    'WAVE_MISMATCH $[1].taskClass',
   ]);
-  assert.deepEqual(wave.errors, []);
+});
+
+test('rejects a write path that does not name a lane file', async () => {
+  const base = await loadFixture('valid-mechanical-recon.json');
+  for (const writePath of [
+    '.',
+    './',
+    'raw/',
+    '/tmp/lane.json',
+    '../lane.json',
+    'raw/../../lane.json',
+    'raw\\lane.json',
+    'C:lane.json',
+  ]) {
+    assert.deepEqual(
+      codesAt(validateAssignmentValue({ ...base, writePath }).errors),
+      ['UNSAFE_WRITE_PATH $.writePath'],
+      writePath,
+    );
+  }
+});
+
+test('treats file-editing tools from any provider as mutating, in any case', async () => {
+  const base = await loadFixture('valid-mechanical-recon.json');
+  const result = validateAssignmentValue({
+    ...base,
+    readSources: {
+      ...base.readSources,
+      tools: ['Read', 'write', 'apply_patch', 'Write_File', 'EDIT'],
+    },
+  });
+  assert.deepEqual(codesAt(result.errors), [
+    'MUTATING_TOOL $.readSources.tools[1]',
+    'MUTATING_TOOL $.readSources.tools[2]',
+    'MUTATING_TOOL $.readSources.tools[3]',
+    'MUTATING_TOOL $.readSources.tools[4]',
+  ]);
+});
+
+test('reports a missing envelope file distinctly from invalid JSON', async () => {
+  const missingPath = fixturePath('does-not-exist.json');
+  const result = await validateAssignmentFile(missingPath);
+  assert.equal(result.valid, false);
+  assert.deepEqual(codesAt(result.errors), ['UNREADABLE_ENVELOPE $']);
+
+  const cli = runCli([missingPath]);
+  assert.equal(cli.status, 2);
+  assert.equal(JSON.parse(cli.stdout).errors[0].code, 'UNREADABLE_ENVELOPE');
 });
 
 test('rejects a non-object envelope and an empty wave', () => {

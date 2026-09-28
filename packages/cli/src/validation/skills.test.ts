@@ -1736,6 +1736,13 @@ describe('validateOatSkills', () => {
     expect(content).toContain(
       '${RECON_SKILLS_ROOT}/recon/scripts/validate-assignment.mjs',
     );
+    // The envelope travels on stdin: structured-output mode writes nothing.
+    expect(content).toContain(
+      'validate-assignment.mjs" -` before the launch; write no envelope file',
+    );
+    expect(content).toMatch(
+      /one homogeneous wave: the same run, wave, wave mode, and task class/,
+    );
     expect(content).toMatch(
       /`recon`[\s\S]{0,400}oat tools install research --scope <user\|project>/,
     );

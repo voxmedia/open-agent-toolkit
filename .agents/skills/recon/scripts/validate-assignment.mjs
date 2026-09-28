@@ -48,7 +48,33 @@ const workerArtifactKinds = [
 const failureRecordings = ['required', 'optional', 'conditional'];
 
 // A recon lane reads only; a tool that edits files is never read authority.
-const mutatingTools = new Set(['Edit', 'MultiEdit', 'NotebookEdit', 'Write']);
+// Recon is provider-neutral, so names are compared case-insensitively with
+// `-` folded to `_`, and the list spans the providers' file-editing tools.
+const mutatingTools = new Set([
+  'apply_patch',
+  'applypatch',
+  'create_file',
+  'delete_file',
+  'edit',
+  'edit_file',
+  'multiedit',
+  'notebookedit',
+  'str_replace_based_edit_tool',
+  'str_replace_editor',
+  'write',
+  'write_file',
+]);
+
+function isMutatingTool(tool) {
+  return (
+    typeof tool === 'string' &&
+    mutatingTools.has(tool.trim().toLowerCase().replaceAll('-', '_'))
+  );
+}
+
+// Every lane of one array shares these, so an array is one homogeneous wave:
+// mixed runs, waves, modes, or task classes need separate waves.
+const waveFields = ['runId', 'waveId', 'waveMode', 'mode', 'taskClass'];
 
 const knownFields = [
   'kind',
@@ -205,7 +231,9 @@ function checkWritePath(envelope, errors, path) {
     posix.isAbsolute(writePath) ||
     /^[A-Za-z]:/.test(writePath) ||
     normalized !== writePath ||
-    writePath.split('/').includes('..') ||
+    writePath
+      .split('/')
+      .some((segment) => segment === '..' || segment === '.') ||
     writePath.endsWith('/')
   ) {
     errors.push(
@@ -388,7 +416,7 @@ function validateEnvelope(envelope, path) {
       { nonEmpty: true },
     );
     for (const [index, tool] of tools.entries()) {
-      if (mutatingTools.has(tool)) {
+      if (isMutatingTool(tool)) {
         errors.push(
           issue(
             'MUTATING_TOOL',
@@ -440,8 +468,10 @@ function validateEnvelope(envelope, path) {
 }
 
 /**
- * Validates one envelope, or a wave of envelopes whose lanes must not share a
- * lane ID or a write path. Every error is reported; nothing short-circuits.
+ * Validates one envelope, or one homogeneous wave of envelopes: every lane
+ * shares the first lane's run, wave, wave mode, worker mode, and task class,
+ * and no two lanes share a lane ID or a write path. Every error is reported;
+ * nothing short-circuits.
  */
 export function validateAssignmentValue(value) {
   if (!Array.isArray(value)) {
@@ -465,6 +495,20 @@ export function validateAssignmentValue(value) {
     const path = `$[${index}]`;
     errors.push(...validateEnvelope(envelope, path));
     if (!isObject(envelope)) continue;
+    const reference = value.find(isObject);
+    if (reference !== envelope) {
+      for (const field of waveFields) {
+        if (envelope[field] !== reference[field]) {
+          errors.push(
+            issue(
+              'WAVE_MISMATCH',
+              `${field} differs from the wave's first lane; one array is one homogeneous wave`,
+              `${path}.${field}`,
+            ),
+          );
+        }
+      }
+    }
     if (isNonEmptyString(envelope.laneId)) {
       if (laneIds.has(envelope.laneId)) {
         errors.push(
@@ -502,9 +546,25 @@ async function readStdin() {
 
 export async function validateAssignmentFile(path) {
   const source = path === '-' ? '-' : resolve(path);
+  let text;
   try {
-    const text =
-      path === '-' ? await readStdin() : await readFile(path, 'utf8');
+    text = path === '-' ? await readStdin() : await readFile(path, 'utf8');
+  } catch (error) {
+    // A wrong path is not a malformed envelope; callers branch on the code.
+    return {
+      valid: false,
+      unreadable: true,
+      path: source,
+      errors: [
+        issue(
+          'UNREADABLE_ENVELOPE',
+          error instanceof Error ? error.message : 'Unreadable envelope',
+          '$',
+        ),
+      ],
+    };
+  }
+  try {
     return { ...validateAssignmentValue(JSON.parse(text)), path: source };
   } catch (error) {
     return {
@@ -530,7 +590,8 @@ async function main(argv) {
   }
   const result = await validateAssignmentFile(path);
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
-  process.exitCode = result.valid ? 0 : 1;
+  // 0 valid, 1 invalid envelope, 2 usage or unreadable input.
+  process.exitCode = result.valid ? 0 : result.unreadable ? 2 : 1;
 }
 
 if (isDirectExecution(import.meta.url)) {
