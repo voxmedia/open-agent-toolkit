@@ -2163,11 +2163,11 @@ be stated in the PR title itself:
 | final  | code     | fixes_completed | 2026-09-28 | reviews/archived/final-review-2026-09-28T113721Z.md         | 1973af8f083c86fdb172eb67d8233eefd002333b | gate       | codex-6-sol-xhigh |
 | final  | code     | passed          | 2026-09-28 | reviews/archived/final-review-2026-09-28T114422Z.md         | ba69e205235f000acf4958e57bc12085c8294f8f | auto       | -                 |
 | final  | code     | passed          | 2026-09-28 | reviews/archived/final-review-2026-09-28T114805Z.md         | b54d67306e12e5abed8e23983f957f7f77c0ad8c | gate       | codex-6-sol-xhigh |
-| final  | code     | fixes_completed | 2026-09-28 | reviews/archived/final-review-2026-09-28T163142Z.md         | 11008080c4853e133ee380d34d14c0f3d60f51d1 | auto       | -                 |
-| final  | code     | fixes_completed | 2026-09-28 | reviews/archived/final-review-2026-09-28T163513Z.md         | 11008080c4853e133ee380d34d14c0f3d60f51d1 | auto       | -                 |
+| final  | code     | passed          | 2026-09-28 | reviews/archived/final-review-2026-09-28T163142Z.md         | 11008080c4853e133ee380d34d14c0f3d60f51d1 | auto       | -                 |
+| final  | code     | passed          | 2026-09-28 | reviews/archived/final-review-2026-09-28T163513Z.md         | 11008080c4853e133ee380d34d14c0f3d60f51d1 | auto       | -                 |
 | p-rev1 | code     | passed          | 2026-09-28 | reviews/archived/p-rev1-review-2026-09-28T160943Z.md        | f4599bec32e5b235e699f7504feb33d348a7cfea | gate       | codex-6-sol-xhigh |
 | p-rev1 | code     | passed          | 2026-09-28 | reviews/archived/p-rev1-review-2026-09-28T162038Z.md        | 71aef4127c537309157d3d81680e6738c9f99f73 | gate       | codex-6-sol-xhigh |
-| final  | code     | received        | 2026-09-28 | reviews/final-review-2026-09-28T164247Z.md                  | 7b389c5af70f08aeeeb4de74cdc2b7d764e1ff2d | gate       | codex-6-sol-xhigh |
+| final  | code     | passed          | 2026-09-28 | reviews/archived/final-review-2026-09-28T164247Z.md         | 7b389c5af70f08aeeeb4de74cdc2b7d764e1ff2d | gate       | codex-6-sol-xhigh |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;

@@ -927,12 +927,14 @@ the keys were renamed), and refresh the Final Summary and summary.md.
   `reviews/archived/p-rev1-review-2026-09-28T160943Z.md` (0 findings) but never
   ran the branch-local `gate route` step, so no route receipt existed and the
   gate failed closed (`review_failed`, `unexpected_post_selection_failure`).
-  Not accepted as gate evidence; the gate reruns once.- Gate run 2 (`codex-6-sol-xhigh`, route `inline` from the installed 0.3.7
+  Not accepted as gate evidence; the gate reruns once.
+- Gate run 2 (`codex-6-sol-xhigh`, route `inline` from the installed 0.3.7
   `gate route`) at `71aef4127`: `review_completed_gate_passed`, 0 Critical,
   High and Medium, 1 Low (this log's joined list item, fixed by root). The
   rerun narrowed to the bookkeeping delta; product code through `4f30b57cb`
   was covered by run 1's 0-finding review. Both runs' artifacts are archived
-  locally; both ledger rows are `passed`.- Final review `bw2-final-review-3` (`oat-reviewer-claude-claude-opus-5-5-high`,
+  locally; both ledger rows are `passed`.
+- Final review `bw2-final-review-3` (`oat-reviewer-claude-claude-opus-5-5-high`,
   auto, whole PR `5bb73dd08..11008080c`, weighted to the revision delta):
   0 Critical/High, 2 Medium, 4 Low
   (`reviews/archived/final-review-2026-09-28T163142Z.md`); reconnaissance
@@ -961,6 +963,14 @@ the keys were renamed), and refresh the Final Summary and summary.md.
   `current-state.md`; L3 analyze skill reports `claude_md_blocks_shim_removal`
   (failing first, 6/6 after); apply has no gap. `pnpm check` 0/11 cached,
   `pnpm lint` exit 0.
+- Final gate re-review (`codex-6-sol-xhigh`, threshold high) at `7b389c5af`:
+  `review_completed_gate_passed`, 0 Critical/High, 2 Medium, 2 Low
+  (`reviews/archived/final-review-2026-09-28T164247Z.md`). M1 (live PR title
+  and body stale) and M2 (summary and recap stale) and L2 (DoD record predates
+  the revision) are the pending closeout steps: summary and recap are fully
+  regenerated and the live PR is refreshed from the hand-off before the exit
+  gate, and the DoD is rerun at the final head. L1 (two joined log items)
+  fixed by root.
 
 ## Implementation Log
 
