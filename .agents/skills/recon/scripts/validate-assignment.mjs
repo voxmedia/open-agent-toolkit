@@ -39,7 +39,7 @@ const waveModeToWorkerMode = Object.freeze({
 
 // Kinds a worker may write. The manifest and review briefs are
 // controller-owned and never a lane's output.
-const workerArtifactKinds = [
+export const WORKER_ARTIFACT_KINDS = [
   'recon.raw-dossier',
   'recon.claim-ledger',
   'recon.review-result',
@@ -101,14 +101,19 @@ function isNonEmptyString(value) {
   return typeof value === 'string' && value.trim() !== '';
 }
 
-const urlLocator = /^[a-z][a-z0-9+.-]*:\/\//i;
+// Any `scheme:` prefix is a URL to a URL parser (`http:/evil.com/x` reads as
+// `http://evil.com/x`), so it is never treated as a repository path. Only
+// well-formed http(s) URLs are comparable: `file:` and other schemes carry no
+// host-bearing origin, and files use repository-relative paths instead.
+const schemePrefix = /^[A-Za-z][A-Za-z0-9+.-]*:/;
+const httpLocator = /^https?:\/\/[^/]/i;
 
 /**
  * Binds a declared input, scope entry, or read source to a comparable locator
  * before launch, following the packet contract's locator kinds: a
- * repository-relative path, or a canonical URL. Anything else — an absolute
- * or drive path, a home-relative path, a backslash path, a `..` segment, or a
- * URL carrying credentials — cannot be bound to the lane's authority without
+ * repository-relative path, or a canonical http(s) URL. Anything else — an
+ * absolute or drive path, a home-relative path, a backslash path, a `..`
+ * segment, any other `scheme:` string, or a URL carrying credentials — cannot be bound to the lane's authority without
  * touching the filesystem, so it returns null and is rejected as unverifiable.
  * The check is lexical: symlinks and realpaths stay with source preflight and
  * the worker's own gate.
@@ -116,7 +121,8 @@ const urlLocator = /^[a-z][a-z0-9+.-]*:\/\//i;
 function toLocator(entry) {
   if (!isNonEmptyString(entry)) return null;
   const value = entry.trim();
-  if (urlLocator.test(value)) {
+  if (schemePrefix.test(value)) {
+    if (!httpLocator.test(value)) return null;
     let url;
     try {
       url = new URL(value);
@@ -124,6 +130,8 @@ function toLocator(entry) {
       return null;
     }
     if (url.username || url.password) return null;
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
+    // `origin` is scheme, host, and port for http(s).
     return {
       origin: url.origin.toLowerCase(),
       segments: url.pathname.split('/').filter(Boolean),
@@ -145,12 +153,28 @@ function toLocator(entry) {
   };
 }
 
-/** True when `child` is `parent` or a descendant of it, segment-wise. */
+/**
+ * True when `child` is `parent` or a descendant of it, segment-wise. Inclusion
+ * compares segments exactly; exclusion folds case, because a case-insensitive
+ * filesystem (the macOS default) reads `Reviews/x` and `reviews/x` as one
+ * file. Both directions therefore fail closed.
+ */
 function isWithin(child, parent) {
   return (
     child.origin === parent.origin &&
     parent.segments.length <= child.segments.length &&
     parent.segments.every((segment, index) => child.segments[index] === segment)
+  );
+}
+
+function isExcludedBy(child, parent) {
+  return (
+    child.origin === parent.origin &&
+    parent.segments.length <= child.segments.length &&
+    parent.segments.every(
+      (segment, index) =>
+        child.segments[index].toLowerCase() === segment.toLowerCase(),
+    )
   );
 }
 
@@ -280,7 +304,9 @@ function checkIncludedExcluded(
     const entryPath = `${path}.${key}.${includedKey}[${index}]`;
     if (locator === null) {
       errors.push(unverifiable(entryPath, `${key}.${includedKey}`, entry));
-    } else if (excludedLocators.some((parent) => isWithin(locator, parent))) {
+    } else if (
+      excludedLocators.some((parent) => isExcludedBy(locator, parent))
+    ) {
       errors.push(
         issue(
           'INPUT_OVERLAPS_EXCLUSION',
@@ -344,7 +370,7 @@ function checkArtifact(envelope, errors, path) {
     );
     return;
   }
-  checkEnum(value, 'kind', workerArtifactKinds, errors, artifactPath);
+  checkEnum(value, 'kind', WORKER_ARTIFACT_KINDS, errors, artifactPath);
   if (value.schemaVersion === undefined || value.schemaVersion === null) {
     errors.push(
       missing(`${artifactPath}.schemaVersion`, 'artifact.schemaVersion'),
@@ -362,35 +388,9 @@ function checkArtifact(envelope, errors, path) {
 }
 
 // The approved schema references are the packet-contract schemas the bundled
-// artifact validator enforces, one per worker-producible kind.
+// artifact validator enforces, one per worker-producible kind. Each fragment is
+// a real anchor (`<a id="<kind>"></a>`) in references/packet-contract.md.
 export const PACKET_CONTRACT_SCHEMA_PREFIX = 'references/packet-contract.md#';
-
-function isClosedInlineSchema(schema, kind) {
-  if (
-    schema.type !== 'object' ||
-    schema.additionalProperties !== false ||
-    !isObject(schema.properties) ||
-    !Array.isArray(schema.required)
-  ) {
-    return false;
-  }
-  const properties = Object.keys(schema.properties);
-  if (
-    !schema.required.every(
-      (name) => typeof name === 'string' && properties.includes(name),
-    )
-  ) {
-    return false;
-  }
-  // Every artifact carries its kind and schema version, pinned to this lane's.
-  return (
-    ['kind', 'schemaVersion'].every((name) => schema.required.includes(name)) &&
-    (schema.properties.kind?.const === undefined ||
-      schema.properties.kind.const === kind) &&
-    (schema.properties.schemaVersion?.const === undefined ||
-      schema.properties.schemaVersion.const === SCHEMA_VERSION)
-  );
-}
 
 function checkOutputSchema(artifact, errors, schemaPath) {
   const schema = artifact.outputSchema;
@@ -403,34 +403,36 @@ function checkOutputSchema(artifact, errors, schemaPath) {
     errors.push(
       missing(
         schemaPath,
-        'artifact.outputSchema (an approved packet-contract reference or closed schema object)',
+        `artifact.outputSchema (${PACKET_CONTRACT_SCHEMA_PREFIX}<artifact.kind>)`,
       ),
     );
     return;
   }
-  if (typeof schema === 'string') {
-    const kind = workerArtifactKinds.includes(artifact.kind)
-      ? artifact.kind
-      : null;
-    if (
-      kind === null ||
-      schema.trim() !== `${PACKET_CONTRACT_SCHEMA_PREFIX}${kind}`
-    ) {
-      errors.push(
-        issue(
-          'UNKNOWN_OUTPUT_SCHEMA',
-          `outputSchema must be ${PACKET_CONTRACT_SCHEMA_PREFIX}<artifact.kind> for a worker artifact kind, or a closed inline schema`,
-          schemaPath,
-        ),
-      );
-    }
-    return;
-  }
-  if (!isObject(schema) || !isClosedInlineSchema(schema, artifact.kind)) {
+  // The artifact kind already fixes the schema the bundled artifact validator
+  // enforces, so an inline schema could only disagree with it: an open nested
+  // object or a kind enum naming another kind would pass the envelope and
+  // then fail packet validation. Only the kind's reference is accepted.
+  if (typeof schema !== 'string') {
     errors.push(
       issue(
-        'OPEN_OUTPUT_SCHEMA',
-        'an inline outputSchema must be a closed object schema (type object, additionalProperties false, required naming kind and schemaVersion among its properties)',
+        'UNSUPPORTED_OUTPUT_SCHEMA',
+        `inline output schemas are not accepted; use ${PACKET_CONTRACT_SCHEMA_PREFIX}<artifact.kind>`,
+        schemaPath,
+      ),
+    );
+    return;
+  }
+  const kind = WORKER_ARTIFACT_KINDS.includes(artifact.kind)
+    ? artifact.kind
+    : null;
+  if (
+    kind === null ||
+    schema.trim() !== `${PACKET_CONTRACT_SCHEMA_PREFIX}${kind}`
+  ) {
+    errors.push(
+      issue(
+        'UNKNOWN_OUTPUT_SCHEMA',
+        `outputSchema must be ${PACKET_CONTRACT_SCHEMA_PREFIX}<artifact.kind> for a worker artifact kind`,
         schemaPath,
       ),
     );
@@ -566,6 +568,7 @@ function validateEnvelope(envelope, path) {
         continue;
       }
       const inside = (parent) => isWithin(source, parent);
+      const excludedBy = (parent) => isExcludedBy(source, parent);
       if (inputs && !allowedInputs.some(inside)) {
         errors.push(
           issue(
@@ -577,7 +580,7 @@ function validateEnvelope(envelope, path) {
       }
       if (
         scope &&
-        (!includedScope.some(inside) || excludedScope.some(inside))
+        (!includedScope.some(inside) || excludedScope.some(excludedBy))
       ) {
         errors.push(
           issue(
@@ -587,7 +590,7 @@ function validateEnvelope(envelope, path) {
           ),
         );
       }
-      if (excludedInputs.some(inside)) {
+      if (excludedInputs.some(excludedBy)) {
         errors.push(
           issue(
             'INPUT_OVERLAPS_EXCLUSION',

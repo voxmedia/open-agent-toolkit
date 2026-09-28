@@ -14,7 +14,7 @@
   },
   "inputs": {
     "allowed": [".agents/agents", ".codex/agents", ".cursor/agents"],
-    "excluded": ["reviews/"]
+    "excluded": [".oat/repo/reference/evidence/review-p04-final/reviews/"]
   },
   "readSources": {
     "sources": [".agents/agents", ".codex/agents", ".cursor/agents"],

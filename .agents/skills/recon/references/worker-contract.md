@@ -19,7 +19,7 @@ The assignment must declare:
 - sole `writePath`, contained by the packet directory and unique to the lane;
 - required artifact `kind`, `schemaVersion`, and output schema: the approved
   reference `references/packet-contract.md#<kind>` for the artifact's own kind,
-  or a closed inline object schema;
+  which resolves to that kind's anchor in the packet contract;
 - enforcement level and deadline;
 - whether failure should be recorded as required, optional, or conditional;
   and
@@ -67,27 +67,33 @@ a worker; an unreadable envelope path is `UNREADABLE_ENVELOPE` with exit 2, not
 an invalid envelope. It rejects a worker mode that does not match the wave
 mode; a read source outside the allowed inputs or included scope, or inside an
 excluded input or excluded scope entry; an allowed input or included scope
-entry inside an exclusion; a file-editing
-tool in `readSources.tools` (compared case-insensitively across providers, for
-example `Write`, `Edit`, or `apply_patch`), a write path that is absolute,
-escapes the packet, or names no file; a controller-owned artifact kind; an
-output schema that is neither the approved reference for the artifact's kind
-nor a closed inline schema (`type: object`, `additionalProperties: false`, and
-`required` naming `kind` and `schemaVersion` among its `properties`); and
-`unavailable` enforcement.
-
-Inputs, scope entries, and read sources use the packet contract's locator
-forms: a repository-relative path or a canonical URL. Containment is by whole
-path segment, so excluding `reviews/` also excludes `reviews/private.json`, and
-`src` does not contain `src-other`. An absolute or drive path, a `~` path, a
-backslash path, a `..` segment, or a URL with credentials cannot be bound to the
-lane's authority before launch and is rejected as `UNVERIFIABLE_SOURCE`. The
-check is lexical; symlink and realpath checks remain with source preflight and
-the worker's own gate. Across an array it rejects a lane whose run, wave,
+entry inside an exclusion; a file-editing tool in `readSources.tools` (compared
+case-insensitively across providers, for example `Write`, `Edit`, or
+`apply_patch`); a write path that is absolute, escapes the packet, or names no
+file; a controller-owned artifact kind; an output schema other than the
+approved reference for the artifact's kind (inline schemas are not accepted,
+because the kind already fixes the schema the artifact validator enforces); and
+`unavailable` enforcement. Across an array it rejects a lane whose run, wave,
 wave mode, worker mode, or task class differs from the first lane, and a
-repeated lane ID or write path. Once a launch is accepted, correct its
-envelope through the accepted handle; acceptance never authorizes a
-replacement worker.
+repeated lane ID or write path. Once a launch is accepted, correct its envelope
+through the accepted handle; acceptance never authorizes a replacement worker.
+
+Inputs, scope entries, and read sources are locators in one namespace: a
+repository-relative path, or a canonical `http` or `https` URL compared by
+scheme, host, and port. Only `writePath` is packet-relative. To exclude the
+packet's own `raw/` or `reviews/` directories from a lane, name them by their
+repository-relative path, for example
+`.oat/repo/reference/evidence/<run>/raw/`; a bare `raw/` excludes the
+repository's `raw/`, not the packet's. Containment is by whole path segment, so
+excluding `reviews/` also excludes `reviews/private.json`, and `src` does not
+contain `src-other`. Inclusion compares segments exactly, while exclusion
+ignores case, so on a case-insensitive filesystem `Reviews/private.json` is
+still excluded; both directions fail closed. An absolute or drive path, a `~`
+path, a backslash path, a `..` segment, any other `scheme:` string (such as
+`file:`, `javascript:`, or `http:/host` without `//`), or a URL with
+credentials cannot be bound to the lane's authority before launch and is
+rejected as `UNVERIFIABLE_SOURCE`. The check is lexical; symlink and realpath
+checks remain with source preflight and the worker's own gate.
 
 The manifest's nine wave modes map to the worker's closed six-mode vocabulary:
 

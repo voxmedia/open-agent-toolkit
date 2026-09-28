@@ -5,8 +5,10 @@ import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import {
+  PACKET_CONTRACT_SCHEMA_PREFIX,
   validateAssignmentFile,
   validateAssignmentValue,
+  WORKER_ARTIFACT_KINDS,
 } from '../scripts/validate-assignment.mjs';
 
 // Envelopes for the two reconnaissance lanes project review launches: a
@@ -286,12 +288,18 @@ test('rejects read sources that cannot be verified or escape the lane authority'
     'SOURCE_OUTSIDE_SCOPE $.readSources.sources[0]',
   ]);
 
-  // A descendant of the excluded `reviews/` input is excluded with it.
-  assert.deepEqual(withSources(['reviews/private.json']), [
-    'SOURCE_OUTSIDE_AUTHORITY $.readSources.sources[0]',
-    'SOURCE_OUTSIDE_SCOPE $.readSources.sources[0]',
-    'INPUT_OVERLAPS_EXCLUSION $.readSources.sources[0]',
-  ]);
+  // A descendant of the excluded packet `reviews/` input is excluded with it.
+  // Exclusions are repository-relative, like every other locator.
+  assert.deepEqual(
+    withSources([
+      '.oat/repo/reference/evidence/review-p04-final/reviews/private.json',
+    ]),
+    [
+      'SOURCE_OUTSIDE_AUTHORITY $.readSources.sources[0]',
+      'SOURCE_OUTSIDE_SCOPE $.readSources.sources[0]',
+      'INPUT_OVERLAPS_EXCLUSION $.readSources.sources[0]',
+    ],
+  );
 });
 
 test('excludes descendants of excluded inputs and scope even inside allowed ones', async () => {
@@ -363,7 +371,7 @@ test('bounds URL read sources by origin and path segment', async () => {
   ]);
 });
 
-test('accepts only an approved packet-contract schema reference or a closed inline schema', async () => {
+test('accepts only the approved packet-contract schema reference for the kind', async () => {
   const base = await loadFixture('valid-mechanical-recon.json');
   const withSchema = (outputSchema, kind = base.artifact.kind) =>
     codesAt(
@@ -378,22 +386,8 @@ test('accepts only an approved packet-contract schema reference or a closed inli
     withSchema('references/packet-contract.md#recon.raw-dossier'),
     [],
   );
-  assert.deepEqual(
-    withSchema({
-      type: 'object',
-      additionalProperties: false,
-      required: ['kind', 'schemaVersion', 'findings'],
-      properties: {
-        kind: { const: 'recon.raw-dossier' },
-        schemaVersion: { const: 1 },
-        findings: { type: 'array' },
-      },
-    }),
-    [],
-  );
 
-  // An unknown reference, a reference to another kind's schema, and an open
-  // object the worker could not treat as closed.
+  // An unknown reference and a reference to another kind's schema.
   assert.deepEqual(withSchema('does-not-exist.json'), [
     'UNKNOWN_OUTPUT_SCHEMA $.artifact.outputSchema',
   ]);
@@ -401,16 +395,159 @@ test('accepts only an approved packet-contract schema reference or a closed inli
     withSchema('references/packet-contract.md#recon.review-result'),
     ['UNKNOWN_OUTPUT_SCHEMA $.artifact.outputSchema'],
   );
-  assert.deepEqual(withSchema({ foo: 1 }), [
-    'OPEN_OUTPUT_SCHEMA $.artifact.outputSchema',
-  ]);
-  assert.deepEqual(
-    withSchema({
+
+  // Inline schemas are not accepted: the kind already fixes the schema the
+  // bundled artifact validator enforces, and an inline one could disagree
+  // with it (open nested objects, a kind enum naming another kind).
+  for (const inline of [
+    { foo: 1 },
+    {
       type: 'object',
-      additionalProperties: true,
-      required: ['kind', 'schemaVersion'],
-      properties: { kind: {}, schemaVersion: {} },
+      additionalProperties: false,
+      required: ['kind', 'schemaVersion', 'findings'],
+      properties: {
+        kind: { enum: ['recon.review-result'] },
+        schemaVersion: { const: 1 },
+        findings: { type: 'object' },
+      },
+    },
+  ]) {
+    assert.deepEqual(withSchema(inline), [
+      'UNSUPPORTED_OUTPUT_SCHEMA $.artifact.outputSchema',
+    ]);
+  }
+});
+
+test('every accepted schema reference resolves to an anchor in packet-contract.md', async () => {
+  const contract = await readFile(
+    new URL('../references/packet-contract.md', import.meta.url),
+    'utf8',
+  );
+  assert.deepEqual(WORKER_ARTIFACT_KINDS, [
+    'recon.raw-dossier',
+    'recon.claim-ledger',
+    'recon.review-result',
+  ]);
+  for (const kind of WORKER_ARTIFACT_KINDS) {
+    const reference = `${PACKET_CONTRACT_SCHEMA_PREFIX}${kind}`;
+    assert.equal(reference.split('#')[0], 'references/packet-contract.md');
+    const anchors = contract.split(`<a id="${kind}"></a>`).length - 1;
+    assert.equal(anchors, 1, `packet-contract.md anchors ${kind} exactly once`);
+  }
+});
+
+test('rejects scheme-prefixed lookalikes and non-http URL locators', async () => {
+  const base = await loadFixture('valid-mechanical-recon.json');
+  const wholeRepo = {
+    ...base,
+    scope: { included: ['.'], excluded: [] },
+    inputs: { allowed: ['.'], excluded: [] },
+  };
+  const check = (envelope, sources) =>
+    codesAt(
+      validateAssignmentValue({
+        ...envelope,
+        readSources: { ...base.readSources, sources },
+      }).errors,
+    );
+
+  // A whole-repository lane still accepts ordinary repository paths.
+  assert.deepEqual(check(wholeRepo, ['src/index.ts', 'README.md']), []);
+
+  // A URL parser reads these as remote or script locators, not paths.
+  assert.deepEqual(
+    check(wholeRepo, [
+      'http:/evil.com/x',
+      'http:evil.com/x',
+      'javascript:alert(1)',
+    ]),
+    [
+      'UNVERIFIABLE_SOURCE $.readSources.sources[0]',
+      'UNVERIFIABLE_SOURCE $.readSources.sources[1]',
+      'UNVERIFIABLE_SOURCE $.readSources.sources[2]',
+    ],
+  );
+
+  // `file:` URLs carry no comparable origin; files use repository paths.
+  const fileLane = {
+    ...base,
+    scope: { included: ['file:///repo'], excluded: [] },
+    inputs: { allowed: ['file:///repo'], excluded: [] },
+  };
+  assert.deepEqual(
+    codesAt(
+      validateAssignmentValue({
+        ...fileLane,
+        readSources: {
+          ...base.readSources,
+          sources: ['file://evilhost/repo/x'],
+        },
+      }).errors,
+    ),
+    [
+      'UNVERIFIABLE_SOURCE $.scope.included[0]',
+      'UNVERIFIABLE_SOURCE $.inputs.allowed[0]',
+      'UNVERIFIABLE_SOURCE $.readSources.sources[0]',
+    ],
+  );
+
+  // http(s) URLs compare scheme, host, and port.
+  const docs = {
+    ...base,
+    scope: { included: ['https://docs.example.com/'], excluded: [] },
+    inputs: { allowed: ['https://docs.example.com/'], excluded: [] },
+  };
+  assert.deepEqual(check(docs, ['https://docs.example.com/a']), []);
+  assert.deepEqual(check(docs, ['http://docs.example.com/a']), [
+    'SOURCE_OUTSIDE_AUTHORITY $.readSources.sources[0]',
+    'SOURCE_OUTSIDE_SCOPE $.readSources.sources[0]',
+  ]);
+});
+
+test('matches exclusions case-insensitively and inclusions case-sensitively', async () => {
+  const base = await loadFixture('valid-mechanical-recon.json');
+  const envelope = {
+    ...base,
+    scope: { included: ['.'], excluded: ['.agents/skills'] },
+    inputs: { allowed: ['.'], excluded: ['reviews/'] },
+  };
+  const check = (sources, overrides = {}) =>
+    codesAt(
+      validateAssignmentValue({
+        ...envelope,
+        ...overrides,
+        readSources: { ...base.readSources, sources },
+      }).errors,
+    );
+
+  assert.deepEqual(check(['.agents/agents/oat-reviewer.md']), []);
+  // On a case-insensitive filesystem both spellings read the same file.
+  assert.deepEqual(check(['Reviews/private.json']), [
+    'INPUT_OVERLAPS_EXCLUSION $.readSources.sources[0]',
+  ]);
+  assert.deepEqual(check(['.agents/Skills/x.md']), [
+    'SOURCE_OUTSIDE_SCOPE $.readSources.sources[0]',
+  ]);
+  // Inclusion stays case-sensitive, so a case variant fails closed.
+  assert.deepEqual(
+    check(['.Agents/agents/x.md'], {
+      scope: { included: ['.agents'], excluded: [] },
+      inputs: { allowed: ['.agents'], excluded: [] },
     }),
-    ['OPEN_OUTPUT_SCHEMA $.artifact.outputSchema'],
+    [
+      'SOURCE_OUTSIDE_AUTHORITY $.readSources.sources[0]',
+      'SOURCE_OUTSIDE_SCOPE $.readSources.sources[0]',
+    ],
+  );
+  // An allowed input that is a case variant of an exclusion contradicts it.
+  assert.deepEqual(
+    codesAt(
+      validateAssignmentValue({
+        ...envelope,
+        inputs: { allowed: ['.', 'REVIEWS/a.json'], excluded: ['reviews/'] },
+        readSources: { ...base.readSources, sources: ['src'] },
+      }).errors,
+    ),
+    ['INPUT_OVERLAPS_EXCLUSION $.inputs.allowed[1]'],
   );
 });

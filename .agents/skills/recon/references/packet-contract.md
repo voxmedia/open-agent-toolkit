@@ -271,6 +271,8 @@ found before the expensive review passes rather than at publication.
 
 ## Claim Ledger
 
+<a id="recon.claim-ledger"></a>
+
 `recon.claim-ledger` version 1 contains run ID, monotonic revision, direct input
 references, synthesis, evidence, claims, unresolved questions, and explicit
 claim transitions.
@@ -337,10 +339,14 @@ branch; source ineligibility never bypasses persistence safety.
 
 ## Other Artifacts
 
-- `recon.raw-dossier`: assignment identity, approved wave and lane, mode,
+The anchors below, with the `recon.claim-ledger` anchor above, are the targets of
+the assignment envelope's `artifact.outputSchema` references
+(`references/packet-contract.md#<kind>`); keep them stable.
+
+- <a id="recon.raw-dossier"></a>`recon.raw-dossier`: assignment identity, approved wave and lane, mode,
   inputs/exclusions, findings, uncertainty, contradictions, gaps, and outcome.
 - `recon.review-brief`: immutable selective-blind projection and digest.
-- `recon.review-result`: review kind, approved lane, exact brief reference,
+- <a id="recon.review-result"></a>`recon.review-result`: review kind, approved lane, exact brief reference,
   permitted/excluded inputs, dispositions, new evidence, closed typed
   claim/evidence associations, coverage findings, unresolved issues, and
   completion status. Every new evidence record has at least one exact
