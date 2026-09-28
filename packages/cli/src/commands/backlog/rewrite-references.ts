@@ -1,6 +1,14 @@
 import { execFile } from 'node:child_process';
+import { randomBytes } from 'node:crypto';
 import { constants as fsConstants, lstatSync } from 'node:fs';
-import { lstat, open as openFile, readdir, realpath } from 'node:fs/promises';
+import {
+  lstat,
+  open as openFile,
+  readdir,
+  realpath,
+  rename,
+  unlink,
+} from 'node:fs/promises';
 import { basename, dirname, join, relative, resolve, sep } from 'node:path';
 import { promisify } from 'node:util';
 
@@ -122,24 +130,74 @@ function pathExistsSync(path: string): boolean {
 /** `O_NOFOLLOW` where the platform has it: refuse to open through a symlink. */
 const NO_FOLLOW = fsConstants.O_NOFOLLOW ?? 0;
 
-async function readNoFollow(path: string): Promise<string> {
+/** Identity of the inode a file was read from. */
+interface FileIdentity {
+  dev: number;
+  ino: number;
+  mode: number;
+}
+
+async function readNoFollow(
+  path: string,
+): Promise<{ content: string; identity: FileIdentity }> {
   const handle = await openFile(path, fsConstants.O_RDONLY | NO_FOLLOW);
   try {
-    return await handle.readFile('utf8');
+    const info = await handle.stat();
+    return {
+      content: await handle.readFile('utf8'),
+      identity: { dev: info.dev, ino: info.ino, mode: info.mode },
+    };
   } finally {
     await handle.close();
   }
 }
 
-async function writeNoFollow(path: string, content: string): Promise<void> {
+/**
+ * Replace `path` with `content` without ever writing to its existing inode:
+ * write a temporary file in the same (already verified, in-tree) directory,
+ * then rename it over the original. Truncating in place would write through
+ * every other hard link to the same inode, including one outside `.oat/repo`.
+ * Immediately before the rename, the target must still be the regular,
+ * non-symlink file that was read (same device and inode); otherwise the
+ * replacement is abandoned. The original permission bits are preserved.
+ */
+async function replaceAtomically(
+  path: string,
+  content: string,
+  identity: FileIdentity,
+): Promise<void> {
+  const temporary = join(
+    dirname(path),
+    `.${basename(path)}.oat-rewrite-${process.pid}-${randomBytes(6).toString('hex')}.tmp`,
+  );
+  const permissions = identity.mode & 0o7777;
   const handle = await openFile(
-    path,
-    fsConstants.O_WRONLY | fsConstants.O_TRUNC | NO_FOLLOW,
+    temporary,
+    fsConstants.O_WRONLY | fsConstants.O_CREAT | fsConstants.O_EXCL | NO_FOLLOW,
+    permissions,
   );
   try {
-    await handle.writeFile(content, 'utf8');
-  } finally {
-    await handle.close();
+    try {
+      await handle.writeFile(content, 'utf8');
+      // The creation mode is masked by the umask; set the exact bits.
+      await handle.chmod(permissions);
+    } finally {
+      await handle.close();
+    }
+    const current = await lstat(path);
+    if (
+      !current.isFile() ||
+      current.dev !== identity.dev ||
+      current.ino !== identity.ino
+    ) {
+      throw new Error(
+        `${path} changed while its references were being rewritten; it was left untouched. Re-run \`oat backlog archive\` to retry.`,
+      );
+    }
+    await rename(temporary, path);
+  } catch (error) {
+    await unlink(temporary).catch(() => undefined);
+    throw error;
   }
 }
 
@@ -609,7 +667,7 @@ export async function rewriteInboundReferences(
   for (const file of files) {
     const absoluteFile = resolve(file);
     const moved = rebaseMovedItem && absoluteFile === absoluteArchivedPath;
-    const content = await readNoFollow(absoluteFile);
+    const { content, identity } = await readNoFollow(absoluteFile);
     const context: RewriteContext = {
       layout,
       itemsPath: absoluteItemsPath,
@@ -621,7 +679,7 @@ export async function rewriteInboundReferences(
     };
     const next = rewriteContent(content, context, moved);
     if (next !== content) {
-      await writeNoFollow(absoluteFile, next);
+      await replaceAtomically(absoluteFile, next, identity);
       rewritten.push(context.fileName);
     }
   }

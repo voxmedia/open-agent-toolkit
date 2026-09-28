@@ -1,12 +1,14 @@
 import { execFileSync } from 'node:child_process';
 import {
   chmod,
+  link,
   mkdir,
-  symlink,
   mkdtemp,
+  readdir,
   readFile,
   rm,
   stat,
+  symlink,
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -887,6 +889,36 @@ describe('archiveBacklogItem', () => {
         `Raw [raw](../items/${otherId}.md?raw=1#notes) view.`,
       );
       expect(archived).toContain(`[query]: ../items/${otherId}.md?raw=1\n`);
+    });
+
+    it('replaces a rewritten file atomically so a hard-linked alias is never written', async () => {
+      const { root, backlogRoot } = await linkedRepository({ git: false });
+      const before = `[hl](../pjm/backlog/items/${id}.md)\n`;
+      const outside = join(root, 'docs', 'hardlink-alias.md');
+      const inTree = join(root, '.oat/repo/reference/hardlinked.md');
+      await writeRepoFile(root, 'docs/hardlink-alias.md', before);
+      await chmod(outside, 0o640);
+      await link(outside, inTree);
+
+      await archiveBacklogItem(backlogRoot, id, {
+        summary: 'Linked work shipped',
+        now: FIXED_NOW,
+      });
+
+      expect(await readFile(inTree, 'utf8')).toBe(
+        `[hl](../pjm/backlog/archived/${id}.md)\n`,
+      );
+      // The outside alias keeps the old inode and its bytes.
+      expect(await readFile(outside, 'utf8')).toBe(before);
+      expect((await stat(inTree)).ino).not.toBe((await stat(outside)).ino);
+      // The replacement keeps the original file mode.
+      expect((await stat(inTree)).mode & 0o777).toBe(0o640);
+      // No temporary file is left behind.
+      expect(
+        (await readdir(join(root, '.oat/repo/reference'))).filter((name) =>
+          name.includes('.oat-rewrite-'),
+        ),
+      ).toEqual([]);
     });
 
     it('does not let a stray backtick hide links in later paragraphs', async () => {
