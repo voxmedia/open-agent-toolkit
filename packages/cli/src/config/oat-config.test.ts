@@ -200,14 +200,18 @@ describe('oat-config', () => {
     }
   });
 
-  describe('documentation.instructionPointerExcludes', () => {
+  describe('instructions.claude.excludes', () => {
     async function writeSharedConfig(
       repoRoot: string,
-      documentation: unknown,
+      claude: unknown,
     ): Promise<void> {
       await writeFile(
         join(repoRoot, '.oat', 'config.json'),
-        JSON.stringify({ version: 1, documentation }),
+        JSON.stringify({
+          version: 1,
+          documentation: { root: 'apps/docs' },
+          instructions: { claude },
+        }),
         'utf8',
       );
     }
@@ -215,16 +219,13 @@ describe('oat-config', () => {
     it('parses a trimmed, de-duplicated, order-preserving list', async () => {
       const repoRoot = await createRepoRoot();
       await writeSharedConfig(repoRoot, {
-        root: 'apps/docs',
-        instructionPointerExcludes: ['  vendor  ', 'apps/docs', 'vendor'],
+        excludes: ['  vendor  ', 'apps/docs', 'vendor'],
       });
 
       await expect(readOatConfig(repoRoot)).resolves.toEqual({
         version: 1,
-        documentation: {
-          root: 'apps/docs',
-          instructionPointerExcludes: ['vendor', 'apps/docs'],
-        },
+        documentation: { root: 'apps/docs' },
+        instructions: { claude: { excludes: ['vendor', 'apps/docs'] } },
       });
     });
 
@@ -233,27 +234,42 @@ describe('oat-config', () => {
 
       await writeOatConfig(repoRoot, {
         version: 1,
-        documentation: {
-          root: 'apps/docs',
-          instructionPointerExcludes: ['vendor', 'third_party'],
-        },
+        documentation: { root: 'apps/docs' },
+        instructions: { claude: { excludes: ['vendor', 'third_party'] } },
       });
 
       await expect(readOatConfig(repoRoot)).resolves.toEqual({
         version: 1,
-        documentation: {
-          root: 'apps/docs',
-          instructionPointerExcludes: ['vendor', 'third_party'],
-        },
+        documentation: { root: 'apps/docs' },
+        instructions: { claude: { excludes: ['vendor', 'third_party'] } },
       });
     });
 
     it('omits the key for an absent or empty list', async () => {
       const repoRoot = await createRepoRoot();
-      await writeSharedConfig(repoRoot, {
-        root: 'apps/docs',
-        instructionPointerExcludes: [],
+      await writeSharedConfig(repoRoot, { excludes: [] });
+
+      await expect(readOatConfig(repoRoot)).resolves.toEqual({
+        version: 1,
+        documentation: { root: 'apps/docs' },
       });
+    });
+
+    // Clean rename (DR amending DR-260927-claude-md-shims-are-opt): the old
+    // pre-rename spelling under `documentation` is not read at all.
+    it('does not read the pre-rename documentation key', async () => {
+      const repoRoot = await createRepoRoot();
+      await writeFile(
+        join(repoRoot, '.oat', 'config.json'),
+        JSON.stringify({
+          version: 1,
+          documentation: {
+            root: 'apps/docs',
+            ['instruction' + 'PointerExcludes']: ['vendor'],
+          },
+        }),
+        'utf8',
+      );
 
       await expect(readOatConfig(repoRoot)).resolves.toEqual({
         version: 1,
@@ -273,13 +289,10 @@ describe('oat-config', () => {
     for (const testCase of invalidCases) {
       it(`rejects ${testCase.name}`, async () => {
         const repoRoot = await createRepoRoot();
-        await writeSharedConfig(repoRoot, {
-          root: 'apps/docs',
-          instructionPointerExcludes: testCase.value,
-        });
+        await writeSharedConfig(repoRoot, { excludes: testCase.value });
 
         await expect(readOatConfig(repoRoot)).rejects.toMatchObject({
-          message: `Invalid documentation.instructionPointerExcludes in ${join(repoRoot, '.oat', 'config.json')}: expected an array of non-empty strings. Repair it with \`oat config set documentation.instructionPointerExcludes <path[,path...]>\` (an empty value clears the key), or by editing that file.`,
+          message: `Invalid instructions.claude.excludes in ${join(repoRoot, '.oat', 'config.json')}: expected an array of non-empty strings. Repair it with \`oat config set instructions.claude.excludes <path[,path...]>\` (an empty value clears the key), or by editing that file.`,
           exitCode: 2,
         });
       });
@@ -287,9 +300,7 @@ describe('oat-config', () => {
 
     it('names the oat config set command that repairs the key', async () => {
       const repoRoot = await createRepoRoot();
-      await writeSharedConfig(repoRoot, {
-        instructionPointerExcludes: 'vendor',
-      });
+      await writeSharedConfig(repoRoot, { excludes: 'vendor' });
 
       // The key is catalogued, so the repair instruction names the validated
       // write path. A repair message that only said "edit the file" would send
@@ -297,22 +308,23 @@ describe('oat-config', () => {
       // the catalog entry is ever removed and the message is not restored.
       await expect(readOatConfig(repoRoot)).rejects.toMatchObject({
         message: expect.stringContaining(
-          'oat config set documentation.instructionPointerExcludes',
+          'oat config set instructions.claude.excludes',
         ),
       });
     });
   });
 
-  describe('documentation.instructionSyncStrategy', () => {
+  describe('instructions.claude.shims', () => {
     async function writeStrategy(
       repoRoot: string,
-      instructionSyncStrategy: unknown,
+      shims: unknown,
     ): Promise<void> {
       await writeFile(
         join(repoRoot, '.oat', 'config.json'),
         JSON.stringify({
           version: 1,
-          documentation: { root: 'apps/docs', instructionSyncStrategy },
+          documentation: { root: 'apps/docs' },
+          instructions: { claude: { shims, excludes: ['vendor'] } },
         }),
         'utf8',
       );
@@ -325,9 +337,9 @@ describe('oat-config', () => {
 
         await expect(readOatConfig(repoRoot)).resolves.toEqual({
           version: 1,
-          documentation: {
-            root: 'apps/docs',
-            instructionSyncStrategy: strategy,
+          documentation: { root: 'apps/docs' },
+          instructions: {
+            claude: { shims: strategy, excludes: ['vendor'] },
           },
         });
       });
@@ -342,9 +354,29 @@ describe('oat-config', () => {
       );
 
       const config = await readOatConfig(repoRoot);
-      expect(config.documentation).not.toHaveProperty(
-        'instructionSyncStrategy',
+      expect(config).not.toHaveProperty('instructions');
+    });
+
+    // Clean rename: a config still holding the pre-rename key reads as
+    // unconfigured, so the built-in default applies.
+    it('does not read the pre-rename documentation key', async () => {
+      const repoRoot = await createRepoRoot();
+      await writeFile(
+        join(repoRoot, '.oat', 'config.json'),
+        JSON.stringify({
+          version: 1,
+          documentation: {
+            root: 'apps/docs',
+            ['instruction' + 'SyncStrategy']: 'pointer',
+          },
+        }),
+        'utf8',
       );
+
+      await expect(readOatConfig(repoRoot)).resolves.toEqual({
+        version: 1,
+        documentation: { root: 'apps/docs' },
+      });
     });
 
     // Fails closed: unset means the built-in default, and the default decides
@@ -356,7 +388,7 @@ describe('oat-config', () => {
         await writeStrategy(repoRoot, value);
 
         await expect(readOatConfig(repoRoot)).rejects.toMatchObject({
-          message: `Invalid documentation.instructionSyncStrategy in ${join(repoRoot, '.oat', 'config.json')}: ${JSON.stringify(value)}. Expected one of: none, pointer, symlink, copy. Repair it with oat config set documentation.instructionSyncStrategy <none|pointer|symlink|copy>.`,
+          message: `Invalid instructions.claude.shims in ${join(repoRoot, '.oat', 'config.json')}: ${JSON.stringify(value)}. Expected one of: none, pointer, symlink, copy. Repair it with oat config set instructions.claude.shims <none|pointer|symlink|copy>.`,
           exitCode: 2,
         });
       });
@@ -371,6 +403,7 @@ describe('oat-config', () => {
       ).resolves.toEqual({
         version: 1,
         documentation: { root: 'apps/docs' },
+        instructions: { claude: { excludes: ['vendor'] } },
       });
     });
   });

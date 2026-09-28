@@ -496,7 +496,7 @@ async function classifyWithoutShims(
 
 /**
  * The effective strategy for one run: the `--strategy` flag, then the
- * repository's `documentation.instructionSyncStrategy`, then the built-in
+ * repository's `instructions.claude.shims`, then the built-in
  * default. The flag only ever overrides a single run; it never rewrites config.
  */
 export function resolveInstructionSyncStrategy(
@@ -509,7 +509,7 @@ export function resolveInstructionSyncStrategy(
 }
 
 /**
- * Read `documentation.instructionSyncStrategy` from the shared config. A
+ * Read `instructions.claude.shims` from the shared config. A
  * malformed value fails closed in the config normalizer rather than reading as
  * unset, so a typo can never silently select the built-in default.
  */
@@ -517,7 +517,7 @@ export async function readConfiguredInstructionSyncStrategy(
   repoRoot: string,
 ): Promise<InstructionSyncStrategy | undefined> {
   const config = await readOatConfig(repoRoot);
-  return config.documentation?.instructionSyncStrategy;
+  return config.instructions?.claude?.shims;
 }
 
 function getValidInstructionDetail(strategy: InstructionSyncStrategy): string {
@@ -736,7 +736,7 @@ async function probeExclusionDirectory(
 /**
  * The directories `oat instructions sync` and `oat instructions validate` skip:
  * the derived documentation content root first, then the explicit
- * `documentation.instructionPointerExcludes` opt-outs.
+ * `instructions.claude.excludes` opt-outs.
  *
  * Both commands resolve exclusions through this one function. That is the
  * property that matters: if they computed exclusions separately, validate
@@ -790,9 +790,9 @@ export async function resolveInstructionPointerExcludes(
     ...(contentRoot === null
       ? []
       : [{ raw: contentRoot, source: 'documentation.root' }]),
-    ...(config.documentation?.instructionPointerExcludes ?? []).map((raw) => ({
+    ...(config.instructions?.claude?.excludes ?? []).map((raw) => ({
       raw,
-      source: 'documentation.instructionPointerExcludes',
+      source: 'instructions.claude.excludes',
     })),
   ];
 
@@ -1328,7 +1328,7 @@ export interface LeftoverClaudeFile {
  * `AGENTS.md` files that link to it.
  *
  * A separate, read-only walk on purpose. The instruction scan skips the
- * documentation content root and `documentation.instructionPointerExcludes`,
+ * documentation content root and `instructions.claude.excludes`,
  * but those only limit what OAT may change: Claude Code's `agents-md` plugin
  * stands down whichever directory the file is in. Only `.git`, `node_modules`,
  * the root `.worktrees`, and nested git checkouts (separate repositories) are
@@ -1455,7 +1455,7 @@ export function buildLeftoverClaudeWarnings(
       message:
         `${relativePath} makes Claude Code ignore every AGENTS.md in this project${scope}: ` +
         "its default agents-md mode stands down while any CLAUDE.md, .claude/CLAUDE.md, or CLAUDE.local.md exists in the session's working directory or any directory above it, up to the project root. " +
-        `${firstOption}, or set documentation.instructionSyncStrategy in .oat/config.json ` +
+        `${firstOption}, or set instructions.claude.shims in .oat/config.json ` +
         'to a shim strategy (pointer, symlink, or copy) and rerun `oat instructions sync` to add shims back.',
     };
   });

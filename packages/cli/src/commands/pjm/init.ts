@@ -63,7 +63,7 @@ export const INSTRUCTIONS_SYNC_HINT =
   'Next step: run `oat instructions sync` to check the repo-reference AGENTS.md ' +
   'files against your CLAUDE.md strategy (preview with `oat instructions sync --dry-run`). ' +
   'No CLAUDE.md shims are created by default; opt in with ' +
-  '`oat config set documentation.instructionSyncStrategy pointer`.';
+  '`oat config set instructions.claude.shims pointer`.';
 
 // AGENTS.md guidance messages printed by `oat pjm init`. An absent managed
 // block is appended to an existing AGENTS.md. The printed manual patch is

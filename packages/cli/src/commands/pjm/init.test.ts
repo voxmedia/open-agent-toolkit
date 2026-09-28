@@ -267,7 +267,7 @@ describe('initializeRepoReference', () => {
       'No CLAUDE.md shims are created by default',
     );
     expect(INSTRUCTIONS_SYNC_HINT).toContain(
-      '`oat config set documentation.instructionSyncStrategy pointer`',
+      '`oat config set instructions.claude.shims pointer`',
     );
   });
 

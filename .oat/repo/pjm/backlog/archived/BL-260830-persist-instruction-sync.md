@@ -33,8 +33,8 @@ item separately.
 Absorbed by `BL-260927-make-claude-md-shims-opt` (backlog-wave-2, p02). One
 line per acceptance criterion below:
 
-- Persist a validated strategy — project configuration: delivered by p02-t01 as `documentation.instructionSyncStrategy` in `.oat/config.json` (`none | pointer | symlink | copy`, validated fail-closed, set with `oat config set/get/unset`). User configuration: dropped, because shims are a per-repository choice under the new default.
-- Init exposes the choice: dropped. The default is `none`, and opting in is one `oat config set documentation.instructionSyncStrategy <strategy>`, so no init prompt is needed.
+- Persist a validated strategy — project configuration: delivered by p02-t01, and renamed by prev1-t01 to `instructions.claude.shims` in `.oat/config.json` (`none | pointer | symlink | copy`, validated fail-closed, set with `oat config set/get/unset`). User configuration: dropped, because shims are a per-repository choice under the new default.
+- Init exposes the choice: dropped. The default is `none`, and opting in is one `oat config set instructions.claude.shims <strategy>`, so no init prompt is needed.
 - Precedence and effective-strategy reporting: delivered by p02-t01. `oat instructions sync` and `oat instructions validate` both resolve `--strategy`, then the configured key, then the built-in default, and report the effective strategy as `strategy` in `--json` and human output.
 - Migration preserves existing installations: superseded by `DR-260927-claude-md-shims-are-opt`, under which a non-dry-run sync automatically removes OAT-managed shims instead of preserving them.
 

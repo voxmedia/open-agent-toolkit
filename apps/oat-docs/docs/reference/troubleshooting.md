@@ -61,14 +61,14 @@ when a same-name canonical skill exists; rename one package before retrying.
 - Check the effective strategy (`strategy:` in the output). The default is `none`, which expects no `CLAUDE.md`; `missing` is only reported under a configured shim strategy.
 - Run `oat instructions sync --dry-run` to preview changes.
 - Under `none`, `managed_shim` entries are `CLAUDE.md` files OAT created; `oat instructions sync` removes them.
-- To keep shims instead, run `oat config set documentation.instructionSyncStrategy pointer` (or `symlink` / `copy`) and then `oat instructions sync`.
+- To keep shims instead, run `oat config set instructions.claude.shims pointer` (or `symlink` / `copy`) and then `oat instructions sync`.
 - Under a shim strategy, if mismatched `CLAUDE.md` files should be overwritten, run `oat instructions sync --force`.
 - If `stray` is reported, `oat instructions sync` will adopt the Claude-only file into `AGENTS.md`, then regenerate `CLAUDE.md` under a shim strategy or remove it under `none`.
 
 ## `instructions sync` warns that a `CLAUDE.md` makes Claude Code ignore every `AGENTS.md`
 
 - Under the default `none` strategy, a remaining `CLAUDE.md`, `.claude/CLAUDE.md`, or `CLAUDE.local.md` makes Claude Code's `agents-md` plugin stand down: for every session when the file is at the repository root, and for sessions started in its directory or below when it is in a subdirectory.
-- Either remove the named file, or set `documentation.instructionSyncStrategy` to a shim strategy and rerun `oat instructions sync` to add shims everywhere.
+- Either remove the named file, or set `instructions.claude.shims` to a shim strategy and rerun `oat instructions sync` to add shims everywhere.
 - If the warning names an `AGENTS.md` that links to the file (`linkedBy` under `--json`), that file holds the only copy of those instructions: replace each linking `AGENTS.md` with the file's content first, then remove the file.
 - Sync never deletes a hand-written or modified `CLAUDE.md` itself; see [Instruction Sync](../provider-sync/instruction-sync.md#leftover-claudemd-warnings).
 - If a broken or unreadable instruction path is reported, fix the underlying file or symlink target first; sync will intentionally skip manual-repair cases instead of forcing recovery.

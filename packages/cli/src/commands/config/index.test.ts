@@ -4809,14 +4809,14 @@ describe('oat config', () => {
     });
   });
 
-  describe('documentation.instructionPointerExcludes', () => {
+  describe('instructions.claude.excludes', () => {
     async function writeShared(
       root: string,
-      documentation: Record<string, unknown>,
+      config: Record<string, unknown>,
     ): Promise<void> {
       await writeFile(
         join(root, '.oat', 'config.json'),
-        `${JSON.stringify({ version: 1, documentation })}\n`,
+        `${JSON.stringify({ version: 1, ...config })}\n`,
         'utf8',
       );
     }
@@ -4833,7 +4833,7 @@ describe('oat config', () => {
 
       await runCommand(command, [
         'set',
-        'documentation.instructionPointerExcludes',
+        'instructions.claude.excludes',
         'apps/oat-docs/docs/, vendor/generated , apps/oat-docs/docs',
       ]);
 
@@ -4843,26 +4843,25 @@ describe('oat config', () => {
       // writes is what those commands will honour.
       expect(await readShared(root)).toEqual({
         version: 1,
-        documentation: {
-          instructionPointerExcludes: [
-            'apps/oat-docs/docs',
-            'vendor/generated',
-          ],
+        instructions: {
+          claude: {
+            excludes: ['apps/oat-docs/docs', 'vendor/generated'],
+          },
         },
       });
       expect(capture.info[0]).toBe(
-        'documentation.instructionPointerExcludes=apps/oat-docs/docs,vendor/generated',
+        'instructions.claude.excludes=apps/oat-docs/docs,vendor/generated',
       );
       expect(process.exitCode).toBe(0);
 
       const json = createHarness({ cwd: root });
       await runCommand(
         json.command,
-        ['get', 'documentation.instructionPointerExcludes'],
+        ['get', 'instructions.claude.excludes'],
         ['--json'],
       );
       expect(json.capture.jsonPayloads[0]).toMatchObject({
-        key: 'documentation.instructionPointerExcludes',
+        key: 'instructions.claude.excludes',
         value: ['apps/oat-docs/docs', 'vendor/generated'],
         source: 'shared',
       });
@@ -4881,25 +4880,25 @@ describe('oat config', () => {
       it(`rejects ${testCase.name} instead of storing it`, async () => {
         const root = await createRepoRoot();
         await writeShared(root, {
-          instructionPointerExcludes: ['vendor/generated'],
+          instructions: { claude: { excludes: ['vendor/generated'] } },
         });
         const { command, capture } = createHarness({ cwd: root });
 
         await runCommand(command, [
           'set',
-          'documentation.instructionPointerExcludes',
+          'instructions.claude.excludes',
           testCase.value,
         ]);
 
         // The consumer drops these entries, so storing one would report
         // protection that never applies. The stored value is untouched.
         expect(capture.error[0]).toContain(
-          'Invalid documentation.instructionPointerExcludes entry',
+          'Invalid instructions.claude.excludes entry',
         );
         expect(process.exitCode).toBe(1);
         expect(await readShared(root)).toEqual({
           version: 1,
-          documentation: { instructionPointerExcludes: ['vendor/generated'] },
+          instructions: { claude: { excludes: ['vendor/generated'] } },
         });
       });
     }
@@ -4907,20 +4906,19 @@ describe('oat config', () => {
     it('clears the key with an empty value and leaves its siblings', async () => {
       const root = await createRepoRoot();
       await writeShared(root, {
-        root: 'apps/docs',
-        instructionPointerExcludes: ['vendor/generated'],
+        documentation: { root: 'apps/docs' },
+        instructions: {
+          claude: { shims: 'pointer', excludes: ['vendor/generated'] },
+        },
       });
       const { command } = createHarness({ cwd: root });
 
-      await runCommand(command, [
-        'set',
-        'documentation.instructionPointerExcludes',
-        '',
-      ]);
+      await runCommand(command, ['set', 'instructions.claude.excludes', '']);
 
       expect(await readShared(root)).toEqual({
         version: 1,
         documentation: { root: 'apps/docs' },
+        instructions: { claude: { shims: 'pointer' } },
       });
       expect(process.exitCode).toBe(0);
     });
@@ -4928,20 +4926,22 @@ describe('oat config', () => {
     it('unsets the key and reports the removal', async () => {
       const root = await createRepoRoot();
       await writeShared(root, {
-        root: 'apps/docs',
-        instructionPointerExcludes: ['vendor/generated'],
+        documentation: { root: 'apps/docs' },
+        instructions: {
+          claude: { shims: 'pointer', excludes: ['vendor/generated'] },
+        },
       });
       const { command, capture } = createHarness({ cwd: root });
 
       await runCommand(
         command,
-        ['unset', 'documentation.instructionPointerExcludes'],
+        ['unset', 'instructions.claude.excludes'],
         ['--json'],
       );
 
       expect(capture.jsonPayloads[0]).toEqual({
         status: 'ok',
-        key: 'documentation.instructionPointerExcludes',
+        key: 'instructions.claude.excludes',
         value: null,
         source: 'shared',
         removed: true,
@@ -4949,6 +4949,7 @@ describe('oat config', () => {
       expect(await readShared(root)).toEqual({
         version: 1,
         documentation: { root: 'apps/docs' },
+        instructions: { claude: { shims: 'pointer' } },
       });
       expect(process.exitCode).toBe(0);
     });
@@ -4959,7 +4960,7 @@ describe('oat config', () => {
         join(root, '.oat', 'config.json'),
         `${JSON.stringify({
           version: 1,
-          documentation: { instructionPointerExcludes: [7] },
+          instructions: { claude: { excludes: [7] } },
         })}\n`,
         'utf8',
       );
@@ -4970,14 +4971,14 @@ describe('oat config', () => {
       // key -- the situation the catalog entry exists to end.
       await runCommand(command, [
         'set',
-        'documentation.instructionPointerExcludes',
+        'instructions.claude.excludes',
         'vendor/generated',
       ]);
 
       expect(process.exitCode).toBe(0);
       expect(await readShared(root)).toEqual({
         version: 1,
-        documentation: { instructionPointerExcludes: ['vendor/generated'] },
+        instructions: { claude: { excludes: ['vendor/generated'] } },
       });
     });
 
@@ -4987,7 +4988,7 @@ describe('oat config', () => {
 
       await runCommand(command, [
         'set',
-        'documentation.instructionPointerExcludes',
+        'instructions.claude.excludes',
         'vendor/generated',
         '--local',
       ]);
@@ -5000,23 +5001,18 @@ describe('oat config', () => {
       const root = await createRepoRoot();
       const { command, capture } = createHarness({ cwd: root });
 
-      await runCommand(command, [
-        'describe',
-        'documentation.instructionPointerExcludes',
-      ]);
+      await runCommand(command, ['describe', 'instructions.claude.excludes']);
 
-      expect(capture.info[0]).toContain(
-        'Key: documentation.instructionPointerExcludes',
-      );
+      expect(capture.info[0]).toContain('Key: instructions.claude.excludes');
       expect(capture.info[0]).toContain('Type: string[]');
       expect(capture.info[0]).toContain(
-        'Owning command: oat config set documentation.instructionPointerExcludes <path[,path...]>',
+        'Owning command: oat config set instructions.claude.excludes <path[,path...]>',
       );
       expect(process.exitCode).toBe(0);
     });
   });
 
-  describe('documentation.instructionSyncStrategy', () => {
+  describe('instructions.claude.shims', () => {
     async function readShared(root: string): Promise<unknown> {
       return JSON.parse(
         await readFile(join(root, '.oat', 'config.json'), 'utf8'),
@@ -5030,26 +5026,24 @@ describe('oat config', () => {
 
         await runCommand(command, [
           'set',
-          'documentation.instructionSyncStrategy',
+          'instructions.claude.shims',
           strategy,
         ]);
         expect(process.exitCode).toBe(0);
-        expect(capture.info[0]).toBe(
-          `documentation.instructionSyncStrategy=${strategy}`,
-        );
+        expect(capture.info[0]).toBe(`instructions.claude.shims=${strategy}`);
         expect(await readShared(root)).toEqual({
           version: 1,
-          documentation: { instructionSyncStrategy: strategy },
+          instructions: { claude: { shims: strategy } },
         });
 
         const get = createHarness({ cwd: root });
         await runCommand(
           get.command,
-          ['get', 'documentation.instructionSyncStrategy'],
+          ['get', 'instructions.claude.shims'],
           ['--json'],
         );
         expect(get.capture.jsonPayloads[0]).toMatchObject({
-          key: 'documentation.instructionSyncStrategy',
+          key: 'instructions.claude.shims',
           value: strategy,
           source: 'shared',
         });
@@ -5057,12 +5051,12 @@ describe('oat config', () => {
         const unset = createHarness({ cwd: root });
         await runCommand(
           unset.command,
-          ['unset', 'documentation.instructionSyncStrategy'],
+          ['unset', 'instructions.claude.shims'],
           ['--json'],
         );
         expect(unset.capture.jsonPayloads[0]).toMatchObject({
           status: 'ok',
-          key: 'documentation.instructionSyncStrategy',
+          key: 'instructions.claude.shims',
           removed: true,
         });
         expect(await readShared(root)).toEqual({ version: 1 });
@@ -5075,12 +5069,12 @@ describe('oat config', () => {
 
       await runCommand(
         command,
-        ['get', 'documentation.instructionSyncStrategy'],
+        ['get', 'instructions.claude.shims'],
         ['--json'],
       );
 
       expect(capture.jsonPayloads[0]).toMatchObject({
-        key: 'documentation.instructionSyncStrategy',
+        key: 'instructions.claude.shims',
         value: 'none',
         source: 'default',
       });
@@ -5091,24 +5085,20 @@ describe('oat config', () => {
         const root = await createRepoRoot();
         await writeFile(
           join(root, '.oat', 'config.json'),
-          `${JSON.stringify({ version: 1, documentation: { instructionSyncStrategy: 'copy' } })}\n`,
+          `${JSON.stringify({ version: 1, instructions: { claude: { shims: 'copy' } } })}\n`,
           'utf8',
         );
         const { command, capture } = createHarness({ cwd: root });
 
-        await runCommand(command, [
-          'set',
-          'documentation.instructionSyncStrategy',
-          value,
-        ]);
+        await runCommand(command, ['set', 'instructions.claude.shims', value]);
 
         expect(process.exitCode).toBe(1);
         expect(capture.error[0]).toContain(
-          'Invalid value for documentation.instructionSyncStrategy: expected one of none | pointer | symlink | copy',
+          'Invalid value for instructions.claude.shims: expected one of none | pointer | symlink | copy',
         );
         expect(await readShared(root)).toEqual({
           version: 1,
-          documentation: { instructionSyncStrategy: 'copy' },
+          instructions: { claude: { shims: 'copy' } },
         });
       });
     }
@@ -5117,21 +5107,21 @@ describe('oat config', () => {
       const root = await createRepoRoot();
       await writeFile(
         join(root, '.oat', 'config.json'),
-        `${JSON.stringify({ version: 1, documentation: { instructionSyncStrategy: 'Pointer' } })}\n`,
+        `${JSON.stringify({ version: 1, instructions: { claude: { shims: 'Pointer' } } })}\n`,
         'utf8',
       );
       const { command } = createHarness({ cwd: root });
 
       await runCommand(command, [
         'set',
-        'documentation.instructionSyncStrategy',
+        'instructions.claude.shims',
         'pointer',
       ]);
 
       expect(process.exitCode).toBe(0);
       expect(await readShared(root)).toEqual({
         version: 1,
-        documentation: { instructionSyncStrategy: 'pointer' },
+        instructions: { claude: { shims: 'pointer' } },
       });
     });
 
@@ -5139,15 +5129,12 @@ describe('oat config', () => {
       const root = await createRepoRoot();
       await writeFile(
         join(root, '.oat', 'config.json'),
-        `${JSON.stringify({ version: 1, documentation: { root: 'apps/docs', instructionSyncStrategy: 7 } })}\n`,
+        `${JSON.stringify({ version: 1, documentation: { root: 'apps/docs' }, instructions: { claude: { shims: 7 } } })}\n`,
         'utf8',
       );
       const { command } = createHarness({ cwd: root });
 
-      await runCommand(command, [
-        'unset',
-        'documentation.instructionSyncStrategy',
-      ]);
+      await runCommand(command, ['unset', 'instructions.claude.shims']);
 
       expect(process.exitCode).toBe(0);
       expect(await readShared(root)).toEqual({
@@ -5162,7 +5149,7 @@ describe('oat config', () => {
 
       await runCommand(command, [
         'set',
-        'documentation.instructionSyncStrategy',
+        'instructions.claude.shims',
         'copy',
         '--local',
       ]);
@@ -5175,17 +5162,12 @@ describe('oat config', () => {
       const root = await createRepoRoot();
       const { command, capture } = createHarness({ cwd: root });
 
-      await runCommand(command, [
-        'describe',
-        'documentation.instructionSyncStrategy',
-      ]);
+      await runCommand(command, ['describe', 'instructions.claude.shims']);
 
-      expect(capture.info[0]).toContain(
-        'Key: documentation.instructionSyncStrategy',
-      );
+      expect(capture.info[0]).toContain('Key: instructions.claude.shims');
       expect(capture.info[0]).toContain('Type: enum');
       expect(capture.info[0]).toContain(
-        'Owning command: oat config set documentation.instructionSyncStrategy <none|pointer|symlink|copy>',
+        'Owning command: oat config set instructions.claude.shims <none|pointer|symlink|copy>',
       );
       expect(process.exitCode).toBe(0);
     });
@@ -6340,25 +6322,23 @@ describe('oat config', () => {
       });
     });
 
-    it('unset removes a malformed documentation.instructionPointerExcludes', async () => {
+    it('unset removes a malformed instructions.claude.excludes', async () => {
       const root = await createRepoRoot();
       await writeSharedConfig(root, {
-        documentation: { instructionPointerExcludes: 7, root: 'apps/docs' },
+        documentation: { root: 'apps/docs' },
+        instructions: { claude: { excludes: 7 } },
       });
       const { command, capture } = createHarness({ cwd: root });
 
-      await runCommand(command, [
-        'unset',
-        'documentation.instructionPointerExcludes',
-      ]);
+      await runCommand(command, ['unset', 'instructions.claude.excludes']);
 
       expect(process.exitCode).toBe(0);
       expect(capture.info[0]).toBe(
-        'documentation.instructionPointerExcludes unset from shared config',
+        'instructions.claude.excludes unset from shared config',
       );
       const shared = await readSharedConfig(root);
       const documentation = shared.documentation as Record<string, unknown>;
-      expect(documentation.instructionPointerExcludes).toBeUndefined();
+      expect(shared).not.toHaveProperty('instructions');
       expect(documentation.root).toBe('apps/docs');
     });
 
@@ -6679,13 +6659,13 @@ describe('oat config', () => {
     it('unset does not prune a documentation parent that still holds a sibling', async () => {
       const root = await createRepoRoot();
       // Unsetting one documentation key must never take a sibling with it,
-      // whether that sibling is catalogued (`instructionPointerExcludes`) or
-      // read-only (`index`, which `oat config` still does not expose).
+      // whether that sibling is catalogued (`excludes`) or read-only
+      // (`index`, which `oat config` still does not expose).
       await writeSharedConfig(root, {
         documentation: {
           root: 'apps/oat-docs/docs',
           index: 'apps/oat-docs/index.md',
-          instructionPointerExcludes: ['apps/oat-docs/docs'],
+          excludes: ['CLAUDE.md'],
         },
       });
       const { command } = createHarness({ cwd: root });
@@ -6696,7 +6676,7 @@ describe('oat config', () => {
       const shared = await readSharedConfig(root);
       expect(shared.documentation).toEqual({
         index: 'apps/oat-docs/index.md',
-        instructionPointerExcludes: ['apps/oat-docs/docs'],
+        excludes: ['CLAUDE.md'],
       });
     });
 
@@ -6809,7 +6789,7 @@ describe('oat config', () => {
       // Removing it from `KEY_ORDER` drops it from the catalog listing and
       // fails here, which is the point: an operator who cannot unset a key OAT
       // reads has no way to remove it at all.
-      expect(keys).toContain('documentation.instructionPointerExcludes');
+      expect(keys).toContain('instructions.claude.excludes');
 
       // Families with a deliberate non-removal outcome; every other key must
       // reach a removal path.

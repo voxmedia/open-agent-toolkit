@@ -973,12 +973,21 @@ describe('instructions utils', () => {
   describe('resolveInstructionPointerExcludes', () => {
     async function writeConfig(
       repoRoot: string,
-      documentation: Record<string, unknown>,
+      {
+        claudeExcludes,
+        ...documentation
+      }: { root?: string; claudeExcludes?: string[] },
     ): Promise<void> {
       await mkdir(join(repoRoot, '.oat'), { recursive: true });
       await writeFile(
         join(repoRoot, '.oat', 'config.json'),
-        JSON.stringify({ version: 1, documentation }),
+        JSON.stringify({
+          version: 1,
+          documentation,
+          ...(claudeExcludes === undefined
+            ? {}
+            : { instructions: { claude: { excludes: claudeExcludes } } }),
+        }),
         'utf8',
       );
     }
@@ -991,7 +1000,7 @@ describe('instructions utils', () => {
       await mkdir(join(repoRoot, 'vendor'), { recursive: true });
       await writeConfig(repoRoot, {
         root: 'apps/docsapp',
-        instructionPointerExcludes: ['vendor'],
+        claudeExcludes: ['vendor'],
       });
 
       const exclusions = await resolveInstructionPointerExcludes(repoRoot);
@@ -1004,7 +1013,7 @@ describe('instructions utils', () => {
     it('warns and withholds effect for an entry naming no directory', async () => {
       const repoRoot = await createRepoRoot();
       await writeConfig(repoRoot, {
-        instructionPointerExcludes: ['nonexistent-dir'],
+        claudeExcludes: ['nonexistent-dir'],
       });
 
       const exclusions = await resolveInstructionPointerExcludes(repoRoot);
@@ -1018,7 +1027,7 @@ describe('instructions utils', () => {
       // the one branch whose message is promised unchanged, so an operator or
       // script that recognizes it today keeps working.
       expect(exclusions.warnings[0]).toBe(
-        'documentation.instructionPointerExcludes entry "nonexistent-dir" matches no directory in this repository (matching is case-sensitive), so it excludes nothing.',
+        'instructions.claude.excludes entry "nonexistent-dir" matches no directory in this repository (matching is case-sensitive), so it excludes nothing.',
       );
     });
 
@@ -1026,7 +1035,7 @@ describe('instructions utils', () => {
       const repoRoot = await createRepoRoot();
       await mkdir(join(repoRoot, 'real-docs'), { recursive: true });
       await symlink(join(repoRoot, 'real-docs'), join(repoRoot, 'alias'));
-      await writeConfig(repoRoot, { instructionPointerExcludes: ['alias'] });
+      await writeConfig(repoRoot, { claudeExcludes: ['alias'] });
 
       const exclusions = await resolveInstructionPointerExcludes(repoRoot);
 
@@ -1048,7 +1057,7 @@ describe('instructions utils', () => {
       const target = join(outsideRoot, 'target');
       await mkdir(target, { recursive: true });
       await symlink(target, join(repoRoot, 'link-out'));
-      await writeConfig(repoRoot, { instructionPointerExcludes: ['link-out'] });
+      await writeConfig(repoRoot, { claudeExcludes: ['link-out'] });
 
       const exclusions = await resolveInstructionPointerExcludes(repoRoot);
 
@@ -1074,7 +1083,7 @@ describe('instructions utils', () => {
       await symlink(repoRoot, join(repoRoot, 'self'));
       await symlink(enclosingRoot, join(repoRoot, 'up'));
       await writeConfig(repoRoot, {
-        instructionPointerExcludes: ['self', 'up'],
+        claudeExcludes: ['self', 'up'],
       });
 
       const exclusions = await resolveInstructionPointerExcludes(repoRoot);
@@ -1093,15 +1102,15 @@ describe('instructions utils', () => {
       // that redirects both to the absolute path is otherwise invisible: the
       // rest of the suite stays green without it.
       expect(exclusions.warnings).toEqual([
-        `documentation.instructionPointerExcludes entry "self" resolves to ${JSON.stringify(resolvedRoot)}, not to itself, so the scan never matches it and it excludes nothing. Point the entry at the resolved directory, or remove the symlink.`,
-        `documentation.instructionPointerExcludes entry "up" resolves to ${JSON.stringify(resolvedParent)}, not to itself, so the scan never matches it and it excludes nothing. Point the entry at the resolved directory, or remove the symlink.`,
+        `instructions.claude.excludes entry "self" resolves to ${JSON.stringify(resolvedRoot)}, not to itself, so the scan never matches it and it excludes nothing. Point the entry at the resolved directory, or remove the symlink.`,
+        `instructions.claude.excludes entry "up" resolves to ${JSON.stringify(resolvedParent)}, not to itself, so the scan never matches it and it excludes nothing. Point the entry at the resolved directory, or remove the symlink.`,
       ]);
     });
 
     it('warns and withholds effect for an entry dropped during normalization', async () => {
       const repoRoot = await createRepoRoot();
       await writeConfig(repoRoot, {
-        instructionPointerExcludes: ['/etc', '../outside'],
+        claudeExcludes: ['/etc', '../outside'],
       });
 
       const exclusions = await resolveInstructionPointerExcludes(repoRoot);
@@ -1117,7 +1126,7 @@ describe('instructions utils', () => {
       const repoRoot = await createRepoRoot();
       await mkdir(join(repoRoot, '.oat', 'repo'), { recursive: true });
       await writeConfig(repoRoot, {
-        instructionPointerExcludes: ['.oat/repo'],
+        claudeExcludes: ['.oat/repo'],
       });
 
       const exclusions = await resolveInstructionPointerExcludes(repoRoot);
@@ -1195,7 +1204,7 @@ describe('instructions utils', () => {
       const repoRoot = await createRepoRoot();
       await mkdir(join(repoRoot, '.oat', 'repo', 'pjm'), { recursive: true });
       await writeConfig(repoRoot, {
-        instructionPointerExcludes: ['.oat/repo/pjm'],
+        claudeExcludes: ['.oat/repo/pjm'],
       });
 
       // `.oat/repo` is queued directly by the carve-in and so bypasses the
@@ -1214,7 +1223,7 @@ describe('instructions utils', () => {
       });
       await writeConfig(repoRoot, {
         root: 'apps/docsapp',
-        instructionPointerExcludes: ['apps/docsapp/docs/guide'],
+        claudeExcludes: ['apps/docsapp/docs/guide'],
       });
 
       // Shadowed by the content root, so the predicate never fires for it, but

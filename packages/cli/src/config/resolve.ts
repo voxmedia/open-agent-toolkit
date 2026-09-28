@@ -74,11 +74,18 @@ const DEFAULT_SHARED_CONFIG = {
     // is absent here has no row at all while it is unset. `null` keeps meaning
     // "not set at this layer", so a configured array still wins.
     excludes: null,
-    instructionPointerExcludes: null,
-    // The strategy `oat instructions sync` applies when neither `--strategy`
-    // nor this key names one, so `oat config get` reports what will happen.
-    instructionSyncStrategy: DEFAULT_INSTRUCTION_SYNC_STRATEGY,
     requireForProjectCompletion: false,
+  },
+  instructions: {
+    claude: {
+      // The strategy `oat instructions sync` applies when neither
+      // `--strategy` nor this key names one, so `oat config get` reports what
+      // will happen.
+      shims: DEFAULT_INSTRUCTION_SYNC_STRATEGY,
+      // Listed for the same reason as `documentation.excludes`: `oat config
+      // dump` enumerates the resolved map, and `null` means "not set here".
+      excludes: null,
+    },
   },
   tools: {
     brainstorm: false,

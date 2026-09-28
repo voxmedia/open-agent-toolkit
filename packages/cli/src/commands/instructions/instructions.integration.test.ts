@@ -603,12 +603,25 @@ describe('instructions command integration', () => {
 
     async function writeDocumentationConfig(
       root: string,
-      documentation: Record<string, unknown>,
+      {
+        claudeExcludes,
+        ...documentation
+      }: { root?: string; claudeExcludes?: unknown },
     ): Promise<void> {
       await mkdir(join(root, '.oat'), { recursive: true });
       await writeFile(
         join(root, '.oat', 'config.json'),
-        JSON.stringify({ version: 1, documentation }, null, 2),
+        JSON.stringify(
+          {
+            version: 1,
+            documentation,
+            ...(claudeExcludes === undefined
+              ? {}
+              : { instructions: { claude: { excludes: claudeExcludes } } }),
+          },
+          null,
+          2,
+        ),
         'utf8',
       );
     }
@@ -773,7 +786,7 @@ describe('instructions command integration', () => {
       await seedRepoCarveIn(root);
       await writeDocumentationConfig(root, {
         root: 'apps/oat-docs',
-        instructionPointerExcludes: ['apps/oat-docs', 'vendor'],
+        claudeExcludes: ['apps/oat-docs', 'vendor'],
       });
 
       await writeFile(
@@ -830,7 +843,7 @@ describe('instructions command integration', () => {
       // reverted to `missing` -- issue #238 recurring behind a false report.
       await writeDocumentationConfig(root, {
         root: 'Apps/Docsapp',
-        instructionPointerExcludes: ['nonexistent-dir', '/etc'],
+        claudeExcludes: ['nonexistent-dir', '/etc'],
       });
 
       await writeFile(
@@ -864,7 +877,7 @@ describe('instructions command integration', () => {
       await seedRepoCarveIn(root);
       await writeDocumentationConfig(root, {
         root: 'apps/docsapp',
-        instructionPointerExcludes: ['vendor'],
+        claudeExcludes: ['vendor'],
       });
 
       await writeFile(
@@ -917,7 +930,7 @@ describe('instructions command integration', () => {
       // neither excludedPaths nor effectiveExcludedPaths. Without
       // exclusionWarnings a --json consumer would see no trace of them at all.
       await writeDocumentationConfig(root, {
-        instructionPointerExcludes: ['/etc'],
+        claudeExcludes: ['/etc'],
       });
 
       const result = await runCli(
@@ -941,7 +954,7 @@ describe('instructions command integration', () => {
         root: 'apps/oat-docs',
         // A typo'd opt-out must not degrade into "no extra exclusions" and
         // quietly write pointers the operator believed were suppressed.
-        instructionPointerExcludes: 'vendor',
+        claudeExcludes: 'vendor',
       });
 
       await writeFile(join(root, 'AGENTS.md'), '# root instructions\n', 'utf8');
@@ -950,7 +963,7 @@ describe('instructions command integration', () => {
 
       expect(result.exitCode).toBe(2);
       expect(result.stderr + result.stdout).toContain(
-        'Invalid documentation.instructionPointerExcludes',
+        'Invalid instructions.claude.excludes',
       );
       // Nothing was written: the command aborted before scanning.
       await expect(pathExists(join(root, 'CLAUDE.md'))).resolves.toBe(false);
@@ -961,7 +974,7 @@ describe('instructions command integration', () => {
       tempDirs.push(root);
 
       await writeDocumentationConfig(root, {
-        instructionPointerExcludes: ['vendor', ''],
+        claudeExcludes: ['vendor', ''],
       });
       await writeFile(join(root, 'AGENTS.md'), '# root instructions\n', 'utf8');
 
@@ -969,7 +982,7 @@ describe('instructions command integration', () => {
 
       expect(result.exitCode).toBe(2);
       expect(result.stderr + result.stdout).toContain(
-        'Invalid documentation.instructionPointerExcludes',
+        'Invalid instructions.claude.excludes',
       );
     });
 
@@ -1008,13 +1021,13 @@ describe('instructions command integration', () => {
   describe('configured instruction sync strategy', () => {
     async function writeStrategyConfig(
       root: string,
-      instructionSyncStrategy: unknown,
+      shims: unknown,
     ): Promise<void> {
       await mkdir(join(root, '.oat'), { recursive: true });
       await writeFile(
         join(root, '.oat', 'config.json'),
         JSON.stringify(
-          { version: 1, documentation: { instructionSyncStrategy } },
+          { version: 1, instructions: { claude: { shims } } },
           null,
           2,
         ),
@@ -1083,7 +1096,7 @@ describe('instructions command integration', () => {
       // The override is one run only: config is unchanged.
       await expect(
         readFile(join(root, '.oat', 'config.json'), 'utf8'),
-      ).resolves.toContain('"instructionSyncStrategy": "copy"');
+      ).resolves.toContain('"shims": "copy"');
     });
 
     it('fails closed on an unknown configured strategy instead of using the default', async () => {
@@ -1095,7 +1108,7 @@ describe('instructions command integration', () => {
       const sync = await runCli(root, ['instructions', 'sync']);
       expect(sync.exitCode).toBe(2);
       expect(sync.stderr + sync.stdout).toContain(
-        'Invalid documentation.instructionSyncStrategy',
+        'Invalid instructions.claude.shims',
       );
       await expect(lstat(join(root, 'CLAUDE.md'))).rejects.toMatchObject({
         code: 'ENOENT',
@@ -1375,10 +1388,8 @@ describe('instructions command integration', () => {
       const root = await createWorkspace();
       tempDirs.push(root);
       await writeSharedConfig(root, {
-        documentation: {
-          root: 'docs-site',
-          instructionPointerExcludes: ['vendor'],
-        },
+        documentation: { root: 'docs-site' },
+        instructions: { claude: { excludes: ['vendor'] } },
       });
       await writePair(root, 'docs-site', EXPECTED_CLAUDE_CONTENT);
       await writePair(root, 'vendor/lib', EXPECTED_CLAUDE_CONTENT);
@@ -1924,7 +1935,7 @@ describe('instructions command integration', () => {
         expect(message).toContain(WARNING_TEXT);
         expect(message).toContain(`Either remove ${path}, or set`);
         expect(message).toContain(
-          'documentation.instructionSyncStrategy in .oat/config.json to a shim strategy',
+          'instructions.claude.shims in .oat/config.json to a shim strategy',
         );
         expect(message).toContain('rerun `oat instructions sync`');
         // Exactly two options: remove the file, or opt back into shims.
@@ -2048,10 +2059,8 @@ describe('instructions command integration', () => {
         const root = await createWorkspace();
         tempDirs.push(root);
         await writeSharedConfig(root, {
-          documentation: {
-            root: 'docs-site',
-            instructionPointerExcludes: ['vendor'],
-          },
+          documentation: { root: 'docs-site' },
+          instructions: { claude: { excludes: ['vendor'] } },
         });
         await writePair(root, 'docs-site', '# a page about CLAUDE.md\n');
         await writePair(root, 'vendor/lib', EXPECTED_CLAUDE_CONTENT);
@@ -2122,7 +2131,7 @@ describe('instructions command integration', () => {
         const root = await createWorkspace();
         tempDirs.push(root);
         await writeSharedConfig(root, {
-          documentation: { instructionSyncStrategy: 'pointer' },
+          instructions: { claude: { shims: 'pointer' } },
         });
         await seedLeftovers(root);
 
@@ -2250,7 +2259,7 @@ describe('instructions command integration', () => {
         const root = await createWorkspace();
         tempDirs.push(root);
         await writeSharedConfig(root, {
-          documentation: { instructionSyncStrategy: 'pointer' },
+          instructions: { claude: { shims: 'pointer' } },
         });
         await writeFile(join(root, 'AGENTS.md'), '# root instructions\n');
         await writePair(root, 'kept', EXPECTED_CLAUDE_CONTENT);
@@ -2282,7 +2291,7 @@ describe('instructions command integration', () => {
           const root = await createWorkspace();
           tempDirs.push(root);
           await writeSharedConfig(root, {
-            documentation: { instructionSyncStrategy: strategy },
+            instructions: { claude: { shims: strategy } },
           });
           await writeFile(join(root, 'AGENTS.md'), '# root instructions\n');
 

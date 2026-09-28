@@ -134,7 +134,7 @@ Source: `anthropics/claude-code` `mods/agents-md` README, as of v2.1.278.
 - **Only user or managed settings can set the option** (`~/.claude/settings.json`, `--settings`, or managed settings); a project's `.claude/settings.json` cannot.
 - **Nested gaps:** nested AGENTS.md files attach on a text `Read` only (not on `@`-mentions, IDE selections, or notebook, image, or PDF reads), and `--add-dir` directories contribute no AGENTS.md.
 
-The one-line `CLAUDE.md` shim (`@AGENTS.md`, or `ln -s AGENTS.md CLAUDE.md`) is now **opt-in**: use it for Claude Code releases before the plugin, for users who set `instructionFiles` to `claude-md`, or when the nested gaps above matter, and then keep a shim beside every AGENTS.md. In OAT this is `documentation.instructionSyncStrategy` (`none` by default; `pointer`, `symlink`, or `copy` to opt in), applied by `oat instructions sync`; see the OAT docs page `provider-sync/instruction-sync.md` (§ Claude Code and AGENTS.md).
+The one-line `CLAUDE.md` shim (`@AGENTS.md`, or `ln -s AGENTS.md CLAUDE.md`) is now **opt-in**: use it for Claude Code releases before the plugin, for users who set `instructionFiles` to `claude-md`, or when the nested gaps above matter, and then keep a shim beside every AGENTS.md. In OAT this is `instructions.claude.shims` (`none` by default; `pointer`, `symlink`, or `copy` to opt in), applied by `oat instructions sync`; see the OAT docs page `provider-sync/instruction-sync.md` (§ Claude Code and AGENTS.md).
 
 ### 2.7 Skills vs CLAUDE.md vs Rules
 

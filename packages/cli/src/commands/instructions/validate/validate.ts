@@ -46,7 +46,7 @@ export function createInstructionsValidateCommand(
     .addOption(
       new Option(
         '--strategy <strategy>',
-        'Sync strategy to check (overrides documentation.instructionSyncStrategy)',
+        'Sync strategy to check (overrides instructions.claude.shims)',
       ).choices([...INSTRUCTION_SYNC_STRATEGIES]),
     )
     .action(

@@ -39,7 +39,7 @@ copying their content here. -->
 
 - CLI `0.3.9` (`backlog-wave-2`, branch `wave/2026-09-27-backlog-wave-2`)
   closes twelve backlog items. `CLAUDE.md` shims are opt-in:
-  `documentation.instructionSyncStrategy` (`none | pointer | symlink | copy`,
+  `instructions.claude.shims` (`none | pointer | symlink | copy`,
   default `none`) persists the strategy, `oat instructions sync` removes only
   exact OAT-created shims under `none`, and a repository-wide warning names
   every remaining `CLAUDE.md` that makes Claude Code ignore `AGENTS.md`

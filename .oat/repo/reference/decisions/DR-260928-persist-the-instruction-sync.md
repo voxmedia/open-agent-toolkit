@@ -14,8 +14,8 @@ With CLAUDE.md shims becoming opt-in, users who still want shims needed a durabl
 
 ## Decision
 
-Persist the strategy as documentation.instructionSyncStrategy (none | pointer | symlink | copy; absent means none), beside documentation.instructionPointerExcludes, which governs the same oat instructions commands. --strategy overrides a single run. BL-260830-persist-instruction-sync is closed as absorbed and its init prompt is dropped, because the default is none and opting in is one oat config set.
+Persist the strategy as instructions.claude.shims (none | pointer | symlink | copy; absent means none), beside instructions.claude.excludes, which governs the same oat instructions commands (key names per DR-260928-name-the-claude-md-shim-keys). --strategy overrides a single run. BL-260830-persist-instruction-sync is closed as absorbed and its init prompt is dropped, because the default is none and opting in is one oat config set.
 
 ## Consequences
 
-Opting back in is oat config set documentation.instructionSyncStrategy pointer followed by oat instructions sync. The key is accepted only together with the behavior it controls. BL-260830's migration-preservation criterion is superseded by DR-260927-claude-md-shims-are-opt. Shipped in backlog-wave-2 (lockstep 0.3.9).
+Opting back in is oat config set instructions.claude.shims pointer followed by oat instructions sync. The key is accepted only together with the behavior it controls. BL-260830's migration-preservation criterion is superseded by DR-260927-claude-md-shims-are-opt. Shipped in backlog-wave-2 (lockstep 0.3.9).

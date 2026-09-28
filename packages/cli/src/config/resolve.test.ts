@@ -267,12 +267,13 @@ describe('resolveEffectiveConfig', () => {
       value: null,
       source: 'default',
     });
-    expect(result.resolved['documentation.instructionPointerExcludes']).toEqual(
-      { value: null, source: 'default' },
-    );
+    expect(result.resolved['instructions.claude.excludes']).toEqual({
+      value: null,
+      source: 'default',
+    });
   });
 
-  it('defaults documentation.instructionSyncStrategy and lets config win', async () => {
+  it('defaults instructions.claude.shims and lets config win', async () => {
     const unset = await resolveEffectiveConfig(
       '/repo',
       '/tmp/user',
@@ -284,7 +285,7 @@ describe('resolveEffectiveConfig', () => {
         readUserConfig: async () => ({ version: 1 }) satisfies UserConfig,
       },
     );
-    expect(unset.resolved['documentation.instructionSyncStrategy']).toEqual({
+    expect(unset.resolved['instructions.claude.shims']).toEqual({
       value: DEFAULT_INSTRUCTION_SYNC_STRATEGY,
       source: 'default',
     });
@@ -298,16 +299,17 @@ describe('resolveEffectiveConfig', () => {
         readOatConfig: async () =>
           ({
             version: 1,
-            documentation: { instructionSyncStrategy: 'copy' },
+            instructions: { claude: { shims: 'copy' } },
           }) satisfies OatConfig,
         readOatLocalConfig: async () =>
           ({ version: 1 }) satisfies OatLocalConfig,
         readUserConfig: async () => ({ version: 1 }) satisfies UserConfig,
       },
     );
-    expect(
-      configured.resolved['documentation.instructionSyncStrategy'],
-    ).toEqual({ value: 'copy', source: 'shared' });
+    expect(configured.resolved['instructions.claude.shims']).toEqual({
+      value: 'copy',
+      source: 'shared',
+    });
   });
 
   it('lets a configured documentation.excludes win over the null default', async () => {
@@ -319,10 +321,8 @@ describe('resolveEffectiveConfig', () => {
         readOatConfig: async () =>
           ({
             version: 1,
-            documentation: {
-              excludes: ['CLAUDE.md'],
-              instructionPointerExcludes: ['apps/docs'],
-            },
+            documentation: { excludes: ['CLAUDE.md'] },
+            instructions: { claude: { excludes: ['apps/docs'] } },
           }) satisfies OatConfig,
         readOatLocalConfig: async () =>
           ({ version: 1 }) satisfies OatLocalConfig,
@@ -336,9 +336,10 @@ describe('resolveEffectiveConfig', () => {
       value: ['CLAUDE.md'],
       source: 'shared',
     });
-    expect(result.resolved['documentation.instructionPointerExcludes']).toEqual(
-      { value: ['apps/docs'], source: 'shared' },
-    );
+    expect(result.resolved['instructions.claude.excludes']).toEqual({
+      value: ['apps/docs'],
+      source: 'shared',
+    });
   });
 
   it('ignores retired local and user execution preferences', async () => {

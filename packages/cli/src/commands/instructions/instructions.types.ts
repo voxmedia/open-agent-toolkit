@@ -3,7 +3,7 @@ import type { Dirent, Stats } from 'node:fs';
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 import type { InstructionSyncStrategy } from '@config/oat-config';
 
-// One list shared with the `documentation.instructionSyncStrategy` config
+// One list shared with the `instructions.claude.shims` config
 // normalizer and `oat config set`, so the commands can never accept a value
 // the config rejects or the reverse.
 export {
@@ -105,7 +105,7 @@ export interface InstructionsJsonPayload {
   status: InstructionsStatus;
   /**
    * The strategy this run applied or checked: `--strategy` when given, else
-   * `documentation.instructionSyncStrategy`, else the built-in default.
+   * `instructions.claude.shims`, else the built-in default.
    */
   strategy: InstructionSyncStrategy;
   summary: InstructionsSummary;
@@ -199,7 +199,7 @@ export interface InstructionsValidateCommandDependencies {
   buildCommandContext: (options: GlobalOptions) => CommandContext;
   resolveProjectRoot: (cwd: string) => Promise<string>;
   /**
-   * The repository's configured `documentation.instructionSyncStrategy`, or
+   * The repository's configured `instructions.claude.shims`, or
    * undefined when the key is absent. Sync inherits it from this interface so
    * both commands resolve the strategy through the same config read.
    */

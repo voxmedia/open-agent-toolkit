@@ -7,7 +7,7 @@ description: Project-scoped AGENTS.md and CLAUDE.md validation, the no-shim defa
 
 `oat instructions ...` is the project-scoped lane for keeping canonical `AGENTS.md` files and any sibling `CLAUDE.md` files consistent throughout a repository tree.
 
-By default OAT keeps **no** `CLAUDE.md` shims: Claude Code reads `AGENTS.md` itself (see [Claude Code and AGENTS.md](#claude-code-and-agentsmd)). A repository opts back into shims with `documentation.instructionSyncStrategy`.
+By default OAT keeps **no** `CLAUDE.md` shims: Claude Code reads `AGENTS.md` itself (see [Claude Code and AGENTS.md](#claude-code-and-agentsmd)). A repository opts back into shims with `instructions.claude.shims`.
 
 Use it when you want OAT to:
 
@@ -27,7 +27,7 @@ Instruction sync is currently project-only.
 - It skips provider-irrelevant or local-only roots such as `.git`, `.oat`, `.worktrees`, and `node_modules`.
 - It stops at nested git checkouts: any directory below the root that holds its own `.git` (a directory, or the gitdir file of a submodule or linked worktree such as `.claude/worktrees/<name>`) is a separate repository that its own `oat instructions` run owns. Nothing inside it is scanned, removed, or warned about.
 - Exception: `.oat/repo/**` is scanned even though the rest of `.oat/` is skipped, so the curated `AGENTS.md` files there (repo root guidance, `pjm/`, `reference/`) are managed and validated like any other directory. The rest of `.oat/` (`templates/`, `projects/`, `sync/`) stays excluded.
-- It skips the documentation content tree by default, and any path you add to `documentation.instructionPointerExcludes`. See [Documentation trees](#documentation-trees) below.
+- It skips the documentation content tree by default, and any path you add to `instructions.claude.excludes`. See [Documentation trees](#documentation-trees) below.
 - It does not scan user-level provider roots such as `~/.claude` in this release.
 
 ## Documentation Trees
@@ -57,17 +57,21 @@ child is skipped, and the app root is still synced (under a shim strategy it
 keeps receiving its `CLAUDE.md` pointer). Opt the app root out explicitly if
 you do not want it synced.
 
-Add further paths with `documentation.instructionPointerExcludes`, a list of
+Add further paths with `instructions.claude.excludes`, a list of
 repository-relative directories. Set it with
-`oat config set documentation.instructionPointerExcludes "vendor,third_party/docs"`
+`oat config set instructions.claude.excludes "vendor,third_party/docs"`
 (an empty value clears it, and `oat config unset` removes it), or write it
 directly:
 
 ```json
 {
   "documentation": {
-    "root": "apps/oat-docs",
-    "instructionPointerExcludes": ["vendor", "third_party/docs"]
+    "root": "apps/oat-docs"
+  },
+  "instructions": {
+    "claude": {
+      "excludes": ["vendor", "third_party/docs"]
+    }
   }
 }
 ```
@@ -184,17 +188,17 @@ Validation treats the selected file shape as part of correctness. For example, `
 The effective strategy for a run is resolved in this order:
 
 1. the `--strategy` flag, which overrides for that one run and never changes config;
-2. `documentation.instructionSyncStrategy` in `.oat/config.json`;
+2. `instructions.claude.shims` in `.oat/config.json`;
 3. the built-in default, `none`.
 
 Persist a shim strategy for the repository with:
 
 ```bash
-oat config set documentation.instructionSyncStrategy pointer
+oat config set instructions.claude.shims pointer
 oat instructions sync
 ```
 
-`oat config unset documentation.instructionSyncStrategy` returns to the default. A value outside `none`, `pointer`, `symlink`, and `copy` is rejected with exit code `2` instead of silently falling back to the default, and `oat config set` can still repair it.
+`oat config unset instructions.claude.shims` returns to the default. A value outside `none`, `pointer`, `symlink`, and `copy` is rejected with exit code `2` instead of silently falling back to the default, and `oat config set` can still repair it.
 
 ## Reported States
 
@@ -262,13 +266,13 @@ two ways out:
 - remove the file — or, when an `AGENTS.md` links to it (the warning's
   `linkedBy`), first replace each linking `AGENTS.md` with the file's content,
   because the file holds the only copy of those instructions; or
-- set `documentation.instructionSyncStrategy` in `.oat/config.json` to a shim
+- set `instructions.claude.shims` in `.oat/config.json` to a shim
   strategy (`pointer`, `symlink`, or `copy`) and rerun `oat instructions sync`
   to add shims back everywhere.
 
 This check is a separate, read-only walk of the whole repository. It
 deliberately ignores `documentation.root` and
-`documentation.instructionPointerExcludes`, which only limit what OAT may
+`instructions.claude.excludes`, which only limit what OAT may
 change, because Claude Code's own walk does not honor them. Only `.git`,
 `node_modules`, the root `.worktrees`, and nested git checkouts are skipped.
 
@@ -379,7 +383,7 @@ oat instructions sync
 Opt the repository into pointer shims:
 
 ```bash
-oat config set documentation.instructionSyncStrategy pointer
+oat config set instructions.claude.shims pointer
 oat instructions sync --dry-run
 oat instructions sync
 ```

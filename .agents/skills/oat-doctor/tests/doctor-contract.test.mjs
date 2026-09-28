@@ -352,7 +352,7 @@ test('a missing CLAUDE.md is an error only under a shim strategy, and leftover C
   assert.match(leftover, /never offer plain removal/);
   assert.match(
     leftover,
-    /`oat config set documentation\.instructionSyncStrategy pointer`/,
+    /`oat config set instructions\.claude\.shims pointer`/,
   );
   assert.match(leftover, /`oat instructions sync`/);
 

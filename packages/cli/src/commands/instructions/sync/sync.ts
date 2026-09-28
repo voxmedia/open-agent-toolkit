@@ -603,7 +603,7 @@ export function createInstructionsSyncCommand(
 
   // `--strategy` has no Commander default: a filled-in default is
   // indistinguishable from an explicit flag and would always hide
-  // `documentation.instructionSyncStrategy`.
+  // `instructions.claude.shims`.
   return new Command('sync')
     .description(
       'Repair AGENTS.md/CLAUDE.md sync drift using the selected strategy',
@@ -613,7 +613,7 @@ export function createInstructionsSyncCommand(
     .addOption(
       new Option(
         '--strategy <strategy>',
-        'Sync strategy for this run (overrides documentation.instructionSyncStrategy)',
+        'Sync strategy for this run (overrides instructions.claude.shims)',
       ).choices([...INSTRUCTION_SYNC_STRATEGIES]),
     )
     .action(
