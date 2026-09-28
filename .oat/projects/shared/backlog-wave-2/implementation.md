@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-27
-oat_current_task_id: p05-t01
+oat_current_task_id: p05-t07
 oat_generated: false
 ---
 
@@ -30,9 +30,9 @@ oat_generated: false
 | Phase 2 | complete    | 8     | 8/8       |
 | Phase 3 | complete    | 5     | 5/5       |
 | Phase 4 | complete    | 7     | 7/7       |
-| Phase 5 | in_progress | 6     | 6/6       |
+| Phase 5 | in_progress | 7     | 6/7       |
 
-**Total:** 34/34 tasks completed
+**Total:** 34/35 tasks completed
 
 ---
 
@@ -296,6 +296,13 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** 349d64442
+
+---
+
+### Task p05-t07: (review) Close p05 review findings M1, L1-L7
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -601,6 +608,10 @@ oat_generated: false
   10), `build`, `check:skill-bumps`, `release:check-versions`,
   `release:validate`, `build:docs`, `test:smoke` 163/163, `test:skills`
   690/690, `test:scripts` 1/1, `lint`, `format`.
+
+- Request `bw2-p05-review-1` (reconnaissance not-attempted):
+  `reviews/archived/p05-review-2026-09-28T103350Z.md` passed (0 Critical/High), 1 Medium (control-plane
+  lacks `check:fix`/`lint:fix`), 7 Low; all converted to `p05-t07`.
 
 ### PR Requirements (hand-off to oat-project-pr-final)
 

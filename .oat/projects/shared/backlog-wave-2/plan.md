@@ -1622,6 +1622,43 @@ Record each exit code and the head SHA in `implementation.md`.
 
 ---
 
+### Task p05-t07: (review) Close p05 review findings M1, L1-L7
+
+Source: `reviews/archived/p05-review-2026-09-28T103350Z.md` (auto review,
+passing: 0 Critical/High, 1 Medium, 7 Low).
+
+**Step 1: Fix**
+
+- M1: give `packages/control-plane` `check:fix` and `lint:fix` scripts matching
+  its siblings, so `pnpm check:fix` repairs it.
+- L1: correct the AGENTS.md and `contributing/code.md` wording (not every
+  workspace package runs oxlint; keep why the root oxlint pass is ungated).
+- L2: pin the control-plane `check` script alongside `lint`.
+- L3: test the untracked-file scan flags and links at depths other than two.
+- L4: do not rewrite inside code spans or fenced code; rebase reference-style
+  link definitions in the moved item; remove the unreachable backslash branch
+  or make it reachable.
+- L5: make a failed rewrite retryable (regenerate the index and retry the
+  rewrite on the already-archived path).
+- L6: mention the rewrite in `archive --help` (with the help snapshot) and say
+  "tracked and untracked, not ignored" in the docs.
+- L7: note in the archived `BL-260904-stabilize-the-collection` item that the
+  ten local runs were on macOS and the Linux (inode-reuse) evidence comes from
+  the PR's Linux CI; correct the index note so it does not claim the rewriter
+  prevented dangling links in this wave (it made zero rewrites).
+
+**Step 2: Verify**
+
+Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/backlog src/commands/help-snapshots.test.ts`,
+`node --test tools/smoke/verification/lint-enrollment.test.mjs`, `pnpm check`,
+`pnpm lint`, `pnpm format`.
+
+**Step 3: Commit**
+
+`fix(p05-t07): close p05 review findings`
+
+---
+
 ## PR Requirements
 
 The release workflow (`.github/workflows/release.yml`) publishes a fixed body
@@ -1656,7 +1693,7 @@ title itself:
 | p02    | code     | passed          | 2026-09-28 | reviews/archived/p02-review-2026-09-28T013003Z.md           | 01055b7963a8e6931762a0780ffed5ee46168f19 | gate       | codex-6-sol-xhigh |
 | p03    | code     | fixes_completed | 2026-09-28 | reviews/archived/p03-review-2026-09-28T014814Z.md           | bfc92754bd4ed05afd5a2f7da173edad7e82fccb | auto       | -                 |
 | p04    | code     | fixes_completed | 2026-09-28 | reviews/archived/p04-review-2026-09-28T021519Z.md           | a5ebb0813cf786a9fb06e04f87aaacd7566bbdfe | auto       | -                 |
-| p05    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| p05    | code     | fixes_added     | 2026-09-28 | reviews/archived/p05-review-2026-09-28T103350Z.md           | 3cfab725098067df0b1f002d80ec5ed4f2d4aeed | auto       | -                 |
 | final  | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
 | design | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
@@ -1720,9 +1757,9 @@ in `implementation.md`). Phase gates and the final review still run.
 - Phase 2: 8 tasks - CLAUDE.md shims
 - Phase 3: 5 tasks - Lifecycle skill routing and bookkeeping
 - Phase 4: 7 tasks - Agent roles and recon validation
-- Phase 5: 6 tasks - CI and backlog tooling, release fan-in
+- Phase 5: 7 tasks - CI and backlog tooling, release fan-in
 
-**Total: 34 tasks**
+**Total: 35 tasks**
 
 Ready for code review and merge.
 
