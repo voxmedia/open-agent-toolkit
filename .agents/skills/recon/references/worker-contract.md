@@ -21,6 +21,47 @@ Reject an incomplete or contradictory assignment before reading sources. Never
 request credentials, mutate an investigated source, broaden scope, or choose an
 alternate write path.
 
+The controller writes the envelope as one closed JSON object (or a JSON array
+for one wave) and validates it with `scripts/validate-assignment.mjs` before
+recording an accepted launch:
+
+```json
+{
+  "kind": "recon.assignment",
+  "schemaVersion": 1,
+  "runId": "run-1",
+  "waveId": "gather-1",
+  "laneId": "lane-a",
+  "waveMode": "gather",
+  "mode": "gather",
+  "taskClass": "mechanical-recon",
+  "objective": "Bounded objective.",
+  "scope": { "included": ["src/"], "excluded": ["src/generated/"] },
+  "inputs": { "allowed": ["src/"], "excluded": ["src/generated/"] },
+  "readSources": { "sources": ["src/"], "tools": ["Read", "Grep", "Glob"] },
+  "writePath": "raw/dossiers/lane-a.json",
+  "artifact": {
+    "kind": "recon.raw-dossier",
+    "schemaVersion": 1,
+    "outputSchema": "references/packet-contract.md#reconraw-dossier"
+  },
+  "enforcement": "contract-enforced",
+  "deadlineSeconds": 900,
+  "failureRecording": "required",
+  "escalation": "Return PASS_FAILED with the unavailable input; the controller covers the gap."
+}
+```
+
+The validator reports every missing, unknown, or invalid field in one pass and
+exits non-zero, so the controller can correct or replace a request that never
+reached a worker. It rejects a worker mode that does not match the wave mode,
+an allowed input or read source that is also excluded, a file-editing tool in
+`readSources.tools`, a write path that is absolute or escapes the packet, a
+controller-owned artifact kind, `unavailable` enforcement, and, across a wave,
+a repeated lane ID or write path. Once a launch is accepted, correct its
+envelope through the accepted handle; acceptance never authorizes a
+replacement worker.
+
 The manifest's nine wave modes map to the worker's closed six-mode vocabulary:
 
 | Manifest wave mode         | Worker assignment mode |

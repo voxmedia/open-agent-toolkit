@@ -33,6 +33,7 @@ const scripts = [
   'reconcile-ledger.mjs',
   'render-packet.mjs',
   'validate-artifact.mjs',
+  'validate-assignment.mjs',
   'validate-packet.mjs',
 ];
 const scratchRoots = [];

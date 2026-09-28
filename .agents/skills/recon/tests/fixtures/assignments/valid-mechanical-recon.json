@@ -1,0 +1,33 @@
+{
+  "kind": "recon.assignment",
+  "schemaVersion": 1,
+  "runId": "review-p04-final",
+  "waveId": "review-recon-mechanical",
+  "laneId": "lane-provider-view-parity",
+  "waveMode": "gather",
+  "mode": "gather",
+  "taskClass": "mechanical-recon",
+  "objective": "Confirm each edited agent role has regenerated .codex and .cursor views whose bodies match the canonical role.",
+  "scope": {
+    "included": [".agents/agents", ".codex/agents", ".cursor/agents"],
+    "excluded": [".agents/skills"]
+  },
+  "inputs": {
+    "allowed": [".agents/agents", ".codex/agents", ".cursor/agents"],
+    "excluded": ["reviews/"]
+  },
+  "readSources": {
+    "sources": [".agents/agents", ".codex/agents", ".cursor/agents"],
+    "tools": ["Read", "Grep", "Glob"]
+  },
+  "writePath": "raw/dossiers/lane-provider-view-parity.json",
+  "artifact": {
+    "kind": "recon.raw-dossier",
+    "schemaVersion": 1,
+    "outputSchema": "references/packet-contract.md#reconraw-dossier"
+  },
+  "enforcement": "contract-enforced",
+  "deadlineSeconds": 600,
+  "failureRecording": "required",
+  "escalation": "Return PASS_FAILED with the unreadable view path; the primary reviewer covers the lane inline."
+}

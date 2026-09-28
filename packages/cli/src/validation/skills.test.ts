@@ -1726,6 +1726,39 @@ describe('validateOatSkills', () => {
     );
   });
 
+  it('validates recon-worker envelopes before launch and corrects accepted children in place', async () => {
+    const content = await readRepoFile('.agents/agents/oat-reviewer.md');
+
+    // The validator ships in the research pack while the reviewer ships in
+    // workflows, so it is resolved through the sibling-skill probe with its
+    // own pack's recovery command rather than an ambient path.
+    expect(content).toContain('${RECON_SKILLS_ROOT}` for `recon`');
+    expect(content).toContain(
+      '${RECON_SKILLS_ROOT}/recon/scripts/validate-assignment.mjs',
+    );
+    expect(content).toMatch(
+      /`recon`[\s\S]{0,400}oat tools install research --scope <user\|project>/,
+    );
+
+    // GitHub #295: validation happens before accepted-launch state exists, and
+    // a failure names every field so the envelope can be corrected or replaced.
+    expect(content).toMatch(
+      /validate-assignment\.mjs[\s\S]{0,400}before (?:the )?launch[\s\S]{0,300}every (?:missing or invalid )?field/i,
+    );
+    expect(content).toMatch(
+      /never record (?:an )?accepted launch[\s\S]{0,160}envelope[\s\S]{0,80}(?:has not|did not) validate/i,
+    );
+
+    // After acceptance, replacement is unavailable: correct through the
+    // accepted handle and keep a durable terminal result.
+    expect(content).toMatch(
+      /after acceptance[\s\S]{0,240}correct[\s\S]{0,120}through the accepted handle[\s\S]{0,160}instead of relaunching/i,
+    );
+    expect(content).toMatch(
+      /every accepted (?:child|lane)[\s\S]{0,160}terminal result/i,
+    );
+  });
+
   it('classifies reviewer reconnaissance independently from worker authority', async () => {
     const reviewer = await readRepoFile('.agents/agents/oat-reviewer.md');
     const engine = await readRepoFile(
@@ -8732,7 +8765,7 @@ describe('recon canonical contracts', () => {
     ]);
 
     expect(skill).toMatch(/^name:\s*recon$/m);
-    expect(readDeclaredVersion(skill)).toBe('1.1.5');
+    expect(readDeclaredVersion(skill)).toBe('1.1.6');
     expect(skill).toMatch(/provider-neutral/i);
     expect(skill).toMatch(/select each wave independently/i);
     expect(skill).toMatch(/schemaVersion: 2/i);

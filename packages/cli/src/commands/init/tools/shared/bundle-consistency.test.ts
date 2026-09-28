@@ -470,6 +470,7 @@ describe('bundle asset inventory consistency', () => {
           ['skills', 'recon', 'SKILL.md'],
           ['skills', 'recon', 'references', 'packet-contract.md'],
           ['skills', 'recon', 'scripts', 'prepare-routing.mjs'],
+          ['skills', 'recon', 'scripts', 'validate-assignment.mjs'],
           ['skills', 'recon', 'scripts', 'validate-packet.mjs'],
           ['skills', 'recon', 'scripts', 'lib', 'contracts.mjs'],
           ['skills', 'recon', 'scripts', 'lib', 'routing.mjs'],

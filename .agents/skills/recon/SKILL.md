@@ -6,7 +6,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Glob, Grep, Bash, AskUserQuestion, Agent, mcp__*
 metadata:
-  version: 1.1.5
+  version: 1.1.6
 ---
 
 # Recon
@@ -288,7 +288,10 @@ and return an explicit unresolved caller-owned gap. Never mutate the target or
 substitute a
 contradiction search for synthesis.
 
-Use `references/worker-contract.md` for every assignment. Never allow two
+Use `references/worker-contract.md` for every assignment. Before recording
+an accepted launch, run `scripts/validate-assignment.mjs` on each lane's
+assignment envelope (or the wave's array); a non-zero exit names every missing
+or invalid field, so correct or replace the request before launch. Never allow two
 workers to share a write path. Every dossier records its approved wave and lane;
 every review result records its approved lane.
 

@@ -1,0 +1,34 @@
+{
+  "kind": "recon.assignment",
+  "schemaVersion": 1,
+  "runId": "review-p04-final",
+  "waveId": "review-recon-intelligent",
+  "laneId": "lane-contract-semantics",
+  "waveMode": "semantic-verification",
+  "mode": "gather",
+  "taskClass": "clever-recon",
+  "objective": "Audit the reviewer contract.",
+  "scope": {
+    "included": [".agents/agents/oat-reviewer.md"],
+    "excluded": []
+  },
+  "inputs": {
+    "allowed": [".agents/agents/oat-reviewer.md", "reviews/"],
+    "excluded": ["reviews/"]
+  },
+  "readSources": {
+    "sources": [".agents/agents/oat-reviewer.md"],
+    "tools": ["Read", "Edit"]
+  },
+  "writePath": "../outside/lane.json",
+  "artifact": {
+    "kind": "recon.packet-manifest",
+    "schemaVersion": 2,
+    "outputSchema": ""
+  },
+  "enforcement": "unavailable",
+  "deadlineSeconds": 0,
+  "failureRecording": "sometimes",
+  "escalation": "Cover inline.",
+  "priority": "high"
+}
