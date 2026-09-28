@@ -27,6 +27,31 @@ describe('agent instructions bundle contract', () => {
     );
   });
 
+  it('reports a blocked CLAUDE.md shim removal through its own finding', () => {
+    const analyzeSkill = readFileSync(
+      repoFilePath('.agents/skills/oat-agent-instructions-analyze/SKILL.md'),
+      'utf8',
+    );
+    const claude =
+      analyzeSkill
+        .split('\n')
+        .find((line) => line.startsWith('- **CLAUDE.md**:')) ?? '';
+
+    // While removal is blocked, `validate` omits the per-file warning for
+    // every kept file in `wouldRemove`, so the block item is what names them.
+    expect(claude).toContain('`claude_md_blocks_shim_removal`');
+    expect(claude).toMatch(/report its `paths`[^\n]*as the High finding/);
+    expect(claude).toMatch(
+      /`linkedBy`[^\n]*replace each linking AGENTS\.md with the file's content first[^\n]*then rerun `oat instructions sync`/,
+    );
+    expect(claude).toMatch(
+      /list its `wouldRemove` as the CLAUDE\.md files that sync then removes/,
+    );
+    expect(claude).toMatch(
+      /no `claude_md_hides_agents_md` warning of their own while the block holds/,
+    );
+  });
+
   it('requires recommendation packs to preserve behavioral and workflow guidance', () => {
     const packTemplate = readFileSync(
       repoFilePath(
