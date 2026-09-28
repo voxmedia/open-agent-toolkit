@@ -71,9 +71,14 @@ function createHarness(options: HarnessOptions = {}): {
   );
 
   // Injected for the same reason: the fake cwd has no `.oat/config.json`, and
-  // the production reader must not consult the developer's filesystem.
+  // the production reader must not consult the developer's filesystem. These
+  // unit cases exercise the pointer write paths, so the harness configures
+  // `pointer` unless a case sets `configuredStrategy` itself (including to
+  // undefined, to observe the built-in default).
+  const configuredStrategy =
+    'configuredStrategy' in options ? options.configuredStrategy : 'pointer';
   const readConfiguredInstructionSyncStrategy = vi.fn(
-    async () => options.configuredStrategy,
+    async () => configuredStrategy,
   );
   const writeFile = vi.fn(async () => undefined);
   const lstat = vi.fn(async () => {
@@ -796,13 +801,15 @@ describe('createInstructionsSyncCommand', () => {
   });
 
   it('reports the built-in default when neither flag nor config names one', async () => {
-    const { capture, command } = createHarness();
+    const { capture, command } = createHarness({
+      configuredStrategy: undefined,
+    });
 
     await runSyncCommand(command, {
       globalArgs: ['--json'],
       commandArgs: ['--dry-run'],
     });
 
-    expect(capture.jsonPayloads[0]).toMatchObject({ strategy: 'pointer' });
+    expect(capture.jsonPayloads[0]).toMatchObject({ strategy: 'none' });
   });
 });

@@ -318,7 +318,7 @@ describe('oat-config', () => {
       );
     }
 
-    for (const strategy of ['pointer', 'symlink', 'copy']) {
+    for (const strategy of ['none', 'pointer', 'symlink', 'copy']) {
       it(`accepts ${strategy}`, async () => {
         const repoRoot = await createRepoRoot();
         await writeStrategy(repoRoot, strategy);
@@ -349,14 +349,14 @@ describe('oat-config', () => {
 
     // Fails closed: unset means the built-in default, and the default decides
     // whether sync writes CLAUDE.md files, so a typo must never read as unset.
-    const invalidValues: unknown[] = ['none', 'Pointer', '', 7, null, ['copy']];
+    const invalidValues: unknown[] = ['None', 'Pointer', '', 7, null, ['copy']];
     for (const value of invalidValues) {
       it(`rejects ${JSON.stringify(value)}`, async () => {
         const repoRoot = await createRepoRoot();
         await writeStrategy(repoRoot, value);
 
         await expect(readOatConfig(repoRoot)).rejects.toMatchObject({
-          message: `Invalid documentation.instructionSyncStrategy in ${join(repoRoot, '.oat', 'config.json')}: ${JSON.stringify(value)}. Expected one of: pointer, symlink, copy. Repair it with oat config set documentation.instructionSyncStrategy <pointer|symlink|copy>.`,
+          message: `Invalid documentation.instructionSyncStrategy in ${join(repoRoot, '.oat', 'config.json')}: ${JSON.stringify(value)}. Expected one of: none, pointer, symlink, copy. Repair it with oat config set documentation.instructionSyncStrategy <none|pointer|symlink|copy>.`,
           exitCode: 2,
         });
       });

@@ -11,7 +11,37 @@ export {
   type InstructionSyncStrategy,
 } from '@config/oat-config';
 
-export type InstructionStatus = 'ok' | 'missing' | 'content_mismatch' | 'stray';
+/**
+ * - `managed_shim`: under strategy `none`, a CLAUDE.md in the exact shape OAT
+ *   writes (the `@AGENTS.md` pointer, a symlink to the sibling AGENTS.md, or a
+ *   byte-identical copy). Drift: sync removes it.
+ * - `unmanaged`: under strategy `none`, a CLAUDE.md that is not an exact
+ *   managed shape (hand-written, modified, a symlink elsewhere). Never
+ *   removed, and not drift.
+ */
+export type InstructionStatus =
+  | 'ok'
+  | 'missing'
+  | 'content_mismatch'
+  | 'stray'
+  | 'managed_shim'
+  | 'unmanaged';
+
+export type ManagedShimShape = 'pointer' | 'symlink' | 'copy';
+
+/**
+ * What the scan observed about a managed shim, so removal can fail closed if
+ * the file changed between planning and deletion. Internal to the sync apply
+ * path; never serialized into the JSON payload.
+ */
+export interface ManagedShimRecord {
+  shape: ManagedShimShape;
+  /** `lstat` identity of the CLAUDE.md itself (the link for a symlink). */
+  dev: number;
+  ino: number;
+  /** The raw `readlink` value, for the symlink shape only. */
+  linkTarget?: string;
+}
 
 export type InstructionsStatus = 'ok' | 'drift';
 
@@ -20,9 +50,11 @@ export interface InstructionEntry {
   claudePath: string;
   status: InstructionStatus;
   detail: string;
+  /** Present only for `managed_shim` entries. */
+  managedShim?: ManagedShimRecord;
 }
 
-export type InstructionActionType = 'create' | 'update' | 'skip';
+export type InstructionActionType = 'create' | 'update' | 'remove' | 'skip';
 
 export type InstructionActionResult = 'planned' | 'applied' | 'skipped';
 
@@ -41,8 +73,11 @@ export interface InstructionsSummary {
   missing: number;
   contentMismatch: number;
   stray: number;
+  managedShim: number;
+  unmanaged: number;
   created: number;
   updated: number;
+  removed: number;
   skipped: number;
 }
 
@@ -130,6 +165,8 @@ export interface InstructionsScanDependencies {
   lstat: (path: string) => Promise<Stats>;
   realpath: (path: string) => Promise<string>;
   readFile: (path: string, encoding: 'utf8') => Promise<string>;
+  /** Raw bytes, for the byte-exact managed-shim comparisons. */
+  readFileBytes: (path: string) => Promise<Buffer>;
   readlink: (path: string) => Promise<string>;
   stat: (path: string) => Promise<Stats>;
 }
@@ -163,6 +200,9 @@ export interface InstructionsValidateCommandDependencies {
 export interface InstructionsSyncCommandDependencies extends InstructionsValidateCommandDependencies {
   lstat: (path: string) => Promise<Stats>;
   readFile: (path: string, encoding: 'utf8') => Promise<string>;
+  /** Raw bytes, for the apply-time managed-shim re-verification. */
+  readFileBytes: (path: string) => Promise<Buffer>;
+  readlink: (path: string) => Promise<string>;
   removeFile: (path: string) => Promise<void>;
   symlinkFile: (target: string, path: string) => Promise<void>;
   writeFile: (path: string, content: string, encoding: 'utf8') => Promise<void>;

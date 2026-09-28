@@ -69,9 +69,11 @@ function createHarness(options: HarnessOptions = {}): {
       interactive: false,
       logger: capture.logger,
     }),
-    // The fake cwd has no config; never let the production reader look.
-    readConfiguredInstructionSyncStrategy: vi.fn(
-      async () => options.configuredStrategy,
+    // The fake cwd has no config; never let the production reader look. The
+    // pointer cases predate strategy `none`, so the harness configures
+    // `pointer` unless a case sets `configuredStrategy` itself.
+    readConfiguredInstructionSyncStrategy: vi.fn(async () =>
+      'configuredStrategy' in options ? options.configuredStrategy : 'pointer',
     ),
     resolveInstructionPointerExcludes,
     resolveProjectRoot: vi.fn(async () => '/tmp/workspace'),

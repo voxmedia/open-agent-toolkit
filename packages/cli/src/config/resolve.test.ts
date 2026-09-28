@@ -288,7 +288,7 @@ describe('resolveEffectiveConfig', () => {
       value: DEFAULT_INSTRUCTION_SYNC_STRATEGY,
       source: 'default',
     });
-    expect(DEFAULT_INSTRUCTION_SYNC_STRATEGY).toBe('pointer');
+    expect(DEFAULT_INSTRUCTION_SYNC_STRATEGY).toBe('none');
 
     const configured = await resolveEffectiveConfig(
       '/repo',

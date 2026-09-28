@@ -1028,7 +1028,7 @@ describe('help output snapshots', () => {
       Options:
         --strategy <strategy>  Sync strategy to check (overrides
                                documentation.instructionSyncStrategy) (choices:
-                               "pointer", "symlink", "copy")
+                               "none", "pointer", "symlink", "copy")
         -h, --help             display help for command
 
       Global Options:
@@ -1056,7 +1056,7 @@ describe('help output snapshots', () => {
         --force                Overwrite mismatched CLAUDE.md files
         --strategy <strategy>  Sync strategy for this run (overrides
                                documentation.instructionSyncStrategy) (choices:
-                               "pointer", "symlink", "copy")
+                               "none", "pointer", "symlink", "copy")
         -h, --help             display help for command
 
       Global Options:

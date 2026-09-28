@@ -3,6 +3,8 @@ import {
   mkdir,
   mkdtemp,
   readFile,
+  readlink,
+  rename,
   rm,
   symlink,
   writeFile,
@@ -10,8 +12,13 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import type { CommandContext, GlobalOptions } from '@app/command-context';
 import { createProgram } from '@app/create-program';
+import { createLoggerCapture } from '@commands/__tests__/helpers';
+import type { InstructionsSyncCommandDependencies } from '@commands/instructions/instructions.types';
 import { EXPECTED_CLAUDE_CONTENT } from '@commands/instructions/instructions.utils';
+import { createInstructionsSyncCommand } from '@commands/instructions/sync/sync';
+import { Command } from 'commander';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { registerCommands } from '../index';
@@ -97,14 +104,19 @@ describe('instructions command integration', () => {
 
     const before = await runCli(
       root,
-      ['instructions', 'validate', '--json'],
+      ['instructions', 'validate', '--strategy', 'pointer', '--json'],
       ['--json'],
     );
     expect(before.exitCode).toBe(1);
     const beforePayload = JSON.parse(before.stdout);
     expect(beforePayload.summary.missing).toBe(1);
 
-    const syncApply = await runCli(root, ['instructions', 'sync']);
+    const syncApply = await runCli(root, [
+      'instructions',
+      'sync',
+      '--strategy',
+      'pointer',
+    ]);
     expect(syncApply.exitCode).toBe(0);
 
     await expect(lstat(join(root, 'CLAUDE.md'))).resolves.toBeDefined();
@@ -114,7 +126,7 @@ describe('instructions command integration', () => {
 
     const after = await runCli(
       root,
-      ['instructions', 'validate', '--json'],
+      ['instructions', 'validate', '--strategy', 'pointer', '--json'],
       ['--json'],
     );
     expect(after.exitCode).toBe(0);
@@ -132,7 +144,7 @@ describe('instructions command integration', () => {
 
     const dryRun = await runCli(
       root,
-      ['instructions', 'sync', '--dry-run', '--json'],
+      ['instructions', 'sync', '--strategy', 'pointer', '--dry-run', '--json'],
       ['--json'],
     );
     expect(dryRun.exitCode).toBe(1);
@@ -146,7 +158,7 @@ describe('instructions command integration', () => {
 
     const applyNoForce = await runCli(
       root,
-      ['instructions', 'sync', '--json'],
+      ['instructions', 'sync', '--strategy', 'pointer', '--json'],
       ['--json'],
     );
     expect(applyNoForce.exitCode).toBe(1);
@@ -157,7 +169,13 @@ describe('instructions command integration', () => {
       result: 'skipped',
     });
 
-    const applyForce = await runCli(root, ['instructions', 'sync', '--force']);
+    const applyForce = await runCli(root, [
+      'instructions',
+      'sync',
+      '--strategy',
+      'pointer',
+      '--force',
+    ]);
     expect(applyForce.exitCode).toBe(0);
     await expect(readFile(join(root, 'CLAUDE.md'), 'utf8')).resolves.toBe(
       EXPECTED_CLAUDE_CONTENT,
@@ -186,7 +204,7 @@ describe('instructions command integration', () => {
 
     const result = await runCli(
       root,
-      ['instructions', 'validate', '--json'],
+      ['instructions', 'validate', '--strategy', 'pointer', '--json'],
       ['--json'],
     );
     expect(result.exitCode).toBe(1);
@@ -205,7 +223,7 @@ describe('instructions command integration', () => {
 
     const result = await runCli(
       root,
-      ['instructions', 'validate', '--json'],
+      ['instructions', 'validate', '--strategy', 'pointer', '--json'],
       ['--json'],
     );
 
@@ -224,7 +242,7 @@ describe('instructions command integration', () => {
 
     const result = await runCli(
       root,
-      ['instructions', 'validate', '--json'],
+      ['instructions', 'validate', '--strategy', 'pointer', '--json'],
       ['--json'],
     );
 
@@ -246,14 +264,19 @@ describe('instructions command integration', () => {
 
     const before = await runCli(
       root,
-      ['instructions', 'validate', '--json'],
+      ['instructions', 'validate', '--strategy', 'pointer', '--json'],
       ['--json'],
     );
     expect(before.exitCode).toBe(1);
     const beforePayload = JSON.parse(before.stdout);
     expect(beforePayload.summary.stray).toBe(1);
 
-    const syncApply = await runCli(root, ['instructions', 'sync']);
+    const syncApply = await runCli(root, [
+      'instructions',
+      'sync',
+      '--strategy',
+      'pointer',
+    ]);
     expect(syncApply.exitCode).toBe(0);
 
     await expect(
@@ -265,7 +288,7 @@ describe('instructions command integration', () => {
 
     const after = await runCli(
       root,
-      ['instructions', 'validate', '--json'],
+      ['instructions', 'validate', '--strategy', 'pointer', '--json'],
       ['--json'],
     );
     expect(after.exitCode).toBe(0);
@@ -410,7 +433,7 @@ describe('instructions command integration', () => {
 
     const before = await runCli(
       root,
-      ['instructions', 'validate', '--json'],
+      ['instructions', 'validate', '--strategy', 'pointer', '--json'],
       ['--json'],
     );
     expect(before.exitCode).toBe(1);
@@ -423,7 +446,13 @@ describe('instructions command integration', () => {
       stray: 1,
     });
 
-    const apply = await runCli(root, ['instructions', 'sync', '--force']);
+    const apply = await runCli(root, [
+      'instructions',
+      'sync',
+      '--strategy',
+      'pointer',
+      '--force',
+    ]);
     expect(apply.exitCode).toBe(0);
 
     await expect(
@@ -447,7 +476,7 @@ describe('instructions command integration', () => {
 
     const after = await runCli(
       root,
-      ['instructions', 'validate', '--json'],
+      ['instructions', 'validate', '--strategy', 'pointer', '--json'],
       ['--json'],
     );
     expect(after.exitCode).toBe(0);
@@ -546,7 +575,7 @@ describe('instructions command integration', () => {
 
     const result = await runCli(
       root,
-      ['instructions', 'validate', '--json'],
+      ['instructions', 'validate', '--strategy', 'pointer', '--json'],
       ['--json'],
     );
 
@@ -620,7 +649,7 @@ describe('instructions command integration', () => {
 
       const first = await runCli(
         root,
-        ['instructions', 'sync', '--json'],
+        ['instructions', 'sync', '--strategy', 'pointer', '--json'],
         ['--json'],
       );
       expect(first.exitCode).toBe(0);
@@ -648,7 +677,7 @@ describe('instructions command integration', () => {
 
       const second = await runCli(
         root,
-        ['instructions', 'sync', '--json'],
+        ['instructions', 'sync', '--strategy', 'pointer', '--json'],
         ['--json'],
       );
       expect(second.exitCode).toBe(0);
@@ -660,7 +689,7 @@ describe('instructions command integration', () => {
       // Validate agrees with sync on the same tree.
       const validated = await runCli(
         root,
-        ['instructions', 'validate', '--json'],
+        ['instructions', 'validate', '--strategy', 'pointer', '--json'],
         ['--json'],
       );
       expect(validated.exitCode).toBe(0);
@@ -694,7 +723,7 @@ describe('instructions command integration', () => {
 
       const first = await runCli(
         root,
-        ['instructions', 'sync', '--json'],
+        ['instructions', 'sync', '--strategy', 'pointer', '--json'],
         ['--json'],
       );
       expect(first.exitCode).toBe(0);
@@ -716,7 +745,7 @@ describe('instructions command integration', () => {
 
       const second = await runCli(
         root,
-        ['instructions', 'sync', '--json'],
+        ['instructions', 'sync', '--strategy', 'pointer', '--json'],
         ['--json'],
       );
       expect(second.exitCode).toBe(0);
@@ -727,7 +756,7 @@ describe('instructions command integration', () => {
 
       const validated = await runCli(
         root,
-        ['instructions', 'validate', '--json'],
+        ['instructions', 'validate', '--strategy', 'pointer', '--json'],
         ['--json'],
       );
       expect(validated.exitCode).toBe(0);
@@ -764,7 +793,7 @@ describe('instructions command integration', () => {
 
       const result = await runCli(
         root,
-        ['instructions', 'sync', '--json'],
+        ['instructions', 'sync', '--strategy', 'pointer', '--json'],
         ['--json'],
       );
       expect(result.exitCode).toBe(0);
@@ -811,7 +840,7 @@ describe('instructions command integration', () => {
 
       const result = await runCli(
         root,
-        ['instructions', 'validate', '--json'],
+        ['instructions', 'validate', '--strategy', 'pointer', '--json'],
         ['--json'],
       );
 
@@ -850,7 +879,7 @@ describe('instructions command integration', () => {
 
       const result = await runCli(
         root,
-        ['instructions', 'validate', '--json'],
+        ['instructions', 'validate', '--strategy', 'pointer', '--json'],
         ['--json'],
       );
 
@@ -892,7 +921,7 @@ describe('instructions command integration', () => {
 
       const result = await runCli(
         root,
-        ['instructions', 'validate', '--json'],
+        ['instructions', 'validate', '--strategy', 'pointer', '--json'],
         ['--json'],
       );
 
@@ -964,7 +993,7 @@ describe('instructions command integration', () => {
 
       const result = await runCli(
         root,
-        ['instructions', 'sync', '--json'],
+        ['instructions', 'sync', '--strategy', 'pointer', '--json'],
         ['--json'],
       );
 
@@ -1076,6 +1105,483 @@ describe('instructions command integration', () => {
     });
   });
 
+  describe('strategy none (the default)', () => {
+    async function pathExists(candidate: string): Promise<boolean> {
+      try {
+        await lstat(candidate);
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    async function writeSharedConfig(
+      root: string,
+      config: Record<string, unknown>,
+    ): Promise<void> {
+      await mkdir(join(root, '.oat'), { recursive: true });
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        JSON.stringify({ version: 1, ...config }, null, 2),
+        'utf8',
+      );
+    }
+
+    async function writePair(
+      root: string,
+      directory: string,
+      claude: string | { link: string } | null,
+      agents = `# ${directory} instructions\n`,
+    ): Promise<void> {
+      const dir = join(root, directory);
+      await mkdir(dir, { recursive: true });
+      await writeFile(join(dir, 'AGENTS.md'), agents, 'utf8');
+      if (claude === null) {
+        return;
+      }
+      if (typeof claude === 'string') {
+        await writeFile(join(dir, 'CLAUDE.md'), claude, 'utf8');
+      } else {
+        await symlink(claude.link, join(dir, 'CLAUDE.md'));
+      }
+    }
+
+    it('plans nothing for an AGENTS.md without a CLAUDE.md, and validate passes', async () => {
+      const root = await createWorkspace();
+      tempDirs.push(root);
+      await writeFile(join(root, 'AGENTS.md'), '# root instructions\n', 'utf8');
+      await writePair(root, 'packages/app', null);
+
+      const dryRun = await runCli(
+        root,
+        ['instructions', 'sync', '--dry-run', '--json'],
+        ['--json'],
+      );
+      expect(dryRun.exitCode).toBe(0);
+      const dryRunPayload = JSON.parse(dryRun.stdout);
+      expect(dryRunPayload.strategy).toBe('none');
+      expect(dryRunPayload.status).toBe('ok');
+      expect(dryRunPayload.actions).toEqual([]);
+
+      const apply = await runCli(root, ['instructions', 'sync']);
+      expect(apply.exitCode).toBe(0);
+      await expect(pathExists(join(root, 'CLAUDE.md'))).resolves.toBe(false);
+      await expect(
+        pathExists(join(root, 'packages', 'app', 'CLAUDE.md')),
+      ).resolves.toBe(false);
+
+      const validate = await runCli(
+        root,
+        ['instructions', 'validate', '--json'],
+        ['--json'],
+      );
+      expect(validate.exitCode).toBe(0);
+      const payload = JSON.parse(validate.stdout);
+      expect(payload.status).toBe('ok');
+      expect(payload.summary).toMatchObject({ scanned: 2, ok: 2, missing: 0 });
+    });
+
+    it('lists every exact managed shim on --dry-run and removes them on apply', async () => {
+      const root = await createWorkspace();
+      tempDirs.push(root);
+      await writePair(root, 'pointer', EXPECTED_CLAUDE_CONTENT);
+      await writePair(root, 'crlf', '@AGENTS.md\r\n');
+      await writePair(root, 'linked', { link: 'AGENTS.md' });
+      await writePair(
+        root,
+        'copied',
+        '# copied instructions\n',
+        '# copied instructions\n',
+      );
+
+      const dryRun = await runCli(
+        root,
+        ['instructions', 'sync', '--dry-run', '--json'],
+        ['--json'],
+      );
+      const dryRunPayload = JSON.parse(dryRun.stdout);
+      expect(dryRunPayload.summary).toMatchObject({
+        managedShim: 4,
+        removed: 4,
+      });
+      expect(
+        dryRunPayload.actions.map(
+          (action: { type: string; target: string; result: string }) => [
+            action.type,
+            action.target.slice(root.length + 1),
+            action.result,
+          ],
+        ),
+      ).toEqual([
+        ['remove', 'copied/CLAUDE.md', 'planned'],
+        ['remove', 'crlf/CLAUDE.md', 'planned'],
+        ['remove', 'linked/CLAUDE.md', 'planned'],
+        ['remove', 'pointer/CLAUDE.md', 'planned'],
+      ]);
+      // The planning identity never leaks into the public payload.
+      for (const entry of dryRunPayload.entries) {
+        expect(entry).not.toHaveProperty('managedShim');
+      }
+      for (const directory of ['pointer', 'crlf', 'linked', 'copied']) {
+        await expect(
+          pathExists(join(root, directory, 'CLAUDE.md')),
+        ).resolves.toBe(true);
+      }
+
+      const before = await runCli(
+        root,
+        ['instructions', 'validate', '--json'],
+        ['--json'],
+      );
+      expect(before.exitCode).toBe(1);
+
+      const apply = await runCli(
+        root,
+        ['instructions', 'sync', '--json'],
+        ['--json'],
+      );
+      expect(apply.exitCode).toBe(0);
+      expect(JSON.parse(apply.stdout).status).toBe('ok');
+      for (const directory of ['pointer', 'crlf', 'linked', 'copied']) {
+        await expect(
+          pathExists(join(root, directory, 'CLAUDE.md')),
+        ).resolves.toBe(false);
+        await expect(
+          pathExists(join(root, directory, 'AGENTS.md')),
+        ).resolves.toBe(true);
+      }
+      await expect(
+        readFile(join(root, 'linked', 'AGENTS.md'), 'utf8'),
+      ).resolves.toBe('# linked instructions\n');
+
+      const after = await runCli(
+        root,
+        ['instructions', 'validate', '--json'],
+        ['--json'],
+      );
+      expect(after.exitCode).toBe(0);
+    });
+
+    it('never deletes a hand-written or modified CLAUDE.md, even with --force', async () => {
+      const root = await createWorkspace();
+      tempDirs.push(root);
+      const kept: Record<string, string> = {
+        'hand/CLAUDE.md': '# my own Claude notes\n',
+        'extended/CLAUDE.md': '@AGENTS.md\n\nAlso read docs/style.md\n',
+        'no-newline/CLAUDE.md': '@AGENTS.md',
+        'spaced/CLAUDE.md': '@AGENTS.md \n',
+        'near-copy/CLAUDE.md': '# near-copy instructions!\n',
+      };
+      for (const [path, content] of Object.entries(kept)) {
+        await writePair(root, path.split('/')[0]!, content);
+      }
+
+      const apply = await runCli(
+        root,
+        ['instructions', 'sync', '--force', '--json'],
+        ['--json'],
+      );
+      expect(apply.exitCode).toBe(0);
+      const payload = JSON.parse(apply.stdout);
+      expect(payload.actions).toEqual([]);
+      expect(payload.summary).toMatchObject({ unmanaged: 5, removed: 0 });
+      for (const entry of payload.entries) {
+        expect(entry.status).toBe('unmanaged');
+        expect(entry.detail).toContain('kept');
+      }
+      for (const [path, content] of Object.entries(kept)) {
+        await expect(readFile(join(root, path), 'utf8')).resolves.toBe(content);
+      }
+
+      // Reported, but not drift: sync will never remove them, so validate must
+      // not demand a state sync cannot reach.
+      const validate = await runCli(
+        root,
+        ['instructions', 'validate', '--json'],
+        ['--json'],
+      );
+      expect(validate.exitCode).toBe(0);
+    });
+
+    it('keeps a CLAUDE.md symlink whose target is not the sibling AGENTS.md', async () => {
+      const root = await createWorkspace();
+      tempDirs.push(root);
+      await writePair(root, 'other', null);
+      await writePair(root, 'foreign', { link: '../other/AGENTS.md' });
+      await mkdir(join(root, 'notes'), { recursive: true });
+      await writeFile(join(root, 'notes', 'CLAUDE-NOTES.md'), '# notes\n');
+      await writePair(root, 'elsewhere', { link: '../notes/CLAUDE-NOTES.md' });
+
+      const apply = await runCli(
+        root,
+        ['instructions', 'sync', '--json'],
+        ['--json'],
+      );
+      expect(apply.exitCode).toBe(0);
+      const payload = JSON.parse(apply.stdout);
+      expect(payload.actions).toEqual([]);
+      await expect(readlink(join(root, 'foreign', 'CLAUDE.md'))).resolves.toBe(
+        '../other/AGENTS.md',
+      );
+      await expect(
+        readlink(join(root, 'elsewhere', 'CLAUDE.md')),
+      ).resolves.toBe('../notes/CLAUDE-NOTES.md');
+      expect(
+        payload.entries
+          .filter((entry: { status: string }) => entry.status === 'unmanaged')
+          .map((entry: { detail: string }) => entry.detail),
+      ).toEqual([
+        'CLAUDE.md symlink targets "../notes/CLAUDE-NOTES.md", not the sibling AGENTS.md; kept',
+        'CLAUDE.md symlink targets "../other/AGENTS.md", not the sibling AGENTS.md; kept',
+      ]);
+    });
+
+    it('never removes CLAUDE.local.md or .claude/CLAUDE.md, whatever they contain', async () => {
+      const root = await createWorkspace();
+      tempDirs.push(root);
+      await writeFile(join(root, 'AGENTS.md'), '# root instructions\n', 'utf8');
+      await writeFile(join(root, 'CLAUDE.local.md'), EXPECTED_CLAUDE_CONTENT);
+      await mkdir(join(root, '.claude'), { recursive: true });
+      await writeFile(
+        join(root, '.claude', 'CLAUDE.md'),
+        EXPECTED_CLAUDE_CONTENT,
+      );
+      await writePair(root, 'pkg/.claude', EXPECTED_CLAUDE_CONTENT);
+
+      const apply = await runCli(
+        root,
+        ['instructions', 'sync', '--json'],
+        ['--json'],
+      );
+      expect(apply.exitCode).toBe(0);
+      expect(JSON.parse(apply.stdout).actions).toEqual([]);
+      for (const path of [
+        'CLAUDE.local.md',
+        '.claude/CLAUDE.md',
+        'pkg/.claude/CLAUDE.md',
+      ]) {
+        await expect(readFile(join(root, path), 'utf8')).resolves.toBe(
+          EXPECTED_CLAUDE_CONTENT,
+        );
+      }
+      // `.claude/CLAUDE.md` is not a stray to adopt either.
+      await expect(
+        pathExists(join(root, '.claude', 'AGENTS.md')),
+      ).resolves.toBe(false);
+    });
+
+    it('never removes a pointer inside an excluded directory or the documentation tree', async () => {
+      const root = await createWorkspace();
+      tempDirs.push(root);
+      await writeSharedConfig(root, {
+        documentation: {
+          root: 'docs-site',
+          instructionPointerExcludes: ['vendor'],
+        },
+      });
+      await writePair(root, 'docs-site', EXPECTED_CLAUDE_CONTENT);
+      await writePair(root, 'vendor/lib', EXPECTED_CLAUDE_CONTENT);
+
+      const apply = await runCli(
+        root,
+        ['instructions', 'sync', '--json'],
+        ['--json'],
+      );
+      expect(apply.exitCode).toBe(0);
+      expect(JSON.parse(apply.stdout).actions).toEqual([]);
+      for (const path of ['docs-site/CLAUDE.md', 'vendor/lib/CLAUDE.md']) {
+        await expect(readFile(join(root, path), 'utf8')).resolves.toBe(
+          EXPECTED_CLAUDE_CONTENT,
+        );
+      }
+    });
+
+    describe('changed between planning and removal', () => {
+      // Drives the real scan and the real filesystem, but intercepts the
+      // apply path's first `lstat` of the target -- the re-verification --
+      // to change the file exactly between planning and deletion.
+      async function syncWithChange(
+        root: string,
+        target: string,
+        change: () => Promise<void>,
+      ): Promise<{ payload: Record<string, unknown>; exitCode: number }> {
+        const capture = createLoggerCapture();
+        let changed = false;
+        const command = createInstructionsSyncCommand({
+          buildCommandContext: (
+            globalOptions: GlobalOptions,
+          ): CommandContext => ({
+            scope: 'project',
+            dryRun: false,
+            verbose: false,
+            json: true,
+            cwd: globalOptions.cwd ?? root,
+            home: root,
+            interactive: false,
+            logger: capture.logger,
+          }),
+          resolveProjectRoot: async () => root,
+          lstat: async (path: string) => {
+            if (path === target && !changed) {
+              changed = true;
+              await change();
+            }
+            return lstat(path);
+          },
+        } satisfies Partial<InstructionsSyncCommandDependencies>);
+
+        const program = new Command()
+          .name('oat')
+          .option('--json')
+          .option('--cwd <path>')
+          .exitOverride();
+        program.addCommand(command);
+        const previousExitCode = process.exitCode;
+        process.exitCode = undefined;
+        await program.parseAsync(['--json', 'sync'], { from: 'user' });
+        const exitCode = process.exitCode ?? 0;
+        process.exitCode = previousExitCode;
+        expect(changed).toBe(true);
+        return {
+          payload: capture.jsonPayloads[0] as Record<string, unknown>,
+          exitCode,
+        };
+      }
+
+      it('keeps a shim rewritten with hand-written content, byte-identical', async () => {
+        const root = await createWorkspace();
+        tempDirs.push(root);
+        await writePair(root, 'pkg', EXPECTED_CLAUDE_CONTENT);
+        const target = join(root, 'pkg', 'CLAUDE.md');
+
+        const { payload, exitCode } = await syncWithChange(root, target, () =>
+          writeFile(target, '# now hand-written\n', 'utf8'),
+        );
+
+        await expect(readFile(target, 'utf8')).resolves.toBe(
+          '# now hand-written\n',
+        );
+        expect(exitCode).toBe(1);
+        expect(payload.actions).toEqual([
+          {
+            type: 'skip',
+            target,
+            reason:
+              'CLAUDE.md changed since planning (hand-written or modified CLAUDE.md); kept',
+            result: 'skipped',
+          },
+        ]);
+      });
+
+      it('keeps a shim replaced by a symlink', async () => {
+        const root = await createWorkspace();
+        tempDirs.push(root);
+        await writePair(root, 'pkg', EXPECTED_CLAUDE_CONTENT);
+        const target = join(root, 'pkg', 'CLAUDE.md');
+
+        // Even a symlink to the sibling AGENTS.md -- itself a managed shape --
+        // is a different file from the one planned, so it is kept.
+        const { payload, exitCode } = await syncWithChange(
+          root,
+          target,
+          async () => {
+            await rm(target);
+            await symlink('AGENTS.md', target);
+          },
+        );
+
+        await expect(readlink(target)).resolves.toBe('AGENTS.md');
+        expect(exitCode).toBe(1);
+        expect(payload.actions).toEqual([
+          expect.objectContaining({
+            type: 'skip',
+            target,
+            result: 'skipped',
+          }),
+        ]);
+        expect(
+          (payload.actions as Array<{ reason: string }>)[0]!.reason,
+        ).toMatch(/^CLAUDE\.md changed since planning \(.+\); kept$/);
+      });
+
+      it('keeps a shim replaced by a different file with identical bytes', async () => {
+        const root = await createWorkspace();
+        tempDirs.push(root);
+        await writePair(root, 'pkg', EXPECTED_CLAUDE_CONTENT);
+        const target = join(root, 'pkg', 'CLAUDE.md');
+
+        // Written beside the original and renamed over it, so the two files
+        // exist at once and cannot share an inode number.
+        const { payload } = await syncWithChange(root, target, async () => {
+          const staged = join(root, 'pkg', 'CLAUDE.md.staged');
+          await writeFile(staged, EXPECTED_CLAUDE_CONTENT, 'utf8');
+          await rename(staged, target);
+        });
+
+        await expect(pathExists(target)).resolves.toBe(true);
+        expect(payload.actions).toEqual([
+          expect.objectContaining({
+            type: 'skip',
+            reason:
+              'CLAUDE.md changed since planning (CLAUDE.md was replaced by a different file); kept',
+          }),
+        ]);
+      });
+    });
+
+    describe('negative control: a configured shim strategy is unchanged', () => {
+      it('pointer still reports a missing CLAUDE.md as drift and creates it', async () => {
+        const root = await createWorkspace();
+        tempDirs.push(root);
+        await writeSharedConfig(root, {
+          documentation: { instructionSyncStrategy: 'pointer' },
+        });
+        await writeFile(join(root, 'AGENTS.md'), '# root instructions\n');
+        await writePair(root, 'kept', EXPECTED_CLAUDE_CONTENT);
+
+        const before = await runCli(
+          root,
+          ['instructions', 'validate', '--json'],
+          ['--json'],
+        );
+        expect(before.exitCode).toBe(1);
+        expect(JSON.parse(before.stdout).summary).toMatchObject({
+          missing: 1,
+          ok: 1,
+        });
+
+        const apply = await runCli(root, ['instructions', 'sync']);
+        expect(apply.exitCode).toBe(0);
+        await expect(readFile(join(root, 'CLAUDE.md'), 'utf8')).resolves.toBe(
+          EXPECTED_CLAUDE_CONTENT,
+        );
+        // An existing pointer is correct under `pointer`, never removed.
+        await expect(
+          readFile(join(root, 'kept', 'CLAUDE.md'), 'utf8'),
+        ).resolves.toBe(EXPECTED_CLAUDE_CONTENT);
+      });
+
+      it('symlink and copy still create their shims', async () => {
+        for (const strategy of ['symlink', 'copy'] as const) {
+          const root = await createWorkspace();
+          tempDirs.push(root);
+          await writeSharedConfig(root, {
+            documentation: { instructionSyncStrategy: strategy },
+          });
+          await writeFile(join(root, 'AGENTS.md'), '# root instructions\n');
+
+          const apply = await runCli(root, ['instructions', 'sync']);
+          expect(apply.exitCode).toBe(0);
+          const claudeStats = await lstat(join(root, 'CLAUDE.md'));
+          expect(claudeStats.isSymbolicLink()).toBe(strategy === 'symlink');
+          await expect(readFile(join(root, 'CLAUDE.md'), 'utf8')).resolves.toBe(
+            '# root instructions\n',
+          );
+        }
+      });
+    });
+  });
+
   it('produces unchanged output when .oat/repo is absent', async () => {
     const root = await createWorkspace();
     tempDirs.push(root);
@@ -1091,7 +1597,7 @@ describe('instructions command integration', () => {
 
     const result = await runCli(
       root,
-      ['instructions', 'validate', '--json'],
+      ['instructions', 'validate', '--strategy', 'pointer', '--json'],
       ['--json'],
     );
 

@@ -1,4 +1,11 @@
-import { lstat, readFile, rm, symlink, writeFile } from 'node:fs/promises';
+import {
+  lstat,
+  readFile,
+  readlink,
+  rm,
+  symlink,
+  writeFile,
+} from 'node:fs/promises';
 import { dirname, join, relative } from 'node:path';
 
 import { buildCommandContext } from '@app/command-context';
@@ -17,6 +24,7 @@ import {
   resolveInstructionPointerExcludes,
   resolveInstructionSyncStrategy,
   scanInstructionFiles,
+  verifyManagedShimUnchanged,
 } from '@commands/instructions/instructions.utils';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { CliError } from '@errors/cli-error';
@@ -42,6 +50,8 @@ function defaultDependencies(): InstructionsSyncCommandDependencies {
     lstat,
     readConfiguredInstructionSyncStrategy,
     readFile,
+    readFileBytes: (path: string) => readFile(path),
+    readlink,
     removeFile: removeInstructionFile,
     resolveInstructionPointerExcludes,
     resolveProjectRoot,
@@ -53,16 +63,24 @@ function defaultDependencies(): InstructionsSyncCommandDependencies {
   };
 }
 
+function getShimLabel(strategy: InstructionSyncStrategy): string {
+  switch (strategy) {
+    case 'symlink':
+      return 'symlink';
+    case 'copy':
+      return 'hard copy';
+    case 'none':
+      return 'removal';
+    default:
+      return 'pointer file';
+  }
+}
+
 function getSyncReason(
   actionType: 'create' | 'update',
   strategy: InstructionSyncStrategy,
 ): string {
-  const label =
-    strategy === 'symlink'
-      ? 'symlink'
-      : strategy === 'copy'
-        ? 'hard copy'
-        : 'pointer file';
+  const label = getShimLabel(strategy);
   return actionType === 'create'
     ? `missing CLAUDE.md ${label}`
     : `overwrite CLAUDE.md with canonical ${label}`;
@@ -70,6 +88,8 @@ function getSyncReason(
 
 function getSyncedDetail(strategy: InstructionSyncStrategy): string {
   switch (strategy) {
+    case 'none':
+      return 'no CLAUDE.md';
     case 'symlink':
       return 'symlink synced';
     case 'copy':
@@ -119,11 +139,72 @@ function wrapStrayResyncError(
   );
 }
 
+/**
+ * Plan strategy `none`: remove exact managed shims, adopt strays into
+ * AGENTS.md without writing a shim back, and never write or overwrite a
+ * CLAUDE.md. `--force` has no effect here: nothing that is not an exact
+ * managed shape is ever deleted.
+ */
+function planNoShimActions(
+  entries: InstructionEntry[],
+): InstructionActionRecord[] {
+  const actions: InstructionActionRecord[] = [];
+
+  for (const entry of entries) {
+    if (entry.status === 'managed_shim' && entry.managedShim) {
+      actions.push({
+        type: 'remove',
+        target: entry.claudePath,
+        reason: `remove OAT-managed CLAUDE.md ${getShimLabel(entry.managedShim.shape)} (strategy none)`,
+        result: 'planned',
+      });
+      continue;
+    }
+
+    if (entry.status === 'stray') {
+      actions.push({
+        type: 'create',
+        target: getAgentsPath(entry),
+        reason: 'adopt stray CLAUDE.md into canonical AGENTS.md',
+        result: 'planned',
+      });
+      continue;
+    }
+
+    if (entry.status !== 'content_mismatch') {
+      continue;
+    }
+
+    if (hasUnreadableCanonicalAgents(entry) && entry.agentsPath) {
+      actions.push({
+        type: 'skip',
+        target: entry.agentsPath,
+        reason: 'canonical AGENTS.md unreadable; repair manually',
+        result: 'skipped',
+      });
+      continue;
+    }
+
+    actions.push({
+      type: 'skip',
+      target: entry.claudePath,
+      reason: 'CLAUDE.md unreadable; repair manually',
+      result: 'skipped',
+    });
+  }
+
+  return actions;
+}
+
 function planSyncActions({
   entries,
   force,
   strategy,
 }: PlanSyncActionsArgs): InstructionActionRecord[] {
+  if (strategy === 'none') {
+    return planNoShimActions(entries);
+  }
+
   const actions: InstructionActionRecord[] = [];
 
   for (const entry of entries) {
@@ -236,6 +317,39 @@ async function applySyncActions(
     const agentsPath = getAgentsPath(entry);
     const isAgentsAction = action.target === agentsPath;
 
+    if (action.type === 'remove') {
+      if (!entry.managedShim || !entry.agentsPath) {
+        throw new CliError(
+          `No planning record for CLAUDE.md removal at ${action.target}`,
+          2,
+        );
+      }
+      // Fail closed at the last moment: the file may have been edited or
+      // replaced since the scan classified it. Anything but the exact shim
+      // the scan recorded is kept and reported, never deleted.
+      const changed = await verifyManagedShimUnchanged(
+        action.target,
+        entry.agentsPath,
+        entry.managedShim,
+        dependencies,
+      );
+      if (changed !== null) {
+        appliedActions.push({
+          type: 'skip',
+          target: action.target,
+          reason: `CLAUDE.md changed since planning (${changed}); kept`,
+          result: 'skipped',
+        });
+        continue;
+      }
+      await dependencies.removeFile(action.target);
+      appliedActions.push({
+        ...action,
+        result: 'applied',
+      });
+      continue;
+    }
+
     if (isAgentsAction) {
       try {
         await dependencies.lstat(agentsPath);
@@ -266,6 +380,13 @@ async function applySyncActions(
 
     if (!entry.agentsPath && action.type !== 'update') {
       throw new CliError(`Unable to resolve AGENTS.md for ${action.target}`, 2);
+    }
+
+    if (strategy === 'none') {
+      throw new CliError(
+        `Refusing to write ${action.target}: strategy none keeps no CLAUDE.md`,
+        2,
+      );
     }
 
     try {
@@ -317,6 +438,27 @@ function getPostSyncEntries(
 
     if (!action && !adoptedAction) {
       return entry;
+    }
+
+    if (action?.type === 'remove' && action.result === 'applied') {
+      return {
+        ...entry,
+        status: 'ok',
+        detail: 'OAT-managed CLAUDE.md removed',
+      };
+    }
+
+    if (
+      strategy === 'none' &&
+      entry.status === 'stray' &&
+      adoptedAction?.result === 'applied'
+    ) {
+      return {
+        ...entry,
+        agentsPath: getAgentsPath(entry),
+        status: 'unmanaged',
+        detail: 'adopted into AGENTS.md; CLAUDE.md kept',
+      };
     }
 
     if (

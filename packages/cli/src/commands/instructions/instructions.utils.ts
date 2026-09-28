@@ -6,7 +6,7 @@ import {
   realpath,
   stat,
 } from 'node:fs/promises';
-import { dirname, join, posix, relative, resolve } from 'node:path';
+import { basename, dirname, join, posix, relative, resolve } from 'node:path';
 
 import {
   DEFAULT_INSTRUCTION_SYNC_STRATEGY,
@@ -25,6 +25,8 @@ import type {
   InstructionsScanDependencies,
   InstructionsStatus,
   InstructionsSummary,
+  InstructionStatus,
+  ManagedShimRecord,
 } from './instructions.types';
 
 export const EXPECTED_CLAUDE_CONTENT = '@AGENTS.md\n';
@@ -83,6 +85,275 @@ function normalizeLineEndings(content: string): string {
   return content.replaceAll('\r\n', '\n');
 }
 
+function readFileBytesDefault(path: string): Promise<Buffer> {
+  return readFile(path);
+}
+
+/**
+ * The exact pointer files OAT writes: `@AGENTS.md` and a newline, with the
+ * CRLF form a Windows checkout produces. Nothing else is a managed pointer --
+ * not trailing whitespace, not a missing newline, not extra lines.
+ */
+const MANAGED_POINTER_BYTES = [
+  Buffer.from(EXPECTED_CLAUDE_CONTENT, 'utf8'),
+  Buffer.from('@AGENTS.md\r\n', 'utf8'),
+];
+
+/** The filesystem reads managed-shim classification needs. */
+export interface ManagedShimInspectionDependencies {
+  lstat: InstructionsScanDependencies['lstat'];
+  readlink: InstructionsScanDependencies['readlink'];
+  readFileBytes: InstructionsScanDependencies['readFileBytes'];
+}
+
+export type ManagedShimInspection =
+  | { kind: 'managed'; record: ManagedShimRecord }
+  | { kind: 'absent' }
+  | { kind: 'unmanaged'; detail: string }
+  | { kind: 'unreadable'; detail: string };
+
+/**
+ * Classify one CLAUDE.md against the exact shapes OAT writes, beside its
+ * sibling AGENTS.md. This is the single definition of "OAT-managed" that both
+ * planning (the scan) and apply-time re-verification use, so the two can never
+ * disagree about what may be deleted.
+ *
+ * Anything that is not provably one of the three shapes is `unmanaged`, which
+ * is never deleted: a CLAUDE.md not named exactly `CLAUDE.md`, one inside a
+ * `.claude` directory, a symlink whose target is not the sibling AGENTS.md,
+ * and any regular file whose bytes are not exactly a pointer or an exact copy.
+ */
+export async function inspectManagedShim(
+  claudePath: string,
+  agentsPath: string,
+  dependencies: ManagedShimInspectionDependencies,
+): Promise<ManagedShimInspection> {
+  const directoryPath = dirname(claudePath);
+  if (
+    basename(claudePath) !== 'CLAUDE.md' ||
+    basename(directoryPath) === '.claude' ||
+    agentsPath !== join(directoryPath, 'AGENTS.md')
+  ) {
+    return {
+      kind: 'unmanaged',
+      detail: 'not a CLAUDE.md beside its AGENTS.md; kept',
+    };
+  }
+
+  let claudeStats: Awaited<
+    ReturnType<ManagedShimInspectionDependencies['lstat']>
+  >;
+  try {
+    claudeStats = await dependencies.lstat(claudePath);
+  } catch (error) {
+    const errorCode = getErrorCode(error);
+    return errorCode === 'ENOENT'
+      ? { kind: 'absent' }
+      : {
+          kind: 'unreadable',
+          detail: `unable to read CLAUDE.md (${errorCode ?? 'unknown error'})`,
+        };
+  }
+
+  const identity = { dev: claudeStats.dev, ino: claudeStats.ino };
+
+  if (claudeStats.isSymbolicLink()) {
+    let linkTarget: string;
+    try {
+      linkTarget = await dependencies.readlink(claudePath);
+    } catch (error) {
+      return {
+        kind: 'unreadable',
+        detail: `unable to read CLAUDE.md symlink target (${getErrorCode(error) ?? 'unknown error'})`,
+      };
+    }
+    // Lexical, not realpath: only a link that names the sibling AGENTS.md is
+    // the shape OAT writes. A link that merely resolves to the same file
+    // through another path was made by someone else.
+    if (resolve(directoryPath, linkTarget) !== agentsPath) {
+      return {
+        kind: 'unmanaged',
+        detail: `CLAUDE.md symlink targets ${JSON.stringify(linkTarget)}, not the sibling AGENTS.md; kept`,
+      };
+    }
+    return {
+      kind: 'managed',
+      record: { shape: 'symlink', ...identity, linkTarget },
+    };
+  }
+
+  if (!claudeStats.isFile()) {
+    return {
+      kind: 'unmanaged',
+      detail: 'CLAUDE.md is not a regular file or symlink; kept',
+    };
+  }
+
+  let claudeBytes: Buffer;
+  try {
+    claudeBytes = await dependencies.readFileBytes(claudePath);
+  } catch (error) {
+    return {
+      kind: 'unreadable',
+      detail: `unable to read CLAUDE.md (${getErrorCode(error) ?? 'unknown error'})`,
+    };
+  }
+
+  if (MANAGED_POINTER_BYTES.some((pointer) => pointer.equals(claudeBytes))) {
+    return { kind: 'managed', record: { shape: 'pointer', ...identity } };
+  }
+
+  let agentsBytes: Buffer;
+  try {
+    agentsBytes = await dependencies.readFileBytes(agentsPath);
+  } catch (error) {
+    return {
+      kind: 'unreadable',
+      detail: `unable to read AGENTS.md (${getErrorCode(error) ?? 'unknown error'})`,
+    };
+  }
+
+  if (agentsBytes.equals(claudeBytes)) {
+    return { kind: 'managed', record: { shape: 'copy', ...identity } };
+  }
+
+  return {
+    kind: 'unmanaged',
+    detail: 'hand-written or modified CLAUDE.md; kept',
+  };
+}
+
+/**
+ * Re-verify, immediately before deletion, that a CLAUDE.md planned for removal
+ * is still the exact managed shim the scan recorded: same `lstat` identity
+ * (device and inode, so a replaced file is caught even with identical bytes),
+ * same shape, same symlink target, and still an exact managed shape now.
+ *
+ * Returns null when removal may proceed, or the reason it must not.
+ */
+export async function verifyManagedShimUnchanged(
+  claudePath: string,
+  agentsPath: string,
+  planned: ManagedShimRecord,
+  dependencies: ManagedShimInspectionDependencies,
+): Promise<string | null> {
+  const current = await inspectManagedShim(
+    claudePath,
+    agentsPath,
+    dependencies,
+  );
+  if (current.kind === 'absent') {
+    return 'CLAUDE.md no longer exists';
+  }
+  if (current.kind !== 'managed') {
+    return current.detail.replace(/; kept$/, '');
+  }
+  if (
+    current.record.dev !== planned.dev ||
+    current.record.ino !== planned.ino
+  ) {
+    return 'CLAUDE.md was replaced by a different file';
+  }
+  if (current.record.shape !== planned.shape) {
+    return `CLAUDE.md changed from a ${planned.shape} shim to a ${current.record.shape} shim`;
+  }
+  if (current.record.linkTarget !== planned.linkTarget) {
+    return 'CLAUDE.md symlink target changed';
+  }
+  return null;
+}
+
+function describeManagedShim(record: ManagedShimRecord): string {
+  switch (record.shape) {
+    case 'symlink':
+      return 'OAT-managed CLAUDE.md symlink';
+    case 'copy':
+      return 'OAT-managed CLAUDE.md hard copy';
+    default:
+      return 'OAT-managed CLAUDE.md pointer file';
+  }
+}
+
+/**
+ * Classify one scanned directory under strategy `none`, where no CLAUDE.md is
+ * wanted: an absent CLAUDE.md is correct, an exact managed shim is drift that
+ * sync removes, and anything else is kept and reported, never deleted.
+ */
+async function classifyWithoutShims(
+  directoryPath: string,
+  directoryEntry: InstructionDirectoryEntry,
+  dependencies: InstructionsScanDependencies,
+): Promise<InstructionEntry> {
+  const agentsPath = directoryEntry.agentsPath ?? null;
+  const claudePath =
+    directoryEntry.claudePath ?? join(directoryPath, 'CLAUDE.md');
+  const hasClaude =
+    directoryEntry.claudePath !== undefined ||
+    directoryEntry.brokenClaudePath !== undefined;
+
+  const entry = (
+    status: InstructionStatus,
+    detail: string,
+  ): InstructionEntry => ({ agentsPath, claudePath, status, detail });
+
+  // `.claude/CLAUDE.md` is Claude Code's alternate project instruction file,
+  // not a shim for an AGENTS.md in `.claude`, so it is never adopted or removed.
+  if (basename(directoryPath) === '.claude' && hasClaude) {
+    return entry(
+      'unmanaged',
+      '.claude/CLAUDE.md is not managed by instruction sync; kept',
+    );
+  }
+
+  if (directoryEntry.brokenClaudePath) {
+    const errorCode = directoryEntry.brokenClaudeErrorCode ?? 'unknown error';
+    return entry(
+      'unmanaged',
+      errorCode === 'ENOENT'
+        ? 'broken CLAUDE.md symlink; kept'
+        : `unreadable CLAUDE.md symlink target (${errorCode}); kept`,
+    );
+  }
+
+  if (!agentsPath) {
+    try {
+      await dependencies.readFile(claudePath, 'utf8');
+    } catch (error) {
+      return entry(
+        'content_mismatch',
+        `unable to read CLAUDE.md (${getErrorCode(error) ?? 'unknown'})`,
+      );
+    }
+    return entry('stray', 'CLAUDE.md found without AGENTS.md');
+  }
+
+  if (!hasClaude) {
+    return entry('ok', 'no CLAUDE.md');
+  }
+
+  const inspection = await inspectManagedShim(
+    claudePath,
+    agentsPath,
+    dependencies,
+  );
+  switch (inspection.kind) {
+    case 'absent':
+      return entry('ok', 'no CLAUDE.md');
+    case 'unreadable':
+      return entry('content_mismatch', inspection.detail);
+    case 'unmanaged':
+      return entry('unmanaged', inspection.detail);
+    case 'managed':
+      return {
+        ...entry(
+          'managed_shim',
+          `${describeManagedShim(inspection.record)}; sync removes it under strategy none`,
+        ),
+        managedShim: inspection.record,
+      };
+  }
+}
+
 /**
  * The effective strategy for one run: the `--strategy` flag, then the
  * repository's `documentation.instructionSyncStrategy`, then the built-in
@@ -111,6 +382,8 @@ export async function readConfiguredInstructionSyncStrategy(
 
 function getValidInstructionDetail(strategy: InstructionSyncStrategy): string {
   switch (strategy) {
+    case 'none':
+      return 'no CLAUDE.md';
     case 'symlink':
       return 'symlink valid';
     case 'copy':
@@ -124,6 +397,8 @@ function getInvalidInstructionDetail(
   strategy: InstructionSyncStrategy,
 ): string {
   switch (strategy) {
+    case 'none':
+      return 'expected no CLAUDE.md';
     case 'symlink':
       return 'expected symlink to AGENTS.md';
     case 'copy':
@@ -352,6 +627,7 @@ export async function resolveInstructionPointerExcludes(
     realpath,
     readdir,
     readFile,
+    readFileBytes: readFileBytesDefault,
     readlink,
     stat,
     ...overrides,
@@ -581,6 +857,7 @@ export async function scanInstructionFiles(
     realpath,
     readdir,
     readFile,
+    readFileBytes: readFileBytesDefault,
     readlink,
     stat,
     ...overrides,
@@ -599,6 +876,13 @@ export async function scanInstructionFiles(
     const brokenAgentsPath = directoryEntry.brokenAgentsPath ?? null;
     const brokenAgentsErrorCode =
       directoryEntry.brokenAgentsErrorCode ?? 'unknown error';
+
+    if (strategy === 'none' && (agentsPath || !brokenAgentsPath)) {
+      entries.push(
+        await classifyWithoutShims(directoryPath, directoryEntry, dependencies),
+      );
+      continue;
+    }
     const brokenClaudePath = directoryEntry.brokenClaudePath ?? null;
     const brokenClaudeErrorCode =
       directoryEntry.brokenClaudeErrorCode ?? 'unknown error';
@@ -818,9 +1102,16 @@ export function buildInstructionsSummary(
       (entry) => entry.status === 'content_mismatch',
     ).length,
     stray: normalizedEntries.filter((entry) => entry.status === 'stray').length,
+    managedShim: normalizedEntries.filter(
+      (entry) => entry.status === 'managed_shim',
+    ).length,
+    unmanaged: normalizedEntries.filter((entry) => entry.status === 'unmanaged')
+      .length,
     created: normalizedActions.filter((action) => action.type === 'create')
       .length,
     updated: normalizedActions.filter((action) => action.type === 'update')
+      .length,
+    removed: normalizedActions.filter((action) => action.type === 'remove')
       .length,
     skipped: normalizedActions.filter((action) => action.result === 'skipped')
       .length,
@@ -831,8 +1122,12 @@ function deriveInstructionsStatus(
   entries: InstructionEntry[],
   actions: InstructionActionRecord[],
 ): InstructionsStatus {
+  // An `unmanaged` CLAUDE.md is reported but is not drift: sync never removes
+  // it, so counting it would leave the repository no clean state to reach.
   if (
-    entries.some((entry) => entry.status !== 'ok') ||
+    entries.some(
+      (entry) => entry.status !== 'ok' && entry.status !== 'unmanaged',
+    ) ||
     actions.some((action) => action.result === 'skipped')
   ) {
     return 'drift';
@@ -862,7 +1157,10 @@ export function buildInstructionsPayload({
     status: deriveInstructionsStatus(normalizedEntries, normalizedActions),
     strategy,
     summary: buildInstructionsSummary(normalizedEntries, normalizedActions),
-    entries: normalizedEntries,
+    // The planning identity is an apply-time safety input, not output.
+    entries: normalizedEntries.map(
+      ({ managedShim: _managedShim, ...entry }) => entry,
+    ),
     actions: normalizedActions,
     // Both omitted when nothing is configured, so a repository with no
     // documentation root keeps its existing payload shape exactly. Once
@@ -892,7 +1190,7 @@ export function formatInstructionsReport(
     `instructions ${payload.mode}`,
     `status: ${payload.status}`,
     `strategy: ${payload.strategy}`,
-    `summary: scanned=${payload.summary.scanned}, ok=${payload.summary.ok}, missing=${payload.summary.missing}, content_mismatch=${payload.summary.contentMismatch}, stray=${payload.summary.stray}, created=${payload.summary.created}, updated=${payload.summary.updated}, skipped=${payload.summary.skipped}`,
+    `summary: scanned=${payload.summary.scanned}, ok=${payload.summary.ok}, missing=${payload.summary.missing}, content_mismatch=${payload.summary.contentMismatch}, stray=${payload.summary.stray}, managed_shim=${payload.summary.managedShim}, unmanaged=${payload.summary.unmanaged}, created=${payload.summary.created}, updated=${payload.summary.updated}, removed=${payload.summary.removed}, skipped=${payload.summary.skipped}`,
   ];
 
   if (payload.entries.length === 0) {

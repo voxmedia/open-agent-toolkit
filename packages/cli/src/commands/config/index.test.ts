@@ -5024,7 +5024,7 @@ describe('oat config', () => {
     }
 
     it('set, get, and unset round-trip each accepted strategy', async () => {
-      for (const strategy of ['pointer', 'symlink', 'copy']) {
+      for (const strategy of ['none', 'pointer', 'symlink', 'copy']) {
         const root = await createRepoRoot();
         const { command, capture } = createHarness({ cwd: root });
 
@@ -5081,12 +5081,12 @@ describe('oat config', () => {
 
       expect(capture.jsonPayloads[0]).toMatchObject({
         key: 'documentation.instructionSyncStrategy',
-        value: 'pointer',
+        value: 'none',
         source: 'default',
       });
     });
 
-    for (const value of ['none', 'bogus', '']) {
+    for (const value of ['None', 'bogus', '']) {
       it(`set rejects ${JSON.stringify(value)} and leaves the file untouched`, async () => {
         const root = await createRepoRoot();
         await writeFile(
@@ -5104,7 +5104,7 @@ describe('oat config', () => {
 
         expect(process.exitCode).toBe(1);
         expect(capture.error[0]).toContain(
-          'Invalid value for documentation.instructionSyncStrategy: expected one of pointer | symlink | copy',
+          'Invalid value for documentation.instructionSyncStrategy: expected one of none | pointer | symlink | copy',
         );
         expect(await readShared(root)).toEqual({
           version: 1,
@@ -5185,7 +5185,7 @@ describe('oat config', () => {
       );
       expect(capture.info[0]).toContain('Type: enum');
       expect(capture.info[0]).toContain(
-        'Owning command: oat config set documentation.instructionSyncStrategy <pointer|symlink|copy>',
+        'Owning command: oat config set documentation.instructionSyncStrategy <none|pointer|symlink|copy>',
       );
       expect(process.exitCode).toBe(0);
     });

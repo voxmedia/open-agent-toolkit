@@ -34,9 +34,10 @@ export {
 } from './dispatch-matrix';
 
 /**
- * The CLAUDE.md shim strategies `oat instructions sync` and
+ * The CLAUDE.md strategies `oat instructions sync` and
  * `oat instructions validate` understand, and the values
- * `documentation.instructionSyncStrategy` accepts.
+ * `documentation.instructionSyncStrategy` accepts. `none` keeps no CLAUDE.md
+ * shims at all; the other three are the shim strategies.
  *
  * Declared here rather than in the instructions command so the config
  * normalizer, the `oat config set` validator, and the commands share one list:
@@ -44,6 +45,7 @@ export {
  * silently fall through to the built-in default.
  */
 export const INSTRUCTION_SYNC_STRATEGIES = [
+  'none',
   'pointer',
   'symlink',
   'copy',
@@ -55,9 +57,13 @@ export type InstructionSyncStrategy =
 /**
  * The strategy used when neither `--strategy` nor
  * `documentation.instructionSyncStrategy` names one.
+ *
+ * `none` (DR-260927-claude-md-shims-are-opt): Claude Code reads AGENTS.md
+ * itself through its `agents-md` plugin, which stands down for the whole
+ * project while any CLAUDE.md exists, so shims are opt-in.
  */
 export const DEFAULT_INSTRUCTION_SYNC_STRATEGY: InstructionSyncStrategy =
-  'pointer';
+  'none';
 
 export function isInstructionSyncStrategy(
   value: unknown,

@@ -90,7 +90,9 @@ describe('instructions utils', () => {
       'utf8',
     );
 
-    const entries = await scanInstructionFiles(repoRoot);
+    const entries = await scanInstructionFiles(repoRoot, {
+      strategy: 'pointer',
+    });
     const byPath = Object.fromEntries(
       entries.map((entry) => [
         relative(repoRoot, entry.agentsPath ?? entry.claudePath),
@@ -139,7 +141,9 @@ describe('instructions utils', () => {
       'utf8',
     );
 
-    const entries = await scanInstructionFiles(repoRoot);
+    const entries = await scanInstructionFiles(repoRoot, {
+      strategy: 'pointer',
+    });
 
     expect(entries).toHaveLength(1);
     expect(relative(repoRoot, entries[0]?.agentsPath ?? '')).toBe(
@@ -181,7 +185,9 @@ describe('instructions utils', () => {
       'utf8',
     );
 
-    const entries = await scanInstructionFiles(repoRoot);
+    const entries = await scanInstructionFiles(repoRoot, {
+      strategy: 'pointer',
+    });
     const paths = entries.map((entry) =>
       relative(repoRoot, entry.agentsPath ?? entry.claudePath),
     );
@@ -213,6 +219,7 @@ describe('instructions utils', () => {
     );
 
     const entries = await scanInstructionFiles(repoRoot, {
+      strategy: 'pointer',
       excludedPaths: ['apps/oat-docs/docs'],
     });
 
@@ -238,6 +245,7 @@ describe('instructions utils', () => {
     );
 
     const entries = await scanInstructionFiles(repoRoot, {
+      strategy: 'pointer',
       excludedPaths: ['apps/oat-docs/docs'],
     });
     const paths = entries.map((entry) =>
@@ -271,6 +279,7 @@ describe('instructions utils', () => {
     );
 
     const entries = await scanInstructionFiles(repoRoot, {
+      strategy: 'pointer',
       excludedPaths: ['content'],
     });
     const paths = entries.map((entry) =>
@@ -311,6 +320,7 @@ describe('instructions utils', () => {
     );
 
     const entries = await scanInstructionFiles(repoRoot, {
+      strategy: 'pointer',
       excludedPaths: ['apps/oat-docs/docs', 'apps/oat-docs', './vendor/'],
     });
     const paths = entries.map((entry) =>
@@ -345,6 +355,7 @@ describe('instructions utils', () => {
     // The carve-in runs before the exclusion predicate, so naming `.oat` (or
     // `.oat/repo` itself) in the opt-out list must not strand the carve-in.
     const entries = await scanInstructionFiles(repoRoot, {
+      strategy: 'pointer',
       excludedPaths: ['.oat', '.oat/repo'],
     });
     const paths = entries.map((entry) =>
@@ -375,6 +386,7 @@ describe('instructions utils', () => {
     // siblings, and the command harnesses' own mocks use prefix matching, so
     // nothing else in the suite would object.
     const entries = await scanInstructionFiles(repoRoot, {
+      strategy: 'pointer',
       excludedPaths: ['apps/docs'],
     });
     const paths = entries
@@ -408,6 +420,7 @@ describe('instructions utils', () => {
       'apps/oat-docs/docs/',
     ]) {
       const entries = await scanInstructionFiles(repoRoot, {
+        strategy: 'pointer',
         excludedPaths: [entry],
       });
       expect(entries, `entry ${entry} should exclude the docs tree`).toEqual(
@@ -439,6 +452,7 @@ describe('instructions utils', () => {
     expect(normalizeExcludedPaths(rejected)).toEqual([]);
 
     const entries = await scanInstructionFiles(repoRoot, {
+      strategy: 'pointer',
       excludedPaths: rejected,
     });
     const paths = entries.map((entry) =>
@@ -466,6 +480,7 @@ describe('instructions utils', () => {
     );
 
     const entries = await scanInstructionFiles(repoRoot, {
+      strategy: 'pointer',
       excludedPaths: ['.', '', '   ', './'],
     });
     const paths = entries.map((entry) =>
@@ -492,7 +507,9 @@ describe('instructions utils', () => {
       'utf8',
     );
 
-    const entries = await scanInstructionFiles(repoRoot);
+    const entries = await scanInstructionFiles(repoRoot, {
+      strategy: 'pointer',
+    });
 
     expect(entries).toHaveLength(1);
     expect(relative(repoRoot, entries[0]?.agentsPath ?? '')).toBe(
@@ -506,7 +523,9 @@ describe('instructions utils', () => {
     await writeFile(join(repoRoot, 'AGENTS.md'), '# instructions\n', 'utf8');
     await writeFile(join(repoRoot, 'CLAUDE.md'), '@AGENTS.md\r\n', 'utf8');
 
-    const entries = await scanInstructionFiles(repoRoot);
+    const entries = await scanInstructionFiles(repoRoot, {
+      strategy: 'pointer',
+    });
 
     expect(entries).toHaveLength(1);
     expect(entries[0]?.status).toBe('ok');
@@ -658,17 +677,21 @@ describe('instructions utils', () => {
     await writeFile(join(docsDir, 'AGENTS.md'), '# docs\n', 'utf8');
     await writeFile(join(docsDir, 'CLAUDE.md'), '@AGENTS.md\n', 'utf8');
 
-    const entries = await scanInstructionFiles(repoRoot, undefined, {
-      readFile: async (path, encoding) => {
-        if (path === join(docsDir, 'CLAUDE.md')) {
-          throw Object.assign(new Error('permission denied'), {
-            code: 'EACCES',
-          });
-        }
+    const entries = await scanInstructionFiles(
+      repoRoot,
+      { strategy: 'pointer' },
+      {
+        readFile: async (path, encoding) => {
+          if (path === join(docsDir, 'CLAUDE.md')) {
+            throw Object.assign(new Error('permission denied'), {
+              code: 'EACCES',
+            });
+          }
 
-        return fsReadFile(path, encoding);
+          return fsReadFile(path, encoding);
+        },
       },
-    });
+    );
 
     expect(entries).toHaveLength(1);
     expect(entries[0]).toMatchObject({
@@ -684,7 +707,9 @@ describe('instructions utils', () => {
     await mkdir(docsDir, { recursive: true });
     await symlink('missing-AGENTS.md', join(docsDir, 'CLAUDE.md'));
 
-    const entries = await scanInstructionFiles(repoRoot);
+    const entries = await scanInstructionFiles(repoRoot, {
+      strategy: 'pointer',
+    });
 
     expect(entries).toHaveLength(1);
     expect(entries[0]).toMatchObject({
@@ -706,17 +731,21 @@ describe('instructions utils', () => {
       'utf8',
     );
 
-    const entries = await scanInstructionFiles(repoRoot, undefined, {
-      readFile: async (path, encoding) => {
-        if (path === join(docsDir, 'CLAUDE.md')) {
-          throw Object.assign(new Error('permission denied'), {
-            code: 'EACCES',
-          });
-        }
+    const entries = await scanInstructionFiles(
+      repoRoot,
+      { strategy: 'pointer' },
+      {
+        readFile: async (path, encoding) => {
+          if (path === join(docsDir, 'CLAUDE.md')) {
+            throw Object.assign(new Error('permission denied'), {
+              code: 'EACCES',
+            });
+          }
 
-        return fsReadFile(path, encoding);
+          return fsReadFile(path, encoding);
+        },
       },
-    });
+    );
 
     expect(entries).toHaveLength(1);
     expect(entries[0]).toMatchObject({
@@ -735,17 +764,21 @@ describe('instructions utils', () => {
     await symlink('target.md', join(docsDir, 'AGENTS.md'));
     await writeFile(join(docsDir, 'CLAUDE.md'), '@AGENTS.md\n', 'utf8');
 
-    const entries = await scanInstructionFiles(repoRoot, undefined, {
-      stat: async (path) => {
-        if (path === join(docsDir, 'AGENTS.md')) {
-          throw Object.assign(new Error('permission denied'), {
-            code: 'EACCES',
-          });
-        }
+    const entries = await scanInstructionFiles(
+      repoRoot,
+      { strategy: 'pointer' },
+      {
+        stat: async (path) => {
+          if (path === join(docsDir, 'AGENTS.md')) {
+            throw Object.assign(new Error('permission denied'), {
+              code: 'EACCES',
+            });
+          }
 
-        return fsStat(path);
+          return fsStat(path);
+        },
       },
-    });
+    );
 
     expect(entries).toHaveLength(1);
     expect(entries[0]).toMatchObject({
@@ -763,17 +796,21 @@ describe('instructions utils', () => {
     await mkdir(docsDir, { recursive: true });
     await symlink('target.md', join(docsDir, 'CLAUDE.md'));
 
-    const entries = await scanInstructionFiles(repoRoot, undefined, {
-      stat: async (path) => {
-        if (path === join(docsDir, 'CLAUDE.md')) {
-          throw Object.assign(new Error('permission denied'), {
-            code: 'EACCES',
-          });
-        }
+    const entries = await scanInstructionFiles(
+      repoRoot,
+      { strategy: 'pointer' },
+      {
+        stat: async (path) => {
+          if (path === join(docsDir, 'CLAUDE.md')) {
+            throw Object.assign(new Error('permission denied'), {
+              code: 'EACCES',
+            });
+          }
 
-        return fsStat(path);
+          return fsStat(path);
+        },
       },
-    });
+    );
 
     expect(entries).toHaveLength(1);
     expect(entries[0]).toMatchObject({
@@ -825,7 +862,9 @@ describe('instructions utils', () => {
     await symlink('missing-AGENTS.md', join(docsDir, 'AGENTS.md'));
     await writeFile(join(docsDir, 'CLAUDE.md'), '@AGENTS.md\n', 'utf8');
 
-    const entries = await scanInstructionFiles(repoRoot);
+    const entries = await scanInstructionFiles(repoRoot, {
+      strategy: 'pointer',
+    });
 
     expect(entries).toHaveLength(1);
     expect(entries[0]).toMatchObject({
@@ -843,7 +882,9 @@ describe('instructions utils', () => {
     await mkdir(docsDir, { recursive: true });
     await symlink('missing-AGENTS.md', join(docsDir, 'AGENTS.md'));
 
-    const entries = await scanInstructionFiles(repoRoot);
+    const entries = await scanInstructionFiles(repoRoot, {
+      strategy: 'pointer',
+    });
 
     expect(entries).toHaveLength(1);
     expect(entries[0]).toMatchObject({
@@ -862,7 +903,9 @@ describe('instructions utils', () => {
 
     await symlink(join(repoRoot, 'real'), join(repoRoot, 'real-link'));
 
-    const entries = await scanInstructionFiles(repoRoot);
+    const entries = await scanInstructionFiles(repoRoot, {
+      strategy: 'pointer',
+    });
 
     expect(entries).toHaveLength(1);
     expect(relative(repoRoot, entries[0]?.agentsPath ?? '')).toBe(
@@ -890,6 +933,7 @@ describe('instructions utils', () => {
     const entries = await scanInstructionFiles(
       repoRoot,
       {
+        strategy: 'pointer',
         debug: (message) => {
           debugLogs.push(message);
         },
@@ -1242,8 +1286,11 @@ describe('instructions utils', () => {
       missing: 1,
       contentMismatch: 1,
       stray: 1,
+      managedShim: 0,
+      unmanaged: 0,
       created: 1,
       updated: 1,
+      removed: 0,
       skipped: 1,
     });
 
