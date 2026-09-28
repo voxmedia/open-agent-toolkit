@@ -30,9 +30,9 @@ oat_generated: false
 | Phase 2 | complete    | 8     | 8/8       |
 | Phase 3 | complete    | 5     | 5/5       |
 | Phase 4 | complete    | 7     | 7/7       |
-| Phase 5 | in_progress | 7     | 6/7       |
+| Phase 5 | in_progress | 7     | 7/7       |
 
-**Total:** 34/35 tasks completed
+**Total:** 35/35 tasks completed
 
 ---
 
@@ -301,8 +301,8 @@ oat_generated: false
 
 ### Task p05-t07: (review) Close p05 review findings M1, L1-L7
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 6da8ac2f8
 
 ---
 
@@ -612,6 +612,13 @@ oat_generated: false
 - Request `bw2-p05-review-1` (reconnaissance not-attempted):
   `reviews/archived/p05-review-2026-09-28T103350Z.md` passed (0 Critical/High), 1 Medium (control-plane
   lacks `check:fix`/`lint:fix`), 7 Low; all converted to `p05-t07`.
+
+- Continuation `cont-backlog-wave-2-p05-fix-1`: `6da8ac2f8` closed M1
+  (control-plane `check:fix`/`lint:fix`) and L1-L7 (wording, `check` pins,
+  scan-flag and depth tests, code-span skip, reference-definition rebase,
+  retryable rewrite, help and docs, macOS/Linux evidence note citing Linux CI
+  runs 34081195164 and 34081580680); 148 vitest, check, lint, format,
+  type-check green.
 
 ### PR Requirements (hand-off to oat-project-pr-final)
 
