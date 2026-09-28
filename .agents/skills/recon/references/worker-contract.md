@@ -7,111 +7,19 @@ the complete assignment; a worker does not infer broader authority.
 
 The assignment must declare:
 
-- `kind: recon.assignment` and `schemaVersion: 1`;
 - `runId`, `waveId`, `laneId`, the approved manifest wave mode, and exactly one
   worker assignment mode;
-- the lane's `taskClass`;
 - bounded objective, included scope, and excluded scope;
 - allowed inputs and excluded inputs;
 - source-read authority in `readSources`, including allowed read-only tools;
-  every read source lies within an allowed input and the included scope and
-  outside every excluded input and excluded scope entry;
-- sole `writePath`, contained by the packet directory and unique to the lane:
-  a `recon.raw-dossier` writes under `raw/dossiers/`, a `recon.claim-ledger`
-  candidate under `raw/drafts/`, and a `recon.review-result` under `reviews/`;
-  no lane ever writes a controller-owned path (`manifest.json`, `claims.json`,
-  `packet.md`, `raw/failure.json`, `reviews/reconciliation.json`, or anything
-  under `reviews/briefs/` or `raw/quarantine/`). Controller-owned names match
-  regardless of case or Unicode normalization, and so does lane uniqueness
-  across a wave;
-- required artifact `kind`, `schemaVersion`, and output schema: the approved
-  reference `references/packet-contract.md#<kind>` for the artifact's own kind,
-  which resolves to that kind's anchor in the packet contract;
-- enforcement level and deadline;
-- whether failure should be recorded as required, optional, or conditional;
-  and
-- an `escalation` path for a lane that cannot complete.
+- sole `writePath`, contained by the packet directory and unique to the lane;
+- required artifact `kind`, `schemaVersion`, and output schema;
+- enforcement level and deadline; and
+- whether failure should be recorded as required, optional, or conditional.
 
 Reject an incomplete or contradictory assignment before reading sources. Never
 request credentials, mutate an investigated source, broaden scope, or choose an
 alternate write path.
-
-The controller builds the envelope as one closed JSON object (or a JSON array
-for one homogeneous wave) and validates it with `scripts/validate-assignment.mjs`
-before recording an accepted launch. Pass `-` to read the envelope from
-standard input so no envelope file is written:
-
-```json
-{
-  "kind": "recon.assignment",
-  "schemaVersion": 1,
-  "runId": "run-1",
-  "waveId": "gather-1",
-  "laneId": "lane-a",
-  "waveMode": "gather",
-  "mode": "gather",
-  "taskClass": "mechanical-recon",
-  "objective": "Bounded objective.",
-  "scope": { "included": ["src/"], "excluded": ["src/generated/"] },
-  "inputs": { "allowed": ["src/"], "excluded": ["src/generated/"] },
-  "readSources": { "sources": ["src/"], "tools": ["Read", "Grep", "Glob"] },
-  "writePath": "raw/dossiers/lane-a.json",
-  "artifact": {
-    "kind": "recon.raw-dossier",
-    "schemaVersion": 1,
-    "outputSchema": "references/packet-contract.md#recon.raw-dossier"
-  },
-  "enforcement": "contract-enforced",
-  "deadlineSeconds": 900,
-  "failureRecording": "required",
-  "escalation": "Return PASS_FAILED with the unavailable input; the controller covers the gap."
-}
-```
-
-The validator reports every missing, unknown, or invalid field in one pass and
-exits 1, so the controller can correct or replace a request that never reached
-a worker; an unreadable envelope path is `UNREADABLE_ENVELOPE` with exit 2, not
-an invalid envelope. It rejects a worker mode that does not match the wave
-mode; a read source outside the allowed inputs or included scope, or inside an
-excluded input or excluded scope entry; an allowed input or included scope
-entry inside an exclusion; any `readSources.tools` entry outside the read-only
-allowlist below; a write path that is absolute, escapes the packet, names no
-file, is controller-owned (`CONTROLLER_OWNED_WRITE_PATH`), or lies outside its
-kind's directory (`WRITE_PATH_OUTSIDE_KIND`); a controller-owned artifact kind; an output schema other than the
-approved reference for the artifact's kind (inline schemas are not accepted,
-because the kind already fixes the schema the artifact validator enforces); and
-`unavailable` enforcement. Across an array it rejects a lane whose run, wave,
-wave mode, worker mode, or task class differs from the first lane, and a
-repeated lane ID or write path. Once a launch is accepted, correct its envelope
-through the accepted handle; acceptance never authorizes a replacement worker.
-
-Read authority is an allowlist. `readSources.tools` may name only these
-read-only tools, compared case-insensitively with `-` and `_` treated alike:
-`Read`, `Grep`, `Glob`, `LS`, `WebFetch`, `WebSearch`, `read_file`,
-`list_dir`, `file_search`, `grep_search`, `codebase_search`, `web_fetch`, and
-`web_search`. A file-editing tool (for example `Write`, `Edit`, or
-`apply_patch`) is `MUTATING_TOOL`; a shell or execution tool (for example
-`Bash`, `exec_command`, or `run_terminal_cmd`) is `EXECUTION_TOOL`, because a
-command can write the filesystem; any other name is `UNKNOWN_TOOL`. Command
-output a lane needs is captured by the controller as a `command-output` source
-rather than granted as a tool.
-
-Inputs, scope entries, and read sources are locators in one namespace: a
-repository-relative path, or a canonical `http` or `https` URL compared by
-scheme, host, and port. Only `writePath` is packet-relative. To exclude the
-packet's own `raw/` or `reviews/` directories from a lane, name them by their
-repository-relative path, for example
-`.oat/repo/reference/evidence/<run>/raw/`; a bare `raw/` excludes the
-repository's `raw/`, not the packet's. Containment is by whole path segment, so
-excluding `reviews/` also excludes `reviews/private.json`, and `src` does not
-contain `src-other`. Inclusion compares segments exactly, while exclusion
-ignores case, so on a case-insensitive filesystem `Reviews/private.json` is
-still excluded; both directions fail closed. An absolute or drive path, a `~`
-path, a backslash path, a `..` segment, any other `scheme:` string (such as
-`file:`, `javascript:`, or `http:/host` without `//`), or a URL with
-credentials cannot be bound to the lane's authority before launch and is
-rejected as `UNVERIFIABLE_SOURCE`. The check is lexical; symlink and realpath
-checks remain with source preflight and the worker's own gate.
 
 The manifest's nine wave modes map to the worker's closed six-mode vocabulary:
 

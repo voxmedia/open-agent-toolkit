@@ -47,7 +47,7 @@ function readModeMappings(content) {
 test('recon is a provider-neutral user-invocable skill', async () => {
   const { skill } = await readContracts();
   assert.match(skill, /^name:\s*recon$/m);
-  assert.equal(readSkillVersion(skill), '1.1.6');
+  assert.equal(readSkillVersion(skill), '1.1.5');
   assert.match(skill, /^user-invocable:\s*true$/m);
   assert.match(skill, /provider-neutral/i);
   assert.doesNotMatch(skill, /(?:must|required to) use GPT-|Claude-|Gemini-/i);
@@ -355,22 +355,9 @@ test('worker contract requires exact excerpts, closed examples, and same-task va
     /supplied deterministic validator[\s\S]{0,260}same accepted\s+task/i,
   );
   assert.match(contract, /terminal invalid[\s\S]{0,100}`PASS_FAILED`/i);
-  const blocks = [...workerContract.matchAll(/```json\n([\s\S]*?)\n```/g)].map(
-    (match) => JSON.parse(match[1]),
-  );
-  // The contract also documents the assignment envelope shape, which
-  // `validate-assignment.test.mjs` owns; only review-result examples are
-  // pinned here.
-  assert.deepEqual(
-    blocks.map(({ kind }) => kind),
-    [
-      'recon.assignment',
-      'recon.review-result',
-      'recon.review-result',
-      'recon.review-result',
-    ],
-  );
-  const examples = blocks.filter(({ kind }) => kind === 'recon.review-result');
+  const examples = [
+    ...workerContract.matchAll(/```json\n([\s\S]*?)\n```/g),
+  ].map((match) => JSON.parse(match[1]));
   assert.deepEqual(
     examples.map(({ reviewKind }) => reviewKind),
     ['semantic', 'adversarial', 'coverage'],
