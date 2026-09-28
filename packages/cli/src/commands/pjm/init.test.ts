@@ -261,6 +261,16 @@ describe('initializeRepoReference', () => {
     expect(INSTRUCTIONS_SYNC_HINT).toContain('--dry-run');
   });
 
+  it('does not promise CLAUDE.md shims, which are opt-in', () => {
+    expect(INSTRUCTIONS_SYNC_HINT).not.toContain('to create CLAUDE.md shims');
+    expect(INSTRUCTIONS_SYNC_HINT).toContain(
+      'No CLAUDE.md shims are created by default',
+    );
+    expect(INSTRUCTIONS_SYNC_HINT).toContain(
+      '`oat config set documentation.instructionSyncStrategy pointer`',
+    );
+  });
+
   it('does not overwrite existing canonical docs and reports them as skipped', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-pjm-init-'));
     tempDirs.push(root);

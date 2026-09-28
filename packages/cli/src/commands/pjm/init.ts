@@ -54,12 +54,16 @@ const TEMPLATE_TARGETS = [
   { template: 'pjm-handoffs-readme.md', target: 'pjm/handoffs/README.md' },
 ] as const satisfies readonly TemplateTarget[];
 
-// Next-step hint printed after init/backfill. `oat pjm init` never writes
-// CLAUDE.md shims itself — strategy ownership stays with `oat instructions
-// sync`, so we point the operator at it (with the `--dry-run` preview).
+// Next-step hint printed after init/backfill. `oat pjm init` never writes or
+// removes CLAUDE.md files itself — strategy ownership stays with
+// `oat instructions sync`, so we point the operator at it (with the
+// `--dry-run` preview). It must not promise shims: the default strategy is
+// `none` (DR-260927-claude-md-shims-are-opt), so shims are opt-in.
 export const INSTRUCTIONS_SYNC_HINT =
-  'Next step: run `oat instructions sync` to create CLAUDE.md shims for the ' +
-  'repo-reference AGENTS.md files (preview with `oat instructions sync --dry-run`).';
+  'Next step: run `oat instructions sync` to check the repo-reference AGENTS.md ' +
+  'files against your CLAUDE.md strategy (preview with `oat instructions sync --dry-run`). ' +
+  'No CLAUDE.md shims are created by default; opt in with ' +
+  '`oat config set documentation.instructionSyncStrategy pointer`.';
 
 // AGENTS.md guidance messages printed by `oat pjm init`. An absent managed
 // block is appended to an existing AGENTS.md. The printed manual patch is
