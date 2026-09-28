@@ -6,6 +6,8 @@ import {
 } from '@commands/instructions/instructions.types';
 import {
   buildInstructionsPayload,
+  buildLeftoverClaudeWarnings,
+  findLeftoverClaudeFiles,
   formatInstructionsReport,
   readConfiguredInstructionSyncStrategy,
   resolveInstructionPointerExcludes,
@@ -20,6 +22,7 @@ import { Command, Option } from 'commander';
 function defaultDependencies(): InstructionsValidateCommandDependencies {
   return {
     buildCommandContext,
+    findLeftoverClaudeFiles,
     readConfiguredInstructionSyncStrategy,
     resolveInstructionPointerExcludes,
     resolveProjectRoot,
@@ -77,12 +80,22 @@ export function createInstructionsValidateCommand(
             excludedPaths: exclusions.configured,
             effectiveExcludedPaths: exclusions.effective,
             exclusionWarnings: exclusions.warnings,
+            // A warning, never drift: it does not change the exit code.
+            warnings: buildLeftoverClaudeWarnings(
+              repoRoot,
+              strategy === 'none'
+                ? await dependencies.findLeftoverClaudeFiles(repoRoot)
+                : [],
+            ),
           });
 
           if (context.json) {
             context.logger.json(payload);
           } else {
             context.logger.info(formatInstructionsReport(payload, repoRoot));
+            for (const warning of payload.warnings ?? []) {
+              context.logger.warn(warning.message);
+            }
             if (payload.status === 'drift') {
               // Repeat the flag only when this run was given one: without it,
               // a bare sync resolves the same configured or default strategy.

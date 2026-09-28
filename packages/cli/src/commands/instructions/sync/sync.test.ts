@@ -23,6 +23,7 @@ interface HarnessOptions {
   effectiveExcludedPaths?: string[];
   exclusionWarnings?: string[];
   configuredStrategy?: InstructionSyncStrategy;
+  leftoverClaudeFiles?: string[];
 }
 
 function createHarness(options: HarnessOptions = {}): {
@@ -99,6 +100,10 @@ function createHarness(options: HarnessOptions = {}): {
       interactive: false,
       logger: capture.logger,
     }),
+    // The leftover walk is read-only but still must not touch the fake cwd.
+    findLeftoverClaudeFiles: vi.fn(
+      async () => options.leftoverClaudeFiles ?? [],
+    ),
     lstat,
     readConfiguredInstructionSyncStrategy,
     readFile,

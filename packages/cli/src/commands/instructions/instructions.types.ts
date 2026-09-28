@@ -67,6 +67,19 @@ export interface InstructionActionRecord {
 
 export type InstructionsMode = 'validate' | 'dry-run' | 'apply';
 
+/**
+ * A finding that never changes the exit code. `claude_md_hides_agents_md`:
+ * under strategy `none`, a `CLAUDE.md`, `.claude/CLAUDE.md`, or
+ * `CLAUDE.local.md` that makes Claude Code's default `agents-md` mode ignore
+ * every AGENTS.md in the project while it exists.
+ */
+export interface InstructionsWarning {
+  code: 'claude_md_hides_agents_md';
+  /** Repository-relative POSIX path. */
+  path: string;
+  message: string;
+}
+
 export interface InstructionsSummary {
   scanned: number;
   ok: number;
@@ -128,6 +141,11 @@ export interface InstructionsJsonPayload {
    * exclusion that silently does nothing. Omitted when empty.
    */
   exclusionWarnings?: string[];
+  /**
+   * Structured warnings, the same text written to stderr in human mode.
+   * Omitted when empty, so a clean repository's payload shape is unchanged.
+   */
+  warnings?: InstructionsWarning[];
 }
 
 /**
@@ -182,6 +200,11 @@ export interface InstructionsValidateCommandDependencies {
   readConfiguredInstructionSyncStrategy: (
     repoRoot: string,
   ) => Promise<InstructionSyncStrategy | undefined>;
+  /**
+   * Every `CLAUDE.md` and `CLAUDE.local.md` in the repository (absolute
+   * paths), from a read-only walk that ignores the mutation exclusions.
+   */
+  findLeftoverClaudeFiles: (repoRoot: string) => Promise<string[]>;
   /**
    * The single exclusion path both commands resolve through. Sync inherits it
    * from this interface rather than resolving its own, so validate can never

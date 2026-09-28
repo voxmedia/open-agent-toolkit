@@ -25,6 +25,7 @@ import type {
   InstructionsScanDependencies,
   InstructionsStatus,
   InstructionsSummary,
+  InstructionsWarning,
   InstructionStatus,
   ManagedShimRecord,
 } from './instructions.types';
@@ -47,6 +48,7 @@ const ROOT_EXCLUDED_DIRECTORY_CARVE_INS = new Map<string, string>([
 interface BuildInstructionsPayloadArgs {
   mode: InstructionsMode;
   strategy: InstructionSyncStrategy;
+  warnings?: InstructionsWarning[];
   entries: InstructionEntry[];
   actions: InstructionActionRecord[];
   excludedPaths?: string[];
@@ -1086,6 +1088,85 @@ export async function scanInstructionFiles(
   return normalizeEntries(entries);
 }
 
+const LEFTOVER_CLAUDE_FILE_NAMES = new Set(['CLAUDE.md', 'CLAUDE.local.md']);
+
+/**
+ * Every `CLAUDE.md` (including `.claude/CLAUDE.md`) and `CLAUDE.local.md` in
+ * the repository, sorted, as absolute paths.
+ *
+ * A separate, read-only walk on purpose. The instruction scan skips the
+ * documentation content root and `documentation.instructionPointerExcludes`,
+ * but those only limit what OAT may change: Claude Code's `agents-md` plugin
+ * stands down whichever directory the file is in. Only `.git`, `node_modules`,
+ * and the root `.worktrees` (separate checkouts) are skipped, and symlinked
+ * directories are not followed. A symlink named like an instruction file
+ * counts, broken or not.
+ */
+export async function findLeftoverClaudeFiles(
+  repoRoot: string,
+  overrides: Partial<Pick<InstructionsScanDependencies, 'readdir'>> = {},
+): Promise<string[]> {
+  const readDirectory = overrides.readdir ?? readdir;
+  const queue = [repoRoot];
+  const found: string[] = [];
+
+  while (queue.length > 0) {
+    const currentDirectory = queue.shift();
+    if (!currentDirectory) {
+      continue;
+    }
+
+    let entries: Awaited<ReturnType<InstructionsScanDependencies['readdir']>>;
+    try {
+      entries = await readDirectory(currentDirectory, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+
+    for (const entry of entries) {
+      const entryPath = join(currentDirectory, entry.name);
+      if (entry.isDirectory()) {
+        if (
+          entry.name === '.git' ||
+          GLOBAL_EXCLUDED_DIRECTORIES.has(entry.name) ||
+          (currentDirectory === repoRoot && entry.name === '.worktrees')
+        ) {
+          continue;
+        }
+        queue.push(entryPath);
+        continue;
+      }
+      if (LEFTOVER_CLAUDE_FILE_NAMES.has(entry.name)) {
+        found.push(entryPath);
+      }
+    }
+  }
+
+  return found.sort((left, right) => left.localeCompare(right));
+}
+
+/**
+ * One warning per leftover file, naming exactly two ways out: remove the
+ * file, or opt back into shims and let sync add them everywhere.
+ */
+export function buildLeftoverClaudeWarnings(
+  repoRoot: string,
+  paths: readonly string[],
+): InstructionsWarning[] {
+  return paths.map((path) => {
+    const relativePath = toPosixPath(relative(repoRoot, path));
+    return {
+      code: 'claude_md_hides_agents_md',
+      path: relativePath,
+      message:
+        `${relativePath} makes Claude Code ignore every AGENTS.md in this project: ` +
+        'its default agents-md mode stands down while any CLAUDE.md, .claude/CLAUDE.md, or CLAUDE.local.md exists. ' +
+        `Either remove ${relativePath}, or set documentation.instructionSyncStrategy in .oat/config.json ` +
+        'to a shim strategy (pointer, symlink, or copy) and rerun `oat instructions sync` to add shims back.',
+    };
+  });
+}
+
 export function buildInstructionsSummary(
   entries: InstructionEntry[],
   actions: InstructionActionRecord[],
@@ -1139,6 +1220,7 @@ function deriveInstructionsStatus(
 export function buildInstructionsPayload({
   mode,
   strategy,
+  warnings,
   entries,
   actions,
   excludedPaths,
@@ -1179,6 +1261,7 @@ export function buildInstructionsPayload({
     ...(exclusionWarnings !== undefined && exclusionWarnings.length > 0
       ? { exclusionWarnings }
       : {}),
+    ...(warnings !== undefined && warnings.length > 0 ? { warnings } : {}),
   };
 }
 

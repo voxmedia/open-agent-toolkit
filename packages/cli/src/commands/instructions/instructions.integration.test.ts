@@ -1529,6 +1529,301 @@ describe('instructions command integration', () => {
       });
     });
 
+    describe('leftover CLAUDE.md warnings', () => {
+      const WARNING_TEXT =
+        'makes Claude Code ignore every AGENTS.md in this project';
+
+      function expectTwoOptions(message: string, path: string): void {
+        expect(message).toContain(path);
+        expect(message).toContain(WARNING_TEXT);
+        expect(message).toContain(`Either remove ${path}, or set`);
+        expect(message).toContain(
+          'documentation.instructionSyncStrategy in .oat/config.json to a shim strategy',
+        );
+        expect(message).toContain('rerun `oat instructions sync`');
+        // Exactly two options: remove the file, or opt back into shims.
+        expect(message.match(/Either /g)).toHaveLength(1);
+        expect(message.match(/, or set /g)).toHaveLength(1);
+      }
+
+      async function seedLeftovers(root: string): Promise<void> {
+        await writePair(root, 'hand', '# my own notes\n');
+        await writeFile(join(root, 'AGENTS.md'), '# root instructions\n');
+        await writeFile(join(root, 'CLAUDE.local.md'), '# personal\n');
+        await mkdir(join(root, '.claude'), { recursive: true });
+        await writeFile(join(root, '.claude', 'CLAUDE.md'), '# project\n');
+      }
+
+      const LEFTOVERS = [
+        '.claude/CLAUDE.md',
+        'CLAUDE.local.md',
+        'hand/CLAUDE.md',
+      ];
+
+      it('warns once per remaining file on sync, in human and --json output, without failing', async () => {
+        const root = await createWorkspace();
+        tempDirs.push(root);
+        await seedLeftovers(root);
+
+        const human = await runCli(root, ['instructions', 'sync']);
+        expect(human.exitCode).toBe(0);
+        const humanWarnings = human.stderr
+          .split('\n')
+          .filter((line) => line.includes(WARNING_TEXT));
+        expect(humanWarnings).toHaveLength(3);
+        for (const path of LEFTOVERS) {
+          const line = humanWarnings.find((warning) =>
+            warning.startsWith(`${path} `),
+          );
+          expect(line, path).toBeDefined();
+          expectTwoOptions(line!, path);
+        }
+
+        const json = await runCli(
+          root,
+          ['instructions', 'sync', '--json'],
+          ['--json'],
+        );
+        expect(json.exitCode).toBe(0);
+        const payload = JSON.parse(json.stdout);
+        expect(
+          payload.warnings.map((warning: { code: string; path: string }) => [
+            warning.code,
+            warning.path,
+          ]),
+        ).toEqual(LEFTOVERS.map((path) => ['claude_md_hides_agents_md', path]));
+        for (const warning of payload.warnings) {
+          expectTwoOptions(warning.message, warning.path);
+        }
+      });
+
+      it('validate reports the same warnings and keeps its exit code', async () => {
+        const root = await createWorkspace();
+        tempDirs.push(root);
+        await seedLeftovers(root);
+
+        const validate = await runCli(
+          root,
+          ['instructions', 'validate', '--json'],
+          ['--json'],
+        );
+        expect(validate.exitCode).toBe(0);
+        const payload = JSON.parse(validate.stdout);
+        expect(payload.status).toBe('ok');
+        expect(
+          payload.warnings.map((warning: { path: string }) => warning.path),
+        ).toEqual(LEFTOVERS);
+
+        const human = await runCli(root, ['instructions', 'validate']);
+        expect(human.exitCode).toBe(0);
+        expect(
+          human.stderr
+            .split('\n')
+            .filter((line) => line.includes(WARNING_TEXT)),
+        ).toHaveLength(3);
+      });
+
+      it('warns about leftovers in excluded directories and the documentation tree too', async () => {
+        const root = await createWorkspace();
+        tempDirs.push(root);
+        await writeSharedConfig(root, {
+          documentation: {
+            root: 'docs-site',
+            instructionPointerExcludes: ['vendor'],
+          },
+        });
+        await writePair(root, 'docs-site', '# a page about CLAUDE.md\n');
+        await writePair(root, 'vendor/lib', EXPECTED_CLAUDE_CONTENT);
+        const expected = ['docs-site/CLAUDE.md', 'vendor/lib/CLAUDE.md'];
+
+        const human = await runCli(root, ['instructions', 'sync']);
+        expect(human.exitCode).toBe(0);
+        for (const path of expected) {
+          expect(human.stderr).toContain(`${path} ${WARNING_TEXT}`);
+        }
+
+        const sync = await runCli(
+          root,
+          ['instructions', 'sync', '--json'],
+          ['--json'],
+        );
+        expect(
+          JSON.parse(sync.stdout).warnings.map(
+            (warning: { path: string }) => warning.path,
+          ),
+        ).toEqual(expected);
+
+        const validate = await runCli(
+          root,
+          ['instructions', 'validate', '--json'],
+          ['--json'],
+        );
+        expect(validate.exitCode).toBe(0);
+        expect(
+          JSON.parse(validate.stdout).warnings.map(
+            (warning: { path: string }) => warning.path,
+          ),
+        ).toEqual(expected);
+
+        // Warned about, never touched: the exclusions still limit removal.
+        await expect(
+          readFile(join(root, 'vendor', 'lib', 'CLAUDE.md'), 'utf8'),
+        ).resolves.toBe(EXPECTED_CLAUDE_CONTENT);
+      });
+
+      it('is silent when no CLAUDE.md remains (negative control)', async () => {
+        const root = await createWorkspace();
+        tempDirs.push(root);
+        await writeFile(join(root, 'AGENTS.md'), '# root instructions\n');
+        // A managed shim sync removes, so nothing remains afterwards.
+        await writePair(root, 'pkg', EXPECTED_CLAUDE_CONTENT);
+
+        const dryRun = await runCli(
+          root,
+          ['instructions', 'sync', '--dry-run', '--json'],
+          ['--json'],
+        );
+        expect(JSON.parse(dryRun.stdout)).not.toHaveProperty('warnings');
+
+        const human = await runCli(root, ['instructions', 'sync']);
+        expect(human.exitCode).toBe(0);
+        expect(human.stderr).not.toContain(WARNING_TEXT);
+
+        const validate = await runCli(
+          root,
+          ['instructions', 'validate', '--json'],
+          ['--json'],
+        );
+        expect(JSON.parse(validate.stdout)).not.toHaveProperty('warnings');
+      });
+
+      it('is silent under a configured shim strategy', async () => {
+        const root = await createWorkspace();
+        tempDirs.push(root);
+        await writeSharedConfig(root, {
+          documentation: { instructionSyncStrategy: 'pointer' },
+        });
+        await seedLeftovers(root);
+
+        const sync = await runCli(
+          root,
+          ['instructions', 'sync', '--json'],
+          ['--json'],
+        );
+        expect(JSON.parse(sync.stdout)).not.toHaveProperty('warnings');
+        const validate = await runCli(
+          root,
+          ['instructions', 'validate', '--json'],
+          ['--json'],
+        );
+        expect(JSON.parse(validate.stdout)).not.toHaveProperty('warnings');
+      });
+    });
+
+    describe('stray adoption', () => {
+      it('adopts a lone CLAUDE.md into AGENTS.md and leaves no CLAUDE.md behind', async () => {
+        const root = await createWorkspace();
+        tempDirs.push(root);
+        await mkdir(join(root, 'pkg'), { recursive: true });
+        await writeFile(join(root, 'pkg', 'CLAUDE.md'), '# lone notes\n');
+
+        const dryRun = await runCli(
+          root,
+          ['instructions', 'sync', '--dry-run', '--json'],
+          ['--json'],
+        );
+        expect(
+          JSON.parse(dryRun.stdout).actions.map(
+            (action: { type: string; target: string }) => [
+              action.type,
+              action.target.slice(root.length + 1),
+            ],
+          ),
+        ).toEqual([
+          ['create', 'pkg/AGENTS.md'],
+          ['remove', 'pkg/CLAUDE.md'],
+        ]);
+        await expect(pathExists(join(root, 'pkg', 'AGENTS.md'))).resolves.toBe(
+          false,
+        );
+
+        const apply = await runCli(
+          root,
+          ['instructions', 'sync', '--json'],
+          ['--json'],
+        );
+        expect(apply.exitCode).toBe(0);
+        const payload = JSON.parse(apply.stdout);
+        expect(payload).not.toHaveProperty('warnings');
+        await expect(
+          readFile(join(root, 'pkg', 'AGENTS.md'), 'utf8'),
+        ).resolves.toBe('# lone notes\n');
+        await expect(pathExists(join(root, 'pkg', 'CLAUDE.md'))).resolves.toBe(
+          false,
+        );
+      });
+
+      it('keeps and reports a stray whose content changed during adoption', async () => {
+        const root = await createWorkspace();
+        tempDirs.push(root);
+        await mkdir(join(root, 'pkg'), { recursive: true });
+        const claudePath = join(root, 'pkg', 'CLAUDE.md');
+        await writeFile(claudePath, '# lone notes\n');
+
+        const capture = createLoggerCapture();
+        const command = createInstructionsSyncCommand({
+          buildCommandContext: (
+            globalOptions: GlobalOptions,
+          ): CommandContext => ({
+            scope: 'project',
+            dryRun: false,
+            verbose: false,
+            json: true,
+            cwd: globalOptions.cwd ?? root,
+            home: root,
+            interactive: false,
+            logger: capture.logger,
+          }),
+          resolveProjectRoot: async () => root,
+          // The adoption write is the seam: the stray is edited right after
+          // its content was copied into AGENTS.md.
+          writeFile: async (path: string, content: string) => {
+            await writeFile(path, content, 'utf8');
+            await writeFile(claudePath, '# edited meanwhile\n', 'utf8');
+          },
+        } satisfies Partial<InstructionsSyncCommandDependencies>);
+        const program = new Command()
+          .name('oat')
+          .option('--json')
+          .exitOverride();
+        program.addCommand(command);
+        const previousExitCode = process.exitCode;
+        process.exitCode = undefined;
+        await program.parseAsync(['--json', 'sync'], { from: 'user' });
+        const exitCode = process.exitCode ?? 0;
+        process.exitCode = previousExitCode;
+
+        expect(exitCode).toBe(1);
+        await expect(readFile(claudePath, 'utf8')).resolves.toBe(
+          '# edited meanwhile\n',
+        );
+        const payload = capture.jsonPayloads[0] as {
+          actions: unknown[];
+          warnings: Array<{ path: string }>;
+        };
+        expect(payload.actions).toContainEqual({
+          type: 'skip',
+          target: claudePath,
+          reason:
+            'CLAUDE.md kept after adoption into AGENTS.md (its content differs from the adopted AGENTS.md)',
+          result: 'skipped',
+        });
+        expect(payload.warnings.map((warning) => warning.path)).toEqual([
+          'pkg/CLAUDE.md',
+        ]);
+      });
+    });
+
     describe('negative control: a configured shim strategy is unchanged', () => {
       it('pointer still reports a missing CLAUDE.md as drift and creates it', async () => {
         const root = await createWorkspace();

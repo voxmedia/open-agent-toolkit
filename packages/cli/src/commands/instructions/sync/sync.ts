@@ -15,6 +15,7 @@ import {
   type InstructionActionRecord,
   type InstructionEntry,
   type InstructionsSyncCommandDependencies,
+  type ManagedShimRecord,
 } from '@commands/instructions/instructions.types';
 import {
   buildInstructionsPayload,
@@ -23,6 +24,9 @@ import {
   readConfiguredInstructionSyncStrategy,
   resolveInstructionPointerExcludes,
   resolveInstructionSyncStrategy,
+  findLeftoverClaudeFiles,
+  inspectManagedShim,
+  buildLeftoverClaudeWarnings,
   scanInstructionFiles,
   verifyManagedShimUnchanged,
 } from '@commands/instructions/instructions.utils';
@@ -47,6 +51,7 @@ export async function removeInstructionFile(
 function defaultDependencies(): InstructionsSyncCommandDependencies {
   return {
     buildCommandContext,
+    findLeftoverClaudeFiles,
     lstat,
     readConfiguredInstructionSyncStrategy,
     readFile,
@@ -161,11 +166,19 @@ function planNoShimActions(
       continue;
     }
 
+    // Adopt, then remove: leaving the lone CLAUDE.md in place would make
+    // Claude Code's `agents-md` plugin stand down for the whole project.
     if (entry.status === 'stray') {
       actions.push({
         type: 'create',
         target: getAgentsPath(entry),
         reason: 'adopt stray CLAUDE.md into canonical AGENTS.md',
+        result: 'planned',
+      });
+      actions.push({
+        type: 'remove',
+        target: entry.claudePath,
+        reason: 'remove adopted stray CLAUDE.md (strategy none)',
         result: 'planned',
       });
       continue;
@@ -294,6 +307,10 @@ async function applySyncActions(
 ): Promise<InstructionActionRecord[]> {
   const appliedActions: InstructionActionRecord[] = [];
   const entriesByTarget = new Map<string, InstructionEntry>();
+  // Under `none`, what each adopted stray CLAUDE.md looked like right after its
+  // content was copied into AGENTS.md: the record its removal re-verifies
+  // against, or the reason it must be kept.
+  const adoptedStrays = new Map<string, ManagedShimRecord | string>();
 
   for (const entry of entries) {
     entriesByTarget.set(entry.claudePath, entry);
@@ -318,26 +335,35 @@ async function applySyncActions(
     const isAgentsAction = action.target === agentsPath;
 
     if (action.type === 'remove') {
-      if (!entry.managedShim || !entry.agentsPath) {
+      const isStray = entry.status === 'stray';
+      const planned = isStray
+        ? adoptedStrays.get(action.target)
+        : entry.managedShim;
+      if (planned === undefined) {
         throw new CliError(
           `No planning record for CLAUDE.md removal at ${action.target}`,
           2,
         );
       }
       // Fail closed at the last moment: the file may have been edited or
-      // replaced since the scan classified it. Anything but the exact shim
-      // the scan recorded is kept and reported, never deleted.
-      const changed = await verifyManagedShimUnchanged(
-        action.target,
-        entry.agentsPath,
-        entry.managedShim,
-        dependencies,
-      );
+      // replaced since it was classified. Anything but the exact shim that
+      // was recorded is kept and reported, never deleted.
+      const changed =
+        typeof planned === 'string'
+          ? planned
+          : await verifyManagedShimUnchanged(
+              action.target,
+              agentsPath,
+              planned,
+              dependencies,
+            );
       if (changed !== null) {
         appliedActions.push({
           type: 'skip',
           target: action.target,
-          reason: `CLAUDE.md changed since planning (${changed}); kept`,
+          reason: isStray
+            ? `CLAUDE.md kept after adoption into AGENTS.md (${changed})`
+            : `CLAUDE.md changed since planning (${changed}); kept`,
           result: 'skipped',
         });
         continue;
@@ -366,11 +392,24 @@ async function applySyncActions(
         }
       }
 
+      const claudeBeforeAdoption =
+        strategy === 'none' ? await dependencies.lstat(entry.claudePath) : null;
       const adoptedContent = await dependencies.readFile(
         entry.claudePath,
         'utf8',
       );
       await dependencies.writeFile(agentsPath, adoptedContent, 'utf8');
+      if (claudeBeforeAdoption) {
+        adoptedStrays.set(
+          entry.claudePath,
+          await recordAdoptedStray(
+            entry.claudePath,
+            agentsPath,
+            claudeBeforeAdoption,
+            dependencies,
+          ),
+        );
+      }
       appliedActions.push({
         ...action,
         result: 'applied',
@@ -423,6 +462,40 @@ async function applySyncActions(
   return appliedActions;
 }
 
+/**
+ * After a stray's content is copied into AGENTS.md under `none`, the stray is
+ * removable only if it is now an exact managed shape of that AGENTS.md (in
+ * practice a byte-identical copy) and is still the same file that was read.
+ * Otherwise return why it must be kept.
+ */
+async function recordAdoptedStray(
+  claudePath: string,
+  agentsPath: string,
+  before: { dev: number; ino: number },
+  dependencies: InstructionsSyncCommandDependencies,
+): Promise<ManagedShimRecord | string> {
+  const inspection = await inspectManagedShim(
+    claudePath,
+    agentsPath,
+    dependencies,
+  );
+  if (inspection.kind === 'absent') {
+    return 'CLAUDE.md no longer exists';
+  }
+  if (inspection.kind === 'unmanaged' || inspection.kind === 'unreadable') {
+    return inspection.detail === 'hand-written or modified CLAUDE.md; kept'
+      ? 'its content differs from the adopted AGENTS.md'
+      : inspection.detail.replace(/; kept$/, '');
+  }
+  if (
+    inspection.record.dev !== before.dev ||
+    inspection.record.ino !== before.ino
+  ) {
+    return 'CLAUDE.md was replaced during adoption';
+  }
+  return inspection.record;
+}
+
 function getPostSyncEntries(
   entries: InstructionEntry[],
   actions: InstructionActionRecord[],
@@ -440,24 +513,31 @@ function getPostSyncEntries(
       return entry;
     }
 
-    if (action?.type === 'remove' && action.result === 'applied') {
-      return {
-        ...entry,
-        status: 'ok',
-        detail: 'OAT-managed CLAUDE.md removed',
-      };
-    }
-
     if (
       strategy === 'none' &&
       entry.status === 'stray' &&
       adoptedAction?.result === 'applied'
     ) {
+      return action?.type === 'remove' && action.result === 'applied'
+        ? {
+            ...entry,
+            agentsPath: getAgentsPath(entry),
+            status: 'ok',
+            detail: 'adopted into AGENTS.md; CLAUDE.md removed',
+          }
+        : {
+            ...entry,
+            agentsPath: getAgentsPath(entry),
+            status: 'unmanaged',
+            detail: 'adopted into AGENTS.md; CLAUDE.md kept',
+          };
+    }
+
+    if (action?.type === 'remove' && action.result === 'applied') {
       return {
         ...entry,
-        agentsPath: getAgentsPath(entry),
-        status: 'unmanaged',
-        detail: 'adopted into AGENTS.md; CLAUDE.md kept',
+        status: 'ok',
+        detail: 'OAT-managed CLAUDE.md removed',
       };
     }
 
@@ -550,6 +630,22 @@ export function createInstructionsSyncCommand(
                 strategy,
               );
 
+          // Read-only and repository-wide, independently of the mutation
+          // exclusions: Claude Code's walk does not honor OAT's excludes. A
+          // dry run reports what would remain, so planned removals are left
+          // out.
+          const plannedRemovals = new Set(
+            plannedActions
+              .filter((action) => action.type === 'remove')
+              .map((action) => action.target),
+          );
+          const leftoverClaudeFiles =
+            strategy === 'none'
+              ? (await dependencies.findLeftoverClaudeFiles(repoRoot)).filter(
+                  (path) => !dryRun || !plannedRemovals.has(path),
+                )
+              : [];
+
           const payload = buildInstructionsPayload({
             mode: dryRun ? 'dry-run' : 'apply',
             strategy,
@@ -560,12 +656,19 @@ export function createInstructionsSyncCommand(
             excludedPaths: exclusions.configured,
             effectiveExcludedPaths: exclusions.effective,
             exclusionWarnings: exclusions.warnings,
+            warnings: buildLeftoverClaudeWarnings(
+              repoRoot,
+              leftoverClaudeFiles,
+            ),
           });
 
           if (context.json) {
             context.logger.json(payload);
           } else {
             context.logger.info(formatInstructionsReport(payload, repoRoot));
+            for (const warning of payload.warnings ?? []) {
+              context.logger.warn(warning.message);
+            }
             if (dryRun) {
               context.logger.warn(
                 '\nDry-run only: no filesystem changes were made.',
