@@ -23,6 +23,7 @@ import {
   readOatConfigForDefaultScopeRepair,
   readOatConfigForDocumentationExcludesRepair,
   readOatConfigForInstructionPointerExcludesRepair,
+  readOatConfigForInstructionSyncStrategyRepair,
   readOatConfigWithWarnings,
   readOatLocalConfig,
   readUserConfig,
@@ -298,6 +299,78 @@ describe('oat-config', () => {
         message: expect.stringContaining(
           'oat config set documentation.instructionPointerExcludes',
         ),
+      });
+    });
+  });
+
+  describe('documentation.instructionSyncStrategy', () => {
+    async function writeStrategy(
+      repoRoot: string,
+      instructionSyncStrategy: unknown,
+    ): Promise<void> {
+      await writeFile(
+        join(repoRoot, '.oat', 'config.json'),
+        JSON.stringify({
+          version: 1,
+          documentation: { root: 'apps/docs', instructionSyncStrategy },
+        }),
+        'utf8',
+      );
+    }
+
+    for (const strategy of ['pointer', 'symlink', 'copy']) {
+      it(`accepts ${strategy}`, async () => {
+        const repoRoot = await createRepoRoot();
+        await writeStrategy(repoRoot, strategy);
+
+        await expect(readOatConfig(repoRoot)).resolves.toEqual({
+          version: 1,
+          documentation: {
+            root: 'apps/docs',
+            instructionSyncStrategy: strategy,
+          },
+        });
+      });
+    }
+
+    it('omits the key when it is absent', async () => {
+      const repoRoot = await createRepoRoot();
+      await writeFile(
+        join(repoRoot, '.oat', 'config.json'),
+        JSON.stringify({ version: 1, documentation: { root: 'apps/docs' } }),
+        'utf8',
+      );
+
+      const config = await readOatConfig(repoRoot);
+      expect(config.documentation).not.toHaveProperty(
+        'instructionSyncStrategy',
+      );
+    });
+
+    // Fails closed: unset means the built-in default, and the default decides
+    // whether sync writes CLAUDE.md files, so a typo must never read as unset.
+    const invalidValues: unknown[] = ['none', 'Pointer', '', 7, null, ['copy']];
+    for (const value of invalidValues) {
+      it(`rejects ${JSON.stringify(value)}`, async () => {
+        const repoRoot = await createRepoRoot();
+        await writeStrategy(repoRoot, value);
+
+        await expect(readOatConfig(repoRoot)).rejects.toMatchObject({
+          message: `Invalid documentation.instructionSyncStrategy in ${join(repoRoot, '.oat', 'config.json')}: ${JSON.stringify(value)}. Expected one of: pointer, symlink, copy. Repair it with oat config set documentation.instructionSyncStrategy <pointer|symlink|copy>.`,
+          exitCode: 2,
+        });
+      });
+    }
+
+    it('the repair reader drops only the malformed strategy', async () => {
+      const repoRoot = await createRepoRoot();
+      await writeStrategy(repoRoot, 'bogus');
+
+      await expect(
+        readOatConfigForInstructionSyncStrategyRepair(repoRoot),
+      ).resolves.toEqual({
+        version: 1,
+        documentation: { root: 'apps/docs' },
       });
     });
   });

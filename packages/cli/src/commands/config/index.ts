@@ -30,11 +30,14 @@ import {
 } from '@config/dispatch-policy-options';
 import { parseJsonConfig } from '@config/json';
 import {
+  DEFAULT_INSTRUCTION_SYNC_STRATEGY,
+  INSTRUCTION_SYNC_STRATEGIES,
   VALID_DISPATCH_POLICY_MODES,
   VALID_MANAGED_DISPATCH_POLICIES,
   MAX_GATE_TIMEOUT_MS,
   MIN_GATE_TIMEOUT_MS,
   isValidGateTimeoutMs,
+  type InstructionSyncStrategy,
   type OatConfig,
   type OatConfigRead,
   type OatLocalConfig,
@@ -58,6 +61,7 @@ import {
   readOatConfigForDefaultScopeRepair,
   readOatConfigForDocumentationExcludesRepair,
   readOatConfigForInstructionPointerExcludesRepair,
+  readOatConfigForInstructionSyncStrategyRepair,
   readOatConfigWithWarnings,
   readOatLocalConfig,
   readUserConfig,
@@ -137,6 +141,7 @@ type ConfigKey =
   | 'documentation.config'
   | 'documentation.excludes'
   | 'documentation.instructionPointerExcludes'
+  | 'documentation.instructionSyncStrategy'
   | 'documentation.requireForProjectCompletion'
   | 'documentation.root'
   | 'documentation.tooling'
@@ -265,6 +270,9 @@ interface ConfigCommandDependencies {
   readOatConfigForInstructionPointerExcludesRepair: (
     repoRoot: string,
   ) => Promise<OatConfig>;
+  readOatConfigForInstructionSyncStrategyRepair: (
+    repoRoot: string,
+  ) => Promise<OatConfig>;
   readOatConfigWithWarnings: (repoRoot: string) => Promise<OatConfigRead>;
   writeOatConfig: (repoRoot: string, config: OatConfig) => Promise<void>;
   readOatLocalConfig: (repoRoot: string) => Promise<OatLocalConfig>;
@@ -315,6 +323,7 @@ const KEY_ORDER: ConfigKey[] = [
   'documentation.config',
   'documentation.excludes',
   'documentation.instructionPointerExcludes',
+  'documentation.instructionSyncStrategy',
   'documentation.requireForProjectCompletion',
   'explainers.defaults.style',
   'explainers.defaults.palette',
@@ -521,6 +530,18 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
       'oat config set documentation.instructionPointerExcludes <path[,path...]>',
     description:
       'Comma-separated repository-relative directories that `oat instructions sync` and `oat instructions validate` must not treat as pointer sites, additive to the documentation content root they already skip. Absolute paths and paths escaping the repository are rejected; an empty value clears the key.',
+  },
+  {
+    key: 'documentation.instructionSyncStrategy',
+    group: 'Shared Repo (.oat/config.json)',
+    file: '.oat/config.json',
+    scope: 'shared repo',
+    type: 'enum',
+    defaultValue: DEFAULT_INSTRUCTION_SYNC_STRATEGY,
+    mutability: 'read/write',
+    owningCommand: `oat config set documentation.instructionSyncStrategy <${INSTRUCTION_SYNC_STRATEGIES.join('|')}>`,
+    description:
+      'How `oat instructions sync` keeps a CLAUDE.md beside each AGENTS.md, and what `oat instructions validate` checks. The `--strategy` flag overrides it for one run.',
   },
   {
     key: 'documentation.requireForProjectCompletion',
@@ -1206,6 +1227,7 @@ const DEFAULT_DEPENDENCIES: ConfigCommandDependencies = {
   readOatConfigForDefaultScopeRepair,
   readOatConfigForDocumentationExcludesRepair,
   readOatConfigForInstructionPointerExcludesRepair,
+  readOatConfigForInstructionSyncStrategyRepair,
   readOatConfigWithWarnings,
   writeOatConfig,
   readOatLocalConfig,
@@ -1397,6 +1419,7 @@ function parseExplainerValue(
 
 const WORKFLOW_ENUM_VALUES = {
   'projects.defaultScope': PROJECT_SCOPES,
+  'documentation.instructionSyncStrategy': INSTRUCTION_SYNC_STRATEGIES,
   'workflow.hillCheckpointDefault': ['every', 'final'],
   'workflow.postImplementSequence': ['wait', 'summary', 'pr', 'docs-pr'],
   'workflow.reviewExecutionModel': ['subagent', 'inline', 'fresh-session'],
@@ -2484,7 +2507,11 @@ async function setConfigValue(
         ? await dependencies.readOatConfigForInstructionPointerExcludesRepair(
             repoRoot,
           )
-        : await dependencies.readOatConfig(repoRoot);
+        : key === 'documentation.instructionSyncStrategy'
+          ? await dependencies.readOatConfigForInstructionSyncStrategyRepair(
+              repoRoot,
+            )
+          : await dependencies.readOatConfig(repoRoot);
 
   if (key.startsWith('documentation.')) {
     const doc = { ...config.documentation };
@@ -2511,6 +2538,11 @@ async function setConfigValue(
       } else {
         doc.instructionPointerExcludes = excludes;
       }
+    } else if (key === 'documentation.instructionSyncStrategy') {
+      doc.instructionSyncStrategy = parseWorkflowValue(
+        key,
+        rawValue,
+      ) as InstructionSyncStrategy;
     } else if (key === 'documentation.requireForProjectCompletion') {
       doc.requireForProjectCompletion =
         rawValue.trim().toLowerCase() === 'true';
@@ -3054,9 +3086,13 @@ async function removeFromSurface(
         ? await dependencies.readOatConfigForInstructionPointerExcludesRepair(
             repoRoot,
           )
-        : key === 'projects.defaultScope'
-          ? await dependencies.readOatConfigForDefaultScopeRepair(repoRoot)
-          : await dependencies.readOatConfig(repoRoot);
+        : key === 'documentation.instructionSyncStrategy'
+          ? await dependencies.readOatConfigForInstructionSyncStrategyRepair(
+              repoRoot,
+            )
+          : key === 'projects.defaultScope'
+            ? await dependencies.readOatConfigForDefaultScopeRepair(repoRoot)
+            : await dependencies.readOatConfig(repoRoot);
   const { next, removed } = removeConfigPath(
     sharedConfig as unknown as Record<string, unknown>,
     path,

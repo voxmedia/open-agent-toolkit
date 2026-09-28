@@ -1026,8 +1026,9 @@ describe('help output snapshots', () => {
       Validate AGENTS.md/CLAUDE.md sync integrity for the selected strategy
 
       Options:
-        --strategy <strategy>  Sync strategy (choices: "pointer", "symlink", "copy",
-                               default: "pointer")
+        --strategy <strategy>  Sync strategy to check (overrides
+                               documentation.instructionSyncStrategy) (choices:
+                               "pointer", "symlink", "copy")
         -h, --help             display help for command
 
       Global Options:
@@ -1053,8 +1054,9 @@ describe('help output snapshots', () => {
       Options:
         --dry-run              Preview sync changes without applying
         --force                Overwrite mismatched CLAUDE.md files
-        --strategy <strategy>  Sync strategy (choices: "pointer", "symlink", "copy",
-                               default: "pointer")
+        --strategy <strategy>  Sync strategy for this run (overrides
+                               documentation.instructionSyncStrategy) (choices:
+                               "pointer", "symlink", "copy")
         -h, --help             display help for command
 
       Global Options:

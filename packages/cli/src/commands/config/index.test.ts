@@ -5016,6 +5016,181 @@ describe('oat config', () => {
     });
   });
 
+  describe('documentation.instructionSyncStrategy', () => {
+    async function readShared(root: string): Promise<unknown> {
+      return JSON.parse(
+        await readFile(join(root, '.oat', 'config.json'), 'utf8'),
+      ) as unknown;
+    }
+
+    it('set, get, and unset round-trip each accepted strategy', async () => {
+      for (const strategy of ['pointer', 'symlink', 'copy']) {
+        const root = await createRepoRoot();
+        const { command, capture } = createHarness({ cwd: root });
+
+        await runCommand(command, [
+          'set',
+          'documentation.instructionSyncStrategy',
+          strategy,
+        ]);
+        expect(process.exitCode).toBe(0);
+        expect(capture.info[0]).toBe(
+          `documentation.instructionSyncStrategy=${strategy}`,
+        );
+        expect(await readShared(root)).toEqual({
+          version: 1,
+          documentation: { instructionSyncStrategy: strategy },
+        });
+
+        const get = createHarness({ cwd: root });
+        await runCommand(
+          get.command,
+          ['get', 'documentation.instructionSyncStrategy'],
+          ['--json'],
+        );
+        expect(get.capture.jsonPayloads[0]).toMatchObject({
+          key: 'documentation.instructionSyncStrategy',
+          value: strategy,
+          source: 'shared',
+        });
+
+        const unset = createHarness({ cwd: root });
+        await runCommand(
+          unset.command,
+          ['unset', 'documentation.instructionSyncStrategy'],
+          ['--json'],
+        );
+        expect(unset.capture.jsonPayloads[0]).toMatchObject({
+          status: 'ok',
+          key: 'documentation.instructionSyncStrategy',
+          removed: true,
+        });
+        expect(await readShared(root)).toEqual({ version: 1 });
+      }
+    });
+
+    it('get reports the built-in default while the key is unset', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(
+        command,
+        ['get', 'documentation.instructionSyncStrategy'],
+        ['--json'],
+      );
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        key: 'documentation.instructionSyncStrategy',
+        value: 'pointer',
+        source: 'default',
+      });
+    });
+
+    for (const value of ['none', 'bogus', '']) {
+      it(`set rejects ${JSON.stringify(value)} and leaves the file untouched`, async () => {
+        const root = await createRepoRoot();
+        await writeFile(
+          join(root, '.oat', 'config.json'),
+          `${JSON.stringify({ version: 1, documentation: { instructionSyncStrategy: 'copy' } })}\n`,
+          'utf8',
+        );
+        const { command, capture } = createHarness({ cwd: root });
+
+        await runCommand(command, [
+          'set',
+          'documentation.instructionSyncStrategy',
+          value,
+        ]);
+
+        expect(process.exitCode).toBe(1);
+        expect(capture.error[0]).toContain(
+          'Invalid value for documentation.instructionSyncStrategy: expected one of pointer | symlink | copy',
+        );
+        expect(await readShared(root)).toEqual({
+          version: 1,
+          documentation: { instructionSyncStrategy: 'copy' },
+        });
+      });
+    }
+
+    it('set repairs a malformed stored value instead of failing closed on it', async () => {
+      const root = await createRepoRoot();
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        `${JSON.stringify({ version: 1, documentation: { instructionSyncStrategy: 'Pointer' } })}\n`,
+        'utf8',
+      );
+      const { command } = createHarness({ cwd: root });
+
+      await runCommand(command, [
+        'set',
+        'documentation.instructionSyncStrategy',
+        'pointer',
+      ]);
+
+      expect(process.exitCode).toBe(0);
+      expect(await readShared(root)).toEqual({
+        version: 1,
+        documentation: { instructionSyncStrategy: 'pointer' },
+      });
+    });
+
+    it('unset removes a malformed stored value', async () => {
+      const root = await createRepoRoot();
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        `${JSON.stringify({ version: 1, documentation: { root: 'apps/docs', instructionSyncStrategy: 7 } })}\n`,
+        'utf8',
+      );
+      const { command } = createHarness({ cwd: root });
+
+      await runCommand(command, [
+        'unset',
+        'documentation.instructionSyncStrategy',
+      ]);
+
+      expect(process.exitCode).toBe(0);
+      expect(await readShared(root)).toEqual({
+        version: 1,
+        documentation: { root: 'apps/docs' },
+      });
+    });
+
+    it('refuses a non-shared surface like every other documentation key', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, [
+        'set',
+        'documentation.instructionSyncStrategy',
+        'copy',
+        '--local',
+      ]);
+
+      expect(capture.error[0]).toContain('structural key');
+      expect(process.exitCode).toBe(1);
+    });
+
+    it('describe surfaces the enum catalog entry', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, [
+        'describe',
+        'documentation.instructionSyncStrategy',
+      ]);
+
+      expect(capture.info[0]).toContain(
+        'Key: documentation.instructionSyncStrategy',
+      );
+      expect(capture.info[0]).toContain('Type: enum');
+      expect(capture.info[0]).toContain(
+        'Owning command: oat config set documentation.instructionSyncStrategy <pointer|symlink|copy>',
+      );
+      expect(process.exitCode).toBe(0);
+    });
+  });
+
   it('sets archive.wrapUpExportPath in config.json', async () => {
     const root = await createRepoRoot();
     const { command } = createHarness({ cwd: root });

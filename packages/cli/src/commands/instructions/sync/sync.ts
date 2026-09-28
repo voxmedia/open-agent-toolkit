@@ -11,9 +11,9 @@ import {
 } from '@commands/instructions/instructions.types';
 import {
   buildInstructionsPayload,
-  DEFAULT_INSTRUCTION_SYNC_STRATEGY,
   EXPECTED_CLAUDE_CONTENT,
   formatInstructionsReport,
+  readConfiguredInstructionSyncStrategy,
   resolveInstructionPointerExcludes,
   resolveInstructionSyncStrategy,
   scanInstructionFiles,
@@ -40,6 +40,7 @@ function defaultDependencies(): InstructionsSyncCommandDependencies {
   return {
     buildCommandContext,
     lstat,
+    readConfiguredInstructionSyncStrategy,
     readFile,
     removeFile: removeInstructionFile,
     resolveInstructionPointerExcludes,
@@ -346,6 +347,9 @@ export function createInstructionsSyncCommand(
     ...overrides,
   };
 
+  // `--strategy` has no Commander default: a filled-in default is
+  // indistinguishable from an explicit flag and would always hide
+  // `documentation.instructionSyncStrategy`.
   return new Command('sync')
     .description(
       'Repair AGENTS.md/CLAUDE.md sync drift using the selected strategy',
@@ -353,9 +357,10 @@ export function createInstructionsSyncCommand(
     .option('--dry-run', 'Preview sync changes without applying')
     .option('--force', 'Overwrite mismatched CLAUDE.md files')
     .addOption(
-      new Option('--strategy <strategy>', 'Sync strategy')
-        .choices([...INSTRUCTION_SYNC_STRATEGIES])
-        .default(DEFAULT_INSTRUCTION_SYNC_STRATEGY),
+      new Option(
+        '--strategy <strategy>',
+        'Sync strategy for this run (overrides documentation.instructionSyncStrategy)',
+      ).choices([...INSTRUCTION_SYNC_STRATEGIES]),
     )
     .action(
       async (
@@ -372,7 +377,10 @@ export function createInstructionsSyncCommand(
 
         try {
           const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
-          const strategy = resolveInstructionSyncStrategy(options.strategy);
+          const strategy = resolveInstructionSyncStrategy(
+            options.strategy,
+            await dependencies.readConfiguredInstructionSyncStrategy(repoRoot),
+          );
           const exclusions =
             await dependencies.resolveInstructionPointerExcludes(repoRoot);
           // Warned before any work: an operator whose opt-out silently matches
@@ -402,6 +410,7 @@ export function createInstructionsSyncCommand(
 
           const payload = buildInstructionsPayload({
             mode: dryRun ? 'dry-run' : 'apply',
+            strategy,
             entries: dryRun
               ? entries
               : getPostSyncEntries(entries, actions, strategy),

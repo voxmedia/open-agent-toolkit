@@ -6,8 +6,8 @@ import {
 } from '@commands/instructions/instructions.types';
 import {
   buildInstructionsPayload,
-  DEFAULT_INSTRUCTION_SYNC_STRATEGY,
   formatInstructionsReport,
+  readConfiguredInstructionSyncStrategy,
   resolveInstructionPointerExcludes,
   resolveInstructionSyncStrategy,
   scanInstructionFiles,
@@ -20,6 +20,7 @@ import { Command, Option } from 'commander';
 function defaultDependencies(): InstructionsValidateCommandDependencies {
   return {
     buildCommandContext,
+    readConfiguredInstructionSyncStrategy,
     resolveInstructionPointerExcludes,
     resolveProjectRoot,
     scanInstructionFiles,
@@ -34,24 +35,29 @@ export function createInstructionsValidateCommand(
     ...overrides,
   };
 
+  // `--strategy` has no Commander default; see `oat instructions sync`.
   return new Command('validate')
     .description(
       'Validate AGENTS.md/CLAUDE.md sync integrity for the selected strategy',
     )
     .addOption(
-      new Option('--strategy <strategy>', 'Sync strategy')
-        .choices([...INSTRUCTION_SYNC_STRATEGIES])
-        .default(DEFAULT_INSTRUCTION_SYNC_STRATEGY),
+      new Option(
+        '--strategy <strategy>',
+        'Sync strategy to check (overrides documentation.instructionSyncStrategy)',
+      ).choices([...INSTRUCTION_SYNC_STRATEGIES]),
     )
     .action(
       async (options: { strategy?: InstructionSyncStrategy }, command) => {
         const context = dependencies.buildCommandContext(
           readGlobalOptions(command),
         );
-        const strategy = resolveInstructionSyncStrategy(options.strategy);
 
         try {
           const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
+          const strategy = resolveInstructionSyncStrategy(
+            options.strategy,
+            await dependencies.readConfiguredInstructionSyncStrategy(repoRoot),
+          );
           const exclusions =
             await dependencies.resolveInstructionPointerExcludes(repoRoot);
           // Warned before any work: an operator whose opt-out silently matches
@@ -65,6 +71,7 @@ export function createInstructionsValidateCommand(
           });
           const payload = buildInstructionsPayload({
             mode: 'validate',
+            strategy,
             entries,
             actions: [],
             excludedPaths: exclusions.configured,
@@ -77,8 +84,10 @@ export function createInstructionsValidateCommand(
           } else {
             context.logger.info(formatInstructionsReport(payload, repoRoot));
             if (payload.status === 'drift') {
+              // Repeat the flag only when this run was given one: without it,
+              // a bare sync resolves the same configured or default strategy.
               const fixCommand =
-                strategy === DEFAULT_INSTRUCTION_SYNC_STRATEGY
+                options.strategy === undefined
                   ? 'Fix with: oat instructions sync'
                   : `Fix with: oat instructions sync --strategy ${strategy}`;
               context.logger.info(fixCommand);

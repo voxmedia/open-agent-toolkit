@@ -23,10 +23,12 @@ import type {
 import {
   buildInstructionsPayload,
   buildInstructionsSummary,
+  DEFAULT_INSTRUCTION_SYNC_STRATEGY,
   EXPECTED_CLAUDE_CONTENT,
   formatInstructionsReport,
   normalizeExcludedPaths,
   resolveInstructionPointerExcludes,
+  resolveInstructionSyncStrategy,
   scanInstructionFiles,
 } from './instructions.utils';
 
@@ -1247,6 +1249,7 @@ describe('instructions utils', () => {
 
     const payload = buildInstructionsPayload({
       mode: 'dry-run',
+      strategy: 'pointer',
       entries,
       actions,
     });
@@ -1266,6 +1269,7 @@ describe('instructions utils', () => {
   it('formats a readable report', () => {
     const payload = buildInstructionsPayload({
       mode: 'validate',
+      strategy: 'symlink',
       entries: [
         {
           agentsPath: null,
@@ -1281,7 +1285,18 @@ describe('instructions utils', () => {
 
     expect(output).toContain('instructions validate');
     expect(output).toContain('status: drift');
+    expect(output).toContain('strategy: symlink');
     expect(output).toContain('CLAUDE.md');
     expect(output).toContain('stray');
+  });
+
+  describe('resolveInstructionSyncStrategy', () => {
+    it('prefers the flag, then the configured strategy, then the default', () => {
+      expect(resolveInstructionSyncStrategy('symlink', 'copy')).toBe('symlink');
+      expect(resolveInstructionSyncStrategy(undefined, 'copy')).toBe('copy');
+      expect(resolveInstructionSyncStrategy(undefined, undefined)).toBe(
+        DEFAULT_INSTRUCTION_SYNC_STRATEGY,
+      );
+    });
   });
 });

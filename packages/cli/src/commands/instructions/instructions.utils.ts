@@ -9,6 +9,7 @@ import {
 import { dirname, join, posix, relative, resolve } from 'node:path';
 
 import {
+  DEFAULT_INSTRUCTION_SYNC_STRATEGY,
   readOatConfig,
   resolveDocumentationContentRoot,
 } from '@config/oat-config';
@@ -27,8 +28,7 @@ import type {
 } from './instructions.types';
 
 export const EXPECTED_CLAUDE_CONTENT = '@AGENTS.md\n';
-export const DEFAULT_INSTRUCTION_SYNC_STRATEGY: InstructionSyncStrategy =
-  'pointer';
+export { DEFAULT_INSTRUCTION_SYNC_STRATEGY };
 
 const ROOT_EXCLUDED_DIRECTORIES = new Set(['.git', '.oat', '.worktrees']);
 const GLOBAL_EXCLUDED_DIRECTORIES = new Set(['node_modules']);
@@ -44,6 +44,7 @@ const ROOT_EXCLUDED_DIRECTORY_CARVE_INS = new Map<string, string>([
 
 interface BuildInstructionsPayloadArgs {
   mode: InstructionsMode;
+  strategy: InstructionSyncStrategy;
   entries: InstructionEntry[];
   actions: InstructionActionRecord[];
   excludedPaths?: string[];
@@ -82,10 +83,30 @@ function normalizeLineEndings(content: string): string {
   return content.replaceAll('\r\n', '\n');
 }
 
+/**
+ * The effective strategy for one run: the `--strategy` flag, then the
+ * repository's `documentation.instructionSyncStrategy`, then the built-in
+ * default. The flag only ever overrides a single run; it never rewrites config.
+ */
 export function resolveInstructionSyncStrategy(
-  strategy?: InstructionSyncStrategy,
+  flagStrategy?: InstructionSyncStrategy,
+  configuredStrategy?: InstructionSyncStrategy,
 ): InstructionSyncStrategy {
-  return strategy ?? DEFAULT_INSTRUCTION_SYNC_STRATEGY;
+  return (
+    flagStrategy ?? configuredStrategy ?? DEFAULT_INSTRUCTION_SYNC_STRATEGY
+  );
+}
+
+/**
+ * Read `documentation.instructionSyncStrategy` from the shared config. A
+ * malformed value fails closed in the config normalizer rather than reading as
+ * unset, so a typo can never silently select the built-in default.
+ */
+export async function readConfiguredInstructionSyncStrategy(
+  repoRoot: string,
+): Promise<InstructionSyncStrategy | undefined> {
+  const config = await readOatConfig(repoRoot);
+  return config.documentation?.instructionSyncStrategy;
 }
 
 function getValidInstructionDetail(strategy: InstructionSyncStrategy): string {
@@ -822,6 +843,7 @@ function deriveInstructionsStatus(
 
 export function buildInstructionsPayload({
   mode,
+  strategy,
   entries,
   actions,
   excludedPaths,
@@ -838,6 +860,7 @@ export function buildInstructionsPayload({
   return {
     mode,
     status: deriveInstructionsStatus(normalizedEntries, normalizedActions),
+    strategy,
     summary: buildInstructionsSummary(normalizedEntries, normalizedActions),
     entries: normalizedEntries,
     actions: normalizedActions,
@@ -868,6 +891,7 @@ export function formatInstructionsReport(
   const lines = [
     `instructions ${payload.mode}`,
     `status: ${payload.status}`,
+    `strategy: ${payload.strategy}`,
     `summary: scanned=${payload.summary.scanned}, ok=${payload.summary.ok}, missing=${payload.summary.missing}, content_mismatch=${payload.summary.contentMismatch}, stray=${payload.summary.stray}, created=${payload.summary.created}, updated=${payload.summary.updated}, skipped=${payload.summary.skipped}`,
   ];
 

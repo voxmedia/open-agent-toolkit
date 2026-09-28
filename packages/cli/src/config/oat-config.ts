@@ -33,6 +33,41 @@ export {
   type WorkflowDispatchRouteTarget,
 } from './dispatch-matrix';
 
+/**
+ * The CLAUDE.md shim strategies `oat instructions sync` and
+ * `oat instructions validate` understand, and the values
+ * `documentation.instructionSyncStrategy` accepts.
+ *
+ * Declared here rather than in the instructions command so the config
+ * normalizer, the `oat config set` validator, and the commands share one list:
+ * a value the normalizer accepted but the commands did not understand would
+ * silently fall through to the built-in default.
+ */
+export const INSTRUCTION_SYNC_STRATEGIES = [
+  'pointer',
+  'symlink',
+  'copy',
+] as const;
+
+export type InstructionSyncStrategy =
+  (typeof INSTRUCTION_SYNC_STRATEGIES)[number];
+
+/**
+ * The strategy used when neither `--strategy` nor
+ * `documentation.instructionSyncStrategy` names one.
+ */
+export const DEFAULT_INSTRUCTION_SYNC_STRATEGY: InstructionSyncStrategy =
+  'pointer';
+
+export function isInstructionSyncStrategy(
+  value: unknown,
+): value is InstructionSyncStrategy {
+  return (
+    typeof value === 'string' &&
+    (INSTRUCTION_SYNC_STRATEGIES as readonly string[]).includes(value)
+  );
+}
+
 export interface OatDocumentationConfig {
   root?: string;
   tooling?: string;
@@ -52,6 +87,12 @@ export interface OatDocumentationConfig {
    * de-duplicated, and order-preserving.
    */
   instructionPointerExcludes?: string[];
+  /**
+   * How `oat instructions sync` keeps a CLAUDE.md beside each AGENTS.md. The
+   * `--strategy` flag overrides it for one run; when both are absent the
+   * built-in `DEFAULT_INSTRUCTION_SYNC_STRATEGY` applies.
+   */
+  instructionSyncStrategy?: InstructionSyncStrategy;
 }
 
 export interface OatGitConfig {
@@ -1569,6 +1610,36 @@ function normalizeInstructionPointerExcludes(
 }
 
 /**
+ * Parse `documentation.instructionSyncStrategy`.
+ *
+ * Fails closed like `projects.defaultScope`: a misspelled strategy must never
+ * read as unset, because unset means the built-in default, and the default
+ * decides whether `oat instructions sync` writes CLAUDE.md files. An absent key
+ * is "not configured"; any present value outside the accepted list is an error
+ * that names the `oat config set` repair.
+ */
+function normalizeInstructionSyncStrategy(
+  value: unknown,
+  configPath: string,
+): InstructionSyncStrategy | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (!isInstructionSyncStrategy(value)) {
+    const accepted = INSTRUCTION_SYNC_STRATEGIES.join('|');
+    throw new CliError(
+      `Invalid documentation.instructionSyncStrategy in ${configPath}: ${JSON.stringify(value)}. ` +
+        `Expected one of: ${INSTRUCTION_SYNC_STRATEGIES.join(', ')}. ` +
+        `Repair it with oat config set documentation.instructionSyncStrategy <${accepted}>.`,
+      2,
+    );
+  }
+
+  return value;
+}
+
+/**
  * Report a stored value whose type the normalizer cannot use.
  *
  * The scalar `documentation.*` branches accept only a non-empty string and have
@@ -1781,6 +1852,13 @@ function normalizeOatConfig(
     );
     if (instructionPointerExcludes.length > 0) {
       doc.instructionPointerExcludes = instructionPointerExcludes;
+    }
+    const instructionSyncStrategy = normalizeInstructionSyncStrategy(
+      parsed.documentation.instructionSyncStrategy,
+      configPath,
+    );
+    if (instructionSyncStrategy !== undefined) {
+      doc.instructionSyncStrategy = instructionSyncStrategy;
     }
     if (Object.keys(doc).length > 0) {
       next.documentation = doc;
@@ -2030,6 +2108,37 @@ export async function readOatConfigForInstructionPointerExcludesRepair(
     if (isRecord(parsed) && isRecord(parsed.documentation)) {
       const {
         instructionPointerExcludes: _invalidInstructionPointerExcludes,
+        ...documentation
+      } = parsed.documentation;
+      return normalizeOatConfig({ ...parsed, documentation }, configPath);
+    }
+    return normalizeOatConfig(parsed, configPath);
+  } catch (error) {
+    if (isMissingFileError(error)) {
+      return { ...DEFAULT_OAT_CONFIG };
+    }
+
+    throw error;
+  }
+}
+
+/**
+ * Read the shared config with a malformed
+ * `documentation.instructionSyncStrategy` dropped, so the
+ * `oat config set`/`unset` repair its validation error names can load the file
+ * it is repairing.
+ */
+export async function readOatConfigForInstructionSyncStrategyRepair(
+  repoRoot: string,
+): Promise<OatConfig> {
+  const configPath = getConfigPath(repoRoot);
+
+  try {
+    const raw = await readFile(configPath, 'utf8');
+    const parsed = parseJsonConfig(raw, configPath);
+    if (isRecord(parsed) && isRecord(parsed.documentation)) {
+      const {
+        instructionSyncStrategy: _invalidInstructionSyncStrategy,
         ...documentation
       } = parsed.documentation;
       return normalizeOatConfig({ ...parsed, documentation }, configPath);

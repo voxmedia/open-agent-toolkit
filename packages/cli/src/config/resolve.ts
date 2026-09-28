@@ -1,6 +1,7 @@
 import { isWorkflowDispatchCandidateLadder } from './dispatch-matrix';
 import {
   BUILTIN_EXEC_TARGETS,
+  DEFAULT_INSTRUCTION_SYNC_STRATEGY,
   isWorkflowPostImplementStructuredSequence,
   readOatConfig,
   readOatLocalConfig,
@@ -74,6 +75,9 @@ const DEFAULT_SHARED_CONFIG = {
     // "not set at this layer", so a configured array still wins.
     excludes: null,
     instructionPointerExcludes: null,
+    // The strategy `oat instructions sync` applies when neither `--strategy`
+    // nor this key names one, so `oat config get` reports what will happen.
+    instructionSyncStrategy: DEFAULT_INSTRUCTION_SYNC_STRATEGY,
     requireForProjectCompletion: false,
   },
   tools: {

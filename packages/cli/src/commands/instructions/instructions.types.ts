@@ -1,15 +1,15 @@
 import type { Dirent, Stats } from 'node:fs';
 
 import type { CommandContext, GlobalOptions } from '@app/command-context';
+import type { InstructionSyncStrategy } from '@config/oat-config';
 
-export const INSTRUCTION_SYNC_STRATEGIES = [
-  'pointer',
-  'symlink',
-  'copy',
-] as const;
-
-export type InstructionSyncStrategy =
-  (typeof INSTRUCTION_SYNC_STRATEGIES)[number];
+// One list shared with the `documentation.instructionSyncStrategy` config
+// normalizer and `oat config set`, so the commands can never accept a value
+// the config rejects or the reverse.
+export {
+  INSTRUCTION_SYNC_STRATEGIES,
+  type InstructionSyncStrategy,
+} from '@config/oat-config';
 
 export type InstructionStatus = 'ok' | 'missing' | 'content_mismatch' | 'stray';
 
@@ -49,6 +49,11 @@ export interface InstructionsSummary {
 export interface InstructionsJsonPayload {
   mode: InstructionsMode;
   status: InstructionsStatus;
+  /**
+   * The strategy this run applied or checked: `--strategy` when given, else
+   * `documentation.instructionSyncStrategy`, else the built-in default.
+   */
+  strategy: InstructionSyncStrategy;
   summary: InstructionsSummary;
   entries: InstructionEntry[];
   actions: InstructionActionRecord[];
@@ -132,6 +137,14 @@ export interface InstructionsScanDependencies {
 export interface InstructionsValidateCommandDependencies {
   buildCommandContext: (options: GlobalOptions) => CommandContext;
   resolveProjectRoot: (cwd: string) => Promise<string>;
+  /**
+   * The repository's configured `documentation.instructionSyncStrategy`, or
+   * undefined when the key is absent. Sync inherits it from this interface so
+   * both commands resolve the strategy through the same config read.
+   */
+  readConfiguredInstructionSyncStrategy: (
+    repoRoot: string,
+  ) => Promise<InstructionSyncStrategy | undefined>;
   /**
    * The single exclusion path both commands resolve through. Sync inherits it
    * from this interface rather than resolving its own, so validate can never

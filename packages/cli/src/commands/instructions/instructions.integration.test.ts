@@ -975,6 +975,107 @@ describe('instructions command integration', () => {
     });
   });
 
+  describe('configured instruction sync strategy', () => {
+    async function writeStrategyConfig(
+      root: string,
+      instructionSyncStrategy: unknown,
+    ): Promise<void> {
+      await mkdir(join(root, '.oat'), { recursive: true });
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        JSON.stringify(
+          { version: 1, documentation: { instructionSyncStrategy } },
+          null,
+          2,
+        ),
+        'utf8',
+      );
+    }
+
+    // Fails before the config-aware resolver: Commander filled `--strategy`
+    // with its own default, so the configured value could never be seen.
+    it('sync and validate apply and report the configured strategy with no flag', async () => {
+      const root = await createWorkspace();
+      tempDirs.push(root);
+      await writeStrategyConfig(root, 'copy');
+      await writeFile(join(root, 'AGENTS.md'), '# root instructions\n', 'utf8');
+
+      const dryRun = await runCli(
+        root,
+        ['instructions', 'sync', '--dry-run', '--json'],
+        ['--json'],
+      );
+      expect(dryRun.exitCode).toBe(0);
+      const dryRunPayload = JSON.parse(dryRun.stdout);
+      expect(dryRunPayload.strategy).toBe('copy');
+      expect(dryRunPayload.actions).toEqual([
+        expect.objectContaining({
+          type: 'create',
+          reason: 'missing CLAUDE.md hard copy',
+        }),
+      ]);
+
+      const validate = await runCli(
+        root,
+        ['instructions', 'validate', '--json'],
+        ['--json'],
+      );
+      expect(JSON.parse(validate.stdout).strategy).toBe('copy');
+    });
+
+    it('--strategy overrides the configured strategy for one run', async () => {
+      const root = await createWorkspace();
+      tempDirs.push(root);
+      await writeStrategyConfig(root, 'copy');
+      await writeFile(join(root, 'AGENTS.md'), '# root instructions\n', 'utf8');
+
+      const dryRun = await runCli(
+        root,
+        [
+          'instructions',
+          'sync',
+          '--dry-run',
+          '--json',
+          '--strategy',
+          'symlink',
+        ],
+        ['--json'],
+      );
+      expect(JSON.parse(dryRun.stdout).strategy).toBe('symlink');
+
+      const validate = await runCli(
+        root,
+        ['instructions', 'validate', '--json', '--strategy', 'symlink'],
+        ['--json'],
+      );
+      expect(JSON.parse(validate.stdout).strategy).toBe('symlink');
+
+      // The override is one run only: config is unchanged.
+      await expect(
+        readFile(join(root, '.oat', 'config.json'), 'utf8'),
+      ).resolves.toContain('"instructionSyncStrategy": "copy"');
+    });
+
+    it('fails closed on an unknown configured strategy instead of using the default', async () => {
+      const root = await createWorkspace();
+      tempDirs.push(root);
+      await writeStrategyConfig(root, 'Pointer');
+      await writeFile(join(root, 'AGENTS.md'), '# root instructions\n', 'utf8');
+
+      const sync = await runCli(root, ['instructions', 'sync']);
+      expect(sync.exitCode).toBe(2);
+      expect(sync.stderr + sync.stdout).toContain(
+        'Invalid documentation.instructionSyncStrategy',
+      );
+      await expect(lstat(join(root, 'CLAUDE.md'))).rejects.toMatchObject({
+        code: 'ENOENT',
+      });
+
+      const validate = await runCli(root, ['instructions', 'validate']);
+      expect(validate.exitCode).toBe(2);
+    });
+  });
+
   it('produces unchanged output when .oat/repo is absent', async () => {
     const root = await createWorkspace();
     tempDirs.push(root);
