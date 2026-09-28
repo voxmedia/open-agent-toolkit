@@ -12,7 +12,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_phase_recovery_policy:
   default_attempt_limit: 10
@@ -96,7 +96,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/332' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-27T14:29:05.687Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-28T17:01:59Z'
+oat_project_state_updated: '2026-09-28T17:13:13Z'
 oat_generated: false
 oat_project_recap:
   decision: generate
@@ -107,7 +107,7 @@ oat_post_implement_sequence:
   source: configured
   final_phase: p-rev1
   pre_approval: [summary, document, pr]
-  pre_approval_completed: [summary, document]
+  pre_approval_completed: [summary, document, pr]
   approval: pending
   approval_source: null
   post_approval: []
@@ -159,7 +159,7 @@ oat_implement_exit_gate:
 
 ## Current Phase
 
-Implementation - Revision 1 tasks complete; awaiting final review.
+Implementation — PR open; completion may run before or after merge.
 
 ## Artifacts
 
@@ -176,7 +176,8 @@ Implementation - Revision 1 tasks complete; awaiting final review.
 - ✓ Implementation tasks complete
 - ✓ PR created
 - ✓ Revision 1 tasks complete
-- ⧗ Awaiting final review
+- ✓ PR #332 title and body refreshed for Revision 1
+- ⧗ Awaiting human review
 
 ## Blockers
 
