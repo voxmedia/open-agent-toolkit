@@ -1,7 +1,7 @@
 ---
 id: BL-260904-stabilize-the-collection
 title: Stabilize the collection-detach engine integration test
-status: open
+status: closed
 priority: low
 scope: task
 scope_estimate: S
@@ -12,7 +12,7 @@ labels:
   - collections
 assignee: null
 created: 2026-09-04T03:52:05.890Z
-updated: 2026-09-07T01:13:05Z
+updated: '2026-09-28T10:24:49Z'
 associated_issues: []
 external_plans: []
 ---

@@ -1,7 +1,7 @@
 ---
 id: BL-260927-name-only-installed-pack
 title: Name only installed pack locations in the OAT tools guidance block
-status: open
+status: closed
 priority: low
 scope: task
 scope_estimate: S
@@ -11,7 +11,7 @@ labels:
   - user-scope
 assignee: null
 created: 2026-09-27T03:35:38.090Z
-updated: 2026-09-27T03:35:38.090Z
+updated: '2026-09-28T10:24:47Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/323

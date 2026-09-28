@@ -1,7 +1,7 @@
 ---
 id: BL-260927-validate-recon-worker
 title: Validate recon-worker assignment envelopes deterministically before launch
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: S
@@ -11,7 +11,7 @@ labels:
   - dispatch
 assignee: null
 created: 2026-09-27T03:35:37.678Z
-updated: 2026-09-27T03:35:37.678Z
+updated: '2026-09-28T10:24:49Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/295

@@ -1,7 +1,7 @@
 ---
 id: BL-260903-close-manual-only-agents-md
 title: Close manual-only AGENTS.md refresh loop
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: M
@@ -12,7 +12,7 @@ labels:
   - residue
 assignee: null
 created: 2026-09-03T00:56:30.158Z
-updated: 2026-09-27T03:40:00Z
+updated: '2026-09-28T10:24:47Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/322

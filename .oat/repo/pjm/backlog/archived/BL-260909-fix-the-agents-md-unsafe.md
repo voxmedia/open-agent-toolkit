@@ -1,7 +1,7 @@
 ---
 id: BL-260909-fix-the-agents-md-unsafe
 title: Fix the agents-md unsafe-directory test race under parallel turbo
-status: open
+status: closed
 priority: low
 scope: task
 scope_estimate: XS
@@ -11,7 +11,7 @@ labels:
   - wave-7-followup
 assignee: null
 created: 2026-09-09T08:35:42.059Z
-updated: 2026-09-09T11:56:51.000Z
+updated: '2026-09-28T10:24:47Z'
 associated_issues: []
 external_plans: []
 ---

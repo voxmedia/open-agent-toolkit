@@ -1,7 +1,7 @@
 ---
 id: BL-260909-give-packages-control-plane
 title: Give packages/control-plane a check script so its formatting is CI-gated
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: XS
@@ -12,7 +12,7 @@ labels:
   - wave-7-followup
 assignee: null
 created: 2026-09-09T08:35:44.852Z
-updated: 2026-09-09T12:32:55.000Z
+updated: '2026-09-28T10:24:49Z'
 associated_issues: []
 external_plans: []
 ---

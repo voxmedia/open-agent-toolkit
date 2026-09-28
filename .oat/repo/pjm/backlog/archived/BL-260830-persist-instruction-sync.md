@@ -1,7 +1,7 @@
 ---
 id: BL-260830-persist-instruction-sync
 title: Persist instruction sync strategy in config and init
-status: open
+status: closed
 priority: medium
 scope: feature
 scope_estimate: M
@@ -13,7 +13,7 @@ labels:
   - legacy-promoted
 assignee: null
 created: 2026-08-30T22:30:53.128Z
-updated: 2026-09-28T00:44:49.000Z
+updated: '2026-09-28T10:24:48Z'
 associated_issues: []
 external_plans: []
 ---

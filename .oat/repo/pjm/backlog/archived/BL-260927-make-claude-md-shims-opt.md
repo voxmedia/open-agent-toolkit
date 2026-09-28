@@ -1,7 +1,7 @@
 ---
 id: BL-260927-make-claude-md-shims-opt
 title: Make CLAUDE.md shims opt-in now that Claude Code reads AGENTS.md
-status: open
+status: closed
 priority: high
 scope: feature
 scope_estimate: M
@@ -12,7 +12,7 @@ labels:
   - sync
 assignee: null
 created: 2026-09-27T13:53:11.407Z
-updated: 2026-09-27T13:53:11.407Z
+updated: '2026-09-28T10:24:47Z'
 associated_issues: []
 external_plans: []
 ---

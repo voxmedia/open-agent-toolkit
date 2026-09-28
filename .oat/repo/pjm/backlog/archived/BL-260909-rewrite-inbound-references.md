@@ -1,7 +1,7 @@
 ---
 id: BL-260909-rewrite-inbound-references
 title: Rewrite inbound references when oat backlog archive moves an item
-status: open
+status: closed
 priority: low
 scope: task
 scope_estimate: S
@@ -11,7 +11,7 @@ labels:
   - wave-7-followup
 assignee: null
 created: 2026-09-09T10:55:13.310Z
-updated: 2026-09-09T10:55:13.310Z
+updated: '2026-09-28T10:24:49Z'
 associated_issues: []
 external_plans: []
 ---

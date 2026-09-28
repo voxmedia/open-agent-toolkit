@@ -1,7 +1,7 @@
 ---
 id: BL-260909-repair-the-bare-fences-that
 title: Repair the bare fences that swallow headings outside .agents/skills
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: S
@@ -12,7 +12,7 @@ labels:
   - wave-7-followup
 assignee: null
 created: 2026-09-09T04:30:47.401Z
-updated: 2026-09-09T04:30:47.401Z
+updated: '2026-09-28T10:24:48Z'
 associated_issues: []
 external_plans: []
 ---

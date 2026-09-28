@@ -1,7 +1,7 @@
 ---
 id: BL-260907-record-absorbed-projects
 title: Record absorbed projects and backlog items for Lite consolidations
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: S
@@ -12,7 +12,7 @@ labels:
   - wave-5-followup
 assignee: null
 created: 2026-09-07T14:05:44.959Z
-updated: 2026-09-07T14:05:44.959Z
+updated: '2026-09-28T10:24:48Z'
 associated_issues: []
 external_plans: []
 ---
