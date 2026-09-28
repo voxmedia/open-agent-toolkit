@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-27
-oat_current_task_id: p01-t08
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -38,7 +38,7 @@ oat_generated: false
 
 ## Phase 1: AGENTS.md guidance
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-09-27
 
 ### Task p01-t01: Give each unsafe-directory variant its own outside directory
@@ -99,8 +99,8 @@ oat_generated: false
 
 ## Phase 2: CLAUDE.md shims
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-09-28
 
 ### Task p02-t01: Persist a configurable instruction sync strategy
 
@@ -282,6 +282,12 @@ oat_generated: false
   `ENOTDIR`, `EMLINK` open errors report an identity change), L3
   (`oat tools guidance` with no packs prints a note; `--json` status
   `no-packs`); 2557 tests green.
+- Phase gate (`codex-6-sol-xhigh`, inline Codex runtime, `exit_nonzero_on: high`):
+  `reviews/archived/p01-review-2026-09-28T001719Z.md` status `ok`, receive-eligible, 0 Critical/High, 1
+  Medium. Judgment sweep: M1 (concurrent invocations can append the same
+  absent block twice, leaving duplicate markers that block later runs)
+  deferred to final; see Deferred Findings (Medium).
+- Phase p01 outcome: pass after 2 fix rounds (p01-t07, p01-t08); 8/8 tasks.
 - Implementer-reported deviations: evidence lives in commit bodies (root owns
   `implementation.md`); the e2e legacy-workflows-block cases stay
   `manual-required` (control (f)); no test pinned oat-doctor 2.0.1.
@@ -345,6 +351,17 @@ both attempts; every finding was resolved in `plan.md`:
 Attempts are exhausted, so plan readiness is an operator decision. Operator
 decision (2026-09-27): proceed to implementation with the findings resolved in
 the plan.
+
+## Deferred Findings (Medium)
+
+- p01 gate M1 (`reviews/archived/p01-review-2026-09-28T001719Z.md`): two concurrent guidance invocations
+  can both pass the absent-block check and append the same managed block
+  twice; the duplicate markers make later runs return `blocked` until the file
+  is repaired by hand. Deferred because a correct fix needs cross-process
+  coordination on `AGENTS.md` (a lock file plus a re-read under the lock),
+  which is larger than a sweep fix; the pre-wave behavior never wrote an
+  existing file, and concurrent `oat` guidance runs against one checkout are
+  rare. Resurface at final review; if not fixed in-wave, file a backlog item.
 
 ## Deviations from Plan / Design
 
