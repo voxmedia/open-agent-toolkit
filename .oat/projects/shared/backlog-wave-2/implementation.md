@@ -28,11 +28,11 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 8     | 8/8       |
 | Phase 2 | complete    | 8     | 8/8       |
-| Phase 3 | in_progress | 3     | 0/3       |
+| Phase 3 | in_progress | 3     | 3/3       |
 | Phase 4 | pending     | 2     | 0/2       |
 | Phase 5 | pending     | 6     | 0/6       |
 
-**Total:** 16/27 tasks completed
+**Total:** 19/27 tasks completed
 
 ---
 
@@ -165,22 +165,22 @@ oat_generated: false
 
 ### Task p03-t01: Route quick-mode discovery rows straight to quick-start
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 776d80724
 
 ---
 
 ### Task p03-t02: Record absorbed projects in Lite consolidations
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 15b54a918 (+ recovery e4a7c7219)
 
 ---
 
 ### Task p03-t03: Commit phase bookkeeping before per-phase review dispatch
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 2938214b8
 
 ---
 
@@ -383,6 +383,34 @@ oat_generated: false
   history.
 - Phase p02 outcome: pass after 1 recovery (bw2-p02-rec-1) and 2 fix rounds
   (p02-t07, p02-t08); 8/8 tasks.
+
+### Phase p03 dispatch
+
+- Request `bw2-p03-impl-1`: accepted, returned `DONE_WITH_CONCERNS` (one
+  recovered defect); target `oat-phase-implementer-claude-claude-opus-5-5-medium`;
+  commits `776d80724` (t01), `15b54a918` (t02), `e4a7c7219` (recovery),
+  `2938214b8` (t03); phase verification pass (888 vitest, 37 implement node
+  tests, skill bumps, validate-skills, docs check, type-check). `Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-medium`
+- Implementer notes: routing rows pinned by a dedicated row-parsing test (the
+  load-contract matrix covers prose only); p03-t03 sweep added the Step 7a push
+  anchor to `synced-bookkeeping-sites.json` and moved the staging-block count
+  3 -> 4; BL-260829 stays open with its live-observation note; BL-260711 notes
+  the relationship.
+
+### Recovery Event bw2-p03-rec-1
+
+- Phase/task: p03 / p03-t02
+- Original request: bw2-p03-impl-1
+- Original commit: 15b54a918
+- Defect class: test
+- Discovered by: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/named-skill-load-contract.test.ts` (p03-t03 transition run)
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: oat-phase-implementer-claude-claude-opus-5-5-medium
+- Recovery commit: e4a7c7219
+- Verification: focused 34 and phase 882 passing before and after commit
+- Reason: a new Lite sentence used a load-contract execution verb ("use"); reworded without changing meaning. Root validated the committed `completed` marker and cleared it (`used_attempts: 1`, `pending_attempt: null`).
 
 ## Implementation Log
 
