@@ -1719,6 +1719,30 @@ external plan citing it in the template's code-span form.
 
 ---
 
+### Task p05-t10: (review) Keep moved-item code spans intact and rebase query links
+
+Source: `reviews/archived/p05-review-2026-09-28T111050Z.md` (phase gate
+attempt 2, passing; judgment sweep, addressed now).
+
+**Step 1: Fix (failing-first)**
+
+- M1: apply the moved-item reference-definition rebase to prose segments only;
+  a multiline inline code span containing a reference-looking line is left
+  unchanged.
+- L1: separate path, query, and anchor before the existence check so
+  `./sibling.md?raw=1` inline links and definitions are rebased.
+
+**Step 2: Verify**
+
+Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/backlog`
+and type-check.
+
+**Step 3: Commit**
+
+`fix(p05-t10): keep moved-item code spans intact and rebase query links`
+
+---
+
 ## PR Requirements
 
 The release workflow (`.github/workflows/release.yml`) publishes a fixed body
@@ -1767,7 +1791,7 @@ title itself:
 | p04    | code     | fixes_completed | 2026-09-28 | reviews/archived/p04-review-2026-09-28T025845Z.md           | 7342fc69d8e9ee79929221a885d56a8e63a24f87 | auto       | -                 |
 | p05    | code     | fixes_completed | 2026-09-28 | reviews/archived/p05-review-2026-09-28T104612Z.md           | 3c64d9e225a789e50caa1ba4edb153e943331365 | gate       | codex-6-sol-xhigh |
 | p05    | code     | fixes_completed | 2026-09-28 | reviews/archived/p05-review-2026-09-28T105839Z.md           | 7085ab58146ade146e41617e3cdef15b0b9694d9 | auto       | -                 |
-| p05    | code     | received        | 2026-09-28 | reviews/p05-review-2026-09-28T111050Z.md                    | 3a38ce1a00570619de6bf0ff3b068138d8915c56 | gate       | codex-6-sol-xhigh |
+| p05    | code     | passed          | 2026-09-28 | reviews/archived/p05-review-2026-09-28T111050Z.md           | 3a38ce1a00570619de6bf0ff3b068138d8915c56 | gate       | codex-6-sol-xhigh |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
@@ -1820,9 +1844,9 @@ in `implementation.md`). Phase gates and the final review still run.
 - Phase 2: 8 tasks - CLAUDE.md shims
 - Phase 3: 5 tasks - Lifecycle skill routing and bookkeeping
 - Phase 4: 7 tasks - Agent roles and recon validation
-- Phase 5: 9 tasks - CI and backlog tooling, release fan-in
+- Phase 5: 10 tasks - CI and backlog tooling, release fan-in
 
-**Total: 37 tasks**
+**Total: 38 tasks**
 
 Ready for code review and merge.
 

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-27
-oat_current_task_id: p05-t09
+oat_current_task_id: p05-t10
 oat_generated: false
 ---
 
@@ -30,9 +30,9 @@ oat_generated: false
 | Phase 2 | complete    | 8     | 8/8       |
 | Phase 3 | complete    | 5     | 5/5       |
 | Phase 4 | complete    | 7     | 7/7       |
-| Phase 5 | in_progress | 9     | 9/9       |
+| Phase 5 | in_progress | 10    | 9/10      |
 
-**Total:** 37/37 tasks completed
+**Total:** 37/38 tasks completed
 
 ---
 
@@ -317,6 +317,13 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** fbd0d5b16
+
+---
+
+### Task p05-t10: (review) Keep moved-item code spans intact and rebase query links
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -661,6 +668,10 @@ oat_generated: false
   already-archived items still have code-span citations in the repository
   (re-running archive on them would repoint via the retry path; out of scope,
   noted for the PR); the Definition of Done is re-run at closeout.
+
+- Phase gate attempt 2 (`codex-6-sol-xhigh`): `reviews/archived/p05-review-2026-09-28T111050Z.md` status
+  `ok` (0 Critical/High), 1 Medium, 1 Low; judgment sweep: both addressed now
+  in `p05-t10`, no re-gate.
 
 ### PR Requirements (hand-off to oat-project-pr-final)
 
