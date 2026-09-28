@@ -25,6 +25,7 @@ Instruction sync is currently project-only.
 - It scans the current repository recursively.
 - It supports nested directories all the way down the tree.
 - It skips provider-irrelevant or local-only roots such as `.git`, `.oat`, `.worktrees`, and `node_modules`.
+- It stops at nested git checkouts: any directory below the root that holds its own `.git` (a directory, or the gitdir file of a submodule or linked worktree such as `.claude/worktrees/<name>`) is a separate repository that its own `oat instructions` run owns. Nothing inside it is scanned, removed, or warned about.
 - Exception: `.oat/repo/**` is scanned even though the rest of `.oat/` is skipped, so the curated `AGENTS.md` files there (repo root guidance, `pjm/`, `reference/`) are managed and validated like any other directory. The rest of `.oat/` (`templates/`, `projects/`, `sync/`) stays excluded.
 - It skips the documentation content tree by default, and any path you add to `documentation.instructionPointerExcludes`. See [Documentation trees](#documentation-trees) below.
 - It does not scan user-level provider roots such as `~/.claude` in this release.
@@ -226,9 +227,15 @@ exact shapes:
 
 Everything else is kept and reported as `unmanaged`: a hand-written or edited
 `CLAUDE.md`, a pointer with extra lines or trailing spaces, a symlink to any
-other file, `.claude/CLAUDE.md`, and `CLAUDE.local.md` (which the scan never
-treats as a shim). A `CLAUDE.md` inside the documentation content tree or an
-excluded directory is never touched.
+other file, and `.claude/CLAUDE.md`. A `CLAUDE.md` that the sibling
+`AGENTS.md` resolves to (the Claude-first `ln -s CLAUDE.md AGENTS.md` layout,
+or a hard link) holds the only copy of the instructions, so it is never
+treated as a shim of any shape; and a copy is only ever recognized against a
+distinct regular `AGENTS.md`. `CLAUDE.local.md` is never touched and never
+scanned as a shim; it is reported only through the
+[leftover warning](#leftover-claudemd-warnings). A `CLAUDE.md` inside the
+documentation content tree, an excluded directory, or a nested git checkout is
+never touched.
 
 Removal also fails closed at apply time. Immediately before deleting, sync
 re-checks the file: it must still be the same file the scan saw (same device
@@ -242,8 +249,11 @@ so you can rerun it.
 Under `none`, after sync (and on every `validate`) OAT reports each remaining
 `CLAUDE.md`, `.claude/CLAUDE.md`, and `CLAUDE.local.md` anywhere in the
 repository with a warning: while that file exists, Claude Code's default
-`agents-md` mode ignores every `AGENTS.md` in the project. The warning names
-exactly two ways out:
+`agents-md` mode ignores every `AGENTS.md` in the project. For a file at the
+root (including `.claude/CLAUDE.md` and `CLAUDE.local.md` there) that holds for
+every session; for a file in a subdirectory it holds for sessions started in
+that directory or below, and the warning says so. The warning names exactly
+two ways out:
 
 - remove the file; or
 - set `documentation.instructionSyncStrategy` in `.oat/config.json` to a shim
@@ -254,7 +264,7 @@ This check is a separate, read-only walk of the whole repository. It
 deliberately ignores `documentation.root` and
 `documentation.instructionPointerExcludes`, which only limit what OAT may
 change, because Claude Code's own walk does not honor them. Only `.git`,
-`node_modules`, and the root `.worktrees` are skipped.
+`node_modules`, the root `.worktrees`, and nested git checkouts are skipped.
 
 Warnings go to stderr in human mode and to the `warnings` array under `--json`
 (each item has `code: "claude_md_hides_agents_md"`, a repository-relative
@@ -312,7 +322,9 @@ Opt into a shim strategy when your contributors need `CLAUDE.md`:
 - the plugin's documented gaps matter to you: nested `AGENTS.md` files attach
   only on a text file `Read` (not on `@`-mentions, IDE selections, or
   notebook, image, or PDF reads), and `--add-dir` directories contribute no
-  `AGENTS.md`, where `CLAUDE.md` shims load in all of those cases.
+  `AGENTS.md`, where Claude Code's own `CLAUDE.md` loading covers those cases
+  (for `--add-dir`, only when `CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1`
+  is set).
 
 ## When `--force` Is Required
 

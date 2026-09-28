@@ -67,7 +67,7 @@ when a same-name canonical skill exists; rename one package before retrying.
 
 ## `instructions sync` warns that a `CLAUDE.md` makes Claude Code ignore every `AGENTS.md`
 
-- Under the default `none` strategy, any remaining `CLAUDE.md`, `.claude/CLAUDE.md`, or `CLAUDE.local.md` makes Claude Code's `agents-md` plugin stand down for the whole project.
+- Under the default `none` strategy, a remaining `CLAUDE.md`, `.claude/CLAUDE.md`, or `CLAUDE.local.md` makes Claude Code's `agents-md` plugin stand down: for every session when the file is at the repository root, and for sessions started in its directory or below when it is in a subdirectory.
 - Either remove the named file, or set `documentation.instructionSyncStrategy` to a shim strategy and rerun `oat instructions sync` to add shims everywhere.
 - Sync never deletes a hand-written or modified `CLAUDE.md` itself; see [Instruction Sync](../provider-sync/instruction-sync.md#leftover-claudemd-warnings).
 - If a broken or unreadable instruction path is reported, fix the underlying file or symlink target first; sync will intentionally skip manual-repair cases instead of forcing recovery.

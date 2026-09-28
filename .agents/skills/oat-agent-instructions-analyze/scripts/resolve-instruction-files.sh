@@ -10,7 +10,7 @@
 #
 # File patterns per provider:
 #   agents_md → **/AGENTS.md
-#   claude    → **/CLAUDE.md, .claude/rules/*.md
+#   claude    → **/CLAUDE.md, **/CLAUDE.local.md, .claude/rules/*.md
 #   cursor    → .cursor/rules/*.mdc, .cursor/rules/*.md
 #   copilot   → .github/copilot-instructions.md, .github/instructions/*.instructions.md
 #   cline     → .cline/rules/*
@@ -58,8 +58,9 @@ discover_agents_md() {
 }
 
 discover_claude() {
-  # CLAUDE.md files
-  find_exclude -name 'CLAUDE.md' | while read -r f; do
+  # CLAUDE.md and personal CLAUDE.local.md files (either one makes Claude
+  # Code's default agents-md mode ignore AGENTS.md)
+  find_exclude -name 'CLAUDE.md' -o -name 'CLAUDE.local.md' | while read -r f; do
     local rel="${f#"$REPO_ROOT"/}"
     printf 'claude\t%s\n' "$rel"
   done

@@ -1,4 +1,5 @@
 import {
+  link,
   lstat,
   mkdir,
   mkdtemp,
@@ -1527,6 +1528,228 @@ describe('instructions command integration', () => {
           }),
         ]);
       });
+      it('keeps a planned copy whose AGENTS.md became a symlink to it', async () => {
+        const root = await createWorkspace();
+        tempDirs.push(root);
+        await writePair(root, 'pkg', '# pkg notes\n', '# pkg notes\n');
+        const target = join(root, 'pkg', 'CLAUDE.md');
+        const agents = join(root, 'pkg', 'AGENTS.md');
+
+        // Planned as a byte-identical copy; before removal AGENTS.md is
+        // replaced by a link to CLAUDE.md, so CLAUDE.md now holds the only
+        // copy of the instructions. The re-check must not let it compare
+        // with itself.
+        const { payload } = await syncWithChange(root, target, async () => {
+          await rm(agents);
+          await symlink('CLAUDE.md', agents);
+        });
+
+        await expect(readFile(target, 'utf8')).resolves.toBe('# pkg notes\n');
+        await expect(readFile(agents, 'utf8')).resolves.toBe('# pkg notes\n');
+        expect(payload.actions).toEqual([
+          expect.objectContaining({ type: 'skip', target, result: 'skipped' }),
+        ]);
+      });
+    });
+
+    describe('AGENTS.md that resolves to CLAUDE.md', () => {
+      async function writeLinkedPair(
+        root: string,
+        directory: string,
+        claude: string,
+        makeAgents: (dir: string) => Promise<void>,
+      ): Promise<void> {
+        const dir = join(root, directory);
+        await mkdir(dir, { recursive: true });
+        await writeFile(join(dir, 'CLAUDE.md'), claude, 'utf8');
+        await makeAgents(dir);
+      }
+
+      const linkToClaude = (dir: string) =>
+        symlink('CLAUDE.md', join(dir, 'AGENTS.md'));
+
+      // The Claude-first layout (`ln -s CLAUDE.md AGENTS.md`): CLAUDE.md is
+      // the only copy of the instructions and must never be deleted.
+      it('keeps a hand-written CLAUDE.md that AGENTS.md links to, at the command level', async () => {
+        const root = await createWorkspace();
+        tempDirs.push(root);
+        await writeLinkedPair(root, '.', '# real instructions\n', linkToClaude);
+        await writeLinkedPair(
+          root,
+          'pkg',
+          '# pkg instructions\n',
+          linkToClaude,
+        );
+
+        const validate = await runCli(
+          root,
+          ['instructions', 'validate', '--json'],
+          ['--json'],
+        );
+        expect(validate.exitCode).toBe(0);
+        const validatePayload = JSON.parse(validate.stdout);
+        expect(validatePayload.summary).toMatchObject({
+          managedShim: 0,
+          unmanaged: 2,
+        });
+
+        const sync = await runCli(
+          root,
+          ['instructions', 'sync', '--json'],
+          ['--json'],
+        );
+        expect(sync.exitCode).toBe(0);
+        const payload = JSON.parse(sync.stdout);
+        expect(payload.actions).toEqual([]);
+        for (const entry of payload.entries) {
+          expect(entry.status).toBe('unmanaged');
+          expect(entry.detail).toContain(
+            'AGENTS.md resolves to this CLAUDE.md',
+          );
+        }
+        expect(
+          payload.warnings.map((warning: { path: string }) => warning.path),
+        ).toEqual(['CLAUDE.md', 'pkg/CLAUDE.md']);
+        await expect(readFile(join(root, 'CLAUDE.md'), 'utf8')).resolves.toBe(
+          '# real instructions\n',
+        );
+        await expect(
+          readFile(join(root, 'pkg', 'AGENTS.md'), 'utf8'),
+        ).resolves.toBe('# pkg instructions\n');
+      });
+
+      it('keeps a pointer-shaped CLAUDE.md that AGENTS.md links to', async () => {
+        const root = await createWorkspace();
+        tempDirs.push(root);
+        await writeLinkedPair(
+          root,
+          'pkg',
+          EXPECTED_CLAUDE_CONTENT,
+          linkToClaude,
+        );
+
+        const sync = await runCli(
+          root,
+          ['instructions', 'sync', '--json'],
+          ['--json'],
+        );
+        expect(JSON.parse(sync.stdout).actions).toEqual([]);
+        await expect(
+          readFile(join(root, 'pkg', 'CLAUDE.md'), 'utf8'),
+        ).resolves.toBe(EXPECTED_CLAUDE_CONTENT);
+      });
+
+      it('keeps a CLAUDE.md that is a hard link of AGENTS.md', async () => {
+        const root = await createWorkspace();
+        tempDirs.push(root);
+        await writeLinkedPair(root, 'pkg', '# shared inode\n', (dir) =>
+          link(join(dir, 'CLAUDE.md'), join(dir, 'AGENTS.md')),
+        );
+
+        const sync = await runCli(
+          root,
+          ['instructions', 'sync', '--json'],
+          ['--json'],
+        );
+        expect(JSON.parse(sync.stdout).actions).toEqual([]);
+        await expect(
+          readFile(join(root, 'pkg', 'CLAUDE.md'), 'utf8'),
+        ).resolves.toBe('# shared inode\n');
+      });
+
+      it('compares the copy shape only against a distinct regular AGENTS.md', async () => {
+        const root = await createWorkspace();
+        tempDirs.push(root);
+        await mkdir(join(root, 'shared'), { recursive: true });
+        await writeFile(join(root, 'shared', 'NOTES.md'), '# shared\n');
+        // AGENTS.md is a link elsewhere; CLAUDE.md has identical bytes but is
+        // not provably an OAT copy, so it is kept.
+        await writeLinkedPair(root, 'pkg', '# shared\n', (dir) =>
+          symlink('../shared/NOTES.md', join(dir, 'AGENTS.md')),
+        );
+
+        const sync = await runCli(
+          root,
+          ['instructions', 'sync', '--json'],
+          ['--json'],
+        );
+        expect(JSON.parse(sync.stdout).actions).toEqual([]);
+        await expect(
+          readFile(join(root, 'pkg', 'CLAUDE.md'), 'utf8'),
+        ).resolves.toBe('# shared\n');
+      });
+
+      it('still removes the reverse shape, a CLAUDE.md symlink to a regular AGENTS.md', async () => {
+        const root = await createWorkspace();
+        tempDirs.push(root);
+        await writePair(root, 'pkg', { link: 'AGENTS.md' });
+
+        const sync = await runCli(root, ['instructions', 'sync']);
+        expect(sync.exitCode).toBe(0);
+        await expect(pathExists(join(root, 'pkg', 'CLAUDE.md'))).resolves.toBe(
+          false,
+        );
+        await expect(
+          readFile(join(root, 'pkg', 'AGENTS.md'), 'utf8'),
+        ).resolves.toBe('# pkg instructions\n');
+      });
+    });
+
+    describe('nested git checkouts', () => {
+      it('never plans, removes, or warns about CLAUDE.md inside a nested checkout', async () => {
+        const root = await createWorkspace();
+        tempDirs.push(root);
+        // A Claude Code worktree (gitdir file) and a submodule-style checkout
+        // (.git directory), each with a managed pointer and a hand-written file.
+        await writePair(root, '.claude/worktrees/wt', EXPECTED_CLAUDE_CONTENT);
+        await writeFile(
+          join(root, '.claude', 'worktrees', 'wt', '.git'),
+          'gitdir: /elsewhere/.git/worktrees/wt\n',
+        );
+        await writePair(root, 'sub', EXPECTED_CLAUDE_CONTENT);
+        await mkdir(join(root, 'sub', '.git'), { recursive: true });
+        await writePair(root, 'sub/deeper', '# hand-written\n');
+        // A sibling outside any nested checkout is still managed.
+        await writePair(root, 'pkg', EXPECTED_CLAUDE_CONTENT);
+
+        const dryRun = await runCli(
+          root,
+          ['instructions', 'sync', '--dry-run', '--json'],
+          ['--json'],
+        );
+        const dryRunPayload = JSON.parse(dryRun.stdout);
+        expect(
+          dryRunPayload.actions.map((action: { target: string }) =>
+            action.target.slice(root.length + 1),
+          ),
+        ).toEqual(['pkg/CLAUDE.md']);
+        expect(dryRunPayload).not.toHaveProperty('warnings');
+
+        const apply = await runCli(
+          root,
+          ['instructions', 'sync', '--json'],
+          ['--json'],
+        );
+        expect(apply.exitCode).toBe(0);
+        expect(JSON.parse(apply.stdout)).not.toHaveProperty('warnings');
+        for (const path of [
+          '.claude/worktrees/wt/CLAUDE.md',
+          'sub/CLAUDE.md',
+          'sub/deeper/CLAUDE.md',
+        ]) {
+          await expect(pathExists(join(root, path))).resolves.toBe(true);
+        }
+
+        const validate = await runCli(
+          root,
+          ['instructions', 'validate', '--json'],
+          ['--json'],
+        );
+        expect(validate.exitCode).toBe(0);
+        const validatePayload = JSON.parse(validate.stdout);
+        expect(validatePayload.summary.scanned).toBe(1);
+        expect(validatePayload).not.toHaveProperty('warnings');
+      });
     });
 
     describe('leftover CLAUDE.md warnings', () => {
@@ -1594,6 +1817,41 @@ describe('instructions command integration', () => {
         ).toEqual(LEFTOVERS.map((path) => ['claude_md_hides_agents_md', path]));
         for (const warning of payload.warnings) {
           expectTwoOptions(warning.message, warning.path);
+        }
+      });
+
+      it('scopes a nested file to sessions started in its directory or below', async () => {
+        const root = await createWorkspace();
+        tempDirs.push(root);
+        await seedLeftovers(root);
+        await mkdir(join(root, 'pkg', '.claude'), { recursive: true });
+        await writeFile(join(root, 'pkg', '.claude', 'CLAUDE.md'), '# pkg\n');
+
+        const json = await runCli(
+          root,
+          ['instructions', 'validate', '--json'],
+          ['--json'],
+        );
+        const byPath = Object.fromEntries(
+          JSON.parse(json.stdout).warnings.map(
+            (warning: { path: string; message: string }) => [
+              warning.path,
+              warning.message,
+            ],
+          ),
+        );
+        expect(byPath['hand/CLAUDE.md']).toContain(
+          'in this project for Claude Code sessions started in hand/ or below:',
+        );
+        // `.claude/CLAUDE.md` belongs to the directory that holds `.claude`.
+        expect(byPath['pkg/.claude/CLAUDE.md']).toContain(
+          'for Claude Code sessions started in pkg/ or below:',
+        );
+        for (const rootFile of ['CLAUDE.local.md', '.claude/CLAUDE.md']) {
+          expect(byPath[rootFile]).toContain(
+            `${rootFile} ${WARNING_TEXT}, whatever directory a session starts in:`,
+          );
+          expect(byPath[rootFile]).not.toContain('sessions started in');
         }
       });
 

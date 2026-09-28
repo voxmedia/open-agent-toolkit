@@ -226,6 +226,7 @@ export interface InstructionsSyncCommandDependencies extends InstructionsValidat
   /** Raw bytes, for the apply-time managed-shim re-verification. */
   readFileBytes: (path: string) => Promise<Buffer>;
   readlink: (path: string) => Promise<string>;
+  realpath: (path: string) => Promise<string>;
   removeFile: (path: string) => Promise<void>;
   symlinkFile: (target: string, path: string) => Promise<void>;
   writeFile: (path: string, content: string, encoding: 'utf8') => Promise<void>;

@@ -106,6 +106,7 @@ export interface ManagedShimInspectionDependencies {
   lstat: InstructionsScanDependencies['lstat'];
   readlink: InstructionsScanDependencies['readlink'];
   readFileBytes: InstructionsScanDependencies['readFileBytes'];
+  realpath: InstructionsScanDependencies['realpath'];
 }
 
 export type ManagedShimInspection =
@@ -191,6 +192,46 @@ export async function inspectManagedShim(
     };
   }
 
+  // A regular CLAUDE.md that the sibling AGENTS.md resolves to -- the
+  // Claude-first `ln -s CLAUDE.md AGENTS.md` layout, or a hard link -- holds
+  // the only copy of the instructions. Comparing the two would compare the
+  // file with itself, so it is never a managed shape of any kind.
+  let agentsStats: Awaited<
+    ReturnType<ManagedShimInspectionDependencies['lstat']>
+  >;
+  try {
+    agentsStats = await dependencies.lstat(agentsPath);
+  } catch (error) {
+    return {
+      kind: 'unreadable',
+      detail: `unable to read AGENTS.md (${getErrorCode(error) ?? 'unknown error'})`,
+    };
+  }
+  let agentsResolvesToClaude =
+    agentsStats.dev === claudeStats.dev && agentsStats.ino === claudeStats.ino;
+  if (agentsStats.isSymbolicLink()) {
+    try {
+      const [realAgents, realClaude] = await Promise.all([
+        dependencies.realpath(agentsPath),
+        dependencies.realpath(claudePath),
+      ]);
+      agentsResolvesToClaude = realAgents === realClaude;
+    } catch (error) {
+      return {
+        kind: 'unreadable',
+        detail: `unable to resolve AGENTS.md (${getErrorCode(error) ?? 'unknown error'})`,
+      };
+    }
+  }
+  if (agentsResolvesToClaude) {
+    return {
+      kind: 'unmanaged',
+      detail:
+        'AGENTS.md resolves to this CLAUDE.md, so CLAUDE.md holds the instructions ' +
+        '(replace the AGENTS.md link with its content before removing CLAUDE.md); kept',
+    };
+  }
+
   let claudeBytes: Buffer;
   try {
     claudeBytes = await dependencies.readFileBytes(claudePath);
@@ -203,6 +244,16 @@ export async function inspectManagedShim(
 
   if (MANAGED_POINTER_BYTES.some((pointer) => pointer.equals(claudeBytes))) {
     return { kind: 'managed', record: { shape: 'pointer', ...identity } };
+  }
+
+  // The copy shape is only ever judged against a distinct regular AGENTS.md:
+  // identical bytes behind a symlink prove nothing about who wrote CLAUDE.md.
+  if (!agentsStats.isFile()) {
+    return {
+      kind: 'unmanaged',
+      detail:
+        'AGENTS.md is not a regular file, so CLAUDE.md is not a managed copy; kept',
+    };
   }
 
   let agentsBytes: Buffer;
@@ -722,6 +773,23 @@ export async function resolveInstructionPointerExcludes(
   return { configured, effective, warnings };
 }
 
+/**
+ * A directory below the repository root that holds its own `.git` (a
+ * directory, or the gitdir file of a submodule or linked worktree such as
+ * `.claude/worktrees/<name>`) is a separate checkout. Its own
+ * `oat instructions` run owns it: the parent never scans, rewrites, removes,
+ * or warns about anything inside it.
+ */
+function isNestedCheckout(
+  repoRoot: string,
+  directoryPath: string,
+  entries: ReadonlyArray<{ name: string }>,
+): boolean {
+  return (
+    directoryPath !== repoRoot && entries.some((entry) => entry.name === '.git')
+  );
+}
+
 async function scanInstructionDirectories(
   repoRoot: string,
   dependencies: InstructionsScanDependencies,
@@ -746,6 +814,13 @@ async function scanInstructionDirectories(
       const errorCode = getErrorCode(error);
       debug?.(
         `Skipping directory scan for ${toPosixPath(currentDirectory)} (${errorCode ?? 'unknown error'})`,
+      );
+      continue;
+    }
+
+    if (isNestedCheckout(repoRoot, currentDirectory, entries)) {
+      debug?.(
+        `Skipping nested git checkout ${toPosixPath(relative(repoRoot, currentDirectory))}`,
       );
       continue;
     }
@@ -1098,8 +1173,8 @@ const LEFTOVER_CLAUDE_FILE_NAMES = new Set(['CLAUDE.md', 'CLAUDE.local.md']);
  * documentation content root and `documentation.instructionPointerExcludes`,
  * but those only limit what OAT may change: Claude Code's `agents-md` plugin
  * stands down whichever directory the file is in. Only `.git`, `node_modules`,
- * and the root `.worktrees` (separate checkouts) are skipped, and symlinked
- * directories are not followed. A symlink named like an instruction file
+ * the root `.worktrees`, and nested git checkouts (separate repositories) are
+ * skipped, and symlinked directories are not followed. A symlink named like an instruction file
  * counts, broken or not.
  */
 export async function findLeftoverClaudeFiles(
@@ -1120,6 +1195,10 @@ export async function findLeftoverClaudeFiles(
     try {
       entries = await readDirectory(currentDirectory, { withFileTypes: true });
     } catch {
+      continue;
+    }
+
+    if (isNestedCheckout(repoRoot, currentDirectory, entries)) {
       continue;
     }
 
@@ -1146,8 +1225,25 @@ export async function findLeftoverClaudeFiles(
 }
 
 /**
+ * The directory whose sessions a leftover file affects: its own directory,
+ * except that `.claude/CLAUDE.md` belongs to the directory holding `.claude`.
+ * `.` for the project root.
+ */
+function leftoverScopeDirectory(relativePath: string): string {
+  const directory = posix.dirname(relativePath);
+  return posix.basename(directory) === '.claude'
+    ? posix.dirname(directory)
+    : directory;
+}
+
+/**
  * One warning per leftover file, naming exactly two ways out: remove the
  * file, or opt back into shims and let sync add them everywhere.
+ *
+ * Claude Code's plugin stands down when such a file sits in the session's
+ * working directory or any directory above it up to the project root, so a
+ * root file affects every session and a nested one only sessions started in
+ * its directory or below.
  */
 export function buildLeftoverClaudeWarnings(
   repoRoot: string,
@@ -1155,12 +1251,17 @@ export function buildLeftoverClaudeWarnings(
 ): InstructionsWarning[] {
   return paths.map((path) => {
     const relativePath = toPosixPath(relative(repoRoot, path));
+    const scopeDirectory = leftoverScopeDirectory(relativePath);
+    const scope =
+      scopeDirectory === '.'
+        ? ', whatever directory a session starts in'
+        : ` for Claude Code sessions started in ${scopeDirectory}/ or below`;
     return {
       code: 'claude_md_hides_agents_md',
       path: relativePath,
       message:
-        `${relativePath} makes Claude Code ignore every AGENTS.md in this project: ` +
-        'its default agents-md mode stands down while any CLAUDE.md, .claude/CLAUDE.md, or CLAUDE.local.md exists. ' +
+        `${relativePath} makes Claude Code ignore every AGENTS.md in this project${scope}: ` +
+        "its default agents-md mode stands down while any CLAUDE.md, .claude/CLAUDE.md, or CLAUDE.local.md exists in the session's working directory or any directory above it, up to the project root. " +
         `Either remove ${relativePath}, or set documentation.instructionSyncStrategy in .oat/config.json ` +
         'to a shim strategy (pointer, symlink, or copy) and rerun `oat instructions sync` to add shims back.',
     };
