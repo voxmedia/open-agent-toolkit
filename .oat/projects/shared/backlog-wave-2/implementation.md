@@ -751,6 +751,12 @@ oat_generated: false
   step. The guard treating prose pipes as rows is a pr-final false positive
   worth a follow-up.
 
+- PR step rerun at `36d48005d`: PRFINAL-03 passed (latest final/code row
+  `passed`); PRFINAL-05 passed (27 of 27 ledger rows resolve); PRFINAL-02
+  auto-resolved the title and base `main` from PR Requirements. Opened
+  https://github.com/voxmedia/open-agent-toolkit/pull/332; `state.md` set to
+  `pr_open`. The `pr` sequence step stays open for the closeout orchestrator.
+
 ### PR Requirements (hand-off to oat-project-pr-final)
 
 - Title names the removal with a breaking marker, for example
