@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-27
@@ -756,6 +756,19 @@ oat_generated: false
   auto-resolved the title and base `main` from PR Requirements. Opened
   https://github.com/voxmedia/open-agent-toolkit/pull/332; `state.md` set to
   `pr_open`. The `pr` sequence step stays open for the closeout orchestrator.
+
+### Final HiLL approval and completion
+
+- Closeout sequence (configured `[summary, document, pr]`, post-approval `[]`):
+  summary `759edbb1e`, document `343426ada`, project recap `built`
+  (`db4bbcd59`), PR #332 opened. Each step was followed by a state-only
+  freshness checkpoint; the exit gate stayed `allowed/passed`.
+- Gate `IMPLEMENT-16`: final HiLL approval auto-approved under the autonomy
+  contract (`approval_source: oat-autonomous`) after the passing final review
+  (`final-review-2026-09-28T114805Z.md`, gate run
+  `0c5dbb3e-18a9-4059-a857-ca4209e3b9e4`) and all pre-approval steps. No
+  post-approval steps. Implementation complete; the project stays `pr_open`
+  for revise or completion.
 
 ### PR Requirements (hand-off to oat-project-pr-final)
 
