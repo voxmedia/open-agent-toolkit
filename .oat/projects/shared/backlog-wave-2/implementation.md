@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-27
-oat_current_task_id: null
+oat_current_task_id: p05-t11
 oat_generated: false
 ---
 
@@ -24,15 +24,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 8     | 8/8       |
-| Phase 2 | complete | 8     | 8/8       |
-| Phase 3 | complete | 5     | 5/5       |
-| Phase 4 | complete | 7     | 7/7       |
-| Phase 5 | complete | 10    | 10/10     |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 8     | 8/8       |
+| Phase 2 | complete    | 8     | 8/8       |
+| Phase 3 | complete    | 5     | 5/5       |
+| Phase 4 | complete    | 7     | 7/7       |
+| Phase 5 | in_progress | 11    | 10/11     |
 
-**Total:** 38/38 tasks completed
+**Total:** 38/39 tasks completed
 
 ---
 
@@ -324,6 +324,13 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** 6dfea1158
+
+---
+
+### Task p05-t11: (review) Align oat-reviewer mechanical-lane guidance with the validator
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -680,6 +687,18 @@ oat_generated: false
   plus 1 sweep fix; 10/10 tasks. The Definition of Done is re-run at closeout
   because p05-t06 predates the later fix commits.
 
+### Final Review
+
+- Request `bw2-final-review-1` (`oat-reviewer-claude-claude-opus-5-5-high`,
+  `oat-project-review-provide code final`, reconnaissance not-attempted):
+  `reviews/archived/final-review-2026-09-28T112631Z.md` 0 Critical/High, 1 Medium (PR behavior-change text
+  inaccurate: stray adoption removes a lone `CLAUDE.md`; `validate` exits 1 on
+  upgraded repositories until sync), 3 Low (summary counts, `oat-reviewer.md`
+  mechanical-lane checks wording vs the validator, template placeholders).
+  Deferred Mediums judged acceptable as filed follow-ups. Root fixed the
+  Medium, L1, and L3 in bookkeeping; L2 went to `p05-t11`. Gate
+  `IMPLEMENT-11` recorded.
+
 ### PR Requirements (hand-off to oat-project-pr-final)
 
 - Title names the removal with a breaking marker, for example
@@ -688,8 +707,13 @@ oat_generated: false
 - Body opens with a **Behavior change** callout: `oat instructions sync` no
   longer creates `CLAUDE.md` shims by default and removes OAT-managed shims
   (exact `@AGENTS.md` pointer, sibling symlink, or identical copy) on its next
-  run; hand-written `CLAUDE.md` files, and any `CLAUDE.md` an `AGENTS.md` links
-  to, are kept and reported. Opt back in with
+  run. A hand-written `CLAUDE.md` beside an `AGENTS.md`, and any `CLAUDE.md`
+  an `AGENTS.md` links to, is kept and reported. A lone `CLAUDE.md` with no
+  `AGENTS.md` is adopted: its content moves into a new `AGENTS.md` and the
+  `CLAUDE.md` is removed (unless an `AGENTS.md` elsewhere links to it). After
+  upgrading, `oat instructions validate` exits 1 in a repository that still has
+  shims from the old default until `oat instructions sync` runs, so CI that
+  runs validate goes red until then. Opt back in with
   `oat config set documentation.instructionSyncStrategy pointer` and rerun
   `oat instructions sync`.
 - Body also lists: append-only AGENTS.md guidance, `--project-guidance`
@@ -698,42 +722,10 @@ oat_generated: false
 
 ## Implementation Log
 
-Chronological log of implementation progress.
-
-### 2026-09-27
-
-**Session Start:** {time}
-
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
-
-**What changed (high level):**
-
-- {short bullets suitable for PR/docs}
-
-**Decisions:**
-
-- {Decision made and rationale}
-
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
-
-**Blockers:**
-
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
-
----
-
-### 2026-09-27
-
-**Session Start:** {time}
-
-{Continue log...}
-
----
+Chronological execution is recorded per phase under Orchestration Runs above
+(dispatch requests, commits, reviews, gates, recovery events, and operator
+dispositions). Sessions: 2026-09-27 (planning, p01) and 2026-09-28 (p01 gate
+through closeout).
 
 ## Plan Gate Feedback (quick-start, QS-12)
 
@@ -843,13 +835,21 @@ no replays), `pnpm build`, `check:skill-bumps`, `release:check-versions`
   and `.oat/templates`; `packages/control-plane` gains `check`, `check:fix`,
   and `lint:fix`, pinned by the lint-enrollment test; the agents-md
   unsafe-target test race is fixed.
-- Lockstep public packages bumped to 0.3.9; twelve backlog items archived.
+- Lockstep public packages bumped to 0.3.9; fourteen backlog items archived:
+  twelve shipped by this wave, plus `BL-260927-record-owner-overrides` and
+  `BL-260901-add-corrective-revision` closed as superseded by the review-cap
+  consolidation in the pre-wave decisions pass. The branch also carries that
+  pass's six decision records (`DR-260927-*`) and the new backlog items it
+  created.
 
 **Behavioral changes (user-facing):**
 
 - `oat instructions sync` no longer creates `CLAUDE.md` shims by default and
-  removes OAT-created ones on its next run; opt back in with
+  removes OAT-created ones on its next run; a lone `CLAUDE.md` is adopted into
+  a new `AGENTS.md` and removed; opt back in with
   `oat config set documentation.instructionSyncStrategy pointer`.
+- After upgrading, `oat instructions validate` exits 1 while old shims remain,
+  until `oat instructions sync` removes them.
 - `oat instructions validate` no longer reports a missing `CLAUDE.md` as drift
   under the default; it warns about leftover `CLAUDE.md` files instead.
 - AGENTS.md guidance writers append absent blocks (exit 0) instead of printing

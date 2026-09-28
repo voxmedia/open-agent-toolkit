@@ -1743,6 +1743,30 @@ and type-check.
 
 ---
 
+### Task p05-t11: (review) Align oat-reviewer mechanical-lane guidance with the validator
+
+Source: `reviews/archived/final-review-2026-09-28T112631Z.md` (final review L2).
+
+**Step 1: Fix**
+
+`.agents/agents/oat-reviewer.md` must not tell mechanical recon lanes to run
+checks through a command tool, which `validate-assignment.mjs` rejects; say
+that check-running work is done by the controller and supplied as captured
+`command-output` sources, or covered inline. Reviewer is already 1.2.10 in
+this PR (no second bump); regenerate its provider views with
+`sync --scope project`.
+
+**Step 2: Verify**
+
+Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation src/commands/init/tools/shared`
+and `node --test .agents/skills/recon/tests/*.test.mjs`.
+
+**Step 3: Commit**
+
+`fix(p05-t11): align reviewer mechanical-lane guidance with the validator`
+
+---
+
 ## PR Requirements
 
 The release workflow (`.github/workflows/release.yml`) publishes a fixed body
@@ -1753,12 +1777,11 @@ title itself:
 - Title uses a Conventional Commit breaking marker and names the removal, for
   example
   `feat!: stop creating and auto-remove OAT-managed CLAUDE.md shims by default (wave 2, lockstep 0.3.9)`.
-- The body (for reviewers) opens with a **Behavior change** callout: `oat instructions sync` no
-  longer creates `CLAUDE.md` shims by default and removes OAT-managed shims
-  (exact `@AGENTS.md` pointer, sibling symlink, or identical copy) on its next
-  run; hand-written `CLAUDE.md` files are kept and reported. Opt back in with
-  `oat config set documentation.instructionSyncStrategy pointer` and rerun
-  `oat instructions sync`.
+- The body (for reviewers) opens with a **Behavior change** callout matching
+  `implementation.md` PR Requirements: default no shims, OAT-managed shims
+  removed on the next sync, hand-written and linked `CLAUDE.md` kept, a lone
+  `CLAUDE.md` adopted into `AGENTS.md` and removed, `validate` exits 1 on
+  upgraded repositories until sync, and the opt-back-in command.
 - The body also lists the other user-visible changes (append-only AGENTS.md
   guidance, `--project-guidance` behavior, the read-only guidance command, and
   backlog archive link rewriting).
@@ -1778,7 +1801,7 @@ title itself:
 | p03    | code     | fixes_completed | 2026-09-28 | reviews/archived/p03-review-2026-09-28T014814Z.md           | bfc92754bd4ed05afd5a2f7da173edad7e82fccb | auto       | -                 |
 | p04    | code     | fixes_completed | 2026-09-28 | reviews/archived/p04-review-2026-09-28T021519Z.md           | a5ebb0813cf786a9fb06e04f87aaacd7566bbdfe | auto       | -                 |
 | p05    | code     | fixes_completed | 2026-09-28 | reviews/archived/p05-review-2026-09-28T103350Z.md           | 3cfab725098067df0b1f002d80ec5ed4f2d4aeed | auto       | -                 |
-| final  | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| final  | code     | fixes_added     | 2026-09-28 | reviews/archived/final-review-2026-09-28T112631Z.md         | 6972d045a7222be30640726d62d32e2897354c40 | auto       | -                 |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
 | design | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
 | plan   | artifact | fixes_completed | 2026-09-27 | -                                                           | -                                        | auto       | -                 |
@@ -1844,9 +1867,9 @@ in `implementation.md`). Phase gates and the final review still run.
 - Phase 2: 8 tasks - CLAUDE.md shims
 - Phase 3: 5 tasks - Lifecycle skill routing and bookkeeping
 - Phase 4: 7 tasks - Agent roles and recon validation
-- Phase 5: 10 tasks - CI and backlog tooling, release fan-in
+- Phase 5: 11 tasks - CI and backlog tooling, release fan-in
 
-**Total: 38 tasks**
+**Total: 39 tasks**
 
 Ready for code review and merge.
 
