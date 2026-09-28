@@ -1686,6 +1686,39 @@ and type-check.
 
 ---
 
+### Task p05-t09: (review) Close p05 re-review findings H1, M1, M2, L1-L3
+
+Source: `reviews/archived/p05-review-2026-09-28T105839Z.md` (auto re-review
+after gate attempt 1: 1 High, 2 Medium, 3 Low).
+
+**Step 1: Fix (failing-first on real-shaped fixtures)**
+
+- H1: rewrite repository paths inside inline code spans when the whole span
+  is a path that resolves to the moved item (the canonical external-plan
+  "Source artifact or scope" citation form); keep fenced code blocks and
+  non-path code spans untouched. Fixture mirrors
+  `.agents/skills/oat-repo-improve/references/plan-template.md` rows.
+- M1: fallback resolution bases apply only when the token does not already
+  resolve to an existing file; never rewrite a working link.
+- M2: reference-definition rebase applies only to `[label]: <url-or-path>`
+  definitions, never to footnotes (`[^n]:`) or prose.
+- L1: rebase links with single-quoted or parenthesized titles in the moved
+  item.
+- L2: make inline code-span detection robust to an unmatched backtick.
+- L3: list rewritten files in plain-text output on the retry path.
+
+**Step 2: Verify**
+
+Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/backlog`,
+type-check, lint, and a scratch archive of a real linked item with an
+external plan citing it in the template's code-span form.
+
+**Step 3: Commit**
+
+`fix(p05-t09): rewrite code-span path citations and protect working links`
+
+---
+
 ## PR Requirements
 
 The release workflow (`.github/workflows/release.yml`) publishes a fixed body
@@ -1733,6 +1766,7 @@ title itself:
 | p04    | code     | fixes_completed | 2026-09-28 | reviews/archived/p04-review-2026-09-28T024124Z.md           | de61806bc4789e7901dd0b90b0ee5579e4bca8e9 | gate       | codex-6-sol-xhigh |
 | p04    | code     | fixes_completed | 2026-09-28 | reviews/archived/p04-review-2026-09-28T025845Z.md           | 7342fc69d8e9ee79929221a885d56a8e63a24f87 | auto       | -                 |
 | p05    | code     | fixes_completed | 2026-09-28 | reviews/archived/p05-review-2026-09-28T104612Z.md           | 3c64d9e225a789e50caa1ba4edb153e943331365 | gate       | codex-6-sol-xhigh |
+| p05    | code     | fixes_added     | 2026-09-28 | reviews/archived/p05-review-2026-09-28T105839Z.md           | 7085ab58146ade146e41617e3cdef15b0b9694d9 | auto       | -                 |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
@@ -1785,9 +1819,9 @@ in `implementation.md`). Phase gates and the final review still run.
 - Phase 2: 8 tasks - CLAUDE.md shims
 - Phase 3: 5 tasks - Lifecycle skill routing and bookkeeping
 - Phase 4: 7 tasks - Agent roles and recon validation
-- Phase 5: 8 tasks - CI and backlog tooling, release fan-in
+- Phase 5: 9 tasks - CI and backlog tooling, release fan-in
 
-**Total: 36 tasks**
+**Total: 37 tasks**
 
 Ready for code review and merge.
 

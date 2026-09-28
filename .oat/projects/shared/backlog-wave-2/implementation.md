@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-27
-oat_current_task_id: p05-t08
+oat_current_task_id: p05-t09
 oat_generated: false
 ---
 
@@ -30,9 +30,9 @@ oat_generated: false
 | Phase 2 | complete    | 8     | 8/8       |
 | Phase 3 | complete    | 5     | 5/5       |
 | Phase 4 | complete    | 7     | 7/7       |
-| Phase 5 | in_progress | 8     | 8/8       |
+| Phase 5 | in_progress | 9     | 8/9       |
 
-**Total:** 36/36 tasks completed
+**Total:** 36/37 tasks completed
 
 ---
 
@@ -310,6 +310,13 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** 9c352de4d
+
+---
+
+### Task p05-t09: (review) Close p05 re-review findings H1, M1, M2, L1-L3
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -637,6 +644,14 @@ oat_generated: false
   writes), M1 (rewrite only tokens resolving to the former path; URLs
   untouched; unresolved local forms warned), M2 (angle-delimited links);
   controls neutralized and restored; 88 backlog tests.
+
+- Request `bw2-p05-review-2` (reconnaissance not-attempted):
+  `reviews/archived/p05-review-2026-09-28T105839Z.md` 1 High (skipping inline code spans, added in
+  `p05-t07`, leaves the canonical external-plan Source citations unrewritten;
+  reproduced on real data), 2 Medium (fallback breaks a working link;
+  footnotes corrupted by the reference-definition rebase), 3 Low. Converted to
+  `p05-t09` (blocking round 2 of 2). DoD re-run at head by the reviewer: all
+  gates green.
 
 ### PR Requirements (hand-off to oat-project-pr-final)
 
