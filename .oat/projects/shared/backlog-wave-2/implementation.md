@@ -738,6 +738,11 @@ oat_generated: false
   (ownership change on replace, same-inode concurrent edit, long temp names),
   deferred to `BL-260928-harden-the-backlog-reference`.
 
+- Generation 1, attempt 2 (run `0c5dbb3e-18a9-4059-a857-ca4209e3b9e4`,
+  reviewed head `531ce5f4e`, intent persisted before launch in `b54d67306`):
+  `reviews/archived/final-review-2026-09-28T114805Z.md` status `ok`, 0 findings; deferred Mediums reconfirmed
+  as acceptable follow-ups. Received; exit gate `allowed/passed`.
+
 ### PR Requirements (hand-off to oat-project-pr-final)
 
 - Title names the removal with a breaking marker, for example

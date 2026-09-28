@@ -100,9 +100,9 @@ oat_project_recap:
   source: autonomous_policy
   decided_at: '2026-09-27T14:32:46.795Z'
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: 'sha256:76eaea5d632f8612107755e2770d20d1331e61ca9d7d4859dfd20a64932869f2'
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
@@ -115,26 +115,26 @@ oat_implement_exit_gate:
   implementation_fingerprint: 'sha256:effective-delta-v1:e7bc9d5c7d02a1f91b02ad271401a3a9172ee118765de4efc34696c48aa15c96'
   freshness_head: 531ce5f4ea6febca75574c45f9b74115e39c0e20
   freshness_fingerprint: 'sha256:effective-delta-v1:e7bc9d5c7d02a1f91b02ad271401a3a9172ee118765de4efc34696c48aa15c96'
-  launch_state: intent_persisted
+  launch_state: result_persisted
   launch_attempt_id: 'bw2-exit-gate-2-20260928T114538Z'
   launch_started_at: '2026-09-28T11:45:38Z'
   launch_result_receipt: '.oat/repo/analysis/backlog-wave-2/exit-gate-2.json'
   gate_run_marker: null
-  gate_run_id: null
-  envelope_status: null
-  artifact: null
-  handoff: null
-  receive_state: not_started
-  receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
-  receive_commit: null
-  receive_eligible: false
-  receive_completed: false
+  gate_run_id: 0c5dbb3e-18a9-4059-a857-ca4209e3b9e4
+  envelope_status: ok
+  artifact: '.oat/projects/shared/backlog-wave-2/reviews/archived/final-review-2026-09-28T114805Z.md'
+  handoff: 'Run oat-project-review-receive for .oat/projects/shared/backlog-wave-2/reviews/final-review-2026-09-28T114805Z.md before treating this gate review as consumed.'
+  receive_state: completed
+  receive_correlation: 'run=0c5dbb3e-18a9-4059-a857-ca4209e3b9e4; handoff=receive; source=reviews/final-review-2026-09-28T114805Z.md; scope=final; type=code'
+  receive_source_artifact: '.oat/projects/shared/backlog-wave-2/reviews/final-review-2026-09-28T114805Z.md'
+  receive_archived_artifact: '.oat/projects/shared/backlog-wave-2/reviews/archived/final-review-2026-09-28T114805Z.md'
+  receive_event_identity: 'final | code | final-review-2026-09-28T114805Z.md'
+  receive_pre_head: d9bc759bb6a35a5746101df63d39610780613390
+  receive_commit: pending-this-commit
+  receive_eligible: true
+  receive_completed: true
   failure: null
-  updated_at: '2026-09-28T11:45:38Z'
+  updated_at: '2026-09-28T11:50:27Z'
 ---
 
 # Project State: backlog-wave-2
