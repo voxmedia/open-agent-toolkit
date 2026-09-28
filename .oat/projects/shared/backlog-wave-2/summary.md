@@ -249,10 +249,10 @@ Revision 1 changed the shim design after the PR opened.
 
 ## Explainer Outcome
 
-- **project-recap:** built — `explainers/backlog-wave-2-recap/` (run
-  `d9a93b10-dde6-4ee0-b111-28e01c32c837`, rebuilt after Revision 1).
-- **QA:** host browser rung (headless Chrome at 320, 768, and 1440 pixels),
-  visual verdict pass; every browser-free check passed.
+- **project-recap:** rebuilt after Revision 1 at completion; the run ID,
+  outcome, and QA verdict are recorded in the exported recap's
+  `manifest.json` and `qa/result.json` (this section names no run, so the
+  recap's own inputs stay unchanged after it is built).
 
 ## Follow-up Items
 
