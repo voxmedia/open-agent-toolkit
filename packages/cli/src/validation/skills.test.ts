@@ -1674,31 +1674,6 @@ describe('validateOatSkills', () => {
       /must not (?:read|load)[\s\S]{0,160}`oat-project-dispatch-subagents`[\s\S]{0,200}project lifecycle phase\/task policy/i,
     );
     expect(content).toMatch(
-      /canonical `recon-worker`[\s\S]{0,100}complete Assignment Gate envelope before launch/i,
-    );
-    for (const assignmentField of [
-      'run, wave, and lane IDs',
-      'approved manifest wave mode',
-      'worker assignment mode',
-      'bounded objective',
-      'included and excluded scope',
-      'allowed and excluded inputs',
-      'source-read authority and read-only tools',
-      'sole write path',
-      'artifact kind, schema version, and closed output schema',
-      'enforcement',
-      'deadline',
-      'escalation path',
-    ]) {
-      expect(content, `recon assignment ${assignmentField}`).toContain(
-        assignmentField,
-      );
-    }
-    expect(content).toMatch(
-      /complete envelope cannot be constructed[\s\S]{0,120}do not launch[\s\S]{0,180}cover the lane inline/i,
-    );
-
-    expect(content).toMatch(
       /authoritative scope[\s\S]{0,160}before considering delegation/i,
     );
     expect(content).toMatch(
@@ -1726,43 +1701,24 @@ describe('validateOatSkills', () => {
     );
   });
 
-  it('validates recon-worker envelopes before launch and corrects accepted children in place', async () => {
+  it('keeps the recon skill worker and its assignment validator out of the reviewer', async () => {
     const content = await readRepoFile('.agents/agents/oat-reviewer.md');
 
-    // The validator ships in the research pack while the reviewer ships in
-    // workflows, so it is resolved through the sibling-skill probe with its
-    // own pack's recovery command rather than an ambient path.
-    expect(content).toContain('${RECON_SKILLS_ROOT}` for `recon`');
-    expect(content).toContain(
-      '${RECON_SKILLS_ROOT}/recon/scripts/validate-assignment.mjs',
-    );
-    // The envelope travels on stdin: structured-output mode writes nothing.
-    expect(content).toContain(
-      'validate-assignment.mjs" -` before the launch; write no envelope file',
-    );
+    // Only the recon skill launches recon-worker: it owns the evidence-packet
+    // machinery. Reviewer lanes are ordinary read-only sub-agents (GitHub #295
+    // is resolved by removing the reviewer's recon-worker path).
+    for (const removed of [
+      'recon-worker',
+      'validate-assignment',
+      'RECON_SKILLS_ROOT',
+      'Assignment Gate',
+      'EXECUTION_TOOL',
+      '--pack research',
+    ]) {
+      expect(content, `reviewer names ${removed}`).not.toContain(removed);
+    }
     expect(content).toMatch(
-      /one homogeneous wave: the same run, wave, wave mode, and task class/,
-    );
-    expect(content).toMatch(
-      /`recon`[\s\S]{0,400}oat tools install research --scope <user\|project>/,
-    );
-
-    // GitHub #295: validation happens before accepted-launch state exists, and
-    // a failure names every field so the envelope can be corrected or replaced.
-    expect(content).toMatch(
-      /validate-assignment\.mjs[\s\S]{0,400}before (?:the )?launch[\s\S]{0,300}every (?:missing or invalid )?field/i,
-    );
-    expect(content).toMatch(
-      /never record (?:an )?accepted launch[\s\S]{0,160}envelope[\s\S]{0,80}(?:has not|did not) validate/i,
-    );
-
-    // After acceptance, replacement is unavailable: correct through the
-    // accepted handle and keep a durable terminal result.
-    expect(content).toMatch(
-      /after acceptance[\s\S]{0,240}correct[\s\S]{0,120}through the accepted handle[\s\S]{0,160}instead of relaunching/i,
-    );
-    expect(content).toMatch(
-      /every accepted (?:child|lane)[\s\S]{0,160}terminal result/i,
+      /lane[\s\S]{0,120}ordinary read-only sub-agent[\s\S]{0,240}generic dispatch contract/i,
     );
   });
 
