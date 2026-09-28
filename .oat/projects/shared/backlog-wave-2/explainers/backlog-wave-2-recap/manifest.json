@@ -1,22 +1,22 @@
 {
   "schemaVersion": "explainer-kit.manifest/v2",
-  "runId": "def695e7-4da2-4fb9-97ff-9a2f10df0294",
+  "runId": "d9a93b10-dde6-4ee0-b111-28e01c32c837",
   "slug": "backlog-wave-2-recap",
   "recipe": {
     "id": "project-recap",
     "version": "2"
   },
-  "createdAt": "2026-09-28T12:12:31.293Z",
+  "createdAt": "2026-09-28T17:23:54.240Z",
   "mode": "unattended",
   "source": {
     "factBasePath": "source/fact-base.json",
-    "factBaseHash": "sha256:077025d2b516fcadb30dac879b28f19234b0486ae4d94e0cffe93da8b7a94043",
+    "factBaseHash": "sha256:b2d691615693b43dbe41b652391279130646dfed36cbf979c36c32ad7d684c60",
     "inputHashes": {
       "discovery.md": "sha256:41d3bb8005743de6a454e6679456b8f6db8253f6809e11a6700c3ecf5ebd3b2e",
-      "implementation.md": "sha256:722f03cf66de35252acd85252ec982abaafd4f426dd7683a060873f3f8077076",
-      "plan.md": "sha256:f78c2051212d681ab41763bcdc4e6e95b941d18c3a48d881e3c0d5228ec8f8b3",
-      "project-log.md": "sha256:c2b6cd76317f110c56b2bbdcdd878ddf6f155df81491d77a07ef43e4815a218b",
-      "summary.md": "sha256:d609b02638332b885b589049bd3333aecc2604ccadf2cd454eb6852b88fb390b"
+      "implementation.md": "sha256:751c5003bf40c2855b11ee952d313d79a6fecc17433605bc17797bcfa6b8e7b0",
+      "plan.md": "sha256:72fe127664917989ed9d68e99a9647f239e78156b0b343b6d72589536a3a9f91",
+      "project-log.md": "sha256:6e2b3e90f8a3ef53d0a2febba686bd8b9867fb56b5773567d713ac0c87c575dc",
+      "summary.md": "sha256:1f0f7c09ad2ef1e903f65d2e29b2648ca33e58ec1dc83f35b29aca04ab720be9"
     }
   },
   "theme": {
@@ -28,19 +28,19 @@
       "id": "project-recap",
       "type": "hub",
       "contentPath": "site/index.html",
-      "hash": "sha256:f4bc2f8e927f8927cbbdf50f8fd8941ee302894278d968c9bcd5645c90f8443e",
+      "hash": "sha256:5b1dbc08492fa009af2c60261542335c2dfc148ce663afd11e9b8e6e1cccf82a",
       "status": "built"
     }
   ],
   "immutableHashes": {
-    "qa/1440.png": "sha256:38749bfe14a5ca613f617fbe5dd499a6f2250a099eb3541ee80f6be77414df7d",
-    "qa/320.png": "sha256:b402870d655d406029661c765821c3795a0abdef43329d42b4e84565ab52246e",
-    "qa/768.png": "sha256:e46cdbcf46ef93acb9a924706838fe60ab46fb6e39bb285d8581a5be0aff661f",
-    "qa/result.json": "sha256:b24b5b5f4ec39c63ed90c775dbf38ccfb795bbfcd33d2659ad7ba71276163bae",
-    "site/index.html": "sha256:f4bc2f8e927f8927cbbdf50f8fd8941ee302894278d968c9bcd5645c90f8443e",
-    "source/fact-base.json": "sha256:077025d2b516fcadb30dac879b28f19234b0486ae4d94e0cffe93da8b7a94043",
-    "source/fact-base.md": "sha256:b66ce5e861c4c4ddebf3d5e23f8240faa9413f6eebf6cf13b1f2a898fcd07c03",
-    "source/ledger.json": "sha256:30adf49947b2dbda85f23aac2377a13859e94e449f4e81617bdbe2284f68da7e",
+    "qa/1440.png": "sha256:70ed74d7fa3523b5ce7694285d563b0835d7b4a44c1799843db09f7ce9422ae8",
+    "qa/320.png": "sha256:716ffc5bfc87d064cccd89f5abd2cff00ab4cf35b44a88cc70e2888fafff8b4d",
+    "qa/768.png": "sha256:cd64ae88364463ca15b3f221bad1dcfeeb05d0dba446d88f0b31bbfdc7ea98a4",
+    "qa/result.json": "sha256:d14385dfd9e235121cec2e27e2bcd4960297cd2123b32e6cc2b11ea618c1e69c",
+    "site/index.html": "sha256:5b1dbc08492fa009af2c60261542335c2dfc148ce663afd11e9b8e6e1cccf82a",
+    "source/fact-base.json": "sha256:b2d691615693b43dbe41b652391279130646dfed36cbf979c36c32ad7d684c60",
+    "source/fact-base.md": "sha256:916ec6e8301659c0ce27d4dd72a22207f9a3681c2bba112ae25b00467ad21244",
+    "source/ledger.json": "sha256:f00887f8dd14f18cef97e8e2f44bfa4609825bd1db513a452553693745495244",
     "theme.resolved.json": "sha256:82c4bf82ac817bb8c04c83bb971d2c2b22aa621384689fb4e0d0fa3a62498f27"
   },
   "outcome": "built",

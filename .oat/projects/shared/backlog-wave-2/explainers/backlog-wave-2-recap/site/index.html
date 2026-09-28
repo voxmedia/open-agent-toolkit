@@ -8,8 +8,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Backlog wave 2: CLAUDE.md shims become opt-in, and twelve backlog gaps close</title>
-    <meta name="description" content="Recap of the backlog-wave-2 OAT project: what the operator asked for, what shipped across five phases, what the independent reviews caught, and what is left to do." />
+    <title>Backlog wave 2: CLAUDE.md shims become opt-in, and twelve backlog items ship</title>
+    <meta name="description" content="Recap of the backlog-wave-2 OAT project after Revision 1: what the operator asked for, what shipped, which decisions shaped it, what the reviews caught, and what is left." />
     <style>
       :root {
         --canvas: hsl(210 20% 98%);
@@ -274,7 +274,7 @@
   <body>
     <div class="wrap">
       <nav class="toc" aria-label="Page sections">
-        <div class="toc-label">OAT project recap · backlog-wave-2</div>
+        <div class="toc-label">OAT project recap · wave-2</div>
         <a href="#original-request">Original request</a>
         <a href="#key-agent-decisions">Key decisions</a>
         <a href="#as-built-architecture">As-built architecture</a>
@@ -284,9 +284,9 @@
       </nav>
       <main>
         <header>
-          <div class="eyebrow">OAT project recap · backlog-wave-2</div>
-          <h1>Backlog wave 2: CLAUDE.md shims become opt-in, and twelve backlog gaps close</h1>
-          <p>Recap of the backlog-wave-2 OAT project: what the operator asked for, what shipped across five phases, what the independent reviews caught, and what is left to do.</p>
+          <div class="eyebrow">OAT project recap · wave-2</div>
+          <h1>Backlog wave 2: CLAUDE.md shims become opt-in, and twelve backlog items ship</h1>
+          <p>Recap of the backlog-wave-2 OAT project after Revision 1: what the operator asked for, what shipped, which decisions shaped it, what the reviews caught, and what is left.</p>
         </header>
         <style>
           @media (prefers-color-scheme: dark) {
@@ -339,18 +339,16 @@
           .stat--next {
             border-inline-start: 0.25rem solid var(--warning);
           }
-          .decisions {
-            display: grid;
-            gap: 0.75rem;
-            padding-inline-start: 0;
-            list-style: none;
-          }
-          .decisions li {
+          .revision-note {
+            max-width: 46rem;
             border: 1px solid var(--border);
+            border-inline-start: 0.25rem solid var(--accent);
             border-radius: var(--radius);
             background: var(--panel);
-            padding: 0.85rem 1rem;
-            overflow-wrap: anywhere;
+            padding: 0.75rem 1rem;
+          }
+          .revision-note strong {
+            font-family: var(--serif);
           }
           .catches {
             display: grid;
@@ -367,8 +365,7 @@
             padding: 0.9rem 1rem;
             overflow-wrap: anywhere;
           }
-          .catches strong,
-          .decisions strong {
+          .catches strong {
             display: block;
             font-family: var(--serif);
             font-size: 1.05rem;
@@ -387,7 +384,8 @@
             font-weight: 600;
           }
           td code,
-          li code {
+          li code,
+          p code {
             overflow-wrap: anywhere;
           }
           .diagram-scroll {
@@ -407,6 +405,10 @@
           .arch-node rect {
             fill: var(--panel-muted);
             stroke: var(--accent);
+          }
+          .arch-node rect.arch-changed {
+            stroke: var(--warning);
+            stroke-dasharray: 6 4;
           }
           .arch-edge line,
           .arch-edge polygon {
@@ -428,35 +430,35 @@
           }
         </style>
         <div class="stats" role="list" aria-label="Project state at a glance">
-          <div class="stat stat--ok" role="listitem"><span class="stat__value">40 / 40</span><span class="stat__label">tasks done across 5 sequential phases (23 planned, 17 review fixes)</span></div>
-          <div class="stat stat--ok" role="listitem"><span class="stat__value">12 + 2</span><span class="stat__label">backlog items shipped, plus 2 retired as superseded (14 archived)</span></div>
-          <div class="stat stat--ok" role="listitem"><span class="stat__value">0 findings</span><span class="stat__label">implementation exit gate, attempt 2 of 2, after one High was fixed</span></div>
+          <div class="stat stat--ok" role="listitem"><span class="stat__value">49 / 49</span><span class="stat__label">tasks done across five phases and the revision phase (30 planned and revision tasks, 19 review fixes)</span></div>
+          <div class="stat stat--ok" role="listitem"><span class="stat__value">14 archived</span><span class="stat__label">backlog items: 12 shipped by this wave, 2 closed as superseded; the bookkeeping item stays open</span></div>
+          <div class="stat stat--ok" role="listitem"><span class="stat__value">Gate passed</span><span class="stat__label">exit gate generation 2, after Revision 1: 0 Critical or High</span></div>
           <div class="stat" role="listitem"><span class="stat__value">0.3.8 → 0.3.9</span><span class="stat__label">lockstep public package bump</span></div>
-          <div class="stat stat--next" role="listitem"><span class="stat__value">PR next</span><span class="stat__label">summary and docs done; the final PR has not been opened yet</span></div>
+          <div class="stat stat--next" role="listitem"><span class="stat__value">PR #332</span><span class="stat__label"><a href="https://github.com/voxmedia/open-agent-toolkit/pull/332">Pull request on GitHub</a>, awaiting operator approval and merge</span></div>
         </div>
+        <p class="revision-note"><strong>Revision 1 changed the design after the PR opened.</strong> The shim keys were renamed to <code>instructions.claude.shims</code> and <code>instructions.claude.excludes</code>, shim removal became all or nothing, and the recon assignment validator built earlier in the wave was withdrawn rather than shipped. This page describes the result after that revision.</p>
 
         <section id="original-request" aria-labelledby="h-original-request">
           <h2 id="h-original-request">Original request</h2>
           <p>
-            The operator approved one tackle-backlog batch for wave-2 of the backlog review
-            on 2026-09-27. The batch held twelve backlog items: the wave's queued items minus the
-            recap-export lane, plus one new high-priority item to stop writing
-            <code>CLAUDE.md</code> shims by default. The agreed shape was one quick-mode OAT project, five phases
-            run in order, a single PR, Claude Opus as implementer, and Codex
-            <code>codex-6-sol-xhigh</code> as the independent reviewer for the plan gate,
-            every phase gate, and the final review.
+            On 2026-09-27 the operator approved one tackle-backlog batch for wave-2 of the
+            backlog review: the wave's queued items minus the recap-export lane, plus one new
+            high-priority item to stop writing <code>CLAUDE.md</code> shims by default. The agreed
+            shape was one quick-mode OAT project, five phases run in order, a single PR, Claude
+            Opus implementing, and Codex <code>codex-6-sol-xhigh</code> as the independent reviewer
+            for the plan gate, every phase gate, and the final review.
           </p>
           <p>
-            Why the shim item jumped the queue: Claude Code now reads <code>AGENTS.md</code>
-            on its own, and its <code>agents-md</code> plugin backs off for the whole project
-            as soon as any <code>CLAUDE.md</code> is present. The shims OAT used to generate
-            were now switching that plugin off.
+            Why the shim item jumped the queue: Claude Code now reads <code>AGENTS.md</code> on its
+            own, and its <code>agents-md</code> plugin stops reading <code>AGENTS.md</code> as soon as
+            any <code>CLAUDE.md</code>, <code>CLAUDE.local.md</code>, or <code>.claude/CLAUDE.md</code>
+            exists. The shims OAT used to generate were switching that plugin off.
           </p>
           <h3>What success meant</h3>
           <ul>
             <li>Every acceptance criterion of the closable items passes with recorded evidence, and those items are archived in the PR.</li>
             <li>The bookkeeping-order item ships its change and contract tests but is not archived, because only a live multi-phase run can confirm it.</li>
-            <li>The full Definition of Done passes on the final head, and every independent gate either passes or has its findings dispositioned.</li>
+            <li>The full Definition of Done passes on the final head, and every independent gate passes or has its findings dispositioned.</li>
             <li>Shim removal never deletes a hand-written instruction file.</li>
           </ul>
           <h3>The approved batch</h3>
@@ -466,18 +468,19 @@
                 <tr><th scope="col">Backlog item</th><th scope="col">What it asked for</th><th scope="col">Where it landed</th></tr>
               </thead>
               <tbody>
-                <tr><td><code>BL-260927-make-claude-md-shims-opt</code></td><td>Stop generating CLAUDE.md shims now that Claude Code reads AGENTS.md</td><td>Phase two; archived</td></tr>
-                <tr><td><code>BL-260903-close-manual-only-agents-md</code></td><td>Let OAT write its AGENTS.md guidance instead of printing a manual patch (<a href="https://github.com/voxmedia/open-agent-toolkit/issues/322">GitHub issue</a>)</td><td>Phase one; archived</td></tr>
-                <tr><td><code>BL-260927-name-only-installed-pack</code></td><td>Name only the skill locations that installed packs use (<a href="https://github.com/voxmedia/open-agent-toolkit/issues/323">GitHub issue</a>)</td><td>Phase one; archived, with the extra command postponed</td></tr>
-                <tr><td><code>BL-260909-fix-the-agents-md-unsafe</code></td><td>Remove a race in the unsafe-directory test under parallel turbo</td><td>Phase one; archived</td></tr>
-                <tr><td><code>BL-260829-order-phase-bookkeeping-before</code></td><td>Commit phase bookkeeping before the per-phase reviewer starts</td><td>Phase three; shipped, stays open</td></tr>
-                <tr><td><code>BL-260907-record-absorbed-projects</code></td><td>Record which projects and backlog items a Lite consolidation absorbs</td><td>Phase three; archived</td></tr>
-                <tr><td><code>BL-260907-route-quick-mode-discovery</code></td><td>Send quick-mode discovery rows straight to quick-start</td><td>Phase three; archived</td></tr>
-                <tr><td><code>BL-260909-repair-the-bare-fences-that</code></td><td>Fix bare code fences that swallow headings outside the skills tree</td><td>Phase four; archived</td></tr>
-                <tr><td><code>BL-260927-validate-recon-worker</code></td><td>Check recon assignment envelopes before any worker launches (<a href="https://github.com/voxmedia/open-agent-toolkit/issues/295">GitHub issue #295</a>)</td><td>Phase four; archived</td></tr>
-                <tr><td><code>BL-260909-give-packages-control-plane</code></td><td>Give the control-plane package a check script so CI gates its formatting</td><td>Phase five; archived</td></tr>
-                <tr><td><code>BL-260909-rewrite-inbound-references</code></td><td>Repoint links when an item is archived instead of leaving them dangling</td><td>Phase five; archived</td></tr>
-                <tr><td><code>BL-260904-stabilize-the-collection</code></td><td>Prove the collection-detach integration test is stable</td><td>Phase five; archived</td></tr>
+                <tr><td><code>BL-260927-make-claude-md-shims-opt</code></td><td>Stop generating CLAUDE.md shims now that Claude Code reads AGENTS.md</td><td>p02, reshaped by Revision 1; archived</td></tr>
+                <tr><td><code>BL-260830-persist-instruction-sync</code></td><td>Persist the instruction sync strategy</td><td>Absorbed into the shim item in p02; archived</td></tr>
+                <tr><td><code>BL-260903-close-manual-only-agents-md</code></td><td>Let OAT write its AGENTS.md guidance instead of printing a manual patch (<a href="https://github.com/voxmedia/open-agent-toolkit/issues/322">GitHub issue</a>)</td><td>p01; archived</td></tr>
+                <tr><td><code>BL-260927-name-only-installed-pack</code></td><td>Name only the skill locations that installed packs use (<a href="https://github.com/voxmedia/open-agent-toolkit/issues/323">GitHub issue</a>)</td><td>p01; archived, with the extra command postponed</td></tr>
+                <tr><td><code>BL-260909-fix-the-agents-md-unsafe</code></td><td>Remove a race in the unsafe-directory test under parallel turbo</td><td>p01; archived</td></tr>
+                <tr><td><code>BL-260829-order-phase-bookkeeping-before</code></td><td>Commit phase bookkeeping before the per-phase reviewer starts</td><td>p03; shipped, stays open</td></tr>
+                <tr><td><code>BL-260907-record-absorbed-projects</code></td><td>Record which projects and backlog items a Lite consolidation absorbs</td><td>p03; archived</td></tr>
+                <tr><td><code>BL-260907-route-quick-mode-discovery</code></td><td>Send quick-mode discovery rows straight to quick-start</td><td>p03; archived</td></tr>
+                <tr><td><code>BL-260909-repair-the-bare-fences-that</code></td><td>Fix bare code fences that swallow headings outside the skills tree</td><td>p04; archived</td></tr>
+                <tr><td><code>BL-260927-validate-recon-worker</code></td><td>Check recon-worker assignment envelopes before launch (<a href="https://github.com/voxmedia/open-agent-toolkit/issues/295">GitHub issue #295</a>)</td><td>Resolved by removing the reviewer's recon-worker path instead; archived</td></tr>
+                <tr><td><code>BL-260909-give-packages-control-plane</code></td><td>Give the control-plane package a check script so CI gates its formatting</td><td>p05; archived</td></tr>
+                <tr><td><code>BL-260909-rewrite-inbound-references</code></td><td>Repoint links when an item is archived instead of leaving them dangling</td><td>p05; archived</td></tr>
+                <tr><td><code>BL-260904-stabilize-the-collection</code></td><td>Prove the collection-detach integration test is stable</td><td>p05; archived</td></tr>
               </tbody>
             </table>
           </div>
@@ -485,22 +488,37 @@
 
         <section id="key-agent-decisions" aria-labelledby="h-key-agent-decisions">
           <h2 id="h-key-agent-decisions">Key agent decisions</h2>
-          <ul class="decisions">
-            <li><strong>Shims are opt-in, and OAT cleans up its own</strong>BL-260927-make-claude-md-shims-opt, recorded as <code>DR-260927-claude-md-shims-are-opt</code>. The default strategy is <code>none</code>: sync writes no shim, removes the exact shapes OAT created, and warns about any other <code>CLAUDE.md</code> with two remedies. Reason: a leftover file silently turns off Claude Code's own AGENTS.md support.</li>
-            <li><strong>The strategy lives in project config</strong>BL-260830-persist-instruction-sync was absorbed. The key <code>documentation.instructionSyncStrategy</code> sits next to <code>documentation.instructionPointerExcludes</code>, which governs the same commands, and the init prompt was dropped because opting back in is a single <code>oat config set</code>.</li>
-            <li><strong>Commit the task ledger before review starts</strong>BL-260829-order-phase-bookkeeping-before. The phase ledger is committed before the per-phase reviewer is dispatched, so a fix child still starts from a clean tree. Reviews in phase three widened it: recovery-marker settlement moved into that commit, and the phase row stays nonterminal until fixes and gates settle. The item stays open because gates and skills run the installed release, so the change can only be watched on the next multi-phase project.</li>
-            <li><strong>The recon validator ships with the recon pack</strong>BL-260927-validate-recon-worker. The validator sits beside <code>validate-packet.mjs</code> and reuses its contract library. Tool authority is an allowlist rather than a denylist, and the artifact kind decides the output schema.</li>
-            <li><strong>Guidance writers append; they never rewrite</strong>BL-260903-close-manual-only-agents-md. Only a missing managed block is appended. When OAT cannot prove the target file's identity, it falls back to the zero-write manual patch and names the real cause.</li>
-            <li><strong>Archive rewrites references rather than warning</strong>BL-260909-rewrite-inbound-references. Only tokens that resolve to the moved item change, and edited files are swapped in through an exclusive temporary file so a hard link is never written through.</li>
-            <li><strong>No <code>oat tools where</code> command for now</strong>BL-260927-name-only-installed-pack. The operator postponed the command: the installed-pack guidance block and the new <code>oat tools guidance</code> cover the reported confusion, and existing list and info commands already show scope.</li>
-            <li><strong>Phases run in sequence, not in parallel worktrees</strong>Shared write sets made parallel lanes unsafe: <code>project-guidance.ts</code>, <code>oat-doctor/SKILL.md</code>, <code>pjm/init.ts</code>, help snapshots, the load-contract test, <code>oat-reviewer.md</code>, and the skill version pins.</li>
-          </ul>
-          <h3>Operator decisions</h3>
+          <p>
+            Nine decision records shaped the result. The revision amended the shim decision with
+            two more records: new key names, and a rule that removes nothing while any hand-written
+            file remains.
+          </p>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr><th scope="col">Decision record</th><th scope="col">Decision</th><th scope="col">Reason and consequence</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>DR-260927-claude-md-shims-are-opt</code></td><td>CLAUDE.md shims are opt-in. The default strategy is <code>none</code>, and sync removes the shims OAT created.</td><td>A leftover CLAUDE.md turns off Claude Code's own AGENTS.md support. Amended by the two records below.</td></tr>
+                <tr><td><code>DR-260928-name-the-claude-md-shim-keys</code></td><td>The keys are <code>instructions.claude.shims</code> and <code>instructions.claude.excludes</code>.</td><td>Both govern Claude Code's CLAUDE.md handling, not documentation. The rename from <code>documentation.instructionSyncStrategy</code> and <code>documentation.instructionPointerExcludes</code> is clean, with no compatibility read or deprecation warning, because most repositories run on defaults.</td></tr>
+                <tr><td><code>DR-260928-remove-no-claude-md-shim-while</code></td><td>Remove no shim while any CLAUDE.md has content of its own.</td><td>Partial removal stranded directories whose shims carried their AGENTS.md into Claude Code sessions. No <code>keep</code> strategy was added; keeping hand-written files means choosing <code>pointer</code>, <code>symlink</code>, or <code>copy</code>.</td></tr>
+                <tr><td><code>DR-260928-persist-the-instruction-sync</code></td><td>Persist the shim strategy in project config.</td><td>The persistence backlog item was absorbed and its init prompt dropped, because opting in is a single <code>oat config set</code>.</td></tr>
+                <tr><td><code>DR-260928-commit-the-phase-task-ledger</code></td><td>Commit the phase task ledger before the per-phase reviewer is dispatched.</td><td>The pre-review commit covers task and phase completion, the resume pointer, and recovery-marker settlement. Review-outcome bookkeeping stays post-review.</td></tr>
+                <tr><td><code>DR-260928-agents-md-guidance-appends</code></td><td>AGENTS.md guidance writers append absent managed blocks.</td><td>Writers never rewrite existing bytes and fall back to the manual patch whenever file identity cannot be proven.</td></tr>
+                <tr><td><code>DR-260928-backlog-archive-rewrites</code></td><td>Backlog archive rewrites inbound references.</td><td>Rewrite rather than only warn, touch only tokens that resolve to the moved item, and replace files through an exclusive temporary file so hard links are never written through.</td></tr>
+                <tr><td><code>DR-260928-exclude-project-and-repository</code></td><td>Exclude project and repository records from exit-gate freshness.</td><td>Summaries, reviews, backlog items, and decision records cannot change shipped behavior, so they no longer stale a passed gate. The exclusion is the literal default <code>.oat/projects/</code> location, not the configured projects root, which errs toward staleness.</td></tr>
+                <tr><td><code>DR-260928-defer-the-oat-tools-where</code></td><td>Defer the <code>oat tools where</code> command.</td><td>The scope-aware guidance block and the new <code>oat tools guidance</code> cover the reported confusion.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <h3>Execution and operator decisions</h3>
           <ul>
-            <li><strong>Plan gate override.</strong> The quick-start plan gate blocked on both of its attempts even though each finding had been fixed in the plan, so readiness became an operator call. The operator approved moving to implementation.</li>
-            <li><strong>p04 gate override.</strong> Two blocked gate attempts used up the p04 retry budget. The operator directed one more fix for the remaining High, a single root re-review, and a move to p05 with no third gate run, leaving the final review to cover p04.</li>
-            <li><strong>BL-260928-settle-codex-read-authority.</strong> After that re-review the operator had the write-path High and the duplicate-check Medium fixed at once, and moved the Codex read-authority Medium and three Lows into this follow-up item.</li>
-            <li><strong>BL-260927-export-only-the-recap-page.</strong> The recap-export lane from the review was deferred out of this wave at kickoff.</li>
+            <li><strong>Phases ran in sequence, not in parallel worktrees.</strong> Shared write sets made parallel lanes unsafe: <code>project-guidance.ts</code>, <code>oat-doctor/SKILL.md</code>, <code>pjm/init.ts</code>, help snapshots, the load-contract test, <code>oat-reviewer.md</code>, and the skill version pins.</li>
+            <li><strong>Plan gate override.</strong> The quick-start plan gate blocked on both attempts although each finding had been fixed in the plan, so readiness became an operator call. The operator approved moving to implementation.</li>
+            <li><strong>p04 gate override.</strong> Two blocked gate attempts used up the p04 retry budget. The operator directed a last fix, one root re-review, and a move to p05 with no third gate run, leaving the final review to cover p04.</li>
+            <li><strong>The revision.</strong> After the PR opened, the operator asked to clean-rename the shim keys, make removal all or nothing, keep rules sync independent of the shim setting, add <code>effective-delta-v2</code> gate freshness, and take <code>recon-worker</code> out of <code>oat-reviewer</code> by restoring the recon skill to <code>main</code>. Declined after discussion: repointing old links to items archived earlier, and a new <code>keep</code> strategy value.</li>
+            <li><strong>Withdraw the recon validator instead of finishing it.</strong> It also blocked Codex recon lanes, and only the <code>recon</code> skill should launch <code>recon-worker</code>.</li>
+            <li><strong>BL-260927-export-only-the-recap-page.</strong> The recap-export lane was deferred out of this wave at kickoff.</li>
             <li><strong>p01 concurrency Medium.</strong> The p01 gate's concurrent-append finding was deferred to the final review, judged acceptable there, and filed as a follow-up.</li>
           </ul>
         </section>
@@ -508,103 +526,119 @@
         <section id="as-built-architecture" aria-labelledby="h-as-built-architecture">
           <h2 id="h-as-built-architecture">As-built architecture</h2>
           <p>
-            The wave added guards in front of commands that write to a repository. Each guard
-            either proves a write is safe or falls back to reporting the problem without
-            touching the file. The map shows the entry points, the guard each passes through,
-            and what it may change.
+            The wave put guards in front of commands that write to a repository or judge a
+            gate. Each guard either proves a change is safe or reports the problem without
+            touching the file. The map shows each entry point, the guard it passes through, and
+            what it may change. Dashed boxes are the parts the revision reshaped.
           </p>
           <figure>
             <div class="diagram-scroll">
-              <svg class="arch" viewBox="0 0 920 470" role="img" aria-labelledby="arch-title arch-desc">
-                <title id="arch-title">Entry points, guards, and repository effects</title>
-                <desc id="arch-desc">Four write paths. Instruction sync and validate pass through the shim planner, which removes only exact OAT shims and warns about the rest. Guidance commands pass through the append writer, which appends a missing block or prints a manual patch. Backlog archive passes through the reference rewriter, which replaces files atomically. The reviewer's recon launch passes through the assignment validator before a worker runs.</desc>
+              <svg class="arch" viewBox="0 0 920 580" role="img" aria-labelledby="arch-title arch-desc">
+                <title id="arch-title">Entry points, guards, and what each may change</title>
+                <desc id="arch-desc">Five paths. Instruction sync and validate pass through the shim planner, which removes exact OAT shims only when no CLAUDE.md has content of its own, and otherwise removes none and reports one finding. Guidance commands pass through the append writer, which appends a missing block or prints a manual patch. Backlog archive passes through the reference rewriter, which replaces files atomically. The exit gate fingerprints changes with effective-delta-v2, which ignores project and repository records. The oat-reviewer agent uses ordinary read-only sub-agents and never launches recon-worker; only the recon skill does.</desc>
                 <g class="arch-head" font-size="13">
                   <text x="20" y="28" font-weight="700">ENTRY POINT</text>
-                  <text x="330" y="28" font-weight="700">NEW GUARD</text>
+                  <text x="330" y="28" font-weight="700">GUARD</text>
                   <text x="640" y="28" font-weight="700">WHAT IT MAY CHANGE</text>
                 </g>
                 <g class="arch-node" stroke-width="2">
-                  <rect x="20" y="45" width="250" height="80" rx="8"/>
-                  <rect x="330" y="45" width="250" height="80" rx="8"/>
-                  <rect x="640" y="45" width="260" height="80" rx="8"/>
-                  <rect x="20" y="150" width="250" height="80" rx="8"/>
-                  <rect x="330" y="150" width="250" height="80" rx="8"/>
-                  <rect x="640" y="150" width="260" height="80" rx="8"/>
-                  <rect x="20" y="255" width="250" height="80" rx="8"/>
-                  <rect x="330" y="255" width="250" height="80" rx="8"/>
-                  <rect x="640" y="255" width="260" height="80" rx="8"/>
-                  <rect x="20" y="360" width="250" height="80" rx="8"/>
-                  <rect x="330" y="360" width="250" height="80" rx="8"/>
-                  <rect x="640" y="360" width="260" height="80" rx="8"/>
+                  <rect x="20" y="45" width="250" height="90" rx="8"/>
+                  <rect class="arch-changed" x="330" y="45" width="250" height="90" rx="8"/>
+                  <rect class="arch-changed" x="640" y="45" width="260" height="90" rx="8"/>
+                  <rect x="20" y="155" width="250" height="90" rx="8"/>
+                  <rect x="330" y="155" width="250" height="90" rx="8"/>
+                  <rect x="640" y="155" width="260" height="90" rx="8"/>
+                  <rect x="20" y="265" width="250" height="90" rx="8"/>
+                  <rect x="330" y="265" width="250" height="90" rx="8"/>
+                  <rect x="640" y="265" width="260" height="90" rx="8"/>
+                  <rect x="20" y="375" width="250" height="90" rx="8"/>
+                  <rect class="arch-changed" x="330" y="375" width="250" height="90" rx="8"/>
+                  <rect class="arch-changed" x="640" y="375" width="260" height="90" rx="8"/>
+                  <rect x="20" y="485" width="250" height="90" rx="8"/>
+                  <rect class="arch-changed" x="330" y="485" width="250" height="90" rx="8"/>
+                  <rect class="arch-changed" x="640" y="485" width="260" height="90" rx="8"/>
                 </g>
                 <g class="arch-edge" stroke-width="2">
-                  <line x1="270" y1="85" x2="322" y2="85"/><polygon points="322,80 330,85 322,90"/>
-                  <line x1="580" y1="85" x2="632" y2="85"/><polygon points="632,80 640,85 632,90"/>
-                  <line x1="270" y1="190" x2="322" y2="190"/><polygon points="322,185 330,190 322,195"/>
-                  <line x1="580" y1="190" x2="632" y2="190"/><polygon points="632,185 640,190 632,195"/>
-                  <line x1="270" y1="295" x2="322" y2="295"/><polygon points="322,290 330,295 322,300"/>
-                  <line x1="580" y1="295" x2="632" y2="295"/><polygon points="632,290 640,295 632,300"/>
-                  <line x1="270" y1="400" x2="322" y2="400"/><polygon points="322,395 330,400 322,405"/>
-                  <line x1="580" y1="400" x2="632" y2="400"/><polygon points="632,395 640,400 632,405"/>
+                  <line x1="270" y1="90" x2="322" y2="90"/><polygon points="322,85 330,90 322,95"/>
+                  <line x1="580" y1="90" x2="632" y2="90"/><polygon points="632,85 640,90 632,95"/>
+                  <line x1="270" y1="200" x2="322" y2="200"/><polygon points="322,195 330,200 322,205"/>
+                  <line x1="580" y1="200" x2="632" y2="200"/><polygon points="632,195 640,200 632,205"/>
+                  <line x1="270" y1="310" x2="322" y2="310"/><polygon points="322,305 330,310 322,315"/>
+                  <line x1="580" y1="310" x2="632" y2="310"/><polygon points="632,305 640,310 632,315"/>
+                  <line x1="270" y1="420" x2="322" y2="420"/><polygon points="322,415 330,420 322,425"/>
+                  <line x1="580" y1="420" x2="632" y2="420"/><polygon points="632,415 640,420 632,425"/>
+                  <line x1="270" y1="530" x2="322" y2="530"/><polygon points="322,525 330,530 322,535"/>
+                  <line x1="580" y1="530" x2="632" y2="530"/><polygon points="632,525 640,530 632,535"/>
                 </g>
                 <g class="arch-label" font-size="14">
                   <text x="34" y="78" font-weight="700">oat instructions sync</text>
-                  <text x="34" y="98">and validate, doctor, skills</text>
+                  <text x="34" y="98">and validate, oat-doctor,</text>
+                  <text x="34" y="116">instructions skills</text>
                   <text x="344" y="78" font-weight="700">Shim planner</text>
-                  <text x="344" y="98">strategy from project config;</text>
-                  <text x="344" y="116">identity re-checked at apply</text>
-                  <text x="654" y="78" font-weight="700">Removes exact OAT shims only</text>
-                  <text x="654" y="98">keeps hand-written CLAUDE.md;</text>
-                  <text x="654" y="116">warns with two remedies</text>
+                  <text x="344" y="98">instructions.claude.shims;</text>
+                  <text x="344" y="116">all-or-nothing check first</text>
+                  <text x="654" y="78" font-weight="700">Removes exact OAT shims</text>
+                  <text x="654" y="98">only if no CLAUDE.md has content;</text>
+                  <text x="654" y="116">else removes none, one finding</text>
 
-                  <text x="34" y="183" font-weight="700">Guidance commands</text>
-                  <text x="34" y="203">pjm init, init, tools guidance,</text>
-                  <text x="34" y="221">every project-guidance flag</text>
-                  <text x="344" y="183" font-weight="700">Append writer</text>
-                  <text x="344" y="203">fstat identity, O_APPEND,</text>
-                  <text x="344" y="221">O_NOFOLLOW</text>
-                  <text x="654" y="183" font-weight="700">Appends a missing block</text>
-                  <text x="654" y="203">or prints a zero-write patch</text>
-                  <text x="654" y="221">naming the real cause</text>
+                  <text x="34" y="188" font-weight="700">Guidance commands</text>
+                  <text x="34" y="208">pjm init, init, tools guidance,</text>
+                  <text x="34" y="226">every project-guidance flag</text>
+                  <text x="344" y="188" font-weight="700">Append writer</text>
+                  <text x="344" y="208">fstat identity, O_APPEND,</text>
+                  <text x="344" y="226">O_NOFOLLOW</text>
+                  <text x="654" y="188" font-weight="700">Appends a missing block</text>
+                  <text x="654" y="208">or prints a zero-write patch</text>
+                  <text x="654" y="226">naming the real cause</text>
 
-                  <text x="34" y="288" font-weight="700">oat backlog archive</text>
-                  <text x="34" y="308">moves an item under .oat/repo</text>
-                  <text x="344" y="288" font-weight="700">Reference rewriter</text>
-                  <text x="344" y="308">resolves every token; refuses</text>
-                  <text x="344" y="326">symlinks and out-of-root paths</text>
-                  <text x="654" y="288" font-weight="700">Repoints links and citations</text>
-                  <text x="654" y="308">via exclusive temp file</text>
-                  <text x="654" y="326">and rename; URLs untouched</text>
+                  <text x="34" y="298" font-weight="700">oat backlog archive</text>
+                  <text x="34" y="318">moves an item under .oat/repo</text>
+                  <text x="344" y="298" font-weight="700">Reference rewriter</text>
+                  <text x="344" y="318">resolves every token; refuses</text>
+                  <text x="344" y="336">symlinks and out-of-root paths</text>
+                  <text x="654" y="298" font-weight="700">Repoints links and citations</text>
+                  <text x="654" y="318">via exclusive temp file</text>
+                  <text x="654" y="336">and rename; URLs untouched</text>
 
-                  <text x="34" y="393" font-weight="700">Recon launch</text>
-                  <text x="34" y="413">oat-reviewer mechanical lane</text>
-                  <text x="344" y="393" font-weight="700">Assignment validator</text>
-                  <text x="344" y="413">reads, tools, writes, schema</text>
-                  <text x="344" y="431">checked against authority</text>
-                  <text x="654" y="393" font-weight="700">Worker runs, or launch refused</text>
-                  <text x="654" y="413">refused lanes fall back</text>
-                  <text x="654" y="431">to inline coverage</text>
+                  <text x="34" y="408" font-weight="700">Implementation exit gate</text>
+                  <text x="34" y="428">new gate generations</text>
+                  <text x="344" y="408" font-weight="700">effective-delta-v2</text>
+                  <text x="344" y="428">freshness fingerprint;</text>
+                  <text x="344" y="446">stored v1 values keep v1 rules</text>
+                  <text x="654" y="408" font-weight="700">Ignores changes under</text>
+                  <text x="654" y="428">.oat/projects and .oat/repo,</text>
+                  <text x="654" y="446">so records never stale a gate</text>
+
+                  <text x="34" y="518" font-weight="700">Reviewer lanes</text>
+                  <text x="34" y="538">oat-reviewer agent</text>
+                  <text x="344" y="518" font-weight="700">Ordinary read-only</text>
+                  <text x="344" y="538">sub-agents</text>
+                  <text x="654" y="518" font-weight="700">Never launches recon-worker;</text>
+                  <text x="654" y="538">only the recon skill does,</text>
+                  <text x="654" y="556">unchanged from main</text>
                 </g>
               </svg>
             </div>
-            <figcaption>Each row is one write path. Arrows show the order a request travels; a guard that cannot prove safety stops the write and reports why.</figcaption>
+            <figcaption>Each row is one path. Arrows show the order a request travels. A guard that cannot prove safety stops the write and reports why. Dashed boxes changed in the revision.</figcaption>
           </figure>
           <h3>Boundaries</h3>
           <ul>
-            <li><strong>Shim planner.</strong> Strategies are <code>none</code>, <code>pointer</code>, <code>symlink</code>, and <code>copy</code>; <code>--strategy</code> overrides a single run. Under <code>none</code> it never removes a hand-written file beside an <code>AGENTS.md</code>, <code>CLAUDE.local.md</code>, <code>.claude/CLAUDE.md</code>, excluded or docs trees, nested git checkouts, or any <code>CLAUDE.md</code> an <code>AGENTS.md</code> resolves to. A lone <code>CLAUDE.md</code> with no <code>AGENTS.md</code> is adopted into a new <code>AGENTS.md</code> and then removed.</li>
-            <li><strong>Append writer.</strong> Hard-linked, unwritable, swapped, or non-regular targets get the manual patch. A new read-only <code>oat tools guidance [--json]</code> prints the managed block without installing anything.</li>
-            <li><strong>Reference rewriter.</strong> Handles Markdown links, repository-root path strings, and whole-span code citations. Fenced code and working links elsewhere are left alone; forms it cannot resolve produce a warning.</li>
-            <li><strong>Assignment validator.</strong> <code>recon/scripts/validate-assignment.mjs</code> checks one homogeneous wave per array, read sources inside allowed inputs and outside exclusions, a read-only tool allowlist, write paths inside the artifact kind's packet folder, and approved schema references.</li>
-            <li><strong>Lifecycle skills.</strong> Quick-mode discovery routes straight to quick-start in next and progress; Lite records absorbed projects and backlog ids; implement commits the task ledger before the per-phase reviewer runs.</li>
+            <li><strong>Shim strategy.</strong> <code>instructions.claude.shims</code> takes <code>none</code>, <code>pointer</code>, <code>symlink</code>, or <code>copy</code>, with <code>none</code> as the default; <code>instructions.claude.excludes</code> lists directories sync leaves alone; <code>--strategy</code> overrides one run. Under <code>none</code>, sync creates no <code>CLAUDE.md</code> and removes only exact OAT-created shims (an <code>@AGENTS.md</code> pointer, a sibling symlink, an identical copy) after apply-time identity and content re-checks. A lone <code>CLAUDE.md</code> with no <code>AGENTS.md</code> is adopted into a new <code>AGENTS.md</code> and removed.</li>
+            <li><strong>All or nothing.</strong> While any <code>CLAUDE.md</code>, <code>CLAUDE.local.md</code>, or <code>.claude/CLAUDE.md</code> with its own content exists anywhere in the repository, excluded trees included, sync removes no shim. <code>sync</code> and <code>validate</code> then report one <code>claude_md_blocks_shim_removal</code> finding that names the files with content, the shims kept, why any <code>CLAUDE.md</code> matters, and the fixes: move the content into <code>AGENTS.md</code> and remove the file, or set a shim strategy. Validate, <code>oat-doctor</code>, and the agent-instructions analyze and apply skills report the same finding.</li>
+            <li><strong>Rules sync is independent of the shim setting.</strong> A test pins identical <code>oat sync</code> output for <code>.claude/rules</code>, skills, and agents under <code>none</code> and <code>pointer</code>, and <code>oat sync</code> never creates or removes a <code>CLAUDE.md</code>.</li>
+            <li><strong>Append writer.</strong> An absent managed block is appended with <code>O_WRONLY | O_APPEND | O_NOFOLLOW</code> after <code>fstat</code> identity checks. Hard-linked, unwritable, swapped, or non-regular targets get the zero-write manual patch with the real cause. A new read-only <code>oat tools guidance [--json]</code> prints the block.</li>
+            <li><strong>Reference rewriter.</strong> Handles <code>.oat/repo</code> Markdown links, repository-root path strings, and whole-span code citations. URLs, symlinks, fenced code, and working links are left alone; forms it cannot resolve produce a warning.</li>
+            <li><strong>Recon.</strong> <code>oat-reviewer</code> no longer launches <code>recon-worker</code>; reviewer lanes use ordinary read-only sub-agents. Only the <code>recon</code> skill launches <code>recon-worker</code>, and that skill is unchanged from <code>main</code>.</li>
+            <li><strong>Lifecycle skills.</strong> Quick-mode discovery routes straight to quick-start in next and progress. Lite records <code>absorbed_projects</code> and <code>absorbed_backlog_ids</code>. Implement commits the task ledger before the per-phase reviewer runs and keeps the phase row nonterminal until review fixes and gates settle.</li>
           </ul>
         </section>
 
         <section id="implementation-record" aria-labelledby="h-implementation-record">
           <h2 id="h-implementation-record">Implementation record</h2>
           <p>
-            The work ran as one autonomous quick-mode project on a single branch. Every phase
-            had an Opus implementer, an Opus root review with fix loops, and a Codex phase gate.
-            Review findings became new tasks, which is why the task count grew well past the plan.
+            The work ran as one autonomous quick-mode project on one branch. Each phase had an
+            Opus implementer, an Opus root review with fix loops, and a Codex phase gate. Review
+            findings became new tasks, and the revision ran as its own phase after the PR opened.
           </p>
           <h3>Phases</h3>
           <div class="table-scroll">
@@ -613,11 +647,12 @@
                 <tr><th scope="col">Phase</th><th scope="col">Scope</th><th scope="col">Tasks and state</th><th scope="col">Review path</th></tr>
               </thead>
               <tbody>
-                <tr><td>Phase 1</td><td>p01 · AGENTS.md guidance</td><td>8 tasks, complete</td><td>Two review fix rounds; the Codex gate passed with one Medium held for the final review</td></tr>
-                <tr><td>Phase 2</td><td>p02 · CLAUDE.md shims</td><td>8 tasks, complete</td><td>One test recovery and two fix rounds, including the C1 data-loss fix; gate passed with one Low fixed at once</td></tr>
-                <tr><td>Phase 3</td><td>p03 · Lifecycle routing and bookkeeping</td><td>5 tasks, complete</td><td>One recovery, one review fix round, and one gate sweep fix</td></tr>
-                <tr><td>Phase 4</td><td>p04 · Agent roles and recon validation</td><td>7 tasks, complete</td><td>Two gate attempts blocked; finished under operator override after five fix rounds</td></tr>
-                <tr><td>Phase 5</td><td>p05 · CI, backlog tooling, release fan-in</td><td>12 tasks, complete</td><td>One blocked gate attempt, three review fix rounds, one sweep fix, then the exit-gate fix</td></tr>
+                <tr><td>Phase 1</td><td>p01 · AGENTS.md guidance</td><td>8 tasks, complete</td><td>Two review-fix rounds; the gate passed with one Medium held for the final review</td></tr>
+                <tr><td>Phase 2</td><td>p02 · CLAUDE.md shims</td><td>8 tasks, complete</td><td>One recovery and two fix rounds, including the C1 data-loss fix</td></tr>
+                <tr><td>Phase 3</td><td>p03 · Lifecycle routing and bookkeeping</td><td>5 tasks, complete</td><td>One recovery, one review-fix round, and one gate sweep fix</td></tr>
+                <tr><td>Phase 4</td><td>p04 · Agent roles and recon validation</td><td>7 tasks, complete</td><td>Two gate attempts blocked; finished under operator override after five fix rounds. Its recon validator was later withdrawn.</td></tr>
+                <tr><td>Phase 5</td><td>p05 · CI, backlog tooling, release fan-in</td><td>12 tasks, complete</td><td>One blocked gate attempt, three review-fix rounds, one sweep fix, then the exit-gate fix</td></tr>
+                <tr><td>Phase p-rev1</td><td>p-rev1 · operator revision</td><td>9 tasks, complete</td><td>Seven revision tasks and two review-fix tasks; one gate run lacked a route receipt and was rerun</td></tr>
               </tbody>
             </table>
           </div>
@@ -628,13 +663,15 @@
                 <tr><th scope="col">Component</th><th scope="col">Notable change</th><th scope="col">Where to look</th></tr>
               </thead>
               <tbody>
-                <tr><td>Shim strategy and cleanup</td><td>No shims by default; exact OAT shims removed after apply-time re-checks; repository-wide leftover warning that names linking AGENTS.md files first</td><td><code>packages/cli/src/commands/instructions/</code>, <code>packages/cli/src/config/oat-config.ts</code>, <code>packages/cli/src/config/resolve.ts</code></td></tr>
-                <tr><td>AGENTS.md guidance</td><td>Append-only writes; guidance printed once by <code>oat pjm init</code>; every project-guidance consumer acts or rejects; guidance for zero packs is dropped</td><td><code>packages/cli/src/commands/shared/agents-md.ts</code>, <code>packages/cli/src/commands/tools/guidance/</code></td></tr>
-                <tr><td>Backlog archive</td><td>Inbound references rewritten and files replaced atomically; a re-run retries</td><td><code>packages/cli/src/commands/backlog/rewrite-references.ts</code></td></tr>
-                <tr><td>Recon validator</td><td>Envelope kind <code>recon.assignment</code>; inline output schemas dropped; <code>oat-reviewer</code> runs it before launch</td><td><code>.agents/skills/recon/scripts/validate-assignment.mjs</code></td></tr>
+                <tr><td>Shim strategy and removal</td><td>No shims by default; keys under <code>instructions.claude</code>; exact OAT shims removed only when no CLAUDE.md has content; otherwise one <code>claude_md_blocks_shim_removal</code> finding and no removal. This repository's own shims were removed.</td><td><code>packages/cli/src/commands/instructions/</code>, <code>packages/cli/src/commands/config/index.ts</code>, <code>packages/cli/src/config/oat-config.ts</code></td></tr>
+                <tr><td>Provider sync independence</td><td>Rules, skills, and agents sync identically under every shim strategy</td><td><code>packages/cli/src/commands/sync/claude-shim-independence.integration.test.ts</code></td></tr>
+                <tr><td>AGENTS.md guidance</td><td>Append-only writes; guidance printed once by <code>oat pjm init</code>; every project-guidance consumer acts or rejects; guidance for zero packs is dropped; the tools block names only directories installed packs use</td><td><code>packages/cli/src/commands/shared/agents-md.ts</code>, <code>packages/cli/src/commands/tools/guidance/</code></td></tr>
+                <tr><td>Backlog archive</td><td>Inbound references rewritten; rewritten files replaced atomically through a temporary file plus rename</td><td><code>packages/cli/src/commands/backlog/rewrite-references.ts</code></td></tr>
+                <tr><td>Exit-gate freshness</td><td>New generations fingerprint with <code>effective-delta-v2</code>, which ignores changes under <code>.oat/projects/**</code> and <code>.oat/repo/**</code></td><td><code>.agents/skills/oat-project-implement/references/completion-and-closeout.md</code></td></tr>
+                <tr><td>Reviewer and recon</td><td><code>oat-reviewer</code> no longer launches <code>recon-worker</code>; the recon skill is unchanged from <code>main</code></td><td><code>.agents/agents/oat-reviewer.md</code>, <code>.agents/skills/recon/</code></td></tr>
                 <tr><td>Lifecycle skills</td><td>Routing, Lite absorbed-item fields, bookkeeping order, nonterminal phase row until gates settle</td><td><code>.agents/skills/oat-project-implement/</code>, <code>oat-project-next</code>, <code>oat-project-progress</code>, <code>oat-project-lite</code></td></tr>
-                <tr><td>Repairs and CI</td><td>Heading-swallowing bare fences fixed in agent roles and templates; fence scanner extended to those trees; control-plane gains check, check:fix, and lint:fix scripts</td><td><code>.agents/agents/</code>, <code>.oat/templates/</code>, <code>packages/control-plane/package.json</code></td></tr>
-                <tr><td>This repository</td><td>Its own CLAUDE.md shims deleted; decision records and new backlog items from the pre-wave review-cap pass ride on the branch</td><td><code>.oat/repo/reference/decisions/</code>, <code>.oat/repo/pjm/backlog/</code></td></tr>
+                <tr><td>Repairs and CI</td><td>Heading-swallowing bare fences fixed in agent roles and templates; fence scanner extended to those trees; control-plane gains check, check:fix, and lint:fix scripts; the unsafe-directory test race fixed</td><td><code>.agents/agents/</code>, <code>.oat/templates/</code>, <code>packages/control-plane/package.json</code></td></tr>
+                <tr><td>Repository records</td><td>Decision records, backlog archives, and the review-cap consolidation records ride on the branch</td><td><code>.oat/repo/reference/decisions/</code>, <code>.oat/repo/pjm/backlog/</code></td></tr>
               </tbody>
             </table>
           </div>
@@ -643,10 +680,9 @@
         <section id="validation-evidence" aria-labelledby="h-validation-evidence">
           <h2 id="h-validation-evidence">Validation evidence</h2>
           <p>
-            Every behavior change started with a failing test, and every named negative control
-            was proven by neutralizing the guard, watching the test break, and restoring it.
-            The table lists the recorded results; the first column names the heading in
-            <code>implementation.md</code> where each result is logged.
+            Behavior changes started with a failing test, and named negative controls were proven
+            by neutralizing the guard, watching the test break, and restoring it. The first column
+            names the <code>implementation.md</code> record that logs each result.
           </p>
           <div class="table-scroll">
             <table>
@@ -654,28 +690,28 @@
                 <tr><th scope="col">Record</th><th scope="col">Observed result</th></tr>
               </thead>
               <tbody>
-                <tr><td>Test Results</td><td>Full Definition of Done at <code>f0901755c</code> in CI order (Step 12), every gate exit 0; 0 of 10 test tasks served from cache; test:smoke 163/163; test:skills 690/690</td></tr>
-                <tr><td>Implementation exit gate</td><td>Attempt 1 blocked on H1; after the fix, the Definition of Done reran at <code>ba69e2052</code> with 0 of 10 cached and 7875 CLI tests; attempt 2 returned 0 findings</td></tr>
-                <tr><td>Phase p05 dispatch</td><td>First Definition of Done run: CLI 7866, control-plane 151, docs-transforms 31, docs-config 10 tests; 0 of 11 check tasks cached</td></tr>
-                <tr><td>Phase p04 dispatch</td><td>After the last p04 fix: 359 recon node tests and 897 vitest tests</td></tr>
+                <tr><td>Test Results</td><td>Final verification (Step 12) after Revision 1 at <code>c95e17aad</code>: full Definition of Done in CI order, every gate exit 0; uncached turbo test run 10/10 tasks with 0 cached; test:smoke 163/163; test:skills 660/660</td></tr>
+                <tr><td>Phase p-rev1 dispatch</td><td>Definition of Done at the revision tip with tests 0/10 cached; the review-fix task recorded failing-first (vitest 2 failed), then instructions and sync tests 226/226 and oat-doctor 11/11; neutralizing the removal block breaks 5 tests</td></tr>
+                <tr><td>Implementation exit gate</td><td>Generation 1: attempt 1 blocked on H1 (writing through hard links), attempt 2 returned 0 findings. Generation 2 after the revision: attempt 1 passed with 0 Critical/High and 2 Medium, both naming the pending closeout steps</td></tr>
+                <tr><td>Final Review</td><td>Round 1: 0 Critical/High, 1 Medium, 3 Low, all fixed; round 2 passed</td></tr>
+                <tr><td>Plan Gate Feedback (quick-start, QS-12)</td><td>Attempt 1 raised 2 High and 1 Medium, attempt 2 raised 1 High; all resolved in the plan, and the operator approved proceeding on 2026-09-27</td></tr>
                 <tr><td>Recovery Event bw2-p02-rec-1</td><td>Full CLI suite at 7833 tests after the recovery, 7841 after the C1 fix, 7846 after the round-two fix</td></tr>
-                <tr><td>Final Review</td><td>Round 1: 0 Critical or High, 1 Medium, 3 Low, all fixed; round 2 passed; round 3 after the exit-gate fix: 3 Low, moved to a follow-up</td></tr>
-                <tr><td>Plan Gate Feedback (quick-start, QS-12)</td><td>Attempt 1 raised 2 High and 1 Medium, attempt 2 raised 1 High; all fixed in the plan; the operator approved proceeding on 2026-09-27</td></tr>
               </tbody>
             </table>
           </div>
           <h3>What the reviews caught</h3>
           <ul class="catches">
-            <li><strong>p02 C1: shim removal deleting a hand-written file</strong>The p02 review reproduced default sync deleting a hand-written <code>CLAUDE.md</code> whenever <code>AGENTS.md</code> was a symlink to it: the identical-copy check was comparing the file with itself. The first fix treated any <code>CLAUDE.md</code> the sibling <code>AGENTS.md</code> resolves to as unmanaged. The second extended that to links from other directories, checked both at planning and at apply time.</li>
-            <li><strong>p04: a new validator authority gap every round</strong>Gate attempt one found read sources that were not bounded and arbitrary output schemas. Attempt two found mutation-capable tool names such as <code>Bash</code> accepted as read-only. The operator-authorized re-review found write paths not bounded to the packet folder. Each gap was fixed: a read-only tool allowlist, write paths pinned to the artifact kind's folder, and approved schema references only.</li>
-            <li><strong>p05: the rewriter kept widening its reach</strong>The p05 gate found a tracked Markdown symlink that let the rewriter write outside <code>.oat/repo</code>, suffix fallbacks that rewrote URLs and unrelated paths, and malformed angle-bracket links. The re-review then found code-span citations left unrewritten and corrupted footnotes. The rewriter now resolves every token and refuses symlinks and out-of-root paths.</li>
-            <li><strong>Exit gate H1: writing through hard links</strong>The first exit-gate attempt found the rewriter truncating files in place, so an in-tree file hard-linked to an outside file would change the outside file. Task p05-t12 replaced files through an <code>O_EXCL | O_NOFOLLOW</code> temporary file and rename after an <code>lstat</code> device and inode re-check, proven with a hard-link fixture that fails when the guard is removed.</li>
+            <li><strong>p02 C1: shim removal nearly deleted a hand-written file</strong>The review reproduced default sync deleting a hand-written <code>CLAUDE.md</code> when <code>AGENTS.md</code> is a symlink to it: the copy check compared the file with itself. Fixes made any <code>CLAUDE.md</code> an <code>AGENTS.md</code> resolves to unmanaged, including cross-directory links checked at planning and apply time.</li>
+            <li><strong>p04: the recon validator kept growing</strong>Each gate and review round found a new authority gap: unbounded reads, arbitrary schemas, mutating tool names, unbounded write paths. The gate budget ran out, and the operator later withdrew the component rather than hardening it further.</li>
+            <li><strong>p05: the reference rewriter kept widening its reach</strong>Reviews found a symlink escape outside <code>.oat/repo</code>, URL and unrelated-path rewrites, broken code-span citations, and footnote corruption. The rewriter now resolves every token and refuses symlinks and out-of-root paths.</li>
+            <li><strong>Exit gate H1, fixed in p05-t12: writing through hard links</strong>The rewriter truncated files in place, so an in-tree file hard-linked to an outside file changed the outside file. Files are now replaced through an <code>O_EXCL | O_NOFOLLOW</code> temporary file and rename after an <code>lstat</code> device and inode re-check, proven with a hard-link fixture that fails when the guard is removed.</li>
           </ul>
           <h3>Known limits</h3>
           <ul>
-            <li>BL-260829-order-phase-bookkeeping-before is not observed live yet: gates and lifecycle skills run the installed release, so its item stays open until the next multi-phase project.</li>
-            <li>The p04 phase gate never passed on its own; the final review and the exit gate covered p04 instead.</li>
-            <li>Case variants of <code>CLAUDE.md</code> are deliberately not warned about, because case-insensitive matching flagged real provider docs.</li>
+            <li>BL-260829-order-phase-bookkeeping-before has not been observed live: gates and lifecycle skills run the installed release, so the item stays open until the next multi-phase project.</li>
+            <li>The p04 phase gate never passed on its own; the final review and the exit gate covered p04.</li>
+            <li>Case variants of <code>CLAUDE.md</code> are deliberately not flagged, because case-insensitive matching caught real provider docs such as <code>tools/smoke/protocols/claude.md</code>.</li>
+            <li>Whether Codex recon lanes launch as contract-enforced on the released CLI is a live check still to run, tracked in BL-260928-settle-codex-read-authority.</li>
           </ul>
         </section>
 
@@ -683,56 +719,58 @@
           <h2 id="h-outcome">Outcome and follow-ups</h2>
           <h3>What works now</h3>
           <ul>
-            <li><code>oat instructions sync</code> writes no shim by default, cleans up the ones OAT made, and tells you about any other <code>CLAUDE.md</code> that would switch off Claude Code's AGENTS.md support.</li>
-            <li>OAT guidance lands in <code>AGENTS.md</code> automatically when it is safe, and names the exact reason when it is not.</li>
+            <li><code>oat instructions sync</code> writes no shim by default, removes the shims OAT made when no hand-written <code>CLAUDE.md</code> remains, and otherwise removes none and explains why.</li>
+            <li>Rules, skills, and agents sync the same way whatever the shim setting.</li>
+            <li>OAT guidance lands in <code>AGENTS.md</code> automatically when it is safe, and names the reason when it is not.</li>
             <li>Archiving a backlog item repoints the links to it across <code>.oat/repo</code>.</li>
-            <li>Recon workers cannot launch with an assignment that reaches beyond its authority.</li>
+            <li>Exit gates no longer go stale when only project or repository records change.</li>
+            <li>Only the <code>recon</code> skill launches <code>recon-worker</code>; <code>oat-reviewer</code> uses ordinary read-only sub-agents.</li>
           </ul>
           <div class="callout callout--warning">
-            <p class="callout__label">Upgrade note</p>
-            <p>After upgrading, <code>oat instructions validate</code> exits non-zero in a repository that still has old shims until <code>oat instructions sync</code> removes them. To keep shims, run <code>oat config set documentation.instructionSyncStrategy pointer</code> and sync again.</p>
+            <p class="callout__label">Upgrade notes</p>
+            <p>After upgrading, <code>oat instructions validate</code> fails in a repository that still has old shims until <code>oat instructions sync</code> removes them, so CI that runs validate goes red until then. To keep shims, run <code>oat config set instructions.claude.shims pointer</code> and sync again.</p>
+            <p>A repository that set the released <code>documentation.instructionPointerExcludes</code> must re-set that list as <code>instructions.claude.excludes</code> before its first sync. The old key is ignored, so sync would otherwise adopt and remove a lone <code>CLAUDE.md</code> in the formerly excluded directories.</p>
           </div>
           <h3>Follow-up backlog items</h3>
           <ul class="followups">
-            <li>BL-260928-serialize-concurrent-agents-md: two guidance runs at the same moment can append the same managed block twice (the p01 gate Medium).</li>
-            <li>BL-260928-keep-instructions-sync-force: with a shim strategy, <code>--strategy pointer --force</code> can overwrite the only <code>CLAUDE.md</code> when <code>AGENTS.md</code> links to it. This predates the wave.</li>
-            <li>BL-260928-route-quick-mode-discovery: the control-plane recommender and dashboard still send quick-mode discovery to <code>oat-project-plan</code>.</li>
-            <li>BL-260928-settle-codex-read-authority: Codex recon lanes have no allowlisted read tool and fall back to inline coverage; weaker write-path form checks, web tools without URL sources, and an unchecked mode also remain.</li>
+            <li>BL-260928-serialize-concurrent-agents-md: concurrent guidance appends can duplicate a managed block (the p01 gate Medium).</li>
+            <li>BL-260928-keep-instructions-sync-force: with a shim strategy, <code>--strategy pointer --force</code> can overwrite the only <code>CLAUDE.md</code> in the <code>AGENTS.md -&gt; CLAUDE.md</code> layout. This predates the wave.</li>
+            <li>BL-260928-route-quick-mode-discovery: the control-plane recommender and dashboard still route quick-mode discovery to <code>oat-project-plan</code>.</li>
+            <li>BL-260928-settle-codex-read-authority: rescoped by the revision to a live check that <code>/recon</code> launches Codex worker lanes as contract-enforced on the released CLI.</li>
             <li>BL-260928-harden-the-backlog-reference: atomic-replace edge cases such as an ownership change, a same-inode concurrent edit, and long temporary names.</li>
-            <li>BL-260818-distinguish-operator-directed: until it ships, record the operator's disposition in the plan's Reviews notes whenever a gate exhausts its budget on findings that are already fixed.</li>
-            <li>BL-260901-add-corrective-revision: closed as superseded by the pre-wave review-cap consolidation.</li>
-            <li>BL-260927-record-owner-overrides: also superseded by that consolidation and archived with this wave.</li>
+            <li>BL-260829-order-phase-bookkeeping-before stays open for live observation on the next multi-phase project.</li>
+            <li>BL-260818-distinguish-operator-directed: until it ships, record the operator's disposition in the plan's Reviews notes when a gate exhausts its budget on findings already fixed.</li>
+            <li>Not filed: the pr-final ledger guard reads a prose line that starts with a pipe under Reviews as a malformed row.</li>
           </ul>
-          <h3>Recorded figures by source section</h3>
+          <h3>Source trail</h3>
+          <p>Where the headline facts on this page come from, by section of the project summary.</p>
           <div class="table-scroll">
             <table>
               <thead>
-                <tr><th scope="col">Source section</th><th scope="col">Recorded figures</th></tr>
+                <tr><th scope="col">Source section</th><th scope="col">Recorded facts</th></tr>
               </thead>
               <tbody>
-                <tr><td>summary.md</td><td>Status complete, last updated 2026-09-28, 0 blockers</td></tr>
-                <tr><td>Summary: backlog-wave-2</td><td>Recap of wave 2</td></tr>
-                <tr><td>Overview</td><td>Wave 2 of the 2026-09-26 backlog review; refresh-loop, routing, validation, and CI gaps closed</td></tr>
-                <tr><td>What Was Implemented</td><td>23 planned plus 17 review-fix tasks; 11 repository shims removed; lockstep 0.3.8 → 0.3.9; guidance for zero packs is skipped; two superseded items closed; six DR-260927 decision records on the branch</td></tr>
-                <tr><td>Progress Overview</td><td>40/40 tasks</td></tr>
-                <tr><td>Implementation: backlog-wave-2</td><td>Every phase complete</td></tr>
-                <tr><td>implementation.md</td><td>Front matter still reads in_progress while closeout bookkeeping finishes</td></tr>
-                <tr><td>p01</td><td>Concurrent-append Medium deferred, then filed</td></tr>
-                <tr><td>p04</td><td>Phase complete under operator override</td></tr>
-                <tr><td>p05</td><td>Phase complete after the exit-gate fix</td></tr>
-                <tr><td>Workflow issues</td><td>The first exit-gate intent write failed a substring guard, so the gate launched before its intent was persisted</td></tr>
+                <tr><td>summary.md</td><td>Status complete, last updated 2026-09-28, regenerated for revision count 1</td></tr>
+                <tr><td>Summary: backlog-wave-2</td><td>The summary for the backlog-wave-2 project</td></tr>
+                <tr><td>Overview</td><td>Wave 2 of the 2026-09-26 backlog review in one PR (#332); the other items closed gaps in the refresh loop, lifecycle routing, and CI; Revision 1 changed the shim design after the PR opened</td></tr>
+                <tr><td>p01</td><td>49 tasks across the phases and the revision, 30 of them planned and revision tasks; the p01 gate Medium on concurrent appends was deferred, then filed</td></tr>
+                <tr><td>What Was Implemented</td><td>19 review-fix tasks; this repository's 11 shims removed; sync and validate exit 1 on a blocked removal; zero-pack guidance skipped; lockstep packages 0.3.8 → 0.3.9; two items closed as superseded</td></tr>
+                <tr><td>Design Deltas</td><td>p04 built the recon assignment validator and review rounds grew it to about 1,900 lines; Revision 1 withdrew it and restored the recon skill to main</td></tr>
+                <tr><td>Notable Challenges</td><td>A p-rev1 gate run failed closed: it wrote a 0-finding review but never ran the route step, so it was not accepted and a rerun passed</td></tr>
+                <tr><td>Revision History</td><td>Revision 1 on 2026-09-28 from operator feedback on PR #332; two review-fix tasks closed p-rev1 and final review findings</td></tr>
+                <tr><td>Workflow issues</td><td>A substring guard failed, so the exit gate launched before its intent was persisted</td></tr>
+                <tr><td>Explainer Outcome</td><td>The earlier recap was built before Revision 1; this page replaces it</td></tr>
               </tbody>
             </table>
           </div>
           <h3>Next step</h3>
           <p>
-            Summary and documentation are done. The remaining pre-approval step is
-            <code>oat-project-pr-final</code>: create the PR with a breaking-change title and a
-            behavior-change callout covering shim removal, lone-file adoption, and the validate
-            exit after upgrade. Then comes operator approval and merge.
+            The implementation, summary, and documentation are done and this recap is rebuilt.
+            What remains is operator approval and merge of the PR; project completion then exports
+            this recap as the durable copy.
           </p>
         </section>
-        <footer>Generated by <code>oat-explainer-kit</code> (explainer-kit core 3.0.3, recipe project-recap v2) in unattended mode from the project's summary, implementation, project log, plan, and discovery artifacts at commit <code>84bc61f39</code> on branch <code>wave/2026-09-27-backlog-wave-2</code>. The source artifacts live under <code>.oat/projects/shared/backlog-wave-2/</code> in the repository.</footer>
+        <footer>Generated by <code>oat-explainer-kit</code> (explainer-kit core 3.0.3, recipe project-recap v2) in unattended mode from the project's summary, implementation, project log, plan, and discovery artifacts at commit <code>316f53e55</code> on branch <code>wave/2026-09-27-backlog-wave-2</code>. The source artifacts live under <code>.oat/projects/shared/backlog-wave-2/</code> in the repository.</footer>
       </main>
     </div>
     <script>

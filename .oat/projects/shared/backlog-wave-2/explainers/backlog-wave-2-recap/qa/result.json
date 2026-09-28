@@ -1,5 +1,5 @@
 {
-  "artifactSha256": "sha256:f4bc2f8e927f8927cbbdf50f8fd8941ee302894278d968c9bcd5645c90f8443e",
+  "artifactSha256": "sha256:5b1dbc08492fa009af2c60261542335c2dfc148ce663afd11e9b8e6e1cccf82a",
   "checks": {
     "parse": {
       "status": "pass"
@@ -31,6 +31,6 @@
   ],
   "visual": {
     "verdict": "pass",
-    "notes": "Host headless Chrome (CDP exact device metrics, light scheme) captured full pages at 320, 768, and 1440 and all three were inspected: no horizontal page overflow (scrollWidth equals clientWidth at every width), all six required sections visible, headings readable at 320, no overlapping text; wide tables and the diagram scroll inside bounded containers. The stored 320 capture is trimmed to the 16384 px PNG limit."
+    "notes": "Headless Chrome over CDP at 320, 768, and 1440 pixels; the full pages were inspected in slices. No horizontal page overflow (scrollWidth equals clientWidth at each width), all six required sections visible, headings readable at 320 pixels, no overlapping text; the diagram and wide tables scroll inside bounded containers at 320 pixels. Evidence PNGs at 320 and 768 are capped at 16000 pixels tall to fit the PNG dimension limit."
   }
 }

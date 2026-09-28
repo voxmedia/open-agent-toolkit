@@ -249,9 +249,10 @@ Revision 1 changed the shim design after the PR opened.
 
 ## Explainer Outcome
 
-- **project-recap:** generated — `explainers/backlog-wave-2-recap/` (run
-  `def695e7-4da2-4fb9-97ff-9a2f10df0294`, built before Revision 1; closeout
-  rebuilds it from this summary)
+- **project-recap:** built — `explainers/backlog-wave-2-recap/` (run
+  `d9a93b10-dde6-4ee0-b111-28e01c32c837`, rebuilt after Revision 1).
+- **QA:** host browser rung (headless Chrome at 320, 768, and 1440 pixels),
+  visual verdict pass; every browser-free check passed.
 
 ## Follow-up Items
 

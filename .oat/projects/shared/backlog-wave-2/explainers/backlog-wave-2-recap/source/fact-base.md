@@ -5,29 +5,40 @@
 - oat_blockers: []
 - oat_last_updated: 2026-09-28
 - oat_generated: true
-- oat_summary_last_task: p05-t12
-- oat_summary_revision_count: 0
-- oat_summary_includes_revisions: []
+- oat_summary_last_task: prev1-t09
+- oat_summary_revision_count: 1
+- oat_summary_includes_revisions: [p-rev1]
 - Summary: backlog-wave-2
 - Wave 2 of the 2026-09-26 backlog review, delivered as one autonomous quick-mode
-- project and one PR. It bundled the approved wave items with a new item making
-- `CLAUDE.md` shims opt-in, because Claude Code now reads `AGENTS.md` natively and
-- any leftover `CLAUDE.md` makes its `agents-md` plugin stand down. The rest
-- closed refresh-loop, routing, validation, and CI gaps from earlier waves.
-- Forty tasks across five sequential phases: 23 planned tasks and 17 review-fix
-- tasks. What shipped:
-- - **CLAUDE.md shims are opt-in.** `documentation.instructionSyncStrategy`
-- (`none | pointer | symlink | copy`, default `none`) persists the strategy and
+- project and one PR (#332). It bundled twelve approved backlog items with a new
+- one making `CLAUDE.md` shims opt-in: Claude Code now reads `AGENTS.md` natively,
+- and any `CLAUDE.md`, `CLAUDE.local.md`, or `.claude/CLAUDE.md` makes its
+- `agents-md` plugin stop reading `AGENTS.md`. The other items closed gaps in the
+- AGENTS.md refresh loop, lifecycle routing, and CI left by earlier waves.
+- Revision 1 changed the shim design after the PR opened.
+- 49 tasks across phases p01-p05 and p-rev1: 30 planned and revision tasks plus
+- 19 review-fix tasks. What shipped:
+- - **CLAUDE.md shims are opt-in.** `instructions.claude.shims`
+- (`none | pointer | symlink | copy`, default `none`) persists the strategy,
+- `instructions.claude.excludes` lists directories sync leaves alone, and
 - `--strategy` overrides one run. Under `none`, `oat instructions sync` creates
-- no `CLAUDE.md` and removes only exact OAT-created shims (pointer, sibling
-- symlink, identical copy) after apply-time identity and content re-checks. It
-- never removes a hand-written `CLAUDE.md` beside an `AGENTS.md`,
-- `CLAUDE.local.md`, `.claude/CLAUDE.md`, excluded or docs trees, nested git
-- checkouts, or any `CLAUDE.md` an `AGENTS.md` resolves to. A lone `CLAUDE.md`
-- with no `AGENTS.md` is adopted into a new `AGENTS.md` and removed. A
-- repository-wide warning names each remaining `CLAUDE.md` with two remedies.
-- Validate, doctor, and the agent-instructions skills follow the same rules;
-- this repository's 11 shims were removed.
+- no `CLAUDE.md` and removes only exact OAT-created shims (`@AGENTS.md` pointer,
+- sibling symlink, identical copy) after apply-time identity and content
+- re-checks. A lone `CLAUDE.md` with no `AGENTS.md` is adopted into a new
+- `AGENTS.md` and removed. This repository's 11 shims were removed.
+- - **Shim removal is all or nothing.** While any `CLAUDE.md`,
+- `CLAUDE.local.md`, or `.claude/CLAUDE.md` with its own content exists
+- anywhere in the repository (excluded trees included), sync removes no shim,
+- and `sync` and `validate` exit 1 with one `claude_md_blocks_shim_removal`
+- finding. It names the files with content, the shims kept, why any
+- `CLAUDE.md` matters (with a docs link), and the fixes: move the content into
+- `AGENTS.md` and remove the file, or set a shim strategy. A blocker that an
+- `AGENTS.md` links to gets replace-then-remove advice, and kept shims get no
+- per-file "remove it" advice. Validate, `oat-doctor`, and the
+- agent-instructions analyze and apply skills report the same finding.
+- - **Rules and provider sync are independent of the shim setting.** A test pins
+- identical `oat sync` output for `.claude/rules`, skills, and agents under
+- `none` and `pointer`, and `oat sync` never creates or removes a `CLAUDE.md`.
 - - **AGENTS.md guidance appends.** An absent managed block is appended with
 - `O_WRONLY | O_APPEND | O_NOFOLLOW` after `fstat` identity checks; hard-linked,
 - unwritable, swapped, or non-regular targets get the zero-write manual patch
@@ -40,60 +51,78 @@
 - whole-span code citations to the moved item. URLs, symlinks, fenced code, and
 - working links are left alone, unresolvable forms warn, and rewritten files
 - are replaced atomically (temporary file plus rename).
-- - **Recon assignment validator.** `recon/scripts/validate-assignment.mjs`
-- checks `recon.assignment` v1 envelopes before launch: every invalid field,
-- one homogeneous wave per array, read sources bounded by allowed inputs and
-- exclusions, a read-only tool allowlist, write paths inside the artifact
-- kind's packet folder, and approved output-schema references. `oat-reviewer`
-- runs it before launch.
+- - **Recon.** `oat-reviewer` no longer launches `recon-worker`; reviewer lanes
+- use ordinary read-only sub-agents, and only the `recon` skill launches
+- `recon-worker`. The recon skill is unchanged from `main`.
 - - **Lifecycle skills.** Quick-mode discovery routes straight to quick-start in
 - next and progress; Lite records `absorbed_projects` /
 - `absorbed_backlog_ids`; implement commits the phase task ledger before
 - dispatching the per-phase reviewer and keeps the phase row nonterminal until
-- review fixes and gates settle.
+- review fixes and gates settle. New exit-gate generations fingerprint with
+- `effective-delta-v2`, which ignores changes under `.oat/projects/**` and
+- `.oat/repo/**`; stored v1 values keep v1 rules.
 - - **Repairs and CI.** Five heading-swallowing bare fences fixed in agent roles
 - and templates, with the fence scanner extended to `.agents/agents` and
 - `.oat/templates`; `packages/control-plane` gains `check`, `check:fix`, and
 - `lint:fix`; the agents-md unsafe-directory test race is fixed; ten uncached
 - runs recorded for the collection-detach test.
 - - Lockstep public packages bumped 0.3.8 → 0.3.9. Fourteen backlog items
-- archived: twelve shipped by this wave plus two closed as superseded by the
-- pre-wave review-cap consolidation, whose six `DR-260927-*` records also ride
-- on this branch.
+- archived: twelve shipped by this wave (`BL-260927-validate-recon-worker`
+- resolved by removing the reviewer's `recon-worker` path) plus two closed as
+- superseded by the pre-wave review-cap consolidation, whose six `DR-260927-*`
+- records also ride on this branch.
 - - **CLAUDE.md shims are opt-in** (`DR-260927-claude-md-shims-are-opt`): the
-- default strategy is `none`, OAT-managed shims are removed automatically,
-- and any remaining `CLAUDE.md` produces a warning.
-- - **Persist the instruction sync strategy in project config:** the key
-- `documentation.instructionSyncStrategy` sits beside
-- `documentation.instructionPointerExcludes`, which governs the same commands.
-- `BL-260830-persist-instruction-sync` was absorbed and its init prompt
-- dropped, because opting in is one `oat config set`.
-- - **Commit the phase task ledger before per-phase review dispatch:** the
-- pre-review commit covers task and phase completion, the resume pointer, and
-- recovery-marker settlement; review-outcome bookkeeping stays post-review, and
-- the phase row stays nonterminal until review fixes and selected gates settle.
-- - **Validate recon assignments before launch in the recon skill:** the
-- validator lives beside `validate-packet.mjs` and reuses its contract library
-- so it ships with the pack that launches workers. Tool authority is an
-- allowlist, not a denylist, and the artifact kind fixes the output schema.
-- - **AGENTS.md guidance appends absent managed blocks:** writers append only
-- missing blocks and never rewrite existing bytes, falling back to the manual
-- patch whenever file identity cannot be proven.
-- - **Backlog archive rewrites inbound references:** the archive rewrites rather
-- than only warns, touches only tokens that resolve to the moved item, and
-- replaces files through an exclusive temporary file so hard links are never
-- written through.
-- - **Defer the `oat tools where` command:** the scope-aware guidance block and
-- `oat tools guidance` cover the reported confusion; `oat tools list --json`
-- and `oat tools info` already report scope.
+- default strategy is `none`, OAT-created shims are removed by sync, and any
+- remaining `CLAUDE.md` produces a warning. Amended by the next two records.
+- - **Name the CLAUDE.md shim keys under instructions.claude**
+- (`DR-260928-name-the-claude-md-shim-keys`): both keys govern Claude Code's
+- `CLAUDE.md` handling, not documentation. The rename from
+- `documentation.instructionSyncStrategy` and
+- `documentation.instructionPointerExcludes` is clean, with no compatibility
+- read or deprecation warning, because most repositories run on defaults.
+- - **Remove no CLAUDE.md shim while any CLAUDE.md has content**
+- (`DR-260928-remove-no-claude-md-shim-while`): partial removal stranded
+- directories whose shims carried their `AGENTS.md` into Claude Code sessions.
+- No `keep` strategy value was added; keeping hand-written files means choosing
+- `pointer`, `symlink`, or `copy`.
+- - **Persist the instruction sync strategy in project config**
+- (`DR-260928-persist-the-instruction-sync`): `BL-260830-persist-instruction-sync`
+- was absorbed and its init prompt dropped, because opting in is one
+- `oat config set`.
+- - **Commit the phase task ledger before per-phase review dispatch**
+- (`DR-260928-commit-the-phase-task-ledger`): the pre-review commit covers task
+- and phase completion, the resume pointer, and recovery-marker settlement;
+- review-outcome bookkeeping stays post-review.
+- - **AGENTS.md guidance appends absent managed blocks**
+- (`DR-260928-agents-md-guidance-appends`): writers never rewrite existing
+- bytes and fall back to the manual patch whenever file identity cannot be
+- proven.
+- - **Backlog archive rewrites inbound references**
+- (`DR-260928-backlog-archive-rewrites`): rewrite rather than only warn, touch
+- only tokens that resolve to the moved item, and replace files through an
+- exclusive temporary file so hard links are never written through.
+- - **Exclude project and repository records from exit-gate freshness**
+- (`DR-260928-exclude-project-and-repository`): summaries, review artifacts,
+- backlog items, and decision records cannot change shipped behavior, so they
+- no longer stale a passed gate. The exclusion is the literal default
+- `.oat/projects/` location, not the configured `projects.root`, which errs
+- toward staleness.
+- - **Defer the oat tools where command** (`DR-260928-defer-the-oat-tools-where`):
+- the scope-aware guidance block and `oat tools guidance` cover the reported
+- confusion.
+- - **Revision 1 reshaped the shim design** (discovery Key Decisions 2-3,
+- `DR-260927-claude-md-shims-are-opt`): the keys moved from the
+- `documentation.*` namespace to `instructions.claude.*`, and unconditional
+- removal of OAT-managed shims became all-or-nothing removal. Operator
+- direction; implementation is the source of truth.
+- - **Recon validator withdrawn** (discovery Key Decision 5, plan p04-t02): p04
+- built `recon/scripts/validate-assignment.mjs` and wired `oat-reviewer` to run
+- it; four review and gate rounds grew it to about 1,900 lines of authority
+- checks. Revision 1 withdrew it, restored the recon skill to `main`, and
+- deleted its unshipped decision record.
 - - **Pre-review bookkeeping widened** (discovery Key Decision 4): p03 review
 - M1/M2 and gate M2 moved recovery-marker settlement into the pre-review commit
 - and kept the phase row nonterminal until fixes and gates settle.
-- Implementation is the source of truth; no follow-up.
-- - **Recon validator enforces authority, not only envelope shape** (plan
-- p04-t02): four review and gate rounds added read, write, tool, and schema
-- authority checks and dropped inline output schemas. Residual gaps are in
-- `BL-260928-settle-codex-read-authority`.
 - - **p04 gate completed under operator override** after two blocked attempts
 - exhausted the retry budget; the final review covered p04.
 - - **Case variants of `CLAUDE.md` are not warned about** (backlog AC4):
@@ -101,40 +130,63 @@
 - `tools/smoke/protocols/claude.md`; documented and pinned.
 - - **Shim removal nearly deleted hand-written files.** p02 review C1 reproduced
 - default sync deleting a hand-written `CLAUDE.md` when `AGENTS.md` is a
-- symlink to it (the copy check compared the file with itself). Round 1 made
-- any `CLAUDE.md` that the sibling `AGENTS.md` resolves to unmanaged; round 2
-- extended this to cross-directory links scanned at planning and apply time.
-- - **Each recon validator gate found a new authority gap.** Gate attempt 1
-- found unbounded read sources and arbitrary schemas; attempt 2 found
-- mutation-capable tool names accepted; the operator-authorized re-review found
-- unbounded write paths. Each was fixed, but the gate budget ran out.
+- symlink to it (the copy check compared the file with itself). Fixes made any
+- `CLAUDE.md` an `AGENTS.md` resolves to unmanaged, including cross-directory
+- links checked at planning and apply time.
+- - **The recon validator kept growing.** Each p04 gate and review found a new
+- authority gap (unbounded reads, arbitrary schemas, mutating tool names,
+- unbounded write paths); the gate budget ran out, and the operator later
+- withdrew the component rather than hardening it further.
 - - **The reference rewriter kept widening its blast radius.** Reviews found a
 - symlink escape outside `.oat/repo`, URL and unrelated-path rewrites, broken
 - code-span citations, footnote corruption, and finally (exit gate H1) in-place
 - truncation writing through hard links. The rewriter now resolves every token,
 - refuses symlinks and out-of-root paths, and replaces files atomically.
+- - **A p-rev1 gate run failed closed.** Run `b282ca69` wrote a 0-finding review
+- but never ran the branch-local `gate route` step, so no route receipt existed;
+- it was not accepted as evidence and a rerun passed.
 - - **Five sequential phases instead of parallel worktrees:** shared write sets
 - (`project-guidance.ts`, `oat-doctor/SKILL.md`, `pjm/init.ts`, help snapshots,
 - the load-contract test, `oat-reviewer.md`, and skill version pins) made
 - parallel lanes unsafe.
+- - **Clean key rename with no compatibility read:** simpler config and docs, at
+- the cost of an upgrade notice for the few repositories that set the released
+- exclusion list.
+- - **All-or-nothing removal:** a repository with one hand-written `CLAUDE.md`
+- keeps every shim and sees exit 1 until someone resolves that file; nothing is
+- removed silently.
+- - **Withdraw the recon validator instead of finishing it:** it also blocked
+- Codex recon lanes, and only the `recon` skill should launch `recon-worker`.
 - - **Concurrent AGENTS.md appends left unserialized:** two simultaneous runs can
-- append the same block twice; a correct fix needs a cross-process lock, larger
-- than a sweep fix, and concurrent runs against one checkout are rare.
-- - **Codex recon lanes fall back to inline coverage:** Codex reads through its
-- command-execution tool, which the read-only allowlist rejects; accepted over
-- weakening the allowlist.
+- append the same block twice; a correct fix needs a cross-process lock, and
+- concurrent runs against one checkout are rare.
 - - **`BL-260829-order-phase-bookkeeping-before` shipped but stays open:** gates
 - and lifecycle skills run the installed release, so live observation waits for
 - the next multi-phase project.
 - - After upgrading, `oat instructions validate` exits 1 in a repository that
-- still has old shims until `oat instructions sync` removes them. Opt back in
-- with `oat config set documentation.instructionSyncStrategy pointer` and rerun
-- sync.
-- - Recon launchers must pass `validate-assignment.mjs`; write paths outside the
-- artifact kind's packet folder and non-allowlisted tools are refused.
-- - Final verification: full Definition of Done at `f0901755c` (and again at
-- `ba69e2052` after `p05-t12`), all gates exit 0 with 0 of 10 test tasks
-- cached; the exit gate passed on attempt 2 with 0 findings.
+- still has old shims until `oat instructions sync` removes them, so CI that
+- runs validate goes red until then. Opt back in with
+- `oat config set instructions.claude.shims pointer` and rerun sync.
+- - Upgrade notice: a repository that set the released
+- `documentation.instructionPointerExcludes` must re-set that list as
+- `instructions.claude.excludes` before its first sync. The old key is ignored,
+- so sync would otherwise adopt and remove a lone `CLAUDE.md` in the formerly
+- excluded directories.
+- - A `claude_md_blocks_shim_removal` finding makes `sync` and `validate` exit 1
+- until the named files are moved or removed or a shim strategy is set.
+- - Reviewer lanes never launch `recon-worker`; use the `recon` skill for
+- evidence-packet reconnaissance.
+- - Final verification: full Definition of Done at `c95e17aad` after Revision 1,
+- every gate exit 0 with 0 of 10 test tasks cached. Exit gate generation 2
+- passed (run `d34bae3b`, 0 Critical/High); its two Mediums were the pending
+- summary, recap, and PR refresh closeout steps.
+- - **Revision 1 (2026-09-28, operator feedback on PR #332; prev1-t01..t09):**
+- renamed the shim keys to `instructions.claude.shims` and
+- `instructions.claude.excludes`, made shim removal all or nothing, pinned
+- rules-sync independence, and added `effective-delta-v2` exit-gate freshness.
+- It also removed the reviewer's `recon-worker` path, restored the recon skill
+- to `main` (withdrawing the p04 assignment validator), and corrected the recon
+- records; two review-fix tasks closed p-rev1 and final review findings.
 - - At batch approval, tell the operator to run `/oat-project-autonomous` next
 - instead of trying the Skill tool first; lifecycle skills are
 - user-invocation-only, so chaining costs a round trip.
@@ -152,10 +204,17 @@
 - the gate sees the trimmed plan; review rounds added machinery a later
 - complexity pass removed.
 - ([2026-09-27T15:25Z — efficiency — Structured artifact review converged in three attempts](oat-execution-learnings.md#2026-09-27t1525z---efficiency---structured-artifact-review-converged-in-three-attempts))
+- - When a gate keeps widening one component across rounds, check whether the
+- component should exist before a second fix round; the recon validator grew
+- through gate rounds and was then withdrawn.
+- ([2026-09-28T13:10Z — decision — Revision 1 resumed autonomously after operator feedback on PR #332](oat-execution-learnings.md#2026-09-28t1310z---decision---revision-1-resumed-autonomously-after-operator-feedback-on-pr-332))
 - - Persist exit-gate launch intent, verify it, then launch; never batch the two,
 - and match YAML keys at line start. A substring guard failed on a commented
 - template and the gate ran without persisted intent.
 - ([2026-09-28T11:40Z — gotcha — Exit-gate intent persistence must be sequential, not parallel](oat-execution-learnings.md#2026-09-28t1140z---gotcha---exit-gate-intent-persistence-must-be-sequential-not-parallel))
+- - **project-recap:** generated — `explainers/backlog-wave-2-recap/` (run
+- `def695e7-4da2-4fb9-97ff-9a2f10df0294`, built before Revision 1; closeout
+- rebuilds it from this summary)
 - - `BL-260928-serialize-concurrent-agents-md` — concurrent guidance appends can
 - duplicate a managed block (p01 gate M1).
 - - `BL-260928-keep-instructions-sync-force` — with a shim strategy,
@@ -163,12 +222,14 @@
 - `AGENTS.md -> CLAUDE.md` layout (pre-existing).
 - - `BL-260928-route-quick-mode-discovery` — the control-plane recommender and
 - dashboard still route quick-mode discovery to `oat-project-plan` (p03 L1).
-- - `BL-260928-settle-codex-read-authority` — Codex recon read authority plus
-- weaker `writePath` form checks, web tools without URL sources, and mode not
-- checked against artifact kind (p04 re-review M2, L1-L3).
+- - `BL-260928-settle-codex-read-authority` — rescoped in Revision 1 to a live
+- check that `/recon` launches Codex worker lanes as `contract-enforced` on the
+- released CLI.
 - - `BL-260928-harden-the-backlog-reference` — atomic-replace edge cases:
 - ownership change, same-inode concurrent edit, long temporary names.
 - - `BL-260829-order-phase-bookkeeping-before` stays open for live observation.
+- - Not filed: the pr-final ledger guard parses a prose line that starts with `|`
+- under `## Reviews` as a malformed row (PRFINAL-05 false positive).
 - 2026-09-27 · structural · oat gate review · plan
 - target=codex-6-sol-xhigh threshold=high findings=critical:0,high:2,medium:1,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-2/reviews/artifact-plan-review-2026-09-27T150947Z.md run=8f69f414-ff48-4fc6-b22a-64dca2027e62
 - 2026-09-27 · structural · oat gate review · plan
@@ -203,6 +264,14 @@
 - target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:0,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-2/reviews/final-review-2026-09-28T113721Z.md run=0415d270-2faa-4559-901c-65430d5c405d
 - 2026-09-28 · structural · oat gate review · final
 - target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-2/reviews/final-review-2026-09-28T114805Z.md run=0c5dbb3e-18a9-4059-a857-ca4209e3b9e4
+- 2026-09-28 · structural · oat gate review · p-rev1
+- target=codex-6-sol-xhigh threshold=high exit=1 status=review_failed run=b282ca69-45c4-4d01-9b68-9b8e1a71d833
+- 2026-09-28 · structural · oat gate review · p-rev1
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:1 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-2/reviews/p-rev1-review-2026-09-28T162038Z.md run=22b3f5cf-b81d-4d85-bc8d-766a6cb611e6
+- 2026-09-28 · structural · oat gate review · final
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:2,low:2 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-2/reviews/final-review-2026-09-28T164247Z.md run=5c3729d3-0488-4ae1-84c5-fd7b86e49418
+- 2026-09-28 · structural · oat gate review · final
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:2,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-2/reviews/final-review-2026-09-28T165830Z.md run=d34bae3b-fe9f-4259-b98b-18a6a4e91b5b
 - oat_status: in_progress
 - oat_ready_for: null
 - oat_blockers: []
@@ -221,13 +290,14 @@
 - > - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews` (e.g., `| final | code | passed | ... |`).
 - > - Keep phase/task statuses consistent with the Progress Overview table so restarts resume correctly.
 - > - Before running the `oat-project-pr-final` skill, fill the Final Summary (for PR/docs) section below with what was actually implemented.
-- | Phase   | Status   | Tasks | Completed |
-- | Phase 1 | complete | 8     | 8/8       |
-- | Phase 2 | complete | 8     | 8/8       |
-- | Phase 3 | complete | 5     | 5/5       |
-- | Phase 4 | complete | 7     | 7/7       |
-- | Phase 5 | complete | 12    | 12/12     |
-- **Total:** 40/40 tasks completed
+- | Phase        | Status   | Tasks | Completed |
+- | Phase 1      | complete | 8     | 8/8       |
+- | Phase 2      | complete | 8     | 8/8       |
+- | Phase 3      | complete | 5     | 5/5       |
+- | Phase 4      | complete | 7     | 7/7       |
+- | Phase 5      | complete | 12    | 12/12     |
+- | Phase p-rev1 | complete | 9     | 9/9       |
+- **Total:** 49/49 tasks completed
 - Phase 1: AGENTS.md guidance
 - **Status:** complete
 - **Started:** 2026-09-27
@@ -326,6 +396,27 @@
 - **Commit:** 0d029f9e4
 - **Status:** completed
 - **Commit:** 2e28e2994
+- Phase p-rev1: Revision 1
+- **Status:** complete
+- **Started:** 2026-09-28
+- **Status:** completed
+- **Commit:** 54e8fa4a1 (+ recovery 0f53a5cea)
+- **Status:** completed
+- **Commit:** 789be2615
+- **Status:** completed
+- **Commit:** 8f5d9589c
+- **Status:** completed
+- **Commit:** ae6b09d98
+- **Status:** completed
+- **Commit:** 67a46703d
+- **Status:** completed
+- **Commit:** 0da130fdb
+- **Status:** completed
+- **Commit:** 512493326
+- **Status:** completed
+- **Commit:** 4f30b57cb
+- **Status:** completed
+- **Commit:** b7536b1be
 - Run 1
 - - Started: 2026-09-27; autonomous (`oat-project-autonomous`), Tier 1 subagents.
 - - Gate `IMPLEMENT-03`: HiLL checkpoints resolved to `['p05']` (final phase,
@@ -665,24 +756,176 @@
 - reviewed head `531ce5f4e`, intent persisted before launch in `b54d67306`):
 - `reviews/archived/final-review-2026-09-28T114805Z.md` status `ok`, 0 findings; deferred Mediums reconfirmed
 - as acceptable follow-ups. Received; exit gate `allowed/passed`.
-- - Title names the removal with a breaking marker, for example
-- `feat!: stop creating and auto-remove OAT-managed CLAUDE.md shims by default (wave 2, lockstep 0.3.9)`;
+- - PR step (pre-approval `pr`) stopped at PRFINAL-05: a root-written prose
+- note under `plan.md` `## Reviews` wrapped an inline-code flag list so a line
+- began with `|`, which the ledger guard parses as a malformed row. Root
+- repaired its own bookkeeping note (flags listed without pipes; project
+- tracking, closeout-only), recorded a freshness checkpoint, and reran the PR
+- step. The guard treating prose pipes as rows is a pr-final false positive
+- worth a follow-up.
+- - PR step rerun at `36d48005d`: PRFINAL-03 passed (latest final/code row
+- `passed`); PRFINAL-05 passed (27 of 27 ledger rows resolve); PRFINAL-02
+- auto-resolved the title and base `main` from PR Requirements. Opened
+- https://github.com/voxmedia/open-agent-toolkit/pull/332; `state.md` set to
+- `pr_open`. The `pr` sequence step stays open for the closeout orchestrator.
+- - Generation 2 (Revision 1): generation 1 (`allowed/passed` at `531ce5f4e`)
+- was marked `stale` by the revision's substantive changes; its provenance is
+- kept above. Final review passed at `7b389c5af` (gate row), DoD at
+- `c95e17aad`. Generation 2 intent persisted before launch: reviewed head
+- `b1d8ab9cb`, `effective-delta-v1` (installed skill rules), unchanged
+- `config_fingerprint`, attempts 0 of 2.
+- - Generation 2, attempt 1 (`codex-6-sol-xhigh`, run
+- `d34bae3b-fe9f-4259-b98b-18a6a4e91b5b`, reviewed head `d52002eba`,
+- threshold high): status `ok`, 0 Critical/High, 2 Medium
+- (`reviews/archived/final-review-2026-09-28T165830Z.md`). Both Mediums (live
+- PR title and body stale; summary and recap stale) are the pending
+- pre-approval closeout steps `summary` and `pr` plus the recap gate, which run
+- next. Received; exit gate `allowed/passed`.
+- - Closeout sequence (configured `[summary, document, pr]`, post-approval `[]`):
+- summary `759edbb1e`, document `343426ada`, project recap `built`
+- (`db4bbcd59`), PR #332 opened. Each step was followed by a state-only
+- freshness checkpoint; the exit gate stayed `allowed/passed`.
+- - Gate `IMPLEMENT-16`: final HiLL approval auto-approved under the autonomy
+- contract (`approval_source: oat-autonomous`) after the passing final review
+- (`final-review-2026-09-28T114805Z.md`, gate run
+- `0c5dbb3e-18a9-4059-a857-ca4209e3b9e4`) and all pre-approval steps. No
+- post-approval steps. Implementation complete; the project stays `pr_open`
+- for revise or completion.
+- - Title names the removal and the key rename with a breaking marker, for
+- example
+- `feat!: stop creating CLAUDE.md shims by default and rename shim config to instructions.claude.* (wave 2, lockstep 0.3.9)`;
 - GitHub release notes list PR titles only.
 - - Body opens with a **Behavior change** callout: `oat instructions sync` no
 - longer creates `CLAUDE.md` shims by default and removes OAT-managed shims
 - (exact `@AGENTS.md` pointer, sibling symlink, or identical copy) on its next
-- run. A hand-written `CLAUDE.md` beside an `AGENTS.md`, and any `CLAUDE.md`
-- an `AGENTS.md` links to, is kept and reported. A lone `CLAUDE.md` with no
-- `AGENTS.md` is adopted: its content moves into a new `AGENTS.md` and the
-- `CLAUDE.md` is removed (unless an `AGENTS.md` elsewhere links to it). After
-- upgrading, `oat instructions validate` exits 1 in a repository that still has
-- shims from the old default until `oat instructions sync` runs, so CI that
-- runs validate goes red until then. Opt back in with
-- `oat config set documentation.instructionSyncStrategy pointer` and rerun
+- run. Removal is all or nothing: while any `CLAUDE.md`, `CLAUDE.local.md`, or
+- `.claude/CLAUDE.md` with its own content exists, sync removes no shim and
+- `sync`/`validate` exit 1, naming the file, the shims it would remove, a docs
+- link, and the fixes (move the content into `AGENTS.md` and remove the file,
+- or set `instructions.claude.shims`). A lone `CLAUDE.md` with no `AGENTS.md`
+- is adopted: its content moves into a new `AGENTS.md` and the `CLAUDE.md` is
+- removed (unless an `AGENTS.md` elsewhere links to it). After upgrading,
+- `oat instructions validate` exits 1 in a repository that still has shims
+- from the old default until `oat instructions sync` runs, so CI that runs
+- validate goes red until then. Opt back in with
+- `oat config set instructions.claude.shims pointer` and rerun
 - `oat instructions sync`.
+- - Body calls out the rename: `documentation.instructionSyncStrategy` and
+- `documentation.instructionPointerExcludes` become
+- `instructions.claude.shims` and `instructions.claude.excludes`, with no
+- compatibility read; the old keys are ignored and are dropped on the next
+- `oat config set`. Upgrade notice: a repository that set
+- `documentation.instructionPointerExcludes` must re-set the list as
+- `instructions.claude.excludes` before its first sync; until then sync scans
+- the formerly excluded directories and adopts and removes a lone `CLAUDE.md`
+- there.
 - - Body also lists: append-only AGENTS.md guidance, `--project-guidance`
 - honored or rejected everywhere, `oat tools guidance`, backlog archive link
-- rewriting, the recon assignment validator, control-plane `check`.
+- rewriting, `oat-reviewer` no longer launching `recon-worker` (recon skill
+- unchanged from `main`), `effective-delta-v2` exit-gate freshness,
+- control-plane `check`.
+- **Date:** 2026-09-28
+- **Source:** inline conversation (operator, after PR #332 opened)
+- **Changes requested:**
+- - Clean-rename the shim keys: `instructions.claude.shims` and
+- `instructions.claude.excludes` (no compatibility read).
+- - Under `none`, remove nothing while any `CLAUDE.md`, `.claude/CLAUDE.md`, or
+- `CLAUDE.local.md` has real content; explain why, link the docs, and point to
+- removing or moving the file or setting a shim strategy.
+- - Keep rules and provider sync independent of the shim setting, pinned by a
+- test.
+- - `effective-delta-v2`: changes only under `.oat/projects/**` and
+- `.oat/repo/**` no longer make the exit gate stale.
+- - Only the `recon` skill uses `recon-worker`: remove the reviewer's
+- `recon-worker` path, restore the recon skill to `main` (dropping this wave's
+- ~1,900-line assignment validator, which also blocked Codex recon lanes), and
+- correct the recon records; rescope the Codex follow-up to a live check.
+- - Declined after discussion: repointing old links to already-archived backlog
+- items; a new `keep` strategy value.
+- **New tasks added:** prev1-t01 through prev1-t07
+- **Next:** Execute revision tasks via `oat-project-implement`, then a new final
+- review and exit-gate generation, update PR #332 (title, Behavior change
+- callout with the new key names and the all-or-nothing rule, release note that
+- the keys were renamed), and refresh the Final Summary and summary.md.
+- - Request `bw2-prev1-impl-1` (`oat-phase-implementer-claude-claude-opus-5-5-high`,
+- hard-reasoning): interrupted when the previous session ended after
+- prev1-t03 with prev1-t04 uncommitted; resumed on the same handle (the agent
+- owned the in-progress edits), returned `DONE_WITH_CONCERNS`. Commits
+- `54e8fa4a1`, recovery `0f53a5cea`, `789be2615`, `8f5d9589c`, `ae6b09d98`,
+- `67a46703d`, `0da130fdb`, `512493326`. Full Definition of Done at
+- `512493326` all exit 0 (tests 0/10 cached; test:skills 660/660).
+- `Dispatch: scope=p-rev1 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
+- - Recovery event `bw2-prev1-rec-1` (prev1-t01, lint, `no-useless-concat` in a
+- test file) recovered in `0f53a5cea`, attempt 1/10; root validated and
+- cleared the `completed` marker.
+- - Verified by root: `git diff origin/main -- .agents/skills/recon` is empty;
+- `oat-reviewer.md` no longer names `recon-worker` or `validate-assignment`;
+- the old key names survive only in historical explainer-kit test fixtures.
+- `summary.md` and the recap are stale and are regenerated at closeout.
+- - Exit gate generation 1 marked `stale` (substantive changes after the
+- allowed result); a new final review and gate generation run at closeout.
+- - Review `bw2-prev1-review-1` (`oat-reviewer-claude-claude-opus-5-5-high`,
+- auto) at `091873d80`: 0 Critical/High, 2 Medium, 3 Low
+- (`reviews/archived/p-rev1-review-2026-09-28T155753Z.md`). Reconnaissance:
+- not-attempted. M1, M2, L1, L2 converted to prev1-t08. L3 recorded here: the
+- prev1-t04 and prev1-t05 commit bodies lack failing-first records; the
+- reviewer confirmed both tests fail against the pre-change files (the v2 test
+- asserts the three exclusion pathspecs extracted from the skill text; the
+- reviewer test asserts `not.toContain('recon-worker')`, which the
+- pre-change `oat-reviewer.md` contained).- prev1-t08 (resume of `bw2-prev1-impl-1`, DONE) at `4f30b57cb`: M1 `linkedBy`
+- per blocker with replace-then-remove advice; M2 per-file leftover warnings
+- suppressed for `wouldRemove` while blocked; L1 wording; L2 docs. Failing
+- first recorded in the commit body (vitest 2 failed, oat-doctor 2 failed).
+- Removal set unchanged (probes keep every shim). `pnpm check` 0/11 cached,
+- instructions+sync 226/226, oat-doctor 11/11.
+- - Gate run `b282ca69` (`codex-6-sol-xhigh`) at `f4599bec3`: the reviewer wrote
+- `reviews/archived/p-rev1-review-2026-09-28T160943Z.md` (0 findings) but never
+- ran the branch-local `gate route` step, so no route receipt existed and the
+- gate failed closed (`review_failed`, `unexpected_post_selection_failure`).
+- Not accepted as gate evidence; the gate reruns once.
+- - Gate run 2 (`codex-6-sol-xhigh`, route `inline` from the installed 0.3.7
+- `gate route`) at `71aef4127`: `review_completed_gate_passed`, 0 Critical,
+- High and Medium, 1 Low (this log's joined list item, fixed by root). The
+- rerun narrowed to the bookkeeping delta; product code through `4f30b57cb`
+- was covered by run 1's 0-finding review. Both runs' artifacts are archived
+- locally; both ledger rows are `passed`.
+- - Final review `bw2-final-review-3` (`oat-reviewer-claude-claude-opus-5-5-high`,
+- auto, whole PR `5bb73dd08..11008080c`, weighted to the revision delta):
+- 0 Critical/High, 2 Medium, 4 Low
+- (`reviews/archived/final-review-2026-09-28T163142Z.md`); reconnaissance
+- not-attempted; removal-block neutralization breaks 5 tests. Root fixed M1
+- (PR hand-off and plan PR Requirements: title names the rename, body carries
+- all-or-nothing and the rename), L1 (Final Summary proofs and follow-ups), and
+- L4 (Deviations row). M2 is a closeout requirement: `summary.md` is fully
+- regenerated (Key Decisions, Integration Notes, and Tradeoffs included, not
+- only the incremental revision sections) with
+- `oat_summary_includes_revisions: [p-rev1]`, the recap is rebuilt from the
+- refreshed facts, and
+- `rg -n "instructionSyncStrategy|instructionPointerExcludes|validate-assignment"`
+- over `summary.md` and `explainers/` returns nothing. L2 and L3 became
+- prev1-t09.
+- - The same final reviewer left a second artifact
+- (`reviews/archived/final-review-2026-09-28T163513Z.md`, 0 Critical/High,
+- 1 Medium, 5 Low) overlapping the first, with three additions, all fixed by
+- root: the PR upgrade notice (a released `instructionPointerExcludes` list is
+- ignored, so sync adopts and removes a lone `CLAUDE.md` in formerly excluded
+- directories until the list is re-set under `instructions.claude.excludes`),
+- the `effective-delta-v2` literal `.oat/projects` assumption (stated in the
+- completion reference and `DR-260928-exclude-project-and-repository`), and
+- `DR-260928-name-the-claude-md-shim-keys` Context wording plus its release
+- note location (PR title). Its stale-DoD Low is closed by the closeout DoD.
+- - prev1-t09 (resume of `bw2-prev1-impl-1`, DONE) at `b7536b1be`: L2 docs and
+- `current-state.md`; L3 analyze skill reports `claude_md_blocks_shim_removal`
+- (failing first, 6/6 after); apply has no gap. `pnpm check` 0/11 cached,
+- `pnpm lint` exit 0.
+- - Final gate re-review (`codex-6-sol-xhigh`, threshold high) at `7b389c5af`:
+- `review_completed_gate_passed`, 0 Critical/High, 2 Medium, 2 Low
+- (`reviews/archived/final-review-2026-09-28T164247Z.md`). M1 (live PR title
+- and body stale) and M2 (summary and recap stale) and L2 (DoD record predates
+- the revision) are the pending closeout steps: summary and recap are fully
+- regenerated and the live PR is refreshed from the hand-off before the exit
+- gate, and the DoD is rerun at the final head. L1 (two joined log items)
+- fixed by root.
 - Chronological execution is recorded per phase under Orchestration Runs above
 - (dispatch requests, commits, reviews, gates, recovery events, and operator
 - dispositions). Sessions: 2026-09-27 (planning, p01) and 2026-09-28 (p01 gate
@@ -705,12 +948,10 @@
 - decision (2026-09-27): proceed to implementation with the findings resolved in
 - the plan.
 - Deferred Findings (Medium)
-- - p04 re-review M2 (`reviews/archived/p04-review-2026-09-28T025845Z.md`): Codex workers read through their
-- command-execution tool only, which the `READ_ONLY_TOOLS` allowlist rejects,
-- so Codex recon lanes fail validation and fall back to inline coverage.
-- Deferred by the operator with L1 (weaker `writePath` form checks), L2 (web
-- tools allowed without URL sources), and L3 (mode not checked against
-- artifact kind): file one follow-up backlog item at closeout.
+- - p04 re-review M2 (`reviews/archived/p04-review-2026-09-28T025845Z.md`) and
+- L1-L3: moot after revision 1 withdrew the recon validator;
+- `BL-260928-settle-codex-read-authority` was rescoped to a live check that
+- Codex `/recon` lanes launch `contract-enforced` on the released CLI.
 - - p01 gate M1 (`reviews/archived/p01-review-2026-09-28T001719Z.md`): two concurrent guidance invocations
 - can both pass the absent-block check and append the same managed block
 - twice; the duplicate markers make later runs return `blocked` until the file
@@ -724,22 +965,27 @@
 - commit was rejected by commitlint's 100-character body line limit and the
 - staged files rode along with the next commit). History was not rewritten.
 - Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
-- | Task / Review         | Source Artifact             | Planned / Documented                            | Actual / Accepted                                                                              | Reason                                            | Source of Truth                          | Follow-up                               |
-- | p03-t03 / p03 reviews | discovery.md Key Decision 4 | Commit the task ledger before reviewer dispatch | Recovery-marker settlement also pre-review; phase row nonterminal until fixes and gates settle | p03 review M1/M2 and gate M2                      | Implementation                           | None                                    |
-- | p04-t02 / p04 reviews | plan.md p04-t02             | Validator checks envelope fields                | Also enforces read, write, tool, and schema authority; inline output schemas dropped           | Four p04 review and gate rounds                   | Implementation                           | `BL-260928-settle-codex-read-authority` |
-- | p04 gate              | plan.md Reviews             | Gate passes within its retry budget             | Completed under operator override after two blocked attempts                                   | Operator decision 2026-09-28                      | Implementation (final review covers p04) | None                                    |
-- | p02-t03               | backlog item AC4            | Warn about leftover CLAUDE.md files             | Case variants deliberately not warned about                                                    | Case-insensitive match flagged real provider docs | Implementation                           | None                                    |
-- Final verification (Step 12) at `f0901755c`, full Definition of Done in CI
-- order, every gate exit 0: `pnpm check`, `pnpm type-check`,
+- | Task / Review         | Source Artifact                                                   | Planned / Documented                                               | Actual / Accepted                                                                              | Reason                                                                                                               | Source of Truth                          | Follow-up                                          |
+- | p03-t03 / p03 reviews | discovery.md Key Decision 4                                       | Commit the task ledger before reviewer dispatch                    | Recovery-marker settlement also pre-review; phase row nonterminal until fixes and gates settle | p03 review M1/M2 and gate M2                                                                                         | Implementation                           | None                                               |
+- | p04-t02 / p04 reviews | plan.md p04-t02                                                   | Validator checks envelope fields                                   | Also enforces read, write, tool, and schema authority; inline output schemas dropped           | Four p04 review and gate rounds                                                                                      | Implementation                           | `BL-260928-settle-codex-read-authority`            |
+- | p04 gate              | plan.md Reviews                                                   | Gate passes within its retry budget                                | Completed under operator override after two blocked attempts                                   | Operator decision 2026-09-28                                                                                         | Implementation (final review covers p04) | None                                               |
+- | p02-t03               | backlog item AC4                                                  | Warn about leftover CLAUDE.md files                                | Case variants deliberately not warned about                                                    | Case-insensitive match flagged real provider docs                                                                    | Implementation                           | None                                               |
+- | p-rev1 (revision)     | plan.md p04-t02                                                   | Recon validator ships; reviewer validates recon lanes              | Validator withdrawn; recon restored to `main`; reviewer no longer launches `recon-worker`      | Operator direction 2026-09-28                                                                                        | Implementation                           | `BL-260928-settle-codex-read-authority` (rescoped) |
+- | p-rev1 (revision)     | discovery.md Key Decision 2 / `DR-260927-claude-md-shims-are-opt` | `documentation.*` keys; unconditional removal of OAT-managed shims | `instructions.claude.*` keys; all-or-nothing removal                                           | Operator direction 2026-09-28 (`DR-260928-name-the-claude-md-shim-keys`, `DR-260928-remove-no-claude-md-shim-while`) | Implementation                           | None                                               |
+- Final verification (Step 12) after Revision 1 at `c95e17aad`, full Definition
+- of Done in CI order, every gate exit 0: `pnpm check`, `pnpm type-check`,
 - `HOME=$(mktemp -d) pnpm exec turbo run test --force` (10/10 tasks, 0 cached,
 - no replays), `pnpm build`, `check:skill-bumps`, `release:check-versions`
 - (after `git fetch origin main`), `release:validate`, `build:docs`,
-- `test:smoke` 163/163, `test:skills` 690/690, `test:scripts`, `pnpm lint`,
-- `pnpm format`. Per-phase verification is recorded under Orchestration Runs.
+- `test:smoke` 163/163, `test:skills` 660/660, `test:scripts`, `pnpm lint`,
+- `pnpm format`. The pre-revision run at `f0901755c` is superseded.
+- Per-phase verification is recorded under Orchestration Runs.
 - **What shipped:**
-- - **CLAUDE.md shims are opt-in.** `documentation.instructionSyncStrategy`
-- (`none | pointer | symlink | copy`, default `none`) persists the strategy;
-- `--strategy` overrides one run. Under `none`, `oat instructions sync` creates
+- - **CLAUDE.md shims are opt-in.** `instructions.claude.shims` in
+- `.oat/config.json` (`none | pointer | symlink | copy`, default `none`)
+- persists the choice and `instructions.claude.excludes` lists directories
+- sync leaves alone (clean rename of the earlier `documentation.*` keys, no
+- compatibility read); `--strategy` overrides one run. Under `none`, `oat instructions sync` creates
 - no `CLAUDE.md`, removes only exact OAT-created shims (pointer, sibling
 - symlink, identical copy) after apply-time identity and content re-checks,
 - and never removes a hand-written `CLAUDE.md` beside an `AGENTS.md`,
@@ -751,6 +997,14 @@
 - (remove it, or set a shim strategy and rerun sync), and names linking
 - `AGENTS.md` files first. Validate, doctor, and the agent-instructions skills
 - follow the same rules; this repository's 11 shims were removed.
+- Removal is all or nothing: while any `CLAUDE.md`, `CLAUDE.local.md`, or
+- `.claude/CLAUDE.md` with its own content exists (including in excluded
+- trees), sync removes no shim and reports `claude_md_blocks_shim_removal`
+- with the files it would have removed, a docs link, and the fixes (move the
+- content into `AGENTS.md` and remove the file, or set a shim strategy); a
+- blocker an `AGENTS.md` links to gets replace-then-remove advice, and kept
+- shims get no per-file "remove it" advice. Rules and provider sync
+- (`.claude/rules`, skills, agents) are independent of the shim setting.
 - - **AGENTS.md guidance appends instead of demanding manual patches.** An
 - absent managed block is appended with `O_WRONLY | O_APPEND | O_NOFOLLOW`
 - after `fstat` identity checks; hard-linked, unwritable, swapped, or
@@ -764,18 +1018,17 @@
 - whole-span code citations to the moved item (URLs, symlinks, fenced code,
 - and working links elsewhere are left alone; unresolvable local forms warn)
 - and retries on re-run.
-- - **Recon assignment validator.** `recon/scripts/validate-assignment.mjs`
-- checks envelopes before launch: every missing or invalid field, one
-- homogeneous wave per array, read sources inside allowed inputs and scope and
-- outside exclusions (case- and Unicode-insensitive; URL lookalikes and
-- `file:` rejected), a read-only tool allowlist, write paths inside the
-- artifact kind's packet folder and never controller-owned files, and approved
-- output-schema references. `oat-reviewer` runs it before launch.
+- - **Recon.** `oat-reviewer` no longer launches `recon-worker`; only the
+- `recon` skill does, with its evidence-packet machinery. The recon skill is
+- unchanged from `main` (the validator built in p04 was withdrawn in the
+- revision).
 - - **Lifecycle skills.** Quick-mode discovery routes straight to quick-start in
 - next and progress; Lite records `absorbed_projects` /
 - `absorbed_backlog_ids`; implement commits the phase task ledger before the
 - per-phase reviewer is dispatched and keeps the phase row nonterminal until
-- review fixes and gates settle.
+- review fixes and gates settle. Exit-gate freshness uses
+- `effective-delta-v2`, which ignores `.oat/projects/**` and `.oat/repo/**`
+- record changes; v1 generations keep their rules.
 - - **Repairs and CI.** Five heading-swallowing bare fences repaired in agent
 - roles and templates, with the fence scanner extended to `.agents/agents`
 - and `.oat/templates`; `packages/control-plane` gains `check`, `check:fix`,
@@ -791,7 +1044,13 @@
 - - `oat instructions sync` no longer creates `CLAUDE.md` shims by default and
 - removes OAT-created ones on its next run; a lone `CLAUDE.md` is adopted into
 - a new `AGENTS.md` and removed; opt back in with
-- `oat config set documentation.instructionSyncStrategy pointer`.
+- `oat config set instructions.claude.shims pointer`.
+- - Removal is all or nothing: while a `CLAUDE.md` with its own content exists,
+- sync removes no shim and `sync`/`validate` exit 1 with the reason and fixes.
+- - `documentation.instructionSyncStrategy` and
+- `documentation.instructionPointerExcludes` are renamed to
+- `instructions.claude.shims` and `instructions.claude.excludes`; the old keys
+- are ignored.
 - - After upgrading, `oat instructions validate` exits 1 while old shims remain,
 - until `oat instructions sync` removes them.
 - - `oat instructions validate` no longer reports a missing `CLAUDE.md` as drift
@@ -807,34 +1066,38 @@
 - `packages/cli/src/commands/tools/guidance/**` - guidance append and emission
 - - `packages/cli/src/commands/backlog/{archive.ts,rewrite-references.ts}` -
 - reference rewriting
-- - `.agents/skills/recon/scripts/validate-assignment.mjs` and its references
 - - Skills: oat-doctor 2.0.2, oat-agent-instructions-analyze 1.12.4,
 - oat-agent-instructions-apply 1.7.3, oat-project-next 1.1.3,
 - oat-project-progress 1.4.3, oat-project-lite 1.1.6, oat-project-implement
-- 2.3.14, recon 1.1.6; agent roles oat-reviewer 1.2.10, oat-codebase-mapper
+- 2.3.14; agent roles oat-reviewer 1.2.10, oat-codebase-mapper
 - 1.0.2, skeptical-evaluator 1.0.1
 - **Verification performed:**
 - - Failing-first tests for every behavior change; neutralize-and-restore proofs
 - for every named negative control (append identity checks, shim deletion
-- guards, validator authority checks, rewriter symlink and resolution guards,
-- lint and check pins).
+- guards, the all-or-nothing removal block, rewriter symlink and resolution guards,
+- lint and check pins); failing-first pins for the reviewer
+- `recon-worker` removal and the `effective-delta-v2` pathspecs.
 - - Per-phase Opus 5.5 high root reviews with fix loops and Codex
-- `codex-6-sol-xhigh` phase gates on every phase (p04 completed under an
-- operator override after its gate budget was exhausted).
-- - Full Definition of Done re-run at `f0901755c`, all gates exit 0 with 0 of 10
-- test tasks cached (see Test Results).
+- `codex-6-sol-xhigh` phase gates on every phase, including revision p-rev1
+- (p04 completed under an operator override after its gate budget was
+- exhausted).
+- - Full Definition of Done re-run after Revision 1 at `c95e17aad`, all gates
+- exit 0 with 0 of 10 test tasks cached (see Test Results).
 - **Design deltas (if any):**
 - - Key decision 4's pre-review bookkeeping was refined during p03 review:
 - recovery-marker settlement belongs to the pre-review commit, and the phase
 - row stays nonterminal until review fixes and gates settle.
-- - The recon validator dropped inline output schemas (the artifact kind fixes
-- the schema) and defines an envelope `kind: recon.assignment`, v1.
+- - Revision 1 (operator feedback on PR #332): renamed the shim keys under
+- `instructions.claude`, made removal all or nothing, pinned rules-sync
+- independence, added `effective-delta-v2`, and withdrew the recon validator
+- and the reviewer's `recon-worker` path (recon restored to `main`).
 - - Case variants of `CLAUDE.md` are deliberately not warned about (they matched
 - real provider docs); documented.
 - - Follow-ups filed: `BL-260928-serialize-concurrent-agents-md`,
 - `BL-260928-keep-instructions-sync-force`,
 - `BL-260928-route-quick-mode-discovery`,
-- `BL-260928-settle-codex-read-authority`; `BL-260829-order-phase-bookkeeping-before`
+- `BL-260928-settle-codex-read-authority`,
+- `BL-260928-harden-the-backlog-reference`; `BL-260829-order-phase-bookkeeping-before`
 - stays open for live observation.
 - - Plan: `plan.md`
 - - Discovery: `discovery.md`
@@ -896,6 +1159,14 @@
 - target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:0,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-2/reviews/final-review-2026-09-28T113721Z.md run=0415d270-2faa-4559-901c-65430d5c405d
 - 2026-09-28 · structural · oat gate review · final
 - target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-2/reviews/final-review-2026-09-28T114805Z.md run=0c5dbb3e-18a9-4059-a857-ca4209e3b9e4
+- 2026-09-28 · structural · oat gate review · p-rev1
+- target=codex-6-sol-xhigh threshold=high exit=1 status=review_failed run=b282ca69-45c4-4d01-9b68-9b8e1a71d833
+- 2026-09-28 · structural · oat gate review · p-rev1
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:1 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-2/reviews/p-rev1-review-2026-09-28T162038Z.md run=22b3f5cf-b81d-4d85-bc8d-766a6cb611e6
+- 2026-09-28 · structural · oat gate review · final
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:2,low:2 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-2/reviews/final-review-2026-09-28T164247Z.md run=5c3729d3-0488-4ae1-84c5-fd7b86e49418
+- 2026-09-28 · structural · oat gate review · final
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:2,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-2/reviews/final-review-2026-09-28T165830Z.md run=d34bae3b-fe9f-4259-b98b-18a6a4e91b5b
 - Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
 - oat_status: complete
 - oat_ready_for: oat-project-implement
@@ -2122,21 +2393,257 @@
 - type-check, lint.
 - **Step 3: Commit**
 - `fix(p05-t12): replace rewritten backlog references atomically`
+- Phase p-rev1: Revision 1
+- Source: inline feedback (2026-09-28, operator conversation after PR #332
+- opened). Tasks run sequentially: prev1-t01 renames the keys that prev1-t02 and
+- the docs then use.
+- **Files:**
+- - Modify: `packages/cli/src/config/oat-config.ts`, `packages/cli/src/config/resolve.ts`,
+- `packages/cli/src/commands/config/index.ts` (set/get/unset/describe),
+- `packages/cli/src/commands/instructions/**` (resolver, messages, JSON),
+- their tests, `packages/cli/src/commands/help-snapshots.test.ts`
+- - Modify: `.agents/skills/oat-doctor/SKILL.md`,
+- `.agents/skills/oat-agent-instructions-analyze/**`,
+- `.agents/skills/oat-agent-instructions-apply/SKILL.md` and their contract tests
+- (all already bumped in this PR; no further bumps)
+- - Modify: every docs page, README, and backlog or decision text that names the
+- old keys (`rg -n "instructionSyncStrategy|instructionPointerExcludes"` must
+- return nothing outside archived review artifacts and historical records)
+- **Step 1:** Clean rename with no compatibility read or deprecation warning
+- (operator direction: most repositories run on defaults):
+- `documentation.instructionSyncStrategy` becomes `instructions.claude.shims`
+- (`none` default, `pointer`, `symlink`, `copy`), and
+- `documentation.instructionPointerExcludes` becomes `instructions.claude.excludes`
+- (repository-relative directories). The `--strategy` flag keeps overriding one
+- run. Record the rename in a decision record amending
+- `DR-260927-claude-md-shims-are-opt` (use `node packages/cli/dist/index.js decision new`).
+- **Step 2: Verify**
+- Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/config src/commands/config src/commands/instructions src/commands/help-snapshots.test.ts`,
+- `node --test .agents/skills/oat-doctor/tests/*.test.mjs .agents/skills/oat-agent-instructions-analyze/tests/*.test.mjs`,
+- `pnpm --filter oat-docs check`, and the `rg` sweep above.
+- Expected: all exit 0; the sweep returns nothing outside history.
+- **Step 3: Commit**
+- ```bash
+- git commit -m "refactor(prev1-t01): move CLAUDE.md shim config under instructions.claude"
+- ```
+- **Files:**
+- - Modify: `packages/cli/src/commands/instructions/{instructions.utils.ts,sync/sync.ts,validate/validate.ts,instructions.types.ts}` and tests
+- - Modify: `.agents/skills/oat-doctor/SKILL.md` (and its contract test)
+- - Modify: `apps/oat-docs/docs/provider-sync/instruction-sync.md`,
+- `apps/oat-docs/docs/reference/troubleshooting.md`, the READMEs if they
+- describe removal
+- **Step 1:** Under `none`, removal is all or nothing. If any `CLAUDE.md`,
+- `.claude/CLAUDE.md`, or `CLAUDE.local.md` in the scanned project is not an
+- exact OAT shim (pointer, sibling symlink, identical copy), sync removes
+- nothing, including the managed shims. It reports: the shims the configuration
+- would remove; that none were removed because a `CLAUDE.md` with real content
+- exists (named); that any `CLAUDE.md` makes Claude Code ignore AGENTS.md, with
+- the link
+- `https://github.com/voxmedia/open-agent-toolkit/blob/main/apps/oat-docs/docs/provider-sync/instruction-sync.md#claude-code-and-agentsmd`;
+- and what to do: remove the file or move its content into an `AGENTS.md` and
+- rerun `oat instructions sync`, or set `instructions.claude.shims` to a shim
+- strategy (`pointer`, `symlink`, or `copy`) to keep `CLAUDE.md` files. The same
+- finding appears in `--json` and in `oat instructions validate` and `oat-doctor`.
+- Stray adoption of a lone content-bearing `CLAUDE.md` (no sibling `AGENTS.md`)
+- stays as shipped. Failing-first tests: a content-bearing root `CLAUDE.md` plus
+- subdirectory shims removes nothing; a content-bearing `CLAUDE.local.md` or
+- `.claude/CLAUDE.md` removes nothing; with only exact shims, removal proceeds as
+- before (negative control). Record the rule in the prev1-t01 decision record or
+- a sibling record.
+- **Step 2: Verify**
+- Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/instructions`,
+- `node --test .agents/skills/oat-doctor/tests/*.test.mjs`, `pnpm --filter oat-docs check`.
+- Expected: all exit 0.
+- **Step 3: Commit**
+- ```bash
+- git commit -m "fix(prev1-t02): keep all CLAUDE.md shims while any CLAUDE.md has content"
+- ```
+- **Files:**
+- - Modify or create: a test under `packages/cli/src/commands/sync/` (or the
+- engine integration tests)
+- **Step 1:** Add a test showing `oat sync` output for canonical rules, skills,
+- and agents (including `.claude/rules/**`) is identical under
+- `instructions.claude.shims` `none` and `pointer`, and that `oat sync` never
+- creates or removes a `CLAUDE.md`. Confirm the new instruction-sync removal and
+- warning code never touches `.claude/rules/**`.
+- **Step 2: Verify**
+- Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/sync src/engine`.
+- Expected: exit 0.
+- **Step 3: Commit**
+- ```bash
+- git commit -m "test(prev1-t03): pin provider sync independence from CLAUDE.md shims"
+- ```
+- **Files:**
+- - Modify: `.agents/skills/oat-project-implement/references/completion-and-closeout.md`
+- (already bumped to 2.3.14 in this PR; no further bump)
+- - Modify: `packages/cli/src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts`
+- - Modify: `apps/oat-docs/docs/workflows/projects/implementation-execution.md`
+- and the `.oat/templates/state.md` comment if it names the fingerprint format
+- - Create: a decision record (`node packages/cli/dist/index.js decision new`)
+- **Step 1:** Define `effective-delta-v2`: identical to v1 but the exclusion set
+- is `$PROJECT_PATH/state.md` plus every path under `.oat/projects/**` and
+- `.oat/repo/**`. `.oat/templates/**`, `.oat/scripts/**`, `.oat/config*.json`,
+- and `.oat/sync/**` stay fingerprinted. New generations persist
+- `sha256:effective-delta-v2:<digest>`; stored v1 values keep v1 semantics and
+- are never reinterpreted. Pin the v2 exclusion set, the v1 preservation rule,
+- and the kept `.oat` paths in the contract test (failing-first).
+- **Step 2: Verify**
+- Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`,
+- `node --test .agents/skills/oat-project-implement/tests/*.test.mjs`,
+- `pnpm run check:skill-bumps`, `pnpm --filter oat-docs check`.
+- Expected: all exit 0.
+- **Step 3: Commit**
+- ```bash
+- git commit -m "feat(prev1-t04): exclude project and repository records from gate freshness"
+- ```
+- **Files:**
+- - Modify: `.agents/agents/oat-reviewer.md` (already 1.2.10 in this PR; no
+- further bump) and its regenerated `.codex/agents` and `.cursor/agents` views
+- (`pnpm build && pnpm run cli -- sync --scope project`; never `--scope all`;
+- revert any `.oat/sync/manifest.json` restamp)
+- - Modify: reviewer contract assertions in
+- `packages/cli/src/validation/skills.test.ts` and any other pin of the removed
+- prose
+- **Step 1:** Operator direction: only the `recon` skill uses `recon-worker`,
+- because it owns the evidence-packet machinery. Remove every path by which
+- `oat-reviewer` launches the canonical `recon-worker`: the Assignment Gate
+- envelope instructions, the sibling recon-skill probe, the validator step, and
+- the "recon-worker lane never runs commands" wording. Reviewer lanes remain
+- optional, bounded, read-only, and use ordinary sub-agents only (how every
+- recorded use worked). Keep the p04 bare-fence repairs. This resolves GitHub
+- #295 by removal. Failing-first: a contract assertion that `oat-reviewer.md`
+- never names `recon-worker` or `validate-assignment`.
+- **Step 2: Verify**
+- Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation src/commands/init/tools/shared`,
+- `node packages/cli/dist/index.js status --scope project`.
+- Expected: exit 0; views in sync.
+- **Step 3: Commit**
+- ```bash
+- git commit -m "fix(prev1-t05): take recon-worker out of oat-reviewer"
+- ```
+- **Files:**
+- - Revert: `.agents/skills/recon/**` to `origin/main` exactly (removes
+- `scripts/validate-assignment.mjs`, its tests and fixtures, and this wave's
+- `SKILL.md`, `worker-contract.md`, `packet-contract.md`, and test edits,
+- including the 1.1.6 bump)
+- - Modify: `packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts`
+- (drop the `validate-assignment.mjs` entry)
+- - Modify: `apps/oat-docs/docs/workflows/skills/recon.md` (remove the "Validate
+- Worker Assignments" section)
+- **Step 1:** `git checkout origin/main -- .agents/skills/recon` and remove any
+- file this wave added under it; confirm `git diff origin/main -- .agents/skills/recon`
+- is empty. Confirm on `main` that Codex runs `recon-worker` lanes as
+- `contract-enforced` (recon `SKILL.md` authority rules) and that nothing else
+- in the repository references `validate-assignment`.
+- **Step 2: Verify**
+- Run: `node --test .agents/skills/recon/tests/*.test.mjs`,
+- `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`,
+- `pnpm run check:skill-bumps`, `pnpm --filter oat-docs check`,
+- `rg -n "validate-assignment" . --glob '!**/node_modules/**' --glob '!.oat/**/reviews/**'`.
+- Expected: exit 0; the sweep finds nothing outside history.
+- **Step 3: Commit**
+- ```bash
+- git commit -m "revert(prev1-t06): restore the recon skill to main"
+- ```
+- **Files:**
+- - Delete: `.oat/repo/reference/decisions/DR-260928-validate-recon-assignments.md`
+- (never shipped), then `node packages/cli/dist/index.js decision regenerate-index`
+- - Modify: `.oat/repo/pjm/backlog/archived/BL-260927-validate-recon-worker.md`
+- and its `backlog/completed.md` entry: resolved by removing the reviewer's
+- `recon-worker` path, not by a validator
+- - Modify: `.oat/repo/pjm/backlog/items/BL-260928-settle-codex-read-authority.md`:
+- rescope to a live check that `/recon` with Codex workers launches
+- `contract-enforced` lanes on the released CLI (title, description, criteria)
+- - Modify: the `.oat/repo/pjm/backlog/index.md` curated note and
+- `.oat/repo/pjm/current-state.md` if they mention the validator
+- **Step 1:** Make the edits; regenerate the backlog index.
+- **Step 2: Verify**
+- Run: `node packages/cli/dist/index.js pjm doctor --json` (no new warnings),
+- `rg -n "validate-assignment|validate-recon-assignments" .oat/repo`.
+- Expected: no live references outside history.
+- **Step 3: Commit**
+- ```bash
+- git commit -m "chore(prev1-t07): correct the recon records"
+- ```
+- Source: `reviews/archived/p-rev1-review-2026-09-28T155753Z.md` (auto review,
+- passing: 0 Critical/High, 2 Medium, 3 Low). L3 (missing failing-first records
+- for prev1-t04 and prev1-t05) is root bookkeeping in `implementation.md`.
+- **Step 1: Fix**
+- - M1: when a blocker `CLAUDE.md` is the target of an `AGENTS.md` link, the
+- `claude_md_blocks_shim_removal` message must never offer plain removal of it.
+- Carry `linkedBy` into `findShimRemovalBlockers`/`buildShimRemovalBlockWarning`
+- (and the JSON finding), phrase the first option as "replace {linkers} with the
+- content of {path}, then remove {path}", and add the same caveat to the
+- oat-doctor `claude_md_blocks_shim_removal` rule and its contract test.
+- Integration case: Claude-first root (`AGENTS.md` -> `CLAUDE.md`) plus a
+- subdirectory pointer shim; assert the block message never offers plain
+- removal of the linked file.
+- - M2: while removal is blocked, do not emit per-file `claude_md_hides_agents_md`
+- "remove it" warnings for the exact shims in `wouldRemove` (sync apply,
+- dry-run, and validate); the block finding already names them. Update the
+- oat-doctor rule: while a `claude_md_blocks_shim_removal` item exists, offer
+- no removal for paths in its `wouldRemove`. Extend the "removes nothing while
+- a root CLAUDE.md has content" test to assert the full warning set.
+- - L1: word the block message as "would remove N CLAUDE.md files" (an adopted
+- stray is not an OAT-managed shim).
+- - L2: soften `instruction-sync.md` "Removal never leaves a mix": files with
+- content block removal; exact shims inside `instructions.claude.excludes` or
+- docs trees are not touched and are reported as leftovers.
+- No further version bumps (oat-doctor is already bumped in this PR).
+- **Step 2: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli build`,
+- `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/instructions src/commands/sync`,
+- `node --test .agents/skills/oat-doctor/tests/*.test.mjs`,
+- `pnpm --filter oat-docs check`, `pnpm run check:skill-bumps`, and the M1 and M2
+- branch-build probes from the review artifact. Record a failing-first result for
+- the M1 and M2 tests in the commit body.
+- **Step 3: Commit**
+- `fix(prev1-t08): close p-rev1 review findings`
+- Source: `reviews/archived/final-review-2026-09-28T163142Z.md` (final review,
+- passing: 0 Critical/High, 2 Medium, 4 Low). M1, M2, L1, and L4 are root
+- bookkeeping and closeout (PR hand-off, full summary regeneration, Final
+- Summary, Deviations).
+- **Step 1: Fix**
+- - L2: add the all-or-nothing qualifier with a link to
+- `../provider-sync/instruction-sync.md#all-or-nothing` to
+- `apps/oat-docs/docs/cli-utilities/configuration.md` (the `none` row) and
+- `apps/oat-docs/docs/reference/oat-directory-structure.md` (the shim row);
+- update `.oat/repo/pjm/current-state.md` for the block, the
+- `instructions.claude.*` rename, and `effective-delta-v2`.
+- - L3: `oat-agent-instructions-analyze` SKILL.md: when a
+- `claude_md_blocks_shim_removal` item exists, report its `paths` as the High
+- finding (fix: move or remove each file, replacing its `linkedBy` links
+- first, then rerun sync) and list its `wouldRemove` as the files sync removes
+- next; pin with its contract test. Check `oat-agent-instructions-apply` for
+- the same gap. Both skills are already bumped in this PR.
+- **Step 2: Verify**
+- Run: `node --test .agents/skills/oat-agent-instructions-analyze/tests/*.test.mjs`,
+- `pnpm --filter oat-docs check`, `pnpm run check:skill-bumps`, `pnpm check`.
+- **Step 3: Commit**
+- `fix(prev1-t09): close final review findings`
 - The release workflow (`.github/workflows/release.yml`) publishes a fixed body
 - plus `generate_release_notes: true`, whose "What's Changed" list carries merged
-- PR titles only, not PR bodies. The removal must therefore be stated in the PR
-- title itself:
-- - Title uses a Conventional Commit breaking marker and names the removal, for
-- example
-- `feat!: stop creating and auto-remove OAT-managed CLAUDE.md shims by default (wave 2, lockstep 0.3.9)`.
+- PR titles only, not PR bodies. The removal and the key rename must therefore
+- be stated in the PR title itself:
+- - Title uses a Conventional Commit breaking marker and names the removal and
+- the rename, for example
+- `feat!: stop creating CLAUDE.md shims by default and rename shim config to instructions.claude.* (wave 2, lockstep 0.3.9)`.
 - - The body (for reviewers) opens with a **Behavior change** callout matching
 - `implementation.md` PR Requirements: default no shims, OAT-managed shims
-- removed on the next sync, hand-written and linked `CLAUDE.md` kept, a lone
-- `CLAUDE.md` adopted into `AGENTS.md` and removed, `validate` exits 1 on
-- upgraded repositories until sync, and the opt-back-in command.
+- removed on the next sync, all-or-nothing removal while any `CLAUDE.md` has
+- content (`sync`/`validate` exit 1 with the fixes), a lone `CLAUDE.md`
+- adopted into `AGENTS.md` and removed, `validate` exits 1 on upgraded
+- repositories until sync, and the opt-back-in command
+- (`oat config set instructions.claude.shims pointer`).
+- - The body calls out the clean rename of `documentation.instructionSyncStrategy`
+- and `documentation.instructionPointerExcludes` to
+- `instructions.claude.shims` and `instructions.claude.excludes` (old keys
+- ignored), with the upgrade notice to re-set a released
+- `instructionPointerExcludes` list before the first sync.
 - - The body also lists the other user-visible changes (append-only AGENTS.md
-- guidance, `--project-guidance` behavior, the read-only guidance command, and
-- backlog archive link rewriting).
+- guidance, `--project-guidance` behavior, the read-only guidance command,
+- backlog archive link rewriting, and `oat-reviewer` no longer launching
+- `recon-worker`).
 - | Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target       |
 - | p01    | code     | fixes_completed | 2026-09-27 | reviews/archived/p01-review-2026-09-27T235828Z.md           | 6aa11df62600cd72e41559a611697afb873893d7 | auto       | -                 |
 - | p01    | code     | passed          | 2026-09-28 | reviews/archived/p01-review-2026-09-28T000859Z.md           | 80d514bbdf342391944b6580b3341a6e074b8a84 | auto       | -                 |
@@ -2162,9 +2669,16 @@
 - | p05    | code     | fixes_completed | 2026-09-28 | reviews/archived/p05-review-2026-09-28T104612Z.md           | 3c64d9e225a789e50caa1ba4edb153e943331365 | gate       | codex-6-sol-xhigh |
 - | p05    | code     | fixes_completed | 2026-09-28 | reviews/archived/p05-review-2026-09-28T105839Z.md           | 7085ab58146ade146e41617e3cdef15b0b9694d9 | auto       | -                 |
 - | p05    | code     | passed          | 2026-09-28 | reviews/archived/p05-review-2026-09-28T111050Z.md           | 3a38ce1a00570619de6bf0ff3b068138d8915c56 | gate       | codex-6-sol-xhigh |
+- | p-rev1 | code     | fixes_completed | 2026-09-28 | reviews/archived/p-rev1-review-2026-09-28T155753Z.md        | 091873d80f6466f7ee6bc4e1dcd33f54f0a4e093 | auto       | -                 |
 - | final  | code     | fixes_completed | 2026-09-28 | reviews/archived/final-review-2026-09-28T113721Z.md         | 1973af8f083c86fdb172eb67d8233eefd002333b | gate       | codex-6-sol-xhigh |
 - | final  | code     | passed          | 2026-09-28 | reviews/archived/final-review-2026-09-28T114422Z.md         | ba69e205235f000acf4958e57bc12085c8294f8f | auto       | -                 |
 - | final  | code     | passed          | 2026-09-28 | reviews/archived/final-review-2026-09-28T114805Z.md         | b54d67306e12e5abed8e23983f957f7f77c0ad8c | gate       | codex-6-sol-xhigh |
+- | final  | code     | passed          | 2026-09-28 | reviews/archived/final-review-2026-09-28T163142Z.md         | 11008080c4853e133ee380d34d14c0f3d60f51d1 | auto       | -                 |
+- | final  | code     | passed          | 2026-09-28 | reviews/archived/final-review-2026-09-28T163513Z.md         | 11008080c4853e133ee380d34d14c0f3d60f51d1 | auto       | -                 |
+- | p-rev1 | code     | passed          | 2026-09-28 | reviews/archived/p-rev1-review-2026-09-28T160943Z.md        | f4599bec32e5b235e699f7504feb33d348a7cfea | gate       | codex-6-sol-xhigh |
+- | p-rev1 | code     | passed          | 2026-09-28 | reviews/archived/p-rev1-review-2026-09-28T162038Z.md        | 71aef4127c537309157d3d81680e6738c9f99f73 | gate       | codex-6-sol-xhigh |
+- | final  | code     | passed          | 2026-09-28 | reviews/archived/final-review-2026-09-28T164247Z.md         | 7b389c5af70f08aeeeb4de74cdc2b7d764e1ff2d | gate       | codex-6-sol-xhigh |
+- | final  | code     | passed          | 2026-09-28 | reviews/archived/final-review-2026-09-28T165830Z.md         | d52002eba97cfaf97d9b741ccc8a82889798b268 | gate       | codex-6-sol-xhigh |
 - For code-review events, `Reviewed Head` is the full 40-character SHA at the
 - head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
 - `Gate Target` is populated only for gate events. Legacy five-column rows remain
@@ -2185,8 +2699,8 @@
 - probe run once; scanner narrowing deferred with a trigger; reviewer probe
 - reuse; explicit `scripts.lint` pin; rewrite-all archive references).
 - Gate attempt 2 (`codex-6-sol-xhigh`) returned one High: the append open flags
-- lacked a write access mode (`EBADF`). Resolved in p01-t02 (`O_WRONLY | O_APPEND
-- | O_NOFOLLOW` plus a real-filesystem success assertion). The configured gate's
+- lacked a write access mode (`EBADF`). Resolved in p01-t02 (`O_WRONLY`, `O_APPEND`, and
+- `O_NOFOLLOW` plus a real-filesystem success assertion). The configured gate's
 - `maxAttempts: 2` is exhausted, so readiness waits on an operator decision
 - (QS-12 boundary).
 - Operator disposition (2026-09-27): with the gate's attempts exhausted and its
@@ -2206,7 +2720,8 @@
 - - Phase 3: 5 tasks - Lifecycle skill routing and bookkeeping
 - - Phase 4: 7 tasks - Agent roles and recon validation
 - - Phase 5: 12 tasks - CI and backlog tooling, release fan-in
-- **Total: 40 tasks**
+- - Phase p-rev1: 9 tasks - Revision 1 (operator feedback on PR #332)
+- **Total: 49 tasks**
 - Ready for code review and merge.
 - - Discovery: `discovery.md`
 - - Backlog review: `.oat/repo/pjm/backlog/reviews/backlog-and-roadmap-review.md`
