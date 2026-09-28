@@ -30,9 +30,9 @@ oat_generated: false
 | Phase 2 | complete    | 8     | 8/8       |
 | Phase 3 | complete    | 5     | 5/5       |
 | Phase 4 | complete    | 7     | 7/7       |
-| Phase 5 | in_progress | 6     | 0/6       |
+| Phase 5 | in_progress | 6     | 6/6       |
 
-**Total:** 28/34 tasks completed
+**Total:** 34/34 tasks completed
 
 ---
 
@@ -259,43 +259,43 @@ oat_generated: false
 
 ### Task p05-t01: Give packages/control-plane a check script
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 2ed6e9fec
 
 ---
 
 ### Task p05-t02: Rewrite inbound references when a backlog item is archived
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** c8454ecf6
 
 ---
 
 ### Task p05-t03: Record ten uncached runs of the collection-detach test
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 9af7e669c
 
 ---
 
 ### Task p05-t04: Bump the lockstep public package versions
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 28199df01
 
 ---
 
 ### Task p05-t05: Archive the shipped backlog items
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 341961ce7
 
 ---
 
 ### Task p05-t06: Run the full Definition of Done
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 349d64442
 
 ---
 
@@ -572,6 +572,51 @@ oat_generated: false
   deferred Medium), `BL-260928-keep-instructions-sync-force` (p02 pre-existing
   `--force` gap), `BL-260928-route-quick-mode-discovery` (p03 L1 routers),
   `BL-260928-settle-codex-read-authority` (p04 M2, L1-L3).
+
+### Phase p05 dispatch
+
+- Request `bw2-p05-impl-1`: accepted, returned `DONE`; target
+  `oat-phase-implementer-claude-claude-opus-5-5-medium`; commits `2ed6e9fec`
+  (t01), `c8454ecf6` (t02), `9af7e669c` (t03), `28199df01` (t04), `341961ce7`
+  (t05), `349d64442` (t06). `Dispatch: scope=p05 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-medium`
+- p05-t01: red control (`turbo run check` for control-plane executed no task
+  with a seeded violation, exit 0), green (exit 1 with the seed, 0 without);
+  `scripts.lint` delete control exit 1, restored 0; both AGENTS.md passages
+  and `contributing/code.md` updated.
+- p05-t02: archive rewrites inbound `.oat/repo` Markdown links and
+  repository-root path strings; failing-first; scratch probe on real linked
+  items rewrote both links.
+- p05-t03: ten uncached runs of the collection-detach case, all exit 0, head
+  `c8454ecf6`, Darwin 25.4.0 arm64, Node v24.18.0.
+- p05-t04: lockstep 0.3.8 -> 0.3.9; `release:check-versions` and
+  `release:validate` exit 0.
+- p05-t05: twelve items archived with the branch CLI (0 inbound rewrites
+  needed); dangling-link sweep empty; external-plan bidirectional-link
+  contract test pass; `pjm doctor` shows only the pre-existing
+  `backlog_completed_unarchived` false positive (14 -> 11 listed).
+  BL-260829 and the four BL-260928-\* follow-ups stay open.
+- p05-t06 Definition of Done at `341961ce7` (all exit 0): `pnpm check` (0/11
+  cached), `type-check`, `HOME=$(mktemp -d) pnpm exec turbo run test --force`
+  (0/10 cached; cli 7866, control-plane 151, docs-transforms 31, docs-config
+  10), `build`, `check:skill-bumps`, `release:check-versions`,
+  `release:validate`, `build:docs`, `test:smoke` 163/163, `test:skills`
+  690/690, `test:scripts` 1/1, `lint`, `format`.
+
+### PR Requirements (hand-off to oat-project-pr-final)
+
+- Title names the removal with a breaking marker, for example
+  `feat!: stop creating and auto-remove OAT-managed CLAUDE.md shims by default (wave 2, lockstep 0.3.9)`;
+  GitHub release notes list PR titles only.
+- Body opens with a **Behavior change** callout: `oat instructions sync` no
+  longer creates `CLAUDE.md` shims by default and removes OAT-managed shims
+  (exact `@AGENTS.md` pointer, sibling symlink, or identical copy) on its next
+  run; hand-written `CLAUDE.md` files, and any `CLAUDE.md` an `AGENTS.md` links
+  to, are kept and reported. Opt back in with
+  `oat config set documentation.instructionSyncStrategy pointer` and rerun
+  `oat instructions sync`.
+- Body also lists: append-only AGENTS.md guidance, `--project-guidance`
+  honored or rejected everywhere, `oat tools guidance`, backlog archive link
+  rewriting, the recon assignment validator, control-plane `check`.
 
 ## Implementation Log
 
