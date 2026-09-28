@@ -188,6 +188,13 @@ tasks. What shipped:
   template and the gate ran without persisted intent.
   ([2026-09-28T11:40Z — gotcha — Exit-gate intent persistence must be sequential, not parallel](oat-execution-learnings.md#2026-09-28t1140z---gotcha---exit-gate-intent-persistence-must-be-sequential-not-parallel))
 
+## Explainer Outcome
+
+- Project recap: `built` (recipe `project-recap` v2, run
+  `def695e7-4da2-4fb9-97ff-9a2f10df0294`); all browser-free checks passed and
+  the host browser capture was inspected at 320, 768, and 1440 px.
+- Run: `explainers/backlog-wave-2-recap/` (page `site/index.html`).
+
 ## Follow-up Items
 
 - `BL-260928-serialize-concurrent-agents-md` — concurrent guidance appends can
