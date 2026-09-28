@@ -17,7 +17,7 @@
   "artifact": {
     "kind": "recon.raw-dossier",
     "schemaVersion": 1,
-    "outputSchema": "references/packet-contract.md#reconraw-dossier"
+    "outputSchema": "references/packet-contract.md#recon.raw-dossier"
   },
   "enforcement": "contract-enforced",
   "failureRecording": "required"

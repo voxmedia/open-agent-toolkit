@@ -14,9 +14,13 @@ The assignment must declare:
 - bounded objective, included scope, and excluded scope;
 - allowed inputs and excluded inputs;
 - source-read authority in `readSources`, including allowed read-only tools;
+  every read source lies within an allowed input and the included scope and
+  outside every excluded input and excluded scope entry;
 - sole `writePath`, contained by the packet directory and unique to the lane;
-- required artifact `kind`, `schemaVersion`, and output schema;
-- enforcement level and deadline; and
+- required artifact `kind`, `schemaVersion`, and output schema: the approved
+  reference `references/packet-contract.md#<kind>` for the artifact's own kind,
+  or a closed inline object schema;
+- enforcement level and deadline;
 - whether failure should be recorded as required, optional, or conditional;
   and
 - an `escalation` path for a lane that cannot complete.
@@ -48,7 +52,7 @@ standard input so no envelope file is written:
   "artifact": {
     "kind": "recon.raw-dossier",
     "schemaVersion": 1,
-    "outputSchema": "references/packet-contract.md#reconraw-dossier"
+    "outputSchema": "references/packet-contract.md#recon.raw-dossier"
   },
   "enforcement": "contract-enforced",
   "deadlineSeconds": 900,
@@ -61,11 +65,25 @@ The validator reports every missing, unknown, or invalid field in one pass and
 exits 1, so the controller can correct or replace a request that never reached
 a worker; an unreadable envelope path is `UNREADABLE_ENVELOPE` with exit 2, not
 an invalid envelope. It rejects a worker mode that does not match the wave
-mode, an allowed input or read source that is also excluded, a file-editing
+mode; a read source outside the allowed inputs or included scope, or inside an
+excluded input or excluded scope entry; an allowed input or included scope
+entry inside an exclusion; a file-editing
 tool in `readSources.tools` (compared case-insensitively across providers, for
 example `Write`, `Edit`, or `apply_patch`), a write path that is absolute,
-escapes the packet, or names no file, a controller-owned artifact kind, and
-`unavailable` enforcement. Across an array it rejects a lane whose run, wave,
+escapes the packet, or names no file; a controller-owned artifact kind; an
+output schema that is neither the approved reference for the artifact's kind
+nor a closed inline schema (`type: object`, `additionalProperties: false`, and
+`required` naming `kind` and `schemaVersion` among its `properties`); and
+`unavailable` enforcement.
+
+Inputs, scope entries, and read sources use the packet contract's locator
+forms: a repository-relative path or a canonical URL. Containment is by whole
+path segment, so excluding `reviews/` also excludes `reviews/private.json`, and
+`src` does not contain `src-other`. An absolute or drive path, a `~` path, a
+backslash path, a `..` segment, or a URL with credentials cannot be bound to the
+lane's authority before launch and is rejected as `UNVERIFIABLE_SOURCE`. The
+check is lexical; symlink and realpath checks remain with source preflight and
+the worker's own gate. Across an array it rejects a lane whose run, wave,
 wave mode, worker mode, or task class differs from the first lane, and a
 repeated lane ID or write path. Once a launch is accepted, correct its
 envelope through the accepted handle; acceptance never authorizes a

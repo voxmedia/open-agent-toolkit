@@ -101,6 +101,71 @@ function isNonEmptyString(value) {
   return typeof value === 'string' && value.trim() !== '';
 }
 
+const urlLocator = /^[a-z][a-z0-9+.-]*:\/\//i;
+
+/**
+ * Binds a declared input, scope entry, or read source to a comparable locator
+ * before launch, following the packet contract's locator kinds: a
+ * repository-relative path, or a canonical URL. Anything else — an absolute
+ * or drive path, a home-relative path, a backslash path, a `..` segment, or a
+ * URL carrying credentials — cannot be bound to the lane's authority without
+ * touching the filesystem, so it returns null and is rejected as unverifiable.
+ * The check is lexical: symlinks and realpaths stay with source preflight and
+ * the worker's own gate.
+ */
+function toLocator(entry) {
+  if (!isNonEmptyString(entry)) return null;
+  const value = entry.trim();
+  if (urlLocator.test(value)) {
+    let url;
+    try {
+      url = new URL(value);
+    } catch {
+      return null;
+    }
+    if (url.username || url.password) return null;
+    return {
+      origin: url.origin.toLowerCase(),
+      segments: url.pathname.split('/').filter(Boolean),
+    };
+  }
+  if (
+    value.includes('\\') ||
+    posix.isAbsolute(value) ||
+    /^[A-Za-z]:/.test(value) ||
+    value.startsWith('~') ||
+    value.split('/').includes('..')
+  ) {
+    return null;
+  }
+  const normalized = posix.normalize(value);
+  return {
+    origin: '',
+    segments: normalized === '.' ? [] : normalized.split('/').filter(Boolean),
+  };
+}
+
+/** True when `child` is `parent` or a descendant of it, segment-wise. */
+function isWithin(child, parent) {
+  return (
+    child.origin === parent.origin &&
+    parent.segments.length <= child.segments.length &&
+    parent.segments.every((segment, index) => child.segments[index] === segment)
+  );
+}
+
+function locators(entries) {
+  return entries.map(toLocator).filter((locator) => locator !== null);
+}
+
+function unverifiable(path, label, entry) {
+  return issue(
+    'UNVERIFIABLE_SOURCE',
+    `${label} entry ${entry} is not a repository-relative path or canonical URL, so it cannot be bound to the lane's authority before launch`,
+    path,
+  );
+}
+
 function missing(path, label) {
   return issue('MISSING_FIELD', `${label} is required`, path);
 }
@@ -205,16 +270,36 @@ function checkIncludedExcluded(
     errors,
     { nonEmpty: false },
   );
+  const excludedLocators = locators(excluded);
   for (const [index, entry] of (Array.isArray(value[includedKey])
     ? value[includedKey]
     : []
   ).entries()) {
-    if (isNonEmptyString(entry) && excluded.includes(entry)) {
+    if (!isNonEmptyString(entry)) continue;
+    const locator = toLocator(entry);
+    const entryPath = `${path}.${key}.${includedKey}[${index}]`;
+    if (locator === null) {
+      errors.push(unverifiable(entryPath, `${key}.${includedKey}`, entry));
+    } else if (excludedLocators.some((parent) => isWithin(locator, parent))) {
       errors.push(
         issue(
           'INPUT_OVERLAPS_EXCLUSION',
           `${key}.${includedKey} entry ${entry} is also excluded`,
-          `${path}.${key}.${includedKey}[${index}]`,
+          entryPath,
+        ),
+      );
+    }
+  }
+  for (const [index, entry] of (Array.isArray(value[excludedKey])
+    ? value[excludedKey]
+    : []
+  ).entries()) {
+    if (isNonEmptyString(entry) && toLocator(entry) === null) {
+      errors.push(
+        unverifiable(
+          `${path}.${key}.${excludedKey}[${index}]`,
+          `${key}.${excludedKey}`,
+          entry,
         ),
       );
     }
@@ -273,15 +358,80 @@ function checkArtifact(envelope, errors, path) {
       ),
     );
   }
-  const schema = value.outputSchema;
+  checkOutputSchema(value, errors, `${artifactPath}.outputSchema`);
+}
+
+// The approved schema references are the packet-contract schemas the bundled
+// artifact validator enforces, one per worker-producible kind.
+export const PACKET_CONTRACT_SCHEMA_PREFIX = 'references/packet-contract.md#';
+
+function isClosedInlineSchema(schema, kind) {
   if (
-    !isNonEmptyString(schema) &&
-    !(isObject(schema) && Object.keys(schema).length > 0)
+    schema.type !== 'object' ||
+    schema.additionalProperties !== false ||
+    !isObject(schema.properties) ||
+    !Array.isArray(schema.required)
+  ) {
+    return false;
+  }
+  const properties = Object.keys(schema.properties);
+  if (
+    !schema.required.every(
+      (name) => typeof name === 'string' && properties.includes(name),
+    )
+  ) {
+    return false;
+  }
+  // Every artifact carries its kind and schema version, pinned to this lane's.
+  return (
+    ['kind', 'schemaVersion'].every((name) => schema.required.includes(name)) &&
+    (schema.properties.kind?.const === undefined ||
+      schema.properties.kind.const === kind) &&
+    (schema.properties.schemaVersion?.const === undefined ||
+      schema.properties.schemaVersion.const === SCHEMA_VERSION)
+  );
+}
+
+function checkOutputSchema(artifact, errors, schemaPath) {
+  const schema = artifact.outputSchema;
+  if (
+    schema === undefined ||
+    schema === null ||
+    schema === '' ||
+    (isObject(schema) && Object.keys(schema).length === 0)
   ) {
     errors.push(
       missing(
-        `${artifactPath}.outputSchema`,
-        'artifact.outputSchema (a schema reference or closed schema object)',
+        schemaPath,
+        'artifact.outputSchema (an approved packet-contract reference or closed schema object)',
+      ),
+    );
+    return;
+  }
+  if (typeof schema === 'string') {
+    const kind = workerArtifactKinds.includes(artifact.kind)
+      ? artifact.kind
+      : null;
+    if (
+      kind === null ||
+      schema.trim() !== `${PACKET_CONTRACT_SCHEMA_PREFIX}${kind}`
+    ) {
+      errors.push(
+        issue(
+          'UNKNOWN_OUTPUT_SCHEMA',
+          `outputSchema must be ${PACKET_CONTRACT_SCHEMA_PREFIX}<artifact.kind> for a worker artifact kind, or a closed inline schema`,
+          schemaPath,
+        ),
+      );
+    }
+    return;
+  }
+  if (!isObject(schema) || !isClosedInlineSchema(schema, artifact.kind)) {
+    errors.push(
+      issue(
+        'OPEN_OUTPUT_SCHEMA',
+        'an inline outputSchema must be a closed object schema (type object, additionalProperties false, required naming kind and schemaVersion among its properties)',
+        schemaPath,
       ),
     );
   }
@@ -361,7 +511,7 @@ function validateEnvelope(envelope, path) {
   checkEnum(envelope, 'taskClass', taskClasses, errors, path);
   checkString(envelope, 'objective', errors, path);
 
-  checkIncludedExcluded(
+  const scope = checkIncludedExcluded(
     envelope,
     'scope',
     ['included', 'excluded'],
@@ -389,20 +539,60 @@ function validateEnvelope(envelope, path) {
       ),
     );
   } else {
-    const sources = checkStringList(
+    checkStringList(
       readSources.sources,
       'readSources.sources',
       `${readPath}.sources`,
       errors,
       { nonEmpty: true },
     );
-    for (const [index, source] of sources.entries()) {
-      if (inputs?.excluded.includes(source)) {
+    // Every read source must bind to a locator inside an allowed input and an
+    // included scope entry, and outside every excluded input and scope entry.
+    // Exclusions cover descendants: excluding `reviews/` excludes
+    // `reviews/private.json`.
+    const allowedInputs = locators(inputs?.included ?? []);
+    const excludedInputs = locators(inputs?.excluded ?? []);
+    const includedScope = locators(scope?.included ?? []);
+    const excludedScope = locators(scope?.excluded ?? []);
+    for (const [index, entry] of (Array.isArray(readSources.sources)
+      ? readSources.sources
+      : []
+    ).entries()) {
+      if (!isNonEmptyString(entry)) continue;
+      const sourcePath = `${readPath}.sources[${index}]`;
+      const source = toLocator(entry);
+      if (source === null) {
+        errors.push(unverifiable(sourcePath, 'readSources.sources', entry));
+        continue;
+      }
+      const inside = (parent) => isWithin(source, parent);
+      if (inputs && !allowedInputs.some(inside)) {
+        errors.push(
+          issue(
+            'SOURCE_OUTSIDE_AUTHORITY',
+            `readSources.sources entry ${entry} is not within any allowed input`,
+            sourcePath,
+          ),
+        );
+      }
+      if (
+        scope &&
+        (!includedScope.some(inside) || excludedScope.some(inside))
+      ) {
+        errors.push(
+          issue(
+            'SOURCE_OUTSIDE_SCOPE',
+            `readSources.sources entry ${entry} is not within the included scope, or is within the excluded scope`,
+            sourcePath,
+          ),
+        );
+      }
+      if (excludedInputs.some(inside)) {
         errors.push(
           issue(
             'INPUT_OVERLAPS_EXCLUSION',
-            `readSources.sources entry ${source} is an excluded input`,
-            `${readPath}.sources[${index}]`,
+            `readSources.sources entry ${entry} is within an excluded input`,
+            sourcePath,
           ),
         );
       }

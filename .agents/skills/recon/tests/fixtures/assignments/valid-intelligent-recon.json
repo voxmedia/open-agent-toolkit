@@ -33,7 +33,7 @@
   "artifact": {
     "kind": "recon.review-result",
     "schemaVersion": 1,
-    "outputSchema": "references/packet-contract.md#reconreview-result"
+    "outputSchema": "references/packet-contract.md#recon.review-result"
   },
   "enforcement": "provider-enforced",
   "deadlineSeconds": 1200,

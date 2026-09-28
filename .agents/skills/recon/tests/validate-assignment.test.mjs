@@ -239,3 +239,178 @@ test('the envelope documented in the worker contract validates', async () => {
   assert.equal(documented.length, 1);
   assert.deepEqual(validateAssignmentValue(documented[0]).errors, []);
 });
+
+// GitHub #295 gate finding: read authority is bounded by the lane's own
+// declared inputs and scope, descendant-aware, before any launch is accepted.
+test('accepts a read source nested inside the allowed inputs and scope', async () => {
+  const base = await loadFixture('valid-mechanical-recon.json');
+  const result = validateAssignmentValue({
+    ...base,
+    readSources: {
+      ...base.readSources,
+      sources: ['.agents/agents/oat-reviewer.md', './.codex/agents/'],
+    },
+  });
+  assert.deepEqual(result.errors, []);
+});
+
+test('rejects read sources that cannot be verified or escape the lane authority', async () => {
+  const base = await loadFixture('valid-mechanical-recon.json');
+  const withSources = (sources) =>
+    codesAt(
+      validateAssignmentValue({
+        ...base,
+        readSources: { ...base.readSources, sources },
+      }).errors,
+    );
+
+  // An unrelated absolute path, a `..` escape, and a Windows path cannot be
+  // bound to the repository before launch.
+  assert.deepEqual(
+    withSources([
+      '/etc/passwd',
+      '.agents/agents/../../etc/passwd',
+      'C:\\secrets.txt',
+    ]),
+    [
+      'UNVERIFIABLE_SOURCE $.readSources.sources[0]',
+      'UNVERIFIABLE_SOURCE $.readSources.sources[1]',
+      'UNVERIFIABLE_SOURCE $.readSources.sources[2]',
+    ],
+  );
+
+  // A relative source under none of the allowed inputs or included scope,
+  // including a sibling that merely shares a name prefix.
+  assert.deepEqual(withSources(['.agents/agents-private/x.md']), [
+    'SOURCE_OUTSIDE_AUTHORITY $.readSources.sources[0]',
+    'SOURCE_OUTSIDE_SCOPE $.readSources.sources[0]',
+  ]);
+
+  // A descendant of the excluded `reviews/` input is excluded with it.
+  assert.deepEqual(withSources(['reviews/private.json']), [
+    'SOURCE_OUTSIDE_AUTHORITY $.readSources.sources[0]',
+    'SOURCE_OUTSIDE_SCOPE $.readSources.sources[0]',
+    'INPUT_OVERLAPS_EXCLUSION $.readSources.sources[0]',
+  ]);
+});
+
+test('excludes descendants of excluded inputs and scope even inside allowed ones', async () => {
+  const base = await loadFixture('valid-mechanical-recon.json');
+  const envelope = {
+    ...base,
+    scope: { included: ['.agents/'], excluded: ['.agents/skills'] },
+    inputs: { allowed: ['.agents'], excluded: ['.agents/agents/private/'] },
+  };
+  const check = (sources) =>
+    codesAt(
+      validateAssignmentValue({
+        ...envelope,
+        readSources: { ...base.readSources, sources },
+      }).errors,
+    );
+
+  assert.deepEqual(check(['.agents/agents/oat-reviewer.md']), []);
+  assert.deepEqual(check(['.agents/agents/private/notes.md']), [
+    'INPUT_OVERLAPS_EXCLUSION $.readSources.sources[0]',
+  ]);
+  assert.deepEqual(check(['.agents/skills/recon/SKILL.md']), [
+    'SOURCE_OUTSIDE_SCOPE $.readSources.sources[0]',
+  ]);
+
+  // An allowed input nested under an excluded one contradicts itself, and an
+  // exclusion that cannot be bound to the repository excludes nothing.
+  assert.deepEqual(
+    codesAt(
+      validateAssignmentValue({
+        ...envelope,
+        readSources: { ...base.readSources, sources: ['.agents/agents'] },
+        inputs: {
+          allowed: ['.agents', '.agents/agents/private/keys.md'],
+          excluded: ['.agents/agents/private/', '/abs/reviews'],
+        },
+      }).errors,
+    ),
+    [
+      'INPUT_OVERLAPS_EXCLUSION $.inputs.allowed[1]',
+      'UNVERIFIABLE_SOURCE $.inputs.excluded[1]',
+    ],
+  );
+});
+
+test('bounds URL read sources by origin and path segment', async () => {
+  const base = await loadFixture('valid-mechanical-recon.json');
+  const docs = 'https://docs.example.com/guide/';
+  const envelope = {
+    ...base,
+    scope: { included: [docs], excluded: [] },
+    inputs: { allowed: [docs], excluded: [] },
+  };
+  const check = (sources) =>
+    codesAt(
+      validateAssignmentValue({
+        ...envelope,
+        readSources: { ...base.readSources, sources },
+      }).errors,
+    );
+  assert.deepEqual(check(['https://docs.example.com/guide/install']), []);
+  assert.deepEqual(check(['https://docs.example.com/guidebook']), [
+    'SOURCE_OUTSIDE_AUTHORITY $.readSources.sources[0]',
+    'SOURCE_OUTSIDE_SCOPE $.readSources.sources[0]',
+  ]);
+  assert.deepEqual(check(['https://evil.example.com/guide/install']), [
+    'SOURCE_OUTSIDE_AUTHORITY $.readSources.sources[0]',
+    'SOURCE_OUTSIDE_SCOPE $.readSources.sources[0]',
+  ]);
+});
+
+test('accepts only an approved packet-contract schema reference or a closed inline schema', async () => {
+  const base = await loadFixture('valid-mechanical-recon.json');
+  const withSchema = (outputSchema, kind = base.artifact.kind) =>
+    codesAt(
+      validateAssignmentValue({
+        ...base,
+        artifact: { ...base.artifact, kind, outputSchema },
+      }).errors,
+    );
+
+  // The documented reference for the lane's own artifact kind.
+  assert.deepEqual(
+    withSchema('references/packet-contract.md#recon.raw-dossier'),
+    [],
+  );
+  assert.deepEqual(
+    withSchema({
+      type: 'object',
+      additionalProperties: false,
+      required: ['kind', 'schemaVersion', 'findings'],
+      properties: {
+        kind: { const: 'recon.raw-dossier' },
+        schemaVersion: { const: 1 },
+        findings: { type: 'array' },
+      },
+    }),
+    [],
+  );
+
+  // An unknown reference, a reference to another kind's schema, and an open
+  // object the worker could not treat as closed.
+  assert.deepEqual(withSchema('does-not-exist.json'), [
+    'UNKNOWN_OUTPUT_SCHEMA $.artifact.outputSchema',
+  ]);
+  assert.deepEqual(
+    withSchema('references/packet-contract.md#recon.review-result'),
+    ['UNKNOWN_OUTPUT_SCHEMA $.artifact.outputSchema'],
+  );
+  assert.deepEqual(withSchema({ foo: 1 }), [
+    'OPEN_OUTPUT_SCHEMA $.artifact.outputSchema',
+  ]);
+  assert.deepEqual(
+    withSchema({
+      type: 'object',
+      additionalProperties: true,
+      required: ['kind', 'schemaVersion'],
+      properties: { kind: {}, schemaVersion: {} },
+    }),
+    ['OPEN_OUTPUT_SCHEMA $.artifact.outputSchema'],
+  );
+});
