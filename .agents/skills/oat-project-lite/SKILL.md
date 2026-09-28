@@ -165,8 +165,8 @@ retired into this one rather than continued — record what was absorbed in
 `"$PROJECT_PATH/state.md"` frontmatter as one frontmatter write immediately
 after the scaffold above, before Step 1. `PROJECT_PATH` here is the value
 re-resolved after `oat project new`, never the pre-scaffold value, which still
-names the previously active project. The fields use the same shapes
-`oat-project-quick-start` writes:
+names the previously active project. The fields have the same shapes that
+`oat-project-quick-start` records:
 
 - `absorbed_projects: [<slug>]` — the project slug of every retired scaffold,
   which also names the scaffold directory under the projects root that this

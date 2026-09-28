@@ -21,6 +21,18 @@ oat_phase_recovery_policy:
     p02:
       used_attempts: 1
       pending_attempt: null
+    p03:
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: bw2-p03-rec-1
+        original_request_id: bw2-p03-impl-1
+        original_task_id: p03-t02
+        original_commit: 15b54a9182b01939617ab83b153116eb594c59a4
+        discovered_by: 'HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/named-skill-load-contract.test.ts (p03-t03 transition run)'
+        dispatch_target: oat-phase-implementer-claude-claude-opus-5-5-medium
+        reservation_head: 15b54a9182b01939617ab83b153116eb594c59a4
+        status: completed
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
 #   phase_attempt_limits: {} # optional pNN: 0-20 overrides; prior usage never resets
