@@ -27,12 +27,12 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 8     | 8/8       |
-| Phase 2 | in_progress | 7     | 6/7       |
+| Phase 2 | in_progress | 7     | 7/7       |
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 2     | 0/2       |
 | Phase 5 | pending     | 6     | 0/6       |
 
-**Total:** 14/26 tasks completed
+**Total:** 15/26 tasks completed
 
 ---
 
@@ -146,8 +146,8 @@ oat_generated: false
 
 ### Task p02-t07: (review) Close p02 review findings C1, M1, M2, L1-L3
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** b1c48d5bc
 
 ---
 
@@ -342,6 +342,15 @@ oat_generated: false
   `AGENTS.md` is a symlink to it (copy check compares the file with itself),
   reproduced by the reviewer. Converted all six to `p02-t07` (fix round 1 of
   the retry limit 2).
+
+- Continuation `cont-backlog-wave-2-p02-fix-1`: `b1c48d5bc` closed C1 (a
+  `CLAUDE.md` that the sibling `AGENTS.md` resolves to, by symlink or hard
+  link, is never a managed copy; guard proven by neutralize-and-restore), M1
+  (scans stop at nested git checkouts), M2 (`.agents/docs/rules-files.md`),
+  L1-L3; full CLI suite 7841 green; repository `validate`/`sync --dry-run`
+  clean. Follow-up recorded (pre-existing, out of scope): with a shim strategy,
+  `--strategy pointer --force` can overwrite the only `CLAUDE.md` in the
+  `AGENTS.md -> CLAUDE.md` layout; file as a backlog item at closeout.
 
 ## Implementation Log
 
