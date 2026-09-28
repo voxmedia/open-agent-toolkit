@@ -810,6 +810,13 @@ oat_generated: false
   https://github.com/voxmedia/open-agent-toolkit/pull/332; `state.md` set to
   `pr_open`. The `pr` sequence step stays open for the closeout orchestrator.
 
+- Generation 2 (Revision 1): generation 1 (`allowed/passed` at `531ce5f4e`)
+  was marked `stale` by the revision's substantive changes; its provenance is
+  kept above. Final review passed at `7b389c5af` (gate row), DoD at
+  `c95e17aad`. Generation 2 intent persisted before launch: reviewed head
+  `b1d8ab9cb`, `effective-delta-v1` (installed skill rules), unchanged
+  `config_fingerprint`, attempts 0 of 2.
+
 ### Final HiLL approval and completion
 
 - Closeout sequence (configured `[summary, document, pr]`, post-approval `[]`):
