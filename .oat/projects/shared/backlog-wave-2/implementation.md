@@ -29,10 +29,10 @@ oat_generated: false
 | Phase 1 | complete    | 8     | 8/8       |
 | Phase 2 | complete    | 8     | 8/8       |
 | Phase 3 | complete    | 5     | 5/5       |
-| Phase 4 | in_progress | 2     | 0/2       |
+| Phase 4 | in_progress | 2     | 2/2       |
 | Phase 5 | pending     | 6     | 0/6       |
 
-**Total:** 21/29 tasks completed
+**Total:** 23/29 tasks completed
 
 ---
 
@@ -205,15 +205,15 @@ oat_generated: false
 
 ### Task p04-t01: Repair bare fences outside .agents/skills and extend the scanner
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 459f7e8c8
 
 ---
 
 ### Task p04-t02: Validate recon assignment envelopes before launch
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** e093b8fbc
 
 ---
 
@@ -450,6 +450,24 @@ oat_generated: false
 - Phase p03 outcome: pass after 1 recovery (bw2-p03-rec-1), 1 review fix
   round (p03-t04), and 1 gate sweep fix (p03-t05); 5/5 tasks. BL-260829 stays
   open for live observation.
+
+### Phase p04 dispatch
+
+- Request `bw2-p04-impl-1`: accepted, returned `DONE`; target
+  `oat-phase-implementer-claude-claude-opus-5-5-medium`; commits `459f7e8c8`
+  (t01), `e093b8fbc` (t02); phase verification pass (960 vitest, 343 recon node
+  tests, skill bumps, validate-skills, type-check, `status --scope project`
+  clean). `Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-medium`
+- p04-t01 evidence (from the commit body): the extended scanner failed first
+  on exactly the five fences; a seeded bare fence failed the live test in
+  `.agents/agents` and in `.oat/templates`; neutralizing the new roots turned
+  five tests red; inventory floor 207 -> 246; scanner laxity narrowing left
+  as-is with a recorded reason and trigger (item notes).
+- p04-t02: new `recon/scripts/validate-assignment.mjs` (envelope
+  `kind: recon.assignment`, `schemaVersion: 1`, documented in
+  `worker-contract.md`) reports every invalid field; truncation control turned
+  two tests red; reviewer role resolves recon through the sibling-skill probe;
+  recon 1.1.6; recon-worker unchanged.
 
 ## Implementation Log
 
