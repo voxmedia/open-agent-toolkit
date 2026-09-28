@@ -24,14 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status      | Tasks | Completed |
-| ------------ | ----------- | ----- | --------- |
-| Phase 1      | complete    | 8     | 8/8       |
-| Phase 2      | complete    | 8     | 8/8       |
-| Phase 3      | complete    | 5     | 5/5       |
-| Phase 4      | complete    | 7     | 7/7       |
-| Phase 5      | complete    | 12    | 12/12     |
-| Phase p-rev1 | in_progress | 8     | 8/8       |
+| Phase        | Status   | Tasks | Completed |
+| ------------ | -------- | ----- | --------- |
+| Phase 1      | complete | 8     | 8/8       |
+| Phase 2      | complete | 8     | 8/8       |
+| Phase 3      | complete | 5     | 5/5       |
+| Phase 4      | complete | 7     | 7/7       |
+| Phase 5      | complete | 12    | 12/12     |
+| Phase p-rev1 | complete | 8     | 8/8       |
 
 **Total:** 48/48 tasks completed
 
@@ -344,7 +344,7 @@ oat_generated: false
 
 ## Phase p-rev1: Revision 1
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-09-28
 
 ### Task prev1-t01: (revision) Rename the CLAUDE.md shim config keys under instructions.claude
@@ -944,12 +944,10 @@ the plan.
 
 ## Deferred Findings (Medium)
 
-- p04 re-review M2 (`reviews/archived/p04-review-2026-09-28T025845Z.md`): Codex workers read through their
-  command-execution tool only, which the `READ_ONLY_TOOLS` allowlist rejects,
-  so Codex recon lanes fail validation and fall back to inline coverage.
-  Deferred by the operator with L1 (weaker `writePath` form checks), L2 (web
-  tools allowed without URL sources), and L3 (mode not checked against
-  artifact kind): file one follow-up backlog item at closeout.
+- p04 re-review M2 (`reviews/archived/p04-review-2026-09-28T025845Z.md`) and
+  L1-L3: moot after revision 1 withdrew the recon validator;
+  `BL-260928-settle-codex-read-authority` was rescoped to a live check that
+  Codex `/recon` lanes launch `contract-enforced` on the released CLI.
 
 - p01 gate M1 (`reviews/archived/p01-review-2026-09-28T001719Z.md`): two concurrent guidance invocations
   can both pass the absent-block check and append the same managed block
@@ -969,12 +967,13 @@ the plan.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review         | Source Artifact             | Planned / Documented                            | Actual / Accepted                                                                              | Reason                                            | Source of Truth                          | Follow-up                               |
-| --------------------- | --------------------------- | ----------------------------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------- | ---------------------------------------- | --------------------------------------- |
-| p03-t03 / p03 reviews | discovery.md Key Decision 4 | Commit the task ledger before reviewer dispatch | Recovery-marker settlement also pre-review; phase row nonterminal until fixes and gates settle | p03 review M1/M2 and gate M2                      | Implementation                           | None                                    |
-| p04-t02 / p04 reviews | plan.md p04-t02             | Validator checks envelope fields                | Also enforces read, write, tool, and schema authority; inline output schemas dropped           | Four p04 review and gate rounds                   | Implementation                           | `BL-260928-settle-codex-read-authority` |
-| p04 gate              | plan.md Reviews             | Gate passes within its retry budget             | Completed under operator override after two blocked attempts                                   | Operator decision 2026-09-28                      | Implementation (final review covers p04) | None                                    |
-| p02-t03               | backlog item AC4            | Warn about leftover CLAUDE.md files             | Case variants deliberately not warned about                                                    | Case-insensitive match flagged real provider docs | Implementation                           | None                                    |
+| Task / Review         | Source Artifact             | Planned / Documented                                  | Actual / Accepted                                                                              | Reason                                            | Source of Truth                          | Follow-up                                          |
+| --------------------- | --------------------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------- | ---------------------------------------- | -------------------------------------------------- |
+| p03-t03 / p03 reviews | discovery.md Key Decision 4 | Commit the task ledger before reviewer dispatch       | Recovery-marker settlement also pre-review; phase row nonterminal until fixes and gates settle | p03 review M1/M2 and gate M2                      | Implementation                           | None                                               |
+| p04-t02 / p04 reviews | plan.md p04-t02             | Validator checks envelope fields                      | Also enforces read, write, tool, and schema authority; inline output schemas dropped           | Four p04 review and gate rounds                   | Implementation                           | `BL-260928-settle-codex-read-authority`            |
+| p04 gate              | plan.md Reviews             | Gate passes within its retry budget                   | Completed under operator override after two blocked attempts                                   | Operator decision 2026-09-28                      | Implementation (final review covers p04) | None                                               |
+| p02-t03               | backlog item AC4            | Warn about leftover CLAUDE.md files                   | Case variants deliberately not warned about                                                    | Case-insensitive match flagged real provider docs | Implementation                           | None                                               |
+| p-rev1 (revision)     | plan.md p04-t02             | Recon validator ships; reviewer validates recon lanes | Validator withdrawn; recon restored to `main`; reviewer no longer launches `recon-worker`      | Operator direction 2026-09-28                     | Implementation                           | `BL-260928-settle-codex-read-authority` (rescoped) |
 
 ## Test Results
 
@@ -990,9 +989,11 @@ no replays), `pnpm build`, `check:skill-bumps`, `release:check-versions`
 
 **What shipped:**
 
-- **CLAUDE.md shims are opt-in.** `documentation.instructionSyncStrategy`
-  (`none | pointer | symlink | copy`, default `none`) persists the strategy;
-  `--strategy` overrides one run. Under `none`, `oat instructions sync` creates
+- **CLAUDE.md shims are opt-in.** `instructions.claude.shims` in
+  `.oat/config.json` (`none | pointer | symlink | copy`, default `none`)
+  persists the choice and `instructions.claude.excludes` lists directories
+  sync leaves alone (clean rename of the earlier `documentation.*` keys, no
+  compatibility read); `--strategy` overrides one run. Under `none`, `oat instructions sync` creates
   no `CLAUDE.md`, removes only exact OAT-created shims (pointer, sibling
   symlink, identical copy) after apply-time identity and content re-checks,
   and never removes a hand-written `CLAUDE.md` beside an `AGENTS.md`,
@@ -1004,6 +1005,14 @@ no replays), `pnpm build`, `check:skill-bumps`, `release:check-versions`
   (remove it, or set a shim strategy and rerun sync), and names linking
   `AGENTS.md` files first. Validate, doctor, and the agent-instructions skills
   follow the same rules; this repository's 11 shims were removed.
+  Removal is all or nothing: while any `CLAUDE.md`, `CLAUDE.local.md`, or
+  `.claude/CLAUDE.md` with its own content exists (including in excluded
+  trees), sync removes no shim and reports `claude_md_blocks_shim_removal`
+  with the files it would have removed, a docs link, and the fixes (move the
+  content into `AGENTS.md` and remove the file, or set a shim strategy); a
+  blocker an `AGENTS.md` links to gets replace-then-remove advice, and kept
+  shims get no per-file "remove it" advice. Rules and provider sync
+  (`.claude/rules`, skills, agents) are independent of the shim setting.
 - **AGENTS.md guidance appends instead of demanding manual patches.** An
   absent managed block is appended with `O_WRONLY | O_APPEND | O_NOFOLLOW`
   after `fstat` identity checks; hard-linked, unwritable, swapped, or
@@ -1017,18 +1026,17 @@ no replays), `pnpm build`, `check:skill-bumps`, `release:check-versions`
   whole-span code citations to the moved item (URLs, symlinks, fenced code,
   and working links elsewhere are left alone; unresolvable local forms warn)
   and retries on re-run.
-- **Recon assignment validator.** `recon/scripts/validate-assignment.mjs`
-  checks envelopes before launch: every missing or invalid field, one
-  homogeneous wave per array, read sources inside allowed inputs and scope and
-  outside exclusions (case- and Unicode-insensitive; URL lookalikes and
-  `file:` rejected), a read-only tool allowlist, write paths inside the
-  artifact kind's packet folder and never controller-owned files, and approved
-  output-schema references. `oat-reviewer` runs it before launch.
+- **Recon.** `oat-reviewer` no longer launches `recon-worker`; only the
+  `recon` skill does, with its evidence-packet machinery. The recon skill is
+  unchanged from `main` (the validator built in p04 was withdrawn in the
+  revision).
 - **Lifecycle skills.** Quick-mode discovery routes straight to quick-start in
   next and progress; Lite records `absorbed_projects` /
   `absorbed_backlog_ids`; implement commits the phase task ledger before the
   per-phase reviewer is dispatched and keeps the phase row nonterminal until
-  review fixes and gates settle.
+  review fixes and gates settle. Exit-gate freshness uses
+  `effective-delta-v2`, which ignores `.oat/projects/**` and `.oat/repo/**`
+  record changes; v1 generations keep their rules.
 - **Repairs and CI.** Five heading-swallowing bare fences repaired in agent
   roles and templates, with the fence scanner extended to `.agents/agents`
   and `.oat/templates`; `packages/control-plane` gains `check`, `check:fix`,
@@ -1046,7 +1054,13 @@ no replays), `pnpm build`, `check:skill-bumps`, `release:check-versions`
 - `oat instructions sync` no longer creates `CLAUDE.md` shims by default and
   removes OAT-created ones on its next run; a lone `CLAUDE.md` is adopted into
   a new `AGENTS.md` and removed; opt back in with
-  `oat config set documentation.instructionSyncStrategy pointer`.
+  `oat config set instructions.claude.shims pointer`.
+- Removal is all or nothing: while a `CLAUDE.md` with its own content exists,
+  sync removes no shim and `sync`/`validate` exit 1 with the reason and fixes.
+- `documentation.instructionSyncStrategy` and
+  `documentation.instructionPointerExcludes` are renamed to
+  `instructions.claude.shims` and `instructions.claude.excludes`; the old keys
+  are ignored.
 - After upgrading, `oat instructions validate` exits 1 while old shims remain,
   until `oat instructions sync` removes them.
 - `oat instructions validate` no longer reports a missing `CLAUDE.md` as drift
@@ -1064,11 +1078,10 @@ no replays), `pnpm build`, `check:skill-bumps`, `release:check-versions`
   `packages/cli/src/commands/tools/guidance/**` - guidance append and emission
 - `packages/cli/src/commands/backlog/{archive.ts,rewrite-references.ts}` -
   reference rewriting
-- `.agents/skills/recon/scripts/validate-assignment.mjs` and its references
 - Skills: oat-doctor 2.0.2, oat-agent-instructions-analyze 1.12.4,
   oat-agent-instructions-apply 1.7.3, oat-project-next 1.1.3,
   oat-project-progress 1.4.3, oat-project-lite 1.1.6, oat-project-implement
-  2.3.14, recon 1.1.6; agent roles oat-reviewer 1.2.10, oat-codebase-mapper
+  2.3.14; agent roles oat-reviewer 1.2.10, oat-codebase-mapper
   1.0.2, skeptical-evaluator 1.0.1
 
 **Verification performed:**
@@ -1078,8 +1091,9 @@ no replays), `pnpm build`, `check:skill-bumps`, `release:check-versions`
   guards, validator authority checks, rewriter symlink and resolution guards,
   lint and check pins).
 - Per-phase Opus 5.5 high root reviews with fix loops and Codex
-  `codex-6-sol-xhigh` phase gates on every phase (p04 completed under an
-  operator override after its gate budget was exhausted).
+  `codex-6-sol-xhigh` phase gates on every phase, including revision p-rev1
+  (p04 completed under an operator override after its gate budget was
+  exhausted).
 - Full Definition of Done re-run at `f0901755c`, all gates exit 0 with 0 of 10
   test tasks cached (see Test Results).
 
@@ -1088,8 +1102,10 @@ no replays), `pnpm build`, `check:skill-bumps`, `release:check-versions`
 - Key decision 4's pre-review bookkeeping was refined during p03 review:
   recovery-marker settlement belongs to the pre-review commit, and the phase
   row stays nonterminal until review fixes and gates settle.
-- The recon validator dropped inline output schemas (the artifact kind fixes
-  the schema) and defines an envelope `kind: recon.assignment`, v1.
+- Revision 1 (operator feedback on PR #332): renamed the shim keys under
+  `instructions.claude`, made removal all or nothing, pinned rules-sync
+  independence, added `effective-delta-v2`, and withdrew the recon validator
+  and the reviewer's `recon-worker` path (recon restored to `main`).
 - Case variants of `CLAUDE.md` are deliberately not warned about (they matched
   real provider docs); documented.
 - Follow-ups filed: `BL-260928-serialize-concurrent-agents-md`,
