@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-27
-oat_current_task_id: p03-t05
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -28,11 +28,11 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 8     | 8/8       |
 | Phase 2 | complete    | 8     | 8/8       |
-| Phase 3 | in_progress | 5     | 4/5       |
-| Phase 4 | pending     | 2     | 0/2       |
+| Phase 3 | complete    | 5     | 5/5       |
+| Phase 4 | in_progress | 2     | 0/2       |
 | Phase 5 | pending     | 6     | 0/6       |
 
-**Total:** 20/29 tasks completed
+**Total:** 21/29 tasks completed
 
 ---
 
@@ -160,7 +160,7 @@ oat_generated: false
 
 ## Phase 3: Lifecycle skill routing and bookkeeping
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-09-28
 
 ### Task p03-t01: Route quick-mode discovery rows straight to quick-start
@@ -193,15 +193,15 @@ oat_generated: false
 
 ### Task p03-t05: (review) Keep the phase row nonterminal until review fixes and the gate settle
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 3ab87b7d6
 
 ---
 
 ## Phase 4: Agent roles and recon validation
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-09-28
 
 ### Task p04-t01: Repair bare fences outside .agents/skills and extend the scanner
 
@@ -443,6 +443,13 @@ oat_generated: false
   pointers named completed `p03-t04`) fixed in root bookkeeping at phase
   close; M2 (Step 7b marked a phase complete before queued fixes and the gate
   settle) routed to `p03-t05` on the original handle, no re-gate.
+
+- Continuation `cont-backlog-wave-2-p03-fix-2`: `3ab87b7d6` closed gate M2
+  (phase row stays nonterminal until review dispositions and selected gates
+  settle); 894 vitest and 37 node tests green.
+- Phase p03 outcome: pass after 1 recovery (bw2-p03-rec-1), 1 review fix
+  round (p03-t04), and 1 gate sweep fix (p03-t05); 5/5 tasks. BL-260829 stays
+  open for live observation.
 
 ## Implementation Log
 
