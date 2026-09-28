@@ -32,7 +32,7 @@ oat_generated: false
 | Phase 4 | pending     | 2     | 0/2       |
 | Phase 5 | pending     | 6     | 0/6       |
 
-**Total:** 8/25 tasks completed
+**Total:** 14/25 tasks completed
 
 ---
 
@@ -104,43 +104,43 @@ oat_generated: false
 
 ### Task p02-t01: Persist a configurable instruction sync strategy
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** e90c64783
 
 ---
 
 ### Task p02-t02: Stop creating shims and remove OAT-managed shims under none
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 684880c9a
 
 ---
 
 ### Task p02-t03: Warn about leftover CLAUDE.md files and adopt strays without shims
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** a80dfd987
 
 ---
 
 ### Task p02-t04: Update doctor, instructions skills, and provider detection
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 20b69c44e
 
 ---
 
 ### Task p02-t05: Document the no-shim default and the pjm init hint
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 8d3ab82c6
 
 ---
 
 ### Task p02-t06: Drop this repository's shims
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 5d54d89c6
 
 ---
 
@@ -299,7 +299,7 @@ oat_generated: false
   `e90c64783..5d54d89c6` (p02-t01..t06); declared phase verification pass
   (2463 tests); full CLI suite fails one file. `Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
 
-### Recovery Event bw2-p02-rec-1
+### Recovery Event bw2-p02-rec-1 (initial stop)
 
 - Phase/task: p02 / p02-t01
 - Original request: bw2-p02-impl-1
@@ -313,6 +313,21 @@ oat_generated: false
 - Recovery commit: -
 - Verification: declared phase checks pass; `src/commands/tools/update/config-write.test.ts` fails at import because its partial `@config/oat-config` mock lacks the new `DEFAULT_INSTRUCTION_SYNC_STRATEGY` export used by `config/resolve.ts`.
 - Reason: the root brief forbade `state.md` edits, which conflicts with the recovery contract's implementer-owned ledger reservation; no reservation, edit, or commit was made. Root direction: the brief conflict was a root error; the narrow `oat_phase_recovery_policy` ledger write is authorized, and the correction is bounded to the failing test's mock (build it on the real module).
+
+### Recovery Event bw2-p02-rec-1
+
+- Phase/task: p02 / p02-t01
+- Original request: bw2-p02-impl-1
+- Original commit: e90c64783
+- Defect class: test
+- Discovered by: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run` (full CLI suite)
+- Disposition: recovered
+- Authorization: operator-extension (root direction after the direction-required stop)
+- Attempt: 1/10
+- Dispatch target: oat-phase-implementer-claude-claude-opus-5-5-high
+- Recovery commit: 02fbaa486
+- Verification: focused `config-write.test.ts` exit 0 before and after commit; full CLI suite exit 0 before and after commit (397 files, 7833 tests)
+- Reason: test-only mock fix (`importOriginal`); root validated the committed `completed` marker, then cleared it (`used_attempts: 1`, `pending_attempt: null`).
 
 ## Implementation Log
 

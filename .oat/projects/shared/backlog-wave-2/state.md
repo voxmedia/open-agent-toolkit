@@ -1,6 +1,6 @@
 ---
-oat_current_task: p02-t01
-oat_last_commit: bb44a14ff
+oat_current_task: p02-t06
+oat_last_commit: 02fbaa486
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -20,16 +20,7 @@ oat_phase_recovery_policy:
   phase_attempt_usage:
     p02:
       used_attempts: 1
-      pending_attempt:
-        attempt: 1
-        event_id: bw2-p02-rec-1
-        original_request_id: bw2-p02-impl-1
-        original_task_id: p02-t01
-        original_commit: e90c64783
-        discovered_by: 'HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run (full CLI suite)'
-        dispatch_target: oat-phase-implementer-claude-claude-opus-5-5-high
-        reservation_head: 68ae84142
-        status: completed
+      pending_attempt: null
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
 #   phase_attempt_limits: {} # optional pNN: 0-20 overrides; prior usage never resets
@@ -99,7 +90,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-27T14:29:05.687Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-28T00:19:53Z'
+oat_project_state_updated: '2026-09-28T00:52:41Z'
 oat_generated: false
 oat_project_recap:
   decision: generate
