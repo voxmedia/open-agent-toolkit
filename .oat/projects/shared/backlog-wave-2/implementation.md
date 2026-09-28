@@ -789,35 +789,115 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 ## Test Results
 
-Track test execution during implementation.
-
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+Final verification (Step 12) at `f0901755c`, full Definition of Done in CI
+order, every gate exit 0: `pnpm check`, `pnpm type-check`,
+`HOME=$(mktemp -d) pnpm exec turbo run test --force` (10/10 tasks, 0 cached,
+no replays), `pnpm build`, `check:skill-bumps`, `release:check-versions`
+(after `git fetch origin main`), `release:validate`, `build:docs`,
+`test:smoke` 163/163, `test:skills` 690/690, `test:scripts`, `pnpm lint`,
+`pnpm format`. Per-phase verification is recorded under Orchestration Runs.
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- **CLAUDE.md shims are opt-in.** `documentation.instructionSyncStrategy`
+  (`none | pointer | symlink | copy`, default `none`) persists the strategy;
+  `--strategy` overrides one run. Under `none`, `oat instructions sync` creates
+  no `CLAUDE.md`, removes only exact OAT-created shims (pointer, sibling
+  symlink, identical copy) after apply-time identity and content re-checks,
+  and never touches hand-written files, `CLAUDE.local.md`, `.claude/CLAUDE.md`,
+  excluded or docs trees, nested git checkouts, or any `CLAUDE.md` an
+  `AGENTS.md` resolves to. A repository-wide warning names every remaining
+  `CLAUDE.md` that would make Claude Code ignore AGENTS.md, with two options
+  (remove it, or set a shim strategy and rerun sync), and names linking
+  `AGENTS.md` files first. Validate, doctor, and the agent-instructions skills
+  follow the same rules; this repository's 11 shims were removed.
+- **AGENTS.md guidance appends instead of demanding manual patches.** An
+  absent managed block is appended with `O_WRONLY | O_APPEND | O_NOFOLLOW`
+  after `fstat` identity checks; hard-linked, unwritable, swapped, or
+  non-regular targets get the zero-write manual patch with the real cause.
+  `oat pjm init` prints guidance once; every `--project-guidance` consumer acts
+  or rejects; `oat init` without `--setup` honors it; zero-pack guidance is
+  skipped; new read-only `oat tools guidance [--json]`; the tools block names
+  only the skills directories installed packs use.
+- **Backlog archive rewrites inbound references.** `oat backlog archive`
+  rewrites `.oat/repo` Markdown links, repository-root path strings, and
+  whole-span code citations to the moved item (URLs, symlinks, fenced code,
+  and working links elsewhere are left alone; unresolvable local forms warn)
+  and retries on re-run.
+- **Recon assignment validator.** `recon/scripts/validate-assignment.mjs`
+  checks envelopes before launch: every missing or invalid field, one
+  homogeneous wave per array, read sources inside allowed inputs and scope and
+  outside exclusions (case- and Unicode-insensitive; URL lookalikes and
+  `file:` rejected), a read-only tool allowlist, write paths inside the
+  artifact kind's packet folder and never controller-owned files, and approved
+  output-schema references. `oat-reviewer` runs it before launch.
+- **Lifecycle skills.** Quick-mode discovery routes straight to quick-start in
+  next and progress; Lite records `absorbed_projects` /
+  `absorbed_backlog_ids`; implement commits the phase task ledger before the
+  per-phase reviewer is dispatched and keeps the phase row nonterminal until
+  review fixes and gates settle.
+- **Repairs and CI.** Five heading-swallowing bare fences repaired in agent
+  roles and templates, with the fence scanner extended to `.agents/agents`
+  and `.oat/templates`; `packages/control-plane` gains `check`, `check:fix`,
+  and `lint:fix`, pinned by the lint-enrollment test; the agents-md
+  unsafe-target test race is fixed.
+- Lockstep public packages bumped to 0.3.9; twelve backlog items archived.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- `oat instructions sync` no longer creates `CLAUDE.md` shims by default and
+  removes OAT-created ones on its next run; opt back in with
+  `oat config set documentation.instructionSyncStrategy pointer`.
+- `oat instructions validate` no longer reports a missing `CLAUDE.md` as drift
+  under the default; it warns about leftover `CLAUDE.md` files instead.
+- AGENTS.md guidance writers append absent blocks (exit 0) instead of printing
+  a manual patch and exiting 1.
+- `oat backlog archive` edits other `.oat/repo` files to repoint links.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `packages/cli/src/commands/instructions/**`, `packages/cli/src/config/oat-config.ts`,
+  `packages/cli/src/config/resolve.ts` - shim strategy, removal, warnings
+- `packages/cli/src/commands/shared/agents-md.ts`,
+  `packages/cli/src/commands/init/**`, `packages/cli/src/commands/pjm/**`,
+  `packages/cli/src/commands/tools/guidance/**` - guidance append and emission
+- `packages/cli/src/commands/backlog/{archive.ts,rewrite-references.ts}` -
+  reference rewriting
+- `.agents/skills/recon/scripts/validate-assignment.mjs` and its references
+- Skills: oat-doctor 2.0.2, oat-agent-instructions-analyze 1.12.4,
+  oat-agent-instructions-apply 1.7.3, oat-project-next 1.1.3,
+  oat-project-progress 1.4.3, oat-project-lite 1.1.6, oat-project-implement
+  2.3.14, recon 1.1.6; agent roles oat-reviewer 1.2.10, oat-codebase-mapper
+  1.0.2, skeptical-evaluator 1.0.1
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- Failing-first tests for every behavior change; neutralize-and-restore proofs
+  for every named negative control (append identity checks, shim deletion
+  guards, validator authority checks, rewriter symlink and resolution guards,
+  lint and check pins).
+- Per-phase Opus 5.5 high root reviews with fix loops and Codex
+  `codex-6-sol-xhigh` phase gates on every phase (p04 completed under an
+  operator override after its gate budget was exhausted).
+- Full Definition of Done re-run at `f0901755c`, all gates exit 0 with 0 of 10
+  test tasks cached (see Test Results).
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- Key decision 4's pre-review bookkeeping was refined during p03 review:
+  recovery-marker settlement belongs to the pre-review commit, and the phase
+  row stays nonterminal until review fixes and gates settle.
+- The recon validator dropped inline output schemas (the artifact kind fixes
+  the schema) and defines an envelope `kind: recon.assignment`, v1.
+- Case variants of `CLAUDE.md` are deliberately not warned about (they matched
+  real provider docs); documented.
+- Follow-ups filed: `BL-260928-serialize-concurrent-agents-md`,
+  `BL-260928-keep-instructions-sync-force`,
+  `BL-260928-route-quick-mode-discovery`,
+  `BL-260928-settle-codex-read-authority`; `BL-260829-order-phase-bookkeeping-before`
+  stays open for live observation.
 
 ## References
 
