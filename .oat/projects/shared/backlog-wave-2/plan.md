@@ -1802,6 +1802,7 @@ title itself:
 | p04    | code     | fixes_completed | 2026-09-28 | reviews/archived/p04-review-2026-09-28T021519Z.md           | a5ebb0813cf786a9fb06e04f87aaacd7566bbdfe | auto       | -                 |
 | p05    | code     | fixes_completed | 2026-09-28 | reviews/archived/p05-review-2026-09-28T103350Z.md           | 3cfab725098067df0b1f002d80ec5ed4f2d4aeed | auto       | -                 |
 | final  | code     | fixes_completed | 2026-09-28 | reviews/archived/final-review-2026-09-28T112631Z.md         | 6972d045a7222be30640726d62d32e2897354c40 | auto       | -                 |
+| final  | code     | passed          | 2026-09-28 | reviews/archived/final-review-2026-09-28T113124Z.md         | 6dd0593e4ba19201352150439e96cad432c9fe27 | auto       | -                 |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
 | design | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
 | plan   | artifact | fixes_completed | 2026-09-27 | -                                                           | -                                        | auto       | -                 |

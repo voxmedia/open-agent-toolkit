@@ -700,6 +700,12 @@ oat_generated: false
   reviewer mechanical-lane wording plus regenerated views). Gate
   `IMPLEMENT-11` recorded.
 
+- Request `bw2-final-review-2` (round 2, scoped to the fixes):
+  `reviews/archived/final-review-2026-09-28T113124Z.md` passed (0 Critical/High/Medium); M1, L1, L2 verified
+  against the branch CLI; two bookkeeping Lows (a stale "never touches
+  hand-written files" sentence; the placeholder Deviations row and References)
+  fixed in root bookkeeping.
+
 ### PR Requirements (hand-off to oat-project-pr-final)
 
 - Title names the removal with a breaking marker, for example
@@ -776,9 +782,12 @@ the plan.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review         | Source Artifact             | Planned / Documented                            | Actual / Accepted                                                                              | Reason                                            | Source of Truth                          | Follow-up                               |
+| --------------------- | --------------------------- | ----------------------------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------- | ---------------------------------------- | --------------------------------------- |
+| p03-t03 / p03 reviews | discovery.md Key Decision 4 | Commit the task ledger before reviewer dispatch | Recovery-marker settlement also pre-review; phase row nonterminal until fixes and gates settle | p03 review M1/M2 and gate M2                      | Implementation                           | None                                    |
+| p04-t02 / p04 reviews | plan.md p04-t02             | Validator checks envelope fields                | Also enforces read, write, tool, and schema authority; inline output schemas dropped           | Four p04 review and gate rounds                   | Implementation                           | `BL-260928-settle-codex-read-authority` |
+| p04 gate              | plan.md Reviews             | Gate passes within its retry budget             | Completed under operator override after two blocked attempts                                   | Operator decision 2026-09-28                      | Implementation (final review covers p04) | None                                    |
+| p02-t03               | backlog item AC4            | Warn about leftover CLAUDE.md files             | Case variants deliberately not warned about                                                    | Case-insensitive match flagged real provider docs | Implementation                           | None                                    |
 
 ## Test Results
 
@@ -799,9 +808,11 @@ no replays), `pnpm build`, `check:skill-bumps`, `release:check-versions`
   `--strategy` overrides one run. Under `none`, `oat instructions sync` creates
   no `CLAUDE.md`, removes only exact OAT-created shims (pointer, sibling
   symlink, identical copy) after apply-time identity and content re-checks,
-  and never touches hand-written files, `CLAUDE.local.md`, `.claude/CLAUDE.md`,
+  and never removes a hand-written `CLAUDE.md` beside an `AGENTS.md`,
+  `CLAUDE.local.md`, `.claude/CLAUDE.md`,
   excluded or docs trees, nested git checkouts, or any `CLAUDE.md` an
-  `AGENTS.md` resolves to. A repository-wide warning names every remaining
+  `AGENTS.md` resolves to (a lone `CLAUDE.md` with no `AGENTS.md` is adopted
+  into a new `AGENTS.md` and removed). A repository-wide warning names every remaining
   `CLAUDE.md` that would make Claude Code ignore AGENTS.md, with two options
   (remove it, or set a shim strategy and rerun sync), and names linking
   `AGENTS.md` files first. Validate, doctor, and the agent-instructions skills
@@ -903,5 +914,6 @@ no replays), `pnpm build`, `check:skill-bumps`, `release:check-versions`
 ## References
 
 - Plan: `plan.md`
-- Design: `design.md`
-- Spec: `spec.md`
+- Discovery: `discovery.md`
+- Decision: `.oat/repo/reference/decisions/DR-260927-claude-md-shims-are-opt.md`
+- Backlog review: `.oat/repo/pjm/backlog/reviews/backlog-and-roadmap-review.md`
