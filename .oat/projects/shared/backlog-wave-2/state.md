@@ -24,6 +24,18 @@ oat_phase_recovery_policy:
     p03:
       used_attempts: 1
       pending_attempt: null
+    p-rev1:
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: bw2-prev1-rec-1
+        original_request_id: bw2-prev1-impl-1
+        original_task_id: prev1-t01
+        original_commit: 54e8fa4a1
+        discovered_by: 'pre-commit lint-staged oxlint --fix (pnpm exec oxlint packages/cli/src/config/oat-config.test.ts)'
+        dispatch_target: oat-phase-implementer-claude-claude-opus-5-5-high
+        reservation_head: 54e8fa4a1
+        status: completed
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
 #   phase_attempt_limits: {} # optional pNN: 0-20 overrides; prior usage never resets

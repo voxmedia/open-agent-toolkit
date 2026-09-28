@@ -265,7 +265,7 @@ describe('oat-config', () => {
           version: 1,
           documentation: {
             root: 'apps/docs',
-            ['instruction' + 'PointerExcludes']: ['vendor'],
+            [['instruction', 'PointerExcludes'].join('')]: ['vendor'],
           },
         }),
         'utf8',
@@ -367,7 +367,7 @@ describe('oat-config', () => {
           version: 1,
           documentation: {
             root: 'apps/docs',
-            ['instruction' + 'SyncStrategy']: 'pointer',
+            [['instruction', 'SyncStrategy'].join('')]: 'pointer',
           },
         }),
         'utf8',
