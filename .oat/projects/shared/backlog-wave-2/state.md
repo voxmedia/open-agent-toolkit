@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: prev1-t08
 oat_last_commit: 512493326
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -96,7 +96,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/332' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-27T14:29:05.687Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-28T15:50:52Z'
+oat_project_state_updated: '2026-09-28T16:01:06Z'
 oat_generated: false
 oat_project_recap:
   decision: generate

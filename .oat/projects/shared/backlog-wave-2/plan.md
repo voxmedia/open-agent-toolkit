@@ -2023,6 +2023,52 @@ git commit -m "chore(prev1-t07): correct the recon records"
 
 ---
 
+### Task prev1-t08: (review) Close p-rev1 review findings M1, M2, L1, L2
+
+Source: `reviews/archived/p-rev1-review-2026-09-28T155753Z.md` (auto review,
+passing: 0 Critical/High, 2 Medium, 3 Low). L3 (missing failing-first records
+for prev1-t04 and prev1-t05) is root bookkeeping in `implementation.md`.
+
+**Step 1: Fix**
+
+- M1: when a blocker `CLAUDE.md` is the target of an `AGENTS.md` link, the
+  `claude_md_blocks_shim_removal` message must never offer plain removal of it.
+  Carry `linkedBy` into `findShimRemovalBlockers`/`buildShimRemovalBlockWarning`
+  (and the JSON finding), phrase the first option as "replace {linkers} with the
+  content of {path}, then remove {path}", and add the same caveat to the
+  oat-doctor `claude_md_blocks_shim_removal` rule and its contract test.
+  Integration case: Claude-first root (`AGENTS.md` -> `CLAUDE.md`) plus a
+  subdirectory pointer shim; assert the block message never offers plain
+  removal of the linked file.
+- M2: while removal is blocked, do not emit per-file `claude_md_hides_agents_md`
+  "remove it" warnings for the exact shims in `wouldRemove` (sync apply,
+  dry-run, and validate); the block finding already names them. Update the
+  oat-doctor rule: while a `claude_md_blocks_shim_removal` item exists, offer
+  no removal for paths in its `wouldRemove`. Extend the "removes nothing while
+  a root CLAUDE.md has content" test to assert the full warning set.
+- L1: word the block message as "would remove N CLAUDE.md files" (an adopted
+  stray is not an OAT-managed shim).
+- L2: soften `instruction-sync.md` "Removal never leaves a mix": files with
+  content block removal; exact shims inside `instructions.claude.excludes` or
+  docs trees are not touched and are reported as leftovers.
+
+No further version bumps (oat-doctor is already bumped in this PR).
+
+**Step 2: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli build`,
+`HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/instructions src/commands/sync`,
+`node --test .agents/skills/oat-doctor/tests/*.test.mjs`,
+`pnpm --filter oat-docs check`, `pnpm run check:skill-bumps`, and the M1 and M2
+branch-build probes from the review artifact. Record a failing-first result for
+the M1 and M2 tests in the commit body.
+
+**Step 3: Commit**
+
+`fix(prev1-t08): close p-rev1 review findings`
+
+---
+
 ## PR Requirements
 
 The release workflow (`.github/workflows/release.yml`) publishes a fixed body
@@ -2072,7 +2118,7 @@ title itself:
 | p05    | code     | fixes_completed | 2026-09-28 | reviews/archived/p05-review-2026-09-28T104612Z.md           | 3c64d9e225a789e50caa1ba4edb153e943331365 | gate       | codex-6-sol-xhigh |
 | p05    | code     | fixes_completed | 2026-09-28 | reviews/archived/p05-review-2026-09-28T105839Z.md           | 7085ab58146ade146e41617e3cdef15b0b9694d9 | auto       | -                 |
 | p05    | code     | passed          | 2026-09-28 | reviews/archived/p05-review-2026-09-28T111050Z.md           | 3a38ce1a00570619de6bf0ff3b068138d8915c56 | gate       | codex-6-sol-xhigh |
-| p-rev1 | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| p-rev1 | code     | fixes_added     | 2026-09-28 | reviews/archived/p-rev1-review-2026-09-28T155753Z.md        | 091873d80f6466f7ee6bc4e1dcd33f54f0a4e093 | auto       | -                 |
 | final  | code     | fixes_completed | 2026-09-28 | reviews/archived/final-review-2026-09-28T113721Z.md         | 1973af8f083c86fdb172eb67d8233eefd002333b | gate       | codex-6-sol-xhigh |
 | final  | code     | passed          | 2026-09-28 | reviews/archived/final-review-2026-09-28T114422Z.md         | ba69e205235f000acf4958e57bc12085c8294f8f | auto       | -                 |
 | final  | code     | passed          | 2026-09-28 | reviews/archived/final-review-2026-09-28T114805Z.md         | b54d67306e12e5abed8e23983f957f7f77c0ad8c | gate       | codex-6-sol-xhigh |
@@ -2129,9 +2175,9 @@ in `implementation.md`). Phase gates and the final review still run.
 - Phase 3: 5 tasks - Lifecycle skill routing and bookkeeping
 - Phase 4: 7 tasks - Agent roles and recon validation
 - Phase 5: 12 tasks - CI and backlog tooling, release fan-in
-- Phase p-rev1: 7 tasks - Revision 1 (operator feedback on PR #332)
+- Phase p-rev1: 8 tasks - Revision 1 (operator feedback on PR #332)
 
-**Total: 47 tasks**
+**Total: 48 tasks**
 
 Ready for code review and merge.
 

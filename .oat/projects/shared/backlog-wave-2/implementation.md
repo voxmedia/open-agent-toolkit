@@ -31,9 +31,9 @@ oat_generated: false
 | Phase 3      | complete    | 5     | 5/5       |
 | Phase 4      | complete    | 7     | 7/7       |
 | Phase 5      | complete    | 12    | 12/12     |
-| Phase p-rev1 | in_progress | 7     | 7/7       |
+| Phase p-rev1 | in_progress | 8     | 7/8       |
 
-**Total:** 47/47 tasks completed
+**Total:** 47/48 tasks completed
 
 ---
 
@@ -381,6 +381,11 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** 512493326
+
+### Task prev1-t08: (review) Close p-rev1 review findings M1, M2, L1, L2
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -883,6 +888,16 @@ the keys were renamed), and refresh the Final Summary and summary.md.
   `summary.md` and the recap are stale and are regenerated at closeout.
 - Exit gate generation 1 marked `stale` (substantive changes after the
   allowed result); a new final review and gate generation run at closeout.
+
+- Review `bw2-prev1-review-1` (`oat-reviewer-claude-claude-opus-5-5-high`,
+  auto) at `091873d80`: 0 Critical/High, 2 Medium, 3 Low
+  (`reviews/archived/p-rev1-review-2026-09-28T155753Z.md`). Reconnaissance:
+  not-attempted. M1, M2, L1, L2 converted to prev1-t08. L3 recorded here: the
+  prev1-t04 and prev1-t05 commit bodies lack failing-first records; the
+  reviewer confirmed both tests fail against the pre-change files (the v2 test
+  asserts the three exclusion pathspecs extracted from the skill text; the
+  reviewer test asserts `not.toContain('recon-worker')`, which the
+  pre-change `oat-reviewer.md` contained).
 
 ## Implementation Log
 
