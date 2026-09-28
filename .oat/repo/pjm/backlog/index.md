@@ -333,6 +333,7 @@
 | BL-260909-give-packages-control-plane    | Give packages/control-plane a check script so its formatting is CI-gated                              | open   | medium   | task       | XS       |
 | BL-260830-integrate-recon-across         | Integrate recon across analysis and research workflows                                                | open   | medium   | feature    | L        |
 | BL-260830-integrate-recon-with-oat       | Integrate recon with OAT discovery and quick start                                                    | open   | medium   | feature    | M        |
+| BL-260928-keep-instructions-sync-force   | Keep instructions sync --force from overwriting the only CLAUDE.md behind an AGENTS.md link           | open   | medium   | task       | S        |
 | BL-260830-live-dogfood-oat-brainstorm    | Live dogfood oat-brainstorm destination and fold-back safety                                          | open   | medium   | task       | M        |
 | BL-260830-make-documentation-aware       | Make documentation-aware discovery prerequisites configurable                                         | open   | medium   | feature    | M        |
 | BL-260904-make-quick-the-default-oat     | Make quick the default OAT workflow mode and spec-driven the explicit larger mode                     | open   | medium   | feature    | L        |
@@ -351,6 +352,7 @@
 | BL-260908-retire-the-top-level-skill     | Retire the top-level skill version alias on the recorded schedule                                     | open   | medium   | task       | S        |
 | BL-260718-rewrite-worktree-bootstrap     | Rewrite worktree bootstrap-group as tested TypeScript command                                         | open   | medium   | feature    | M        |
 | BL-260713-root-agent-judgment-logging    | Root-agent judgment logging responsibility for project log                                            | open   | medium   | feature    | S        |
+| BL-260928-settle-codex-read-authority    | Settle Codex read authority and remaining recon assignment validator gaps                             | open   | medium   | task       | S        |
 | BL-260927-share-one-hook-safe-exact-path | Share one hook-safe exact-path commit primitive across CLI and skill lifecycle commits                | open   | medium   | feature    | L        |
 | BL-260827-span-based-prose-guards        | Span-based prose guards, anchored probe records, and a shared probe runner for skill contract tests   | open   | medium   | task       | S        |
 | BL-260718-support-fumadocs-in-oat-docs   | Support Fumadocs in oat docs nav sync (currently MkDocs-only)                                         | open   | medium   | task       |          |
@@ -391,6 +393,8 @@
 | BL-260903-retire-deprecated-pack         | Retire deprecated pack placement and dead evidence diagnostics                                        | open   | low      | task       | M        |
 | BL-260909-rewrite-inbound-references     | Rewrite inbound references when oat backlog archive moves an item                                     | open   | low      | task       | S        |
 | BL-260907-route-quick-mode-discovery     | Route quick-mode discovery rows in oat-project-next and oat-project-progress straight to quick-start  | open   | low      | task       | XS       |
+| BL-260928-route-quick-mode-discovery     | Route quick-mode discovery to quick-start in the CLI recommender and dashboard                        | open   | low      | task       | XS       |
+| BL-260928-serialize-concurrent-agents-md | Serialize concurrent AGENTS.md guidance appends                                                       | open   | low      | task       | S        |
 | BL-260909-show-the-brainstorm-pack       | Show the brainstorm pack in the oat-doctor dashboard example and pack enumeration                     | open   | low      | task       | XS       |
 | BL-260904-stabilize-the-collection       | Stabilize the collection-detach engine integration test                                               | open   | low      | task       | S        |
 | BL-260908-tighten-the-pr-final-ledger    | Tighten the pr-final ledger guard's prose and escaped-pipe boundary                                   | open   | low      | task       | XS       |

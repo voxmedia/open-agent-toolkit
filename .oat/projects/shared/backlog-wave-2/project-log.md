@@ -84,6 +84,10 @@ target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:0,low:
 
 bw2-p04-stop-1 p04 gate attempt 2 blocked (1 High: read-only tool authority); retry limit exhausted; stopped for operator direction
 
+### 2026-09-28 · structural · oat-project-implement · p04
+
+bw2-p04-outcome p04 complete under operator override after 2 blocked gate attempts and 5 fix rounds; follow-ups filed; see implementation.md
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

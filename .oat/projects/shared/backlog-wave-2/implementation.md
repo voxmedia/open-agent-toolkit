@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-27
-oat_current_task_id: p04-t07
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -29,10 +29,10 @@ oat_generated: false
 | Phase 1 | complete    | 8     | 8/8       |
 | Phase 2 | complete    | 8     | 8/8       |
 | Phase 3 | complete    | 5     | 5/5       |
-| Phase 4 | in_progress | 7     | 6/7       |
-| Phase 5 | pending     | 6     | 0/6       |
+| Phase 4 | complete    | 7     | 7/7       |
+| Phase 5 | in_progress | 6     | 0/6       |
 
-**Total:** 27/34 tasks completed
+**Total:** 28/34 tasks completed
 
 ---
 
@@ -200,7 +200,7 @@ oat_generated: false
 
 ## Phase 4: Agent roles and recon validation
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-09-28
 
 ### Task p04-t01: Repair bare fences outside .agents/skills and extend the scanner
@@ -247,15 +247,15 @@ oat_generated: false
 
 ### Task p04-t07: (review) Bound recon write paths and make wave duplicate checks case-insensitive
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 7bcaefe2a
 
 ---
 
 ## Phase 5: CI and backlog tooling, release fan-in
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-09-28
 
 ### Task p05-t01: Give packages/control-plane a check script
 
@@ -559,6 +559,19 @@ oat_generated: false
   M2 (Codex has no allowlisted read tool, so Codex recon lanes fall back to
   inline) and L1-L3 to a follow-up backlog item; continue without another p04
   review.
+
+- Continuation `cont-backlog-wave-2-p04-fix-5`: `7bcaefe2a` closed H1
+  (write paths bound to each artifact kind's packet folder; controller-owned
+  paths refused) and M1 (case- and NFC-insensitive duplicate and exclusion
+  matching); 359 recon node tests, 897 vitest.
+- Phase p04 outcome: complete under operator override (2026-09-28). Two gate
+  attempts blocked (each with a new validator authority gap, both fixed); the
+  gate retry budget was exhausted, and the operator directed fixing the
+  remaining High and continuing, with the final review covering p04. 7/7
+  tasks. Follow-ups filed: `BL-260928-serialize-concurrent-agents-md` (p01
+  deferred Medium), `BL-260928-keep-instructions-sync-force` (p02 pre-existing
+  `--force` gap), `BL-260928-route-quick-mode-discovery` (p03 L1 routers),
+  `BL-260928-settle-codex-read-authority` (p04 M2, L1-L3).
 
 ## Implementation Log
 
