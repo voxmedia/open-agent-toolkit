@@ -2069,6 +2069,39 @@ the M1 and M2 tests in the commit body.
 
 ---
 
+### Task prev1-t09: (review) Close final review findings L2, L3
+
+Source: `reviews/archived/final-review-2026-09-28T163142Z.md` (final review,
+passing: 0 Critical/High, 2 Medium, 4 Low). M1, M2, L1, and L4 are root
+bookkeeping and closeout (PR hand-off, full summary regeneration, Final
+Summary, Deviations).
+
+**Step 1: Fix**
+
+- L2: add the all-or-nothing qualifier with a link to
+  `../provider-sync/instruction-sync.md#all-or-nothing` to
+  `apps/oat-docs/docs/cli-utilities/configuration.md` (the `none` row) and
+  `apps/oat-docs/docs/reference/oat-directory-structure.md` (the shim row);
+  update `.oat/repo/pjm/current-state.md` for the block, the
+  `instructions.claude.*` rename, and `effective-delta-v2`.
+- L3: `oat-agent-instructions-analyze` SKILL.md: when a
+  `claude_md_blocks_shim_removal` item exists, report its `paths` as the High
+  finding (fix: move or remove each file, replacing its `linkedBy` links
+  first, then rerun sync) and list its `wouldRemove` as the files sync removes
+  next; pin with its contract test. Check `oat-agent-instructions-apply` for
+  the same gap. Both skills are already bumped in this PR.
+
+**Step 2: Verify**
+
+Run: `node --test .agents/skills/oat-agent-instructions-analyze/tests/*.test.mjs`,
+`pnpm --filter oat-docs check`, `pnpm run check:skill-bumps`, `pnpm check`.
+
+**Step 3: Commit**
+
+`fix(prev1-t09): close final review findings`
+
+---
+
 ## PR Requirements
 
 The release workflow (`.github/workflows/release.yml`) publishes a fixed body
@@ -2122,6 +2155,7 @@ title itself:
 | final  | code     | fixes_completed | 2026-09-28 | reviews/archived/final-review-2026-09-28T113721Z.md         | 1973af8f083c86fdb172eb67d8233eefd002333b | gate       | codex-6-sol-xhigh |
 | final  | code     | passed          | 2026-09-28 | reviews/archived/final-review-2026-09-28T114422Z.md         | ba69e205235f000acf4958e57bc12085c8294f8f | auto       | -                 |
 | final  | code     | passed          | 2026-09-28 | reviews/archived/final-review-2026-09-28T114805Z.md         | b54d67306e12e5abed8e23983f957f7f77c0ad8c | gate       | codex-6-sol-xhigh |
+| final  | code     | fixes_added     | 2026-09-28 | reviews/archived/final-review-2026-09-28T163142Z.md         | 11008080c4853e133ee380d34d14c0f3d60f51d1 | auto       | -                 |
 | p-rev1 | code     | passed          | 2026-09-28 | reviews/archived/p-rev1-review-2026-09-28T160943Z.md        | f4599bec32e5b235e699f7504feb33d348a7cfea | gate       | codex-6-sol-xhigh |
 | p-rev1 | code     | passed          | 2026-09-28 | reviews/archived/p-rev1-review-2026-09-28T162038Z.md        | 71aef4127c537309157d3d81680e6738c9f99f73 | gate       | codex-6-sol-xhigh |
 
@@ -2177,9 +2211,9 @@ in `implementation.md`). Phase gates and the final review still run.
 - Phase 3: 5 tasks - Lifecycle skill routing and bookkeeping
 - Phase 4: 7 tasks - Agent roles and recon validation
 - Phase 5: 12 tasks - CI and backlog tooling, release fan-in
-- Phase p-rev1: 8 tasks - Revision 1 (operator feedback on PR #332)
+- Phase p-rev1: 9 tasks - Revision 1 (operator feedback on PR #332)
 
-**Total: 48 tasks**
+**Total: 49 tasks**
 
 Ready for code review and merge.
 

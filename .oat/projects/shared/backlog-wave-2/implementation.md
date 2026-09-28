@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status   | Tasks | Completed |
-| ------------ | -------- | ----- | --------- |
-| Phase 1      | complete | 8     | 8/8       |
-| Phase 2      | complete | 8     | 8/8       |
-| Phase 3      | complete | 5     | 5/5       |
-| Phase 4      | complete | 7     | 7/7       |
-| Phase 5      | complete | 12    | 12/12     |
-| Phase p-rev1 | complete | 8     | 8/8       |
+| Phase        | Status      | Tasks | Completed |
+| ------------ | ----------- | ----- | --------- |
+| Phase 1      | complete    | 8     | 8/8       |
+| Phase 2      | complete    | 8     | 8/8       |
+| Phase 3      | complete    | 5     | 5/5       |
+| Phase 4      | complete    | 7     | 7/7       |
+| Phase 5      | complete    | 12    | 12/12     |
+| Phase p-rev1 | in_progress | 9     | 8/9       |
 
-**Total:** 48/48 tasks completed
+**Total:** 48/49 tasks completed
 
 ---
 
@@ -344,7 +344,7 @@ oat_generated: false
 
 ## Phase p-rev1: Revision 1
 
-**Status:** complete
+**Status:** in_progress
 **Started:** 2026-09-28
 
 ### Task prev1-t01: (revision) Rename the CLAUDE.md shim config keys under instructions.claude
@@ -386,6 +386,11 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** 4f30b57cb
+
+### Task prev1-t09: (review) Close final review findings L2, L3
+
+**Status:** pending
+**Commit:** -
 
 ---
 
