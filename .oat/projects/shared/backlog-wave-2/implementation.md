@@ -29,10 +29,10 @@ oat_generated: false
 | Phase 1 | complete    | 8     | 8/8       |
 | Phase 2 | complete    | 8     | 8/8       |
 | Phase 3 | complete    | 5     | 5/5       |
-| Phase 4 | in_progress | 6     | 5/6       |
+| Phase 4 | in_progress | 6     | 6/6       |
 | Phase 5 | pending     | 6     | 0/6       |
 
-**Total:** 26/33 tasks completed
+**Total:** 27/33 tasks completed
 
 ---
 
@@ -240,8 +240,8 @@ oat_generated: false
 
 ### Task p04-t06: (review) Restrict read-only tool authority to an allowlist
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** ab672560e
 
 ---
 
@@ -539,6 +539,11 @@ oat_generated: false
 - Operator disposition (2026-09-28) for the exhausted p04 gate budget: fix
   the High in `p04-t06`, run one root re-review, then continue to p05 without
   a third gate run; the final review covers p04.
+
+- Continuation `cont-backlog-wave-2-p04-fix-4`: `ab672560e` replaced the
+  mutating-tool denylist with a `READ_ONLY_TOOLS` allowlist
+  (`MUTATING_TOOL`, `EXECUTION_TOOL`, `UNKNOWN_TOOL` rejections); 357 recon
+  node tests, 897 vitest.
 
 ## Implementation Log
 
