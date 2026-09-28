@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-27
-oat_current_task_id: p04-t06
+oat_current_task_id: p04-t07
 oat_generated: false
 ---
 
@@ -29,10 +29,10 @@ oat_generated: false
 | Phase 1 | complete    | 8     | 8/8       |
 | Phase 2 | complete    | 8     | 8/8       |
 | Phase 3 | complete    | 5     | 5/5       |
-| Phase 4 | in_progress | 6     | 6/6       |
+| Phase 4 | in_progress | 7     | 6/7       |
 | Phase 5 | pending     | 6     | 0/6       |
 
-**Total:** 27/33 tasks completed
+**Total:** 27/34 tasks completed
 
 ---
 
@@ -242,6 +242,13 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** ab672560e
+
+---
+
+### Task p04-t07: (review) Bound recon write paths and make wave duplicate checks case-insensitive
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -545,6 +552,14 @@ oat_generated: false
   (`MUTATING_TOOL`, `EXECUTION_TOOL`, `UNKNOWN_TOOL` rejections); 357 recon
   node tests, 897 vitest.
 
+- Request `bw2-p04-review-3` (operator-authorized re-review):
+  `reviews/archived/p04-review-2026-09-28T025845Z.md` 1 High (write paths not bounded to the artifact-kind
+  packet directory; controller-owned files accepted), 2 Medium, 3 Low; gate-2
+  High verified fixed. Operator direction: fix H1 and M1 in `p04-t07`; defer
+  M2 (Codex has no allowlisted read tool, so Codex recon lanes fall back to
+  inline) and L1-L3 to a follow-up backlog item; continue without another p04
+  review.
+
 ## Implementation Log
 
 Chronological log of implementation progress.
@@ -606,6 +621,13 @@ decision (2026-09-27): proceed to implementation with the findings resolved in
 the plan.
 
 ## Deferred Findings (Medium)
+
+- p04 re-review M2 (`reviews/archived/p04-review-2026-09-28T025845Z.md`): Codex workers read through their
+  command-execution tool only, which the `READ_ONLY_TOOLS` allowlist rejects,
+  so Codex recon lanes fail validation and fall back to inline coverage.
+  Deferred by the operator with L1 (weaker `writePath` form checks), L2 (web
+  tools allowed without URL sources), and L3 (mode not checked against
+  artifact kind): file one follow-up backlog item at closeout.
 
 - p01 gate M1 (`reviews/archived/p01-review-2026-09-28T001719Z.md`): two concurrent guidance invocations
   can both pass the absent-block check and append the same managed block
