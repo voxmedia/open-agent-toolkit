@@ -249,10 +249,9 @@ Revision 1 changed the shim design after the PR opened.
 
 ## Explainer Outcome
 
-- **project-recap:** rebuilt after Revision 1 at completion; the run ID,
-  outcome, and QA verdict are recorded in the exported recap's
-  `manifest.json` and `qa/result.json` (this section names no run, so the
-  recap's own inputs stay unchanged after it is built).
+- **project-recap:** built, rebuilt after Revision 1 at completion. Tracked
+  export: `.oat/repo/reference/project-recaps/20260928-backlog-wave-2/` (page `site/index.html`; run ID, outcome, and QA verdict in
+  its `manifest.json` and `qa/result.json`).
 
 ## Follow-up Items
 
