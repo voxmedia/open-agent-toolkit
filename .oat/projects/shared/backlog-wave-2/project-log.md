@@ -96,6 +96,10 @@ target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:2,low:
 
 target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:1,low:1 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-2/reviews/p05-review-2026-09-28T111050Z.md run=138c0018-3da4-473a-ab58-e2a99ba608ab
 
+### 2026-09-28 · structural · oat-project-implement · p05
+
+bw2-p05-outcome p05 pass after 1 blocked gate attempt, 3 review-fix rounds, 1 sweep fix; all 38 tasks complete
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

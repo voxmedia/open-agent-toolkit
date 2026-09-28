@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-27
-oat_current_task_id: p05-t10
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,15 +24,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 8     | 8/8       |
-| Phase 2 | complete    | 8     | 8/8       |
-| Phase 3 | complete    | 5     | 5/5       |
-| Phase 4 | complete    | 7     | 7/7       |
-| Phase 5 | in_progress | 10    | 9/10      |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 8     | 8/8       |
+| Phase 2 | complete | 8     | 8/8       |
+| Phase 3 | complete | 5     | 5/5       |
+| Phase 4 | complete | 7     | 7/7       |
+| Phase 5 | complete | 10    | 10/10     |
 
-**Total:** 37/38 tasks completed
+**Total:** 38/38 tasks completed
 
 ---
 
@@ -254,7 +254,7 @@ oat_generated: false
 
 ## Phase 5: CI and backlog tooling, release fan-in
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-09-28
 
 ### Task p05-t01: Give packages/control-plane a check script
@@ -322,8 +322,8 @@ oat_generated: false
 
 ### Task p05-t10: (review) Keep moved-item code spans intact and rebase query links
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 6dfea1158
 
 ---
 
@@ -672,6 +672,13 @@ oat_generated: false
 - Phase gate attempt 2 (`codex-6-sol-xhigh`): `reviews/archived/p05-review-2026-09-28T111050Z.md` status
   `ok` (0 Critical/High), 1 Medium, 1 Low; judgment sweep: both addressed now
   in `p05-t10`, no re-gate.
+
+- Continuation `cont-backlog-wave-2-p05-fix-4`: `6dfea1158` closed the gate
+  sweep M1 (definition rebase on prose only) and L1 (query-bearing links); 95
+  backlog tests.
+- Phase p05 outcome: pass after 1 blocked gate attempt and 3 review-fix rounds
+  plus 1 sweep fix; 10/10 tasks. The Definition of Done is re-run at closeout
+  because p05-t06 predates the later fix commits.
 
 ### PR Requirements (hand-off to oat-project-pr-final)
 
