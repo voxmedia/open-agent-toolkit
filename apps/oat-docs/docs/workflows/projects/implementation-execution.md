@@ -47,8 +47,9 @@ flowchart LR
 
   P --> Report["Phase report\nverification + commits"]
   Report --> Root
-  Root --> R["Independent phase reviewer"]
-  R -->|pass| Book["Bookkeeping + next phase"]
+  Root --> Ledger["Commit task ledger\npre-review bookkeeping"]
+  Ledger --> R["Independent phase reviewer"]
+  R -->|pass| Book["Review-outcome bookkeeping\n+ next phase"]
   R -->|blocking findings| Fix["Resume phase implementer\nbounded fix scope"]
   Fix --> R2["Fresh root-owned review round"]
 ```
@@ -241,7 +242,14 @@ already part of the next phase's base.
 
 The root sends the reviewer a fresh scope containing the authoritative phase
 commit range, task IDs and boundaries, project artifacts, and verification
-evidence. The review passes with zero Critical and zero High findings.
+evidence. The root commits the phase's task ledger — task rows, the resume
+pointer, and any settled recovery marker — before it dispatches the reviewer,
+so the reviewed head is never stale by construction. Review-outcome
+bookkeeping — the Reviews row and its disposition, the Orchestration Run, and
+the deferred project-log entries — is out of scope at the reviewed head: the
+root writes it after the review returns. In a parallel group the phase worktree
+does not carry the root ledger, so the reviewer brief names the task ledger out
+of scope as well. The review passes with zero Critical and zero High findings.
 Medium and Low findings are recorded without blocking the phase.
 
 ## Final Exit-Gate Boundary

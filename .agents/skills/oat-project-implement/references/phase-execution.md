@@ -684,10 +684,11 @@ degradation is forbidden for the invalid run.
 ### Per-Phase Review
 
 The root workflow owns implementation review. After validating the phase
-report, commit Step 7a pre-review bookkeeping before resolving or dispatching
-the reviewer, so the reviewed head carries the phase's current task ledger. Then
-resolve and dispatch exactly one fresh `oat-reviewer` round at the configured
-review ceiling:
+report (sequential phases; see the parallel-group note below), commit Step 7a
+pre-review bookkeeping before resolving or dispatching the reviewer, so the
+reviewed head carries the phase's current task ledger. Then resolve and
+dispatch exactly one fresh `oat-reviewer` round at the configured review
+ceiling:
 
 ```bash
 oat project dispatch-ceiling resolve \
@@ -813,7 +814,8 @@ worktree in Outstanding Items.
 
 After the root-owned per-phase reviewer passes and both halves of Step 7
 bookkeeping are committed, run `oat_phase_review_gate` for selected phases. The
-gate reviews the same committed task ledger the per-phase reviewer saw:
+gate reviews the committed ledger after both Step 7 halves — which, after a fix
+loop or in a parallel group, is newer than the head the per-phase reviewer saw:
 
 ```bash
 oat --json gate review \
@@ -906,15 +908,24 @@ Run after the phase report validates and before Per-Phase Review dispatches the
 reviewer. Write the phase's task ledger:
 
 - the `implementation.md` task and phase completion rows: each planned task's
-  status and commit, and the phase's completion status and summary;
+  status and commit; keep the phase row `in_progress` (tasks complete, review
+  pending), because the phase's terminal status depends on its review;
 - the `state.md` resume pointer (`oat_current_task`, last commit, and
   timestamp), advanced consistently with `implementation.md` so the two
   resume pointers never disagree;
+- when the phase report carried a recovery attempt, after the matching
+  handoff-matrix row validates, clear the terminal `pending_attempt` marker,
+  preserve `used_attempts`, and append the validated canonical recovery event
+  to `implementation.md`;
 - remove legacy `oat_execution_mode: subagent-driven`; and
 - preserve any configured retry override.
 
-Nothing here depends on the review outcome, which is why it can move ahead of
-the review. Commit it through the same scope-resolving branch as Step 7b,
+The task rows, resume pointer, and recovery settlement do not depend on the
+review outcome, which is why they can move ahead of the review; the recovery
+settlement is validated from the phase report, not from the review. A
+terminal-stop branch that ends without a review (`failed-attempt`,
+`direction-required`, or `BLOCKED`) records its event and marker disposition
+through the Step 7a commit block and then stops; it has no Step 7b. Commit it through the same scope-resolving branch as Step 7b,
 including the synced-scope `oat project push` path. Why this keeps the fix-child
 preflight clean: the pre-review writes are committed before the reviewer is
 dispatched, so the tree is clean when a bounded fix child is dispatched after
@@ -955,6 +966,9 @@ Write the review-outcome bookkeeping that Step 7a leaves out:
   move an event status backward;
 - apply the Reviews Ledger Mutation Contract above before every disposition or
   archive re-point;
+- set the phase's `implementation.md` row to its terminal status from the
+  review outcome: `complete` on pass, `blocked` on retry exhaustion; and
+  update the phase summary for any review-fix commits;
 - append the deferred phase-outcome and review-orchestration entries through
   `oat project log append`;
 - update `state.md` last commit and timestamp for any review-fix commit, and

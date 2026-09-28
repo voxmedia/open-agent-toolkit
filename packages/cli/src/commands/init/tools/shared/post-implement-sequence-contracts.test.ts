@@ -1537,4 +1537,102 @@ describe('phase bookkeeping ordering around per-phase review', () => {
       ),
     ).toContain('both halves of Step 7 bookkeeping are committed');
   });
+
+  // p03 review follow-ups (M1, M2, L2-L4).
+  it('settles a validated recovery marker in the pre-review commit', () => {
+    const pre = normalizeWhitespace(preReviewHalf(readPhaseExecution()));
+
+    expect(pre).toContain(
+      'after the matching handoff-matrix row validates, clear the terminal `pending_attempt` marker, preserve `used_attempts`, and append the validated canonical recovery event',
+    );
+    expect(pre).toContain(
+      'A terminal-stop branch that ends without a review (`failed-attempt`, `direction-required`, or `BLOCKED`) records its event and marker disposition through the Step 7a commit block and then stops',
+    );
+  });
+
+  it('keeps the phase pending in Step 7a and sets its terminal status in Step 7b', () => {
+    const route = readPhaseExecution();
+    const pre = normalizeWhitespace(preReviewHalf(route));
+    const post = normalizeWhitespace(postReviewHalf(route));
+
+    expect(pre).not.toContain('Nothing here depends on the review outcome');
+    expect(pre).not.toContain("the phase's completion status and summary");
+    expect(pre).toContain(
+      'keep the phase row `in_progress` (tasks complete, review pending)',
+    );
+    expect(pre).toContain(
+      'The task rows, resume pointer, and recovery settlement do not depend on the review outcome',
+    );
+    expect(post).toContain(
+      "set the phase's `implementation.md` row to its terminal status from the review outcome: `complete` on pass, `blocked` on retry exhaustion",
+    );
+    expect(post).toContain(
+      'update the phase summary for any review-fix commits',
+    );
+  });
+
+  it('states the parallel-group exception up front and does not overstate the gate ledger', () => {
+    const route = readPhaseExecution();
+    const review = normalizeWhitespace(perPhaseReview(route));
+    const gate = normalizeWhitespace(
+      requiredSlice(
+        route,
+        '### Optional External Phase Review Gate',
+        '#### Reviews Ledger Mutation Contract',
+      ),
+    );
+
+    expect(
+      review.indexOf('(sequential phases; see the parallel-group note below)'),
+    ).toBeGreaterThan(-1);
+    expect(
+      review.indexOf('(sequential phases; see the parallel-group note below)'),
+    ).toBeLessThan(review.indexOf('oat project dispatch-ceiling resolve'));
+    expect(review).toContain(
+      "In a parallel group the phase worktree under review does not carry the root ledger (step 10 of Parallel Group Execution commits it once after fan-in), so that phase's Review Scope also names the task ledger as out of scope.",
+    );
+    expect(gate).not.toContain(
+      'the same committed task ledger the per-phase reviewer saw',
+    );
+    expect(gate).toContain(
+      'The gate reviews the committed ledger after both Step 7 halves',
+    );
+  });
+
+  it('names the per-phase review as a committed-baseline boundary in the entry skill', () => {
+    const entry = normalizeWhitespace(
+      readFileSync(
+        join(
+          import.meta.dirname,
+          '../../../../../../../.agents/skills/oat-project-implement/SKILL.md',
+        ),
+        'utf8',
+      ),
+    );
+
+    expect(entry).toContain(
+      "The per-phase review is such a boundary: commit the phase's task ledger (`references/phase-execution.md` Step 7a) before dispatching the per-phase reviewer, and write review-outcome bookkeeping after the review returns (Step 7b).",
+    );
+  });
+
+  it('documents the split and the reviewer-brief scope for users', () => {
+    const docs = normalizeWhitespace(
+      readFileSync(
+        join(
+          import.meta.dirname,
+          '../../../../../../../apps/oat-docs/docs/workflows/projects/implementation-execution.md',
+        ),
+        'utf8',
+      ),
+    );
+
+    expectMarkersInOrder(docs, [
+      'Root --> Ledger["Commit task ledger',
+      'Ledger --> R["Independent phase reviewer"]',
+      'Book["Review-outcome bookkeeping',
+    ]);
+    expect(docs).toContain(
+      'Review-outcome bookkeeping — the Reviews row and its disposition, the Orchestration Run, and the deferred project-log entries — is out of scope at the reviewed head',
+    );
+  });
 });
