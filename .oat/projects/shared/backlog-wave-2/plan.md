@@ -1766,7 +1766,7 @@ title itself:
 | p04    | code     | fixes_completed | 2026-09-28 | reviews/archived/p04-review-2026-09-28T024124Z.md           | de61806bc4789e7901dd0b90b0ee5579e4bca8e9 | gate       | codex-6-sol-xhigh |
 | p04    | code     | fixes_completed | 2026-09-28 | reviews/archived/p04-review-2026-09-28T025845Z.md           | 7342fc69d8e9ee79929221a885d56a8e63a24f87 | auto       | -                 |
 | p05    | code     | fixes_completed | 2026-09-28 | reviews/archived/p05-review-2026-09-28T104612Z.md           | 3c64d9e225a789e50caa1ba4edb153e943331365 | gate       | codex-6-sol-xhigh |
-| p05    | code     | fixes_added     | 2026-09-28 | reviews/archived/p05-review-2026-09-28T105839Z.md           | 7085ab58146ade146e41617e3cdef15b0b9694d9 | auto       | -                 |
+| p05    | code     | fixes_completed | 2026-09-28 | reviews/archived/p05-review-2026-09-28T105839Z.md           | 7085ab58146ade146e41617e3cdef15b0b9694d9 | auto       | -                 |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;

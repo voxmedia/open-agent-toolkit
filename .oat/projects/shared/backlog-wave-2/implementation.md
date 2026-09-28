@@ -30,9 +30,9 @@ oat_generated: false
 | Phase 2 | complete    | 8     | 8/8       |
 | Phase 3 | complete    | 5     | 5/5       |
 | Phase 4 | complete    | 7     | 7/7       |
-| Phase 5 | in_progress | 9     | 8/9       |
+| Phase 5 | in_progress | 9     | 9/9       |
 
-**Total:** 36/37 tasks completed
+**Total:** 37/37 tasks completed
 
 ---
 
@@ -315,8 +315,8 @@ oat_generated: false
 
 ### Task p05-t09: (review) Close p05 re-review findings H1, M1, M2, L1-L3
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** fbd0d5b16
 
 ---
 
@@ -652,6 +652,15 @@ oat_generated: false
   footnotes corrupted by the reference-definition rebase), 3 Low. Converted to
   `p05-t09` (blocking round 2 of 2). DoD re-run at head by the reviewer: all
   gates green.
+
+- Continuation `cont-backlog-wave-2-p05-fix-3`: `fbd0d5b16` closed H1
+  (whole-span path citations rewritten; commands and fenced blocks warned and
+  kept), M1 (fallbacks only when the relative path does not exist), M2
+  (footnotes and prose definitions untouched), L1-L3; scratch real-data runs
+  rewrote exactly the citing plan lines. Implementer notes: seven older,
+  already-archived items still have code-span citations in the repository
+  (re-running archive on them would repoint via the retry path; out of scope,
+  noted for the PR); the Definition of Done is re-run at closeout.
 
 ### PR Requirements (hand-off to oat-project-pr-final)
 
