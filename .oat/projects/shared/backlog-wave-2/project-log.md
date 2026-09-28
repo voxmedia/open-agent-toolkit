@@ -52,6 +52,10 @@ target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:0,low:
 
 target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:1,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-2/reviews/p01-review-2026-09-28T001719Z.md run=6da2a8cf-79c3-4fbd-96a2-01d7485a9e93
 
+### 2026-09-28 · structural · oat-project-implement · p01
+
+bw2-p01-outcome p01 pass after 2 fix rounds (p01-t07, p01-t08); gate codex-6-sol-xhigh ok, 1 Medium deferred to final; see implementation.md Orchestration Runs
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
