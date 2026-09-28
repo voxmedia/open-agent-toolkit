@@ -16,7 +16,14 @@ The assignment must declare:
 - source-read authority in `readSources`, including allowed read-only tools;
   every read source lies within an allowed input and the included scope and
   outside every excluded input and excluded scope entry;
-- sole `writePath`, contained by the packet directory and unique to the lane;
+- sole `writePath`, contained by the packet directory and unique to the lane:
+  a `recon.raw-dossier` writes under `raw/dossiers/`, a `recon.claim-ledger`
+  candidate under `raw/drafts/`, and a `recon.review-result` under `reviews/`;
+  no lane ever writes a controller-owned path (`manifest.json`, `claims.json`,
+  `packet.md`, `raw/failure.json`, `reviews/reconciliation.json`, or anything
+  under `reviews/briefs/` or `raw/quarantine/`). Controller-owned names match
+  regardless of case or Unicode normalization, and so does lane uniqueness
+  across a wave;
 - required artifact `kind`, `schemaVersion`, and output schema: the approved
   reference `references/packet-contract.md#<kind>` for the artifact's own kind,
   which resolves to that kind's anchor in the packet contract;
@@ -68,8 +75,9 @@ an invalid envelope. It rejects a worker mode that does not match the wave
 mode; a read source outside the allowed inputs or included scope, or inside an
 excluded input or excluded scope entry; an allowed input or included scope
 entry inside an exclusion; any `readSources.tools` entry outside the read-only
-allowlist below; a write path that is absolute, escapes the packet, or names no
-file; a controller-owned artifact kind; an output schema other than the
+allowlist below; a write path that is absolute, escapes the packet, names no
+file, is controller-owned (`CONTROLLER_OWNED_WRITE_PATH`), or lies outside its
+kind's directory (`WRITE_PATH_OUTSIDE_KIND`); a controller-owned artifact kind; an output schema other than the
 approved reference for the artifact's kind (inline schemas are not accepted,
 because the kind already fixes the schema the artifact validator enforces); and
 `unavailable` enforcement. Across an array it rejects a lane whose run, wave,

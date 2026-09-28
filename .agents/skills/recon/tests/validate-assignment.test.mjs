@@ -596,3 +596,98 @@ test('the worker contract lists every allowlisted read-only tool', async () => {
     assert.ok(documented.has(tool), `worker-contract.md names ${tool}`);
   }
 });
+
+// Gate finding: write authority is bound to the packet layout. A lane writes
+// only inside its artifact kind's directory and never a controller-owned file.
+test('binds writePath to the artifact kind and rejects controller-owned files', async () => {
+  const dossier = await loadFixture('valid-mechanical-recon.json');
+  const review = await loadFixture('valid-intelligent-recon.json');
+  const ledger = {
+    ...dossier,
+    artifact: {
+      ...dossier.artifact,
+      kind: 'recon.claim-ledger',
+      outputSchema: 'references/packet-contract.md#recon.claim-ledger',
+    },
+  };
+  const at = (envelope, writePath) =>
+    codesAt(validateAssignmentValue({ ...envelope, writePath }).errors);
+
+  // Accepted controls, one per worker kind.
+  assert.deepEqual(at(dossier, 'raw/dossiers/lane-a.json'), []);
+  assert.deepEqual(at(ledger, 'raw/drafts/claims-v2.json'), []);
+  assert.deepEqual(at(review, 'reviews/semantic/lane-b.json'), []);
+  assert.deepEqual(at(review, 'reviews/semantic.json'), []);
+
+  // Canonical and controller-owned packet files, for any kind and in any case.
+  for (const writePath of [
+    'manifest.json',
+    'claims.json',
+    'packet.md',
+    'raw/failure.json',
+    'reviews/reconciliation.json',
+    'Reviews/Reconciliation.json',
+    'reviews/briefs/verify.json',
+    'raw/quarantine/lane-a.json.invalid',
+  ]) {
+    for (const envelope of [dossier, ledger, review]) {
+      assert.deepEqual(
+        at(envelope, writePath),
+        ['CONTROLLER_OWNED_WRITE_PATH $.writePath'],
+        `${envelope.artifact.kind} -> ${writePath}`,
+      );
+    }
+  }
+
+  // A kind writing outside its own directory.
+  assert.deepEqual(at(dossier, 'reviews/lane-a.json'), [
+    'WRITE_PATH_OUTSIDE_KIND $.writePath',
+  ]);
+  assert.deepEqual(at(dossier, 'raw/drafts/lane-a.json'), [
+    'WRITE_PATH_OUTSIDE_KIND $.writePath',
+  ]);
+  assert.deepEqual(at(ledger, 'raw/dossiers/claims-v2.json'), [
+    'WRITE_PATH_OUTSIDE_KIND $.writePath',
+  ]);
+  assert.deepEqual(at(review, 'raw/dossiers/lane-b.json'), [
+    'WRITE_PATH_OUTSIDE_KIND $.writePath',
+  ]);
+  assert.deepEqual(at(dossier, 'lane-a.json'), [
+    'WRITE_PATH_OUTSIDE_KIND $.writePath',
+  ]);
+});
+
+test('treats case and Unicode-normalization variants as one write path or exclusion', async () => {
+  const first = await loadFixture('valid-mechanical-recon.json');
+  const upper = {
+    ...first,
+    laneId: 'lane-upper',
+    writePath: 'raw/dossiers/LANE-PROVIDER-VIEW-PARITY.JSON',
+  };
+  assert.deepEqual(codesAt(validateAssignmentValue([first, upper]).errors), [
+    'DUPLICATE_WRITE_PATH $[1].writePath',
+  ]);
+
+  const nfc = { ...first, writePath: 'raw/dossiers/café.json' };
+  const nfd = {
+    ...first,
+    laneId: 'lane-nfd',
+    writePath: 'raw/dossiers/café.json',
+  };
+  assert.deepEqual(codesAt(validateAssignmentValue([nfc, nfd]).errors), [
+    'DUPLICATE_WRITE_PATH $[1].writePath',
+  ]);
+
+  // An NFD spelling of an NFC-excluded directory names the same directory.
+  assert.deepEqual(
+    codesAt(
+      validateAssignmentValue({
+        ...first,
+        scope: { included: ['.'], excluded: [] },
+        inputs: { allowed: ['.'], excluded: ['café/'] },
+        readSources: { ...first.readSources, sources: ['café/x.md'] },
+      }).errors,
+    ),
+    ['INPUT_OVERLAPS_EXCLUSION $.readSources.sources[0]'],
+  );
+});

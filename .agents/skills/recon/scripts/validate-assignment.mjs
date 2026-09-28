@@ -230,7 +230,8 @@ function isExcludedBy(child, parent) {
     parent.segments.length <= child.segments.length &&
     parent.segments.every(
       (segment, index) =>
-        child.segments[index].toLowerCase() === segment.toLowerCase(),
+        child.segments[index].normalize('NFC').toLowerCase() ===
+        segment.normalize('NFC').toLowerCase(),
     )
   );
 }
@@ -390,6 +391,30 @@ function checkIncludedExcluded(
   return { included, excluded };
 }
 
+// Case- and Unicode-normalization-insensitive key for a packet or repository
+// path: APFS and the macOS default treat these spellings as one name.
+function foldPathKey(value) {
+  return posix.normalize(value).normalize('NFC').toLowerCase();
+}
+
+// Packet files the controller or reconciler owns (packet-contract.md,
+// Directory; recon SKILL.md reconciliation). Compared as folded keys.
+const controllerOwnedFiles = [
+  'manifest.json',
+  'claims.json',
+  'packet.md',
+  'raw/failure.json',
+  'reviews/reconciliation.json',
+];
+const controllerOwnedDirectories = ['reviews/briefs/', 'raw/quarantine/'];
+
+// The packet directory each worker-producible kind writes under.
+const kindWriteDirectories = Object.freeze({
+  'recon.raw-dossier': 'raw/dossiers/',
+  'recon.claim-ledger': 'raw/drafts/',
+  'recon.review-result': 'reviews/',
+});
+
 function checkWritePath(envelope, errors, path) {
   if (!checkString(envelope, 'writePath', errors, path)) return;
   const writePath = envelope.writePath;
@@ -408,6 +433,36 @@ function checkWritePath(envelope, errors, path) {
       issue(
         'UNSAFE_WRITE_PATH',
         'writePath must be a normalized relative file path contained by the packet directory',
+        `${path}.writePath`,
+      ),
+    );
+    return;
+  }
+
+  // Bound to the packet layout (packet-contract.md, Directory). Controller-owned
+  // matching folds case and Unicode normalization so a variant spelling of a
+  // canonical file still fails closed on a case-insensitive filesystem.
+  const folded = foldPathKey(writePath);
+  if (
+    controllerOwnedFiles.includes(folded) ||
+    controllerOwnedDirectories.some((directory) => folded.startsWith(directory))
+  ) {
+    errors.push(
+      issue(
+        'CONTROLLER_OWNED_WRITE_PATH',
+        `writePath ${writePath} is a canonical or controller-owned packet path; a lane writes only its own candidate`,
+        `${path}.writePath`,
+      ),
+    );
+    return;
+  }
+  const kind = envelope.artifact?.kind;
+  const directory = kindWriteDirectories[kind];
+  if (directory !== undefined && !writePath.startsWith(directory)) {
+    errors.push(
+      issue(
+        'WRITE_PATH_OUTSIDE_KIND',
+        `a ${kind} lane writes under ${directory}, not ${writePath}`,
         `${path}.writePath`,
       ),
     );
@@ -767,8 +822,10 @@ export function validateAssignmentValue(value) {
       laneIds.add(envelope.laneId);
     }
     if (isNonEmptyString(envelope.writePath)) {
-      const normalized = posix.normalize(envelope.writePath);
-      if (writePaths.has(normalized)) {
+      // Folded: two lanes whose paths differ only in case or Unicode
+      // normalization would write one file on a case-insensitive filesystem.
+      const key = foldPathKey(envelope.writePath);
+      if (writePaths.has(key)) {
         errors.push(
           issue(
             'DUPLICATE_WRITE_PATH',
@@ -777,7 +834,7 @@ export function validateAssignmentValue(value) {
           ),
         );
       }
-      writePaths.add(normalized);
+      writePaths.add(key);
     }
   }
   return { valid: errors.length === 0, errors };
