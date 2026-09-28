@@ -1439,6 +1439,7 @@ title itself:
 | p01    | code     | passed          | 2026-09-28 | reviews/archived/p01-review-2026-09-28T001719Z.md           | 4905ae61b93f3011d368258f5eda6297904d4184 | gate       | codex-6-sol-xhigh |
 | p02    | code     | fixes_completed | 2026-09-28 | reviews/archived/p02-review-2026-09-28T005842Z.md           | 8724f5b4ff88c132909cf900fd0bf31b3e0e2948 | auto       | -                 |
 | p02    | code     | passed          | 2026-09-28 | reviews/archived/p02-review-2026-09-28T011221Z.md           | c5886c1bf65cd776eba7051cd22ae5cb52ba352b | auto       | -                 |
+| p02    | code     | received        | 2026-09-28 | reviews/p02-review-2026-09-28T013003Z.md                    | 01055b7963a8e6931762a0780ffed5ee46168f19 | gate       | codex-6-sol-xhigh |
 | p03    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | p04    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | p05    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
