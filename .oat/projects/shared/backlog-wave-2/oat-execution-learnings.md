@@ -24,3 +24,9 @@ UTC-dated and never record secrets or active autonomy signals.
 **Observation:** The automatic Opus plan review found 17, then 11, then 2 findings, all valid; a separate complexity review then removed about a dozen proof and pin additions the review rounds had introduced.
 **Impact:** Review rounds add precision and machinery at the same time.
 **Recommendation:** Run complexity-review after artifact review rounds, before the gate, so the gate sees the trimmed plan.
+
+## 2026-09-28T01:45Z - gotcha - Commitlint rejects silently after lint-staged prints success
+
+**Observation:** A `git commit -qm` whose body had lines over 100 characters was rejected by the commit-msg hook, but `| tail -1` showed only lint-staged's "[COMPLETED] Cleaning up temporary files..." line, so the failure went unnoticed and the staged files were swept into the next (bookkeeping) commit.
+**Impact:** A code fix landed inside a bookkeeping commit; pushed history could not be cleanly corrected.
+**Recommendation:** Check the commit exit code (and `git log -1`) after every commit instead of tailing hook output; wrap commit bodies at 100 characters.

@@ -376,8 +376,11 @@ oat_generated: false
 
 - Phase gate (`codex-6-sol-xhigh`): `reviews/archived/p02-review-2026-09-28T013003Z.md` status `ok`,
   0 Critical/High/Medium, 1 Low (analyze/apply overstated a nested
-  `CLAUDE.md`'s effect). Judgment sweep: addressed now in `2b81c0323` (two wording
-  lines; no re-gate).
+  `CLAUDE.md`'s effect). Judgment sweep: addressed now (two wording lines; no re-gate). The
+  wording change landed inside bookkeeping commit `e13fa06cd` because its own
+  commit was rejected by commitlint (body line over 100 characters) after the
+  files were staged; recorded as a deviation rather than rewriting pushed
+  history.
 - Phase p02 outcome: pass after 1 recovery (bw2-p02-rec-1) and 2 fix rounds
   (p02-t07, p02-t08); 8/8 tasks.
 
@@ -453,6 +456,11 @@ the plan.
   rare. Resurface at final review; if not fixed in-wave, file a backlog item.
 
 ## Deviations from Plan / Design
+
+- p02 gate Low address-now fix (analyze/apply nested `CLAUDE.md` wording) is
+  in bookkeeping commit `e13fa06cd`, not a separate `fix(p02)` commit (its
+  commit was rejected by commitlint's 100-character body line limit and the
+  staged files rode along with the next commit). History was not rewritten.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
