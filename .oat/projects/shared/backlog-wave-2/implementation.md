@@ -32,7 +32,7 @@ oat_generated: false
 | Phase 4 | pending     | 2     | 0/2       |
 | Phase 5 | pending     | 6     | 0/6       |
 
-**Total:** 6/24 tasks completed
+**Total:** 7/24 tasks completed
 
 ---
 
@@ -85,8 +85,8 @@ oat_generated: false
 
 ### Task p01-t07: (review) Close p01 review findings M1, M2, L1-L4
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 1ea888506
 
 ---
 
@@ -258,6 +258,12 @@ oat_generated: false
   `reviews/archived/p01-review-2026-09-27T235828Z.md`: 0 Critical, 0 High,
   2 Medium, 4 Low (passes the phase threshold). Received in auto-disposition
   mode: all six converted to `p01-t07`. `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
+- Continuation `cont-backlog-wave-2-p01-fix-1` (same handle, fix mode):
+  `1ea888506` closed M1 (link count above 1 takes the manual patch, at planning
+  and after open), M2 (zero-pack guidance is `skipped`, exit 0), L1 (real cause
+  plus patch; partial writes distinguished), L2 (`O_NONBLOCK`, non-regular
+  refused), L3 (doctor wording), L4 (test title); failing-first and
+  neutralize-and-restore evidence in the commit body; 2492 tests green.
 - Implementer-reported deviations: evidence lives in commit bodies (root owns
   `implementation.md`); the e2e legacy-workflows-block cases stay
   `manual-required` (control (f)); no test pinned oat-doctor 2.0.1.

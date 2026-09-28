@@ -1332,7 +1332,7 @@ title itself:
 
 | Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target       |
 | ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------- |
-| p01    | code     | fixes_added     | 2026-09-27 | reviews/archived/p01-review-2026-09-27T235828Z.md           | 6aa11df62600cd72e41559a611697afb873893d7 | auto       | -                 |
+| p01    | code     | fixes_completed | 2026-09-27 | reviews/archived/p01-review-2026-09-27T235828Z.md           | 6aa11df62600cd72e41559a611697afb873893d7 | auto       | -                 |
 | p02    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | p03    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | p04    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
