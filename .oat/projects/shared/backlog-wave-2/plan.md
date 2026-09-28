@@ -1119,6 +1119,32 @@ Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run sr
 
 ---
 
+### Task p03-t05: (review) Keep the phase row nonterminal until review fixes and the gate settle
+
+Source: `reviews/archived/p03-review-2026-09-28T015614Z.md` (phase gate,
+passing; M2 addressed now in the judgment sweep).
+
+**Step 1: Fix (failing-first pin)**
+
+In `.agents/skills/oat-project-implement/references/phase-execution.md` Step
+7b, a passing root review with queued review-fix tasks, or with a selected
+external phase gate still pending, leaves the phase row nonterminal; the row
+becomes `complete` only after review dispositions and any selected gate pass.
+Define how a blocked gate or an added fix task updates the row, and pin the
+transition in the phase-sequence contract test. No version bump
+(`oat-project-implement` is already 2.3.14 in this PR).
+
+**Step 2: Verify**
+
+Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation src/commands/init/tools/shared`
+and `node --test .agents/skills/oat-project-implement/tests/*.test.mjs`.
+
+**Step 3: Commit**
+
+`fix(p03-t05): keep the phase row nonterminal until review and gate settle`
+
+---
+
 ## Phase 4: Agent roles and recon validation
 
 ### Task p04-t01: Repair bare fences outside .agents/skills and extend the scanner
@@ -1486,7 +1512,7 @@ title itself:
 | plan   | artifact | fixes_completed | 2026-09-27 | -                                                           | -                                        | auto       | -                 |
 | plan   | artifact | fixes_completed | 2026-09-27 | reviews/archived/artifact-plan-review-2026-09-27T150947Z.md | -                                        | gate       | codex-6-sol-xhigh |
 | plan   | artifact | fixes_completed | 2026-09-27 | reviews/archived/artifact-plan-review-2026-09-27T151608Z.md | -                                        | gate       | codex-6-sol-xhigh |
-| p03    | code     | received        | 2026-09-28 | reviews/p03-review-2026-09-28T015614Z.md                    | 91066575de14dab6df77a52dcb1e967bfad91890 | gate       | codex-6-sol-xhigh |
+| p03    | code     | passed          | 2026-09-28 | reviews/archived/p03-review-2026-09-28T015614Z.md           | 91066575de14dab6df77a52dcb1e967bfad91890 | gate       | codex-6-sol-xhigh |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
@@ -1537,11 +1563,11 @@ in `implementation.md`). Phase gates and the final review still run.
 
 - Phase 1: 8 tasks - AGENTS.md guidance
 - Phase 2: 8 tasks - CLAUDE.md shims
-- Phase 3: 4 tasks - Lifecycle skill routing and bookkeeping
+- Phase 3: 5 tasks - Lifecycle skill routing and bookkeeping
 - Phase 4: 2 tasks - Agent roles and recon validation
 - Phase 5: 6 tasks - CI and backlog tooling, release fan-in
 
-**Total: 28 tasks**
+**Total: 29 tasks**
 
 Ready for code review and merge.
 

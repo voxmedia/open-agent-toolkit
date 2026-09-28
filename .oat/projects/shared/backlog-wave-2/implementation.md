@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-27
-oat_current_task_id: p03-t04
+oat_current_task_id: p03-t05
 oat_generated: false
 ---
 
@@ -28,11 +28,11 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 8     | 8/8       |
 | Phase 2 | complete    | 8     | 8/8       |
-| Phase 3 | in_progress | 4     | 4/4       |
+| Phase 3 | in_progress | 5     | 4/5       |
 | Phase 4 | pending     | 2     | 0/2       |
 | Phase 5 | pending     | 6     | 0/6       |
 
-**Total:** 20/28 tasks completed
+**Total:** 20/29 tasks completed
 
 ---
 
@@ -188,6 +188,13 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** 794b76561
+
+---
+
+### Task p03-t05: (review) Keep the phase row nonterminal until review fixes and the gate settle
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -430,6 +437,12 @@ oat_generated: false
   (Step 7a settles recovery markers; no-review stops commit through 7a), M2
   (phase status set in 7b from the review outcome), L2-L4; 893 vitest and 37
   node tests green.
+
+- Phase gate (`codex-6-sol-xhigh`): `reviews/archived/p03-review-2026-09-28T015614Z.md` status `ok`,
+  0 Critical/High, 2 Medium. Judgment sweep, both addressed now: M1 (resume
+  pointers named completed `p03-t04`) fixed in root bookkeeping at phase
+  close; M2 (Step 7b marked a phase complete before queued fixes and the gate
+  settle) routed to `p03-t05` on the original handle, no re-gate.
 
 ## Implementation Log
 
