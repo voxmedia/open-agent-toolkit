@@ -103,13 +103,13 @@ oat_project_recap:
   source: autonomous_policy
   decided_at: '2026-09-27T14:32:46.795Z'
 oat_post_implement_sequence:
-  status: complete
+  status: pre_approval
   source: configured
-  final_phase: p05
+  final_phase: p-rev1
   pre_approval: [summary, document, pr]
-  pre_approval_completed: [summary, document, pr]
-  approval: approved
-  approval_source: oat-autonomous
+  pre_approval_completed: []
+  approval: pending
+  approval_source: null
   post_approval: []
   post_approval_completed: []
   failure: null
