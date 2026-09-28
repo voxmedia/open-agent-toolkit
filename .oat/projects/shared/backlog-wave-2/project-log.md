@@ -92,6 +92,10 @@ bw2-p04-outcome p04 complete under operator override after 2 blocked gate attemp
 
 target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:2,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-2/reviews/p05-review-2026-09-28T104612Z.md run=9dc0deb0-d3d9-4a35-9b5a-8c111634a460
 
+### 2026-09-28 · structural · oat gate review · p05
+
+target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:1,low:1 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-2/reviews/p05-review-2026-09-28T111050Z.md run=138c0018-3da4-473a-ab58-e2a99ba608ab
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
