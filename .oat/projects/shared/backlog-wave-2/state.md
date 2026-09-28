@@ -104,7 +104,7 @@ oat_post_implement_sequence:
   source: configured
   final_phase: p05
   pre_approval: [summary, document, pr]
-  pre_approval_completed: [summary]
+  pre_approval_completed: [summary, document]
   approval: pending
   approval_source: null
   post_approval: []
@@ -124,8 +124,8 @@ oat_implement_exit_gate:
   reviewed_head: 531ce5f4ea6febca75574c45f9b74115e39c0e20
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:e7bc9d5c7d02a1f91b02ad271401a3a9172ee118765de4efc34696c48aa15c96'
-  freshness_head: 759edbb1e93de6a010baceb22e305a34189e051d
-  freshness_fingerprint: 'sha256:effective-delta-v1:85bec2f2eb1890f26e16de7dd2f1250c325f15d2087535d378620439bfca7004'
+  freshness_head: afa24154236669ef04a66d2a80839b9c87f83223
+  freshness_fingerprint: 'sha256:effective-delta-v1:cf961b942f5255dcf7e768eeb8a1b2ff4068df2b0e1b9e66aa3ab046346292a2'
   launch_state: result_persisted
   launch_attempt_id: 'bw2-exit-gate-2-20260928T114538Z'
   launch_started_at: '2026-09-28T11:45:38Z'
@@ -145,7 +145,7 @@ oat_implement_exit_gate:
   receive_eligible: true
   receive_completed: true
   failure: null
-  updated_at: '2026-09-28T11:55:35Z'
+  updated_at: '2026-09-28T11:58:59Z'
 ---
 
 # Project State: backlog-wave-2
