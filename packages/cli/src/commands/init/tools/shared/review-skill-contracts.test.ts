@@ -1620,6 +1620,68 @@ printf 'artifact-read\\n'`,
     );
   });
 
+  it('records absorbed project slugs and backlog IDs at Lite consolidation', () => {
+    const content = readRepoFile('.agents/skills/oat-project-lite/SKILL.md');
+
+    const scaffoldIndex = content.indexOf(
+      '### Step 0.5: Resolve Active Project or Scaffold Lite',
+    );
+    const consolidationIndex = content.indexOf(
+      '**Consolidating earlier scaffolds.**',
+    );
+    const stepOneIndex = content.indexOf(
+      '### Step 1: Read Repository Knowledge',
+    );
+
+    expect(scaffoldIndex).toBeGreaterThanOrEqual(0);
+    expect(
+      consolidationIndex,
+      'the recording paragraph follows the Lite scaffold',
+    ).toBeGreaterThan(scaffoldIndex);
+    expect(stepOneIndex).toBeGreaterThan(consolidationIndex);
+    expect(
+      content.slice(scaffoldIndex, consolidationIndex),
+      'the scaffold re-resolves PROJECT_PATH before the consolidation write',
+    ).toContain('PROJECT_PATH=$(oat config get activeProject)');
+
+    const branch = content
+      .slice(consolidationIndex, stepOneIndex)
+      .replace(/\s+/g, ' ');
+
+    // Same field shapes quick-start writes, so the completion sweep reads a
+    // Lite consolidation exactly as it reads a quick one.
+    expect(branch).toContain('absorbed_projects: [<slug>]');
+    expect(branch).toContain('absorbed_backlog_ids: [<BL-id>]');
+    expect(branch).toContain('"$PROJECT_PATH/state.md"` frontmatter');
+    expect(branch, 'names the retired scaffold directories').toMatch(
+      /names the scaffold directory[\s\S]{0,120}supersedes/i,
+    );
+    expect(branch, 'consolidation is conditional, not unconditional').toContain(
+      'only when a consolidation actually happened',
+    );
+    expect(branch, 'the two fields are the sweep inputs').toContain(
+      'only inputs the absorbed-project retirement sweep reads at completion',
+    );
+    expect(branch, 'retirement is semantic, not physical').toContain(
+      'semantic claim about the planning surfaces rather than the physical removal of a directory',
+    );
+
+    // The docs no longer describe recording as a quick-mode-only step.
+    const lifecycle = readRepoFile(
+      'apps/oat-docs/docs/workflows/projects/lifecycle.md',
+    ).replace(/\s+/g, ' ');
+    expect(lifecycle).not.toContain('Recording them is a quick-mode step');
+    expect(lifecycle).not.toContain(
+      'A lite project that consolidates earlier scaffolds records nothing',
+    );
+    expect(lifecycle).toContain(
+      '`absorbed_projects` and `absorbed_backlog_ids`',
+    );
+    expect(lifecycle).toMatch(
+      /quick-start[^.]{0,80}oat-project-lite|oat-project-lite[^.]{0,80}quick-start/,
+    );
+  });
+
   it('sweeps and dispositions absorbed ownership before the project-log roll-up and seal', () => {
     const content = readRepoFile(
       '.agents/skills/oat-project-complete/SKILL.md',

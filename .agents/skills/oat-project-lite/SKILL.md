@@ -7,7 +7,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.1.5
+  version: 1.1.6
 ---
 
 # Lite Project
@@ -158,6 +158,28 @@ PROJECT_PATH=$(oat config get activeProject)
 
 Confirm `state.md` reports `oat_workflow_mode: lite`, `oat_phase: plan`, and
 `oat_phase_status: in_progress`. Do not create discovery or design artifacts.
+
+**Consolidating earlier scaffolds.** When this new Lite project absorbs work
+that earlier project scaffolds already started — those directories are being
+retired into this one rather than continued — record what was absorbed in
+`"$PROJECT_PATH/state.md"` frontmatter as one frontmatter write immediately
+after the scaffold above, before Step 1. `PROJECT_PATH` here is the value
+re-resolved after `oat project new`, never the pre-scaffold value, which still
+names the previously active project. The fields use the same shapes
+`oat-project-quick-start` writes:
+
+- `absorbed_projects: [<slug>]` — the project slug of every retired scaffold,
+  which also names the scaffold directory under the projects root that this
+  project supersedes.
+- `absorbed_backlog_ids: [<BL-id>]` — every backlog ID those scaffolds carried
+  into this project.
+
+Record both fields only when a consolidation actually happened; an absent field
+and an empty list are equivalent. A resumed Lite project keeps whatever it
+already recorded. These two fields are the only inputs the absorbed-project
+retirement sweep reads at completion, where retiring a scaffold is treated as a
+semantic claim about the planning surfaces rather than the physical removal of
+a directory. The write travels with this project's next `state.md` commit.
 
 ### Step 1: Read Repository Knowledge
 

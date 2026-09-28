@@ -2155,7 +2155,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-lite',
-        version: '1.1.5',
+        version: '1.1.6',
         finalizedHeading: '### Step 6: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading: '### Step 7: Mark Plan Complete and Hand Off',
@@ -6273,7 +6273,7 @@ describe('validateOatSkills', () => {
       ['oat-project-plan', '1.4.15'],
       ['oat-project-quick-start', '2.3.16'],
       ['oat-project-import-plan', '1.4.18'],
-      ['oat-project-lite', '1.1.5'],
+      ['oat-project-lite', '1.1.6'],
       ['oat-project-review-provide', '1.5.11'],
     ] as const;
 

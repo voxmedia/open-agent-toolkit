@@ -158,13 +158,11 @@ filesystem operation. Deleting or archiving the old scaffold does not make the
 roadmap stop promising its work, so completion checks the claim against the
 prose that still makes it.
 
-When a quick project consolidates earlier scaffolds, quick-start records
+When a quick or lite project consolidates earlier scaffolds, the workflow that
+scaffolds it (`oat-project-quick-start` or `oat-project-lite`) records
 `absorbed_projects` and `absorbed_backlog_ids` in that project's `state.md`
-frontmatter. Those two fields are the only inputs the sweep takes.
-
-Recording them is a quick-mode step today. A lite project that consolidates
-earlier scaffolds records nothing, so the sweep finds no inputs and degrades to
-its recorded note rather than checking that project's surfaces.
+frontmatter, with the same field shapes in both modes. Those two fields are the
+only inputs the sweep takes.
 
 Inside the project-log completion gate — after the log status probe and before
 the roll-up and seal — completion searches the active planning surfaces for each
