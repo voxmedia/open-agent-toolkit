@@ -292,6 +292,28 @@ oat_generated: false
   `implementation.md`); the e2e legacy-workflows-block cases stay
   `manual-required` (control (f)); no test pinned oat-doctor 2.0.1.
 
+### Phase p02 dispatch
+
+- Request `bw2-p02-impl-1`: accepted, returned `DONE_WITH_CONCERNS`; target
+  `oat-phase-implementer-claude-claude-opus-5-5-high`; commits
+  `e90c64783..5d54d89c6` (p02-t01..t06); declared phase verification pass
+  (2463 tests); full CLI suite fails one file. `Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
+
+### Recovery Event bw2-p02-rec-1
+
+- Phase/task: p02 / p02-t01
+- Original request: bw2-p02-impl-1
+- Original commit: e90c64783
+- Defect class: test
+- Discovered by: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run` (full CLI suite)
+- Disposition: direction-required
+- Authorization: phase-standing
+- Attempt: 0/10
+- Dispatch target: oat-phase-implementer-claude-claude-opus-5-5-high
+- Recovery commit: -
+- Verification: declared phase checks pass; `src/commands/tools/update/config-write.test.ts` fails at import because its partial `@config/oat-config` mock lacks the new `DEFAULT_INSTRUCTION_SYNC_STRATEGY` export used by `config/resolve.ts`.
+- Reason: the root brief forbade `state.md` edits, which conflicts with the recovery contract's implementer-owned ledger reservation; no reservation, edit, or commit was made. Root direction: the brief conflict was a root error; the narrow `oat_phase_recovery_policy` ledger write is authorized, and the correction is bounded to the failing test's mock (build it on the real module).
+
 ## Implementation Log
 
 Chronological log of implementation progress.
