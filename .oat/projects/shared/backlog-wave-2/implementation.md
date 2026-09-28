@@ -817,6 +817,14 @@ oat_generated: false
   `b1d8ab9cb`, `effective-delta-v1` (installed skill rules), unchanged
   `config_fingerprint`, attempts 0 of 2.
 
+- Generation 2, attempt 1 (`codex-6-sol-xhigh`, run
+  `d34bae3b-fe9f-4259-b98b-18a6a4e91b5b`, reviewed head `d52002eba`,
+  threshold high): status `ok`, 0 Critical/High, 2 Medium
+  (`reviews/archived/final-review-2026-09-28T165830Z.md`). Both Mediums (live
+  PR title and body stale; summary and recap stale) are the pending
+  pre-approval closeout steps `summary` and `pr` plus the recap gate, which run
+  next. Received; exit gate `allowed/passed`.
+
 ### Final HiLL approval and completion
 
 - Closeout sequence (configured `[summary, document, pr]`, post-approval `[]`):
