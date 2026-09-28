@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-27
-oat_current_task_id: p02-t08
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -27,8 +27,8 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 8     | 8/8       |
-| Phase 2 | in_progress | 8     | 8/8       |
-| Phase 3 | pending     | 3     | 0/3       |
+| Phase 2 | complete    | 8     | 8/8       |
+| Phase 3 | in_progress | 3     | 0/3       |
 | Phase 4 | pending     | 2     | 0/2       |
 | Phase 5 | pending     | 6     | 0/6       |
 
@@ -99,7 +99,7 @@ oat_generated: false
 
 ## Phase 2: CLAUDE.md shims
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-09-28
 
 ### Task p02-t01: Persist a configurable instruction sync strategy
@@ -160,8 +160,8 @@ oat_generated: false
 
 ## Phase 3: Lifecycle skill routing and bookkeeping
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-09-28
 
 ### Task p03-t01: Route quick-mode discovery rows straight to quick-start
 
@@ -373,6 +373,13 @@ oat_generated: false
   analyze, docs); L1 dispositioned as not reported (case-insensitive matching
   flagged real provider docs such as `tools/smoke/protocols/claude.md`;
   documented and pinned). Full CLI suite 7846 green; repository clean.
+
+- Phase gate (`codex-6-sol-xhigh`): `reviews/archived/p02-review-2026-09-28T013003Z.md` status `ok`,
+  0 Critical/High/Medium, 1 Low (analyze/apply overstated a nested
+  `CLAUDE.md`'s effect). Judgment sweep: addressed now in `2b81c0323` (two wording
+  lines; no re-gate).
+- Phase p02 outcome: pass after 1 recovery (bw2-p02-rec-1) and 2 fix rounds
+  (p02-t07, p02-t08); 8/8 tasks.
 
 ## Implementation Log
 

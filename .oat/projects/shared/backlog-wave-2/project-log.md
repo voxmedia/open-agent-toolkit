@@ -60,6 +60,10 @@ bw2-p01-outcome p01 pass after 2 fix rounds (p01-t07, p01-t08); gate codex-6-sol
 
 target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:1 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-2/reviews/p02-review-2026-09-28T013003Z.md run=c8b28cc4-1645-498f-9290-c5c34552a079
 
+### 2026-09-28 · structural · oat-project-implement · p02
+
+bw2-p02-outcome p02 pass after 1 recovery and 2 fix rounds (C1 symlink data-loss fixed); gate codex-6-sol-xhigh ok, 1 Low addressed now; see implementation.md
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
