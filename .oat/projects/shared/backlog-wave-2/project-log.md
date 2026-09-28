@@ -80,6 +80,10 @@ target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:1,low:
 
 target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:0,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-2/reviews/p04-review-2026-09-28T024124Z.md run=c9813e05-1215-4615-abcb-bef0fdfbf6d0
 
+### 2026-09-28 · structural · oat-project-implement · p04
+
+bw2-p04-stop-1 p04 gate attempt 2 blocked (1 High: read-only tool authority); retry limit exhausted; stopped for operator direction
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

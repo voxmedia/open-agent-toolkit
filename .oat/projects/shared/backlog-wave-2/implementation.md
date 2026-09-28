@@ -522,6 +522,13 @@ oat_generated: false
   anchors in `packet-contract.md`, tested), L1, L2 (inline output schemas
   dropped; the artifact kind fixes the schema); 355 recon node tests.
 
+- Phase gate attempt 2 (`codex-6-sol-xhigh`): `reviews/archived/p04-review-2026-09-28T024124Z.md` status
+  `blocked`: one High (the validator accepts mutation-capable and unknown
+  names such as `Bash`, `exec_command`, `NotARealTool` in
+  `readSources.tools`). Review-fix and gate rounds for p04 are exhausted
+  (`oat_orchestration_retry_limit` 2), so the run stopped at the gate-policy
+  boundary for operator direction.
+
 ## Implementation Log
 
 Chronological log of implementation progress.
