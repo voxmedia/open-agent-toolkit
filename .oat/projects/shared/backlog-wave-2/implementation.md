@@ -30,9 +30,9 @@ oat_generated: false
 | Phase 2 | complete    | 8     | 8/8       |
 | Phase 3 | complete    | 5     | 5/5       |
 | Phase 4 | complete    | 7     | 7/7       |
-| Phase 5 | in_progress | 8     | 7/8       |
+| Phase 5 | in_progress | 8     | 8/8       |
 
-**Total:** 35/36 tasks completed
+**Total:** 36/36 tasks completed
 
 ---
 
@@ -308,8 +308,8 @@ oat_generated: false
 
 ### Task p05-t08: (review) Close p05 gate findings H1, M1, M2
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 9c352de4d
 
 ---
 
@@ -631,6 +631,12 @@ oat_generated: false
   `blocked`: H1 (tracked Markdown symlink lets the rewriter write outside
   `.oat/repo`), M1 (suffix fallback rewrites URLs and unrelated paths), M2
   (angle-bracket links malformed). Converted to `p05-t08` (gate round 1 of 2).
+
+- Continuation `cont-backlog-wave-2-p05-fix-2`: `9c352de4d` closed H1
+  (symlinks and out-of-root real paths skipped; `O_NOFOLLOW` reads and
+  writes), M1 (rewrite only tokens resolving to the former path; URLs
+  untouched; unresolved local forms warned), M2 (angle-delimited links);
+  controls neutralized and restored; 88 backlog tests.
 
 ### PR Requirements (hand-off to oat-project-pr-final)
 
