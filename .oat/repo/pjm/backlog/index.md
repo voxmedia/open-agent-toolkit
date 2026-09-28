@@ -11,7 +11,8 @@
   `BL-260830-persist-instruction-sync` (CLAUDE.md shims are opt-in);
   `BL-260907-route-quick-mode-discovery`, `BL-260907-record-absorbed-projects`
   (lifecycle skill routing); `BL-260909-repair-the-bare-fences-that`,
-  `BL-260927-validate-recon-worker` (agent roles and recon validation); and
+  `BL-260927-validate-recon-worker` (agent roles; resolved by taking
+  `recon-worker` out of `oat-reviewer`, not by a validator); and
   `BL-260909-give-packages-control-plane`,
   `BL-260909-rewrite-inbound-references`, `BL-260904-stabilize-the-collection`
   (CI and backlog tooling). `oat backlog archive` now rewrites inbound
@@ -335,6 +336,7 @@
 | BL-260830-cli-flag-help-p2-p3-cleanup    | CLI flag/help P2-P3 cleanup                                                                           | open   | medium   | task       | M        |
 | BL-260819-classify-canonical-skills-by   | Classify canonical skills by distribution, lifecycle, and tenant scope                                | open   | medium   | feature    | M        |
 | BL-260830-complete-control-plane-backed  | Complete control-plane-backed lifecycle reads                                                         | open   | medium   | initiative | M        |
+| BL-260928-settle-codex-read-authority    | Confirm /recon launches Codex worker lanes as contract-enforced on the released CLI                   | open   | medium   | task       | S        |
 | BL-260830-decide-generic-oat-ownership   | Decide generic OAT ownership of Jira backlog refinement                                               | open   | medium   | idea       | L        |
 | BL-260902-decide-test-only-freshness     | Decide test-only freshness exception for the implement exit gate                                      | open   | medium   | idea       | S        |
 | BL-260927-derive-current-lifecycle-state | Derive current lifecycle state from one authority for review, phase, and publication status           | open   | medium   | feature    | L        |
@@ -365,7 +367,6 @@
 | BL-260908-retire-the-top-level-skill     | Retire the top-level skill version alias on the recorded schedule                                     | open   | medium   | task       | S        |
 | BL-260718-rewrite-worktree-bootstrap     | Rewrite worktree bootstrap-group as tested TypeScript command                                         | open   | medium   | feature    | M        |
 | BL-260713-root-agent-judgment-logging    | Root-agent judgment logging responsibility for project log                                            | open   | medium   | feature    | S        |
-| BL-260928-settle-codex-read-authority    | Settle Codex read authority and remaining recon assignment validator gaps                             | open   | medium   | task       | S        |
 | BL-260927-share-one-hook-safe-exact-path | Share one hook-safe exact-path commit primitive across CLI and skill lifecycle commits                | open   | medium   | feature    | L        |
 | BL-260827-span-based-prose-guards        | Span-based prose guards, anchored probe records, and a shared probe runner for skill contract tests   | open   | medium   | task       | S        |
 | BL-260718-support-fumadocs-in-oat-docs   | Support Fumadocs in oat docs nav sync (currently MkDocs-only)                                         | open   | medium   | task       |          |

@@ -1,28 +1,27 @@
 ---
 id: BL-260928-settle-codex-read-authority
-title: Settle Codex read authority and remaining recon assignment validator gaps
+title: Confirm /recon launches Codex worker lanes as contract-enforced on the released CLI
 status: open
 priority: medium
 scope: task
 scope_estimate: S
 labels:
   - recon
-  - validation
   - codex
   - dispatch
 assignee: null
 created: 2026-09-28T10:16:23.474Z
-updated: 2026-09-28T10:16:23.474Z
+updated: 2026-09-28T15:43:07.000Z
 associated_issues: []
 external_plans: []
 ---
 
 ## Description
 
-Follow-up from backlog-wave-2 p04 (reviews/archived/p04-review-2026-09-28T025845Z.md, deferred by the operator). M2: Codex workers read files only through their command-execution tool, which the READ_ONLY_TOOLS allowlist in .agents/skills/recon/scripts/validate-assignment.mjs rejects, so Codex-hosted recon lanes fail validation and fall back to inline coverage; the allowlist comment also claims Codex coverage it does not have. Decide how a shell-only provider fits read-only authority (for example allowing Codex exec only with a declared, validated command restriction) and record it. Also: L1 writePath form checks weaker than read sources (~/x.json, file:x.json, whitespace); L2 WebFetch/WebSearch allowed for lanes with no URL sources; L3 worker mode not checked against artifact kind.
+Follow-up from backlog-wave-2. p04 shipped a recon assignment validator whose read-only tool allowlist rejected Codex, which reads files only through its command-execution tool (p04 review M2, reviews/archived/p04-review-2026-09-28T025845Z.md). Revision p-rev1 withdrew that validator and took `recon-worker` out of `oat-reviewer`, so the recon skill is again exactly as on `main`. There, the Codex `recon-worker` view runs with `sandbox_mode = "workspace-write"` and no provider-enforced read restriction, so the recon `SKILL.md` authority rules classify its lanes as `contract-enforced`: permitted in the default mode under the audited leaf-worker contract, and a stop under `--strict`. That reading comes from the contract text only. Confirm it with a live run on the released CLI.
 
 ## Acceptance Criteria
 
-- A recorded decision states how a shell-only provider (Codex) satisfies read-only recon authority, and the validator and its allowlist comment match it.
-- Codex-hosted recon lanes either validate under that rule or fail with an explicit, documented reason; a test covers both a valid Codex lane and a rejected unrestricted shell.
-- `writePath` rejects `~`, `file:`, and whitespace-padded forms; web tools are rejected for lanes without URL sources; worker mode is checked against artifact kind.
+- A live `/recon` run on the released CLI with Codex-hosted `recon-worker` lanes records `contract-enforced` authority in the approved manifest and packet, and its lanes launch and complete without falling back to inline coverage.
+- The same run under `--strict` stops before launch because the Codex lanes are not provider-enforced.
+- The outcome (confirmed, or the observed divergence with a follow-up item) is recorded on this item before it is closed.

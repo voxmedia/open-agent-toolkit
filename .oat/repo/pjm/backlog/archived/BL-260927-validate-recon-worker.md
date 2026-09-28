@@ -11,7 +11,7 @@ labels:
   - dispatch
 assignee: null
 created: 2026-09-27T03:35:37.678Z
-updated: '2026-09-28T10:24:49Z'
+updated: '2026-09-28T15:43:07Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/295
@@ -27,3 +27,7 @@ A final review launched two recon children with incomplete envelopes; both were 
 - A deterministic validator checks a recon assignment against the selected role envelope before launch and reports every missing or invalid field.
 - Reviewer guidance runs it before launch and uses it to correct an accepted handle's envelope instead of relaunching.
 - Valid and invalid fixtures cover the mechanical and intelligent recon lanes used by project review.
+
+## Resolution
+
+Resolved by removal, not by a validator. Backlog wave 2 p04 first shipped a deterministic assignment validator in the recon skill and had `oat-reviewer` run it before launch; revision p-rev1 withdrew both before release (operator direction, 2026-09-28). Only the `recon` skill launches `recon-worker`, because it owns the evidence-packet machinery. `oat-reviewer` no longer launches `recon-worker` at all: its optional reconnaissance lanes are ordinary read-only sub-agents, so no reviewer-built assignment envelope exists to validate or to reject after acceptance. The acceptance criteria above are superseded; the recon skill is unchanged from `main`.

@@ -48,12 +48,13 @@ copying their content here. -->
   patch; every `--project-guidance` consumer acts or rejects, and the new
   read-only `oat tools guidance [--json]` prints the block.
   `oat backlog archive` rewrites inbound `.oat/repo` references to the moved
-  item. The recon skill ships `scripts/validate-assignment.mjs`, which `oat-reviewer`
-  runs before launching a `recon-worker` lane. Quick-mode discovery routes to
-  quick-start, Lite records absorbed projects, and implement commits the phase
-  task ledger before dispatching the phase reviewer. `packages/control-plane`
-  gains a `check` script. After upgrading, run `oat instructions sync` to
-  remove old shims; `oat instructions validate` exits 1 until then.
+  item. `oat-reviewer` no longer launches `recon-worker`: only the `recon` skill
+  does, and reviewer lanes are ordinary read-only sub-agents. Quick-mode
+  discovery routes to quick-start, Lite records absorbed projects, and implement
+  commits the phase task ledger before dispatching the phase reviewer.
+  `packages/control-plane` gains a `check` script. After upgrading, run
+  `oat instructions sync` to remove old shims; `oat instructions validate`
+  exits 1 until then.
 - CLI `0.3.8` (`triage-correctness-wave`, branch `wave/2026-09-26-backlog`)
   closes nine correctness items from the 2026-09-26 triage.
   `resolve-providers.sh` no longer aborts when the last auto-detect test is

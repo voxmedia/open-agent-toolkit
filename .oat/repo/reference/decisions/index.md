@@ -18,7 +18,6 @@
 | DR-260928-name-the-claude-md-shim-keys   | 2026-09-28 | accepted   | Name the CLAUDE.md shim keys under instructions.claude                                                 | -       |
 | DR-260928-persist-the-instruction-sync   | 2026-09-28 | accepted   | Persist the instruction sync strategy in project config                                                | -       |
 | DR-260928-remove-no-claude-md-shim-while | 2026-09-28 | accepted   | Remove no CLAUDE.md shim while any CLAUDE.md has content                                               | -       |
-| DR-260928-validate-recon-assignments     | 2026-09-28 | accepted   | Validate recon assignments before launch in the recon skill                                            | -       |
 | DR-260927-accept-alwaysapply             | 2026-09-27 | accepted   | Accept alwaysApply as a canonical rule activation alias                                                | -       |
 | DR-260927-claude-md-shims-are-opt        | 2026-09-27 | accepted   | CLAUDE.md shims are opt-in                                                                             | -       |
 | DR-260927-dispatch-record-validates      | 2026-09-27 | accepted   | Dispatch record validates without persisting                                                           | -       |
