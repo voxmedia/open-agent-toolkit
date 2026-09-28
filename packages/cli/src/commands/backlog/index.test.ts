@@ -356,6 +356,28 @@ describe('createBacklogCommand', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('lists files rewritten by a retry on an already-archived item', async () => {
+    const { command, capture, archiveBacklogItem } = createHarness();
+    archiveBacklogItem.mockResolvedValueOnce({
+      id: 'BL-260705-demo',
+      result: 'noop',
+      status: 'closed',
+      completedEntry: 'skipped',
+      movedTo:
+        '/tmp/workspace/repo/.oat/repo/pjm/backlog/archived/BL-260705-demo.md',
+      indexRegenerated: true,
+      rewrittenReferences: ['.oat/repo/reference/late.md'],
+      warnings: ['Backlog item BL-260705-demo is already archived'],
+    });
+
+    await runCommand(command, 'archive', [], ['BL-260705-demo']);
+
+    expect(capture.info.join('\n')).toContain(
+      'Rewrote references in .oat/repo/reference/late.md',
+    );
+    expect(process.exitCode).toBe(0);
+  });
+
   it('maps an actionable archive failure to exit code 1', async () => {
     const { command, capture, archiveBacklogItem } = createHarness();
     const { BacklogArchiveError } = await import('./archive');

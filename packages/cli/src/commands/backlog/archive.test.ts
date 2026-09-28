@@ -758,6 +758,132 @@ describe('archiveBacklogItem', () => {
       },
     );
 
+    async function archiveWith(
+      files: Record<string, string>,
+      movedItemLines: string[] = [],
+    ): Promise<{
+      root: string;
+      result: Awaited<ReturnType<typeof archiveBacklogItem>>;
+      read: (relativePath: string) => Promise<string>;
+    }> {
+      const { root, backlogRoot } = await linkedRepository({ git: false });
+      for (const [relativePath, content] of Object.entries(files)) {
+        await writeRepoFile(root, relativePath, content);
+      }
+      if (movedItemLines.length > 0) {
+        const itemPath = join(backlogRoot, 'items', `${id}.md`);
+        await writeFile(
+          itemPath,
+          `${await readFile(itemPath, 'utf8')}${movedItemLines.join('\n')}\n`,
+          'utf8',
+        );
+      }
+      const result = await archiveBacklogItem(backlogRoot, id, {
+        summary: 'Linked work shipped',
+        now: FIXED_NOW,
+      });
+      return {
+        root,
+        result,
+        read: (relativePath) => readFile(join(root, relativePath), 'utf8'),
+      };
+    }
+
+    it('rewrites the external-plan template citation span and warns on code it leaves', async () => {
+      // Mirrors .agents/skills/oat-repo-improve/references/plan-template.md
+      // ("- Source artifact or scope: `<repo-relative path or scope>`").
+      const plan = [
+        '## Source and live evidence',
+        '',
+        `- Source artifact or scope: \`.oat/repo/pjm/backlog/items/${id}.md\``,
+        '- Source artifact or scope:',
+        `  \`.oat/repo/pjm/backlog/items/${id}.md\``,
+        `- Criteria: \` .oat/repo/pjm/backlog/items/${id}.md#acceptance-criteria \``,
+        `- Relative: \`../../pjm/backlog/items/${id}.md\``,
+        `- Line: \`.oat/repo/pjm/backlog/items/${id}.md:12\``,
+        '',
+      ].join('\n');
+      const { result, read } = await archiveWith({
+        '.oat/repo/reference/external-plans/2026-07-02-cited.md': plan,
+      });
+
+      expect(
+        await read('.oat/repo/reference/external-plans/2026-07-02-cited.md'),
+      ).toBe(
+        plan
+          .replaceAll('/items/', '/archived/')
+          .replace(`archived/${id}.md:12`, `items/${id}.md:12`),
+      );
+      // A span that is not a bare path (here `path:line`) is kept and reported.
+      expect(
+        result.warnings.filter((warning) =>
+          warning.includes('2026-07-02-cited.md'),
+        ),
+      ).toHaveLength(1);
+      // Commands and fenced code stay as written, but are never silent.
+      expect(await read('.oat/repo/reference/commands.md')).toBe(CODE_ONLY);
+      expect(
+        result.warnings.filter((warning) =>
+          warning.includes('.oat/repo/reference/commands.md'),
+        ),
+      ).toHaveLength(3);
+    });
+
+    it('never rewrites a link that already resolves to a different existing file', async () => {
+      const readme = [
+        `[snap](pjm/backlog/items/${id}.md)`,
+        `[root](.oat/repo/pjm/backlog/items/${id}.md)`,
+        '',
+      ].join('\n');
+      const { result, read } = await archiveWith({
+        [`.oat/repo/reference/snapshot/pjm/backlog/items/${id}.md`]: 'copy\n',
+        [`.oat/repo/reference/snapshot/.oat/repo/pjm/backlog/items/${id}.md`]:
+          'copy\n',
+        '.oat/repo/reference/snapshot/readme.md': readme,
+      });
+
+      expect(await read('.oat/repo/reference/snapshot/readme.md')).toBe(readme);
+      expect(result.rewrittenReferences).not.toContain(
+        '.oat/repo/reference/snapshot/readme.md',
+      );
+    });
+
+    it('rebases only real reference definitions and every title form in the moved item', async () => {
+      const { read } = await archiveWith({}, [
+        '[^1]: See the discussion in standup.',
+        '[^note]: first word of a footnote.',
+        '[Note]: This matters here.',
+        `[titled]: ./${otherId}.md "Sibling"`,
+        `[single](./${otherId}.md 'T') and [paren](./${otherId}.md (T)).`,
+      ]);
+
+      const archived = await read(`.oat/repo/pjm/backlog/archived/${id}.md`);
+      expect(archived).toContain('[^1]: See the discussion in standup.\n');
+      expect(archived).toContain('[^note]: first word of a footnote.\n');
+      expect(archived).toContain('[Note]: This matters here.\n');
+      expect(archived).toContain(`[titled]: ../items/${otherId}.md "Sibling"`);
+      expect(archived).toContain(
+        `[single](../items/${otherId}.md 'T') and [paren](../items/${otherId}.md (T)).`,
+      );
+    });
+
+    it('does not let a stray backtick hide links in later paragraphs', async () => {
+      const { read } = await archiveWith({
+        '.oat/repo/reference/stray.md': [
+          'Press the ` key to open the console.',
+          '',
+          `See [stray](../pjm/backlog/items/${id}.md).`,
+          '',
+          'Then run `oat status`.',
+          '',
+        ].join('\n'),
+      });
+
+      expect(await read('.oat/repo/reference/stray.md')).toContain(
+        `See [stray](../pjm/backlog/archived/${id}.md).`,
+      );
+    });
+
     it('retries a failed reference rewrite and index regeneration on re-run', async () => {
       const { root, backlogRoot } = await linkedRepository({ git: false });
       await regenerateBacklogIndex(backlogRoot);

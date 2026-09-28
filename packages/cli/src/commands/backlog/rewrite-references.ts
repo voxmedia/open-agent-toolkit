@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process';
-import { constants as fsConstants } from 'node:fs';
+import { constants as fsConstants, lstatSync } from 'node:fs';
 import { lstat, open as openFile, readdir, realpath } from 'node:fs/promises';
 import { basename, dirname, join, relative, resolve, sep } from 'node:path';
 import { promisify } from 'node:util';
@@ -104,6 +104,16 @@ async function isRegularFileInside(
     }
     const real = await realpath(path);
     return real === realScanRoot || real.startsWith(`${realScanRoot}${sep}`);
+  } catch {
+    return false;
+  }
+}
+
+/** True when anything (file, directory, or link) exists at `path`. */
+function pathExistsSync(path: string): boolean {
+  try {
+    lstatSync(path);
+    return true;
   } catch {
     return false;
   }
@@ -233,8 +243,14 @@ function rewriteItemToken(
   const itemFile = basename(itemsPath);
 
   if (isRelativeTarget(token)) {
-    if (resolve(context.baseDirectory, token) === itemsPath) {
+    const fromFile = resolve(context.baseDirectory, token);
+    if (fromFile === itemsPath) {
       return relativeFrom(context.currentDirectory, archivedPath, token);
+    }
+    // A token that already resolves to a different, existing file is a
+    // working link: never repoint it through a fallback base.
+    if (pathExistsSync(fromFile)) {
+      return null;
     }
     for (const base of [layout.repoRoot, layout.scanRoot]) {
       if (base !== null && resolve(base, token) === itemsPath) {
@@ -260,29 +276,34 @@ function rewriteItemToken(
   return null;
 }
 
+/** A Markdown segment: prose, an inline code span, or a fenced code block. */
+export interface MarkdownSegment {
+  kind: 'prose' | 'span' | 'fence';
+  text: string;
+}
+
 /**
- * Split Markdown into prose and code segments. Fenced code blocks (``` or ~~~,
- * closed by a same-character run at least as long, or running to the end of
- * the file) and inline code spans (a backtick run closed by a run of the same
- * length) are code; everything else is prose.
+ * Split Markdown into prose, inline code spans, and fenced code blocks.
+ * Fences (``` or ~~~) close on a same-character run at least as long, or run
+ * to the end of the file. Inline code spans pair a backtick run with the next
+ * run of the same length inside one paragraph (a blank line ends it), so a
+ * stray backtick never swallows later paragraphs.
  */
-export function splitMarkdownCode(
-  content: string,
-): Array<{ code: boolean; text: string }> {
-  const segments: Array<{ code: boolean; text: string }> = [];
-  const push = (code: boolean, text: string) => {
+export function splitMarkdownCode(content: string): MarkdownSegment[] {
+  const segments: MarkdownSegment[] = [];
+  const push = (kind: MarkdownSegment['kind'], text: string) => {
     if (text.length === 0) {
       return;
     }
     const last = segments.at(-1);
-    if (last && last.code === code) {
+    if (last && last.kind === kind && kind === 'prose') {
       last.text += text;
     } else {
-      segments.push({ code, text });
+      segments.push({ kind, text });
     }
   };
 
-  const pushProse = (text: string) => {
+  const pushParagraph = (text: string) => {
     let cursor = 0;
     const opener = /`+/gu;
     let match: RegExpExecArray | null;
@@ -295,12 +316,19 @@ export function splitMarkdownCode(
         continue;
       }
       const end = match.index + run.length + close.index + run.length;
-      push(false, text.slice(cursor, match.index));
-      push(true, text.slice(match.index, end));
+      push('prose', text.slice(cursor, match.index));
+      push('span', text.slice(match.index, end));
       cursor = end;
       opener.lastIndex = end;
     }
-    push(false, text.slice(cursor));
+    push('prose', text.slice(cursor));
+  };
+
+  const pushProse = (text: string) => {
+    // Blank lines end a paragraph; the separators stay prose.
+    for (const part of text.split(/(\r?\n[ \t]*\r?\n)/u)) {
+      pushParagraph(part);
+    }
   };
 
   const lines = content.split(/(?<=\n)/u);
@@ -316,7 +344,7 @@ export function splitMarkdownCode(
         close[1]![0] === fence.char &&
         close[1]!.length >= fence.length
       ) {
-        push(true, code);
+        push('fence', code);
         code = '';
         fence = null;
       }
@@ -333,18 +361,51 @@ export function splitMarkdownCode(
     prose += line;
   }
   pushProse(prose);
-  push(true, code);
+  push('fence', code);
   return segments;
 }
 
-/** Apply `transform` to prose only, leaving code spans and fences untouched. */
-function mapProse(
-  content: string,
-  transform: (text: string) => string,
-): string {
-  return splitMarkdownCode(content)
-    .map((segment) => (segment.code ? segment.text : transform(segment.text)))
-    .join('');
+/** Report every `items/<id>.md` occurrence left inside code as written. */
+function warnCodeOccurrences(text: string, context: RewriteContext): void {
+  const itemFile = basename(context.itemsPath);
+  const needle = `items/${itemFile}`;
+  let index = text.indexOf(needle);
+  while (index !== -1) {
+    const after = text[index + needle.length] ?? '';
+    if (after === '' || !/[A-Za-z0-9_-]/u.test(after)) {
+      context.warnings.push(
+        `${context.fileName} mentions \`${needle}\` inside code, which is left as written; update it by hand if it is a live reference to archived backlog item ${basename(itemFile, '.md')}.`,
+      );
+    }
+    index = text.indexOf(needle, index + needle.length);
+  }
+}
+
+/**
+ * Rewrite an inline code span whose whole content is one path (optionally
+ * with a `#anchor`) that resolves to the moved item — the external-plan
+ * "Source artifact or scope" citation form. Any other span naming the item is
+ * left as written with a warning, so recorded commands keep their meaning.
+ */
+function rewriteCodeSpan(span: string, context: RewriteContext): string {
+  const run = /^`+/u.exec(span)![0];
+  const inner = span.slice(run.length, span.length - run.length);
+  const single = /^(\s*)([^\s`]+)(\s*)$/u.exec(inner);
+  if (single) {
+    const [, leading, token, trailing] = single;
+    const hash = token!.indexOf('#');
+    const path = hash === -1 ? token! : token!.slice(0, hash);
+    const anchor = hash === -1 ? '' : token!.slice(hash);
+    const itemFile = basename(context.itemsPath);
+    if (path === itemFile || path.endsWith(`/${itemFile}`)) {
+      const replacement = rewriteItemToken(path, context);
+      return replacement === null || replacement === path
+        ? span
+        : `${run}${leading}${replacement}${anchor}${trailing}${run}`;
+    }
+  }
+  warnCodeOccurrences(inner, context);
+  return span;
 }
 
 /** Rewrite every token in `content` that ends in the item's file name. */
@@ -377,7 +438,11 @@ function rewriteItemTokens(content: string, context: RewriteContext): string {
   return output + content.slice(cursor);
 }
 
-/** Rebase one relative link target of the moved item, or return it as-is. */
+/**
+ * Rebase one relative link target of the moved item, or return it as-is.
+ * Only a target that existed relative to `items/` is rebased, so prose or an
+ * already-broken target is never rewritten into a new broken path.
+ */
 function rebaseTarget(target: string, context: RewriteContext): string {
   if (!isRelativeTarget(target)) {
     return target;
@@ -385,56 +450,125 @@ function rebaseTarget(target: string, context: RewriteContext): string {
   const absolute = resolve(context.baseDirectory, target);
   if (
     absolute === context.itemsPath ||
-    resolve(context.currentDirectory, target) === absolute
+    resolve(context.currentDirectory, target) === absolute ||
+    !pathExistsSync(absolute)
   ) {
     return target;
   }
   return relativeFrom(context.currentDirectory, absolute, target);
 }
 
+/** Rebase `path#anchor`, keeping the anchor. */
+function rebaseWithAnchor(target: string, context: RewriteContext): string {
+  const hash = target.indexOf('#');
+  const path = hash === -1 ? target : target.slice(0, hash);
+  const anchor = hash === -1 ? '' : target.slice(hash);
+  return path.length === 0 ? target : `${rebaseTarget(path, context)}${anchor}`;
+}
+
+/** A CommonMark link title: `"…"`, `'…'`, or `(…)`. */
+const LINK_TITLE = String.raw`(?:"[^"\n]*"|'[^'\n]*'|\([^)\n]*\))`;
+
+const INLINE_LINK = new RegExp(
+  String.raw`\]\((?:<([^<>\n]*)>|([^)\s<]+))((?:\s+${LINK_TITLE})?)\)`,
+  'gu',
+);
+
+const REFERENCE_DEFINITION = new RegExp(
+  String.raw`^( {0,3}\[(?!\^)[^\]\n]+\]:[ \t]*)(?:<([^<>\n]*)>|([^\s<>]+))((?:[ \t]+${LINK_TITLE})?[ \t]*\r?)$`,
+  'gmu',
+);
+
 /**
- * Rebase the moved item's own relative Markdown link targets — inline
- * `[text](target)` links and reference-style `[label]: target` definitions —
- * from `items/` to `archived/` so links to siblings and other files keep
- * resolving.
+ * Rebase the moved item's inline `[text](target "title")` links (angle
+ * destinations and every title form) from `items/` to `archived/`.
  */
-function rebaseMovedItemLinks(
+function rebaseMovedItemInlineLinks(
   content: string,
   context: RewriteContext,
 ): string {
-  return content
-    .replace(
-      /\]\((?:<([^<>\n]*)>|([^)\s#<]+)((?:#[^)\s]*)?))((?:\s+"[^"]*")?)\)/gu,
-      (
-        _match,
-        angled: string | undefined,
-        bare: string | undefined,
-        bareAnchor: string | undefined,
-        title: string,
-      ) => {
-        if (angled !== undefined) {
-          // `[text](<path#anchor> "title")`: rebase the inner path only.
-          const hash = angled.indexOf('#');
-          const path = hash === -1 ? angled : angled.slice(0, hash);
-          const anchor = hash === -1 ? '' : angled.slice(hash);
-          return `](<${rebaseTarget(path, context)}${anchor}>${title})`;
-        }
-        return `](${rebaseTarget(bare!, context)}${bareAnchor ?? ''}${title})`;
-      },
+  return content.replace(
+    INLINE_LINK,
+    (_match, angled: string | undefined, bare: string | undefined, title) =>
+      angled !== undefined
+        ? `](<${rebaseWithAnchor(angled, context)}>${title})`
+        : `](${rebaseWithAnchor(bare!, context)}${title})`,
+  );
+}
+
+/**
+ * Rebase the moved item's reference definitions (`[label]: <dest> "title"`)
+ * outside fenced code. Footnotes (`[^n]:`) and `[label]: prose` lines — a
+ * destination followed by anything but a title — are not definitions and are
+ * left untouched.
+ */
+function rebaseMovedItemDefinitions(
+  content: string,
+  context: RewriteContext,
+): string {
+  return splitMarkdownCode(content)
+    .map((segment) =>
+      segment.kind === 'fence'
+        ? segment.text
+        : segment.text.replace(
+            REFERENCE_DEFINITION,
+            (
+              _match,
+              prefix: string,
+              angled: string | undefined,
+              bare: string | undefined,
+              rest: string,
+            ) =>
+              angled !== undefined
+                ? `${prefix}<${rebaseWithAnchor(angled, context)}>${rest}`
+                : `${prefix}${rebaseWithAnchor(bare!, context)}${rest}`,
+          ),
     )
-    .replace(
-      /^( {0,3}\[[^\]\n]+\]:[ \t]*<?)([^\s>#]+)/gmu,
-      (_match, prefix: string, target: string) =>
-        `${prefix}${rebaseTarget(target, context)}`,
-    );
+    .join('');
+}
+
+/** Rewrite one file's content: prose tokens, citation spans, moved links. */
+function rewriteContent(
+  content: string,
+  context: RewriteContext,
+  moved: boolean,
+): string {
+  const itemFile = basename(context.itemsPath);
+  let next = content;
+  if (content.includes(itemFile)) {
+    next = splitMarkdownCode(content)
+      .map((segment) => {
+        if (segment.kind === 'prose') {
+          return rewriteItemTokens(segment.text, context);
+        }
+        if (segment.kind === 'span') {
+          return rewriteCodeSpan(segment.text, context);
+        }
+        warnCodeOccurrences(segment.text, context);
+        return segment.text;
+      })
+      .join('');
+  }
+  if (moved) {
+    next = splitMarkdownCode(next)
+      .map((segment) =>
+        segment.kind === 'prose'
+          ? rebaseMovedItemInlineLinks(segment.text, context)
+          : segment.text,
+      )
+      .join('');
+    next = rebaseMovedItemDefinitions(next, context);
+  }
+  return next;
 }
 
 /**
  * After `items/<id>.md` moved to `archived/<id>.md`, rewrite every reference
  * to the old path in Markdown under `.oat/repo/**` (links and repository-root
- * path strings such as `oat_external_plan_sources` frontmatter). Text inside
- * inline code spans and fenced code blocks is never rewritten, so a recorded
- * command keeps its meaning. References that name the item's `items/` path
+ * path strings such as `oat_external_plan_sources` frontmatter). An inline code
+ * span is rewritten only when its whole content is a path to the item (the
+ * external-plan citation form); other spans and fenced code are left as
+ * written with a warning, so a recorded command keeps its meaning. References that name the item's `items/` path
  * but cannot be resolved are reported as warnings and left untouched. The
  * rewrite is idempotent, so a re-run on an already-archived item is safe.
  */
@@ -473,12 +607,7 @@ export async function rewriteInboundReferences(
       currentDirectory: dirname(absoluteFile),
       warnings,
     };
-    let next = content.includes(basename(absoluteItemsPath))
-      ? mapProse(content, (text) => rewriteItemTokens(text, context))
-      : content;
-    if (moved) {
-      next = mapProse(next, (text) => rebaseMovedItemLinks(text, context));
-    }
+    const next = rewriteContent(content, context, moved);
     if (next !== content) {
       await writeNoFollow(absoluteFile, next);
       rewritten.push(context.fileName);
