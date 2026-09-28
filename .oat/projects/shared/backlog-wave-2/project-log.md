@@ -116,6 +116,10 @@ target=codex-6-sol-xhigh threshold=high exit=1 status=review_failed run=b282ca69
 
 target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:1 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-2/reviews/p-rev1-review-2026-09-28T162038Z.md run=22b3f5cf-b81d-4d85-bc8d-766a6cb611e6
 
+### 2026-09-28 · structural · oat gate review · final
+
+target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:2,low:2 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-2/reviews/final-review-2026-09-28T164247Z.md run=5c3729d3-0488-4ae1-84c5-fd7b86e49418
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
