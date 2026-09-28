@@ -75,11 +75,14 @@ changes for this gate.
 
 CI runs neither `pnpm lint` nor `pnpm format`. `pnpm check` covers the
 formatting of `.agents/skills/**`, `apps/oat-docs/docs`, and `tools/smoke`
-through `format:root`, and every workspace package's own `check` script
-(`packages/control-plane` included) runs its `oxlint` passes and
-`oxfmt --check .`, but `pnpm lint`'s root `oxlint` pass over `tools/smoke` and
-`.agents/skills` still runs in no CI gate — run `pnpm lint` and `pnpm format`
-whenever a change touches those paths.
+through `format:root`, and the `check` script of every package under
+`packages/` (`packages/control-plane` included) runs its `oxlint` passes and
+`oxfmt --check .` (the docs app's `check` covers only its Markdown), but
+`pnpm lint`'s root `oxlint` pass over `tools/smoke` and `.agents/skills` still
+runs in no CI gate — the smoke test that shells out to `pnpm lint` passes as
+long as its own seeded violations are reported, so it cannot catch an existing
+root-oxlint violation. Run `pnpm lint` and `pnpm format` whenever a change
+touches those paths.
 For narrower changes, use package-specific checks when possible, but do not
 merge without passing the relevant workspace gates.
 

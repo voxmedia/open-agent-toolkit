@@ -15,7 +15,9 @@
   `BL-260909-give-packages-control-plane`,
   `BL-260909-rewrite-inbound-references`, `BL-260904-stabilize-the-collection`
   (CI and backlog tooling). `oat backlog archive` now rewrites inbound
-  `.oat/repo` references, so this close-out left no dangling `items/` links.
+  `.oat/repo` references to an archived item. This close-out left no dangling
+  `items/` links because none of the twelve had inbound links; the rewriter
+  reported zero rewrites.
   `BL-260829-order-phase-bookkeeping-before` stays open. The wave filed four
   follow-ups: `BL-260928-keep-instructions-sync-force`,
   `BL-260928-route-quick-mode-discovery`,

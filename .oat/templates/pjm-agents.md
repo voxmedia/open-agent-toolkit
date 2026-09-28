@@ -35,10 +35,11 @@ commit/PR as the work whenever practical.
 for abandoned work and `--summary "<text>"` to record the outcome. The command
 performs the whole close-out atomically: it flips `status` to the terminal
 value and bumps `updated`, appends the canonical `backlog/completed.md` entry
-(always for `closed`; for `wont_do` only when `--summary` is given), moves the item file from
-`backlog/items/` to `backlog/archived/`, rewrites inbound `.oat/repo` links and
-path references to the moved file (reporting each rewritten file), and
-regenerates `backlog/index.md`. Stage the resulting changes with the shipping commit/PR.
+(always for `closed`; for `wont_do` only when `--summary` is given), moves the
+item file from `backlog/items/` to `backlog/archived/`, rewrites inbound
+`.oat/repo` links and path references to the moved file (reporting each
+rewritten file), and regenerates `backlog/index.md`. Stage the resulting
+changes with the shipping commit/PR.
 
 **Manual fallback.** These are the steps the command automates — follow them, in
 order, only when closing out by hand:

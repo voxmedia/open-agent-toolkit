@@ -202,8 +202,9 @@ async function moveItemFile(
  * Atomic backlog close-out. Validates the current status, sets the terminal
  * status and `updated`, records a canonical `completed.md` entry, moves the
  * item file into `archived/`, rewrites inbound `.oat/repo` references to the
- * moved file, and regenerates the index. Idempotent when the
- * item is already archived.
+ * moved file, and regenerates the index. Idempotent when the item is already
+ * archived: that path writes no status, completed-log, or move changes and only
+ * retries the reference rewrite and index regeneration.
  */
 export async function archiveBacklogItem(
   backlogRoot: string,
@@ -214,7 +215,8 @@ export async function archiveBacklogItem(
   const archivedPath = join(backlogRoot, 'archived', `${id}.md`);
   const warnings: string[] = [];
 
-  // Idempotent no-op: already archived.
+  // Already archived: no status, completed-log, or move writes; only the
+  // idempotent reference rewrite and index regeneration are retried.
   if (await pathExists(archivedPath)) {
     // Conflicting duplicate: the same id lives in BOTH `items/` and
     // `archived/`. Treating this as a clean no-op would silently leave the live
@@ -235,16 +237,28 @@ export async function archiveBacklogItem(
       status = null;
     }
     warnings.push(
-      `Backlog item ${id} is already archived at ${archivedPath}; nothing to do.`,
+      `Backlog item ${id} is already archived at ${archivedPath}; re-checked inbound references and regenerated the index.`,
     );
+    // Retry the idempotent tail of a close-out: a run that failed during the
+    // reference rewrite (or an item archived before the rewrite existed)
+    // still gets its inbound links repointed and the index regenerated.
+    const references = await rewriteInboundReferences(
+      backlogRoot,
+      itemsPath,
+      archivedPath,
+      { rebaseMovedItem: false },
+    );
+    warnings.push(...references.warnings);
+    const regeneration = await regenerateBacklogIndex(backlogRoot);
+    warnings.push(...regeneration.warnings);
     return {
       id,
       result: 'noop',
       status,
       completedEntry: 'skipped',
       movedTo: archivedPath,
-      indexRegenerated: false,
-      rewrittenReferences: [],
+      indexRegenerated: true,
+      rewrittenReferences: references.rewritten,
       warnings,
     };
   }

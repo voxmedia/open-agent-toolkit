@@ -30,6 +30,13 @@ test('root lint commands cover tools/smoke and skill scripts and reject violatio
   );
   assert.equal(typeof controlPlaneManifest.scripts?.lint, 'string');
   assert.match(controlPlaneManifest.scripts.lint, /\boxlint\b/u);
+  // `turbo run check` (pnpm check, the CI gate) skipped the package until it
+  // defined `check`; `check:fix` keeps `pnpm check:fix` able to repair it.
+  assert.equal(typeof controlPlaneManifest.scripts?.check, 'string');
+  assert.match(controlPlaneManifest.scripts.check, /\boxlint\b/u);
+  assert.match(controlPlaneManifest.scripts.check, /oxfmt --check \./u);
+  assert.equal(typeof controlPlaneManifest.scripts?.['check:fix'], 'string');
+  assert.match(controlPlaneManifest.scripts['check:fix'], /oxfmt \./u);
 
   const seedPath = resolve(
     repositoryRoot,

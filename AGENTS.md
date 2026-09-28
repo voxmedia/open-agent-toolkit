@@ -35,10 +35,12 @@ skipped — validates canonical OAT skill structure through
 `apps/oat-docs/docs/**/*.md`, and `tools/smoke/**/*.{mjs,md,json}` through the
 shared `format:root` script that `pnpm format` also calls. Markdownlint catches
 docs violations such as a fenced code block with no language or a skipped
-heading level. Every workspace package, `packages/control-plane` included,
-defines a `check` script that runs its `oxlint` passes and `oxfmt --check .`.
-One surface still sits outside `pnpm check`, so passing it does not predict
-it: `pnpm lint`'s root-level `oxlint tools/smoke .agents/skills`.
+heading level. Every package under `packages/`, `packages/control-plane`
+included, defines a `check` script that runs its `oxlint` passes and
+`oxfmt --check .` (the docs app's `check` is markdown-only: `oxfmt --check` and
+markdownlint over `docs/**/*.md`). One surface still sits outside
+`pnpm check`, so passing it does not predict it: `pnpm lint`'s root-level
+`oxlint tools/smoke .agents/skills`.
 
 ### Definition of Done
 
@@ -110,11 +112,11 @@ that dropped the field it asserted was preserved.
 
 CI runs neither `pnpm lint` nor `pnpm format` as a gate step. `pnpm check`
 covers the shared `format:root` portion of `pnpm format` (`.agents/skills`,
-`apps/oat-docs/docs`, and `tools/smoke`) and every package's own
-`oxfmt --check .`, `packages/control-plane` included, but one surface still
-has no CI gate: `pnpm lint`'s root-level `oxlint tools/smoke .agents/skills`.
-Run `pnpm lint` and `pnpm format` whenever a change touches `tools/smoke` or
-`.agents/skills`.
+`apps/oat-docs/docs`, and `tools/smoke`) and the `oxlint` and
+`oxfmt --check .` passes of every package under `packages/`,
+`packages/control-plane` included, but one surface still has no CI gate:
+`pnpm lint`'s root-level `oxlint tools/smoke .agents/skills`. Run `pnpm lint`
+and `pnpm format` whenever a change touches `tools/smoke` or `.agents/skills`.
 
 `packages/control-plane`'s `lint` is reached twice. Its `check` script runs the
 same `oxlint` passes under `pnpm check`, and
@@ -124,8 +126,13 @@ same `oxlint` passes under `pnpm check`, and
 control-plane lint error short-circuits the `&&` so the seeded violations that
 test looks for are never reported, and the test fails. The same test asserts
 the root `lint` script string verbatim and that `packages/control-plane` still
-defines a `lint` script, so splitting the `&&` or deleting that script fails
-loudly rather than silently dropping the coverage.
+defines `lint`, `check`, and `check:fix` scripts, so splitting the `&&` or
+deleting one of those scripts fails loudly rather than silently dropping the
+coverage. The same smoke test does not gate the root oxlint pass: it accepts
+any `pnpm lint` failure whose output also reports its own seeded violations,
+so an existing root-oxlint violation under `tools/smoke` or `.agents/skills`
+leaves it green (verified: a seeded `prefer-const` under `.agents/skills`
+does not turn it red). That is why the root pass stays ungated.
 
 ### Development Workflow
 

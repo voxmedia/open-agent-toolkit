@@ -288,7 +288,7 @@ export function createBacklogCommand(
   cmd
     .command('archive')
     .description(
-      'Close out a backlog item: set a terminal status, record it in completed.md, move it to archived/, and regenerate the index',
+      'Close out a backlog item: set a terminal status, record it in completed.md, move it to archived/, rewrite inbound .oat/repo references to it, and regenerate the index',
     )
     .argument('<id>', 'Backlog item id (`BL-YYMMDD-slug`)')
     .option('--wont-do', 'Close the item as `wont_do` instead of `closed`')

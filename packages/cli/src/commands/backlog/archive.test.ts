@@ -1,5 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import {
+  chmod,
   mkdir,
   mkdtemp,
   readFile,
@@ -14,6 +15,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { archiveBacklogItem, BacklogArchiveError } from './archive';
 import { initializeBacklog } from './init';
+import { regenerateBacklogIndex } from './regenerate-index';
 
 const FIXED_NOW = new Date('2026-07-05T12:00:00Z');
 
@@ -516,6 +518,18 @@ describe('archiveBacklogItem', () => {
   describe('inbound reference rewriting', () => {
     const id = 'BL-260705-linked';
     const otherId = 'BL-260705-other';
+    const IGNORED = `[ignored](../pjm/backlog/items/${id}.md)\n`;
+    // Recorded commands keep their meaning: code is never rewritten.
+    const CODE_ONLY = [
+      `Run \`git mv .oat/repo/pjm/backlog/items/${id}.md elsewhere.md\` once.`,
+      '',
+      '```bash',
+      `cat ../../pjm/backlog/items/${id}.md`,
+      '```',
+      '',
+      `Double \`\` span with pjm/backlog/items/${id}.md inside \`\`.`,
+      '',
+    ].join('\n');
 
     async function writeRepoFile(
       root: string,
@@ -547,6 +561,9 @@ describe('archiveBacklogItem', () => {
           '',
           `See [sibling](./${otherId}.md), [self](./${id}.md), and [index](../index.md).`,
           '',
+          `[ref]: ./${otherId}.md`,
+          '[top]: <../index.md>',
+          '',
         ].join('\n'),
         'utf8',
       );
@@ -576,8 +593,19 @@ describe('archiveBacklogItem', () => {
       await writeRepoFile(
         root,
         '.oat/repo/reference/notes.md',
-        `Prose mention of ${id}.md stays.\nBroken \`wrong/items/${id}.md\` form.\n`,
+        `Prose mention of ${id}.md stays.\nBroken wrong/items/${id}.md form.\n`,
       );
+      await writeRepoFile(
+        root,
+        '.oat/repo/reference/a/b/c/deep.md',
+        `[deep](../../../../pjm/backlog/items/${id}.md)\n`,
+      );
+      await writeRepoFile(
+        root,
+        '.oat/repo/top.md',
+        `[top](pjm/backlog/items/${id}.md)\n`,
+      );
+      await writeRepoFile(root, '.oat/repo/reference/commands.md', CODE_ONLY);
       await writeRepoFile(
         root,
         'docs/outside.md',
@@ -587,8 +615,18 @@ describe('archiveBacklogItem', () => {
         execFileSync('git', ['init', '-q'], { cwd: root });
         execFileSync('git', ['config', 'user.email', 'a@b.co'], { cwd: root });
         execFileSync('git', ['config', 'user.name', 'tester'], { cwd: root });
+        await writeFile(join(root, '.gitignore'), '.oat/repo/analysis/\n');
         execFileSync('git', ['add', '.'], { cwd: root });
         execFileSync('git', ['commit', '-qm', 'seed'], { cwd: root });
+        // Created after the seed commit: one untracked-but-not-ignored file
+        // (scanned through `--others`) and one ignored file
+        // (skipped through `--exclude-standard`).
+        await writeRepoFile(
+          root,
+          '.oat/repo/reference/untracked.md',
+          `[untracked](../pjm/backlog/items/${id}.md)\n`,
+        );
+        await writeRepoFile(root, '.oat/repo/analysis/ignored.md', IGNORED);
       }
       return { root, backlogRoot };
     }
@@ -626,11 +664,24 @@ describe('archiveBacklogItem', () => {
         expect(archived).toContain(
           `See [sibling](../items/${otherId}.md), [self](./${id}.md), and [index](../index.md).`,
         );
+        expect(archived).toContain(`[ref]: ../items/${otherId}.md`);
+        expect(archived).toContain('[top]: <../index.md>');
+
+        // Other depths resolve against the referencing file's own directory.
+        expect(await read('.oat/repo/reference/a/b/c/deep.md')).toBe(
+          `[deep](../../../../pjm/backlog/archived/${id}.md)\n`,
+        );
+        expect(await read('.oat/repo/top.md')).toBe(
+          `[top](pjm/backlog/archived/${id}.md)\n`,
+        );
+
+        // Inline code spans and fenced code are left exactly as written.
+        expect(await read('.oat/repo/reference/commands.md')).toBe(CODE_ONLY);
 
         // Prose and out-of-scope files are untouched; the unresolvable form warns.
         const notes = await read('.oat/repo/reference/notes.md');
         expect(notes).toContain(`Prose mention of ${id}.md stays.`);
-        expect(notes).toContain(`\`wrong/items/${id}.md\``);
+        expect(notes).toContain(`Broken wrong/items/${id}.md form.`);
         expect(await read('docs/outside.md')).toContain(
           `pjm/backlog/items/${id}.md`,
         );
@@ -642,12 +693,22 @@ describe('archiveBacklogItem', () => {
           ),
         ).toBe(true);
 
+        if (options.git) {
+          expect(await read('.oat/repo/reference/untracked.md')).toBe(
+            `[untracked](../pjm/backlog/archived/${id}.md)\n`,
+          );
+          expect(await read('.oat/repo/analysis/ignored.md')).toBe(IGNORED);
+        }
+
         expect([...result.rewrittenReferences].sort()).toEqual(
           [
             `.oat/repo/pjm/backlog/archived/${id}.md`,
             `.oat/repo/pjm/backlog/items/${otherId}.md`,
+            '.oat/repo/reference/a/b/c/deep.md',
             '.oat/repo/reference/decisions/DR-260705-demo.md',
             '.oat/repo/reference/external-plans/2026-07-01-plan.md',
+            '.oat/repo/top.md',
+            ...(options.git ? ['.oat/repo/reference/untracked.md'] : []),
           ].sort(),
         );
 
@@ -667,6 +728,57 @@ describe('archiveBacklogItem', () => {
         }
       },
     );
+
+    it('retries a failed reference rewrite and index regeneration on re-run', async () => {
+      const { root, backlogRoot } = await linkedRepository({ git: false });
+      await regenerateBacklogIndex(backlogRoot);
+      const indexPath = join(backlogRoot, 'index.md');
+      expect(await readFile(indexPath, 'utf8')).toContain(id);
+      const blocked = join(
+        root,
+        '.oat/repo/reference/decisions/DR-260705-demo.md',
+      );
+      await chmod(blocked, 0o000);
+
+      try {
+        await expect(
+          archiveBacklogItem(backlogRoot, id, {
+            summary: 'Linked work shipped',
+            now: FIXED_NOW,
+          }),
+        ).rejects.toThrow();
+      } finally {
+        await chmod(blocked, 0o644);
+      }
+      // The move landed but the index and the blocked link did not.
+      expect(await fileExists(join(backlogRoot, 'archived', `${id}.md`))).toBe(
+        true,
+      );
+      expect(await readFile(indexPath, 'utf8')).toContain(id);
+      const archivedBefore = await readFile(
+        join(backlogRoot, 'archived', `${id}.md`),
+        'utf8',
+      );
+
+      const retry = await archiveBacklogItem(backlogRoot, id, {
+        summary: 'Linked work shipped',
+        now: FIXED_NOW,
+      });
+
+      expect(retry.result).toBe('noop');
+      expect(retry.indexRegenerated).toBe(true);
+      expect(retry.rewrittenReferences).toContain(
+        '.oat/repo/reference/decisions/DR-260705-demo.md',
+      );
+      expect(await readFile(blocked, 'utf8')).toBe(
+        `Tracked by [the item](../../pjm/backlog/archived/${id}.md).\n`,
+      );
+      expect(await readFile(indexPath, 'utf8')).not.toContain(id);
+      // The moved item was rebased by the first run and is not rebased again.
+      expect(
+        await readFile(join(backlogRoot, 'archived', `${id}.md`), 'utf8'),
+      ).toBe(archivedBefore);
+    });
 
     it('reports no rewrites when nothing links the item', async () => {
       const backlogRoot = await freshBacklog();

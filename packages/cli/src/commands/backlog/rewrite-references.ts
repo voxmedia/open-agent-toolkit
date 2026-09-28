@@ -35,6 +35,16 @@ export interface RewriteInboundReferencesResult {
   warnings: string[];
 }
 
+/** Options for {@link rewriteInboundReferences}. */
+export interface RewriteInboundReferencesOptions {
+  /**
+   * Rebase the moved item's own relative links from `items/` to `archived/`.
+   * Defaults to `true`; a retry on an already-archived item passes `false`
+   * because its links were rebased (or written) against `archived/` already.
+   */
+  rebaseMovedItem?: boolean;
+}
+
 interface ScanLayout {
   /** Directory whose Markdown files are scanned (`.oat/repo`). */
   scanRoot: string;
@@ -192,21 +202,109 @@ function rewriteItemToken(
 
   // Canonical backlog layout: `archived/` is a sibling of `items/`, so any
   // `.../backlog/items/<id>.md` form keeps its base when the segment swaps.
+  // Only `/`-separated forms are recognized: the token scan requires `/` or a
+  // delimiter before the file name, so backslash paths never reach here.
   const itemsSuffix = `items/${itemFile}`;
-  const normalized = token.replace(/\\/gu, '/');
   if (
-    normalized === `backlog/${itemsSuffix}` ||
-    normalized.endsWith(`/backlog/${itemsSuffix}`)
+    token === `backlog/${itemsSuffix}` ||
+    token.endsWith(`/backlog/${itemsSuffix}`)
   ) {
-    return `${normalized.slice(0, -itemsSuffix.length)}archived/${itemFile}`;
+    return `${token.slice(0, -itemsSuffix.length)}archived/${itemFile}`;
   }
 
-  if (normalized === itemsSuffix || normalized.endsWith(`/${itemsSuffix}`)) {
+  if (token === itemsSuffix || token.endsWith(`/${itemsSuffix}`)) {
     context.warnings.push(
       `${context.fileName} references \`${token}\`, which names archived backlog item ${basename(itemFile, '.md')} but does not resolve to its old items/ path; update it by hand.`,
     );
   }
   return null;
+}
+
+/**
+ * Split Markdown into prose and code segments. Fenced code blocks (``` or ~~~,
+ * closed by a same-character run at least as long, or running to the end of
+ * the file) and inline code spans (a backtick run closed by a run of the same
+ * length) are code; everything else is prose.
+ */
+export function splitMarkdownCode(
+  content: string,
+): Array<{ code: boolean; text: string }> {
+  const segments: Array<{ code: boolean; text: string }> = [];
+  const push = (code: boolean, text: string) => {
+    if (text.length === 0) {
+      return;
+    }
+    const last = segments.at(-1);
+    if (last && last.code === code) {
+      last.text += text;
+    } else {
+      segments.push({ code, text });
+    }
+  };
+
+  const pushProse = (text: string) => {
+    let cursor = 0;
+    const opener = /`+/gu;
+    let match: RegExpExecArray | null;
+    while ((match = opener.exec(text)) !== null) {
+      const run = match[0];
+      const closer = new RegExp(`(?<!\`)${run}(?!\`)`, 'u');
+      const rest = text.slice(match.index + run.length);
+      const close = closer.exec(rest);
+      if (!close) {
+        continue;
+      }
+      const end = match.index + run.length + close.index + run.length;
+      push(false, text.slice(cursor, match.index));
+      push(true, text.slice(match.index, end));
+      cursor = end;
+      opener.lastIndex = end;
+    }
+    push(false, text.slice(cursor));
+  };
+
+  const lines = content.split(/(?<=\n)/u);
+  let prose = '';
+  let fence: { char: string; length: number } | null = null;
+  let code = '';
+  for (const line of lines) {
+    if (fence) {
+      code += line;
+      const close = /^ {0,3}(`{3,}|~{3,})[ \t]*\r?\n?$/u.exec(line);
+      if (
+        close &&
+        close[1]![0] === fence.char &&
+        close[1]!.length >= fence.length
+      ) {
+        push(true, code);
+        code = '';
+        fence = null;
+      }
+      continue;
+    }
+    const open = /^ {0,3}(`{3,}|~{3,})/u.exec(line);
+    if (open) {
+      pushProse(prose);
+      prose = '';
+      fence = { char: open[1]![0]!, length: open[1]!.length };
+      code = line;
+      continue;
+    }
+    prose += line;
+  }
+  pushProse(prose);
+  push(true, code);
+  return segments;
+}
+
+/** Apply `transform` to prose only, leaving code spans and fences untouched. */
+function mapProse(
+  content: string,
+  transform: (text: string) => string,
+): string {
+  return splitMarkdownCode(content)
+    .map((segment) => (segment.code ? segment.text : transform(segment.text)))
+    .join('');
 }
 
 /** Rewrite every token in `content` that ends in the item's file name. */
@@ -239,44 +337,60 @@ function rewriteItemTokens(content: string, context: RewriteContext): string {
   return output + content.slice(cursor);
 }
 
+/** Rebase one relative link target of the moved item, or return it as-is. */
+function rebaseTarget(target: string, context: RewriteContext): string {
+  if (!isRelativeTarget(target)) {
+    return target;
+  }
+  const absolute = resolve(context.baseDirectory, target);
+  if (
+    absolute === context.itemsPath ||
+    resolve(context.currentDirectory, target) === absolute
+  ) {
+    return target;
+  }
+  return relativeFrom(context.currentDirectory, absolute, target);
+}
+
 /**
- * Rebase the moved item's own relative Markdown link targets from `items/` to
- * `archived/` so links to siblings and other files keep resolving.
+ * Rebase the moved item's own relative Markdown link targets — inline
+ * `[text](target)` links and reference-style `[label]: target` definitions —
+ * from `items/` to `archived/` so links to siblings and other files keep
+ * resolving.
  */
 function rebaseMovedItemLinks(
   content: string,
   context: RewriteContext,
 ): string {
-  return content.replace(
-    /\]\(([^)\s#]+)((?:#[^)\s]*)?(?:\s+"[^"]*")?)\)/gu,
-    (match, target: string, rest: string) => {
-      if (!isRelativeTarget(target)) {
-        return match;
-      }
-      const absolute = resolve(context.baseDirectory, target);
-      if (
-        absolute === context.itemsPath ||
-        resolve(context.currentDirectory, target) === absolute
-      ) {
-        return match;
-      }
-      return `](${relativeFrom(context.currentDirectory, absolute, target)}${rest})`;
-    },
-  );
+  return content
+    .replace(
+      /\]\(([^)\s#]+)((?:#[^)\s]*)?(?:\s+"[^"]*")?)\)/gu,
+      (_match, target: string, rest: string) =>
+        `](${rebaseTarget(target, context)}${rest})`,
+    )
+    .replace(
+      /^( {0,3}\[[^\]\n]+\]:[ \t]*<?)([^\s>#]+)/gmu,
+      (_match, prefix: string, target: string) =>
+        `${prefix}${rebaseTarget(target, context)}`,
+    );
 }
 
 /**
  * After `items/<id>.md` moved to `archived/<id>.md`, rewrite every reference
  * to the old path in Markdown under `.oat/repo/**` (links and repository-root
- * path strings such as `oat_external_plan_sources` frontmatter). References
- * that name the item's `items/` path but cannot be resolved are reported as
- * warnings and left untouched.
+ * path strings such as `oat_external_plan_sources` frontmatter). Text inside
+ * inline code spans and fenced code blocks is never rewritten, so a recorded
+ * command keeps its meaning. References that name the item's `items/` path
+ * but cannot be resolved are reported as warnings and left untouched. The
+ * rewrite is idempotent, so a re-run on an already-archived item is safe.
  */
 export async function rewriteInboundReferences(
   backlogRoot: string,
   itemsPath: string,
   archivedPath: string,
+  options: RewriteInboundReferencesOptions = {},
 ): Promise<RewriteInboundReferencesResult> {
+  const rebaseMovedItem = options.rebaseMovedItem ?? true;
   const layout = resolveLayout(backlogRoot);
   const absoluteItemsPath = resolve(itemsPath);
   const absoluteArchivedPath = resolve(archivedPath);
@@ -284,10 +398,17 @@ export async function rewriteInboundReferences(
   const rewritten: string[] = [];
   const warnings: string[] = [];
 
-  const files = (await listMarkdownFiles(layout.scanRoot)).sort();
+  // The moved item goes first, so a failure on a later file never leaves its
+  // own links half-rebased: a retry (which skips the rebase) stays correct.
+  const files = (await listMarkdownFiles(layout.scanRoot)).sort(
+    (left, right) =>
+      Number(resolve(right) === absoluteArchivedPath) -
+        Number(resolve(left) === absoluteArchivedPath) ||
+      left.localeCompare(right),
+  );
   for (const file of files) {
     const absoluteFile = resolve(file);
-    const moved = absoluteFile === absoluteArchivedPath;
+    const moved = rebaseMovedItem && absoluteFile === absoluteArchivedPath;
     const content = await readFile(absoluteFile, 'utf8');
     const context: RewriteContext = {
       layout,
@@ -299,10 +420,10 @@ export async function rewriteInboundReferences(
       warnings,
     };
     let next = content.includes(basename(absoluteItemsPath))
-      ? rewriteItemTokens(content, context)
+      ? mapProse(content, (text) => rewriteItemTokens(text, context))
       : content;
     if (moved) {
-      next = rebaseMovedItemLinks(next, context);
+      next = mapProse(next, (text) => rebaseMovedItemLinks(text, context));
     }
     if (next !== content) {
       await writeFile(absoluteFile, next, 'utf8');

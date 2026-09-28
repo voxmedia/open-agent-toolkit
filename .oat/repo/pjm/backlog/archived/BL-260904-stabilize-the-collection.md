@@ -52,3 +52,9 @@ verified explicitly.
   runs 1-10 all `exit=0` (`1 passed | 31 skipped`), head
   `c8454ecf62e8dc0aa6e8029a33681a0d6c34485d`, Darwin 25.4.0 arm64,
   Node v24.18.0. Criteria 1-2 were met by `ddddba079`.
+- 2026-09-28 (p05 review): the ten runs above are a macOS regression check
+  only. The confirmed mechanism is Linux inode reuse, which macOS does not
+  reproduce (the case also passed 3/3 locally before the fix). The Linux
+  evidence is CI on `ubuntu-latest` after the fixture fix `ddddba079`: PR #264
+  CI run `34081195164` passed at head `47a7538be`, and `main` CI run
+  `34081580680` passed at merge commit `0f47bf700`.

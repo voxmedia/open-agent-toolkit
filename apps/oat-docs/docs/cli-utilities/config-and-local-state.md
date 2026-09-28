@@ -52,9 +52,9 @@ The command validates all inputs before creating the scaffold or writing an item
 - For the default `closed` path, validates and trims a nonblank `--summary` before any file or index mutation. The `wont_do` path may omit the summary and completion-ledger entry.
 - Rewrites only the `status:` and `updated:` frontmatter lines (preserving any inline enum comment), then moves the item from `items/` to `archived/` with `git mv` inside a work tree, falling back to a plain rename (with a warning) outside git or if `git mv` fails.
 - `closed` archives append a canonical newest-first `completed.md` entry (`YYYY-MM-DD — <id> — Title — summary`). `wont_do` archives append an entry only when `--summary` is provided. A missing `completed.md` is scaffolded from the starter template; a missing `## Completed Items` heading is scaffolded with a warning.
-- Rewrites inbound references to the moved file across tracked Markdown under `.oat/repo/**` (external plans, decision records, other backlog items): relative links, `.oat/repo`-relative and repository-root path strings (including `oat_external_plan_sources` frontmatter) that resolve to `items/<id>.md` now point at `archived/<id>.md`, and the moved item's own relative links are rebased so they keep resolving. Each rewritten file is reported; a reference that names `items/<id>.md` but cannot be resolved is left untouched with a warning.
+- Rewrites inbound references to the moved file across Markdown under `.oat/repo/**` — tracked and untracked files that Git does not ignore, or every `.md` file outside a Git work tree — (external plans, decision records, other backlog items): relative links, `.oat/repo`-relative and repository-root path strings (including `oat_external_plan_sources` frontmatter) that resolve to `items/<id>.md` now point at `archived/<id>.md`, and the moved item's own relative links (inline and reference-style definitions) are rebased so they keep resolving. Text inside inline code spans and fenced code blocks is never rewritten, so recorded commands keep their meaning. Each rewritten file is reported; a reference that names `items/<id>.md` but cannot be resolved is left untouched with a warning.
 - Regenerates the managed backlog index after the move.
-- Idempotent: re-running on an item already in `archived/` is a no-op warning with no writes.
+- Idempotent: re-running on an item already in `archived/` returns `noop` with a warning and makes no status, `completed.md`, or move changes; it only retries the idempotent reference rewrite and index regeneration, so a run interrupted during the rewrite (or an item archived by hand or by an older CLI) can be finished by running the command again.
 
 **Exit codes:**
 
@@ -81,7 +81,7 @@ On success the payload is the archive result object:
 }
 ```
 
-`result` is `archived` or `noop` (already archived); `completedEntry` is `written`, `scaffolded`, or `skipped` (e.g. a `wont_do` archive without `--summary`); `movedTo` is the destination path or `null`; `rewrittenReferences` lists the repository-relative Markdown files whose references to the moved item were rewritten (empty for a no-op). On an actionable failure the payload is `{ "result": "error", "id": "<id>", "message": "<why + fix>" }`.
+`result` is `archived` or `noop` (already archived); `completedEntry` is `written`, `scaffolded`, or `skipped` (e.g. a `wont_do` archive without `--summary`); `movedTo` is the destination path or `null`; `rewrittenReferences` lists the repository-relative Markdown files whose references to the moved item were rewritten (usually empty for a no-op, which re-runs only the idempotent rewrite). On an actionable failure the payload is `{ "result": "error", "id": "<id>", "message": "<why + fix>" }`.
 
 For full project-management repo-reference setup, use [`oat pjm init`](tool-packs.md#install-vs-initialize). It scaffolds the two-layer PJM surface (`pjm/current-state.md`, `pjm/roadmap.md`, `reference/decisions/`, and AGENTS guides) and delegates the backlog sub-surface to `oat backlog init`.
 
