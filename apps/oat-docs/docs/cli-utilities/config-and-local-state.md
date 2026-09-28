@@ -272,6 +272,7 @@ Operational notes:
 - Validation and sync use the same recursive scan model, so `--dry-run` previews the same states that `validate` reports.
 - `none` is the default strategy: no `CLAUDE.md` shims, because Claude Code reads `AGENTS.md` itself. Persist a shim strategy with `oat config set instructions.claude.shims pointer|symlink|copy`; `--strategy` overrides it for one run.
 - Under `none`, every remaining `CLAUDE.md`, `.claude/CLAUDE.md`, or `CLAUDE.local.md` is reported with a warning, because it makes Claude Code ignore every `AGENTS.md`.
+- Under `none`, shim removal is all or nothing: while any of those files has content of its own, sync removes no shim, exits `1`, and reports one `claude_md_blocks_shim_removal` finding naming the files with content and the shims it kept. See [All or nothing](../provider-sync/instruction-sync.md#all-or-nothing).
 - Under a shim strategy, `symlink` and `copy` make file shape part of correctness.
 - Unreadable canonical `AGENTS.md` files and unreadable Claude-only sources are surfaced as drift, but sync leaves them in manual-repair mode instead of guessing at recovery.
 

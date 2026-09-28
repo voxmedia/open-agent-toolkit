@@ -16,7 +16,7 @@ Use it when you want OAT to:
 - create or repair `CLAUDE.md` shims with a chosen strategy, when you opt in
 - adopt Claude-only directories back into canonical `AGENTS.md`
 
-This command group is intentionally separate from manifest-backed provider sync. It operates on repo-local instruction files, not provider view manifests.
+This command group is intentionally separate from manifest-backed provider sync. It operates on repo-local instruction files, not provider view manifests. The shim setting affects only `oat instructions`: `oat sync` writes the same rules (including `.claude/rules`), skills, and agents under every strategy and never creates or removes a `CLAUDE.md`, and `oat instructions sync` leaves synced `.claude/rules` files alone.
 
 ## Scope
 
