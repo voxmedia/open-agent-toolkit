@@ -391,6 +391,7 @@
 | BL-260826-decide-whether-test-only-paths | Decide whether test-only paths under packages/cli/src count as publishable                            | open   | low      | task       | S        |
 | BL-260719-evaluate-broader-final-gate    | Evaluate broader final-gate freshness policy after narrow optimization                                | open   | low      | feature    | M        |
 | BL-260906-give-project-state-frontmatter | Give PROJECT_STATE_FRONTMATTER_FIELDS a production consumer or delete it                              | open   | low      | task       | S        |
+| BL-260928-harden-the-backlog-reference   | Harden the backlog reference rewriter's atomic replace edge cases                                     | open   | low      | task       | S        |
 | BL-260907-ignore-backslash-escaped       | Ignore backslash-escaped emphasis in skill-script reference extraction                                | open   | low      | task       | XS       |
 | BL-260909-make-findsection-comment-aware | Make findSection comment-aware in the bundled-docs contract test                                      | open   | low      | task       | S        |
 | BL-260906-make-the-phase-implementer     | Make the phase-implementer sweep contract test negation-aware                                         | open   | low      | task       | S        |

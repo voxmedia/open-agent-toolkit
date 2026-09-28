@@ -732,6 +732,12 @@ oat_generated: false
   after an `lstat` device/inode re-check; hard-link fixture proven by
   neutralize-and-restore. Generation 1 basis marked stale; Steps 12-13 rerun.
 
+- Steps 12-13 rerun for the stale basis: Definition of Done at `ba69e2052` all
+  exit 0 (0/10 cached; cli 7875 tests); final re-review `bw2-final-review-3`
+  (`reviews/archived/final-review-2026-09-28T114422Z.md`) passed with 0 Critical/High/Medium and 3 Low
+  (ownership change on replace, same-inode concurrent edit, long temp names),
+  deferred to `BL-260928-harden-the-backlog-reference`.
+
 ### PR Requirements (hand-off to oat-project-pr-final)
 
 - Title names the removal with a breaking marker, for example
