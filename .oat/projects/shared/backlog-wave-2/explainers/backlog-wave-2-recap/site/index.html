@@ -1,0 +1,762 @@
+<!doctype html>
+<!--
+  Neutral production shell. Worked content: ../examples/
+  TEMPLATE CONTRACT: THEME_CSS, TITLE, DESCRIPTION, EYEBROW, NAVIGATION, CONTENT, FOOTER
+  All replacement values are validated and escaped by the renderer.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Backlog wave 2: CLAUDE.md shims become opt-in, and twelve backlog gaps close</title>
+    <meta name="description" content="Recap of the backlog-wave-2 OAT project: what the operator asked for, what shipped across five phases, what the independent reviews caught, and what is left to do." />
+    <style>
+      :root {
+        --canvas: hsl(210 20% 98%);
+        --panel: hsl(0 0% 100%);
+        --panel-muted: hsl(210 16% 94%);
+        --border: hsl(210 14% 82%);
+        --ink: hsl(215 24% 16%);
+        --muted: hsl(215 12% 38%);
+        --accent: hsl(215 28% 32%);
+        --success: hsl(145 45% 28%);
+        --warning: hsl(38 70% 30%);
+        --danger: hsl(0 55% 36%);
+        --sans: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        --serif: ui-serif, Georgia, serif;
+        --mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+        --radius: 0.65rem;
+        --canvas: #f4f6f9;
+        --panel: #ffffff;
+        --panel-muted: #eef1f5;
+        --border: #d3d9e2;
+        --ink: #16202e;
+        --muted: #4a5568;
+        --accent: #2f56c9;
+        --accent-2: #0e7180;
+        --success: #157a54;
+        --warning: #965108;
+        --danger: #bd3a2c;
+        --sans: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        --serif: ui-serif, Georgia, serif;
+        --mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+        --radius: 8px;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        color-scheme: light dark;
+        scroll-behavior: smooth;
+      }
+      body {
+        margin: 0;
+        background: var(--canvas);
+        color: var(--ink);
+        font-family: var(--sans);
+        line-height: 1.6;
+      }
+      a {
+        color: var(--accent);
+      }
+      .wrap {
+        display: grid;
+        grid-template-columns: minmax(10rem, 14rem) minmax(0, 1fr);
+        gap: 2rem;
+        max-width: 74rem;
+        margin: auto;
+        padding: 2rem;
+      }
+      .toc {
+        position: sticky;
+        top: 2rem;
+        align-self: start;
+        max-height: calc(100dvh - 4rem);
+        overflow-y: auto;
+      }
+      .toc-label,
+      .eyebrow {
+        color: var(--muted);
+        font: 0.72rem/1.4 var(--mono);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+      .toc a {
+        display: block;
+        border-inline-start: 2px solid transparent;
+        padding: 0.3rem 0.7rem;
+        text-decoration: none;
+      }
+      .toc a.active {
+        border-inline-start-color: var(--accent);
+        font-weight: 650;
+      }
+      main {
+        min-width: 0;
+      }
+      h1,
+      h2,
+      h3 {
+        font-family: var(--serif);
+        line-height: 1.2;
+        text-wrap: balance;
+      }
+      h1 {
+        font-size: clamp(2rem, 5vw, 3.4rem);
+        margin-block: 0.5rem 1rem;
+      }
+      h2 {
+        border-block-end: 1px solid var(--border);
+        padding-block-end: 0.45rem;
+        scroll-margin-top: 1rem;
+      }
+      section {
+        margin-block: 2.5rem;
+      }
+      .cards,
+      .lanes {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+        gap: 1rem;
+      }
+      .card,
+      .lane,
+      .callout {
+        min-width: 0;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--panel);
+        padding: 1rem;
+        overflow-wrap: anywhere;
+      }
+      .callout {
+        border-inline-start: 0.25rem solid var(--accent);
+      }
+      .callout--tip,
+      .callout--note {
+        border-inline-start-color: var(--accent);
+      }
+      .callout--important {
+        border-inline-start-color: var(--success);
+      }
+      .callout--warning {
+        border-inline-start-color: var(--warning);
+      }
+      .callout--caution {
+        border-inline-start-color: var(--danger);
+      }
+      .callout__label {
+        color: var(--muted);
+        font: 0.72rem/1.4 var(--mono);
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      blockquote {
+        margin-inline: 0;
+        border-inline-start: 0.2rem solid var(--border);
+        padding-inline-start: 1rem;
+        color: var(--muted);
+      }
+      .task-list {
+        padding-inline-start: 0;
+        list-style: none;
+      }
+      .task-list li {
+        display: flex;
+        align-items: baseline;
+        gap: 0.5rem;
+      }
+      .task-list li > p {
+        margin-block: 0.2rem;
+      }
+      .timeline {
+        display: grid;
+        gap: 0.8rem;
+        padding-inline-start: 0;
+        list-style: none;
+      }
+      .timeline li {
+        display: grid;
+        grid-template-columns: minmax(7rem, 0.25fr) 1fr;
+        gap: 1rem;
+        border-inline-start: 0.2rem solid var(--accent);
+        padding-inline-start: 1rem;
+      }
+      .timeline time {
+        color: var(--muted);
+        font-family: var(--mono);
+      }
+      .table-scroll,
+      .diagram-scroll,
+      pre {
+        max-width: 100%;
+        overflow-x: auto;
+      }
+      .diagram-scroll > svg {
+        display: block;
+      }
+      pre {
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--panel-muted);
+        padding: 1rem;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        border-block-end: 1px solid var(--border);
+        padding: 0.6rem;
+        text-align: start;
+      }
+      code,
+      pre {
+        font-family: var(--mono);
+      }
+      :not(pre) > code {
+        border-radius: calc(var(--radius) / 2);
+        background: var(--panel-muted);
+        padding: 0.1em 0.3em;
+      }
+      figure {
+        margin-inline: 0;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--panel);
+        padding: 1rem;
+      }
+      figcaption {
+        margin-block-start: 0.5rem;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+      footer {
+        border-block-start: 1px solid var(--border);
+        color: var(--muted);
+        margin-block-start: 3rem;
+        padding-block-start: 1rem;
+      }
+      @media (max-width: 46rem) {
+        .wrap {
+          grid-template-columns: 1fr;
+          padding: 1rem;
+        }
+        .toc {
+          position: sticky;
+          top: 0;
+          z-index: 2;
+          display: flex;
+          gap: 0.25rem;
+          max-height: none;
+          overflow-x: auto;
+          background: var(--canvas);
+          border-block-end: 1px solid var(--border);
+          padding-block: 0.5rem;
+        }
+        .toc-label {
+          display: none;
+        }
+        .toc a {
+          flex: none;
+          white-space: nowrap;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <nav class="toc" aria-label="Page sections">
+        <div class="toc-label">OAT project recap · backlog-wave-2</div>
+        <a href="#original-request">Original request</a>
+        <a href="#key-agent-decisions">Key decisions</a>
+        <a href="#as-built-architecture">As-built architecture</a>
+        <a href="#implementation-record">Implementation record</a>
+        <a href="#validation-evidence">Validation and review catches</a>
+        <a href="#outcome">Outcome and follow-ups</a>
+      </nav>
+      <main>
+        <header>
+          <div class="eyebrow">OAT project recap · backlog-wave-2</div>
+          <h1>Backlog wave 2: CLAUDE.md shims become opt-in, and twelve backlog gaps close</h1>
+          <p>Recap of the backlog-wave-2 OAT project: what the operator asked for, what shipped across five phases, what the independent reviews caught, and what is left to do.</p>
+        </header>
+        <style>
+          @media (prefers-color-scheme: dark) {
+            :root {
+              --canvas: #111827;
+              --panel: #1f2937;
+              --panel-muted: #374151;
+              --border: #4b5563;
+              --ink: #f9fafb;
+              --muted: #d1d5db;
+              --accent: #93c5fd;
+              --accent-2: #5eead4;
+              --success: #86efac;
+              --warning: #fde047;
+              --danger: #fca5a5;
+            }
+          }
+          .lede {
+            max-width: 46rem;
+            font-size: 1.125rem;
+            color: var(--muted);
+          }
+          .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 10.5rem), 1fr));
+            gap: 0.75rem;
+            margin-block: 1.5rem 0.5rem;
+          }
+          .stat {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--panel);
+            padding: 0.75rem 0.9rem;
+            min-width: 0;
+          }
+          .stat__value {
+            display: block;
+            font: 700 1.5rem/1.2 var(--sans);
+            color: var(--ink);
+          }
+          .stat__label {
+            display: block;
+            color: var(--muted);
+            font-size: 0.875rem;
+            line-height: 1.4;
+          }
+          .stat--ok {
+            border-inline-start: 0.25rem solid var(--success);
+          }
+          .stat--next {
+            border-inline-start: 0.25rem solid var(--warning);
+          }
+          .decisions {
+            display: grid;
+            gap: 0.75rem;
+            padding-inline-start: 0;
+            list-style: none;
+          }
+          .decisions li {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--panel);
+            padding: 0.85rem 1rem;
+            overflow-wrap: anywhere;
+          }
+          .catches {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
+            gap: 1rem;
+            padding-inline-start: 0;
+            list-style: none;
+          }
+          .catches li {
+            border: 1px solid var(--border);
+            border-inline-start: 0.3rem solid var(--danger);
+            border-radius: var(--radius);
+            background: var(--panel);
+            padding: 0.9rem 1rem;
+            overflow-wrap: anywhere;
+          }
+          .catches strong,
+          .decisions strong {
+            display: block;
+            font-family: var(--serif);
+            font-size: 1.05rem;
+            margin-block-end: 0.25rem;
+          }
+          .table-scroll table {
+            min-width: 36rem;
+          }
+          th {
+            color: var(--muted);
+            font: 600 0.8rem/1.4 var(--mono);
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+          }
+          td:first-child {
+            font-weight: 600;
+          }
+          td code,
+          li code {
+            overflow-wrap: anywhere;
+          }
+          .diagram-scroll {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--panel);
+          }
+          .diagram-scroll svg text {
+            font-family: var(--sans);
+          }
+          .diagram-scroll svg.arch {
+            display: block;
+            width: 100%;
+            min-width: 46rem;
+            height: auto;
+          }
+          .arch-node rect {
+            fill: var(--panel-muted);
+            stroke: var(--accent);
+          }
+          .arch-edge line,
+          .arch-edge polygon {
+            stroke: var(--accent-2);
+            fill: var(--accent-2);
+          }
+          .arch-label text {
+            fill: var(--ink);
+          }
+          .arch-head text {
+            fill: var(--muted);
+            letter-spacing: 0.06em;
+          }
+          .followups {
+            padding-inline-start: 1.1rem;
+          }
+          .followups li {
+            margin-block: 0.45rem;
+          }
+        </style>
+        <div class="stats" role="list" aria-label="Project state at a glance">
+          <div class="stat stat--ok" role="listitem"><span class="stat__value">40 / 40</span><span class="stat__label">tasks done across 5 sequential phases (23 planned, 17 review fixes)</span></div>
+          <div class="stat stat--ok" role="listitem"><span class="stat__value">12 + 2</span><span class="stat__label">backlog items shipped, plus 2 retired as superseded (14 archived)</span></div>
+          <div class="stat stat--ok" role="listitem"><span class="stat__value">0 findings</span><span class="stat__label">implementation exit gate, attempt 2 of 2, after one High was fixed</span></div>
+          <div class="stat" role="listitem"><span class="stat__value">0.3.8 → 0.3.9</span><span class="stat__label">lockstep public package bump</span></div>
+          <div class="stat stat--next" role="listitem"><span class="stat__value">PR next</span><span class="stat__label">summary and docs done; the final PR has not been opened yet</span></div>
+        </div>
+
+        <section id="original-request" aria-labelledby="h-original-request">
+          <h2 id="h-original-request">Original request</h2>
+          <p>
+            The operator approved one tackle-backlog batch for wave-2 of the backlog review
+            on 2026-09-27. The batch held twelve backlog items: the wave's queued items minus the
+            recap-export lane, plus one new high-priority item to stop writing
+            <code>CLAUDE.md</code> shims by default. The agreed shape was one quick-mode OAT project, five phases
+            run in order, a single PR, Claude Opus as implementer, and Codex
+            <code>codex-6-sol-xhigh</code> as the independent reviewer for the plan gate,
+            every phase gate, and the final review.
+          </p>
+          <p>
+            Why the shim item jumped the queue: Claude Code now reads <code>AGENTS.md</code>
+            on its own, and its <code>agents-md</code> plugin backs off for the whole project
+            as soon as any <code>CLAUDE.md</code> is present. The shims OAT used to generate
+            were now switching that plugin off.
+          </p>
+          <h3>What success meant</h3>
+          <ul>
+            <li>Every acceptance criterion of the closable items passes with recorded evidence, and those items are archived in the PR.</li>
+            <li>The bookkeeping-order item ships its change and contract tests but is not archived, because only a live multi-phase run can confirm it.</li>
+            <li>The full Definition of Done passes on the final head, and every independent gate either passes or has its findings dispositioned.</li>
+            <li>Shim removal never deletes a hand-written instruction file.</li>
+          </ul>
+          <h3>The approved batch</h3>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr><th scope="col">Backlog item</th><th scope="col">What it asked for</th><th scope="col">Where it landed</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>BL-260927-make-claude-md-shims-opt</code></td><td>Stop generating CLAUDE.md shims now that Claude Code reads AGENTS.md</td><td>Phase two; archived</td></tr>
+                <tr><td><code>BL-260903-close-manual-only-agents-md</code></td><td>Let OAT write its AGENTS.md guidance instead of printing a manual patch (<a href="https://github.com/voxmedia/open-agent-toolkit/issues/322">GitHub issue</a>)</td><td>Phase one; archived</td></tr>
+                <tr><td><code>BL-260927-name-only-installed-pack</code></td><td>Name only the skill locations that installed packs use (<a href="https://github.com/voxmedia/open-agent-toolkit/issues/323">GitHub issue</a>)</td><td>Phase one; archived, with the extra command postponed</td></tr>
+                <tr><td><code>BL-260909-fix-the-agents-md-unsafe</code></td><td>Remove a race in the unsafe-directory test under parallel turbo</td><td>Phase one; archived</td></tr>
+                <tr><td><code>BL-260829-order-phase-bookkeeping-before</code></td><td>Commit phase bookkeeping before the per-phase reviewer starts</td><td>Phase three; shipped, stays open</td></tr>
+                <tr><td><code>BL-260907-record-absorbed-projects</code></td><td>Record which projects and backlog items a Lite consolidation absorbs</td><td>Phase three; archived</td></tr>
+                <tr><td><code>BL-260907-route-quick-mode-discovery</code></td><td>Send quick-mode discovery rows straight to quick-start</td><td>Phase three; archived</td></tr>
+                <tr><td><code>BL-260909-repair-the-bare-fences-that</code></td><td>Fix bare code fences that swallow headings outside the skills tree</td><td>Phase four; archived</td></tr>
+                <tr><td><code>BL-260927-validate-recon-worker</code></td><td>Check recon assignment envelopes before any worker launches (<a href="https://github.com/voxmedia/open-agent-toolkit/issues/295">GitHub issue #295</a>)</td><td>Phase four; archived</td></tr>
+                <tr><td><code>BL-260909-give-packages-control-plane</code></td><td>Give the control-plane package a check script so CI gates its formatting</td><td>Phase five; archived</td></tr>
+                <tr><td><code>BL-260909-rewrite-inbound-references</code></td><td>Repoint links when an item is archived instead of leaving them dangling</td><td>Phase five; archived</td></tr>
+                <tr><td><code>BL-260904-stabilize-the-collection</code></td><td>Prove the collection-detach integration test is stable</td><td>Phase five; archived</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="key-agent-decisions" aria-labelledby="h-key-agent-decisions">
+          <h2 id="h-key-agent-decisions">Key agent decisions</h2>
+          <ul class="decisions">
+            <li><strong>Shims are opt-in, and OAT cleans up its own</strong>BL-260927-make-claude-md-shims-opt, recorded as <code>DR-260927-claude-md-shims-are-opt</code>. The default strategy is <code>none</code>: sync writes no shim, removes the exact shapes OAT created, and warns about any other <code>CLAUDE.md</code> with two remedies. Reason: a leftover file silently turns off Claude Code's own AGENTS.md support.</li>
+            <li><strong>The strategy lives in project config</strong>BL-260830-persist-instruction-sync was absorbed. The key <code>documentation.instructionSyncStrategy</code> sits next to <code>documentation.instructionPointerExcludes</code>, which governs the same commands, and the init prompt was dropped because opting back in is a single <code>oat config set</code>.</li>
+            <li><strong>Commit the task ledger before review starts</strong>BL-260829-order-phase-bookkeeping-before. The phase ledger is committed before the per-phase reviewer is dispatched, so a fix child still starts from a clean tree. Reviews in phase three widened it: recovery-marker settlement moved into that commit, and the phase row stays nonterminal until fixes and gates settle. The item stays open because gates and skills run the installed release, so the change can only be watched on the next multi-phase project.</li>
+            <li><strong>The recon validator ships with the recon pack</strong>BL-260927-validate-recon-worker. The validator sits beside <code>validate-packet.mjs</code> and reuses its contract library. Tool authority is an allowlist rather than a denylist, and the artifact kind decides the output schema.</li>
+            <li><strong>Guidance writers append; they never rewrite</strong>BL-260903-close-manual-only-agents-md. Only a missing managed block is appended. When OAT cannot prove the target file's identity, it falls back to the zero-write manual patch and names the real cause.</li>
+            <li><strong>Archive rewrites references rather than warning</strong>BL-260909-rewrite-inbound-references. Only tokens that resolve to the moved item change, and edited files are swapped in through an exclusive temporary file so a hard link is never written through.</li>
+            <li><strong>No <code>oat tools where</code> command for now</strong>BL-260927-name-only-installed-pack. The operator postponed the command: the installed-pack guidance block and the new <code>oat tools guidance</code> cover the reported confusion, and existing list and info commands already show scope.</li>
+            <li><strong>Phases run in sequence, not in parallel worktrees</strong>Shared write sets made parallel lanes unsafe: <code>project-guidance.ts</code>, <code>oat-doctor/SKILL.md</code>, <code>pjm/init.ts</code>, help snapshots, the load-contract test, <code>oat-reviewer.md</code>, and the skill version pins.</li>
+          </ul>
+          <h3>Operator decisions</h3>
+          <ul>
+            <li><strong>Plan gate override.</strong> The quick-start plan gate blocked on both of its attempts even though each finding had been fixed in the plan, so readiness became an operator call. The operator approved moving to implementation.</li>
+            <li><strong>p04 gate override.</strong> Two blocked gate attempts used up the p04 retry budget. The operator directed one more fix for the remaining High, a single root re-review, and a move to p05 with no third gate run, leaving the final review to cover p04.</li>
+            <li><strong>BL-260928-settle-codex-read-authority.</strong> After that re-review the operator had the write-path High and the duplicate-check Medium fixed at once, and moved the Codex read-authority Medium and three Lows into this follow-up item.</li>
+            <li><strong>BL-260927-export-only-the-recap-page.</strong> The recap-export lane from the review was deferred out of this wave at kickoff.</li>
+            <li><strong>p01 concurrency Medium.</strong> The p01 gate's concurrent-append finding was deferred to the final review, judged acceptable there, and filed as a follow-up.</li>
+          </ul>
+        </section>
+
+        <section id="as-built-architecture" aria-labelledby="h-as-built-architecture">
+          <h2 id="h-as-built-architecture">As-built architecture</h2>
+          <p>
+            The wave added guards in front of commands that write to a repository. Each guard
+            either proves a write is safe or falls back to reporting the problem without
+            touching the file. The map shows the entry points, the guard each passes through,
+            and what it may change.
+          </p>
+          <figure>
+            <div class="diagram-scroll">
+              <svg class="arch" viewBox="0 0 920 470" role="img" aria-labelledby="arch-title arch-desc">
+                <title id="arch-title">Entry points, guards, and repository effects</title>
+                <desc id="arch-desc">Four write paths. Instruction sync and validate pass through the shim planner, which removes only exact OAT shims and warns about the rest. Guidance commands pass through the append writer, which appends a missing block or prints a manual patch. Backlog archive passes through the reference rewriter, which replaces files atomically. The reviewer's recon launch passes through the assignment validator before a worker runs.</desc>
+                <g class="arch-head" font-size="13">
+                  <text x="20" y="28" font-weight="700">ENTRY POINT</text>
+                  <text x="330" y="28" font-weight="700">NEW GUARD</text>
+                  <text x="640" y="28" font-weight="700">WHAT IT MAY CHANGE</text>
+                </g>
+                <g class="arch-node" stroke-width="2">
+                  <rect x="20" y="45" width="250" height="80" rx="8"/>
+                  <rect x="330" y="45" width="250" height="80" rx="8"/>
+                  <rect x="640" y="45" width="260" height="80" rx="8"/>
+                  <rect x="20" y="150" width="250" height="80" rx="8"/>
+                  <rect x="330" y="150" width="250" height="80" rx="8"/>
+                  <rect x="640" y="150" width="260" height="80" rx="8"/>
+                  <rect x="20" y="255" width="250" height="80" rx="8"/>
+                  <rect x="330" y="255" width="250" height="80" rx="8"/>
+                  <rect x="640" y="255" width="260" height="80" rx="8"/>
+                  <rect x="20" y="360" width="250" height="80" rx="8"/>
+                  <rect x="330" y="360" width="250" height="80" rx="8"/>
+                  <rect x="640" y="360" width="260" height="80" rx="8"/>
+                </g>
+                <g class="arch-edge" stroke-width="2">
+                  <line x1="270" y1="85" x2="322" y2="85"/><polygon points="322,80 330,85 322,90"/>
+                  <line x1="580" y1="85" x2="632" y2="85"/><polygon points="632,80 640,85 632,90"/>
+                  <line x1="270" y1="190" x2="322" y2="190"/><polygon points="322,185 330,190 322,195"/>
+                  <line x1="580" y1="190" x2="632" y2="190"/><polygon points="632,185 640,190 632,195"/>
+                  <line x1="270" y1="295" x2="322" y2="295"/><polygon points="322,290 330,295 322,300"/>
+                  <line x1="580" y1="295" x2="632" y2="295"/><polygon points="632,290 640,295 632,300"/>
+                  <line x1="270" y1="400" x2="322" y2="400"/><polygon points="322,395 330,400 322,405"/>
+                  <line x1="580" y1="400" x2="632" y2="400"/><polygon points="632,395 640,400 632,405"/>
+                </g>
+                <g class="arch-label" font-size="14">
+                  <text x="34" y="78" font-weight="700">oat instructions sync</text>
+                  <text x="34" y="98">and validate, doctor, skills</text>
+                  <text x="344" y="78" font-weight="700">Shim planner</text>
+                  <text x="344" y="98">strategy from project config;</text>
+                  <text x="344" y="116">identity re-checked at apply</text>
+                  <text x="654" y="78" font-weight="700">Removes exact OAT shims only</text>
+                  <text x="654" y="98">keeps hand-written CLAUDE.md;</text>
+                  <text x="654" y="116">warns with two remedies</text>
+
+                  <text x="34" y="183" font-weight="700">Guidance commands</text>
+                  <text x="34" y="203">pjm init, init, tools guidance,</text>
+                  <text x="34" y="221">every project-guidance flag</text>
+                  <text x="344" y="183" font-weight="700">Append writer</text>
+                  <text x="344" y="203">fstat identity, O_APPEND,</text>
+                  <text x="344" y="221">O_NOFOLLOW</text>
+                  <text x="654" y="183" font-weight="700">Appends a missing block</text>
+                  <text x="654" y="203">or prints a zero-write patch</text>
+                  <text x="654" y="221">naming the real cause</text>
+
+                  <text x="34" y="288" font-weight="700">oat backlog archive</text>
+                  <text x="34" y="308">moves an item under .oat/repo</text>
+                  <text x="344" y="288" font-weight="700">Reference rewriter</text>
+                  <text x="344" y="308">resolves every token; refuses</text>
+                  <text x="344" y="326">symlinks and out-of-root paths</text>
+                  <text x="654" y="288" font-weight="700">Repoints links and citations</text>
+                  <text x="654" y="308">via exclusive temp file</text>
+                  <text x="654" y="326">and rename; URLs untouched</text>
+
+                  <text x="34" y="393" font-weight="700">Recon launch</text>
+                  <text x="34" y="413">oat-reviewer mechanical lane</text>
+                  <text x="344" y="393" font-weight="700">Assignment validator</text>
+                  <text x="344" y="413">reads, tools, writes, schema</text>
+                  <text x="344" y="431">checked against authority</text>
+                  <text x="654" y="393" font-weight="700">Worker runs, or launch refused</text>
+                  <text x="654" y="413">refused lanes fall back</text>
+                  <text x="654" y="431">to inline coverage</text>
+                </g>
+              </svg>
+            </div>
+            <figcaption>Each row is one write path. Arrows show the order a request travels; a guard that cannot prove safety stops the write and reports why.</figcaption>
+          </figure>
+          <h3>Boundaries</h3>
+          <ul>
+            <li><strong>Shim planner.</strong> Strategies are <code>none</code>, <code>pointer</code>, <code>symlink</code>, and <code>copy</code>; <code>--strategy</code> overrides a single run. Under <code>none</code> it never removes a hand-written file beside an <code>AGENTS.md</code>, <code>CLAUDE.local.md</code>, <code>.claude/CLAUDE.md</code>, excluded or docs trees, nested git checkouts, or any <code>CLAUDE.md</code> an <code>AGENTS.md</code> resolves to. A lone <code>CLAUDE.md</code> with no <code>AGENTS.md</code> is adopted into a new <code>AGENTS.md</code> and then removed.</li>
+            <li><strong>Append writer.</strong> Hard-linked, unwritable, swapped, or non-regular targets get the manual patch. A new read-only <code>oat tools guidance [--json]</code> prints the managed block without installing anything.</li>
+            <li><strong>Reference rewriter.</strong> Handles Markdown links, repository-root path strings, and whole-span code citations. Fenced code and working links elsewhere are left alone; forms it cannot resolve produce a warning.</li>
+            <li><strong>Assignment validator.</strong> <code>recon/scripts/validate-assignment.mjs</code> checks one homogeneous wave per array, read sources inside allowed inputs and outside exclusions, a read-only tool allowlist, write paths inside the artifact kind's packet folder, and approved schema references.</li>
+            <li><strong>Lifecycle skills.</strong> Quick-mode discovery routes straight to quick-start in next and progress; Lite records absorbed projects and backlog ids; implement commits the task ledger before the per-phase reviewer runs.</li>
+          </ul>
+        </section>
+
+        <section id="implementation-record" aria-labelledby="h-implementation-record">
+          <h2 id="h-implementation-record">Implementation record</h2>
+          <p>
+            The work ran as one autonomous quick-mode project on a single branch. Every phase
+            had an Opus implementer, an Opus root review with fix loops, and a Codex phase gate.
+            Review findings became new tasks, which is why the task count grew well past the plan.
+          </p>
+          <h3>Phases</h3>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr><th scope="col">Phase</th><th scope="col">Scope</th><th scope="col">Tasks and state</th><th scope="col">Review path</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Phase 1</td><td>p01 · AGENTS.md guidance</td><td>8 tasks, complete</td><td>Two review fix rounds; the Codex gate passed with one Medium held for the final review</td></tr>
+                <tr><td>Phase 2</td><td>p02 · CLAUDE.md shims</td><td>8 tasks, complete</td><td>One test recovery and two fix rounds, including the C1 data-loss fix; gate passed with one Low fixed at once</td></tr>
+                <tr><td>Phase 3</td><td>p03 · Lifecycle routing and bookkeeping</td><td>5 tasks, complete</td><td>One recovery, one review fix round, and one gate sweep fix</td></tr>
+                <tr><td>Phase 4</td><td>p04 · Agent roles and recon validation</td><td>7 tasks, complete</td><td>Two gate attempts blocked; finished under operator override after five fix rounds</td></tr>
+                <tr><td>Phase 5</td><td>p05 · CI, backlog tooling, release fan-in</td><td>12 tasks, complete</td><td>One blocked gate attempt, three review fix rounds, one sweep fix, then the exit-gate fix</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <h3>What shipped, by component</h3>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr><th scope="col">Component</th><th scope="col">Notable change</th><th scope="col">Where to look</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Shim strategy and cleanup</td><td>No shims by default; exact OAT shims removed after apply-time re-checks; repository-wide leftover warning that names linking AGENTS.md files first</td><td><code>packages/cli/src/commands/instructions/</code>, <code>packages/cli/src/config/oat-config.ts</code>, <code>packages/cli/src/config/resolve.ts</code></td></tr>
+                <tr><td>AGENTS.md guidance</td><td>Append-only writes; guidance printed once by <code>oat pjm init</code>; every project-guidance consumer acts or rejects; guidance for zero packs is dropped</td><td><code>packages/cli/src/commands/shared/agents-md.ts</code>, <code>packages/cli/src/commands/tools/guidance/</code></td></tr>
+                <tr><td>Backlog archive</td><td>Inbound references rewritten and files replaced atomically; a re-run retries</td><td><code>packages/cli/src/commands/backlog/rewrite-references.ts</code></td></tr>
+                <tr><td>Recon validator</td><td>Envelope kind <code>recon.assignment</code>; inline output schemas dropped; <code>oat-reviewer</code> runs it before launch</td><td><code>.agents/skills/recon/scripts/validate-assignment.mjs</code></td></tr>
+                <tr><td>Lifecycle skills</td><td>Routing, Lite absorbed-item fields, bookkeeping order, nonterminal phase row until gates settle</td><td><code>.agents/skills/oat-project-implement/</code>, <code>oat-project-next</code>, <code>oat-project-progress</code>, <code>oat-project-lite</code></td></tr>
+                <tr><td>Repairs and CI</td><td>Heading-swallowing bare fences fixed in agent roles and templates; fence scanner extended to those trees; control-plane gains check, check:fix, and lint:fix scripts</td><td><code>.agents/agents/</code>, <code>.oat/templates/</code>, <code>packages/control-plane/package.json</code></td></tr>
+                <tr><td>This repository</td><td>Its own CLAUDE.md shims deleted; decision records and new backlog items from the pre-wave review-cap pass ride on the branch</td><td><code>.oat/repo/reference/decisions/</code>, <code>.oat/repo/pjm/backlog/</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="validation-evidence" aria-labelledby="h-validation-evidence">
+          <h2 id="h-validation-evidence">Validation evidence</h2>
+          <p>
+            Every behavior change started with a failing test, and every named negative control
+            was proven by neutralizing the guard, watching the test break, and restoring it.
+            The table lists the recorded results; the first column names the heading in
+            <code>implementation.md</code> where each result is logged.
+          </p>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr><th scope="col">Record</th><th scope="col">Observed result</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Test Results</td><td>Full Definition of Done at <code>f0901755c</code> in CI order (Step 12), every gate exit 0; 0 of 10 test tasks served from cache; test:smoke 163/163; test:skills 690/690</td></tr>
+                <tr><td>Implementation exit gate</td><td>Attempt 1 blocked on H1; after the fix, the Definition of Done reran at <code>ba69e2052</code> with 0 of 10 cached and 7875 CLI tests; attempt 2 returned 0 findings</td></tr>
+                <tr><td>Phase p05 dispatch</td><td>First Definition of Done run: CLI 7866, control-plane 151, docs-transforms 31, docs-config 10 tests; 0 of 11 check tasks cached</td></tr>
+                <tr><td>Phase p04 dispatch</td><td>After the last p04 fix: 359 recon node tests and 897 vitest tests</td></tr>
+                <tr><td>Recovery Event bw2-p02-rec-1</td><td>Full CLI suite at 7833 tests after the recovery, 7841 after the C1 fix, 7846 after the round-two fix</td></tr>
+                <tr><td>Final Review</td><td>Round 1: 0 Critical or High, 1 Medium, 3 Low, all fixed; round 2 passed; round 3 after the exit-gate fix: 3 Low, moved to a follow-up</td></tr>
+                <tr><td>Plan Gate Feedback (quick-start, QS-12)</td><td>Attempt 1 raised 2 High and 1 Medium, attempt 2 raised 1 High; all fixed in the plan; the operator approved proceeding on 2026-09-27</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <h3>What the reviews caught</h3>
+          <ul class="catches">
+            <li><strong>p02 C1: shim removal deleting a hand-written file</strong>The p02 review reproduced default sync deleting a hand-written <code>CLAUDE.md</code> whenever <code>AGENTS.md</code> was a symlink to it: the identical-copy check was comparing the file with itself. The first fix treated any <code>CLAUDE.md</code> the sibling <code>AGENTS.md</code> resolves to as unmanaged. The second extended that to links from other directories, checked both at planning and at apply time.</li>
+            <li><strong>p04: a new validator authority gap every round</strong>Gate attempt one found read sources that were not bounded and arbitrary output schemas. Attempt two found mutation-capable tool names such as <code>Bash</code> accepted as read-only. The operator-authorized re-review found write paths not bounded to the packet folder. Each gap was fixed: a read-only tool allowlist, write paths pinned to the artifact kind's folder, and approved schema references only.</li>
+            <li><strong>p05: the rewriter kept widening its reach</strong>The p05 gate found a tracked Markdown symlink that let the rewriter write outside <code>.oat/repo</code>, suffix fallbacks that rewrote URLs and unrelated paths, and malformed angle-bracket links. The re-review then found code-span citations left unrewritten and corrupted footnotes. The rewriter now resolves every token and refuses symlinks and out-of-root paths.</li>
+            <li><strong>Exit gate H1: writing through hard links</strong>The first exit-gate attempt found the rewriter truncating files in place, so an in-tree file hard-linked to an outside file would change the outside file. Task p05-t12 replaced files through an <code>O_EXCL | O_NOFOLLOW</code> temporary file and rename after an <code>lstat</code> device and inode re-check, proven with a hard-link fixture that fails when the guard is removed.</li>
+          </ul>
+          <h3>Known limits</h3>
+          <ul>
+            <li>BL-260829-order-phase-bookkeeping-before is not observed live yet: gates and lifecycle skills run the installed release, so its item stays open until the next multi-phase project.</li>
+            <li>The p04 phase gate never passed on its own; the final review and the exit gate covered p04 instead.</li>
+            <li>Case variants of <code>CLAUDE.md</code> are deliberately not warned about, because case-insensitive matching flagged real provider docs.</li>
+          </ul>
+        </section>
+
+        <section id="outcome" aria-labelledby="h-outcome">
+          <h2 id="h-outcome">Outcome and follow-ups</h2>
+          <h3>What works now</h3>
+          <ul>
+            <li><code>oat instructions sync</code> writes no shim by default, cleans up the ones OAT made, and tells you about any other <code>CLAUDE.md</code> that would switch off Claude Code's AGENTS.md support.</li>
+            <li>OAT guidance lands in <code>AGENTS.md</code> automatically when it is safe, and names the exact reason when it is not.</li>
+            <li>Archiving a backlog item repoints the links to it across <code>.oat/repo</code>.</li>
+            <li>Recon workers cannot launch with an assignment that reaches beyond its authority.</li>
+          </ul>
+          <div class="callout callout--warning">
+            <p class="callout__label">Upgrade note</p>
+            <p>After upgrading, <code>oat instructions validate</code> exits non-zero in a repository that still has old shims until <code>oat instructions sync</code> removes them. To keep shims, run <code>oat config set documentation.instructionSyncStrategy pointer</code> and sync again.</p>
+          </div>
+          <h3>Follow-up backlog items</h3>
+          <ul class="followups">
+            <li>BL-260928-serialize-concurrent-agents-md: two guidance runs at the same moment can append the same managed block twice (the p01 gate Medium).</li>
+            <li>BL-260928-keep-instructions-sync-force: with a shim strategy, <code>--strategy pointer --force</code> can overwrite the only <code>CLAUDE.md</code> when <code>AGENTS.md</code> links to it. This predates the wave.</li>
+            <li>BL-260928-route-quick-mode-discovery: the control-plane recommender and dashboard still send quick-mode discovery to <code>oat-project-plan</code>.</li>
+            <li>BL-260928-settle-codex-read-authority: Codex recon lanes have no allowlisted read tool and fall back to inline coverage; weaker write-path form checks, web tools without URL sources, and an unchecked mode also remain.</li>
+            <li>BL-260928-harden-the-backlog-reference: atomic-replace edge cases such as an ownership change, a same-inode concurrent edit, and long temporary names.</li>
+            <li>BL-260818-distinguish-operator-directed: until it ships, record the operator's disposition in the plan's Reviews notes whenever a gate exhausts its budget on findings that are already fixed.</li>
+            <li>BL-260901-add-corrective-revision: closed as superseded by the pre-wave review-cap consolidation.</li>
+            <li>BL-260927-record-owner-overrides: also superseded by that consolidation and archived with this wave.</li>
+          </ul>
+          <h3>Recorded figures by source section</h3>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr><th scope="col">Source section</th><th scope="col">Recorded figures</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>summary.md</td><td>Status complete, last updated 2026-09-28, 0 blockers</td></tr>
+                <tr><td>Summary: backlog-wave-2</td><td>Recap of wave 2</td></tr>
+                <tr><td>Overview</td><td>Wave 2 of the 2026-09-26 backlog review; refresh-loop, routing, validation, and CI gaps closed</td></tr>
+                <tr><td>What Was Implemented</td><td>23 planned plus 17 review-fix tasks; 11 repository shims removed; lockstep 0.3.8 → 0.3.9; guidance for zero packs is skipped; two superseded items closed; six DR-260927 decision records on the branch</td></tr>
+                <tr><td>Progress Overview</td><td>40/40 tasks</td></tr>
+                <tr><td>Implementation: backlog-wave-2</td><td>Every phase complete</td></tr>
+                <tr><td>implementation.md</td><td>Front matter still reads in_progress while closeout bookkeeping finishes</td></tr>
+                <tr><td>p01</td><td>Concurrent-append Medium deferred, then filed</td></tr>
+                <tr><td>p04</td><td>Phase complete under operator override</td></tr>
+                <tr><td>p05</td><td>Phase complete after the exit-gate fix</td></tr>
+                <tr><td>Workflow issues</td><td>The first exit-gate intent write failed a substring guard, so the gate launched before its intent was persisted</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <h3>Next step</h3>
+          <p>
+            Summary and documentation are done. The remaining pre-approval step is
+            <code>oat-project-pr-final</code>: create the PR with a breaking-change title and a
+            behavior-change callout covering shim removal, lone-file adoption, and the validate
+            exit after upgrade. Then comes operator approval and merge.
+          </p>
+        </section>
+        <footer>Generated by <code>oat-explainer-kit</code> (explainer-kit core 3.0.3, recipe project-recap v2) in unattended mode from the project's summary, implementation, project log, plan, and discovery artifacts at commit <code>84bc61f39</code> on branch <code>wave/2026-09-27-backlog-wave-2</code>. The source artifacts live under <code>.oat/projects/shared/backlog-wave-2/</code> in the repository.</footer>
+      </main>
+    </div>
+    <script>
+      (() => {
+        const links = [...document.querySelectorAll('.toc a[href^="#"]')];
+        const targets = links
+          .map((link) => document.querySelector(link.getAttribute('href')))
+          .filter(Boolean);
+        const observer = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (!entry.isIntersecting) continue;
+              links.forEach((link) =>
+                link.classList.toggle(
+                  'active',
+                  link.getAttribute('href') === `#${entry.target.id}`,
+                ),
+              );
+            }
+          },
+          { rootMargin: '-15% 0px -70% 0px' },
+        );
+        targets.forEach((target) => observer.observe(target));
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,36 @@
+{
+  "artifactSha256": "sha256:f4bc2f8e927f8927cbbdf50f8fd8941ee302894278d968c9bcd5645c90f8443e",
+  "checks": {
+    "parse": {
+      "status": "pass"
+    },
+    "requiredNarrative": {
+      "status": "pass"
+    },
+    "structure": {
+      "status": "pass"
+    },
+    "sourceDumping": {
+      "status": "pass"
+    },
+    "shellScripts": {
+      "status": "pass"
+    },
+    "ledgerToPage": {
+      "status": "pass"
+    },
+    "pageToLedger": {
+      "status": "pass"
+    }
+  },
+  "rung": "host",
+  "screenshots": [
+    "qa/320.png",
+    "qa/768.png",
+    "qa/1440.png"
+  ],
+  "visual": {
+    "verdict": "pass",
+    "notes": "Host headless Chrome (CDP exact device metrics, light scheme) captured full pages at 320, 768, and 1440 and all three were inspected: no horizontal page overflow (scrollWidth equals clientWidth at every width), all six required sections visible, headings readable at 320, no overlapping text; wide tables and the diagram scroll inside bounded containers. The stored 320 capture is trimmed to the 16384 px PNG limit."
+  }
+}
