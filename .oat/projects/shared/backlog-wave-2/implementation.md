@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-27
-oat_current_task_id: p01-t01
+oat_current_task_id: p01-t07
 oat_generated: false
 ---
 
@@ -32,7 +32,7 @@ oat_generated: false
 | Phase 4 | pending     | 2     | 0/2       |
 | Phase 5 | pending     | 6     | 0/6       |
 
-**Total:** 0/23 tasks completed
+**Total:** 6/24 tasks completed
 
 ---
 
@@ -43,40 +43,47 @@ oat_generated: false
 
 ### Task p01-t01: Give each unsafe-directory variant its own outside directory
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 8d84a43cf
 
 ---
 
 ### Task p01-t02: Append absent managed blocks to an existing AGENTS.md
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 005f84b58
 
 ---
 
 ### Task p01-t03: Print guidance once and prove the fresh-repo sequence
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 27de0e30e
 
 ---
 
 ### Task p01-t04: Make every --project-guidance consumer act or reject
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** c73970479
 
 ---
 
 ### Task p01-t05: Add read-only guidance emission and fix the oat-doctor hint
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 2dfc72266
 
 ---
 
 ### Task p01-t06: Name only installed pack locations in the guidance block
+
+**Status:** completed
+**Commit:** 6aa11df62
+
+---
+
+### Task p01-t07: (review) Close p01 review findings M1, M2, L1-L4
 
 **Status:** pending
 **Commit:** -
@@ -239,6 +246,21 @@ oat_generated: false
   launches use the resolver-returned Claude variants after a validation-only
   `oat project dispatch record` (`status: validated-only`) with the branch CLI,
   because the installed 0.3.7 CLI lacks `canonical-role`.
+
+### Phase p01 dispatch
+
+- Request `bw2-p01-impl-1`: accepted and returned `DONE`; target
+  `oat-phase-implementer-claude-claude-opus-5-5-high`; commits
+  `8d84a43cf..6aa11df62` (p01-t01..t06), phase verification pass, recovery
+  0/10. `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
+- Request `bw2-p01-review-1`: accepted; target
+  `oat-reviewer-claude-claude-opus-5-5-high`; reconnaissance not-attempted;
+  `reviews/archived/p01-review-2026-09-27T235828Z.md`: 0 Critical, 0 High,
+  2 Medium, 4 Low (passes the phase threshold). Received in auto-disposition
+  mode: all six converted to `p01-t07`. `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
+- Implementer-reported deviations: evidence lives in commit bodies (root owns
+  `implementation.md`); the e2e legacy-workflows-block cases stay
+  `manual-required` (control (f)); no test pinned oat-doctor 2.0.1.
 
 ## Implementation Log
 

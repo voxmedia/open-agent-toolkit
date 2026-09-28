@@ -476,6 +476,51 @@ Expected: green.
 
 ---
 
+### Task p01-t07: (review) Close p01 review findings M1, M2, L1-L4
+
+Source: `reviews/archived/p01-review-2026-09-27T235828Z.md` (auto review,
+head `6aa11df62600cd72e41559a611697afb873893d7`).
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/shared/agents-md.ts` and
+  `agents-md.test.ts` (M1, L1, L2)
+- Modify: `packages/cli/src/commands/init/index.ts` and its tests (M2)
+- Modify: `.agents/skills/oat-doctor/SKILL.md` (L3; already bumped to 2.0.2 in
+  this PR, do not bump again)
+- Modify: `packages/cli/src/commands/pjm/index.test.ts` (L4)
+
+**Step 1: Fix (failing-first for M1 and M2)**
+
+- M1: an existing `AGENTS.md` whose link count is above 1 (a pre-existing hard
+  link, possibly to a file outside the repository) never takes the append path;
+  it returns the zero-write manual patch. Add a failing-first test with a hard
+  link to a file outside the repository present at planning time.
+- M2: `oat init --project-guidance` without `--setup` and with no installed
+  pack does not append an empty `OAT tools` block; it skips with a clear
+  message (or plans only the blocks that have content) and exits 0, so a later
+  `oat tools install <pack> --project-guidance` appends normally. Add a test
+  that exercises the real applier, not a mock, for that sequence.
+- L1: report append failures with a reason matching the actual error (for
+  example permission denied) and include the manual patch; distinguish a
+  partial write from a clean refusal.
+- L2: add `O_NONBLOCK` to the append open flags and refuse a non-regular file
+  after `fstat`.
+- L3: fix the oat-doctor PJM hint wording (`oat pjm init` appends absent
+  blocks; it does not rewrite).
+- L4: make the pjm test title match its assertions.
+
+**Step 2: Verify**
+
+Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/shared src/commands/init src/commands/pjm src/e2e/workflow.test.ts`
+and `node --test .agents/skills/oat-doctor/tests/*.test.mjs`. Expected: green.
+
+**Step 3: Commit**
+
+`fix(p01-t07): close p01 review findings`
+
+---
+
 ## Phase 2: CLAUDE.md shims
 
 ### Task p02-t01: Persist a configurable instruction sync strategy
@@ -1285,19 +1330,19 @@ title itself:
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target       |
-| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ----------------- |
-| p01    | code     | pending         | -          | -                                                           | -             | -          | -                 |
-| p02    | code     | pending         | -          | -                                                           | -             | -          | -                 |
-| p03    | code     | pending         | -          | -                                                           | -             | -          | -                 |
-| p04    | code     | pending         | -          | -                                                           | -             | -          | -                 |
-| p05    | code     | pending         | -          | -                                                           | -             | -          | -                 |
-| final  | code     | pending         | -          | -                                                           | -             | -          | -                 |
-| spec   | artifact | pending         | -          | -                                                           | -             | -          | -                 |
-| design | artifact | pending         | -          | -                                                           | -             | -          | -                 |
-| plan   | artifact | fixes_completed | 2026-09-27 | -                                                           | -             | auto       | -                 |
-| plan   | artifact | fixes_completed | 2026-09-27 | reviews/archived/artifact-plan-review-2026-09-27T150947Z.md | -             | gate       | codex-6-sol-xhigh |
-| plan   | artifact | fixes_completed | 2026-09-27 | reviews/archived/artifact-plan-review-2026-09-27T151608Z.md | -             | gate       | codex-6-sol-xhigh |
+| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target       |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------- |
+| p01    | code     | fixes_added     | 2026-09-27 | reviews/archived/p01-review-2026-09-27T235828Z.md           | 6aa11df62600cd72e41559a611697afb873893d7 | auto       | -                 |
+| p02    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| p03    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| p04    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| p05    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| final  | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
+| design | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
+| plan   | artifact | fixes_completed | 2026-09-27 | -                                                           | -                                        | auto       | -                 |
+| plan   | artifact | fixes_completed | 2026-09-27 | reviews/archived/artifact-plan-review-2026-09-27T150947Z.md | -                                        | gate       | codex-6-sol-xhigh |
+| plan   | artifact | fixes_completed | 2026-09-27 | reviews/archived/artifact-plan-review-2026-09-27T151608Z.md | -                                        | gate       | codex-6-sol-xhigh |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
@@ -1346,13 +1391,13 @@ in `implementation.md`). Phase gates and the final review still run.
 
 **Summary:**
 
-- Phase 1: 6 tasks - AGENTS.md guidance
+- Phase 1: 7 tasks - AGENTS.md guidance
 - Phase 2: 6 tasks - CLAUDE.md shims
 - Phase 3: 3 tasks - Lifecycle skill routing and bookkeeping
 - Phase 4: 2 tasks - Agent roles and recon validation
 - Phase 5: 6 tasks - CI and backlog tooling, release fan-in
 
-**Total: 23 tasks**
+**Total: 24 tasks**
 
 Ready for code review and merge.
 
