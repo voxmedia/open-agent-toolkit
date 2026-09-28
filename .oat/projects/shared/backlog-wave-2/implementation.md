@@ -29,10 +29,10 @@ oat_generated: false
 | Phase 1 | complete    | 8     | 8/8       |
 | Phase 2 | complete    | 8     | 8/8       |
 | Phase 3 | complete    | 5     | 5/5       |
-| Phase 4 | in_progress | 3     | 2/3       |
+| Phase 4 | in_progress | 3     | 3/3       |
 | Phase 5 | pending     | 6     | 0/6       |
 
-**Total:** 23/30 tasks completed
+**Total:** 24/30 tasks completed
 
 ---
 
@@ -219,8 +219,8 @@ oat_generated: false
 
 ### Task p04-t03: (review) Close p04 review findings M1, L1-L7
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 28d9ced4e
 
 ---
 
@@ -480,6 +480,10 @@ oat_generated: false
   `reviews/archived/p04-review-2026-09-28T021519Z.md` passed the phase threshold (0 Critical/High), 1 Medium
   (array not enforced as one homogeneous wave), 7 Low; all converted to
   `p04-t03`.
+
+- Continuation `cont-backlog-wave-2-p04-fix-1`: `28d9ced4e` closed M1
+  (`WAVE_MISMATCH` across run, wave, wave mode, mode, task class) and L1-L7;
+  347 recon node tests, 897 vitest, skill bumps, provider status clean.
 
 ## Implementation Log
 
