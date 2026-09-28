@@ -911,6 +911,38 @@ Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run`
 
 ---
 
+### Task p02-t08: (review) Close p02 round-2 findings M1, M2, L1
+
+Source: `reviews/archived/p02-review-2026-09-28T011221Z.md` (auto review,
+passing: 0 Critical/High, 2 Medium, 1 Low).
+
+**Step 1: Fix (failing-first for M1 and M2)**
+
+- M1: before removing or adopting a `CLAUDE.md`, check whether any scanned
+  `AGENTS.md` (or other instruction file) in the repository resolves to it; if
+  so, keep it and report it (no dangling links, no silent success). Cover
+  `pkg/AGENTS.md -> ../CLAUDE.md` with an identical root copy and with the root
+  `CLAUDE.md` as the only instructions.
+- M2: when an `AGENTS.md` links to the named `CLAUDE.md`, the leftover warning
+  (CLI human and `--json`), doctor, analyze, and docs advice says to replace the
+  link with the file's content first instead of "remove the file"; doctor
+  surfaces that caveat, not just the generic warning.
+- L1: report case variants of `CLAUDE.md` / `CLAUDE.local.md` (for example
+  `claude.md`) in the leftover warning without removing them, or record why not.
+
+**Step 2: Verify**
+
+Run the full CLI suite with an isolated `HOME`, the analyze and doctor node
+tests, `pnpm --filter oat-docs check`, `pnpm run check:skill-bumps`, and the
+branch CLI `instructions validate --json` / `instructions sync --dry-run --json`
+on this repository.
+
+**Step 3: Commit**
+
+`fix(p02-t08): close p02 round-2 review findings`
+
+---
+
 ## Phase 3: Lifecycle skill routing and bookkeeping
 
 ### Task p03-t01: Route quick-mode discovery rows straight to quick-start
@@ -1406,6 +1438,7 @@ title itself:
 | p01    | code     | passed          | 2026-09-28 | reviews/archived/p01-review-2026-09-28T000859Z.md           | 80d514bbdf342391944b6580b3341a6e074b8a84 | auto       | -                 |
 | p01    | code     | passed          | 2026-09-28 | reviews/archived/p01-review-2026-09-28T001719Z.md           | 4905ae61b93f3011d368258f5eda6297904d4184 | gate       | codex-6-sol-xhigh |
 | p02    | code     | fixes_completed | 2026-09-28 | reviews/archived/p02-review-2026-09-28T005842Z.md           | 8724f5b4ff88c132909cf900fd0bf31b3e0e2948 | auto       | -                 |
+| p02    | code     | passed          | 2026-09-28 | reviews/archived/p02-review-2026-09-28T011221Z.md           | c5886c1bf65cd776eba7051cd22ae5cb52ba352b | auto       | -                 |
 | p03    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | p04    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | p05    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
@@ -1464,12 +1497,12 @@ in `implementation.md`). Phase gates and the final review still run.
 **Summary:**
 
 - Phase 1: 8 tasks - AGENTS.md guidance
-- Phase 2: 7 tasks - CLAUDE.md shims
+- Phase 2: 8 tasks - CLAUDE.md shims
 - Phase 3: 3 tasks - Lifecycle skill routing and bookkeeping
 - Phase 4: 2 tasks - Agent roles and recon validation
 - Phase 5: 6 tasks - CI and backlog tooling, release fan-in
 
-**Total: 26 tasks**
+**Total: 27 tasks**
 
 Ready for code review and merge.
 

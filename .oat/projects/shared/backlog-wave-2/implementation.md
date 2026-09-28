@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-27
-oat_current_task_id: p02-t07
+oat_current_task_id: p02-t08
 oat_generated: false
 ---
 
@@ -27,12 +27,12 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 8     | 8/8       |
-| Phase 2 | in_progress | 7     | 7/7       |
+| Phase 2 | in_progress | 8     | 7/8       |
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 2     | 0/2       |
 | Phase 5 | pending     | 6     | 0/6       |
 
-**Total:** 15/26 tasks completed
+**Total:** 15/27 tasks completed
 
 ---
 
@@ -148,6 +148,13 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** b1c48d5bc
+
+---
+
+### Task p02-t08: (review) Close p02 round-2 findings M1, M2, L1
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -351,6 +358,13 @@ oat_generated: false
   clean. Follow-up recorded (pre-existing, out of scope): with a shim strategy,
   `--strategy pointer --force` can overwrite the only `CLAUDE.md` in the
   `AGENTS.md -> CLAUDE.md` layout; file as a backlog item at closeout.
+
+- Request `bw2-p02-review-2` (round 2, reconnaissance not-attempted):
+  `reviews/archived/p02-review-2026-09-28T011221Z.md` passed (0 Critical/High); C1 and M1 verified across
+  symlink, hard-link, chain, absolute-path, and seven apply-time race
+  variants. Two new Mediums (cross-directory dangling link; unsafe "remove the
+  file" advice when `AGENTS.md` links to the `CLAUDE.md`) and one Low (case
+  variants) converted to `p02-t08` (fix round 2 of 2).
 
 ## Implementation Log
 
