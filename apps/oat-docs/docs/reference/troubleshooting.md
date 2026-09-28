@@ -67,7 +67,7 @@ when a same-name canonical skill exists; rename one package before retrying.
 
 ## `instructions sync` removed no shims because a `CLAUDE.md` has content
 
-- Under `none`, removal is all or nothing: while any `CLAUDE.md`, `.claude/CLAUDE.md`, or `CLAUDE.local.md` has content of its own, sync removes no `CLAUDE.md` at all, reports each held-back removal as skipped, and exits `1`. The finding (`claude_md_blocks_shim_removal` under `--json`) names the files with content (`paths`) and the shims kept (`wouldRemove`); `oat instructions validate` reports the same finding.
+- Under `none`, removal is all or nothing: while any `CLAUDE.md`, `.claude/CLAUDE.md`, or `CLAUDE.local.md` has content of its own, sync removes no `CLAUDE.md` at all, reports each held-back removal as skipped, and exits `1`. The finding (`claude_md_blocks_shim_removal` under `--json`) names the files with content (`paths`) and the `CLAUDE.md` files kept (`wouldRemove`); `linkedBy` names any `AGENTS.md` link to a file with content, which you replace with that file's content before removing it. `oat instructions validate` reports the same finding.
 - Either remove each named file or move its content into an `AGENTS.md`, then rerun `oat instructions sync`; or set `instructions.claude.shims` to `pointer`, `symlink`, or `copy` to keep `CLAUDE.md` files.
 - See [Instruction Sync](../provider-sync/instruction-sync.md#all-or-nothing).
 

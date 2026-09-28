@@ -1450,16 +1450,33 @@ export const CLAUDE_CODE_AGENTS_MD_DOCS_URL =
 export function findShimRemovalBlockers(
   entries: readonly InstructionEntry[],
   leftovers: readonly LeftoverClaudeFile[],
-): string[] {
+): ShimRemovalBlocker[] {
   const adoptedStrays = new Set(
     entries
       .filter((entry) => entry.status === 'stray')
       .map((entry) => entry.claudePath),
   );
   return leftovers
-    .filter((leftover) => !leftover.exactShim)
-    .map((leftover) => leftover.path)
-    .filter((path) => !adoptedStrays.has(path));
+    .filter(
+      (leftover) => !leftover.exactShim && !adoptedStrays.has(leftover.path),
+    )
+    .map(({ path, linkedBy }) => ({ path, linkedBy }));
+}
+
+/** A file that blocks removal, and the `AGENTS.md` links that reach it. */
+export type ShimRemovalBlocker = Pick<LeftoverClaudeFile, 'path' | 'linkedBy'>;
+
+/**
+ * Under a blocked removal, the leftover warnings minus the files the block
+ * holds back: the block finding already names them, and advice to remove
+ * one by hand would recreate the mix the block exists to prevent.
+ */
+export function omitHeldBackLeftovers<T extends { path: string }>(
+  leftovers: readonly T[],
+  heldBack: readonly string[],
+): T[] {
+  const kept = new Set(heldBack);
+  return leftovers.filter((leftover) => !kept.has(leftover.path));
 }
 
 /** The CLAUDE.md files strategy `none` removes: managed shims and adopted strays. */
@@ -1485,9 +1502,11 @@ function joinList(items: readonly string[]): string {
 /** The skip reason sync records for each removal the block holds back. */
 export function describeShimRemovalBlock(
   repoRoot: string,
-  blockers: readonly string[],
+  blockers: readonly ShimRemovalBlocker[],
 ): string {
-  const paths = blockers.map((path) => toPosixPath(relative(repoRoot, path)));
+  const paths = blockers.map(({ path }) =>
+    toPosixPath(relative(repoRoot, path)),
+  );
   return (
     `kept: strategy none removes no CLAUDE.md while ${joinList(paths)} ` +
     `${paths.length === 1 ? 'has' : 'have'} content (see warnings)`
@@ -1501,29 +1520,53 @@ export function describeShimRemovalBlock(
  */
 export function buildShimRemovalBlockWarning(
   repoRoot: string,
-  blockers: readonly string[],
+  blockers: readonly ShimRemovalBlocker[],
   wouldRemove: readonly string[],
   mode: InstructionsMode,
 ): ClaudeMdBlocksShimRemovalWarning {
-  const paths = blockers.map((path) => toPosixPath(relative(repoRoot, path)));
-  const removals = wouldRemove.map((path) =>
-    toPosixPath(relative(repoRoot, path)),
-  );
+  const relativeTo = (path: string): string =>
+    toPosixPath(relative(repoRoot, path));
+  const paths = blockers.map(({ path }) => relativeTo(path));
+  const removals = wouldRemove.map(relativeTo);
   const one = paths.length === 1;
+  // A blocker an AGENTS.md links to holds the only copy of those
+  // instructions: removing it would break the links, so its fix is to
+  // replace them with its content first, never plain removal.
+  const unlinked = blockers
+    .filter(({ linkedBy }) => linkedBy.length === 0)
+    .map(({ path }) => relativeTo(path));
+  const fixes = [
+    ...(unlinked.length === 0
+      ? []
+      : [
+          `remove ${joinList(unlinked)} or move ${unlinked.length === 1 ? 'its' : 'their'} content into an AGENTS.md`,
+        ]),
+    ...blockers
+      .filter(({ linkedBy }) => linkedBy.length > 0)
+      .map(({ path, linkedBy }) => {
+        const file = relativeTo(path);
+        return `replace ${describeLinkers(repoRoot, linkedBy)} with the content of ${file}, then remove ${file}`;
+      }),
+  ];
   return {
     code: 'claude_md_blocks_shim_removal',
     paths,
     wouldRemove: removals,
+    linkedBy: Object.fromEntries(
+      blockers.map(({ path, linkedBy }) => [
+        relativeTo(path),
+        linkedBy.map(relativeTo),
+      ]),
+    ),
     message:
-      `Strategy none would remove ${removals.length} OAT-managed CLAUDE.md ` +
-      `${removals.length === 1 ? 'shim' : 'shims'} (${removals.join(', ')}), ` +
+      `Strategy none would remove ${removals.length} CLAUDE.md ` +
+      `${removals.length === 1 ? 'file' : 'files'} (${removals.join(', ')}), ` +
       `but ${mode === 'apply' ? 'none were removed' : 'none will be removed'} ` +
       `because ${joinList(paths)} ${one ? 'has' : 'have'} content that is not an OAT shim. ` +
       'Any CLAUDE.md makes Claude Code ignore AGENTS.md ' +
-      `(${CLAUDE_CODE_AGENTS_MD_DOCS_URL}), so OAT keeps every shim until no ` +
+      `(${CLAUDE_CODE_AGENTS_MD_DOCS_URL}), so OAT removes none of them until no ` +
       'CLAUDE.md with content remains rather than leave a mix. ' +
-      `To finish, remove ${joinList(paths)} or move ${one ? 'its' : 'their'} content into an AGENTS.md ` +
-      'and rerun `oat instructions sync`, or set instructions.claude.shims to a shim strategy ' +
+      `To finish, ${fixes.join('; ')} and rerun \`oat instructions sync\`, or set instructions.claude.shims to a shim strategy ` +
       '(pointer, symlink, or copy) to keep CLAUDE.md files.',
   };
 }

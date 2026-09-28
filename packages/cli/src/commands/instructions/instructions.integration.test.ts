@@ -2159,7 +2159,18 @@ describe('instructions command integration', () => {
         code: string;
         paths: string[];
         wouldRemove: string[];
+        linkedBy: Record<string, string[]>;
         message: string;
+      }
+
+      /** Every warning as `[code, path or paths]`, in payload order. */
+      function warningSet(payload: {
+        warnings?: Array<{ code: string; path?: string; paths?: string[] }>;
+      }): Array<[string, string | string[] | undefined]> {
+        return (payload.warnings ?? []).map((warning) => [
+          warning.code,
+          warning.path ?? warning.paths,
+        ]);
       }
 
       function blockWarning(payload: {
@@ -2208,6 +2219,13 @@ describe('instructions command integration', () => {
           ),
         ).toEqual(SHIMS.map((path) => ['skip', path, 'skipped']));
         expect(blockWarning(dryRunPayload)?.wouldRemove).toEqual(SHIMS);
+        // The block finding names the kept shims; no per-shim "remove it"
+        // advice may contradict it, only the blocker's own leftover warning.
+        const expectedWarnings = [
+          [BLOCK_CODE, ['CLAUDE.md']],
+          ['claude_md_hides_agents_md', 'CLAUDE.md'],
+        ];
+        expect(warningSet(dryRunPayload)).toEqual(expectedWarnings);
 
         const apply = await runCli(
           root,
@@ -2230,9 +2248,12 @@ describe('instructions command integration', () => {
         const warning = blockWarning(payload)!;
         expect(warning.paths).toEqual(['CLAUDE.md']);
         expect(warning.wouldRemove).toEqual(SHIMS);
+        expect(warning.linkedBy).toEqual({ 'CLAUDE.md': [] });
+        expect(warningSet(payload)).toEqual(expectedWarnings);
         expect(warning.message).toContain(
-          `would remove 2 OAT-managed CLAUDE.md shims (${SHIMS.join(', ')})`,
+          `would remove 2 CLAUDE.md files (${SHIMS.join(', ')})`,
         );
+        expect(warning.message).not.toContain('OAT-managed');
         expect(warning.message).toContain(
           'none were removed because CLAUDE.md has content',
         );
@@ -2250,7 +2271,60 @@ describe('instructions command integration', () => {
         const human = await runCli(root, ['instructions', 'sync']);
         expect(human.exitCode).toBe(1);
         expect(human.stderr).toContain(warning.message);
+        for (const shim of SHIMS) {
+          expect(human.stderr).not.toContain(`Either remove ${shim}`);
+        }
         await expectShimsKept(root);
+
+        const validate = await runCli(
+          root,
+          ['instructions', 'validate', '--json'],
+          ['--json'],
+        );
+        expect(warningSet(JSON.parse(validate.stdout))).toEqual(
+          expectedWarnings,
+        );
+      });
+
+      it('never offers plain removal of a blocker that an AGENTS.md links to', async () => {
+        const root = await createWorkspace();
+        tempDirs.push(root);
+        // Claude-first root: AGENTS.md is a link to the only copy, CLAUDE.md.
+        await writeFile(join(root, 'CLAUDE.md'), '# real\n', 'utf8');
+        await symlink('CLAUDE.md', join(root, 'AGENTS.md'));
+        await writePair(root, 'pkg', EXPECTED_CLAUDE_CONTENT);
+
+        for (const args of [
+          ['instructions', 'validate', '--json'],
+          ['instructions', 'sync', '--dry-run', '--json'],
+          ['instructions', 'sync', '--json'],
+        ]) {
+          const label = args.join(' ');
+          const result = await runCli(root, args, ['--json']);
+          expect(result.exitCode, label).toBe(1);
+          const warning = blockWarning(JSON.parse(result.stdout))!;
+          expect(warning.paths, label).toEqual(['CLAUDE.md']);
+          expect(warning.wouldRemove, label).toEqual(['pkg/CLAUDE.md']);
+          expect(warning.linkedBy, label).toEqual({
+            'CLAUDE.md': ['AGENTS.md'],
+          });
+          expect(warning.message, label).toContain(
+            'To finish, replace AGENTS.md with the content of CLAUDE.md, then remove CLAUDE.md and rerun `oat instructions sync`',
+          );
+          expect(warning.message, label).not.toMatch(
+            /remove CLAUDE\.md or move/,
+          );
+          expect(warningSet(JSON.parse(result.stdout)), label).toEqual([
+            [BLOCK_CODE, ['CLAUDE.md']],
+            ['claude_md_hides_agents_md', 'CLAUDE.md'],
+          ]);
+        }
+        await expect(readFile(join(root, 'AGENTS.md'), 'utf8')).resolves.toBe(
+          '# real\n',
+        );
+        await expect(
+          readFile(join(root, 'pkg', 'CLAUDE.md'), 'utf8'),
+        ).resolves.toBe(EXPECTED_CLAUDE_CONTENT);
       });
 
       it('reports the same finding from validate, without the misleading fix line', async () => {

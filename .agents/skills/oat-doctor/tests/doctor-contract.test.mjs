@@ -191,7 +191,16 @@ function sweepTable() {
   });
 }
 
-const OPTIONAL_ITEM_FIELDS = new Set(['deprecated']);
+// Item fields only some items carry: `deprecated`, and the per-code
+// `.warnings[]` fields (`path` on a leftover warning; `paths` and
+// `wouldRemove` on a blocked-removal warning). At least one item must carry
+// each, so seeded payloads include both warning codes.
+const OPTIONAL_ITEM_FIELDS = new Set([
+  'deprecated',
+  'path',
+  'paths',
+  'wouldRemove',
+]);
 // Top-level arrays the CLI omits when empty (`oat instructions validate
 // --json` `.warnings`); proven on a seeded payload instead.
 const OPTIONAL_TOP_LEVEL_FIELDS = new Set(['warnings']);
@@ -268,19 +277,30 @@ test('every field the sweep projects exists in the built CLI output, on every it
       requireFields(seeded, fields, `${label} (seeded)`);
     }
     if (command[0] === 'instructions' && command[1] === 'validate') {
-      // A repository with a hand-written CLAUDE.md under the default
-      // strategy, so the `.warnings[]` projection is proven on a real item.
+      // A repository with a hand-written root CLAUDE.md and one exact
+      // pointer shim under the default strategy, so the `.warnings[]`
+      // projection is proven on a real item of each code: the blocked-removal
+      // finding and the root file's own leftover warning.
       const repo = await mkdtemp(join(tmpdir(), 'oat-doctor-leftover-'));
       await execFileAsync('git', ['init', '-q', repo]);
       await writeFile(join(repo, 'AGENTS.md'), '# instructions\n');
       await writeFile(join(repo, 'CLAUDE.md'), '# hand-written\n');
+      await mkdir(join(repo, 'pkg'));
+      await writeFile(join(repo, 'pkg', 'AGENTS.md'), '# pkg\n');
+      await writeFile(join(repo, 'pkg', 'CLAUDE.md'), '@AGENTS.md\n');
       const seeded = await runJson([...command, '--cwd', repo], {
         ...process.env,
         HOME: home,
       });
       assert.equal(seeded.strategy, 'none');
-      assert.ok(seeded.warnings?.length >= 1, 'leftover warning not reported');
-      assert.deepEqual(seeded.warnings[0].linkedBy, []);
+      const codes = (seeded.warnings ?? []).map((warning) => warning.code);
+      assert.deepEqual(codes, [
+        'claude_md_blocks_shim_removal',
+        'claude_md_hides_agents_md',
+      ]);
+      assert.deepEqual(seeded.warnings[0].wouldRemove, ['pkg/CLAUDE.md']);
+      assert.deepEqual(seeded.warnings[0].linkedBy, { 'CLAUDE.md': [] });
+      assert.deepEqual(seeded.warnings[1].linkedBy, []);
       requireFields(seeded, fields, `${label} (seeded)`, { seeded: true });
     }
   }
@@ -312,10 +332,16 @@ test('every field the sweep projects exists in the built CLI output, on every it
     byLabel['oat instructions validate --json'].includes('warnings[].path'),
     'instructions validate: warnings[] not parsed',
   );
-  assert.ok(
-    byLabel['oat instructions validate --json'].includes('warnings[].linkedBy'),
-    'instructions validate: warnings[].linkedBy not parsed',
-  );
+  for (const field of [
+    'warnings[].linkedBy',
+    'warnings[].paths',
+    'warnings[].wouldRemove',
+  ]) {
+    assert.ok(
+      byLabel['oat instructions validate --json'].includes(field),
+      `instructions validate: ${field} not parsed`,
+    );
+  }
 });
 
 test('a missing CLAUDE.md is an error only under a shim strategy, and leftover CLAUDE.md files are warned about', () => {
@@ -355,6 +381,12 @@ test('a missing CLAUDE.md is an error only under a shim strategy, and leftover C
     /`oat config set instructions\.claude\.shims pointer`/,
   );
   assert.match(leftover, /`oat instructions sync`/);
+  // While removal is blocked, the kept shims get no removal advice of their
+  // own: removing them by hand recreates the mix the block exists to prevent.
+  assert.match(
+    leftover,
+    /`path` is in a `claude_md_blocks_shim_removal` item's `wouldRemove`/,
+  );
 
   // Removal under `none` is all or nothing: while any CLAUDE.md has content,
   // sync removes no shim, and the doctor reports why instead of sending the
@@ -369,6 +401,14 @@ test('a missing CLAUDE.md is an error only under a shim strategy, and leftover C
   assert.match(blocked, /moves its content into an AGENTS\.md/);
   assert.match(blocked, /`oat instructions sync`/);
   assert.match(blocked, /`pointer`, `symlink`, or `copy`/);
+  // A blocker an AGENTS.md links to holds the only copy of the instructions.
+  assert.match(blocked, /`linkedBy`/);
+  assert.match(
+    blocked,
+    /replaces each linking AGENTS\.md with the file's content first/,
+  );
+  assert.match(blocked, /never offer plain removal/);
+  assert.match(blocked, /offer no removal for any path in its `wouldRemove`/);
   assert.match(managed, /`claude_md_blocks_shim_removal`/);
 
   const dive = section('#### Agent instructions dive');

@@ -246,9 +246,10 @@ never touched.
 
 ### All or nothing
 
-Removal never leaves a mix. If any `CLAUDE.md`, `.claude/CLAUDE.md`, or
-`CLAUDE.local.md` in the repository is not one of the exact shapes above — it
-has content of its own — sync removes **nothing**, not even the managed shims.
+A file with content never leaves a mix behind. If any `CLAUDE.md`,
+`.claude/CLAUDE.md`, or `CLAUDE.local.md` in the repository is not one of the
+exact shapes above — it has content of its own — sync removes **nothing**, not
+even the managed shims.
 A partial removal would strand directories: while that file exists, Claude
 Code ignores `AGENTS.md` for the sessions it covers, and the removed shims were
 what carried those directories' instructions. The check covers the whole
@@ -258,18 +259,32 @@ walk does not honor OAT's exclusions. A lone `CLAUDE.md` that sync will adopt
 `AGENTS.md`. While another file blocks removal, that stray is still adopted
 into `AGENTS.md`, but its `CLAUDE.md` is kept.
 
+Exact shims do not block. An exact shim inside an `instructions.claude.excludes`
+directory or the documentation content tree is never touched, so sync removes
+the other shims and reports that one as a
+[leftover](#leftover-claudemd-warnings); sessions started in its directory
+still ignore `AGENTS.md` until you remove it.
+
 When removal is blocked, sync reports every removal it held back as a skipped
 action and exits `1`, and sync, `oat instructions validate`, and `oat-doctor`
 report one finding (`code: "claude_md_blocks_shim_removal"` under `--json`,
-with `paths` naming the files with content and `wouldRemove` naming the shims
-kept). The finding names the shims the configuration would remove, says none
-were removed and why, links to [Claude Code and AGENTS.md](#claude-code-and-agentsmd),
-and names what to do next:
+with `paths` naming the files with content, `wouldRemove` naming the
+`CLAUDE.md` files kept, and `linkedBy` mapping each file in `paths` to the
+`AGENTS.md` links that reach it). The finding names the `CLAUDE.md` files the
+configuration would remove, says none were removed and why, links to
+[Claude Code and AGENTS.md](#claude-code-and-agentsmd), and names what to do
+next:
 
 - remove each named file, or move its content into an `AGENTS.md`, and rerun
-  `oat instructions sync`; or
+  `oat instructions sync`; for a file an `AGENTS.md` links to (the Claude-first
+  layout), replace each link with the file's content first, then remove the
+  file, because it holds the only copy of those instructions; or
 - set `instructions.claude.shims` to a shim strategy (`pointer`, `symlink`, or
   `copy`) to keep `CLAUDE.md` files.
+
+While removal is blocked, the files in `wouldRemove` get no
+[leftover warning](#leftover-claudemd-warnings) of their own: the finding
+already names them, and removing one by hand would recreate the mix.
 
 Removal also fails closed at apply time. Immediately before deleting, sync
 re-checks the file: it must still be the same file the scan saw (same device

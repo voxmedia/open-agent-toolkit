@@ -100,6 +100,13 @@ export interface ClaudeMdBlocksShimRemovalWarning {
   paths: string[];
   /** Repository-relative POSIX paths of the CLAUDE.md files kept because of them. */
   wouldRemove: string[];
+  /**
+   * For each path in `paths`, the repository-relative `AGENTS.md` paths whose
+   * symlink chain reaches it. A non-empty list means that file holds the only
+   * copy of those instructions: replace each link with its content before
+   * removing it, never remove it plainly. Every path in `paths` has a key.
+   */
+  linkedBy: Record<string, string[]>;
   message: string;
 }
 

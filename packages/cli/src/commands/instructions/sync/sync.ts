@@ -32,6 +32,7 @@ import {
   buildShimRemovalBlockWarning,
   describeShimRemovalBlock,
   findShimRemovalBlockers,
+  omitHeldBackLeftovers,
   markBlockedShimEntries,
   scanInstructionFiles,
   verifyManagedShimUnchanged,
@@ -739,7 +740,12 @@ export function createInstructionsSyncCommand(
                     ),
                   ]
                 : []),
-              ...buildLeftoverClaudeWarnings(repoRoot, leftoverClaudeFiles),
+              ...buildLeftoverClaudeWarnings(
+                repoRoot,
+                blocked
+                  ? omitHeldBackLeftovers(leftoverClaudeFiles, heldBack)
+                  : leftoverClaudeFiles,
+              ),
             ],
           });
 
