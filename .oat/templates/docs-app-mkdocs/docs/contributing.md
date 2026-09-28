@@ -102,9 +102,8 @@ Extends fenced code support and enables custom fences such as Mermaid:
 ```mermaid
 flowchart LR
   A[Read index.md] --> B[Generate nav]
-````
-
 ```
+````
 
 ### `pymdownx.tabbed`
 
@@ -119,4 +118,3 @@ Adds table-of-contents anchors and permalinks for headings.
 - Treat `index.md` plus its `## Contents` section as the local discovery source of truth.
 - Prefer linking to source files and commands explicitly when documenting behavior.
 - When adding a new plugin or extension, update this guide with what it does and how to use it.
-```

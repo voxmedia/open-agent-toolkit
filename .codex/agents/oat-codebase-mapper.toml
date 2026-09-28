@@ -239,11 +239,12 @@ Return a brief confirmation. DO NOT include document contents.
 
 Format:
 
-```
+```markdown
 ## Mapping Complete
 
 **Focus:** {focus}
 **Documents written:**
+
 - `.oat/repo/knowledge/{DOC1}.md` ({N} lines)
 - `.oat/repo/knowledge/{DOC2}.md` ({N} lines)
 

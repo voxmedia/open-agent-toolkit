@@ -27,3 +27,7 @@ Wave-7 p10 (`2026-09-08-repair-stray-fences-in-lifecycle-skills.md`) repaired th
 - The fence-scan inventory in `packages/cli/src/validation/named-skill-load-contract.test.ts` covers `.agents/agents` and `.oat/templates`, and fails on a seeded bare fence that swallows a heading in each tree (negative control, then restored).
 - Each changed versioned asset is bumped once (`oat-reviewer.md`, `oat-codebase-mapper.md`, and `skeptical-evaluator.md` top-level `version:`), plus the lockstep packages for the `.oat/templates` change.
 - The indent-laxity and heading-anchor narrowing and the inventory-headroom reduction are either done with tests or explicitly left out with a one-line reason.
+
+## Notes
+
+- 2026-09-27 (backlog-wave-2 p04-t01): the `^\s*` indent laxity, column-0 heading anchor, and inventory headroom are left as they are because the wave-7 p10 root review proved them latent, not live, and the headroom is already one file (live 247, floor 246); reintroduce the narrowing when a heading-swallowing fence the current scanner misses is found.

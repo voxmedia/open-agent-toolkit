@@ -1,6 +1,6 @@
 ---
 name: oat-codebase-mapper
-version: 1.0.1
+version: 1.0.2
 description: Explores codebase and writes structured analysis documents. Spawned by oat-repo-knowledge-index with a focus area (tech, arch, quality, concerns). Writes documents directly to reduce orchestrator context load.
 tools: Read, Bash, Grep, Glob, Write
 color: cyan
@@ -243,11 +243,12 @@ Return a brief confirmation. DO NOT include document contents.
 
 Format:
 
-```
+```markdown
 ## Mapping Complete
 
 **Focus:** {focus}
 **Documents written:**
+
 - `.oat/repo/knowledge/{DOC1}.md` ({N} lines)
 - `.oat/repo/knowledge/{DOC2}.md` ({N} lines)
 

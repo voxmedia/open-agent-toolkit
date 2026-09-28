@@ -404,7 +404,8 @@ async function collectBoundedFiles(repoRoot: string): Promise<string[]> {
 }
 
 /**
- * Fence-scan inventory: every regular markdown file under `.agents/skills`.
+ * Fence-scan inventory: every regular markdown file under `.agents/skills`,
+ * `.agents/agents`, and `.oat/templates`.
  *
  * Deliberately wider than `collectBoundedFiles`, and separate from it. A stray
  * fence deletes an arbitrary span from whatever file it lands in, so confining
@@ -447,10 +448,10 @@ async function collectBoundedFiles(repoRoot: string): Promise<string[]> {
  * sibling skill's real directory inside `.agents/skills`, whose files are
  * already scanned where they live; following it would only duplicate them
  * under a second path. The floor below does not police those three skips one
- * target at a time — the live `> 207` assertion also catches loss of one of the
- * 208 files. What it especially polices is the collapse: dropping symlink
- * following altogether leaves the 202 directly reached files, under the floor
- * of 207, so the regression this suite already shipped once cannot recur
+ * target at a time — the live `> 246` assertion also catches loss of one of the
+ * 247 files. What it especially polices is the collapse: dropping symlink
+ * following altogether leaves the 241 directly reached files, under the floor
+ * of 246, so the regression this suite already shipped once cannot recur
  * quietly.
  */
 async function collectFenceScanFiles(repoRoot: string): Promise<string[]> {
@@ -473,8 +474,8 @@ async function collectFenceScanFiles(repoRoot: string): Promise<string[]> {
   const walk = async (relativeDir: string): Promise<void> => {
     // Deliberately unguarded. Swallowing a `readdir` failure would let an
     // unreadable or vanished directory shrink the inventory silently, and the
-    // floor only catches a shrinkage larger than its headroom — at 208 live
-    // files against a floor of 207, the live-inventory `> floor` assertion
+    // floor only catches a shrinkage larger than its headroom — at 247 live
+    // files against a floor of 246, the live-inventory `> floor` assertion
     // allows no file to disappear quietly. A scan that cannot read part of
     // its surface must fail loudly, not scan less. The only `readdir` here that
     // can fail on a missing path is the `.agents/skills` root, because every
@@ -533,6 +534,23 @@ async function collectFenceScanFiles(repoRoot: string): Promise<string[]> {
   };
 
   await walk('.agents/skills');
+  // The two trees outside `.agents/skills` that ship markdown bundled with the
+  // CLI: agent roles and the `.oat/templates` scaffolds. Five heading-swallowing
+  // bare fences sat live in them after the skills tree was repaired, because
+  // the walk stopped at `.agents/skills`. Each root is optional so a fixture
+  // repository that models only the skills tree still scans; the live floor in
+  // `CORPUS_MINIMUMS` and the named members asserted against the live walk are
+  // what catch either root vanishing from the repository. Only a missing root
+  // is tolerated — any other `readdir` failure still fails loudly.
+  for (const optionalRoot of ['.agents/agents', '.oat/templates']) {
+    try {
+      await stat(join(repoRoot, optionalRoot));
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') continue;
+      throw error;
+    }
+    await walk(optionalRoot);
+  }
   return [...byRealPath.values()].sort();
 }
 
@@ -2619,10 +2637,10 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
 /**
  * Floors, not exact counts: the corpus grows, but a glob or path regression that
  * shrinks it must fail loudly rather than quietly widening every exemption.
- * Recorded at 42 bounded files / 208 fence-scan files / 179 candidate
+ * Recorded at 42 bounded files / 247 fence-scan files / 179 candidate
  * sentences. The bounded and candidate floors are not tripwires on one loss:
  * 2 bounded files and 29 candidate sentences can be lost before one fires. The
- * fence-scan floor is intentionally tighter: its live `> 207` assertion catches
+ * fence-scan floor is intentionally tighter: its live `> 246` assertion catches
  * one lost file. Together they catch structural regressions — a glob that
  * stopped matching, a walk that stopped recursing, or a filter that started
  * skipping a whole entry kind.
@@ -2630,12 +2648,14 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
  * the wider inventory: a walk that stopped recursing or started skipping
  * directories must fail on the shrinkage itself, not silently scan less.
  *
- * The fence-scan floor is deliberately tight rather than roomy. The 208 files
- * are 202 reached directly plus 6 distinct targets reached only through the
- * eleven markdown symlinks. The floor of 207 makes losing even one file a
- * breach and dropping symlink following falls to 202 — the one regression a
+ * The fence-scan floor is deliberately tight rather than roomy. The 247 files
+ * are 241 reached directly plus 6 distinct targets reached only through the
+ * eleven markdown symlinks; 34 of the direct files sit under `.agents/agents`
+ * (5) and `.oat/templates` (29). The floor of 246 makes losing even one file a
+ * breach, dropping either optional root falls to 242 or 218, and dropping
+ * symlink following falls to 241 — the one regression a
  * content differential structurally cannot see, and the one this suite already
- * shipped once. Raise the floor when the corpus grows; never lower it to 202 or
+ * shipped once. Raise the floor when the corpus grows; never lower it to 241 or
  * below, which would re-disarm the symlink guarantee.
  *
  * The negative control below reads these values rather than restating them, so
@@ -2643,7 +2663,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
  */
 const CORPUS_MINIMUMS: CorpusMinimums = {
   files: 40,
-  fenceScanFiles: 207,
+  fenceScanFiles: 246,
   candidates: 150,
 };
 
@@ -2758,7 +2778,7 @@ describe('named-skill execution contract', () => {
     expect(report.overMatchedRows).toEqual([]);
   });
 
-  it('rejects all three stray-fence shapes across every markdown file under .agents/skills', async () => {
+  it('rejects all three stray-fence shapes across every markdown file under .agents/skills, .agents/agents, and .oat/templates', async () => {
     const repoRoot = resolve(process.cwd(), '..', '..');
     const report = await inspectContract(
       repoRoot,
@@ -3361,6 +3381,55 @@ describe('named-skill execution contract', () => {
     );
   });
 
+  it.each([
+    ['.agents/agents', '.agents/agents/oat-fixture-role.md'],
+    ['.oat/templates', '.oat/templates/docs-app-fixture/docs/guide.md'],
+  ])(
+    'fails on a bare fence that swallows a heading under %s',
+    async (_tree, file) => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-named-skill-load-'));
+      tempDirs.push(root);
+      await writeFixtureSkill(root, COMPLIANT_FIXTURE);
+
+      // Both shapes the five live instances took: a bare fence opening onto a
+      // heading after prose, and a duplicated closer re-opening a bare fence.
+      await writeFixtureFile(
+        root,
+        file,
+        [
+          '# Role',
+          '',
+          '```markdown',
+          'example',
+          '```',
+          '',
+          '```',
+          '',
+          '## Swallowed Guidance',
+          '',
+          '```',
+          '',
+        ].join('\n'),
+      );
+
+      // The same repository with the file clean passes, so the rejection is
+      // about the seeded fence and not about the tree existing at all.
+      await expect(collectFenceScanFiles(root)).resolves.toContain(file);
+      await expect(
+        assertContractCurrent(root, FIXTURE_MATRIX),
+      ).rejects.toThrowError(
+        new RegExp(
+          `Fenced-code defects[\\s\\S]*${file.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')}`,
+        ),
+      );
+
+      await writeFixtureFile(root, file, '# Role\n\nClean prose.\n');
+      await expect(
+        assertContractCurrent(root, FIXTURE_MATRIX),
+      ).resolves.toBeUndefined();
+    },
+  );
+
   it('surfaces a directory it cannot read instead of scanning less', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-named-skill-load-'));
     tempDirs.push(root);
@@ -3383,9 +3452,20 @@ describe('named-skill execution contract', () => {
       '.agents/skills/oat-agent-instructions-apply/references/instruction-file-templates/glob-scoped-rule.md',
     );
 
+    // Both optional roots are reached at HEAD, so a rename or a walk that stops
+    // at `.agents/skills` cannot pass on the tolerated missing-root path.
+    expect(live).toEqual(
+      expect.arrayContaining([
+        '.agents/agents/oat-reviewer.md',
+        '.agents/agents/oat-codebase-mapper.md',
+        '.agents/agents/skeptical-evaluator.md',
+        '.oat/templates/docs-app-mkdocs/docs/contributing.md',
+      ]),
+    );
+
     // The symlinked half of the live inventory, named rather than counted. Each
     // of these is reached only through a `*.md` link under `.agents/skills`;
-    // without symlink following the live walk reaches 202 files and none of
+    // without symlink following the live walk reaches 241 files and none of
     // these six, which is below `CORPUS_MINIMUMS.fenceScanFiles`.
     expect(live).toEqual(
       expect.arrayContaining([
