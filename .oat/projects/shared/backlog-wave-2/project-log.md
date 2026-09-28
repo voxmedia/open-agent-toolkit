@@ -88,6 +88,10 @@ bw2-p04-stop-1 p04 gate attempt 2 blocked (1 High: read-only tool authority); re
 
 bw2-p04-outcome p04 complete under operator override after 2 blocked gate attempts and 5 fix rounds; follow-ups filed; see implementation.md
 
+### 2026-09-28 · structural · oat gate review · p05
+
+target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:2,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-2/reviews/p05-review-2026-09-28T104612Z.md run=9dc0deb0-d3d9-4a35-9b5a-8c111634a460
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
