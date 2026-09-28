@@ -36,3 +36,9 @@ UTC-dated and never record secrets or active autonomy signals.
 **Observation:** The root launched `oat --json gate review` in the same tool batch as the script that persists `oat_implement_exit_gate` launch intent; the persistence script failed its guard (the state frontmatter carries a commented `# oat_implement_exit_gate:` template that matched a substring check), so the gate ran with no persisted intent.
 **Impact:** The launch-acceptance contract (intent before launch) was violated for one run; the accepted run was kept (no replacement) and its state was persisted afterwards from the result receipt, recorded as a deviation.
 **Recommendation:** Never batch a gate launch with its intent persistence; persist, verify the committed state, then launch. Match YAML keys at line start (`^oat_implement_exit_gate:`), not by substring.
+
+## 2026-09-28T13:10Z - decision - Revision 1 resumed autonomously after operator feedback on PR #332
+
+**Observation:** The operator reviewed the open PR and redirected three areas: CLAUDE.md removal becomes all-or-nothing, the shim keys move to `instructions.claude.*` without compatibility, and this wave's recon-worker validator (about 1,900 lines added through gate rounds) is reverted because only the recon skill should use `recon-worker`.
+**Impact:** Seven revision tasks; the exit gate basis becomes stale and a new final review and gate generation run at closeout.
+**Recommendation:** When a gate keeps widening a component through successive rounds, pause and check whether the component should exist at all before hardening it further (complexity-review before the second fix round).
