@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-27
-oat_current_task_id: p05-t11
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,15 +24,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 8     | 8/8       |
-| Phase 2 | complete    | 8     | 8/8       |
-| Phase 3 | complete    | 5     | 5/5       |
-| Phase 4 | complete    | 7     | 7/7       |
-| Phase 5 | in_progress | 11    | 10/11     |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 8     | 8/8       |
+| Phase 2 | complete | 8     | 8/8       |
+| Phase 3 | complete | 5     | 5/5       |
+| Phase 4 | complete | 7     | 7/7       |
+| Phase 5 | complete | 11    | 11/11     |
 
-**Total:** 38/39 tasks completed
+**Total:** 39/39 tasks completed
 
 ---
 
@@ -329,8 +329,8 @@ oat_generated: false
 
 ### Task p05-t11: (review) Align oat-reviewer mechanical-lane guidance with the validator
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 0d029f9e4
 
 ---
 
@@ -696,7 +696,8 @@ oat_generated: false
   upgraded repositories until sync), 3 Low (summary counts, `oat-reviewer.md`
   mechanical-lane checks wording vs the validator, template placeholders).
   Deferred Mediums judged acceptable as filed follow-ups. Root fixed the
-  Medium, L1, and L3 in bookkeeping; L2 went to `p05-t11`. Gate
+  Medium, L1, and L3 in bookkeeping; L2 went to `p05-t11` (`0d029f9e4`,
+  reviewer mechanical-lane wording plus regenerated views). Gate
   `IMPLEMENT-11` recorded.
 
 ### PR Requirements (hand-off to oat-project-pr-final)
