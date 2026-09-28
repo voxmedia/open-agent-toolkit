@@ -19,8 +19,17 @@ oat_phase_recovery_policy:
   phase_attempt_limits: {}
   phase_attempt_usage:
     p02:
-      used_attempts: 0
-      pending_attempt: null
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: bw2-p02-rec-1
+        original_request_id: bw2-p02-impl-1
+        original_task_id: p02-t01
+        original_commit: e90c64783
+        discovered_by: 'HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run (full CLI suite)'
+        dispatch_target: oat-phase-implementer-claude-claude-opus-5-5-high
+        reservation_head: 68ae84142
+        status: completed
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
 #   phase_attempt_limits: {} # optional pNN: 0-20 overrides; prior usage never resets
