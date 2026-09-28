@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-27
-oat_current_task_id: null
+oat_current_task_id: prev1-t01
 oat_generated: false
 ---
 
@@ -24,15 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 8     | 8/8       |
-| Phase 2 | complete | 8     | 8/8       |
-| Phase 3 | complete | 5     | 5/5       |
-| Phase 4 | complete | 7     | 7/7       |
-| Phase 5 | complete | 12    | 12/12     |
+| Phase        | Status      | Tasks | Completed |
+| ------------ | ----------- | ----- | --------- |
+| Phase 1      | complete    | 8     | 8/8       |
+| Phase 2      | complete    | 8     | 8/8       |
+| Phase 3      | complete    | 5     | 5/5       |
+| Phase 4      | complete    | 7     | 7/7       |
+| Phase 5      | complete    | 12    | 12/12     |
+| Phase p-rev1 | in_progress | 4     | 0/4       |
 
-**Total:** 40/40 tasks completed
+**Total:** 40/44 tasks completed
 
 ---
 
@@ -338,6 +339,33 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** 2e28e2994
+
+---
+
+## Phase p-rev1: Revision 1
+
+**Status:** in_progress
+**Started:** 2026-09-28
+
+### Task prev1-t01: (revision) Rename the CLAUDE.md shim config keys under instructions.claude
+
+**Status:** pending
+**Commit:** -
+
+### Task prev1-t02: (revision) Remove nothing when any CLAUDE.md has real content
+
+**Status:** pending
+**Commit:** -
+
+### Task prev1-t03: (revision) Pin that rules and provider sync ignore the shim setting
+
+**Status:** pending
+**Commit:** -
+
+### Task prev1-t04: (revision) Exclude project and repository records from exit-gate freshness
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -790,6 +818,32 @@ oat_generated: false
 - Body also lists: append-only AGENTS.md guidance, `--project-guidance`
   honored or rejected everywhere, `oat tools guidance`, backlog archive link
   rewriting, the recon assignment validator, control-plane `check`.
+
+### Revision Received: Inline Feedback
+
+**Date:** 2026-09-28
+**Source:** inline conversation (operator, after PR #332 opened)
+
+**Changes requested:**
+
+- Clean-rename the shim keys: `instructions.claude.shims` and
+  `instructions.claude.excludes` (no compatibility read).
+- Under `none`, remove nothing while any `CLAUDE.md`, `.claude/CLAUDE.md`, or
+  `CLAUDE.local.md` has real content; explain why, link the docs, and point to
+  removing or moving the file or setting a shim strategy.
+- Keep rules and provider sync independent of the shim setting, pinned by a
+  test.
+- `effective-delta-v2`: changes only under `.oat/projects/**` and
+  `.oat/repo/**` no longer make the exit gate stale.
+- Declined after discussion: repointing old links to already-archived backlog
+  items; a new `keep` strategy value.
+
+**New tasks added:** prev1-t01, prev1-t02, prev1-t03, prev1-t04
+
+**Next:** Execute revision tasks via `oat-project-implement`, then a new final
+review and exit-gate generation, update PR #332 (title, Behavior change
+callout with the new key names and the all-or-nothing rule, release note that
+the keys were renamed), and refresh the Final Summary and summary.md.
 
 ## Implementation Log
 

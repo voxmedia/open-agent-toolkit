@@ -1791,6 +1791,145 @@ type-check, lint.
 
 ---
 
+## Phase p-rev1: Revision 1
+
+Source: inline feedback (2026-09-28, operator conversation after PR #332
+opened). Tasks run sequentially: prev1-t01 renames the keys that prev1-t02 and
+the docs then use.
+
+### Task prev1-t01: (revision) Rename the CLAUDE.md shim config keys under instructions.claude
+
+**Files:**
+
+- Modify: `packages/cli/src/config/oat-config.ts`, `packages/cli/src/config/resolve.ts`,
+  `packages/cli/src/commands/config/index.ts` (set/get/unset/describe),
+  `packages/cli/src/commands/instructions/**` (resolver, messages, JSON),
+  their tests, `packages/cli/src/commands/help-snapshots.test.ts`
+- Modify: `.agents/skills/oat-doctor/SKILL.md`,
+  `.agents/skills/oat-agent-instructions-analyze/**`,
+  `.agents/skills/oat-agent-instructions-apply/SKILL.md` and their contract tests
+  (all already bumped in this PR; no further bumps)
+- Modify: every docs page, README, and backlog or decision text that names the
+  old keys (`rg -n "instructionSyncStrategy|instructionPointerExcludes"` must
+  return nothing outside archived review artifacts and historical records)
+
+**Step 1:** Clean rename with no compatibility read or deprecation warning
+(operator direction: most repositories run on defaults):
+`documentation.instructionSyncStrategy` becomes `instructions.claude.shims`
+(`none` default, `pointer`, `symlink`, `copy`), and
+`documentation.instructionPointerExcludes` becomes `instructions.claude.excludes`
+(repository-relative directories). The `--strategy` flag keeps overriding one
+run. Record the rename in a decision record amending
+`DR-260927-claude-md-shims-are-opt` (use `node packages/cli/dist/index.js decision new`).
+
+**Step 2: Verify**
+Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/config src/commands/config src/commands/instructions src/commands/help-snapshots.test.ts`,
+`node --test .agents/skills/oat-doctor/tests/*.test.mjs .agents/skills/oat-agent-instructions-analyze/tests/*.test.mjs`,
+`pnpm --filter oat-docs check`, and the `rg` sweep above.
+Expected: all exit 0; the sweep returns nothing outside history.
+
+**Step 3: Commit**
+
+```bash
+git commit -m "refactor(prev1-t01): move CLAUDE.md shim config under instructions.claude"
+```
+
+### Task prev1-t02: (revision) Remove nothing when any CLAUDE.md has real content
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/instructions/{instructions.utils.ts,sync/sync.ts,validate/validate.ts,instructions.types.ts}` and tests
+- Modify: `.agents/skills/oat-doctor/SKILL.md` (and its contract test)
+- Modify: `apps/oat-docs/docs/provider-sync/instruction-sync.md`,
+  `apps/oat-docs/docs/reference/troubleshooting.md`, the READMEs if they
+  describe removal
+
+**Step 1:** Under `none`, removal is all or nothing. If any `CLAUDE.md`,
+`.claude/CLAUDE.md`, or `CLAUDE.local.md` in the scanned project is not an
+exact OAT shim (pointer, sibling symlink, identical copy), sync removes
+nothing, including the managed shims. It reports: the shims the configuration
+would remove; that none were removed because a `CLAUDE.md` with real content
+exists (named); that any `CLAUDE.md` makes Claude Code ignore AGENTS.md, with
+the link
+`https://github.com/voxmedia/open-agent-toolkit/blob/main/apps/oat-docs/docs/provider-sync/instruction-sync.md#claude-code-and-agentsmd`;
+and what to do: remove the file or move its content into an `AGENTS.md` and
+rerun `oat instructions sync`, or set `instructions.claude.shims` to a shim
+strategy (`pointer`, `symlink`, or `copy`) to keep `CLAUDE.md` files. The same
+finding appears in `--json` and in `oat instructions validate` and `oat-doctor`.
+Stray adoption of a lone content-bearing `CLAUDE.md` (no sibling `AGENTS.md`)
+stays as shipped. Failing-first tests: a content-bearing root `CLAUDE.md` plus
+subdirectory shims removes nothing; a content-bearing `CLAUDE.local.md` or
+`.claude/CLAUDE.md` removes nothing; with only exact shims, removal proceeds as
+before (negative control). Record the rule in the prev1-t01 decision record or
+a sibling record.
+
+**Step 2: Verify**
+Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/instructions`,
+`node --test .agents/skills/oat-doctor/tests/*.test.mjs`, `pnpm --filter oat-docs check`.
+Expected: all exit 0.
+
+**Step 3: Commit**
+
+```bash
+git commit -m "fix(prev1-t02): keep all CLAUDE.md shims while any CLAUDE.md has content"
+```
+
+### Task prev1-t03: (revision) Pin that rules and provider sync ignore the shim setting
+
+**Files:**
+
+- Modify or create: a test under `packages/cli/src/commands/sync/` (or the
+  engine integration tests)
+
+**Step 1:** Add a test showing `oat sync` output for canonical rules, skills,
+and agents (including `.claude/rules/**`) is identical under
+`instructions.claude.shims` `none` and `pointer`, and that `oat sync` never
+creates or removes a `CLAUDE.md`. Confirm the new instruction-sync removal and
+warning code never touches `.claude/rules/**`.
+
+**Step 2: Verify**
+Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/sync src/engine`.
+Expected: exit 0.
+
+**Step 3: Commit**
+
+```bash
+git commit -m "test(prev1-t03): pin provider sync independence from CLAUDE.md shims"
+```
+
+### Task prev1-t04: (revision) Exclude project and repository records from exit-gate freshness
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/references/completion-and-closeout.md`
+  (already bumped to 2.3.14 in this PR; no further bump)
+- Modify: `packages/cli/src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts`
+- Modify: `apps/oat-docs/docs/workflows/projects/implementation-execution.md`
+  and the `.oat/templates/state.md` comment if it names the fingerprint format
+- Create: a decision record (`node packages/cli/dist/index.js decision new`)
+
+**Step 1:** Define `effective-delta-v2`: identical to v1 but the exclusion set
+is `$PROJECT_PATH/state.md` plus every path under `.oat/projects/**` and
+`.oat/repo/**`. `.oat/templates/**`, `.oat/scripts/**`, `.oat/config*.json`,
+and `.oat/sync/**` stay fingerprinted. New generations persist
+`sha256:effective-delta-v2:<digest>`; stored v1 values keep v1 semantics and
+are never reinterpreted. Pin the v2 exclusion set, the v1 preservation rule,
+and the kept `.oat` paths in the contract test (failing-first).
+
+**Step 2: Verify**
+Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`,
+`node --test .agents/skills/oat-project-implement/tests/*.test.mjs`,
+`pnpm run check:skill-bumps`, `pnpm --filter oat-docs check`.
+Expected: all exit 0.
+
+**Step 3: Commit**
+
+```bash
+git commit -m "feat(prev1-t04): exclude project and repository records from gate freshness"
+```
+
+---
+
 ## PR Requirements
 
 The release workflow (`.github/workflows/release.yml`) publishes a fixed body
@@ -1840,6 +1979,7 @@ title itself:
 | p05    | code     | fixes_completed | 2026-09-28 | reviews/archived/p05-review-2026-09-28T104612Z.md           | 3c64d9e225a789e50caa1ba4edb153e943331365 | gate       | codex-6-sol-xhigh |
 | p05    | code     | fixes_completed | 2026-09-28 | reviews/archived/p05-review-2026-09-28T105839Z.md           | 7085ab58146ade146e41617e3cdef15b0b9694d9 | auto       | -                 |
 | p05    | code     | passed          | 2026-09-28 | reviews/archived/p05-review-2026-09-28T111050Z.md           | 3a38ce1a00570619de6bf0ff3b068138d8915c56 | gate       | codex-6-sol-xhigh |
+| p-rev1 | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | final  | code     | fixes_completed | 2026-09-28 | reviews/archived/final-review-2026-09-28T113721Z.md         | 1973af8f083c86fdb172eb67d8233eefd002333b | gate       | codex-6-sol-xhigh |
 | final  | code     | passed          | 2026-09-28 | reviews/archived/final-review-2026-09-28T114422Z.md         | ba69e205235f000acf4958e57bc12085c8294f8f | auto       | -                 |
 | final  | code     | passed          | 2026-09-28 | reviews/archived/final-review-2026-09-28T114805Z.md         | b54d67306e12e5abed8e23983f957f7f77c0ad8c | gate       | codex-6-sol-xhigh |
@@ -1896,8 +2036,9 @@ in `implementation.md`). Phase gates and the final review still run.
 - Phase 3: 5 tasks - Lifecycle skill routing and bookkeeping
 - Phase 4: 7 tasks - Agent roles and recon validation
 - Phase 5: 12 tasks - CI and backlog tooling, release fan-in
+- Phase p-rev1: 4 tasks - Revision 1 (operator feedback on PR #332)
 
-**Total: 40 tasks**
+**Total: 44 tasks**
 
 Ready for code review and merge.
 
