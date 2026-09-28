@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-27
-oat_current_task_id: p04-t04
+oat_current_task_id: p04-t05
 oat_generated: false
 ---
 
@@ -29,10 +29,10 @@ oat_generated: false
 | Phase 1 | complete    | 8     | 8/8       |
 | Phase 2 | complete    | 8     | 8/8       |
 | Phase 3 | complete    | 5     | 5/5       |
-| Phase 4 | in_progress | 4     | 4/4       |
+| Phase 4 | in_progress | 5     | 4/5       |
 | Phase 5 | pending     | 6     | 0/6       |
 
-**Total:** 25/31 tasks completed
+**Total:** 25/32 tasks completed
 
 ---
 
@@ -228,6 +228,13 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** d9240c2c1
+
+---
+
+### Task p04-t05: (review) Close p04 round-2 findings M1-M3, L1-L2
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -502,6 +509,12 @@ oat_generated: false
   exclusions, segment-aware; unverifiable forms rejected) and M1 (output
   schema must be the approved packet-contract reference or a closed inline
   schema); 352 recon node tests, 897 vitest.
+
+- Request `bw2-p04-review-2` (reconnaissance not-attempted):
+  `reviews/archived/p04-review-2026-09-28T023246Z.md` passed (0 Critical/High); gate H1/M1 and first-review
+  findings verified fixed; adversarial probing found 3 Medium (scheme-without-
+  slashes URLs, case-variant exclusion bypass, schema anchors that do not
+  resolve) and 2 Low, converted to `p04-t05` before gate attempt 2.
 
 ## Implementation Log
 

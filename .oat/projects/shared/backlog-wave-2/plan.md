@@ -1332,6 +1332,38 @@ Run: `node --test .agents/skills/recon/tests/*.test.mjs` and
 
 ---
 
+### Task p04-t05: (review) Close p04 round-2 findings M1-M3, L1-L2
+
+Source: `reviews/archived/p04-review-2026-09-28T023246Z.md` (auto review,
+passing: 0 Critical/High, 3 Medium, 2 Low).
+
+**Step 1: Fix (failing-first negative controls)**
+
+- M1: treat any string with a URL scheme (`scheme:`), with or without `//`, as
+  a URL; only `http`/`https` are allowed URL forms; `file:` and other schemes
+  are unverifiable; compare URL origins including host.
+- M2: compare repository paths case-insensitively for exclusion and
+  containment (fail closed on case-insensitive filesystems).
+- M3: make the approved output-schema reference resolve to a real anchor in
+  `packet-contract.md` (add stable headings for the artifact kinds, or change
+  the accepted reference form to one that resolves), and add a test that the
+  accepted reference's anchor exists.
+- L1: state in the contract how packet-relative exclusions (for example
+  `raw/`, `reviews/`) are expressed, and align the fixtures.
+- L2: an inline output schema must match the schema for its artifact kind (or
+  record why top-level closure is sufficient).
+
+**Step 2: Verify**
+
+Run: `node --test .agents/skills/recon/tests/*.test.mjs` and
+`HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation src/commands/init/tools/shared`.
+
+**Step 3: Commit**
+
+`fix(p04-t05): close p04 round-2 review findings`
+
+---
+
 ## Phase 5: CI and backlog tooling, release fan-in
 
 ### Task p05-t01: Give packages/control-plane a check script
@@ -1580,6 +1612,7 @@ title itself:
 | plan   | artifact | fixes_completed | 2026-09-27 | reviews/archived/artifact-plan-review-2026-09-27T151608Z.md | -                                        | gate       | codex-6-sol-xhigh |
 | p03    | code     | passed          | 2026-09-28 | reviews/archived/p03-review-2026-09-28T015614Z.md           | 91066575de14dab6df77a52dcb1e967bfad91890 | gate       | codex-6-sol-xhigh |
 | p04    | code     | fixes_completed | 2026-09-28 | reviews/archived/p04-review-2026-09-28T022315Z.md           | 8e34aae0ccb86f9af3e1f26648a50a556ae92144 | gate       | codex-6-sol-xhigh |
+| p04    | code     | fixes_added     | 2026-09-28 | reviews/archived/p04-review-2026-09-28T023246Z.md           | 53346a3878ed3a4ed6f2d81b0e683e2893954bdb | auto       | -                 |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
@@ -1631,10 +1664,10 @@ in `implementation.md`). Phase gates and the final review still run.
 - Phase 1: 8 tasks - AGENTS.md guidance
 - Phase 2: 8 tasks - CLAUDE.md shims
 - Phase 3: 5 tasks - Lifecycle skill routing and bookkeeping
-- Phase 4: 4 tasks - Agent roles and recon validation
+- Phase 4: 5 tasks - Agent roles and recon validation
 - Phase 5: 6 tasks - CI and backlog tooling, release fan-in
 
-**Total: 31 tasks**
+**Total: 32 tasks**
 
 Ready for code review and merge.
 
