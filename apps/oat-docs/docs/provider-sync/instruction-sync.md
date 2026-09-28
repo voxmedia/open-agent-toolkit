@@ -227,7 +227,10 @@ exact shapes:
 
 Everything else is kept and reported as `unmanaged`: a hand-written or edited
 `CLAUDE.md`, a pointer with extra lines or trailing spaces, a symlink to any
-other file, and `.claude/CLAUDE.md`. A `CLAUDE.md` that the sibling
+other file, `.claude/CLAUDE.md`, and any `CLAUDE.md` that a scanned instruction
+file in another directory links to (`pkg/AGENTS.md -> ../CLAUDE.md`), which
+is neither removed nor adopted because that would leave the link dangling; the
+entry names the links. A `CLAUDE.md` that the sibling
 `AGENTS.md` resolves to (the Claude-first `ln -s CLAUDE.md AGENTS.md` layout,
 or a hard link) holds the only copy of the instructions, so it is never
 treated as a shim of any shape; and a copy is only ever recognized against a
@@ -239,8 +242,9 @@ never touched.
 
 Removal also fails closed at apply time. Immediately before deleting, sync
 re-checks the file: it must still be the same file the scan saw (same device
-and inode, and the same symlink target) and still an exact managed shape. If
-it was edited or replaced in between, it is kept, byte for byte, and reported
+and inode, and the same symlink target), still an exact managed shape, and not
+the target of a link from any scanned instruction file. If it was edited or
+replaced, or a link to it appeared, in between, it is kept, byte for byte, and reported
 as `CLAUDE.md changed since planning (...); kept`, and the command exits `1`
 so you can rerun it.
 
@@ -255,7 +259,9 @@ every session; for a file in a subdirectory it holds for sessions started in
 that directory or below, and the warning says so. The warning names exactly
 two ways out:
 
-- remove the file; or
+- remove the file — or, when an `AGENTS.md` links to it (the warning's
+  `linkedBy`), first replace each linking `AGENTS.md` with the file's content,
+  because the file holds the only copy of those instructions; or
 - set `documentation.instructionSyncStrategy` in `.oat/config.json` to a shim
   strategy (`pointer`, `symlink`, or `copy`) and rerun `oat instructions sync`
   to add shims back everywhere.
@@ -268,7 +274,13 @@ change, because Claude Code's own walk does not honor them. Only `.git`,
 
 Warnings go to stderr in human mode and to the `warnings` array under `--json`
 (each item has `code: "claude_md_hides_agents_md"`, a repository-relative
-`path`, and the `message`). They never change the exit code, a dry run leaves
+`path`, `linkedBy` — the repository-relative `AGENTS.md` paths whose symlink
+chain reaches the file, empty when there are none — and the `message`).
+Names are matched exactly: a case variant such as `claude.md` is neither
+reported nor ever removed, because such names are common for ordinary
+documents (a provider page named `claude.md`, for example). On a
+case-insensitive filesystem, rename a case-variant file yourself if Claude Code
+treats it as `CLAUDE.md`. They never change the exit code, a dry run leaves
 out files it is about to remove, a repository with no remaining `CLAUDE.md`
 prints nothing, and no warning is emitted under a shim strategy.
 

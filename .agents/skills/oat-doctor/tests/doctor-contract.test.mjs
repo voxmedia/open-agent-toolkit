@@ -280,6 +280,7 @@ test('every field the sweep projects exists in the built CLI output, on every it
       });
       assert.equal(seeded.strategy, 'none');
       assert.ok(seeded.warnings?.length >= 1, 'leftover warning not reported');
+      assert.deepEqual(seeded.warnings[0].linkedBy, []);
       requireFields(seeded, fields, `${label} (seeded)`, { seeded: true });
     }
   }
@@ -311,6 +312,10 @@ test('every field the sweep projects exists in the built CLI output, on every it
     byLabel['oat instructions validate --json'].includes('warnings[].path'),
     'instructions validate: warnings[] not parsed',
   );
+  assert.ok(
+    byLabel['oat instructions validate --json'].includes('warnings[].linkedBy'),
+    'instructions validate: warnings[].linkedBy not parsed',
+  );
 });
 
 test('a missing CLAUDE.md is an error only under a shim strategy, and leftover CLAUDE.md files are warned about', () => {
@@ -337,6 +342,14 @@ test('a missing CLAUDE.md is an error only under a shim strategy, and leftover C
   assert.match(leftover, /ignores every AGENTS\.md/);
   // Exactly the two fixes the CLI names: remove the file, or opt back in.
   assert.match(leftover, /removes the file/);
+  // A file an AGENTS.md links to holds the only copy of the instructions:
+  // the linkedBy caveat replaces the plain remove advice.
+  assert.match(leftover, /`linkedBy`/);
+  assert.match(
+    leftover,
+    /replaces each linking AGENTS\.md with the file's content first/,
+  );
+  assert.match(leftover, /never offer plain removal/);
   assert.match(
     leftover,
     /`oat config set documentation\.instructionSyncStrategy pointer`/,

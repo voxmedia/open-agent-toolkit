@@ -73,8 +73,11 @@ function createHarness(options: HarnessOptions = {}): {
     // The fake cwd has no config; never let the production reader look. The
     // pointer cases predate strategy `none`, so the harness configures
     // `pointer` unless a case sets `configuredStrategy` itself.
-    findLeftoverClaudeFiles: vi.fn(
-      async () => options.leftoverClaudeFiles ?? [],
+    findLeftoverClaudeFiles: vi.fn(async () =>
+      (options.leftoverClaudeFiles ?? []).map((path) => ({
+        path,
+        linkedBy: [],
+      })),
     ),
     readConfiguredInstructionSyncStrategy: vi.fn(async () =>
       'configuredStrategy' in options ? options.configuredStrategy : 'pointer',

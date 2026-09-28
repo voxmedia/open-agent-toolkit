@@ -1550,6 +1550,37 @@ describe('instructions command integration', () => {
           expect.objectContaining({ type: 'skip', target, result: 'skipped' }),
         ]);
       });
+
+      it('keeps a planned copy that an AGENTS.md in another directory now links to', async () => {
+        const root = await createWorkspace();
+        tempDirs.push(root);
+        await writePair(root, '.', '# root notes\n', '# root notes\n');
+        await writePair(root, 'pkg', null);
+        const target = join(root, 'CLAUDE.md');
+        const pkgAgents = join(root, 'pkg', 'AGENTS.md');
+
+        const { payload, exitCode } = await syncWithChange(
+          root,
+          target,
+          async () => {
+            await rm(pkgAgents);
+            await symlink('../CLAUDE.md', pkgAgents);
+          },
+        );
+
+        expect(exitCode).toBe(1);
+        await expect(readFile(pkgAgents, 'utf8')).resolves.toBe(
+          '# root notes\n',
+        );
+        expect(payload.actions).toEqual([
+          expect.objectContaining({
+            type: 'skip',
+            target,
+            result: 'skipped',
+            reason: expect.stringContaining('pkg/AGENTS.md'),
+          }),
+        ]);
+      });
     });
 
     describe('AGENTS.md that resolves to CLAUDE.md', () => {
@@ -1692,6 +1723,138 @@ describe('instructions command integration', () => {
         await expect(
           readFile(join(root, 'pkg', 'AGENTS.md'), 'utf8'),
         ).resolves.toBe('# pkg instructions\n');
+      });
+
+      // Layout A: the root CLAUDE.md is an exact copy of the root AGENTS.md,
+      // but pkg/AGENTS.md links to it, so removing it would dangle the link.
+      it('keeps a managed-shaped CLAUDE.md that an AGENTS.md in another directory links to', async () => {
+        const root = await createWorkspace();
+        tempDirs.push(root);
+        await writePair(root, '.', '# same\n', '# same\n');
+        await mkdir(join(root, 'pkg'), { recursive: true });
+        await symlink('../CLAUDE.md', join(root, 'pkg', 'AGENTS.md'));
+
+        const sync = await runCli(
+          root,
+          ['instructions', 'sync', '--json'],
+          ['--json'],
+        );
+        expect(sync.exitCode).toBe(0);
+        const payload = JSON.parse(sync.stdout);
+        expect(payload.actions).toEqual([]);
+        const rootEntry = payload.entries.find(
+          (entry: { claudePath: string }) =>
+            entry.claudePath === join(root, 'CLAUDE.md'),
+        );
+        expect(rootEntry.status).toBe('unmanaged');
+        expect(rootEntry.detail).toContain('pkg/AGENTS.md');
+        await expect(readFile(join(root, 'CLAUDE.md'), 'utf8')).resolves.toBe(
+          '# same\n',
+        );
+        await expect(
+          readFile(join(root, 'pkg', 'AGENTS.md'), 'utf8'),
+        ).resolves.toBe('# same\n');
+      });
+
+      // Layout B: the root CLAUDE.md is the only copy (a stray) and
+      // pkg/AGENTS.md links to it: adopting and deleting it would dangle the
+      // link, so it is neither adopted nor removed.
+      it('keeps a stray CLAUDE.md that an AGENTS.md in another directory links to', async () => {
+        const root = await createWorkspace();
+        tempDirs.push(root);
+        await writeFile(join(root, 'CLAUDE.md'), '# only copy\n');
+        await mkdir(join(root, 'pkg'), { recursive: true });
+        await symlink('../CLAUDE.md', join(root, 'pkg', 'AGENTS.md'));
+
+        const sync = await runCli(
+          root,
+          ['instructions', 'sync', '--json'],
+          ['--json'],
+        );
+        expect(sync.exitCode).toBe(0);
+        const payload = JSON.parse(sync.stdout);
+        expect(payload.actions).toEqual([]);
+        await expect(readFile(join(root, 'CLAUDE.md'), 'utf8')).resolves.toBe(
+          '# only copy\n',
+        );
+        await expect(
+          readFile(join(root, 'pkg', 'AGENTS.md'), 'utf8'),
+        ).resolves.toBe('# only copy\n');
+        await expect(pathExists(join(root, 'AGENTS.md'))).resolves.toBe(false);
+        expect(payload.warnings).toEqual([
+          expect.objectContaining({
+            path: 'CLAUDE.md',
+            linkedBy: ['pkg/AGENTS.md'],
+          }),
+        ]);
+      });
+
+      it('warns to replace the linking AGENTS.md before removing the file it links to', async () => {
+        const root = await createWorkspace();
+        tempDirs.push(root);
+        await writeLinkedPair(root, 'pkg', '# pkg only\n', linkToClaude);
+        await writePair(root, 'plain', '# hand-written\n');
+
+        const validate = await runCli(
+          root,
+          ['instructions', 'validate', '--json'],
+          ['--json'],
+        );
+        const byPath = Object.fromEntries(
+          JSON.parse(validate.stdout).warnings.map(
+            (warning: { path: string }) => [warning.path, warning],
+          ),
+        );
+        expect(byPath['pkg/CLAUDE.md'].linkedBy).toEqual(['pkg/AGENTS.md']);
+        expect(byPath['pkg/CLAUDE.md'].message).toContain(
+          'Either replace pkg/AGENTS.md (a link to pkg/CLAUDE.md) with the content of pkg/CLAUDE.md and then remove pkg/CLAUDE.md, or set',
+        );
+        expect(byPath['plain/CLAUDE.md'].linkedBy).toEqual([]);
+        expect(byPath['plain/CLAUDE.md'].message).toContain(
+          'Either remove plain/CLAUDE.md, or set',
+        );
+
+        const human = await runCli(root, ['instructions', 'validate']);
+        expect(human.stderr).toContain(
+          'Either replace pkg/AGENTS.md (a link to pkg/CLAUDE.md)',
+        );
+      });
+    });
+
+    describe('case variants', () => {
+      // Deliberately neither warned about nor removed: exact-case matching
+      // keeps ordinary documents such as a provider page named `claude.md`
+      // out of the delete-this advice (see instruction-sync.md).
+      it('never removes or warns about case variants of CLAUDE.md and CLAUDE.local.md', async () => {
+        const root = await createWorkspace();
+        tempDirs.push(root);
+        await writePair(root, 'pkg', null);
+        await writeFile(
+          join(root, 'pkg', 'claude.md'),
+          EXPECTED_CLAUDE_CONTENT,
+        );
+        await writePair(root, 'p', null);
+        await writeFile(join(root, 'p', 'CLAUDE.MD'), '# shouting\n');
+        await writeFile(join(root, 'Claude.Local.md'), '# personal\n');
+
+        const sync = await runCli(
+          root,
+          ['instructions', 'sync', '--json'],
+          ['--json'],
+        );
+        expect(sync.exitCode).toBe(0);
+        const payload = JSON.parse(sync.stdout);
+        expect(payload.actions).toEqual([]);
+        expect(payload).not.toHaveProperty('warnings');
+        await expect(
+          readFile(join(root, 'pkg', 'claude.md'), 'utf8'),
+        ).resolves.toBe(EXPECTED_CLAUDE_CONTENT);
+        await expect(
+          readFile(join(root, 'p', 'CLAUDE.MD'), 'utf8'),
+        ).resolves.toBe('# shouting\n');
+        await expect(
+          readFile(join(root, 'Claude.Local.md'), 'utf8'),
+        ).resolves.toBe('# personal\n');
       });
     });
 

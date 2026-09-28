@@ -101,8 +101,11 @@ function createHarness(options: HarnessOptions = {}): {
       logger: capture.logger,
     }),
     // The leftover walk is read-only but still must not touch the fake cwd.
-    findLeftoverClaudeFiles: vi.fn(
-      async () => options.leftoverClaudeFiles ?? [],
+    findLeftoverClaudeFiles: vi.fn(async () =>
+      (options.leftoverClaudeFiles ?? []).map((path) => ({
+        path,
+        linkedBy: [],
+      })),
     ),
     lstat,
     readConfiguredInstructionSyncStrategy,

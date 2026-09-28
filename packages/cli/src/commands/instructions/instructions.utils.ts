@@ -276,6 +276,93 @@ export async function inspectManagedShim(
   };
 }
 
+/** The filesystem reads link-chain resolution needs. */
+export interface LinkResolutionDependencies {
+  lstat: InstructionsScanDependencies['lstat'];
+  readlink: InstructionsScanDependencies['readlink'];
+  realpath: InstructionsScanDependencies['realpath'];
+}
+
+/**
+ * The path of a directory entry itself, with its parent directories resolved
+ * but the entry not followed, so a link and the file it names compare by the
+ * node they occupy rather than by spelling.
+ */
+async function canonicalNodePath(
+  path: string,
+  dependencies: LinkResolutionDependencies,
+): Promise<string | null> {
+  try {
+    return join(await dependencies.realpath(dirname(path)), basename(path));
+  } catch {
+    return null;
+  }
+}
+
+const MAX_LINK_HOPS = 40;
+
+/**
+ * The candidates whose symlink chain passes through `targetPath`: removing
+ * `targetPath` would leave each of them dangling. Every hop is followed, so a
+ * link to a link to the target counts, and a link to the target that is
+ * itself a symlink counts too. Regular files and hard links never dangle, so
+ * they are never reported.
+ */
+export async function findLinksThrough(
+  targetPath: string,
+  candidates: readonly string[],
+  dependencies: LinkResolutionDependencies,
+): Promise<string[]> {
+  const targetNode = await canonicalNodePath(targetPath, dependencies);
+  if (targetNode === null) {
+    return [];
+  }
+
+  const linkers: string[] = [];
+  for (const candidate of new Set(candidates)) {
+    if (
+      candidate === targetPath ||
+      (await canonicalNodePath(candidate, dependencies)) === targetNode
+    ) {
+      continue;
+    }
+    let current = candidate;
+    for (let hop = 0; hop < MAX_LINK_HOPS; hop += 1) {
+      let stats: Awaited<ReturnType<LinkResolutionDependencies['lstat']>>;
+      try {
+        stats = await dependencies.lstat(current);
+      } catch {
+        break;
+      }
+      if (!stats.isSymbolicLink()) {
+        break;
+      }
+      let linkTarget: string;
+      try {
+        linkTarget = await dependencies.readlink(current);
+      } catch {
+        break;
+      }
+      const next = resolve(dirname(current), linkTarget);
+      if ((await canonicalNodePath(next, dependencies)) === targetNode) {
+        linkers.push(candidate);
+        break;
+      }
+      current = next;
+    }
+  }
+  return linkers.sort((left, right) => left.localeCompare(right));
+}
+
+/** `a` / `a and b` / `a, b, and c`, repository-relative. */
+function describeLinkers(repoRoot: string, linkers: readonly string[]): string {
+  const paths = linkers.map((path) => toPosixPath(relative(repoRoot, path)));
+  if (paths.length <= 2) {
+    return paths.join(' and ');
+  }
+  return `${paths.slice(0, -1).join(', ')}, and ${paths.at(-1)}`;
+}
+
 /**
  * Re-verify, immediately before deletion, that a CLAUDE.md planned for removal
  * is still the exact managed shim the scan recorded: same `lstat` identity
@@ -1160,30 +1247,114 @@ export async function scanInstructionFiles(
     }
   }
 
+  if (strategy === 'none') {
+    return normalizeEntries(
+      await keepLinkedClaudeFiles(
+        repoRoot,
+        entries,
+        instructionDirectories,
+        dependencies,
+      ),
+    );
+  }
+
   return normalizeEntries(entries);
 }
 
+/**
+ * Under `none`, a CLAUDE.md that any scanned instruction file links to --
+ * `pkg/AGENTS.md -> ../CLAUDE.md`, say -- is never removed or adopted, even
+ * when it has an exact managed shape: deleting it would leave that link
+ * dangling. It is reported as `unmanaged`, naming the links.
+ */
+async function keepLinkedClaudeFiles(
+  repoRoot: string,
+  entries: InstructionEntry[],
+  instructionDirectories: Map<string, InstructionDirectoryEntry>,
+  dependencies: InstructionsScanDependencies,
+): Promise<InstructionEntry[]> {
+  const candidates = [...instructionDirectories.values()].flatMap(
+    (directoryEntry) =>
+      [
+        directoryEntry.agentsPath,
+        directoryEntry.brokenAgentsPath,
+        directoryEntry.claudePath,
+        directoryEntry.brokenClaudePath,
+      ].filter((path): path is string => path !== undefined),
+  );
+
+  const kept: InstructionEntry[] = [];
+  for (const entry of entries) {
+    if (entry.status !== 'managed_shim' && entry.status !== 'stray') {
+      kept.push(entry);
+      continue;
+    }
+    const linkers = await findLinksThrough(
+      entry.claudePath,
+      candidates,
+      dependencies,
+    );
+    if (linkers.length === 0) {
+      kept.push(entry);
+      continue;
+    }
+    kept.push({
+      agentsPath: entry.agentsPath,
+      claudePath: entry.claudePath,
+      status: 'unmanaged',
+      detail: `${describeLinkers(repoRoot, linkers)} ${linkers.length === 1 ? 'links' : 'link'} to this CLAUDE.md, so removing it would break ${linkers.length === 1 ? 'that link' : 'those links'} (replace ${linkers.length === 1 ? 'the link' : 'each link'} with its content first); kept`,
+    });
+  }
+  return kept;
+}
+
+// Exact-case names only. A case-insensitive match would flag ordinary
+// documents such as a provider page named `claude.md` (this repository has
+// two) with advice to delete them, on the unverified premise that Claude
+// Code's plugin would treat them as CLAUDE.md; case variants are therefore
+// neither reported nor ever removed.
 const LEFTOVER_CLAUDE_FILE_NAMES = new Set(['CLAUDE.md', 'CLAUDE.local.md']);
+
+/** A leftover file and the `AGENTS.md` links that pass through it. */
+export interface LeftoverClaudeFile {
+  path: string;
+  /** Absolute paths of every `AGENTS.md` whose symlink chain reaches `path`. */
+  linkedBy: string[];
+}
 
 /**
  * Every `CLAUDE.md` (including `.claude/CLAUDE.md`) and `CLAUDE.local.md` in
- * the repository, sorted, as absolute paths.
+ * the repository (exact case), sorted, as absolute paths, each with the
+ * `AGENTS.md` files that link to it.
  *
  * A separate, read-only walk on purpose. The instruction scan skips the
  * documentation content root and `documentation.instructionPointerExcludes`,
  * but those only limit what OAT may change: Claude Code's `agents-md` plugin
  * stands down whichever directory the file is in. Only `.git`, `node_modules`,
  * the root `.worktrees`, and nested git checkouts (separate repositories) are
- * skipped, and symlinked directories are not followed. A symlink named like an instruction file
- * counts, broken or not.
+ * skipped, and symlinked directories are not followed. A symlink named like
+ * an instruction file counts, broken or not. Each directory entry is read
+ * once, so one file is never reported twice, even on a case-insensitive
+ * filesystem.
  */
 export async function findLeftoverClaudeFiles(
   repoRoot: string,
-  overrides: Partial<Pick<InstructionsScanDependencies, 'readdir'>> = {},
-): Promise<string[]> {
+  overrides: Partial<
+    Pick<
+      InstructionsScanDependencies,
+      'readdir' | 'lstat' | 'readlink' | 'realpath'
+    >
+  > = {},
+): Promise<LeftoverClaudeFile[]> {
   const readDirectory = overrides.readdir ?? readdir;
+  const linkDependencies: LinkResolutionDependencies = {
+    lstat: overrides.lstat ?? lstat,
+    readlink: overrides.readlink ?? readlink,
+    realpath: overrides.realpath ?? realpath,
+  };
   const queue = [repoRoot];
   const found: string[] = [];
+  const agentsFiles: string[] = [];
 
   while (queue.length > 0) {
     const currentDirectory = queue.shift();
@@ -1215,13 +1386,23 @@ export async function findLeftoverClaudeFiles(
         queue.push(entryPath);
         continue;
       }
+      if (entry.name === 'AGENTS.md') {
+        agentsFiles.push(entryPath);
+      }
       if (LEFTOVER_CLAUDE_FILE_NAMES.has(entry.name)) {
         found.push(entryPath);
       }
     }
   }
 
-  return found.sort((left, right) => left.localeCompare(right));
+  const leftovers: LeftoverClaudeFile[] = [];
+  for (const path of found.sort((left, right) => left.localeCompare(right))) {
+    leftovers.push({
+      path,
+      linkedBy: await findLinksThrough(path, agentsFiles, linkDependencies),
+    });
+  }
+  return leftovers;
 }
 
 /**
@@ -1240,6 +1421,11 @@ function leftoverScopeDirectory(relativePath: string): string {
  * One warning per leftover file, naming exactly two ways out: remove the
  * file, or opt back into shims and let sync add them everywhere.
  *
+ * When an `AGENTS.md` links to the file, removing it would break that link
+ * and lose the only copy of the instructions, so the first option becomes
+ * "replace the link with the file's content, then remove the file", and
+ * `linkedBy` names the links.
+ *
  * Claude Code's plugin stands down when such a file sits in the session's
  * working directory or any directory above it up to the project root, so a
  * root file affects every session and a nested one only sessions started in
@@ -1247,22 +1433,29 @@ function leftoverScopeDirectory(relativePath: string): string {
  */
 export function buildLeftoverClaudeWarnings(
   repoRoot: string,
-  paths: readonly string[],
+  leftovers: readonly LeftoverClaudeFile[],
 ): InstructionsWarning[] {
-  return paths.map((path) => {
+  return leftovers.map(({ path, linkedBy }) => {
     const relativePath = toPosixPath(relative(repoRoot, path));
     const scopeDirectory = leftoverScopeDirectory(relativePath);
     const scope =
       scopeDirectory === '.'
         ? ', whatever directory a session starts in'
         : ` for Claude Code sessions started in ${scopeDirectory}/ or below`;
+    const firstOption =
+      linkedBy.length === 0
+        ? `Either remove ${relativePath}`
+        : `Either replace ${describeLinkers(repoRoot, linkedBy)} (${linkedBy.length === 1 ? 'a link' : 'links'} to ${relativePath}) with the content of ${relativePath} and then remove ${relativePath}`;
     return {
       code: 'claude_md_hides_agents_md',
       path: relativePath,
+      linkedBy: linkedBy.map((linker) =>
+        toPosixPath(relative(repoRoot, linker)),
+      ),
       message:
         `${relativePath} makes Claude Code ignore every AGENTS.md in this project${scope}: ` +
         "its default agents-md mode stands down while any CLAUDE.md, .claude/CLAUDE.md, or CLAUDE.local.md exists in the session's working directory or any directory above it, up to the project root. " +
-        `Either remove ${relativePath}, or set documentation.instructionSyncStrategy in .oat/config.json ` +
+        `${firstOption}, or set documentation.instructionSyncStrategy in .oat/config.json ` +
         'to a shim strategy (pointer, symlink, or copy) and rerun `oat instructions sync` to add shims back.',
     };
   });

@@ -77,6 +77,12 @@ export interface InstructionsWarning {
   code: 'claude_md_hides_agents_md';
   /** Repository-relative POSIX path. */
   path: string;
+  /**
+   * Repository-relative `AGENTS.md` paths whose symlink chain reaches `path`.
+   * When non-empty, removing `path` would break them: replace each link with
+   * the file's content first. Always present, possibly empty.
+   */
+  linkedBy: string[];
   message: string;
 }
 
@@ -204,7 +210,9 @@ export interface InstructionsValidateCommandDependencies {
    * Every `CLAUDE.md` and `CLAUDE.local.md` in the repository (absolute
    * paths), from a read-only walk that ignores the mutation exclusions.
    */
-  findLeftoverClaudeFiles: (repoRoot: string) => Promise<string[]>;
+  findLeftoverClaudeFiles: (
+    repoRoot: string,
+  ) => Promise<Array<{ path: string; linkedBy: string[] }>>;
   /**
    * The single exclusion path both commands resolve through. Sync inherits it
    * from this interface rather than resolving its own, so validate can never

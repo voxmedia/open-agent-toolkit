@@ -26,6 +26,7 @@ import {
   resolveInstructionPointerExcludes,
   resolveInstructionSyncStrategy,
   findLeftoverClaudeFiles,
+  findLinksThrough,
   inspectManagedShim,
   buildLeftoverClaudeWarnings,
   scanInstructionFiles,
@@ -306,6 +307,7 @@ async function applySyncActions(
   entries: InstructionEntry[],
   dependencies: InstructionsSyncCommandDependencies,
   strategy: InstructionSyncStrategy,
+  repoRoot: string,
 ): Promise<InstructionActionRecord[]> {
   const appliedActions: InstructionActionRecord[] = [];
   const entriesByTarget = new Map<string, InstructionEntry>();
@@ -359,6 +361,34 @@ async function applySyncActions(
               planned,
               dependencies,
             );
+      // Also re-check, just as late, that no scanned instruction file has
+      // become a link through this CLAUDE.md: deleting it would dangle it.
+      const linkers =
+        changed === null
+          ? await findLinksThrough(
+              action.target,
+              entries.flatMap((candidate) =>
+                candidate.agentsPath === null
+                  ? [candidate.claudePath]
+                  : [candidate.agentsPath, candidate.claudePath],
+              ),
+              dependencies,
+            )
+          : [];
+      if (linkers.length > 0) {
+        const linked = linkers
+          .map((linker) => relative(repoRoot, linker).replaceAll('\\', '/'))
+          .join(', ');
+        appliedActions.push({
+          type: 'skip',
+          target: action.target,
+          reason: isStray
+            ? `CLAUDE.md kept after adoption into AGENTS.md (${linked} now link to it)`
+            : `CLAUDE.md changed since planning (${linked} now link to it); kept`,
+          result: 'skipped',
+        });
+        continue;
+      }
       if (changed !== null) {
         appliedActions.push({
           type: 'skip',
@@ -630,6 +660,7 @@ export function createInstructionsSyncCommand(
                 entries,
                 dependencies,
                 strategy,
+                repoRoot,
               );
 
           // Read-only and repository-wide, independently of the mutation
@@ -644,7 +675,7 @@ export function createInstructionsSyncCommand(
           const leftoverClaudeFiles =
             strategy === 'none'
               ? (await dependencies.findLeftoverClaudeFiles(repoRoot)).filter(
-                  (path) => !dryRun || !plannedRemovals.has(path),
+                  (leftover) => !dryRun || !plannedRemovals.has(leftover.path),
                 )
               : [];
 
