@@ -902,7 +902,11 @@ the keys were renamed), and refresh the Final Summary and summary.md.
   suppressed for `wouldRemove` while blocked; L1 wording; L2 docs. Failing
   first recorded in the commit body (vitest 2 failed, oat-doctor 2 failed).
   Removal set unchanged (probes keep every shim). `pnpm check` 0/11 cached,
-  instructions+sync 226/226, oat-doctor 11/11.
+  instructions+sync 226/226, oat-doctor 11/11.- Gate run `b282ca69` (`codex-6-sol-xhigh`) at `f4599bec3`: the reviewer wrote
+  `reviews/archived/p-rev1-review-2026-09-28T160943Z.md` (0 findings) but never
+  ran the branch-local `gate route` step, so no route receipt existed and the
+  gate failed closed (`review_failed`, `unexpected_post_selection_failure`).
+  Not accepted as gate evidence; the gate reruns once.
 
 ## Implementation Log
 
