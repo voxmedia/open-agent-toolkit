@@ -20,6 +20,7 @@ export type AgentsGuidanceAction =
   | 'not-requested'
   | 'create'
   | 'appended'
+  | 'skipped'
   | 'no-change'
   | 'manual-required'
   | 'blocked';
@@ -76,6 +77,10 @@ export function reportProjectGuidancePlan(
   plan: AgentsGuidancePlan,
 ): void {
   const message = `Project guidance: ${plan.action} — ${plan.reason}`;
+  if (plan.action === 'skipped') {
+    logger.warn(message);
+    return;
+  }
   if (!isProjectGuidanceIncomplete(plan)) {
     logger.info(message);
     return;

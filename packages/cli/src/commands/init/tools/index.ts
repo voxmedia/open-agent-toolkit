@@ -1030,6 +1030,18 @@ async function planAndApplyProjectGuidanceAfterInstall(
       assetsRoot,
       dependencies,
     );
+    if (realized.packs.length === 0) {
+      // An empty block would be a stale placeholder that turns the first real
+      // pack install into a manual patch, so write nothing.
+      return {
+        ...initialPlan,
+        repoRoot,
+        target: join(repoRoot, 'AGENTS.md'),
+        action: 'skipped',
+        reason:
+          'No OAT tool pack is installed, so there is no OAT tools guidance to write; AGENTS.md was left unchanged. Run `oat tools install <pack> --project-guidance` or `oat init --setup --project-guidance` to install packs with guidance.',
+      };
+    }
     const completePlan = await dependencies.planProjectGuidance({
       repoRoot,
       packs: realized.packs,

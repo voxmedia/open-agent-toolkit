@@ -252,14 +252,17 @@ Tool-pack setup separates three decisions that do not imply one another:
    can write it. The `workflows` pack also offers guidance without the flag;
    other pack commands plan it only when the flag is given. `oat init` without
    `--setup` applies an explicit `--project-guidance` for the packs already
-   installed, because guided setup is not there to do it. The
+   installed, because guided setup is not there to do it; with no pack
+   installed it writes nothing, reports `skipped` with a warning, and exits 0. The
    interactive prompt defaults to decline. Non-interactive runs perform no
    guidance write unless `--project-guidance` is present and report the exact
    opt-in command instead. When `AGENTS.md` already exists or is a contained
    symlink to a file inside the repository, accepted guidance appends an
    absent `OAT tools` section with one append-only write (reported as
    `appended`, exit 0) that never truncates, renames, or rewrites existing
-   bytes. A matching section is a no-op. A section that is present but
+   bytes. A file with more than one hard link is never appended to; it gets
+   the manual patch instead, as does a file OAT cannot write (the patch names
+   the cause). A matching section is a no-op. A section that is present but
    differs, or a legacy `OAT workflows` block that must be removed, gets zero
    writes and the same repository-relative, copy-pasteable managed block on
    every run, with a non-zero exit. The block describes the complete realized

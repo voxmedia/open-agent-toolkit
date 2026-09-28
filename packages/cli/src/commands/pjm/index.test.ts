@@ -322,7 +322,7 @@ describe('oat pjm', () => {
     );
   });
 
-  it('appends absent PJM blocks and prints no manual patch', async () => {
+  it('appends the absent PJM block and patches only the different decisions block', async () => {
     const root = await createWorkspace();
     tempDirs.push(root);
     const existing = [

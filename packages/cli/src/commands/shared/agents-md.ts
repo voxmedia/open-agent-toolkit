@@ -55,6 +55,8 @@ interface AgentsMdPlan {
   kind: 'missing' | 'file' | 'symlink';
   agentsIdentity?: FileIdentity;
   targetIdentity?: FileIdentity;
+  /** Hard-link count of the planned target; above 1 never takes the append. */
+  targetLinkCount?: number;
   linkText?: string;
 }
 
@@ -246,6 +248,7 @@ async function planAgentsMd(
       kind: 'file',
       agentsIdentity: identityOf(agentsStat),
       targetIdentity: identityOf(agentsStat),
+      targetLinkCount: Number(agentsStat.nlink),
     };
   }
 
@@ -298,6 +301,7 @@ async function planAgentsMd(
     kind: 'symlink',
     agentsIdentity: identityOf(agentsStat),
     targetIdentity: identityOf(targetStat),
+    targetLinkCount: Number(targetStat.nlink),
     linkText,
   };
 }
@@ -377,7 +381,7 @@ function safeReason(error: unknown): string {
     return 'AGENTS.md guidance could not be planned safely.';
   }
   if (
-    /^(Repository root|Repository-root AGENTS\.md|Repository or AGENTS\.md|AGENTS\.md section|AGENTS\.md managed sections|AGENTS\.md content)/.test(
+    /^(Repository root|Repository-root AGENTS\.md|Repository or AGENTS\.md|AGENTS\.md section|AGENTS\.md managed sections|AGENTS\.md content|AGENTS\.md append)/.test(
       error.message,
     )
   ) {
@@ -435,6 +439,7 @@ function createManualPatch(
   plan: AgentsMdPlan,
   managedBlocks: readonly string[],
   legacyKeys: readonly string[],
+  appendRefusal?: string,
 ): AgentsMdManualPatch {
   const target = targetIdentifier(plan);
   return {
@@ -442,6 +447,11 @@ function createManualPatch(
     managedBlock: managedBlocks.join('\n\n'),
     legacyBlockAction: legacyKeys.length > 0 ? 'remove-manually' : 'preserve',
     instructions: [
+      ...(appendRefusal
+        ? [
+            `OAT did not append to ${target}: ${appendRefusal}. Nothing was written.`,
+          ]
+        : []),
       `Open ${target}.`,
       'Replace each matching OAT managed block, or append each absent block, exactly as shown.',
       ...(legacyKeys.length > 0
@@ -476,10 +486,45 @@ async function createMissingFile(
 /**
  * Open flags for the append-only write. A write access mode is required:
  * `O_APPEND | O_NOFOLLOW` alone opens read-only and the write fails with
- * `EBADF`. `O_NOFOLLOW` refuses a symlink swapped in at the final component.
+ * `EBADF`. `O_NOFOLLOW` refuses a symlink swapped in at the final component,
+ * and `O_NONBLOCK` makes a FIFO swapped in fail fast (`ENXIO`) instead of
+ * hanging; it has no effect on regular-file writes.
  */
 export const AGENTS_MD_APPEND_FLAGS =
-  constants.O_WRONLY | constants.O_APPEND | constants.O_NOFOLLOW;
+  constants.O_WRONLY |
+  constants.O_APPEND |
+  constants.O_NOFOLLOW |
+  constants.O_NONBLOCK;
+
+const HARD_LINK_REFUSAL =
+  'the file has more than one hard link, so an append could change another path';
+
+type AppendOutcome =
+  | { kind: 'appended' }
+  /** Zero bytes written; fall back to the manual patch with this cause. */
+  | { kind: 'refused'; cause: string }
+  | { kind: 'blocked'; reason: string };
+
+function describeErrorCode(error: unknown): string {
+  switch (errorCode(error)) {
+    case 'EACCES':
+    case 'EPERM':
+      return 'permission denied';
+    case 'EROFS':
+      return 'read-only file system';
+    case 'ENOSPC':
+      return 'no space left on device';
+    case 'EDQUOT':
+      return 'disk quota exceeded';
+    case undefined:
+      return 'unexpected error';
+    default:
+      return `error ${errorCode(error)}`;
+  }
+}
+
+const IDENTITY_CHANGED =
+  'Repository or AGENTS.md identity changed during planning.';
 
 /**
  * Appends absent managed blocks to an existing, already-approved target.
@@ -487,43 +532,79 @@ export const AGENTS_MD_APPEND_FLAGS =
  * The opened handle's device/inode must equal the planned target identity, so
  * a target swapped in after planning (for example a hard link to a file
  * outside the repository renamed over AGENTS.md) is refused with zero bytes
- * written. The payload always starts with one newline, so the first marker
- * starts its own line however the file (or a concurrent writer) ended, and
- * `O_APPEND` places it after every byte already in the file.
+ * written. A handle with more than one hard link is refused the same way, and
+ * a non-regular file is blocked. The payload always starts with one newline,
+ * so the first marker starts its own line however the file (or a concurrent
+ * writer) ended, and `O_APPEND` places it after every byte already there.
  */
 async function appendAbsentSections(
   plan: AgentsMdPlan,
   blocks: readonly string[],
   fileSystem: AgentsMdFileSystem,
-): Promise<'appended' | 'blocked'> {
+): Promise<AppendOutcome> {
   let handle: Awaited<ReturnType<typeof open>>;
   try {
     handle = await fileSystem.open(plan.targetPath, AGENTS_MD_APPEND_FLAGS);
-  } catch {
-    return 'blocked';
+  } catch (error) {
+    const code = errorCode(error);
+    if (code === 'ELOOP' || code === 'ENOENT') {
+      return { kind: 'blocked', reason: IDENTITY_CHANGED };
+    }
+    if (code === 'ENXIO') {
+      return {
+        kind: 'blocked',
+        reason: 'AGENTS.md append target is not a regular file.',
+      };
+    }
+    return { kind: 'refused', cause: describeErrorCode(error) };
   }
+
+  let outcome: AppendOutcome;
+  let offset = 0;
+  const payload = Buffer.from(`\n${blocks.join('\n\n')}\n`, 'utf8');
   try {
     const opened = await handle.stat();
-    if (!opened.isFile() || !hasIdentity(opened, plan.targetIdentity)) {
-      return 'blocked';
+    if (!opened.isFile()) {
+      outcome = {
+        kind: 'blocked',
+        reason: 'AGENTS.md append target is not a regular file.',
+      };
+    } else if (!hasIdentity(opened, plan.targetIdentity)) {
+      outcome = { kind: 'blocked', reason: IDENTITY_CHANGED };
+    } else if (Number(opened.nlink) !== 1) {
+      outcome = { kind: 'refused', cause: HARD_LINK_REFUSAL };
+    } else {
+      while (offset < payload.length) {
+        const { bytesWritten } = await handle.write(
+          payload,
+          offset,
+          payload.length - offset,
+        );
+        if (bytesWritten <= 0) {
+          throw Object.assign(new Error('Append wrote no bytes.'), {
+            code: 'EIO',
+          });
+        }
+        offset += bytesWritten;
+      }
+      outcome = { kind: 'appended' };
     }
-    const payload = Buffer.from(`\n${blocks.join('\n\n')}\n`, 'utf8');
-    let offset = 0;
-    while (offset < payload.length) {
-      const { bytesWritten } = await handle.write(
-        payload,
-        offset,
-        payload.length - offset,
-      );
-      if (bytesWritten <= 0) return 'blocked';
-      offset += bytesWritten;
-    }
-    return 'appended';
-  } catch {
-    return 'blocked';
-  } finally {
-    await handle.close();
+  } catch (error) {
+    outcome =
+      offset === 0
+        ? { kind: 'refused', cause: describeErrorCode(error) }
+        : {
+            kind: 'blocked',
+            reason: `AGENTS.md append stopped after writing part of the managed block (${describeErrorCode(error)}); the file may now end with a partial OAT block. Remove the partial block by hand, then rerun.`,
+          };
   }
+  try {
+    await handle.close();
+  } catch {
+    // Every byte is already written (or the outcome is already a refusal); a
+    // close error does not change what the file contains.
+  }
+  return outcome;
 }
 
 async function upsertSectionsInternal(
@@ -608,17 +689,42 @@ async function upsertSectionsInternal(
           range !== undefined &&
           content.slice(range.start, range.end) !== block,
       );
+      let appendRefusal: string | undefined;
       if (absent.length > 0) {
-        const appended = await appendAbsentSections(
-          plan,
-          absent.map(({ block }) => block),
-          fileSystem,
-        );
-        if (appended === 'blocked') {
-          throw new Error(
-            'Repository or AGENTS.md identity changed during planning.',
+        if (plan.targetLinkCount !== 1) {
+          appendRefusal = HARD_LINK_REFUSAL;
+        } else {
+          const appended = await appendAbsentSections(
+            plan,
+            absent.map(({ block }) => block),
+            fileSystem,
           );
+          if (appended.kind === 'blocked') throw new Error(appended.reason);
+          if (appended.kind === 'refused') appendRefusal = appended.cause;
         }
+      }
+      if (appendRefusal !== undefined) {
+        // Zero bytes were written: every absent or different block goes on
+        // one manual patch that names why OAT did not append.
+        const refusalPatch = createManualPatch(
+          plan,
+          managed
+            .filter(
+              ({ block, range }) =>
+                !range || content.slice(range.start, range.end) !== block,
+            )
+            .map(({ block }) => block),
+          [],
+          appendRefusal,
+        );
+        return Object.fromEntries(
+          managed.map(({ key, range }) => [
+            key,
+            range && !different.some((entry) => entry.key === key)
+              ? { action: 'no-change' }
+              : { action: 'manual-required', manualPatch: refusalPatch },
+          ]),
+        );
       }
       const differentPatch =
         different.length > 0

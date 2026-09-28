@@ -513,6 +513,62 @@ describe('e2e workflow', () => {
     },
   );
 
+  it('skips init --project-guidance without packs, then appends on the first pack install', async () => {
+    const root = await createWorkspace();
+    const userRoot = await mkdtemp(
+      join(tmpdir(), 'oat-cli-e2e-zero-pack-home-'),
+    );
+    tempDirs.push(root, userRoot);
+    const existing = '# Mine\n';
+    await writeFile(join(root, 'AGENTS.md'), existing, 'utf8');
+
+    const previousHome = process.env.HOME;
+    process.env.HOME = userRoot;
+    try {
+      // Real applier, no mocks: no OAT pack is installed yet.
+      const init = await runCli(root, [
+        'init',
+        '--scope',
+        'project',
+        '--project-guidance',
+        '--no-hook',
+      ]);
+      const initOutput = `${init.stdout}\n${init.stderr}`;
+      expect(init.exitCode).toBe(0);
+      expect(initOutput).toContain('Project guidance: skipped');
+      expect(initOutput).toContain('No OAT tool pack is installed');
+      expect(initOutput).toContain(
+        'oat tools install <pack> --project-guidance',
+      );
+      await expect(readFile(join(root, 'AGENTS.md'), 'utf8')).resolves.toBe(
+        existing,
+      );
+
+      const install = await runCli(root, [
+        'tools',
+        'install',
+        'workflows',
+        '--scope',
+        'project',
+        '--project-guidance',
+        '--no-sync',
+      ]);
+      expect(install.exitCode).toBe(0);
+      expect(`${install.stdout}\n${install.stderr}`).toContain(
+        'Project guidance: appended',
+      );
+      const guidance = await readFile(join(root, 'AGENTS.md'), 'utf8');
+      expect(guidance.startsWith(`${existing}\n<!-- OAT tools -->\n`)).toBe(
+        true,
+      );
+      expect(guidance.match(/<!-- OAT tools -->/g)).toHaveLength(1);
+      expect(guidance).toContain('**workflows**');
+    } finally {
+      if (previousHome === undefined) delete process.env.HOME;
+      else process.env.HOME = previousHome;
+    }
+  });
+
   it('creates missing guidance and recognizes exact content through a contained symlink', async () => {
     const root = await createWorkspace();
     const userRoot = await mkdtemp(

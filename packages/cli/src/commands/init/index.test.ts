@@ -2256,6 +2256,32 @@ config_file = "agents/reviewer.toml"
       expect(process.exitCode).toBe(1);
     });
 
+    it('warns and exits 0 when direct guidance is skipped because no pack is installed', async () => {
+      const { capture, command, applyProjectGuidance } = createHarness({
+        interactive: false,
+        hookInstalled: true,
+        oatDirExists: true,
+      });
+      applyProjectGuidance.mockResolvedValueOnce({
+        repoRoot: '/tmp/workspace',
+        target: '/tmp/workspace/AGENTS.md',
+        action: 'skipped',
+        sectionKey: 'tools',
+        body: '## Tool Packs',
+        legacySectionAction: 'remove',
+        reason: 'No OAT tool pack is installed.',
+        choice: { choice: 'accepted', source: 'flag' },
+      });
+
+      await runInitCommand(command, {
+        globalArgs: ['--scope', 'project'],
+        commandArgs: ['--project-guidance'],
+      });
+
+      expect(capture.warn.join('\n')).toContain('Project guidance: skipped');
+      expect(process.exitCode).toBe(0);
+    });
+
     it('applies --project-guidance after a declined fresh-init setup prompt', async () => {
       const { command, runGuidedSetup, applyProjectGuidance } = createHarness({
         interactive: true,

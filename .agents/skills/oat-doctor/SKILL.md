@@ -125,7 +125,7 @@ Each finding is one line with an **area**, a **severity**, a one-line **summary*
 
 - An entry with status `missing` or `content_mismatch` (the entry literal; the summary counter is spelled `contentMismatch`) → `error`; fix `oat instructions sync` (`--force` for a content mismatch the person confirms is stale).
 - An entry with status `stray` → `warning`; fix `oat instructions sync` after the person decides whether the stray file should exist.
-- A CLI-written heading absent while its capability is present → `warning`: no `## Tool Packs` while any pack is installed at project scope (fix `oat tools guidance`, which prints the managed `OAT tools` block for the installed packs without installing, upgrading, or writing anything, for the person to add to `AGENTS.md`); no `### Project Management` or `### Decision Records` while PJM adoption is `declared` (fix `oat pjm init`, which rewrites the guidance); no `## Documentation` while a docs surface exists (fix: `oat-docs-bootstrap`).
+- A CLI-written heading absent while its capability is present → `warning`: no `## Tool Packs` while any pack is installed at project scope (fix `oat tools guidance`, which prints the managed `OAT tools` block for the installed packs without installing, upgrading, or writing anything, for the person to add to `AGENTS.md`); no `### Project Management` or `### Decision Records` while PJM adoption is `declared` (fix `oat pjm init`, which appends the absent guidance blocks; a block that exists but differs gets a printed manual patch); no `## Documentation` while a docs surface exists (fix: `oat-docs-bootstrap`).
 - Content quality beyond presence is not judged here; route to `oat-agent-instructions-analyze`.
 
 **Docs**
