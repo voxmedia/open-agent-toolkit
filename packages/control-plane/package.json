@@ -33,6 +33,7 @@
     "build": "tsc && tsc-alias",
     "clean": "rm -rf dist tsconfig.tsbuildinfo",
     "dev": "tsc --watch",
+    "check": "oxlint . && oxlint --type-aware -A all -D typescript/no-floating-promises -D typescript/no-misused-promises --ignore-pattern '**/*.test.ts' --ignore-pattern '**/*.spec.ts' . && oxfmt --check .",
     "lint": "oxlint . && oxlint --type-aware -A all -D typescript/no-floating-promises -D typescript/no-misused-promises --ignore-pattern '**/*.test.ts' --ignore-pattern '**/*.spec.ts' .",
     "format": "oxfmt --check .",
     "format:fix": "oxfmt .",

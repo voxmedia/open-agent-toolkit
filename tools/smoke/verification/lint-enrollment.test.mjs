@@ -20,6 +20,16 @@ test('root lint commands cover tools/smoke and skill scripts and reject violatio
     packageManifest.scripts['lint:fix'],
     'turbo run lint:fix && pnpm exec oxlint --fix tools/smoke .agents/skills',
   );
+  // `turbo run lint` reaches packages/control-plane only while it keeps a
+  // `lint` script; deleting it would silently drop that package's oxlint.
+  const controlPlaneManifest = JSON.parse(
+    await readFile(
+      resolve(repositoryRoot, 'packages/control-plane/package.json'),
+      'utf8',
+    ),
+  );
+  assert.equal(typeof controlPlaneManifest.scripts?.lint, 'string');
+  assert.match(controlPlaneManifest.scripts.lint, /\boxlint\b/u);
 
   const seedPath = resolve(
     repositoryRoot,
