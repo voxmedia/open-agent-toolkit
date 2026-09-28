@@ -72,6 +72,10 @@ target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:2,low:
 
 bw2-p03-outcome p03 pass after 1 recovery, 1 review fix round, 1 gate sweep fix; gate codex-6-sol-xhigh ok; see implementation.md
 
+### 2026-09-28 · structural · oat gate review · p04
+
+target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:1,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-2/reviews/p04-review-2026-09-28T022315Z.md run=43f7cea9-d98d-4f4b-90e7-89537f0df389
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
