@@ -1,6 +1,6 @@
 ---
-oat_current_task: prev1-t01
-oat_last_commit: 2e28e2994
+oat_current_task: null
+oat_last_commit: 512493326
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -26,16 +26,7 @@ oat_phase_recovery_policy:
       pending_attempt: null
     p-rev1:
       used_attempts: 1
-      pending_attempt:
-        attempt: 1
-        event_id: bw2-prev1-rec-1
-        original_request_id: bw2-prev1-impl-1
-        original_task_id: prev1-t01
-        original_commit: 54e8fa4a1
-        discovered_by: 'pre-commit lint-staged oxlint --fix (pnpm exec oxlint packages/cli/src/config/oat-config.test.ts)'
-        dispatch_target: oat-phase-implementer-claude-claude-opus-5-5-high
-        reservation_head: 54e8fa4a1
-        status: completed
+      pending_attempt: null
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
 #   phase_attempt_limits: {} # optional pNN: 0-20 overrides; prior usage never resets
@@ -105,7 +96,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/332' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-27T14:29:05.687Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-28T13:21:52Z'
+oat_project_state_updated: '2026-09-28T15:50:52Z'
 oat_generated: false
 oat_project_recap:
   decision: generate
@@ -123,7 +114,7 @@ oat_post_implement_sequence:
   post_approval_completed: []
   failure: null
 oat_implement_exit_gate:
-  status: allowed
+  status: stale
   resolution: configured
   disposition: passed
   config_fingerprint: 'sha256:76eaea5d632f8612107755e2770d20d1331e61ca9d7d4859dfd20a64932869f2'
@@ -157,7 +148,7 @@ oat_implement_exit_gate:
   receive_eligible: true
   receive_completed: true
   failure: null
-  updated_at: '2026-09-28T12:21:04Z'
+  updated_at: '2026-09-28T15:50:52Z'
 ---
 
 # Project State: backlog-wave-2

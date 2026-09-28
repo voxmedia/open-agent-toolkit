@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-27
-oat_current_task_id: prev1-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -31,9 +31,9 @@ oat_generated: false
 | Phase 3      | complete    | 5     | 5/5       |
 | Phase 4      | complete    | 7     | 7/7       |
 | Phase 5      | complete    | 12    | 12/12     |
-| Phase p-rev1 | in_progress | 7     | 0/7       |
+| Phase p-rev1 | in_progress | 7     | 7/7       |
 
-**Total:** 40/47 tasks completed
+**Total:** 47/47 tasks completed
 
 ---
 
@@ -349,38 +349,38 @@ oat_generated: false
 
 ### Task prev1-t01: (revision) Rename the CLAUDE.md shim config keys under instructions.claude
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 54e8fa4a1 (+ recovery 0f53a5cea)
 
 ### Task prev1-t02: (revision) Remove nothing when any CLAUDE.md has real content
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 789be2615
 
 ### Task prev1-t03: (revision) Pin that rules and provider sync ignore the shim setting
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 8f5d9589c
 
 ### Task prev1-t04: (revision) Exclude project and repository records from exit-gate freshness
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** ae6b09d98
 
 ### Task prev1-t05: (revision) Take recon-worker out of oat-reviewer
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 67a46703d
 
 ### Task prev1-t06: (revision) Restore the recon skill to main
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 0da130fdb
 
 ### Task prev1-t07: (revision) Correct the recon records
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 512493326
 
 ---
 
@@ -863,6 +863,26 @@ oat_generated: false
 review and exit-gate generation, update PR #332 (title, Behavior change
 callout with the new key names and the all-or-nothing rule, release note that
 the keys were renamed), and refresh the Final Summary and summary.md.
+
+### Phase p-rev1 dispatch
+
+- Request `bw2-prev1-impl-1` (`oat-phase-implementer-claude-claude-opus-5-5-high`,
+  hard-reasoning): interrupted when the previous session ended after
+  prev1-t03 with prev1-t04 uncommitted; resumed on the same handle (the agent
+  owned the in-progress edits), returned `DONE_WITH_CONCERNS`. Commits
+  `54e8fa4a1`, recovery `0f53a5cea`, `789be2615`, `8f5d9589c`, `ae6b09d98`,
+  `67a46703d`, `0da130fdb`, `512493326`. Full Definition of Done at
+  `512493326` all exit 0 (tests 0/10 cached; test:skills 660/660).
+  `Dispatch: scope=p-rev1 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
+- Recovery event `bw2-prev1-rec-1` (prev1-t01, lint, `no-useless-concat` in a
+  test file) recovered in `0f53a5cea`, attempt 1/10; root validated and
+  cleared the `completed` marker.
+- Verified by root: `git diff origin/main -- .agents/skills/recon` is empty;
+  `oat-reviewer.md` no longer names `recon-worker` or `validate-assignment`;
+  the old key names survive only in historical explainer-kit test fixtures.
+  `summary.md` and the recap are stale and are regenerated at closeout.
+- Exit gate generation 1 marked `stale` (substantive changes after the
+  allowed result); a new final review and gate generation run at closeout.
 
 ## Implementation Log
 
