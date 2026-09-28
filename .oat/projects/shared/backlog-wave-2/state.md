@@ -130,7 +130,7 @@ oat_implement_exit_gate:
   receive_archived_artifact: '.oat/projects/shared/backlog-wave-2/reviews/archived/final-review-2026-09-28T113721Z.md'
   receive_event_identity: 'final | code | final-review-2026-09-28T113721Z.md'
   receive_pre_head: 6b7e9ead5ffaf3a945d95ef60c4e4b2a79a28da2
-  receive_commit: pending-this-commit
+  receive_commit: 75b6111a5
   receive_eligible: true
   receive_completed: true
   failure: 'blocked: H1 archive rewriter writes through a hard link to a file outside .oat/repo; remediation p05-t12 (attempt 1 of 2 consumed)'
