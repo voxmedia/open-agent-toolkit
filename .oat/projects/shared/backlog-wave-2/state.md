@@ -130,7 +130,7 @@ oat_implement_exit_gate:
   receive_archived_artifact: '.oat/projects/shared/backlog-wave-2/reviews/archived/final-review-2026-09-28T114805Z.md'
   receive_event_identity: 'final | code | final-review-2026-09-28T114805Z.md'
   receive_pre_head: d9bc759bb6a35a5746101df63d39610780613390
-  receive_commit: pending-this-commit
+  receive_commit: 3e6f9cc2d
   receive_eligible: true
   receive_completed: true
   failure: null
