@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-27
-oat_current_task_id: p04-t01
+oat_current_task_id: p04-t03
 oat_generated: false
 ---
 
@@ -29,10 +29,10 @@ oat_generated: false
 | Phase 1 | complete    | 8     | 8/8       |
 | Phase 2 | complete    | 8     | 8/8       |
 | Phase 3 | complete    | 5     | 5/5       |
-| Phase 4 | in_progress | 2     | 2/2       |
+| Phase 4 | in_progress | 3     | 2/3       |
 | Phase 5 | pending     | 6     | 0/6       |
 
-**Total:** 23/29 tasks completed
+**Total:** 23/30 tasks completed
 
 ---
 
@@ -214,6 +214,13 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** e093b8fbc
+
+---
+
+### Task p04-t03: (review) Close p04 review findings M1, L1-L7
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -468,6 +475,11 @@ oat_generated: false
   `worker-contract.md`) reports every invalid field; truncation control turned
   two tests red; reviewer role resolves recon through the sibling-skill probe;
   recon 1.1.6; recon-worker unchanged.
+
+- Request `bw2-p04-review-1` (reconnaissance not-attempted):
+  `reviews/archived/p04-review-2026-09-28T021519Z.md` passed the phase threshold (0 Critical/High), 1 Medium
+  (array not enforced as one homogeneous wave), 7 Low; all converted to
+  `p04-t03`.
 
 ## Implementation Log
 

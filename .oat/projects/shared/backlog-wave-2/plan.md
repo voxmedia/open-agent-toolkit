@@ -1266,6 +1266,42 @@ commit the regenerated views of the edited roles in this task, and confirm
 
 ---
 
+### Task p04-t03: (review) Close p04 review findings M1, L1-L7
+
+Source: `reviews/archived/p04-review-2026-09-28T021519Z.md` (auto review,
+passing: 0 Critical/High, 1 Medium, 7 Low).
+
+**Step 1: Fix (failing-first for M1)**
+
+- M1: an array of envelopes validates as one homogeneous wave (same run, wave,
+  wave mode, and task class); flip the test that accepts a mixed array.
+- L1: reject `writePath: "."` (and other non-file paths).
+- L2: detect file-editing tools case-insensitively and across providers
+  (`write`, `apply_patch`, and so on).
+- L3: report a missing envelope file distinctly from invalid JSON.
+- L4: list `taskClass` and `escalation` among the worker contract's required
+  fields.
+- L5: name all scanned roots in the fence scanner's failure message.
+- L6: remove the empty leftover code block in `oat-reviewer.md` (~595-597).
+- L7: have the reviewer pass the envelope on stdin instead of writing a file
+  (structured-output mode must not write).
+
+No further bumps (reviewer 1.2.10 and recon 1.1.6 already in this PR);
+regenerate the reviewer's provider views with `sync --scope project` if the
+role changes.
+
+**Step 2: Verify**
+
+Run: `node --test .agents/skills/recon/tests/*.test.mjs`,
+`HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation src/commands/init/tools/shared`,
+`pnpm run check:skill-bumps`, `node packages/cli/dist/index.js status --scope project`.
+
+**Step 3: Commit**
+
+`fix(p04-t03): close p04 review findings`
+
+---
+
 ## Phase 5: CI and backlog tooling, release fan-in
 
 ### Task p05-t01: Give packages/control-plane a check script
@@ -1504,7 +1540,7 @@ title itself:
 | p02    | code     | passed          | 2026-09-28 | reviews/archived/p02-review-2026-09-28T011221Z.md           | c5886c1bf65cd776eba7051cd22ae5cb52ba352b | auto       | -                 |
 | p02    | code     | passed          | 2026-09-28 | reviews/archived/p02-review-2026-09-28T013003Z.md           | 01055b7963a8e6931762a0780ffed5ee46168f19 | gate       | codex-6-sol-xhigh |
 | p03    | code     | fixes_completed | 2026-09-28 | reviews/archived/p03-review-2026-09-28T014814Z.md           | bfc92754bd4ed05afd5a2f7da173edad7e82fccb | auto       | -                 |
-| p04    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| p04    | code     | fixes_added     | 2026-09-28 | reviews/archived/p04-review-2026-09-28T021519Z.md           | a5ebb0813cf786a9fb06e04f87aaacd7566bbdfe | auto       | -                 |
 | p05    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | final  | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
@@ -1564,10 +1600,10 @@ in `implementation.md`). Phase gates and the final review still run.
 - Phase 1: 8 tasks - AGENTS.md guidance
 - Phase 2: 8 tasks - CLAUDE.md shims
 - Phase 3: 5 tasks - Lifecycle skill routing and bookkeeping
-- Phase 4: 2 tasks - Agent roles and recon validation
+- Phase 4: 3 tasks - Agent roles and recon validation
 - Phase 5: 6 tasks - CI and backlog tooling, release fan-in
 
-**Total: 29 tasks**
+**Total: 30 tasks**
 
 Ready for code review and merge.
 
