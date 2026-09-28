@@ -1068,13 +1068,15 @@ describe('post-implementation sequence contracts', () => {
       );
     });
 
-    it('stages the project log conditionally in all three bookkeeping blocks', () => {
+    it('stages the project log conditionally in all four bookkeeping blocks', () => {
       const skill = readImplementSkill();
       const staging = skill.match(
         /\[ -f .*project-log\.md.*\] && git add .*project-log\.md/g,
       );
 
-      expect(staging).toHaveLength(3);
+      // Step 7a pre-review, Step 7b post-review, and the two
+      // closeout blocks in completion-and-closeout.md.
+      expect(staging).toHaveLength(4);
       expect(normalizeWhitespace(skill)).toContain(
         'Stage it only when it exists; logging can be disabled.',
       );
@@ -1378,5 +1380,161 @@ describe('post-implementation sequence contracts', () => {
 
       expect(() => assertSweepContract(contradicted)).toThrow();
     });
+  });
+});
+
+// BL-260829-order-phase-bookkeeping-before: the per-phase reviewer must never
+// be handed a head whose task ledger is stale by construction, and moving that
+// bookkeeping earlier must not dirty the tree a bounded fix child requires.
+describe('phase bookkeeping ordering around per-phase review', () => {
+  function readPhaseExecution(): string {
+    return readFileSync(
+      join(
+        import.meta.dirname,
+        '../../../../../../../.agents/skills/oat-project-implement/references/phase-execution.md',
+      ),
+      'utf8',
+    );
+  }
+
+  const PRE_REVIEW_HEADING = '#### Step 7a: Pre-Review Bookkeeping';
+  const POST_REVIEW_HEADING = '#### Step 7b: Post-Review Bookkeeping';
+
+  function preReviewHalf(route: string): string {
+    return requiredSlice(route, PRE_REVIEW_HEADING, POST_REVIEW_HEADING);
+  }
+
+  function postReviewHalf(route: string): string {
+    return requiredSlice(
+      route,
+      POST_REVIEW_HEADING,
+      '### Step 8: Check Plan Phase Completion',
+    );
+  }
+
+  function perPhaseReview(route: string): string {
+    return requiredSlice(
+      route,
+      '### Per-Phase Review',
+      '#### Bounded Fix and Re-Review Loop',
+    );
+  }
+
+  it('commits the task ledger before the per-phase reviewer is dispatched', () => {
+    const route = readPhaseExecution();
+    const review = normalizeWhitespace(perPhaseReview(route));
+    const dispatchIndex = review.indexOf(
+      'oat project dispatch-ceiling resolve',
+    );
+    const orderingIndex = review.indexOf(
+      'commit Step 7a pre-review bookkeeping before resolving or dispatching the reviewer',
+    );
+
+    expect(orderingIndex, 'review names the pre-review commit').toBeGreaterThan(
+      -1,
+    );
+    expect(
+      dispatchIndex,
+      'the ordering rule precedes the reviewer dispatch',
+    ).toBeGreaterThan(orderingIndex);
+
+    const pre = normalizeWhitespace(preReviewHalf(route));
+    expect(pre).toContain('`implementation.md` task and phase completion rows');
+    expect(pre).toContain('`state.md` resume pointer');
+    expect(pre).toContain('before Per-Phase Review dispatches the reviewer');
+    // Step 7 still reads as one step with two halves, in review order.
+    expectMarkersInOrder(route, [
+      '### Per-Phase Review',
+      '### Step 7: Artifact Updates After Each Phase (or Group)',
+      PRE_REVIEW_HEADING,
+      POST_REVIEW_HEADING,
+    ]);
+  });
+
+  it('reuses the scope-resolving commit branch, including synced push, in both halves', () => {
+    const route = readPhaseExecution();
+    for (const [name, half] of [
+      ['pre-review', preReviewHalf(route)],
+      ['post-review', postReviewHalf(route)],
+    ] as const) {
+      expect(half, `${name} resolves scope and fails closed`).toContain(
+        'PROJECT_SCOPE=$(oat project scope "{PROJECT_PATH}" --format value) ||',
+      );
+      expect(half, `${name} keeps the synced push path`).toMatch(
+        /if \[ "\$PROJECT_SCOPE" = "synced" \]; then\n\s+oat project push "\{PROJECT_PATH\}"/,
+      );
+      expect(half, `${name} stages the log only when it exists`).toContain(
+        '[ -f {PROJECT_PATH}/project-log.md ] && git add {PROJECT_PATH}/project-log.md',
+      );
+    }
+    expect(preReviewHalf(route)).toContain(
+      'chore(oat): record {pNN} task ledger before review',
+    );
+    expect(postReviewHalf(route)).toContain(
+      'chore(oat): bookkeeping after {pNN} {pass|fail}',
+    );
+  });
+
+  it('writes review-outcome bookkeeping only after the review returns', () => {
+    const route = readPhaseExecution();
+    const pre = preReviewHalf(route);
+    const post = normalizeWhitespace(postReviewHalf(route));
+
+    for (const outcome of [
+      '`fixes_added`',
+      'Orchestration Run',
+      'Reviews Ledger Mutation Contract',
+      'oat project log append',
+    ]) {
+      expect(pre, `pre-review half must not write ${outcome}`).not.toContain(
+        outcome,
+      );
+    }
+    expect(post).toContain('`fixes_added` / `fixes_completed` / `passed`');
+    expect(post).toContain('append an Orchestration Run');
+    expect(post).toContain('Reviews Ledger Mutation Contract');
+  });
+
+  it('names review-outcome bookkeeping as out of scope in the reviewer brief', () => {
+    const review = normalizeWhitespace(perPhaseReview(readPhaseExecution()));
+
+    expect(review).toContain(
+      'The Review Scope names review-outcome bookkeeping as out of scope',
+    );
+    expect(review).toContain(
+      "this review's `## Reviews` row and its disposition",
+    );
+    expect(review).toContain(
+      'their absence at the reviewed head is not a finding',
+    );
+    expect(review).toContain(
+      'The task ledger itself stays in scope and must be current at the reviewed head',
+    );
+  });
+
+  it('keeps the tree clean when a bounded fix child is dispatched', () => {
+    const route = readPhaseExecution();
+    const pre = normalizeWhitespace(preReviewHalf(route));
+
+    expect(pre).toContain(
+      'the pre-review writes are committed before the reviewer is dispatched, so the tree is clean when a bounded fix child is dispatched after the review',
+    );
+    // The deferred review-orchestration append still lands after review.
+    expect(normalizeWhitespace(route)).toContain(
+      'No project-log write happens anywhere between a reviewer returning and a fix child being dispatched.',
+    );
+    expect(normalizeWhitespace(route)).toContain(
+      'appended with the phase-outcome entry at Step 7b',
+    );
+    // The optional external gate sees the same committed ledger.
+    expect(
+      normalizeWhitespace(
+        requiredSlice(
+          route,
+          '### Optional External Phase Review Gate',
+          '#### Reviews Ledger Mutation Contract',
+        ),
+      ),
+    ).toContain('both halves of Step 7 bookkeeping are committed');
   });
 });

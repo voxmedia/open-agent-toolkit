@@ -684,8 +684,10 @@ degradation is forbidden for the invalid run.
 ### Per-Phase Review
 
 The root workflow owns implementation review. After validating the phase
-report, resolve and dispatch exactly one fresh `oat-reviewer` round at the
-configured review ceiling:
+report, commit Step 7a pre-review bookkeeping before resolving or dispatching
+the reviewer, so the reviewed head carries the phase's current task ledger. Then
+resolve and dispatch exactly one fresh `oat-reviewer` round at the configured
+review ceiling:
 
 ```bash
 oat project dispatch-ceiling resolve \
@@ -702,6 +704,17 @@ review payload before launch. Send a self-contained Review Scope with the phase
 commit range, task IDs and boundaries, artifacts, verification evidence,
 configured axes, selection reason, and candidates. Require a timestamped review
 artifact under the project's `reviews/` directory.
+
+The Review Scope names review-outcome bookkeeping as out of scope: this
+review's `## Reviews` row and its disposition, the Orchestration Run entry for
+this review's outcome, the deferred phase-outcome and review-orchestration
+project-log entries, and the ledger's record of any review-fix commit. Step 7b
+writes all of them after the review returns, so their absence at the reviewed
+head is not a finding. The task ledger itself stays in scope and must be
+current at the reviewed head, because Step 7a committed it before dispatch.
+In a parallel group the phase worktree under review does not carry the root
+ledger (step 10 of Parallel Group Execution commits it once after fan-in), so
+that phase's Review Scope also names the task ledger as out of scope.
 
 For a managed capped review, bind the exact provider argument to the actual
 invocation: `providers.codex.dispatchArgs.variant`,
@@ -755,7 +768,9 @@ and workers never write `project-log.md` or append this entry.
 
 No project-log write happens anywhere between a reviewer returning and a fix
 child being dispatched. The deferred orchestration entry is appended with the
-phase-outcome entry at Step 7 and committed by that step's bookkeeping.
+phase-outcome entry at Step 7b and committed by that half's bookkeeping. Step
+7a's commit lands before the reviewer is dispatched, so it cannot dirty that
+window either.
 
 After successful signal and orchestration validation, validate the review
 artifact scope and commit range.
@@ -796,8 +811,9 @@ worktree in Outstanding Items.
 
 ### Optional External Phase Review Gate
 
-After the root-owned per-phase reviewer passes and phase bookkeeping is clean,
-run `oat_phase_review_gate` for selected phases:
+After the root-owned per-phase reviewer passes and both halves of Step 7
+bookkeeping are committed, run `oat_phase_review_gate` for selected phases. The
+gate reviews the same committed task ledger the per-phase reviewer saw:
 
 ```bash
 oat --json gate review \
@@ -879,7 +895,55 @@ target-preserving execution and must be recorded.
 
 ### Step 7: Artifact Updates After Each Phase (or Group)
 
-After each phase or parallel group:
+After each phase or parallel group, Step 7 runs in two halves around the
+per-phase review, each with its own commit.
+The split exists so the reviewer never evaluates a head whose task ledger is
+stale by construction, while the tree stays clean for a bounded fix child.
+
+#### Step 7a: Pre-Review Bookkeeping
+
+Run after the phase report validates and before Per-Phase Review dispatches the
+reviewer. Write the phase's task ledger:
+
+- the `implementation.md` task and phase completion rows: each planned task's
+  status and commit, and the phase's completion status and summary;
+- the `state.md` resume pointer (`oat_current_task`, last commit, and
+  timestamp), advanced consistently with `implementation.md` so the two
+  resume pointers never disagree;
+- remove legacy `oat_execution_mode: subagent-driven`; and
+- preserve any configured retry override.
+
+Nothing here depends on the review outcome, which is why it can move ahead of
+the review. Commit it through the same scope-resolving branch as Step 7b,
+including the synced-scope `oat project push` path. Why this keeps the fix-child
+preflight clean: the pre-review writes are committed before the reviewer is
+dispatched, so the tree is clean when a bounded fix child is dispatched after
+the review. The Optional External Phase Review Gate later sees the same
+committed ledger.
+
+Pre-review bookkeeping is mandatory:
+
+```bash
+oat state refresh
+PROJECT_SCOPE=$(oat project scope "{PROJECT_PATH}" --format value) || { echo "oat: cannot resolve project scope for {PROJECT_PATH}; refusing to commit artifacts" >&2; exit 1; }
+# fail closed: never fall back to branch bookkeeping when scope resolution fails
+if [ "$PROJECT_SCOPE" = "synced" ]; then
+  oat project push "{PROJECT_PATH}" --message "chore(oat): record {pNN} task ledger before review" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
+else
+  git add {PROJECT_PATH}/implementation.md {PROJECT_PATH}/state.md {PROJECT_PATH}/plan.md
+  [ -f {PROJECT_PATH}/project-log.md ] && git add {PROJECT_PATH}/project-log.md
+  git commit -m "chore(oat): record {pNN} task ledger before review"
+fi
+```
+
+A parallel group makes this commit once after fan-in, together with Step 7b
+(step 10 of Parallel Group Execution), because its phase worktrees do not carry
+the root ledger.
+
+#### Step 7b: Post-Review Bookkeeping
+
+Run after the phase's terminal review outcome (pass, or retry exhaustion).
+Write the review-outcome bookkeeping that Step 7a leaves out:
 
 - append an Orchestration Run with phase outcomes, task commits, phase/root
   review result, fix iterations, dispatch stamps, selection reasons,
@@ -891,8 +955,10 @@ After each phase or parallel group:
   move an event status backward;
 - apply the Reviews Ledger Mutation Contract above before every disposition or
   archive re-point;
-- update `state.md` current task, last commit, and timestamp;
-- remove legacy `oat_execution_mode: subagent-driven`; and
+- append the deferred phase-outcome and review-orchestration entries through
+  `oat project log append`;
+- update `state.md` last commit and timestamp for any review-fix commit, and
+  its current task when the phase outcome changes it; and
 - preserve any configured retry override.
 
 Bookkeeping is mandatory:

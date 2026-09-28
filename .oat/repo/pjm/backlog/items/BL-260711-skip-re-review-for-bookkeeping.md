@@ -8,7 +8,7 @@ scope_estimate: L
 labels: [reviews, orchestration, gates, efficiency]
 assignee: null
 created: '2026-07-11T15:29:00Z'
-updated: 2026-09-02T23:49:54Z
+updated: 2026-09-28T01:42:28Z
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/233
@@ -89,3 +89,14 @@ dispatch another reviewer solely to confirm that class of fix.
 - Review-provide, review-receive, phase-execution, plan/resume, and final
   closeout documentation encode the same rule and safety boundary so no
   lifecycle path independently reintroduces a bookkeeping-only re-review.
+
+## Relationship to BL-260829-order-phase-bookkeeping-before
+
+`BL-260829-order-phase-bookkeeping-before` shipped first (backlog-wave-2,
+2026-09-27): `oat-project-implement` now commits the phase's task ledger
+(`implementation.md` task and phase completion rows plus the `state.md` resume
+pointer) before dispatching the per-phase reviewer, and the reviewer brief names
+review-outcome bookkeeping as out of scope. That prevents the recurring
+stale-ledger finding at its source, so this item should cover only residual
+bookkeeping-only findings that still reach a reviewer or gate — it no longer
+needs to absorb the per-phase stale-ledger class.

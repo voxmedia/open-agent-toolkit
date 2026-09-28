@@ -120,6 +120,12 @@
     "guard": "project-scope"
   },
   {
+    "file": ".agents/skills/oat-project-implement/references/phase-execution.md",
+    "anchor": "  oat project push \"{PROJECT_PATH}\" --message \"chore(oat): record {pNN} task ledger before review\"",
+    "kind": "write",
+    "guard": "project-scope"
+  },
+  {
     "file": ".agents/skills/oat-project-implement/references/completion-and-closeout.md",
     "anchor": "  oat project push \"$PROJECT_PATH\" --message \"chore(oat): prepare final implementation closeout\"",
     "kind": "write",
