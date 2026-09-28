@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 import {
   PACKET_CONTRACT_SCHEMA_PREFIX,
+  READ_ONLY_TOOLS,
   validateAssignmentFile,
   validateAssignmentValue,
   WORKER_ARTIFACT_KINDS,
@@ -550,4 +551,48 @@ test('matches exclusions case-insensitively and inclusions case-sensitively', as
     ),
     ['INPUT_OVERLAPS_EXCLUSION $.inputs.allowed[1]'],
   );
+});
+
+test('accepts only allowlisted read-only tools as read authority', async () => {
+  const base = await loadFixture('valid-mechanical-recon.json');
+  const withTools = (tools) =>
+    codesAt(
+      validateAssignmentValue({
+        ...base,
+        readSources: { ...base.readSources, tools },
+      }).errors,
+    );
+
+  // Read-only tools across providers, in any case or separator spelling.
+  assert.deepEqual(
+    withTools(['Read', 'grep', 'GLOB', 'WebFetch', 'web-search', 'read_file']),
+    [],
+  );
+
+  // A shell or execution tool can write the filesystem, and an unknown name
+  // gives the worker no verifiable boundary; neither is read authority.
+  assert.deepEqual(
+    withTools(['Bash', 'exec_command', 'run_terminal_cmd', 'NotARealTool']),
+    [
+      'EXECUTION_TOOL $.readSources.tools[0]',
+      'EXECUTION_TOOL $.readSources.tools[1]',
+      'EXECUTION_TOOL $.readSources.tools[2]',
+      'UNKNOWN_TOOL $.readSources.tools[3]',
+    ],
+  );
+});
+
+test('the worker contract lists every allowlisted read-only tool', async () => {
+  const contract = await readFile(
+    new URL('../references/worker-contract.md', import.meta.url),
+    'utf8',
+  );
+  const documented = new Set(
+    [...contract.matchAll(/`([A-Za-z_-]+)`/g)].map(([, name]) =>
+      name.toLowerCase().replaceAll('-', '_'),
+    ),
+  );
+  for (const tool of READ_ONLY_TOOLS) {
+    assert.ok(documented.has(tool), `worker-contract.md names ${tool}`);
+  }
 });

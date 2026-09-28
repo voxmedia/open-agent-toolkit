@@ -65,10 +65,67 @@ const mutatingTools = new Set([
   'write_file',
 ]);
 
-function isMutatingTool(tool) {
-  return (
-    typeof tool === 'string' &&
-    mutatingTools.has(tool.trim().toLowerCase().replaceAll('-', '_'))
+// Shell and execution tools can write the filesystem, so they are never read
+// authority however the command is described.
+const executionTools = new Set([
+  'bash',
+  'exec',
+  'exec_command',
+  'powershell',
+  'run_command',
+  'run_terminal_cmd',
+  'shell',
+  'terminal',
+]);
+
+// Read authority is an allowlist: only these read-only tools, spanning the
+// Claude (`Read`, `Grep`, `Glob`, `WebFetch`, `WebSearch`) and Cursor/Codex
+// (`read_file`, `list_dir`, `grep_search`, ...) spellings. `WebFetch` and
+// `WebSearch` stay because URL sources are read sources and the recon-worker
+// role declares them. Anything else is rejected rather than trusted.
+export const READ_ONLY_TOOLS = Object.freeze([
+  'codebase_search',
+  'file_search',
+  'glob',
+  'grep',
+  'grep_search',
+  'list_dir',
+  'ls',
+  'read',
+  'read_file',
+  'web_fetch',
+  'web_search',
+  'webfetch',
+  'websearch',
+]);
+
+function normalizeTool(tool) {
+  return typeof tool === 'string'
+    ? tool.trim().toLowerCase().replaceAll('-', '_')
+    : '';
+}
+
+function toolIssue(tool, path) {
+  const name = normalizeTool(tool);
+  if (READ_ONLY_TOOLS.includes(name)) return null;
+  if (mutatingTools.has(name)) {
+    return issue(
+      'MUTATING_TOOL',
+      `${tool} can modify files and is not read-only authority`,
+      path,
+    );
+  }
+  if (executionTools.has(name)) {
+    return issue(
+      'EXECUTION_TOOL',
+      `${tool} executes commands that can modify files and is not read-only authority`,
+      path,
+    );
+  }
+  return issue(
+    'UNKNOWN_TOOL',
+    `${tool} is not a supported read-only tool; use one of: ${READ_ONLY_TOOLS.join(', ')}`,
+    path,
   );
 }
 
@@ -609,15 +666,10 @@ function validateEnvelope(envelope, path) {
       { nonEmpty: true },
     );
     for (const [index, tool] of tools.entries()) {
-      if (isMutatingTool(tool)) {
-        errors.push(
-          issue(
-            'MUTATING_TOOL',
-            `${tool} can modify files and is not read-only authority`,
-            `${readPath}.tools[${index}]`,
-          ),
-        );
-      }
+      // Non-string entries are already reported by checkStringList.
+      if (!isNonEmptyString(tool)) continue;
+      const problem = toolIssue(tool, `${readPath}.tools[${index}]`);
+      if (problem) errors.push(problem);
     }
   }
 

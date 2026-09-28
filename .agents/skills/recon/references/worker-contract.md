@@ -67,9 +67,8 @@ a worker; an unreadable envelope path is `UNREADABLE_ENVELOPE` with exit 2, not
 an invalid envelope. It rejects a worker mode that does not match the wave
 mode; a read source outside the allowed inputs or included scope, or inside an
 excluded input or excluded scope entry; an allowed input or included scope
-entry inside an exclusion; a file-editing tool in `readSources.tools` (compared
-case-insensitively across providers, for example `Write`, `Edit`, or
-`apply_patch`); a write path that is absolute, escapes the packet, or names no
+entry inside an exclusion; any `readSources.tools` entry outside the read-only
+allowlist below; a write path that is absolute, escapes the packet, or names no
 file; a controller-owned artifact kind; an output schema other than the
 approved reference for the artifact's kind (inline schemas are not accepted,
 because the kind already fixes the schema the artifact validator enforces); and
@@ -77,6 +76,17 @@ because the kind already fixes the schema the artifact validator enforces); and
 wave mode, worker mode, or task class differs from the first lane, and a
 repeated lane ID or write path. Once a launch is accepted, correct its envelope
 through the accepted handle; acceptance never authorizes a replacement worker.
+
+Read authority is an allowlist. `readSources.tools` may name only these
+read-only tools, compared case-insensitively with `-` and `_` treated alike:
+`Read`, `Grep`, `Glob`, `LS`, `WebFetch`, `WebSearch`, `read_file`,
+`list_dir`, `file_search`, `grep_search`, `codebase_search`, `web_fetch`, and
+`web_search`. A file-editing tool (for example `Write`, `Edit`, or
+`apply_patch`) is `MUTATING_TOOL`; a shell or execution tool (for example
+`Bash`, `exec_command`, or `run_terminal_cmd`) is `EXECUTION_TOOL`, because a
+command can write the filesystem; any other name is `UNKNOWN_TOOL`. Command
+output a lane needs is captured by the controller as a `command-output` source
+rather than granted as a tool.
 
 Inputs, scope entries, and read sources are locators in one namespace: a
 repository-relative path, or a canonical `http` or `https` URL compared by
