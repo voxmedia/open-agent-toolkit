@@ -68,7 +68,11 @@ vi.mock('@app/command-context', () => ({
   buildCommandContext,
 }));
 
-vi.mock('@config/oat-config', () => ({
+// Built on the real module so its other exports (for example
+// DEFAULT_INSTRUCTION_SYNC_STRATEGY, read by config/resolve.ts at import)
+// still resolve; only the config readers and writer are replaced.
+vi.mock('@config/oat-config', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@config/oat-config')>()),
   readOatConfig,
   readOatLocalConfig,
   readUserConfig,

@@ -213,10 +213,11 @@ Purpose:
 Key behavior:
 
 - Read-only validation of nested project-scoped instruction directories
-- Supports `--strategy pointer|symlink|copy` to validate the expected file shape
-- Reports `ok`, `missing`, `content_mismatch`, and `stray` states
+- Validates the effective strategy: `--strategy none|pointer|symlink|copy`, else `instructions.claude.shims`, else `none` (the default, which expects no `CLAUDE.md`); reports it as `strategy` under `--json`
+- Reports `ok`, `missing` (shim strategies only), `content_mismatch`, `stray`, and, under `none`, `managed_shim` (drift sync removes) and `unmanaged` (kept, not drift)
 - Detects Claude-only adoptable directories and unreadable/broken instruction paths as drift
-- Skips the derived documentation content root and any `documentation.instructionPointerExcludes` paths, using the same exclusions as `oat instructions sync`
+- Under `none`, warns about every remaining `CLAUDE.md`, `.claude/CLAUDE.md`, and `CLAUDE.local.md` (stderr, or the `warnings` array under `--json`) without changing the exit code
+- Skips the derived documentation content root and any `instructions.claude.excludes` paths, using the same exclusions as `oat instructions sync`
 - Exit code `0` when all entries are valid, `1` when drift is detected
 - Detailed behavior: [`Instruction Sync`](instruction-sync.md)
 
@@ -229,12 +230,14 @@ Purpose:
 Key behavior:
 
 - Mutates by default; use `--dry-run` to preview changes
-- Supports `--strategy pointer|symlink|copy`
-- Creates missing `CLAUDE.md` files using the selected strategy
-- Adopts Claude-only stray files by writing canonical `AGENTS.md` content first, then regenerating `CLAUDE.md`
-- Skips mismatched files unless `--force` is provided
+- Supports `--strategy none|pointer|symlink|copy` as a one-run override of `instructions.claude.shims` (default `none`)
+- Under `none`, removes the `CLAUDE.md` shims OAT created (exact `@AGENTS.md` pointer, symlink to the sibling `AGENTS.md`, or byte-identical copy), re-verifying each immediately before deletion; hand-written or modified `CLAUDE.md` files are reported, never deleted, and while any `CLAUDE.md`, `.claude/CLAUDE.md`, or `CLAUDE.local.md` has content of its own, nothing is removed (`claude_md_blocks_shim_removal`)
+- Under a shim strategy, creates missing `CLAUDE.md` files using that strategy
+- Adopts Claude-only stray files by writing canonical `AGENTS.md` content first, then regenerating `CLAUDE.md` (shim strategies) or removing it (`none`)
+- Under a shim strategy, skips mismatched files unless `--force` is provided
 - Skips unreadable canonical or Claude-only sources and reports manual-repair guidance instead of forcing recovery
-- Skips the documentation content tree (`<documentation.root>/docs` when that is a directory, otherwise `documentation.root`) plus any `documentation.instructionPointerExcludes` paths, so authored pages never receive pointers; app-level instruction files such as `apps/oat-docs/AGENTS.md` are still synced
+- Skips the documentation content tree (`<documentation.root>/docs` when that is a directory, otherwise `documentation.root`) plus any `instructions.claude.excludes` paths, so authored pages never receive pointers; app-level instruction files such as `apps/oat-docs/AGENTS.md` are still synced
 - Never deletes an existing `CLAUDE.md` inside an excluded tree
+- Under `none`, warns about every `CLAUDE.md` that remains after sync, including inside excluded trees, because any one of them makes Claude Code ignore every `AGENTS.md`
 - Uses pointer content `@AGENTS.md\n`, file symlinks, or hard copies depending on the selected strategy
 - Detailed behavior and examples: [`Instruction Sync`](instruction-sync.md)

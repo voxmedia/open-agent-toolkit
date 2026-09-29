@@ -198,8 +198,8 @@ describe('help output snapshots', () => {
       Options:
         --scope <scope>        Limit execution scope (choices: "project", "user",
                                "all", default: "all")
-        --project-guidance     Create missing or print manual repository AGENTS.md
-                               tool guidance
+        --project-guidance     Create or append repository AGENTS.md tool guidance,
+                               or print a manual patch
         --no-project-guidance  Decline repository AGENTS.md tool guidance
         --hook                 Install optional pre-commit hook
         --no-hook              Skip optional pre-commit hook install
@@ -268,7 +268,7 @@ describe('help output snapshots', () => {
         init [options]                         Scaffold the canonical backlog directory structure and starter files
         new [options] <title>                  Create a new file-backed backlog item
         regenerate-index [options]             Regenerate the managed backlog index table
-        archive [options] <id>                 Close out a backlog item: set a terminal status, record it in completed.md, move it to archived/, and regenerate the index
+        archive [options] <id>                 Close out a backlog item: set a terminal status, record it in completed.md, move it to archived/, rewrite inbound .oat/repo references to it, and regenerate the index
         generate-id [options] <title-or-slug>  Generate a backlog item identifier (\`BL-YYMMDD-slug\`) from a title or slug
         help [command]                         display help for command
       "
@@ -1026,8 +1026,9 @@ describe('help output snapshots', () => {
       Validate AGENTS.md/CLAUDE.md sync integrity for the selected strategy
 
       Options:
-        --strategy <strategy>  Sync strategy (choices: "pointer", "symlink", "copy",
-                               default: "pointer")
+        --strategy <strategy>  Sync strategy to check (overrides
+                               instructions.claude.shims) (choices: "none",
+                               "pointer", "symlink", "copy")
         -h, --help             display help for command
 
       Global Options:
@@ -1053,8 +1054,9 @@ describe('help output snapshots', () => {
       Options:
         --dry-run              Preview sync changes without applying
         --force                Overwrite mismatched CLAUDE.md files
-        --strategy <strategy>  Sync strategy (choices: "pointer", "symlink", "copy",
-                               default: "pointer")
+        --strategy <strategy>  Sync strategy for this run (overrides
+                               instructions.claude.shims) (choices: "none",
+                               "pointer", "symlink", "copy")
         -h, --help             display help for command
 
       Global Options:
@@ -1344,6 +1346,8 @@ describe('help output snapshots', () => {
         outdated [options]       Show tools with available updates
         info [options] <name>    Show details for an installed tool
         has [options] <pack>     Check whether a bundled tool pack is available
+        guidance                 Print the managed OAT tools AGENTS.md guidance block
+                                 without installing or writing anything
         update [options] [name]  Update installed tools to bundled versions
         migrate [options]        Move an installed tool pack between scopes safely
         remove [options] [name]  Remove installed tools
@@ -1415,8 +1419,8 @@ describe('help output snapshots', () => {
       project-management, research, brainstorm)
 
       Options:
-        --project-guidance            Create missing or print manual repository
-                                      AGENTS.md tool guidance
+        --project-guidance            Create or append repository AGENTS.md tool
+                                      guidance, or print a manual patch
         --no-project-guidance         Decline repository AGENTS.md tool guidance
         --scope <scope>               Limit execution scope (choices: "project",
                                       "user", "all", default: "all")
@@ -1430,7 +1434,7 @@ describe('help output snapshots', () => {
         --cwd <path>                  Override working directory
 
       Commands:
-        core                          Install OAT core skills (diagnostics, docs)
+        core [options]                Install OAT core skills (diagnostics, docs)
         ideas [options]               Install OAT ideas skills, templates, and idea
                                       workflow files
         docs [options]                Install OAT docs workflow skills

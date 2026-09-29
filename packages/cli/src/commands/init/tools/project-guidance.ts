@@ -1,6 +1,10 @@
 import { join } from 'node:path';
 
-import type { AgentsMdManualPatch } from '@commands/shared/agents-md';
+import {
+  type AgentsMdManualPatch,
+  buildAgentsMdManagedBlock,
+  formatAgentsMdGuidanceResult,
+} from '@commands/shared/agents-md';
 import type { PromptContext } from '@commands/shared/shared.prompts';
 import type { PackName } from '@commands/tools/shared/types';
 import { CliError } from '@errors/index';
@@ -15,6 +19,8 @@ export type AgentsGuidanceAction =
   | 'declined'
   | 'not-requested'
   | 'create'
+  | 'appended'
+  | 'skipped'
   | 'no-change'
   | 'manual-required'
   | 'blocked';
@@ -36,7 +42,15 @@ export interface AgentsGuidancePlan {
   manualPatch?: AgentsMdManualPatch;
 }
 
-export interface PlanProjectGuidanceInput {
+export interface ToolPacksSectionOptions {
+  /**
+   * Project skills that belong to no OAT pack. They are described separately
+   * and never named as pack skills.
+   */
+  otherProjectSkills?: readonly string[];
+}
+
+export interface PlanProjectGuidanceInput extends ToolPacksSectionOptions {
   repoRoot: string | null;
   packs: readonly ProjectGuidancePack[];
   explicitChoice?: boolean;
@@ -51,6 +65,35 @@ export function reportableProjectGuidance(plan: AgentsGuidancePlan) {
     reason: plan.reason,
     ...(plan.manualPatch ? { manualPatch: plan.manualPatch } : {}),
   };
+}
+
+export function isProjectGuidanceIncomplete(plan: AgentsGuidancePlan): boolean {
+  return plan.action === 'blocked' || plan.action === 'manual-required';
+}
+
+/** Prints one guidance plan in the human form every guidance surface uses. */
+export function reportProjectGuidancePlan(
+  logger: { info: (message: string) => void; warn: (message: string) => void },
+  plan: AgentsGuidancePlan,
+): void {
+  const message = `Project guidance: ${plan.action} — ${plan.reason}`;
+  if (plan.action === 'skipped') {
+    logger.warn(message);
+    return;
+  }
+  if (!isProjectGuidanceIncomplete(plan)) {
+    logger.info(message);
+    return;
+  }
+  logger.warn(message);
+  if (plan.manualPatch) {
+    for (const line of formatAgentsMdGuidanceResult({
+      action: 'manual-required',
+      manualPatch: plan.manualPatch,
+    })) {
+      logger.info(line);
+    }
+  }
 }
 
 const PACK_DESCRIPTIONS: Record<PackName, string> = {
@@ -69,25 +112,51 @@ const PACK_DESCRIPTIONS: Record<PackName, string> = {
 
 export function buildToolPacksSectionBody(
   packs: readonly ProjectGuidancePack[],
+  options: ToolPacksSectionOptions = {},
 ): string {
+  // Directories are named by pack membership, never by directory existence:
+  // `oat init --scope project` creates an empty `.agents/skills/`, and
+  // unrelated repository skills may live there.
+  const projectPacks = packs.filter(
+    (pack) => pack.scope === 'project' || pack.scope === 'both',
+  );
   const userPacks = packs.filter(
     (pack) => pack.scope === 'user' || pack.scope === 'both',
   );
+  const hasOtherProjectSkills = (options.otherProjectSkills?.length ?? 0) > 0;
   const hasWorkflows = packs.some((pack) => pack.pack === 'workflows');
-  const lines = [
-    '## Tool Packs',
-    '',
-    '- **Skills directory:** `.agents/skills/`',
-    '- **Discover available skills:** scan `.agents/skills/*/SKILL.md`',
-    '- **Refresh provider views:** `oat sync --scope all`',
-    '- **Update skills to latest versions:** `oat tools update`',
-  ];
+  const lines = ['## Tool Packs', ''];
 
-  if (userPacks.length > 0) {
+  if (projectPacks.length > 0) {
     lines.push(
-      `- **User-scoped skills:** \`~/.agents/skills/\` (${userPacks.map(({ pack }) => pack).join(', ')} packs installed at user scope)`,
+      `- **Project skills directory:** \`.agents/skills/\` (${projectPacks.map(({ pack }) => pack).join(', ')} packs installed at project scope)`,
     );
   }
+  if (userPacks.length > 0) {
+    lines.push(
+      `- **User skills directory:** \`~/.agents/skills/\` (${userPacks.map(({ pack }) => pack).join(', ')} packs installed at user scope)`,
+    );
+  }
+  if (hasOtherProjectSkills) {
+    lines.push(
+      '- **Other project skills:** `.agents/skills/` also holds repository skills that belong to no OAT pack; they are not OAT pack skills.',
+    );
+  }
+  const scanTargets = [
+    ...(projectPacks.length > 0 || hasOtherProjectSkills
+      ? ['`.agents/skills/*/SKILL.md`']
+      : []),
+    ...(userPacks.length > 0 ? ['`~/.agents/skills/*/SKILL.md`'] : []),
+  ];
+  if (scanTargets.length > 0) {
+    lines.push(
+      `- **Discover available skills:** scan ${scanTargets.join(' and ')}`,
+    );
+  }
+  lines.push(
+    '- **Refresh provider views:** `oat sync --scope all`',
+    '- **Update skills to latest versions:** `oat tools update`',
+  );
 
   lines.push('', '### Installed Packs', '');
   for (const { pack, scope } of packs) {
@@ -112,6 +181,17 @@ export function buildToolPacksSectionBody(
   }
 
   return lines.join('\n');
+}
+
+/** The complete managed `OAT tools` block, markers included. */
+export function renderToolPacksManagedBlock(
+  packs: readonly ProjectGuidancePack[],
+  options: ToolPacksSectionOptions = {},
+): string {
+  return buildAgentsMdManagedBlock(
+    'tools',
+    buildToolPacksSectionBody(packs, options),
+  );
 }
 
 export function parseProjectGuidanceFlags(
@@ -145,7 +225,7 @@ export function withProjectGuidanceOptions<TCommand extends Command>(
   if (!command.options.some(({ long }) => long === '--project-guidance')) {
     command.option(
       '--project-guidance',
-      'Create missing or print manual repository AGENTS.md tool guidance',
+      'Create or append repository AGENTS.md tool guidance, or print a manual patch',
     );
   }
   if (!command.options.some(({ long }) => long === '--no-project-guidance')) {
@@ -172,7 +252,7 @@ export async function planProjectGuidance(
     };
   } else {
     const accepted = await input.confirmAction(
-      'Create missing or propose manual repository AGENTS.md tool guidance?',
+      'Create or append repository AGENTS.md tool guidance (a different existing block prints a manual patch)?',
       { interactive: input.interactive },
     );
     choice = accepted
@@ -180,7 +260,7 @@ export async function planProjectGuidance(
       : { choice: 'declined', source: 'prompt' };
   }
 
-  const body = buildToolPacksSectionBody(input.packs);
+  const body = buildToolPacksSectionBody(input.packs, input);
   if (choice.choice === 'declined') {
     return {
       repoRoot: input.repoRoot,
@@ -203,7 +283,7 @@ export async function planProjectGuidance(
       body,
       legacySectionAction: 'preserve',
       reason:
-        'Project guidance was not requested. Re-run with --project-guidance to create an absent AGENTS.md or print a manual patch for an existing one.',
+        'Project guidance was not requested. Re-run with --project-guidance to create an absent AGENTS.md, append an absent guidance block to an existing one, or print a manual patch for a different existing block.',
       choice,
     };
   }
@@ -229,7 +309,7 @@ export async function planProjectGuidance(
     body,
     legacySectionAction: 'remove',
     reason:
-      'Project guidance was accepted. An absent AGENTS.md may be created; an existing file requires a manual patch.',
+      'Project guidance was accepted. An absent AGENTS.md may be created and an absent guidance block appended; a different existing block requires a manual patch.',
     choice,
   };
 }

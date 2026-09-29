@@ -134,6 +134,7 @@ Notable commands introduced in the current CLI surface:
   `refs/oat/completed/<project>` result counts as absence. Transport,
   authentication, and other lookup failures fail the command closed; they are
   never converted into a `recorded-absent` row or pull guidance.
+- `oat tools guidance` - print the managed `OAT tools` `AGENTS.md` block for the currently installed packs without installing, upgrading, or writing anything; `--json` returns `status`, `sectionKey`, `target`, `packs`, `otherProjectSkills`, and `managedBlock`. See [Tool Packs](../cli-utilities/tool-packs.md#oat-tools-guidance).
 - `oat tools migrate --pack <pack> --from <scope> --to <scope>` - move one installed pack between project and user scope. Always previews first, installs and re-inventories the destination before touching the source, and offers source removal only after the destination is verified complete. Declining or running non-interactively leaves the pack installed at both scopes rather than failing. `--dry-run` stops after the preview; there is no force flag. See [Tool Packs](../cli-utilities/tool-packs.md#oat-tools-migrate).
 - `oat pjm doctor --json` - read-only repository PJM diagnostics whose result carries an additive `adoption` object (`state` of `declared` | `inferred-legacy` | `partial-initialization` | `none`, `repoRoot`, and `recovery`). This, not `oat tools has project-management`, is the check that answers whether _this repository_ adopted PJM.
 - `oat pjm remote ... --json` - operate one explicit provider-neutral binding.
@@ -165,6 +166,7 @@ Notable commands introduced in the current CLI surface:
 - `oat gate target set <id> --timeout-ms <milliseconds>` - persist a validated per-target gate budget.
 - `oat gate target list --json` - inspect resolved gate targets without selecting or executing a reviewer. Each entry reports its config origin, whether it is explicitly configured and enabled, current availability, and normalized configured invocation values (`unknown` when omitted).
 - `oat gate cross-provider-exec <prompt...>` - choose an available exec target while avoiding the current runtime by default, then run the prompt with the chosen target's configured base command and exit with the child status.
+- `oat instructions sync [--dry-run] [--strategy none|pointer|symlink|copy]` - apply the effective `CLAUDE.md` strategy (`--strategy`, else `instructions.claude.shims`, else `none`). Under the default `none` it removes the `CLAUDE.md` shims OAT created — none at all while any `CLAUDE.md` has content of its own — keeps and reports every other `CLAUDE.md`, and warns about any `CLAUDE.md`, `.claude/CLAUDE.md`, or `CLAUDE.local.md` that would make Claude Code ignore `AGENTS.md`. `oat instructions validate` checks the same strategy read-only. See [Instruction Sync](../provider-sync/instruction-sync.md).
 
 ## `oat config` surface flags
 

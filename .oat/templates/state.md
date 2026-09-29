@@ -50,8 +50,8 @@ oat_workflow_origin: native # native | imported
 #   max_attempts: 2
 #   attempts_completed: 0
 #   reviewed_head: null
-#   implementation_base_ref: null # exact logical base ref for effective-delta-v1
-#   implementation_fingerprint: null # new generations use sha256:effective-delta-v1:<digest>
+#   implementation_base_ref: null # exact logical base ref for the qualified effective-delta fingerprint
+#   implementation_fingerprint: null # new generations use sha256:effective-delta-v2:<digest>; stored v1 values keep v1 semantics
 #   freshness_head: null # rolling accepted tree checkpoint
 #   freshness_fingerprint: null # full effective delta at freshness_head
 #   launch_state: not_started # not_started | intent_persisted | accepted | result_persisted | not_accepted

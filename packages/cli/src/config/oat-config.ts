@@ -33,6 +33,47 @@ export {
   type WorkflowDispatchRouteTarget,
 } from './dispatch-matrix';
 
+/**
+ * The CLAUDE.md strategies `oat instructions sync` and
+ * `oat instructions validate` understand, and the values
+ * `instructions.claude.shims` accepts. `none` keeps no CLAUDE.md
+ * shims at all; the other three are the shim strategies.
+ *
+ * Declared here rather than in the instructions command so the config
+ * normalizer, the `oat config set` validator, and the commands share one list:
+ * a value the normalizer accepted but the commands did not understand would
+ * silently fall through to the built-in default.
+ */
+export const INSTRUCTION_SYNC_STRATEGIES = [
+  'none',
+  'pointer',
+  'symlink',
+  'copy',
+] as const;
+
+export type InstructionSyncStrategy =
+  (typeof INSTRUCTION_SYNC_STRATEGIES)[number];
+
+/**
+ * The strategy used when neither `--strategy` nor
+ * `instructions.claude.shims` names one.
+ *
+ * `none` (DR-260927-claude-md-shims-are-opt): Claude Code reads AGENTS.md
+ * itself through its `agents-md` plugin, which stands down for the whole
+ * project while any CLAUDE.md exists, so shims are opt-in.
+ */
+export const DEFAULT_INSTRUCTION_SYNC_STRATEGY: InstructionSyncStrategy =
+  'none';
+
+export function isInstructionSyncStrategy(
+  value: unknown,
+): value is InstructionSyncStrategy {
+  return (
+    typeof value === 'string' &&
+    (INSTRUCTION_SYNC_STRATEGIES as readonly string[]).includes(value)
+  );
+}
+
 export interface OatDocumentationConfig {
   root?: string;
   tooling?: string;
@@ -45,13 +86,30 @@ export interface OatDocumentationConfig {
    * and order-preserving.
    */
   excludes?: string[];
+}
+
+/**
+ * How `oat instructions sync` and `oat instructions validate` treat Claude
+ * Code's CLAUDE.md files (`instructions.claude.*`).
+ */
+export interface OatInstructionsClaudeConfig {
+  /**
+   * How `oat instructions sync` keeps a CLAUDE.md beside each AGENTS.md. The
+   * `--strategy` flag overrides it for one run; when both are absent the
+   * built-in `DEFAULT_INSTRUCTION_SYNC_STRATEGY` applies.
+   */
+  shims?: InstructionSyncStrategy;
   /**
    * Repo-relative directories `oat instructions sync` and
    * `oat instructions validate` must not treat as pointer sites, additive to
    * the derived documentation content root they skip by default. Trimmed,
    * de-duplicated, and order-preserving.
    */
-  instructionPointerExcludes?: string[];
+  excludes?: string[];
+}
+
+export interface OatInstructionsConfig {
+  claude?: OatInstructionsClaudeConfig;
 }
 
 export interface OatGitConfig {
@@ -1353,6 +1411,7 @@ export interface OatConfig {
   tools?: OatToolsConfig;
   pjm?: OatPjmConfig;
   documentation?: OatDocumentationConfig;
+  instructions?: OatInstructionsConfig;
   localPaths?: string[];
   autoReviewAtCheckpoints?: boolean;
   workflow?: OatWorkflowConfig;
@@ -1520,7 +1579,7 @@ function normalizeDocumentationExcludes(
 }
 
 /**
- * Parse `documentation.instructionPointerExcludes` into a trimmed,
+ * Parse `instructions.claude.excludes` into a trimmed,
  * de-duplicated, order-preserving list.
  *
  * Fails closed, exactly like its `documentation.excludes` sibling above and for
@@ -1530,7 +1589,7 @@ function normalizeDocumentationExcludes(
  * an error.
  *
  * The repair instruction names `oat config set` first and the file second: the
- * command is catalogued (`oat config set documentation.instructionPointerExcludes`),
+ * command is catalogued (`oat config set instructions.claude.excludes`),
  * and an operator repairing a malformed value should reach for the validated
  * write path before hand-editing JSON.
  */
@@ -1544,8 +1603,8 @@ function normalizeInstructionPointerExcludes(
 
   const invalid = (): never => {
     throw new CliError(
-      `Invalid documentation.instructionPointerExcludes in ${configPath}: expected an array of non-empty strings. ` +
-        'Repair it with `oat config set documentation.instructionPointerExcludes <path[,path...]>` (an empty value clears the key), or by editing that file.',
+      `Invalid instructions.claude.excludes in ${configPath}: expected an array of non-empty strings. ` +
+        'Repair it with `oat config set instructions.claude.excludes <path[,path...]>` (an empty value clears the key), or by editing that file.',
       2,
     );
   };
@@ -1566,6 +1625,36 @@ function normalizeInstructionPointerExcludes(
   }
 
   return normalized;
+}
+
+/**
+ * Parse `instructions.claude.shims`.
+ *
+ * Fails closed like `projects.defaultScope`: a misspelled strategy must never
+ * read as unset, because unset means the built-in default, and the default
+ * decides whether `oat instructions sync` writes CLAUDE.md files. An absent key
+ * is "not configured"; any present value outside the accepted list is an error
+ * that names the `oat config set` repair.
+ */
+function normalizeInstructionSyncStrategy(
+  value: unknown,
+  configPath: string,
+): InstructionSyncStrategy | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (!isInstructionSyncStrategy(value)) {
+    const accepted = INSTRUCTION_SYNC_STRATEGIES.join('|');
+    throw new CliError(
+      `Invalid instructions.claude.shims in ${configPath}: ${JSON.stringify(value)}. ` +
+        `Expected one of: ${INSTRUCTION_SYNC_STRATEGIES.join(', ')}. ` +
+        `Repair it with oat config set instructions.claude.shims <${accepted}>.`,
+      2,
+    );
+  }
+
+  return value;
 }
 
 /**
@@ -1775,15 +1864,29 @@ function normalizeOatConfig(
     if (excludes.length > 0) {
       doc.excludes = excludes;
     }
-    const instructionPointerExcludes = normalizeInstructionPointerExcludes(
-      parsed.documentation.instructionPointerExcludes,
-      configPath,
-    );
-    if (instructionPointerExcludes.length > 0) {
-      doc.instructionPointerExcludes = instructionPointerExcludes;
-    }
     if (Object.keys(doc).length > 0) {
       next.documentation = doc;
+    }
+  }
+
+  if (isRecord(parsed.instructions) && isRecord(parsed.instructions.claude)) {
+    const claude: OatInstructionsClaudeConfig = {};
+    const shims = normalizeInstructionSyncStrategy(
+      parsed.instructions.claude.shims,
+      configPath,
+    );
+    if (shims !== undefined) {
+      claude.shims = shims;
+    }
+    const excludes = normalizeInstructionPointerExcludes(
+      parsed.instructions.claude.excludes,
+      configPath,
+    );
+    if (excludes.length > 0) {
+      claude.excludes = excludes;
+    }
+    if (Object.keys(claude).length > 0) {
+      next.instructions = { claude };
     }
   }
 
@@ -2011,8 +2114,32 @@ export async function readOatConfigForDocumentationExcludesRepair(
 }
 
 /**
- * Read the shared config with a malformed
- * `documentation.instructionPointerExcludes` dropped.
+ * Return `parsed` with `instructions.claude.<key>` removed, leaving every other
+ * value untouched, so a repair read can load the file whose value it replaces.
+ */
+function withoutInstructionsClaudeKey(
+  parsed: unknown,
+  key: keyof OatInstructionsClaudeConfig,
+): unknown {
+  if (
+    !isRecord(parsed) ||
+    !isRecord(parsed.instructions) ||
+    !isRecord(parsed.instructions.claude)
+  ) {
+    return parsed;
+  }
+  const claude = Object.fromEntries(
+    Object.entries(parsed.instructions.claude).filter(([name]) => name !== key),
+  );
+  return {
+    ...parsed,
+    instructions: { ...parsed.instructions, claude },
+  };
+}
+
+/**
+ * Read the shared config with a malformed `instructions.claude.excludes`
+ * dropped.
  *
  * The sibling of `readOatConfigForDocumentationExcludesRepair`, and it exists
  * for the same reason: this key's own validation error now names
@@ -2027,14 +2154,37 @@ export async function readOatConfigForInstructionPointerExcludesRepair(
   try {
     const raw = await readFile(configPath, 'utf8');
     const parsed = parseJsonConfig(raw, configPath);
-    if (isRecord(parsed) && isRecord(parsed.documentation)) {
-      const {
-        instructionPointerExcludes: _invalidInstructionPointerExcludes,
-        ...documentation
-      } = parsed.documentation;
-      return normalizeOatConfig({ ...parsed, documentation }, configPath);
+    return normalizeOatConfig(
+      withoutInstructionsClaudeKey(parsed, 'excludes'),
+      configPath,
+    );
+  } catch (error) {
+    if (isMissingFileError(error)) {
+      return { ...DEFAULT_OAT_CONFIG };
     }
-    return normalizeOatConfig(parsed, configPath);
+
+    throw error;
+  }
+}
+
+/**
+ * Read the shared config with a malformed `instructions.claude.shims`
+ * dropped, so the
+ * `oat config set`/`unset` repair its validation error names can load the file
+ * it is repairing.
+ */
+export async function readOatConfigForInstructionSyncStrategyRepair(
+  repoRoot: string,
+): Promise<OatConfig> {
+  const configPath = getConfigPath(repoRoot);
+
+  try {
+    const raw = await readFile(configPath, 'utf8');
+    const parsed = parseJsonConfig(raw, configPath);
+    return normalizeOatConfig(
+      withoutInstructionsClaudeKey(parsed, 'shims'),
+      configPath,
+    );
   } catch (error) {
     if (isMissingFileError(error)) {
       return { ...DEFAULT_OAT_CONFIG };

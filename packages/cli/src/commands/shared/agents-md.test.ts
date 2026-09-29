@@ -1,18 +1,24 @@
+import { execFileSync } from 'node:child_process';
+import { constants } from 'node:fs';
 import {
+  appendFile,
   chmod,
+  link,
   lstat,
   mkdir,
   mkdtemp,
+  open,
   readFile,
   readdir,
   readlink,
   realpath,
+  rename,
   rm,
   symlink,
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -25,6 +31,7 @@ import {
 
 const realFileSystem: AgentsMdFileSystem = {
   lstat,
+  open,
   readFile,
   readlink,
   realpath,
@@ -37,7 +44,12 @@ function withFileSystem(
   return { ...realFileSystem, ...overrides };
 }
 
-describe('manual-only AGENTS.md guidance', () => {
+const TOOLS_BLOCK =
+  '<!-- OAT tools -->\n## Tool Packs\n- workflows\n<!-- END OAT tools -->';
+const STALE_TOOLS_BLOCK =
+  '<!-- OAT tools -->\n## Tool Packs\n- stale\n<!-- END OAT tools -->\n';
+
+describe('append-only AGENTS.md guidance', () => {
   let root = '';
 
   afterEach(async () => {
@@ -101,7 +113,7 @@ describe('manual-only AGENTS.md guidance', () => {
     expect((await lstat(join(root, 'AGENTS.md'))).mode & 0o777).toBe(0o600);
   });
 
-  it('preserves a target that appears before exclusive create and replans manually', async () => {
+  it('preserves a target that appears before exclusive create and replans to an append', async () => {
     await setup();
     const agentsPath = join(root, 'AGENTS.md');
     let injected = false;
@@ -119,29 +131,35 @@ describe('manual-only AGENTS.md guidance', () => {
       fileSystem,
     });
 
-    expect(result).toMatchObject({ action: 'manual-required' });
-    await expect(readAgentsMd()).resolves.toBe('# Late user file\n');
+    expect(result).toEqual({ action: 'appended' });
+    await expect(readAgentsMd()).resolves.toBe(
+      '# Late user file\n\n<!-- OAT tools -->\nTool guidance\n<!-- END OAT tools -->\n',
+    );
     await expectNoPrivateArtifacts();
   });
 
   it.each(['direct', 'symlink'] as const)(
-    'returns the same redacted zero-write patch for an existing %s target',
+    'returns the same redacted zero-write patch for a different block in an existing %s target',
     async (kind) => {
       await setup();
       const agentsPath = join(root, 'AGENTS.md');
       const targetPath =
         kind === 'direct' ? agentsPath : join(root, 'guidance.md');
-      const original = '# Private user instructions\nDo not echo this text.\n';
+      const original = `# Private user instructions\nDo not echo this text.\n${STALE_TOOLS_BLOCK}`;
       await writeFile(targetPath, original, { mode: 0o640 });
       await chmod(targetPath, 0o640);
       if (kind === 'symlink') await symlink('guidance.md', agentsPath);
       const before = await lstat(targetPath);
+      const openSpy = vi.fn(realFileSystem.open);
 
       const first = await upsertAgentsMdSection(
         root,
         'tools',
         '## Tool Packs\n- workflows',
-        { removeSectionKeys: ['workflows'] },
+        {
+          removeSectionKeys: ['workflows'],
+          fileSystem: withFileSystem({ open: openSpy }),
+        },
       );
       const repeated = await upsertAgentsMdSection(
         root,
@@ -155,12 +173,12 @@ describe('manual-only AGENTS.md guidance', () => {
         action: 'manual-required',
         manualPatch: {
           target: kind === 'direct' ? 'AGENTS.md' : 'guidance.md',
-          managedBlock:
-            '<!-- OAT tools -->\n## Tool Packs\n- workflows\n<!-- END OAT tools -->',
+          managedBlock: TOOLS_BLOCK,
           legacyBlockAction: 'preserve',
           instructions: expect.any(Array),
         },
       });
+      expect(openSpy).not.toHaveBeenCalled();
       expect(JSON.stringify(first)).not.toContain('Private user instructions');
       expect(JSON.stringify(first)).not.toContain(root);
       await expect(readFile(targetPath, 'utf8')).resolves.toBe(original);
@@ -175,14 +193,15 @@ describe('manual-only AGENTS.md guidance', () => {
     await setup();
     const target = join(root, 'nested', 'guidance.md');
     await mkdir(join(root, 'nested'));
-    await writeFile(target, '# Existing\n', 'utf8');
+    const original = `# Existing\n${STALE_TOOLS_BLOCK}`;
+    await writeFile(target, original, 'utf8');
     await symlink(target, join(root, 'AGENTS.md'));
 
     const result = await upsertAgentsMdSection(root, 'tools', 'Tool guidance');
 
     expect(result.manualPatch?.target).toBe('nested/guidance.md');
     expect(JSON.stringify(result)).not.toContain(root);
-    await expect(readFile(target, 'utf8')).resolves.toBe('# Existing\n');
+    await expect(readFile(target, 'utf8')).resolves.toBe(original);
   });
 
   it.each(['direct', 'symlink'] as const)(
@@ -197,11 +216,14 @@ describe('manual-only AGENTS.md guidance', () => {
       if (kind === 'symlink')
         await symlink('shared.md', join(root, 'AGENTS.md'));
 
+      const openSpy = vi.fn(realFileSystem.open);
       await expect(
         upsertAgentsMdSection(root, 'tools', 'Tool guidance', {
           removeSectionKeys: ['workflows'],
+          fileSystem: withFileSystem({ open: openSpy }),
         }),
       ).resolves.toEqual({ action: 'no-change' });
+      expect(openSpy).not.toHaveBeenCalled();
       await expect(readFile(target, 'utf8')).resolves.toBe(content);
     },
   );
@@ -295,7 +317,11 @@ describe('manual-only AGENTS.md guidance', () => {
   });
 
   it.each([
-    ['external', async (path: string) => symlink('../outside.md', path)],
+    [
+      'external',
+      async (path: string, outside: string) =>
+        symlink(relative(root, outside), path),
+    ],
     ['broken', async (path: string) => symlink('missing.md', path)],
     ['cyclic', async (path: string) => symlink('AGENTS.md', path)],
     [
@@ -305,20 +331,30 @@ describe('manual-only AGENTS.md guidance', () => {
         await symlink('guidance', path);
       },
     ],
-  ])('returns blocked for an unsafe %s target', async (_case, seed) => {
-    await setup();
-    const outside = join(root, '..', 'outside.md');
-    await writeFile(outside, '# Outside\n', 'utf8');
-    try {
-      await seed(join(root, 'AGENTS.md'));
-      const result = await upsertAgentsMdSection(root, 'tools', 'replacement');
-      expect(result).toMatchObject({ action: 'blocked' });
-      expect(JSON.stringify(result)).not.toContain(root);
-      await expect(readFile(outside, 'utf8')).resolves.toBe('# Outside\n');
-    } finally {
-      await rm(outside, { force: true });
-    }
-  });
+  ] as const)(
+    'returns blocked for an unsafe %s target',
+    async (_case, seed) => {
+      await setup();
+      // Each variant owns a private sibling directory for the outside target, so
+      // concurrent variants and test processes never share one outside file.
+      const outsideDir = await mkdtemp(join(tmpdir(), 'agents-md-outside-'));
+      const outside = join(outsideDir, 'outside.md');
+      await writeFile(outside, '# Outside\n', 'utf8');
+      try {
+        await seed(join(root, 'AGENTS.md'), outside);
+        const result = await upsertAgentsMdSection(
+          root,
+          'tools',
+          'replacement',
+        );
+        expect(result).toMatchObject({ action: 'blocked' });
+        expect(JSON.stringify(result)).not.toContain(root);
+        await expect(readFile(outside, 'utf8')).resolves.toBe('# Outside\n');
+      } finally {
+        await rm(outsideDir, { recursive: true, force: true });
+      }
+    },
+  );
 
   it.each(['direct', 'symlink'] as const)(
     'blocks a late in-place edit while preserving its bytes for a %s target',
@@ -368,8 +404,18 @@ describe('manual-only AGENTS.md guidance', () => {
     );
   });
 
-  it('returns one user-content-free manual patch for requested existing sections', async () => {
-    const original = '# Secret prefix\nSecret suffix\n';
+  it('returns one user-content-free manual patch for requested different sections', async () => {
+    const original = [
+      '# Secret prefix',
+      '<!-- OAT project-management -->',
+      'old PJM',
+      '<!-- END OAT project-management -->',
+      '<!-- OAT decisions -->',
+      'old decisions',
+      '<!-- END OAT decisions -->',
+      'Secret suffix',
+      '',
+    ].join('\n');
     await setup(original);
     const result = await upsertAgentsMdSections(root, [
       { key: 'project-management', body: 'PJM guidance' },
@@ -385,6 +431,537 @@ describe('manual-only AGENTS.md guidance', () => {
     });
     expect(JSON.stringify(result)).not.toContain('Secret');
     await expect(readAgentsMd()).resolves.toBe(original);
+  });
+
+  describe('append path for absent managed blocks', () => {
+    it.each(['direct', 'symlink'] as const)(
+      'appends an absent block to an existing %s target with the real file system',
+      async (kind) => {
+        await setup();
+        const target =
+          kind === 'direct' ? join(root, 'AGENTS.md') : join(root, 'shared.md');
+        const original = '# Existing user guidance\nKeep this.\n';
+        await writeFile(target, original, 'utf8');
+        if (kind === 'symlink')
+          await symlink('shared.md', join(root, 'AGENTS.md'));
+        const before = await lstat(target);
+
+        const first = await upsertAgentsMdSection(
+          root,
+          'tools',
+          '## Tool Packs\n- workflows',
+        );
+        const repeated = await upsertAgentsMdSection(
+          root,
+          'tools',
+          '## Tool Packs\n- workflows',
+        );
+
+        expect(first).toEqual({ action: 'appended' });
+        expect(repeated).toEqual({ action: 'no-change' });
+        await expect(readFile(target, 'utf8')).resolves.toBe(
+          `${original}\n${TOOLS_BLOCK}\n`,
+        );
+        const after = await lstat(target);
+        expect(after.ino).toBe(before.ino);
+        expect(after.mode).toBe(before.mode);
+        if (kind === 'symlink') {
+          expect((await lstat(join(root, 'AGENTS.md'))).isSymbolicLink()).toBe(
+            true,
+          );
+        }
+        await expectNoPrivateArtifacts();
+      },
+    );
+
+    it('opens the existing target write-only, append-only, no-follow, and non-blocking', async () => {
+      await setup('# Existing\n');
+      const openSpy = vi.fn(realFileSystem.open);
+      const write = vi.fn(realFileSystem.writeFile);
+
+      const result = await upsertAgentsMdSection(
+        root,
+        'tools',
+        'Tool guidance',
+        {
+          fileSystem: withFileSystem({ open: openSpy, writeFile: write }),
+        },
+      );
+
+      expect(result).toEqual({ action: 'appended' });
+      expect(openSpy).toHaveBeenCalledTimes(1);
+      expect(openSpy.mock.calls[0]?.[0]).toBe(
+        join(await realpath(root), 'AGENTS.md'),
+      );
+      expect(openSpy.mock.calls[0]?.[1]).toBe(
+        constants.O_WRONLY |
+          constants.O_APPEND |
+          constants.O_NOFOLLOW |
+          constants.O_NONBLOCK,
+      );
+      expect(write).not.toHaveBeenCalled();
+    });
+
+    it('negative control (a): an absent block no longer yields the pre-fix manual patch', async () => {
+      // Pre-fix behavior: existing file + absent block -> manual-required with
+      // zero writes and a non-zero exit. The append contract replaces it.
+      const original = '# No trailing newline';
+      await setup(original);
+
+      const result = await upsertAgentsMdSection(
+        root,
+        'tools',
+        'Tool guidance',
+      );
+
+      expect(result).toEqual({ action: 'appended' });
+      expect(result.manualPatch).toBeUndefined();
+      await expect(readAgentsMd()).resolves.toBe(
+        `${original}\n<!-- OAT tools -->\nTool guidance\n<!-- END OAT tools -->\n`,
+      );
+    });
+
+    it('negative control (b): appends every absent block after the original bytes', async () => {
+      const original = '# Secret prefix\nSecret suffix\n';
+      await setup(original);
+
+      const result = await upsertAgentsMdSections(root, [
+        { key: 'project-management', body: 'PJM guidance' },
+        { key: 'decisions', body: 'Decision guidance' },
+      ]);
+
+      expect(result).toEqual({
+        'project-management': { action: 'appended' },
+        decisions: { action: 'appended' },
+      });
+      expect(JSON.stringify(result)).not.toContain('Secret');
+      await expect(readAgentsMd()).resolves.toBe(
+        `${original}\n<!-- OAT project-management -->\nPJM guidance\n<!-- END OAT project-management -->\n\n<!-- OAT decisions -->\nDecision guidance\n<!-- END OAT decisions -->\n`,
+      );
+    });
+
+    it('negative control (c): a concurrent append survives with the original prefix unchanged', async () => {
+      const original = '# Original prefix\nuser line\n';
+      await setup(original);
+      const agentsPath = join(root, 'AGENTS.md');
+      const concurrent = 'Concurrent user note.\n';
+      const fileSystem = withFileSystem({
+        open: vi.fn(async (...args: Parameters<typeof open>) => {
+          await appendFile(agentsPath, concurrent, 'utf8');
+          return open(...args);
+        }) as AgentsMdFileSystem['open'],
+      });
+
+      const result = await upsertAgentsMdSection(
+        root,
+        'tools',
+        'Tool guidance',
+        {
+          fileSystem,
+        },
+      );
+
+      expect(result).toEqual({ action: 'appended' });
+      const content = await readAgentsMd();
+      expect(content.startsWith(original)).toBe(true);
+      expect(content).toBe(
+        `${original}${concurrent}\n<!-- OAT tools -->\nTool guidance\n<!-- END OAT tools -->\n`,
+      );
+    });
+
+    it('negative control (d): a concurrent append without a trailing newline keeps the marker on its own line', async () => {
+      const original = '# Original prefix\n';
+      await setup(original);
+      const agentsPath = join(root, 'AGENTS.md');
+      const concurrent = 'unterminated concurrent tail';
+      const fileSystem = withFileSystem({
+        open: vi.fn(async (...args: Parameters<typeof open>) => {
+          await appendFile(agentsPath, concurrent, 'utf8');
+          return open(...args);
+        }) as AgentsMdFileSystem['open'],
+      });
+
+      const first = await upsertAgentsMdSection(
+        root,
+        'tools',
+        'Tool guidance',
+        {
+          fileSystem,
+        },
+      );
+      const repeated = await upsertAgentsMdSection(
+        root,
+        'tools',
+        'Tool guidance',
+      );
+
+      expect(first).toEqual({ action: 'appended' });
+      expect(repeated).toEqual({ action: 'no-change' });
+      const content = await readAgentsMd();
+      expect(content.startsWith(`${original}${concurrent}`)).toBe(true);
+      expect(content.split('\n')).toContain('<!-- OAT tools -->');
+      expect(content.match(/<!-- OAT tools -->/g)).toHaveLength(1);
+      expect(content.match(/<!-- END OAT tools -->/g)).toHaveLength(1);
+    });
+
+    it('negative control (e): refuses a hard-linked outside target swapped in before the open', async () => {
+      await setup('# Repository guidance\n');
+      const agentsPath = join(root, 'AGENTS.md');
+      const outsideDir = await mkdtemp(join(tmpdir(), 'agents-md-swap-'));
+      const outside = join(outsideDir, 'outside.md');
+      const outsideContent = '# Outside the repository\n';
+      await writeFile(outside, outsideContent, 'utf8');
+      try {
+        const fileSystem = withFileSystem({
+          open: vi.fn(async (...args: Parameters<typeof open>) => {
+            const staged = join(root, 'swap.tmp');
+            await link(outside, staged);
+            await rename(staged, agentsPath);
+            return open(...args);
+          }) as AgentsMdFileSystem['open'],
+        });
+
+        const result = await upsertAgentsMdSection(
+          root,
+          'tools',
+          'Tool guidance',
+          { fileSystem },
+        );
+
+        expect(result).toMatchObject({
+          action: 'blocked',
+          blocked: {
+            reason: 'Repository or AGENTS.md identity changed during planning.',
+          },
+        });
+        await expect(readFile(outside, 'utf8')).resolves.toBe(outsideContent);
+        await expect(readAgentsMd()).resolves.toBe(outsideContent);
+      } finally {
+        await rm(outsideDir, { recursive: true, force: true });
+      }
+    });
+
+    it('negative control (f): an absent block beside a legacy block stays zero-write', async () => {
+      const original =
+        '# Header\n<!-- OAT workflows -->\nlegacy\n<!-- END OAT workflows -->\n';
+      await setup(original);
+      const openSpy = vi.fn(realFileSystem.open);
+
+      const result = await upsertAgentsMdSection(
+        root,
+        'tools',
+        'Tool guidance',
+        {
+          removeSectionKeys: ['workflows'],
+          fileSystem: withFileSystem({ open: openSpy }),
+        },
+      );
+
+      expect(result).toMatchObject({
+        action: 'manual-required',
+        manualPatch: { legacyBlockAction: 'remove-manually' },
+      });
+      expect(openSpy).not.toHaveBeenCalled();
+      await expect(readAgentsMd()).resolves.toBe(original);
+    });
+
+    it('negative control (f): appends the absent block and patches only the different block', async () => {
+      const original = [
+        '# Header',
+        '<!-- OAT decisions -->',
+        'old decisions',
+        '<!-- END OAT decisions -->',
+        '',
+      ].join('\n');
+      await setup(original);
+
+      const result = await upsertAgentsMdSections(root, [
+        { key: 'project-management', body: 'PJM guidance' },
+        { key: 'decisions', body: 'Decision guidance' },
+      ]);
+
+      expect(result['project-management']).toEqual({ action: 'appended' });
+      expect(result.decisions).toMatchObject({
+        action: 'manual-required',
+        manualPatch: {
+          managedBlock:
+            '<!-- OAT decisions -->\nDecision guidance\n<!-- END OAT decisions -->',
+          legacyBlockAction: 'preserve',
+        },
+      });
+      await expect(readAgentsMd()).resolves.toBe(
+        `${original}\n<!-- OAT project-management -->\nPJM guidance\n<!-- END OAT project-management -->\n`,
+      );
+    });
+  });
+
+  describe('append refusals and failures (p01 review)', () => {
+    const tempDirs: string[] = [];
+
+    afterEach(async () => {
+      await Promise.all(
+        tempDirs.map((dir) => rm(dir, { recursive: true, force: true })),
+      );
+      tempDirs.length = 0;
+    });
+
+    async function outsideFile(content: string): Promise<string> {
+      const dir = await mkdtemp(join(tmpdir(), 'agents-md-outside-link-'));
+      tempDirs.push(dir);
+      const path = join(dir, 'outside.md');
+      await writeFile(path, content, 'utf8');
+      return path;
+    }
+
+    it('negative control (g): a hard link to an outside file present at planning gets the zero-write manual patch', async () => {
+      await setup();
+      const outsideContent = '# Outside the repository\n';
+      const outside = await outsideFile(outsideContent);
+      await link(outside, join(root, 'AGENTS.md'));
+      const openSpy = vi.fn(realFileSystem.open);
+
+      const result = await upsertAgentsMdSection(
+        root,
+        'tools',
+        'Tool guidance',
+        { fileSystem: withFileSystem({ open: openSpy }) },
+      );
+
+      expect(result).toMatchObject({
+        action: 'manual-required',
+        manualPatch: {
+          target: 'AGENTS.md',
+          managedBlock:
+            '<!-- OAT tools -->\nTool guidance\n<!-- END OAT tools -->',
+        },
+      });
+      expect(result.manualPatch?.instructions.join('\n')).toMatch(
+        /more than one hard link/,
+      );
+      expect(openSpy).not.toHaveBeenCalled();
+      await expect(readFile(outside, 'utf8')).resolves.toBe(outsideContent);
+      expect(JSON.stringify(result)).not.toContain(outside);
+    });
+
+    it('records the append refusal on the manual patch for callers', async () => {
+      await setup('# Read only\n');
+      await chmod(join(root, 'AGENTS.md'), 0o444);
+
+      const result = await upsertAgentsMdSection(
+        root,
+        'tools',
+        'Tool guidance',
+      );
+
+      expect(result.manualPatch?.appendRefusal).toBe('permission denied');
+    });
+
+    it('gives an in-repository hard link the same zero-write manual patch', async () => {
+      await setup('# Shared\n');
+      await link(join(root, 'AGENTS.md'), join(root, 'CLAUDE.md'));
+
+      const result = await upsertAgentsMdSection(
+        root,
+        'tools',
+        'Tool guidance',
+      );
+
+      expect(result.action).toBe('manual-required');
+      await expect(readAgentsMd()).resolves.toBe('# Shared\n');
+    });
+
+    it('refuses without writing when a hard link appears between planning and the open', async () => {
+      await setup('# Original\n');
+      const agentsPath = join(root, 'AGENTS.md');
+      const dir = await mkdtemp(join(tmpdir(), 'agents-md-late-link-'));
+      tempDirs.push(dir);
+      const fileSystem = withFileSystem({
+        open: vi.fn(async (...args: Parameters<typeof open>) => {
+          await link(agentsPath, join(dir, 'late.md'));
+          return open(...args);
+        }) as AgentsMdFileSystem['open'],
+      });
+
+      const result = await upsertAgentsMdSection(
+        root,
+        'tools',
+        'Tool guidance',
+        { fileSystem },
+      );
+
+      expect(result.action).toBe('manual-required');
+      await expect(readAgentsMd()).resolves.toBe('# Original\n');
+    });
+
+    it('reports a read-only AGENTS.md as permission denied with the manual patch', async () => {
+      await setup('# Read only\n');
+      await chmod(join(root, 'AGENTS.md'), 0o444);
+
+      const result = await upsertAgentsMdSection(
+        root,
+        'tools',
+        'Tool guidance',
+      );
+
+      expect(result).toMatchObject({
+        action: 'manual-required',
+        manualPatch: {
+          managedBlock: expect.stringContaining('<!-- OAT tools -->'),
+        },
+      });
+      const instructions = result.manualPatch?.instructions.join('\n') ?? '';
+      expect(instructions).toMatch(/permission denied/);
+      expect(instructions).not.toMatch(/identity changed/);
+      await expect(readAgentsMd()).resolves.toBe('# Read only\n');
+    });
+
+    function failingHandle(
+      writePlan: (
+        real: Awaited<ReturnType<typeof open>>,
+        buffer: Buffer,
+        offset: number,
+        length: number,
+      ) => Promise<{ bytesWritten: number }>,
+      closeError?: Error,
+    ): AgentsMdFileSystem['open'] {
+      return (async (...args: Parameters<typeof open>) => {
+        const real = await open(...args);
+        return {
+          stat: () => real.stat(),
+          write: (buffer: Buffer, offset: number, length: number) =>
+            writePlan(real, buffer, offset, length),
+          close: async () => {
+            await real.close();
+            if (closeError) throw closeError;
+          },
+        };
+      }) as unknown as AgentsMdFileSystem['open'];
+    }
+
+    function errno(code: string): NodeJS.ErrnoException {
+      return Object.assign(new Error(code), { code });
+    }
+
+    it('falls back to the manual patch when the first write fails with nothing written', async () => {
+      await setup('# Original\n');
+
+      const result = await upsertAgentsMdSection(
+        root,
+        'tools',
+        'Tool guidance',
+        {
+          fileSystem: withFileSystem({
+            open: failingHandle(async () => {
+              throw errno('ENOSPC');
+            }),
+          }),
+        },
+      );
+
+      expect(result.action).toBe('manual-required');
+      expect(result.manualPatch?.instructions.join('\n')).toMatch(
+        /no space left on device/,
+      );
+      await expect(readAgentsMd()).resolves.toBe('# Original\n');
+    });
+
+    it('reports a partial append as blocked with a repair reason', async () => {
+      await setup('# Original\n');
+      let calls = 0;
+
+      const result = await upsertAgentsMdSection(
+        root,
+        'tools',
+        'Tool guidance',
+        {
+          fileSystem: withFileSystem({
+            open: failingHandle(async (real, buffer, offset) => {
+              calls += 1;
+              if (calls > 1) throw errno('ENOSPC');
+              return real.write(buffer, offset, 5);
+            }),
+          }),
+        },
+      );
+
+      expect(result).toMatchObject({
+        action: 'blocked',
+        blocked: { reason: expect.stringMatching(/partial OAT block/) },
+      });
+      expect(result.blocked?.reason).not.toMatch(/identity changed/);
+    });
+
+    it('keeps appended when close fails after the full payload was written', async () => {
+      await setup('# Original\n');
+
+      const result = await upsertAgentsMdSection(
+        root,
+        'tools',
+        'Tool guidance',
+        {
+          fileSystem: withFileSystem({
+            open: failingHandle(
+              (real, buffer, offset, length) =>
+                real.write(buffer, offset, length),
+              errno('EIO'),
+            ),
+          }),
+        },
+      );
+
+      expect(result).toEqual({ action: 'appended' });
+      await expect(readAgentsMd()).resolves.toBe(
+        '# Original\n\n<!-- OAT tools -->\nTool guidance\n<!-- END OAT tools -->\n',
+      );
+    });
+
+    it('reports a directory swapped in before the open as an identity change', async () => {
+      await setup('# Original\n');
+      const agentsPath = join(root, 'AGENTS.md');
+      const fileSystem = withFileSystem({
+        open: vi.fn(async (...args: Parameters<typeof open>) => {
+          await rm(agentsPath);
+          await mkdir(agentsPath);
+          return open(...args);
+        }) as AgentsMdFileSystem['open'],
+      });
+
+      const result = await upsertAgentsMdSection(
+        root,
+        'tools',
+        'Tool guidance',
+        { fileSystem },
+      );
+
+      expect(result).toMatchObject({
+        action: 'blocked',
+        blocked: {
+          reason: 'Repository or AGENTS.md identity changed during planning.',
+        },
+      });
+      expect(result.manualPatch).toBeUndefined();
+    });
+
+    it('fails fast instead of hanging on a FIFO swapped in before the open', async () => {
+      await setup('# Original\n');
+      const agentsPath = join(root, 'AGENTS.md');
+      const fileSystem = withFileSystem({
+        open: vi.fn(async (...args: Parameters<typeof open>) => {
+          await rm(agentsPath);
+          execFileSync('mkfifo', [agentsPath]);
+          return open(...args);
+        }) as AgentsMdFileSystem['open'],
+      });
+
+      const result = await upsertAgentsMdSection(
+        root,
+        'tools',
+        'Tool guidance',
+        { fileSystem },
+      );
+
+      expect(result.action).toBe('blocked');
+    }, 5000);
   });
 
   it('never removes an existing managed section automatically', async () => {

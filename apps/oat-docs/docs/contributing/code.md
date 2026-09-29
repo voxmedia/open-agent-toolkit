@@ -73,12 +73,16 @@ checkout with neither `origin/main` nor `main` skips the whole gate (CI uses
 `fetch-depth: 0`). Test files under `packages/cli/src/` count as publishable
 changes for this gate.
 
-CI runs neither `pnpm lint` nor `pnpm format`. `pnpm check` now covers the
+CI runs neither `pnpm lint` nor `pnpm format`. `pnpm check` covers the
 formatting of `.agents/skills/**`, `apps/oat-docs/docs`, and `tools/smoke`
-through `format:root`, but `pnpm lint`'s root `oxlint` pass over `tools/smoke`
-and `.agents/skills`, and `packages/control-plane`'s `format` (it defines no
-`check` script), still run in no CI gate — run both whenever a change touches
-those paths.
+through `format:root`, and the `check` script of every package under
+`packages/` (`packages/control-plane` included) runs its `oxlint` passes and
+`oxfmt --check .` (the docs app's `check` covers only its Markdown), but
+`pnpm lint`'s root `oxlint` pass over `tools/smoke` and `.agents/skills` still
+runs in no CI gate — the smoke test that shells out to `pnpm lint` passes as
+long as its own seeded violations are reported, so it cannot catch an existing
+root-oxlint violation. Run `pnpm lint` and `pnpm format` whenever a change
+touches those paths.
 For narrower changes, use package-specific checks when possible, but do not
 merge without passing the relevant workspace gates.
 

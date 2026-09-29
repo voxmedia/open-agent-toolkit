@@ -384,13 +384,13 @@ and can never be reused as a fresh `allowed` result once the gate is
 re-enabled; the re-enabled gate requires a new configured generation.
 
 New generations persist `implementation_fingerprint` as
-`sha256:effective-delta-v1:<digest>`. Resolve the logical integration base from
+`sha256:effective-delta-v2:<digest>`. Resolve the logical integration base from
 the tracked PR's exact base ref, then the repository's configured remote default
 branch; missing or ambiguous resolution fails closed. Persist the logical base
 ref as `implementation_base_ref`; require exactly one merge base between that
 ref and each compared HEAD.
 
-Prefix the fingerprint input with the bytes `effective-delta-v1\0`. Hash the
+Prefix the fingerprint input with the bytes `effective-delta-v2\0`. Hash the
 exact NUL-delimited byte stream from Git
 `--raw -z --no-renames --no-abbrev` output, which includes both base and final
 modes and full object IDs for blobs, symlinks, deletions, and gitlinks. Run with
@@ -398,13 +398,29 @@ modes and full object IDs for blobs, symlinks, deletions, and gitlinks. Run with
 format owns path framing and byte ordering; do not parse and reserialize it,
 abbreviate object IDs, enable rename detection, or hash human patch output.
 
-Exclude only the exact `$PROJECT_PATH/state.md` checkpoint carrier to avoid a
-self-referential digest. Use Git's literal exclusion pathspec, not a glob.
-Validate that file independently as the structured transition above. Every
-other path remains fingerprinted. Set `freshness_head` to `reviewed_head` and
-`freshness_fingerprint` to `implementation_fingerprint` when the generation
-starts. These rolling fields preserve the accepted tree outcome after later
-authorized closeout transitions without changing the immutable reviewed basis.
+Exclude the exact `$PROJECT_PATH/state.md` checkpoint carrier, which would make
+the digest self-referential, and every path under `.oat/projects/` and
+`.oat/repo/`, whose project artifacts and repository records never make the
+gate stale. Use Git's literal exclusion pathspecs
+`:(exclude,literal)$PROJECT_PATH/state.md`, `:(exclude,literal).oat/projects`,
+and `:(exclude,literal).oat/repo`, not globs. A literal directory pathspec
+excludes that directory and everything beneath it, never a sibling whose name
+merely starts the same way. `.oat/templates/`, `.oat/scripts/`,
+`.oat/config*.json`, and `.oat/sync/` stay fingerprinted, as does every other
+path. The `.oat/projects` exclusion names the default location literally; a
+project whose configured `projects.root` lies outside `.oat/projects/` keeps
+its other artifacts fingerprinted (more staleness, never less). Validate the
+state carrier independently as the structured transition above.
+
+Stored `sha256:effective-delta-v1:<digest>` values keep v1 semantics and are
+never reinterpreted: recompute them with the `effective-delta-v1\0` prefix and
+only the exact `$PROJECT_PATH/state.md` exclusion. A v1 generation stays v1
+until it goes stale; its replacement generation uses v2.
+
+Set `freshness_head` to `reviewed_head` and `freshness_fingerprint` to
+`implementation_fingerprint` when the generation starts. These rolling fields
+preserve the accepted tree outcome after later authorized closeout transitions
+without changing the immutable reviewed basis.
 
 An in-flight `pending` or `blocked` generation reuses its persisted resolved
 configuration and never re-resolves it. Recompute the fingerprint from those
@@ -561,9 +577,14 @@ disposition.
   closeout-only. A path category alone is insufficient: the corresponding
   persisted gate or sequence transition must own that descendant boundary;
   unknown or mixed work is substantive.
-- For a qualified `sha256:effective-delta-v1:<digest>` value, require the
+- For a qualified `sha256:effective-delta-v2:<digest>` or
+  `sha256:effective-delta-v1:<digest>` value, require the
   persisted `implementation_base_ref`, `freshness_head`, one current merge base,
   and 64-character lowercase hexadecimal implementation and freshness digests.
+  Recompute with the stored value's own version prefix and exclusion set.
+  Under v2, a descendant commit whose changes all fall inside the v2 exclusion
+  set leaves the effective delta unchanged; it is neither substantive nor
+  unknown and needs no owning transition.
   Missing or malformed inputs fail closed. Walk descendants after
   `freshness_head` in commit order. Ignore a checkpoint-persistence commit only
   after verifying its diff changes the exact state carrier and nothing else.
@@ -587,7 +608,8 @@ disposition.
   or workflow configuration changes make the prior result `stale`.
 - Every stale transition preserves prior provenance for audit, requires a
   current final lifecycle review for the changed basis, and starts a new
-  generation using the qualified fingerprint format.
+  generation using the current qualified fingerprint format,
+  `effective-delta-v2`.
 
 Before approval-aware sequencing, final HiLL approval, implementation
 completion, or success output, run the configured gate:

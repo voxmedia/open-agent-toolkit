@@ -54,12 +54,38 @@ const TEMPLATE_TARGETS = [
   { template: 'pjm-handoffs-readme.md', target: 'pjm/handoffs/README.md' },
 ] as const satisfies readonly TemplateTarget[];
 
-// Next-step hint printed after init/backfill. `oat pjm init` never writes
-// CLAUDE.md shims itself — strategy ownership stays with `oat instructions
-// sync`, so we point the operator at it (with the `--dry-run` preview).
+// Next-step hint printed after init/backfill. `oat pjm init` never writes or
+// removes CLAUDE.md files itself — strategy ownership stays with
+// `oat instructions sync`, so we point the operator at it (with the
+// `--dry-run` preview). It must not promise shims: the default strategy is
+// `none` (DR-260927-claude-md-shims-are-opt), so shims are opt-in.
 export const INSTRUCTIONS_SYNC_HINT =
-  'Next step: run `oat instructions sync` to create CLAUDE.md shims for the ' +
-  'repo-reference AGENTS.md files (preview with `oat instructions sync --dry-run`).';
+  'Next step: run `oat instructions sync` to check the repo-reference AGENTS.md ' +
+  'files against your CLAUDE.md strategy (preview with `oat instructions sync --dry-run`). ' +
+  'No CLAUDE.md shims are created by default; opt in with ' +
+  '`oat config set instructions.claude.shims pointer`.';
+
+// AGENTS.md guidance messages printed by `oat pjm init`. An absent managed
+// block is appended to an existing AGENTS.md. The printed manual patch is
+// needed when a block is present but differs from the managed version, or
+// when OAT refuses to append at all (for example a hard-linked or unwritable
+// AGENTS.md); the refusal gets its own header.
+export const AGENTS_GUIDANCE_APPENDED_MESSAGE =
+  'AGENTS.md guidance: appended the absent OAT managed blocks to the existing AGENTS.md.';
+export const AGENTS_GUIDANCE_MANUAL_MESSAGE =
+  'PJM scaffold and adoption completed; AGENTS.md guidance requires manual action. ' +
+  'Absent managed blocks are appended automatically, but an existing block ' +
+  'differs from the managed version: apply the patch below, then rerun `oat pjm init`.';
+export function agentsGuidanceRefusalMessage(
+  target: string,
+  cause: string,
+): string {
+  return (
+    'PJM scaffold and adoption completed; AGENTS.md guidance requires manual action. ' +
+    `OAT could not append the absent guidance blocks to ${target} (${cause}), ` +
+    'so nothing was written: apply the patch below, then rerun `oat pjm init`.'
+  );
+}
 
 const BACKLOG_PATHS = [
   'pjm/backlog/index.md',

@@ -1,0 +1,2907 @@
+# Fact base
+
+- oat_status: complete
+- oat_ready_for: null
+- oat_blockers: []
+- oat_last_updated: 2026-09-28
+- oat_generated: true
+- oat_summary_last_task: prev1-t09
+- oat_summary_revision_count: 1
+- oat_summary_includes_revisions: [p-rev1]
+- Summary: backlog-wave-2
+- Wave 2 of the 2026-09-26 backlog review, delivered as one autonomous quick-mode
+- project and one PR (#332). It bundled twelve approved backlog items with a new
+- one making `CLAUDE.md` shims opt-in: Claude Code now reads `AGENTS.md` natively,
+- and any `CLAUDE.md`, `CLAUDE.local.md`, or `.claude/CLAUDE.md` makes its
+- `agents-md` plugin stop reading `AGENTS.md`. The other items closed gaps in the
+- AGENTS.md refresh loop, lifecycle routing, and CI left by earlier waves.
+- Revision 1 changed the shim design after the PR opened.
+- 49 tasks across phases p01-p05 and p-rev1: 30 planned and revision tasks plus
+- 19 review-fix tasks. What shipped:
+- - **CLAUDE.md shims are opt-in.** `instructions.claude.shims`
+- (`none | pointer | symlink | copy`, default `none`) persists the strategy,
+- `instructions.claude.excludes` lists directories sync leaves alone, and
+- `--strategy` overrides one run. Under `none`, `oat instructions sync` creates
+- no `CLAUDE.md` and removes only exact OAT-created shims (`@AGENTS.md` pointer,
+- sibling symlink, identical copy) after apply-time identity and content
+- re-checks. A lone `CLAUDE.md` with no `AGENTS.md` is adopted into a new
+- `AGENTS.md` and removed. This repository's 11 shims were removed.
+- - **Shim removal is all or nothing.** While any `CLAUDE.md`,
+- `CLAUDE.local.md`, or `.claude/CLAUDE.md` with its own content exists
+- anywhere in the repository (excluded trees included), sync removes no shim,
+- and `sync` and `validate` exit 1 with one `claude_md_blocks_shim_removal`
+- finding. It names the files with content, the shims kept, why any
+- `CLAUDE.md` matters (with a docs link), and the fixes: move the content into
+- `AGENTS.md` and remove the file, or set a shim strategy. A blocker that an
+- `AGENTS.md` links to gets replace-then-remove advice, and kept shims get no
+- per-file "remove it" advice. Validate, `oat-doctor`, and the
+- agent-instructions analyze and apply skills report the same finding.
+- - **Rules and provider sync are independent of the shim setting.** A test pins
+- identical `oat sync` output for `.claude/rules`, skills, and agents under
+- `none` and `pointer`, and `oat sync` never creates or removes a `CLAUDE.md`.
+- - **AGENTS.md guidance appends.** An absent managed block is appended with
+- `O_WRONLY | O_APPEND | O_NOFOLLOW` after `fstat` identity checks; hard-linked,
+- unwritable, swapped, or non-regular targets get the zero-write manual patch
+- with the real cause. `oat pjm init` prints guidance once, every
+- `--project-guidance` consumer acts or rejects, zero-pack guidance is skipped,
+- a new read-only `oat tools guidance [--json]` prints the block, and the tools
+- block names only the skills directories installed packs use.
+- - **Backlog archive rewrites inbound references.** `oat backlog archive`
+- repoints `.oat/repo` Markdown links, repository-root path strings, and
+- whole-span code citations to the moved item. URLs, symlinks, fenced code, and
+- working links are left alone, unresolvable forms warn, and rewritten files
+- are replaced atomically (temporary file plus rename).
+- - **Recon.** `oat-reviewer` no longer launches `recon-worker`; reviewer lanes
+- use ordinary read-only sub-agents, and only the `recon` skill launches
+- `recon-worker`. The recon skill is unchanged from `main`.
+- - **Lifecycle skills.** Quick-mode discovery routes straight to quick-start in
+- next and progress; Lite records `absorbed_projects` /
+- `absorbed_backlog_ids`; implement commits the phase task ledger before
+- dispatching the per-phase reviewer and keeps the phase row nonterminal until
+- review fixes and gates settle. New exit-gate generations fingerprint with
+- `effective-delta-v2`, which ignores changes under `.oat/projects/**` and
+- `.oat/repo/**`; stored v1 values keep v1 rules.
+- - **Repairs and CI.** Five heading-swallowing bare fences fixed in agent roles
+- and templates, with the fence scanner extended to `.agents/agents` and
+- `.oat/templates`; `packages/control-plane` gains `check`, `check:fix`, and
+- `lint:fix`; the agents-md unsafe-directory test race is fixed; ten uncached
+- runs recorded for the collection-detach test.
+- - Lockstep public packages bumped 0.3.8 → 0.3.9. Fourteen backlog items
+- archived: twelve shipped by this wave (`BL-260927-validate-recon-worker`
+- resolved by removing the reviewer's `recon-worker` path) plus two closed as
+- superseded by the pre-wave review-cap consolidation, whose six `DR-260927-*`
+- records also ride on this branch.
+- - **CLAUDE.md shims are opt-in** (`DR-260927-claude-md-shims-are-opt`): the
+- default strategy is `none`, OAT-created shims are removed by sync, and any
+- remaining `CLAUDE.md` produces a warning. Amended by the next two records.
+- - **Name the CLAUDE.md shim keys under instructions.claude**
+- (`DR-260928-name-the-claude-md-shim-keys`): both keys govern Claude Code's
+- `CLAUDE.md` handling, not documentation. The rename from
+- `documentation.instructionSyncStrategy` and
+- `documentation.instructionPointerExcludes` is clean, with no compatibility
+- read or deprecation warning, because most repositories run on defaults.
+- - **Remove no CLAUDE.md shim while any CLAUDE.md has content**
+- (`DR-260928-remove-no-claude-md-shim-while`): partial removal stranded
+- directories whose shims carried their `AGENTS.md` into Claude Code sessions.
+- No `keep` strategy value was added; keeping hand-written files means choosing
+- `pointer`, `symlink`, or `copy`.
+- - **Persist the instruction sync strategy in project config**
+- (`DR-260928-persist-the-instruction-sync`): `BL-260830-persist-instruction-sync`
+- was absorbed and its init prompt dropped, because opting in is one
+- `oat config set`.
+- - **Commit the phase task ledger before per-phase review dispatch**
+- (`DR-260928-commit-the-phase-task-ledger`): the pre-review commit covers task
+- and phase completion, the resume pointer, and recovery-marker settlement;
+- review-outcome bookkeeping stays post-review.
+- - **AGENTS.md guidance appends absent managed blocks**
+- (`DR-260928-agents-md-guidance-appends`): writers never rewrite existing
+- bytes and fall back to the manual patch whenever file identity cannot be
+- proven.
+- - **Backlog archive rewrites inbound references**
+- (`DR-260928-backlog-archive-rewrites`): rewrite rather than only warn, touch
+- only tokens that resolve to the moved item, and replace files through an
+- exclusive temporary file so hard links are never written through.
+- - **Exclude project and repository records from exit-gate freshness**
+- (`DR-260928-exclude-project-and-repository`): summaries, review artifacts,
+- backlog items, and decision records cannot change shipped behavior, so they
+- no longer stale a passed gate. The exclusion is the literal default
+- `.oat/projects/` location, not the configured `projects.root`, which errs
+- toward staleness.
+- - **Defer the oat tools where command** (`DR-260928-defer-the-oat-tools-where`):
+- the scope-aware guidance block and `oat tools guidance` cover the reported
+- confusion.
+- - **Revision 1 reshaped the shim design** (discovery Key Decisions 2-3,
+- `DR-260927-claude-md-shims-are-opt`): the keys moved from the
+- `documentation.*` namespace to `instructions.claude.*`, and unconditional
+- removal of OAT-managed shims became all-or-nothing removal. Operator
+- direction; implementation is the source of truth.
+- - **Recon validator withdrawn** (discovery Key Decision 5, plan p04-t02): p04
+- built `recon/scripts/validate-assignment.mjs` and wired `oat-reviewer` to run
+- it; four review and gate rounds grew it to about 1,900 lines of authority
+- checks. Revision 1 withdrew it, restored the recon skill to `main`, and
+- deleted its unshipped decision record.
+- - **Pre-review bookkeeping widened** (discovery Key Decision 4): p03 review
+- M1/M2 and gate M2 moved recovery-marker settlement into the pre-review commit
+- and kept the phase row nonterminal until fixes and gates settle.
+- - **p04 gate completed under operator override** after two blocked attempts
+- exhausted the retry budget; the final review covered p04.
+- - **Case variants of `CLAUDE.md` are not warned about** (backlog AC4):
+- case-insensitive matching flagged real provider docs such as
+- `tools/smoke/protocols/claude.md`; documented and pinned.
+- - **Shim removal nearly deleted hand-written files.** p02 review C1 reproduced
+- default sync deleting a hand-written `CLAUDE.md` when `AGENTS.md` is a
+- symlink to it (the copy check compared the file with itself). Fixes made any
+- `CLAUDE.md` an `AGENTS.md` resolves to unmanaged, including cross-directory
+- links checked at planning and apply time.
+- - **The recon validator kept growing.** Each p04 gate and review found a new
+- authority gap (unbounded reads, arbitrary schemas, mutating tool names,
+- unbounded write paths); the gate budget ran out, and the operator later
+- withdrew the component rather than hardening it further.
+- - **The reference rewriter kept widening its blast radius.** Reviews found a
+- symlink escape outside `.oat/repo`, URL and unrelated-path rewrites, broken
+- code-span citations, footnote corruption, and finally (exit gate H1) in-place
+- truncation writing through hard links. The rewriter now resolves every token,
+- refuses symlinks and out-of-root paths, and replaces files atomically.
+- - **A p-rev1 gate run failed closed.** Run `b282ca69` wrote a 0-finding review
+- but never ran the branch-local `gate route` step, so no route receipt existed;
+- it was not accepted as evidence and a rerun passed.
+- - **Five sequential phases instead of parallel worktrees:** shared write sets
+- (`project-guidance.ts`, `oat-doctor/SKILL.md`, `pjm/init.ts`, help snapshots,
+- the load-contract test, `oat-reviewer.md`, and skill version pins) made
+- parallel lanes unsafe.
+- - **Clean key rename with no compatibility read:** simpler config and docs, at
+- the cost of an upgrade notice for the few repositories that set the released
+- exclusion list.
+- - **All-or-nothing removal:** a repository with one hand-written `CLAUDE.md`
+- keeps every shim and sees exit 1 until someone resolves that file; nothing is
+- removed silently.
+- - **Withdraw the recon validator instead of finishing it:** it also blocked
+- Codex recon lanes, and only the `recon` skill should launch `recon-worker`.
+- - **Concurrent AGENTS.md appends left unserialized:** two simultaneous runs can
+- append the same block twice; a correct fix needs a cross-process lock, and
+- concurrent runs against one checkout are rare.
+- - **`BL-260829-order-phase-bookkeeping-before` shipped but stays open:** gates
+- and lifecycle skills run the installed release, so live observation waits for
+- the next multi-phase project.
+- - After upgrading, `oat instructions validate` exits 1 in a repository that
+- still has old shims until `oat instructions sync` removes them, so CI that
+- runs validate goes red until then. Opt back in with
+- `oat config set instructions.claude.shims pointer` and rerun sync.
+- - Upgrade notice: a repository that set the released
+- `documentation.instructionPointerExcludes` must re-set that list as
+- `instructions.claude.excludes` before its first sync. The old key is ignored,
+- so sync would otherwise adopt and remove a lone `CLAUDE.md` in the formerly
+- excluded directories.
+- - A `claude_md_blocks_shim_removal` finding makes `sync` and `validate` exit 1
+- until the named files are moved or removed or a shim strategy is set.
+- - Reviewer lanes never launch `recon-worker`; use the `recon` skill for
+- evidence-packet reconnaissance.
+- - Final verification: full Definition of Done at `c95e17aad` after Revision 1,
+- every gate exit 0 with 0 of 10 test tasks cached. Exit gate generation 2
+- passed (run `d34bae3b`, 0 Critical/High); its two Mediums were the pending
+- summary, recap, and PR refresh closeout steps.
+- - **Revision 1 (2026-09-28, operator feedback on PR #332; prev1-t01..t09):**
+- renamed the shim keys to `instructions.claude.shims` and
+- `instructions.claude.excludes`, made shim removal all or nothing, pinned
+- rules-sync independence, and added `effective-delta-v2` exit-gate freshness.
+- It also removed the reviewer's `recon-worker` path, restored the recon skill
+- to `main` (withdrawing the p04 assignment validator), and corrected the recon
+- records; two review-fix tasks closed p-rev1 and final review findings.
+- - At batch approval, tell the operator to run `/oat-project-autonomous` next
+- instead of trying the Skill tool first; lifecycle skills are
+- user-invocation-only, so chaining costs a round trip.
+- ([2026-09-27T14:35Z — efficiency — Lifecycle skills are user-invocation-only from the Skill tool](oat-execution-learnings.md#2026-09-27t1435z---efficiency---lifecycle-skills-are-user-invocation-only-from-the-skill-tool))
+- - Check the commit exit code and `git log -1` after every commit, and wrap
+- commit bodies at 100 characters; tailing hook output hid a commitlint
+- rejection and a fix landed in a bookkeeping commit.
+- ([2026-09-28T01:45Z — gotcha — Commitlint rejects silently after lint-staged prints success](oat-execution-learnings.md#2026-09-28t0145z---gotcha---commitlint-rejects-silently-after-lint-staged-prints-success))
+- - Record the operator's disposition in the plan's Reviews notes when a
+- configured gate exhausts its budget on already-resolved findings, until
+- `BL-260818-distinguish-operator-directed` ships; this run spent an operator
+- round trip on a one-flag fix.
+- ([2026-09-27T15:25Z — decision — Plan gate exhausted on a one-flag finding](oat-execution-learnings.md#2026-09-27t1525z---decision---plan-gate-exhausted-on-a-one-flag-finding))
+- - Run complexity review after artifact review rounds and before the gate, so
+- the gate sees the trimmed plan; review rounds added machinery a later
+- complexity pass removed.
+- ([2026-09-27T15:25Z — efficiency — Structured artifact review converged in three attempts](oat-execution-learnings.md#2026-09-27t1525z---efficiency---structured-artifact-review-converged-in-three-attempts))
+- - When a gate keeps widening one component across rounds, check whether the
+- component should exist before a second fix round; the recon validator grew
+- through gate rounds and was then withdrawn.
+- ([2026-09-28T13:10Z — decision — Revision 1 resumed autonomously after operator feedback on PR #332](oat-execution-learnings.md#2026-09-28t1310z---decision---revision-1-resumed-autonomously-after-operator-feedback-on-pr-332))
+- - Persist exit-gate launch intent, verify it, then launch; never batch the two,
+- and match YAML keys at line start. A substring guard failed on a commented
+- template and the gate ran without persisted intent.
+- ([2026-09-28T11:40Z — gotcha — Exit-gate intent persistence must be sequential, not parallel](oat-execution-learnings.md#2026-09-28t1140z---gotcha---exit-gate-intent-persistence-must-be-sequential-not-parallel))
+- - **project-recap:** rebuilt after Revision 1 at completion; the run ID,
+- outcome, and QA verdict are recorded in the exported recap's
+- `manifest.json` and `qa/result.json` (this section names no run, so the
+- recap's own inputs stay unchanged after it is built).
+- - `BL-260928-serialize-concurrent-agents-md` — concurrent guidance appends can
+- duplicate a managed block (p01 gate M1).
+- - `BL-260928-keep-instructions-sync-force` — with a shim strategy,
+- `--strategy pointer --force` can overwrite the only `CLAUDE.md` in the
+- `AGENTS.md -> CLAUDE.md` layout (pre-existing).
+- - `BL-260928-route-quick-mode-discovery` — the control-plane recommender and
+- dashboard still route quick-mode discovery to `oat-project-plan` (p03 L1).
+- - `BL-260928-settle-codex-read-authority` — rescoped in Revision 1 to a live
+- check that `/recon` launches Codex worker lanes as `contract-enforced` on the
+- released CLI.
+- - `BL-260928-harden-the-backlog-reference` — atomic-replace edge cases:
+- ownership change, same-inode concurrent edit, long temporary names.
+- - `BL-260829-order-phase-bookkeeping-before` stays open for live observation.
+- - Not filed: the pr-final ledger guard parses a prose line that starts with `|`
+- under `## Reviews` as a malformed row (PRFINAL-05 false positive).
+- 2026-09-27 · structural · oat gate review · plan
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:2,medium:1,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-2/reviews/artifact-plan-review-2026-09-27T150947Z.md run=8f69f414-ff48-4fc6-b22a-64dca2027e62
+- 2026-09-27 · structural · oat gate review · plan
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:0,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-2/reviews/artifact-plan-review-2026-09-27T151608Z.md run=685e7775-8f4f-4c4e-b08d-bd172ad8f3d9
+- 2026-09-28 · structural · oat gate review · p01
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:1,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-2/reviews/p01-review-2026-09-28T001719Z.md run=6da2a8cf-79c3-4fbd-96a2-01d7485a9e93
+- 2026-09-28 · structural · oat-project-implement · p01
+- bw2-p01-outcome p01 pass after 2 fix rounds (p01-t07, p01-t08); gate codex-6-sol-xhigh ok, 1 Medium deferred to final; see implementation.md Orchestration Runs
+- 2026-09-28 · structural · oat gate review · p02
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:1 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-2/reviews/p02-review-2026-09-28T013003Z.md run=c8b28cc4-1645-498f-9290-c5c34552a079
+- 2026-09-28 · structural · oat-project-implement · p02
+- bw2-p02-outcome p02 pass after 1 recovery and 2 fix rounds (C1 symlink data-loss fixed); gate codex-6-sol-xhigh ok, 1 Low addressed now; see implementation.md
+- 2026-09-28 · structural · oat gate review · p03
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:2,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-2/reviews/p03-review-2026-09-28T015614Z.md run=ab142cc6-10a3-44bb-b645-46ebd5561db5
+- 2026-09-28 · structural · oat-project-implement · p03
+- bw2-p03-outcome p03 pass after 1 recovery, 1 review fix round, 1 gate sweep fix; gate codex-6-sol-xhigh ok; see implementation.md
+- 2026-09-28 · structural · oat gate review · p04
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:1,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-2/reviews/p04-review-2026-09-28T022315Z.md run=43f7cea9-d98d-4f4b-90e7-89537f0df389
+- 2026-09-28 · structural · oat gate review · p04
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:0,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-2/reviews/p04-review-2026-09-28T024124Z.md run=c9813e05-1215-4615-abcb-bef0fdfbf6d0
+- 2026-09-28 · structural · oat-project-implement · p04
+- bw2-p04-stop-1 p04 gate attempt 2 blocked (1 High: read-only tool authority); retry limit exhausted; stopped for operator direction
+- 2026-09-28 · structural · oat-project-implement · p04
+- bw2-p04-outcome p04 complete under operator override after 2 blocked gate attempts and 5 fix rounds; follow-ups filed; see implementation.md
+- 2026-09-28 · structural · oat gate review · p05
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:2,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-2/reviews/p05-review-2026-09-28T104612Z.md run=9dc0deb0-d3d9-4a35-9b5a-8c111634a460
+- 2026-09-28 · structural · oat gate review · p05
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:1,low:1 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-2/reviews/p05-review-2026-09-28T111050Z.md run=138c0018-3da4-473a-ab58-e2a99ba608ab
+- 2026-09-28 · structural · oat-project-implement · p05
+- bw2-p05-outcome p05 pass after 1 blocked gate attempt, 3 review-fix rounds, 1 sweep fix; all 38 tasks complete
+- 2026-09-28 · structural · oat gate review · final
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:0,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-2/reviews/final-review-2026-09-28T113721Z.md run=0415d270-2faa-4559-901c-65430d5c405d
+- 2026-09-28 · structural · oat gate review · final
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-2/reviews/final-review-2026-09-28T114805Z.md run=0c5dbb3e-18a9-4059-a857-ca4209e3b9e4
+- 2026-09-28 · structural · oat gate review · p-rev1
+- target=codex-6-sol-xhigh threshold=high exit=1 status=review_failed run=b282ca69-45c4-4d01-9b68-9b8e1a71d833
+- 2026-09-28 · structural · oat gate review · p-rev1
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:1 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-2/reviews/p-rev1-review-2026-09-28T162038Z.md run=22b3f5cf-b81d-4d85-bc8d-766a6cb611e6
+- 2026-09-28 · structural · oat gate review · final
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:2,low:2 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-2/reviews/final-review-2026-09-28T164247Z.md run=5c3729d3-0488-4ae1-84c5-fd7b86e49418
+- 2026-09-28 · structural · oat gate review · final
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:2,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-2/reviews/final-review-2026-09-28T165830Z.md run=d34bae3b-fe9f-4259-b98b-18a6a4e91b5b
+- oat_status: complete
+- oat_ready_for: null
+- oat_blockers: []
+- oat_last_updated: 2026-09-27
+- oat_current_task_id: null
+- oat_generated: false
+- Implementation: backlog-wave-2
+- **Started:** 2026-09-27
+- **Last Updated:** 2026-09-27
+- > This document is used to resume interrupted implementation sessions.
+- >
+- > Conventions:
+- >
+- > - `oat_current_task_id` always points at the **next plan task to do** (not the last completed task).
+- > - When all plan tasks are complete, set `oat_current_task_id: null`.
+- > - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews` (e.g., `| final | code | passed | ... |`).
+- > - Keep phase/task statuses consistent with the Progress Overview table so restarts resume correctly.
+- > - Before running the `oat-project-pr-final` skill, fill the Final Summary (for PR/docs) section below with what was actually implemented.
+- | Phase        | Status   | Tasks | Completed |
+- | Phase 1      | complete | 8     | 8/8       |
+- | Phase 2      | complete | 8     | 8/8       |
+- | Phase 3      | complete | 5     | 5/5       |
+- | Phase 4      | complete | 7     | 7/7       |
+- | Phase 5      | complete | 12    | 12/12     |
+- | Phase p-rev1 | complete | 9     | 9/9       |
+- **Total:** 49/49 tasks completed
+- Phase 1: AGENTS.md guidance
+- **Status:** complete
+- **Started:** 2026-09-27
+- **Status:** completed
+- **Commit:** 8d84a43cf
+- **Status:** completed
+- **Commit:** 005f84b58
+- **Status:** completed
+- **Commit:** 27de0e30e
+- **Status:** completed
+- **Commit:** c73970479
+- **Status:** completed
+- **Commit:** 2dfc72266
+- **Status:** completed
+- **Commit:** 6aa11df62
+- **Status:** completed
+- **Commit:** 1ea888506
+- Task p01-t08: (review) Close p01 round-2 Low findings L1-L3
+- **Status:** completed
+- **Commit:** bb44a14ff
+- Phase 2: CLAUDE.md shims
+- **Status:** complete
+- **Started:** 2026-09-28
+- **Status:** completed
+- **Commit:** e90c64783
+- **Status:** completed
+- **Commit:** 684880c9a
+- **Status:** completed
+- **Commit:** a80dfd987
+- **Status:** completed
+- **Commit:** 20b69c44e
+- **Status:** completed
+- **Commit:** 8d3ab82c6
+- **Status:** completed
+- **Commit:** 5d54d89c6
+- **Status:** completed
+- **Commit:** b1c48d5bc
+- Task p02-t08: (review) Close p02 round-2 findings M1, M2, L1
+- **Status:** completed
+- **Commit:** e64ec3dd5
+- Phase 3: Lifecycle skill routing and bookkeeping
+- **Status:** complete
+- **Started:** 2026-09-28
+- **Status:** completed
+- **Commit:** 776d80724
+- **Status:** completed
+- **Commit:** 15b54a918 (+ recovery e4a7c7219)
+- **Status:** completed
+- **Commit:** 2938214b8
+- **Status:** completed
+- **Commit:** 794b76561
+- **Status:** completed
+- **Commit:** 3ab87b7d6
+- Phase 4: Agent roles and recon validation
+- **Status:** complete
+- **Started:** 2026-09-28
+- **Status:** completed
+- **Commit:** 459f7e8c8
+- **Status:** completed
+- **Commit:** e093b8fbc
+- **Status:** completed
+- **Commit:** 28d9ced4e
+- **Status:** completed
+- **Commit:** d9240c2c1
+- Task p04-t05: (review) Close p04 round-2 findings M1-M3, L1-L2
+- **Status:** completed
+- **Commit:** 7c1e07245
+- **Status:** completed
+- **Commit:** ab672560e
+- **Status:** completed
+- **Commit:** 7bcaefe2a
+- Phase 5: CI and backlog tooling, release fan-in
+- **Status:** complete
+- **Started:** 2026-09-28
+- **Status:** completed
+- **Commit:** 2ed6e9fec
+- **Status:** completed
+- **Commit:** c8454ecf6
+- **Status:** completed
+- **Commit:** 9af7e669c
+- **Status:** completed
+- **Commit:** 28199df01
+- **Status:** completed
+- **Commit:** 341961ce7
+- **Status:** completed
+- **Commit:** 349d64442
+- **Status:** completed
+- **Commit:** 6da8ac2f8
+- **Status:** completed
+- **Commit:** 9c352de4d
+- **Status:** completed
+- **Commit:** fbd0d5b16
+- **Status:** completed
+- **Commit:** 6dfea1158
+- **Status:** completed
+- **Commit:** 0d029f9e4
+- **Status:** completed
+- **Commit:** 2e28e2994
+- Phase p-rev1: Revision 1
+- **Status:** complete
+- **Started:** 2026-09-28
+- **Status:** completed
+- **Commit:** 54e8fa4a1 (+ recovery 0f53a5cea)
+- **Status:** completed
+- **Commit:** 789be2615
+- **Status:** completed
+- **Commit:** 8f5d9589c
+- **Status:** completed
+- **Commit:** ae6b09d98
+- **Status:** completed
+- **Commit:** 67a46703d
+- **Status:** completed
+- **Commit:** 0da130fdb
+- **Status:** completed
+- **Commit:** 512493326
+- **Status:** completed
+- **Commit:** 4f30b57cb
+- **Status:** completed
+- **Commit:** b7536b1be
+- Run 1
+- - Started: 2026-09-27; autonomous (`oat-project-autonomous`), Tier 1 subagents.
+- - Gate `IMPLEMENT-03`: HiLL checkpoints resolved to `['p05']` (final phase,
+- first run, field absent) with `oat_auto_review_at_hill_checkpoints: true`.
+- - Gate `IMPLEMENT-08`: not needed; Claude Code Task-tool dispatch of the
+- generated `oat-phase-implementer` and `oat-reviewer` variants is available
+- without extra authorization.
+- - Phase review gate: `oat_phase_review_gate` enabled for every phase
+- (`review_type: code`, `exit_nonzero_on: high`), configured target resolves
+- to `codex-6-sol-xhigh`.
+- - Dispatch policy: managed `high` from project state; implementer and reviewer
+- launches use the resolver-returned Claude variants after a validation-only
+- `oat project dispatch record` (`status: validated-only`) with the branch CLI,
+- because the installed 0.3.7 CLI lacks `canonical-role`.
+- - Request `bw2-p01-impl-1`: accepted and returned `DONE`; target
+- `oat-phase-implementer-claude-claude-opus-5-5-high`; commits
+- `8d84a43cf..6aa11df62` (p01-t01..t06), phase verification pass, recovery
+- 0/10. `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
+- - Request `bw2-p01-review-1`: accepted; target
+- `oat-reviewer-claude-claude-opus-5-5-high`; reconnaissance not-attempted;
+- `reviews/archived/p01-review-2026-09-27T235828Z.md`: 0 Critical, 0 High,
+- 2 Medium, 4 Low (passes the phase threshold). Received in auto-disposition
+- mode: all six converted to `p01-t07`. `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
+- - Continuation `cont-backlog-wave-2-p01-fix-1` (same handle, fix mode):
+- `1ea888506` closed M1 (link count above 1 takes the manual patch, at planning
+- and after open), M2 (zero-pack guidance is `skipped`, exit 0), L1 (real cause
+- plus patch; partial writes distinguished), L2 (`O_NONBLOCK`, non-regular
+- refused), L3 (doctor wording), L4 (test title); failing-first and
+- neutralize-and-restore evidence in the commit body; 2492 tests green.
+- - Request `bw2-p01-review-2` (round 2, `oat-reviewer-claude-claude-opus-5-5-high`,
+- reconnaissance not-attempted): `reviews/archived/p01-review-2026-09-28T000859Z.md`
+- passed with 0 Critical/High/Medium; all six round-1 findings verified fixed;
+- three new Lows converted to `p01-t08`. The M2 fix landed in
+- `init/tools/index.ts` rather than the plan's `init/index.ts` (plan wording
+- only).
+- - Continuation `cont-backlog-wave-2-p01-fix-2`: `bb44a14ff` closed round-2
+- L1 (refusal header names the cause via `appendRefusal`), L2 (`EISDIR`,
+- `ENOTDIR`, `EMLINK` open errors report an identity change), L3
+- (`oat tools guidance` with no packs prints a note; `--json` status
+- `no-packs`); 2557 tests green.
+- - Phase gate (`codex-6-sol-xhigh`, inline Codex runtime, `exit_nonzero_on: high`):
+- `reviews/archived/p01-review-2026-09-28T001719Z.md` status `ok`, receive-eligible, 0 Critical/High, 1
+- Medium. Judgment sweep: M1 (concurrent invocations can append the same
+- absent block twice, leaving duplicate markers that block later runs)
+- deferred to final; see Deferred Findings (Medium).
+- - Phase p01 outcome: pass after 2 fix rounds (p01-t07, p01-t08); 8/8 tasks.
+- - Implementer-reported deviations: evidence lives in commit bodies (root owns
+- `implementation.md`); the e2e legacy-workflows-block cases stay
+- `manual-required` (control (f)); no test pinned oat-doctor 2.0.1.
+- - Request `bw2-p02-impl-1`: accepted, returned `DONE_WITH_CONCERNS`; target
+- `oat-phase-implementer-claude-claude-opus-5-5-high`; commits
+- `e90c64783..5d54d89c6` (p02-t01..t06); declared phase verification pass
+- (2463 tests); full CLI suite fails one file. `Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
+- Recovery Event bw2-p02-rec-1 (initial stop)
+- - Phase/task: p02 / p02-t01
+- - Original request: bw2-p02-impl-1
+- - Original commit: e90c64783
+- - Defect class: test
+- - Discovered by: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run` (full CLI suite)
+- - Disposition: direction-required
+- - Authorization: phase-standing
+- - Attempt: 0/10
+- - Dispatch target: oat-phase-implementer-claude-claude-opus-5-5-high
+- - Recovery commit: -
+- - Verification: declared phase checks pass; `src/commands/tools/update/config-write.test.ts` fails at import because its partial `@config/oat-config` mock lacks the new `DEFAULT_INSTRUCTION_SYNC_STRATEGY` export used by `config/resolve.ts`.
+- - Reason: the root brief forbade `state.md` edits, which conflicts with the recovery contract's implementer-owned ledger reservation; no reservation, edit, or commit was made. Root direction: the brief conflict was a root error; the narrow `oat_phase_recovery_policy` ledger write is authorized, and the correction is bounded to the failing test's mock (build it on the real module).
+- Recovery Event bw2-p02-rec-1
+- - Phase/task: p02 / p02-t01
+- - Original request: bw2-p02-impl-1
+- - Original commit: e90c64783
+- - Defect class: test
+- - Discovered by: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run` (full CLI suite)
+- - Disposition: recovered
+- - Authorization: operator-extension (root direction after the direction-required stop)
+- - Attempt: 1/10
+- - Dispatch target: oat-phase-implementer-claude-claude-opus-5-5-high
+- - Recovery commit: 02fbaa486
+- - Verification: focused `config-write.test.ts` exit 0 before and after commit; full CLI suite exit 0 before and after commit (397 files, 7833 tests)
+- - Reason: test-only mock fix (`importOriginal`); root validated the committed `completed` marker, then cleared it (`used_attempts: 1`, `pending_attempt: null`).
+- - Request `bw2-p02-review-1` (`oat-reviewer-claude-claude-opus-5-5-high`,
+- reconnaissance not-attempted): `reviews/archived/p02-review-2026-09-28T005842Z.md` 1 Critical, 2 Medium,
+- 3 Low; blocking. C1: default sync deletes a hand-written `CLAUDE.md` when
+- `AGENTS.md` is a symlink to it (copy check compares the file with itself),
+- reproduced by the reviewer. Converted all six to `p02-t07` (fix round 1 of
+- the retry limit 2).
+- - Continuation `cont-backlog-wave-2-p02-fix-1`: `b1c48d5bc` closed C1 (a
+- `CLAUDE.md` that the sibling `AGENTS.md` resolves to, by symlink or hard
+- link, is never a managed copy; guard proven by neutralize-and-restore), M1
+- (scans stop at nested git checkouts), M2 (`.agents/docs/rules-files.md`),
+- L1-L3; full CLI suite 7841 green; repository `validate`/`sync --dry-run`
+- clean. Follow-up recorded (pre-existing, out of scope): with a shim strategy,
+- `--strategy pointer --force` can overwrite the only `CLAUDE.md` in the
+- `AGENTS.md -> CLAUDE.md` layout; file as a backlog item at closeout.
+- - Request `bw2-p02-review-2` (round 2, reconnaissance not-attempted):
+- `reviews/archived/p02-review-2026-09-28T011221Z.md` passed (0 Critical/High); C1 and M1 verified across
+- symlink, hard-link, chain, absolute-path, and seven apply-time race
+- variants. Two new Mediums (cross-directory dangling link; unsafe "remove the
+- file" advice when `AGENTS.md` links to the `CLAUDE.md`) and one Low (case
+- variants) converted to `p02-t08` (fix round 2 of 2).
+- - Continuation `cont-backlog-wave-2-p02-fix-2`: `e64ec3dd5` closed M1
+- (planning- and apply-time `findLinksThrough` check keeps any `CLAUDE.md` a
+- scanned instruction file links through; stray layout is not adopted), M2
+- (`linkedBy` in the leftover warning; replace-the-link advice in CLI, doctor,
+- analyze, docs); L1 dispositioned as not reported (case-insensitive matching
+- flagged real provider docs such as `tools/smoke/protocols/claude.md`;
+- documented and pinned). Full CLI suite 7846 green; repository clean.
+- - Phase gate (`codex-6-sol-xhigh`): `reviews/archived/p02-review-2026-09-28T013003Z.md` status `ok`,
+- 0 Critical/High/Medium, 1 Low (analyze/apply overstated a nested
+- `CLAUDE.md`'s effect). Judgment sweep: addressed now (two wording lines; no re-gate). The
+- wording change landed inside bookkeeping commit `e13fa06cd` because its own
+- commit was rejected by commitlint (body line over 100 characters) after the
+- files were staged; recorded as a deviation rather than rewriting pushed
+- history.
+- - Phase p02 outcome: pass after 1 recovery (bw2-p02-rec-1) and 2 fix rounds
+- (p02-t07, p02-t08); 8/8 tasks.
+- - Request `bw2-p03-impl-1`: accepted, returned `DONE_WITH_CONCERNS` (one
+- recovered defect); target `oat-phase-implementer-claude-claude-opus-5-5-medium`;
+- commits `776d80724` (t01), `15b54a918` (t02), `e4a7c7219` (recovery),
+- `2938214b8` (t03); phase verification pass (888 vitest, 37 implement node
+- tests, skill bumps, validate-skills, docs check, type-check). `Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-medium`
+- - Implementer notes: routing rows pinned by a dedicated row-parsing test (the
+- load-contract matrix covers prose only); p03-t03 sweep added the Step 7a push
+- anchor to `synced-bookkeeping-sites.json` and moved the staging-block count
+- 3 -> 4; BL-260829 stays open with its live-observation note; BL-260711 notes
+- the relationship.
+- Recovery Event bw2-p03-rec-1
+- - Phase/task: p03 / p03-t02
+- - Original request: bw2-p03-impl-1
+- - Original commit: 15b54a918
+- - Defect class: test
+- - Discovered by: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/named-skill-load-contract.test.ts` (p03-t03 transition run)
+- - Disposition: recovered
+- - Authorization: phase-standing
+- - Attempt: 1/10
+- - Dispatch target: oat-phase-implementer-claude-claude-opus-5-5-medium
+- - Recovery commit: e4a7c7219
+- - Verification: focused 34 and phase 882 passing before and after commit
+- - Reason: a new Lite sentence used a load-contract execution verb ("use"); reworded without changing meaning. Root validated the committed `completed` marker and cleared it (`used_attempts: 1`, `pending_attempt: null`).
+- - Request `bw2-p03-review-1` (`oat-reviewer-claude-claude-opus-5-5-high`,
+- reconnaissance not-attempted): `reviews/archived/p03-review-2026-09-28T014814Z.md` passed the phase
+- threshold (0 Critical/High), 2 Medium, 4 Low. M1, M2, L2-L4 converted to
+- `p03-t04`. L1 (the control-plane recommender `router.ts:66-67` and the
+- dashboard `state/generate.ts:411-414` still route quick-mode discovery to
+- `oat-project-plan`) deferred to a follow-up backlog item at closeout.
+- - Continuation `cont-backlog-wave-2-p03-fix-1`: `794b76561` closed M1
+- (Step 7a settles recovery markers; no-review stops commit through 7a), M2
+- (phase status set in 7b from the review outcome), L2-L4; 893 vitest and 37
+- node tests green.
+- - Phase gate (`codex-6-sol-xhigh`): `reviews/archived/p03-review-2026-09-28T015614Z.md` status `ok`,
+- 0 Critical/High, 2 Medium. Judgment sweep, both addressed now: M1 (resume
+- pointers named completed `p03-t04`) fixed in root bookkeeping at phase
+- close; M2 (Step 7b marked a phase complete before queued fixes and the gate
+- settle) routed to `p03-t05` on the original handle, no re-gate.
+- - Continuation `cont-backlog-wave-2-p03-fix-2`: `3ab87b7d6` closed gate M2
+- (phase row stays nonterminal until review dispositions and selected gates
+- settle); 894 vitest and 37 node tests green.
+- - Phase p03 outcome: pass after 1 recovery (bw2-p03-rec-1), 1 review fix
+- round (p03-t04), and 1 gate sweep fix (p03-t05); 5/5 tasks. BL-260829 stays
+- open for live observation.
+- - Request `bw2-p04-impl-1`: accepted, returned `DONE`; target
+- `oat-phase-implementer-claude-claude-opus-5-5-medium`; commits `459f7e8c8`
+- (t01), `e093b8fbc` (t02); phase verification pass (960 vitest, 343 recon node
+- tests, skill bumps, validate-skills, type-check, `status --scope project`
+- clean). `Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-medium`
+- - p04-t01 evidence (from the commit body): the extended scanner failed first
+- on exactly the five fences; a seeded bare fence failed the live test in
+- `.agents/agents` and in `.oat/templates`; neutralizing the new roots turned
+- five tests red; inventory floor 207 -> 246; scanner laxity narrowing left
+- as-is with a recorded reason and trigger (item notes).
+- - p04-t02: new `recon/scripts/validate-assignment.mjs` (envelope
+- `kind: recon.assignment`, `schemaVersion: 1`, documented in
+- `worker-contract.md`) reports every invalid field; truncation control turned
+- two tests red; reviewer role resolves recon through the sibling-skill probe;
+- recon 1.1.6; recon-worker unchanged.
+- - Request `bw2-p04-review-1` (reconnaissance not-attempted):
+- `reviews/archived/p04-review-2026-09-28T021519Z.md` passed the phase threshold (0 Critical/High), 1 Medium
+- (array not enforced as one homogeneous wave), 7 Low; all converted to
+- `p04-t03`.
+- - Continuation `cont-backlog-wave-2-p04-fix-1`: `28d9ced4e` closed M1
+- (`WAVE_MISMATCH` across run, wave, wave mode, mode, task class) and L1-L7;
+- 347 recon node tests, 897 vitest, skill bumps, provider status clean.
+- - Phase gate attempt 1 (`codex-6-sol-xhigh`): `reviews/archived/p04-review-2026-09-28T022315Z.md` status
+- `blocked`, receive-eligible: H1 (read sources not bounded by allowed and
+- excluded inputs) and M1 (arbitrary output schema accepted). Converted to
+- `p04-t04` (gate fix round 1 of 2); root review and gate rerun after the fix.
+- - Continuation `cont-backlog-wave-2-p04-fix-2`: `d9240c2c1` closed gate H1
+- (read sources must sit inside allowed inputs and included scope, outside
+- exclusions, segment-aware; unverifiable forms rejected) and M1 (output
+- schema must be the approved packet-contract reference or a closed inline
+- schema); 352 recon node tests, 897 vitest.
+- - Request `bw2-p04-review-2` (reconnaissance not-attempted):
+- `reviews/archived/p04-review-2026-09-28T023246Z.md` passed (0 Critical/High); gate H1/M1 and first-review
+- findings verified fixed; adversarial probing found 3 Medium (scheme-without-
+- slashes URLs, case-variant exclusion bypass, schema anchors that do not
+- resolve) and 2 Low, converted to `p04-t05` before gate attempt 2.
+- - Continuation `cont-backlog-wave-2-p04-fix-3`: `7c1e07245` closed M1 (any
+- `scheme:` string is a URL; only http/https accepted, compared by origin),
+- M2 (case-insensitive exclusion, exact inclusion), M3 (stable per-kind
+- anchors in `packet-contract.md`, tested), L1, L2 (inline output schemas
+- dropped; the artifact kind fixes the schema); 355 recon node tests.
+- - Phase gate attempt 2 (`codex-6-sol-xhigh`): `reviews/archived/p04-review-2026-09-28T024124Z.md` status
+- `blocked`: one High (the validator accepts mutation-capable and unknown
+- names such as `Bash`, `exec_command`, `NotARealTool` in
+- `readSources.tools`). Review-fix and gate rounds for p04 are exhausted
+- (`oat_orchestration_retry_limit` 2), so the run stopped at the gate-policy
+- boundary for operator direction.
+- - Operator disposition (2026-09-28) for the exhausted p04 gate budget: fix
+- the High in `p04-t06`, run one root re-review, then continue to p05 without
+- a third gate run; the final review covers p04.
+- - Continuation `cont-backlog-wave-2-p04-fix-4`: `ab672560e` replaced the
+- mutating-tool denylist with a `READ_ONLY_TOOLS` allowlist
+- (`MUTATING_TOOL`, `EXECUTION_TOOL`, `UNKNOWN_TOOL` rejections); 357 recon
+- node tests, 897 vitest.
+- - Request `bw2-p04-review-3` (operator-authorized re-review):
+- `reviews/archived/p04-review-2026-09-28T025845Z.md` 1 High (write paths not bounded to the artifact-kind
+- packet directory; controller-owned files accepted), 2 Medium, 3 Low; gate-2
+- High verified fixed. Operator direction: fix H1 and M1 in `p04-t07`; defer
+- M2 (Codex has no allowlisted read tool, so Codex recon lanes fall back to
+- inline) and L1-L3 to a follow-up backlog item; continue without another p04
+- review.
+- - Continuation `cont-backlog-wave-2-p04-fix-5`: `7bcaefe2a` closed H1
+- (write paths bound to each artifact kind's packet folder; controller-owned
+- paths refused) and M1 (case- and NFC-insensitive duplicate and exclusion
+- matching); 359 recon node tests, 897 vitest.
+- - Phase p04 outcome: complete under operator override (2026-09-28). Two gate
+- attempts blocked (each with a new validator authority gap, both fixed); the
+- gate retry budget was exhausted, and the operator directed fixing the
+- remaining High and continuing, with the final review covering p04. 7/7
+- tasks. Follow-ups filed: `BL-260928-serialize-concurrent-agents-md` (p01
+- deferred Medium), `BL-260928-keep-instructions-sync-force` (p02 pre-existing
+- `--force` gap), `BL-260928-route-quick-mode-discovery` (p03 L1 routers),
+- `BL-260928-settle-codex-read-authority` (p04 M2, L1-L3).
+- - Request `bw2-p05-impl-1`: accepted, returned `DONE`; target
+- `oat-phase-implementer-claude-claude-opus-5-5-medium`; commits `2ed6e9fec`
+- (t01), `c8454ecf6` (t02), `9af7e669c` (t03), `28199df01` (t04), `341961ce7`
+- (t05), `349d64442` (t06). `Dispatch: scope=p05 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-medium`
+- - p05-t01: red control (`turbo run check` for control-plane executed no task
+- with a seeded violation, exit 0), green (exit 1 with the seed, 0 without);
+- `scripts.lint` delete control exit 1, restored 0; both AGENTS.md passages
+- and `contributing/code.md` updated.
+- - p05-t02: archive rewrites inbound `.oat/repo` Markdown links and
+- repository-root path strings; failing-first; scratch probe on real linked
+- items rewrote both links.
+- - p05-t03: ten uncached runs of the collection-detach case, all exit 0, head
+- `c8454ecf6`, Darwin 25.4.0 arm64, Node v24.18.0.
+- - p05-t04: lockstep 0.3.8 -> 0.3.9; `release:check-versions` and
+- `release:validate` exit 0.
+- - p05-t05: twelve items archived with the branch CLI (0 inbound rewrites
+- needed); dangling-link sweep empty; external-plan bidirectional-link
+- contract test pass; `pjm doctor` shows only the pre-existing
+- `backlog_completed_unarchived` false positive (14 -> 11 listed).
+- BL-260829 and the four BL-260928-\* follow-ups stay open.
+- - p05-t06 Definition of Done at `341961ce7` (all exit 0): `pnpm check` (0/11
+- cached), `type-check`, `HOME=$(mktemp -d) pnpm exec turbo run test --force`
+- (0/10 cached; cli 7866, control-plane 151, docs-transforms 31, docs-config
+- 10), `build`, `check:skill-bumps`, `release:check-versions`,
+- `release:validate`, `build:docs`, `test:smoke` 163/163, `test:skills`
+- 690/690, `test:scripts` 1/1, `lint`, `format`.
+- - Request `bw2-p05-review-1` (reconnaissance not-attempted):
+- `reviews/archived/p05-review-2026-09-28T103350Z.md` passed (0 Critical/High), 1 Medium (control-plane
+- lacks `check:fix`/`lint:fix`), 7 Low; all converted to `p05-t07`.
+- - Continuation `cont-backlog-wave-2-p05-fix-1`: `6da8ac2f8` closed M1
+- (control-plane `check:fix`/`lint:fix`) and L1-L7 (wording, `check` pins,
+- scan-flag and depth tests, code-span skip, reference-definition rebase,
+- retryable rewrite, help and docs, macOS/Linux evidence note citing Linux CI
+- runs 34081195164 and 34081580680); 148 vitest, check, lint, format,
+- type-check green.
+- - Phase gate attempt 1 (`codex-6-sol-xhigh`): `reviews/archived/p05-review-2026-09-28T104612Z.md` status
+- `blocked`: H1 (tracked Markdown symlink lets the rewriter write outside
+- `.oat/repo`), M1 (suffix fallback rewrites URLs and unrelated paths), M2
+- (angle-bracket links malformed). Converted to `p05-t08` (gate round 1 of 2).
+- - Continuation `cont-backlog-wave-2-p05-fix-2`: `9c352de4d` closed H1
+- (symlinks and out-of-root real paths skipped; `O_NOFOLLOW` reads and
+- writes), M1 (rewrite only tokens resolving to the former path; URLs
+- untouched; unresolved local forms warned), M2 (angle-delimited links);
+- controls neutralized and restored; 88 backlog tests.
+- - Request `bw2-p05-review-2` (reconnaissance not-attempted):
+- `reviews/archived/p05-review-2026-09-28T105839Z.md` 1 High (skipping inline code spans, added in
+- `p05-t07`, leaves the canonical external-plan Source citations unrewritten;
+- reproduced on real data), 2 Medium (fallback breaks a working link;
+- footnotes corrupted by the reference-definition rebase), 3 Low. Converted to
+- `p05-t09` (blocking round 2 of 2). DoD re-run at head by the reviewer: all
+- gates green.
+- - Continuation `cont-backlog-wave-2-p05-fix-3`: `fbd0d5b16` closed H1
+- (whole-span path citations rewritten; commands and fenced blocks warned and
+- kept), M1 (fallbacks only when the relative path does not exist), M2
+- (footnotes and prose definitions untouched), L1-L3; scratch real-data runs
+- rewrote exactly the citing plan lines. Implementer notes: seven older,
+- already-archived items still have code-span citations in the repository
+- (re-running archive on them would repoint via the retry path; out of scope,
+- noted for the PR); the Definition of Done is re-run at closeout.
+- - Phase gate attempt 2 (`codex-6-sol-xhigh`): `reviews/archived/p05-review-2026-09-28T111050Z.md` status
+- `ok` (0 Critical/High), 1 Medium, 1 Low; judgment sweep: both addressed now
+- in `p05-t10`, no re-gate.
+- - Continuation `cont-backlog-wave-2-p05-fix-4`: `6dfea1158` closed the gate
+- sweep M1 (definition rebase on prose only) and L1 (query-bearing links); 95
+- backlog tests.
+- - Phase p05 outcome: pass after 1 blocked gate attempt and 3 review-fix rounds
+- plus 1 sweep fix; 10/10 tasks. The Definition of Done is re-run at closeout
+- because p05-t06 predates the later fix commits.
+- - Request `bw2-final-review-1` (`oat-reviewer-claude-claude-opus-5-5-high`,
+- `oat-project-review-provide code final`, reconnaissance not-attempted):
+- `reviews/archived/final-review-2026-09-28T112631Z.md` 0 Critical/High, 1 Medium (PR behavior-change text
+- inaccurate: stray adoption removes a lone `CLAUDE.md`; `validate` exits 1 on
+- upgraded repositories until sync), 3 Low (summary counts, `oat-reviewer.md`
+- mechanical-lane checks wording vs the validator, template placeholders).
+- Deferred Mediums judged acceptable as filed follow-ups. Root fixed the
+- Medium, L1, and L3 in bookkeeping; L2 went to `p05-t11` (`0d029f9e4`,
+- reviewer mechanical-lane wording plus regenerated views). Gate
+- `IMPLEMENT-11` recorded.
+- - Request `bw2-final-review-2` (round 2, scoped to the fixes):
+- `reviews/archived/final-review-2026-09-28T113124Z.md` passed (0 Critical/High/Medium); M1, L1, L2 verified
+- against the branch CLI; two bookkeeping Lows (a stale "never touches
+- hand-written files" sentence; the placeholder Deviations row and References)
+- fixed in root bookkeeping.
+- - Generation 1, attempt 1 (`codex-6-sol-xhigh`, run
+- `0415d270-2faa-4559-901c-65430d5c405d`, reviewed head `1973af8f0`):
+- `reviews/archived/final-review-2026-09-28T113721Z.md` status `blocked`, receive-eligible: H1 (the archive
+- rewriter truncates in place, so an in-tree file hard-linked to an outside
+- file rewrites the outside file). Both deferred Mediums judged acceptable as
+- filed follow-ups. `on_failure: block`: attempt 1 of 2 consumed; remediation
+- `p05-t12`; the basis becomes stale and Steps 12-13 rerun before attempt 2.
+- - Deviation: the launch intent was not persisted before this launch (the
+- intent write and the launch ran in one batch and the write failed a
+- substring guard); the accepted run was kept, never replaced, and its state
+- was persisted from the result receipt afterwards.
+- - Remediation `p05-t12` (`2e28e2994`): rewritten files are replaced through
+- an `O_EXCL | O_NOFOLLOW` temporary file and rename in the verified parent
+- after an `lstat` device/inode re-check; hard-link fixture proven by
+- neutralize-and-restore. Generation 1 basis marked stale; Steps 12-13 rerun.
+- - Steps 12-13 rerun for the stale basis: Definition of Done at `ba69e2052` all
+- exit 0 (0/10 cached; cli 7875 tests); final re-review `bw2-final-review-3`
+- (`reviews/archived/final-review-2026-09-28T114422Z.md`) passed with 0 Critical/High/Medium and 3 Low
+- (ownership change on replace, same-inode concurrent edit, long temp names),
+- deferred to `BL-260928-harden-the-backlog-reference`.
+- - Generation 1, attempt 2 (run `0c5dbb3e-18a9-4059-a857-ca4209e3b9e4`,
+- reviewed head `531ce5f4e`, intent persisted before launch in `b54d67306`):
+- `reviews/archived/final-review-2026-09-28T114805Z.md` status `ok`, 0 findings; deferred Mediums reconfirmed
+- as acceptable follow-ups. Received; exit gate `allowed/passed`.
+- - PR step (pre-approval `pr`) stopped at PRFINAL-05: a root-written prose
+- note under `plan.md` `## Reviews` wrapped an inline-code flag list so a line
+- began with `|`, which the ledger guard parses as a malformed row. Root
+- repaired its own bookkeeping note (flags listed without pipes; project
+- tracking, closeout-only), recorded a freshness checkpoint, and reran the PR
+- step. The guard treating prose pipes as rows is a pr-final false positive
+- worth a follow-up.
+- - PR step rerun at `36d48005d`: PRFINAL-03 passed (latest final/code row
+- `passed`); PRFINAL-05 passed (27 of 27 ledger rows resolve); PRFINAL-02
+- auto-resolved the title and base `main` from PR Requirements. Opened
+- https://github.com/voxmedia/open-agent-toolkit/pull/332; `state.md` set to
+- `pr_open`. The `pr` sequence step stays open for the closeout orchestrator.
+- - Generation 2 (Revision 1): generation 1 (`allowed/passed` at `531ce5f4e`)
+- was marked `stale` by the revision's substantive changes; its provenance is
+- kept above. Final review passed at `7b389c5af` (gate row), DoD at
+- `c95e17aad`. Generation 2 intent persisted before launch: reviewed head
+- `b1d8ab9cb`, `effective-delta-v1` (installed skill rules), unchanged
+- `config_fingerprint`, attempts 0 of 2.
+- - Generation 2, attempt 1 (`codex-6-sol-xhigh`, run
+- `d34bae3b-fe9f-4259-b98b-18a6a4e91b5b`, reviewed head `d52002eba`,
+- threshold high): status `ok`, 0 Critical/High, 2 Medium
+- (`reviews/archived/final-review-2026-09-28T165830Z.md`). Both Mediums (live
+- PR title and body stale; summary and recap stale) are the pending
+- pre-approval closeout steps `summary` and `pr` plus the recap gate, which run
+- next. Received; exit gate `allowed/passed`.
+- - Closeout sequence (configured `[summary, document, pr]`, post-approval `[]`):
+- summary `759edbb1e`, document `343426ada`, project recap `built`
+- (`db4bbcd59`), PR #332 opened. Each step was followed by a state-only
+- freshness checkpoint; the exit gate stayed `allowed/passed`.
+- - Gate `IMPLEMENT-16`: final HiLL approval auto-approved under the autonomy
+- contract (`approval_source: oat-autonomous`) after the passing final review
+- (`final-review-2026-09-28T114805Z.md`, gate run
+- `0c5dbb3e-18a9-4059-a857-ca4209e3b9e4`) and all pre-approval steps. No
+- post-approval steps. Implementation complete; the project stays `pr_open`
+- for revise or completion.
+- - Revision 1 closeout sequence (configured `[summary, document, pr]`,
+- post-approval `[]`): summary `80fc9a4f4` (full regeneration), document
+- `564c0b8f3`, PR #332 title and body refreshed in place (state `316f53e55`),
+- project recap `built` (`cc232ad8c`, run
+- `d9a93b10-dde6-4ee0-b111-28e01c32c837`, terminal-outcome check ok). Each
+- step was followed by a state-only freshness checkpoint; the exit gate
+- stayed `allowed/passed`.
+- - Gate `IMPLEMENT-16` (Revision 1): final HiLL approval auto-approved under
+- the autonomy contract (`approval_source: oat-autonomous`) after the passing
+- final review (`final-review-2026-09-28T165830Z.md`, exit gate generation 2
+- run `d34bae3b-fe9f-4259-b98b-18a6a4e91b5b`) and all pre-approval steps. No
+- post-approval steps. Implementation complete; the project stays `pr_open`.
+- - Title names the removal and the key rename with a breaking marker, for
+- example
+- `feat!: stop creating CLAUDE.md shims by default and rename shim config to instructions.claude.* (wave 2, lockstep 0.3.9)`;
+- GitHub release notes list PR titles only.
+- - Body opens with a **Behavior change** callout: `oat instructions sync` no
+- longer creates `CLAUDE.md` shims by default and removes OAT-managed shims
+- (exact `@AGENTS.md` pointer, sibling symlink, or identical copy) on its next
+- run. Removal is all or nothing: while any `CLAUDE.md`, `CLAUDE.local.md`, or
+- `.claude/CLAUDE.md` with its own content exists, sync removes no shim and
+- `sync`/`validate` exit 1, naming the file, the shims it would remove, a docs
+- link, and the fixes (move the content into `AGENTS.md` and remove the file,
+- or set `instructions.claude.shims`). A lone `CLAUDE.md` with no `AGENTS.md`
+- is adopted: its content moves into a new `AGENTS.md` and the `CLAUDE.md` is
+- removed (unless an `AGENTS.md` elsewhere links to it). After upgrading,
+- `oat instructions validate` exits 1 in a repository that still has shims
+- from the old default until `oat instructions sync` runs, so CI that runs
+- validate goes red until then. Opt back in with
+- `oat config set instructions.claude.shims pointer` and rerun
+- `oat instructions sync`.
+- - Body calls out the rename: `documentation.instructionSyncStrategy` and
+- `documentation.instructionPointerExcludes` become
+- `instructions.claude.shims` and `instructions.claude.excludes`, with no
+- compatibility read; the old keys are ignored and are dropped on the next
+- `oat config set`. Upgrade notice: a repository that set
+- `documentation.instructionPointerExcludes` must re-set the list as
+- `instructions.claude.excludes` before its first sync; until then sync scans
+- the formerly excluded directories and adopts and removes a lone `CLAUDE.md`
+- there.
+- - Body also lists: append-only AGENTS.md guidance, `--project-guidance`
+- honored or rejected everywhere, `oat tools guidance`, backlog archive link
+- rewriting, `oat-reviewer` no longer launching `recon-worker` (recon skill
+- unchanged from `main`), `effective-delta-v2` exit-gate freshness,
+- control-plane `check`.
+- **Date:** 2026-09-28
+- **Source:** inline conversation (operator, after PR #332 opened)
+- **Changes requested:**
+- - Clean-rename the shim keys: `instructions.claude.shims` and
+- `instructions.claude.excludes` (no compatibility read).
+- - Under `none`, remove nothing while any `CLAUDE.md`, `.claude/CLAUDE.md`, or
+- `CLAUDE.local.md` has real content; explain why, link the docs, and point to
+- removing or moving the file or setting a shim strategy.
+- - Keep rules and provider sync independent of the shim setting, pinned by a
+- test.
+- - `effective-delta-v2`: changes only under `.oat/projects/**` and
+- `.oat/repo/**` no longer make the exit gate stale.
+- - Only the `recon` skill uses `recon-worker`: remove the reviewer's
+- `recon-worker` path, restore the recon skill to `main` (dropping this wave's
+- ~1,900-line assignment validator, which also blocked Codex recon lanes), and
+- correct the recon records; rescope the Codex follow-up to a live check.
+- - Declined after discussion: repointing old links to already-archived backlog
+- items; a new `keep` strategy value.
+- **New tasks added:** prev1-t01 through prev1-t07
+- **Next:** Execute revision tasks via `oat-project-implement`, then a new final
+- review and exit-gate generation, update PR #332 (title, Behavior change
+- callout with the new key names and the all-or-nothing rule, release note that
+- the keys were renamed), and refresh the Final Summary and summary.md.
+- - Request `bw2-prev1-impl-1` (`oat-phase-implementer-claude-claude-opus-5-5-high`,
+- hard-reasoning): interrupted when the previous session ended after
+- prev1-t03 with prev1-t04 uncommitted; resumed on the same handle (the agent
+- owned the in-progress edits), returned `DONE_WITH_CONCERNS`. Commits
+- `54e8fa4a1`, recovery `0f53a5cea`, `789be2615`, `8f5d9589c`, `ae6b09d98`,
+- `67a46703d`, `0da130fdb`, `512493326`. Full Definition of Done at
+- `512493326` all exit 0 (tests 0/10 cached; test:skills 660/660).
+- `Dispatch: scope=p-rev1 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
+- - Recovery event `bw2-prev1-rec-1` (prev1-t01, lint, `no-useless-concat` in a
+- test file) recovered in `0f53a5cea`, attempt 1/10; root validated and
+- cleared the `completed` marker.
+- - Verified by root: `git diff origin/main -- .agents/skills/recon` is empty;
+- `oat-reviewer.md` no longer names `recon-worker` or `validate-assignment`;
+- the old key names survive only in historical explainer-kit test fixtures.
+- `summary.md` and the recap are stale and are regenerated at closeout.
+- - Exit gate generation 1 marked `stale` (substantive changes after the
+- allowed result); a new final review and gate generation run at closeout.
+- - Review `bw2-prev1-review-1` (`oat-reviewer-claude-claude-opus-5-5-high`,
+- auto) at `091873d80`: 0 Critical/High, 2 Medium, 3 Low
+- (`reviews/archived/p-rev1-review-2026-09-28T155753Z.md`). Reconnaissance:
+- not-attempted. M1, M2, L1, L2 converted to prev1-t08. L3 recorded here: the
+- prev1-t04 and prev1-t05 commit bodies lack failing-first records; the
+- reviewer confirmed both tests fail against the pre-change files (the v2 test
+- asserts the three exclusion pathspecs extracted from the skill text; the
+- reviewer test asserts `not.toContain('recon-worker')`, which the
+- pre-change `oat-reviewer.md` contained).- prev1-t08 (resume of `bw2-prev1-impl-1`, DONE) at `4f30b57cb`: M1 `linkedBy`
+- per blocker with replace-then-remove advice; M2 per-file leftover warnings
+- suppressed for `wouldRemove` while blocked; L1 wording; L2 docs. Failing
+- first recorded in the commit body (vitest 2 failed, oat-doctor 2 failed).
+- Removal set unchanged (probes keep every shim). `pnpm check` 0/11 cached,
+- instructions+sync 226/226, oat-doctor 11/11.
+- - Gate run `b282ca69` (`codex-6-sol-xhigh`) at `f4599bec3`: the reviewer wrote
+- `reviews/archived/p-rev1-review-2026-09-28T160943Z.md` (0 findings) but never
+- ran the branch-local `gate route` step, so no route receipt existed and the
+- gate failed closed (`review_failed`, `unexpected_post_selection_failure`).
+- Not accepted as gate evidence; the gate reruns once.
+- - Gate run 2 (`codex-6-sol-xhigh`, route `inline` from the installed 0.3.7
+- `gate route`) at `71aef4127`: `review_completed_gate_passed`, 0 Critical,
+- High and Medium, 1 Low (this log's joined list item, fixed by root). The
+- rerun narrowed to the bookkeeping delta; product code through `4f30b57cb`
+- was covered by run 1's 0-finding review. Both runs' artifacts are archived
+- locally; both ledger rows are `passed`.
+- - Final review `bw2-final-review-3` (`oat-reviewer-claude-claude-opus-5-5-high`,
+- auto, whole PR `5bb73dd08..11008080c`, weighted to the revision delta):
+- 0 Critical/High, 2 Medium, 4 Low
+- (`reviews/archived/final-review-2026-09-28T163142Z.md`); reconnaissance
+- not-attempted; removal-block neutralization breaks 5 tests. Root fixed M1
+- (PR hand-off and plan PR Requirements: title names the rename, body carries
+- all-or-nothing and the rename), L1 (Final Summary proofs and follow-ups), and
+- L4 (Deviations row). M2 is a closeout requirement: `summary.md` is fully
+- regenerated (Key Decisions, Integration Notes, and Tradeoffs included, not
+- only the incremental revision sections) with
+- `oat_summary_includes_revisions: [p-rev1]`, the recap is rebuilt from the
+- refreshed facts, and
+- `rg -n "instructionSyncStrategy|instructionPointerExcludes|validate-assignment"`
+- over `summary.md` and `explainers/` returns nothing. L2 and L3 became
+- prev1-t09.
+- - The same final reviewer left a second artifact
+- (`reviews/archived/final-review-2026-09-28T163513Z.md`, 0 Critical/High,
+- 1 Medium, 5 Low) overlapping the first, with three additions, all fixed by
+- root: the PR upgrade notice (a released `instructionPointerExcludes` list is
+- ignored, so sync adopts and removes a lone `CLAUDE.md` in formerly excluded
+- directories until the list is re-set under `instructions.claude.excludes`),
+- the `effective-delta-v2` literal `.oat/projects` assumption (stated in the
+- completion reference and `DR-260928-exclude-project-and-repository`), and
+- `DR-260928-name-the-claude-md-shim-keys` Context wording plus its release
+- note location (PR title). Its stale-DoD Low is closed by the closeout DoD.
+- - prev1-t09 (resume of `bw2-prev1-impl-1`, DONE) at `b7536b1be`: L2 docs and
+- `current-state.md`; L3 analyze skill reports `claude_md_blocks_shim_removal`
+- (failing first, 6/6 after); apply has no gap. `pnpm check` 0/11 cached,
+- `pnpm lint` exit 0.
+- - Final gate re-review (`codex-6-sol-xhigh`, threshold high) at `7b389c5af`:
+- `review_completed_gate_passed`, 0 Critical/High, 2 Medium, 2 Low
+- (`reviews/archived/final-review-2026-09-28T164247Z.md`). M1 (live PR title
+- and body stale) and M2 (summary and recap stale) and L2 (DoD record predates
+- the revision) are the pending closeout steps: summary and recap are fully
+- regenerated and the live PR is refreshed from the hand-off before the exit
+- gate, and the DoD is rerun at the final head. L1 (two joined log items)
+- fixed by root.
+- Chronological execution is recorded per phase under Orchestration Runs above
+- (dispatch requests, commits, reviews, gates, recovery events, and operator
+- dispositions). Sessions: 2026-09-27 (planning, p01) and 2026-09-28 (p01 gate
+- through closeout).
+- Plan Gate Feedback (quick-start, QS-12)
+- The configured quick-start gate (`oat-project-quick-start`, `onFailure: block`,
+- `maxAttempts: 2`, target `codex-6-sol-xhigh`, inline Codex runtime) blocked on
+- both attempts; every finding was resolved in `plan.md`:
+- - Attempt 1 (`reviews/archived/artifact-plan-review-2026-09-27T150947Z.md`):
+- H1 re-verify identity and exact managed content at apply time before removing
+- a CLAUDE.md shim (with changed-content and symlink-replacement controls); H2
+- make leftover CLAUDE.md detection repository-wide and independent of the
+- mutation exclusions at sync, `--json`, validate, and doctor; M1 accept `none`
+- only in the same task as its behavior (p02-t02).
+- - Attempt 2 (`reviews/archived/artifact-plan-review-2026-09-27T151608Z.md`):
+- H1 open the existing `AGENTS.md` with `O_WRONLY | O_APPEND | O_NOFOLLOW`
+- (the flags as written opened read-only and failed with `EBADF`), plus a
+- real-filesystem success assertion.
+- Attempts are exhausted, so plan readiness is an operator decision. Operator
+- decision (2026-09-27): proceed to implementation with the findings resolved in
+- the plan.
+- Deferred Findings (Medium)
+- - p04 re-review M2 (`reviews/archived/p04-review-2026-09-28T025845Z.md`) and
+- L1-L3: moot after revision 1 withdrew the recon validator;
+- `BL-260928-settle-codex-read-authority` was rescoped to a live check that
+- Codex `/recon` lanes launch `contract-enforced` on the released CLI.
+- - p01 gate M1 (`reviews/archived/p01-review-2026-09-28T001719Z.md`): two concurrent guidance invocations
+- can both pass the absent-block check and append the same managed block
+- twice; the duplicate markers make later runs return `blocked` until the file
+- is repaired by hand. Deferred because a correct fix needs cross-process
+- coordination on `AGENTS.md` (a lock file plus a re-read under the lock),
+- which is larger than a sweep fix; the pre-wave behavior never wrote an
+- existing file, and concurrent `oat` guidance runs against one checkout are
+- rare. Resurface at final review; if not fixed in-wave, file a backlog item.
+- - p02 gate Low address-now fix (analyze/apply nested `CLAUDE.md` wording) is
+- in bookkeeping commit `e13fa06cd`, not a separate `fix(p02)` commit (its
+- commit was rejected by commitlint's 100-character body line limit and the
+- staged files rode along with the next commit). History was not rewritten.
+- Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
+- | Task / Review         | Source Artifact                                                   | Planned / Documented                                               | Actual / Accepted                                                                              | Reason                                                                                                               | Source of Truth                          | Follow-up                                          |
+- | p03-t03 / p03 reviews | discovery.md Key Decision 4                                       | Commit the task ledger before reviewer dispatch                    | Recovery-marker settlement also pre-review; phase row nonterminal until fixes and gates settle | p03 review M1/M2 and gate M2                                                                                         | Implementation                           | None                                               |
+- | p04-t02 / p04 reviews | plan.md p04-t02                                                   | Validator checks envelope fields                                   | Also enforces read, write, tool, and schema authority; inline output schemas dropped           | Four p04 review and gate rounds                                                                                      | Implementation                           | `BL-260928-settle-codex-read-authority`            |
+- | p04 gate              | plan.md Reviews                                                   | Gate passes within its retry budget                                | Completed under operator override after two blocked attempts                                   | Operator decision 2026-09-28                                                                                         | Implementation (final review covers p04) | None                                               |
+- | p02-t03               | backlog item AC4                                                  | Warn about leftover CLAUDE.md files                                | Case variants deliberately not warned about                                                    | Case-insensitive match flagged real provider docs                                                                    | Implementation                           | None                                               |
+- | p-rev1 (revision)     | plan.md p04-t02                                                   | Recon validator ships; reviewer validates recon lanes              | Validator withdrawn; recon restored to `main`; reviewer no longer launches `recon-worker`      | Operator direction 2026-09-28                                                                                        | Implementation                           | `BL-260928-settle-codex-read-authority` (rescoped) |
+- | p-rev1 (revision)     | discovery.md Key Decision 2 / `DR-260927-claude-md-shims-are-opt` | `documentation.*` keys; unconditional removal of OAT-managed shims | `instructions.claude.*` keys; all-or-nothing removal                                           | Operator direction 2026-09-28 (`DR-260928-name-the-claude-md-shim-keys`, `DR-260928-remove-no-claude-md-shim-while`) | Implementation                           | None                                               |
+- Final verification (Step 12) after Revision 1 at `c95e17aad`, full Definition
+- of Done in CI order, every gate exit 0: `pnpm check`, `pnpm type-check`,
+- `HOME=$(mktemp -d) pnpm exec turbo run test --force` (10/10 tasks, 0 cached,
+- no replays), `pnpm build`, `check:skill-bumps`, `release:check-versions`
+- (after `git fetch origin main`), `release:validate`, `build:docs`,
+- `test:smoke` 163/163, `test:skills` 660/660, `test:scripts`, `pnpm lint`,
+- `pnpm format`. The pre-revision run at `f0901755c` is superseded.
+- Per-phase verification is recorded under Orchestration Runs.
+- **What shipped:**
+- - **CLAUDE.md shims are opt-in.** `instructions.claude.shims` in
+- `.oat/config.json` (`none | pointer | symlink | copy`, default `none`)
+- persists the choice and `instructions.claude.excludes` lists directories
+- sync leaves alone (clean rename of the earlier `documentation.*` keys, no
+- compatibility read); `--strategy` overrides one run. Under `none`, `oat instructions sync` creates
+- no `CLAUDE.md`, removes only exact OAT-created shims (pointer, sibling
+- symlink, identical copy) after apply-time identity and content re-checks,
+- and never removes a hand-written `CLAUDE.md` beside an `AGENTS.md`,
+- `CLAUDE.local.md`, `.claude/CLAUDE.md`,
+- excluded or docs trees, nested git checkouts, or any `CLAUDE.md` an
+- `AGENTS.md` resolves to (a lone `CLAUDE.md` with no `AGENTS.md` is adopted
+- into a new `AGENTS.md` and removed). A repository-wide warning names every remaining
+- `CLAUDE.md` that would make Claude Code ignore AGENTS.md, with two options
+- (remove it, or set a shim strategy and rerun sync), and names linking
+- `AGENTS.md` files first. Validate, doctor, and the agent-instructions skills
+- follow the same rules; this repository's 11 shims were removed.
+- Removal is all or nothing: while any `CLAUDE.md`, `CLAUDE.local.md`, or
+- `.claude/CLAUDE.md` with its own content exists (including in excluded
+- trees), sync removes no shim and reports `claude_md_blocks_shim_removal`
+- with the files it would have removed, a docs link, and the fixes (move the
+- content into `AGENTS.md` and remove the file, or set a shim strategy); a
+- blocker an `AGENTS.md` links to gets replace-then-remove advice, and kept
+- shims get no per-file "remove it" advice. Rules and provider sync
+- (`.claude/rules`, skills, agents) are independent of the shim setting.
+- - **AGENTS.md guidance appends instead of demanding manual patches.** An
+- absent managed block is appended with `O_WRONLY | O_APPEND | O_NOFOLLOW`
+- after `fstat` identity checks; hard-linked, unwritable, swapped, or
+- non-regular targets get the zero-write manual patch with the real cause.
+- `oat pjm init` prints guidance once; every `--project-guidance` consumer acts
+- or rejects; `oat init` without `--setup` honors it; zero-pack guidance is
+- skipped; new read-only `oat tools guidance [--json]`; the tools block names
+- only the skills directories installed packs use.
+- - **Backlog archive rewrites inbound references.** `oat backlog archive`
+- rewrites `.oat/repo` Markdown links, repository-root path strings, and
+- whole-span code citations to the moved item (URLs, symlinks, fenced code,
+- and working links elsewhere are left alone; unresolvable local forms warn)
+- and retries on re-run.
+- - **Recon.** `oat-reviewer` no longer launches `recon-worker`; only the
+- `recon` skill does, with its evidence-packet machinery. The recon skill is
+- unchanged from `main` (the validator built in p04 was withdrawn in the
+- revision).
+- - **Lifecycle skills.** Quick-mode discovery routes straight to quick-start in
+- next and progress; Lite records `absorbed_projects` /
+- `absorbed_backlog_ids`; implement commits the phase task ledger before the
+- per-phase reviewer is dispatched and keeps the phase row nonterminal until
+- review fixes and gates settle. Exit-gate freshness uses
+- `effective-delta-v2`, which ignores `.oat/projects/**` and `.oat/repo/**`
+- record changes; v1 generations keep their rules.
+- - **Repairs and CI.** Five heading-swallowing bare fences repaired in agent
+- roles and templates, with the fence scanner extended to `.agents/agents`
+- and `.oat/templates`; `packages/control-plane` gains `check`, `check:fix`,
+- and `lint:fix`, pinned by the lint-enrollment test; the agents-md
+- unsafe-target test race is fixed.
+- - Lockstep public packages bumped to 0.3.9; fourteen backlog items archived:
+- twelve shipped by this wave, plus `BL-260927-record-owner-overrides` and
+- `BL-260901-add-corrective-revision` closed as superseded by the review-cap
+- consolidation in the pre-wave decisions pass. The branch also carries that
+- pass's six decision records (`DR-260927-*`) and the new backlog items it
+- created.
+- **Behavioral changes (user-facing):**
+- - `oat instructions sync` no longer creates `CLAUDE.md` shims by default and
+- removes OAT-created ones on its next run; a lone `CLAUDE.md` is adopted into
+- a new `AGENTS.md` and removed; opt back in with
+- `oat config set instructions.claude.shims pointer`.
+- - Removal is all or nothing: while a `CLAUDE.md` with its own content exists,
+- sync removes no shim and `sync`/`validate` exit 1 with the reason and fixes.
+- - `documentation.instructionSyncStrategy` and
+- `documentation.instructionPointerExcludes` are renamed to
+- `instructions.claude.shims` and `instructions.claude.excludes`; the old keys
+- are ignored.
+- - After upgrading, `oat instructions validate` exits 1 while old shims remain,
+- until `oat instructions sync` removes them.
+- - `oat instructions validate` no longer reports a missing `CLAUDE.md` as drift
+- under the default; it warns about leftover `CLAUDE.md` files instead.
+- - AGENTS.md guidance writers append absent blocks (exit 0) instead of printing
+- a manual patch and exiting 1.
+- - `oat backlog archive` edits other `.oat/repo` files to repoint links.
+- **Key files / modules:**
+- - `packages/cli/src/commands/instructions/**`, `packages/cli/src/config/oat-config.ts`,
+- `packages/cli/src/config/resolve.ts` - shim strategy, removal, warnings
+- - `packages/cli/src/commands/shared/agents-md.ts`,
+- `packages/cli/src/commands/init/**`, `packages/cli/src/commands/pjm/**`,
+- `packages/cli/src/commands/tools/guidance/**` - guidance append and emission
+- - `packages/cli/src/commands/backlog/{archive.ts,rewrite-references.ts}` -
+- reference rewriting
+- - Skills: oat-doctor 2.0.2, oat-agent-instructions-analyze 1.12.4,
+- oat-agent-instructions-apply 1.7.3, oat-project-next 1.1.3,
+- oat-project-progress 1.4.3, oat-project-lite 1.1.6, oat-project-implement
+- 2.3.14; agent roles oat-reviewer 1.2.10, oat-codebase-mapper
+- 1.0.2, skeptical-evaluator 1.0.1
+- **Verification performed:**
+- - Failing-first tests for every behavior change; neutralize-and-restore proofs
+- for every named negative control (append identity checks, shim deletion
+- guards, the all-or-nothing removal block, rewriter symlink and resolution guards,
+- lint and check pins); failing-first pins for the reviewer
+- `recon-worker` removal and the `effective-delta-v2` pathspecs.
+- - Per-phase Opus 5.5 high root reviews with fix loops and Codex
+- `codex-6-sol-xhigh` phase gates on every phase, including revision p-rev1
+- (p04 completed under an operator override after its gate budget was
+- exhausted).
+- - Full Definition of Done re-run after Revision 1 at `c95e17aad`, all gates
+- exit 0 with 0 of 10 test tasks cached (see Test Results).
+- **Design deltas (if any):**
+- - Key decision 4's pre-review bookkeeping was refined during p03 review:
+- recovery-marker settlement belongs to the pre-review commit, and the phase
+- row stays nonterminal until review fixes and gates settle.
+- - Revision 1 (operator feedback on PR #332): renamed the shim keys under
+- `instructions.claude`, made removal all or nothing, pinned rules-sync
+- independence, added `effective-delta-v2`, and withdrew the recon validator
+- and the reviewer's `recon-worker` path (recon restored to `main`).
+- - Case variants of `CLAUDE.md` are deliberately not warned about (they matched
+- real provider docs); documented.
+- - Follow-ups filed: `BL-260928-serialize-concurrent-agents-md`,
+- `BL-260928-keep-instructions-sync-force`,
+- `BL-260928-route-quick-mode-discovery`,
+- `BL-260928-settle-codex-read-authority`,
+- `BL-260928-harden-the-backlog-reference`; `BL-260829-order-phase-bookkeeping-before`
+- stays open for live observation.
+- - Plan: `plan.md`
+- - Discovery: `discovery.md`
+- - Decision: `.oat/repo/reference/decisions/DR-260927-claude-md-shims-are-opt.md`
+- - Backlog review: `.oat/repo/pjm/backlog/reviews/backlog-and-roadmap-review.md`
+- oat_generated: false
+- purpose: project-observations
+- oat_last_updated: 2026-09-27
+- Project Log: backlog-wave-2
+- This append-only log serves two audiences: the project team learning from this project's execution, and maintainers improving the general OAT workflow and tooling.
+- Append when something breaks, surprises you, requires a workaround, or works notably well enough to preserve as do-not-regress evidence. Record evidence, not a running narrative. Prior entries are never edited or struck through; append corrections as a new judgment entry that references the original entry and explains the correction. Add a version note to tool-related observations. Create entries only with `oat project log append`; run `oat project log append --help` for the complete entry contract. Reference supporting artifacts by path instead of inlining them. Never record secret values such as tokens, keys, signed URLs, or credentials because this log rolls up into tracked surfaces; reference secrets by name or source, never by value.
+- Judgment entries default to 1–3 sentences covering what happened, the impact or workaround, and any follow-up. High-value entries may instead use this structured body:
+- ```text
+- Observation: What happened and the supporting evidence.
+- Impact: Why it mattered or what workaround was required.
+- Recommendation: What should change or be preserved.
+- ```
+- Shared tracked surfaces must be written only from the root checkout, never from parallel worktrees.
+- Judgment entries:
+- ```text
+- 2026-09-27 · <project|general> · <bug|friction|worked-well|feedback> · <area>
+- ```
+- Structural entries:
+- ```text
+- 2026-09-27 · structural · <producer> · <ref>
+- ```
+- Entries are chronological and append-only.
+- 2026-09-27 · structural · oat gate review · plan
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:2,medium:1,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-2/reviews/artifact-plan-review-2026-09-27T150947Z.md run=8f69f414-ff48-4fc6-b22a-64dca2027e62
+- 2026-09-27 · structural · oat gate review · plan
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:0,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-2/reviews/artifact-plan-review-2026-09-27T151608Z.md run=685e7775-8f4f-4c4e-b08d-bd172ad8f3d9
+- 2026-09-28 · structural · oat gate review · p01
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:1,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-2/reviews/p01-review-2026-09-28T001719Z.md run=6da2a8cf-79c3-4fbd-96a2-01d7485a9e93
+- 2026-09-28 · structural · oat-project-implement · p01
+- bw2-p01-outcome p01 pass after 2 fix rounds (p01-t07, p01-t08); gate codex-6-sol-xhigh ok, 1 Medium deferred to final; see implementation.md Orchestration Runs
+- 2026-09-28 · structural · oat gate review · p02
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:1 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-2/reviews/p02-review-2026-09-28T013003Z.md run=c8b28cc4-1645-498f-9290-c5c34552a079
+- 2026-09-28 · structural · oat-project-implement · p02
+- bw2-p02-outcome p02 pass after 1 recovery and 2 fix rounds (C1 symlink data-loss fixed); gate codex-6-sol-xhigh ok, 1 Low addressed now; see implementation.md
+- 2026-09-28 · structural · oat gate review · p03
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:2,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-2/reviews/p03-review-2026-09-28T015614Z.md run=ab142cc6-10a3-44bb-b645-46ebd5561db5
+- 2026-09-28 · structural · oat-project-implement · p03
+- bw2-p03-outcome p03 pass after 1 recovery, 1 review fix round, 1 gate sweep fix; gate codex-6-sol-xhigh ok; see implementation.md
+- 2026-09-28 · structural · oat gate review · p04
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:1,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-2/reviews/p04-review-2026-09-28T022315Z.md run=43f7cea9-d98d-4f4b-90e7-89537f0df389
+- 2026-09-28 · structural · oat gate review · p04
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:0,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-2/reviews/p04-review-2026-09-28T024124Z.md run=c9813e05-1215-4615-abcb-bef0fdfbf6d0
+- 2026-09-28 · structural · oat-project-implement · p04
+- bw2-p04-stop-1 p04 gate attempt 2 blocked (1 High: read-only tool authority); retry limit exhausted; stopped for operator direction
+- 2026-09-28 · structural · oat-project-implement · p04
+- bw2-p04-outcome p04 complete under operator override after 2 blocked gate attempts and 5 fix rounds; follow-ups filed; see implementation.md
+- 2026-09-28 · structural · oat gate review · p05
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:2,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-2/reviews/p05-review-2026-09-28T104612Z.md run=9dc0deb0-d3d9-4a35-9b5a-8c111634a460
+- 2026-09-28 · structural · oat gate review · p05
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:1,low:1 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-2/reviews/p05-review-2026-09-28T111050Z.md run=138c0018-3da4-473a-ab58-e2a99ba608ab
+- 2026-09-28 · structural · oat-project-implement · p05
+- bw2-p05-outcome p05 pass after 1 blocked gate attempt, 3 review-fix rounds, 1 sweep fix; all 38 tasks complete
+- 2026-09-28 · structural · oat gate review · final
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:0,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-2/reviews/final-review-2026-09-28T113721Z.md run=0415d270-2faa-4559-901c-65430d5c405d
+- 2026-09-28 · structural · oat gate review · final
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-2/reviews/final-review-2026-09-28T114805Z.md run=0c5dbb3e-18a9-4059-a857-ca4209e3b9e4
+- 2026-09-28 · structural · oat gate review · p-rev1
+- target=codex-6-sol-xhigh threshold=high exit=1 status=review_failed run=b282ca69-45c4-4d01-9b68-9b8e1a71d833
+- 2026-09-28 · structural · oat gate review · p-rev1
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:1 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-2/reviews/p-rev1-review-2026-09-28T162038Z.md run=22b3f5cf-b81d-4d85-bc8d-766a6cb611e6
+- 2026-09-28 · structural · oat gate review · final
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:2,low:2 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-2/reviews/final-review-2026-09-28T164247Z.md run=5c3729d3-0488-4ae1-84c5-fd7b86e49418
+- 2026-09-28 · structural · oat gate review · final
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:2,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-2/reviews/final-review-2026-09-28T165830Z.md run=d34bae3b-fe9f-4259-b98b-18a6a4e91b5b
+- Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
+- oat_status: complete
+- oat_ready_for: oat-project-implement
+- oat_blockers: []
+- oat_last_updated: 2026-09-27
+- oat_phase: plan
+- oat_phase_status: complete
+- oat_plan_parallel_groups: []
+- oat_plan_hill_phases: ['p05']
+- oat_auto_review_at_hill_checkpoints: true
+- oat_plan_source: quick
+- oat_import_reference: null
+- oat_import_source_path: null
+- oat_import_provider: null
+- oat_template: false
+- oat_generated: false
+- oat_phase_review_gate:
+- enabled: true
+- phases: []
+- review_type: code
+- exit_nonzero_on: high
+- Implementation Plan: backlog-wave-2
+- > Execute this plan using `oat-project-implement`. The five phases run
+- > sequentially on branch `wave/2026-09-27-backlog-wave-2`.
+- **Goal:** Ship Wave 2 of the 2026-09-26 backlog review plus the CLAUDE.md shim
+- change as one PR: close eleven backlog items with evidence, absorb
+- `BL-260830-persist-instruction-sync`, ship `BL-260829-order-phase-bookkeeping-before`
+- while keeping it open for live observation, and bump the lockstep packages to
+- 0.3.9.
+- **Architecture:** Five sequential phases grouped by shared write sets: AGENTS.md
+- guidance (p01), CLAUDE.md shims (p02), lifecycle skill prose (p03), agent roles
+- and recon validation (p04), and CI/backlog tooling plus the release fan-in
+- (p05).
+- **Tech Stack:** TypeScript ESM CLI (`packages/cli`, vitest), bundled skills
+- under `.agents/skills` and agent roles under `.agents/agents` (markdown plus
+- `node --test` scripts), Fumadocs docs under `apps/oat-docs/docs`.
+- **Commit Convention:** `{type}({pNN-tNN}): {description}` — for example
+- `fix(p01-t02): append absent managed blocks to an existing AGENTS.md`.
+- - [x] Confirmed HiLL checkpoints with user (autonomous run; phase gates on all
+- phases replace per-phase pauses; `p05` is the fan-in checkpoint)
+- - [x] Set `oat_plan_hill_phases` in frontmatter (confirmed at implementation
+- start)
+- - [x] Evaluated phases for parallelism opportunities
+- - [x] Set `oat_plan_parallel_groups` in frontmatter
+- - **Test runner:** CLI tests run from the repository root with
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run <paths relative to packages/cli>`.
+- Skill and agent script tests run with `node --test <path>`. Always set
+- `HOME=$(mktemp -d)` for any test that could resolve user-scope OAT state.
+- - **Imports:** same-directory `./...` or the package's configured aliases
+- (`@rules/*`, `@engine/*`, `@config/*`, `@providers/*`, `@commands/*`,
+- `@agents/*`); never `../`, `src/...`, or `@/*` (`packages/cli/AGENTS.md`).
+- - **Format:** run `pnpm exec oxfmt --write <files you created or edited>` on
+- every changed `.ts`, `.mjs`, `.json`, and non-`.oat` `.md` file before
+- committing. oxfmt skips `.oat/` paths when given explicit arguments; never
+- run it on `state.md`.
+- - **Failing-first proof:** every defect fix records, in the task's commit body
+- or `implementation.md`, that the new test fails against the pre-fix code (run
+- it before the fix, or neutralize the fix, observe the failure, and restore).
+- Load-bearing negative controls named in a task are proven by
+- neutralize-and-restore.
+- - **Bundled mirrors:** never edit `packages/cli/assets/skills/**` or
+- `packages/cli/assets/docs/**`; `pnpm build` regenerates them. Only four files
+- under `packages/cli/assets/` are tracked.
+- - **Versions:** bump a changed canonical skill's `metadata.version`, or a
+- changed agent role's top-level `version:`, once in the PR, in the task that
+- first changes it, and update every test pin of that version in the same
+- task (search `packages/cli/src` and `.agents/skills/*/tests` for the old
+- value). Later tasks that edit the same skill do not bump again.
+- - **Sync:** if a task needs provider views refreshed, run
+- `pnpm run cli -- sync --scope project`; never `--scope all`.
+- - **Branch CLI for probes:** run `pnpm build` then
+- `node packages/cli/dist/index.js ...` for temp-repo probes; the `oat` on
+- `PATH` is the installed 0.3.7 release.
+- - **After every commit:** run `git status --short`; if the pre-commit hook left
+- a reformatted file, review it and commit it in the same task.
+- The plan is fully sequential (`oat_plan_parallel_groups: []`). Every adjacent
+- phase pair shares a write:
+- - p01 and p02 both edit `.agents/skills/oat-doctor/SKILL.md`,
+- `packages/cli/src/commands/pjm/init.ts` (the next-step hint), and
+- `packages/cli/src/commands/help-snapshots.test.ts`.
+- - p02 and p03 both bump skills whose versions are pinned in
+- `packages/cli/src/validation/skills.test.ts`.
+- - p03 and p04 both edit `packages/cli/src/validation/named-skill-load-contract.test.ts`
+- (routing pins in p03; the fence-scan inventory in p04).
+- - p05 is the fan-in: the lockstep bump and backlog close-out need every earlier
+- phase.
+- Within p04, both tasks edit `.agents/agents/oat-reviewer.md`; they are ordered,
+- and the first owns the one version bump.
+- | Item                                       | Criterion                                                                                                                   | Task                                                  |
+- | `BL-260909-fix-the-agents-md-unsafe`       | Each variant writes under its own temp dir; repeated run green; no shared `outside.md` reference                            | p01-t01                                               |
+- | `BL-260903-close-manual-only-agents-md`    | Append absent block, `appended`, exit 0; different block keeps manual patch; identical no-op; absent file exclusive create  | p01-t02                                               |
+- |                                            | Negative control: pre-fix manual state, post-fix append, concurrent-edit survival                                           | p01-t02                                               |
+- |                                            | Brand-new repo `oat init` → `oat pjm init` ends with both blocks, no manual action                                          | p01-t03                                               |
+- |                                            | Guidance printed once per command                                                                                           | p01-t03                                               |
+- |                                            | Docs and `oat pjm init` next-step message describe append                                                                   | p01-t03                                               |
+- |                                            | Every `--project-guidance` consumer acts or rejects                                                                         | p01-t04                                               |
+- |                                            | `oat init` without `--setup` honors or warns                                                                                | p01-t04                                               |
+- |                                            | Read-only emission of the managed block                                                                                     | p01-t05                                               |
+- |                                            | `oat-doctor` hints name a producing command                                                                                 | p01-t05                                               |
+- | `BL-260927-name-only-installed-pack`       | Scope-aware directory naming by pack membership                                                                             | p01-t06                                               |
+- |                                            | Non-pack project skills described separately                                                                                | p01-t06                                               |
+- |                                            | Fixtures: all-user, all-project, mixed, user-plus-unrelated                                                                 | p01-t06                                               |
+- |                                            | `oat tools where` decision recorded (deferred)                                                                              | p01-t06                                               |
+- | `BL-260927-make-claude-md-shims-opt`       | Persisted config key, default `none`, `--strategy` override, `oat config set`, docs                                         | p02-t01, p02-t05                                      |
+- |                                            | `none`: missing is not drift; configured strategy unchanged (negative control)                                              | p02-t02                                               |
+- |                                            | No partial coverage: managed-shim removal, dry-run listing, hand-written preserved                                          | p02-t02                                               |
+- |                                            | Leftover CLAUDE.md warning (sync, `--json`, validate, doctor); silent when none                                             | p02-t03, p02-t04                                      |
+- |                                            | Stray adoption under `none` leaves no CLAUDE.md                                                                             | p02-t03                                               |
+- |                                            | Analyze/apply conditional import; `resolve-providers.sh` detection; bumps                                                   | p02-t04                                               |
+- |                                            | Docs: default, when to opt in, plugin constraints                                                                           | p02-t05                                               |
+- |                                            | `BL-260830-persist-instruction-sync` absorbed                                                                               | p02-t06, p05-t05                                      |
+- |                                            | This repository drops its shims; sync clean                                                                                 | p02-t06                                               |
+- |                                            | Lockstep bump; tests for each strategy with isolated `HOME`                                                                 | p02-t02, p02-t03, p05-t04                             |
+- |                                            | Release notes call out the automatic removal (via the PR title)                                                             | p05-t05 (PR Requirements)                             |
+- | `BL-260907-route-quick-mode-discovery`     | Discovery rows name quick-start; pins; one bump each                                                                        | p03-t01                                               |
+- | `BL-260907-record-absorbed-projects`       | Lite records both fields; contract test and scratch probe; `lifecycle.md` qualifier dropped                                 | p03-t02                                               |
+- | `BL-260829-order-phase-bookkeeping-before` | Reviewer never sees a stale ledger; clean tree for the fix child preserved; relationship to `BL-260711` recorded            | p03-t03                                               |
+- |                                            | Live multi-phase verification                                                                                               | Not in this wave (item stays open; operator decision) |
+- | `BL-260909-repair-the-bare-fences-that`    | Five instances repaired; scanner covers `.agents/agents` and `.oat/templates` with negative control; bumps; laxity decision | p04-t01                                               |
+- | `BL-260927-validate-recon-worker`          | Deterministic validator; reviewer runs it before launch and corrects accepted handles; fixtures for both lanes              | p04-t02                                               |
+- | `BL-260909-give-packages-control-plane`    | `pnpm check` fails on control-plane formatting (red then green); AGENTS.md updated; lint enrollment pinned                  | p05-t01                                               |
+- |                                            | Lockstep bump                                                                                                               | p05-t04                                               |
+- | `BL-260909-rewrite-inbound-references`     | No dangling `.oat/repo` links after archive; fixture test                                                                   | p05-t02                                               |
+- |                                            | Tip clean after a real archival                                                                                             | p05-t05                                               |
+- | `BL-260904-stabilize-the-collection`       | Ten consecutive uncached runs recorded                                                                                      | p05-t03                                               |
+- Phase 1: AGENTS.md guidance
+- Backlog: `BL-260909-fix-the-agents-md-unsafe`.
+- **Files:**
+- - Modify: `packages/cli/src/commands/shared/agents-md.test.ts` (the `it.each`
+- "unsafe %s target" block, lines ~296-321)
+- **Step 1: Isolate (GREEN)**
+- The block computes `const outside = join(root, '..', 'outside.md')` (line
+- ~310), and `root` is a fresh `mkdtemp(tmpdir(), 'agents-md-test-')`, so every
+- variant, and every concurrent test process, uses the same `$TMPDIR/outside.md`.
+- Create a second `mkdtemp` directory per variant for the outside target, point
+- the `external` symlink at that directory's `outside.md` with a path that still
+- leaves `root`, and clean it up with the variant. Remove every other reference to
+- the shared `outside.md` path in the file.
+- **Step 2: Verify**
+- Run twenty times with explicit exit codes (vitest 4 has no `--repeat`):
+- `for i in $(seq 1 20); do HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/shared/agents-md.test.ts > /tmp/agents-md-r$i.log 2>&1; echo "run=$i exit=$?"; done`
+- Expected: all twenty exit 0; record the exit codes in `implementation.md`. Also `rg -n "'\.\.', 'outside\.md'|\.\./outside\.md" packages/cli/src/commands/shared/agents-md.test.ts`
+- returns no shared-path use.
+- **Step 3: Commit**
+- `test(p01-t01): isolate the agents-md unsafe-target fixtures per variant`
+- Backlog: `BL-260903-close-manual-only-agents-md` (criteria 1, 2).
+- **Files:**
+- - Modify: `packages/cli/src/commands/shared/agents-md.ts` (result action union
+- at line ~76, `createMissingFile` ~443, the existing-file branch ~462-556,
+- `formatAgentsMdGuidanceResult` ~396)
+- - Modify: `packages/cli/src/commands/shared/agents-md.test.ts`
+- - Modify: `packages/cli/src/commands/init/tools/project-guidance.ts`
+- (`AgentsGuidanceAction` gains `appended`; the prompt "Create missing or
+- propose manual repository AGENTS.md tool guidance?" and the "an existing file
+- requires a manual patch" reason strings, ~14-20, ~180, ~218, ~232, describe
+- the append path) and `packages/cli/src/commands/init/tools/index.test.ts`
+- - Modify: every caller that switches on the action (search `'manual-required'`
+- under all of `packages/cli/src`) so `appended` is handled wherever `created`
+- is, including `packages/cli/src/commands/decision/index.ts` (~167) and
+- `packages/cli/src/commands/docs/init/index.ts` (~310), which map
+- `manual-required` to a partial non-zero outcome
+- - Modify: `packages/cli/src/commands/decision/*.test.ts`,
+- `packages/cli/src/commands/docs/init/index.test.ts`, and
+- `packages/cli/src/e2e/workflow.test.ts` (~562-641, "reports $consumer manual
+- guidance truthfully", which seeds an AGENTS.md without the blocks and today
+- expects exit 1 plus `manual-required`; under the new contract the absent-block
+- cases become `appended` with exit 0, while present-but-different cases keep
+- the manual patch; the tools-guidance cases at ~354-460, "keeps $entryPoint
+- ... guidance manual-only across reruns", flip the same way)
+- **Step 1: Write tests (RED)**
+- Cover the four-way contract for `upsertAgentsMdSections` against an existing
+- file:
+- - the real-filesystem append (no injected seam) uses the exact open flags from
+- Step 2 and succeeds;
+- - block absent → action `appended`, exit-code-bearing result is success, and
+- the file equals the original bytes, one separator newline (`\n`), the absent
+- blocks joined by `\n\n`, and a trailing `\n` (matching `createMissingFile`),
+- so the block marker always starts its own line regardless of how the file
+- (or a concurrent writer) ended;
+- - block present and identical → `no-change`, file untouched;
+- - block present but different → `manual-required` with the same manual patch
+- as today, file untouched;
+- - file absent → exclusive create as today.
+- Add the negative control: (a) a fixture capturing today's behavior (existing
+- file, absent block → `manual-required`) that fails after the change; (b) the
+- append case; (c) a concurrent-edit fixture where another writer appends user
+- content to the file between the read and the append, and both the user bytes
+- and the managed block are present afterwards with the original prefix
+- byte-for-byte unchanged; (d) the same race where the concurrent append has no
+- trailing newline: the managed block's opening marker still starts its own
+- line, and a second `upsertAgentsMdSections` run returns `no-change` with
+- exactly one managed block. Inject the concurrent write through a new `open` member on
+- `AgentsMdFileSystem` (today it exposes only `lstat`, `readFile`, `readlink`,
+- `realpath`, `writeFile`), between planning and the append. (e) Target swap:
+- rename a hard link to a file outside the repository (in a sibling `mkdtemp` on
+- the same filesystem) over `AGENTS.md` between planning and the open; expect
+- `blocked`, zero bytes written, and the outside file byte-identical; prove it by
+- neutralize-and-restore of the `fstat` `dev`/`ino` identity check, since only
+- that check can reject this swap (`O_NOFOLLOW` stays in Step 2 as defense in
+- depth without a separate proof).
+- (f) Multi-section and legacy cases: tools block absent while the legacy
+- `<!-- OAT workflows -->` block is present stays `manual-required` with zero
+- writes (append cannot remove the legacy block); in a multi-section write
+- (pjm init writes two sections in one call) with one block absent and the other
+- present-but-different, append the absent block and report `manual-required`
+- with a patch for only the different block and a non-zero exit.
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/shared/agents-md.test.ts`
+- Expected: the absent-block and concurrent cases fail.
+- **Step 2: Implement (GREEN)**
+- Add the `appended` action. For an existing regular file whose managed block is
+- absent, open it with `O_WRONLY | O_APPEND | O_NOFOLLOW` (a write access mode is required; `O_APPEND | O_NOFOLLOW` alone opens read-only and the write fails with `EBADF`) for a direct target (or open the
+- already-approved in-repository resolved target with an equivalent writable
+- append mode), `fstat` the opened handle and
+- compare `dev`/`ino` with the planned target identity, closing with `blocked`
+- and zero bytes written on a mismatch; then
+- always write one leading `\n` before the block marker (no last-byte read, so
+- no read-to-write window), then the absent blocks joined by `\n\n` and a
+- trailing `\n`, and nothing else; never truncate, rename, or rewrite the file. State in
+- the commit body whether an in-repository symlinked `AGENTS.md` target (the e2e
+- symlink cases) is appended through or keeps the manual patch; keep today's
+- refusal for any target outside the repository. Keep the existing
+- symlink/unsafe-target refusals in front of the append. Present-but-different
+- stays the zero-write manual patch.
+- **Step 3: Verify**
+- Run
+- `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/shared src/commands/pjm src/commands/init src/commands/decision src/commands/docs/init src/e2e/workflow.test.ts`.
+- Expected: green. Prove the concurrent-edit control by neutralizing the append
+- (swap in a read-modify-write), observing the control fail, and restoring.
+- **Step 4: Commit**
+- `fix(p01-t02): append absent managed blocks to an existing AGENTS.md`
+- Backlog: `BL-260903-close-manual-only-agents-md` (criteria 3, 4, 5).
+- **Files:**
+- - Modify: `packages/cli/src/commands/pjm/index.ts` (guidance print loop, lines
+- ~203-212)
+- - Modify: `packages/cli/src/commands/pjm/init.ts` (next-step message constants)
+- - Modify: `packages/cli/src/commands/pjm/index.test.ts`,
+- `packages/cli/src/commands/pjm/init.test.ts`
+- - Modify: `apps/oat-docs/docs/cli-utilities/tool-packs.md` (guidance section,
+- now near line ~688) and any `oat pjm init` docs page that describes
+- `manual-required` for an absent block
+- **Step 1: Write tests (RED)**
+- - `oat pjm init` against a repo whose `AGENTS.md` has both PJM blocks present
+- but different: the combined manual patch is printed exactly once (today it
+- prints once per writer) and the command exits non-zero. This fails before
+- the dedup fix.
+- - A fresh temp repository: run an `oat init` path that actually writes
+- `AGENTS.md` non-interactively (for example `init --setup --project-guidance`
+- with a pack, or the tools-install guidance path), assert the file exists,
+- then run `oat pjm init`; assert the tools, project-management, and decisions
+- block markers are all present, the exit code is 0, and no manual patch is
+- printed. Use the command runners the existing tests use, with an isolated
+- `HOME`.
+- **Step 2: Implement (GREEN)**
+- Deduplicate the guidance output in `pjm/index.ts` so one combined result prints
+- per command. Update the next-step message and docs to describe the append
+- behavior (absent block appended; different block still needs the printed
+- patch).
+- **Step 3: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm`
+- Then build and probe in a temp repo inside one subshell so both commands share
+- the isolated `HOME`:
+- `pnpm build && (export HOME=$(mktemp -d); cd $(mktemp -d) && git init -q && node /Users/tstang/Code/open-agent-toolkit/packages/cli/dist/index.js init --scope project --setup --project-guidance <same non-interactive flags the test uses>; echo "init exit=$?"; test -f AGENTS.md && echo "AGENTS.md exists"; node /Users/tstang/Code/open-agent-toolkit/packages/cli/dist/index.js pjm init; echo "pjm exit=$?"; grep -n '<!-- OAT' AGENTS.md)`;
+- record the exit codes and the block markers in `implementation.md`.
+- **Step 4: Commit**
+- `fix(p01-t03): print AGENTS.md guidance once and document the append path`
+- Backlog: `BL-260903-close-manual-only-agents-md` (criteria 6, 7).
+- **Files:**
+- - Modify: `packages/cli/src/commands/init/tools/index.ts` (guidance gated on
+- `pack === 'workflows'` at ~1207, ~1790-1805, ~1940; whole-set command
+- ~2144-2159)
+- - Modify: `packages/cli/src/commands/init/index.ts` (the guidance block skipped
+- when `!setupFlag && !(interactive && freshInit)`, ~1305-1328)
+- - Modify: `packages/cli/src/commands/init/tools/index.test.ts` (or the
+- existing pack-command tests), `packages/cli/src/commands/init/index.test.ts`
+- - Modify: `packages/cli/src/commands/help-snapshots.test.ts` if help text
+- changes
+- **Step 1: Write tests (RED)**
+- For each of the seven non-`workflows` pack install commands (and the
+- `oat tools install <pack>` equivalents), passing `--project-guidance` either
+- plans and writes the OAT tools guidance block or exits non-zero with a message
+- naming the command that does; none exits 0 while ignoring it. `oat init
+- --project-guidance` without `--setup` on a non-fresh repo either applies
+- guidance or prints a warning that it was ignored and how to apply it.
+- **Step 2: Implement (GREEN)**
+- Choose one behavior per surface and document it in the commit body. Preferred:
+- the OAT tools guidance block describes all installed packs, so any pack command
+- given `--project-guidance` plans guidance the same way `workflows` does; if a
+- surface cannot, it rejects the flag explicitly. `oat init` without `--setup`
+- applies the guidance directly when the flag is given (or warns, if applying
+- would require the setup flow).
+- **Step 3: Verify**
+- Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init src/commands/tools src/commands/help-snapshots.test.ts`
+- Expected: green.
+- **Step 4: Commit**
+- `fix(p01-t04): honor or reject --project-guidance on every command`
+- Backlog: `BL-260903-close-manual-only-agents-md` (criteria 8, 9).
+- **Files:**
+- - Modify: `packages/cli/src/commands/init/tools/project-guidance.ts` and the
+- tools command registration (new read-only subcommand, for example
+- `oat tools guidance [--json]`, that renders the managed OAT tools block from
+- the installed pack state without installing, upgrading, or writing anything)
+- - Create/modify: tests for the new command (no filesystem writes, output equals
+- the block the writer would produce, `--json` shape)
+- - Modify: `packages/cli/src/commands/help-snapshots.test.ts`
+- - Modify: `.agents/skills/oat-doctor/SKILL.md` (every fix hint that names
+- `oat tools install <pack> --project-guidance`, at ~line 128 and in the
+- instructions dive ~line 224;
+- `metadata.version` 2.0.1 → 2.0.2) and its pins (search for `2.0.1` in
+- `packages/cli/src` and `.agents/skills/oat-doctor/tests`)
+- - Modify: `apps/oat-docs/docs/cli-utilities/tool-packs.md` and
+- `apps/oat-docs/docs/reference/cli-reference.md`
+- **Step 1: Write tests (RED)**
+- The new command prints the block, writes nothing (assert the tree and
+- `AGENTS.md` are byte-identical before and after), and does not call the
+- install/upgrade path. The doctor contract test asserts that both hint sites
+- name the new command (or `oat pjm init` for PJM blocks) and that no hint names
+- `oat tools install <pack> --project-guidance`.
+- **Step 2: Implement (GREEN)**
+- Reuse the existing block builder; the command only renders. Update the
+- `oat-doctor` hint and bump the skill.
+- **Step 3: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init src/commands/tools src/commands/help-snapshots.test.ts src/validation/skills.test.ts`
+- and `node --test .agents/skills/oat-doctor/tests/*.test.mjs`.
+- Expected: green.
+- **Step 4: Commit**
+- `feat(p01-t05): print the OAT tools guidance block without reinstalling`
+- Backlog: `BL-260927-name-only-installed-pack` (all criteria).
+- **Files:**
+- - Modify: `packages/cli/src/commands/init/tools/project-guidance.ts`
+- (`buildToolPacksSectionBody`, `PACK_DESCRIPTIONS`; the unconditional
+- `.agents/skills/` lines at ~76-77)
+- - Modify: `packages/cli/src/commands/init/tools/project-guidance.test.ts`
+- - Modify: `.oat/repo/pjm/backlog/items/BL-260927-name-only-installed-pack.md`
+- (notes: record the `oat tools where` deferral)
+- **Step 1: Write tests (RED)**
+- Fixtures: all packs user-scope (block names `~/.agents/skills/`, not
+- `.agents/skills/`); all project-scope (names `.agents/skills/`); mixed (names
+- both, each with its packs); user-scope packs plus unrelated project skills
+- (names `~/.agents/skills/` for packs and describes the unrelated project skills
+- separately, not as OAT packs). Decide by pack membership, never by directory
+- existence.
+- **Step 2: Implement (GREEN)**
+- Derive the named directories from each installed pack's scope. Add a separate
+- line for project skills that belong to no pack when present.
+- **Step 3: Record the deferral**
+- Add a note to the item: `oat tools where` deferred by the operator on
+- 2026-09-27; `oat tools list --json` and `oat tools info` already report scope,
+- and the scope-aware block plus p01-t05's read-only command cover the reported
+- confusion. Record the same in `implementation.md`.
+- **Step 4: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools`
+- Expected: green.
+- **Step 5: Commit**
+- `fix(p01-t06): name only the skills directories installed packs use`
+- Source: `reviews/archived/p01-review-2026-09-27T235828Z.md` (auto review,
+- head `6aa11df62600cd72e41559a611697afb873893d7`).
+- **Files:**
+- - Modify: `packages/cli/src/commands/shared/agents-md.ts` and
+- `agents-md.test.ts` (M1, L1, L2)
+- - Modify: `packages/cli/src/commands/init/index.ts` and its tests (M2)
+- - Modify: `.agents/skills/oat-doctor/SKILL.md` (L3; already bumped to 2.0.2 in
+- this PR, do not bump again)
+- - Modify: `packages/cli/src/commands/pjm/index.test.ts` (L4)
+- **Step 1: Fix (failing-first for M1 and M2)**
+- - M1: an existing `AGENTS.md` whose link count is above 1 (a pre-existing hard
+- link, possibly to a file outside the repository) never takes the append path;
+- it returns the zero-write manual patch. Add a failing-first test with a hard
+- link to a file outside the repository present at planning time.
+- - M2: `oat init --project-guidance` without `--setup` and with no installed
+- pack does not append an empty `OAT tools` block; it skips with a clear
+- message (or plans only the blocks that have content) and exits 0, so a later
+- `oat tools install <pack> --project-guidance` appends normally. Add a test
+- that exercises the real applier, not a mock, for that sequence.
+- - L1: report append failures with a reason matching the actual error (for
+- example permission denied) and include the manual patch; distinguish a
+- partial write from a clean refusal.
+- - L2: add `O_NONBLOCK` to the append open flags and refuse a non-regular file
+- after `fstat`.
+- - L3: fix the oat-doctor PJM hint wording (`oat pjm init` appends absent
+- blocks; it does not rewrite).
+- - L4: make the pjm test title match its assertions.
+- **Step 2: Verify**
+- Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/shared src/commands/init src/commands/pjm src/e2e/workflow.test.ts`
+- and `node --test .agents/skills/oat-doctor/tests/*.test.mjs`. Expected: green.
+- **Step 3: Commit**
+- `fix(p01-t07): close p01 review findings`
+- Task p01-t08: (review) Close p01 round-2 Low findings L1-L3
+- Source: `reviews/archived/p01-review-2026-09-28T000859Z.md` (auto review,
+- passing: 0 Critical/High/Medium, 3 Low).
+- **Files:** `packages/cli/src/commands/pjm/index.ts` (or the shared guidance
+- formatter) and tests; `apps/oat-docs/docs/cli-utilities/tool-packs.md`;
+- `packages/cli/src/commands/shared/agents-md.ts` and tests;
+- `packages/cli/src/commands/tools/guidance/index.ts` and tests.
+- **Step 1: Fix**
+- - L1: when a zero-write refusal happens (hard link, permission denied, and so
+- on), `oat pjm init`'s header states the refusal, not "an existing block
+- differs"; fix `tool-packs.md` (~736) to match.
+- - L2: a directory swapped in before the append is reported as an identity
+- change, not a write refusal.
+- - L3: `oat tools guidance` with no installed packs prints a clear "no packs
+- installed" message (and `--json` says so) instead of an empty placeholder
+- block.
+- **Step 2: Verify**
+- Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/shared src/commands/pjm src/commands/tools src/commands/init`.
+- **Step 3: Commit**
+- `fix(p01-t08): close p01 round-2 review findings`
+- Phase 2: CLAUDE.md shims
+- Backlog: `BL-260927-make-claude-md-shims-opt` (criterion 1);
+- `DR-260927-claude-md-shims-are-opt`.
+- **Files:**
+- - Modify: `packages/cli/src/commands/instructions/instructions.types.ts` only if
+- the resolver needs a type; `none` is not added in this task
+- - Modify: `packages/cli/src/commands/instructions/instructions.utils.ts` (add
+- the config-aware resolver: `--strategy` flag, then
+- `documentation.instructionSyncStrategy`, then the built-in default; in this
+- task the built-in default stays `pointer`, and p02-t02 flips it to `none`
+- together with the `none` behavior so every intermediate commit is coherent)
+- - Modify: `packages/cli/src/config/resolve.ts` (default row for
+- `documentation.instructionSyncStrategy` beside `instructionPointerExcludes`
+- ~76)
+- - Modify: `packages/cli/src/config/oat-config.ts` (`OatDocumentationConfig`
+- gains `instructionSyncStrategy`; parse and validate alongside
+- `instructionPointerExcludes`, ~1523-1548 and ~1778-1783)
+- - Modify: `packages/cli/src/commands/config/index.ts` (`oat config
+- set/get/unset` support, following the `instructionPointerExcludes` pattern at
+- ~137-142, ~313-318, ~513-534)
+- - Modify: `packages/cli/src/commands/instructions/sync/sync.ts` (~356-358) and
+- `validate/validate.ts` (~42-44): remove the Commander
+- `.default(DEFAULT_INSTRUCTION_SYNC_STRATEGY)` on `--strategy`, which would
+- otherwise always fill the option and hide the config; read the resolved
+- strategy instead, and report the effective strategy in `--json` output
+- - Modify: tests: `src/config/oat-config.test.ts`, `src/config/resolve.test.ts`,
+- `src/commands/config/index.test.ts`, `src/commands/instructions/**/*.test.ts`,
+- `src/commands/help-snapshots.test.ts` (`instructions --help` block ~861)
+- **Step 1: Write tests (RED)**
+- - Config: the key accepts `pointer`, `symlink`, `copy`; rejects other values
+- (including `none`, which p02-t02 adds together with its behavior) with the
+- existing validation style; `oat config set/get/unset` round trip.
+- - Resolution: flag beats config beats default.
+- - CLI level (not only the resolver): with `documentation.instructionSyncStrategy:
+- copy` in config and no flag, `instructions sync --dry-run --json` and
+- `instructions validate --json` report the effective strategy `copy`; with
+- `--strategy symlink` they report `symlink`. This fails before the fix because Commander's default fills the
+- option.
+- **Step 2: Implement (GREEN)**
+- Add the key and resolver for the three existing strategies. Accepting `none`,
+- its behavior, and the default flip all land together in p02-t02, so no commit
+- exposes a `none` value that still creates shims.
+- **Step 3: Verify**
+- Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/config src/commands/config src/commands/instructions src/commands/help-snapshots.test.ts`
+- Expected: green.
+- **Step 4: Commit**
+- `feat(p02-t01): persist a configurable instruction sync strategy`
+- Backlog: `BL-260927-make-claude-md-shims-opt` (criteria 2, 3, 10).
+- **Files:**
+- - Modify: `packages/cli/src/commands/instructions/sync/sync.ts`
+- (`planSyncActions` ~121, `applySyncActions` ~207)
+- - Modify: `packages/cli/src/commands/instructions/validate/validate.ts` (~88)
+- - Modify: `packages/cli/src/commands/instructions/instructions.utils.ts`
+- (`scanInstructionFiles` ~552 statuses)
+- - Modify: `packages/cli/src/commands/instructions/**/*.test.ts`,
+- `instructions.integration.test.ts`
+- **Step 1: Write tests (RED)**
+- With the strategy resolved to `none` (isolated `HOME`, temp repos):
+- - an AGENTS.md without a CLAUDE.md → sync plans nothing; validate exits 0.
+- - a managed pointer shim (`@AGENTS.md\n`), a symlink to the sibling AGENTS.md,
+- and a byte-identical copy → a non-dry-run sync removes each; `--dry-run` lists
+- each as a planned removal and removes nothing.
+- - a hand-written or modified CLAUDE.md → never deleted; reported.
+- - a `CLAUDE.md` symlink whose target is not the sibling AGENTS.md → kept and
+- reported.
+- - `CLAUDE.local.md` and `.claude/CLAUDE.md` whose content is exactly
+- `@AGENTS.md` → never removed (p02-t03 warns about them).
+- - a pointer shim inside an excluded directory or the documentation content
+- tree → never removed.
+- - a planned shim that is replaced with hand-written content between planning
+- and removal → kept byte-identical and reported; the same for a planned shim
+- replaced by a symlink between planning and removal (inject the change through
+- the sync apply path's filesystem seam).
+- Negative control: with `pointer` configured, a missing CLAUDE.md is still
+- reported as `missing` drift and created by sync, exactly as today; each of
+- `symlink` and `copy` keeps today's behavior.
+- **Step 2: Implement (GREEN)**
+- Add `none` to `INSTRUCTION_SYNC_STRATEGIES` and to the config key's accepted
+- values (with the `oat config set` test), flip the built-in default to `none`
+- (`DEFAULT_INSTRUCTION_SYNC_STRATEGY`), and
+- update existing tests that relied on the implicit `pointer` default to pass
+- `--strategy pointer` or configure it. Add `none` handling everywhere the
+- strategy is switched on (`sync.ts` ~60-62, `getSyncedDetail`). Add a removal
+- action for exact managed shapes under `none`; keep every existing strategy path
+- unchanged. Removal only ever targets a file named `CLAUDE.md` whose sibling is
+- `AGENTS.md`, inside the set the scanner already walks; it never touches
+- `CLAUDE.local.md`, `.claude/CLAUDE.md`, files in
+- `documentation.instructionPointerExcludes` or the documentation content tree,
+- or anything that is not an exact managed shape. Removal fails closed at apply
+- time: immediately before deleting, re-`lstat` the target and re-verify both its
+- identity (the `dev`/`ino` or symlink target recorded at planning) and its exact
+- managed content; on any change, skip the deletion and report the file as
+- changed-since-planning.
+- **Step 3: Verify**
+- Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/instructions`
+- Expected: green. Prove the hand-written-preservation and foreign-symlink
+- controls by neutralizing the exact-shape check, and the changed-since-planning
+- control by neutralizing the apply-time re-verification, observing each test
+- fail, and restoring.
+- **Step 4: Commit**
+- `feat(p02-t02): default to no CLAUDE.md shims and remove OAT-managed ones`
+- Backlog: `BL-260927-make-claude-md-shims-opt` (criteria 4, 5).
+- **Files:**
+- - Modify: `packages/cli/src/commands/instructions/sync/sync.ts` (stray adoption
+- ~250-290; warning output)
+- - Modify: `packages/cli/src/commands/instructions/validate/validate.ts`
+- - Modify: `packages/cli/src/commands/instructions/instructions.utils.ts`
+- (detection of `CLAUDE.md`, `.claude/CLAUDE.md`, `CLAUDE.local.md`)
+- - Modify: instructions tests
+- **Step 1: Write tests (RED)**
+- Under `none`:
+- - after sync, each remaining `CLAUDE.md`, `.claude/CLAUDE.md`, or
+- `CLAUDE.local.md` produces one warning naming the path, stating that Claude
+- Code's default `agents-md` mode ignores every AGENTS.md in the project while
+- it exists, and giving exactly two options: remove the file, or set
+- `documentation.instructionSyncStrategy` in `.oat/config.json` to a shim
+- strategy and rerun `oat instructions sync`. `--json` carries the same
+- finding as a structured warning; `oat instructions validate` reports it; exit
+- codes are unchanged (warning, not failure).
+- - a repository with no remaining CLAUDE.md prints no such warning (negative
+- control).
+- - stray adoption: a lone CLAUDE.md with no AGENTS.md is adopted into a new
+- AGENTS.md and the CLAUDE.md is removed (or, if removal is refused because the
+- content differs after adoption, the kept file is reported with the reason).
+- Under a configured shim strategy, no leftover warning is emitted and stray
+- adoption behaves as today. Leftover detection is a separate, read-only,
+- repository-wide walk that is independent of the mutation exclusions
+- (`documentation.instructionPointerExcludes` and the documentation content root
+- limit removal only, never the warning), because Claude Code's walk does not
+- honor OAT's excludes. Add a case with a leftover `CLAUDE.md` in an excluded
+- directory and one under the documentation root, asserted at the public command
+- boundaries: `instructions sync` (human and `--json`) and
+- `instructions validate --json`; p02-t04 pins the doctor surface.
+- **Step 2: Implement (GREEN)**
+- **Step 3: Verify**
+- Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/instructions`
+- Expected: green.
+- **Step 4: Commit**
+- `feat(p02-t03): warn when a CLAUDE.md would hide AGENTS.md from Claude Code`
+- Backlog: `BL-260927-make-claude-md-shims-opt` (criteria 4 doctor half, 6).
+- **Files:**
+- - Modify: `.agents/skills/oat-doctor/SKILL.md` (instructions check ~90, ~126-127:
+- `missing` is an error only when a shim strategy is configured; surface the
+- leftover-CLAUDE.md warning; already bumped in p01-t05, do not bump again)
+- - Modify: `.agents/skills/oat-doctor/tests/doctor-contract.test.mjs` (~20, 29, 278)
+- - Modify: `.agents/skills/oat-agent-instructions-analyze/SKILL.md` (~262, 309,
+- 317: recommend the `@AGENTS.md` import only when shims are configured;
+- `metadata.version` 1.12.3 → 1.12.4)
+- - Modify: `.agents/skills/oat-agent-instructions-analyze/references/analysis-artifact-template.md`
+- (~124: the "Claude import shim" recommendation row fires only when a shim
+- strategy is configured) and `references/quality-checklist.md` (~30, ~47)
+- - Verify: `.agents/skills/oat-agent-instructions-analyze/scripts/resolve-providers.sh`
+- (~83) already detects Claude from `.claude/` or from `.oat/sync/config.json`
+- `providers.claude.enabled` (~26, ~62-76) without a root CLAUDE.md, and
+- `tests/resolve-providers.test.mjs` (~48-50, "AGENTS.md plus .claude/ only")
+- already proves the `.claude/`-only path; record that the criterion is met by
+- existing behavior. Change the script only if that evidence fails.
+- - Modify: `.agents/skills/oat-agent-instructions-apply/SKILL.md` (~207, 243;
+- `metadata.version` 1.7.2 → 1.7.3)
+- - Modify: version pins (`packages/cli/src/validation/skills.test.ts`,
+- `packages/cli/src/commands/init/tools/shared/agent-instructions-bundle-contract.test.ts`,
+- and any other hit for the old values)
+- **Step 1: Write tests (RED)**
+- Update the existing doctor contract pins (`doctor-contract.test.mjs` ~20, 29, 278) to the conditional wording and to the leftover-CLAUDE.md warning; they
+- fail before the doctor edit. Analyze, the artifact template row, and apply are
+- prose edits verified by review and the version-bump gate.
+- **Step 2: Implement (GREEN)**
+- **Step 3: Verify**
+- Run: `node --test .agents/skills/oat-doctor/tests/*.test.mjs .agents/skills/oat-agent-instructions-analyze/tests/*.test.mjs`
+- and `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts src/commands/init/tools/shared`.
+- Expected: green.
+- **Step 4: Commit**
+- `feat(p02-t04): make instructions skills and doctor shim-aware`
+- Backlog: `BL-260927-make-claude-md-shims-opt` (criteria 1 docs half, 7).
+- **Files:**
+- - Modify: `packages/cli/src/commands/pjm/init.ts` (`INSTRUCTIONS_SYNC_HINT`
+- ~57-62: stop promising shim creation) and `pjm/init.test.ts` (~218-219)
+- - Modify: `apps/oat-docs/docs/provider-sync/instruction-sync.md` (strategy table
+- ~163-167 gains `none` as the default; statuses ~179-182; adoption ~186-198; a
+- section on the Claude Code `agents-md` plugin: default mode, when to opt in —
+- releases before the plugin, `instructionFiles: claude-md`, the nested-file
+- gaps — that a project cannot set `instructionFiles`, and that any root
+- `CLAUDE.md` or `CLAUDE.local.md` makes the default mode ignore AGENTS.md)
+- - Modify: `apps/oat-docs/docs/provider-sync/commands.md` (~211-239),
+- `apps/oat-docs/docs/cli-utilities/configuration.md` (~98, new key entry),
+- `apps/oat-docs/docs/reference/oat-directory-structure.md` (~128),
+- `apps/oat-docs/docs/reference/troubleshooting.md` (~61-64),
+- `apps/oat-docs/docs/cli-utilities/config-and-local-state.md` (~259-262),
+- `apps/oat-docs/docs/provider-sync/scope-and-surface.md` (~126),
+- `apps/oat-docs/docs/reference/cli-reference.md`
+- **Step 1: Implement**
+- Cite the plugin source as `anthropics/claude-code` `mods/agents-md` at
+- v2.1.278.
+- **Step 2: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm`
+- and `pnpm --filter oat-docs check` (the oxfmt and markdownlint check CI
+- uses). Expected: green.
+- **Step 3: Commit**
+- `docs(p02-t05): document the no-shim default and when to opt in`
+- Backlog: `BL-260927-make-claude-md-shims-opt` (criteria 8, 9).
+- **Files:**
+- - Delete: the tracked pointer shims (root `CLAUDE.md`,
+- `packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/CLAUDE.md`,
+- `apps/oat-docs/CLAUDE.md`, `.oat/repo/CLAUDE.md`,
+- `.oat/repo/pjm/CLAUDE.md`, `.oat/repo/reference/CLAUDE.md`,
+- `.oat/repo/reference/decisions/CLAUDE.md`; confirm the list with
+- `git ls-files | grep -E '(^|/)CLAUDE\.md$'` and check each is exactly
+- `@AGENTS.md`)
+- - Modify: `.oat/repo/pjm/backlog/items/BL-260830-persist-instruction-sync.md`
+- (disposition note, one line per criterion, reused as the p05-t05 archive
+- summary: project-config persistence delivered by p02-t01; user-config
+- persistence dropped because shims are a per-repository choice under the new
+- default; the init prompt dropped because the default is `none` and opting in
+- is one `oat config set`; effective-strategy reporting delivered by p02-t01's
+- `--json` effective strategy field; the migration criterion superseded by
+- `DR-260927-claude-md-shims-are-opt` automatic removal)
+- - Modify: any test or smoke fixture that asserts this repository's shims exist
+- (search `tools/smoke` and `packages/cli/src` for repository-root CLAUDE.md
+- assertions)
+- **Step 1: Remove through the product path**
+- Run `pnpm build`, then `node packages/cli/dist/index.js instructions sync
+- --dry-run` from the repository root and confirm it lists exactly the managed
+- shims for removal and nothing else; then run it without `--dry-run`. Record the
+- dry-run output in `implementation.md`. If any non-shim CLAUDE.md appears,
+- stop and report instead of deleting.
+- **Step 2: Verify**
+- Run `node packages/cli/dist/index.js instructions validate --json` (exit 0, no
+- leftover warning) and `node packages/cli/dist/index.js instructions sync
+- --json` (no changes).
+- **Step 3: Commit**
+- `chore(p02-t06): drop this repository's CLAUDE.md shims`
+- Source: `reviews/archived/p02-review-2026-09-28T005842Z.md` (auto review:
+- 1 Critical, 2 Medium, 3 Low).
+- **Step 1: Fix (failing-first for C1 and M1; neutralize-and-restore for C1)**
+- - C1: never treat a `CLAUDE.md` as a managed copy when the sibling `AGENTS.md`
+- is a symlink that resolves to that `CLAUDE.md` (or when both resolve to the
+- same file or inode); such a `CLAUDE.md` is the source of truth and is kept
+- and reported. Compare the copy shape against a distinct regular `AGENTS.md`
+- only. Add tests for `AGENTS.md -> CLAUDE.md` (hand-written) and the reverse
+- shapes; prove the guard by neutralize-and-restore.
+- - M1: sync, validate, and the leftover walk stop at nested git checkouts
+- (a directory containing `.git`, including submodules and nested worktrees
+- such as `.claude/worktrees/<name>`); add a failing-first test.
+- - M2: update the analyze skill's bundled `.agents/docs/rules-files.md`
+- (sections 2.6, 5.4) to the new Claude Code `agents-md` facts and the
+- conditional shim guidance; bump that file's owning skill only if not already
+- bumped in this PR.
+- - L1: word the leftover warning precisely for a subdirectory `CLAUDE.md`
+- (it disables the plugin for Claude Code sessions started in that directory or
+- below).
+- - L2: correct `instruction-sync.md` (`CLAUDE.local.md` reporting; the
+- `--add-dir` claim).
+- - L3: include `CLAUDE.local.md` in the analyze skill's discovered file list.
+- **Step 2: Verify**
+- Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run`
+- (full CLI suite), `node --test .agents/skills/oat-agent-instructions-analyze/tests/*.test.mjs .agents/skills/oat-doctor/tests/*.test.mjs`,
+- `pnpm --filter oat-docs check`, `pnpm run check:skill-bumps`.
+- **Step 3: Commit**
+- `fix(p02-t07): close p02 review findings`
+- Task p02-t08: (review) Close p02 round-2 findings M1, M2, L1
+- Source: `reviews/archived/p02-review-2026-09-28T011221Z.md` (auto review,
+- passing: 0 Critical/High, 2 Medium, 1 Low).
+- **Step 1: Fix (failing-first for M1 and M2)**
+- - M1: before removing or adopting a `CLAUDE.md`, check whether any scanned
+- `AGENTS.md` (or other instruction file) in the repository resolves to it; if
+- so, keep it and report it (no dangling links, no silent success). Cover
+- `pkg/AGENTS.md -> ../CLAUDE.md` with an identical root copy and with the root
+- `CLAUDE.md` as the only instructions.
+- - M2: when an `AGENTS.md` links to the named `CLAUDE.md`, the leftover warning
+- (CLI human and `--json`), doctor, analyze, and docs advice says to replace the
+- link with the file's content first instead of "remove the file"; doctor
+- surfaces that caveat, not just the generic warning.
+- - L1: report case variants of `CLAUDE.md` / `CLAUDE.local.md` (for example
+- `claude.md`) in the leftover warning without removing them, or record why not.
+- **Step 2: Verify**
+- Run the full CLI suite with an isolated `HOME`, the analyze and doctor node
+- tests, `pnpm --filter oat-docs check`, `pnpm run check:skill-bumps`, and the
+- branch CLI `instructions validate --json` / `instructions sync --dry-run --json`
+- on this repository.
+- **Step 3: Commit**
+- `fix(p02-t08): close p02 round-2 review findings`
+- Phase 3: Lifecycle skill routing and bookkeeping
+- Backlog: `BL-260907-route-quick-mode-discovery` (all criteria).
+- **Files:**
+- - Modify: `.agents/skills/oat-project-next/SKILL.md` (quick-mode discovery rows
+- ~256-257; `metadata.version` 1.1.2 → 1.1.3)
+- - Modify: `.agents/skills/oat-project-progress/SKILL.md` (routing row ~279;
+- `metadata.version` 1.4.2 → 1.4.3)
+- - Modify: `packages/cli/src/validation/named-skill-load-contract.test.ts` (pin
+- both rows beside the existing next/progress pins ~1650-1859, ~2141-2162)
+- - Modify: version pins (`packages/cli/src/validation/skills.test.ts` and any
+- other hit)
+- **Step 1: Write the pins (RED)**
+- **Step 2: Edit the rows (GREEN)**
+- **Step 3: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/named-skill-load-contract.test.ts src/validation/skills.test.ts`
+- Expected: green.
+- **Step 4: Commit**
+- `fix(p03-t01): route quick-mode discovery rows straight to quick-start`
+- Backlog: `BL-260907-record-absorbed-projects` (all criteria).
+- **Files:**
+- - Modify: `.agents/skills/oat-project-lite/SKILL.md` (the Lite frontmatter
+- write for `state.md`; `metadata.version` 1.1.5 → 1.1.6), mirroring
+- `oat-project-quick-start/SKILL.md` ~201-219 field shapes
+- (`absorbed_projects: [<slug>]`, `absorbed_backlog_ids: [<BL-id>]`)
+- - Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+- (new Lite case beside the quick-start case ~1587-1616)
+- - Modify: `apps/oat-docs/docs/workflows/projects/lifecycle.md` (~165: drop the
+- quick-mode-only qualifier)
+- - Modify: version pins
+- **Step 1: Write the contract test (RED)**
+- **Step 2: Edit the skill and docs (GREEN)**
+- **Step 3: Scratch-tree probe**
+- The retirement sweep is agent-executed prose in
+- `oat-project-complete/SKILL.md` (~770-775); there is no sweep script. Model the
+- probe on the quick-start harness in `review-skill-contracts.test.ts`
+- (~4303-4380): extract Lite's scaffold and consolidation block from the edited
+- `SKILL.md`, run it verbatim in a scratch repository through the built CLI,
+- assert that `state.md` carries `absorbed_projects` and `absorbed_backlog_ids`
+- in quick-start's shapes, and apply the sweep's documented input predicate
+- (non-empty fields) as the "reaches the semantic checks" assertion. Run it once in a
+- scratch repository and record the result in `implementation.md`; the Step 1
+- contract pin stays the durable guard.
+- **Step 4: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/review-skill-contracts.test.ts src/validation/skills.test.ts`
+- Expected: green.
+- **Step 5: Commit**
+- `fix(p03-t02): record absorbed projects in Lite consolidations`
+- Backlog: `BL-260829-order-phase-bookkeeping-before` (criteria 1, 2, 4; criterion
+- 3 stays open by operator decision).
+- **Files:**
+- - Modify: `.agents/skills/oat-project-implement/references/phase-execution.md`
+- (Per-Phase Review ~684-796, the deferral note ~756-758, Step 7 Root
+- Bookkeeping ~880-916)
+- - Bump: `.agents/skills/oat-project-implement/SKILL.md` `metadata.version`
+- 2.3.13 → 2.3.14 (required: `references/phase-execution.md` is a bundled file
+- of the skill)
+- - Modify: `.agents/skills/oat-project-implement/SKILL.md` summary, if it
+- describes the order
+- - Modify: the implement skill contract tests that pin the review/bookkeeping
+- order (search `packages/cli/src/commands/init/tools/shared/*.test.ts` and
+- `.agents/skills/oat-project-implement/tests/` for `Step 7: Artifact Updates`
+- and `bookkeeping`)
+- - Modify: `.oat/repo/pjm/backlog/items/BL-260711-skip-re-review-for-bookkeeping.md`
+- and `.oat/repo/pjm/backlog/items/BL-260829-order-phase-bookkeeping-before.md`
+- (notes)
+- - Modify: version pins
+- **Step 1: Write the contract test (RED)**
+- Pin that the phase's task ledger (`implementation.md` task and phase completion
+- rows plus the `state.md` resume pointer) is committed before the per-phase
+- reviewer is dispatched, that the reviewer brief names review-outcome
+- bookkeeping (review rows and dispositions, which are written after the review)
+- as out of scope, and that the fix child still starts from a clean tree.
+- **Step 2: Edit the reference (GREEN)**
+- Split Step 7 into pre-review bookkeeping (committed before dispatch) and
+- post-review bookkeeping (review rows, dispositions, orchestration log entry
+- for the review outcome). State why this keeps the fix-child preflight clean:
+- the pre-review writes are committed, so the tree is clean when a bounded fix
+- child is dispatched. The pre-review commit reuses Step 7's scope-resolving
+- commit branch, including the synced-scope `oat project push` path, and the
+- Optional External Phase Review Gate (~797) sees the same committed ledger.
+- **Step 3: Record relationships and status**
+- Add a note to `BL-260711-skip-re-review-for-bookkeeping` stating that
+- `BL-260829-order-phase-bookkeeping-before` shipped first and prevents the
+- stale-ledger finding at its source, so `BL-260711` should cover only residual
+- bookkeeping-only findings. Add a note to `BL-260829` that code and contract
+- tests shipped in this PR and only live observation on the next multi-phase
+- project remains; the item stays open.
+- **Step 4: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`
+- and `node --test .agents/skills/oat-project-implement/tests/*.test.mjs`.
+- Expected: green.
+- **Step 5: Commit**
+- `fix(p03-t03): commit phase bookkeeping before per-phase review dispatch`
+- Source: `reviews/archived/p03-review-2026-09-28T014814Z.md` (auto review,
+- passing: 0 Critical/High, 2 Medium, 4 Low; L1 deferred to a follow-up backlog
+- item at closeout because it touches CLI routers outside the item's scope).
+- **Step 1: Fix**
+- - M1: state that settling a completed recovery marker (clearing
+- `pending_attempt`, recording its canonical event) belongs to Step 7a, before
+- reviewer dispatch; state which commit owns bookkeeping for stops that end
+- without a review.
+- - M2: Step 7a records task completion and the resume pointer but not the
+- phase's pass status; the phase status is set in Step 7b from the review
+- outcome (and corrected on retry exhaustion). Fix the "nothing here depends
+- on the review outcome" sentence.
+- - L2: correct the gate sentence for parallel groups and after a fix loop, and
+- lead Per-Phase Review with the parallel-group exception.
+- - L3: update `apps/oat-docs/docs/workflows/projects/implementation-execution.md`
+- to show the split and the reviewer-brief scope.
+- - L4: pin the parallel-group "task ledger out of scope" clause and the new
+- `SKILL.md` sentence with failing-first contract assertions.
+- No second version bump (`oat-project-implement` is already 2.3.14 in this PR).
+- **Step 2: Verify**
+- Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation src/commands/init/tools/shared`,
+- `node --test .agents/skills/oat-project-implement/tests/*.test.mjs`,
+- `pnpm run check:skill-bumps`, `pnpm --filter oat-docs check`.
+- **Step 3: Commit**
+- `fix(p03-t04): close p03 review findings`
+- Source: `reviews/archived/p03-review-2026-09-28T015614Z.md` (phase gate,
+- passing; M2 addressed now in the judgment sweep).
+- **Step 1: Fix (failing-first pin)**
+- In `.agents/skills/oat-project-implement/references/phase-execution.md` Step
+- 7b, a passing root review with queued review-fix tasks, or with a selected
+- external phase gate still pending, leaves the phase row nonterminal; the row
+- becomes `complete` only after review dispositions and any selected gate pass.
+- Define how a blocked gate or an added fix task updates the row, and pin the
+- transition in the phase-sequence contract test. No version bump
+- (`oat-project-implement` is already 2.3.14 in this PR).
+- **Step 2: Verify**
+- Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation src/commands/init/tools/shared`
+- and `node --test .agents/skills/oat-project-implement/tests/*.test.mjs`.
+- **Step 3: Commit**
+- `fix(p03-t05): keep the phase row nonterminal until review and gate settle`
+- Phase 4: Agent roles and recon validation
+- Backlog: `BL-260909-repair-the-bare-fences-that` (all criteria).
+- **Files:**
+- - Modify: `.agents/agents/oat-codebase-mapper.md` (fence ~246-255;
+- `version:` 1.0.1 → 1.0.2)
+- - Modify: `.agents/agents/oat-reviewer.md` (fences ~502-523 and ~534-559;
+- `version:` 1.2.9 → 1.2.10; p04-t02 does not bump again)
+- - Modify: `.agents/agents/skeptical-evaluator.md` (fence ~81-99; `version:`
+- 1.0.0 → 1.0.1)
+- - Modify: `.oat/templates/docs-app-mkdocs/docs/contributing.md` (fence
+- ~107-122)
+- - Modify: `packages/cli/src/validation/named-skill-load-contract.test.ts`
+- (`collectFenceScanFiles` ~456-537 walks only `.agents/skills`; extend to
+- `.agents/agents` and `.oat/templates`; update `CORPUS_MINIMUMS`)
+- - Modify: agent-role version pins, if any test pins them
+- - Regenerate: tracked provider views of the edited roles
+- (`.codex/agents/*.toml`, `.cursor/agents/*.md`)
+- **Step 1: Extend the scanner (RED)**
+- With the five fences still broken, the extended scan fails and names each.
+- **Step 2: Repair (GREEN)**
+- Apply the wave-7 p10 treatment to each (opener, narrowed closers, balanced info
+- strings) so the swallowed headings, including `### Step 9: Return
+- Confirmation` and `## Structured-Output Mode` in `oat-reviewer.md`, render as
+- headings.
+- **Step 3: Negative control**
+- Seed a bare fence that swallows a heading in a scratch copy under each new tree
+- (or a fixture the scanner reads), confirm the test fails, and restore. Record
+- the result in `implementation.md`.
+- **Step 4: Decide the laxity narrowing**
+- Record in `implementation.md` and the item a one-line reason for leaving the
+- scanner's `^\s*` indent laxity, column-0 heading anchor, and inventory headroom
+- as they are (latent, not live, per the wave-7 p10 root review). Reintroduce the
+- narrowing when a heading-swallowing fence the current scanner misses is found.
+- **Step 5: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/named-skill-load-contract.test.ts src/validation`
+- Expected: green. Then `pnpm build && pnpm run cli -- sync --scope project`
+- (never `--scope all`), confirm with `git status --short` that only the edited
+- roles' `.codex/agents` and `.cursor/agents` views changed, and include them in
+- this task's commit; `node packages/cli/dist/index.js status --scope project`
+- reports no drift.
+- **Step 6: Commit**
+- `fix(p04-t01): repair bare fences in agent roles and templates`
+- Backlog: `BL-260927-validate-recon-worker` (all criteria; GitHub #295).
+- **Files:**
+- - Create: `.agents/skills/recon/scripts/validate-assignment.mjs` (deterministic
+- validator reusing `.agents/skills/recon/scripts/lib/` contract helpers)
+- - Create: `.agents/skills/recon/tests/validate-assignment.test.mjs` and fixtures
+- (valid and invalid envelopes for the mechanical and intelligent recon lanes
+- project review uses)
+- - Modify: `.agents/skills/recon/SKILL.md` (document the script;
+- `metadata.version` 1.1.5 → 1.1.6)
+- - Modify: `.agents/agents/oat-reviewer.md` (~101: run the validator before
+- launch; when a launched child's envelope is found invalid after acceptance,
+- correct it through the accepted handle instead of relaunching). The reviewer
+- ships in the `workflows` pack and the validator in the `research` pack: add
+- `recon` to the reviewer's existing sibling-skill probe (~89, user scope then
+- repository) with recovery `oat tools install research --scope <scope>`; the
+- existing "cannot be constructed → do not launch, cover the lane inline" rule
+- (~101) covers a miss
+- - Modify: `packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts`
+- (~469-476: add `['skills','recon','scripts','validate-assignment.mjs']` to the
+- recon scripts that must ship)
+- - Regenerate: tracked provider views of `oat-reviewer` (and `recon-worker` if
+- edited) under `.codex/agents` and `.cursor/agents`
+- - Modify: `.agents/agents/recon-worker.md` only if its Assignment Gate
+- (~33-43) must reference the validator (`version:` 1.0.2 → 1.0.3 if edited)
+- **Step 1: Read the contract**
+- Read GitHub #295 (`gh issue view 295`) and the recon-worker Assignment Gate to
+- list the envelope's required fields and their constraints for each lane.
+- **Step 2: Write tests (RED)**
+- The validator reports every missing or invalid field (not just the first) and
+- exits non-zero on an invalid envelope; valid fixtures for both lanes pass. Add
+- a contract assertion (in `packages/cli/src/validation/skills.test.ts` or the
+- existing agent-role contract tests) that `oat-reviewer.md` names
+- `validate-assignment.mjs` and the accepted-handle correction rule; it fails
+- before the edit.
+- **Step 3: Implement (GREEN)**
+- **Step 4: Verify**
+- Run: `node --test .agents/skills/recon/tests/*.test.mjs` and
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation src/commands/init/tools/shared`.
+- Expected: green. Then `pnpm build && pnpm run cli -- sync --scope project`,
+- commit the regenerated views of the edited roles in this task, and confirm
+- `git status --short` is clean.
+- **Step 5: Commit**
+- `feat(p04-t02): validate recon assignment envelopes before launch`
+- Source: `reviews/archived/p04-review-2026-09-28T021519Z.md` (auto review,
+- passing: 0 Critical/High, 1 Medium, 7 Low).
+- **Step 1: Fix (failing-first for M1)**
+- - M1: an array of envelopes validates as one homogeneous wave (same run, wave,
+- wave mode, and task class); flip the test that accepts a mixed array.
+- - L1: reject `writePath: "."` (and other non-file paths).
+- - L2: detect file-editing tools case-insensitively and across providers
+- (`write`, `apply_patch`, and so on).
+- - L3: report a missing envelope file distinctly from invalid JSON.
+- - L4: list `taskClass` and `escalation` among the worker contract's required
+- fields.
+- - L5: name all scanned roots in the fence scanner's failure message.
+- - L6: remove the empty leftover code block in `oat-reviewer.md` (~595-597).
+- - L7: have the reviewer pass the envelope on stdin instead of writing a file
+- (structured-output mode must not write).
+- No further bumps (reviewer 1.2.10 and recon 1.1.6 already in this PR);
+- regenerate the reviewer's provider views with `sync --scope project` if the
+- role changes.
+- **Step 2: Verify**
+- Run: `node --test .agents/skills/recon/tests/*.test.mjs`,
+- `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation src/commands/init/tools/shared`,
+- `pnpm run check:skill-bumps`, `node packages/cli/dist/index.js status --scope project`.
+- **Step 3: Commit**
+- `fix(p04-t03): close p04 review findings`
+- Source: `reviews/archived/p04-review-2026-09-28T022315Z.md` (phase gate
+- `codex-6-sol-xhigh`, blocked: 1 High, 1 Medium).
+- **Step 1: Fix (failing-first negative controls)**
+- - H1: every `readSources.sources` entry must resolve inside the declared
+- allowed inputs and scope and outside excluded inputs and scope (excluded
+- directories exclude descendants), using the contract's path or locator
+- semantics; reject authority that cannot be verified before launch. Add a
+- valid nested-source control and negative controls for an unrelated absolute
+- path and an excluded descendant.
+- - M1: `artifact.outputSchema` must resolve to an approved packet-contract
+- schema reference or be a closed inline schema; add unknown-reference and
+- open-object negative controls beside the documented valid reference.
+- No further version bumps (recon 1.1.6 already in this PR).
+- **Step 2: Verify**
+- Run: `node --test .agents/skills/recon/tests/*.test.mjs` and
+- `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation src/commands/init/tools/shared`.
+- **Step 3: Commit**
+- `fix(p04-t04): bound recon read sources and output schemas`
+- Task p04-t05: (review) Close p04 round-2 findings M1-M3, L1-L2
+- Source: `reviews/archived/p04-review-2026-09-28T023246Z.md` (auto review,
+- passing: 0 Critical/High, 3 Medium, 2 Low).
+- **Step 1: Fix (failing-first negative controls)**
+- - M1: treat any string with a URL scheme (`scheme:`), with or without `//`, as
+- a URL; only `http`/`https` are allowed URL forms; `file:` and other schemes
+- are unverifiable; compare URL origins including host.
+- - M2: compare repository paths case-insensitively for exclusion and
+- containment (fail closed on case-insensitive filesystems).
+- - M3: make the approved output-schema reference resolve to a real anchor in
+- `packet-contract.md` (add stable headings for the artifact kinds, or change
+- the accepted reference form to one that resolves), and add a test that the
+- accepted reference's anchor exists.
+- - L1: state in the contract how packet-relative exclusions (for example
+- `raw/`, `reviews/`) are expressed, and align the fixtures.
+- - L2: an inline output schema must match the schema for its artifact kind (or
+- record why top-level closure is sufficient).
+- **Step 2: Verify**
+- Run: `node --test .agents/skills/recon/tests/*.test.mjs` and
+- `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation src/commands/init/tools/shared`.
+- **Step 3: Commit**
+- `fix(p04-t05): close p04 round-2 review findings`
+- Source: `reviews/archived/p04-review-2026-09-28T024124Z.md` (phase gate
+- attempt 2, blocked: 1 High). Operator direction (2026-09-28): fix, run one
+- root re-review, record an override of the exhausted gate budget, continue.
+- **Step 1: Fix (failing-first)**
+- `readSources.tools` accepts only an explicit set of supported read-only tool
+- names across providers (for example `Read`, `Grep`, `Glob`, and their
+- provider equivalents); shell or execution tools (`Bash`, `exec_command`, and
+- so on) and unknown names are rejected. Add negative controls for a shell tool
+- and an unknown tool beside the valid fixture; they must fail against the
+- current validator.
+- **Step 2: Verify**
+- Run: `node --test .agents/skills/recon/tests/*.test.mjs` and
+- `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation src/commands/init/tools/shared`.
+- **Step 3: Commit**
+- `fix(p04-t06): restrict recon read-only tool authority to an allowlist`
+- Source: `reviews/archived/p04-review-2026-09-28T025845Z.md` (operator-authorized
+- root re-review: 1 High, 2 Medium, 3 Low). Operator direction (2026-09-28): fix
+- H1 and M1, defer M2 and L1-L3 to a follow-up backlog item, continue to p05
+- without another p04 review; the final review covers p04.
+- **Step 1: Fix (failing-first)**
+- - H1: `writePath` must sit inside the packet directory for the lane's
+- artifact kind and must never name a controller-owned file (`manifest.json`,
+- `claims.json`, `packet.md`, `reviews/reconciliation.json`,
+- `raw/failure.json`, and any other canonical packet file in the contract).
+- - M1: compare write paths across a wave case-insensitively and after Unicode
+- normalization for the duplicate check.
+- **Step 2: Verify**
+- Run: `node --test .agents/skills/recon/tests/*.test.mjs` and
+- `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation src/commands/init/tools/shared`.
+- **Step 3: Commit**
+- `fix(p04-t07): bound recon write paths and case-fold duplicate checks`
+- Phase 5: CI and backlog tooling, release fan-in
+- Backlog: `BL-260909-give-packages-control-plane` (criteria 1, 2, 4).
+- **Files:**
+- - Modify: `packages/control-plane/package.json` (add `check` copying the other
+- packages' `oxlint . && oxlint --type-aware ... && oxfmt --check .` pattern)
+- - Modify: `AGENTS.md` (both passages naming the gap: the `pnpm check`
+- description ~40 and the control-plane paragraphs ~113-136)
+- - Modify: `tools/smoke/verification/lint-enrollment.test.mjs` (assert
+- explicitly that `packages/control-plane/package.json` defines `scripts.lint`;
+- the test's existing `pnpm lint` shell-out proves turbo reaches it)
+- **Step 1: Red control**
+- Seed a formatting violation in `packages/control-plane/src`, run
+- `pnpm exec turbo run check --filter @open-agent-toolkit/control-plane --force`,
+- and record that nothing fails (no `check` task).
+- **Step 2: Implement (GREEN)**
+- Add the script; rerun with the seeded violation (fails), remove the seed, rerun
+- (passes). Record both exit codes in `implementation.md`.
+- **Step 3: Pin the lint enrollment**
+- Add the assertion and prove it by temporarily deleting the control-plane `lint`
+- script (test fails), then restoring.
+- **Step 4: Verify**
+- Run: `node --test tools/smoke/verification/lint-enrollment.test.mjs` (after
+- `pnpm build`) and `pnpm lint`, `pnpm format`.
+- Expected: green.
+- **Step 5: Commit**
+- `build(p05-t01): gate packages/control-plane formatting through check`
+- Backlog: `BL-260909-rewrite-inbound-references` (criteria 1, 2).
+- **Files:**
+- - Modify: `packages/cli/src/commands/backlog/archive.ts` (`archiveBacklogItem`
+- ~200-321)
+- - Modify: `packages/cli/src/commands/backlog/archive.test.ts`
+- - Modify: `apps/oat-docs/docs/` backlog command docs,
+- `.oat/repo/pjm/AGENTS.md` (Backlog Lifecycle: note the rewrite), and the
+- shipped template `.oat/templates/pjm-agents.md` (primary path notes the
+- rewrite; the manual fallback adds "rewrite inbound `.oat/repo` links to
+- `archived/`")
+- **Step 1: Write tests (RED)**
+- A fixture repository whose external plan, decision record, and another backlog
+- item link to `pjm/backlog/items/<id>.md` (relative paths from their own
+- locations); after archive, each link points at `pjm/backlog/archived/<id>.md`
+- with a correct relative path, and the command output lists the rewritten
+- files. Include a repository-root path reference in external-plan frontmatter
+- (`oat_external_plan_sources: - .oat/repo/pjm/backlog/items/<id>.md`) and assert it is
+- rewritten. Links inside
+- the archived item itself and in `completed.md` stay correct.
+- **Step 2: Implement (GREEN)**
+- Scan tracked Markdown under `.oat/repo/**` and rewrite every link or path
+- string (including repository-root frontmatter paths) that resolves to the moved
+- item; report each rewritten path, and warn only on forms that cannot be
+- resolved.
+- **Step 3: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/backlog`
+- Expected: green.
+- **Step 4: Commit**
+- `feat(p05-t02): rewrite inbound references when archiving a backlog item`
+- Backlog: `BL-260904-stabilize-the-collection` (criterion 3; criteria 1-2 met
+- by `ddddba079`).
+- **Step 1: Run**
+- Run the named case ten times uncached with an isolated `HOME`, for example
+- `for i in $(seq 1 10); do HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/engine/engine.integration.test.ts -t "preserves a same-target user replacement during disablement"; echo "run=$i exit=$?"; done`,
+- capturing each exit code.
+- **Step 2: Record**
+- Record the ten exit codes, the head SHA, and the platform in
+- `implementation.md` and the item notes.
+- **Step 3: Commit**
+- `test(p05-t03): record ten uncached collection-detach runs`
+- Backlog: lockstep criteria of `BL-260909-give-packages-control-plane` and
+- `BL-260927-make-claude-md-shims-opt`.
+- **Files:**
+- - Modify: `packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`
+- (0.3.8 → 0.3.9) and any tracked version manifest the release tooling reads
+- (`packages/cli/assets/public-package-versions.json`)
+- **Step 1: Bump**
+- Follow the same files the 0.3.8 bump changed (`git show 5bb73dd08 --stat`
+- filtered to version files).
+- **Step 2: Verify**
+- Run: `git fetch origin main && pnpm release:check-versions` and
+- `pnpm release:validate`.
+- Expected: exit 0.
+- **Step 3: Commit**
+- `chore(p05-t04): bump lockstep public packages to 0.3.9`
+- Backlog: close-out for every closable item; `BL-260909-rewrite-inbound-references`
+- criterion 3.
+- **Step 1: Archive with the branch CLI**
+- After `pnpm build`, run `node packages/cli/dist/index.js backlog archive <id>
+- --summary "<outcome>"` for each item whose criteria all pass:
+- `BL-260903-close-manual-only-agents-md`, `BL-260927-name-only-installed-pack`,
+- `BL-260909-fix-the-agents-md-unsafe`, `BL-260927-make-claude-md-shims-opt`,
+- `BL-260830-persist-instruction-sync` (summary: absorbed by the shim item),
+- `BL-260907-route-quick-mode-discovery`, `BL-260907-record-absorbed-projects`,
+- `BL-260909-repair-the-bare-fences-that`, `BL-260927-validate-recon-worker`,
+- `BL-260909-give-packages-control-plane`, `BL-260909-rewrite-inbound-references`,
+- `BL-260904-stabilize-the-collection`. Do not archive
+- `BL-260829-order-phase-bookkeeping-before`.
+- **Step 2: Verify no dangling links**
+- Run `rg -n "pjm/backlog/items/(<archived ids joined by |>)\.md" .oat/repo`;
+- expect no matches; any match is a defect in p05-t02 to fix before
+- continuing. Then run the executable bidirectional-link check,
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts -t "every current external plan"`,
+- as the `BL-260909-rewrite-inbound-references` criterion 3 evidence. Note in
+- `implementation.md` that no external plan links to this wave's items, so the
+- p05-t02 fixture test carries the behavioral proof.
+- **Step 3: Record the PR requirements**
+- Write the `## PR Requirements` section below into `implementation.md`'s
+- hand-off so the PR step (`oat-project-pr-final`) uses them verbatim.
+- **Step 4: Index note**
+- Add a curated overview note to `.oat/repo/pjm/backlog/index.md` summarizing the
+- wave, run `node packages/cli/dist/index.js backlog regenerate-index`, and run
+- `node packages/cli/dist/index.js pjm doctor --json` (no new warnings).
+- **Step 5: Commit**
+- `chore(p05-t05): archive the backlog items shipped in wave 2`
+- **Step 1: Run every gate with explicit exit codes**
+- In CI order, each captured as `pnpm <gate> > <log> 2>&1; echo "exit=$?"`:
+- `pnpm check`, `pnpm type-check`, `HOME=$(mktemp -d) pnpm exec turbo run test --force`,
+- `pnpm build`, `pnpm run check:skill-bumps`, `pnpm release:check-versions` (after
+- `git fetch origin main`), `pnpm release:validate`, `pnpm build:docs`; then
+- `pnpm test:smoke`, `pnpm test:skills`, `pnpm test:scripts`, `pnpm lint`, and
+- `pnpm format` (this wave touches `tools/smoke`, `.agents/skills`, and
+- `packages/control-plane`). Confirm test runs were not cache replays.
+- **Step 2: Record**
+- Record each exit code and the head SHA in `implementation.md`.
+- **Step 3: Commit**
+- `chore(p05-t06): record wave 2 definition-of-done evidence`
+- Source: `reviews/archived/p05-review-2026-09-28T103350Z.md` (auto review,
+- passing: 0 Critical/High, 1 Medium, 7 Low).
+- **Step 1: Fix**
+- - M1: give `packages/control-plane` `check:fix` and `lint:fix` scripts matching
+- its siblings, so `pnpm check:fix` repairs it.
+- - L1: correct the AGENTS.md and `contributing/code.md` wording (not every
+- workspace package runs oxlint; keep why the root oxlint pass is ungated).
+- - L2: pin the control-plane `check` script alongside `lint`.
+- - L3: test the untracked-file scan flags and links at depths other than two.
+- - L4: do not rewrite inside code spans or fenced code; rebase reference-style
+- link definitions in the moved item; remove the unreachable backslash branch
+- or make it reachable.
+- - L5: make a failed rewrite retryable (regenerate the index and retry the
+- rewrite on the already-archived path).
+- - L6: mention the rewrite in `archive --help` (with the help snapshot) and say
+- "tracked and untracked, not ignored" in the docs.
+- - L7: note in the archived `BL-260904-stabilize-the-collection` item that the
+- ten local runs were on macOS and the Linux (inode-reuse) evidence comes from
+- the PR's Linux CI; correct the index note so it does not claim the rewriter
+- prevented dangling links in this wave (it made zero rewrites).
+- **Step 2: Verify**
+- Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/backlog src/commands/help-snapshots.test.ts`,
+- `node --test tools/smoke/verification/lint-enrollment.test.mjs`, `pnpm check`,
+- `pnpm lint`, `pnpm format`.
+- **Step 3: Commit**
+- `fix(p05-t07): close p05 review findings`
+- Source: `reviews/archived/p05-review-2026-09-28T104612Z.md` (phase gate
+- `codex-6-sol-xhigh`, blocked: 1 High, 2 Medium).
+- **Step 1: Fix (failing-first)**
+- - H1: never read or write through a symlink in the rewrite scan (`lstat`, or
+- resolve and require the real target inside `.oat/repo`); a Git-tracked
+- symlink fixture proves an outside target stays unchanged.
+- - M1: rewrite only tokens whose resolved target is the archived item's former
+- path; leave URLs unchanged; warn on unresolved local forms; pin a remote URL
+- and an unrelated `../../elsewhere/backlog/items/<id>.md` path as unchanged.
+- - M2: parse optional angle delimiters separately in inline links and
+- reassemble after rebasing; assert an angle-bracket sibling link.
+- **Step 2: Verify**
+- Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/backlog`
+- and type-check.
+- **Step 3: Commit**
+- `fix(p05-t08): bound backlog reference rewriting to real in-repo targets`
+- Source: `reviews/archived/p05-review-2026-09-28T105839Z.md` (auto re-review
+- after gate attempt 1: 1 High, 2 Medium, 3 Low).
+- **Step 1: Fix (failing-first on real-shaped fixtures)**
+- - H1: rewrite repository paths inside inline code spans when the whole span
+- is a path that resolves to the moved item (the canonical external-plan
+- "Source artifact or scope" citation form); keep fenced code blocks and
+- non-path code spans untouched. Fixture mirrors
+- `.agents/skills/oat-repo-improve/references/plan-template.md` rows.
+- - M1: fallback resolution bases apply only when the token does not already
+- resolve to an existing file; never rewrite a working link.
+- - M2: reference-definition rebase applies only to `[label]: <url-or-path>`
+- definitions, never to footnotes (`[^n]:`) or prose.
+- - L1: rebase links with single-quoted or parenthesized titles in the moved
+- item.
+- - L2: make inline code-span detection robust to an unmatched backtick.
+- - L3: list rewritten files in plain-text output on the retry path.
+- **Step 2: Verify**
+- Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/backlog`,
+- type-check, lint, and a scratch archive of a real linked item with an
+- external plan citing it in the template's code-span form.
+- **Step 3: Commit**
+- `fix(p05-t09): rewrite code-span path citations and protect working links`
+- Source: `reviews/archived/p05-review-2026-09-28T111050Z.md` (phase gate
+- attempt 2, passing; judgment sweep, addressed now).
+- **Step 1: Fix (failing-first)**
+- - M1: apply the moved-item reference-definition rebase to prose segments only;
+- a multiline inline code span containing a reference-looking line is left
+- unchanged.
+- - L1: separate path, query, and anchor before the existence check so
+- `./sibling.md?raw=1` inline links and definitions are rebased.
+- **Step 2: Verify**
+- Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/backlog`
+- and type-check.
+- **Step 3: Commit**
+- `fix(p05-t10): keep moved-item code spans intact and rebase query links`
+- Source: `reviews/archived/final-review-2026-09-28T112631Z.md` (final review L2).
+- **Step 1: Fix**
+- `.agents/agents/oat-reviewer.md` must not tell mechanical recon lanes to run
+- checks through a command tool, which `validate-assignment.mjs` rejects; say
+- that check-running work is done by the controller and supplied as captured
+- `command-output` sources, or covered inline. Reviewer is already 1.2.10 in
+- this PR (no second bump); regenerate its provider views with
+- `sync --scope project`.
+- **Step 2: Verify**
+- Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation src/commands/init/tools/shared`
+- and `node --test .agents/skills/recon/tests/*.test.mjs`.
+- **Step 3: Commit**
+- `fix(p05-t11): align reviewer mechanical-lane guidance with the validator`
+- Source: `reviews/archived/final-review-2026-09-28T113721Z.md` (implementation
+- exit gate, blocked: 1 High).
+- **Step 1: Fix (failing-first)**
+- Write each rewritten file through a new temporary file in the verified
+- in-tree parent directory, then rename it over the original (never truncate
+- the existing inode), re-verifying path identity at the write boundary. A
+- hard-link fixture asserts that an outside alias stays byte-identical while a
+- normal in-tree reference is rewritten; prove the guard by neutralize-and-restore.
+- **Step 2: Verify**
+- Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/backlog`,
+- type-check, lint.
+- **Step 3: Commit**
+- `fix(p05-t12): replace rewritten backlog references atomically`
+- Phase p-rev1: Revision 1
+- Source: inline feedback (2026-09-28, operator conversation after PR #332
+- opened). Tasks run sequentially: prev1-t01 renames the keys that prev1-t02 and
+- the docs then use.
+- **Files:**
+- - Modify: `packages/cli/src/config/oat-config.ts`, `packages/cli/src/config/resolve.ts`,
+- `packages/cli/src/commands/config/index.ts` (set/get/unset/describe),
+- `packages/cli/src/commands/instructions/**` (resolver, messages, JSON),
+- their tests, `packages/cli/src/commands/help-snapshots.test.ts`
+- - Modify: `.agents/skills/oat-doctor/SKILL.md`,
+- `.agents/skills/oat-agent-instructions-analyze/**`,
+- `.agents/skills/oat-agent-instructions-apply/SKILL.md` and their contract tests
+- (all already bumped in this PR; no further bumps)
+- - Modify: every docs page, README, and backlog or decision text that names the
+- old keys (`rg -n "instructionSyncStrategy|instructionPointerExcludes"` must
+- return nothing outside archived review artifacts and historical records)
+- **Step 1:** Clean rename with no compatibility read or deprecation warning
+- (operator direction: most repositories run on defaults):
+- `documentation.instructionSyncStrategy` becomes `instructions.claude.shims`
+- (`none` default, `pointer`, `symlink`, `copy`), and
+- `documentation.instructionPointerExcludes` becomes `instructions.claude.excludes`
+- (repository-relative directories). The `--strategy` flag keeps overriding one
+- run. Record the rename in a decision record amending
+- `DR-260927-claude-md-shims-are-opt` (use `node packages/cli/dist/index.js decision new`).
+- **Step 2: Verify**
+- Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/config src/commands/config src/commands/instructions src/commands/help-snapshots.test.ts`,
+- `node --test .agents/skills/oat-doctor/tests/*.test.mjs .agents/skills/oat-agent-instructions-analyze/tests/*.test.mjs`,
+- `pnpm --filter oat-docs check`, and the `rg` sweep above.
+- Expected: all exit 0; the sweep returns nothing outside history.
+- **Step 3: Commit**
+- ```bash
+- git commit -m "refactor(prev1-t01): move CLAUDE.md shim config under instructions.claude"
+- ```
+- **Files:**
+- - Modify: `packages/cli/src/commands/instructions/{instructions.utils.ts,sync/sync.ts,validate/validate.ts,instructions.types.ts}` and tests
+- - Modify: `.agents/skills/oat-doctor/SKILL.md` (and its contract test)
+- - Modify: `apps/oat-docs/docs/provider-sync/instruction-sync.md`,
+- `apps/oat-docs/docs/reference/troubleshooting.md`, the READMEs if they
+- describe removal
+- **Step 1:** Under `none`, removal is all or nothing. If any `CLAUDE.md`,
+- `.claude/CLAUDE.md`, or `CLAUDE.local.md` in the scanned project is not an
+- exact OAT shim (pointer, sibling symlink, identical copy), sync removes
+- nothing, including the managed shims. It reports: the shims the configuration
+- would remove; that none were removed because a `CLAUDE.md` with real content
+- exists (named); that any `CLAUDE.md` makes Claude Code ignore AGENTS.md, with
+- the link
+- `https://github.com/voxmedia/open-agent-toolkit/blob/main/apps/oat-docs/docs/provider-sync/instruction-sync.md#claude-code-and-agentsmd`;
+- and what to do: remove the file or move its content into an `AGENTS.md` and
+- rerun `oat instructions sync`, or set `instructions.claude.shims` to a shim
+- strategy (`pointer`, `symlink`, or `copy`) to keep `CLAUDE.md` files. The same
+- finding appears in `--json` and in `oat instructions validate` and `oat-doctor`.
+- Stray adoption of a lone content-bearing `CLAUDE.md` (no sibling `AGENTS.md`)
+- stays as shipped. Failing-first tests: a content-bearing root `CLAUDE.md` plus
+- subdirectory shims removes nothing; a content-bearing `CLAUDE.local.md` or
+- `.claude/CLAUDE.md` removes nothing; with only exact shims, removal proceeds as
+- before (negative control). Record the rule in the prev1-t01 decision record or
+- a sibling record.
+- **Step 2: Verify**
+- Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/instructions`,
+- `node --test .agents/skills/oat-doctor/tests/*.test.mjs`, `pnpm --filter oat-docs check`.
+- Expected: all exit 0.
+- **Step 3: Commit**
+- ```bash
+- git commit -m "fix(prev1-t02): keep all CLAUDE.md shims while any CLAUDE.md has content"
+- ```
+- **Files:**
+- - Modify or create: a test under `packages/cli/src/commands/sync/` (or the
+- engine integration tests)
+- **Step 1:** Add a test showing `oat sync` output for canonical rules, skills,
+- and agents (including `.claude/rules/**`) is identical under
+- `instructions.claude.shims` `none` and `pointer`, and that `oat sync` never
+- creates or removes a `CLAUDE.md`. Confirm the new instruction-sync removal and
+- warning code never touches `.claude/rules/**`.
+- **Step 2: Verify**
+- Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/sync src/engine`.
+- Expected: exit 0.
+- **Step 3: Commit**
+- ```bash
+- git commit -m "test(prev1-t03): pin provider sync independence from CLAUDE.md shims"
+- ```
+- **Files:**
+- - Modify: `.agents/skills/oat-project-implement/references/completion-and-closeout.md`
+- (already bumped to 2.3.14 in this PR; no further bump)
+- - Modify: `packages/cli/src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts`
+- - Modify: `apps/oat-docs/docs/workflows/projects/implementation-execution.md`
+- and the `.oat/templates/state.md` comment if it names the fingerprint format
+- - Create: a decision record (`node packages/cli/dist/index.js decision new`)
+- **Step 1:** Define `effective-delta-v2`: identical to v1 but the exclusion set
+- is `$PROJECT_PATH/state.md` plus every path under `.oat/projects/**` and
+- `.oat/repo/**`. `.oat/templates/**`, `.oat/scripts/**`, `.oat/config*.json`,
+- and `.oat/sync/**` stay fingerprinted. New generations persist
+- `sha256:effective-delta-v2:<digest>`; stored v1 values keep v1 semantics and
+- are never reinterpreted. Pin the v2 exclusion set, the v1 preservation rule,
+- and the kept `.oat` paths in the contract test (failing-first).
+- **Step 2: Verify**
+- Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`,
+- `node --test .agents/skills/oat-project-implement/tests/*.test.mjs`,
+- `pnpm run check:skill-bumps`, `pnpm --filter oat-docs check`.
+- Expected: all exit 0.
+- **Step 3: Commit**
+- ```bash
+- git commit -m "feat(prev1-t04): exclude project and repository records from gate freshness"
+- ```
+- **Files:**
+- - Modify: `.agents/agents/oat-reviewer.md` (already 1.2.10 in this PR; no
+- further bump) and its regenerated `.codex/agents` and `.cursor/agents` views
+- (`pnpm build && pnpm run cli -- sync --scope project`; never `--scope all`;
+- revert any `.oat/sync/manifest.json` restamp)
+- - Modify: reviewer contract assertions in
+- `packages/cli/src/validation/skills.test.ts` and any other pin of the removed
+- prose
+- **Step 1:** Operator direction: only the `recon` skill uses `recon-worker`,
+- because it owns the evidence-packet machinery. Remove every path by which
+- `oat-reviewer` launches the canonical `recon-worker`: the Assignment Gate
+- envelope instructions, the sibling recon-skill probe, the validator step, and
+- the "recon-worker lane never runs commands" wording. Reviewer lanes remain
+- optional, bounded, read-only, and use ordinary sub-agents only (how every
+- recorded use worked). Keep the p04 bare-fence repairs. This resolves GitHub
+- #295 by removal. Failing-first: a contract assertion that `oat-reviewer.md`
+- never names `recon-worker` or `validate-assignment`.
+- **Step 2: Verify**
+- Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation src/commands/init/tools/shared`,
+- `node packages/cli/dist/index.js status --scope project`.
+- Expected: exit 0; views in sync.
+- **Step 3: Commit**
+- ```bash
+- git commit -m "fix(prev1-t05): take recon-worker out of oat-reviewer"
+- ```
+- **Files:**
+- - Revert: `.agents/skills/recon/**` to `origin/main` exactly (removes
+- `scripts/validate-assignment.mjs`, its tests and fixtures, and this wave's
+- `SKILL.md`, `worker-contract.md`, `packet-contract.md`, and test edits,
+- including the 1.1.6 bump)
+- - Modify: `packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts`
+- (drop the `validate-assignment.mjs` entry)
+- - Modify: `apps/oat-docs/docs/workflows/skills/recon.md` (remove the "Validate
+- Worker Assignments" section)
+- **Step 1:** `git checkout origin/main -- .agents/skills/recon` and remove any
+- file this wave added under it; confirm `git diff origin/main -- .agents/skills/recon`
+- is empty. Confirm on `main` that Codex runs `recon-worker` lanes as
+- `contract-enforced` (recon `SKILL.md` authority rules) and that nothing else
+- in the repository references `validate-assignment`.
+- **Step 2: Verify**
+- Run: `node --test .agents/skills/recon/tests/*.test.mjs`,
+- `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`,
+- `pnpm run check:skill-bumps`, `pnpm --filter oat-docs check`,
+- `rg -n "validate-assignment" . --glob '!**/node_modules/**' --glob '!.oat/**/reviews/**'`.
+- Expected: exit 0; the sweep finds nothing outside history.
+- **Step 3: Commit**
+- ```bash
+- git commit -m "revert(prev1-t06): restore the recon skill to main"
+- ```
+- **Files:**
+- - Delete: `.oat/repo/reference/decisions/DR-260928-validate-recon-assignments.md`
+- (never shipped), then `node packages/cli/dist/index.js decision regenerate-index`
+- - Modify: `.oat/repo/pjm/backlog/archived/BL-260927-validate-recon-worker.md`
+- and its `backlog/completed.md` entry: resolved by removing the reviewer's
+- `recon-worker` path, not by a validator
+- - Modify: `.oat/repo/pjm/backlog/items/BL-260928-settle-codex-read-authority.md`:
+- rescope to a live check that `/recon` with Codex workers launches
+- `contract-enforced` lanes on the released CLI (title, description, criteria)
+- - Modify: the `.oat/repo/pjm/backlog/index.md` curated note and
+- `.oat/repo/pjm/current-state.md` if they mention the validator
+- **Step 1:** Make the edits; regenerate the backlog index.
+- **Step 2: Verify**
+- Run: `node packages/cli/dist/index.js pjm doctor --json` (no new warnings),
+- `rg -n "validate-assignment|validate-recon-assignments" .oat/repo`.
+- Expected: no live references outside history.
+- **Step 3: Commit**
+- ```bash
+- git commit -m "chore(prev1-t07): correct the recon records"
+- ```
+- Source: `reviews/archived/p-rev1-review-2026-09-28T155753Z.md` (auto review,
+- passing: 0 Critical/High, 2 Medium, 3 Low). L3 (missing failing-first records
+- for prev1-t04 and prev1-t05) is root bookkeeping in `implementation.md`.
+- **Step 1: Fix**
+- - M1: when a blocker `CLAUDE.md` is the target of an `AGENTS.md` link, the
+- `claude_md_blocks_shim_removal` message must never offer plain removal of it.
+- Carry `linkedBy` into `findShimRemovalBlockers`/`buildShimRemovalBlockWarning`
+- (and the JSON finding), phrase the first option as "replace {linkers} with the
+- content of {path}, then remove {path}", and add the same caveat to the
+- oat-doctor `claude_md_blocks_shim_removal` rule and its contract test.
+- Integration case: Claude-first root (`AGENTS.md` -> `CLAUDE.md`) plus a
+- subdirectory pointer shim; assert the block message never offers plain
+- removal of the linked file.
+- - M2: while removal is blocked, do not emit per-file `claude_md_hides_agents_md`
+- "remove it" warnings for the exact shims in `wouldRemove` (sync apply,
+- dry-run, and validate); the block finding already names them. Update the
+- oat-doctor rule: while a `claude_md_blocks_shim_removal` item exists, offer
+- no removal for paths in its `wouldRemove`. Extend the "removes nothing while
+- a root CLAUDE.md has content" test to assert the full warning set.
+- - L1: word the block message as "would remove N CLAUDE.md files" (an adopted
+- stray is not an OAT-managed shim).
+- - L2: soften `instruction-sync.md` "Removal never leaves a mix": files with
+- content block removal; exact shims inside `instructions.claude.excludes` or
+- docs trees are not touched and are reported as leftovers.
+- No further version bumps (oat-doctor is already bumped in this PR).
+- **Step 2: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli build`,
+- `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/instructions src/commands/sync`,
+- `node --test .agents/skills/oat-doctor/tests/*.test.mjs`,
+- `pnpm --filter oat-docs check`, `pnpm run check:skill-bumps`, and the M1 and M2
+- branch-build probes from the review artifact. Record a failing-first result for
+- the M1 and M2 tests in the commit body.
+- **Step 3: Commit**
+- `fix(prev1-t08): close p-rev1 review findings`
+- Source: `reviews/archived/final-review-2026-09-28T163142Z.md` (final review,
+- passing: 0 Critical/High, 2 Medium, 4 Low). M1, M2, L1, and L4 are root
+- bookkeeping and closeout (PR hand-off, full summary regeneration, Final
+- Summary, Deviations).
+- **Step 1: Fix**
+- - L2: add the all-or-nothing qualifier with a link to
+- `../provider-sync/instruction-sync.md#all-or-nothing` to
+- `apps/oat-docs/docs/cli-utilities/configuration.md` (the `none` row) and
+- `apps/oat-docs/docs/reference/oat-directory-structure.md` (the shim row);
+- update `.oat/repo/pjm/current-state.md` for the block, the
+- `instructions.claude.*` rename, and `effective-delta-v2`.
+- - L3: `oat-agent-instructions-analyze` SKILL.md: when a
+- `claude_md_blocks_shim_removal` item exists, report its `paths` as the High
+- finding (fix: move or remove each file, replacing its `linkedBy` links
+- first, then rerun sync) and list its `wouldRemove` as the files sync removes
+- next; pin with its contract test. Check `oat-agent-instructions-apply` for
+- the same gap. Both skills are already bumped in this PR.
+- **Step 2: Verify**
+- Run: `node --test .agents/skills/oat-agent-instructions-analyze/tests/*.test.mjs`,
+- `pnpm --filter oat-docs check`, `pnpm run check:skill-bumps`, `pnpm check`.
+- **Step 3: Commit**
+- `fix(prev1-t09): close final review findings`
+- The release workflow (`.github/workflows/release.yml`) publishes a fixed body
+- plus `generate_release_notes: true`, whose "What's Changed" list carries merged
+- PR titles only, not PR bodies. The removal and the key rename must therefore
+- be stated in the PR title itself:
+- - Title uses a Conventional Commit breaking marker and names the removal and
+- the rename, for example
+- `feat!: stop creating CLAUDE.md shims by default and rename shim config to instructions.claude.* (wave 2, lockstep 0.3.9)`.
+- - The body (for reviewers) opens with a **Behavior change** callout matching
+- `implementation.md` PR Requirements: default no shims, OAT-managed shims
+- removed on the next sync, all-or-nothing removal while any `CLAUDE.md` has
+- content (`sync`/`validate` exit 1 with the fixes), a lone `CLAUDE.md`
+- adopted into `AGENTS.md` and removed, `validate` exits 1 on upgraded
+- repositories until sync, and the opt-back-in command
+- (`oat config set instructions.claude.shims pointer`).
+- - The body calls out the clean rename of `documentation.instructionSyncStrategy`
+- and `documentation.instructionPointerExcludes` to
+- `instructions.claude.shims` and `instructions.claude.excludes` (old keys
+- ignored), with the upgrade notice to re-set a released
+- `instructionPointerExcludes` list before the first sync.
+- - The body also lists the other user-visible changes (append-only AGENTS.md
+- guidance, `--project-guidance` behavior, the read-only guidance command,
+- backlog archive link rewriting, and `oat-reviewer` no longer launching
+- `recon-worker`).
+- | Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target       |
+- | p01    | code     | fixes_completed | 2026-09-27 | reviews/archived/p01-review-2026-09-27T235828Z.md           | 6aa11df62600cd72e41559a611697afb873893d7 | auto       | -                 |
+- | p01    | code     | passed          | 2026-09-28 | reviews/archived/p01-review-2026-09-28T000859Z.md           | 80d514bbdf342391944b6580b3341a6e074b8a84 | auto       | -                 |
+- | p01    | code     | passed          | 2026-09-28 | reviews/archived/p01-review-2026-09-28T001719Z.md           | 4905ae61b93f3011d368258f5eda6297904d4184 | gate       | codex-6-sol-xhigh |
+- | p02    | code     | fixes_completed | 2026-09-28 | reviews/archived/p02-review-2026-09-28T005842Z.md           | 8724f5b4ff88c132909cf900fd0bf31b3e0e2948 | auto       | -                 |
+- | p02    | code     | passed          | 2026-09-28 | reviews/archived/p02-review-2026-09-28T011221Z.md           | c5886c1bf65cd776eba7051cd22ae5cb52ba352b | auto       | -                 |
+- | p02    | code     | passed          | 2026-09-28 | reviews/archived/p02-review-2026-09-28T013003Z.md           | 01055b7963a8e6931762a0780ffed5ee46168f19 | gate       | codex-6-sol-xhigh |
+- | p03    | code     | fixes_completed | 2026-09-28 | reviews/archived/p03-review-2026-09-28T014814Z.md           | bfc92754bd4ed05afd5a2f7da173edad7e82fccb | auto       | -                 |
+- | p04    | code     | fixes_completed | 2026-09-28 | reviews/archived/p04-review-2026-09-28T021519Z.md           | a5ebb0813cf786a9fb06e04f87aaacd7566bbdfe | auto       | -                 |
+- | p05    | code     | fixes_completed | 2026-09-28 | reviews/archived/p05-review-2026-09-28T103350Z.md           | 3cfab725098067df0b1f002d80ec5ed4f2d4aeed | auto       | -                 |
+- | final  | code     | fixes_completed | 2026-09-28 | reviews/archived/final-review-2026-09-28T112631Z.md         | 6972d045a7222be30640726d62d32e2897354c40 | auto       | -                 |
+- | final  | code     | passed          | 2026-09-28 | reviews/archived/final-review-2026-09-28T113124Z.md         | 6dd0593e4ba19201352150439e96cad432c9fe27 | auto       | -                 |
+- | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
+- | design | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
+- | plan   | artifact | fixes_completed | 2026-09-27 | -                                                           | -                                        | auto       | -                 |
+- | plan   | artifact | fixes_completed | 2026-09-27 | reviews/archived/artifact-plan-review-2026-09-27T150947Z.md | -                                        | gate       | codex-6-sol-xhigh |
+- | plan   | artifact | fixes_completed | 2026-09-27 | reviews/archived/artifact-plan-review-2026-09-27T151608Z.md | -                                        | gate       | codex-6-sol-xhigh |
+- | p03    | code     | passed          | 2026-09-28 | reviews/archived/p03-review-2026-09-28T015614Z.md           | 91066575de14dab6df77a52dcb1e967bfad91890 | gate       | codex-6-sol-xhigh |
+- | p04    | code     | fixes_completed | 2026-09-28 | reviews/archived/p04-review-2026-09-28T022315Z.md           | 8e34aae0ccb86f9af3e1f26648a50a556ae92144 | gate       | codex-6-sol-xhigh |
+- | p04    | code     | fixes_completed | 2026-09-28 | reviews/archived/p04-review-2026-09-28T023246Z.md           | 53346a3878ed3a4ed6f2d81b0e683e2893954bdb | auto       | -                 |
+- | p04    | code     | fixes_completed | 2026-09-28 | reviews/archived/p04-review-2026-09-28T024124Z.md           | de61806bc4789e7901dd0b90b0ee5579e4bca8e9 | gate       | codex-6-sol-xhigh |
+- | p04    | code     | fixes_completed | 2026-09-28 | reviews/archived/p04-review-2026-09-28T025845Z.md           | 7342fc69d8e9ee79929221a885d56a8e63a24f87 | auto       | -                 |
+- | p05    | code     | fixes_completed | 2026-09-28 | reviews/archived/p05-review-2026-09-28T104612Z.md           | 3c64d9e225a789e50caa1ba4edb153e943331365 | gate       | codex-6-sol-xhigh |
+- | p05    | code     | fixes_completed | 2026-09-28 | reviews/archived/p05-review-2026-09-28T105839Z.md           | 7085ab58146ade146e41617e3cdef15b0b9694d9 | auto       | -                 |
+- | p05    | code     | passed          | 2026-09-28 | reviews/archived/p05-review-2026-09-28T111050Z.md           | 3a38ce1a00570619de6bf0ff3b068138d8915c56 | gate       | codex-6-sol-xhigh |
+- | p-rev1 | code     | fixes_completed | 2026-09-28 | reviews/archived/p-rev1-review-2026-09-28T155753Z.md        | 091873d80f6466f7ee6bc4e1dcd33f54f0a4e093 | auto       | -                 |
+- | final  | code     | fixes_completed | 2026-09-28 | reviews/archived/final-review-2026-09-28T113721Z.md         | 1973af8f083c86fdb172eb67d8233eefd002333b | gate       | codex-6-sol-xhigh |
+- | final  | code     | passed          | 2026-09-28 | reviews/archived/final-review-2026-09-28T114422Z.md         | ba69e205235f000acf4958e57bc12085c8294f8f | auto       | -                 |
+- | final  | code     | passed          | 2026-09-28 | reviews/archived/final-review-2026-09-28T114805Z.md         | b54d67306e12e5abed8e23983f957f7f77c0ad8c | gate       | codex-6-sol-xhigh |
+- | final  | code     | passed          | 2026-09-28 | reviews/archived/final-review-2026-09-28T163142Z.md         | 11008080c4853e133ee380d34d14c0f3d60f51d1 | auto       | -                 |
+- | final  | code     | passed          | 2026-09-28 | reviews/archived/final-review-2026-09-28T163513Z.md         | 11008080c4853e133ee380d34d14c0f3d60f51d1 | auto       | -                 |
+- | p-rev1 | code     | passed          | 2026-09-28 | reviews/archived/p-rev1-review-2026-09-28T160943Z.md        | f4599bec32e5b235e699f7504feb33d348a7cfea | gate       | codex-6-sol-xhigh |
+- | p-rev1 | code     | passed          | 2026-09-28 | reviews/archived/p-rev1-review-2026-09-28T162038Z.md        | 71aef4127c537309157d3d81680e6738c9f99f73 | gate       | codex-6-sol-xhigh |
+- | final  | code     | passed          | 2026-09-28 | reviews/archived/final-review-2026-09-28T164247Z.md         | 7b389c5af70f08aeeeb4de74cdc2b7d764e1ff2d | gate       | codex-6-sol-xhigh |
+- | final  | code     | passed          | 2026-09-28 | reviews/archived/final-review-2026-09-28T165830Z.md         | d52002eba97cfaf97d9b741ccc8a82889798b268 | gate       | codex-6-sol-xhigh |
+- For code-review events, `Reviewed Head` is the full 40-character SHA at the
+- head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
+- `Gate Target` is populated only for gate events. Legacy five-column rows remain
+- valid. Writers must preserve every existing row and every unknown trailing
+- cell; never truncate a widened row back to five columns.
+- Plan artifact review dispositions: the automatic structured review (Opus 5.5
+- high, exception route because the planning parent's effort was unknown) ran
+- three attempts within the retry bound of 2; attempts 1-2 findings (M1-M13,
+- L1-L4; M1-M5, L1-L6) were applied and re-reviewed, and attempt 3's two findings
+- (M1 control split, L1 trailing newline) were applied after the bound without a
+- further structured pass and are covered by the configured gate. Gate attempt 1
+- (`codex-6-sol-xhigh`, QS-12, `onFailure: block`) returned H1 (apply-time
+- re-verification before shim removal), H2 (repository-wide leftover detection
+- independent of exclusions), and M1 (`none` accepted only with its behavior);
+- all three were resolved in the plan, together with the complexity-review
+- simplifications (p01-t01 repro deleted; one target-swap control; no `--json`
+- source field; existing doctor pins and resolve-providers fixture reused; Lite
+- probe run once; scanner narrowing deferred with a trigger; reviewer probe
+- reuse; explicit `scripts.lint` pin; rewrite-all archive references).
+- Gate attempt 2 (`codex-6-sol-xhigh`) returned one High: the append open flags
+- lacked a write access mode (`EBADF`). Resolved in p01-t02 (`O_WRONLY`, `O_APPEND`, and
+- `O_NOFOLLOW` plus a real-filesystem success assertion). The configured gate's
+- `maxAttempts: 2` is exhausted, so readiness waits on an operator decision
+- (QS-12 boundary).
+- Operator disposition (2026-09-27): with the gate's attempts exhausted and its
+- last finding resolved in the plan, the operator approved proceeding to
+- implementation (QS-12 boundary resolved by explicit operator decision; recorded
+- in `implementation.md`). Phase gates and the final review still run.
+- **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
+- **Meaning:**
+- - `received`: review artifact exists (not yet converted into fix tasks)
+- - `fixes_added`: fix tasks were added to the plan (work queued)
+- - `fixes_completed`: fix tasks implemented, awaiting re-review
+- - `passed`: re-review run and recorded as passing (no Critical/High)
+- Implementation Complete
+- **Summary:**
+- - Phase 1: 8 tasks - AGENTS.md guidance
+- - Phase 2: 8 tasks - CLAUDE.md shims
+- - Phase 3: 5 tasks - Lifecycle skill routing and bookkeeping
+- - Phase 4: 7 tasks - Agent roles and recon validation
+- - Phase 5: 12 tasks - CI and backlog tooling, release fan-in
+- - Phase p-rev1: 9 tasks - Revision 1 (operator feedback on PR #332)
+- **Total: 49 tasks**
+- Ready for code review and merge.
+- - Discovery: `discovery.md`
+- - Backlog review: `.oat/repo/pjm/backlog/reviews/backlog-and-roadmap-review.md`
+- - Backlog items: `.oat/repo/pjm/backlog/items/` (IDs listed per task)
+- - Decisions: `.oat/repo/reference/decisions/DR-260927-claude-md-shims-are-opt.md`
+- - External: `anthropics/claude-code` `mods/agents-md/README.md` at v2.1.278
+- oat_status: complete
+- oat_ready_for: oat-project-quick-start
+- oat_blockers: []
+- oat_last_updated: 2026-09-27
+- oat_generated: false
+- Discovery: backlog-wave-2
+- Deliver Wave 2 of the 2026-09-26 backlog review
+- (`.oat/repo/pjm/backlog/reviews/backlog-and-roadmap-review.md`, Section 5) as
+- one tackle-backlog wave, minus the deferred recap-export lane, plus the new
+- high-priority CLAUDE.md shim item. The operator approved the exact batch and
+- topology on 2026-09-27: twelve backlog items, five sequential phases, one PR,
+- Claude (Opus) implementing, Codex `codex-6-sol-xhigh` as the independent
+- reviewer for the plan gate, every phase gate, and the final review, and a
+- project dispatch policy of `high`.
+- Approved items:
+- | Item                                       | Title                                                                                                |
+- | `BL-260903-close-manual-only-agents-md`    | Close manual-only AGENTS.md refresh loop (GitHub #322)                                               |
+- | `BL-260927-name-only-installed-pack`       | Name only installed pack locations in the OAT tools guidance block (#323)                            |
+- | `BL-260909-fix-the-agents-md-unsafe`       | Fix the agents-md unsafe-directory test race under parallel turbo                                    |
+- | `BL-260927-make-claude-md-shims-opt`       | Make CLAUDE.md shims opt-in now that Claude Code reads AGENTS.md                                     |
+- | `BL-260829-order-phase-bookkeeping-before` | Order phase bookkeeping before per-phase review dispatch                                             |
+- | `BL-260907-record-absorbed-projects`       | Record absorbed projects and backlog items for Lite consolidations                                   |
+- | `BL-260907-route-quick-mode-discovery`     | Route quick-mode discovery rows in oat-project-next and oat-project-progress straight to quick-start |
+- | `BL-260909-repair-the-bare-fences-that`    | Repair the bare fences that swallow headings outside .agents/skills                                  |
+- | `BL-260927-validate-recon-worker`          | Validate recon-worker assignment envelopes deterministically before launch (#295)                    |
+- | `BL-260909-give-packages-control-plane`    | Give packages/control-plane a check script so its formatting is CI-gated                             |
+- | `BL-260909-rewrite-inbound-references`     | Rewrite inbound references when oat backlog archive moves an item                                    |
+- | `BL-260904-stabilize-the-collection`       | Stabilize the collection-detach engine integration test                                              |
+- Each item file under `.oat/repo/pjm/backlog/items/` holds the authoritative
+- acceptance criteria; the plan maps every criterion to a task.
+- Question 1: `oat tools where`
+- **Q:** `BL-260927-name-only-installed-pack` requires a recorded decision on
+- shipping an `oat tools where` command.
+- **A:** Defer it (operator, 2026-09-27).
+- **Decision:** Record an explicit deferral; ship only the guidance-block fix.
+- Question 2: Live acceptance for bookkeeping ordering
+- **Q:** `BL-260829-order-phase-bookkeeping-before` requires verification on a
+- real multi-phase run, but gates and lifecycle skills run the installed release,
+- so this wave cannot observe the changed skill.
+- **A:** Ship the code and contract tests and keep the item open (operator,
+- 2026-09-27).
+- **Decision:** The item is not archived; its note records that only live
+- observation on the next multi-phase project remains.
+- Question 3: CLAUDE.md shims
+- **Q:** How should the new no-shim default treat existing shims, this
+- repository's shims, and scheduling?
+- **A:** Remove OAT-managed shims automatically, drop this repository's shims,
+- and schedule the item into this wave. Any CLAUDE.md that remains produces a
+- warning telling the user to remove it or to set a shim strategy and rerun sync
+- (operator, 2026-09-27; `DR-260927-claude-md-shims-are-opt`).
+- The batch, its order, and its topology were settled during backlog review and
+- operator approval; the approach per item is fixed by each item's criteria and
+- the decision records below. Chosen direction: one quick project, five
+- sequential phases grouped by shared write sets, one PR.
+- 1. **Topology:** Five sequential phases in one PR. Parallel worktrees are
+- unsafe because `project-guidance.ts`, `oat-doctor/SKILL.md`, `pjm/init.ts`,
+- and `help-snapshots.test.ts` are shared by p01 and p02;
+- `named-skill-load-contract.test.ts` by p03 and p04; `.agents/agents/oat-reviewer.md`
+- by both p04 items; and `packages/cli/src/validation/skills.test.ts` version
+- pins by every phase that bumps a skill.
+- 2. **Shim config key:** `documentation.instructionSyncStrategy`
+- (`none | pointer | symlink | copy`, absent means `none`), placed beside the
+- existing `documentation.instructionPointerExcludes` that governs the same
+- `oat instructions` commands.
+- 3. **`BL-260830-persist-instruction-sync`:** Closed as absorbed by the shim
+- item. The strategy is persisted in project config; the init prompt it asked
+- for is dropped because the default is now `none` and opting in is one
+- `oat config set`. Its "migration preserves existing installations" criterion
+- is superseded by `DR-260927-claude-md-shims-are-opt`.
+- 4. **Bookkeeping ordering route:** Commit the phase's task ledger
+- (`implementation.md` task/phase completion and the `state.md` resume
+- pointer) before dispatching the per-phase reviewer, and name review-outcome
+- bookkeeping (review rows, dispositions) as post-review and out of scope in
+- the reviewer brief. The fix child still starts from a clean tree because the
+- pre-review bookkeeping is committed, which preserves the reason the old order
+- existed.
+- 5. **Recon assignment validator home:** A script in the recon skill's
+- `scripts/` beside `validate-packet.mjs`, reusing its contract library, so it
+- ships with the pack that launches recon workers; `oat-reviewer.md` runs it
+- before launch.
+- 6. **Read-only guidance emission:** A read-only command prints the managed OAT
+- tools guidance block (human and `--json`) without installing or upgrading
+- assets; `oat-doctor` hints point at it.
+- 7. **Inbound-reference AC3:** The executable bidirectional-link check is the
+- external-plan contract test in `skills-bundled-docs-contract.test.ts`
+- ("every current external plan is accepted under its date-selected mode"),
+- which enforces plan-to-item backlinks. It is run on the tip after this
+- wave's archives, alongside a sweep for remaining `pjm/backlog/items/<id>.md`
+- references.
+- 8. **Version bumps:** One lockstep bump (0.3.8 → 0.3.9) in the fan-in; one
+- `metadata.version` bump per changed skill and one top-level `version:` bump
+- per changed agent role across the whole PR.
+- - Repository Definition of Done (AGENTS.md): eight gates in CI order with
+- explicit exit codes; forced turbo runs with an isolated `HOME` as evidence.
+- - Failing-first tests for every defect fix; neutralize-and-restore proof for
+- load-bearing negative controls.
+- - Lanes run `oat sync --scope project`, never `--scope all`.
+- - Never edit `packages/cli/assets/skills/**` (build output).
+- - Gates run the installed CLI (0.3.7) and installed skills, not the branch.
+- - Every acceptance criterion of the eleven closable items passes with recorded
+- evidence, and those items are archived with `oat backlog archive` in the PR.
+- - `BL-260829-order-phase-bookkeeping-before` ships its change and contract
+- tests and stays open with the live-observation note.
+- - `BL-260830-persist-instruction-sync` is closed as absorbed.
+- - The full Definition of Done passes on the final head; independent phase gates
+- and the final review pass or have dispositioned findings.
+- - `oat tools where` (deferred, recorded).
+- - The recap export change (`BL-260927-export-only-the-recap-page`, deferred by
+- the operator).
+- - The three sibling flakes named in `BL-260909-fix-the-agents-md-unsafe`'s
+- notes (`workflow.test.ts:476`, `tools/smoke/cursor-broker.test.mjs`,
+- `capture-dirty-tree.test.mjs:694`).
+- - The dead duplicate applier in `init/tools/workflows/index.ts:116-300`
+- mentioned in `BL-260903-close-manual-only-agents-md`'s description but absent
+- from its criteria.
+- - Review-cap umbrella work and later backlog-review waves.
+- Deferred Ideas
+- - `oat tools where [--json]` - deferred by the operator; the guidance-block fix
+- removes most of the confusion it targeted.
+- Open Questions
+- None blocking. Implementation-level choices (append detection algorithm,
+- reference-rewrite versus warn) are made in the owning tasks within each item's
+- criteria.
+- - The Claude Code `agents-md` plugin behavior at tag v2.1.278 is the reference
+- for shim documentation.
+- - `stabilize-the-collection`'s fix already landed at `ddddba079`; only the
+- ten-uncached-run evidence remains.
+- - **Shim removal deletes tracked files in user repositories:** Removal is
+- restricted to exact OAT-managed shapes; hand-written files are reported,
+- never deleted; `--dry-run` lists removals.
+- - **Likelihood:** Medium
+- - **Impact:** High
+- - **Mitigation Ideas:** Exact-shape matching, negative-control tests, release
+- notes.
+- - **Append path races a concurrent writer:** Append-only writes never touch
+- existing bytes; a concurrent-edit fixture proves user content survives.
+- - **Likelihood:** Low
+- - **Impact:** High
+- - **Mitigation Ideas:** `O_APPEND` with trailing-newline check; negative
+- control.
+- - **Hidden shared test pins cause cross-phase conflicts:** Sequential phases
+- and one bump per skill avoid it.
+- - **Likelihood:** Medium
+- - **Impact:** Low
+- - **Mitigation Ideas:** Sequential phases; bump in the first touching task.
+- - Claude Code built-in `agents-md` plugin, `anthropics/claude-code`
+- `mods/agents-md/README.md` at tag v2.1.278 (read 2026-09-27 via `gh api`):
+- `instructionFiles` defaults to `claude-md-or-agents-md`; any `CLAUDE.md`,
+- `.claude/CLAUDE.md`, or `CLAUDE.local.md` from the project root down to the
+- working directory makes the plugin stand down for the whole project (a
+- user's `~/.claude/CLAUDE.md` does not count); the option is read only from
+- user, `--settings`, or managed settings. Coverage limit: behavior of later
+- Claude Code releases is not verified.
+- - No other external systems are involved; all other evidence is local source at
+- the wave base.
+- - **QS-01:** Working tree clean at start; no dirty-tree decision needed.
+- - **QS-04 (design depth):** Straight to plan. Rationale: every item has
+- operator-approved scope, recorded decisions (`DR-260927-*`), and verified
+- file-level write sets from three read-only recon lanes at `c7d08e496`; the
+- remaining choices are implementation-local and settled above.
+- - **QS-05 (requirements gate):** Auto-confirmed under the non-interactive
+- branch; the confirmed requirement set is the Key Decisions, Constraints, and
+- Success Criteria above.
+- Quick mode, straight to plan.

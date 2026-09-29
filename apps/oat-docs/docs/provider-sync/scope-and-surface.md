@@ -123,7 +123,7 @@ runtime mismatch, malformed output, and missing telemetry never authorize it.
 ## Non-interop namespaces in the same CLI
 
 - `oat project new <name>` (workflow/project scaffolding)
-- `oat instructions validate` / `oat instructions sync` (AGENTS.md/CLAUDE.md pointer, symlink, or copy integrity plus Claude-only adoption)
+- `oat instructions validate` / `oat instructions sync` (AGENTS.md integrity with no CLAUDE.md shims by default, opt-in pointer, symlink, or copy shims, plus Claude-only adoption)
 - `oat internal validate-oat-skills` (internal maintenance)
 
 ## Reference artifacts

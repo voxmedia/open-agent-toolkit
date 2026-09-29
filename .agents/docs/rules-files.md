@@ -125,13 +125,16 @@ User-level rules go in `~/.claude/rules/` and apply to all projects (lower prior
 
 ### 2.6 AGENTS.md Support
 
-**AGENTS.md is NOT natively supported by Claude Code** (GitHub issue #6235 has 2,700+ upvotes, still open). The recommended workaround is a one-line `CLAUDE.md`:
+Source: `anthropics/claude-code` `mods/agents-md` README, as of v2.1.278.
 
-```markdown
-@AGENTS.md
-```
+**Claude Code reads AGENTS.md natively** through its built-in `agents-md` plugin. Its `instructionFiles` option defaults to `claude-md-or-agents-md`; the other values are `claude-md`, `claude-md-and-agents-md`, and `managed-only`.
 
-This leverages @-import. Alternative: symlink `ln -s AGENTS.md CLAUDE.md`.
+- **Default mode stands down on any CLAUDE.md.** In `claude-md-or-agents-md`, the plugin loads no AGENTS.md for the session when any `CLAUDE.md`, `.claude/CLAUDE.md`, or `CLAUDE.local.md` exists in the working directory or any directory above it up to the project root; the engine then loads only CLAUDE.md files. A root `CLAUDE.md` or a personal `CLAUDE.local.md` therefore hides every AGENTS.md, and shims in some directories but not others hide every AGENTS.md without one.
+- **`claude-md-and-agents-md`** loads both; an AGENTS.md that a CLAUDE.md already imports or links is not loaded twice.
+- **Only user or managed settings can set the option** (`~/.claude/settings.json`, `--settings`, or managed settings); a project's `.claude/settings.json` cannot.
+- **Nested gaps:** nested AGENTS.md files attach on a text `Read` only (not on `@`-mentions, IDE selections, or notebook, image, or PDF reads), and `--add-dir` directories contribute no AGENTS.md.
+
+The one-line `CLAUDE.md` shim (`@AGENTS.md`, or `ln -s AGENTS.md CLAUDE.md`) is now **opt-in**: use it for Claude Code releases before the plugin, for users who set `instructionFiles` to `claude-md`, or when the nested gaps above matter, and then keep a shim beside every AGENTS.md. In OAT this is `instructions.claude.shims` (`none` by default; `pointer`, `symlink`, or `copy` to opt in), applied by `oat instructions sync`; see the OAT docs page `provider-sync/instruction-sync.md` (§ Claude Code and AGENTS.md).
 
 ### 2.7 Skills vs CLAUDE.md vs Rules
 
@@ -411,12 +414,12 @@ All three providers support file-pattern-based activation — this is the unifyi
 
 ### 5.4 AGENTS.md Support
 
-| Provider    | Native support                   | Nested                 | Import mechanism     |
-| ----------- | -------------------------------- | ---------------------- | -------------------- |
-| Claude Code | **No** (use `@AGENTS.md` import) | N/A                    | `@path` in CLAUDE.md |
-| Cursor      | **Yes** (first-class)            | Yes (hierarchical)     | N/A — read directly  |
-| Copilot     | **Yes** (`**/AGENTS.md`)         | Yes (nearest wins)     | N/A — read directly  |
-| Codex       | **Yes** (primary format)         | Yes (override pattern) | N/A — native         |
+| Provider    | Native support                                                                                                                                            | Nested                          | Import mechanism                      |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- | ------------------------------------- |
+| Claude Code | **Yes** (built-in `agents-md` plugin; stands down while any CLAUDE.md, `.claude/CLAUDE.md`, or `CLAUDE.local.md` is on the path to the working directory) | Yes (attached on a text `Read`) | Opt-in `@AGENTS.md` shim in CLAUDE.md |
+| Cursor      | **Yes** (first-class)                                                                                                                                     | Yes (hierarchical)              | N/A — read directly                   |
+| Copilot     | **Yes** (`**/AGENTS.md`)                                                                                                                                  | Yes (nearest wins)              | N/A — read directly                   |
+| Codex       | **Yes** (primary format)                                                                                                                                  | Yes (override pattern)          | N/A — native                          |
 
 ---
 

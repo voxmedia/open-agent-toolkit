@@ -17,7 +17,7 @@ Use the `oat backlog` group when you want direct CLI support for the file-backed
 - `oat backlog new <title>` - validate and create a file-backed backlog item from the canonical template, then regenerate the managed index
 - `oat backlog generate-id <title>` - generate a deterministic `BL-YYMMDD-slug` backlog ID from a title
 - `oat backlog generate-id <title> --created-at <timestamp>` - generate a reproducible ID for a known creation timestamp
-- `oat backlog archive <id>` - atomic close-out: set a terminal status, record the completion in `completed.md`, move the item into `archived/`, and regenerate the index in one step
+- `oat backlog archive <id>` - atomic close-out: set a terminal status, record the completion in `completed.md`, move the item into `archived/`, rewrite inbound `.oat/repo` references to the moved file, and regenerate the index in one step
 - `oat backlog regenerate-index` - rebuild the managed backlog index table from item frontmatter
 
 Backlog IDs are deterministic date+slug identifiers (`BL-YYMMDD-slug`) derived from the creation date and title, so two machines or worktrees produce the same ID for the same record without scanning the local checkout. The slug is capped at 30 characters at the last whole-word boundary (with trailing stop-words trimmed), so prefer concise, meaningful titles. Index regeneration is deterministic and safe to re-run when resolving an index merge conflict.
@@ -52,8 +52,9 @@ The command validates all inputs before creating the scaffold or writing an item
 - For the default `closed` path, validates and trims a nonblank `--summary` before any file or index mutation. The `wont_do` path may omit the summary and completion-ledger entry.
 - Rewrites only the `status:` and `updated:` frontmatter lines (preserving any inline enum comment), then moves the item from `items/` to `archived/` with `git mv` inside a work tree, falling back to a plain rename (with a warning) outside git or if `git mv` fails.
 - `closed` archives append a canonical newest-first `completed.md` entry (`YYYY-MM-DD — <id> — Title — summary`). `wont_do` archives append an entry only when `--summary` is provided. A missing `completed.md` is scaffolded from the starter template; a missing `## Completed Items` heading is scaffolded with a warning.
+- Rewrites inbound references to the moved file across Markdown under `.oat/repo/**` — tracked and untracked files that Git does not ignore, or every `.md` file outside a Git work tree — (external plans, decision records, other backlog items): relative links, `.oat/repo`-relative and repository-root path strings (including `oat_external_plan_sources` frontmatter) that resolve to `items/<id>.md` now point at `archived/<id>.md`, and the moved item's own relative links (inline links with any title form, and reference-style definitions; never footnotes or prose) are rebased when their target exists, so they keep resolving. An inline code span whose whole content is a path to the item (optionally with an `#anchor`), such as an external plan's `Source artifact or scope` citation, is rewritten; any other code span or fenced code block that mentions `items/<id>.md` is left as written with a warning, so recorded commands keep their meaning. Only references that resolve to the item's former `items/<id>.md` path change, and a link that already resolves to a different existing file is never repointed; URLs are never touched, and symlinked Markdown files are skipped so nothing outside `.oat/repo` is read or written. Each rewritten file is reported; a reference that names `items/<id>.md` but cannot be resolved is left untouched with a warning.
 - Regenerates the managed backlog index after the move.
-- Idempotent: re-running on an item already in `archived/` is a no-op warning with no writes.
+- Idempotent: re-running on an item already in `archived/` returns `noop` with a warning and makes no status, `completed.md`, or move changes; it only retries the idempotent reference rewrite and index regeneration, so a run interrupted during the rewrite (or an item archived by hand or by an older CLI) can be finished by running the command again.
 
 **Exit codes:**
 
@@ -73,11 +74,14 @@ On success the payload is the archive result object:
   "completedEntry": "written",
   "movedTo": ".oat/repo/pjm/backlog/archived/BL-260705-example.md",
   "indexRegenerated": true,
+  "rewrittenReferences": [
+    ".oat/repo/reference/external-plans/2026-07-05-example-plan.md"
+  ],
   "warnings": []
 }
 ```
 
-`result` is `archived` or `noop` (already archived); `completedEntry` is `written`, `scaffolded`, or `skipped` (e.g. a `wont_do` archive without `--summary`); `movedTo` is the destination path or `null`. On an actionable failure the payload is `{ "result": "error", "id": "<id>", "message": "<why + fix>" }`.
+`result` is `archived` or `noop` (already archived); `completedEntry` is `written`, `scaffolded`, or `skipped` (e.g. a `wont_do` archive without `--summary`); `movedTo` is the destination path or `null`; `rewrittenReferences` lists the repository-relative Markdown files whose references to the moved item were rewritten (on a no-op this lists anything the retried rewrite changed, and the human output prints each file on both paths). On an actionable failure the payload is `{ "result": "error", "id": "<id>", "message": "<why + fix>" }`.
 
 For full project-management repo-reference setup, use [`oat pjm init`](tool-packs.md#install-vs-initialize). It scaffolds the two-layer PJM surface (`pjm/current-state.md`, `pjm/roadmap.md`, `reference/decisions/`, and AGENTS guides) and delegates the backlog sub-surface to `oat backlog init`.
 
@@ -258,15 +262,18 @@ Use these reference pages for file ownership and schema details:
 
 These commands validate and repair project-scoped instruction integrity between `AGENTS.md` and sibling `CLAUDE.md` files.
 
-- `oat instructions validate` - read-only integrity check with `--strategy pointer|symlink|copy`
-- `oat instructions sync` - preview or apply pointer, symlink, or hard-copy repairs
+- `oat instructions validate` - read-only integrity check with `--strategy none|pointer|symlink|copy`
+- `oat instructions sync` - preview or apply the effective strategy: remove OAT-managed shims (`none`, the default) or create and repair pointer, symlink, or hard-copy shims
 
 Use this command group when instruction files drift after manual edits or generated updates, or when nested project directories contain Claude-only stray files that should be adopted into canonical `AGENTS.md`.
 
 Operational notes:
 
 - Validation and sync use the same recursive scan model, so `--dry-run` previews the same states that `validate` reports.
-- `pointer` is the default strategy; `symlink` and `copy` make file shape part of correctness.
+- `none` is the default strategy: no `CLAUDE.md` shims, because Claude Code reads `AGENTS.md` itself. Persist a shim strategy with `oat config set instructions.claude.shims pointer|symlink|copy`; `--strategy` overrides it for one run.
+- Under `none`, every remaining `CLAUDE.md`, `.claude/CLAUDE.md`, or `CLAUDE.local.md` is reported with a warning, because it makes Claude Code ignore every `AGENTS.md`.
+- Under `none`, shim removal is all or nothing: while any of those files has content of its own, sync removes no shim, exits `1`, and reports one `claude_md_blocks_shim_removal` finding naming the files with content and the shims it kept. See [All or nothing](../provider-sync/instruction-sync.md#all-or-nothing).
+- Under a shim strategy, `symlink` and `copy` make file shape part of correctness.
 - Unreadable canonical `AGENTS.md` files and unreadable Claude-only sources are surfaced as drift, but sync leaves them in manual-repair mode instead of guessing at recovery.
 
 For the full state model, repair semantics, and examples, see [Instruction Sync](../provider-sync/instruction-sync.md).

@@ -12,7 +12,7 @@ labels:
   - efficiency
 assignee: null
 created: 2026-08-29T19:18:15.323Z
-updated: 2026-08-29T19:18:15.323Z
+updated: 2026-09-28T01:42:28Z
 associated_issues: []
 external_plans: []
 ---
@@ -59,3 +59,19 @@ current ordering makes this trap easy to fall into repeatedly.
 
 Source: `.oat/projects/shared/portable-agent-references/references/project-retro.md`,
 item UP-01.
+
+## Status (2026-09-27, backlog-wave-2)
+
+Code and contract tests shipped in the backlog-wave-2 PR (p03-t03):
+`oat-project-implement/references/phase-execution.md` splits Step 7 into Step
+7a pre-review bookkeeping, committed before the per-phase reviewer is
+dispatched, and Step 7b post-review bookkeeping; the reviewer brief names
+review-outcome bookkeeping out of scope; both halves keep the scope-resolving
+commit branch, including synced `oat project push`. Contract tests pin the
+order, the out-of-scope brief, and the clean tree for the fix child (criteria
+1 and 2), and the relationship note is recorded on
+`BL-260711-skip-re-review-for-bookkeeping` (criterion 4).
+
+Only live observation remains (criterion 3): the next multi-phase project must
+complete a phase whose review returns without a bookkeeping finding. The item
+stays open until then.

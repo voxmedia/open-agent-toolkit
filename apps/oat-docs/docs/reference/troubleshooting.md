@@ -56,12 +56,27 @@ when a same-name canonical skill exists; rename one package before retrying.
   - `oat providers set --scope project --enabled <providers> --disabled <providers>`
 - Re-run `oat sync --scope project` after updating config.
 
-## `instructions validate` reports `missing`, `content_mismatch`, or `stray`
+## `instructions validate` reports `missing`, `content_mismatch`, `stray`, or `managed_shim`
 
+- Check the effective strategy (`strategy:` in the output). The default is `none`, which expects no `CLAUDE.md`; `missing` is only reported under a configured shim strategy.
 - Run `oat instructions sync --dry-run` to preview changes.
-- Run `oat instructions sync --strategy pointer|symlink|copy` to apply the expected `CLAUDE.md` shape.
-- If mismatched `CLAUDE.md` files should be overwritten, run `oat instructions sync --force` (or combine it with `--strategy` if needed).
-- If `stray` is reported, `oat instructions sync` will adopt the Claude-only file into `AGENTS.md` and then regenerate `CLAUDE.md`.
+- Under `none`, `managed_shim` entries are `CLAUDE.md` files OAT created; `oat instructions sync` removes them, unless a `CLAUDE.md` with its own content blocks removal (see below).
+- To keep shims instead, run `oat config set instructions.claude.shims pointer` (or `symlink` / `copy`) and then `oat instructions sync`.
+- Under a shim strategy, if mismatched `CLAUDE.md` files should be overwritten, run `oat instructions sync --force`.
+- If `stray` is reported, `oat instructions sync` will adopt the Claude-only file into `AGENTS.md`, then regenerate `CLAUDE.md` under a shim strategy or remove it under `none`.
+
+## `instructions sync` removed no shims because a `CLAUDE.md` has content
+
+- Under `none`, removal is all or nothing: while any `CLAUDE.md`, `.claude/CLAUDE.md`, or `CLAUDE.local.md` has content of its own, sync removes no `CLAUDE.md` at all, reports each held-back removal as skipped, and exits `1`. The finding (`claude_md_blocks_shim_removal` under `--json`) names the files with content (`paths`) and the `CLAUDE.md` files kept (`wouldRemove`); `linkedBy` names any `AGENTS.md` link to a file with content, which you replace with that file's content before removing it. `oat instructions validate` reports the same finding.
+- Either remove each named file or move its content into an `AGENTS.md`, then rerun `oat instructions sync`; or set `instructions.claude.shims` to `pointer`, `symlink`, or `copy` to keep `CLAUDE.md` files.
+- See [Instruction Sync](../provider-sync/instruction-sync.md#all-or-nothing).
+
+## `instructions sync` warns that a `CLAUDE.md` makes Claude Code ignore every `AGENTS.md`
+
+- Under the default `none` strategy, a remaining `CLAUDE.md`, `.claude/CLAUDE.md`, or `CLAUDE.local.md` makes Claude Code's `agents-md` plugin stand down: for every session when the file is at the repository root, and for sessions started in its directory or below when it is in a subdirectory.
+- Either remove the named file, or set `instructions.claude.shims` to a shim strategy and rerun `oat instructions sync` to add shims everywhere.
+- If the warning names an `AGENTS.md` that links to the file (`linkedBy` under `--json`), that file holds the only copy of those instructions: replace each linking `AGENTS.md` with the file's content first, then remove the file.
+- Sync never deletes a hand-written or modified `CLAUDE.md` itself; see [Instruction Sync](../provider-sync/instruction-sync.md#leftover-claudemd-warnings).
 - If a broken or unreadable instruction path is reported, fix the underlying file or symlink target first; sync will intentionally skip manual-repair cases instead of forcing recovery.
 - If a directory you expected to see is missing from the scan, confirm it is not under `.git`, `.oat`, `.worktrees`, or `node_modules`.
 - Re-run `oat instructions validate` and confirm status is `ok`.

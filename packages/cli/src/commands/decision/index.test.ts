@@ -247,6 +247,36 @@ describe('createDecisionCommand', () => {
     },
   );
 
+  it.each([false, true])(
+    'reports appended decision guidance as a successful outcome in json=%s mode',
+    async (json) => {
+      const { command, capture, initializeDecisionAgentsGuidance } =
+        createHarness();
+      initializeDecisionAgentsGuidance.mockResolvedValueOnce({
+        root: { action: 'appended' },
+        scoped: { action: 'created' },
+      });
+
+      await runCommand(command, 'init', json ? ['--json'] : []);
+
+      if (json) {
+        expect(capture.jsonPayloads[0]).toMatchObject({
+          status: 'ok',
+          guidance: {
+            root: { action: 'appended' },
+            scoped: { action: 'created' },
+          },
+        });
+      } else {
+        expect(capture.info.join('\n')).toContain(
+          'AGENTS.md guidance: root=appended, decisions=created',
+        );
+        expect(capture.warn.join('\n')).not.toMatch(/manual action/i);
+      }
+      expect(process.exitCode).toBe(0);
+    },
+  );
+
   it('regenerates the managed decision index', async () => {
     const { command, capture, regenerateDecisionIndex } = createHarness();
 

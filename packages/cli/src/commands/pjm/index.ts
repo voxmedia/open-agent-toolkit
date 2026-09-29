@@ -10,7 +10,13 @@ import { Command } from 'commander';
 
 import { resolvePjmAdoption } from './adoption';
 import { runPjmDoctorChecks } from './doctor';
-import { initializeRepoReference, INSTRUCTIONS_SYNC_HINT } from './init';
+import {
+  AGENTS_GUIDANCE_APPENDED_MESSAGE,
+  AGENTS_GUIDANCE_MANUAL_MESSAGE,
+  agentsGuidanceRefusalMessage,
+  initializeRepoReference,
+  INSTRUCTIONS_SYNC_HINT,
+} from './init';
 import { migratePjmRepo, readPjmMigrationPrompt } from './migrate';
 import { createPjmRemoteCommand } from './remote/index';
 
@@ -205,12 +211,31 @@ export function createPjmCommand(
             );
           }
           context.logger.info(INSTRUCTIONS_SYNC_HINT);
+          const guidanceResults = Object.values(result.guidance ?? {});
+          if (guidanceResults.some(({ action }) => action === 'appended')) {
+            context.logger.info(AGENTS_GUIDANCE_APPENDED_MESSAGE);
+          }
           if (guidanceIncomplete) {
+            const refusedPatch = guidanceResults.find(
+              ({ manualPatch }) => manualPatch?.appendRefusal !== undefined,
+            )?.manualPatch;
             context.logger.warn(
-              'PJM scaffold and adoption completed; AGENTS.md guidance requires manual action.',
+              refusedPatch?.appendRefusal
+                ? agentsGuidanceRefusalMessage(
+                    refusedPatch.target,
+                    refusedPatch.appendRefusal,
+                  )
+                : AGENTS_GUIDANCE_MANUAL_MESSAGE,
             );
-            for (const guidance of Object.values(result.guidance ?? {})) {
-              for (const line of formatAgentsMdGuidanceResult(guidance)) {
+            // Both writers share one combined patch; print each distinct
+            // guidance result once per command, not once per writer.
+            const printed = new Set<string>();
+            for (const guidance of guidanceResults) {
+              const lines = formatAgentsMdGuidanceResult(guidance);
+              const identity = lines.join('\n');
+              if (lines.length === 0 || printed.has(identity)) continue;
+              printed.add(identity);
+              for (const line of lines) {
                 context.logger.info(line);
               }
             }

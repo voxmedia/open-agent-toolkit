@@ -30,11 +30,14 @@ import {
 } from '@config/dispatch-policy-options';
 import { parseJsonConfig } from '@config/json';
 import {
+  DEFAULT_INSTRUCTION_SYNC_STRATEGY,
+  INSTRUCTION_SYNC_STRATEGIES,
   VALID_DISPATCH_POLICY_MODES,
   VALID_MANAGED_DISPATCH_POLICIES,
   MAX_GATE_TIMEOUT_MS,
   MIN_GATE_TIMEOUT_MS,
   isValidGateTimeoutMs,
+  type InstructionSyncStrategy,
   type OatConfig,
   type OatConfigRead,
   type OatLocalConfig,
@@ -58,6 +61,7 @@ import {
   readOatConfigForDefaultScopeRepair,
   readOatConfigForDocumentationExcludesRepair,
   readOatConfigForInstructionPointerExcludesRepair,
+  readOatConfigForInstructionSyncStrategyRepair,
   readOatConfigWithWarnings,
   readOatLocalConfig,
   readUserConfig,
@@ -136,7 +140,6 @@ type ConfigKey =
   | 'lastPausedProject'
   | 'documentation.config'
   | 'documentation.excludes'
-  | 'documentation.instructionPointerExcludes'
   | 'documentation.requireForProjectCompletion'
   | 'documentation.root'
   | 'documentation.tooling'
@@ -145,6 +148,8 @@ type ConfigKey =
   | 'explainers.defaults.themeBundlePath'
   | 'explainers.defaults.visualProfile'
   | 'git.defaultBranch'
+  | 'instructions.claude.excludes'
+  | 'instructions.claude.shims'
   | 'projects.defaultScope'
   | 'projects.root'
   | PjmRemoteConfigKey
@@ -265,6 +270,9 @@ interface ConfigCommandDependencies {
   readOatConfigForInstructionPointerExcludesRepair: (
     repoRoot: string,
   ) => Promise<OatConfig>;
+  readOatConfigForInstructionSyncStrategyRepair: (
+    repoRoot: string,
+  ) => Promise<OatConfig>;
   readOatConfigWithWarnings: (repoRoot: string) => Promise<OatConfigRead>;
   writeOatConfig: (repoRoot: string, config: OatConfig) => Promise<void>;
   readOatLocalConfig: (repoRoot: string) => Promise<OatLocalConfig>;
@@ -314,13 +322,14 @@ const KEY_ORDER: ConfigKey[] = [
   'documentation.tooling',
   'documentation.config',
   'documentation.excludes',
-  'documentation.instructionPointerExcludes',
   'documentation.requireForProjectCompletion',
   'explainers.defaults.style',
   'explainers.defaults.palette',
   'explainers.defaults.visualProfile',
   'explainers.defaults.themeBundlePath',
   'git.defaultBranch',
+  'instructions.claude.shims',
+  'instructions.claude.excludes',
   'projects.root',
   'projects.defaultScope',
   ...PJM_REMOTE_CONFIG_KEYS,
@@ -450,6 +459,31 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
       'Default branch used by lifecycle PR flows when base branch auto-detection is unavailable.',
   },
   {
+    key: 'instructions.claude.shims',
+    group: 'Shared Repo (.oat/config.json)',
+    file: '.oat/config.json',
+    scope: 'shared repo',
+    type: 'enum',
+    defaultValue: DEFAULT_INSTRUCTION_SYNC_STRATEGY,
+    mutability: 'read/write',
+    owningCommand: `oat config set instructions.claude.shims <${INSTRUCTION_SYNC_STRATEGIES.join('|')}>`,
+    description:
+      'How `oat instructions sync` keeps a CLAUDE.md beside each AGENTS.md, and what `oat instructions validate` checks. The `--strategy` flag overrides it for one run.',
+  },
+  {
+    key: 'instructions.claude.excludes',
+    group: 'Shared Repo (.oat/config.json)',
+    file: '.oat/config.json',
+    scope: 'shared repo',
+    type: 'string[]',
+    defaultValue: 'unset',
+    mutability: 'read/write',
+    owningCommand:
+      'oat config set instructions.claude.excludes <path[,path...]>',
+    description:
+      'Comma-separated repository-relative directories that `oat instructions sync` and `oat instructions validate` must not treat as pointer sites, additive to the documentation content root they already skip. Absolute paths and paths escaping the repository are rejected; an empty value clears the key.',
+  },
+  {
     key: 'autoReviewAtCheckpoints',
     group: 'Shared Repo (.oat/config.json)',
     file: '.oat/config.json',
@@ -508,19 +542,6 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     owningCommand: 'oat config set documentation.excludes <glob[,glob...]>',
     description:
       'Comma-separated globs, relative to the docs directory, excluded from `oat docs generate-index`. Repeated `--exclude` flags extend this list; an empty value clears the key.',
-  },
-  {
-    key: 'documentation.instructionPointerExcludes',
-    group: 'Shared Repo (.oat/config.json)',
-    file: '.oat/config.json',
-    scope: 'shared repo',
-    type: 'string[]',
-    defaultValue: 'unset',
-    mutability: 'read/write',
-    owningCommand:
-      'oat config set documentation.instructionPointerExcludes <path[,path...]>',
-    description:
-      'Comma-separated repository-relative directories that `oat instructions sync` and `oat instructions validate` must not treat as pointer sites, additive to the documentation content root they already skip. Absolute paths and paths escaping the repository are rejected; an empty value clears the key.',
   },
   {
     key: 'documentation.requireForProjectCompletion',
@@ -1206,6 +1227,7 @@ const DEFAULT_DEPENDENCIES: ConfigCommandDependencies = {
   readOatConfigForDefaultScopeRepair,
   readOatConfigForDocumentationExcludesRepair,
   readOatConfigForInstructionPointerExcludesRepair,
+  readOatConfigForInstructionSyncStrategyRepair,
   readOatConfigWithWarnings,
   writeOatConfig,
   readOatLocalConfig,
@@ -1308,7 +1330,7 @@ function normalizeSharedRoot(value: string): string {
  * as "clear the key" rather than as an error.
  */
 /**
- * Parse `documentation.instructionPointerExcludes` from one comma-separated
+ * Parse `instructions.claude.excludes` from one comma-separated
  * value into the shape the loader and the consumer already agree on.
  *
  * Every entry goes through `normalizeExcludedPaths`, the same function
@@ -1337,7 +1359,7 @@ function parseInstructionPointerExcludes(rawValue: string): string[] {
     const [normalizedEntry] = normalizeExcludedPaths([entry]);
     if (normalizedEntry === undefined || WINDOWS_DRIVE_PATH_RE.test(entry)) {
       throw new Error(
-        `Invalid documentation.instructionPointerExcludes entry ${JSON.stringify(
+        `Invalid instructions.claude.excludes entry ${JSON.stringify(
           entry,
         )}: entries must be repository-relative paths inside the repository. Absolute paths and paths escaping the repository cannot exclude anything.`,
       );
@@ -1397,6 +1419,7 @@ function parseExplainerValue(
 
 const WORKFLOW_ENUM_VALUES = {
   'projects.defaultScope': PROJECT_SCOPES,
+  'instructions.claude.shims': INSTRUCTION_SYNC_STRATEGIES,
   'workflow.hillCheckpointDefault': ['every', 'final'],
   'workflow.postImplementSequence': ['wait', 'summary', 'pr', 'docs-pr'],
   'workflow.reviewExecutionModel': ['subagent', 'inline', 'fresh-session'],
@@ -1464,6 +1487,7 @@ function isStructuralKey(key: ConfigKey): boolean {
     key === 'worktrees.root' ||
     key === 'git.defaultBranch' ||
     key.startsWith('documentation.') ||
+    key.startsWith('instructions.') ||
     key.startsWith('archive.') ||
     key.startsWith('tools.')
   );
@@ -1510,7 +1534,7 @@ function validateSurfaceForKey(key: ConfigKey, surface: ConfigSurface): void {
   if (isStructuralKey(key)) {
     if (surface !== 'shared') {
       throw new Error(
-        `Cannot set structural key '${key}' at '${surface}' scope. Structural keys (projects.root, worktrees.root, git.*, documentation.*, archive.*, tools.*) can only be set at shared scope (.oat/config.json).`,
+        `Cannot set structural key '${key}' at '${surface}' scope. Structural keys (projects.root, worktrees.root, git.*, documentation.*, instructions.*, archive.*, tools.*) can only be set at shared scope (.oat/config.json).`,
       );
     }
     return;
@@ -2480,11 +2504,47 @@ async function setConfigValue(
   const config =
     key === 'documentation.excludes'
       ? await dependencies.readOatConfigForDocumentationExcludesRepair(repoRoot)
-      : key === 'documentation.instructionPointerExcludes'
+      : key === 'instructions.claude.excludes'
         ? await dependencies.readOatConfigForInstructionPointerExcludesRepair(
             repoRoot,
           )
-        : await dependencies.readOatConfig(repoRoot);
+        : key === 'instructions.claude.shims'
+          ? await dependencies.readOatConfigForInstructionSyncStrategyRepair(
+              repoRoot,
+            )
+          : await dependencies.readOatConfig(repoRoot);
+
+  if (key.startsWith('instructions.claude.')) {
+    const claude = { ...config.instructions?.claude };
+
+    if (key === 'instructions.claude.excludes') {
+      const excludes = parseInstructionPointerExcludes(rawValue);
+      if (excludes.length === 0) {
+        delete claude.excludes;
+      } else {
+        claude.excludes = excludes;
+      }
+    } else {
+      claude.shims = parseWorkflowValue(
+        key,
+        rawValue,
+      ) as InstructionSyncStrategy;
+    }
+
+    await dependencies.writeOatConfig(repoRoot, {
+      ...config,
+      instructions: { ...config.instructions, claude },
+    });
+
+    return {
+      key,
+      value:
+        key === 'instructions.claude.excludes'
+          ? (claude.excludes ?? null)
+          : (claude.shims ?? null),
+      source: 'shared',
+    };
+  }
 
   if (key.startsWith('documentation.')) {
     const doc = { ...config.documentation };
@@ -2504,13 +2564,6 @@ async function setConfigValue(
       } else {
         doc.excludes = excludes;
       }
-    } else if (key === 'documentation.instructionPointerExcludes') {
-      const excludes = parseInstructionPointerExcludes(rawValue);
-      if (excludes.length === 0) {
-        delete doc.instructionPointerExcludes;
-      } else {
-        doc.instructionPointerExcludes = excludes;
-      }
     } else if (key === 'documentation.requireForProjectCompletion') {
       doc.requireForProjectCompletion =
         rawValue.trim().toLowerCase() === 'true';
@@ -2526,11 +2579,9 @@ async function setConfigValue(
         ? String(doc.requireForProjectCompletion ?? false)
         : key === 'documentation.excludes'
           ? (doc.excludes ?? null)
-          : key === 'documentation.instructionPointerExcludes'
-            ? (doc.instructionPointerExcludes ?? null)
-            : ((doc[
-                key.replace('documentation.', '') as keyof typeof doc
-              ] as string) ?? null);
+          : ((doc[
+              key.replace('documentation.', '') as keyof typeof doc
+            ] as string) ?? null);
 
     return {
       key,
@@ -2776,6 +2827,7 @@ function configPathForKey(key: ConfigKey): string[] {
   if (
     key.startsWith('explainers.') ||
     key.startsWith('documentation.') ||
+    key.startsWith('instructions.') ||
     key.startsWith('archive.') ||
     isPjmRemoteConfigKey(key)
   ) {
@@ -3050,13 +3102,17 @@ async function removeFromSurface(
   const sharedConfig =
     key === 'documentation.excludes'
       ? await dependencies.readOatConfigForDocumentationExcludesRepair(repoRoot)
-      : key === 'documentation.instructionPointerExcludes'
+      : key === 'instructions.claude.excludes'
         ? await dependencies.readOatConfigForInstructionPointerExcludesRepair(
             repoRoot,
           )
-        : key === 'projects.defaultScope'
-          ? await dependencies.readOatConfigForDefaultScopeRepair(repoRoot)
-          : await dependencies.readOatConfig(repoRoot);
+        : key === 'instructions.claude.shims'
+          ? await dependencies.readOatConfigForInstructionSyncStrategyRepair(
+              repoRoot,
+            )
+          : key === 'projects.defaultScope'
+            ? await dependencies.readOatConfigForDefaultScopeRepair(repoRoot)
+            : await dependencies.readOatConfig(repoRoot);
   const { next, removed } = removeConfigPath(
     sharedConfig as unknown as Record<string, unknown>,
     path,

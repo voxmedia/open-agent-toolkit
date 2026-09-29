@@ -226,6 +226,48 @@ describe('createDocsInitCommand', () => {
     },
   );
 
+  it.each([false, true])(
+    'reports appended guidance as a successful outcome in json=%s mode',
+    async (json) => {
+      const { command, capture, upsertAgentsMdSection } = createHarness({
+        interactive: false,
+      });
+      upsertAgentsMdSection.mockResolvedValueOnce({ action: 'appended' });
+
+      await runCommand(
+        command,
+        [
+          '--framework',
+          'mkdocs',
+          '--app-name',
+          'docs',
+          '--target-dir',
+          'apps/docs',
+          '--description',
+          '',
+          '--format',
+          'none',
+          '--yes',
+        ],
+        json ? ['--json'] : [],
+      );
+
+      if (json) {
+        expect(capture.jsonPayloads).toHaveLength(1);
+        expect(capture.jsonPayloads[0]).toMatchObject({
+          status: 'ok',
+          guidance: { action: 'appended' },
+        });
+      } else {
+        expect(capture.info.join('\n')).toContain(
+          'AGENTS.md docs section appended.',
+        );
+        expect(capture.warn.join('\n')).not.toMatch(/manual-required/i);
+      }
+      expect(process.exitCode).toBe(0);
+    },
+  );
+
   it('prints single-package next steps when repo shape is single-package', async () => {
     const capture = createLoggerCapture();
     const command = createDocsInitCommand({

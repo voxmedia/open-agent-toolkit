@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Glob, Grep, Bash(git:*), Bash(oat:*), AskUserQuestion
 metadata:
-  version: 1.4.2
+  version: 1.4.3
 ---
 
 # Progress Router
@@ -276,7 +276,7 @@ Routing matrix by mode:
 | oat_phase | oat_phase_status | Next Skill                                                                                                                          |
 | --------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | discovery | in_progress      | Continue `oat-project-discover`                                                                                                     |
-| discovery | complete         | `oat-project-plan`                                                                                                                  |
+| discovery | complete         | `oat-project-quick-start`                                                                                                           |
 | plan      | in_progress      | Continue `oat-project-quick-start` when the plan is not implementation-ready; otherwise `oat-project-implement`                     |
 | plan      | complete         | `oat-project-implement` when the plan is implementation-ready; otherwise `oat-project-quick-start`                                  |
 | implement | in_progress      | Continue `oat-project-implement`. If drift detected (see drift detection above), also mention `oat-project-reconcile` as an option. |

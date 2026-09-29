@@ -147,7 +147,12 @@ async function applyProjectGuidance(
     }
     return {
       ...plan,
-      action: result.action === 'created' ? 'create' : 'no-change',
+      action:
+        result.action === 'created'
+          ? 'create'
+          : result.action === 'appended'
+            ? 'appended'
+            : 'no-change',
       reason: `Accepted project guidance ${result.action}. Capability placement and PJM adoption were unchanged.`,
     };
   } catch (error) {

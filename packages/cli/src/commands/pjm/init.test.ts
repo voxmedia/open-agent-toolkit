@@ -144,23 +144,65 @@ describe('initializeRepoReference', () => {
     expect(rootGuidance).not.toContain('oat decision init');
   });
 
-  it('preserves an existing root file and returns an adoption guidance patch', async () => {
+  it('preserves an existing root file and appends the absent adoption guidance', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-pjm-init-'));
     tempDirs.push(root);
     const assetsRoot = join(root, 'assets');
     const repoRoot = join(root, 'repo');
     await seedTemplates(join(assetsRoot, 'templates'));
-    await writeFile(
-      join(root, 'AGENTS.md'),
-      '<!-- OAT tools -->\nTool guidance\n<!-- END OAT tools -->\n',
-      'utf8',
-    );
+    const toolsGuidance =
+      '<!-- OAT tools -->\nTool guidance\n<!-- END OAT tools -->\n';
+    await writeFile(join(root, 'AGENTS.md'), toolsGuidance, 'utf8');
 
     const result = await initializeRepoReference({ assetsRoot, repoRoot });
 
     const rootGuidance = await readFile(join(root, 'AGENTS.md'), 'utf8');
-    expect(rootGuidance).toBe(
-      '<!-- OAT tools -->\nTool guidance\n<!-- END OAT tools -->\n',
+    expect(
+      rootGuidance.startsWith(
+        `${toolsGuidance}\n<!-- OAT project-management -->\n`,
+      ),
+    ).toBe(true);
+    expect(rootGuidance).toMatch(
+      /<!-- END OAT project-management -->\n\n<!-- OAT decisions -->\n/,
+    );
+    expect(rootGuidance.endsWith('<!-- END OAT decisions -->\n')).toBe(true);
+    expect(result.guidance).toEqual({
+      projectManagement: { action: 'appended' },
+      decisions: { action: 'appended' },
+    });
+
+    const repeated = await initializeRepoReference({ assetsRoot, repoRoot });
+    expect(repeated.guidance).toEqual({
+      projectManagement: { action: 'no-change' },
+      decisions: { action: 'no-change' },
+    });
+    await expect(readFile(join(root, 'AGENTS.md'), 'utf8')).resolves.toBe(
+      rootGuidance,
+    );
+  });
+
+  it('preserves different existing adoption blocks and returns one guidance patch', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-pjm-init-'));
+    tempDirs.push(root);
+    const assetsRoot = join(root, 'assets');
+    const repoRoot = join(root, 'repo');
+    await seedTemplates(join(assetsRoot, 'templates'));
+    const existing = [
+      '<!-- OAT project-management -->',
+      'stale PJM',
+      '<!-- END OAT project-management -->',
+      '',
+      '<!-- OAT decisions -->',
+      'stale decisions',
+      '<!-- END OAT decisions -->',
+      '',
+    ].join('\n');
+    await writeFile(join(root, 'AGENTS.md'), existing, 'utf8');
+
+    const result = await initializeRepoReference({ assetsRoot, repoRoot });
+
+    await expect(readFile(join(root, 'AGENTS.md'), 'utf8')).resolves.toBe(
+      existing,
     );
     expect(result.guidance.projectManagement).toMatchObject({
       action: 'manual-required',
@@ -217,6 +259,16 @@ describe('initializeRepoReference', () => {
   it('exposes a sync next-step hint mentioning oat instructions sync and --dry-run', () => {
     expect(INSTRUCTIONS_SYNC_HINT).toContain('oat instructions sync');
     expect(INSTRUCTIONS_SYNC_HINT).toContain('--dry-run');
+  });
+
+  it('does not promise CLAUDE.md shims, which are opt-in', () => {
+    expect(INSTRUCTIONS_SYNC_HINT).not.toContain('to create CLAUDE.md shims');
+    expect(INSTRUCTIONS_SYNC_HINT).toContain(
+      'No CLAUDE.md shims are created by default',
+    );
+    expect(INSTRUCTIONS_SYNC_HINT).toContain(
+      '`oat config set instructions.claude.shims pointer`',
+    );
   });
 
   it('does not overwrite existing canonical docs and reports them as skipped', async () => {

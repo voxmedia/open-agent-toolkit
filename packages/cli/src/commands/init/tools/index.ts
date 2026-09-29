@@ -909,7 +909,12 @@ async function applyProjectGuidance(
     }
     return {
       ...plan,
-      action: sectionResult.action === 'created' ? 'create' : 'no-change',
+      action:
+        sectionResult.action === 'created'
+          ? 'create'
+          : sectionResult.action === 'appended'
+            ? 'appended'
+            : 'no-change',
       reason: `Accepted project guidance ${sectionResult.action}. Capability placement and PJM adoption were unchanged.`,
     };
   } catch (error) {
@@ -919,6 +924,84 @@ async function applyProjectGuidance(
       reason: `Accepted project guidance was blocked: ${formatAgentsMdMutationFailure(error)}`,
     };
   }
+}
+
+export interface RealizedGuidanceState {
+  packs: ProjectGuidancePack[];
+  /** Project skills that belong to no OAT pack, by name. */
+  otherProjectSkills: string[];
+}
+
+async function realizedGuidanceState(
+  context: CommandContext,
+  repoRoot: string | null,
+  assetsRoot: string,
+  dependencies: InitToolsDependencies,
+): Promise<RealizedGuidanceState> {
+  const userRoot = dependencies.resolveScopeRoot(
+    'user',
+    context.cwd,
+    context.home,
+  );
+  const finalPackStates = await loadInstalledPackStates(
+    repoRoot,
+    userRoot,
+    assetsRoot,
+    dependencies,
+  );
+  const packs = ALL_TOOL_PACKS.flatMap((pack) => {
+    const scope = finalPackStates[pack].location;
+    return scope === 'not-installed'
+      ? []
+      : [{ pack, scope } satisfies ProjectGuidancePack];
+  });
+  return {
+    packs,
+    otherProjectSkills: await otherProjectSkillNames(
+      repoRoot,
+      assetsRoot,
+      dependencies,
+    ),
+  };
+}
+
+/**
+ * Project skills whose names belong to no bundled pack. Pack membership, not
+ * directory existence, decides what is "other".
+ */
+async function otherProjectSkillNames(
+  repoRoot: string | null,
+  assetsRoot: string,
+  dependencies: InitToolsDependencies,
+): Promise<string[]> {
+  if (!repoRoot) return [];
+  const projectTools = await dependencies.scanTools({
+    scope: 'project',
+    scopeRoot: repoRoot,
+    assetsRoot,
+  });
+  return projectTools
+    .filter(({ type, pack }) => type === 'skill' && pack === 'custom')
+    .map(({ name }) => name)
+    .sort();
+}
+
+/**
+ * Reads the realized pack placement (and unrelated project skills) the OAT
+ * tools block describes. Read-only: it inventories and scans installed state
+ * and never installs, upgrades, or writes.
+ */
+export async function loadRealizedGuidanceState(
+  context: CommandContext,
+  projectRoot: string | null,
+  overrides: Partial<InitToolsDependencies> = {},
+): Promise<RealizedGuidanceState> {
+  const dependencies: InitToolsDependencies = {
+    ...DEFAULT_DEPENDENCIES,
+    ...overrides,
+  };
+  const assetsRoot = await dependencies.resolveAssetsRoot();
+  return realizedGuidanceState(context, projectRoot, assetsRoot, dependencies);
 }
 
 async function planAndApplyProjectGuidanceAfterInstall(
@@ -941,26 +1024,28 @@ async function planAndApplyProjectGuidanceAfterInstall(
     const repoRoot =
       installedProjectRoot ??
       (await dependencies.resolveProjectRoot(context.cwd));
-    const userRoot = dependencies.resolveScopeRoot(
-      'user',
-      context.cwd,
-      context.home,
-    );
-    const finalPackStates = await loadInstalledPackStates(
+    const realized = await realizedGuidanceState(
+      context,
       repoRoot,
-      userRoot,
       assetsRoot,
       dependencies,
     );
-    const realizedPacks = ALL_TOOL_PACKS.flatMap((pack) => {
-      const scope = finalPackStates[pack].location;
-      return scope === 'not-installed'
-        ? []
-        : [{ pack, scope } satisfies ProjectGuidancePack];
-    });
+    if (realized.packs.length === 0) {
+      // An empty block would be a stale placeholder that turns the first real
+      // pack install into a manual patch, so write nothing.
+      return {
+        ...initialPlan,
+        repoRoot,
+        target: join(repoRoot, 'AGENTS.md'),
+        action: 'skipped',
+        reason:
+          'No OAT tool pack is installed, so there is no OAT tools guidance to write; AGENTS.md was left unchanged. Run `oat tools install <pack> --project-guidance` or `oat init --setup --project-guidance` to install packs with guidance.',
+      };
+    }
     const completePlan = await dependencies.planProjectGuidance({
       repoRoot,
-      packs: realizedPacks,
+      packs: realized.packs,
+      otherProjectSkills: realized.otherProjectSkills,
       explicitChoice: true,
       interactive: false,
       confirmAction: dependencies.confirmAction,
@@ -973,6 +1058,31 @@ async function planAndApplyProjectGuidanceAfterInstall(
       reason: `Accepted project guidance was blocked: ${formatAgentsMdMutationFailure(error)}`,
     };
   }
+}
+
+/**
+ * Plans and applies the OAT tools guidance block for the packs already
+ * installed, without installing or upgrading anything. `oat init` uses it to
+ * honor `--project-guidance` when guided setup does not run.
+ */
+export async function applyProjectGuidanceForInstalledPacks(
+  context: CommandContext,
+  projectRoot: string | null,
+  explicitChoice: boolean,
+  overrides: Partial<InitToolsDependencies> = {},
+): Promise<AgentsGuidancePlan> {
+  const dependencies: InitToolsDependencies = {
+    ...DEFAULT_DEPENDENCIES,
+    ...overrides,
+  };
+  const assetsRoot = await dependencies.resolveAssetsRoot();
+  return planAndApplyProjectGuidanceAfterInstall(
+    context,
+    assetsRoot,
+    projectRoot,
+    explicitChoice,
+    dependencies,
+  );
 }
 
 function initProviderVisibility(
@@ -1580,6 +1690,11 @@ export async function runInitTools(
     const plannedGuidance = await dependencies.planProjectGuidance({
       repoRoot: projectRoot,
       packs: realizedPacks,
+      otherProjectSkills: await otherProjectSkillNames(
+        projectRoot,
+        assetsRoot,
+        dependencies,
+      ),
       explicitChoice: explicitProjectGuidance,
       interactive: context.interactive,
       confirmAction: dependencies.confirmAction,
@@ -1786,10 +1901,9 @@ function createReconciledPackCommand(
   };
   const base = new Command(pack).description(descriptions[pack]);
   const scopedCommand = pack === 'core' ? base : withScopeOption(base);
-  const packCommand =
-    pack === 'workflows'
-      ? withProjectGuidanceOptions(scopedCommand)
-      : scopedCommand;
+  // Every pack command acts on --project-guidance: the OAT tools block
+  // describes every installed pack, so any pack install can plan it.
+  const packCommand = withProjectGuidanceOptions(scopedCommand);
   return packCommand
     .allowUnknownOption(false)
     .action(async (_options: unknown, command: Command) => {
@@ -1800,10 +1914,7 @@ function createReconciledPackCommand(
       let selection: PackLifecycleOutcome['selection'] | null = null;
       let providerContexts: ProviderScopeContext[] = [];
       try {
-        const explicitProjectGuidance =
-          pack === 'workflows'
-            ? commandProjectGuidanceChoice(command)
-            : undefined;
+        const explicitProjectGuidance = commandProjectGuidanceChoice(command);
         const assetsRoot = await dependencies.resolveAssetsRoot();
         const explicitScope =
           command.getOptionValueSourceWithGlobals('scope') === 'cli';
@@ -1936,8 +2047,10 @@ function createReconciledPackCommand(
             .filter(({ plan }) => plan.operations.length > 0)
             .map(({ request }) => request.scope),
         );
+        // `workflows` offers guidance on every run (prompting when
+        // interactive); other packs plan it only when the flag is given.
         const projectGuidance =
-          pack === 'workflows'
+          pack === 'workflows' || explicitProjectGuidance !== undefined
             ? await planAndApplyProjectGuidanceAfterInstall(
                 context,
                 assetsRoot,

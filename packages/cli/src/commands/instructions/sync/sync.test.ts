@@ -5,6 +5,7 @@ import {
 } from '@commands/__tests__/helpers';
 import type {
   InstructionEntry,
+  InstructionSyncStrategy,
   InstructionsSyncCommandDependencies,
 } from '@commands/instructions/instructions.types';
 import { EXPECTED_CLAUDE_CONTENT } from '@commands/instructions/instructions.utils';
@@ -21,12 +22,15 @@ interface HarnessOptions {
   excludedPaths?: string[];
   effectiveExcludedPaths?: string[];
   exclusionWarnings?: string[];
+  configuredStrategy?: InstructionSyncStrategy;
+  leftoverClaudeFiles?: string[];
 }
 
 function createHarness(options: HarnessOptions = {}): {
   capture: LoggerCapture;
   command: Command;
   lstat: ReturnType<typeof vi.fn>;
+  readConfiguredInstructionSyncStrategy: ReturnType<typeof vi.fn>;
   readFile: ReturnType<typeof vi.fn>;
   removeFile: ReturnType<typeof vi.fn>;
   resolveInstructionPointerExcludes: ReturnType<typeof vi.fn>;
@@ -67,6 +71,16 @@ function createHarness(options: HarnessOptions = {}): {
     },
   );
 
+  // Injected for the same reason: the fake cwd has no `.oat/config.json`, and
+  // the production reader must not consult the developer's filesystem. These
+  // unit cases exercise the pointer write paths, so the harness configures
+  // `pointer` unless a case sets `configuredStrategy` itself (including to
+  // undefined, to observe the built-in default).
+  const configuredStrategy =
+    'configuredStrategy' in options ? options.configuredStrategy : 'pointer';
+  const readConfiguredInstructionSyncStrategy = vi.fn(
+    async () => configuredStrategy,
+  );
   const writeFile = vi.fn(async () => undefined);
   const lstat = vi.fn(async () => {
     throw Object.assign(new Error('missing'), { code: 'ENOENT' });
@@ -86,7 +100,16 @@ function createHarness(options: HarnessOptions = {}): {
       interactive: false,
       logger: capture.logger,
     }),
+    // The leftover walk is read-only but still must not touch the fake cwd.
+    findLeftoverClaudeFiles: vi.fn(async () =>
+      (options.leftoverClaudeFiles ?? []).map((path) => ({
+        path,
+        linkedBy: [],
+        exactShim: false,
+      })),
+    ),
     lstat,
+    readConfiguredInstructionSyncStrategy,
     readFile,
     removeFile,
     resolveInstructionPointerExcludes,
@@ -100,6 +123,7 @@ function createHarness(options: HarnessOptions = {}): {
     capture,
     command,
     lstat,
+    readConfiguredInstructionSyncStrategy,
     readFile,
     removeFile,
     resolveInstructionPointerExcludes,
@@ -738,5 +762,63 @@ describe('createInstructionsSyncCommand', () => {
       excludedPaths: [],
       strategy: 'copy',
     });
+  });
+
+  it('applies the configured strategy when --strategy is omitted', async () => {
+    const { capture, command, readConfiguredInstructionSyncStrategy } =
+      createHarness({
+        configuredStrategy: 'copy',
+        entries: [
+          {
+            agentsPath: '/tmp/workspace/AGENTS.md',
+            claudePath: '/tmp/workspace/CLAUDE.md',
+            status: 'missing',
+            detail: 'CLAUDE.md missing',
+          },
+        ],
+      });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--json'],
+      commandArgs: ['--dry-run'],
+    });
+
+    expect(readConfiguredInstructionSyncStrategy).toHaveBeenCalledWith(
+      '/tmp/workspace',
+    );
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      strategy: 'copy',
+      actions: [{ type: 'create', reason: 'missing CLAUDE.md hard copy' }],
+    });
+  });
+
+  it('lets --strategy override the configured strategy for one run', async () => {
+    const { capture, command, scanInstructionFiles } = createHarness({
+      configuredStrategy: 'copy',
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--json'],
+      commandArgs: ['--dry-run', '--strategy', 'symlink'],
+    });
+
+    expect(scanInstructionFiles).toHaveBeenCalledWith('/tmp/workspace', {
+      excludedPaths: [],
+      strategy: 'symlink',
+    });
+    expect(capture.jsonPayloads[0]).toMatchObject({ strategy: 'symlink' });
+  });
+
+  it('reports the built-in default when neither flag nor config names one', async () => {
+    const { capture, command } = createHarness({
+      configuredStrategy: undefined,
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--json'],
+      commandArgs: ['--dry-run'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({ strategy: 'none' });
   });
 });

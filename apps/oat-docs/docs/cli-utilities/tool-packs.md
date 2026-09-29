@@ -11,7 +11,7 @@ This page covers CLI commands that manage bundled OAT tool packs and installed O
 
 - What it does: explains how bundled OAT packs are installed, updated, inspected, and removed.
 - When to use it: when you need to add capabilities to a repo, update installed skills, or understand which packs own which tools.
-- Primary commands: `oat tools list`, `oat tools has`, `oat tools install`, `oat tools update`, `oat tools remove`, `oat tools migrate`
+- Primary commands: `oat tools list`, `oat tools has`, `oat tools guidance`, `oat tools install`, `oat tools update`, `oat tools remove`, `oat tools migrate`
 - Coming from an earlier CLI: read [Upgrading from an earlier CLI](#upgrading-from-an-earlier-cli) for the changed install-scope default, PJM adoption gating, sparse `tools` config map, and per-pack `--json` shape
 
 ## Bundled packs at a glance
@@ -243,16 +243,31 @@ Tool-pack setup separates three decisions that do not imply one another:
    user scope, or both. Placement controls where the capability is available;
    it does not authorize a repository `AGENTS.md` edit.
 2. **Project guidance** is an explicit choice to create an absent root
-   `AGENTS.md` or print a manual patch for its managed `OAT tools` section. Use
+   `AGENTS.md`, append an absent managed `OAT tools` section to an existing
+   one, or print a manual patch when that section exists but differs. Use
    `--project-guidance` to accept or `--no-project-guidance` to decline on
-   `oat init --setup`, `oat init tools`, and `oat tools install` flows. The
+   `oat init`, `oat init tools`, and `oat tools install`, including every
+   per-pack subcommand such as `oat tools install docs --project-guidance`:
+   the `OAT tools` block describes every installed pack, so any pack install
+   can write it. The `workflows` pack also offers guidance without the flag;
+   other pack commands plan it only when the flag is given. `oat init` without
+   `--setup` applies an explicit `--project-guidance` for the packs already
+   installed, because guided setup is not there to do it; with no pack
+   installed it writes nothing, reports `skipped` with a warning, and exits 0. The
    interactive prompt defaults to decline. Non-interactive runs perform no
    guidance write unless `--project-guidance` is present and report the exact
    opt-in command instead. When `AGENTS.md` already exists or is a contained
-   symlink, accepted guidance performs zero writes and prints the same
-   repository-relative, copy-pasteable managed block on every run. The patch
-   describes the complete realized project-and-user pack inventory and tells
-   the operator to remove a legacy `OAT workflows` block manually when needed.
+   symlink to a file inside the repository, accepted guidance appends an
+   absent `OAT tools` section with one append-only write (reported as
+   `appended`, exit 0) that never truncates, renames, or rewrites existing
+   bytes. A file with more than one hard link is never appended to; it gets
+   the manual patch instead, as does a file OAT cannot write (the patch names
+   the cause). A matching section is a no-op. A section that is present but
+   differs, or a legacy `OAT workflows` block that must be removed, gets zero
+   writes and the same repository-relative, copy-pasteable managed block on
+   every run, with a non-zero exit. The block describes the complete realized
+   project-and-user pack inventory and tells the operator to remove a legacy
+   `OAT workflows` block manually when needed.
 3. **PJM adoption** is the repository decision to use project-management state.
    Make it separately with `oat pjm init`; neither installing the
    `project-management` pack nor accepting tool guidance adopts PJM.
@@ -467,7 +482,7 @@ neither recognized legacy input nor a complete current layout is skipped with
 an `oat pjm init` recovery. `--print-prompt` only reads the bundled prompt and
 does not inspect adoption or modify the repository.
 
-Decision records still require repository PJM adoption. Run `oat pjm init` first: like every repository-mutating PJM command, `oat decision init` fails closed in an unadopted repository, writes nothing, and returns `oat pjm init` as the recovery. Once the repository is adopted, `oat decision init` scaffolds only the decision surface — the decision directory, generated index, and decision-specific AGENTS guidance — without touching current state, roadmap, or backlog artifacts. It does not require the `project-management` pack. A missing AGENTS file can be created exclusively; an existing file or symlink is left byte-for-byte unchanged and receives a manual decision-guidance patch. If the pack is installed later, project-management guidance remains a separate managed section so the decision instructions stay independently reusable.
+Decision records still require repository PJM adoption. Run `oat pjm init` first: like every repository-mutating PJM command, `oat decision init` fails closed in an unadopted repository, writes nothing, and returns `oat pjm init` as the recovery. Once the repository is adopted, `oat decision init` scaffolds only the decision surface — the decision directory, generated index, and decision-specific AGENTS guidance — without touching current state, roadmap, or backlog artifacts. It does not require the `project-management` pack. A missing AGENTS file can be created exclusively; an existing file or contained symlink target without an `OAT decisions` section gets that section appended with one append-only write that leaves every existing byte in place, and a section that exists but differs is left byte-for-byte unchanged and receives a manual decision-guidance patch. If the pack is installed later, project-management guidance remains a separate managed section so the decision instructions stay independently reusable.
 
 `oat pjm init` is idempotent and non-destructive. Existing reference docs are skipped and left unchanged, so curated repo state is not overwritten on repeated runs.
 
@@ -657,6 +672,41 @@ oat tools has brainstorm --scope user
 oat --json tools has workflows
 ```
 
+### `oat tools guidance`
+
+Purpose:
+
+- Print the managed `OAT tools` `AGENTS.md` block for the packs installed now,
+  without installing, upgrading, or writing anything
+
+Key behavior:
+
+- Reads installed pack placement at project and user scope (user scope only
+  outside a Git repository) and renders the same block, markers included,
+  that `--project-guidance` would create or append
+- Never touches `AGENTS.md`, pack assets, or config, so it is the safe way to
+  obtain the block for a manual edit, such as when an existing `OAT tools`
+  section differs and guidance prints a manual patch
+- The block names `.agents/skills/` only when a pack is installed at project
+  scope and `~/.agents/skills/` only when a pack is installed at user scope,
+  each with its packs, deciding by pack membership rather than by whether the
+  directory exists. Project skills that belong to no OAT pack are described
+  on a separate line, never as pack skills
+- `--json` returns `status`, `sectionKey` (`tools`), `target` (`AGENTS.md`),
+  `packs` (each `pack` with its `scope`), `otherProjectSkills` (names of
+  project skills that belong to no pack), and `managedBlock`
+- With no OAT pack installed it prints no block, only a note that there is
+  nothing to add (an empty block would be a stale placeholder); `--json`
+  returns `status: "no-packs"`, `managedBlock: null`, and a `message`
+- Exits `0` on success and `1` when pack state cannot be read
+
+Examples:
+
+```bash
+oat tools guidance
+oat --json tools guidance
+```
+
 ### `oat tools install`
 
 Purpose:
@@ -685,8 +735,8 @@ Key behavior:
   JSON output adds `adoptedPacks` only when the list is non-empty. This is pack
   intent reconciliation, not repository PJM adoption
 - A user-only capability install needs no Git repository and performs no repository writes unless `--project-guidance` explicitly requests the separate repository guidance update
-- Offers repository `AGENTS.md` guidance independently of capability scope. Pass `--project-guidance` to create an absent file or print a manual managed `OAT tools` patch for an existing file/symlink, or `--no-project-guidance` to decline; the interactive prompt defaults to decline and non-interactive runs write nothing without the explicit opt-in
-- Repository `AGENTS.md` guidance for project management is owned by adoption, not by pack placement. Installing the `project-management` pack never writes the section. `oat pjm init` creates guidance only when the root file is absent; otherwise it completes scaffold/adoption and prints a manual patch without changing the existing file or symlink
+- Offers repository `AGENTS.md` guidance independently of capability scope. Pass `--project-guidance` to create an absent file, append an absent managed `OAT tools` section to an existing file/symlink target, or print a manual patch for a section that exists but differs, or `--no-project-guidance` to decline; the interactive prompt defaults to decline and non-interactive runs write nothing without the explicit opt-in
+- Repository `AGENTS.md` guidance for project management is owned by adoption, not by pack placement. Installing the `project-management` pack never writes the section. `oat pjm init` creates the root file when it is absent and appends the absent `OAT project-management` and `OAT decisions` sections to an existing file (reported as `appended`, exit 0). A section that exists but differs from the managed version, or an `AGENTS.md` OAT will not append to (more than one hard link, or not writable), completes scaffold/adoption with one combined manual patch, printed once, and a non-zero exit, without changing the existing file or symlink; the header names the refusal cause when OAT could not append
 - Interactive runs can prompt to update selected outdated skills
 - Successful installs report the final scope chosen for each pack, including `project + user` when a pack is installed in both, and auto-sync only the scopes actually changed by the install so untouched scopes are never re-synced or pruned
 - Install-triggered auto-sync limits removal planning to the canonical entries from the pack that was just installed, so stale manifest drift in unrelated packs does not delete other provider views

@@ -1,19 +1,22 @@
 ---
 title: Instruction Sync
-description: Project-scoped AGENTS.md and CLAUDE.md validation, repair strategies, and Claude-only adoption.
+description: Project-scoped AGENTS.md and CLAUDE.md validation, the no-shim default, opt-in shim strategies, and Claude-only adoption.
 ---
 
 # Instruction Sync
 
-`oat instructions ...` is the project-scoped lane for keeping canonical `AGENTS.md` files aligned with sibling `CLAUDE.md` files throughout a repository tree.
+`oat instructions ...` is the project-scoped lane for keeping canonical `AGENTS.md` files and any sibling `CLAUDE.md` files consistent throughout a repository tree.
+
+By default OAT keeps **no** `CLAUDE.md` shims: Claude Code reads `AGENTS.md` itself (see [Claude Code and AGENTS.md](#claude-code-and-agentsmd)). A repository opts back into shims with `instructions.claude.shims`.
 
 Use it when you want OAT to:
 
-- validate nested `AGENTS.md` / `CLAUDE.md` pairs
-- repair missing or drifted `CLAUDE.md` files with a chosen strategy
+- validate nested `AGENTS.md` files, and their `CLAUDE.md` shims when a shim strategy is configured
+- remove the `CLAUDE.md` shims OAT created, under the default, once no `CLAUDE.md` with its own content remains, and warn about any `CLAUDE.md` that would hide `AGENTS.md` from Claude Code
+- create or repair `CLAUDE.md` shims with a chosen strategy, when you opt in
 - adopt Claude-only directories back into canonical `AGENTS.md`
 
-This command group is intentionally separate from manifest-backed provider sync. It operates on repo-local instruction files, not provider view manifests.
+This command group is intentionally separate from manifest-backed provider sync. It operates on repo-local instruction files, not provider view manifests. The shim setting affects only `oat instructions`: `oat sync` writes the same rules (including `.claude/rules`), skills, and agents under every strategy and never creates or removes a `CLAUDE.md`, and `oat instructions sync` leaves synced `.claude/rules` files alone.
 
 ## Scope
 
@@ -22,8 +25,9 @@ Instruction sync is currently project-only.
 - It scans the current repository recursively.
 - It supports nested directories all the way down the tree.
 - It skips provider-irrelevant or local-only roots such as `.git`, `.oat`, `.worktrees`, and `node_modules`.
-- Exception: `.oat/repo/**` is scanned even though the rest of `.oat/` is skipped, so the curated `AGENTS.md` files there (repo root guidance, `pjm/`, `reference/`) get their sibling `CLAUDE.md` shims managed and validated like any other directory. The rest of `.oat/` (`templates/`, `projects/`, `sync/`) stays excluded.
-- It skips the documentation content tree by default, and any path you add to `documentation.instructionPointerExcludes`. See [Documentation trees](#documentation-trees) below.
+- It stops at nested git checkouts: any directory below the root that holds its own `.git` (a directory, or the gitdir file of a submodule or linked worktree such as `.claude/worktrees/<name>`) is a separate repository that its own `oat instructions` run owns. Nothing inside it is scanned, removed, or warned about.
+- Exception: `.oat/repo/**` is scanned even though the rest of `.oat/` is skipped, so the curated `AGENTS.md` files there (repo root guidance, `pjm/`, `reference/`) are managed and validated like any other directory. The rest of `.oat/` (`templates/`, `projects/`, `sync/`) stays excluded.
+- It skips the documentation content tree by default, and any path you add to `instructions.claude.excludes`. See [Documentation trees](#documentation-trees) below.
 - It does not scan user-level provider roots such as `~/.claude` in this release.
 
 ## Documentation Trees
@@ -49,20 +53,25 @@ only; it does not change what instruction sync excludes.)
 canonically names the docs _app_ root, and a file like
 `apps/oat-docs/AGENTS.md` is instructions for working on the docs app rather
 than a documentation page. When the app root has a `docs` child, only that
-child is skipped, and the app root keeps receiving its `CLAUDE.md` pointer. Opt
-the app root out explicitly if you do not want it synced.
+child is skipped, and the app root is still synced (under a shim strategy it
+keeps receiving its `CLAUDE.md` pointer). Opt the app root out explicitly if
+you do not want it synced.
 
-Add further paths with `documentation.instructionPointerExcludes`, a list of
+Add further paths with `instructions.claude.excludes`, a list of
 repository-relative directories. Set it with
-`oat config set documentation.instructionPointerExcludes "vendor,third_party/docs"`
+`oat config set instructions.claude.excludes "vendor,third_party/docs"`
 (an empty value clears it, and `oat config unset` removes it), or write it
 directly:
 
 ```json
 {
   "documentation": {
-    "root": "apps/oat-docs",
-    "instructionPointerExcludes": ["vendor", "third_party/docs"]
+    "root": "apps/oat-docs"
+  },
+  "instructions": {
+    "claude": {
+      "excludes": ["vendor", "third_party/docs"]
+    }
   }
 }
 ```
@@ -115,8 +124,11 @@ leaves the content root underived, and no default exclusion applies).
 
 Exclusion only stops a directory from being scanned. Nothing is deleted: a
 `CLAUDE.md` that already exists inside an excluded tree is left exactly as it
-is. When any exclusion is configured, `--json` output carries three additional
-fields.
+is, even under the default `none` strategy, which removes managed shims
+everywhere else. Exclusion does not silence the
+[leftover `CLAUDE.md` warning](#leftover-claudemd-warnings), because Claude
+Code does not honor OAT's exclusions. When any exclusion is configured,
+`--json` output carries three additional fields.
 
 - `excludedPaths` lists the configured exclusions — a statement of intent, not
   a per-directory skip log, so `.oat` appearing there does not contradict
@@ -135,8 +147,8 @@ dropped before `excludedPaths` is built, so it appears only here.
 ## Canonical Model
 
 - `AGENTS.md` is canonical.
-- `CLAUDE.md` is derived from the sibling `AGENTS.md`.
-- If a directory contains only `CLAUDE.md`, OAT can adopt that file by writing canonical `AGENTS.md` content first and then regenerating `CLAUDE.md`.
+- A `CLAUDE.md` beside it is either absent (the default, strategy `none`) or a shim derived from the sibling `AGENTS.md` (strategies `pointer`, `symlink`, and `copy`).
+- If a directory contains only `CLAUDE.md`, OAT can adopt that file by writing canonical `AGENTS.md` content first. Under a shim strategy it then regenerates `CLAUDE.md`; under `none` it removes it.
 
 ## Commands
 
@@ -146,40 +158,177 @@ Read-only validation for instruction integrity.
 
 - Resolves the project root automatically.
 - Scans nested directories for instruction pairs and Claude-only strays.
-- Returns exit code `0` when everything is valid and `1` when drift is detected.
-- Suggests the matching repair command, including `--strategy` when you validated with a non-default mode.
+- Returns exit code `0` when everything is valid and `1` when drift is detected. Leftover-`CLAUDE.md` warnings never change the exit code.
+- Suggests the matching repair command, including `--strategy` when you validated with an explicit `--strategy`.
 
 ### `oat instructions sync`
 
 Repair and adoption command for instruction drift.
 
 - Mutates by default.
-- Use `--dry-run` to preview planned actions.
-- Use `--force` to overwrite mismatched `CLAUDE.md` files.
-- Reuses the selected strategy when creating or repairing `CLAUDE.md`.
+- Use `--dry-run` to preview planned actions, including every planned removal.
+- Under a shim strategy, use `--force` to overwrite mismatched `CLAUDE.md` files. Under `none`, `--force` has no effect: sync never deletes anything that is not an exact managed shim.
+- Applies the effective strategy when creating, repairing, or removing `CLAUDE.md`.
+
+Both commands report the effective strategy as `strategy:` in human output and as the `strategy` field under `--json`.
 
 ## Supported Strategies
 
-`CLAUDE.md` can be generated or validated in one of three modes:
-
-| Strategy  | Expected `CLAUDE.md` shape       | Notes                                   |
-| --------- | -------------------------------- | --------------------------------------- |
-| `pointer` | file content `@AGENTS.md`        | Default mode. Lightweight and explicit. |
-| `symlink` | file symlink to `AGENTS.md`      | Uses a same-directory relative symlink. |
-| `copy`    | hard copy of `AGENTS.md` content | Useful when symlinks are undesirable.   |
+| Strategy  | Expected `CLAUDE.md` shape       | Notes                                                                                               |
+| --------- | -------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `none`    | no `CLAUDE.md`                   | Default. Sync removes the shims OAT created (all or nothing) and warns about any other `CLAUDE.md`. |
+| `pointer` | file content `@AGENTS.md`        | Lightweight and explicit. The default before shims became opt-in.                                   |
+| `symlink` | file symlink to `AGENTS.md`      | Uses a same-directory relative symlink.                                                             |
+| `copy`    | hard copy of `AGENTS.md` content | Useful when symlinks are undesirable.                                                               |
 
 Validation treats the selected file shape as part of correctness. For example, `copy` mode rejects a symlink even if the symlink resolves to identical content.
+
+### Choosing a strategy
+
+The effective strategy for a run is resolved in this order:
+
+1. the `--strategy` flag, which overrides for that one run and never changes config;
+2. `instructions.claude.shims` in `.oat/config.json`;
+3. the built-in default, `none`.
+
+Persist a shim strategy for the repository with:
+
+```bash
+oat config set instructions.claude.shims pointer
+oat instructions sync
+```
+
+`oat config unset instructions.claude.shims` returns to the default. A value outside `none`, `pointer`, `symlink`, and `copy` is rejected with exit code `2` instead of silently falling back to the default, and `oat config set` can still repair it.
 
 ## Reported States
 
 `oat instructions validate` and `oat instructions sync --dry-run` work from the same scan model.
 
-| State              | Meaning                                                                                          |
-| ------------------ | ------------------------------------------------------------------------------------------------ |
-| `ok`               | The discovered instruction pair matches the selected strategy.                                   |
-| `missing`          | `AGENTS.md` exists but sibling `CLAUDE.md` is missing.                                           |
-| `content_mismatch` | `CLAUDE.md` exists but has the wrong shape/content, or an instruction file is unreadable/broken. |
-| `stray`            | `CLAUDE.md` exists without sibling `AGENTS.md` and the Claude file is readable enough to adopt.  |
+| State              | Meaning                                                                                                                                                          |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ok`               | The directory matches the effective strategy (under `none`: no `CLAUDE.md` beside `AGENTS.md`).                                                                  |
+| `missing`          | Shim strategies only: `AGENTS.md` exists but sibling `CLAUDE.md` is missing. Under `none` a missing `CLAUDE.md` is correct, never drift.                         |
+| `content_mismatch` | `CLAUDE.md` exists but has the wrong shape/content, or an instruction file is unreadable/broken.                                                                 |
+| `stray`            | `CLAUDE.md` exists without sibling `AGENTS.md` and the Claude file is readable enough to adopt.                                                                  |
+| `managed_shim`     | `none` only: a `CLAUDE.md` in an exact shape OAT writes. Drift; sync removes it unless [a `CLAUDE.md` with content blocks removal](#all-or-nothing).             |
+| `unmanaged`        | `none` only: a `CLAUDE.md` that is not an exact managed shape (hand-written, modified, or a symlink elsewhere). Reported and kept, never deleted, and not drift. |
+
+## Removing OAT-Managed Shims
+
+Under `none`, a non-dry-run sync removes the `CLAUDE.md` files OAT created, so
+the repository never sits with shims in some directories and not others (see
+[Claude Code and AGENTS.md](#claude-code-and-agentsmd) for why that state is
+worse than either extreme). `--dry-run` lists each planned `remove` action and
+changes nothing.
+
+Removal is deliberately narrow. It only ever targets a file named `CLAUDE.md`
+whose sibling is `AGENTS.md`, inside the tree the scan walks, in one of these
+exact shapes:
+
+- the pointer `@AGENTS.md` followed by a newline (LF or CRLF), and nothing else;
+- a symlink whose target names the sibling `AGENTS.md`;
+- a byte-identical copy of the sibling `AGENTS.md`.
+
+Everything else is kept and reported as `unmanaged`: a hand-written or edited
+`CLAUDE.md`, a pointer with extra lines or trailing spaces, a symlink to any
+other file, `.claude/CLAUDE.md`, and any `CLAUDE.md` that a scanned instruction
+file in another directory links to (`pkg/AGENTS.md -> ../CLAUDE.md`), which
+is neither removed nor adopted because that would leave the link dangling; the
+entry names the links. A `CLAUDE.md` that the sibling
+`AGENTS.md` resolves to (the Claude-first `ln -s CLAUDE.md AGENTS.md` layout,
+or a hard link) holds the only copy of the instructions, so it is never
+treated as a shim of any shape; and a copy is only ever recognized against a
+distinct regular `AGENTS.md`. `CLAUDE.local.md` is never touched and never
+scanned as a shim; it is reported only through the
+[leftover warning](#leftover-claudemd-warnings). A `CLAUDE.md` inside the
+documentation content tree, an excluded directory, or a nested git checkout is
+never touched.
+
+### All or nothing
+
+A file with content never leaves a mix behind. If any `CLAUDE.md`,
+`.claude/CLAUDE.md`, or `CLAUDE.local.md` in the repository is not one of the
+exact shapes above — it has content of its own — sync removes **nothing**, not
+even the managed shims.
+A partial removal would strand directories: while that file exists, Claude
+Code ignores `AGENTS.md` for the sessions it covers, and the removed shims were
+what carried those directories' instructions. The check covers the whole
+repository, including excluded and documentation trees, because Claude Code's
+walk does not honor OAT's exclusions. A lone `CLAUDE.md` that sync will adopt
+(no sibling `AGENTS.md`) is not counted: its content moves into a new
+`AGENTS.md`. While another file blocks removal, that stray is still adopted
+into `AGENTS.md`, but its `CLAUDE.md` is kept.
+
+Exact shims do not block. An exact shim inside an `instructions.claude.excludes`
+directory or the documentation content tree is never touched, so sync removes
+the other shims and reports that one as a
+[leftover](#leftover-claudemd-warnings); sessions started in its directory
+still ignore `AGENTS.md` until you remove it.
+
+When removal is blocked, sync reports every removal it held back as a skipped
+action and exits `1`, and sync, `oat instructions validate`, and `oat-doctor`
+report one finding (`code: "claude_md_blocks_shim_removal"` under `--json`,
+with `paths` naming the files with content, `wouldRemove` naming the
+`CLAUDE.md` files kept, and `linkedBy` mapping each file in `paths` to the
+`AGENTS.md` links that reach it). The finding names the `CLAUDE.md` files the
+configuration would remove, says none were removed and why, links to
+[Claude Code and AGENTS.md](#claude-code-and-agentsmd), and names what to do
+next:
+
+- remove each named file, or move its content into an `AGENTS.md`, and rerun
+  `oat instructions sync`; for a file an `AGENTS.md` links to (the Claude-first
+  layout), replace each link with the file's content first, then remove the
+  file, because it holds the only copy of those instructions; or
+- set `instructions.claude.shims` to a shim strategy (`pointer`, `symlink`, or
+  `copy`) to keep `CLAUDE.md` files.
+
+While removal is blocked, the files in `wouldRemove` get no
+[leftover warning](#leftover-claudemd-warnings) of their own: the finding
+already names them, and removing one by hand would recreate the mix.
+
+Removal also fails closed at apply time. Immediately before deleting, sync
+re-checks the file: it must still be the same file the scan saw (same device
+and inode, and the same symlink target), still an exact managed shape, and not
+the target of a link from any scanned instruction file. If it was edited or
+replaced, or a link to it appeared, in between, it is kept, byte for byte, and reported
+as `CLAUDE.md changed since planning (...); kept`, and the command exits `1`
+so you can rerun it.
+
+## Leftover `CLAUDE.md` Warnings
+
+Under `none`, after sync (and on every `validate`) OAT reports each remaining
+`CLAUDE.md`, `.claude/CLAUDE.md`, and `CLAUDE.local.md` anywhere in the
+repository with a warning: while that file exists, Claude Code's default
+`agents-md` mode ignores every `AGENTS.md` in the project. For a file at the
+root (including `.claude/CLAUDE.md` and `CLAUDE.local.md` there) that holds for
+every session; for a file in a subdirectory it holds for sessions started in
+that directory or below, and the warning says so. The warning names exactly
+two ways out:
+
+- remove the file — or, when an `AGENTS.md` links to it (the warning's
+  `linkedBy`), first replace each linking `AGENTS.md` with the file's content,
+  because the file holds the only copy of those instructions; or
+- set `instructions.claude.shims` in `.oat/config.json` to a shim
+  strategy (`pointer`, `symlink`, or `copy`) and rerun `oat instructions sync`
+  to add shims back everywhere.
+
+This check is a separate, read-only walk of the whole repository. It
+deliberately ignores `documentation.root` and
+`instructions.claude.excludes`, which only limit what OAT may
+change, because Claude Code's own walk does not honor them. Only `.git`,
+`node_modules`, the root `.worktrees`, and nested git checkouts are skipped.
+
+Warnings go to stderr in human mode and to the `warnings` array under `--json`
+(each item has `code: "claude_md_hides_agents_md"`, a repository-relative
+`path`, `linkedBy` — the repository-relative `AGENTS.md` paths whose symlink
+chain reaches the file, empty when there are none — and the `message`).
+Names are matched exactly: a case variant such as `claude.md` is neither
+reported nor ever removed, because such names are common for ordinary
+documents (a provider page named `claude.md`, for example). On a
+case-insensitive filesystem, rename a case-variant file yourself if Claude Code
+treats it as `CLAUDE.md`. They never change the exit code, a dry run leaves
+out files it is about to remove, a repository with no remaining `CLAUDE.md`
+prints nothing, and no warning is emitted under a shim strategy.
 
 ## Claude-Only Adoption
 
@@ -187,15 +336,59 @@ When a directory contains `CLAUDE.md` but no `AGENTS.md`, sync can adopt it:
 
 1. Read the existing `CLAUDE.md`
 2. Write canonical `AGENTS.md` with that content
-3. Regenerate `CLAUDE.md` using the selected strategy
+3. Under a shim strategy, regenerate `CLAUDE.md` using that strategy. Under
+   `none`, remove the `CLAUDE.md`, so adoption never leaves a file that makes
+   Claude Code ignore `AGENTS.md` — unless another `CLAUDE.md` with content
+   [blocks removal](#all-or-nothing), in which case the adopted `CLAUDE.md` is
+   kept.
 
-This means the original Claude instructions become canonical before the derived file is rewritten.
+This means the original Claude instructions become canonical before the derived file is rewritten or removed.
+
+Under `none` the removal is re-verified like any other: the `CLAUDE.md` must
+still be the same file and now byte-identical to the new `AGENTS.md`. If it
+changed during adoption, it is kept and reported as
+`CLAUDE.md kept after adoption into AGENTS.md (...)`, and it is also named in a
+leftover warning.
 
 Readable Claude-only files are adoptable. Unreadable Claude-only files are not.
+`.claude/CLAUDE.md` is Claude Code's own alternate project file, not a stray,
+so under `none` it is never adopted.
+
+## Claude Code and AGENTS.md
+
+Claude Code reads `AGENTS.md` natively through its built-in `agents-md` plugin
+(`anthropics/claude-code`, `mods/agents-md`, as of v2.1.278). Its
+`instructionFiles` option defaults to `claude-md-or-agents-md`:
+
+- In that default mode the plugin stands down for the **whole project** when
+  any `CLAUDE.md`, `.claude/CLAUDE.md`, or `CLAUDE.local.md` exists in any
+  directory from the project root down to the working directory; Claude Code
+  then loads only `CLAUDE.md` files. A single root `CLAUDE.md` or a personal
+  `CLAUDE.local.md` is enough to make it ignore every `AGENTS.md`, and a
+  repository with shims in some directories but not others loses every
+  `AGENTS.md` that has no shim. This is why the default removes managed shims
+  and warns about the rest.
+- In `claude-md-and-agents-md` mode, an `AGENTS.md` that a `CLAUDE.md` already
+  imports or links is not loaded twice, so shims are harmless there.
+- The option can be set only in user settings (`~/.claude/settings.json`),
+  with `--settings`, or in managed settings. A project's
+  `.claude/settings.json` cannot set it, so a repository cannot choose the mode
+  for its contributors.
+
+Opt into a shim strategy when your contributors need `CLAUDE.md`:
+
+- they run Claude Code releases from before the built-in `agents-md` plugin;
+- they set `instructionFiles` to `claude-md`, which loads no `AGENTS.md`;
+- the plugin's documented gaps matter to you: nested `AGENTS.md` files attach
+  only on a text file `Read` (not on `@`-mentions, IDE selections, or
+  notebook, image, or PDF reads), and `--add-dir` directories contribute no
+  `AGENTS.md`, where Claude Code's own `CLAUDE.md` loading covers those cases
+  (for `--add-dir`, only when `CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1`
+  is set).
 
 ## When `--force` Is Required
 
-`oat instructions sync` does not overwrite a mismatched `CLAUDE.md` unless you pass `--force`.
+Under a shim strategy, `oat instructions sync` does not overwrite a mismatched `CLAUDE.md` unless you pass `--force`.
 
 Typical pattern:
 
@@ -223,9 +416,18 @@ In these cases, sync reports a manual-repair skip instead of guessing at destruc
 
 ## Example Workflow
 
-Preview and adopt nested Claude-only strays as pointer files:
+Preview and apply the default: remove OAT-managed shims and adopt Claude-only
+strays into `AGENTS.md`:
 
 ```bash
+oat instructions sync --dry-run
+oat instructions sync
+```
+
+Opt the repository into pointer shims:
+
+```bash
+oat config set instructions.claude.shims pointer
 oat instructions sync --dry-run
 oat instructions sync
 ```

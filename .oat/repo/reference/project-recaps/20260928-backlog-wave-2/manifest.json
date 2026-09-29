@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "explainer-kit.manifest/v2",
+  "runId": "7cc39ba6-10c5-49ee-8a6f-f2e7961532bb",
+  "slug": "backlog-wave-2-recap",
+  "recipe": {
+    "id": "project-recap",
+    "version": "2"
+  },
+  "createdAt": "2026-09-28T17:30:08.256Z",
+  "mode": "unattended",
+  "source": {
+    "factBasePath": "source/fact-base.json",
+    "factBaseHash": "sha256:b16fa4d8b570e83955b7cadfdbd117b0cfde8285d54beb0bcc87232a5b369eb2",
+    "inputHashes": {
+      "discovery.md": "sha256:41d3bb8005743de6a454e6679456b8f6db8253f6809e11a6700c3ecf5ebd3b2e",
+      "implementation.md": "sha256:b2e331d287e43fe50183f8050b2065e2f0314f5536b5ae527b54bc69b62d7815",
+      "plan.md": "sha256:72fe127664917989ed9d68e99a9647f239e78156b0b343b6d72589536a3a9f91",
+      "project-log.md": "sha256:6e2b3e90f8a3ef53d0a2febba686bd8b9867fb56b5773567d713ac0c87c575dc",
+      "summary.md": "sha256:9294455de6e20ec2d5f59e7c84d1e0385c21bd05459b800909f43bc741099014"
+    }
+  },
+  "theme": {
+    "path": "theme.resolved.json",
+    "hash": "sha256:82c4bf82ac817bb8c04c83bb971d2c2b22aa621384689fb4e0d0fa3a62498f27"
+  },
+  "artifacts": [
+    {
+      "id": "project-recap",
+      "type": "hub",
+      "contentPath": "site/index.html",
+      "hash": "sha256:ed756b2e33435495c5d548f219a78877781db0478ba603c0022d82789c293adc",
+      "status": "built"
+    }
+  ],
+  "immutableHashes": {
+    "qa/1440.png": "sha256:a245348945474dc91723d28ee50631243f0509049f74a42cdb0ccb3174555bff",
+    "qa/320.png": "sha256:9b09b5f442b03293fc4ec2294084bb070889e6b33bed5f86ce75283bdc16c8ee",
+    "qa/768.png": "sha256:e886d86c4fd21996e5abbb6f50f4faa882beb282a19519dd391088c9061bd98e",
+    "qa/result.json": "sha256:1bb0e480b18d492fb860a34dc7223c3aded0d6567c53ab9780c6aa8e230778b4",
+    "site/index.html": "sha256:ed756b2e33435495c5d548f219a78877781db0478ba603c0022d82789c293adc",
+    "source/fact-base.json": "sha256:b16fa4d8b570e83955b7cadfdbd117b0cfde8285d54beb0bcc87232a5b369eb2",
+    "source/fact-base.md": "sha256:52d5828adca806b0dc7b16283674c25607294fc1ac645e8981f9bc2a14a98fe0",
+    "source/ledger.json": "sha256:cf805c2513a226dd8880b35b3d3f51e7c9b4f364e41408be9c565deea0c9dbc0",
+    "theme.resolved.json": "sha256:82c4bf82ac817bb8c04c83bb971d2c2b22aa621384689fb4e0d0fa3a62498f27"
+  },
+  "outcome": "built",
+  "warnings": []
+}

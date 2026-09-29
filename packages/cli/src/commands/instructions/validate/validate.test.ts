@@ -3,7 +3,10 @@ import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
-import type { InstructionEntry } from '@commands/instructions/instructions.types';
+import type {
+  InstructionEntry,
+  InstructionSyncStrategy,
+} from '@commands/instructions/instructions.types';
 import { CliError } from '@errors/cli-error';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -17,6 +20,8 @@ interface HarnessOptions {
   excludedPaths?: string[];
   effectiveExcludedPaths?: string[];
   exclusionWarnings?: string[];
+  configuredStrategy?: InstructionSyncStrategy;
+  leftoverClaudeFiles?: string[];
 }
 
 function createHarness(options: HarnessOptions = {}): {
@@ -65,6 +70,19 @@ function createHarness(options: HarnessOptions = {}): {
       interactive: false,
       logger: capture.logger,
     }),
+    // The fake cwd has no config; never let the production reader look. The
+    // pointer cases predate strategy `none`, so the harness configures
+    // `pointer` unless a case sets `configuredStrategy` itself.
+    findLeftoverClaudeFiles: vi.fn(async () =>
+      (options.leftoverClaudeFiles ?? []).map((path) => ({
+        path,
+        linkedBy: [],
+        exactShim: false,
+      })),
+    ),
+    readConfiguredInstructionSyncStrategy: vi.fn(async () =>
+      'configuredStrategy' in options ? options.configuredStrategy : 'pointer',
+    ),
     resolveInstructionPointerExcludes,
     resolveProjectRoot: vi.fn(async () => '/tmp/workspace'),
     scanInstructionFiles,
@@ -291,5 +309,48 @@ describe('createInstructionsValidateCommand', () => {
     expect(capture.info).toContain(
       'Fix with: oat instructions sync --strategy symlink',
     );
+  });
+
+  it('checks the configured strategy when --strategy is omitted', async () => {
+    const { command, capture, scanInstructionFiles } = createHarness({
+      configuredStrategy: 'copy',
+      entries: [
+        {
+          agentsPath: '/tmp/workspace/AGENTS.md',
+          claudePath: '/tmp/workspace/CLAUDE.md',
+          status: 'missing',
+          detail: 'CLAUDE.md missing',
+        },
+      ],
+    });
+
+    await runValidateCommand(command);
+
+    expect(scanInstructionFiles).toHaveBeenCalledWith('/tmp/workspace', {
+      excludedPaths: [],
+      strategy: 'copy',
+    });
+    expect(capture.info[0]).toContain('strategy: copy');
+    // A bare sync resolves the same configured strategy, so the guidance
+    // must not pin a flag the operator never passed.
+    expect(capture.info).toContain('Fix with: oat instructions sync');
+  });
+
+  it('reports the effective strategy in --json, flag over config', async () => {
+    const configured = createHarness({ configuredStrategy: 'copy' });
+    await runValidateCommand(configured.command, { globalArgs: ['--json'] });
+    expect(configured.capture.jsonPayloads[0]).toMatchObject({
+      mode: 'validate',
+      strategy: 'copy',
+    });
+
+    const overridden = createHarness({ configuredStrategy: 'copy' });
+    await runValidateCommand(overridden.command, {
+      globalArgs: ['--json'],
+      commandArgs: ['--strategy', 'symlink'],
+    });
+    expect(overridden.capture.jsonPayloads[0]).toMatchObject({
+      strategy: 'symlink',
+    });
   });
 });

@@ -6,7 +6,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 2.0.1
+  version: 2.0.2
 ---
 
 # OAT Doctor
@@ -81,15 +81,15 @@ Run the seven commands below and the four file checks. Every command call is pro
 
 A command has **failed** only when its stdout does not parse as JSON, or the process is killed or times out. A non-zero exit with parseable JSON is a findings result: `oat doctor` and `oat pjm doctor` both exit 1 whenever any check warns, which is the normal state of a healthy repository. A failed command becomes one `warning` finding for its area whose summary names the command and quotes the first line of stderr; the sweep continues.
 
-| #   | Command                                 | Projection                                                                               | Feeds                                        |
-| --- | --------------------------------------- | ---------------------------------------------------------------------------------------- | -------------------------------------------- |
-| 1   | `oat doctor --json --scope all`         | `.checks[] \| {name, status, message}` — drop `packEvidence` and `providerRefreshAdvice` | config, tools, docs (by the check map below) |
-| 2   | `oat pjm doctor --json`                 | `.adoption` and `.checks[] \| {name, status, message}`                                   | PJM                                          |
-| 3   | `oat config dump --json`                | `.shared`, `.local`, `.user` (the three surface objects)                                 | config, docs                                 |
-| 4   | `oat config describe --json`            | `.entries[] \| {key, group, file, scope, defaultValue, owningCommand, deprecated}`       | config                                       |
-| 5   | `oat instructions validate --json`      | `.summary` and `.entries[] \| select(.status != "ok") \| {agentsPath, status, detail}`   | agent instructions                           |
-| 6   | `oat tools list --json --scope all`     | `.tools[] \| {name, pack, scope, status}`                                                | tools                                        |
-| 7   | `oat tools outdated --json --scope all` | `.tools[] \| {name, version, bundledVersion, scope}`                                     | tools                                        |
+| #   | Command                                 | Projection                                                                                                                                                                                               | Feeds                                        |
+| --- | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| 1   | `oat doctor --json --scope all`         | `.checks[] \| {name, status, message}` — drop `packEvidence` and `providerRefreshAdvice`                                                                                                                 | config, tools, docs (by the check map below) |
+| 2   | `oat pjm doctor --json`                 | `.adoption` and `.checks[] \| {name, status, message}`                                                                                                                                                   | PJM                                          |
+| 3   | `oat config dump --json`                | `.shared`, `.local`, `.user` (the three surface objects)                                                                                                                                                 | config, docs                                 |
+| 4   | `oat config describe --json`            | `.entries[] \| {key, group, file, scope, defaultValue, owningCommand, deprecated}`                                                                                                                       | config                                       |
+| 5   | `oat instructions validate --json`      | `.strategy`, `.summary`, `.entries[] \| select(.status != "ok") \| {agentsPath, status, detail}`, and `.warnings[] \| {code, path, paths, wouldRemove, linkedBy, message}` (omitted when there are none) | agent instructions                           |
+| 6   | `oat tools list --json --scope all`     | `.tools[] \| {name, pack, scope, status}`                                                                                                                                                                | tools                                        |
+| 7   | `oat tools outdated --json --scope all` | `.tools[] \| {name, version, bundledVersion, scope}`                                                                                                                                                     | tools                                        |
 
 File checks (read-only):
 
@@ -123,9 +123,13 @@ Each finding is one line with an **area**, a **severity**, a one-line **summary*
 
 **Agent instructions**
 
-- An entry with status `missing` or `content_mismatch` (the entry literal; the summary counter is spelled `contentMismatch`) → `error`; fix `oat instructions sync` (`--force` for a content mismatch the person confirms is stale).
+- An entry with status `content_mismatch` (the entry literal; the summary counter is spelled `contentMismatch`) → `error`; fix `oat instructions sync` (`--force` for a content mismatch the person confirms is stale).
+- An entry with status `missing` → `error` only when a shim strategy is configured (`.strategy` is `pointer`, `symlink`, or `copy`); fix `oat instructions sync`. Under `none`, the default, an AGENTS.md without a CLAUDE.md is correct and the CLI never reports it as `missing`.
+- An entry with status `managed_shim` (strategy `none` only: a CLAUDE.md in the exact shape OAT writes) → `warning`; fix `oat instructions sync`, which removes it, unless `.warnings[]` holds a `claude_md_blocks_shim_removal` item: then sync removes nothing, so report that item instead of sending the person to sync. An entry with status `unmanaged` (a hand-written or modified CLAUDE.md that sync keeps, or one an AGENTS.md links to) is not a finding of its own; the leftover warning below covers it, including the link caveat through `linkedBy`.
+- Each `.warnings[]` item with code `claude_md_hides_agents_md` → `warning`; the summary names its `path`: while that `CLAUDE.md`, `.claude/CLAUDE.md`, or `CLAUDE.local.md` exists, Claude Code's default `agents-md` mode ignores every AGENTS.md in the project (for a file below the root: in sessions started in its directory or below). Offer exactly the two fixes the CLI names: the person removes the file (the doctor never deletes it), or `oat config set instructions.claude.shims pointer` (or `symlink` / `copy`) followed by `oat instructions sync` to add shims back. When the item's `linkedBy` is non-empty, the file holds the only copy of the instructions for those AGENTS.md links: the first fix becomes "the person replaces each linking AGENTS.md with the file's content first, then removes the file", naming the `linkedBy` paths, and never offer plain removal for it. Skip an item whose `path` is in a `claude_md_blocks_shim_removal` item's `wouldRemove`: that item already names the file, and removing one kept file by hand recreates the mix the block exists to prevent.
+- A `.warnings[]` item with code `claude_md_blocks_shim_removal` → `warning`: removal under `none` is all or nothing, so while any file in its `paths` (a `CLAUDE.md`, `.claude/CLAUDE.md`, or `CLAUDE.local.md` with content that is not an OAT shim) exists, `oat instructions sync` removes none of the shims in its `wouldRemove`. The summary names both lists. Offer the fixes the CLI names: the person removes each file in `paths` or moves its content into an AGENTS.md, then reruns `oat instructions sync`; or `oat config set instructions.claude.shims` to `pointer`, `symlink`, or `copy` to keep CLAUDE.md files. Its `linkedBy` maps each file in `paths` to the AGENTS.md links that reach it: for a file with a non-empty list, the first fix becomes "the person replaces each linking AGENTS.md with the file's content first, then removes the file", naming those links, and never offer plain removal for it. While this item exists, offer no removal for any path in its `wouldRemove`. The doctor never deletes or edits the files.
 - An entry with status `stray` → `warning`; fix `oat instructions sync` after the person decides whether the stray file should exist.
-- A CLI-written heading absent while its capability is present → `warning`: no `## Tool Packs` while any pack is installed at project scope (fix `oat tools install <pack> --project-guidance`); no `### Project Management` or `### Decision Records` while PJM adoption is `declared` (fix `oat pjm init`, which rewrites the guidance); no `## Documentation` while a docs surface exists (fix: `oat-docs-bootstrap`).
+- A CLI-written heading absent while its capability is present → `warning`: no `## Tool Packs` while any pack is installed at project scope (fix `oat tools guidance`, which prints the managed `OAT tools` block for the installed packs without installing, upgrading, or writing anything, for the person to add to `AGENTS.md`); no `### Project Management` or `### Decision Records` while PJM adoption is `declared` (fix `oat pjm init`, which appends the absent guidance blocks; a block that exists but differs gets a printed manual patch); no `## Documentation` while a docs surface exists (fix: `oat-docs-bootstrap`).
 - Content quality beyond presence is not judged here; route to `oat-agent-instructions-analyze`.
 
 **Docs**
@@ -221,7 +225,7 @@ State the adoption state (`declared`, `inferred-legacy`, `partial-initialization
 
 #### Agent instructions dive
 
-Explain the sync strategy in use (`oat instructions validate --json` `.summary`) and each non-`ok` entry with its path. Explain each missing heading: what the CLI writes there and why an agent needs it (`cli-utilities/bootstrap.md` for `## Tool Packs`; `cli-utilities/backlog-lifecycle.md` § Adoption comes first for the PJM sections). Offer `oat instructions sync`, `oat tools install <pack> --project-guidance`, or `oat pjm init` as the finding names; for wording and coverage beyond presence, hand off to `oat-agent-instructions-analyze` then `oat-agent-instructions-apply`.
+Explain the sync strategy in use (`oat instructions validate --json` `.strategy`: `none`, the default, keeps no CLAUDE.md because Claude Code reads AGENTS.md itself; `pointer`, `symlink`, and `copy` keep a shim beside each AGENTS.md) and each non-`ok` entry and leftover-CLAUDE.md warning with its path. Explain each missing heading: what the CLI writes there and why an agent needs it (`cli-utilities/bootstrap.md` for `## Tool Packs`; `cli-utilities/backlog-lifecycle.md` § Adoption comes first for the PJM sections). Offer `oat instructions sync`, `oat tools guidance` (read-only: prints the `OAT tools` block to add), or `oat pjm init` (appends absent PJM blocks) as the finding names; for wording and coverage beyond presence, hand off to `oat-agent-instructions-analyze` then `oat-agent-instructions-apply`.
 
 #### Docs dive
 

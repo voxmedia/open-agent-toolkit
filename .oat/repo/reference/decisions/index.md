@@ -10,10 +10,24 @@
 
 | ID                                       | Date       | Status     | Title                                                                                                  | Legacy  |
 | ---------------------------------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------ | ------- |
+| DR-260928-agents-md-guidance-appends     | 2026-09-28 | accepted   | AGENTS.md guidance appends absent managed blocks                                                       | -       |
+| DR-260928-backlog-archive-rewrites       | 2026-09-28 | accepted   | Backlog archive rewrites inbound references                                                            | -       |
+| DR-260928-commit-the-phase-task-ledger   | 2026-09-28 | accepted   | Commit the phase task ledger before per-phase review dispatch                                          | -       |
+| DR-260928-defer-the-oat-tools-where      | 2026-09-28 | accepted   | Defer the oat tools where command                                                                      | -       |
+| DR-260928-exclude-project-and-repository | 2026-09-28 | accepted   | Exclude project and repository records from exit-gate freshness                                        | -       |
+| DR-260928-name-the-claude-md-shim-keys   | 2026-09-28 | accepted   | Name the CLAUDE.md shim keys under instructions.claude                                                 | -       |
+| DR-260928-persist-the-instruction-sync   | 2026-09-28 | accepted   | Persist the instruction sync strategy in project config                                                | -       |
+| DR-260928-remove-no-claude-md-shim-while | 2026-09-28 | accepted   | Remove no CLAUDE.md shim while any CLAUDE.md has content                                               | -       |
 | DR-260927-accept-alwaysapply             | 2026-09-27 | accepted   | Accept alwaysApply as a canonical rule activation alias                                                | -       |
+| DR-260927-claude-md-shims-are-opt        | 2026-09-27 | accepted   | CLAUDE.md shims are opt-in                                                                             | -       |
+| DR-260927-dispatch-record-validates      | 2026-09-27 | accepted   | Dispatch record validates without persisting                                                           | -       |
 | DR-260927-label-gate-dispatch-audit      | 2026-09-27 | accepted   | Label gate dispatch audit stamp as policy view                                                         | -       |
+| DR-260927-one-decision-point-at-review   | 2026-09-27 | accepted   | One decision point at review and gate exhaustion                                                       | -       |
+| DR-260927-operator-waiver-for-test-only  | 2026-09-27 | accepted   | Operator waiver for test-only gate staleness                                                           | -       |
 | DR-260927-preserve-config-key-order      | 2026-09-27 | accepted   | Preserve config key order and skip no-op writes                                                        | -       |
 | DR-260927-report-dispatch-record         | 2026-09-27 | accepted   | Report dispatch-record violations in one redacted message                                              | -       |
+| DR-260927-templates-resolve-repository   | 2026-09-27 | accepted   | Templates resolve repository first                                                                     | -       |
+| DR-260927-test-only-paths-skip           | 2026-09-27 | accepted   | Test-only paths skip the lockstep bump                                                                 | -       |
 | DR-260924-astra-effort-catalog-and-sol   | 2026-09-24 | accepted   | Astra effort catalog and Sol max support                                                               | -       |
 | DR-260924-astra-frontier-placement-is    | 2026-09-24 | accepted   | Astra Frontier placement is user-directed                                                              | -       |
 | DR-260924-model-guidance-source-status   | 2026-09-24 | accepted   | Model guidance source status separation                                                                | -       |

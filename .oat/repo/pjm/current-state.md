@@ -37,6 +37,35 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- CLI `0.3.9` (`backlog-wave-2`, branch `wave/2026-09-27-backlog-wave-2`)
+  closes twelve backlog items. `CLAUDE.md` shims are opt-in:
+  `instructions.claude.shims` (`none | pointer | symlink | copy`,
+  default `none`) persists the strategy and `instructions.claude.excludes`
+  lists directories that are not pointer sites; both replace the
+  `documentation.*` keys in a clean rename with no compatibility read
+  (`DR-260928-name-the-claude-md-shim-keys`). Under `none`,
+  `oat instructions sync` removes only exact OAT-created shims, and all or
+  nothing: while any `CLAUDE.md`, `.claude/CLAUDE.md`, or `CLAUDE.local.md`
+  has content of its own it removes none and reports one
+  `claude_md_blocks_shim_removal` finding
+  (`DR-260928-remove-no-claude-md-shim-while`). A repository-wide warning names
+  every other remaining `CLAUDE.md` that makes Claude Code ignore `AGENTS.md`
+  (`DR-260927-claude-md-shims-are-opt`). The implementation exit gate's new
+  generations use `effective-delta-v2`, which also excludes `.oat/projects/**`
+  and `.oat/repo/**` from freshness; stored v1 values keep v1 semantics
+  (`DR-260928-exclude-project-and-repository`). AGENTS.md guidance writers
+  append an absent managed block after identity checks instead of printing a
+  manual patch; every `--project-guidance` consumer acts or rejects, and the new
+  read-only `oat tools guidance [--json]` prints the block.
+  `oat backlog archive` rewrites inbound `.oat/repo` references to the moved
+  item. `oat-reviewer` no longer launches `recon-worker`: only the `recon` skill
+  does, and reviewer lanes are ordinary read-only sub-agents. Quick-mode
+  discovery routes to quick-start, Lite records absorbed projects, and implement
+  commits the phase task ledger before dispatching the phase reviewer.
+  `packages/control-plane` gains a `check` script. After upgrading, run
+  `oat instructions sync` to remove old shims (it removes none while a
+  `CLAUDE.md` with content remains); `oat instructions validate` exits 1 until
+  they are gone.
 - CLI `0.3.8` (`triage-correctness-wave`, branch `wave/2026-09-26-backlog`)
   closes nine correctness items from the 2026-09-26 triage.
   `resolve-providers.sh` no longer aborts when the last auto-detect test is

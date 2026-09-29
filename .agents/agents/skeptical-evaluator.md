@@ -1,6 +1,6 @@
 ---
 name: skeptical-evaluator
-version: 1.0.0
+version: 1.0.1
 description: Adversarial claim evaluator — receives a context package and gathers evidence to disprove then support a claim. Returns structured findings with citations.
 tools: Read, Bash, Grep, Glob, WebSearch, WebFetch
 color: red
@@ -78,21 +78,25 @@ Return findings to the orchestrator using the output structure below. Do NOT wri
 
 Return inline findings to the orchestrator in this structure:
 
-```
+```markdown
 ## Evidence
 
 ### Contradicting Evidence
+
 {Each piece with specific citation — file:line, URL, version, etc.}
 {Or "None found after searching: [list of sources checked]"}
 
 ### Supporting Evidence
+
 {Each piece with specific citation}
 {Or "None found"}
 
 ### Evidence Quality Assessment
+
 {How reliable the evidence is — direct vs indirect, authoritative vs anecdotal}
 
 ## Preliminary Assessment
+
 {Lean toward one of: holds_up | skepticism_warranted | nuanced | inconclusive}
 {Brief reasoning for the lean}
 {Confidence estimate: X%}

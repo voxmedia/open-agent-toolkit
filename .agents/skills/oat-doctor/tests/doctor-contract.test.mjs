@@ -191,12 +191,27 @@ function sweepTable() {
   });
 }
 
-const OPTIONAL_ITEM_FIELDS = new Set(['deprecated']);
+// Item fields only some items carry: `deprecated`, and the per-code
+// `.warnings[]` fields (`path` on a leftover warning; `paths` and
+// `wouldRemove` on a blocked-removal warning). At least one item must carry
+// each, so seeded payloads include both warning codes.
+const OPTIONAL_ITEM_FIELDS = new Set([
+  'deprecated',
+  'path',
+  'paths',
+  'wouldRemove',
+]);
+// Top-level arrays the CLI omits when empty (`oat instructions validate
+// --json` `.warnings`); proven on a seeded payload instead.
+const OPTIONAL_TOP_LEVEL_FIELDS = new Set(['warnings']);
 
-function requireFields(payload, fields, label) {
+function requireFields(payload, fields, label, { seeded = false } = {}) {
   for (const field of fields) {
     const [head, ...rest] = field.split('.');
     const key = head.replace('[]', '');
+    if (!seeded && OPTIONAL_TOP_LEVEL_FIELDS.has(key) && !(key in payload)) {
+      continue;
+    }
     assert.ok(payload && key in payload, `${label}: missing ${key}`);
     if (!head.endsWith('[]')) continue;
     const items = payload[key];
@@ -261,6 +276,33 @@ test('every field the sweep projects exists in the built CLI output, on every it
       assert.ok(seeded.tools.length >= 1, 'seeded outdated tool not reported');
       requireFields(seeded, fields, `${label} (seeded)`);
     }
+    if (command[0] === 'instructions' && command[1] === 'validate') {
+      // A repository with a hand-written root CLAUDE.md and one exact
+      // pointer shim under the default strategy, so the `.warnings[]`
+      // projection is proven on a real item of each code: the blocked-removal
+      // finding and the root file's own leftover warning.
+      const repo = await mkdtemp(join(tmpdir(), 'oat-doctor-leftover-'));
+      await execFileAsync('git', ['init', '-q', repo]);
+      await writeFile(join(repo, 'AGENTS.md'), '# instructions\n');
+      await writeFile(join(repo, 'CLAUDE.md'), '# hand-written\n');
+      await mkdir(join(repo, 'pkg'));
+      await writeFile(join(repo, 'pkg', 'AGENTS.md'), '# pkg\n');
+      await writeFile(join(repo, 'pkg', 'CLAUDE.md'), '@AGENTS.md\n');
+      const seeded = await runJson([...command, '--cwd', repo], {
+        ...process.env,
+        HOME: home,
+      });
+      assert.equal(seeded.strategy, 'none');
+      const codes = (seeded.warnings ?? []).map((warning) => warning.code);
+      assert.deepEqual(codes, [
+        'claude_md_blocks_shim_removal',
+        'claude_md_hides_agents_md',
+      ]);
+      assert.deepEqual(seeded.warnings[0].wouldRemove, ['pkg/CLAUDE.md']);
+      assert.deepEqual(seeded.warnings[0].linkedBy, { 'CLAUDE.md': [] });
+      assert.deepEqual(seeded.warnings[1].linkedBy, []);
+      requireFields(seeded, fields, `${label} (seeded)`, { seeded: true });
+    }
   }
   // Rows that name more than one projection must yield all of them.
   const byLabel = Object.fromEntries(
@@ -282,6 +324,96 @@ test('every field the sweep projects exists in the built CLI output, on every it
     byLabel['oat instructions validate --json'].includes('entries[].status'),
     'instructions validate: entries[] not parsed',
   );
+  assert.ok(
+    byLabel['oat instructions validate --json'].includes('strategy'),
+    'instructions validate: strategy not parsed',
+  );
+  assert.ok(
+    byLabel['oat instructions validate --json'].includes('warnings[].path'),
+    'instructions validate: warnings[] not parsed',
+  );
+  for (const field of [
+    'warnings[].linkedBy',
+    'warnings[].paths',
+    'warnings[].wouldRemove',
+  ]) {
+    assert.ok(
+      byLabel['oat instructions validate --json'].includes(field),
+      `instructions validate: ${field} not parsed`,
+    );
+  }
+});
+
+test('a missing CLAUDE.md is an error only under a shim strategy, and leftover CLAUDE.md files are warned about', () => {
+  const lines = skill.split('\n');
+  const missing = lines.find((line) => line.includes('status `missing`'));
+  assert.ok(missing, 'missing-entry rule missing');
+  assert.match(missing, /only when a shim strategy is configured/);
+  assert.match(missing, /`none`/);
+  assert.doesNotMatch(
+    skill,
+    /status `missing` or `content_mismatch`[^\n]*→ `error`/,
+    'missing must not be an unconditional error',
+  );
+
+  const managed = lines.find((line) => line.includes('status `managed_shim`'));
+  assert.ok(managed, 'managed-shim rule missing');
+  assert.match(managed, /`oat instructions sync`/);
+
+  const leftover = lines.find((line) =>
+    line.includes('`claude_md_hides_agents_md`'),
+  );
+  assert.ok(leftover, 'leftover CLAUDE.md warning rule missing');
+  assert.match(leftover, /→ `warning`/);
+  assert.match(leftover, /ignores every AGENTS\.md/);
+  // Exactly the two fixes the CLI names: remove the file, or opt back in.
+  assert.match(leftover, /removes the file/);
+  // A file an AGENTS.md links to holds the only copy of the instructions:
+  // the linkedBy caveat replaces the plain remove advice.
+  assert.match(leftover, /`linkedBy`/);
+  assert.match(
+    leftover,
+    /replaces each linking AGENTS\.md with the file's content first/,
+  );
+  assert.match(leftover, /never offer plain removal/);
+  assert.match(
+    leftover,
+    /`oat config set instructions\.claude\.shims pointer`/,
+  );
+  assert.match(leftover, /`oat instructions sync`/);
+  // While removal is blocked, the kept shims get no removal advice of their
+  // own: removing them by hand recreates the mix the block exists to prevent.
+  assert.match(
+    leftover,
+    /`path` is in a `claude_md_blocks_shim_removal` item's `wouldRemove`/,
+  );
+
+  // Removal under `none` is all or nothing: while any CLAUDE.md has content,
+  // sync removes no shim, and the doctor reports why instead of sending the
+  // person to a sync that cannot clear the managed shims.
+  const blocked = lines.find((line) =>
+    line.includes('item with code `claude_md_blocks_shim_removal`'),
+  );
+  assert.ok(blocked, 'blocked-removal rule missing');
+  assert.match(blocked, /→ `warning`/);
+  assert.match(blocked, /`paths`/);
+  assert.match(blocked, /`wouldRemove`/);
+  assert.match(blocked, /moves its content into an AGENTS\.md/);
+  assert.match(blocked, /`oat instructions sync`/);
+  assert.match(blocked, /`pointer`, `symlink`, or `copy`/);
+  // A blocker an AGENTS.md links to holds the only copy of the instructions.
+  assert.match(blocked, /`linkedBy`/);
+  assert.match(
+    blocked,
+    /replaces each linking AGENTS\.md with the file's content first/,
+  );
+  assert.match(blocked, /never offer plain removal/);
+  assert.match(blocked, /offer no removal for any path in its `wouldRemove`/);
+  assert.match(managed, /`claude_md_blocks_shim_removal`/);
+
+  const dive = section('#### Agent instructions dive');
+  assert.match(dive, /`\.strategy`/);
+  assert.match(dive, /`none`/);
 });
 
 test('every cited docs page exists, with or without a section', async () => {
@@ -362,4 +494,19 @@ test('the lifecycle pointer repairs the skill prescribes are accepted by the CLI
     run(['config', 'unset', 'activeProject', '--local']),
     /Cannot unset state key/,
   );
+});
+
+test('the Tool Packs hints name the read-only guidance command, never a pack reinstall', async () => {
+  // Both hint sites (the Agent instructions finding rule and its dive) must
+  // name a command that actually produces the OAT tools block.
+  const rule = skill
+    .split('\n')
+    .find((line) => line.includes('no `## Tool Packs` while'));
+  assert.ok(rule, 'Tool Packs finding rule missing');
+  assert.match(rule, /`oat tools guidance`/);
+  const dive = section('#### Agent instructions dive');
+  assert.match(dive, /`oat tools guidance`/);
+  assert.match(dive, /`oat pjm init`/);
+  assert.doesNotMatch(skill, /oat tools install <pack> --project-guidance/);
+  await usageLine('tools guidance', []);
 });

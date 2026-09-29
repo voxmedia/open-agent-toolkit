@@ -35,7 +35,7 @@
   - [Provider Sync](provider-sync/index.md) — Standalone adoption lane for canonical assets, provider views, sync commands, and drift management.
   - [Provider Interop Commands](provider-sync/commands.md) — CLI commands for provider status, sync, and drift management.
   - [Sync Config (`.oat/sync/config.json`)](provider-sync/config.md) — Configuration schema and behavior for provider sync in .oat/sync/config.json.
-  - [Instruction Sync](provider-sync/instruction-sync.md) — Project-scoped AGENTS.md and CLAUDE.md validation, repair strategies, and Claude-only adoption.
+  - [Instruction Sync](provider-sync/instruction-sync.md) — Project-scoped AGENTS.md and CLAUDE.md validation, the no-shim default, opt-in shim strategies, and Claude-only adoption.
   - [Manifest and Drift](provider-sync/manifest-and-drift.md) — Manifest tracking, drift states, and stray adoption for canonical-to-provider reconciliation.
   - [Providers](provider-sync/providers.md) — Provider-specific path mappings for Claude, Cursor, Copilot, Gemini, and Codex adapters.
   - [Provider Interop CLI Scope and Surface](provider-sync/scope-and-surface.md) — Scope boundaries and design principles for canonical-to-provider asset management.

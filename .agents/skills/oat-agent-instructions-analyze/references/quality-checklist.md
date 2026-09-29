@@ -27,7 +27,7 @@ Per-file evaluation criteria for agent instruction files. Use this checklist to 
 
 ### 4. Size Within Budget
 
-- [ ] Root files (AGENTS.md, CLAUDE.md): <300 lines (hard max 500)
+- [ ] Root files (AGENTS.md, and CLAUDE.md when a shim strategy is configured): <300 lines (hard max 500)
 - [ ] Scoped/package files: 40–150 lines
 - [ ] Individual rules files: <80 lines
 - [ ] Always-on baseline load is estimated and kept comfortably below the task budget
@@ -44,7 +44,7 @@ Per-file evaluation criteria for agent instruction files. Use this checklist to 
 
 ### 6. Precedence Clear
 
-- [ ] Override semantics are explicit (nearest-wins for AGENTS.md, import directives for CLAUDE.md)
+- [ ] Override semantics are explicit (nearest-wins for AGENTS.md, import directives for CLAUDE.md when a shim strategy is configured)
 - [ ] No ambiguous or conflicting instructions across scope levels
 - **Severity if failing:** Medium
 

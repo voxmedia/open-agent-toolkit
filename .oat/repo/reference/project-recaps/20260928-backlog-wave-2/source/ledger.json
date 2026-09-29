@@ -1,0 +1,6406 @@
+{
+  "terminology": [
+    {
+      "term": "summary.md"
+    },
+    {
+      "term": "wave-2"
+    },
+    {
+      "term": "p01"
+    },
+    {
+      "term": "p05"
+    },
+    {
+      "term": "BL-260927-validate-recon-worker"
+    },
+    {
+      "term": "BL-260830-persist-instruction-sync"
+    },
+    {
+      "term": "p04"
+    },
+    {
+      "term": "p03"
+    },
+    {
+      "term": "p02"
+    },
+    {
+      "term": "BL-260829-order-phase-bookkeeping-before"
+    },
+    {
+      "term": "BL-260818-distinguish-operator-directed"
+    },
+    {
+      "term": "BL-260928-serialize-concurrent-agents-md"
+    }
+  ],
+  "numbers": [
+    {
+      "subject": "summary.md",
+      "value": "2026-09-28"
+    },
+    {
+      "subject": "summary.md",
+      "value": "1"
+    },
+    {
+      "subject": "Summary: backlog-wave-2",
+      "value": "2"
+    },
+    {
+      "subject": "Overview",
+      "value": "2026-09-26"
+    },
+    {
+      "subject": "Overview",
+      "value": "2"
+    },
+    {
+      "subject": "Overview",
+      "value": "332"
+    },
+    {
+      "subject": "Overview",
+      "value": "1"
+    },
+    {
+      "subject": "p01",
+      "value": "49"
+    },
+    {
+      "subject": "p01",
+      "value": "30"
+    },
+    {
+      "subject": "What Was Implemented",
+      "value": "19"
+    },
+    {
+      "subject": "What Was Implemented",
+      "value": "11"
+    },
+    {
+      "subject": "What Was Implemented",
+      "value": "1"
+    }
+  ],
+  "statuses": [
+    {
+      "subject": "summary.md",
+      "value": "complete"
+    },
+    {
+      "subject": "Overview",
+      "value": "closed"
+    },
+    {
+      "subject": "What Was Implemented",
+      "value": "skipped"
+    },
+    {
+      "subject": "What Was Implemented",
+      "value": "closed"
+    },
+    {
+      "subject": "Design Deltas",
+      "value": "built"
+    },
+    {
+      "subject": "Notable Challenges",
+      "value": "failed"
+    },
+    {
+      "subject": "Notable Challenges",
+      "value": "closed"
+    },
+    {
+      "subject": "BL-260829-order-phase-bookkeeping-before",
+      "value": "open"
+    },
+    {
+      "subject": "Revision History",
+      "value": "closed"
+    },
+    {
+      "subject": "Workflow issues",
+      "value": "failed"
+    },
+    {
+      "subject": "Explainer Outcome",
+      "value": "built"
+    },
+    {
+      "subject": "p01",
+      "value": "deferred"
+    }
+  ],
+  "claims": [
+    {
+      "subject": "summary.md",
+      "value": "complete",
+      "kind": "status",
+      "claimId": "claim-0e4ed8258875f3af"
+    },
+    {
+      "subject": "summary.md",
+      "value": "2026-09-28",
+      "kind": "date",
+      "claimId": "claim-a36f8d5d96465ef4"
+    },
+    {
+      "subject": "summary.md",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-37ccea48b75cbb17"
+    },
+    {
+      "subject": "Summary: backlog-wave-2",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-0cf59710bbfbf5bd"
+    },
+    {
+      "subject": "Overview",
+      "value": "2026-09-26",
+      "kind": "date",
+      "claimId": "claim-259b8442dc352ac6"
+    },
+    {
+      "subject": "Overview",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-259b8442dc352ac6"
+    },
+    {
+      "subject": "Overview",
+      "value": "332",
+      "kind": "number",
+      "claimId": "claim-2cc511bbbddbce6a"
+    },
+    {
+      "subject": "Overview",
+      "value": "closed",
+      "kind": "status",
+      "claimId": "claim-927309a9f8e7426a"
+    },
+    {
+      "subject": "Overview",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-37a468d85eb7093f"
+    },
+    {
+      "subject": "p01",
+      "value": "49",
+      "kind": "number",
+      "claimId": "claim-0ebe38fe7a975ace"
+    },
+    {
+      "subject": "p01",
+      "value": "30",
+      "kind": "number",
+      "claimId": "claim-0ebe38fe7a975ace"
+    },
+    {
+      "subject": "What Was Implemented",
+      "value": "19",
+      "kind": "number",
+      "claimId": "claim-3e9a1549dae71030"
+    },
+    {
+      "subject": "What Was Implemented",
+      "value": "11",
+      "kind": "number",
+      "claimId": "claim-c041092a94ab19f9"
+    },
+    {
+      "subject": "What Was Implemented",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-e59f0c2b994ac670"
+    },
+    {
+      "subject": "What Was Implemented",
+      "value": "skipped",
+      "kind": "status",
+      "claimId": "claim-c169063303762bec"
+    },
+    {
+      "subject": "What Was Implemented",
+      "value": "0.3",
+      "kind": "number",
+      "claimId": "claim-d84cec3a1b441a5b"
+    },
+    {
+      "subject": "What Was Implemented",
+      "value": "8",
+      "kind": "number",
+      "claimId": "claim-d84cec3a1b441a5b"
+    },
+    {
+      "subject": "What Was Implemented",
+      "value": "9",
+      "kind": "number",
+      "claimId": "claim-d84cec3a1b441a5b"
+    },
+    {
+      "subject": "BL-260927-validate-recon-worker",
+      "value": "260927",
+      "kind": "number",
+      "claimId": "claim-543ddd8dfae86f90"
+    },
+    {
+      "subject": "What Was Implemented",
+      "value": "closed",
+      "kind": "status",
+      "claimId": "claim-3201002da9364df8"
+    },
+    {
+      "subject": "What Was Implemented",
+      "value": "260927",
+      "kind": "number",
+      "claimId": "claim-2c7673faf2d0f888"
+    },
+    {
+      "subject": "Key Decisions",
+      "value": "260927",
+      "kind": "number",
+      "claimId": "claim-183da330d4afa9a4"
+    },
+    {
+      "subject": "Key Decisions",
+      "value": "260928",
+      "kind": "number",
+      "claimId": "claim-0ce0671f964ca82f"
+    },
+    {
+      "subject": "BL-260830-persist-instruction-sync",
+      "value": "260928",
+      "kind": "number",
+      "claimId": "claim-5428a4ac82aea713"
+    },
+    {
+      "subject": "BL-260830-persist-instruction-sync",
+      "value": "260830",
+      "kind": "number",
+      "claimId": "claim-5428a4ac82aea713"
+    },
+    {
+      "subject": "Design Deltas",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-ebb49f101087a362"
+    },
+    {
+      "subject": "Design Deltas",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-ebb49f101087a362"
+    },
+    {
+      "subject": "Design Deltas",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-ebb49f101087a362"
+    },
+    {
+      "subject": "Design Deltas",
+      "value": "260927",
+      "kind": "number",
+      "claimId": "claim-edc061a7bae3f00e"
+    },
+    {
+      "subject": "p04-t02",
+      "value": "5",
+      "kind": "number",
+      "claimId": "claim-9985e660dd7ce52f"
+    },
+    {
+      "subject": "Design Deltas",
+      "value": "built",
+      "kind": "status",
+      "claimId": "claim-5bb3852195a4db85"
+    },
+    {
+      "subject": "Design Deltas",
+      "value": "1900",
+      "kind": "number",
+      "claimId": "claim-9f27ec391e26c2d4"
+    },
+    {
+      "subject": "p03",
+      "value": "4",
+      "kind": "number",
+      "claimId": "claim-6ea7a101aa9d3842"
+    },
+    {
+      "subject": "Notable Challenges",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-dc4a1f6005923fc7"
+    },
+    {
+      "subject": "Notable Challenges",
+      "value": "failed",
+      "kind": "status",
+      "claimId": "claim-dc4a1f6005923fc7"
+    },
+    {
+      "subject": "Notable Challenges",
+      "value": "closed",
+      "kind": "status",
+      "claimId": "claim-dc4a1f6005923fc7"
+    },
+    {
+      "subject": "Tradeoffs Made",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-320cdcc0b75621fc"
+    },
+    {
+      "subject": "BL-260829-order-phase-bookkeeping-before",
+      "value": "260829",
+      "kind": "number",
+      "claimId": "claim-4f4a83b06af223b3"
+    },
+    {
+      "subject": "BL-260829-order-phase-bookkeeping-before",
+      "value": "open",
+      "kind": "status",
+      "claimId": "claim-4f4a83b06af223b3"
+    },
+    {
+      "subject": "Integration Notes",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-ea84ab25e1baa5a7"
+    },
+    {
+      "subject": "Integration Notes",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-8e353f2629478539"
+    },
+    {
+      "subject": "Integration Notes",
+      "value": "10",
+      "kind": "number",
+      "claimId": "claim-8e353f2629478539"
+    },
+    {
+      "subject": "Integration Notes",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-8e353f2629478539"
+    },
+    {
+      "subject": "Revision History",
+      "value": "2026-09-28",
+      "kind": "date",
+      "claimId": "claim-f6329b2d161ef9df"
+    },
+    {
+      "subject": "Revision History",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-f6329b2d161ef9df"
+    },
+    {
+      "subject": "Revision History",
+      "value": "332",
+      "kind": "number",
+      "claimId": "claim-f6329b2d161ef9df"
+    },
+    {
+      "subject": "Revision History",
+      "value": "closed",
+      "kind": "status",
+      "claimId": "claim-653d3bd2c16bc5cb"
+    },
+    {
+      "subject": "Agent-instruction updates",
+      "value": "2026",
+      "kind": "number",
+      "claimId": "claim-7fa3292675ea3838"
+    },
+    {
+      "subject": "Agent-instruction updates",
+      "value": "09",
+      "kind": "number",
+      "claimId": "claim-7fa3292675ea3838"
+    },
+    {
+      "subject": "Agent-instruction updates",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-583bdf868dc98e5b"
+    },
+    {
+      "subject": "Agent-instruction updates",
+      "value": "100",
+      "kind": "number",
+      "claimId": "claim-cd0590d4a2c9c1fe"
+    },
+    {
+      "subject": "BL-260818-distinguish-operator-directed",
+      "value": "260818",
+      "kind": "number",
+      "claimId": "claim-4b87bb2b14b1a1f9"
+    },
+    {
+      "subject": "Workflow issues",
+      "value": "2026",
+      "kind": "number",
+      "claimId": "claim-2b8ec9c6a487ebcd"
+    },
+    {
+      "subject": "Workflow issues",
+      "value": "09",
+      "kind": "number",
+      "claimId": "claim-2b8ec9c6a487ebcd"
+    },
+    {
+      "subject": "Workflow issues",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-f7527685e121fc32"
+    },
+    {
+      "subject": "Workflow issues",
+      "value": "332",
+      "kind": "number",
+      "claimId": "claim-f7527685e121fc32"
+    },
+    {
+      "subject": "Workflow issues",
+      "value": "failed",
+      "kind": "status",
+      "claimId": "claim-155b57bfc7234761"
+    },
+    {
+      "subject": "Explainer Outcome",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-a554b676e8e05cbc"
+    },
+    {
+      "subject": "Explainer Outcome",
+      "value": "built",
+      "kind": "status",
+      "claimId": "claim-c7a870edc14129ab"
+    },
+    {
+      "subject": "BL-260928-serialize-concurrent-agents-md",
+      "value": "260928",
+      "kind": "number",
+      "claimId": "claim-8c6e36b94a70bbff"
+    },
+    {
+      "subject": "BL-260928-keep-instructions-sync-force",
+      "value": "260928",
+      "kind": "number",
+      "claimId": "claim-a963800631896a08"
+    },
+    {
+      "subject": "BL-260928-route-quick-mode-discovery",
+      "value": "260928",
+      "kind": "number",
+      "claimId": "claim-2bc00f4bf1ec6ff2"
+    },
+    {
+      "subject": "BL-260928-settle-codex-read-authority",
+      "value": "260928",
+      "kind": "number",
+      "claimId": "claim-91a311910f6bec94"
+    },
+    {
+      "subject": "BL-260928-settle-codex-read-authority",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-91a311910f6bec94"
+    },
+    {
+      "subject": "BL-260928-harden-the-backlog-reference",
+      "value": "260928",
+      "kind": "number",
+      "claimId": "claim-cfcab63f4b3acc1f"
+    },
+    {
+      "subject": "Follow-up Items",
+      "value": "05",
+      "kind": "number",
+      "claimId": "claim-cec889499fe6a1c5"
+    },
+    {
+      "subject": "2026-09-27 · structural · oat gate review · plan",
+      "value": "2026-09-27",
+      "kind": "date",
+      "claimId": "claim-5ddc56a90b6cafe4"
+    },
+    {
+      "subject": "wave-2",
+      "value": "6",
+      "kind": "number",
+      "claimId": "claim-ba06ecab56e59f7f"
+    },
+    {
+      "subject": "wave-2",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-ba06ecab56e59f7f"
+    },
+    {
+      "subject": "wave-2",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-ba06ecab56e59f7f"
+    },
+    {
+      "subject": "wave-2",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-ba06ecab56e59f7f"
+    },
+    {
+      "subject": "wave-2",
+      "value": "2026",
+      "kind": "number",
+      "claimId": "claim-ba06ecab56e59f7f"
+    },
+    {
+      "subject": "wave-2",
+      "value": "09",
+      "kind": "number",
+      "claimId": "claim-ba06ecab56e59f7f"
+    },
+    {
+      "subject": "2026-09-28 · structural · oat gate review · p01",
+      "value": "2026-09-28",
+      "kind": "date",
+      "claimId": "claim-6bcbc7a18e1c5150"
+    },
+    {
+      "subject": "2026-09-28 · structural · oat-project-implement · p01",
+      "value": "2026-09-28",
+      "kind": "date",
+      "claimId": "claim-8576bf7d640c5149"
+    },
+    {
+      "subject": "p01",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-39caef812d684c21"
+    },
+    {
+      "subject": "p01",
+      "value": "6",
+      "kind": "number",
+      "claimId": "claim-39caef812d684c21"
+    },
+    {
+      "subject": "p01",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-39caef812d684c21"
+    },
+    {
+      "subject": "p01",
+      "value": "deferred",
+      "kind": "status",
+      "claimId": "claim-39caef812d684c21"
+    },
+    {
+      "subject": "2026-09-28 · structural · oat gate review · p02",
+      "value": "2026-09-28",
+      "kind": "date",
+      "claimId": "claim-21e0c57a4d28074f"
+    },
+    {
+      "subject": "wave-2",
+      "value": "1645",
+      "kind": "number",
+      "claimId": "claim-abbb31920b21c1a9"
+    },
+    {
+      "subject": "wave-2",
+      "value": "9290",
+      "kind": "number",
+      "claimId": "claim-abbb31920b21c1a9"
+    },
+    {
+      "subject": "2026-09-28 · structural · oat-project-implement · p02",
+      "value": "2026-09-28",
+      "kind": "date",
+      "claimId": "claim-9583b1948e81d454"
+    },
+    {
+      "subject": "p02",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-180413f11a7e4962"
+    },
+    {
+      "subject": "p02",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-180413f11a7e4962"
+    },
+    {
+      "subject": "p02",
+      "value": "6",
+      "kind": "number",
+      "claimId": "claim-180413f11a7e4962"
+    },
+    {
+      "subject": "2026-09-28 · structural · oat gate review · p03",
+      "value": "2026-09-28",
+      "kind": "date",
+      "claimId": "claim-0b1b69db280b02b8"
+    },
+    {
+      "subject": "2026-09-28 · structural · oat-project-implement · p03",
+      "value": "2026-09-28",
+      "kind": "date",
+      "claimId": "claim-0e35c44758872d41"
+    },
+    {
+      "subject": "p03",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-17d821d3172e3478"
+    },
+    {
+      "subject": "p03",
+      "value": "6",
+      "kind": "number",
+      "claimId": "claim-17d821d3172e3478"
+    },
+    {
+      "subject": "2026-09-28 · structural · oat gate review · p04",
+      "value": "2026-09-28",
+      "kind": "date",
+      "claimId": "claim-01147dbdf37c0fb1"
+    },
+    {
+      "subject": "wave-2",
+      "value": "1215",
+      "kind": "number",
+      "claimId": "claim-c83495b776dca859"
+    },
+    {
+      "subject": "wave-2",
+      "value": "4615",
+      "kind": "number",
+      "claimId": "claim-c83495b776dca859"
+    },
+    {
+      "subject": "2026-09-28 · structural · oat-project-implement · p04",
+      "value": "2026-09-28",
+      "kind": "date",
+      "claimId": "claim-954f0221026d8888"
+    },
+    {
+      "subject": "p04",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-19740d4f7951d753"
+    },
+    {
+      "subject": "p04",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-19740d4f7951d753"
+    },
+    {
+      "subject": "p04",
+      "value": "5",
+      "kind": "number",
+      "claimId": "claim-a5a9bab8df4f48f0"
+    },
+    {
+      "subject": "p04",
+      "value": "complete",
+      "kind": "status",
+      "claimId": "claim-a5a9bab8df4f48f0"
+    },
+    {
+      "subject": "2026-09-28 · structural · oat gate review · p05",
+      "value": "2026-09-28",
+      "kind": "date",
+      "claimId": "claim-6b09ed24e4eccdd4"
+    },
+    {
+      "subject": "2026-09-28 · structural · oat-project-implement · p05",
+      "value": "2026-09-28",
+      "kind": "date",
+      "claimId": "claim-125a19409ec05772"
+    },
+    {
+      "subject": "p05",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-1743acbd171c84d4"
+    },
+    {
+      "subject": "p05",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-1743acbd171c84d4"
+    },
+    {
+      "subject": "p05",
+      "value": "38",
+      "kind": "number",
+      "claimId": "claim-1743acbd171c84d4"
+    },
+    {
+      "subject": "p05",
+      "value": "complete",
+      "kind": "status",
+      "claimId": "claim-1743acbd171c84d4"
+    },
+    {
+      "subject": "2026-09-28 · structural · oat gate review · final",
+      "value": "2026-09-28",
+      "kind": "date",
+      "claimId": "claim-e037f8578fa3f0c2"
+    },
+    {
+      "subject": "wave-2",
+      "value": "4559",
+      "kind": "number",
+      "claimId": "claim-13eecc01475a73e4"
+    },
+    {
+      "subject": "wave-2",
+      "value": "4059",
+      "kind": "number",
+      "claimId": "claim-d1ad9c15d2826b95"
+    },
+    {
+      "subject": "2026-09-28 · structural · oat gate review · p-rev1",
+      "value": "2026-09-28",
+      "kind": "date",
+      "claimId": "claim-10fe4cab533d7bdb"
+    },
+    {
+      "subject": "2026-09-28 · structural · oat gate review · p-rev1",
+      "value": "6",
+      "kind": "number",
+      "claimId": "claim-206eecef247e6dbf"
+    },
+    {
+      "subject": "2026-09-28 · structural · oat gate review · p-rev1",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-206eecef247e6dbf"
+    },
+    {
+      "subject": "wave-2",
+      "value": "0488",
+      "kind": "number",
+      "claimId": "claim-925ecff271bc2753"
+    },
+    {
+      "subject": "wave-2",
+      "value": "4259",
+      "kind": "number",
+      "claimId": "claim-2a8ee457067f3856"
+    },
+    {
+      "subject": "implementation.md",
+      "value": "complete",
+      "kind": "status",
+      "claimId": "claim-1e9507600a5c0401"
+    },
+    {
+      "subject": "implementation.md",
+      "value": "2026-09-27",
+      "kind": "date",
+      "claimId": "claim-640d21500f2c93d3"
+    },
+    {
+      "subject": "Implementation: backlog-wave-2",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-e6db3ec82acf046a"
+    },
+    {
+      "subject": "Implementation: backlog-wave-2",
+      "value": "2026-09-27",
+      "kind": "date",
+      "claimId": "claim-d7b07ab9bb5fa0c5"
+    },
+    {
+      "subject": "Implementation: backlog-wave-2",
+      "value": "complete",
+      "kind": "status",
+      "claimId": "claim-062f456b3b45d7e1"
+    },
+    {
+      "subject": "Phase 1",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-858829d7159495a2"
+    },
+    {
+      "subject": "Phase 1",
+      "value": "8",
+      "kind": "number",
+      "claimId": "claim-858829d7159495a2"
+    },
+    {
+      "subject": "Phase 1",
+      "value": "complete",
+      "kind": "status",
+      "claimId": "claim-858829d7159495a2"
+    },
+    {
+      "subject": "Phase 2",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-96a244f3a4044691"
+    },
+    {
+      "subject": "Phase 2",
+      "value": "8",
+      "kind": "number",
+      "claimId": "claim-96a244f3a4044691"
+    },
+    {
+      "subject": "Phase 2",
+      "value": "complete",
+      "kind": "status",
+      "claimId": "claim-96a244f3a4044691"
+    },
+    {
+      "subject": "Phase 3",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-a5950d4699554e69"
+    },
+    {
+      "subject": "Phase 3",
+      "value": "5",
+      "kind": "number",
+      "claimId": "claim-a5950d4699554e69"
+    },
+    {
+      "subject": "Phase 3",
+      "value": "complete",
+      "kind": "status",
+      "claimId": "claim-a5950d4699554e69"
+    },
+    {
+      "subject": "Phase 4",
+      "value": "4",
+      "kind": "number",
+      "claimId": "claim-239a08fa3d24dd11"
+    },
+    {
+      "subject": "Phase 4",
+      "value": "7",
+      "kind": "number",
+      "claimId": "claim-239a08fa3d24dd11"
+    },
+    {
+      "subject": "Phase 4",
+      "value": "complete",
+      "kind": "status",
+      "claimId": "claim-239a08fa3d24dd11"
+    },
+    {
+      "subject": "Phase 5",
+      "value": "5",
+      "kind": "number",
+      "claimId": "claim-ffd92c5b2da5d0c4"
+    },
+    {
+      "subject": "Phase 5",
+      "value": "12",
+      "kind": "number",
+      "claimId": "claim-ffd92c5b2da5d0c4"
+    },
+    {
+      "subject": "Phase 5",
+      "value": "complete",
+      "kind": "status",
+      "claimId": "claim-ffd92c5b2da5d0c4"
+    },
+    {
+      "subject": "Phase p-rev1",
+      "value": "9",
+      "kind": "number",
+      "claimId": "claim-ed316d3de2b6e81a"
+    },
+    {
+      "subject": "Phase p-rev1",
+      "value": "complete",
+      "kind": "status",
+      "claimId": "claim-ed316d3de2b6e81a"
+    },
+    {
+      "subject": "Progress Overview",
+      "value": "49",
+      "kind": "number",
+      "claimId": "claim-cbaa58786f5f64cb"
+    },
+    {
+      "subject": "Phase 1: AGENTS.md guidance",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-d48be099f05516ac"
+    },
+    {
+      "subject": "Phase 1: AGENTS.md guidance",
+      "value": "complete",
+      "kind": "status",
+      "claimId": "claim-f26888fd6cf43c5d"
+    },
+    {
+      "subject": "Phase 1: AGENTS.md guidance",
+      "value": "2026-09-27",
+      "kind": "date",
+      "claimId": "claim-e71c6ca94a4883aa"
+    },
+    {
+      "subject": "Task p01-t08: (review) Close p01 round-2 Low findings L1-L3",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-f29e9239ee10e6e1"
+    },
+    {
+      "subject": "Phase 2: CLAUDE.md shims",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-867012e755e44682"
+    },
+    {
+      "subject": "Phase 2: CLAUDE.md shims",
+      "value": "complete",
+      "kind": "status",
+      "claimId": "claim-e3b41a9deb67dcc1"
+    },
+    {
+      "subject": "Phase 2: CLAUDE.md shims",
+      "value": "2026-09-28",
+      "kind": "date",
+      "claimId": "claim-6f63976dc9354ebd"
+    },
+    {
+      "subject": "Task p02-t08: (review) Close p02 round-2 findings M1, M2, L1",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-99cd36f808ca55f2"
+    },
+    {
+      "subject": "Phase 3: Lifecycle skill routing and bookkeeping",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-21c8a9f6d1e39efa"
+    },
+    {
+      "subject": "Phase 3: Lifecycle skill routing and bookkeeping",
+      "value": "complete",
+      "kind": "status",
+      "claimId": "claim-9421db23df65dd74"
+    },
+    {
+      "subject": "Phase 3: Lifecycle skill routing and bookkeeping",
+      "value": "2026-09-28",
+      "kind": "date",
+      "claimId": "claim-44a10d22118b9c3a"
+    },
+    {
+      "subject": "Phase 4: Agent roles and recon validation",
+      "value": "4",
+      "kind": "number",
+      "claimId": "claim-e2870ab08b84885d"
+    },
+    {
+      "subject": "Phase 4: Agent roles and recon validation",
+      "value": "complete",
+      "kind": "status",
+      "claimId": "claim-0b513fabe9a5c4e0"
+    },
+    {
+      "subject": "Phase 4: Agent roles and recon validation",
+      "value": "2026-09-28",
+      "kind": "date",
+      "claimId": "claim-871aeab2a04ba30d"
+    },
+    {
+      "subject": "Task p04-t05: (review) Close p04 round-2 findings M1-M3, L1-L2",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-3be7f26c497a48a0"
+    },
+    {
+      "subject": "Phase 5: CI and backlog tooling, release fan-in",
+      "value": "5",
+      "kind": "number",
+      "claimId": "claim-a34eff49df9801f3"
+    },
+    {
+      "subject": "Phase 5: CI and backlog tooling, release fan-in",
+      "value": "complete",
+      "kind": "status",
+      "claimId": "claim-07c7b90de81cce2b"
+    },
+    {
+      "subject": "Phase 5: CI and backlog tooling, release fan-in",
+      "value": "2026-09-28",
+      "kind": "date",
+      "claimId": "claim-01039e40b2362ff4"
+    },
+    {
+      "subject": "Phase p-rev1: Revision 1",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-8790a8aa20609387"
+    },
+    {
+      "subject": "Phase p-rev1: Revision 1",
+      "value": "complete",
+      "kind": "status",
+      "claimId": "claim-9ac81627214a7d32"
+    },
+    {
+      "subject": "Phase p-rev1: Revision 1",
+      "value": "2026-09-28",
+      "kind": "date",
+      "claimId": "claim-4308b85f5eab693f"
+    },
+    {
+      "subject": "Task prev1-t07: (revision) Correct the recon records",
+      "value": "512493326",
+      "kind": "number",
+      "claimId": "claim-2f775d7a93279e70"
+    },
+    {
+      "subject": "Run 1",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-0345b3bd33ed529f"
+    },
+    {
+      "subject": "Run 1",
+      "value": "2026-09-27",
+      "kind": "date",
+      "claimId": "claim-62495234296efe1c"
+    },
+    {
+      "subject": "p05",
+      "value": "03",
+      "kind": "number",
+      "claimId": "claim-5b97098f39b13ad7"
+    },
+    {
+      "subject": "Run 1",
+      "value": "08",
+      "kind": "number",
+      "claimId": "claim-53a4bb64748d043d"
+    },
+    {
+      "subject": "Run 1",
+      "value": "6",
+      "kind": "number",
+      "claimId": "claim-43c5891d5e5a5f9e"
+    },
+    {
+      "subject": "Run 1",
+      "value": "0.3",
+      "kind": "number",
+      "claimId": "claim-5a1c948bea36c032"
+    },
+    {
+      "subject": "Run 1",
+      "value": "7",
+      "kind": "number",
+      "claimId": "claim-5a1c948bea36c032"
+    },
+    {
+      "subject": "Phase p01 dispatch",
+      "value": "5",
+      "kind": "number",
+      "claimId": "claim-ea6521686b56cfa9"
+    },
+    {
+      "subject": "p01",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-2aad329d8e113ffb"
+    },
+    {
+      "subject": "p01",
+      "value": "10",
+      "kind": "number",
+      "claimId": "claim-2aad329d8e113ffb"
+    },
+    {
+      "subject": "p01",
+      "value": "5",
+      "kind": "number",
+      "claimId": "claim-2aad329d8e113ffb"
+    },
+    {
+      "subject": "p01",
+      "value": "2026",
+      "kind": "number",
+      "claimId": "claim-ee3763343754cb9a"
+    },
+    {
+      "subject": "p01",
+      "value": "09",
+      "kind": "number",
+      "claimId": "claim-ee3763343754cb9a"
+    },
+    {
+      "subject": "Phase p01 dispatch",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-9b056c2df976a7af"
+    },
+    {
+      "subject": "Phase p01 dispatch",
+      "value": "4",
+      "kind": "number",
+      "claimId": "claim-9b056c2df976a7af"
+    },
+    {
+      "subject": "p01-t07",
+      "value": "5",
+      "kind": "number",
+      "claimId": "claim-79c1ba93d7de163d"
+    },
+    {
+      "subject": "Phase p01 dispatch",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-9764a856de1893ee"
+    },
+    {
+      "subject": "Phase p01 dispatch",
+      "value": "closed",
+      "kind": "status",
+      "claimId": "claim-9764a856de1893ee"
+    },
+    {
+      "subject": "Phase p01 dispatch",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-0a006962cec120d2"
+    },
+    {
+      "subject": "Phase p01 dispatch",
+      "value": "open",
+      "kind": "status",
+      "claimId": "claim-0a006962cec120d2"
+    },
+    {
+      "subject": "Phase p01 dispatch",
+      "value": "skipped",
+      "kind": "status",
+      "claimId": "claim-0a006962cec120d2"
+    },
+    {
+      "subject": "Phase p01 dispatch",
+      "value": "2492",
+      "kind": "number",
+      "claimId": "claim-d1be5d4bc31141ae"
+    },
+    {
+      "subject": "wave-2",
+      "value": "closed",
+      "kind": "status",
+      "claimId": "claim-361656ad46c43a50"
+    },
+    {
+      "subject": "Phase p01 dispatch",
+      "value": "2557",
+      "kind": "number",
+      "claimId": "claim-ed13ead0d995329a"
+    },
+    {
+      "subject": "Phase p01 dispatch",
+      "value": "6",
+      "kind": "number",
+      "claimId": "claim-7cd254f92272811b"
+    },
+    {
+      "subject": "Phase p01 dispatch",
+      "value": "deferred",
+      "kind": "status",
+      "claimId": "claim-14c5e6d201348004"
+    },
+    {
+      "subject": "p01",
+      "value": "8",
+      "kind": "number",
+      "claimId": "claim-2cc7dde7ee09456b"
+    },
+    {
+      "subject": "Phase p01 dispatch",
+      "value": "2.0",
+      "kind": "number",
+      "claimId": "claim-bb43d48936520062"
+    },
+    {
+      "subject": "Phase p02 dispatch",
+      "value": "5",
+      "kind": "number",
+      "claimId": "claim-0b3929a86817d6f4"
+    },
+    {
+      "subject": "p02",
+      "value": "2463",
+      "kind": "number",
+      "claimId": "claim-06d9133db05378e5"
+    },
+    {
+      "subject": "p02",
+      "value": "5",
+      "kind": "number",
+      "claimId": "claim-06d9133db05378e5"
+    },
+    {
+      "subject": "Recovery Event bw2-p02-rec-1 (initial stop)",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-2bb47a2be64b9a1d"
+    },
+    {
+      "subject": "Recovery Event bw2-p02-rec-1 (initial stop)",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-63928ef3b3a324a2"
+    },
+    {
+      "subject": "Recovery Event bw2-p02-rec-1 (initial stop)",
+      "value": "10",
+      "kind": "number",
+      "claimId": "claim-63928ef3b3a324a2"
+    },
+    {
+      "subject": "Recovery Event bw2-p02-rec-1 (initial stop)",
+      "value": "5",
+      "kind": "number",
+      "claimId": "claim-b9e336389f07b928"
+    },
+    {
+      "subject": "Recovery Event bw2-p02-rec-1",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-3997295903e60f49"
+    },
+    {
+      "subject": "Recovery Event bw2-p02-rec-1",
+      "value": "10",
+      "kind": "number",
+      "claimId": "claim-8998d6113dc459bc"
+    },
+    {
+      "subject": "Recovery Event bw2-p02-rec-1",
+      "value": "5",
+      "kind": "number",
+      "claimId": "claim-9dd618d7a622665c"
+    },
+    {
+      "subject": "Recovery Event bw2-p02-rec-1",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-c9bc5e81cc31f646"
+    },
+    {
+      "subject": "Recovery Event bw2-p02-rec-1",
+      "value": "397",
+      "kind": "number",
+      "claimId": "claim-c9bc5e81cc31f646"
+    },
+    {
+      "subject": "Recovery Event bw2-p02-rec-1",
+      "value": "7833",
+      "kind": "number",
+      "claimId": "claim-c9bc5e81cc31f646"
+    },
+    {
+      "subject": "p02",
+      "value": "2026",
+      "kind": "number",
+      "claimId": "claim-535c3f83a01e8f67"
+    },
+    {
+      "subject": "p02",
+      "value": "09",
+      "kind": "number",
+      "claimId": "claim-535c3f83a01e8f67"
+    },
+    {
+      "subject": "Recovery Event bw2-p02-rec-1",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-3d69ba5b5cfae11f"
+    },
+    {
+      "subject": "p02-t07",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-16e8b11db30f7b00"
+    },
+    {
+      "subject": "Recovery Event bw2-p02-rec-1",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-11c6dcddb9ff44c6"
+    },
+    {
+      "subject": "Recovery Event bw2-p02-rec-1",
+      "value": "7841",
+      "kind": "number",
+      "claimId": "claim-82e4df88d87e7477"
+    },
+    {
+      "subject": "p02",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-841e871df5040c64"
+    },
+    {
+      "subject": "p02-t08",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-074ed97f2e80947c"
+    },
+    {
+      "subject": "Recovery Event bw2-p02-rec-1",
+      "value": "7846",
+      "kind": "number",
+      "claimId": "claim-e93c398063d3b57b"
+    },
+    {
+      "subject": "Recovery Event bw2-p02-rec-1",
+      "value": "100",
+      "kind": "number",
+      "claimId": "claim-6077d1d8ca016728"
+    },
+    {
+      "subject": "p02-t07",
+      "value": "8",
+      "kind": "number",
+      "claimId": "claim-5f6238cdbe22dff0"
+    },
+    {
+      "subject": "Phase p03 dispatch",
+      "value": "5",
+      "kind": "number",
+      "claimId": "claim-32d85e0c9830d590"
+    },
+    {
+      "subject": "Phase p03 dispatch",
+      "value": "888",
+      "kind": "number",
+      "claimId": "claim-efb0d3ec14531299"
+    },
+    {
+      "subject": "Phase p03 dispatch",
+      "value": "37",
+      "kind": "number",
+      "claimId": "claim-efb0d3ec14531299"
+    },
+    {
+      "subject": "p03",
+      "value": "5",
+      "kind": "number",
+      "claimId": "claim-d4a1e9fbaffabe89"
+    },
+    {
+      "subject": "Phase p03 dispatch",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-3675f45a2a918b4a"
+    },
+    {
+      "subject": "Phase p03 dispatch",
+      "value": "4",
+      "kind": "number",
+      "claimId": "claim-3675f45a2a918b4a"
+    },
+    {
+      "subject": "Phase p03 dispatch",
+      "value": "260829",
+      "kind": "number",
+      "claimId": "claim-3675f45a2a918b4a"
+    },
+    {
+      "subject": "Phase p03 dispatch",
+      "value": "260711",
+      "kind": "number",
+      "claimId": "claim-3675f45a2a918b4a"
+    },
+    {
+      "subject": "Phase p03 dispatch",
+      "value": "open",
+      "kind": "status",
+      "claimId": "claim-3675f45a2a918b4a"
+    },
+    {
+      "subject": "Recovery Event bw2-p03-rec-1",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-a6dc01cb8ba865dd"
+    },
+    {
+      "subject": "Recovery Event bw2-p03-rec-1",
+      "value": "10",
+      "kind": "number",
+      "claimId": "claim-21ffc8b6a8684ab3"
+    },
+    {
+      "subject": "Recovery Event bw2-p03-rec-1",
+      "value": "5",
+      "kind": "number",
+      "claimId": "claim-2be80d5fda59ef56"
+    },
+    {
+      "subject": "Recovery Event bw2-p03-rec-1",
+      "value": "34",
+      "kind": "number",
+      "claimId": "claim-32e56fc61dc840cf"
+    },
+    {
+      "subject": "Recovery Event bw2-p03-rec-1",
+      "value": "882",
+      "kind": "number",
+      "claimId": "claim-32e56fc61dc840cf"
+    },
+    {
+      "subject": "p03",
+      "value": "2026",
+      "kind": "number",
+      "claimId": "claim-37c22517cfbbe40e"
+    },
+    {
+      "subject": "p03",
+      "value": "09",
+      "kind": "number",
+      "claimId": "claim-37c22517cfbbe40e"
+    },
+    {
+      "subject": "Recovery Event bw2-p03-rec-1",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-3f148ab699d9e5ad"
+    },
+    {
+      "subject": "Recovery Event bw2-p03-rec-1",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-3f148ab699d9e5ad"
+    },
+    {
+      "subject": "Recovery Event bw2-p03-rec-1",
+      "value": "4",
+      "kind": "number",
+      "claimId": "claim-3f148ab699d9e5ad"
+    },
+    {
+      "subject": "p03-t04",
+      "value": "66",
+      "kind": "number",
+      "claimId": "claim-2424e9cacc1a6ff2"
+    },
+    {
+      "subject": "p03-t04",
+      "value": "67",
+      "kind": "number",
+      "claimId": "claim-2424e9cacc1a6ff2"
+    },
+    {
+      "subject": "Recovery Event bw2-p03-rec-1",
+      "value": "411",
+      "kind": "number",
+      "claimId": "claim-af0ae5027b1e0e74"
+    },
+    {
+      "subject": "Recovery Event bw2-p03-rec-1",
+      "value": "414",
+      "kind": "number",
+      "claimId": "claim-af0ae5027b1e0e74"
+    },
+    {
+      "subject": "Recovery Event bw2-p03-rec-1",
+      "value": "deferred",
+      "kind": "status",
+      "claimId": "claim-3b1a64377933039a"
+    },
+    {
+      "subject": "Recovery Event bw2-p03-rec-1",
+      "value": "893",
+      "kind": "number",
+      "claimId": "claim-e15f0d963f316349"
+    },
+    {
+      "subject": "Recovery Event bw2-p03-rec-1",
+      "value": "37",
+      "kind": "number",
+      "claimId": "claim-e15f0d963f316349"
+    },
+    {
+      "subject": "Recovery Event bw2-p03-rec-1",
+      "value": "complete",
+      "kind": "status",
+      "claimId": "claim-c6871ddde7695e38"
+    },
+    {
+      "subject": "Recovery Event bw2-p03-rec-1",
+      "value": "894",
+      "kind": "number",
+      "claimId": "claim-94e493780c85dfe0"
+    },
+    {
+      "subject": "p03-t04",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-6d754c3074deda4d"
+    },
+    {
+      "subject": "p03-t04",
+      "value": "5",
+      "kind": "number",
+      "claimId": "claim-6d754c3074deda4d"
+    },
+    {
+      "subject": "p03-t04",
+      "value": "260829",
+      "kind": "number",
+      "claimId": "claim-6d754c3074deda4d"
+    },
+    {
+      "subject": "Recovery Event bw2-p03-rec-1",
+      "value": "open",
+      "kind": "status",
+      "claimId": "claim-0811307d88f20ab7"
+    },
+    {
+      "subject": "Phase p04 dispatch",
+      "value": "5",
+      "kind": "number",
+      "claimId": "claim-ab70a21892009d63"
+    },
+    {
+      "subject": "Phase p04 dispatch",
+      "value": "960",
+      "kind": "number",
+      "claimId": "claim-764abe2d02b43413"
+    },
+    {
+      "subject": "Phase p04 dispatch",
+      "value": "343",
+      "kind": "number",
+      "claimId": "claim-764abe2d02b43413"
+    },
+    {
+      "subject": "p04-t01",
+      "value": "failed",
+      "kind": "status",
+      "claimId": "claim-a8a0da44eb7c3728"
+    },
+    {
+      "subject": "Phase p04 dispatch",
+      "value": "failed",
+      "kind": "status",
+      "claimId": "claim-781d709a51352040"
+    },
+    {
+      "subject": "Phase p04 dispatch",
+      "value": "207",
+      "kind": "number",
+      "claimId": "claim-271a1ff72b9fa0f3"
+    },
+    {
+      "subject": "Phase p04 dispatch",
+      "value": "246",
+      "kind": "number",
+      "claimId": "claim-271a1ff72b9fa0f3"
+    },
+    {
+      "subject": "Phase p04 dispatch",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-42a7675ca03e6f53"
+    },
+    {
+      "subject": "Phase p04 dispatch",
+      "value": "1.1",
+      "kind": "number",
+      "claimId": "claim-e81af49229e3bec0"
+    },
+    {
+      "subject": "Phase p04 dispatch",
+      "value": "6",
+      "kind": "number",
+      "claimId": "claim-e81af49229e3bec0"
+    },
+    {
+      "subject": "p04",
+      "value": "2026",
+      "kind": "number",
+      "claimId": "claim-4c5c09f1f43ae63c"
+    },
+    {
+      "subject": "p04",
+      "value": "09",
+      "kind": "number",
+      "claimId": "claim-4c5c09f1f43ae63c"
+    },
+    {
+      "subject": "p04",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-4c5c09f1f43ae63c"
+    },
+    {
+      "subject": "Phase p04 dispatch",
+      "value": "7",
+      "kind": "number",
+      "claimId": "claim-42c06f1826336d7e"
+    },
+    {
+      "subject": "Phase p04 dispatch",
+      "value": "347",
+      "kind": "number",
+      "claimId": "claim-964aa5a58699508f"
+    },
+    {
+      "subject": "Phase p04 dispatch",
+      "value": "897",
+      "kind": "number",
+      "claimId": "claim-964aa5a58699508f"
+    },
+    {
+      "subject": "p04",
+      "value": "6",
+      "kind": "number",
+      "claimId": "claim-eea8d05e77bd6722"
+    },
+    {
+      "subject": "p04-t04",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-bfc7b97164160aeb"
+    },
+    {
+      "subject": "p04-t04",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-bfc7b97164160aeb"
+    },
+    {
+      "subject": "Phase p04 dispatch",
+      "value": "closed",
+      "kind": "status",
+      "claimId": "claim-e445ebd85953fac5"
+    },
+    {
+      "subject": "Phase p04 dispatch",
+      "value": "352",
+      "kind": "number",
+      "claimId": "claim-ce060ff79e36bf8b"
+    },
+    {
+      "subject": "Phase p04 dispatch",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-00cdeb6a2cc8af1c"
+    },
+    {
+      "subject": "p04-t05",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-72caf7b276c4d848"
+    },
+    {
+      "subject": "wave-2",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-005bee4d27dc12fe"
+    },
+    {
+      "subject": "Phase p04 dispatch",
+      "value": "355",
+      "kind": "number",
+      "claimId": "claim-b99370ecd850653a"
+    },
+    {
+      "subject": "Phase p04 dispatch",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-54dc62bec4356cb8"
+    },
+    {
+      "subject": "p04",
+      "value": "2026-09-28",
+      "kind": "date",
+      "claimId": "claim-24636bd1f1a72ed0"
+    },
+    {
+      "subject": "wave-2",
+      "value": "4",
+      "kind": "number",
+      "claimId": "claim-06508f2fb11153e5"
+    },
+    {
+      "subject": "Phase p04 dispatch",
+      "value": "357",
+      "kind": "number",
+      "claimId": "claim-6558916b6a5f4124"
+    },
+    {
+      "subject": "p04",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-5a087b3199bdcde7"
+    },
+    {
+      "subject": "wave-2",
+      "value": "5",
+      "kind": "number",
+      "claimId": "claim-7a8da5bfb2a2ee20"
+    },
+    {
+      "subject": "Phase p04 dispatch",
+      "value": "359",
+      "kind": "number",
+      "claimId": "claim-249911775b2b19d7"
+    },
+    {
+      "subject": "p04",
+      "value": "7",
+      "kind": "number",
+      "claimId": "claim-14fd26a021f8bfbe"
+    },
+    {
+      "subject": "BL-260928-keep-instructions-sync-force",
+      "value": "deferred",
+      "kind": "status",
+      "claimId": "claim-ec48b96e7bc85de5"
+    },
+    {
+      "subject": "Phase p05 dispatch",
+      "value": "5",
+      "kind": "number",
+      "claimId": "claim-bfe88b55461251d8"
+    },
+    {
+      "subject": "p05",
+      "value": "5",
+      "kind": "number",
+      "claimId": "claim-8489048a99bbe21b"
+    },
+    {
+      "subject": "Phase p05 dispatch",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-a736ae9c9b685f8f"
+    },
+    {
+      "subject": "Phase p05 dispatch",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-a736ae9c9b685f8f"
+    },
+    {
+      "subject": "p05-t03",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-ae98a2bf9fe4da12"
+    },
+    {
+      "subject": "Phase p05 dispatch",
+      "value": "25.4",
+      "kind": "number",
+      "claimId": "claim-3bf8356c1e8c26f9"
+    },
+    {
+      "subject": "Phase p05 dispatch",
+      "value": "18.0",
+      "kind": "number",
+      "claimId": "claim-3bf8356c1e8c26f9"
+    },
+    {
+      "subject": "p05-t04",
+      "value": "0.3",
+      "kind": "number",
+      "claimId": "claim-f539ebfd6a5517bc"
+    },
+    {
+      "subject": "p05-t04",
+      "value": "8",
+      "kind": "number",
+      "claimId": "claim-f539ebfd6a5517bc"
+    },
+    {
+      "subject": "p05-t04",
+      "value": "9",
+      "kind": "number",
+      "claimId": "claim-f539ebfd6a5517bc"
+    },
+    {
+      "subject": "p05-t05",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-1ce7b33ed3d5f3dd"
+    },
+    {
+      "subject": "Phase p05 dispatch",
+      "value": "14",
+      "kind": "number",
+      "claimId": "claim-158a4d15d971cf51"
+    },
+    {
+      "subject": "Phase p05 dispatch",
+      "value": "11",
+      "kind": "number",
+      "claimId": "claim-158a4d15d971cf51"
+    },
+    {
+      "subject": "Phase p05 dispatch",
+      "value": "260829",
+      "kind": "number",
+      "claimId": "claim-62b54ff026d53691"
+    },
+    {
+      "subject": "Phase p05 dispatch",
+      "value": "260928",
+      "kind": "number",
+      "claimId": "claim-62b54ff026d53691"
+    },
+    {
+      "subject": "Phase p05 dispatch",
+      "value": "open",
+      "kind": "status",
+      "claimId": "claim-62b54ff026d53691"
+    },
+    {
+      "subject": "p05-t06",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-aace77d385ad4e76"
+    },
+    {
+      "subject": "p05-t06",
+      "value": "11",
+      "kind": "number",
+      "claimId": "claim-aace77d385ad4e76"
+    },
+    {
+      "subject": "Phase p05 dispatch",
+      "value": "10",
+      "kind": "number",
+      "claimId": "claim-3d238da7805b7432"
+    },
+    {
+      "subject": "Phase p05 dispatch",
+      "value": "7866",
+      "kind": "number",
+      "claimId": "claim-3d238da7805b7432"
+    },
+    {
+      "subject": "Phase p05 dispatch",
+      "value": "151",
+      "kind": "number",
+      "claimId": "claim-3d238da7805b7432"
+    },
+    {
+      "subject": "Phase p05 dispatch",
+      "value": "31",
+      "kind": "number",
+      "claimId": "claim-3d238da7805b7432"
+    },
+    {
+      "subject": "Phase p05 dispatch",
+      "value": "163",
+      "kind": "number",
+      "claimId": "claim-ee33d2d221a7dcaf"
+    },
+    {
+      "subject": "Phase p05 dispatch",
+      "value": "690",
+      "kind": "number",
+      "claimId": "claim-34ed5b946dabbd85"
+    },
+    {
+      "subject": "p05",
+      "value": "2026",
+      "kind": "number",
+      "claimId": "claim-b6ed0437c7b5193b"
+    },
+    {
+      "subject": "p05",
+      "value": "09",
+      "kind": "number",
+      "claimId": "claim-b6ed0437c7b5193b"
+    },
+    {
+      "subject": "p05",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-b6ed0437c7b5193b"
+    },
+    {
+      "subject": "p05-t07",
+      "value": "7",
+      "kind": "number",
+      "claimId": "claim-868ed519beb1e7fc"
+    },
+    {
+      "subject": "Phase p05 dispatch",
+      "value": "34081195164",
+      "kind": "number",
+      "claimId": "claim-f04c2b294098a901"
+    },
+    {
+      "subject": "Phase p05 dispatch",
+      "value": "34081580680",
+      "kind": "number",
+      "claimId": "claim-f04c2b294098a901"
+    },
+    {
+      "subject": "Phase p05 dispatch",
+      "value": "148",
+      "kind": "number",
+      "claimId": "claim-f04c2b294098a901"
+    },
+    {
+      "subject": "p05",
+      "value": "6",
+      "kind": "number",
+      "claimId": "claim-49d940dd3cd395b9"
+    },
+    {
+      "subject": "p05-t08",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-ba8f0280829d0bb1"
+    },
+    {
+      "subject": "p05-t08",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-ba8f0280829d0bb1"
+    },
+    {
+      "subject": "Phase p05 dispatch",
+      "value": "skipped",
+      "kind": "status",
+      "claimId": "claim-a900a8b182db5905"
+    },
+    {
+      "subject": "Phase p05 dispatch",
+      "value": "88",
+      "kind": "number",
+      "claimId": "claim-c61607059815decf"
+    },
+    {
+      "subject": "p05",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-29821d5f14932ac3"
+    },
+    {
+      "subject": "Phase p05 dispatch",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-6603095c2084b2e6"
+    },
+    {
+      "subject": "Phase p05 dispatch",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-5db8a0de29c400e7"
+    },
+    {
+      "subject": "p05-t09",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-0700b75b1fd67706"
+    },
+    {
+      "subject": "Phase p05 dispatch",
+      "value": "95",
+      "kind": "number",
+      "claimId": "claim-05593d0e6a23402b"
+    },
+    {
+      "subject": "Final Review",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-483111a49e9865c6"
+    },
+    {
+      "subject": "Final Review",
+      "value": "5",
+      "kind": "number",
+      "claimId": "claim-483111a49e9865c6"
+    },
+    {
+      "subject": "Final Review",
+      "value": "2026",
+      "kind": "number",
+      "claimId": "claim-0875203070c13d13"
+    },
+    {
+      "subject": "Final Review",
+      "value": "09",
+      "kind": "number",
+      "claimId": "claim-0875203070c13d13"
+    },
+    {
+      "subject": "Final Review",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-0875203070c13d13"
+    },
+    {
+      "subject": "Final Review",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-9cc8ef835c4e3649"
+    },
+    {
+      "subject": "Final Review",
+      "value": "deferred",
+      "kind": "status",
+      "claimId": "claim-0d46e14382af239c"
+    },
+    {
+      "subject": "Final Review",
+      "value": "11",
+      "kind": "number",
+      "claimId": "claim-753d569fd9af81fc"
+    },
+    {
+      "subject": "Final Review",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-71d9a119ac014e66"
+    },
+    {
+      "subject": "Implementation exit gate",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-ba1f5d693d360933"
+    },
+    {
+      "subject": "Implementation exit gate",
+      "value": "6",
+      "kind": "number",
+      "claimId": "claim-ba1f5d693d360933"
+    },
+    {
+      "subject": "Implementation exit gate",
+      "value": "4559",
+      "kind": "number",
+      "claimId": "claim-e3ab9db3e5ab3f4a"
+    },
+    {
+      "subject": "Implementation exit gate",
+      "value": "2026",
+      "kind": "number",
+      "claimId": "claim-cc8f1b2629d61b1e"
+    },
+    {
+      "subject": "Implementation exit gate",
+      "value": "09",
+      "kind": "number",
+      "claimId": "claim-cc8f1b2629d61b1e"
+    },
+    {
+      "subject": "Implementation exit gate",
+      "value": "deferred",
+      "kind": "status",
+      "claimId": "claim-d763e393d84e301f"
+    },
+    {
+      "subject": "Implementation exit gate",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-7a8a9e21b414c352"
+    },
+    {
+      "subject": "p05-t12",
+      "value": "12",
+      "kind": "number",
+      "claimId": "claim-02fa75fe48e6ef12"
+    },
+    {
+      "subject": "p05-t12",
+      "value": "13",
+      "kind": "number",
+      "claimId": "claim-02fa75fe48e6ef12"
+    },
+    {
+      "subject": "p05-t12",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-02fa75fe48e6ef12"
+    },
+    {
+      "subject": "Implementation exit gate",
+      "value": "failed",
+      "kind": "status",
+      "claimId": "claim-5a9d415e4478696a"
+    },
+    {
+      "subject": "Implementation exit gate",
+      "value": "12",
+      "kind": "number",
+      "claimId": "claim-686143619b003a85"
+    },
+    {
+      "subject": "Implementation exit gate",
+      "value": "13",
+      "kind": "number",
+      "claimId": "claim-686143619b003a85"
+    },
+    {
+      "subject": "Implementation exit gate",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-0fe052b4eecedb31"
+    },
+    {
+      "subject": "Implementation exit gate",
+      "value": "10",
+      "kind": "number",
+      "claimId": "claim-0fe052b4eecedb31"
+    },
+    {
+      "subject": "Implementation exit gate",
+      "value": "7875",
+      "kind": "number",
+      "claimId": "claim-0fe052b4eecedb31"
+    },
+    {
+      "subject": "Implementation exit gate",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-0fe052b4eecedb31"
+    },
+    {
+      "subject": "BL-260928-harden-the-backlog-reference",
+      "value": "deferred",
+      "kind": "status",
+      "claimId": "claim-fbd3909d676acc20"
+    },
+    {
+      "subject": "Implementation exit gate",
+      "value": "4059",
+      "kind": "number",
+      "claimId": "claim-3d8b5f44ba94704b"
+    },
+    {
+      "subject": "Implementation exit gate",
+      "value": "05",
+      "kind": "number",
+      "claimId": "claim-7657a3d042de2fc4"
+    },
+    {
+      "subject": "Implementation exit gate",
+      "value": "03",
+      "kind": "number",
+      "claimId": "claim-6fab1ec5cad49864"
+    },
+    {
+      "subject": "Implementation exit gate",
+      "value": "27",
+      "kind": "number",
+      "claimId": "claim-2eb2e40ae332c348"
+    },
+    {
+      "subject": "Implementation exit gate",
+      "value": "02",
+      "kind": "number",
+      "claimId": "claim-2eb2e40ae332c348"
+    },
+    {
+      "subject": "Implementation exit gate",
+      "value": "332",
+      "kind": "number",
+      "claimId": "claim-d4cb4e75e4054ddd"
+    },
+    {
+      "subject": "Implementation exit gate",
+      "value": "open",
+      "kind": "status",
+      "claimId": "claim-74b2583eeedac6f9"
+    },
+    {
+      "subject": "Implementation exit gate",
+      "value": "4259",
+      "kind": "number",
+      "claimId": "claim-a624c0c0f5e48666"
+    },
+    {
+      "subject": "Final HiLL approval and completion",
+      "value": "built",
+      "kind": "status",
+      "claimId": "claim-d1f2831756aa1d09"
+    },
+    {
+      "subject": "Final HiLL approval and completion",
+      "value": "332",
+      "kind": "number",
+      "claimId": "claim-b7281ddeadd724c8"
+    },
+    {
+      "subject": "Final HiLL approval and completion",
+      "value": "16",
+      "kind": "number",
+      "claimId": "claim-3f2e287036d53f78"
+    },
+    {
+      "subject": "Final HiLL approval and completion",
+      "value": "2026",
+      "kind": "number",
+      "claimId": "claim-f4541c8089661ba0"
+    },
+    {
+      "subject": "Final HiLL approval and completion",
+      "value": "09",
+      "kind": "number",
+      "claimId": "claim-f4541c8089661ba0"
+    },
+    {
+      "subject": "Final HiLL approval and completion",
+      "value": "4059",
+      "kind": "number",
+      "claimId": "claim-2c119748db85822c"
+    },
+    {
+      "subject": "Final HiLL approval and completion",
+      "value": "complete",
+      "kind": "status",
+      "claimId": "claim-b053f6677deb24b4"
+    },
+    {
+      "subject": "Final HiLL approval and completion",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-e8321dd822dafb98"
+    },
+    {
+      "subject": "Final HiLL approval and completion",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-494f302444cf4dfd"
+    },
+    {
+      "subject": "Final HiLL approval and completion",
+      "value": "4259",
+      "kind": "number",
+      "claimId": "claim-75840b318487edb6"
+    },
+    {
+      "subject": "PR Requirements (hand-off to oat-project-pr-final)",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-f5c41b281fe0ca75"
+    },
+    {
+      "subject": "PR Requirements (hand-off to oat-project-pr-final)",
+      "value": "0.3",
+      "kind": "number",
+      "claimId": "claim-f5c41b281fe0ca75"
+    },
+    {
+      "subject": "PR Requirements (hand-off to oat-project-pr-final)",
+      "value": "9",
+      "kind": "number",
+      "claimId": "claim-f5c41b281fe0ca75"
+    },
+    {
+      "subject": "PR Requirements (hand-off to oat-project-pr-final)",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-7617dd671e16c16f"
+    },
+    {
+      "subject": "Revision Received: Inline Feedback",
+      "value": "2026-09-28",
+      "kind": "date",
+      "claimId": "claim-b6b86b48b8745a99"
+    },
+    {
+      "subject": "Revision Received: Inline Feedback",
+      "value": "332",
+      "kind": "number",
+      "claimId": "claim-129fc80b7c823260"
+    },
+    {
+      "subject": "Revision Received: Inline Feedback",
+      "value": "1900",
+      "kind": "number",
+      "claimId": "claim-172a4870b348e194"
+    },
+    {
+      "subject": "Phase p-rev1 dispatch",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-784a8389ea97b3af"
+    },
+    {
+      "subject": "Phase p-rev1 dispatch",
+      "value": "5",
+      "kind": "number",
+      "claimId": "claim-784a8389ea97b3af"
+    },
+    {
+      "subject": "Phase p-rev1 dispatch",
+      "value": "512493326",
+      "kind": "number",
+      "claimId": "claim-ba3c4e04d8566390"
+    },
+    {
+      "subject": "Phase p-rev1 dispatch",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-10fb41b30ce16005"
+    },
+    {
+      "subject": "Phase p-rev1 dispatch",
+      "value": "10",
+      "kind": "number",
+      "claimId": "claim-10fb41b30ce16005"
+    },
+    {
+      "subject": "Phase p-rev1 dispatch",
+      "value": "660",
+      "kind": "number",
+      "claimId": "claim-10fb41b30ce16005"
+    },
+    {
+      "subject": "Phase p-rev1 dispatch",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-9b1a442b678dfacc"
+    },
+    {
+      "subject": "Phase p-rev1 dispatch",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-9b1a442b678dfacc"
+    },
+    {
+      "subject": "Phase p-rev1 dispatch",
+      "value": "2026",
+      "kind": "number",
+      "claimId": "claim-ac7f1896c7443ece"
+    },
+    {
+      "subject": "Phase p-rev1 dispatch",
+      "value": "09",
+      "kind": "number",
+      "claimId": "claim-ac7f1896c7443ece"
+    },
+    {
+      "subject": "Phase p-rev1 dispatch",
+      "value": "failed",
+      "kind": "status",
+      "claimId": "claim-01b728d90b7a34df"
+    },
+    {
+      "subject": "Phase p-rev1 dispatch",
+      "value": "11",
+      "kind": "number",
+      "claimId": "claim-31e43d6d8ae2c137"
+    },
+    {
+      "subject": "Phase p-rev1 dispatch",
+      "value": "226",
+      "kind": "number",
+      "claimId": "claim-3f17e5e02ee64ef7"
+    },
+    {
+      "subject": "Phase p-rev1 dispatch",
+      "value": "6",
+      "kind": "number",
+      "claimId": "claim-60835cd8d6c879a4"
+    },
+    {
+      "subject": "Phase p-rev1 dispatch",
+      "value": "closed",
+      "kind": "status",
+      "claimId": "claim-9f4b1a3928d22187"
+    },
+    {
+      "subject": "Phase p-rev1 dispatch",
+      "value": "0.3",
+      "kind": "number",
+      "claimId": "claim-08ec15a42d958971"
+    },
+    {
+      "subject": "Phase p-rev1 dispatch",
+      "value": "7",
+      "kind": "number",
+      "claimId": "claim-08ec15a42d958971"
+    },
+    {
+      "subject": "Phase p-rev1 dispatch",
+      "value": "4",
+      "kind": "number",
+      "claimId": "claim-1bb5a5e0dce98c36"
+    },
+    {
+      "subject": "Phase p-rev1 dispatch",
+      "value": "260928",
+      "kind": "number",
+      "claimId": "claim-ccb0cf5b069c9627"
+    },
+    {
+      "subject": "p01",
+      "value": "2026-09-27",
+      "kind": "date",
+      "claimId": "claim-d9bc7b83d8c750bb"
+    },
+    {
+      "subject": "p01",
+      "value": "2026-09-28",
+      "kind": "date",
+      "claimId": "claim-d9bc7b83d8c750bb"
+    },
+    {
+      "subject": "Plan Gate Feedback (quick-start, QS-12)",
+      "value": "12",
+      "kind": "number",
+      "claimId": "claim-328e250e4e72b7a1"
+    },
+    {
+      "subject": "Plan Gate Feedback (quick-start, QS-12)",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-830933a1e0273954"
+    },
+    {
+      "subject": "Plan Gate Feedback (quick-start, QS-12)",
+      "value": "6",
+      "kind": "number",
+      "claimId": "claim-830933a1e0273954"
+    },
+    {
+      "subject": "Plan Gate Feedback (quick-start, QS-12)",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-a41497f90f68ba22"
+    },
+    {
+      "subject": "Plan Gate Feedback (quick-start, QS-12)",
+      "value": "2026",
+      "kind": "number",
+      "claimId": "claim-a41497f90f68ba22"
+    },
+    {
+      "subject": "Plan Gate Feedback (quick-start, QS-12)",
+      "value": "09",
+      "kind": "number",
+      "claimId": "claim-a41497f90f68ba22"
+    },
+    {
+      "subject": "Plan Gate Feedback (quick-start, QS-12)",
+      "value": "open",
+      "kind": "status",
+      "claimId": "claim-a526fa3426a88792"
+    },
+    {
+      "subject": "Plan Gate Feedback (quick-start, QS-12)",
+      "value": "failed",
+      "kind": "status",
+      "claimId": "claim-08daefdc50d4e038"
+    },
+    {
+      "subject": "Plan Gate Feedback (quick-start, QS-12)",
+      "value": "2026-09-27",
+      "kind": "date",
+      "claimId": "claim-1c5185465971cd63"
+    },
+    {
+      "subject": "Deferred Findings (Medium)",
+      "value": "deferred",
+      "kind": "status",
+      "claimId": "claim-668e900580858d06"
+    },
+    {
+      "subject": "Deferred Findings (Medium)",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-33116bc6dacb0ad6"
+    },
+    {
+      "subject": "Deviations from Plan / Design",
+      "value": "100",
+      "kind": "number",
+      "claimId": "claim-10a172be04a26f40"
+    },
+    {
+      "subject": "p03-t03 / p03 reviews",
+      "value": "4",
+      "kind": "number",
+      "claimId": "claim-0087c487fa272fea"
+    },
+    {
+      "subject": "p04-t02 / p04 reviews",
+      "value": "260928",
+      "kind": "number",
+      "claimId": "claim-24e9161a82d92ffe"
+    },
+    {
+      "subject": "p04 gate",
+      "value": "2026-09-28",
+      "kind": "date",
+      "claimId": "claim-8d5087c9d45d3d38"
+    },
+    {
+      "subject": "p-rev1 (revision)",
+      "value": "2026-09-28",
+      "kind": "date",
+      "claimId": "claim-b456ab60831c1ab0"
+    },
+    {
+      "subject": "p-rev1 (revision)",
+      "value": "260928",
+      "kind": "number",
+      "claimId": "claim-b456ab60831c1ab0"
+    },
+    {
+      "subject": "p-rev1 (revision)",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-89ce183aaf04eb42"
+    },
+    {
+      "subject": "p-rev1 (revision)",
+      "value": "260927",
+      "kind": "number",
+      "claimId": "claim-89ce183aaf04eb42"
+    },
+    {
+      "subject": "Test Results",
+      "value": "12",
+      "kind": "number",
+      "claimId": "claim-f58dc977d27e6638"
+    },
+    {
+      "subject": "Test Results",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-f58dc977d27e6638"
+    },
+    {
+      "subject": "Test Results",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-0774a35011dcc8cf"
+    },
+    {
+      "subject": "Test Results",
+      "value": "10",
+      "kind": "number",
+      "claimId": "claim-53e9d7c7c90e399a"
+    },
+    {
+      "subject": "Test Results",
+      "value": "163",
+      "kind": "number",
+      "claimId": "claim-b711986140482377"
+    },
+    {
+      "subject": "Test Results",
+      "value": "660",
+      "kind": "number",
+      "claimId": "claim-b711986140482377"
+    },
+    {
+      "subject": "Final Summary (for PR/docs)",
+      "value": "11",
+      "kind": "number",
+      "claimId": "claim-feafb0715245e225"
+    },
+    {
+      "subject": "Final Summary (for PR/docs)",
+      "value": "skipped",
+      "kind": "status",
+      "claimId": "claim-58d2fd6d3e4e8d28"
+    },
+    {
+      "subject": "p04",
+      "value": "built",
+      "kind": "status",
+      "claimId": "claim-0ddb85555bbfc148"
+    },
+    {
+      "subject": "Final Summary (for PR/docs)",
+      "value": "0.3",
+      "kind": "number",
+      "claimId": "claim-483b628649c78ebd"
+    },
+    {
+      "subject": "Final Summary (for PR/docs)",
+      "value": "9",
+      "kind": "number",
+      "claimId": "claim-483b628649c78ebd"
+    },
+    {
+      "subject": "BL-260927-record-owner-overrides",
+      "value": "260927",
+      "kind": "number",
+      "claimId": "claim-b335bda3a74046dc"
+    },
+    {
+      "subject": "BL-260901-add-corrective-revision",
+      "value": "260901",
+      "kind": "number",
+      "claimId": "claim-73283e09e50e15eb"
+    },
+    {
+      "subject": "BL-260901-add-corrective-revision",
+      "value": "closed",
+      "kind": "status",
+      "claimId": "claim-73283e09e50e15eb"
+    },
+    {
+      "subject": "Final Summary (for PR/docs)",
+      "value": "260927",
+      "kind": "number",
+      "claimId": "claim-73d2c633789acdda"
+    },
+    {
+      "subject": "Final Summary (for PR/docs)",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-3ca6d5d20a09a213"
+    },
+    {
+      "subject": "Final Summary (for PR/docs)",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-445f39ea92dc6e05"
+    },
+    {
+      "subject": "Final Summary (for PR/docs)",
+      "value": "2.0",
+      "kind": "number",
+      "claimId": "claim-12c42c42bf98a091"
+    },
+    {
+      "subject": "Final Summary (for PR/docs)",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-12c42c42bf98a091"
+    },
+    {
+      "subject": "Final Summary (for PR/docs)",
+      "value": "1.12",
+      "kind": "number",
+      "claimId": "claim-12c42c42bf98a091"
+    },
+    {
+      "subject": "Final Summary (for PR/docs)",
+      "value": "4",
+      "kind": "number",
+      "claimId": "claim-12c42c42bf98a091"
+    },
+    {
+      "subject": "Final Summary (for PR/docs)",
+      "value": "1.7",
+      "kind": "number",
+      "claimId": "claim-a317213d424c6a27"
+    },
+    {
+      "subject": "Final Summary (for PR/docs)",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-a317213d424c6a27"
+    },
+    {
+      "subject": "Final Summary (for PR/docs)",
+      "value": "1.1",
+      "kind": "number",
+      "claimId": "claim-a317213d424c6a27"
+    },
+    {
+      "subject": "Final Summary (for PR/docs)",
+      "value": "1.4",
+      "kind": "number",
+      "claimId": "claim-c427d8a8a4bd7b76"
+    },
+    {
+      "subject": "Final Summary (for PR/docs)",
+      "value": "6",
+      "kind": "number",
+      "claimId": "claim-c427d8a8a4bd7b76"
+    },
+    {
+      "subject": "Final Summary (for PR/docs)",
+      "value": "2.3",
+      "kind": "number",
+      "claimId": "claim-17d2c189bc3b3eab"
+    },
+    {
+      "subject": "Final Summary (for PR/docs)",
+      "value": "14",
+      "kind": "number",
+      "claimId": "claim-17d2c189bc3b3eab"
+    },
+    {
+      "subject": "Final Summary (for PR/docs)",
+      "value": "1.2",
+      "kind": "number",
+      "claimId": "claim-17d2c189bc3b3eab"
+    },
+    {
+      "subject": "Final Summary (for PR/docs)",
+      "value": "10",
+      "kind": "number",
+      "claimId": "claim-17d2c189bc3b3eab"
+    },
+    {
+      "subject": "Final Summary (for PR/docs)",
+      "value": "1.0",
+      "kind": "number",
+      "claimId": "claim-d7eddf6dbc4d668c"
+    },
+    {
+      "subject": "Final Summary (for PR/docs)",
+      "value": "5.5",
+      "kind": "number",
+      "claimId": "claim-d3142b762ff1fdc5"
+    },
+    {
+      "subject": "Final Summary (for PR/docs)",
+      "value": "332",
+      "kind": "number",
+      "claimId": "claim-7ef4aff610b212cf"
+    },
+    {
+      "subject": "BL-260928-harden-the-backlog-reference",
+      "value": "260829",
+      "kind": "number",
+      "claimId": "claim-0f1c8a1dca064ce2"
+    },
+    {
+      "subject": "Final Summary (for PR/docs)",
+      "value": "open",
+      "kind": "status",
+      "claimId": "claim-13845b423036c292"
+    },
+    {
+      "subject": "References",
+      "value": "260927",
+      "kind": "number",
+      "claimId": "claim-cc944d5d52480392"
+    },
+    {
+      "subject": "project-log.md",
+      "value": "2026-09-27",
+      "kind": "date",
+      "claimId": "claim-c96ac085df45414f"
+    },
+    {
+      "subject": "Project Log: backlog-wave-2",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-00288f181d206c14"
+    },
+    {
+      "subject": "Logging contract",
+      "value": "complete",
+      "kind": "status",
+      "claimId": "claim-e58ca993a833754a"
+    },
+    {
+      "subject": "Logging contract",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-b5c9a168209d03d2"
+    },
+    {
+      "subject": "Logging contract",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-b5c9a168209d03d2"
+    },
+    {
+      "subject": "2026-09-27 · <project|general> · <bug|friction|worked-well|feedback> · <area>",
+      "value": "2026-09-27",
+      "kind": "date",
+      "claimId": "claim-abfe9484e25e8f00"
+    },
+    {
+      "subject": "2026-09-27 · structural · <producer> · <ref>",
+      "value": "2026-09-27",
+      "kind": "date",
+      "claimId": "claim-4660f5e4f945e5cd"
+    },
+    {
+      "subject": "plan.md",
+      "value": "complete",
+      "kind": "status",
+      "claimId": "claim-f1a974b30f9e6e71"
+    },
+    {
+      "subject": "plan.md",
+      "value": "2026-09-27",
+      "kind": "date",
+      "claimId": "claim-f015ae4dfebabf49"
+    },
+    {
+      "subject": "Implementation Plan: backlog-wave-2",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-2107c104a3972b8d"
+    },
+    {
+      "subject": "wave-2",
+      "value": "2026-09-27",
+      "kind": "date",
+      "claimId": "claim-889739bedda51c64"
+    },
+    {
+      "subject": "Implementation Plan: backlog-wave-2",
+      "value": "2026-09-26",
+      "kind": "date",
+      "claimId": "claim-574d565e2bf6314b"
+    },
+    {
+      "subject": "BL-260830-persist-instruction-sync",
+      "value": "260829",
+      "kind": "number",
+      "claimId": "claim-e502fdd88383083d"
+    },
+    {
+      "subject": "Implementation Plan: backlog-wave-2",
+      "value": "open",
+      "kind": "status",
+      "claimId": "claim-f5b88bc7d7b6b076"
+    },
+    {
+      "subject": "Implementation Plan: backlog-wave-2",
+      "value": "0.3",
+      "kind": "number",
+      "claimId": "claim-35cdf2f17f8ef7c1"
+    },
+    {
+      "subject": "Implementation Plan: backlog-wave-2",
+      "value": "9",
+      "kind": "number",
+      "claimId": "claim-35cdf2f17f8ef7c1"
+    },
+    {
+      "subject": "Conventions for Every Task",
+      "value": "0.3",
+      "kind": "number",
+      "claimId": "claim-5c12722f19eb6a8b"
+    },
+    {
+      "subject": "Conventions for Every Task",
+      "value": "7",
+      "kind": "number",
+      "claimId": "claim-5c12722f19eb6a8b"
+    },
+    {
+      "subject": "`BL-260909-fix-the-agents-md-unsafe`",
+      "value": "260909",
+      "kind": "number",
+      "claimId": "claim-2b5d6ec1747a5b2a"
+    },
+    {
+      "subject": "`BL-260903-close-manual-only-agents-md`",
+      "value": "260903",
+      "kind": "number",
+      "claimId": "claim-cb169aae55f070ed"
+    },
+    {
+      "subject": "`BL-260903-close-manual-only-agents-md`",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-cb169aae55f070ed"
+    },
+    {
+      "subject": "`BL-260927-name-only-installed-pack`",
+      "value": "260927",
+      "kind": "number",
+      "claimId": "claim-4dd317ed31983cbc"
+    },
+    {
+      "subject": "`oat tools where` decision recorded (deferred)",
+      "value": "deferred",
+      "kind": "status",
+      "claimId": "claim-b67c230e44357704"
+    },
+    {
+      "subject": "`BL-260927-make-claude-md-shims-opt`",
+      "value": "260927",
+      "kind": "number",
+      "claimId": "claim-5efdfdf79efbcf77"
+    },
+    {
+      "subject": "`BL-260830-persist-instruction-sync` absorbed",
+      "value": "260830",
+      "kind": "number",
+      "claimId": "claim-ff92c3651659c0d2"
+    },
+    {
+      "subject": "`BL-260907-route-quick-mode-discovery`",
+      "value": "260907",
+      "kind": "number",
+      "claimId": "claim-0a865cc027eae87b"
+    },
+    {
+      "subject": "`BL-260907-record-absorbed-projects`",
+      "value": "260907",
+      "kind": "number",
+      "claimId": "claim-d83c3377342caeb9"
+    },
+    {
+      "subject": "`BL-260829-order-phase-bookkeeping-before`",
+      "value": "260829",
+      "kind": "number",
+      "claimId": "claim-67d7954639e0f074"
+    },
+    {
+      "subject": "`BL-260829-order-phase-bookkeeping-before`",
+      "value": "260711",
+      "kind": "number",
+      "claimId": "claim-67d7954639e0f074"
+    },
+    {
+      "subject": "Live multi-phase verification",
+      "value": "open",
+      "kind": "status",
+      "claimId": "claim-a5d26d9616a54897"
+    },
+    {
+      "subject": "`BL-260909-repair-the-bare-fences-that`",
+      "value": "260909",
+      "kind": "number",
+      "claimId": "claim-afc5c311d7158030"
+    },
+    {
+      "subject": "`BL-260927-validate-recon-worker`",
+      "value": "260927",
+      "kind": "number",
+      "claimId": "claim-fd4916b98b07e37c"
+    },
+    {
+      "subject": "`BL-260909-give-packages-control-plane`",
+      "value": "260909",
+      "kind": "number",
+      "claimId": "claim-089a56a75f773738"
+    },
+    {
+      "subject": "`BL-260909-rewrite-inbound-references`",
+      "value": "260909",
+      "kind": "number",
+      "claimId": "claim-3d9c43f7da752093"
+    },
+    {
+      "subject": "`BL-260904-stabilize-the-collection`",
+      "value": "260904",
+      "kind": "number",
+      "claimId": "claim-da011c356d3211c5"
+    },
+    {
+      "subject": "BL-260909-fix-the-agents-md-unsafe",
+      "value": "260909",
+      "kind": "number",
+      "claimId": "claim-50219f00020c9aa4"
+    },
+    {
+      "subject": "Task p01-t01: Give each unsafe-directory variant its own outside directory",
+      "value": "296",
+      "kind": "number",
+      "claimId": "claim-c7167d8e0fc60eff"
+    },
+    {
+      "subject": "Task p01-t01: Give each unsafe-directory variant its own outside directory",
+      "value": "321",
+      "kind": "number",
+      "claimId": "claim-c7167d8e0fc60eff"
+    },
+    {
+      "subject": "Task p01-t01: Give each unsafe-directory variant its own outside directory",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-e4b0301e4b2001f9"
+    },
+    {
+      "subject": "Task p01-t01: Give each unsafe-directory variant its own outside directory",
+      "value": "310",
+      "kind": "number",
+      "claimId": "claim-4d11f8243bd00267"
+    },
+    {
+      "subject": "Task p01-t01: Give each unsafe-directory variant its own outside directory",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-d70abfa61a15d147"
+    },
+    {
+      "subject": "Task p01-t01: Give each unsafe-directory variant its own outside directory",
+      "value": "4",
+      "kind": "number",
+      "claimId": "claim-5de9a057567cb33b"
+    },
+    {
+      "subject": "Task p01-t01: Give each unsafe-directory variant its own outside directory",
+      "value": "20",
+      "kind": "number",
+      "claimId": "claim-fc9240093df8591b"
+    },
+    {
+      "subject": "Task p01-t01: Give each unsafe-directory variant its own outside directory",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-cbe48588a0e3e23f"
+    },
+    {
+      "subject": "Task p01-t01: Give each unsafe-directory variant its own outside directory",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-124f42b345faa0de"
+    },
+    {
+      "subject": "BL-260903-close-manual-only-agents-md",
+      "value": "260903",
+      "kind": "number",
+      "claimId": "claim-64747ce35f9b4285"
+    },
+    {
+      "subject": "BL-260903-close-manual-only-agents-md",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-64747ce35f9b4285"
+    },
+    {
+      "subject": "BL-260903-close-manual-only-agents-md",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-64747ce35f9b4285"
+    },
+    {
+      "subject": "Task p01-t02: Append absent managed blocks to an existing AGENTS.md",
+      "value": "76",
+      "kind": "number",
+      "claimId": "claim-1bf388d23d403a19"
+    },
+    {
+      "subject": "Task p01-t02: Append absent managed blocks to an existing AGENTS.md",
+      "value": "443",
+      "kind": "number",
+      "claimId": "claim-1bf388d23d403a19"
+    },
+    {
+      "subject": "Task p01-t02: Append absent managed blocks to an existing AGENTS.md",
+      "value": "462",
+      "kind": "number",
+      "claimId": "claim-1bf388d23d403a19"
+    },
+    {
+      "subject": "Task p01-t02: Append absent managed blocks to an existing AGENTS.md",
+      "value": "556",
+      "kind": "number",
+      "claimId": "claim-1bf388d23d403a19"
+    },
+    {
+      "subject": "Task p01-t02: Append absent managed blocks to an existing AGENTS.md",
+      "value": "396",
+      "kind": "number",
+      "claimId": "claim-4de19be4dd576a49"
+    },
+    {
+      "subject": "Task p01-t02: Append absent managed blocks to an existing AGENTS.md",
+      "value": "14",
+      "kind": "number",
+      "claimId": "claim-a8e3f8aa98fe7edb"
+    },
+    {
+      "subject": "Task p01-t02: Append absent managed blocks to an existing AGENTS.md",
+      "value": "20",
+      "kind": "number",
+      "claimId": "claim-a8e3f8aa98fe7edb"
+    },
+    {
+      "subject": "Task p01-t02: Append absent managed blocks to an existing AGENTS.md",
+      "value": "180",
+      "kind": "number",
+      "claimId": "claim-a8e3f8aa98fe7edb"
+    },
+    {
+      "subject": "Task p01-t02: Append absent managed blocks to an existing AGENTS.md",
+      "value": "218",
+      "kind": "number",
+      "claimId": "claim-a8e3f8aa98fe7edb"
+    },
+    {
+      "subject": "Task p01-t02: Append absent managed blocks to an existing AGENTS.md",
+      "value": "232",
+      "kind": "number",
+      "claimId": "claim-a8e3f8aa98fe7edb"
+    },
+    {
+      "subject": "Task p01-t02: Append absent managed blocks to an existing AGENTS.md",
+      "value": "167",
+      "kind": "number",
+      "claimId": "claim-114183d18ff87b6c"
+    },
+    {
+      "subject": "Task p01-t02: Append absent managed blocks to an existing AGENTS.md",
+      "value": "310",
+      "kind": "number",
+      "claimId": "claim-14c92baa05c41f03"
+    },
+    {
+      "subject": "Task p01-t02: Append absent managed blocks to an existing AGENTS.md",
+      "value": "562",
+      "kind": "number",
+      "claimId": "claim-4858ee3e36c1d1c2"
+    },
+    {
+      "subject": "Task p01-t02: Append absent managed blocks to an existing AGENTS.md",
+      "value": "641",
+      "kind": "number",
+      "claimId": "claim-4858ee3e36c1d1c2"
+    },
+    {
+      "subject": "Task p01-t02: Append absent managed blocks to an existing AGENTS.md",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-230b31ef06e012a7"
+    },
+    {
+      "subject": "Task p01-t02: Append absent managed blocks to an existing AGENTS.md",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-28aeaae8cf8b1170"
+    },
+    {
+      "subject": "Task p01-t02: Append absent managed blocks to an existing AGENTS.md",
+      "value": "354",
+      "kind": "number",
+      "claimId": "claim-81da0ccfe64c0b60"
+    },
+    {
+      "subject": "Task p01-t02: Append absent managed blocks to an existing AGENTS.md",
+      "value": "460",
+      "kind": "number",
+      "claimId": "claim-81da0ccfe64c0b60"
+    },
+    {
+      "subject": "Task p01-t02: Append absent managed blocks to an existing AGENTS.md",
+      "value": "open",
+      "kind": "status",
+      "claimId": "claim-8ffa775d0bea172d"
+    },
+    {
+      "subject": "Task p01-t02: Append absent managed blocks to an existing AGENTS.md",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-57b213f40687e03a"
+    },
+    {
+      "subject": "Task p01-t02: Append absent managed blocks to an existing AGENTS.md",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-9499d0723c64614a"
+    },
+    {
+      "subject": "Task p01-t02: Append absent managed blocks to an existing AGENTS.md",
+      "value": "4",
+      "kind": "number",
+      "claimId": "claim-9e27b8328a074205"
+    },
+    {
+      "subject": "BL-260903-close-manual-only-agents-md",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-154b2fe898abbfa8"
+    },
+    {
+      "subject": "BL-260903-close-manual-only-agents-md",
+      "value": "4",
+      "kind": "number",
+      "claimId": "claim-154b2fe898abbfa8"
+    },
+    {
+      "subject": "BL-260903-close-manual-only-agents-md",
+      "value": "5",
+      "kind": "number",
+      "claimId": "claim-154b2fe898abbfa8"
+    },
+    {
+      "subject": "Task p01-t03: Print guidance once and prove the fresh-repo sequence",
+      "value": "203",
+      "kind": "number",
+      "claimId": "claim-02a3909221d04708"
+    },
+    {
+      "subject": "Task p01-t03: Print guidance once and prove the fresh-repo sequence",
+      "value": "212",
+      "kind": "number",
+      "claimId": "claim-02a3909221d04708"
+    },
+    {
+      "subject": "Task p01-t03: Print guidance once and prove the fresh-repo sequence",
+      "value": "688",
+      "kind": "number",
+      "claimId": "claim-fad438fbe8348de7"
+    },
+    {
+      "subject": "Task p01-t03: Print guidance once and prove the fresh-repo sequence",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-40a646e0cf6737c6"
+    },
+    {
+      "subject": "Task p01-t03: Print guidance once and prove the fresh-repo sequence",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-01d07da4ceff9473"
+    },
+    {
+      "subject": "Task p01-t03: Print guidance once and prove the fresh-repo sequence",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-d2770da86788eda6"
+    },
+    {
+      "subject": "Task p01-t03: Print guidance once and prove the fresh-repo sequence",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-de20898bf5d910a2"
+    },
+    {
+      "subject": "Task p01-t03: Print guidance once and prove the fresh-repo sequence",
+      "value": "4",
+      "kind": "number",
+      "claimId": "claim-d180f3dc36c54f31"
+    },
+    {
+      "subject": "BL-260903-close-manual-only-agents-md",
+      "value": "6",
+      "kind": "number",
+      "claimId": "claim-a4c30b8ab186250c"
+    },
+    {
+      "subject": "BL-260903-close-manual-only-agents-md",
+      "value": "7",
+      "kind": "number",
+      "claimId": "claim-a4c30b8ab186250c"
+    },
+    {
+      "subject": "Task p01-t04: Make every --project-guidance consumer act or reject",
+      "value": "1207",
+      "kind": "number",
+      "claimId": "claim-bf8e1b9353e24fff"
+    },
+    {
+      "subject": "Task p01-t04: Make every --project-guidance consumer act or reject",
+      "value": "1790",
+      "kind": "number",
+      "claimId": "claim-bf8e1b9353e24fff"
+    },
+    {
+      "subject": "Task p01-t04: Make every --project-guidance consumer act or reject",
+      "value": "1805",
+      "kind": "number",
+      "claimId": "claim-bf8e1b9353e24fff"
+    },
+    {
+      "subject": "Task p01-t04: Make every --project-guidance consumer act or reject",
+      "value": "1940",
+      "kind": "number",
+      "claimId": "claim-bf8e1b9353e24fff"
+    },
+    {
+      "subject": "Task p01-t04: Make every --project-guidance consumer act or reject",
+      "value": "2144",
+      "kind": "number",
+      "claimId": "claim-7d9b7d8616c8a5cb"
+    },
+    {
+      "subject": "Task p01-t04: Make every --project-guidance consumer act or reject",
+      "value": "2159",
+      "kind": "number",
+      "claimId": "claim-7d9b7d8616c8a5cb"
+    },
+    {
+      "subject": "Task p01-t04: Make every --project-guidance consumer act or reject",
+      "value": "skipped",
+      "kind": "status",
+      "claimId": "claim-b4f2d5c69e4e3e67"
+    },
+    {
+      "subject": "Task p01-t04: Make every --project-guidance consumer act or reject",
+      "value": "1305",
+      "kind": "number",
+      "claimId": "claim-0841d5bf875e462a"
+    },
+    {
+      "subject": "Task p01-t04: Make every --project-guidance consumer act or reject",
+      "value": "1328",
+      "kind": "number",
+      "claimId": "claim-0841d5bf875e462a"
+    },
+    {
+      "subject": "Task p01-t04: Make every --project-guidance consumer act or reject",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-541bb474aea7b29d"
+    },
+    {
+      "subject": "Task p01-t04: Make every --project-guidance consumer act or reject",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-c1fe4970388a228c"
+    },
+    {
+      "subject": "Task p01-t04: Make every --project-guidance consumer act or reject",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-36be0bd09284d205"
+    },
+    {
+      "subject": "Task p01-t04: Make every --project-guidance consumer act or reject",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-d94c29a09267c56b"
+    },
+    {
+      "subject": "Task p01-t04: Make every --project-guidance consumer act or reject",
+      "value": "4",
+      "kind": "number",
+      "claimId": "claim-66101e0c1a4a612d"
+    },
+    {
+      "subject": "BL-260903-close-manual-only-agents-md",
+      "value": "8",
+      "kind": "number",
+      "claimId": "claim-691d5dcc4906a958"
+    },
+    {
+      "subject": "BL-260903-close-manual-only-agents-md",
+      "value": "9",
+      "kind": "number",
+      "claimId": "claim-691d5dcc4906a958"
+    },
+    {
+      "subject": "Task p01-t05: Add read-only guidance emission and fix the oat-doctor hint",
+      "value": "128",
+      "kind": "number",
+      "claimId": "claim-7c8c23f89a7b7072"
+    },
+    {
+      "subject": "Task p01-t05: Add read-only guidance emission and fix the oat-doctor hint",
+      "value": "224",
+      "kind": "number",
+      "claimId": "claim-3c90a80fa03eaa7b"
+    },
+    {
+      "subject": "Task p01-t05: Add read-only guidance emission and fix the oat-doctor hint",
+      "value": "2.0",
+      "kind": "number",
+      "claimId": "claim-54f981a1effac091"
+    },
+    {
+      "subject": "Task p01-t05: Add read-only guidance emission and fix the oat-doctor hint",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-54f981a1effac091"
+    },
+    {
+      "subject": "Task p01-t05: Add read-only guidance emission and fix the oat-doctor hint",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-54f981a1effac091"
+    },
+    {
+      "subject": "Task p01-t05: Add read-only guidance emission and fix the oat-doctor hint",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-85ce8cfc5fbc7bc2"
+    },
+    {
+      "subject": "Task p01-t05: Add read-only guidance emission and fix the oat-doctor hint",
+      "value": "4",
+      "kind": "number",
+      "claimId": "claim-fc2a29f34f1662ac"
+    },
+    {
+      "subject": "BL-260927-name-only-installed-pack",
+      "value": "260927",
+      "kind": "number",
+      "claimId": "claim-2f57f6285db862e5"
+    },
+    {
+      "subject": "Task p01-t06: Name only installed pack locations in the guidance block",
+      "value": "76",
+      "kind": "number",
+      "claimId": "claim-1d5f1f47388e108a"
+    },
+    {
+      "subject": "Task p01-t06: Name only installed pack locations in the guidance block",
+      "value": "77",
+      "kind": "number",
+      "claimId": "claim-1d5f1f47388e108a"
+    },
+    {
+      "subject": "Task p01-t06: Name only installed pack locations in the guidance block",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-c62f1315c247cecc"
+    },
+    {
+      "subject": "Task p01-t06: Name only installed pack locations in the guidance block",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-96a06e7e83963cd4"
+    },
+    {
+      "subject": "Task p01-t06: Name only installed pack locations in the guidance block",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-362a7889fb2d910e"
+    },
+    {
+      "subject": "Task p01-t06: Name only installed pack locations in the guidance block",
+      "value": "deferred",
+      "kind": "status",
+      "claimId": "claim-9ba292be852ad220"
+    },
+    {
+      "subject": "Task p01-t06: Name only installed pack locations in the guidance block",
+      "value": "2026-09-27",
+      "kind": "date",
+      "claimId": "claim-5eb6137a539bf86a"
+    },
+    {
+      "subject": "Task p01-t06: Name only installed pack locations in the guidance block",
+      "value": "4",
+      "kind": "number",
+      "claimId": "claim-a33c00582f2269b0"
+    },
+    {
+      "subject": "Task p01-t06: Name only installed pack locations in the guidance block",
+      "value": "5",
+      "kind": "number",
+      "claimId": "claim-7b9cb118b35d0a65"
+    },
+    {
+      "subject": "Task p01-t07: (review) Close p01 review findings M1, M2, L1-L4",
+      "value": "2.0",
+      "kind": "number",
+      "claimId": "claim-318c245c835d8d77"
+    },
+    {
+      "subject": "Task p01-t07: (review) Close p01 review findings M1, M2, L1-L4",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-318c245c835d8d77"
+    },
+    {
+      "subject": "Task p01-t07: (review) Close p01 review findings M1, M2, L1-L4",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-6ea4c0586355b037"
+    },
+    {
+      "subject": "Task p01-t07: (review) Close p01 review findings M1, M2, L1-L4",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-15baeef952ff9123"
+    },
+    {
+      "subject": "Task p01-t07: (review) Close p01 review findings M1, M2, L1-L4",
+      "value": "open",
+      "kind": "status",
+      "claimId": "claim-a733bf88d6db791e"
+    },
+    {
+      "subject": "Task p01-t07: (review) Close p01 review findings M1, M2, L1-L4",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-3caa538afa2dce8c"
+    },
+    {
+      "subject": "Task p01-t08: (review) Close p01 round-2 Low findings L1-L3",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-ac99d4c63863d768"
+    },
+    {
+      "subject": "Task p01-t08: (review) Close p01 round-2 Low findings L1-L3",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-ac99d4c63863d768"
+    },
+    {
+      "subject": "Task p01-t08: (review) Close p01 round-2 Low findings L1-L3",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-8f44a2bbce2ce0b0"
+    },
+    {
+      "subject": "Task p01-t08: (review) Close p01 round-2 Low findings L1-L3",
+      "value": "736",
+      "kind": "number",
+      "claimId": "claim-727b7362f31a21d2"
+    },
+    {
+      "subject": "p01-t08",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-d726aac7f2c28b81"
+    },
+    {
+      "subject": "BL-260927-make-claude-md-shims-opt",
+      "value": "260927",
+      "kind": "number",
+      "claimId": "claim-7439c8215d8e64d1"
+    },
+    {
+      "subject": "BL-260927-make-claude-md-shims-opt",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-7439c8215d8e64d1"
+    },
+    {
+      "subject": "Task p02-t01: Persist a configurable instruction sync strategy",
+      "value": "260927",
+      "kind": "number",
+      "claimId": "claim-5dcaf0b668e53095"
+    },
+    {
+      "subject": "Task p02-t01: Persist a configurable instruction sync strategy",
+      "value": "76",
+      "kind": "number",
+      "claimId": "claim-f0d644b7c3dd4f38"
+    },
+    {
+      "subject": "Task p02-t01: Persist a configurable instruction sync strategy",
+      "value": "1523",
+      "kind": "number",
+      "claimId": "claim-a2811a83c2464983"
+    },
+    {
+      "subject": "Task p02-t01: Persist a configurable instruction sync strategy",
+      "value": "1548",
+      "kind": "number",
+      "claimId": "claim-a2811a83c2464983"
+    },
+    {
+      "subject": "Task p02-t01: Persist a configurable instruction sync strategy",
+      "value": "1778",
+      "kind": "number",
+      "claimId": "claim-a2811a83c2464983"
+    },
+    {
+      "subject": "Task p02-t01: Persist a configurable instruction sync strategy",
+      "value": "1783",
+      "kind": "number",
+      "claimId": "claim-a2811a83c2464983"
+    },
+    {
+      "subject": "Task p02-t01: Persist a configurable instruction sync strategy",
+      "value": "137",
+      "kind": "number",
+      "claimId": "claim-a58806c63128d79e"
+    },
+    {
+      "subject": "Task p02-t01: Persist a configurable instruction sync strategy",
+      "value": "142",
+      "kind": "number",
+      "claimId": "claim-a58806c63128d79e"
+    },
+    {
+      "subject": "Task p02-t01: Persist a configurable instruction sync strategy",
+      "value": "313",
+      "kind": "number",
+      "claimId": "claim-a58806c63128d79e"
+    },
+    {
+      "subject": "Task p02-t01: Persist a configurable instruction sync strategy",
+      "value": "318",
+      "kind": "number",
+      "claimId": "claim-a58806c63128d79e"
+    },
+    {
+      "subject": "Task p02-t01: Persist a configurable instruction sync strategy",
+      "value": "513",
+      "kind": "number",
+      "claimId": "claim-a58806c63128d79e"
+    },
+    {
+      "subject": "Task p02-t01: Persist a configurable instruction sync strategy",
+      "value": "534",
+      "kind": "number",
+      "claimId": "claim-a58806c63128d79e"
+    },
+    {
+      "subject": "Task p02-t01: Persist a configurable instruction sync strategy",
+      "value": "356",
+      "kind": "number",
+      "claimId": "claim-60e8a0f088153c8d"
+    },
+    {
+      "subject": "Task p02-t01: Persist a configurable instruction sync strategy",
+      "value": "358",
+      "kind": "number",
+      "claimId": "claim-60e8a0f088153c8d"
+    },
+    {
+      "subject": "Task p02-t01: Persist a configurable instruction sync strategy",
+      "value": "42",
+      "kind": "number",
+      "claimId": "claim-e38257ae9b8a8bee"
+    },
+    {
+      "subject": "Task p02-t01: Persist a configurable instruction sync strategy",
+      "value": "44",
+      "kind": "number",
+      "claimId": "claim-e38257ae9b8a8bee"
+    },
+    {
+      "subject": "Task p02-t01: Persist a configurable instruction sync strategy",
+      "value": "861",
+      "kind": "number",
+      "claimId": "claim-933078243f6a5238"
+    },
+    {
+      "subject": "Task p02-t01: Persist a configurable instruction sync strategy",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-6874d9422fe5f4f6"
+    },
+    {
+      "subject": "Task p02-t01: Persist a configurable instruction sync strategy",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-6711309169422f6e"
+    },
+    {
+      "subject": "Task p02-t01: Persist a configurable instruction sync strategy",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-08814ae623874d64"
+    },
+    {
+      "subject": "Task p02-t01: Persist a configurable instruction sync strategy",
+      "value": "4",
+      "kind": "number",
+      "claimId": "claim-97d580c908c38f9c"
+    },
+    {
+      "subject": "BL-260927-make-claude-md-shims-opt",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-e2b8979c5d25f40f"
+    },
+    {
+      "subject": "BL-260927-make-claude-md-shims-opt",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-e2b8979c5d25f40f"
+    },
+    {
+      "subject": "BL-260927-make-claude-md-shims-opt",
+      "value": "10",
+      "kind": "number",
+      "claimId": "claim-e2b8979c5d25f40f"
+    },
+    {
+      "subject": "Task p02-t02: Stop creating shims and remove OAT-managed shims under none",
+      "value": "121",
+      "kind": "number",
+      "claimId": "claim-9b10c7d08f2a6a66"
+    },
+    {
+      "subject": "Task p02-t02: Stop creating shims and remove OAT-managed shims under none",
+      "value": "207",
+      "kind": "number",
+      "claimId": "claim-9b10c7d08f2a6a66"
+    },
+    {
+      "subject": "Task p02-t02: Stop creating shims and remove OAT-managed shims under none",
+      "value": "88",
+      "kind": "number",
+      "claimId": "claim-1bb3ee9f4afb5bbd"
+    },
+    {
+      "subject": "Task p02-t02: Stop creating shims and remove OAT-managed shims under none",
+      "value": "552",
+      "kind": "number",
+      "claimId": "claim-31f1ff75f253bc45"
+    },
+    {
+      "subject": "Task p02-t02: Stop creating shims and remove OAT-managed shims under none",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-37b9de0df661ca7d"
+    },
+    {
+      "subject": "Task p02-t02: Stop creating shims and remove OAT-managed shims under none",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-00b12b9b128e2947"
+    },
+    {
+      "subject": "Task p02-t02: Stop creating shims and remove OAT-managed shims under none",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-8eb16f48dd88fc4e"
+    },
+    {
+      "subject": "Task p02-t02: Stop creating shims and remove OAT-managed shims under none",
+      "value": "60",
+      "kind": "number",
+      "claimId": "claim-c09d786a1b4e49b5"
+    },
+    {
+      "subject": "Task p02-t02: Stop creating shims and remove OAT-managed shims under none",
+      "value": "62",
+      "kind": "number",
+      "claimId": "claim-c09d786a1b4e49b5"
+    },
+    {
+      "subject": "Task p02-t02: Stop creating shims and remove OAT-managed shims under none",
+      "value": "closed",
+      "kind": "status",
+      "claimId": "claim-38f5e1a6bc555e3c"
+    },
+    {
+      "subject": "Task p02-t02: Stop creating shims and remove OAT-managed shims under none",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-3a61fbc4ccc763bf"
+    },
+    {
+      "subject": "Task p02-t02: Stop creating shims and remove OAT-managed shims under none",
+      "value": "4",
+      "kind": "number",
+      "claimId": "claim-76dde496628e8b94"
+    },
+    {
+      "subject": "BL-260927-make-claude-md-shims-opt",
+      "value": "4",
+      "kind": "number",
+      "claimId": "claim-49fb23e6989268aa"
+    },
+    {
+      "subject": "BL-260927-make-claude-md-shims-opt",
+      "value": "5",
+      "kind": "number",
+      "claimId": "claim-49fb23e6989268aa"
+    },
+    {
+      "subject": "Task p02-t03: Warn about leftover CLAUDE.md files and adopt strays without shims",
+      "value": "250",
+      "kind": "number",
+      "claimId": "claim-5c5515660cee73e0"
+    },
+    {
+      "subject": "Task p02-t03: Warn about leftover CLAUDE.md files and adopt strays without shims",
+      "value": "290",
+      "kind": "number",
+      "claimId": "claim-5c5515660cee73e0"
+    },
+    {
+      "subject": "Task p02-t03: Warn about leftover CLAUDE.md files and adopt strays without shims",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-94dc9125cdd532c5"
+    },
+    {
+      "subject": "Task p02-t03: Warn about leftover CLAUDE.md files and adopt strays without shims",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-f32afcc0cdc58b9e"
+    },
+    {
+      "subject": "Task p02-t03: Warn about leftover CLAUDE.md files and adopt strays without shims",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-35e17084fa69e57e"
+    },
+    {
+      "subject": "Task p02-t03: Warn about leftover CLAUDE.md files and adopt strays without shims",
+      "value": "4",
+      "kind": "number",
+      "claimId": "claim-7f54111192518145"
+    },
+    {
+      "subject": "BL-260927-make-claude-md-shims-opt",
+      "value": "6",
+      "kind": "number",
+      "claimId": "claim-0613e833b1bf3777"
+    },
+    {
+      "subject": "Task p02-t04: Update doctor, instructions skills, and provider detection",
+      "value": "90",
+      "kind": "number",
+      "claimId": "claim-8b994c34961da837"
+    },
+    {
+      "subject": "Task p02-t04: Update doctor, instructions skills, and provider detection",
+      "value": "126",
+      "kind": "number",
+      "claimId": "claim-8b994c34961da837"
+    },
+    {
+      "subject": "Task p02-t04: Update doctor, instructions skills, and provider detection",
+      "value": "127",
+      "kind": "number",
+      "claimId": "claim-8b994c34961da837"
+    },
+    {
+      "subject": "Task p02-t04: Update doctor, instructions skills, and provider detection",
+      "value": "20",
+      "kind": "number",
+      "claimId": "claim-9dc296f5c1e66dbd"
+    },
+    {
+      "subject": "Task p02-t04: Update doctor, instructions skills, and provider detection",
+      "value": "29",
+      "kind": "number",
+      "claimId": "claim-9dc296f5c1e66dbd"
+    },
+    {
+      "subject": "Task p02-t04: Update doctor, instructions skills, and provider detection",
+      "value": "278",
+      "kind": "number",
+      "claimId": "claim-9dc296f5c1e66dbd"
+    },
+    {
+      "subject": "Task p02-t04: Update doctor, instructions skills, and provider detection",
+      "value": "262",
+      "kind": "number",
+      "claimId": "claim-41430c2a5c97a83c"
+    },
+    {
+      "subject": "Task p02-t04: Update doctor, instructions skills, and provider detection",
+      "value": "309",
+      "kind": "number",
+      "claimId": "claim-41430c2a5c97a83c"
+    },
+    {
+      "subject": "Task p02-t04: Update doctor, instructions skills, and provider detection",
+      "value": "317",
+      "kind": "number",
+      "claimId": "claim-cac21a742acedb77"
+    },
+    {
+      "subject": "Task p02-t04: Update doctor, instructions skills, and provider detection",
+      "value": "1.12",
+      "kind": "number",
+      "claimId": "claim-2bac458bbd999f14"
+    },
+    {
+      "subject": "Task p02-t04: Update doctor, instructions skills, and provider detection",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-2bac458bbd999f14"
+    },
+    {
+      "subject": "Task p02-t04: Update doctor, instructions skills, and provider detection",
+      "value": "4",
+      "kind": "number",
+      "claimId": "claim-2bac458bbd999f14"
+    },
+    {
+      "subject": "Task p02-t04: Update doctor, instructions skills, and provider detection",
+      "value": "124",
+      "kind": "number",
+      "claimId": "claim-f0badbdafe44d5eb"
+    },
+    {
+      "subject": "Task p02-t04: Update doctor, instructions skills, and provider detection",
+      "value": "30",
+      "kind": "number",
+      "claimId": "claim-c5ca69468a5c4229"
+    },
+    {
+      "subject": "Task p02-t04: Update doctor, instructions skills, and provider detection",
+      "value": "47",
+      "kind": "number",
+      "claimId": "claim-c5ca69468a5c4229"
+    },
+    {
+      "subject": "Task p02-t04: Update doctor, instructions skills, and provider detection",
+      "value": "83",
+      "kind": "number",
+      "claimId": "claim-d2339fdb13925b61"
+    },
+    {
+      "subject": "Task p02-t04: Update doctor, instructions skills, and provider detection",
+      "value": "26",
+      "kind": "number",
+      "claimId": "claim-34ac0d364f6cc9e0"
+    },
+    {
+      "subject": "Task p02-t04: Update doctor, instructions skills, and provider detection",
+      "value": "62",
+      "kind": "number",
+      "claimId": "claim-34ac0d364f6cc9e0"
+    },
+    {
+      "subject": "Task p02-t04: Update doctor, instructions skills, and provider detection",
+      "value": "76",
+      "kind": "number",
+      "claimId": "claim-34ac0d364f6cc9e0"
+    },
+    {
+      "subject": "Task p02-t04: Update doctor, instructions skills, and provider detection",
+      "value": "48",
+      "kind": "number",
+      "claimId": "claim-5ee65b0f89a81daf"
+    },
+    {
+      "subject": "Task p02-t04: Update doctor, instructions skills, and provider detection",
+      "value": "50",
+      "kind": "number",
+      "claimId": "claim-5ee65b0f89a81daf"
+    },
+    {
+      "subject": "Task p02-t04: Update doctor, instructions skills, and provider detection",
+      "value": "207",
+      "kind": "number",
+      "claimId": "claim-2216a80d7fff5d50"
+    },
+    {
+      "subject": "Task p02-t04: Update doctor, instructions skills, and provider detection",
+      "value": "243",
+      "kind": "number",
+      "claimId": "claim-2216a80d7fff5d50"
+    },
+    {
+      "subject": "Task p02-t04: Update doctor, instructions skills, and provider detection",
+      "value": "1.7",
+      "kind": "number",
+      "claimId": "claim-413d6feec69637e1"
+    },
+    {
+      "subject": "Task p02-t04: Update doctor, instructions skills, and provider detection",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-413d6feec69637e1"
+    },
+    {
+      "subject": "Task p02-t04: Update doctor, instructions skills, and provider detection",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-fa124af534a3d472"
+    },
+    {
+      "subject": "BL-260927-make-claude-md-shims-opt",
+      "value": "7",
+      "kind": "number",
+      "claimId": "claim-25974625d1f00bff"
+    },
+    {
+      "subject": "Task p02-t05: Document the no-shim default and the pjm init hint",
+      "value": "57",
+      "kind": "number",
+      "claimId": "claim-3d571760178767c1"
+    },
+    {
+      "subject": "Task p02-t05: Document the no-shim default and the pjm init hint",
+      "value": "62",
+      "kind": "number",
+      "claimId": "claim-3d571760178767c1"
+    },
+    {
+      "subject": "Task p02-t05: Document the no-shim default and the pjm init hint",
+      "value": "218",
+      "kind": "number",
+      "claimId": "claim-3d571760178767c1"
+    },
+    {
+      "subject": "Task p02-t05: Document the no-shim default and the pjm init hint",
+      "value": "219",
+      "kind": "number",
+      "claimId": "claim-3d571760178767c1"
+    },
+    {
+      "subject": "Task p02-t05: Document the no-shim default and the pjm init hint",
+      "value": "163",
+      "kind": "number",
+      "claimId": "claim-5a343e0825f6ebca"
+    },
+    {
+      "subject": "Task p02-t05: Document the no-shim default and the pjm init hint",
+      "value": "167",
+      "kind": "number",
+      "claimId": "claim-5a343e0825f6ebca"
+    },
+    {
+      "subject": "Task p02-t05: Document the no-shim default and the pjm init hint",
+      "value": "179",
+      "kind": "number",
+      "claimId": "claim-5a343e0825f6ebca"
+    },
+    {
+      "subject": "Task p02-t05: Document the no-shim default and the pjm init hint",
+      "value": "182",
+      "kind": "number",
+      "claimId": "claim-5a343e0825f6ebca"
+    },
+    {
+      "subject": "Task p02-t05: Document the no-shim default and the pjm init hint",
+      "value": "186",
+      "kind": "number",
+      "claimId": "claim-5a343e0825f6ebca"
+    },
+    {
+      "subject": "Task p02-t05: Document the no-shim default and the pjm init hint",
+      "value": "198",
+      "kind": "number",
+      "claimId": "claim-5a343e0825f6ebca"
+    },
+    {
+      "subject": "Task p02-t05: Document the no-shim default and the pjm init hint",
+      "value": "211",
+      "kind": "number",
+      "claimId": "claim-66681a2d2606906d"
+    },
+    {
+      "subject": "Task p02-t05: Document the no-shim default and the pjm init hint",
+      "value": "239",
+      "kind": "number",
+      "claimId": "claim-66681a2d2606906d"
+    },
+    {
+      "subject": "Task p02-t05: Document the no-shim default and the pjm init hint",
+      "value": "98",
+      "kind": "number",
+      "claimId": "claim-b5d12e2948fe9093"
+    },
+    {
+      "subject": "Task p02-t05: Document the no-shim default and the pjm init hint",
+      "value": "128",
+      "kind": "number",
+      "claimId": "claim-ee1ff8ab0fd90391"
+    },
+    {
+      "subject": "Task p02-t05: Document the no-shim default and the pjm init hint",
+      "value": "61",
+      "kind": "number",
+      "claimId": "claim-fa1ab63f31050f6e"
+    },
+    {
+      "subject": "Task p02-t05: Document the no-shim default and the pjm init hint",
+      "value": "64",
+      "kind": "number",
+      "claimId": "claim-fa1ab63f31050f6e"
+    },
+    {
+      "subject": "Task p02-t05: Document the no-shim default and the pjm init hint",
+      "value": "259",
+      "kind": "number",
+      "claimId": "claim-9ddcad4f2b95b85d"
+    },
+    {
+      "subject": "Task p02-t05: Document the no-shim default and the pjm init hint",
+      "value": "262",
+      "kind": "number",
+      "claimId": "claim-9ddcad4f2b95b85d"
+    },
+    {
+      "subject": "Task p02-t05: Document the no-shim default and the pjm init hint",
+      "value": "126",
+      "kind": "number",
+      "claimId": "claim-db18c90f22b0624d"
+    },
+    {
+      "subject": "Task p02-t05: Document the no-shim default and the pjm init hint",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-247559274b215746"
+    },
+    {
+      "subject": "Task p02-t05: Document the no-shim default and the pjm init hint",
+      "value": "1.278",
+      "kind": "number",
+      "claimId": "claim-a01cd3e67337ef84"
+    },
+    {
+      "subject": "Task p02-t05: Document the no-shim default and the pjm init hint",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-8f93d06e1062be74"
+    },
+    {
+      "subject": "Task p02-t05: Document the no-shim default and the pjm init hint",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-6be11b5814e2962c"
+    },
+    {
+      "subject": "BL-260927-make-claude-md-shims-opt",
+      "value": "8",
+      "kind": "number",
+      "claimId": "claim-d2cae5bbef1b404f"
+    },
+    {
+      "subject": "BL-260927-make-claude-md-shims-opt",
+      "value": "9",
+      "kind": "number",
+      "claimId": "claim-d2cae5bbef1b404f"
+    },
+    {
+      "subject": "Task p02-t06: Drop this repository's shims",
+      "value": "260927",
+      "kind": "number",
+      "claimId": "claim-31b4268707e89799"
+    },
+    {
+      "subject": "Task p02-t06: Drop this repository's shims",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-c0b9ace93cc1df29"
+    },
+    {
+      "subject": "Task p02-t06: Drop this repository's shims",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-e1f4f585aa28f627"
+    },
+    {
+      "subject": "Task p02-t06: Drop this repository's shims",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-ef49e2508153471b"
+    },
+    {
+      "subject": "Task p02-t06: Drop this repository's shims",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-844ba2150e6008fd"
+    },
+    {
+      "subject": "Task p02-t07: (review) Close p02 review findings C1, M1, M2, L1-L3",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-b486566c70f4021a"
+    },
+    {
+      "subject": "Task p02-t07: (review) Close p02 review findings C1, M1, M2, L1-L3",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-b486566c70f4021a"
+    },
+    {
+      "subject": "Task p02-t07: (review) Close p02 review findings C1, M1, M2, L1-L3",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-b486566c70f4021a"
+    },
+    {
+      "subject": "Task p02-t07: (review) Close p02 review findings C1, M1, M2, L1-L3",
+      "value": "2.6",
+      "kind": "number",
+      "claimId": "claim-f8dd1302bc70e222"
+    },
+    {
+      "subject": "Task p02-t07: (review) Close p02 review findings C1, M1, M2, L1-L3",
+      "value": "5.4",
+      "kind": "number",
+      "claimId": "claim-f8dd1302bc70e222"
+    },
+    {
+      "subject": "Task p02-t08: (review) Close p02 round-2 findings M1, M2, L1",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-9b37c1f22526d3c5"
+    },
+    {
+      "subject": "Task p02-t08: (review) Close p02 round-2 findings M1, M2, L1",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-9b37c1f22526d3c5"
+    },
+    {
+      "subject": "Task p02-t08: (review) Close p02 round-2 findings M1, M2, L1",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-b59d81b552f8fd73"
+    },
+    {
+      "subject": "BL-260907-route-quick-mode-discovery",
+      "value": "260907",
+      "kind": "number",
+      "claimId": "claim-dafdfc2c317f3b99"
+    },
+    {
+      "subject": "Task p03-t01: Route quick-mode discovery rows straight to quick-start",
+      "value": "256",
+      "kind": "number",
+      "claimId": "claim-097452097a4e27ac"
+    },
+    {
+      "subject": "Task p03-t01: Route quick-mode discovery rows straight to quick-start",
+      "value": "257",
+      "kind": "number",
+      "claimId": "claim-097452097a4e27ac"
+    },
+    {
+      "subject": "Task p03-t01: Route quick-mode discovery rows straight to quick-start",
+      "value": "1.1",
+      "kind": "number",
+      "claimId": "claim-097452097a4e27ac"
+    },
+    {
+      "subject": "Task p03-t01: Route quick-mode discovery rows straight to quick-start",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-097452097a4e27ac"
+    },
+    {
+      "subject": "Task p03-t01: Route quick-mode discovery rows straight to quick-start",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-097452097a4e27ac"
+    },
+    {
+      "subject": "Task p03-t01: Route quick-mode discovery rows straight to quick-start",
+      "value": "279",
+      "kind": "number",
+      "claimId": "claim-6c3564ef0ac44298"
+    },
+    {
+      "subject": "Task p03-t01: Route quick-mode discovery rows straight to quick-start",
+      "value": "1.4",
+      "kind": "number",
+      "claimId": "claim-b48679e526959bcf"
+    },
+    {
+      "subject": "Task p03-t01: Route quick-mode discovery rows straight to quick-start",
+      "value": "1650",
+      "kind": "number",
+      "claimId": "claim-09ed5f2b0ed5effd"
+    },
+    {
+      "subject": "Task p03-t01: Route quick-mode discovery rows straight to quick-start",
+      "value": "1859",
+      "kind": "number",
+      "claimId": "claim-09ed5f2b0ed5effd"
+    },
+    {
+      "subject": "Task p03-t01: Route quick-mode discovery rows straight to quick-start",
+      "value": "2141",
+      "kind": "number",
+      "claimId": "claim-09ed5f2b0ed5effd"
+    },
+    {
+      "subject": "Task p03-t01: Route quick-mode discovery rows straight to quick-start",
+      "value": "2162",
+      "kind": "number",
+      "claimId": "claim-09ed5f2b0ed5effd"
+    },
+    {
+      "subject": "Task p03-t01: Route quick-mode discovery rows straight to quick-start",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-840fab72a9322f0e"
+    },
+    {
+      "subject": "Task p03-t01: Route quick-mode discovery rows straight to quick-start",
+      "value": "4",
+      "kind": "number",
+      "claimId": "claim-a7290d895299b6f0"
+    },
+    {
+      "subject": "BL-260907-record-absorbed-projects",
+      "value": "260907",
+      "kind": "number",
+      "claimId": "claim-8cdcbaf2616916b4"
+    },
+    {
+      "subject": "Task p03-t02: Record absorbed projects in Lite consolidations",
+      "value": "1.1",
+      "kind": "number",
+      "claimId": "claim-80932c7d77ec2ad2"
+    },
+    {
+      "subject": "Task p03-t02: Record absorbed projects in Lite consolidations",
+      "value": "5",
+      "kind": "number",
+      "claimId": "claim-80932c7d77ec2ad2"
+    },
+    {
+      "subject": "Task p03-t02: Record absorbed projects in Lite consolidations",
+      "value": "6",
+      "kind": "number",
+      "claimId": "claim-80932c7d77ec2ad2"
+    },
+    {
+      "subject": "Task p03-t02: Record absorbed projects in Lite consolidations",
+      "value": "201",
+      "kind": "number",
+      "claimId": "claim-08fdf0bd3e857dc9"
+    },
+    {
+      "subject": "Task p03-t02: Record absorbed projects in Lite consolidations",
+      "value": "219",
+      "kind": "number",
+      "claimId": "claim-08fdf0bd3e857dc9"
+    },
+    {
+      "subject": "Task p03-t02: Record absorbed projects in Lite consolidations",
+      "value": "1587",
+      "kind": "number",
+      "claimId": "claim-fe90191c272bf71f"
+    },
+    {
+      "subject": "Task p03-t02: Record absorbed projects in Lite consolidations",
+      "value": "1616",
+      "kind": "number",
+      "claimId": "claim-fe90191c272bf71f"
+    },
+    {
+      "subject": "Task p03-t02: Record absorbed projects in Lite consolidations",
+      "value": "165",
+      "kind": "number",
+      "claimId": "claim-1f02dfaa9ad3ce74"
+    },
+    {
+      "subject": "Task p03-t02: Record absorbed projects in Lite consolidations",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-7aa71e214bb89e4f"
+    },
+    {
+      "subject": "Task p03-t02: Record absorbed projects in Lite consolidations",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-a54e8d9a7541247d"
+    },
+    {
+      "subject": "Task p03-t02: Record absorbed projects in Lite consolidations",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-45f37d6996989fdf"
+    },
+    {
+      "subject": "Task p03-t02: Record absorbed projects in Lite consolidations",
+      "value": "770",
+      "kind": "number",
+      "claimId": "claim-132376c8f3c3a30a"
+    },
+    {
+      "subject": "Task p03-t02: Record absorbed projects in Lite consolidations",
+      "value": "775",
+      "kind": "number",
+      "claimId": "claim-132376c8f3c3a30a"
+    },
+    {
+      "subject": "Task p03-t02: Record absorbed projects in Lite consolidations",
+      "value": "4303",
+      "kind": "number",
+      "claimId": "claim-60533924f7bbcd5a"
+    },
+    {
+      "subject": "Task p03-t02: Record absorbed projects in Lite consolidations",
+      "value": "4380",
+      "kind": "number",
+      "claimId": "claim-60533924f7bbcd5a"
+    },
+    {
+      "subject": "Task p03-t02: Record absorbed projects in Lite consolidations",
+      "value": "built",
+      "kind": "status",
+      "claimId": "claim-3c918998b46539ef"
+    },
+    {
+      "subject": "Task p03-t02: Record absorbed projects in Lite consolidations",
+      "value": "4",
+      "kind": "number",
+      "claimId": "claim-dc044d840430beb9"
+    },
+    {
+      "subject": "BL-260829-order-phase-bookkeeping-before",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-da1a5855cfc4b377"
+    },
+    {
+      "subject": "BL-260829-order-phase-bookkeeping-before",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-da1a5855cfc4b377"
+    },
+    {
+      "subject": "BL-260829-order-phase-bookkeeping-before",
+      "value": "4",
+      "kind": "number",
+      "claimId": "claim-da1a5855cfc4b377"
+    },
+    {
+      "subject": "Task p03-t03: Commit phase bookkeeping before per-phase review dispatch",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-e4e6a1ca93d910a0"
+    },
+    {
+      "subject": "Task p03-t03: Commit phase bookkeeping before per-phase review dispatch",
+      "value": "open",
+      "kind": "status",
+      "claimId": "claim-e4e6a1ca93d910a0"
+    },
+    {
+      "subject": "Task p03-t03: Commit phase bookkeeping before per-phase review dispatch",
+      "value": "684",
+      "kind": "number",
+      "claimId": "claim-3cee93d129e2502a"
+    },
+    {
+      "subject": "Task p03-t03: Commit phase bookkeeping before per-phase review dispatch",
+      "value": "796",
+      "kind": "number",
+      "claimId": "claim-3cee93d129e2502a"
+    },
+    {
+      "subject": "Task p03-t03: Commit phase bookkeeping before per-phase review dispatch",
+      "value": "756",
+      "kind": "number",
+      "claimId": "claim-3cee93d129e2502a"
+    },
+    {
+      "subject": "Task p03-t03: Commit phase bookkeeping before per-phase review dispatch",
+      "value": "758",
+      "kind": "number",
+      "claimId": "claim-3cee93d129e2502a"
+    },
+    {
+      "subject": "Task p03-t03: Commit phase bookkeeping before per-phase review dispatch",
+      "value": "7",
+      "kind": "number",
+      "claimId": "claim-3cee93d129e2502a"
+    },
+    {
+      "subject": "Task p03-t03: Commit phase bookkeeping before per-phase review dispatch",
+      "value": "880",
+      "kind": "number",
+      "claimId": "claim-5290d51896f93373"
+    },
+    {
+      "subject": "Task p03-t03: Commit phase bookkeeping before per-phase review dispatch",
+      "value": "916",
+      "kind": "number",
+      "claimId": "claim-5290d51896f93373"
+    },
+    {
+      "subject": "Task p03-t03: Commit phase bookkeeping before per-phase review dispatch",
+      "value": "2.3",
+      "kind": "number",
+      "claimId": "claim-5d6354a7218ada97"
+    },
+    {
+      "subject": "Task p03-t03: Commit phase bookkeeping before per-phase review dispatch",
+      "value": "13",
+      "kind": "number",
+      "claimId": "claim-5d6354a7218ada97"
+    },
+    {
+      "subject": "Task p03-t03: Commit phase bookkeeping before per-phase review dispatch",
+      "value": "14",
+      "kind": "number",
+      "claimId": "claim-5d6354a7218ada97"
+    },
+    {
+      "subject": "BL-260711-skip-re-review-for-bookkeeping",
+      "value": "260711",
+      "kind": "number",
+      "claimId": "claim-937040a351650aa4"
+    },
+    {
+      "subject": "Task p03-t03: Commit phase bookkeeping before per-phase review dispatch",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-3eb333dc975c0c1a"
+    },
+    {
+      "subject": "Task p03-t03: Commit phase bookkeeping before per-phase review dispatch",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-143ae35acf070121"
+    },
+    {
+      "subject": "Task p03-t03: Commit phase bookkeeping before per-phase review dispatch",
+      "value": "797",
+      "kind": "number",
+      "claimId": "claim-d18cb3811768be06"
+    },
+    {
+      "subject": "Task p03-t03: Commit phase bookkeeping before per-phase review dispatch",
+      "value": "260711",
+      "kind": "number",
+      "claimId": "claim-b4d1b8c3dda887cf"
+    },
+    {
+      "subject": "Task p03-t03: Commit phase bookkeeping before per-phase review dispatch",
+      "value": "260829",
+      "kind": "number",
+      "claimId": "claim-093d3e865d85872f"
+    },
+    {
+      "subject": "Task p03-t03: Commit phase bookkeeping before per-phase review dispatch",
+      "value": "4",
+      "kind": "number",
+      "claimId": "claim-36d1aa5861c5d492"
+    },
+    {
+      "subject": "Task p03-t03: Commit phase bookkeeping before per-phase review dispatch",
+      "value": "5",
+      "kind": "number",
+      "claimId": "claim-952d5fe9c696c4ed"
+    },
+    {
+      "subject": "Task p03-t04: (review) Close p03 review findings M1, M2, L2-L4",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-30126df91dca0aa2"
+    },
+    {
+      "subject": "Task p03-t04: (review) Close p03 review findings M1, M2, L2-L4",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-30126df91dca0aa2"
+    },
+    {
+      "subject": "Task p03-t04: (review) Close p03 review findings M1, M2, L2-L4",
+      "value": "4",
+      "kind": "number",
+      "claimId": "claim-30126df91dca0aa2"
+    },
+    {
+      "subject": "Task p03-t04: (review) Close p03 review findings M1, M2, L2-L4",
+      "value": "deferred",
+      "kind": "status",
+      "claimId": "claim-30126df91dca0aa2"
+    },
+    {
+      "subject": "Task p03-t04: (review) Close p03 review findings M1, M2, L2-L4",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-2b4450b94dddcf80"
+    },
+    {
+      "subject": "Task p03-t04: (review) Close p03 review findings M1, M2, L2-L4",
+      "value": "2.3",
+      "kind": "number",
+      "claimId": "claim-bdfb45d52b029b89"
+    },
+    {
+      "subject": "Task p03-t04: (review) Close p03 review findings M1, M2, L2-L4",
+      "value": "14",
+      "kind": "number",
+      "claimId": "claim-bdfb45d52b029b89"
+    },
+    {
+      "subject": "Task p03-t04: (review) Close p03 review findings M1, M2, L2-L4",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-3370166c15bc2699"
+    },
+    {
+      "subject": "Task p03-t05: (review) Keep the phase row nonterminal until review fixes and the gate settle",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-c862570af7bcee7a"
+    },
+    {
+      "subject": "Task p03-t05: (review) Keep the phase row nonterminal until review fixes and the gate settle",
+      "value": "complete",
+      "kind": "status",
+      "claimId": "claim-17e10e2728cd9d11"
+    },
+    {
+      "subject": "Task p03-t05: (review) Keep the phase row nonterminal until review fixes and the gate settle",
+      "value": "2.3",
+      "kind": "number",
+      "claimId": "claim-5f43a91f6f5f8a6e"
+    },
+    {
+      "subject": "Task p03-t05: (review) Keep the phase row nonterminal until review fixes and the gate settle",
+      "value": "14",
+      "kind": "number",
+      "claimId": "claim-5f43a91f6f5f8a6e"
+    },
+    {
+      "subject": "Task p03-t05: (review) Keep the phase row nonterminal until review fixes and the gate settle",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-dd35b0353646b4bf"
+    },
+    {
+      "subject": "Task p03-t05: (review) Keep the phase row nonterminal until review fixes and the gate settle",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-fd2ad6c2d7335b5e"
+    },
+    {
+      "subject": "BL-260909-repair-the-bare-fences-that",
+      "value": "260909",
+      "kind": "number",
+      "claimId": "claim-8e0460c02261daf3"
+    },
+    {
+      "subject": "Task p04-t01: Repair bare fences outside .agents/skills and extend the scanner",
+      "value": "246",
+      "kind": "number",
+      "claimId": "claim-3608ce489ae4aa88"
+    },
+    {
+      "subject": "Task p04-t01: Repair bare fences outside .agents/skills and extend the scanner",
+      "value": "255",
+      "kind": "number",
+      "claimId": "claim-3608ce489ae4aa88"
+    },
+    {
+      "subject": "Task p04-t01: Repair bare fences outside .agents/skills and extend the scanner",
+      "value": "1.0",
+      "kind": "number",
+      "claimId": "claim-01aec07d26977730"
+    },
+    {
+      "subject": "Task p04-t01: Repair bare fences outside .agents/skills and extend the scanner",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-01aec07d26977730"
+    },
+    {
+      "subject": "Task p04-t01: Repair bare fences outside .agents/skills and extend the scanner",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-01aec07d26977730"
+    },
+    {
+      "subject": "Task p04-t01: Repair bare fences outside .agents/skills and extend the scanner",
+      "value": "502",
+      "kind": "number",
+      "claimId": "claim-f1edfb2b9564c679"
+    },
+    {
+      "subject": "Task p04-t01: Repair bare fences outside .agents/skills and extend the scanner",
+      "value": "523",
+      "kind": "number",
+      "claimId": "claim-f1edfb2b9564c679"
+    },
+    {
+      "subject": "Task p04-t01: Repair bare fences outside .agents/skills and extend the scanner",
+      "value": "534",
+      "kind": "number",
+      "claimId": "claim-f1edfb2b9564c679"
+    },
+    {
+      "subject": "Task p04-t01: Repair bare fences outside .agents/skills and extend the scanner",
+      "value": "559",
+      "kind": "number",
+      "claimId": "claim-f1edfb2b9564c679"
+    },
+    {
+      "subject": "p04-t02",
+      "value": "1.2",
+      "kind": "number",
+      "claimId": "claim-3dc09522ca8500de"
+    },
+    {
+      "subject": "p04-t02",
+      "value": "9",
+      "kind": "number",
+      "claimId": "claim-3dc09522ca8500de"
+    },
+    {
+      "subject": "p04-t02",
+      "value": "10",
+      "kind": "number",
+      "claimId": "claim-3dc09522ca8500de"
+    },
+    {
+      "subject": "Task p04-t01: Repair bare fences outside .agents/skills and extend the scanner",
+      "value": "81",
+      "kind": "number",
+      "claimId": "claim-ec5f7e1e39bb4dd2"
+    },
+    {
+      "subject": "Task p04-t01: Repair bare fences outside .agents/skills and extend the scanner",
+      "value": "99",
+      "kind": "number",
+      "claimId": "claim-ec5f7e1e39bb4dd2"
+    },
+    {
+      "subject": "Task p04-t01: Repair bare fences outside .agents/skills and extend the scanner",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-0df3d85958109a64"
+    },
+    {
+      "subject": "Task p04-t01: Repair bare fences outside .agents/skills and extend the scanner",
+      "value": "107",
+      "kind": "number",
+      "claimId": "claim-1a14a802ab2ce1af"
+    },
+    {
+      "subject": "Task p04-t01: Repair bare fences outside .agents/skills and extend the scanner",
+      "value": "122",
+      "kind": "number",
+      "claimId": "claim-1a14a802ab2ce1af"
+    },
+    {
+      "subject": "Task p04-t01: Repair bare fences outside .agents/skills and extend the scanner",
+      "value": "456",
+      "kind": "number",
+      "claimId": "claim-979d6e3e672857d2"
+    },
+    {
+      "subject": "Task p04-t01: Repair bare fences outside .agents/skills and extend the scanner",
+      "value": "537",
+      "kind": "number",
+      "claimId": "claim-979d6e3e672857d2"
+    },
+    {
+      "subject": "wave-7",
+      "value": "7",
+      "kind": "number",
+      "claimId": "claim-c9ef927fb76ed765"
+    },
+    {
+      "subject": "Task p04-t01: Repair bare fences outside .agents/skills and extend the scanner",
+      "value": "9",
+      "kind": "number",
+      "claimId": "claim-5c146907d6131999"
+    },
+    {
+      "subject": "Task p04-t01: Repair bare fences outside .agents/skills and extend the scanner",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-dbc305851022931f"
+    },
+    {
+      "subject": "Task p04-t01: Repair bare fences outside .agents/skills and extend the scanner",
+      "value": "4",
+      "kind": "number",
+      "claimId": "claim-b5b1d516f6539f76"
+    },
+    {
+      "subject": "Task p04-t01: Repair bare fences outside .agents/skills and extend the scanner",
+      "value": "5",
+      "kind": "number",
+      "claimId": "claim-629ce231592c342a"
+    },
+    {
+      "subject": "Task p04-t01: Repair bare fences outside .agents/skills and extend the scanner",
+      "value": "6",
+      "kind": "number",
+      "claimId": "claim-e74d5cb4759a85e5"
+    },
+    {
+      "subject": "BL-260927-validate-recon-worker",
+      "value": "295",
+      "kind": "number",
+      "claimId": "claim-b9b67a6555ad9fba"
+    },
+    {
+      "subject": "Task p04-t02: Validate recon assignment envelopes before launch",
+      "value": "1.1",
+      "kind": "number",
+      "claimId": "claim-bc60b7bba063d1fa"
+    },
+    {
+      "subject": "Task p04-t02: Validate recon assignment envelopes before launch",
+      "value": "5",
+      "kind": "number",
+      "claimId": "claim-bc60b7bba063d1fa"
+    },
+    {
+      "subject": "Task p04-t02: Validate recon assignment envelopes before launch",
+      "value": "6",
+      "kind": "number",
+      "claimId": "claim-bc60b7bba063d1fa"
+    },
+    {
+      "subject": "Task p04-t02: Validate recon assignment envelopes before launch",
+      "value": "101",
+      "kind": "number",
+      "claimId": "claim-51ff3a449ad5de9b"
+    },
+    {
+      "subject": "Task p04-t02: Validate recon assignment envelopes before launch",
+      "value": "89",
+      "kind": "number",
+      "claimId": "claim-988f7ff0ad52aa2e"
+    },
+    {
+      "subject": "Task p04-t02: Validate recon assignment envelopes before launch",
+      "value": "469",
+      "kind": "number",
+      "claimId": "claim-e3c80354668bf4d0"
+    },
+    {
+      "subject": "Task p04-t02: Validate recon assignment envelopes before launch",
+      "value": "476",
+      "kind": "number",
+      "claimId": "claim-e3c80354668bf4d0"
+    },
+    {
+      "subject": "Task p04-t02: Validate recon assignment envelopes before launch",
+      "value": "33",
+      "kind": "number",
+      "claimId": "claim-857c1f9994aa966f"
+    },
+    {
+      "subject": "Task p04-t02: Validate recon assignment envelopes before launch",
+      "value": "43",
+      "kind": "number",
+      "claimId": "claim-857c1f9994aa966f"
+    },
+    {
+      "subject": "Task p04-t02: Validate recon assignment envelopes before launch",
+      "value": "1.0",
+      "kind": "number",
+      "claimId": "claim-857c1f9994aa966f"
+    },
+    {
+      "subject": "Task p04-t02: Validate recon assignment envelopes before launch",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-857c1f9994aa966f"
+    },
+    {
+      "subject": "Task p04-t02: Validate recon assignment envelopes before launch",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-857c1f9994aa966f"
+    },
+    {
+      "subject": "Task p04-t02: Validate recon assignment envelopes before launch",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-9cd8e5334549ee82"
+    },
+    {
+      "subject": "Task p04-t02: Validate recon assignment envelopes before launch",
+      "value": "295",
+      "kind": "number",
+      "claimId": "claim-76af3bb1519a9b7e"
+    },
+    {
+      "subject": "Task p04-t02: Validate recon assignment envelopes before launch",
+      "value": "4",
+      "kind": "number",
+      "claimId": "claim-287b01eb35952336"
+    },
+    {
+      "subject": "Task p04-t03: (review) Close p04 review findings M1, L1-L7",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-fbf73c6381531a11"
+    },
+    {
+      "subject": "Task p04-t03: (review) Close p04 review findings M1, L1-L7",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-fbf73c6381531a11"
+    },
+    {
+      "subject": "Task p04-t03: (review) Close p04 review findings M1, L1-L7",
+      "value": "7",
+      "kind": "number",
+      "claimId": "claim-fbf73c6381531a11"
+    },
+    {
+      "subject": "Task p04-t03: (review) Close p04 review findings M1, L1-L7",
+      "value": "595",
+      "kind": "number",
+      "claimId": "claim-d66154bc7588b93d"
+    },
+    {
+      "subject": "Task p04-t03: (review) Close p04 review findings M1, L1-L7",
+      "value": "597",
+      "kind": "number",
+      "claimId": "claim-d66154bc7588b93d"
+    },
+    {
+      "subject": "Task p04-t03: (review) Close p04 review findings M1, L1-L7",
+      "value": "1.2",
+      "kind": "number",
+      "claimId": "claim-8ba9ce49b59efde6"
+    },
+    {
+      "subject": "Task p04-t03: (review) Close p04 review findings M1, L1-L7",
+      "value": "10",
+      "kind": "number",
+      "claimId": "claim-8ba9ce49b59efde6"
+    },
+    {
+      "subject": "Task p04-t03: (review) Close p04 review findings M1, L1-L7",
+      "value": "1.1",
+      "kind": "number",
+      "claimId": "claim-8ba9ce49b59efde6"
+    },
+    {
+      "subject": "Task p04-t03: (review) Close p04 review findings M1, L1-L7",
+      "value": "6",
+      "kind": "number",
+      "claimId": "claim-8ba9ce49b59efde6"
+    },
+    {
+      "subject": "Task p04-t03: (review) Close p04 review findings M1, L1-L7",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-fc7636efb94f6fda"
+    },
+    {
+      "subject": "Task p04-t03: (review) Close p04 review findings M1, L1-L7",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-3ad22100dd0b8986"
+    },
+    {
+      "subject": "Task p04-t04: (review) Close p04 gate findings H1, M1",
+      "value": "6",
+      "kind": "number",
+      "claimId": "claim-21f2a8accc70a9e2"
+    },
+    {
+      "subject": "Task p04-t04: (review) Close p04 gate findings H1, M1",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-21f2a8accc70a9e2"
+    },
+    {
+      "subject": "Task p04-t04: (review) Close p04 gate findings H1, M1",
+      "value": "closed",
+      "kind": "status",
+      "claimId": "claim-58506d0c99217063"
+    },
+    {
+      "subject": "Task p04-t04: (review) Close p04 gate findings H1, M1",
+      "value": "1.1",
+      "kind": "number",
+      "claimId": "claim-d0e1f0be099efe5c"
+    },
+    {
+      "subject": "Task p04-t04: (review) Close p04 gate findings H1, M1",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-0ace61e6286b9cd6"
+    },
+    {
+      "subject": "Task p04-t04: (review) Close p04 gate findings H1, M1",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-3982c0f9598f8c20"
+    },
+    {
+      "subject": "Task p04-t05: (review) Close p04 round-2 findings M1-M3, L1-L2",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-a829144de2d8012a"
+    },
+    {
+      "subject": "Task p04-t05: (review) Close p04 round-2 findings M1-M3, L1-L2",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-a829144de2d8012a"
+    },
+    {
+      "subject": "Task p04-t05: (review) Close p04 round-2 findings M1-M3, L1-L2",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-079c8d75579bc4df"
+    },
+    {
+      "subject": "Task p04-t05: (review) Close p04 round-2 findings M1-M3, L1-L2",
+      "value": "closed",
+      "kind": "status",
+      "claimId": "claim-d113029b333bab00"
+    },
+    {
+      "subject": "Task p04-t06: (review) Restrict read-only tool authority to an allowlist",
+      "value": "2026-09-28",
+      "kind": "date",
+      "claimId": "claim-58fd64ff6919cc11"
+    },
+    {
+      "subject": "Task p04-t06: (review) Restrict read-only tool authority to an allowlist",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-58fd64ff6919cc11"
+    },
+    {
+      "subject": "Task p04-t06: (review) Restrict read-only tool authority to an allowlist",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-58fd64ff6919cc11"
+    },
+    {
+      "subject": "Task p04-t06: (review) Restrict read-only tool authority to an allowlist",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-71affe33c698e583"
+    },
+    {
+      "subject": "Task p04-t07: (review) Bound recon write paths and make wave duplicate checks case-insensitive",
+      "value": "2026-09-28",
+      "kind": "date",
+      "claimId": "claim-4200e4c43190fff0"
+    },
+    {
+      "subject": "Task p04-t07: (review) Bound recon write paths and make wave duplicate checks case-insensitive",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-4200e4c43190fff0"
+    },
+    {
+      "subject": "Task p04-t07: (review) Bound recon write paths and make wave duplicate checks case-insensitive",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-4200e4c43190fff0"
+    },
+    {
+      "subject": "Task p04-t07: (review) Bound recon write paths and make wave duplicate checks case-insensitive",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-4200e4c43190fff0"
+    },
+    {
+      "subject": "BL-260909-give-packages-control-plane",
+      "value": "260909",
+      "kind": "number",
+      "claimId": "claim-8b93c1e793f4a9ab"
+    },
+    {
+      "subject": "BL-260909-give-packages-control-plane",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-8b93c1e793f4a9ab"
+    },
+    {
+      "subject": "BL-260909-give-packages-control-plane",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-8b93c1e793f4a9ab"
+    },
+    {
+      "subject": "BL-260909-give-packages-control-plane",
+      "value": "4",
+      "kind": "number",
+      "claimId": "claim-8b93c1e793f4a9ab"
+    },
+    {
+      "subject": "Task p05-t01: Give packages/control-plane a check script",
+      "value": "40",
+      "kind": "number",
+      "claimId": "claim-636d4b332e6d6a77"
+    },
+    {
+      "subject": "Task p05-t01: Give packages/control-plane a check script",
+      "value": "113",
+      "kind": "number",
+      "claimId": "claim-636d4b332e6d6a77"
+    },
+    {
+      "subject": "Task p05-t01: Give packages/control-plane a check script",
+      "value": "136",
+      "kind": "number",
+      "claimId": "claim-636d4b332e6d6a77"
+    },
+    {
+      "subject": "Task p05-t01: Give packages/control-plane a check script",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-7a3d81449a3f1c48"
+    },
+    {
+      "subject": "Task p05-t01: Give packages/control-plane a check script",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-650e39091d3c2311"
+    },
+    {
+      "subject": "Task p05-t01: Give packages/control-plane a check script",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-eac642d504aa751a"
+    },
+    {
+      "subject": "Task p05-t01: Give packages/control-plane a check script",
+      "value": "4",
+      "kind": "number",
+      "claimId": "claim-0e67d23ebe9c545d"
+    },
+    {
+      "subject": "Task p05-t01: Give packages/control-plane a check script",
+      "value": "5",
+      "kind": "number",
+      "claimId": "claim-e9af22074a3eb10e"
+    },
+    {
+      "subject": "BL-260909-rewrite-inbound-references",
+      "value": "260909",
+      "kind": "number",
+      "claimId": "claim-6e72d05df449232d"
+    },
+    {
+      "subject": "BL-260909-rewrite-inbound-references",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-6e72d05df449232d"
+    },
+    {
+      "subject": "BL-260909-rewrite-inbound-references",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-6e72d05df449232d"
+    },
+    {
+      "subject": "Task p05-t02: Rewrite inbound references when a backlog item is archived",
+      "value": "200",
+      "kind": "number",
+      "claimId": "claim-0279941d9191d6e0"
+    },
+    {
+      "subject": "Task p05-t02: Rewrite inbound references when a backlog item is archived",
+      "value": "321",
+      "kind": "number",
+      "claimId": "claim-0279941d9191d6e0"
+    },
+    {
+      "subject": "Task p05-t02: Rewrite inbound references when a backlog item is archived",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-6eea13c4e057a19b"
+    },
+    {
+      "subject": "Task p05-t02: Rewrite inbound references when a backlog item is archived",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-4452c6e5627e95ed"
+    },
+    {
+      "subject": "Task p05-t02: Rewrite inbound references when a backlog item is archived",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-0e71d4aa628d0c22"
+    },
+    {
+      "subject": "Task p05-t02: Rewrite inbound references when a backlog item is archived",
+      "value": "4",
+      "kind": "number",
+      "claimId": "claim-36650a5cc3bc0cd7"
+    },
+    {
+      "subject": "BL-260904-stabilize-the-collection",
+      "value": "260904",
+      "kind": "number",
+      "claimId": "claim-d2dc44660e806738"
+    },
+    {
+      "subject": "BL-260904-stabilize-the-collection",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-d2dc44660e806738"
+    },
+    {
+      "subject": "BL-260904-stabilize-the-collection",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-d2dc44660e806738"
+    },
+    {
+      "subject": "BL-260904-stabilize-the-collection",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-d2dc44660e806738"
+    },
+    {
+      "subject": "Task p05-t03: Record ten uncached runs of the collection-detach test",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-3c77cfec816a1df9"
+    },
+    {
+      "subject": "Task p05-t03: Record ten uncached runs of the collection-detach test",
+      "value": "10",
+      "kind": "number",
+      "claimId": "claim-67335fb58bf45af0"
+    },
+    {
+      "subject": "Task p05-t03: Record ten uncached runs of the collection-detach test",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-8cecc55d383bef37"
+    },
+    {
+      "subject": "Task p05-t03: Record ten uncached runs of the collection-detach test",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-e8dd7392b29dd3f3"
+    },
+    {
+      "subject": "Task p05-t04: Bump the lockstep public package versions",
+      "value": "0.3",
+      "kind": "number",
+      "claimId": "claim-83676daa03711e62"
+    },
+    {
+      "subject": "Task p05-t04: Bump the lockstep public package versions",
+      "value": "8",
+      "kind": "number",
+      "claimId": "claim-83676daa03711e62"
+    },
+    {
+      "subject": "Task p05-t04: Bump the lockstep public package versions",
+      "value": "9",
+      "kind": "number",
+      "claimId": "claim-83676daa03711e62"
+    },
+    {
+      "subject": "Task p05-t04: Bump the lockstep public package versions",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-073438d648e38aec"
+    },
+    {
+      "subject": "Task p05-t04: Bump the lockstep public package versions",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-eda1f04a5db5dbba"
+    },
+    {
+      "subject": "Task p05-t04: Bump the lockstep public package versions",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-80d5d5cff08319c5"
+    },
+    {
+      "subject": "Task p05-t04: Bump the lockstep public package versions",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-1466a32bfe677ad8"
+    },
+    {
+      "subject": "Task p05-t05: Archive the shipped backlog items",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-df0a0c1628b6ec1e"
+    },
+    {
+      "subject": "Task p05-t05: Archive the shipped backlog items",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-e62597804bd08ed0"
+    },
+    {
+      "subject": "BL-260903-close-manual-only-agents-md",
+      "value": "260927",
+      "kind": "number",
+      "claimId": "claim-16aec84bb54729f0"
+    },
+    {
+      "subject": "BL-260909-fix-the-agents-md-unsafe",
+      "value": "260927",
+      "kind": "number",
+      "claimId": "claim-0cb9c409b2435362"
+    },
+    {
+      "subject": "BL-260909-repair-the-bare-fences-that",
+      "value": "260927",
+      "kind": "number",
+      "claimId": "claim-86b7caf9dc25a6a0"
+    },
+    {
+      "subject": "Task p05-t05: Archive the shipped backlog items",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-8ea6a6483e7b5fcc"
+    },
+    {
+      "subject": "BL-260909-rewrite-inbound-references",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-962a5e401639c9f3"
+    },
+    {
+      "subject": "Task p05-t05: Archive the shipped backlog items",
+      "value": "4",
+      "kind": "number",
+      "claimId": "claim-395bb7a4adbeb106"
+    },
+    {
+      "subject": "Task p05-t05: Archive the shipped backlog items",
+      "value": "5",
+      "kind": "number",
+      "claimId": "claim-562e189f059db4e2"
+    },
+    {
+      "subject": "p05-t05",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-2e05b71793082aea"
+    },
+    {
+      "subject": "Task p05-t06: Run the full Definition of Done",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-3783b3209da53474"
+    },
+    {
+      "subject": "Task p05-t06: Run the full Definition of Done",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-f0c27dc0cf83966a"
+    },
+    {
+      "subject": "Task p05-t06: Run the full Definition of Done",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-c5364e706e622532"
+    },
+    {
+      "subject": "p05-t06",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-a7633ae9f2d704bb"
+    },
+    {
+      "subject": "Task p05-t07: (review) Close p05 review findings M1, L1-L7",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-f2869eb1e34d2460"
+    },
+    {
+      "subject": "Task p05-t07: (review) Close p05 review findings M1, L1-L7",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-f2869eb1e34d2460"
+    },
+    {
+      "subject": "Task p05-t07: (review) Close p05 review findings M1, L1-L7",
+      "value": "7",
+      "kind": "number",
+      "claimId": "claim-f2869eb1e34d2460"
+    },
+    {
+      "subject": "Task p05-t07: (review) Close p05 review findings M1, L1-L7",
+      "value": "failed",
+      "kind": "status",
+      "claimId": "claim-8cf2af9198896cb6"
+    },
+    {
+      "subject": "Task p05-t07: (review) Close p05 review findings M1, L1-L7",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-4dd9c99b3a899196"
+    },
+    {
+      "subject": "Task p05-t07: (review) Close p05 review findings M1, L1-L7",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-2de97757586e3f97"
+    },
+    {
+      "subject": "Task p05-t08: (review) Close p05 gate findings H1, M1, M2",
+      "value": "6",
+      "kind": "number",
+      "claimId": "claim-9de17e44ea0e84c4"
+    },
+    {
+      "subject": "Task p05-t08: (review) Close p05 gate findings H1, M1, M2",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-9de17e44ea0e84c4"
+    },
+    {
+      "subject": "Task p05-t08: (review) Close p05 gate findings H1, M1, M2",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-9de17e44ea0e84c4"
+    },
+    {
+      "subject": "Task p05-t08: (review) Close p05 gate findings H1, M1, M2",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-46f5ce41b907b2ab"
+    },
+    {
+      "subject": "Task p05-t09: (review) Close p05 re-review findings H1, M1, M2, L1-L3",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-fce0666ea928fcf8"
+    },
+    {
+      "subject": "Task p05-t09: (review) Close p05 re-review findings H1, M1, M2, L1-L3",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-fce0666ea928fcf8"
+    },
+    {
+      "subject": "Task p05-t09: (review) Close p05 re-review findings H1, M1, M2, L1-L3",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-fce0666ea928fcf8"
+    },
+    {
+      "subject": "Task p05-t10: (review) Keep moved-item code spans intact and rebase query links",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-2220eaf04686e45a"
+    },
+    {
+      "subject": "Task p05-t10: (review) Keep moved-item code spans intact and rebase query links",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-0d129ec8f8e55f49"
+    },
+    {
+      "subject": "Task p05-t10: (review) Keep moved-item code spans intact and rebase query links",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-37c163759583ede0"
+    },
+    {
+      "subject": "Task p05-t11: (review) Align oat-reviewer mechanical-lane guidance with the validator",
+      "value": "2026",
+      "kind": "number",
+      "claimId": "claim-e39cc9d5a4504a02"
+    },
+    {
+      "subject": "Task p05-t11: (review) Align oat-reviewer mechanical-lane guidance with the validator",
+      "value": "09",
+      "kind": "number",
+      "claimId": "claim-e39cc9d5a4504a02"
+    },
+    {
+      "subject": "Task p05-t11: (review) Align oat-reviewer mechanical-lane guidance with the validator",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-6460a0c09d43b01d"
+    },
+    {
+      "subject": "Task p05-t11: (review) Align oat-reviewer mechanical-lane guidance with the validator",
+      "value": "1.2",
+      "kind": "number",
+      "claimId": "claim-63560250deb784bd"
+    },
+    {
+      "subject": "Task p05-t11: (review) Align oat-reviewer mechanical-lane guidance with the validator",
+      "value": "10",
+      "kind": "number",
+      "claimId": "claim-63560250deb784bd"
+    },
+    {
+      "subject": "Task p05-t11: (review) Align oat-reviewer mechanical-lane guidance with the validator",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-b8dfc44e4148eb38"
+    },
+    {
+      "subject": "Task p05-t11: (review) Align oat-reviewer mechanical-lane guidance with the validator",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-7f4c47f8636dbedb"
+    },
+    {
+      "subject": "Task p05-t12: (review) Replace rewritten files atomically so hard links are never written through",
+      "value": "2026",
+      "kind": "number",
+      "claimId": "claim-16fc54678981104c"
+    },
+    {
+      "subject": "Task p05-t12: (review) Replace rewritten files atomically so hard links are never written through",
+      "value": "09",
+      "kind": "number",
+      "claimId": "claim-16fc54678981104c"
+    },
+    {
+      "subject": "Task p05-t12: (review) Replace rewritten files atomically so hard links are never written through",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-d16da795d5336892"
+    },
+    {
+      "subject": "Task p05-t12: (review) Replace rewritten files atomically so hard links are never written through",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-191a2e60d676fafd"
+    },
+    {
+      "subject": "Task p05-t12: (review) Replace rewritten files atomically so hard links are never written through",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-22c493406229be8a"
+    },
+    {
+      "subject": "Phase p-rev1: Revision 1",
+      "value": "332",
+      "kind": "number",
+      "claimId": "claim-882251f91e00f205"
+    },
+    {
+      "subject": "Task prev1-t01: (revision) Rename the CLAUDE.md shim config keys under instructions.claude",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-4eb7f200878e524a"
+    },
+    {
+      "subject": "Task prev1-t01: (revision) Rename the CLAUDE.md shim config keys under instructions.claude",
+      "value": "260927",
+      "kind": "number",
+      "claimId": "claim-20cc8dfa76d0394b"
+    },
+    {
+      "subject": "Task prev1-t01: (revision) Rename the CLAUDE.md shim config keys under instructions.claude",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-06ac992e1d641f42"
+    },
+    {
+      "subject": "Task prev1-t01: (revision) Rename the CLAUDE.md shim config keys under instructions.claude",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-8fdf133d53f5432d"
+    },
+    {
+      "subject": "Task prev1-t01: (revision) Rename the CLAUDE.md shim config keys under instructions.claude",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-b3f27fe380a8d271"
+    },
+    {
+      "subject": "Task prev1-t02: (revision) Remove nothing when any CLAUDE.md has real content",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-0fa9be3f9c133258"
+    },
+    {
+      "subject": "Task prev1-t02: (revision) Remove nothing when any CLAUDE.md has real content",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-94f86c4909b7214b"
+    },
+    {
+      "subject": "Task prev1-t02: (revision) Remove nothing when any CLAUDE.md has real content",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-6d806f8db3da4981"
+    },
+    {
+      "subject": "Task prev1-t02: (revision) Remove nothing when any CLAUDE.md has real content",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-a3b1cdd34d346e2b"
+    },
+    {
+      "subject": "Task prev1-t03: (revision) Pin that rules and provider sync ignore the shim setting",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-76983f6a894c88ea"
+    },
+    {
+      "subject": "Task prev1-t03: (revision) Pin that rules and provider sync ignore the shim setting",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-20c35a3d3ed00857"
+    },
+    {
+      "subject": "Task prev1-t03: (revision) Pin that rules and provider sync ignore the shim setting",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-395f293fdfd2cf71"
+    },
+    {
+      "subject": "Task prev1-t03: (revision) Pin that rules and provider sync ignore the shim setting",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-ca244ab62b69db65"
+    },
+    {
+      "subject": "Task prev1-t04: (revision) Exclude project and repository records from exit-gate freshness",
+      "value": "2.3",
+      "kind": "number",
+      "claimId": "claim-d6294ebd99545b88"
+    },
+    {
+      "subject": "Task prev1-t04: (revision) Exclude project and repository records from exit-gate freshness",
+      "value": "14",
+      "kind": "number",
+      "claimId": "claim-d6294ebd99545b88"
+    },
+    {
+      "subject": "Task prev1-t04: (revision) Exclude project and repository records from exit-gate freshness",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-1a1a93e776f7a2dc"
+    },
+    {
+      "subject": "Task prev1-t04: (revision) Exclude project and repository records from exit-gate freshness",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-32778058979e3c59"
+    },
+    {
+      "subject": "Task prev1-t04: (revision) Exclude project and repository records from exit-gate freshness",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-e3e82d1d736a0242"
+    },
+    {
+      "subject": "Task prev1-t04: (revision) Exclude project and repository records from exit-gate freshness",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-30a48dad9d16d3a1"
+    },
+    {
+      "subject": "Task prev1-t05: (revision) Take recon-worker out of oat-reviewer",
+      "value": "1.2",
+      "kind": "number",
+      "claimId": "claim-a6df51fba67e41ef"
+    },
+    {
+      "subject": "Task prev1-t05: (revision) Take recon-worker out of oat-reviewer",
+      "value": "10",
+      "kind": "number",
+      "claimId": "claim-a6df51fba67e41ef"
+    },
+    {
+      "subject": "Task prev1-t05: (revision) Take recon-worker out of oat-reviewer",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-4f72f68702d49540"
+    },
+    {
+      "subject": "Task prev1-t05: (revision) Take recon-worker out of oat-reviewer",
+      "value": "295",
+      "kind": "number",
+      "claimId": "claim-f03864cb7a2b6687"
+    },
+    {
+      "subject": "Task prev1-t05: (revision) Take recon-worker out of oat-reviewer",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-7293359b71dbb51e"
+    },
+    {
+      "subject": "Task prev1-t05: (revision) Take recon-worker out of oat-reviewer",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-06f4e0a726ce1950"
+    },
+    {
+      "subject": "Task prev1-t05: (revision) Take recon-worker out of oat-reviewer",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-19bd93846537d5dc"
+    },
+    {
+      "subject": "Task prev1-t06: (revision) Restore the recon skill to main",
+      "value": "1.1",
+      "kind": "number",
+      "claimId": "claim-b5def7c2e2457e50"
+    },
+    {
+      "subject": "Task prev1-t06: (revision) Restore the recon skill to main",
+      "value": "6",
+      "kind": "number",
+      "claimId": "claim-b5def7c2e2457e50"
+    },
+    {
+      "subject": "Task prev1-t06: (revision) Restore the recon skill to main",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-3df69317dee33abe"
+    },
+    {
+      "subject": "Task prev1-t06: (revision) Restore the recon skill to main",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-70769d4e4758ff25"
+    },
+    {
+      "subject": "Task prev1-t06: (revision) Restore the recon skill to main",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-7ad527d119f616b6"
+    },
+    {
+      "subject": "Task prev1-t06: (revision) Restore the recon skill to main",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-a2bafa30ac2a60cf"
+    },
+    {
+      "subject": "Task prev1-t07: (revision) Correct the recon records",
+      "value": "260928",
+      "kind": "number",
+      "claimId": "claim-d3b0c40ac1540a88"
+    },
+    {
+      "subject": "Task prev1-t07: (revision) Correct the recon records",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-56fde5050f608d21"
+    },
+    {
+      "subject": "Task prev1-t07: (revision) Correct the recon records",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-fbfb61e40d308e42"
+    },
+    {
+      "subject": "Task prev1-t07: (revision) Correct the recon records",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-bf5b6ec95cee4dde"
+    },
+    {
+      "subject": "Task prev1-t08: (review) Close p-rev1 review findings M1, M2, L1, L2",
+      "value": "2026",
+      "kind": "number",
+      "claimId": "claim-6b77e37bf764034c"
+    },
+    {
+      "subject": "Task prev1-t08: (review) Close p-rev1 review findings M1, M2, L1, L2",
+      "value": "09",
+      "kind": "number",
+      "claimId": "claim-6b77e37bf764034c"
+    },
+    {
+      "subject": "Task prev1-t08: (review) Close p-rev1 review findings M1, M2, L1, L2",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-8c687eef5edd3871"
+    },
+    {
+      "subject": "Task prev1-t08: (review) Close p-rev1 review findings M1, M2, L1, L2",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-8c687eef5edd3871"
+    },
+    {
+      "subject": "Task prev1-t08: (review) Close p-rev1 review findings M1, M2, L1, L2",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-8c687eef5edd3871"
+    },
+    {
+      "subject": "Task prev1-t08: (review) Close p-rev1 review findings M1, M2, L1, L2",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-595439c4d2fa3dbf"
+    },
+    {
+      "subject": "Task prev1-t09: (review) Close final review findings L2, L3",
+      "value": "2026",
+      "kind": "number",
+      "claimId": "claim-6c8d082bd09a629d"
+    },
+    {
+      "subject": "Task prev1-t09: (review) Close final review findings L2, L3",
+      "value": "09",
+      "kind": "number",
+      "claimId": "claim-6c8d082bd09a629d"
+    },
+    {
+      "subject": "Task prev1-t09: (review) Close final review findings L2, L3",
+      "value": "0",
+      "kind": "number",
+      "claimId": "claim-4d99e4ac7714403e"
+    },
+    {
+      "subject": "Task prev1-t09: (review) Close final review findings L2, L3",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-4d99e4ac7714403e"
+    },
+    {
+      "subject": "Task prev1-t09: (review) Close final review findings L2, L3",
+      "value": "4",
+      "kind": "number",
+      "claimId": "claim-4d99e4ac7714403e"
+    },
+    {
+      "subject": "Task prev1-t09: (review) Close final review findings L2, L3",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-449442594bbfd6eb"
+    },
+    {
+      "subject": "Task prev1-t09: (review) Close final review findings L2, L3",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-ec9b974f03cf9fb2"
+    },
+    {
+      "subject": "PR Requirements",
+      "value": "merged",
+      "kind": "status",
+      "claimId": "claim-ae5a88aaf71d7828"
+    },
+    {
+      "subject": "PR Requirements",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-08e1f6782c688392"
+    },
+    {
+      "subject": "PR Requirements",
+      "value": "0.3",
+      "kind": "number",
+      "claimId": "claim-08e1f6782c688392"
+    },
+    {
+      "subject": "PR Requirements",
+      "value": "9",
+      "kind": "number",
+      "claimId": "claim-08e1f6782c688392"
+    },
+    {
+      "subject": "PR Requirements",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-429cf1aa570bf900"
+    },
+    {
+      "subject": "p02",
+      "value": "2026-09-28",
+      "kind": "date",
+      "claimId": "claim-353e31c454e7cc48"
+    },
+    {
+      "subject": "p03",
+      "value": "2026-09-28",
+      "kind": "date",
+      "claimId": "claim-e96e0fbafcdcc9ce"
+    },
+    {
+      "subject": "p05",
+      "value": "2026-09-28",
+      "kind": "date",
+      "claimId": "claim-cc08d34c70010bbc"
+    },
+    {
+      "subject": "final",
+      "value": "2026-09-28",
+      "kind": "date",
+      "claimId": "claim-3765f610accf7d12"
+    },
+    {
+      "subject": "final",
+      "value": "2026",
+      "kind": "number",
+      "claimId": "claim-3765f610accf7d12"
+    },
+    {
+      "subject": "final",
+      "value": "09",
+      "kind": "number",
+      "claimId": "claim-3765f610accf7d12"
+    },
+    {
+      "subject": "plan",
+      "value": "2026-09-27",
+      "kind": "date",
+      "claimId": "claim-2370f7c055eaafa2"
+    },
+    {
+      "subject": "plan",
+      "value": "2026",
+      "kind": "number",
+      "claimId": "claim-36ebc4ea55e0da34"
+    },
+    {
+      "subject": "plan",
+      "value": "09",
+      "kind": "number",
+      "claimId": "claim-36ebc4ea55e0da34"
+    },
+    {
+      "subject": "plan",
+      "value": "6",
+      "kind": "number",
+      "claimId": "claim-36ebc4ea55e0da34"
+    },
+    {
+      "subject": "p-rev1",
+      "value": "2026-09-28",
+      "kind": "date",
+      "claimId": "claim-d27a527bcdf7fcd0"
+    },
+    {
+      "subject": "p-rev1",
+      "value": "2026",
+      "kind": "number",
+      "claimId": "claim-d27a527bcdf7fcd0"
+    },
+    {
+      "subject": "p-rev1",
+      "value": "09",
+      "kind": "number",
+      "claimId": "claim-d27a527bcdf7fcd0"
+    },
+    {
+      "subject": "final",
+      "value": "6",
+      "kind": "number",
+      "claimId": "claim-fbb5e8b92aede240"
+    },
+    {
+      "subject": "p-rev1",
+      "value": "6",
+      "kind": "number",
+      "claimId": "claim-15107af11e9f560d"
+    },
+    {
+      "subject": "Reviews",
+      "value": "40",
+      "kind": "number",
+      "claimId": "claim-1d5ffea3ae9b4b37"
+    },
+    {
+      "subject": "Reviews",
+      "value": "5.5",
+      "kind": "number",
+      "claimId": "claim-d411cf40a4ec41f2"
+    },
+    {
+      "subject": "Reviews",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-21cbde2b4c723775"
+    },
+    {
+      "subject": "Reviews",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-21cbde2b4c723775"
+    },
+    {
+      "subject": "Reviews",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-10a0a063ed2457c0"
+    },
+    {
+      "subject": "Reviews",
+      "value": "6",
+      "kind": "number",
+      "claimId": "claim-585142dd8cb92d97"
+    },
+    {
+      "subject": "Reviews",
+      "value": "12",
+      "kind": "number",
+      "claimId": "claim-585142dd8cb92d97"
+    },
+    {
+      "subject": "Reviews",
+      "value": "deferred",
+      "kind": "status",
+      "claimId": "claim-1e9b1c00fcf6ad23"
+    },
+    {
+      "subject": "Reviews",
+      "value": "open",
+      "kind": "status",
+      "claimId": "claim-77d22f7588c1190f"
+    },
+    {
+      "subject": "Reviews",
+      "value": "2026-09-27",
+      "kind": "date",
+      "claimId": "claim-4c609d9a7e84ccc6"
+    },
+    {
+      "subject": "Implementation Complete",
+      "value": "complete",
+      "kind": "status",
+      "claimId": "claim-89981d7cf5e6ad35"
+    },
+    {
+      "subject": "Implementation Complete",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-31207626f381a623"
+    },
+    {
+      "subject": "Implementation Complete",
+      "value": "8",
+      "kind": "number",
+      "claimId": "claim-31207626f381a623"
+    },
+    {
+      "subject": "Implementation Complete",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-6bad32ab8b52271b"
+    },
+    {
+      "subject": "Implementation Complete",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-9dab573df7227657"
+    },
+    {
+      "subject": "Implementation Complete",
+      "value": "5",
+      "kind": "number",
+      "claimId": "claim-9dab573df7227657"
+    },
+    {
+      "subject": "Implementation Complete",
+      "value": "4",
+      "kind": "number",
+      "claimId": "claim-baf7bc0fb95efb26"
+    },
+    {
+      "subject": "Implementation Complete",
+      "value": "7",
+      "kind": "number",
+      "claimId": "claim-baf7bc0fb95efb26"
+    },
+    {
+      "subject": "Implementation Complete",
+      "value": "12",
+      "kind": "number",
+      "claimId": "claim-8fb16541222abff5"
+    },
+    {
+      "subject": "Implementation Complete",
+      "value": "9",
+      "kind": "number",
+      "claimId": "claim-b9d8eaf0a127ddab"
+    },
+    {
+      "subject": "Implementation Complete",
+      "value": "332",
+      "kind": "number",
+      "claimId": "claim-b9d8eaf0a127ddab"
+    },
+    {
+      "subject": "Implementation Complete",
+      "value": "49",
+      "kind": "number",
+      "claimId": "claim-ff7e9345768c774c"
+    },
+    {
+      "subject": "References",
+      "value": "1.278",
+      "kind": "number",
+      "claimId": "claim-2e798517a1e381bd"
+    },
+    {
+      "subject": "discovery.md",
+      "value": "complete",
+      "kind": "status",
+      "claimId": "claim-228beb01e664247e"
+    },
+    {
+      "subject": "discovery.md",
+      "value": "2026-09-27",
+      "kind": "date",
+      "claimId": "claim-b9742b89d87520f3"
+    },
+    {
+      "subject": "Discovery: backlog-wave-2",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-41dc823100ee18df"
+    },
+    {
+      "subject": "Initial Request",
+      "value": "2026-09-26",
+      "kind": "date",
+      "claimId": "claim-d8dad82b0f30b336"
+    },
+    {
+      "subject": "Initial Request",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-d8dad82b0f30b336"
+    },
+    {
+      "subject": "Initial Request",
+      "value": "5",
+      "kind": "number",
+      "claimId": "claim-418c4116b3668bd3"
+    },
+    {
+      "subject": "Initial Request",
+      "value": "deferred",
+      "kind": "status",
+      "claimId": "claim-ecf91ecd892c802b"
+    },
+    {
+      "subject": "Initial Request",
+      "value": "2026-09-27",
+      "kind": "date",
+      "claimId": "claim-435c98d767141d61"
+    },
+    {
+      "subject": "Initial Request",
+      "value": "6",
+      "kind": "number",
+      "claimId": "claim-e38e62fe04560ebf"
+    },
+    {
+      "subject": "`BL-260903-close-manual-only-agents-md`",
+      "value": "322",
+      "kind": "number",
+      "claimId": "claim-66c2977a534c3240"
+    },
+    {
+      "subject": "`BL-260927-name-only-installed-pack`",
+      "value": "323",
+      "kind": "number",
+      "claimId": "claim-764e856952df960e"
+    },
+    {
+      "subject": "`BL-260927-validate-recon-worker`",
+      "value": "295",
+      "kind": "number",
+      "claimId": "claim-d2492df227e22557"
+    },
+    {
+      "subject": "Question 1: `oat tools where`",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-0642195e9c2ca3fb"
+    },
+    {
+      "subject": "Question 1: `oat tools where`",
+      "value": "2026-09-27",
+      "kind": "date",
+      "claimId": "claim-c0e762c3a062f549"
+    },
+    {
+      "subject": "Question 2: Live acceptance for bookkeeping ordering",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-9cfc643cf14ce455"
+    },
+    {
+      "subject": "Question 2: Live acceptance for bookkeeping ordering",
+      "value": "open",
+      "kind": "status",
+      "claimId": "claim-a21e7ecb864912c3"
+    },
+    {
+      "subject": "Question 2: Live acceptance for bookkeeping ordering",
+      "value": "2026-09-27",
+      "kind": "date",
+      "claimId": "claim-b279c521de04f9b0"
+    },
+    {
+      "subject": "Question 3: CLAUDE.md shims",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-d9a234dafeae4bbc"
+    },
+    {
+      "subject": "Question 3: CLAUDE.md shims",
+      "value": "2026-09-27",
+      "kind": "date",
+      "claimId": "claim-4c837623ece20888"
+    },
+    {
+      "subject": "Question 3: CLAUDE.md shims",
+      "value": "260927",
+      "kind": "number",
+      "claimId": "claim-4c837623ece20888"
+    },
+    {
+      "subject": "Key Decisions",
+      "value": "1",
+      "kind": "number",
+      "claimId": "claim-1dccb746ab4420d0"
+    },
+    {
+      "subject": "Key Decisions",
+      "value": "2",
+      "kind": "number",
+      "claimId": "claim-c2cca039cade777a"
+    },
+    {
+      "subject": "BL-260830-persist-instruction-sync",
+      "value": "3",
+      "kind": "number",
+      "claimId": "claim-31b02dcb9864292c"
+    },
+    {
+      "subject": "BL-260830-persist-instruction-sync",
+      "value": "closed",
+      "kind": "status",
+      "claimId": "claim-31b02dcb9864292c"
+    },
+    {
+      "subject": "Key Decisions",
+      "value": "4",
+      "kind": "number",
+      "claimId": "claim-8090c9d6eb826e00"
+    },
+    {
+      "subject": "Key Decisions",
+      "value": "5",
+      "kind": "number",
+      "claimId": "claim-37c99f1ddbb64871"
+    },
+    {
+      "subject": "Key Decisions",
+      "value": "6",
+      "kind": "number",
+      "claimId": "claim-e37eb9fa36cc60e4"
+    },
+    {
+      "subject": "Key Decisions",
+      "value": "7",
+      "kind": "number",
+      "claimId": "claim-94eb17a5390f6d46"
+    },
+    {
+      "subject": "Key Decisions",
+      "value": "8",
+      "kind": "number",
+      "claimId": "claim-4adb4da330f2d6ff"
+    },
+    {
+      "subject": "Key Decisions",
+      "value": "0.3",
+      "kind": "number",
+      "claimId": "claim-4adb4da330f2d6ff"
+    },
+    {
+      "subject": "Key Decisions",
+      "value": "9",
+      "kind": "number",
+      "claimId": "claim-4adb4da330f2d6ff"
+    },
+    {
+      "subject": "Constraints",
+      "value": "0.3",
+      "kind": "number",
+      "claimId": "claim-9ab9963aa3f5043e"
+    },
+    {
+      "subject": "Constraints",
+      "value": "7",
+      "kind": "number",
+      "claimId": "claim-9ab9963aa3f5043e"
+    },
+    {
+      "subject": "Success Criteria",
+      "value": "open",
+      "kind": "status",
+      "claimId": "claim-8bf824a3c1e19ae4"
+    },
+    {
+      "subject": "Out of Scope",
+      "value": "deferred",
+      "kind": "status",
+      "claimId": "claim-96e6659f4bcb7dcd"
+    },
+    {
+      "subject": "BL-260927-export-only-the-recap-page",
+      "value": "260927",
+      "kind": "number",
+      "claimId": "claim-abd8d9384c36caca"
+    },
+    {
+      "subject": "BL-260927-export-only-the-recap-page",
+      "value": "deferred",
+      "kind": "status",
+      "claimId": "claim-abd8d9384c36caca"
+    },
+    {
+      "subject": "Out of Scope",
+      "value": "476",
+      "kind": "number",
+      "claimId": "claim-a730d7e6f36227b2"
+    },
+    {
+      "subject": "Out of Scope",
+      "value": "694",
+      "kind": "number",
+      "claimId": "claim-33ef3704ea80d0c8"
+    },
+    {
+      "subject": "Out of Scope",
+      "value": "116",
+      "kind": "number",
+      "claimId": "claim-9755fad62de9f2d2"
+    },
+    {
+      "subject": "Out of Scope",
+      "value": "300",
+      "kind": "number",
+      "claimId": "claim-9755fad62de9f2d2"
+    },
+    {
+      "subject": "Deferred Ideas",
+      "value": "deferred",
+      "kind": "status",
+      "claimId": "claim-3dfc3d35a6f84a76"
+    },
+    {
+      "subject": "Open Questions",
+      "value": "open",
+      "kind": "status",
+      "claimId": "claim-26b0517a88bfecb7"
+    },
+    {
+      "subject": "Assumptions",
+      "value": "1.278",
+      "kind": "number",
+      "claimId": "claim-a72aef20c02a84ce"
+    },
+    {
+      "subject": "External Integration Evidence",
+      "value": "2026-09-27",
+      "kind": "date",
+      "claimId": "claim-e3ed19977800f1bc"
+    },
+    {
+      "subject": "External Integration Evidence",
+      "value": "1.278",
+      "kind": "number",
+      "claimId": "claim-e3ed19977800f1bc"
+    },
+    {
+      "subject": "Workflow Decisions (Autonomous)",
+      "value": "01",
+      "kind": "number",
+      "claimId": "claim-2429def029bbf128"
+    },
+    {
+      "subject": "Workflow Decisions (Autonomous)",
+      "value": "04",
+      "kind": "number",
+      "claimId": "claim-a8e7a91a0b43f173"
+    },
+    {
+      "subject": "Workflow Decisions (Autonomous)",
+      "value": "260927",
+      "kind": "number",
+      "claimId": "claim-996a5f2ef6635506"
+    },
+    {
+      "subject": "Workflow Decisions (Autonomous)",
+      "value": "05",
+      "kind": "number",
+      "claimId": "claim-f5c8232ed8d6b81e"
+    }
+  ]
+}

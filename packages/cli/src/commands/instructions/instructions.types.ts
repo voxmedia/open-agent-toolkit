@@ -1,17 +1,47 @@
 import type { Dirent, Stats } from 'node:fs';
 
 import type { CommandContext, GlobalOptions } from '@app/command-context';
+import type { InstructionSyncStrategy } from '@config/oat-config';
 
-export const INSTRUCTION_SYNC_STRATEGIES = [
-  'pointer',
-  'symlink',
-  'copy',
-] as const;
+// One list shared with the `instructions.claude.shims` config
+// normalizer and `oat config set`, so the commands can never accept a value
+// the config rejects or the reverse.
+export {
+  INSTRUCTION_SYNC_STRATEGIES,
+  type InstructionSyncStrategy,
+} from '@config/oat-config';
 
-export type InstructionSyncStrategy =
-  (typeof INSTRUCTION_SYNC_STRATEGIES)[number];
+/**
+ * - `managed_shim`: under strategy `none`, a CLAUDE.md in the exact shape OAT
+ *   writes (the `@AGENTS.md` pointer, a symlink to the sibling AGENTS.md, or a
+ *   byte-identical copy). Drift: sync removes it.
+ * - `unmanaged`: under strategy `none`, a CLAUDE.md that is not an exact
+ *   managed shape (hand-written, modified, a symlink elsewhere). Never
+ *   removed, and not drift.
+ */
+export type InstructionStatus =
+  | 'ok'
+  | 'missing'
+  | 'content_mismatch'
+  | 'stray'
+  | 'managed_shim'
+  | 'unmanaged';
 
-export type InstructionStatus = 'ok' | 'missing' | 'content_mismatch' | 'stray';
+export type ManagedShimShape = 'pointer' | 'symlink' | 'copy';
+
+/**
+ * What the scan observed about a managed shim, so removal can fail closed if
+ * the file changed between planning and deletion. Internal to the sync apply
+ * path; never serialized into the JSON payload.
+ */
+export interface ManagedShimRecord {
+  shape: ManagedShimShape;
+  /** `lstat` identity of the CLAUDE.md itself (the link for a symlink). */
+  dev: number;
+  ino: number;
+  /** The raw `readlink` value, for the symlink shape only. */
+  linkTarget?: string;
+}
 
 export type InstructionsStatus = 'ok' | 'drift';
 
@@ -20,9 +50,11 @@ export interface InstructionEntry {
   claudePath: string;
   status: InstructionStatus;
   detail: string;
+  /** Present only for `managed_shim` entries. */
+  managedShim?: ManagedShimRecord;
 }
 
-export type InstructionActionType = 'create' | 'update' | 'skip';
+export type InstructionActionType = 'create' | 'update' | 'remove' | 'skip';
 
 export type InstructionActionResult = 'planned' | 'applied' | 'skipped';
 
@@ -35,20 +67,75 @@ export interface InstructionActionRecord {
 
 export type InstructionsMode = 'validate' | 'dry-run' | 'apply';
 
+/**
+ * A finding that never changes the exit code by itself.
+ *
+ * `claude_md_hides_agents_md`: under strategy `none`, a `CLAUDE.md`,
+ * `.claude/CLAUDE.md`, or `CLAUDE.local.md` that makes Claude Code's default
+ * `agents-md` mode ignore every AGENTS.md in the project while it exists.
+ */
+export interface ClaudeMdHidesAgentsMdWarning {
+  code: 'claude_md_hides_agents_md';
+  /** Repository-relative POSIX path. */
+  path: string;
+  /**
+   * Repository-relative `AGENTS.md` paths whose symlink chain reaches `path`.
+   * When non-empty, removing `path` would break them: replace each link with
+   * the file's content first. Always present, possibly empty.
+   */
+  linkedBy: string[];
+  message: string;
+}
+
+/**
+ * `claude_md_blocks_shim_removal`: under strategy `none`, removal is all or
+ * nothing. While any `CLAUDE.md`, `.claude/CLAUDE.md`, or `CLAUDE.local.md`
+ * is not an exact OAT shim, sync removes no CLAUDE.md at all; this finding
+ * names those files and the removals held back. Sync reports each held-back
+ * removal as a skipped action, which is what sets its exit code.
+ */
+export interface ClaudeMdBlocksShimRemovalWarning {
+  code: 'claude_md_blocks_shim_removal';
+  /** Repository-relative POSIX paths of the files with their own content. */
+  paths: string[];
+  /** Repository-relative POSIX paths of the CLAUDE.md files kept because of them. */
+  wouldRemove: string[];
+  /**
+   * For each path in `paths`, the repository-relative `AGENTS.md` paths whose
+   * symlink chain reaches it. A non-empty list means that file holds the only
+   * copy of those instructions: replace each link with its content before
+   * removing it, never remove it plainly. Every path in `paths` has a key.
+   */
+  linkedBy: Record<string, string[]>;
+  message: string;
+}
+
+export type InstructionsWarning =
+  | ClaudeMdHidesAgentsMdWarning
+  | ClaudeMdBlocksShimRemovalWarning;
+
 export interface InstructionsSummary {
   scanned: number;
   ok: number;
   missing: number;
   contentMismatch: number;
   stray: number;
+  managedShim: number;
+  unmanaged: number;
   created: number;
   updated: number;
+  removed: number;
   skipped: number;
 }
 
 export interface InstructionsJsonPayload {
   mode: InstructionsMode;
   status: InstructionsStatus;
+  /**
+   * The strategy this run applied or checked: `--strategy` when given, else
+   * `instructions.claude.shims`, else the built-in default.
+   */
+  strategy: InstructionSyncStrategy;
   summary: InstructionsSummary;
   entries: InstructionEntry[];
   actions: InstructionActionRecord[];
@@ -88,6 +175,11 @@ export interface InstructionsJsonPayload {
    * exclusion that silently does nothing. Omitted when empty.
    */
   exclusionWarnings?: string[];
+  /**
+   * Structured warnings, the same text written to stderr in human mode.
+   * Omitted when empty, so a clean repository's payload shape is unchanged.
+   */
+  warnings?: InstructionsWarning[];
 }
 
 /**
@@ -125,6 +217,8 @@ export interface InstructionsScanDependencies {
   lstat: (path: string) => Promise<Stats>;
   realpath: (path: string) => Promise<string>;
   readFile: (path: string, encoding: 'utf8') => Promise<string>;
+  /** Raw bytes, for the byte-exact managed-shim comparisons. */
+  readFileBytes: (path: string) => Promise<Buffer>;
   readlink: (path: string) => Promise<string>;
   stat: (path: string) => Promise<Stats>;
 }
@@ -132,6 +226,22 @@ export interface InstructionsScanDependencies {
 export interface InstructionsValidateCommandDependencies {
   buildCommandContext: (options: GlobalOptions) => CommandContext;
   resolveProjectRoot: (cwd: string) => Promise<string>;
+  /**
+   * The repository's configured `instructions.claude.shims`, or
+   * undefined when the key is absent. Sync inherits it from this interface so
+   * both commands resolve the strategy through the same config read.
+   */
+  readConfiguredInstructionSyncStrategy: (
+    repoRoot: string,
+  ) => Promise<InstructionSyncStrategy | undefined>;
+  /**
+   * Every `CLAUDE.md` and `CLAUDE.local.md` in the repository (absolute
+   * paths), from a read-only walk that ignores the mutation exclusions, each
+   * classified as an exact OAT shim or not.
+   */
+  findLeftoverClaudeFiles: (
+    repoRoot: string,
+  ) => Promise<Array<{ path: string; linkedBy: string[]; exactShim: boolean }>>;
   /**
    * The single exclusion path both commands resolve through. Sync inherits it
    * from this interface rather than resolving its own, so validate can never
@@ -150,6 +260,10 @@ export interface InstructionsValidateCommandDependencies {
 export interface InstructionsSyncCommandDependencies extends InstructionsValidateCommandDependencies {
   lstat: (path: string) => Promise<Stats>;
   readFile: (path: string, encoding: 'utf8') => Promise<string>;
+  /** Raw bytes, for the apply-time managed-shim re-verification. */
+  readFileBytes: (path: string) => Promise<Buffer>;
+  readlink: (path: string) => Promise<string>;
+  realpath: (path: string) => Promise<string>;
   removeFile: (path: string) => Promise<void>;
   symlinkFile: (target: string, path: string) => Promise<void>;
   writeFile: (path: string, content: string, encoding: 'utf8') => Promise<void>;

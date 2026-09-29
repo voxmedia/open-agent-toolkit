@@ -21,7 +21,9 @@ const tempDirs: string[] = [];
  * of restating it, so this test fails when the documented sequence stops
  * staging the project log rather than when a copy of it drifts.
  */
-function readPhaseBookkeepingBlock(): string {
+function readPhaseBookkeepingBlock(
+  marker = 'Bookkeeping is mandatory:',
+): string {
   const content = readFileSync(
     join(
       import.meta.dirname,
@@ -29,15 +31,18 @@ function readPhaseBookkeepingBlock(): string {
     ),
     'utf8',
   );
-  const marker = content.indexOf('Bookkeeping is mandatory:');
-  expect(marker).toBeGreaterThanOrEqual(0);
+  const markerIndex = content.indexOf(marker);
+  expect(markerIndex).toBeGreaterThanOrEqual(0);
 
-  const block = content.slice(marker).match(/```bash\n([\s\S]*?)```/);
+  const block = content.slice(markerIndex).match(/```bash\n([\s\S]*?)```/);
   if (block?.[1] == null) {
     throw new Error('phase-execution.md is missing the bookkeeping block');
   }
   return block[1];
 }
+
+/** Step 7a: the task-ledger commit made before the reviewer is dispatched. */
+const PRE_REVIEW_MARKER = 'Pre-review bookkeeping is mandatory:';
 
 function instantiate(block: string): string {
   const sharedScopeStub = [
@@ -58,7 +63,8 @@ function instantiate(block: string): string {
     .filter((line) => !line.startsWith('oat state refresh'))
     .join('\n')
     .replaceAll('{PROJECT_PATH}', PROJECT_PATH)
-    .replace('{pNN} {pass|fail}', 'p01 pass');
+    .replace('{pNN} {pass|fail}', 'p01 pass')
+    .replaceAll('{pNN}', 'p01');
 
   return `${sharedScopeStub}\n${instantiatedBlock}`;
 }
@@ -181,6 +187,37 @@ describe('project log staging behavior', () => {
     );
 
     expect(status(root)).toContain('project-log.md');
+  });
+
+  it('leaves the tree clean for a fix child after the pre-review ledger commit', () => {
+    const root = setupProject({ withLog: true });
+    // The phase's task ledger, written after the phase report validates.
+    writeFileSync(
+      join(root, PROJECT_PATH, 'implementation.md'),
+      '# implementation.md\n\n| p01-t01 | completed |\n',
+      'utf8',
+    );
+    writeFileSync(
+      join(root, PROJECT_PATH, 'state.md'),
+      '# state.md\n\noat_current_task: p02-t01\n',
+      'utf8',
+    );
+
+    bash(root, instantiate(readPhaseBookkeepingBlock(PRE_REVIEW_MARKER)));
+
+    // Committed before the reviewer is dispatched, so nothing the reviewer or
+    // a bounded fix child sees is dirty, and the reviewed head carries the
+    // current ledger.
+    expect(status(root)).toBe('');
+    expect(git(root, 'log', '-1', '--format=%s')).toBe(
+      'chore(oat): record p01 task ledger before review',
+    );
+    expect(
+      git(root, 'show', '--name-only', '--format=', 'HEAD').split('\n').sort(),
+    ).toEqual([
+      `${PROJECT_PATH}/implementation.md`,
+      `${PROJECT_PATH}/state.md`,
+    ]);
   });
 
   it('commits cleanly for a project that has no log at all', () => {
