@@ -105,4 +105,4 @@ Package drift and tooling approval work remain in the existing broader backlog r
 
 ## Next Steps
 
-Choose design depth. A lightweight design is recommended to settle index ownership and existing-directory adoption before writing the implementation plan.
+The user selected lightweight design. Complete the collaborative design review to settle index ownership and existing-directory adoption before writing the implementation plan.
