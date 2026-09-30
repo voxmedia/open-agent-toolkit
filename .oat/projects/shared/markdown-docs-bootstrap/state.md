@@ -81,7 +81,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-30T18:58:24.831Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-30T19:09:37Z'
+oat_project_state_updated: '2026-09-30T19:17:41Z'
 oat_generated: false
 ---
 
@@ -93,7 +93,7 @@ oat_generated: false
 
 ## Current Phase
 
-Lightweight design - Full draft awaiting independent Opus design review and user acceptance
+Lightweight design - Independent design review received; clarifications and user acceptance pending
 
 ## Artifacts
 
@@ -109,7 +109,11 @@ Lightweight design - Full draft awaiting independent Opus design review and user
 - ✓ Execution artifacts scaffolded
 - ✓ Requirements captured from the current conversation
 - ✓ Lightweight design selected
-- ⧗ Full draft awaiting independent design review
+- ⧗ Independent design review received: pass, 6 medium and 2 low findings
+
+## Design Review
+
+See `reviews/design-consensus-handoff.md` for the completed review, canonical artifacts, provenance limits, and unresolved clarifications.
 
 ## Blockers
 
@@ -117,4 +121,4 @@ None
 
 ## Next Milestone
 
-Review the full design with Consensus Review (Opus 5.5 High), then present its findings before planning
+Resolve the design review clarifications and obtain design acceptance before planning
