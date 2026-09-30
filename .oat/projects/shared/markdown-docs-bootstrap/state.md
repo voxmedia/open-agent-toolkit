@@ -2,7 +2,9 @@
 oat_current_task: null
 oat_last_commit: null
 oat_blockers: []
-associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
+associated_issues:
+  - type: backlog
+    ref: BL-260911-make-docs-bootstrap-a-front
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
 oat_siblings: [] # optional child-only sibling slugs
@@ -79,7 +81,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-30T18:58:24.831Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-30T18:58:24.831Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-30T19:00:23Z'
 oat_generated: false
 ---
 
@@ -105,7 +107,8 @@ Discovery - Gathering requirements for a quick workflow before planning
 
 - ✓ Discovery started
 - ✓ Execution artifacts scaffolded
-- ⧗ Awaiting user input
+- ✓ Requirements captured from the current conversation
+- ⧗ Awaiting design-depth choice
 
 ## Blockers
 
@@ -113,4 +116,4 @@ None
 
 ## Next Milestone
 
-Complete discovery and generate a quick implementation plan
+Choose design depth, then generate and review the quick implementation plan

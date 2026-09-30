@@ -4,139 +4,105 @@ oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-30
 oat_generated: false
+oat_template: false
 ---
 
-# Discovery: markdown-docs-bootstrap
-
-## Phase Guardrails (Discovery)
-
-Discovery is for requirements and decisions, not implementation details.
-
-- Prefer outcomes and constraints over concrete deliverables (no specific scripts, file paths, or function names).
-- If an implementation detail comes up, capture it as an **Open Question** for design (or a constraint), not as a deliverable list.
+# Discovery: Markdown Docs Bootstrap
 
 ## Initial Request
 
-{Copy of user's initial request}
+Make plain Markdown documentation an explicit docs bootstrap option, with `documentation.tooling: "markdown"`, while retaining all applicable OAT documentation best practices. Support both new documentation and safe adoption of an existing populated docs directory.
+
+The user selected the quick workflow. This project covers the Markdown portion of `BL-260911-make-docs-bootstrap-a-front` (Make docs bootstrap a front door for existing docs and support the docs-directory convention); it does not complete that broader item.
 
 ## Clarifying Questions
 
-### Question 1: {Topic}
+### Bootstrap and Config Support
 
-**Q:** {Question}
-**A:** {User's answer}
-**Decision:** {What this means for the project}
+**Q:** Should plain Markdown be a first-class bootstrap and configuration option?
+**A:** Yes; bootstrap must offer it and docs config must support tooling as `markdown`.
+**Decision:** Give Markdown an explicit supported mode rather than relying solely on existing plain-directory fallback discovery.
 
-## Solution Space
+### Documentation Quality
 
-_Include this section only when the request is exploratory or multiple viable approaches exist. For well-understood requests with an obvious approach, omit or replace with a single sentence stating the chosen direction._
+**Q:** Should Markdown mode retain OAT documentation practices?
+**A:** Yes, including index files and context.
+**Decision:** Retain the applicable structure, navigation, content metadata, context, and agent/contributor guidance contracts.
 
-{Divergent exploration of the problem space before converging on an approach. Capture genuinely distinct strategies, not minor variations. Include 2-3 approaches as needed.}
+### Project Scope
 
-### Approach 1: {Strategy Name} _(Recommended)_
+**Q:** Are package drift detection and tooling approval changes part of this work?
+**A:** The user proceeded with quick-start after the recommendation to separate those existing backlog concerns.
+**Decision:** Scope this project to Markdown support. Leave package drift and approval policy changes as follow-up work under the broader backlog item.
 
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
+## Chosen Direction
 
-### Approach 2: {Strategy Name}
-
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
-
-### Chosen Direction
-
-**Approach:** {Which approach was selected}
-**Rationale:** {Why this approach over the alternatives}
-**User validated:** {Yes/No — explicit buy-in before proceeding}
-
-## Options Considered
-
-{Specific implementation options within the chosen approach. More granular than Solution Space — captures decisions about libraries, patterns, data formats, etc.}
-
-### Option A: {Option Name}
-
-**Description:** {What this option involves}
-
-**Pros:**
-
-- {Benefit 1}
-- {Benefit 2}
-
-**Cons:**
-
-- {Drawback 1}
-- {Drawback 2}
-
-**Chosen:** {A/B/Neither}
-
-**Summary:** {1-2 sentence summary of the chosen option and why}
+Extend the existing docs bootstrap/config/docs workflows with a Markdown mode, reusing the established documentation contract and analysis/apply capabilities. Do not introduce a separate documentation engine.
 
 ## Key Decisions
 
-1. **{Decision Category}:** {Decision made and why}
-2. **{Decision Category}:** {Decision made and why}
+1. Plain Markdown is an explicit bootstrap option alongside the existing site frameworks.
+2. Use the canonical config key `documentation.tooling` with value `markdown`; default the docs root to `docs` and support a chosen root.
+3. Markdown documentation needs no site framework, app package, install step, or site build.
+4. Existing documentation is adopted or repaired safely, preserving content and local ownership/audience guidance.
+5. Authored context/index pages and generated discovery artifacts have distinct ownership and must not overwrite one another.
+6. Analyze/apply retain the same applicable OAT quality and structure requirements in Markdown mode.
 
 ## Constraints
 
-- {Constraint 1}
-- {Constraint 2}
+- Preserve Fumadocs and MkDocs behavior and existing plain-directory fallback support.
+- Follow the existing config contract rather than inventing a separate `docs` configuration namespace.
+- Preserve populated directory content; replacement requires an explicit separate choice.
+- Keep context entrypoints useful to people and agents, with populated Contents maps and relative Markdown navigation links.
+- Preserve the generated-artifact boundary and asset-only directory exemptions.
+- Keep changes on the current execution host and worktree.
 
 ## Success Criteria
 
-- {Criterion 1}
-- {Criterion 2}
+- Bootstrap offers plain Markdown for both fresh setup and an existing docs surface.
+- The resulting config records tooling, root, and the appropriate index entrypoint consistently.
+- Documentation directories have authored index entrypoints with useful context and Contents maps linking sibling pages and immediate child directories.
+- Applicable title/description metadata and authoring guidance are established without fabricating repository-specific content.
+- Agent/contributor guidance identifies the docs root, context entrypoints, authoring conventions, and analyze/apply workflow.
+- Re-running bootstrap against existing content is safe and does not clobber authored or generated files.
+- Config resolution, detection, analyze/apply, and applicable index tooling handle Markdown mode consistently.
+- Markdown verification does not require site tooling; existing framework behavior remains intact.
 
 ## Out of Scope
 
-- {Thing we explicitly decided not to do}
-- {Thing we explicitly decided not to include in this phase}
+- Docs app package-version drift detection or dependency upgrades.
+- New explicit-approval classes or changes to unattended approval policy.
+- Changes to pntr automation or other repositories.
+- A renderer, hosting, preview server, or new docs engine.
+- Archiving the broader backlog item before its remaining acceptance criteria ship.
 
 ## Deferred Ideas
 
-{Ideas that came up during discovery but are intentionally out of scope for now}
-
-- {Idea 1} - {Why deferred}
-- {Idea 2} - {Why deferred}
+Package drift and tooling approval work remain in the existing broader backlog record.
 
 ## Open Questions
 
-{Questions that need resolution before or during specification (and later design)}
-
-- **{Question Category}:** {Question that needs answering}
-- **{Question Category}:** {Question that needs answering}
+- **Index ownership:** Define the authored index entrypoint and optional generated manifest behavior so default index generation cannot conflict with Markdown source files.
+- **Adoption boundary:** Define which config, index, and guidance repairs bootstrap owns versus the existing analyze/apply workflow, including behavior for an existing nonempty directory.
+- **Scaffold shape:** Choose the minimal useful Markdown scaffold and framework-independent guidance while preserving repository-specific context.
 
 ## Assumptions
 
-{Assumptions we're making that need validation}
-
-- {Assumption 1}
-- {Assumption 2}
+- The existing permissive tooling config, content-root resolution, and plain Markdown analyze/apply paths can be reused.
+- Existing content is authoritative; missing structure should produce scoped repair recommendations rather than broad rewrites.
 
 ## Risks
 
-{Potential risks identified during discovery}
+- **Content preservation:** The current app scaffolder rejects nonempty targets; a Markdown adoption path must avoid overwriting existing content.
+- **Index collision:** Authored root indexes and generated manifests can resolve to the same path unless the mode defines their ownership explicitly.
+- **Framework assumptions:** App prompts, package patches, setup commands, guidance, and verification currently assume a rendered docs application.
 
-- **{Risk Name}:** {Description}
-  - **Likelihood:** Low / Medium / High
-  - **Impact:** Low / Medium / High
-  - **Mitigation Ideas:** {How to address}
+## References
+
+- [Source backlog item](../../../repo/pjm/backlog/items/BL-260911-make-docs-bootstrap-a-front.md)
+- Current docs bootstrap, analyze/apply, and authoring skills.
+- Current CLI docs init, config resolution, docs detection, and index generation implementation.
 
 ## Next Steps
 
-Use this discovery artifact to drive the next workflow step:
-
-- **Spec-driven mode:** continue to `oat-project-design` (which confirms
-  requirements and produces both `spec.md` and `design.md`).
-- **Spec-driven mode → formalize-only:** use `oat-project-spec` standalone
-  if you want a formalized requirements artifact but aren't ready to
-  design yet.
-- **Quick mode → straight to plan:** proceed directly to `plan.md` when
-  scope is clear and no architecture decisions remain.
-- **Quick mode → optional lightweight design:** produce a focused
-  `design.md` (architecture, components, data flow, testing) before
-  planning. Choose this when discovery surfaced architecture choices
-  or component boundaries.
-- **Quick mode → promote:** escalate to spec-driven if discovery revealed
-  the scope is larger or more complex than expected.
+Choose design depth. A lightweight design is recommended to settle index ownership and existing-directory adoption before writing the implementation plan.
