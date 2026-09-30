@@ -81,7 +81,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-30T18:58:24.831Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-30T19:04:02Z'
+oat_project_state_updated: '2026-09-30T19:09:37Z'
 oat_generated: false
 ---
 
@@ -93,13 +93,13 @@ oat_generated: false
 
 ## Current Phase
 
-Lightweight design - Reviewing the overview before architecture and components
+Lightweight design - Full draft awaiting independent Opus design review and user acceptance
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (in_progress)
 - **Spec:** N/A (quick mode)
-- **Design:** `design.md` (in_progress; overview awaiting confirmation)
+- **Design:** `design.md` (in_progress; full draft awaiting review)
 - **Plan:** `plan.md` (scaffolded template — not started)
 - **Implementation:** `implementation.md` (scaffolded template — not started)
 
@@ -109,7 +109,7 @@ Lightweight design - Reviewing the overview before architecture and components
 - ✓ Execution artifacts scaffolded
 - ✓ Requirements captured from the current conversation
 - ✓ Lightweight design selected
-- ⧗ Overview awaiting confirmation
+- ⧗ Full draft awaiting independent design review
 
 ## Blockers
 
@@ -117,4 +117,4 @@ None
 
 ## Next Milestone
 
-Confirm the design overview, then review architecture, components, and testing strategy
+Review the full design with Consensus Review (Opus 5.5 High), then present its findings before planning
