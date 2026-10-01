@@ -88,7 +88,7 @@ oat_project_completed: null # ISO 8601 UTC timestamp — set when project is com
 oat_project_state_updated: '2026-10-01T15:55:45Z'
 oat_generated: false
 oat_implement_exit_gate:
-  disposition: null
+  disposition: passed
   launch_attempt_id: markdown-implement-exit-2026-10-01T163427Z
   launch_started_at: '2026-10-01T16:34:27Z'
   launch_result_receipt: .oat/projects/shared/markdown-docs-bootstrap/reviews/markdown-implement-exit-2026-10-01T163427Z.json
@@ -111,9 +111,9 @@ oat_implement_exit_gate:
     type: code
     source_filename: final-review-2026-10-01T163602Z.md
   receive_pre_head: f45ae26d7ef579c7dd01df768d6b6c8f0ee7b584
-  receive_commit: null
+  receive_commit: a0cd25b4ed544f214c0fb9f69a399d71b6959df3
   failure: null
-  status: pending
+  status: allowed
   resolution: configured
   resolved_command: oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."
   resolved_description: Semantic cross-family final implementation review before oat-project-implement exits.
@@ -127,10 +127,10 @@ oat_implement_exit_gate:
   freshness_head: 2f6ba887966806222f3a585e27f2e55885eb91c1
   freshness_fingerprint: sha256:effective-delta-v2:2484819cabd75262a0bf304bd25ec8cc802a80871753e664759c42995f3fd37c
   launch_state: result_persisted
-  receive_state: intent_persisted
+  receive_state: completed
   receive_eligible: true
-  receive_completed: false
-  updated_at: '2026-10-01T16:39:32Z'
+  receive_completed: true
+  updated_at: '2026-10-01T16:40:54Z'
   config_fingerprint: sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324
 oat_project_recap:
   decision: skip
