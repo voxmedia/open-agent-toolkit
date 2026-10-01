@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
-oat_current_task_id: p06-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 5     | 5/5       |
-| Phase 2 | complete | 6     | 6/6       |
-| Phase 3 | complete | 10    | 10/10     |
-| Phase 4 | complete | 6     | 6/6       |
-| Phase 5 | complete | 8     | 8/8       |
-| Phase 6 | pending  | 3     | 0/3       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 5     | 5/5       |
+| Phase 2 | complete    | 6     | 6/6       |
+| Phase 3 | complete    | 10    | 10/10     |
+| Phase 4 | complete    | 6     | 6/6       |
+| Phase 5 | complete    | 8     | 8/8       |
+| Phase 6 | in_progress | 3     | 3/3       |
 
-**Total:** 35/38 tasks completed
+**Total:** 38/38 tasks completed
 
 ---
 
@@ -244,22 +244,22 @@ oat_generated: false
 
 ## Phase 6: Release fan-in
 
-**Status:** pending
+**Status:** in_progress
 
 ### Task p06-t01: Bump the lockstep public packages to 0.3.10
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 5cb25aa41
 
 ### Task p06-t02: Archive the shipped backlog items
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 6924afcf5
 
 ### Task p06-t03: Run the full Definition of Done
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** no commit (verification only)
 
 ---
 
@@ -650,15 +650,22 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 | p05-t03       | plan.md p05-t03                  | Probe with `pnpm run worktree:init`                                    | Probe used `pnpm install --frozen-lockfile`; `worktree:init` with a throwaway `HOME` made `bundle-assets.sh` copy the repo into its own staging until the disk filled                                                                                          | Pre-existing `bundle-assets.sh` hazard                                                                                           | Implementation  | `BL-261001-fail-closed-when-bundle-assets`                                  |
 | p05-t04       | plan.md p05-t04                  | Key-type checks                                                        | Type checks run in the existing `oat-*` required-key loop; located YAML errors run for every skill                                                                                                                                                             | Existing required-key checks are `oat-*` only                                                                                    | Implementation  | None                                                                        |
 | p05-t05       | plan.md p05-t05                  | Listed router and dashboard files                                      | Also updated `project/split/__tests__/run.test.ts`, which pinned the old quick route                                                                                                                                                                           | Mechanical                                                                                                                       | Implementation  | None                                                                        |
+| p06-t03       | plan.md p06-t03                  | `HOME=$(mktemp -d) pnpm exec turbo run test --force`                   | `pnpm build` with the real `HOME`, then the isolated-`HOME` test step with `--only`                                                                                                                                                                            | Keep `bundle-assets.sh` off an isolated `HOME`                                                                                   | Implementation  | None                                                                        |
 
 ## Test Results
 
-Track test execution during implementation.
-
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+Full Definition of Done at `6924afcf5` (p06-t03), CI order, every gate exit 0,
+logs in `.oat/repo/analysis/backlog-wave-3/dod/`: `pnpm check` (0/11 cached),
+`pnpm type-check` (0/10), `pnpm build` then
+`HOME=$(mktemp -d) pnpm exec turbo run test --force --only` (0/4 cached; CLI
+7957, control-plane 153, docs-transforms 31, docs-config 10), `pnpm build`
+(0/5), `check:skill-bumps`, `release:check-versions` (after
+`git fetch origin main`), `release:validate` (five packages at 0.3.11),
+`build:docs` (0/6); plus `test:smoke` 163, `test:skills` 689, `test:scripts`,
+`pnpm lint` (0/10), `pnpm format` (0/10). No log contains a cache replay.
+The test gate built with the real `HOME` first and ran the isolated-`HOME`
+tests with `--only`, so `bundle-assets.sh` never ran under an isolated `HOME`
+(`BL-261001-fail-closed-when-bundle-assets`).
 
 ## Final Summary (for PR/docs)
 
