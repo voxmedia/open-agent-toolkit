@@ -44,9 +44,10 @@ copying their content here. -->
   nonmutating `--dry-run`. Optional generated manifests require external
   output; existing content and local instructions remain authoritative.
   Bootstrap, analyze/apply, authoring and instruction consumers retain the
-  applicable Markdown contracts without site tooling. All eleven tasks,
-  final review and retained implementation exit gate passed; configured
-  closeout and final HiLL approval remain pending. See the
+  applicable Markdown contracts without site tooling. All fourteen tasks and
+  current independent final review passed, including both Bugbot fixes and
+  unreadable optional-directory preservation. Completed closeout outputs are
+  refreshed; retained exit-gate refresh and final HiLL approval remain pending. See the
   [project summary](../../projects/shared/markdown-docs-bootstrap/summary.md).
   **BL-260911-make-docs-bootstrap-a-front: Make docs bootstrap a front door
   for existing docs and support the docs-directory convention** remains open

@@ -145,7 +145,7 @@ Main #334 at98d1d524624e17f55ccfce33d18b3d5535dc91ca is integrated by normal mer
 
 All14 tasks complete, recovery0/10, no deferred review debt. Latest eight local gates pass on5237891573c59413e2b13e3f4090b8053aadfb90: actualCLI7,970/398files, root163/660/1 and73docs pages. Check/types mixed actual/cache; unchanged consumer tests and subsequent build/docs cache replay are explicit. Focused200 and exact old-failing/fixed-passing regressions plus real CLI preservation/accepted/safety controls are retained in final-remote-controls and final-unreadable-controls. Latest source fingerprints remain pinned; no extra source changes after acceptance.
 
-Prior clean integration/remote final reviews are retained; fresh final review and configured-exit freshness are pending for the optional-directory delta. Summary/document/PR steps remain complete in their stored order and existing PR335 remains open. Their outputs are refreshed, not re-resolved. Final p04 HiLL approval remains pending; interactive visual recap skip and written summary choice persist. No publication, GitHub merge or deployment performed.
+Prior clean integration/remote final reviews are retained; current final review passed; configured-exit freshness remains pending for the optional-directory delta. Summary/document/PR steps remain complete in their stored order and existing PR335 remains open. Their outputs are refreshed, not re-resolved. Final p04 HiLL approval remains pending; interactive visual recap skip and written summary choice persist. No publication, GitHub merge or deployment performed.
 
 ## Orchestration Runs
 
@@ -3322,3 +3322,60 @@ Accepted exact-target canonical-role route /root/markdown_final_unreadable_pinne
 Root consumed exactly one **Reconnaissance: not-attempted** return before full106-line artifact/provenance validation; no orchestration wave/log applies. Current canonical receive1.6.7 inline under the implementation lifecycle, root-owned judgment. Explicit6ad9b2223716db22dbc95a0d21d0681e363307e1..da14976fe0fa87e0f18e80be5aacd5b1a64b9e4b range/head/stamp and exact two-file artifact/plan commit corroborated. 0C/0H/0M/0L,166actualtests and14realCLIcontrols; strict required permission refusal and optional external directory symlink non-traversal independently pass. Exact old-failing/fixed-passing formatted regression, current all8 source receipts/hash/cache corroborated. Earlier main/remote/full coverage inherited explicitly; no new broad/provider claims.
 
 L1 source and L2 summary alignment from original passing gate74cf045f are independently accepted; its bound event advances passed while old raw counts/provenance remain unchanged. Routing generation remains stale because sourcefingerprint changed; this final review does not replace configured-gate provenance. No deferred findings/new tasks/failure-cycle or recovery consumption. Existing output sequence and interactive recap skip persist. Next: new retained configured generation for current source, final output/PR sync, final p04 HiLL approval.
+
+### Retained gate refresh for final optional-directory source
+
+Complete preceding generation is retained exactly below before replacement. Its two Low dispositions are independently accepted; routing remains stale for the changed effective source delta. All fourteen source tasks, latest eight local gates and current final review passed. Prior configured snapshot/recap and counters persist unchanged; current consumed attempts0.
+
+```json
+{
+  "disposition": null,
+  "launch_attempt_id": "markdown-implement-exit-remote-2026-10-01T185139Z",
+  "launch_started_at": "2026-10-01T18:51:39Z",
+  "launch_result_receipt": ".oat/projects/shared/markdown-docs-bootstrap/reviews/gate-receipts/remote-2026-10-01T185139Z.json",
+  "gate_run_marker": "/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/74cf045f-60fb-4931-a434-8cc9eaa5df19.json",
+  "gate_run_id": "74cf045f-60fb-4931-a434-8cc9eaa5df19",
+  "envelope_status": "ok",
+  "artifact": ".oat/projects/shared/markdown-docs-bootstrap/reviews/final-review-2026-10-01T185353Z.md",
+  "handoff": "Gate passed at the high threshold, but the final review still contains non-blocking findings (low=2). Run oat-project-review-receive for .oat/projects/shared/markdown-docs-bootstrap/reviews/final-review-2026-10-01T185353Z.md to disposition them before marking the final review row passed.",
+  "receive_correlation": {
+    "run_id": "74cf045f-60fb-4931-a434-8cc9eaa5df19",
+    "handoff": "Gate passed at the high threshold, but the final review still contains non-blocking findings (low=2). Run oat-project-review-receive for .oat/projects/shared/markdown-docs-bootstrap/reviews/final-review-2026-10-01T185353Z.md to disposition them before marking the final review row passed.",
+    "source_artifact": ".oat/projects/shared/markdown-docs-bootstrap/reviews/final-review-2026-10-01T185353Z.md",
+    "scope": "final",
+    "type": "code",
+    "source_filename": "final-review-2026-10-01T185353Z.md"
+  },
+  "receive_source_artifact": ".oat/projects/shared/markdown-docs-bootstrap/reviews/final-review-2026-10-01T185353Z.md",
+  "receive_archived_artifact": ".oat/projects/shared/markdown-docs-bootstrap/reviews/archived/final-review-2026-10-01T185353Z.md",
+  "receive_event_identity": {
+    "scope": "final",
+    "type": "code",
+    "source_filename": "final-review-2026-10-01T185353Z.md"
+  },
+  "receive_pre_head": "a7ca3b640623ebd2b417206af67a9dd3fb12caaa",
+  "receive_commit": "81cdda44ee85fcfb1e654466e0cf2a140b6197b0",
+  "failure": "Passing-gate L1 address-now source correction changes the effective delta; current final source review and new retained generation required.",
+  "status": "stale",
+  "resolution": "configured",
+  "resolved_command": "oat --json gate review --project \"$PROJECT_PATH\" --review-type code --review-scope final --exit-nonzero-on important \"Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings.\"",
+  "resolved_description": "Semantic cross-family final implementation review before oat-project-implement exits.",
+  "project_override": null,
+  "on_failure": "block",
+  "max_attempts": 2,
+  "attempts_completed": 0,
+  "reviewed_head": "14ecdcc0dbb876dc1225a3ef4ca332ae88796cc0",
+  "implementation_base_ref": "origin/main",
+  "implementation_fingerprint": "sha256:effective-delta-v2:964fb0d52950ca56e6316ac94eb24eae9f7c03c77ad098c083e9919a9b794324",
+  "freshness_head": "14ecdcc0dbb876dc1225a3ef4ca332ae88796cc0",
+  "freshness_fingerprint": "sha256:effective-delta-v2:964fb0d52950ca56e6316ac94eb24eae9f7c03c77ad098c083e9919a9b794324",
+  "launch_state": "result_persisted",
+  "receive_state": "completed",
+  "receive_eligible": true,
+  "receive_completed": true,
+  "updated_at": "2026-10-01T19:22:53Z",
+  "config_fingerprint": "sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324"
+}
+```
+
+New final retained launch intent `markdown-implement-exit-unreadable-2026-10-01T193437Z`, receipt `.oat/projects/shared/markdown-docs-bootstrap/reviews/gate-receipts/unreadable-2026-10-01T193437Z.json`; exact configured argv/normalHOME/PATH unchanged. No replacement of an in-flight run. Root current PJM adoption declared; doctor warn/exit1 only eleven pre-existing completed-log archive warnings, no unrelated repair or new decision capture. Five existing Key Decisions deduplicate exactly. Completed output snapshot is refreshed inline, unchanged.

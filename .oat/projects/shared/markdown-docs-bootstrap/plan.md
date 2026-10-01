@@ -18,7 +18,7 @@ oat_template: false
 
 # Implementation Plan: markdown-docs-bootstrap
 
-> Execute with `oat-project-implement` after quick-start review and readiness are complete. All fourteen implementation tasks complete; current source verification passed; fresh final source review/exit-gate refresh pending.
+> Execute with `oat-project-implement` after quick-start review and readiness are complete. All fourteen implementation tasks complete; current source verification and final review passed; exit-gate refresh pending.
 
 **Goal:** Offer plain Markdown docs bootstrap with `documentation.tooling: markdown`, authored index/context conventions, additive adoption, and nonmutating dry-run.
 
@@ -296,7 +296,7 @@ Source pointers retained for the already-planned consumer inventory: index gener
 
 ## Implementation Complete
 
-Implementation in progress: 14/14 tasks complete; both remote source fixes independently accepted; passing-gate L1 correction and all eight local gates passed; current final source review/exit-gate refresh pending. Scope: 4 sequential phases, 14 atomic tasks — p01 (2), p02 (3), p03 (3), p04 (6). Prior integrated verification/review remains history; current final source review and retained exit gate refresh precede final HiLL approval. Existing configured pre-approval steps are complete and their snapshot is unchanged.
+Implementation in progress: 14/14 tasks complete; both remote source fixes independently accepted; passing-gate L1 correction and all eight local gates passed; current final source review passed; exit-gate refresh pending. Scope: 4 sequential phases, 14 atomic tasks — p01 (2), p02 (3), p03 (3), p04 (6). Prior integrated verification/review remains history; current final source review and retained exit gate refresh precede final HiLL approval. Existing configured pre-approval steps are complete and their snapshot is unchanged.
 
 ## References
 
