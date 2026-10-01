@@ -242,3 +242,65 @@ for name, source, replacements, selected_test in cases:
 print(json.dumps(records, indent=2))
 
 ```
+
+## p02-t03 filename navigation control
+
+Run after building: `python3 probe-t03.py <absolute-built-cli-path> --expect valid`. Against the original encoder, use `--expect broken`: setup exits 0 but three actual destinations resolve incorrectly. The fixed encoder produces six existing-file destinations with no query/fragment and preserves every original byte. Ordinary filenames remain accepted. Direct public Vitest regression also fails with the old encoder and passes with the fix.
+
+```python
+import argparse
+import hashlib
+import json
+import pathlib
+import re
+import subprocess
+import tempfile
+import urllib.parse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('cli')
+parser.add_argument('--expect', choices=['broken', 'valid'], required=True)
+args = parser.parse_args()
+cli = str(pathlib.Path(args.cli).resolve())
+root = pathlib.Path(tempfile.mkdtemp(prefix='oat-p02-t03-'+args.expect+'-'))
+original = {
+    'release#owner.md': '# Release ownership\n\nThe runtime team approves each release.\n',
+    'faq?audience.md': '# Audience FAQ\n\nOperators and reviewers share these answers.\n',
+    'deploy(operator).md': '# Operator deployment\n\nUse the reviewed deployment checklist.\n',
+    'operations#on-call?(primary)/index.md': '# Primary on-call operations\n\nEscalation ownership and handoff context.\n',
+    'ordinary.md': '# Ordinary page\n\nThis normal relative link must remain usable.\n',
+}
+for relative, content in original.items():
+    path = root/'docs'/relative
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content)
+command = ['node', cli, '--cwd', str(root), '--json', 'docs', 'init', '--framework',
+           'markdown', '--adopt', '--yes', '--site-name', 'URI Handbook']
+run = subprocess.run(command, text=True, capture_output=True)
+payload = json.loads(run.stdout)
+assert run.returncode == 0 and payload['status'] == 'ok'
+index = root/'docs/index.md'
+destinations = re.findall(r'^- \[.*\]\(([^)]*)\)$', index.read_text(), re.MULTILINE)
+resolved = []
+for destination in destinations:
+    uri = urllib.parse.urlsplit(urllib.parse.urljoin(index.as_uri(), destination))
+    actual = pathlib.Path(urllib.parse.unquote(uri.path))
+    valid = not uri.query and not uri.fragment and actual.is_file()
+    resolved.append({'destination': destination, 'query': uri.query, 'fragment': uri.fragment,
+                     'actualPath': str(actual), 'exists': actual.is_file(), 'valid': valid})
+assert 'ordinary.md' in destinations
+assert 'deploy%28operator%29.md' in destinations
+for relative, content in original.items(): assert (root/'docs'/relative).read_text() == content
+broken = [item for item in resolved if not item['valid']]
+if args.expect == 'broken':
+    assert len(broken) == 3, broken
+else:
+    assert broken == [], broken
+    assert {item['actualPath'] for item in resolved} == {str(root/'docs'/relative) for relative in list(original)+['contributing.md']}
+report = {'command': command, 'exit': run.returncode, 'stdout': run.stdout, 'stderr': run.stderr,
+          'category': args.expect, 'destinations': resolved, 'originalFilesPreserved': True,
+          'originalFiles': original,
+          'originalHashes': {relative: hashlib.sha256(content.encode()).hexdigest() for relative, content in original.items()}}
+(root/'results.json').write_text(json.dumps(report, indent=2)+'\n')
+print(json.dumps({'category': args.expect, 'cliExit': run.returncode, 'brokenLinks': len(broken), 'preserved': True, 'artifacts': str(root)}))
+```

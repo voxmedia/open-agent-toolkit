@@ -3,24 +3,24 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
-oat_current_task_id: p02-t03
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
 # Implementation: markdown-docs-bootstrap
 
-Phase p01 is complete after independent review. Four of ten tasks are complete. Phase p02 review found one valid Medium navigation defect; p02-t03 fixes it before phase acceptance. Next task p02-t03; final HiLL remains p04.
+Phase p01 is complete after independent review. Five of ten tasks are complete. All three p02 tasks, including the M1 filename navigation fix, are complete; independent re-review is pending. Next planned task p03-t01; final HiLL remains p04.
 
 ## Progress Overview
 
 | Phase | Status      | Tasks | Completed |
 | ----- | ----------- | ----- | --------- |
 | p01   | complete    | 2     | 2/2       |
-| p02   | in_progress | 3     | 2/3       |
+| p02   | in_progress | 3     | 3/3       |
 | p03   | pending     | 3     | 0/3       |
 | p04   | pending     | 2     | 0/2       |
 
-**Total:** 4/10 tasks completed
+**Total:** 5/10 tasks completed
 
 ## Phase 1: Shared content and guidance contracts
 
@@ -60,10 +60,10 @@ Phase p01 is complete after independent review. Four of ten tasks are complete. 
 
 ### Task p02-t03: (review) Encode Markdown adoption link destinations
 
-**Status:** pending
-**Commit:** -
-**Outcome:** M1 accepted; encoded filename destinations required.
-**Verification:** Not run
+**Status:** completed
+**Commit:** cc3f828f04abf21533c88faf5aab413c4b2a09cb
+**Outcome:** Relative filename segments are encoded without losing slash separators; query, fragment and Markdown destination delimiters resolve to actual authored files. Existing content preserved.
+**Verification:** Old-encoder public test fails for query resolution; old built CLI accepts but three links resolve incorrectly. Fixed CLI accepts with all six links valid and existing bytes preserved. Full phase suite 195 tests/10 actual files; build, types, lint, two-file formatting and diff checks exit 0. No recovery attempts.
 
 ## Phase 3: Bootstrap workflow and docs consumers
 
@@ -853,3 +853,7 @@ Root read the complete review and validated scope, full reviewed head, range and
 Dispatch: scope=p02-t03 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high-3da8a37eed
 
 Host followup_task accepted continuation on /root/markdown_p02_pinned. Exact target retained; scope only the newly added filename link fix. No new child or routing fallback. Awaiting root ACK.
+
+#### p02-t03 root task acceptance
+
+Root verified the append-only two-file code commit, clean tree and intended failing old-encoder control. Exact runnable probe retained in reviews/p02-reproduction-controls.md. M1 fix complete; bound first review event fixes_completed, independently reviewed acceptance pending. Full phase report awaits root tracking ACK.
