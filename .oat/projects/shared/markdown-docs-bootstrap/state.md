@@ -94,9 +94,9 @@ oat_implement_exit_gate:
   launch_result_receipt: .oat/projects/shared/markdown-docs-bootstrap/reviews/markdown-implement-exit-2026-10-01T163427Z.json
   gate_run_marker: /var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/e49bf748-36dc-44ff-9fa6-1e7105fc21b3.json
   gate_run_id: e49bf748-36dc-44ff-9fa6-1e7105fc21b3
-  envelope_status: null
-  artifact: null
-  handoff: null
+  envelope_status: ok
+  artifact: .oat/projects/shared/markdown-docs-bootstrap/reviews/final-review-2026-10-01T163602Z.md
+  handoff: Gate passed at the high threshold, but the final review still contains non-blocking findings (low=1). Run oat-project-review-receive for .oat/projects/shared/markdown-docs-bootstrap/reviews/final-review-2026-10-01T163602Z.md to disposition them before marking the final review row passed.
   receive_correlation: null
   receive_source_artifact: null
   receive_archived_artifact: null
@@ -117,11 +117,11 @@ oat_implement_exit_gate:
   implementation_fingerprint: sha256:effective-delta-v2:2484819cabd75262a0bf304bd25ec8cc802a80871753e664759c42995f3fd37c
   freshness_head: 2f6ba887966806222f3a585e27f2e55885eb91c1
   freshness_fingerprint: sha256:effective-delta-v2:2484819cabd75262a0bf304bd25ec8cc802a80871753e664759c42995f3fd37c
-  launch_state: accepted
+  launch_state: result_persisted
   receive_state: not_started
-  receive_eligible: false
+  receive_eligible: true
   receive_completed: false
-  updated_at: '2026-10-01T16:35:45Z'
+  updated_at: '2026-10-01T16:39:29Z'
   config_fingerprint: sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324
 oat_project_recap:
   decision: skip
