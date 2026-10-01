@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
-oat_current_task_id: p03-t01
+oat_current_task_id: p02-t06
 oat_generated: false
 ---
 
@@ -27,13 +27,13 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 5     | 5/5       |
-| Phase 2 | in_progress | 5     | 5/5       |
+| Phase 2 | in_progress | 6     | 5/6       |
 | Phase 3 | pending     | 5     | 0/5       |
 | Phase 4 | pending     | 4     | 0/4       |
 | Phase 5 | pending     | 6     | 0/6       |
 | Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 10/28 tasks completed
+**Total:** 10/29 tasks completed
 
 ---
 
@@ -96,6 +96,11 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** 6f533ac7c
+
+### Task p02-t06: (review) Close p02 gate findings M1, M2, L1
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -296,6 +301,11 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   (`.mdx` targets), M3 and L1 (docs), L2 (detection tests with
   neutralize-and-restore), L3 (plain-text titles); 277 tests and an uncached
   `build:docs` pass.
+
+- Phase gate (`codex-6-sol-xhigh`) at `4fa0c5f32`:
+  `reviews/archived/p02-review-2026-10-01T122403Z.md` status `ok`, 0
+  Critical/High, 2 Medium, 1 Low. Judgment sweep: all three addressed now as
+  `p02-t06`.
 
 <!-- orchestration-runs-end -->
 

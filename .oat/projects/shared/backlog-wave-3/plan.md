@@ -462,6 +462,41 @@ Expected: exit 0.
 
 ---
 
+### Task p02-t06: (review) Close p02 gate findings M1, M2, L1
+
+Source: `reviews/archived/p02-review-2026-10-01T122403Z.md` (Codex phase gate,
+`ok`: 0 Critical/High, 2 Medium, 1 Low).
+
+**Step 1: Fix**
+
+- M1: compute index inclusion and reachability from the effective merged
+  folder metadata. A preserved `root: true` folder gets no implicit index from
+  the Fumadocs 16.10.2 loader, so list its landing page explicitly when the
+  Contents map authors it, or report it as unlisted; never count it reachable
+  only because the file exists. Test an ordinary folder and a `root: true`
+  folder against the real loader, asserting every page claimed as listed is in
+  the tree, for both sync and `--check`.
+- M2: grant the read-only check in `.agents/skills/oat-docs-analyze/SKILL.md`
+  (for example `Bash(oat docs nav sync:*)` scoped as narrowly as the host
+  syntax allows, without granting mutation) and pin the grant with the
+  existing skill-contract convention.
+- L1: show the analysis command with the resolved docs-app directory
+  (`--target-dir <app>`), distinct from its `docs/` content root.
+
+**Step 2: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli build`,
+`HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/docs src/validation`,
+`node packages/cli/dist/index.js docs nav sync --target-dir apps/oat-docs --check`,
+`pnpm oat:validate-skills`, `pnpm --filter oat-docs check`.
+Expected: exit 0.
+
+**Step 3: Commit**
+
+`fix(p02-t06): close p02 gate findings`
+
+---
+
 ## Phase 3: Recon publication and Codex recovery
 
 Backlog: `BL-261001-make-recon-s-packet-validator`,
@@ -1343,7 +1378,7 @@ breaking changes must be named in the title:
 | plan   | artifact | fixes_completed | 2026-10-01 | reviews/artifact-plan-review-2026-10-01T061917Z.md | -                                        | gate       | codex-6-sol-xhigh |
 | plan   | artifact | fixes_completed | 2026-10-01 | reviews/artifact-plan-review-2026-10-01T063044Z.md | -                                        | gate       | codex-6-sol-xhigh |
 | p01    | code     | passed          | 2026-10-01 | reviews/archived/p01-review-2026-10-01T114001Z.md  | 91b1dde7c5f589226a852c41da4ba80fb0de012c | gate       | codex-6-sol-xhigh |
-| p02    | code     | received        | 2026-10-01 | reviews/p02-review-2026-10-01T122403Z.md           | 4fa0c5f3258f73adfc0a78f21596af11ffa789b7 | gate       | codex-6-sol-xhigh |
+| p02    | code     | fixes_added     | 2026-10-01 | reviews/archived/p02-review-2026-10-01T122403Z.md  | 4fa0c5f3258f73adfc0a78f21596af11ffa789b7 | gate       | codex-6-sol-xhigh |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
@@ -1412,13 +1447,13 @@ criterion.
 **Summary:**
 
 - Phase 1: 5 tasks - Template resolver
-- Phase 2: 5 tasks - Fumadocs navigation
+- Phase 2: 6 tasks - Fumadocs navigation
 - Phase 3: 5 tasks - Recon publication and Codex recovery
 - Phase 4: 4 tasks - Lifecycle closeout guards
 - Phase 5: 6 tasks - Small fixes
 - Phase 6: 3 tasks - Release fan-in
 
-**Total: 28 tasks**
+**Total: 29 tasks**
 
 Ready for code review and merge.
 
