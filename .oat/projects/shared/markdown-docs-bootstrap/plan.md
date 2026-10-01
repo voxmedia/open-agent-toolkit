@@ -174,7 +174,7 @@ All phases run sequentially (`oat_plan_parallel_groups: []`). p02 consumes p01's
 
 ## Reviews
 
-Existing scaffold rows and historical review events are preserved. Quick mode requires no spec. All approved plan edits are applied; the final cross-runtime gate passed and its two Low findings were dispositioned as already-covered scope. See `reviews/plan-gate-final-handoff.md` for receipt evidence. Implementation remains unstarted.
+Existing scaffold rows and historical review events are preserved. Quick mode requires no spec. All approved plan edits are applied; the final cross-runtime gate passed and its two Low findings were dispositioned as already-covered scope. See `reviews/plan-gate-final-handoff.md` for receipt evidence. Implementation is in progress; p01 tasks and independent review complete.
 
 | Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target          |
 | ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | -------------------- |
@@ -190,6 +190,7 @@ Existing scaffold rows and historical review events are preserved. Quick mode re
 | plan   | artifact | fixes_completed | 2026-10-01 | reviews/archived/artifact-plan-review-2026-10-01T060016Z.md | -                                        | gate       | claude-opus-5-5-high |
 | plan   | artifact | fixes_completed | 2026-10-01 | reviews/plan-auto-final-retry.md                            | 4f1c0d422241214859c906efb176e5a2787ba472 | auto       | -                    |
 | plan   | artifact | passed          | 2026-10-01 | reviews/archived/artifact-plan-review-2026-10-01T112231Z.md | -                                        | gate       | claude-opus-5-5-high |
+| p01    | code     | fixes_completed | 2026-10-01 | reviews/p01-review-2026-10-01T120229Z.md                    | 47f4fddad5b3618e5146631b729e435a0a4a5f4a | auto       | -                    |
 
 Record full reviewed heads and invocation provenance for actual reviews. Preserve all rows and unknown trailing cells. Mark `passed` only for a clean result; disposition residual findings before readiness.
 

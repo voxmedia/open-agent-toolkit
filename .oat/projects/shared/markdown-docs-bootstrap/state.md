@@ -85,7 +85,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-30T18:58:24.831Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-01T11:46:38Z'
+oat_project_state_updated: '2026-10-01T12:06:01Z'
 oat_generated: false
 ---
 
@@ -97,7 +97,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation setup complete. p01 tasks complete; independent phase review pending; standard root-owned reviews run after each phase and the final HiLL checkpoint follows p04.
+Implementation setup complete. p01 complete after independent review; p02-t01 next; standard root-owned reviews run after each phase and the final HiLL checkpoint follows p04.
 
 ## Artifacts
 
@@ -132,4 +132,4 @@ None
 
 ## Next Milestone
 
-Review p01 against its committed task ledger before p02.
+Execute p02-t01 and p02-t02 through the next phase implementer.

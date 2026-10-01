@@ -9,22 +9,22 @@ oat_generated: false
 
 # Implementation: markdown-docs-bootstrap
 
-Implementation setup resolved from effective workflow configuration. Production tasks have not started. The next task is p01-t01; 0/9 tasks are complete. Record actual changes, commits, verification exit codes, negative controls, review dispositions, and deviations as implementation proceeds.
+Phase p01 is complete after independent review: 2/9 tasks completed. Next task p02-t01; the overall implementation remains in progress.
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p01   | in_progress | 2     | 2/2       |
-| p02   | pending     | 2     | 0/2       |
-| p03   | pending     | 3     | 0/3       |
-| p04   | pending     | 2     | 0/2       |
+| Phase | Status   | Tasks | Completed |
+| ----- | -------- | ----- | --------- |
+| p01   | complete | 2     | 2/2       |
+| p02   | pending  | 2     | 0/2       |
+| p03   | pending  | 3     | 0/3       |
+| p04   | pending  | 2     | 0/2       |
 
 **Total:** 2/9 tasks completed
 
 ## Phase 1: Shared content and guidance contracts
 
-**Status:** in_progress
+**Status:** complete
 
 ### Task p01-t01: Resolve literal Markdown roots and protect authored indexes
 
@@ -111,7 +111,7 @@ None recorded.
 
 ## Final Summary (for PR/docs)
 
-Not complete; implementation unstarted.
+Not complete. Shared Markdown root/output protection and guidance preview are implemented and independently reviewed; CLI bootstrap/adoption, skill/docs alignment and final integration/release validation remain pending.
 
 ## Orchestration Runs
 
@@ -455,7 +455,7 @@ Accepted reviewer handle `/root/markdown_p01_review_pinned`; exact controls reta
     "dispatch_mode": "background"
   },
   "launch_status": "accepted",
-  "child_outcome": null,
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     "project-state:high",
     "user-config:gpt-6.1-sol/high",
@@ -483,3 +483,11 @@ Accepted reviewer handle `/root/markdown_p01_review_pinned`; exact controls reta
   "floor_satisfaction": "satisfied"
 }
 ```
+
+#### p01 terminal phase outcome
+
+- Verdict: pass; fix iterations 0; both planned task commits preserved, root tracking committed separately.
+- Independent review: reviews/p01-review-2026-10-01T120229Z.md; reviewed full head 47f4fddad5b3618e5146631b729e435a0a4a5f4a; auto invocation; 0 Critical, 0 High, 0 Medium, 1 Low. Exactly one not-attempted reconnaissance signal; no Review Orchestration section, no reconnaissance-log append. Scope/range/frontmatter and severity lists validated.
+- L1 accepted and resolved in this root-owned bookkeeping: current implementation introduction and Final Summary now agree with completed task rows and p02-t01 pointer. Raw review counts are preserved; no production fix/re-review needed for this tracking-only repair. Review event remains fixes_completed rather than claiming an independently clean re-review.
+- Reviewer independently ran all 672 tests/13 actual files and type-check, exit 0; corrected guessed test filters are disclosed in artifact. It reproduced pre/post overwrite, accepted external/Fumadocs controls and both regression neutralizations in an isolated archive.
+- No unresolved findings, recovery attempts, optional nested dispatch, scope deviations or additional phase gate. Continue p02; final HiLL remains p04.
