@@ -223,7 +223,7 @@ Source pointers retained for the already-planned consumer inventory: index gener
 
 ## Implementation Complete
 
-Implementation in progress: 8/10 tasks complete. Planned scope: 4 sequential phases, 10 atomic tasks — p01 (2), p02 (3), p03 (3), p04 (2). Replace this with a completion summary only after implementation and required reviews/gates pass.
+Implementation in progress: 9/10 tasks complete. Planned scope: 4 sequential phases, 10 atomic tasks — p01 (2), p02 (3), p03 (3), p04 (2). Replace this with a completion summary only after implementation and required reviews/gates pass.
 
 ## References
 

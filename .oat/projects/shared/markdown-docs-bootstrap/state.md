@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t01
-oat_last_commit: 58f6772f0e302f5a8ec408b382156bcf651e403e
+oat_current_task: p04-t02
+oat_last_commit: 0e52b8d4457a0f590223b1d14a6e587f5a9e88c6
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -97,7 +97,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation setup complete. p01 and p02 complete after independent reviews; p03 complete after independent review and Low tracking/evidence fixes; p04 begins next; standard root-owned reviews run after each phase and the final HiLL checkpoint follows p04.
+Implementation setup complete. p01 and p02 complete after independent reviews; p03 complete after independent review and Low tracking/evidence fixes; p04 versions/bundles complete; full integration checks next; standard root-owned reviews run after each phase and the final HiLL checkpoint follows p04.
 
 ## Artifacts
 
@@ -105,7 +105,7 @@ Implementation setup complete. p01 and p02 complete after independent reviews; p
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; approved dispositions incorporated)
 - **Plan:** `plan.md` (complete; ready for oat-project-implement)
-- **Implementation:** `implementation.md` (tracking initialized; 8/10 tasks completed)
+- **Implementation:** `implementation.md` (tracking initialized; 9/10 tasks completed)
 
 ## Progress
 
