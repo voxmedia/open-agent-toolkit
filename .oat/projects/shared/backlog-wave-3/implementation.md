@@ -592,6 +592,19 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   all 13 archived items, and the DoD evidence verified.
   `Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
 
+### Implementation exit gate
+
+- Generation 1: `oat_implement_exit_gate` resolved `configured`
+  (`codex-6-sol-xhigh` final gate, `onFailure: block`, `maxAttempts: 2`),
+  `effective-delta-v2` fingerprint `003e3c66…` at `845ca17e3` (unchanged from
+  the p06 head, confirming only records changed after the Definition of Done).
+  Intent `7a5f1331c`, acceptance `073c003ed` (run `99fcf137`), result and
+  receive intent `e2ac9c493`.
+- Envelope `ok`, receive-eligible, 0 Critical/High, 2 Medium
+  (`reviews/archived/final-review-2026-10-01T203319Z.md`). Received: both
+  Mediums deferred to backlog (see Deferred Findings); the final gate row is
+  `passed`; disposition `allowed/passed`.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -694,6 +707,17 @@ Chronological execution is recorded per phase under Orchestration Runs above
 (dispatch requests, commits, reviews, gates, recovery events, the mid-wave
 merge of `main`, the operator's review-cap decisions, and the p03 complexity
 review). Plan-gate history is under Plan Gate Feedback.
+
+## Deferred Findings (Medium)
+
+- Exit gate M1 (`reviews/archived/final-review-2026-10-01T203319Z.md`): Fumadocs
+  nav sync writes a filename starting with `!` as an exclusion directive, so the
+  page is hidden while `--check` reports clean. Deferred to `BL-261001-escape-directive-like` (high):
+  fixing it now would make the exit-gate generation stale and require a new
+  final review and gate; no shipped docs page is affected.
+- Exit gate M2 (same artifact): recon Review Downgrades omits claims a
+  thorough-profile redundant-verification review left without a disposition.
+  Deferred to `BL-261001-list-thorough-review-omissions` (medium): rendering-only, thorough profile only.
 
 ## Deviations from Plan / Design
 
