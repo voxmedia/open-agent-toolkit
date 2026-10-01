@@ -304,7 +304,10 @@ scoped to it or global to its review, a coverage finding that names it, or a
 non-affirming disposition) is listed under Review Downgrades with the review's
 own text, even when it is not a key claim, so a `complete` packet cannot hide a
 downgraded claim. A claim that a required review left without a disposition stays
-`unresolved` and is listed there as not reviewed. A review's
+`unresolved`. Any claim below `verified` that an incorporated assurance review,
+core or thorough, listed in its brief but left without a disposition is listed
+there as not reviewed by that review; a claim outside a review's brief is never
+reported as its omission. A review's
 `unresolvedIssues` entry may name the claim IDs it affects or apply to the
 whole review; a legacy plain-string entry is read as review-wide. A material
 coverage gap does not fail publication by itself: the claims it affects stay
