@@ -10,7 +10,13 @@
   `BL-260718-support-fumadocs-in-oat-docs` is raised to high with acceptance
   criteria: `oat docs nav sync` writes Fumadocs `meta.json` files from the
   authored `index.md` Contents maps. Wave 2's GitHub issues #322 and #295 were
-  closed against #332.
+  closed against #332. GitHub issue #333 (a live recon run that could not
+  publish a packet) is split three ways:
+  `BL-261001-make-recon-s-packet-validator` (high, joins the wave: the packet
+  validator rejects what recon's own brief generator and reconciler produce),
+  `BL-261001-recover-recon-lanes-after` (medium: Codex agent-limit recovery,
+  weighed against recon's machinery cost first), and
+  `BL-261001-make-recon-controller-setup` (low: setup and preflight friction).
 - 2026-09-28: the `backlog-wave-2` project (lockstep 0.3.9) closed twelve
   items: `BL-260903-close-manual-only-agents-md`,
   `BL-260927-name-only-installed-pack`, `BL-260909-fix-the-agents-md-unsafe`
@@ -333,6 +339,7 @@
 | BL-260718-harden-full-surface-gate       | Harden full-surface gate reviews against budget and recursive dispatch                                | open   | high     | feature    | M        |
 | BL-260729-implement-reviewplan-first     | Implement ReviewPlan-first reviewer workflow                                                          | open   | high     | feature    | L        |
 | BL-260911-make-docs-bootstrap-a-front    | Make docs bootstrap a front door for existing docs and support the docs-directory convention          | open   | high     | feature    | M        |
+| BL-261001-make-recon-s-packet-validator  | Make recon's packet validator accept what its own helpers produce                                     | open   | high     | feature    | M        |
 | BL-260829-order-phase-bookkeeping-before | Order phase bookkeeping before per-phase review dispatch                                              | open   | high     | task       | M        |
 | BL-260724-support-provider-directory     | Support provider directory symlinks as full collection sync                                           | open   | high     | feature    | M        |
 | BL-260718-support-fumadocs-in-oat-docs   | Teach oat docs nav sync to write Fumadocs navigation from index.md Contents maps                      | open   | high     | feature    | M        |
@@ -369,6 +376,7 @@
 | BL-260830-re-evaluate-same-target-gate   | Re-evaluate same-target gate execution                                                                | open   | medium   | idea       | L        |
 | BL-260906-re-evaluate-universal-plan     | Re-evaluate universal plan proof strategy and test-first guidance                                     | open   | medium   | feature    | L        |
 | BL-260907-recognize-phase-level          | Recognize phase-level completion records so bullet-list revision phases do not read as incomplete     | open   | medium   | task       | S        |
+| BL-261001-recover-recon-lanes-after      | Recover recon lanes after a Codex agent-limit rejection                                               | open   | medium   | feature    | M        |
 | BL-260827-refresh-provider-codex-md      | Refresh provider-codex.md for the ultra effort tier, the GPT-5.4 retirement, and per-subcommand flags | open   | medium   | task       | S        |
 | BL-260908-remove-the-top-level-skill     | Remove the top-level skill version read after the alias error has been quiet                          | open   | medium   | task       | S        |
 | BL-260909-restamp-a-stale-copy-strategy  | Restamp a stale copy-strategy contentHash on skip and retire the pre-framing digest bridge            | open   | medium   | task       | M        |
@@ -402,6 +410,7 @@
 | BL-260928-harden-the-backlog-reference   | Harden the backlog reference rewriter's atomic replace edge cases                                     | open   | low      | task       | S        |
 | BL-260907-ignore-backslash-escaped       | Ignore backslash-escaped emphasis in skill-script reference extraction                                | open   | low      | task       | XS       |
 | BL-260909-make-findsection-comment-aware | Make findSection comment-aware in the bundled-docs contract test                                      | open   | low      | task       | S        |
+| BL-261001-make-recon-controller-setup    | Make recon controller setup and preflight self-serve                                                  | open   | low      | feature    | M        |
 | BL-260906-make-the-phase-implementer     | Make the phase-implementer sweep contract test negation-aware                                         | open   | low      | task       | S        |
 | BL-260830-memory-subsystem-ownership     | Memory subsystem ownership decision for OAT                                                           | open   | low      | idea       | XL       |
 | BL-260906-project-journal-reservation    | Project journal reservation state into the smoke evidence bundle                                      | open   | low      | task       | S        |
