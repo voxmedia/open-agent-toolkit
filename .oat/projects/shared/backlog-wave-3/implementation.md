@@ -577,6 +577,21 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   `reviews/archived/p06-review-2026-10-01T200536Z.md` status `ok`, 0 findings.
 - Phase p06 outcome: pass; 3/3 tasks.
 
+### Final Review
+
+- Gate `IMPLEMENT-11` (autonomous final review): request `bw3-final-review-1`
+  (`oat-reviewer-claude-claude-opus-5-5-high`, reconnaissance not-attempted,
+  Tier 1 cross-context Claude review; the independent Codex review is the
+  configured exit gate) at `580788fa8`:
+  `reviews/archived/final-review-2026-10-01T201832Z.md`, 0 Critical/High/
+  Medium, 4 Low (passes). Lows fixed by root in records only: the PR notes now
+  say the skills need `oat` 0.3.11 or later and that nav sync is strict with a
+  `--check` gate; the archived recon item records its narrowed release-note
+  criterion; the Implementation Log, References, and template-copy count are
+  corrected. Cross-phase edits, single bumps per skill (27), the #334 merge,
+  all 13 archived items, and the DoD evidence verified.
+  `Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -639,10 +654,16 @@ breaking changes must be named in the title:
     rebuilds each brief with the production generator and rejects any
     difference, so an injected claim, note, or source in any brief type fails
     with `REVIEW_BRIEF_MISMATCH`;
-  - `oat docs nav sync` writes Fumadocs `meta.json`;
+  - `oat docs nav sync` writes strict Fumadocs `meta.json`: pages no
+    `index.md` Contents map lists are left out of the sidebar and reported,
+    and `nav sync --check` (run in `apps/oat-docs` `prebuild`) fails on drift;
   - `oat project complete-state` refuses a configured closeout with a missing
     or incomplete snapshot; exit-gate waivers are operator-only;
   - test-only package changes no longer require the lockstep bump.
+  - the updated lifecycle skills call `oat template resolve` and
+    `oat project closeout-check`, so they need `oat` 0.3.11 or later; with an
+    older `oat` on PATH, `oat-project-complete` treats the missing command as
+    an incomplete closeout. Update the CLI with the skills (`oat tools update`).
 - Breaking CLI grammar, per `.github/PULL_REQUEST_TEMPLATE.md` and
   `apps/oat-docs/docs/contributing/code.md`: tick the template's grammar-change
   box and include
@@ -669,42 +690,10 @@ Additional PR body notes from implementation:
 
 ## Implementation Log
 
-Chronological log of implementation progress.
-
-### 2026-10-01
-
-**Session Start:** {time}
-
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
-
-**What changed (high level):**
-
-- {short bullets suitable for PR/docs}
-
-**Decisions:**
-
-- {Decision made and rationale}
-
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
-
-**Blockers:**
-
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
-
----
-
-### 2026-10-01
-
-**Session Start:** {time}
-
-{Continue log...}
-
----
+Chronological execution is recorded per phase under Orchestration Runs above
+(dispatch requests, commits, reviews, gates, recovery events, the mid-wave
+merge of `main`, the operator's review-cap decisions, and the p03 complexity
+review). Plan-gate history is under Plan Gate Feedback.
 
 ## Deviations from Plan / Design
 
@@ -756,8 +745,8 @@ tests with `--only`, so `bundle-assets.sh` never ran under an isolated `HOME`
 - **Template resolver (lead).** One resolver in repository, user, bundle order
   (`DR-260927-templates-resolve-repository`) shared by the project scaffold,
   promote, PJM, backlog, and decision commands, and a new
-  `oat template resolve <name> [--json] [--output <path>]`. Fourteen lifecycle
-  skills copy templates through it, so user-scope-only installs work; the
+  `oat template resolve <name> [--json] [--output <path>]`. Eleven lifecycle
+  skills copy templates through it (fourteen skills changed), so user-scope-only installs work; the
   Cursor-cloud skill's template order matches. Skills that run it gained
   `Bash(oat template:*)`.
 - **Fumadocs navigation.** `oat docs nav sync` detects the framework and, for
@@ -831,5 +820,5 @@ tests with `--only`, so `bundle-assets.sh` never ran under an isolated `HOME`
 ## References
 
 - Plan: `plan.md`
-- Design: `design.md`
-- Spec: `spec.md`
+- Discovery: `discovery.md`
+- Execution learnings: `oat-execution-learnings.md`

@@ -83,3 +83,13 @@ released CLI). The dispatch-capacity half of #333 is
   test is shown to pass a bad state when its guard is neutralized.
 - `recon` `metadata.version` bumped; release notes say packets that failed
   only on these three codes now validate.
+
+## Closure note
+
+- 2026-10-01: the release-note criterion was narrowed after p03 review M4.
+  Legacy string issues are read as global, so a 1.1.5 packet that failed on
+  `REVIEW_DISPOSITION_MISMATCH` (the #333 packet among them) still keeps every
+  covered claim below verified after re-running reconciliation; the PR notes
+  say so instead of claiming such packets now validate. The structured-issue
+  and coverage criteria shipped as decided; brief integrity uses
+  rebuild-and-compare after the operator-approved complexity review.
