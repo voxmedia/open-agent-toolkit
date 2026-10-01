@@ -1,6 +1,6 @@
 # Fable skill inventory advisory
 
-**Source:** Fable 5.1's final advisory message, 2026-10-01. Fable attributed enumeration/classification to an Opus lane and reported spot-checking flags and drift against source. These are retained peer findings, not a complete root-reproduced audit. The full per-skill matrix remains to be captured before relying on exact public coverage totals.
+**Source:** Fable 5.1's final advisory message, 2026-10-01. Fable attributed enumeration/classification to an Opus lane and reported spot-checking flags and drift against source. These are retained peer findings, not a complete root-reproduced audit. The subsequently supplied [full matrix and sidebar probe report](skill-inventory-matrix.md) is Fable's transcription, with its verification limits retained. Validate public-support intent before relying on an exact public coverage total.
 
 ## Reported inventory
 

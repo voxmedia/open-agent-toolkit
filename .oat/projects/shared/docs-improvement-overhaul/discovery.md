@@ -126,7 +126,7 @@ Proposed criteria to confirm before planning:
 ## Assumptions
 
 - The useful pattern to borrow from the skills repo is one canonical capability guide with multiple discovery paths, not its entire product taxonomy.
-- Fable's approximately 71 user-facing candidates are provisional; six of the 12 internal classifications include distribution-intent uncertainty.
+- Fable's approximately 71 user-facing candidates are provisional; the inferred unshipped classifications include distribution-intent uncertainty.
 - The deployed site inspection is evidence of the current reader experience, not proof of parity with this checkout's exact revision.
 
 ## Risks

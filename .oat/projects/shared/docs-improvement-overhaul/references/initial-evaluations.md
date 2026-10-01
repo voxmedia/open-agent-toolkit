@@ -41,7 +41,7 @@ Root-checked source:
 - `packages/cli/src/commands/docs/nav/sync.ts:73` constructs `mkdocs.yml`, reads it at line 76, and writes it at line 83. This is a MkDocs operation, not Fumadocs sidebar generation. Calling it here is not correctly described as a no-op.
 - `apps/oat-docs/AGENTS.md` nevertheless instructs authors to maintain Contents as authoritative, run nav sync or a framework equivalent, and avoid independent navigation configuration. There is no implemented Contents-to-Fumadocs bridge to fulfill that implication.
 
-Fable additionally ran the installed Fumadocs tree builder in memory, reporting index first, files alphabetically, then folders alphabetically, with labels from frontmatter. Projects put Lifecycle ninth. This is an in-memory probe, not a full site build; its script/output was not delivered as a retained artifact.
+Fable's recon lane additionally ran the installed Fumadocs tree builder in memory, reporting index first, files alphabetically, then folders alphabetically, with labels from frontmatter. Projects put Lifecycle ninth. The [transcribed report](skill-inventory-matrix.md) retains method and source references, but not the executable probe or raw output. This is an in-memory probe, not a full site build.
 
 Keep two sorts distinct: the agent manifest's documented directories-before-files order is not evidence for the sidebar's files-before-folders order. Cross-section Contents links are ignored by sidebar construction, not deleted from Markdown or necessarily broken in rendered page bodies.
 
