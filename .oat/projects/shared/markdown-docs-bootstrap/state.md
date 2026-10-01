@@ -85,7 +85,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-30T18:58:24.831Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-01T05:38:35Z'
+oat_project_state_updated: '2026-10-01T06:14:19Z'
 oat_generated: false
 ---
 
@@ -97,7 +97,7 @@ oat_generated: false
 
 ## Current Phase
 
-Planning - Executable draft contains four sequential phases and nine tasks; High dispatch selected; additional phase gates disabled; both configured lifecycle gates retained; plan review received with two Medium findings; approved edits passed re-review; retained gate passed threshold; new artifact findings await approval
+Planning - Executable draft contains four sequential phases and nine tasks; High dispatch selected; additional phase gates disabled; both configured lifecycle gates retained; plan review received with two Medium findings; approved edits passed re-review; retained gate passed threshold; approved gate edits applied; re-review pending
 
 ## Artifacts
 
@@ -125,11 +125,11 @@ See `reviews/design-consensus-handoff.md` for the completed review, canonical ar
 
 ## Blockers
 
-None. Gate M1/L1 require user disposition before plan readiness. The gate passed its blocking threshold.
+None. None. User-approved Gate M1/L1 edits are applied; re-review remains required.
 
 ## Next Milestone
 
-Approve Gate M1/L1 artifact edits, re-review, and complete readiness; implementation has not started
+Re-review the revised plan and complete quick-start readiness; implementation has not started
 
 ## Review Setup
 

@@ -60,8 +60,8 @@ All phases run sequentially (`oat_plan_parallel_groups: []`). p02 consumes p01's
 
 1. Inventory root consumers. Add regressions for literal Markdown root `docs`, custom roots, nested `docs/docs`, and existing framework roots. The full configured Markdown tree must remain excluded from pointer writes, including existing local AGENTS files.
 2. Resolve explicit Markdown to the configured root itself; retain permissive tooling parsing and generic/framework fallbacks.
-3. Refuse default Markdown manifest output with an explicit-output instruction. Validate explicit output against the full canonical configured content root and configured authored index in addition to existing selected-source safeguards. Refuse narrowed-source overwrite and symlink aliases; allow safe external output without changing the authored config index. Preserve Fumadocs-only config transition.
-4. Preserve reproduction-grade negative and accepted controls: pre-change narrowed source can target the authored index; post-change rejects the same invocation for the intended output guard; valid external output succeeds. Use meaningful existing index bytes and valid config. Record exact fixtures/commands and categorical outcomes in `implementation.md`.
+3. Refuse default Markdown manifest output with an explicit-output instruction. For `documentation.tooling: markdown` only, validate explicit output against the full canonical configured content root and configured authored index in addition to existing selected-source safeguards. Existing selected-source safeguards still apply to all modes. Refuse narrowed-source overwrite and symlink aliases; allow safe external output without changing the authored config index. Preserve Fumadocs-only config transition.
+4. Preserve reproduction-grade negative and accepted controls: pre-change narrowed source can target the authored index; post-change rejects the same invocation for the intended output guard; valid external output succeeds. Add a Fumadocs accepted control: output to its configured `documentation.index` succeeds and preserves the existing generated-manifest config transition. Use meaningful existing index bytes and valid config. Record exact fixtures/commands and categorical outcomes in `implementation.md`.
 
 **Verify:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/oat-config.test.ts src/commands/docs/index-generate/index.test.ts src/commands/instructions/instructions.utils.test.ts src/commands/instructions/instructions.integration.test.ts src/commands/instructions/sync/sync.test.ts src/commands/instructions/validate/validate.test.ts`. Assert literal paths, preserved index bytes, and no pointer writes throughout the content tree. Run `pnpm --filter @open-agent-toolkit/cli type-check`.
 
@@ -81,7 +81,7 @@ All phases run sequentially (`oat_plan_parallel_groups: []`). p02 consumes p01's
 
 ### Task p02-t01: Add fresh Markdown scaffold and CLI mode
 
-**Files:** Modify `packages/cli/src/commands/docs/init/resolve-options.ts`, `scaffold.ts`, `index.ts`, `docs-commands.ts`, their existing tests, and `packages/cli/src/commands/docs/index.ts` help wiring as needed. Create `.oat/templates/docs-markdown/index.md` and `contributing.md`. Modify `packages/cli/scripts/bundle-inputs.mjs` to register `docs-markdown` in `templateDirectories`; retain the existing bundle-assets copying mechanism.
+**Files:** Modify `packages/cli/src/commands/docs/init/resolve-options.ts`, `scaffold.ts`, `index.ts`, `docs-commands.ts`, their existing tests, and `packages/cli/src/commands/docs/index.ts` help wiring as needed. Create `.oat/templates/docs-markdown/index.md` and `contributing.md`. Modify `packages/cli/scripts/bundle-inputs.mjs` to register `docs-markdown` in `templateDirectories`; retain the existing bundle-assets copying mechanism. Modify `packages/cli/src/commands/tools/shared/pack-manifest.ts` to add `template('docs-markdown', 'directory')` to the docs pack. Extend `packages/cli/src/commands/tools/shared/pack-lifecycle.test.ts` to assert installation of both Markdown templates and use the existing bundle consistency check.
 
 **Steps:**
 
@@ -91,7 +91,7 @@ All phases run sequentially (`oat_plan_parallel_groups: []`). p02 consumes p01's
 4. Produce deterministic managed root Documentation guidance naming the literal root, Markdown tooling, authored index, and contributing path. Extend existing result reporting without site install/dev/build commands, package discovery/dependencies, root package/Turbo patches, or framework files.
 5. Preserve Fumadocs/MkDocs prompts, replacement behavior, and results, including explicitly authorized framework initialization over configured Markdown.
 
-**Verify:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/docs/init/resolve-options.test.ts src/commands/docs/init/scaffold.test.ts src/commands/docs/init/index.test.ts src/commands/docs/init/integration.test.ts src/commands/docs/init/docs-commands.test.ts src/commands/docs/init/root-package.test.ts src/commands/docs/init/mkdocs-compat.test.ts` and CLI type-check. Fresh default/custom roots produce literal config and meaningful pages/guidance; package files remain unchanged; unsafe/config conflicts fail before writes; framework controls retain existing behavior. Run `pnpm build`; verify `node packages/cli/scripts/bundle-inputs.mjs --list templateDirectories` includes `docs-markdown` and the built `packages/cli/assets/templates/docs-markdown/` contains both `index.md` and `contributing.md`.
+**Verify:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/docs/init/resolve-options.test.ts src/commands/docs/init/scaffold.test.ts src/commands/docs/init/index.test.ts src/commands/docs/init/integration.test.ts src/commands/docs/init/docs-commands.test.ts src/commands/docs/init/root-package.test.ts src/commands/docs/init/mkdocs-compat.test.ts src/commands/init/tools/shared/bundle-consistency.test.ts src/commands/tools/shared/pack-lifecycle.test.ts` and CLI type-check. Fresh default/custom roots produce literal config and meaningful pages/guidance; package files remain unchanged; unsafe/config conflicts fail before writes; framework controls retain existing behavior. Run `pnpm build`; verify `node packages/cli/scripts/bundle-inputs.mjs --list templateDirectories` includes `docs-markdown` and the built `packages/cli/assets/templates/docs-markdown/` contains both `index.md` and `contributing.md`.
 
 **Commit:** `feat(p02-t01): bootstrap plain markdown documentation`.
 
@@ -148,7 +148,7 @@ All phases run sequentially (`oat_plan_parallel_groups: []`). p02 consumes p01's
 
 **Files:** Modify versions in `packages/cli/package.json`, `packages/control-plane/package.json`, `packages/docs-config/package.json`, `packages/docs-theme/package.json`, and `packages/docs-transforms/package.json`; update `pnpm-lock.yaml` if the existing workflow requires it. Complete missing PR-scoped canonical skill bumps.
 
-**Steps:** Fetch `origin/main`, inspect lockstep versions, and choose one shared version strictly above that base using repository policy. Build and verify Markdown templates and changed skills/resources through the real bundled resolver with an isolated test home. Inspect existing release scripts rather than inventing another mechanism. Confirm no framework dependency additions or unrelated upgrades. This prepares release-valid assets and does not publish them.
+**Steps:** Fetch `origin/main`, inspect lockstep versions, and choose one shared version strictly above that base using repository policy. Build and verify Markdown templates and changed skills/resources through the real bundled resolver with an isolated test home. Install/update the docs pack in isolated user and project scopes and verify `docs-markdown/index.md` and `docs-markdown/contributing.md` are distributed by the real pack manifest. Inspect existing release scripts rather than inventing another mechanism. Confirm no framework dependency additions or unrelated upgrades. This prepares release-valid assets and does not publish them.
 
 **Verify:** `pnpm build`, `pnpm run check:skill-bumps`, `pnpm release:check-versions`, and `pnpm release:validate`; record actual exit codes and bundled-resolution evidence.
 
@@ -174,28 +174,28 @@ All phases run sequentially (`oat_plan_parallel_groups: []`). p02 consumes p01's
 
 Existing scaffold rows are preserved. Quick mode requires no spec; original design review and approved revisions are recorded in `reviews/design-consensus-handoff.md`. The pending design row does not claim re-review of the revised design. Plan review returned two Medium findings; user-approved edits passed re-review with no findings; the retained gate remains pending and readiness remains disabled.
 
-| Scope  | Type     | Status          | Date       | Artifact                                           | Reviewed Head                            | Invocation | Gate Target          |
-| ------ | -------- | --------------- | ---------- | -------------------------------------------------- | ---------------------------------------- | ---------- | -------------------- |
-| p01    | code     | pending         | -          | -                                                  | -                                        | -          | -                    |
-| p02    | code     | pending         | -          | -                                                  | -                                        | -          | -                    |
-| final  | code     | pending         | -          | -                                                  | -                                        | -          | -                    |
-| spec   | artifact | pending         | -          | -                                                  | -                                        | -          | -                    |
-| design | artifact | pending         | -          | -                                                  | -                                        | -          | -                    |
-| p03    | code     | pending         | -          | -                                                  | -                                        | -          | -                    |
-| p04    | code     | pending         | -          | -                                                  | -                                        | -          | -                    |
-| plan   | artifact | fixes_completed | 2026-10-01 | reviews/plan-auto-handoff.md                       | b3480f8824b175b34cdba2f76d7dcf66ee12a034 | auto       | -                    |
-| plan   | artifact | passed          | 2026-10-01 | reviews/plan-auto-rereview.md                      | 1ab8e49002716294f43b63831e13b0f9576f535b | auto       | -                    |
-| plan   | artifact | received        | 2026-10-01 | reviews/artifact-plan-review-2026-10-01T060016Z.md | -                                        | gate       | claude-opus-5-5-high |
+| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target          |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | -------------------- |
+| p01    | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
+| p02    | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
+| final  | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
+| spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                    |
+| design | artifact | pending         | -          | -                                                           | -                                        | -          | -                    |
+| p03    | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
+| p04    | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
+| plan   | artifact | fixes_completed | 2026-10-01 | reviews/plan-auto-handoff.md                                | b3480f8824b175b34cdba2f76d7dcf66ee12a034 | auto       | -                    |
+| plan   | artifact | passed          | 2026-10-01 | reviews/plan-auto-rereview.md                               | 1ab8e49002716294f43b63831e13b0f9576f535b | auto       | -                    |
+| plan   | artifact | fixes_completed | 2026-10-01 | reviews/archived/artifact-plan-review-2026-10-01T060016Z.md | -                                        | gate       | claude-opus-5-5-high |
 
 Record full reviewed heads and invocation provenance for actual reviews. Preserve all rows and unknown trailing cells. Mark `passed` only for a clean result; disposition residual findings before readiness.
 
 ### Plan Review Dispositions
 
-Automatic plan review: 0 Critical, 0 High, 2 Medium, 0 Low. User approved M1 (build before p03 smoke/CLI walkthrough) and M2 (explicit Markdown bundle inventory ownership and verification); both are resolved in the plan. See `reviews/plan-auto-handoff.md`. Re-review passed with no findings; retained quick-start gate passed its High threshold with one Medium and one Low finding; disposition is pending.
+Automatic plan review: 0 Critical, 0 High, 2 Medium, 0 Low. User approved M1 (build before p03 smoke/CLI walkthrough) and M2 (explicit Markdown bundle inventory ownership and verification); both are resolved in the plan. See `reviews/plan-auto-handoff.md`. Re-review passed with no findings; retained quick-start gate passed its High threshold with one Medium and one Low finding; approved artifact edits are applied and re-review is pending.
 
-### Gate Review Disposition Pending
+### Gate Review Dispositions
 
-Gate passed (0 Critical, 0 High, 1 Medium, 1 Low), receive-eligible and corroborated. Root recommends Gate M1 (docs tools pack registration and checks) and Gate L1 (Markdown-only authored-index guard plus Fumadocs accepted control). User approval pending; no edits applied. See `reviews/plan-gate-handoff.md`. This received artifact is not yet consumed or archived.
+Gate passed (0 Critical, 0 High, 1 Medium, 1 Low), receive-eligible and corroborated. User approved Gate M1 (docs tools pack registration and checks) and Gate L1 (Markdown-only authored-index guard plus Fumadocs accepted control); both are applied. Re-review pending. See `reviews/plan-gate-handoff.md`. The consumed artifact is archived; its findings await re-review before readiness.
 
 ## Implementation Complete
 
