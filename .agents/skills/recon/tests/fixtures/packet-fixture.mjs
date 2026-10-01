@@ -494,9 +494,10 @@ export async function createPacketFixture({
     reviewArtifacts.push(priorRef);
     const briefManifest = {
       run: { id: 'run-render' },
+      // Mirrors the manifest request below: briefs bind to its projection.
       request: {
         includedScope: ['source-1'],
-        excludedScope: [],
+        excludedScope: ['unrelated sources'],
         questions: ['What evidence exists?'],
       },
       sources: [source],

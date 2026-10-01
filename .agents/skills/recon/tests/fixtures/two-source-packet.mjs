@@ -81,6 +81,9 @@ function fileEvidence(id, sourceId, path, line, excerpt, provenance) {
  * without a disposition. The reconciler's omission gaps are recorded in the
  * manifest as the controller records them, unless `recordOmissionGaps` is
  * false; the run status is `partial` whenever a material gap is recorded.
+ * Adversarial probes may also override a review's disposition
+ * (`dispositionOverrides`), forge the reconciled ledger before it is written
+ * (`editReconciled`), or edit the recorded omission gaps (`editOmissionGaps`).
  */
 export async function createTwoSourcePacket({
   semanticIssues = [structuredClone(twoSourceSemanticIssue)],
@@ -88,6 +91,9 @@ export async function createTwoSourcePacket({
   mutateBrief,
   omitDispositions = [],
   recordOmissionGaps = true,
+  dispositionOverrides = [],
+  editReconciled,
+  editOmissionGaps,
 } = {}) {
   const packet = await createPacketFixture({
     profile: 'standard',
@@ -261,7 +267,12 @@ export async function createTwoSourcePacket({
       )
       .map((claimId) => ({
         claimId,
-        disposition: dispositionFor(claimId),
+        disposition:
+          dispositionOverrides.find(
+            (override) =>
+              override.reviewKind === reviewKind &&
+              override.claimId === claimId,
+          )?.disposition ?? dispositionFor(claimId),
       })),
     newEvidence: [],
     evidenceAssociations: [],
@@ -308,6 +319,7 @@ export async function createTwoSourcePacket({
     runId: manifest.run.id,
     manifest,
   });
+  if (editReconciled) editReconciled({ ledger, reconciliation });
   await writeJson(join(packetRoot, 'raw/drafts/claims-v2.json'), ledger);
   await writeJson(
     join(packetRoot, 'reviews/reconciliation.json'),
@@ -326,7 +338,11 @@ export async function createTwoSourcePacket({
       coverageFindingIds: [twoSourceCoverageFinding.id],
     });
   }
-  if (recordOmissionGaps) manifest.gaps.push(...omissionGaps);
+  if (recordOmissionGaps) {
+    const recorded = structuredClone(omissionGaps);
+    if (editOmissionGaps) editOmissionGaps(recorded);
+    manifest.gaps.push(...recorded);
+  }
   manifest.run.status = manifest.gaps.some((gap) => gap.material === true)
     ? 'partial'
     : 'complete';

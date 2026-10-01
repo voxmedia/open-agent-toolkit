@@ -2048,9 +2048,43 @@ function validateReviewBriefSource(source, index, errors) {
   }
 }
 
+const reviewBriefIdPattern = /^[a-z0-9]+(?:[-_.][a-z0-9]+)*$/;
+const reviewBriefTimestampPattern =
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/;
+
 function validateReviewBriefArtifact(value, errors) {
   for (const key of ['id', 'runId', 'mode', 'createdAt']) {
     requiredString(value, key, errors);
+  }
+  // A brief's identifier and timestamp are shown to a blind reviewer, so
+  // both are structurally fixed: a short lowercase slug and a UTC ISO-8601
+  // instant. Neither can carry free text.
+  if (
+    typeof value.id === 'string' &&
+    (value.id.length > 64 || !reviewBriefIdPattern.test(value.id))
+  ) {
+    errors.push(
+      issue(
+        'INVALID_REVIEW_BRIEF',
+        'Brief id must be a lowercase slug of at most 64 characters',
+        '$.id',
+      ),
+    );
+  }
+  if (
+    typeof value.createdAt === 'string' &&
+    !(
+      reviewBriefTimestampPattern.test(value.createdAt) &&
+      Number.isFinite(Date.parse(value.createdAt))
+    )
+  ) {
+    errors.push(
+      issue(
+        'INVALID_REVIEW_BRIEF',
+        'Brief createdAt must be a UTC ISO-8601 timestamp',
+        '$.createdAt',
+      ),
+    );
   }
   requiredArray(value, 'excludedInputs', errors);
   if (value.mode === 'verify') {

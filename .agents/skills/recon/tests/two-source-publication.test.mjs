@@ -250,3 +250,103 @@ for (const [label, options] of [
     );
   });
 }
+
+function relabel(claimId, status) {
+  return ({ ledger, reconciliation }) => {
+    ledger.claims.find((claim) => claim.id === claimId).status = status;
+    for (const transitions of [
+      ledger.transitions,
+      reconciliation.transitions,
+    ]) {
+      transitions.find((item) => item.claimId === claimId).to = status;
+    }
+  };
+}
+
+for (const status of ['contested', 'unsupported']) {
+  test(`an omitted claim relabeled ${status} without a review characterizing it still needs its gap`, async () => {
+    const packet = await createTwoSourcePacket({
+      withCoverageFinding: false,
+      omitDispositions: omittedEpsilon,
+      recordOmissionGaps: false,
+      editReconciled: relabel(twoSourceClaimIds.coverageGap, status),
+    });
+    tempRoots.push(packet.tempRoot);
+    assert.equal(
+      packet.ledger.claims.find(
+        (claim) => claim.id === twoSourceClaimIds.coverageGap,
+      ).status,
+      status,
+    );
+    assert.equal(packet.manifest.run.status, 'complete');
+    const validation = await validatePacket(packet.packetRoot);
+    assert.equal(validation.valid, false);
+    assert.deepEqual(
+      [...new Set(validation.errors.map((error) => error.code))],
+      ['MISSING_REVIEW_OMISSION_GAP'],
+    );
+  });
+}
+
+test('a claim the adversarial review challenged needs no omission gap', async () => {
+  const packet = await createTwoSourcePacket({
+    withCoverageFinding: false,
+    omitDispositions: omittedEpsilon,
+    dispositionOverrides: [
+      {
+        reviewKind: 'adversarial',
+        claimId: twoSourceClaimIds.coverageGap,
+        disposition: 'challenged',
+      },
+    ],
+  });
+  tempRoots.push(packet.tempRoot);
+  assert.deepEqual(packet.omissionGaps, []);
+  const validation = await validatePacket(packet.packetRoot);
+  assert.equal(validation.valid, true, JSON.stringify(validation, null, 2));
+  assert.equal(validation.status, 'complete');
+});
+
+// Each clause of the gap match is pinned: a recorded gap that differs in any
+// one of them does not discharge the omission.
+const gapMismatches = [
+  ['code', (gap) => Object.assign(gap, { code: 'INCOMPLETE_REVIEW' })],
+  ['material flag', (gap) => Object.assign(gap, { material: false })],
+  ['wave', (gap) => Object.assign(gap, { waveId: 'wave-adversarial' })],
+  ['lane', (gap) => Object.assign(gap, { laneId: 'lane-adversarial' })],
+  [
+    'claim IDs',
+    (gap) => Object.assign(gap, { claimIds: [twoSourceClaimIds.firstSource] }),
+  ],
+];
+
+for (const [label, edit] of gapMismatches) {
+  test(`an omission gap with the wrong ${label} does not discharge the omission`, async () => {
+    const packet = await createTwoSourcePacket({
+      withCoverageFinding: false,
+      omitDispositions: omittedEpsilon,
+      editOmissionGaps: (gaps) => gaps.forEach(edit),
+    });
+    tempRoots.push(packet.tempRoot);
+    const validation = await validatePacket(packet.packetRoot);
+    assert.equal(validation.valid, false);
+    assert.ok(
+      validation.errors.some(
+        (error) => error.code === 'MISSING_REVIEW_OMISSION_GAP',
+      ),
+      JSON.stringify(validation.errors, null, 2),
+    );
+  });
+}
+
+test('an omission gap naming a superset of claims discharges the omission', async () => {
+  const packet = await createTwoSourcePacket({
+    withCoverageFinding: false,
+    omitDispositions: omittedEpsilon,
+    editOmissionGaps: (gaps) =>
+      gaps.forEach((gap) => gap.claimIds.push(twoSourceClaimIds.firstSource)),
+  });
+  tempRoots.push(packet.tempRoot);
+  const validation = await validatePacket(packet.packetRoot);
+  assert.equal(validation.valid, true, JSON.stringify(validation, null, 2));
+});

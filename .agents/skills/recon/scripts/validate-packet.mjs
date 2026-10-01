@@ -16,6 +16,7 @@ import {
 import {
   reviewBriefBindsClaim,
   reviewBriefEntries,
+  reviewBriefRequestBinds,
 } from './lib/review-binding.mjs';
 import {
   gapCoversReviewOmission,
@@ -1378,6 +1379,15 @@ function validateReviewBindings(
     // its own. An injected entry (a note to a blind reviewer, an invented
     // claim, or a forged source) fails closed. A real ledger claim the reviewer
     // left without a disposition still binds; it is handled as an omission.
+    if (!reviewBriefRequestBinds(brief, manifest)) {
+      errors.push(
+        issue(
+          'REVIEW_BRIEF_MISMATCH',
+          `Review ${result.id} brief exclusions, scope, or questions differ from the approved request projection`,
+          result.id,
+        ),
+      );
+    }
     const briefEntries = reviewBriefEntries(brief, result.reviewKind);
     const briefClaimIds = briefEntries.map((entry) => entry?.id);
     if (new Set(briefClaimIds).size !== briefClaimIds.length) {

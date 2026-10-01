@@ -8,7 +8,10 @@ import { isDirectExecution } from './lib/cli-entry.mjs';
 import { issue, isObject, validateArtifactShape } from './lib/contracts.mjs';
 import {
   projectEvidenceLink,
+  projectReviewQuestions,
+  projectReviewScope,
   projectReviewSources,
+  reviewBriefExcludedInputs,
 } from './lib/review-binding.mjs';
 import { assertSafeOutputPath } from './lib/safe-path.mjs';
 
@@ -82,13 +85,7 @@ function verificationBrief(input) {
     runId: input.manifest.run.id,
     mode: 'verify',
     createdAt: input.createdAt,
-    excludedInputs: [
-      'worker_intermediates',
-      'prior_reasoning',
-      'consumer_summary',
-      'artifact_lineage',
-      'earlier_reviews',
-    ],
+    excludedInputs: [...reviewBriefExcludedInputs.verify],
     claims: projectedClaims,
     sources: projectReviewSources(input.manifest, sourceIds),
   };
@@ -102,19 +99,9 @@ function adversarialBrief(input) {
     runId: input.manifest.run.id,
     mode: 'adversary',
     createdAt: input.createdAt,
-    excludedInputs: [
-      'worker_intermediates',
-      'prior_reasoning',
-      'consumer_summary',
-      'artifact_lineage',
-      'earlier_reviews',
-      'verification_conclusions',
-    ],
-    scope: {
-      included: structuredClone(input.manifest.request.includedScope ?? []),
-      excluded: structuredClone(input.manifest.request.excludedScope ?? []),
-    },
-    questions: structuredClone(input.manifest.request.questions ?? []),
+    excludedInputs: [...reviewBriefExcludedInputs.adversary],
+    scope: projectReviewScope(input.manifest),
+    questions: projectReviewQuestions(input.manifest),
     provisionalStatements: selectedClaims(input.ledger, input.claimIds).map(
       (claim) => ({ id: claim.id, statement: claim.statement }),
     ),
@@ -129,20 +116,9 @@ function coverageBrief(input) {
     runId: input.manifest.run.id,
     mode: 'coverage',
     createdAt: input.createdAt,
-    excludedInputs: [
-      'worker_intermediates',
-      'prior_reasoning',
-      'consumer_summary',
-      'artifact_lineage',
-      'earlier_reviews',
-      'verification_conclusions',
-      'adversarial_conclusions',
-    ],
-    scope: {
-      included: structuredClone(input.manifest.request.includedScope ?? []),
-      excluded: structuredClone(input.manifest.request.excludedScope ?? []),
-    },
-    questions: structuredClone(input.manifest.request.questions ?? []),
+    excludedInputs: [...reviewBriefExcludedInputs.coverage],
+    scope: projectReviewScope(input.manifest),
+    questions: projectReviewQuestions(input.manifest),
     claims: selectedClaims(input.ledger, input.claimIds).map((claim) => ({
       id: claim.id,
       statement: claim.statement,

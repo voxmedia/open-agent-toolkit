@@ -37,6 +37,72 @@ export const commonReviewSourceFields = Object.freeze([
   'validationState',
 ]);
 
+// The fixed exclusion declaration each brief mode carries. It is structural,
+// not caller-supplied, so a brief cannot use it as a free-text channel.
+export const reviewBriefExcludedInputs = Object.freeze({
+  verify: Object.freeze([
+    'worker_intermediates',
+    'prior_reasoning',
+    'consumer_summary',
+    'artifact_lineage',
+    'earlier_reviews',
+  ]),
+  adversary: Object.freeze([
+    'worker_intermediates',
+    'prior_reasoning',
+    'consumer_summary',
+    'artifact_lineage',
+    'earlier_reviews',
+    'verification_conclusions',
+  ]),
+  coverage: Object.freeze([
+    'worker_intermediates',
+    'prior_reasoning',
+    'consumer_summary',
+    'artifact_lineage',
+    'earlier_reviews',
+    'verification_conclusions',
+    'adversarial_conclusions',
+  ]),
+});
+
+// Adversarial and coverage briefs carry the approved request's scope and
+// questions, projected here for both the generator and the validator.
+export function projectReviewScope(manifest) {
+  return {
+    included: structuredClone(manifest?.request?.includedScope ?? []),
+    excluded: structuredClone(manifest?.request?.excludedScope ?? []),
+  };
+}
+
+export function projectReviewQuestions(manifest) {
+  return structuredClone(manifest?.request?.questions ?? []);
+}
+
+// Every non-claim field a brief shows a reviewer is bound: `excludedInputs`
+// to its mode's fixed declaration, and adversarial and coverage `scope` and
+// `questions` to the manifest request. Claim entries and verification sources
+// are bound per claim by `reviewBriefBindsClaim`.
+export function reviewBriefRequestBinds(brief, manifest) {
+  const excluded = reviewBriefExcludedInputs[brief?.mode];
+  if (
+    !excluded ||
+    hashCanonicalJson(brief.excludedInputs ?? null) !==
+      hashCanonicalJson(excluded)
+  ) {
+    return false;
+  }
+  if (brief.mode === 'verify') {
+    return !Object.hasOwn(brief, 'scope') && !Object.hasOwn(brief, 'questions');
+  }
+  return (
+    hashCanonicalJson(brief.scope ?? null) ===
+      hashCanonicalJson(projectReviewScope(manifest)) &&
+    hashCanonicalJson(brief.questions ?? null) ===
+      hashCanonicalJson(projectReviewQuestions(manifest))
+  );
+}
+
 const verificationReviewKinds = new Set(['semantic', 'redundant-verification']);
 const adversaryReviewKinds = new Set([
   'adversarial',

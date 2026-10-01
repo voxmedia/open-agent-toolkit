@@ -4,9 +4,11 @@
 // `verified`. It must not hide: the packet carries a material gap naming the
 // claim and the review's exact approved wave and lane, which forces `partial`.
 //
-// Contested and unsupported claims are already characterized under
-// "Contradictions and Qualifications"; a verified claim cannot lack a required
-// disposition (publication rejects it). Every other claim is subject.
+// The only exemption is a claim an incorporated review itself characterized:
+// any review's `rejected` disposition or an adversarial `challenged` one. That
+// mirrors the reconciler's precedence (rejected, then challenged, before
+// incomplete) and is read from the reviews, never from the claim's published
+// status, which the controller writes.
 
 export const REVIEW_OMISSION_GAP_CODE = 'REVIEW_DISPOSITION_OMITTED';
 
@@ -16,7 +18,17 @@ export const requiredReviewKinds = Object.freeze([
   'coverage',
 ]);
 
-const characterizedStatuses = new Set(['verified', 'contested', 'unsupported']);
+export function reviewsCharacterizeClaim(claimId, reviews) {
+  return reviews.some((review) =>
+    (review?.dispositions ?? []).some(
+      (item) =>
+        item?.claimId === claimId &&
+        (item.disposition === 'rejected' ||
+          (review.reviewKind === 'adversarial' &&
+            item.disposition === 'challenged')),
+    ),
+  );
+}
 
 function laneWaves(manifest) {
   const waves = new Map();
@@ -45,7 +57,7 @@ export function reviewOmissionGaps({ manifest, ledger, reviews }) {
   const waves = laneWaves(manifest);
   const gaps = [];
   for (const claim of Array.isArray(ledger?.claims) ? ledger.claims : []) {
-    if (characterizedStatuses.has(claim.status)) continue;
+    if (reviewsCharacterizeClaim(claim.id, reviews)) continue;
     for (const review of omittedReviews(claim.id, reviews)) {
       const waveId = waves.get(review.reviewerLane);
       gaps.push({

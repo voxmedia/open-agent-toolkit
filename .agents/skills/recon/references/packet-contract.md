@@ -390,8 +390,14 @@ In every brief mode, each claim entry (verification and coverage `claims`,
 adversarial `provisionalStatements`) is an exact projection of a distinct
 ledger claim, with no repeated claim ID, and each review disposition names a
 brief entry. A verification brief's sources are the projected union of its
-claims' sources. A brief therefore cannot carry an injected claim, note, or
-source (`REVIEW_BRIEF_MISMATCH`).
+claims' sources. Every other field a reviewer sees is bound or fixed:
+adversarial and coverage `scope` and `questions` equal the manifest request's
+`includedScope`, `excludedScope`, and `questions`; `excludedInputs` equals the
+mode's fixed declaration; `runId` and `mode` match the run and review kind; the
+brief `id` is a lowercase slug of at most 64 characters and `createdAt` a UTC
+ISO-8601 instant; `kind`, `schemaVersion`, and the closed field set are fixed
+by the schema. A brief therefore cannot carry an injected claim, note, or
+source (`REVIEW_BRIEF_MISMATCH`, or a schema error for `id` and `createdAt`).
 
 A reviewer may leave a briefed claim without a disposition, and an accepted
 review is never rerun. Reconciliation keeps such a claim below `verified`, and
@@ -400,10 +406,12 @@ omitting required review (semantic, adversarial, coverage) naming the claim and
 that review's exact `waveId` and `laneId`. The same rule applies to a claim no
 required review disposed of. The controller records those gaps in
 `manifest.gaps`, so the run publishes as `partial`; publication rejects a
-packet that lacks one (`MISSING_REVIEW_OMISSION_GAP`). Contested and
-unsupported claims are exempt because they are already characterized under
-Contradictions and Qualifications. `packet.md` lists every such claim under
-Review Downgrades as not reviewed.
+packet that lacks one (`MISSING_REVIEW_OMISSION_GAP`). The only exemption is
+a claim an incorporated review itself characterized, through any review's
+`rejected` disposition or an adversarial `challenged` one; it is read from the
+reviews, never from the claim's published status. `packet.md` lists every
+claim a required review left without a disposition under Review Downgrades as
+not reviewed.
 All reject dossier paths, compiler reasoning, synthesis prose, provenance
 references, and prior review IDs.
 
