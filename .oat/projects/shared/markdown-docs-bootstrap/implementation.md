@@ -2409,3 +2409,67 @@ Dispatch: scope=summary action=implementation role=implementer producer=unknown 
 #### Pre-approval summary completed
 
 Accepted summary child `markdown-closeout-summary-pinned-20261001` completed in `15aad4f4f0cfa4f214e62ac48dba5cd5d3b3ab10`: 111-line written summary, five confirmed CLI-promoted decision records and CLI-generated index. Root read the complete summary and decisions, checked exact seven-path diff and actual exit-zero formatting/rollup receipts; state/plan/implementation/log remained unchanged, immutable sequence verified before success. Eleven structural log entries, zero judgments; rollup deduplicated and byte-idempotent. Broader backlog remains open, all five packages 0.3.11, no publication/merge claimed. Visual recap skipped (interactive); final HiLL pending.
+
+#### Pre-approval document dispatch
+
+Dispatch: scope=document action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium-2f7731ed84
+
+```json
+{
+  "request_id": "markdown-closeout-document-native-20261001",
+  "caller": "oat-project-implement",
+  "scope": "document",
+  "objective": "Execute current oat-project-document skill for immutable configured pre-approval sequence.",
+  "action": "closeout",
+  "role_name": "oat-project-document",
+  "role_class": "worker",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "codex-root-closeout-document",
+    "source": "current-tool-schema",
+    "observed_at": "2026-10-01T16:53:35.726156+00:00"
+  },
+  "authority": "Only named closeout step owned outputs and commits; preserve authoritative sequence snapshot.",
+  "role_selector": "oat-phase-implementer-gpt-6-1-sol-medium-2f7731ed84",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact",
+  "effort_selector": "medium",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-09-24",
+  "guidance_verified_at": "2026-09-24",
+  "guidance_status": "review-required",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/medium", "gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 3600,
+  "retry_limit": 2,
+  "payload": {
+    "agent_type": "oat-phase-implementer-gpt-6-1-sol-medium-2f7731ed84",
+    "fork_turns": "none",
+    "dispatch_mode": "background"
+  },
+  "launch_status": "planned",
+  "child_outcome": null,
+  "configured_invocation_evidence": [
+    "project-state:high",
+    "current dispatch resolver model/effort tuple: gpt-6.1-sol/medium",
+    "tool-schema:worker exact explicit model and reasoning_effort"
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [
+    "Native model-pinned worker first; named current closeout skill owns action and output boundary. Runtime identity not reported."
+  ],
+  "continuation_events": [],
+  "task_class": "default-implementation",
+  "model_class_floor": "default-implementation",
+  "classification_source": "caller",
+  "classification_reason": "Bounded closeout artifact synthesis and reconciliation using committed project evidence.",
+  "floor_satisfaction": "satisfied"
+}
+```
