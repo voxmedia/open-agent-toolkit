@@ -1138,7 +1138,7 @@ Accepted exact-target canonical-role route /root/markdown_p03_pinned; awaiting r
     "reasoning_effort": "medium"
   },
   "launch_status": "accepted",
-  "child_outcome": null,
+  "child_outcome": "DONE",
   "configured_invocation_evidence": [
     "project-state:high",
     "user-config:gpt-6.1-sol/medium",
@@ -1188,3 +1188,74 @@ Walkthrough proof uses the executable p03 controls: fresh authored structure pas
 #### p03 docs task acceptance
 
 Root verified clean append-only 13-file task commit: docs-tooling/{add-docs-to-a-repo,commands,index,workflows}.md; cli-utilities/{configuration,tool-packs}.md; provider-sync/{commands,instruction-sync}.md; reference/{cli-reference,docs-index-contract,file-locations,oat-directory-structure}.md; generated apps/oat-docs/index.md. Explicit in-plan docs task authorizes these source-backed changes; no new approval required. Actual documented Fumadocs regeneration is the framework-equivalent nav step, not MkDocs nav sync. CLI examples and link checker retained in reviews/p03-walkthrough-controls.md. Root deliberate-testing review retains public behavior controls with independent URI/filesystem oracles; no own-module mock, no new prose-mirroring automated tests.
+
+#### p03 review dispatch
+
+Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high-3da8a37eed
+
+```json
+{
+  "request_id": "markdown-p03-review-native-20261001",
+  "caller": "oat-project-implement",
+  "scope": "p03",
+  "objective": "Independent review of Bootstrap/consumer authored-index ownership, preservation handoffs and source-backed docs against approved design.",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "reviewer",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "codex-root-20261001",
+    "source": "tool-schema",
+    "observed_at": "2026-10-01"
+  },
+  "authority": "read-only code and one review artifact",
+  "role_selector": "oat-reviewer-gpt-6-1-sol-high-3da8a37eed",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-09-24",
+  "guidance_verified_at": "2026-09-24",
+  "guidance_status": "review-required",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/medium", "gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 3600,
+  "retry_limit": 2,
+  "payload": {
+    "agent_type": "oat-reviewer-gpt-6-1-sol-high-3da8a37eed",
+    "fork_turns": "none",
+    "scope_reference": "p03:255bcd04bfa8487a622e9201073f27214d187a8f..HEAD",
+    "dispatch_mode": "background"
+  },
+  "launch_status": "planned",
+  "child_outcome": null,
+  "configured_invocation_evidence": [
+    "project-state:high",
+    "user-config:gpt-6.1-sol/high",
+    "tool-schema:gpt-6.1-sol low-through-ultra",
+    "canonical-role:sha256:eb1bd78d0a5a48ed5d1867e313e19a07859a86aedec14d759beda8f97d26ce55"
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [
+    "Model guidance is dated; current configured target and live model selector control this invocation.",
+    "No independent service-tier control selected."
+  ],
+  "continuation_events": [],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Independent review of Bootstrap/consumer authored-index ownership, preservation handoffs and source-backed docs against approved design.",
+  "floor_satisfaction": "satisfied"
+}
+```
+
+#### p03 complete phase report accepted before review
+
+Root validated three append-only task commits and separate tracking commits, full phase base 255bcd04bfa8487a622e9201073f27214d187a8f through 4d26226ec9a520badeff7d43bea05425a52751d6, exact declared relevant skill/docs ownership, clean tree and passing task/phase checks. Recovery 0/10, pending null, no nested dispatch or deviations. Current task ledger committed before review; phase remains in_progress pending independent acceptance.
