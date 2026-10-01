@@ -194,6 +194,8 @@ Existing scaffold rows and historical review events are preserved. Quick mode re
 
 Record full reviewed heads and invocation provenance for actual reviews. Preserve all rows and unknown trailing cells. Mark `passed` only for a clean result; disposition residual findings before readiness.
 
+| p02 | code | received | 2026-10-01 | reviews/p02-review-2026-10-01T125830Z.md | 95250d626e6fb7bf4f382be4d4e10eae18e330c0 | auto | - |
+
 ### Plan Review Dispositions
 
 - Original automatic review M1/M2: user approved and resolved; first automatic re-review passed.
