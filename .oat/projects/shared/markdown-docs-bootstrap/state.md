@@ -85,19 +85,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-30T18:58:24.831Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-01T15:43:24Z'
+oat_project_state_updated: '2026-10-01T15:55:45Z'
 oat_generated: false
 ---
 
 # Project State: markdown-docs-bootstrap
 
-**Status:** Tasks complete; final re-review pending
+**Status:** Tasks and final review complete; exit gate pending
 **Started:** 2026-09-30
 **Last Updated:** 2026-10-01
 
 ## Current Phase
 
-All eleven tasks complete. Final M1 metadata normalization committed and full verification passed; original findings/counts retained. Independent final re-review, retained exit gate and configured pre-approval steps precede HiLL.
+All eleven tasks and final review complete. Metadata M1 independently resolved; original counts retained. Retained exit gate and configured pre-approval sequence precede final HiLL.
 
 ## Artifacts
 
@@ -105,7 +105,7 @@ All eleven tasks complete. Final M1 metadata normalization committed and full ve
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; approved dispositions incorporated)
 - **Plan:** `plan.md` (complete; ready for oat-project-implement)
-- **Implementation:** `implementation.md` (11/11 tasks completed; final re-review pending)
+- **Implementation:** `implementation.md` (11/11 tasks completed; final review passed)
 
 ## Progress
 
@@ -132,4 +132,4 @@ None
 
 ## Next Milestone
 
-Complete independent final re-review, retained implementation exit gate and configured closeout steps before HiLL.
+Run the retained implementation exit gate, then configured pre-approval closeout steps and final HiLL.

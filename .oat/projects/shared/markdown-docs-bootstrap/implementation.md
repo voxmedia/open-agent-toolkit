@@ -9,16 +9,16 @@ oat_generated: false
 
 # Implementation: markdown-docs-bootstrap
 
-All eleven tasks are complete, including final M1 metadata normalization. Required verification passed on the corrected source. Original phase reviews remain preserved; p04 final-fix acceptance and final re-review are pending, followed by the retained exit gate and configured closeout/HiLL.
+All eleven tasks are complete, including final M1 metadata normalization. Required verification passed on the corrected source. All phase and final-review dispositions are settled. Final metadata re-review passed without findings; retained exit gate and configured closeout precede HiLL.
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p01   | complete    | 2     | 2/2       |
-| p02   | complete    | 3     | 3/3       |
-| p03   | complete    | 3     | 3/3       |
-| p04   | in_progress | 3     | 3/3       |
+| Phase | Status   | Tasks | Completed |
+| ----- | -------- | ----- | --------- |
+| p01   | complete | 2     | 2/2       |
+| p02   | complete | 3     | 3/3       |
+| p03   | complete | 3     | 3/3       |
+| p04   | complete | 3     | 3/3       |
 
 **Total:** 11/11 tasks completed
 
@@ -92,7 +92,7 @@ All eleven tasks are complete, including final M1 metadata normalization. Requir
 
 ## Phase 4: Integration, bundled release, and acceptance
 
-**Status:** in_progress
+**Status:** complete
 
 ### Task p04-t01: Apply release versions and verify bundles
 
@@ -131,9 +131,9 @@ Markdown authored indexes are protected from manifest generation throughout the 
 
 Key owners are CLI docs init/markdown planning, shared root resolution and managed-guidance preview, index generation, bundle inputs/docs-pack manifest, two baseline templates, five canonical lifecycle/docs skills and twelve source documentation pages. Five public packages plus generated CLI version inventory are lockstep 0.3.11, above fresh main 0.3.10.
 
-All eleven tasks complete, including final M1 meaningful metadata defaults; independent final re-review pending. Current corrected-source verification: all eight CI gates passed in order; changed CLI suite actually executed 7,944 tests, plus smoke163/skills660/scripts1, and docs compiled/generated73pages. Focused196tests/CLItypes/lint/exactformat passed. Earlier root lint/format and isolated-home forced ten-task/8,135-test run remain unchanged-consumer evidence, with cache replays distinguished. Bundle parity46, user/project install/update,24 integrated CLI controls and six retained probes passed; independent reviews reproduced pre-fix overwrite/broken navigation and restored negative/accepted controls. Original failures and cache replays remain distinguished in durable receipts.
+All eleven tasks and review dispositions are complete. Final full review plus narrowed M1 re-review passed; no unresolved findings or deferred Medium/Low debt. Current corrected-source verification: all eight CI gates passed in order; changed CLI suite actually executed 7,944 tests, plus smoke163/skills660/scripts1, and docs compiled/generated73pages. Focused196tests/CLItypes/lint/exactformat passed. Earlier root lint/format and isolated-home forced ten-task/8,135-test run remain unchanged-consumer evidence, with cache replays distinguished. Bundle parity46, user/project install/update,24 integrated CLI controls and six retained probes passed; independent reviews reproduced pre-fix overwrite/broken navigation and restored negative/accepted controls. Original failures and cache replays remain distinguished in durable receipts.
 
-Design deltas: no production scope deviation. Final M1 added defaulting of blank Markdown title/description before planning/writes, preserving valid supplied bytes and frameworks. The p02 review added bounded filename-encoding correction; p04 acceptance repaired two stale help snapshots and two canonical skill-version literals under its planned acceptance-defect clause. Source backlog remains open for the broader approvals/version-drift work. Final review, retained implementation exit gate and configured pre-approval closeout work remain pending; no release has occurred.
+Design deltas: no production scope deviation. Final M1 added defaulting of blank Markdown title/description before planning/writes, preserving valid supplied bytes and frameworks. The p02 review added bounded filename-encoding correction; p04 acceptance repaired two stale help snapshots and two canonical skill-version literals under its planned acceptance-defect clause. Source backlog remains open for the broader approvals/version-drift work. Final review passed. Retained implementation exit gate and configured pre-approval closeout work remain pending; no release has occurred.
 
 ## Orchestration Runs
 
@@ -1995,7 +1995,7 @@ Accepted exact-target canonical-role route /root/markdown_final_r2_pinned; await
     "reasoning_effort": "high"
   },
   "launch_status": "accepted",
-  "child_outcome": null,
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     "project-state:high",
     "user-config:gpt-6.1-sol/high",
@@ -2027,3 +2027,7 @@ Accepted exact-target canonical-role route /root/markdown_final_r2_pinned; await
 #### Final re-review scope resolution
 
 Re-review scope: range=f7b7acb6f041d9b016bc67af4196c40a0f689e6d..697f529e8641ade24140fd7a9b88483799aa204a; classification=substantive; reason=narrowed from guarded prior reviewed head. Auto-narrow preference true; same final lifecycle lineage artifact/event agree, full prior head exists and ancestor guard passed. Scope preserves prior full final coverage as inherited and independently verifies metadata correction/current terminal evidence. Original p04 same-target fix DONE report validated, one normal review fix/recovery0/10.
+
+#### Final narrowed review received and passed
+
+Root consumed exactly one not-attempted signal before artifact validation, no orchestration section/recon-log entry. Read complete reviews/final-review-2026-10-01T155302Z.md; six-path range/full40head697f529e8641ade24140fd7a9b88483799aa204a and prior full final provenance agree. Root copied resolver-returned stamp byte-for-byte before raw artifact commit720da408b; no findings content changed. Counts and severity sections all0, current focused196/metadata7/old-fail1-fixed0 controls independently verified. Unchanged full-project coverage inherited explicitly from original final artifact. Deferred Medium0/Low0; M1 independently resolved, first event retains fixes_completed/raw1Medium; new final event passed. p04 initial phase review plus this accepted final correction settle all three task outcomes; all phases complete, one final-fix iteration/recovery0/10. Raw artifact committed then collision-free archive and bound event re-pointed preserving fullhead/invocation/unknowncolumns. Implementation remains in_progress until retained exit gate and configured pre-approval/HiLL finish.

@@ -18,7 +18,7 @@ oat_template: false
 
 # Implementation Plan: markdown-docs-bootstrap
 
-> Execute with `oat-project-implement` after quick-start review and readiness are complete. All eleven implementation tasks complete; final re-review/gate/closeout remain pending.
+> Execute with `oat-project-implement` after quick-start review and readiness are complete. All eleven implementation tasks complete; final review passed; retained exit gate/closeout remain pending.
 
 **Goal:** Offer plain Markdown docs bootstrap with `documentation.tooling: markdown`, authored index/context conventions, additive adoption, and nonmutating dry-run.
 
@@ -225,7 +225,7 @@ Record full reviewed heads and invocation provenance for actual reviews. Preserv
 | p03 | code | fixes_completed | 2026-10-01 | reviews/p03-review-2026-10-01T140627Z.md | 1e03f88dcb5ae9713ff36a4b3327ac02d1b4f953 | auto | - |
 | p04 | code | passed | 2026-10-01 | reviews/p04-review-2026-10-01T150035Z.md | f4d76f977968c4d4e00d86153e48a9781649a2d1 | auto | - |
 | final | code | fixes_completed | 2026-10-01 | reviews/archived/final-review-2026-10-01T151606Z.md | f7b7acb6f041d9b016bc67af4196c40a0f689e6d | auto | - |
-| final | code | received | 2026-10-01 | reviews/final-review-2026-10-01T155302Z.md | 697f529e8641ade24140fd7a9b88483799aa204a | auto | - |
+| final | code | passed | 2026-10-01 | reviews/archived/final-review-2026-10-01T155302Z.md | 697f529e8641ade24140fd7a9b88483799aa204a | auto | - |
 
 ### Plan Review Dispositions
 
@@ -238,7 +238,7 @@ Source pointers retained for the already-planned consumer inventory: index gener
 
 ## Implementation Complete
 
-Implementation in progress: 11/11 tasks complete; final re-review and acceptance pending. Planned scope: 4 sequential phases, 11 atomic tasks — p01 (2), p02 (3), p03 (3), p04 (3). Replace this with a completion summary only after implementation and required reviews/gates pass.
+Implementation in progress: 11/11 tasks complete; final review passed; retained exit gate and closeout pending. Planned scope: 4 sequential phases, 11 atomic tasks — p01 (2), p02 (3), p03 (3), p04 (3). Replace this with a completion summary only after implementation and required reviews/gates pass.
 
 ## References
 

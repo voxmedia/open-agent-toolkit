@@ -64,6 +64,10 @@ p03 verdict pass; 0C/0H/0M/2L; both Low tracking/evidence findings fixed in root
 
 p04 passed: two task commits, zero independent review findings, all dispositions settled, no phase gate selected; fix iterations 0, recovery 0/10. Continue final review and retained exit gate before final HiLL.
 
+### 2026-10-01 · structural · oat-project-implement · p04
+
+Final metadata fix accepted by independent narrowed final review: zero findings, prior full coverage inherited, all eleven tasks/dispositions settled; final fix iteration1, recovery0/10. Retained exit gate and configured closeout before HiLL.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
