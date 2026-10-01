@@ -352,9 +352,14 @@ unknown fields and object-valued issue entries are invalid.
 Reconciliation results replace the brief reference with prior-ledger/revision,
 additions/removals, exact transitions, and coverage-disposition bindings.
 Coverage findings are closed records bound to affected claims and exact
-manifest gaps. Accepted
-material gaps require a legal downgrade for every affected claim; a resolved
-finding instead names exact typed evidence. Non-material coverage gaps
+manifest gaps. One coverage rule applies at acceptance, reconciliation, and
+publication: an accepted material finding forces every claim it names below
+`verified`, and publication rejects a named claim that is still `verified`
+(`MATERIAL_COVERAGE_ASSURANCE_EXCEEDED`). The reviewer's per-statement
+disposition for a named claim may remain `covered`, because a missing question
+is not a defect in that statement; the material gap stays visible in
+`manifest.gaps` and forces `partial`. A resolved finding instead names exact
+typed evidence. Non-material coverage gaps
 downgrade verified claims and transition provisional claims to unresolved,
 while existing supported claims remain supported without verified promotion.
 Thorough redundant verification and contradiction resolution are

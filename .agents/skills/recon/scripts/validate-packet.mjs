@@ -1830,16 +1830,13 @@ function validateReconciliation(
         );
       }
       if (disposition?.disposition === 'accepted-gap') {
+        // A material finding forces every named claim below `verified`, the
+        // same downgrade the reconciler applies. The reviewer's per-statement
+        // disposition may stay `covered`: a question omission is not a
+        // statement defect.
         for (const claimId of finding.claimIds) {
           const claim = currentClaims.get(claimId);
-          const coverageDisposition = coverage.dispositions.find(
-            (item) => item.claimId === claimId,
-          );
-          if (
-            finding.material === true &&
-            (claim?.status === 'verified' ||
-              coverageDisposition?.disposition !== 'gap')
-          ) {
+          if (finding.material === true && claim?.status === 'verified') {
             errors.push(
               issue(
                 'MATERIAL_COVERAGE_ASSURANCE_EXCEEDED',
