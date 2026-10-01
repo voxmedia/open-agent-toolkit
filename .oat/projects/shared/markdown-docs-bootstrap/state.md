@@ -89,9 +89,9 @@ oat_project_state_updated: '2026-10-01T15:55:45Z'
 oat_generated: false
 oat_implement_exit_gate:
   disposition: null
-  launch_attempt_id: null
-  launch_started_at: null
-  launch_result_receipt: null
+  launch_attempt_id: markdown-implement-exit-2026-10-01T155647Z
+  launch_started_at: '2026-10-01T15:56:47Z'
+  launch_result_receipt: .oat/projects/shared/markdown-docs-bootstrap/reviews/markdown-implement-exit-2026-10-01T155647Z.json
   gate_run_marker: null
   gate_run_id: null
   envelope_status: null
@@ -117,11 +117,11 @@ oat_implement_exit_gate:
   implementation_fingerprint: sha256:effective-delta-v2:a96f98e44fac955295b9d420135e93e985f665e96e99daa0ba31c2401fdef824
   freshness_head: 697f529e8641ade24140fd7a9b88483799aa204a
   freshness_fingerprint: sha256:effective-delta-v2:a96f98e44fac955295b9d420135e93e985f665e96e99daa0ba31c2401fdef824
-  launch_state: not_started
+  launch_state: intent_persisted
   receive_state: not_started
   receive_eligible: false
   receive_completed: false
-  updated_at: '2026-10-01T15:56:44Z'
+  updated_at: '2026-10-01T15:56:47Z'
   config_fingerprint: sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324
 ---
 
