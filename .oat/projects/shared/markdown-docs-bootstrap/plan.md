@@ -187,6 +187,7 @@ Existing scaffold rows are preserved. Quick mode requires no spec; original desi
 | plan   | artifact | passed          | 2026-10-01 | reviews/plan-auto-rereview.md                               | 1ab8e49002716294f43b63831e13b0f9576f535b | auto       | -                    |
 | plan   | artifact | fixes_completed | 2026-10-01 | reviews/archived/artifact-plan-review-2026-10-01T060016Z.md | -                                        | gate       | claude-opus-5-5-high |
 | plan   | artifact | received        | 2026-10-01 | reviews/plan-auto-final-retry.md                            | 4f1c0d422241214859c906efb176e5a2787ba472 | auto       | -                    |
+| plan   | artifact | received        | 2026-10-01 | reviews/artifact-plan-review-2026-10-01T112231Z.md          | -                                        | -          | -                    |
 
 Record full reviewed heads and invocation provenance for actual reviews. Preserve all rows and unknown trailing cells. Mark `passed` only for a clean result; disposition residual findings before readiness.
 
