@@ -118,7 +118,15 @@ None recorded.
 
 ## Final Summary (for PR/docs)
 
-Markdown bootstrap, additive adoption, nonmutating preview, literal documentation roots, authored-index protection, skill workflows and user documentation are implemented. Five public packages and bundled inventory are 0.3.11; full ordered CI gates and actual forced execution passed. All four phase reviews are settled. Final review, retained exit gate and final HiLL approval remain pending.
+The docs bootstrap workflow offers plain Markdown and `oat docs init --framework markdown` records `documentation.tooling: "markdown"` with a literal dedicated root (default `docs`). Fresh initialization creates authored context/index and contributing guidance; explicit additive `--adopt` maps real pages and child indexes while preserving all existing content and local instructions. Command-local `--dry-run` previews files, configuration and managed guidance without mutation; partial guidance outcomes remain explicit.
+
+Markdown authored indexes are protected from manifest generation throughout the configured content root, including narrowed source scans and symlink aliases. An explicit output outside that root remains supported. Relative filename segments encode query/fragment/parenthesis characters. Existing Fumadocs and MkDocs behavior, instruction consumers and general init boundaries remain verified.
+
+Key owners are CLI docs init/markdown planning, shared root resolution and managed-guidance preview, index generation, bundle inputs/docs-pack manifest, two baseline templates, five canonical lifecycle/docs skills and twelve source documentation pages. Five public packages plus generated CLI version inventory are lockstep 0.3.11, above fresh main 0.3.10.
+
+All ten tasks and four independent phase reviews are complete. Verification: eight CI gates passed in order, root lint/format passed; forced isolated-home execution ran ten uncached tasks and 8,135 workspace tests, with docs compilation/generation 73/73. Normal test separately executed smoke163/skills660/scripts1. Bundle parity46, user/project install/update,24 integrated CLI controls and six retained probes passed; independent reviews reproduced pre-fix overwrite/broken navigation and restored negative/accepted controls. Original failures and cache replays remain distinguished in durable receipts.
+
+Design deltas: no production scope deviation. The p02 review added bounded filename-encoding correction; p04 acceptance repaired two stale help snapshots and two canonical skill-version literals under its planned acceptance-defect clause. Source backlog remains open for the broader approvals/version-drift work. Final review, retained implementation exit gate and configured pre-approval closeout work remain pending; no release has occurred.
 
 ## Orchestration Runs
 
@@ -1689,3 +1697,7 @@ Root reconciled DONE report: base 7e8abb5b377ffc2f16d9576a0023e7a6cf4a46fd throu
 #### p04 independent phase review disposition
 
 Root consumed exactly one not-attempted reconnaissance signal before validation, with no Review Orchestration or recon-log entry. Read complete reviews/p04-review-2026-10-01T150035Z.md; bound full head f4d76f977968c4d4e00d86153e48a9781649a2d1 and exact phase range verified, standard counts/severity sections agree: zero Critical, High, Medium and Low. Independent bundle46parity/four lifecycle commands,24CLI controls,six retained probes,303focused tests,release versions and pre-guard overwrite/post-guard refusal/external acceptance pass. Actual full-gate receipts independently inspected; broad gates not rerun. Review passed; all tasks/dispositions complete, no selected phase gate, p04 complete, fix iterations0/recovery0/10. All four phases complete; distinct final review and retained exit gate precede p04 HiLL approval.
+
+#### Final closeout baseline and verification
+
+All four phases/ten task commits reconcile with state and plan; task pointers null and implementation remains in_progress. Final verification reuses the completed p04 full ordered gates plus forced actual execution at final production commit 8f3f7fd95c49d33e4ded4c1dc57aa0515a849c59. Subsequent changes are project bookkeeping/review artifacts only; no new source change, failure or unresolved concern warrants repeating passing full suites. Required distinct final code review follows; deferred Medium/Low ledger is empty after settled prior dispositions. Review execution: subagent from workflow.reviewExecutionModel.

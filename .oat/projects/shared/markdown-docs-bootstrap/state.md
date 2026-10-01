@@ -91,7 +91,7 @@ oat_generated: false
 
 # Project State: markdown-docs-bootstrap
 
-**Status:** Implementation in progress
+**Status:** Tasks complete; final acceptance in progress
 **Started:** 2026-09-30
 **Last Updated:** 2026-10-01
 
