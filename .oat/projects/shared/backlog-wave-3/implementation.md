@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
-oat_current_task_id: p03-t10
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 5     | 5/5       |
-| Phase 2 | complete    | 6     | 6/6       |
-| Phase 3 | in_progress | 10    | 9/10      |
-| Phase 4 | pending     | 4     | 0/4       |
-| Phase 5 | pending     | 6     | 0/6       |
-| Phase 6 | pending     | 3     | 0/3       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 5     | 5/5       |
+| Phase 2 | complete | 6     | 6/6       |
+| Phase 3 | complete | 10    | 10/10     |
+| Phase 4 | pending  | 4     | 0/4       |
+| Phase 5 | pending  | 6     | 0/6       |
+| Phase 6 | pending  | 3     | 0/3       |
 
-**Total:** 20/34 tasks completed
+**Total:** 21/34 tasks completed
 
 ---
 
@@ -106,7 +106,7 @@ oat_generated: false
 
 ## Phase 3: Recon publication and Codex recovery
 
-**Status:** in_progress
+**Status:** complete
 
 ### Task p03-t01: Share review-brief source binding
 
@@ -155,8 +155,8 @@ oat_generated: false
 
 ### Task p03-t10: (review) Close p03 gate finding M1
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 8c2f74e76
 
 ---
 
@@ -431,6 +431,14 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   `reviews/archived/p03-review-2026-10-01T165604Z.md` status `ok`, 0
   Critical/High, 1 Medium (each brief rebuilt once per verified claim;
   quadratic validation). Addressed now as `p03-t10`.
+
+- Continuation `cont-backlog-wave-3-p03-fix-5`: `8c2f74e76` closed gate M1
+  (one rebuild per brief per validation pass via a pass-scoped checker; a
+  rebuild-count test failed first at 12 and passes at 3); 800-claim
+  validation 4,402 ms to 97 ms; recon 358/358.
+- Phase p03 outcome: pass after three root review rounds, an operator-extended
+  fourth fix round, an operator-approved complexity-review simplification, and
+  one gate-fix task (p03-t06..t10); 10/10 tasks.
 
 <!-- orchestration-runs-end -->
 

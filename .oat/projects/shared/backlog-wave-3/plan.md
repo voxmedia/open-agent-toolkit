@@ -1584,7 +1584,7 @@ breaking changes must be named in the title:
 | p03    | code     | fixes_completed | 2026-10-01 | reviews/archived/p03-review-2026-10-01T130314Z.md  | 3769d125fc8499b681305a7565fbdab66b9174a5 | auto       | -                 |
 | p03    | code     | fixes_completed | 2026-10-01 | reviews/archived/p03-review-2026-10-01T131855Z.md  | a3d625b312d892dbdd33270582fb2561ec39533c | auto       | -                 |
 | p03    | code     | fixes_completed | 2026-10-01 | reviews/archived/p03-review-2026-10-01T133903Z.md  | 18012ae901c3ba7460af9cb82d2010fb6b8d1970 | auto       | -                 |
-| p03    | code     | fixes_added     | 2026-10-01 | reviews/archived/p03-review-2026-10-01T165604Z.md  | 2cb68863a5b6eb3ff54e9cb9176db401d7c9932d | gate       | codex-6-sol-xhigh |
+| p03    | code     | passed          | 2026-10-01 | reviews/archived/p03-review-2026-10-01T165604Z.md  | 2cb68863a5b6eb3ff54e9cb9176db401d7c9932d | gate       | codex-6-sol-xhigh |
 | p04    | code     | pending         | -          | -                                                  | -                                        | -          | -                 |
 | p05    | code     | pending         | -          | -                                                  | -                                        | -          | -                 |
 | p06    | code     | pending         | -          | -                                                  | -                                        | -          | -                 |
