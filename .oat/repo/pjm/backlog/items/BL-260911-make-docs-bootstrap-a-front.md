@@ -36,3 +36,9 @@ Clarified 2026-09-30: plain Markdown must be an explicit bootstrap choice and us
 - Docs pages for bootstrap and analyze describe the front-door behavior and the docs-directory shape.
 
 Related: BL-260911-support-per-tool-scope (per-tool scope migration, lower priority).
+
+## Partial Markdown Slice
+
+The [markdown-docs-bootstrap project](../../../../projects/shared/markdown-docs-bootstrap/implementation.md) implements the plain Markdown mode/config, additive bootstrap/adoption, authored-index protection, and corresponding docs consumers. Integrated command/file acceptance and release-valid bundles are recorded there; phase/final reviews, implementation exit gate and final approval remain pending at this evidence update.
+
+This is a partial slice. This item remains **open**: package drift, explicit-approval policy, pntr automation changes and acceptance in the named external repositories remain outside that project and are not claimed complete.

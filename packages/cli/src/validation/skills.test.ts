@@ -3243,7 +3243,7 @@ describe('validateOatSkills', () => {
       ['.agents/skills/oat-project-review-provide/SKILL.md', '1.5.11'],
       ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.7'],
       ['.agents/skills/oat-project-summary/SKILL.md', '1.5.6'],
-      ['.agents/skills/oat-project-document/SKILL.md', '1.8.5'],
+      ['.agents/skills/oat-project-document/SKILL.md', '1.8.6'],
       ['.agents/skills/oat-project-pr-final/SKILL.md', '1.6.6'],
       ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.16'],
     ] as const;
@@ -8241,7 +8241,7 @@ describe('lite mode skill contracts', () => {
       '`Assumptions`',
     );
     expect(readDeclaredVersion(summary)).toBe('1.5.6');
-    expect(readDeclaredVersion(document)).toBe('1.8.5');
+    expect(readDeclaredVersion(document)).toBe('1.8.6');
   });
 
   it('routes lite projects through progress and next', async () => {
