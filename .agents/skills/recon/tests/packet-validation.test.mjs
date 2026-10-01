@@ -1652,10 +1652,16 @@ test('rejects paraphrased excerpts that are not contiguous source substrings', a
   await expectInvalid(packet, 'LOCATOR_EXCERPT_MISMATCH');
 });
 
-test('review results require unresolvedIssues to contain only strings', async () => {
+test('review results accept scoped unresolved issues and reject unscoped objects', async () => {
   const packet = await makePacket({ profile: 'standard' });
   const semantic = packet.reviewPaths.get('review-semantic').value;
-  semantic.unresolvedIssues = [{ message: 'not a closed string issue' }];
+  semantic.unresolvedIssues = [
+    { text: 'Scoped to the reviewed claim.', claimIds: ['claim-1'] },
+  ];
+  const accepted = validateArtifactShape(semantic);
+  assert.equal(accepted.valid, true, JSON.stringify(accepted, null, 2));
+
+  semantic.unresolvedIssues = [{ message: 'not a scoped issue object' }];
   const validation = validateArtifactShape(semantic);
   assert.equal(validation.valid, false);
   assert.ok(

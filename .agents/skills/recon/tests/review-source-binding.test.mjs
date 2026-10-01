@@ -33,9 +33,7 @@ function briefMismatches(validation) {
 }
 
 test('a production verification brief spanning two sources binds every claim', async () => {
-  // Structured issues are not part of this rule; the source-binding check is
-  // isolated from them so the brief is the only variable.
-  const packet = await twoSourcePacket({ semanticIssues: [] });
+  const packet = await twoSourcePacket();
   assert.deepEqual(
     packet.briefs.verify.sources.map((source) => source.id),
     ['source-1', 'source-2'],

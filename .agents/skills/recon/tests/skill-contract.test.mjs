@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 
+import { validateArtifactShape } from '../scripts/lib/contracts.mjs';
+
 const skillPath = new URL('../SKILL.md', import.meta.url);
 const profilesPath = new URL('../references/profiles.md', import.meta.url);
 const packetContractPath = new URL(
@@ -364,6 +366,15 @@ test('worker contract requires exact excerpts, closed examples, and same-task va
   );
   assert.ok(
     examples.every(({ unresolvedIssues }) => Array.isArray(unresolvedIssues)),
+  );
+  for (const example of examples) {
+    const validation = validateArtifactShape(example);
+    assert.equal(validation.valid, true, JSON.stringify(validation, null, 2));
+  }
+  assert.ok(
+    examples.some(({ unresolvedIssues }) =>
+      unresolvedIssues.some((entry) => Array.isArray(entry?.claimIds)),
+    ),
   );
 });
 

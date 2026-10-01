@@ -12,7 +12,10 @@ import { dirname, resolve } from 'node:path';
 
 import { canonicalJson, hashFile } from './lib/canonical-json.mjs';
 import { isDirectExecution } from './lib/cli-entry.mjs';
-import { validateArtifactShape } from './lib/contracts.mjs';
+import {
+  unresolvedIssuesBlockClaim,
+  validateArtifactShape,
+} from './lib/contracts.mjs';
 import {
   assertCanonicalRoot,
   assertSafeExistingPath,
@@ -233,6 +236,11 @@ export function reconcileLedger({
         (item) => item.claimId === claim.id && item.disposition === 'uncertain',
       ),
     );
+    // A covering review's global issue, or an issue scoped to this claim,
+    // keeps the claim below verified. Publication applies the same rule.
+    const issueBlocked = supporting.some((review) =>
+      unresolvedIssuesBlockClaim(review, claim.id),
+    );
     const incomplete = [...requiredDispositions.keys()].some(
       (kind) =>
         !reviewResults.some(
@@ -291,7 +299,7 @@ export function reconcileLedger({
       }
       continue;
     }
-    if (uncertain || incomplete) {
+    if (uncertain || issueBlocked || incomplete) {
       const from = claim.status;
       const to = 'unresolved';
       if (legalReconciliationTransitions.has(`${from}:${to}`)) {

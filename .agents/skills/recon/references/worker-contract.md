@@ -86,7 +86,12 @@ unpromoted `writePath`. Correct an invalid candidate within the same accepted
 task and validate again. A terminal invalid candidate is `PASS_FAILED`; it does
 not authorize controller retry or replacement.
 
-Closed review-result examples (all omitted arrays are still required as shown):
+Closed review-result examples (all omitted arrays are still required as shown).
+Each `unresolvedIssues` entry names its scope: `{ "text", "claimIds" }` for
+issues about specific claims this review covers, or
+`{ "text", "scope": "global" }` for an issue about every claim it covers. A
+bare string is accepted as a legacy global issue. Scope an issue to the claims
+it actually affects: a global issue keeps every covered claim below `verified`.
 
 ```json
 {
@@ -103,11 +108,19 @@ Closed review-result examples (all omitted arrays are still required as shown):
   },
   "permittedInputs": [],
   "excludedInputs": [],
-  "dispositions": [],
+  "dispositions": [
+    { "claimId": "claim-1", "disposition": "affirmed" },
+    { "claimId": "claim-2", "disposition": "uncertain" }
+  ],
   "newEvidence": [],
   "evidenceAssociations": [],
   "coverageFindings": [],
-  "unresolvedIssues": []
+  "unresolvedIssues": [
+    {
+      "text": "The cited release note may describe a different version.",
+      "claimIds": ["claim-2"]
+    }
+  ]
 }
 ```
 

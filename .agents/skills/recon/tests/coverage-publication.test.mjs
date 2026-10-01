@@ -20,9 +20,7 @@ afterEach(async () => {
 });
 
 test('a material question omission over covered statements reconciles to a publishable downgrade', async () => {
-  // Structured issues are not part of this rule; the coverage check is
-  // isolated from them so the coverage review is the only variable.
-  const packet = await createTwoSourcePacket({ semanticIssues: [] });
+  const packet = await createTwoSourcePacket();
   tempRoots.push(packet.tempRoot);
   assert.ok(
     packet.reviews.coverage.dispositions.every(

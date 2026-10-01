@@ -34,19 +34,61 @@ async function readJson(path) {
   return JSON.parse(await readFile(path, 'utf8'));
 }
 
-test('review-result unresolved issues are a closed string array', async () => {
+test('review-result unresolved issues accept the closed scoped union', async () => {
   const packet = await fixture('standard');
   const review = await readJson(
     join(packet.packetRoot, 'reviews', 'semantic.json'),
   );
-  review.unresolvedIssues = [{ message: 'object members are not allowed' }];
+  review.unresolvedIssues = [
+    'A legacy string issue is read as global.',
+    { text: 'Scoped to one covered claim.', claimIds: ['claim-1'] },
+    { text: 'Applies to every covered claim.', scope: 'global' },
+  ];
   const validation = validateArtifactShape(review);
-  assert.equal(validation.valid, false);
-  assert.ok(
-    validation.errors.some(
-      (error) => error.code === 'INVALID_UNRESOLVED_ISSUE',
-    ),
+  assert.equal(validation.valid, true, JSON.stringify(validation, null, 2));
+});
+
+test('review-result unresolved issues reject malformed scope at acceptance', async () => {
+  const packet = await fixture('standard');
+  const review = await readJson(
+    join(packet.packetRoot, 'reviews', 'semantic.json'),
   );
+  const malformed = {
+    'neither scope form': { text: 'No scope.' },
+    'an unscoped legacy object': { message: 'object members need a scope' },
+    'empty claimIds': { text: 'Empty scope.', claimIds: [] },
+    'a non-string claim ID': { text: 'Numeric scope.', claimIds: [1] },
+    'an uncovered claim ID': {
+      text: 'Names a claim the review does not cover.',
+      claimIds: ['claim-unreviewed'],
+    },
+    'both scope forms': {
+      text: 'Both scopes.',
+      claimIds: ['claim-1'],
+      scope: 'global',
+    },
+    'a non-global scope': { text: 'Unknown scope.', scope: 'claims' },
+    'empty text': { text: '', scope: 'global' },
+    'an unknown field': {
+      text: 'Extra field.',
+      scope: 'global',
+      severity: 'high',
+    },
+    'a null entry': null,
+  };
+  for (const [label, entry] of Object.entries(malformed)) {
+    review.unresolvedIssues = [entry];
+    const validation = validateArtifactShape(review);
+    assert.equal(validation.valid, false, label);
+    assert.ok(
+      validation.errors.some(
+        (error) =>
+          error.code === 'INVALID_UNRESOLVED_ISSUE' &&
+          error.path === '$.unresolvedIssues[0]',
+      ),
+      `${label}: ${JSON.stringify(validation, null, 2)}`,
+    );
+  }
 });
 
 test('ledger rejects misplaced unresolved issues without throwing', async () => {

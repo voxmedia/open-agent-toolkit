@@ -177,10 +177,9 @@ export async function createTwoSourcePacket({
     inputArtifacts: [structuredClone(dossierRef)],
     synthesis: {
       answer: 'Both sources record evidence; one release link is unconfirmed.',
-      keyClaimIds: [
-        twoSourceClaimIds.firstSource,
-        twoSourceClaimIds.secondSource,
-      ],
+      // Every claim is a key claim so the rendered packet shows each
+      // reconciled state, including the downgraded ones.
+      keyClaimIds: Object.values(twoSourceClaimIds),
       caveats: ['The epsilon release question remains open.'],
       unresolvedQuestionIds: ['question-1'],
     },

@@ -10,6 +10,7 @@ import {
   isObject,
   issue,
   profiles,
+  unresolvedIssuesBlockClaim,
   validateArtifactShape,
 } from './lib/contracts.mjs';
 import { reviewBriefBindsClaim } from './lib/review-binding.mjs';
@@ -2141,11 +2142,11 @@ function validateAssurance(validatedRun, errors) {
             ),
           );
         }
-        if ((artifact.unresolvedIssues ?? []).length > 0) {
+        if (unresolvedIssuesBlockClaim(artifact, claim.id)) {
           errors.push(
             issue(
               'REVIEW_DISPOSITION_MISMATCH',
-              `Review ${reviewId} retains unresolved issues`,
+              `Review ${reviewId} retains an unresolved issue that applies to this claim`,
               claim.id,
             ),
           );

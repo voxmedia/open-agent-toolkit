@@ -347,8 +347,18 @@ branch; source ineligibility never bypasses persistence safety.
   association, and an association cannot name evidence absent from that result
   or a claim without a disposition in that result.
 
-Every `unresolvedIssues` member is a string. Review results are closed objects:
-unknown fields and object-valued issue entries are invalid.
+`unresolvedIssues` members are a closed union. A string is a legacy entry read
+as a global issue. `{ "text": "...", "claimIds": ["claim-1"] }` scopes an issue
+to a non-empty list of unique claim IDs that the review covers (each has a
+disposition in that review, so each is projected by its immutable brief).
+`{ "text": "...", "scope": "global" }` is an explicit global issue. Any other
+entry, including an object with neither or both scope forms, an empty or
+non-string claim list, or a claim the review does not cover, is rejected at
+artifact acceptance with `INVALID_UNRESOLVED_ISSUE`; it is never read as no
+issue. Reconciliation and publication apply one rule: a claim-scoped issue keeps
+only the claims it names below `verified`, and a global issue keeps every claim
+the review covers below `verified`. Review results are closed objects: unknown
+fields are invalid.
 Reconciliation results replace the brief reference with prior-ledger/revision,
 additions/removals, exact transitions, and coverage-disposition bindings.
 Coverage findings are closed records bound to affected claims and exact
