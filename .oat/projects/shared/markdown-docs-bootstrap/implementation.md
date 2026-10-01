@@ -3240,3 +3240,77 @@ Dispatch: scope=final action=review role=reviewer producer=unknown provenance=un
   "floor_satisfaction": "satisfied"
 }
 ```
+
+Accepted exact-target canonical-role route /root/markdown_final_unreadable_pinned; awaiting root ACK.
+
+```json
+{
+  "request_id": "markdown-final-unreadable-pinned-20261001",
+  "caller": "oat-project-implement",
+  "scope": "final",
+  "objective": "Final source freshness after passing-gate optional directory correction; explicit bounded range, inherited main/remote/full coverage, root-owned approval",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "reviewer",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "codex-root-20261001",
+    "source": "tool-schema",
+    "observed_at": "2026-10-01"
+  },
+  "authority": "read-only code and one review artifact",
+  "role_selector": "default",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-10-01",
+  "guidance_verified_at": "2026-10-01",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selection_reason": "pre-start-rejection",
+  "selected_route": "native",
+  "deadline_seconds": 3600,
+  "retry_limit": 2,
+  "payload": {
+    "agent_type": "default",
+    "fork_turns": "none",
+    "scope_reference": "final:6ad9b2223716db22dbc95a0d21d0681e363307e1..HEAD",
+    "dispatch_mode": "background",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "high"
+  },
+  "launch_status": "accepted",
+  "child_outcome": null,
+  "configured_invocation_evidence": [
+    "project-state:high",
+    "user-config:gpt-6.1-sol/high",
+    "tool-schema:gpt-6.1-sol low-through-ultra",
+    "canonical-role:sha256:eb1bd78d0a5a48ed5d1867e313e19a07859a86aedec14d759beda8f97d26ce55"
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [
+    "Current configured tuple intersects live explicit model/effort controls; runtime identity not reported."
+  ],
+  "continuation_events": [
+    {
+      "event": "exact-target-approximation",
+      "from_request_id": "markdown-final-unreadable-native-20261001",
+      "provesNoChildStarted": true,
+      "canonicalRoleDigest": "sha256:eb1bd78d0a5a48ed5d1867e313e19a07859a86aedec14d759beda8f97d26ce55",
+      "approximation": true
+    }
+  ],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Final source freshness after passing-gate optional directory correction; explicit bounded range, inherited main/remote/full coverage, root-owned approval",
+  "floor_satisfaction": "satisfied"
+}
+```
