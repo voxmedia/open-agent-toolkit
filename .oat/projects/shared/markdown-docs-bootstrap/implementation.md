@@ -9,7 +9,7 @@ oat_generated: false
 
 # Implementation: markdown-docs-bootstrap
 
-All thirteen tasks are complete, including both remote adoption corrections. Current-main integration and all eight local gates passed; independent final review and retained exit-gate refresh remain pending before final p04 HiLL approval. Written summary/document/PR steps remain complete; their outputs will be refreshed with current evidence.
+All fourteen tasks are complete, including both remote adoption corrections and optional-directory permission preservation. Current-main integration, all eight local gates and independent final source review passed. The retained exit gate passed; its final documentation dispositions are being received before final p04 HiLL approval. Written summary, documentation and PR steps remain complete; current evidence is reflected in their outputs.
 
 ## Progress Overview
 
@@ -113,7 +113,28 @@ All thirteen tasks are complete, including both remote adoption corrections. Cur
 **Status:** completed
 **Commit:** 4962a907932b21d18ce75954a8ec83f6c1e0cc08
 **Outcome:** Blank Markdown metadata uses meaningful repository defaults before plans/writes; nonblank values retain bytes, interactive null cancellation and framework semantics preserved.
-**Verification:** Independent YAML public regression old resolver fails1 at intended title assertion/fixed0; seven actual CLI control cases, dry-run/nonmutation and repeated adoption pass. Direct ten-file196tests/types/lint/exactformat/diff0. All eight ordered CI gates/fresh fetch0; actual7,944CLItests plus smoke163/skills660/scripts1 and docs73. Exact three-file hook hashes preserved, clean; recovery0/10.
+**Verification:** Independent YAML public regression old resolver fails with exit 1 at intended title assertion/fixed exit 0; seven actual CLI control cases, dry-run/nonmutation and repeated adoption pass. Direct ten-file 196 tests/types/lint/exactformat/diff0. All eight ordered CI gates/fresh fetch0; actual 7,944 CLI tests plus smoke 163/skills 660/scripts 1 and docs 73. Exact three-file hook hashes preserved, clean; recovery0/10.
+
+### Task p04-t04: (review) Preserve adoption across optional child index aliases
+
+**Status:** completed
+**Commit:** b541b04b91d8b34cb82c6a6dad6a71f4905aec9f
+**Outcome:** Optional child index discovery uses repository containment; readable in-repository aliases map normally, unusable aliases/files remain preserved with audit advice, required root-baseline and unsafe-target validation unchanged.
+**Verification:** Direct ten-file suite 198 tests, build (CLI executed/four dependency replay), CLI types/lint, exact formatting/diff each exit 0. Private archive public regression old exit 1/fixed exit 0 at intended adoption status; twelve old/twelve fixed CLI dry/live commands prove optional handling and strict required external-root refusal. Original harness instruction-prefix oracle correction retained, no production/recovery failure. Root read complete runnable evidence and independently checked source hashes, exact owned three-path commit, raw counts and intended old failure. Full gates pending t05; recovery 0/10.
+
+### Task p04-t05: (review) Ignore instruction-only directories in docs advice
+
+**Status:** completed
+**Commit:** e74c06116acc294feb290c08e2677f8975de33da
+**Outcome:** Recursive authored-content detection excludes AGENTS.md/CLAUDE.md consistently with direct Contents; genuine authored Markdown and configured exclusions preserve advice semantics and existing bytes.
+**Verification:** Actual ten-file suite 199 tests, CLI lint/types/build (CLI executed/four replay), scoped format/diff and six probe syntax checks each exit 0. Private archive regression old exit 1 at unwanted instructions/ advice assertion, fixed exit 0. Six old/fixed/check-out dry/live categories all product exit 0; independent oracle differentiates false advice correction and genuine/excluded controls. Root read complete added test and runnable evidence, validated three-path source commit/hash receipts and actual test/failure logs. Full eight gates next, recovery 0/10.
+
+### Task p04-t06: (review) Preserve adoption across unreadable optional directories
+
+**Status:** completed
+**Commit:** f27361742e42e9803246bffaf6099ab11fbf5ba2
+**Outcome:** Optional recursive EACCES/EPERM leaves content intact, emits accurate path-specific uninspected/preserved advice and continues readable siblings. Required baseline and target checks remain strict; symlink directories are not traversed.
+**Verification:** Real EACCES was enforced without skipping. The exact committed regression fails old production with exit 1 and passes fixed with exit 0. Direct ten-file suite: 200 tests; CLI lint/types/build and scoped formatting passed. Public dry/live/repeat and safety controls preserve bytes, permissions and links. All eight ordered local gates passed on tracking ACK 5237891573c59413e2b13e3f4090b8053aadfb90: actual CLI 7,970 tests, root 163/660/1 and 73 docs pages; unchanged results replay cache explicitly. Independent final review passed 166 tests and 14 CLI controls, with zero findings. See reviews/final-unreadable-controls.md; evidence-only commit 664af22fb1c2b353f4018a99ecf353359282e1c1. Recovery 0/10.
 
 ## Review and Acceptance Evidence
 
@@ -123,29 +144,15 @@ Planning reviews and gate receipt are recorded in plan.md and reviews/plan-gate-
 
 None recorded.
 
-### Task p04-t04: (review) Preserve adoption across optional child index aliases
-
-**Status:** completed
-**Commit:** b541b04b91d8b34cb82c6a6dad6a71f4905aec9f
-**Outcome:** Optional child index discovery uses repository containment; readable in-repository aliases map normally, unusable aliases/files remain preserved with audit advice, required root-baseline and unsafe-target validation unchanged.
-**Verification:** Direct ten-file suite198 tests, build (CLI executed/four dependency replay), CLI types/lint, exact formatting/diff each exit0. Private archive public regression old1/fixed0 at intended adoption status; twelve old/twelve fixed CLI dry/live commands prove optional handling and strict required external-root refusal. Original harness instruction-prefix oracle correction retained, no production/recovery failure. Root read complete runnable evidence and independently checked source hashes, exact owned three-path commit, raw counts and intended old failure. Full gates pending t05; recovery0/10.
-
-### Task p04-t05: (review) Ignore instruction-only directories in docs advice
-
-**Status:** completed
-**Commit:** e74c06116acc294feb290c08e2677f8975de33da
-**Outcome:** Recursive authored-content detection excludes AGENTS.md/CLAUDE.md consistently with direct Contents; genuine authored Markdown and configured exclusions preserve advice semantics and existing bytes.
-**Verification:** Actual ten-file suite199 tests, CLI lint/types/build (CLI executed/four replay), scoped format/diff and six probe syntax checks each exit0. Private archive regression old1 at unwanted instructions/ advice assertion, fixed0. Six old/fixed/check-out dry/live categories all product0; independent oracle differentiates false advice correction and genuine/excluded controls. Root read complete added test and runnable evidence, validated three-path source commit/hash receipts and actual test/failure logs. Full eight gates next, recovery0/10.
-
 ## Final Summary (for PR/docs)
 
-Markdown bootstrap supports `documentation.tooling: markdown`, literal dedicated roots, authored indexes/context/Contents/metadata, explicit additive adoption and nonmutating dry-run, protected external manifests and file verification. Five canonical skills, two templates and twelve documentation pages ship with five public packages prepared at0.3.11. General init detection, approval classes and broader package-drift work remain outside this slice.
+Markdown bootstrap supports `documentation.tooling: markdown`, literal content roots, authored context/index/Contents/metadata, explicit additive adoption, nonmutating dry-run, protected external manifests and file verification. Five canonical skills, two templates and twelve documentation pages accompany five public packages prepared at 0.3.11. General init detection, approval classes and broader package-drift work remain outside this slice.
 
-Main #334 at98d1d524624e17f55ccfce33d18b3d5535dc91ca is integrated by normal merge. Seven conflicts preserve lockstep packages, canonical version inventory and main's genuine sync stamp; independently verified semantic composition and actual8,159 prior workspace tests are retained. Both Bugbot fixes are independently accepted: usable repository child indexes map, unusable optional indexes are preserved/advised, instruction-only directories are exempt. Passing-gate L1 additionally preserves inaccessible optional directories with accurate unknown-content advice; required root/target safety remains strict.
+Main #334 at 98d1d524624e17f55ccfce33d18b3d5535dc91ca is integrated by normal merge. Seven conflicts preserve lockstep packages, canonical version inventory and main's genuine sync stamp. Independently verified composition and the prior actual 8,159 workspace tests are retained. Both Bugbot corrections are accepted: usable repository child indexes map; unusable optional indexes remain preserved with advice; instruction-only directories are exempt. Optional recursive permission failures now preserve unknown content with accurate advice; required root/target safety stays strict.
 
-All14 tasks complete, recovery0/10, no deferred review debt. Latest eight local gates pass on5237891573c59413e2b13e3f4090b8053aadfb90: actualCLI7,970/398files, root163/660/1 and73docs pages. Check/types mixed actual/cache; unchanged consumer tests and subsequent build/docs cache replay are explicit. Focused200 and exact old-failing/fixed-passing regressions plus real CLI preservation/accepted/safety controls are retained in final-remote-controls and final-unreadable-controls. Latest source fingerprints remain pinned; no extra source changes after acceptance.
+All 14 tasks complete, recovery 0/10, no deferred review debt. Latest eight local gates passed on 5237891573c59413e2b13e3f4090b8053aadfb90: actual CLI 7,970 tests across 398 files, root suites 163/660/1 and 73 docs pages. Check/types mixed actual/cache; unchanged consumer tests and subsequent build/docs cache replay are explicit. Focused 200 tests, exact old-failing/fixed-passing regressions and real CLI preservation/safety controls are retained in final-remote-controls and final-unreadable-controls. Sources remain unchanged after acceptance.
 
-Prior clean integration/remote final reviews are retained; current final review passed; configured-exit freshness remains pending for the optional-directory delta. Summary/document/PR steps remain complete in their stored order and existing PR335 remains open. Their outputs are refreshed, not re-resolved. Final p04 HiLL approval remains pending; interactive visual recap skip and written summary choice persist. No publication, GitHub merge or deployment performed.
+Current independent final review passed with zero findings. The retained Opus 5.5 High gate passed with three Low findings: one out-of-scope advice consistency suggestion rejected with rationale, two current artifact/prose issues addressed. Raw counts/provenance remain preserved; no deferred findings or source changes. Summary/document/PR steps remain complete in stored order; PR #335 is open. Final p04 HiLL approval remains pending; visual recap is skipped by explicit user choice and the written summary retained. No publication, GitHub PR merge or deployment performed.
 
 ## Orchestration Runs
 
@@ -3383,3 +3390,15 @@ New final retained launch intent `markdown-implement-exit-unreadable-2026-10-01T
 Accepted current retained run `39b33a8d-8a63-41e5-af34-145a5d525935`, marker `/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/39b33a8d-8a63-41e5-af34-145a5d525935.json`; target `claude-opus-5-5-high`/runtimeclaude, current project/final/code start2026-10-01T19:34:48.454Z after launch intent. Result/receive pending; no replacement/retry.
 
 Final retained structured result: run39b33a8d-8a63-41e5-af34-145a5d525935, ok/high threshold,0C/0H/0M/3L, full project/run/target/invocation corroboration and eligible handoff. Root consumed the sole not-attempted confirmation before reading/validating the complete artifact. No reconnaissance wave/log. Terminal live marker cleanup is reconciled from captured marker JSON and committed acceptance; no repeat launch. Source hashes match final gated source after reviewer temporary contrasts. Receive/dispositions pending.
+
+### Final retained gate received — 39b33a8d-8a63-41e5-af34-145a5d525935
+
+**Artifact:** reviews/archived/final-review-2026-10-01T193637Z.md
+
+Root consumed the sole not-attempted confirmation before the complete artifact read/validation; current canonical receive v1.6.7 Step 2.6 passing-gate non-pausing judgment applies. Original raw counts: 0 Critical, 0 High, 0 Medium, 3 Low, high threshold passed. Deferred Medium/Low debt is zero; exact source fingerprints unchanged after reviewer contrasts.
+
+- L1 top-level unreadable candidate-path advice — Task Scope: Minor. Reject as out of scope for this bounded nested-enumeration correction. The review itself confirms no contract violation or loss: existing top-level optional-index discovery already preserves the subtree, omits unusable links and accepts adoption. Its statement that the candidate index path is not usable is true when permissions prevent inspection; it does not assert known Markdown or require that index to exist. p04-t06 explicitly owns nested readdir failure, and p04-t04 owns generic optional child-index unusability. Neither accepted design nor those requirements promise a separate top-level permission message. This is an adjacent wording consistency suggestion, not an unresolved preservation defect or requirement waiver; no deferred work or source change is created.
+- L2 implementation structure/lead — Task Scope: Negligible. Address now: current lead reflects 14 tasks/final review; move existing p04-t04/t05 entries under Phase 4 and add p04-t06 Status/Commit/Outcome/Verification with actual source/evidence. Preserve original outcomes and historical logs.
+- L3 collapsed prose tokens — Task Scope: Negligible. Address now: correct current summary, Phase 4 task prose and Final Summary spacing; keep historical audit/code identifiers unchanged. No new blocking task, tests, source work or phase re-gate is justified for these artifact-only alignments.
+
+All findings dispositioned; event passed with original counts/provenance. Required root safety and source behavior remain those independently accepted. Full configured receipt correlation, archive/event and receive commit are reconciled before allowed state. Existing output snapshot/recap skip persist; final p04 approval and PR synchronization remain root-owned. No GitHub replies/thread resolutions performed.

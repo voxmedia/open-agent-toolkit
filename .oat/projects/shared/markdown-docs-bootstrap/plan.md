@@ -280,7 +280,7 @@ Use public adoption/dry-run regressions for instruction-only direct/nested direc
 | final         | code     | passed          | 2026-10-01 | reviews/archived/final-review-2026-10-01T184430Z.md         | 66524f780ced805111a84de22b76f63fe4767cd6 | auto       | -                    |
 | final         | code     | passed          | 2026-10-01 | reviews/archived/final-review-2026-10-01T185353Z.md         | 909f8a68b1068b54f2a0ee870e299088a5c0da82 | gate       | claude-opus-5-5-high |
 | final         | code     | passed          | 2026-10-01 | reviews/archived/final-review-2026-10-01T192917Z.md         | da14976fe0fa87e0f18e80be5aacd5b1a64b9e4b | auto       | -                    |
-| final         | code     | received        | 2026-10-01 | reviews/final-review-2026-10-01T193637Z.md                  | 852db5a7073fc8a6f928577e27124df57febd0df | gate       | claude-opus-5-5-high |
+| final         | code     | passed          | 2026-10-01 | reviews/archived/final-review-2026-10-01T193637Z.md         | 852db5a7073fc8a6f928577e27124df57febd0df | gate       | claude-opus-5-5-high |
 
 Historical scaffold rows and review events are preserved. Eleven prior tasks are complete; remote M1/L1 are converted to p04-t04/p04-t05. Prior passed reviews and gates remain history; fresh final acceptance is required for the remote fixes on the integrated branch.
 
