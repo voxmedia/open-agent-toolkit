@@ -302,7 +302,9 @@ Run the passes in this order:
    `execution.reconciliation` paths and literal producer
    `controller:reconcile-ledger-v1`, validates both candidate outputs, copies
    the exact ledger bytes to a packet-contained temporary file, and atomically
-   renames it to `claims.json`. No reconciliation worker is dispatched.
+   renames it to `claims.json`. No reconciliation worker is dispatched. Record
+   every `gaps` entry the helper reports (a claim a required review left
+   without a disposition) in `manifest.gaps` and publish `partial`.
 
 If reconciliation requires new semantic judgment, preserve completed evidence
 and return an explicit unresolved caller-owned gap. Never mutate the target or

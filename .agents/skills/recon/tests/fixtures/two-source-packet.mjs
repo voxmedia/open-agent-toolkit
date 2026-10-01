@@ -75,17 +75,23 @@ function fileEvidence(id, sourceId, path, line, excerpt, provenance) {
  * `semanticIssues` defaults to the one claim-scoped issue. Callers that
  * isolate a different rule may replace it. `withCoverageFinding: false` drops
  * the material coverage finding (and its gap), so the run may publish as
- * `complete`. `mutateVerifyBrief` receives the production verification brief
- * before it is written, for adversarial probes.
+ * `complete`. `mutateBrief` receives each production brief (`verify`,
+ * `adversary`, `coverage`) before it is written, for adversarial probes.
+ * `omitDispositions` lists `{ reviewKind, claimId }` pairs a review leaves
+ * without a disposition. The reconciler's omission gaps are recorded in the
+ * manifest as the controller records them, unless `recordOmissionGaps` is
+ * false; the run status is `partial` whenever a material gap is recorded.
  */
 export async function createTwoSourcePacket({
   semanticIssues = [structuredClone(twoSourceSemanticIssue)],
   withCoverageFinding = true,
-  mutateVerifyBrief,
+  mutateBrief,
+  omitDispositions = [],
+  recordOmissionGaps = true,
 } = {}) {
   const packet = await createPacketFixture({
     profile: 'standard',
-    status: withCoverageFinding ? 'partial' : 'complete',
+    status: 'complete',
   });
   const { packetRoot, manifest } = packet;
   const dossierRef = structuredClone(
@@ -217,8 +223,9 @@ export async function createTwoSourcePacket({
       manifest,
       ledger: priorLedger,
     });
-    if (mode === 'verify' && mutateVerifyBrief) {
-      await mutateVerifyBrief({
+    if (mutateBrief) {
+      await mutateBrief({
+        mode,
         brief: briefs[mode],
         manifest,
         sourceRoot: packet.sourceRoot,
@@ -244,10 +251,18 @@ export async function createTwoSourcePacket({
     brief: { ...briefRefs[briefMode] },
     permittedInputs: [{ ...briefRefs[briefMode] }],
     excludedInputs: ['prior_reasoning'],
-    dispositions: claimIds.map((claimId) => ({
-      claimId,
-      disposition: dispositionFor(claimId),
-    })),
+    dispositions: claimIds
+      .filter(
+        (claimId) =>
+          !omitDispositions.some(
+            (omitted) =>
+              omitted.reviewKind === reviewKind && omitted.claimId === claimId,
+          ),
+      )
+      .map((claimId) => ({
+        claimId,
+        disposition: dispositionFor(claimId),
+      })),
     newEvidence: [],
     evidenceAssociations: [],
     coverageFindings: [],
@@ -282,11 +297,16 @@ export async function createTwoSourcePacket({
     });
   }
 
-  const { ledger, reconciliation } = reconcileLedger({
+  const {
+    ledger,
+    reconciliation,
+    gaps: omissionGaps,
+  } = reconcileLedger({
     priorLedger,
     reviewResults,
     priorReference,
     runId: manifest.run.id,
+    manifest,
   });
   await writeJson(join(packetRoot, 'raw/drafts/claims-v2.json'), ledger);
   await writeJson(
@@ -306,6 +326,10 @@ export async function createTwoSourcePacket({
       coverageFindingIds: [twoSourceCoverageFinding.id],
     });
   }
+  if (recordOmissionGaps) manifest.gaps.push(...omissionGaps);
+  manifest.run.status = manifest.gaps.some((gap) => gap.material === true)
+    ? 'partial'
+    : 'complete';
   for (const reference of manifest.artifacts) {
     reference.digest = await hashFile(join(packetRoot, reference.path));
   }
@@ -315,6 +339,7 @@ export async function createTwoSourcePacket({
     ...packet,
     manifest,
     ledger,
+    omissionGaps,
     priorLedger,
     reconciliation,
     briefs,

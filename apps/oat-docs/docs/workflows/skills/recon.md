@@ -297,7 +297,10 @@ downgrades. Every claim a review kept below `verified` (an unresolved issue
 scoped to it or global to its review, a coverage finding that names it, or a
 non-affirming disposition) is listed under Review Downgrades with the review's
 own text, even when it is not a key claim, so a `complete` packet cannot hide a
-downgraded claim. A run may be partial even when it achieved the requested
+downgraded claim. A claim that a required review left without a disposition is
+listed there as not reviewed, and the run publishes as `partial` with a
+material `REVIEW_DISPOSITION_OMITTED` gap naming the claim and the review's
+wave and lane. A run may be partial even when it achieved the requested
 profile if a material evidence gap remains. The achieved profile is derived from the
 complete typed artifacts in the packet; each required pass without a complete
 result needs a material `PASS_FAILED` or `PASS_OMITTED` gap. Each approved lane

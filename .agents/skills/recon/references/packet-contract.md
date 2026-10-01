@@ -384,12 +384,26 @@ briefs, claim dispositions, and explicit affected-contradiction dispositions.
 Create immutable mode-specific review projections with
 `scripts/create-review-brief.mjs`. Verification briefs expose only claim
 statements, display excerpts, typed locators, and required source descriptors.
-Each verification-brief claim is an exact projection of a distinct ledger claim,
-each review disposition names a brief claim, and the brief's sources are the
-projected union of those claims' sources, so a brief cannot carry an injected
-claim or source.
 Adversarial briefs expose only scope, questions, and provisional statements.
 Coverage briefs expose only scope, questions, and claim ID/statement pairs.
+In every brief mode, each claim entry (verification and coverage `claims`,
+adversarial `provisionalStatements`) is an exact projection of a distinct
+ledger claim, with no repeated claim ID, and each review disposition names a
+brief entry. A verification brief's sources are the projected union of its
+claims' sources. A brief therefore cannot carry an injected claim, note, or
+source (`REVIEW_BRIEF_MISMATCH`).
+
+A reviewer may leave a briefed claim without a disposition, and an accepted
+review is never rerun. Reconciliation keeps such a claim below `verified`, and
+`reconcile-ledger.mjs` reports one material `REVIEW_DISPOSITION_OMITTED` gap per
+omitting required review (semantic, adversarial, coverage) naming the claim and
+that review's exact `waveId` and `laneId`. The same rule applies to a claim no
+required review disposed of. The controller records those gaps in
+`manifest.gaps`, so the run publishes as `partial`; publication rejects a
+packet that lacks one (`MISSING_REVIEW_OMISSION_GAP`). Contested and
+unsupported claims are exempt because they are already characterized under
+Contradictions and Qualifications. `packet.md` lists every such claim under
+Review Downgrades as not reviewed.
 All reject dossier paths, compiler reasoning, synthesis prose, provenance
 references, and prior review IDs.
 

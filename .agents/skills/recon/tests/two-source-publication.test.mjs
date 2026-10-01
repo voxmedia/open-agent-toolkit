@@ -167,3 +167,86 @@ test('a global issue renders on every claim it downgrades', async () => {
     );
   }
 });
+
+const omittedEpsilon = [
+  { reviewKind: 'semantic', claimId: twoSourceClaimIds.coverageGap },
+];
+
+test('a claim a required review left without a disposition publishes only as a named partial', async () => {
+  const packet = await createTwoSourcePacket({
+    withCoverageFinding: false,
+    omitDispositions: omittedEpsilon,
+  });
+  tempRoots.push(packet.tempRoot);
+  assert.ok(
+    !packet.ledger.synthesis.keyClaimIds.includes(
+      twoSourceClaimIds.coverageGap,
+    ),
+  );
+  // The gap comes from the production reconciler, not from this test.
+  assert.deepEqual(
+    packet.omissionGaps.map((gap) => [
+      gap.code,
+      gap.material,
+      gap.waveId,
+      gap.laneId,
+      gap.claimIds,
+    ]),
+    [
+      [
+        'REVIEW_DISPOSITION_OMITTED',
+        true,
+        'wave-semantic-verification',
+        'lane-semantic',
+        [twoSourceClaimIds.coverageGap],
+      ],
+    ],
+  );
+  const validation = await validatePacket(packet.packetRoot);
+  assert.equal(validation.valid, true, JSON.stringify(validation, null, 2));
+  assert.equal(validation.status, 'partial');
+  const epsilon = packet.ledger.claims.find(
+    (claim) => claim.id === twoSourceClaimIds.coverageGap,
+  );
+  assert.equal(epsilon.status, 'unresolved');
+
+  await renderPacket(packet.packetRoot);
+  const document = await readFile(join(packet.packetRoot, 'packet.md'), 'utf8');
+  assert.match(
+    reviewDowngrades(document),
+    /claim-epsilon\*\* \(unresolved\)[^\n]*semantic review: not reviewed \(no disposition\)/,
+  );
+  assert.match(document, /REVIEW\\_DISPOSITION\\_OMITTED/);
+});
+
+for (const [label, options] of [
+  ['an omitted disposition', { omitDispositions: omittedEpsilon }],
+  [
+    'a claim left out of the brief and the review',
+    {
+      omitDispositions: omittedEpsilon,
+      mutateBrief: ({ mode, brief }) => {
+        if (mode !== 'verify') return;
+        brief.claims = brief.claims.filter(
+          (claim) => claim.id !== twoSourceClaimIds.coverageGap,
+        );
+      },
+    },
+  ],
+]) {
+  test(`${label} cannot hide in a complete packet`, async () => {
+    const packet = await createTwoSourcePacket({
+      withCoverageFinding: false,
+      recordOmissionGaps: false,
+      ...options,
+    });
+    tempRoots.push(packet.tempRoot);
+    assert.equal(packet.manifest.run.status, 'complete');
+    const validation = await validatePacket(packet.packetRoot);
+    assert.equal(validation.valid, false);
+    assert.deepEqual(
+      [...new Set(validation.errors.map((error) => error.code))],
+      ['MISSING_REVIEW_OMISSION_GAP'],
+    );
+  });
+}

@@ -107,6 +107,15 @@ export function briefSourcesBind(brief, manifest) {
   );
 }
 
+// The claim-bearing entries of a brief: adversarial briefs project
+// `provisionalStatements`; verification and coverage briefs project `claims`.
+export function reviewBriefEntries(brief, reviewKind) {
+  const entries = adversaryReviewKinds.has(reviewKind)
+    ? brief?.provisionalStatements
+    : brief?.claims;
+  return Array.isArray(entries) ? entries : [];
+}
+
 export function reviewBriefProjection(brief, reviewKind, claimId) {
   if (verificationReviewKinds.has(reviewKind)) {
     return brief?.claims?.find((item) => item?.id === claimId);

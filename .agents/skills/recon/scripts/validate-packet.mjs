@@ -13,7 +13,14 @@ import {
   unresolvedIssuesBlockClaim,
   validateArtifactShape,
 } from './lib/contracts.mjs';
-import { reviewBriefBindsClaim } from './lib/review-binding.mjs';
+import {
+  reviewBriefBindsClaim,
+  reviewBriefEntries,
+} from './lib/review-binding.mjs';
+import {
+  gapCoversReviewOmission,
+  reviewOmissionGaps,
+} from './lib/review-omissions.mjs';
 import { normalizeManifestRouting } from './lib/routing.mjs';
 import {
   assertCanonicalRoot,
@@ -1363,18 +1370,27 @@ function validateReviewBindings(
       );
       continue;
     }
-    // A verification brief carries evidence and sources, so its claim set is
-    // bound in both directions: every disposition claim binds to a brief
-    // projection (below), and every brief claim is a distinct ledger claim
-    // whose exact projection binds. An injected brief claim, with or without
-    // an injected source, would otherwise widen the brief-level source union
-    // unchecked. A real ledger claim the reviewer left without a disposition
-    // still binds; reconciliation keeps it below verified as incomplete.
-    if (expectedMode === 'verify') {
-      const briefClaimIds = (
-        Array.isArray(brief.claims) ? brief.claims : []
-      ).map((claim) => claim?.id);
-      const unbound = briefClaimIds.some((claimId) => {
+    // Every brief's claim set is bound in both directions: every disposition
+    // claim binds to a brief projection (below), and every brief entry
+    // (verification and coverage `claims`, adversarial `provisionalStatements`)
+    // is a distinct ledger claim whose exact projection binds. Projection
+    // lookup binds the first entry with an ID, so a duplicate ID is rejected on
+    // its own. An injected entry (a note to a blind reviewer, an invented
+    // claim, or a forged source) fails closed. A real ledger claim the reviewer
+    // left without a disposition still binds; it is handled as an omission.
+    const briefEntries = reviewBriefEntries(brief, result.reviewKind);
+    const briefClaimIds = briefEntries.map((entry) => entry?.id);
+    if (new Set(briefClaimIds).size !== briefClaimIds.length) {
+      errors.push(
+        issue(
+          'REVIEW_BRIEF_MISMATCH',
+          `Review ${result.id} brief repeats a claim ID`,
+          result.id,
+        ),
+      );
+    }
+    if (
+      briefClaimIds.some((claimId) => {
         const priorClaim = priorClaims.get(claimId);
         const ledgerClaim = priorClaim ?? claims.get(claimId);
         return (
@@ -1387,16 +1403,15 @@ function validateReviewBindings(
             manifest,
           )
         );
-      });
-      if (unbound || new Set(briefClaimIds).size !== briefClaimIds.length) {
-        errors.push(
-          issue(
-            'REVIEW_BRIEF_MISMATCH',
-            `Review ${result.id} brief claims must each be an exact ledger claim projection`,
-            result.id,
-          ),
-        );
-      }
+      })
+    ) {
+      errors.push(
+        issue(
+          'REVIEW_BRIEF_MISMATCH',
+          `Review ${result.id} brief entries must each be an exact ledger claim projection`,
+          result.id,
+        ),
+      );
     }
     const seen = new Set();
     for (const disposition of result.dispositions) {
@@ -1823,6 +1838,26 @@ function validateReconciliation(
         reconciliation.id,
       ),
     );
+  }
+
+  for (const expected of reviewOmissionGaps({
+    manifest,
+    ledger,
+    reviews: incorporatedReviews,
+  })) {
+    if (
+      !(manifest.gaps ?? []).some((gap) =>
+        gapCoversReviewOmission(gap, expected),
+      )
+    ) {
+      errors.push(
+        issue(
+          'MISSING_REVIEW_OMISSION_GAP',
+          `Claim ${expected.claimIds[0]} lacks a ${expected.laneId ?? 'review'} disposition and needs a material ${expected.code} gap naming the claim and the review's wave and lane`,
+          expected.claimIds[0],
+        ),
+      );
+    }
   }
 
   const coverageResults = (passes.get('coverage') ?? [])

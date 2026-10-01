@@ -10,6 +10,7 @@ import {
   classifyUnresolvedIssue,
   unresolvedIssuesBlockClaim,
 } from './lib/contracts.mjs';
+import { omittedReviews } from './lib/review-omissions.mjs';
 import {
   assertSafeExistingPath,
   assertSafeOutputPath,
@@ -131,8 +132,9 @@ function issueText(entry) {
 }
 
 // Every claim an incorporated review kept below `verified` (an unresolved
-// issue that applies to it, a coverage finding that names it, or a
-// non-affirming disposition), with the review's own words. Key-claim status
+// issue that applies to it, a coverage finding that names it, a
+// non-affirming disposition, or a required review that left it without a
+// disposition), with the review's own words. Key-claim status
 // alone would let a `complete` packet hide a downgraded non-key claim.
 function reviewDowngradeLines(validatedRun) {
   const { ledger, artifacts, assuranceReviewIds } = validatedRun;
@@ -169,6 +171,11 @@ function reviewDowngradeLines(validatedRun) {
           reasons.push(`${review.reviewKind} ${scope}: ${issueText(entry)}`);
         }
       }
+    }
+    for (const review of omittedReviews(claim.id, reviews)) {
+      reasons.push(
+        `${review.reviewKind} review: not reviewed (no disposition)`,
+      );
     }
     for (const review of reviews) {
       for (const finding of review.coverageFindings ?? []) {

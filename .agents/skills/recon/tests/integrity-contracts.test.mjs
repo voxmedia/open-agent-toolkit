@@ -874,10 +874,10 @@ test('production reconciliation converts a typed rejection into an unsupported c
   );
   semantic.brief = { ...briefReference };
   semantic.permittedInputs = [{ ...briefReference }];
-  semantic.dispositions.push({
-    claimId: 'claim-2',
-    disposition: 'rejected',
-  });
+  // The fixture's semantic review already disposes of claim-2; reject it.
+  semantic.dispositions = semantic.dispositions.map((item) =>
+    item.claimId === 'claim-2' ? { ...item, disposition: 'rejected' } : item,
+  );
   await replaceArtifact(packet, 'reviews/semantic.json', semantic);
 
   const { ledger, reconciliation } = reconcileLedger({
@@ -967,6 +967,7 @@ test('production reconciliation transitions uncertain and incomplete provisional
     {
       name: 'missing coverage disposition',
       reviewPath: 'reviews/coverage.json',
+      omittedLane: 'lane-coverage',
       mutate(review) {
         review.dispositions = [];
       },
@@ -991,10 +992,11 @@ test('production reconciliation transitions uncertain and incomplete provisional
     scenario.mutate(review);
     await replaceArtifact(packet, scenario.reviewPath, review);
 
-    const { ledger, reconciliation } = reconcileLedger({
+    const { ledger, reconciliation, gaps } = reconcileLedger({
       priorLedger,
       reviewResults: await coreReviewResults(packet),
       priorReference,
+      manifest: packet.manifest,
     });
     assert.equal(ledger.claims[0].status, 'unresolved', scenario.name);
     assert.deepEqual(
@@ -1012,15 +1014,25 @@ test('production reconciliation transitions uncertain and incomplete provisional
     );
 
     packet.manifest.run.status = 'partial';
-    packet.manifest.gaps.push({
-      id: `gap-${scenario.name.replaceAll(' ', '-')}`,
-      code: 'INCOMPLETE_REVIEW',
-      message: `Claim review remained incomplete: ${scenario.name}.`,
-      material: true,
-      sourceIds: [],
-      claimIds: ['claim-1'],
-      coverageFindingIds: [],
-    });
+    if (scenario.omittedLane) {
+      // The omission gap comes from the production reconciler.
+      assert.deepEqual(
+        gaps.map((gap) => [gap.code, gap.laneId, gap.claimIds]),
+        [['REVIEW_DISPOSITION_OMITTED', scenario.omittedLane, ['claim-1']]],
+      );
+      packet.manifest.gaps.push(...gaps);
+    } else {
+      assert.deepEqual(gaps, [], scenario.name);
+      packet.manifest.gaps.push({
+        id: `gap-${scenario.name.replaceAll(' ', '-')}`,
+        code: 'INCOMPLETE_REVIEW',
+        message: `Claim review remained incomplete: ${scenario.name}.`,
+        material: true,
+        sourceIds: [],
+        claimIds: ['claim-1'],
+        coverageFindingIds: [],
+      });
+    }
     await replaceArtifact(packet, 'claims.json', ledger);
     await replaceArtifact(
       packet,
@@ -1066,10 +1078,11 @@ test('production reconciliation transitions a provisional claim omitted by every
     await replaceArtifact(packet, relative, review);
   }
 
-  const { ledger, reconciliation } = reconcileLedger({
+  const { ledger, reconciliation, gaps } = reconcileLedger({
     priorLedger,
     reviewResults: await coreReviewResults(packet),
     priorReference,
+    manifest: packet.manifest,
   });
   assert.equal(ledger.claims[0].status, 'unresolved');
   assert.deepEqual(
@@ -1079,16 +1092,33 @@ test('production reconciliation transitions a provisional claim omitted by every
     [{ claimId: 'claim-1', from: 'provisional', to: 'unresolved' }],
   );
 
+  // One production-derived material gap per omitting review, each naming the
+  // claim and that review's exact wave and lane.
+  assert.deepEqual(
+    gaps.map((gap) => [gap.code, gap.waveId, gap.laneId, gap.claimIds]),
+    [
+      [
+        'REVIEW_DISPOSITION_OMITTED',
+        'wave-semantic-verification',
+        'lane-semantic',
+        ['claim-1'],
+      ],
+      [
+        'REVIEW_DISPOSITION_OMITTED',
+        'wave-adversarial',
+        'lane-adversarial',
+        ['claim-1'],
+      ],
+      [
+        'REVIEW_DISPOSITION_OMITTED',
+        'wave-coverage',
+        'lane-coverage',
+        ['claim-1'],
+      ],
+    ],
+  );
   packet.manifest.run.status = 'partial';
-  packet.manifest.gaps.push({
-    id: 'gap-claim-omitted-by-all-reviews',
-    code: 'INCOMPLETE_REVIEW',
-    message: 'The claim was omitted by every required review.',
-    material: true,
-    sourceIds: [],
-    claimIds: ['claim-1'],
-    coverageFindingIds: [],
-  });
+  packet.manifest.gaps.push(...gaps);
   await replaceArtifact(packet, 'claims.json', ledger);
   await replaceArtifact(packet, 'reviews/reconciliation.json', reconciliation);
   const compiled = await compileValidatedRun(packet.packetRoot);
@@ -1279,10 +1309,6 @@ test('production reconciliation retains exact incorporated review evidence and r
   reviewEvidence.id = 'evidence-review-1';
 
   const incorporatedResults = structuredClone(results);
-  incorporatedResults[0].dispositions.push({
-    claimId: 'claim-2',
-    disposition: 'affirmed',
-  });
   incorporatedResults[0].newEvidence = [reviewEvidence];
   incorporatedResults[0].evidenceAssociations = [
     {
@@ -1379,6 +1405,9 @@ test('production reconciliation retains exact incorporated review evidence and r
   );
 
   const crossClaim = structuredClone(results);
+  crossClaim[0].dispositions = crossClaim[0].dispositions.filter(
+    (item) => item.claimId !== 'claim-2',
+  );
   crossClaim[0].newEvidence = [reviewEvidence];
   crossClaim[0].evidenceAssociations = [
     {
@@ -1616,10 +1645,10 @@ test('a complete typed rejection can explicitly authorize prior claim removal', 
   );
   semantic.brief = { ...briefRef };
   semantic.permittedInputs = [{ ...briefRef }];
-  semantic.dispositions.push({
-    claimId: 'claim-2',
-    disposition: 'rejected',
-  });
+  // The fixture's semantic review already disposes of claim-2; reject it.
+  semantic.dispositions = semantic.dispositions.map((item) =>
+    item.claimId === 'claim-2' ? { ...item, disposition: 'rejected' } : item,
+  );
   await replaceArtifact(packet, 'reviews/semantic.json', semantic);
 
   packet.ledger.claims = packet.ledger.claims.filter(
@@ -1685,10 +1714,10 @@ test('a shadow reconciliation cannot authorize removal from a forged prior ledge
   );
   semantic.brief = { ...briefRef };
   semantic.permittedInputs = [{ ...briefRef }];
-  semantic.dispositions.push({
-    claimId: 'claim-2',
-    disposition: 'rejected',
-  });
+  // The fixture's semantic review already disposes of claim-2; reject it.
+  semantic.dispositions = semantic.dispositions.map((item) =>
+    item.claimId === 'claim-2' ? { ...item, disposition: 'rejected' } : item,
+  );
   await replaceArtifact(packet, 'reviews/semantic.json', semantic);
 
   packet.ledger.claims = packet.ledger.claims.filter(
