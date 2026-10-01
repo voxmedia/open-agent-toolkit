@@ -67,6 +67,11 @@ export async function resolveEntryTarget(
   directoryPath: string,
   dirRelativePath: string,
   entry: DocsContentsEntry,
+  /**
+   * Page extensions a Contents link may target. MkDocs renders only `.md`;
+   * Fumadocs also renders `.mdx` pages.
+   */
+  pageExtensions: readonly string[] = ['.md'],
 ): Promise<{ kind: 'page' | 'section'; path: string }> {
   const href = entry.href.split('#', 1)[0]?.trim() ?? '';
   if (!href) {
@@ -113,7 +118,7 @@ export async function resolveEntryTarget(
     );
   }
 
-  if (extname(targetPath) !== '.md') {
+  if (!pageExtensions.includes(extname(targetPath))) {
     throw new Error(
       `Contents link "${entry.href}" in ${join(
         docsRoot,

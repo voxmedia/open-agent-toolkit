@@ -62,7 +62,7 @@ Documentation should ship with the code it explains. This page covers the core d
   pnpm -w run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md
   ```
 
-- Then refresh the sidebar navigation. `oat docs nav sync` rewrites the committed `meta.json` files from the `## Contents` maps and reports any page no map lists; list the page in its directory's `## Contents` rather than editing `meta.json`:
+- Then refresh the sidebar navigation. `oat docs nav sync` rewrites the committed `meta.json` files from the `## Contents` maps and reports any page no map lists; list the page in its directory's `## Contents` rather than editing `meta.json`. The build runs the read-only `--check` form and fails while the navigation is stale or a page is unlisted:
 
   ```bash
   pnpm -w run cli:source -- docs nav sync --target-dir apps/oat-docs

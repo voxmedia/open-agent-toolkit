@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 import { createLoggerCapture } from '@commands/__tests__/helpers';
 import { Command } from 'commander';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import YAML from 'yaml';
 
 import { buildDocsNavTree, parseIndexContents } from './contents';
@@ -75,6 +75,27 @@ async function createFumadocsFixture(root: string): Promise<string> {
     'docs/reference/api.md': '# API\n',
     'docs/orphan/index.md': indexPage('Orphan', ['[Lost](lost.md)']),
     'docs/orphan/lost.md': '# Lost\n',
+  });
+  return appRoot;
+}
+
+/** A Fumadocs app whose Contents maps list every page, including `.mdx`. */
+async function createListedFumadocsFixture(root: string): Promise<string> {
+  const appRoot = join(root, 'apps', 'docs');
+  await writeTree(appRoot, {
+    'source.config.ts': 'export default {};\n',
+    'docs/index.md': indexPage(
+      'Home',
+      ['[Start](start.md)', '[Fancy](fancy.mdx)', '[Guides](guides/index.md)'],
+      'Listed Docs',
+    ),
+    'docs/start.md': '# Start\n',
+    'docs/fancy.mdx': '# Fancy\n',
+    'docs/guides/index.md': indexPage('Guides', [
+      '[Widget](widget.mdx)',
+      '[Back Home Fancy](../fancy.mdx)',
+    ]),
+    'docs/guides/widget.mdx': '# Widget\n',
   });
   return appRoot;
 }
@@ -448,6 +469,69 @@ Keep this section untouched.
     ).rejects.toThrow();
   });
 
+  it('lists .mdx Contents targets by slug', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-docs-fuma-mdx-'));
+    createdRoots.push(root);
+    const appRoot = await createListedFumadocsFixture(root);
+    const docsRoot = join(appRoot, 'docs');
+
+    const result = await syncDocsNavigation({ appRoot });
+
+    if (result.framework !== 'fumadocs') throw new Error('unreachable');
+    expect(result.unlisted).toEqual([]);
+    await expect(readMeta(docsRoot, '.')).resolves.toEqual({
+      title: 'Listed Docs',
+      pages: ['index', 'start', 'fancy', 'guides'],
+    });
+    await expect(readMeta(docsRoot, 'guides')).resolves.toEqual({
+      title: 'Guides',
+      pages: ['widget', '[Back Home Fancy](/fancy)'],
+    });
+  });
+
+  it('strips inline Markdown from an H1-derived folder title', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-docs-fuma-inline-'));
+    createdRoots.push(root);
+    const appRoot = join(root, 'docs-app');
+    await writeTree(appRoot, {
+      'source.config.ts': 'export default {};\n',
+      'docs/index.md': indexPage(
+        'The `sub` **Bold** _Soft_ [Linked](page.md) ![Icon](i.png) Section',
+        ['[Page](page.md)'],
+      ),
+      'docs/page.md': '# Page\n',
+    });
+
+    await syncDocsNavigation({ appRoot });
+
+    await expect(readMeta(join(appRoot, 'docs'), '.')).resolves.toEqual({
+      title: 'The sub Bold Soft Linked Icon Section',
+      pages: ['index', 'page'],
+    });
+  });
+
+  it('checks MkDocs navigation without writing mkdocs.yml', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-docs-mkdocs-check-'));
+    createdRoots.push(root);
+    const appRoot = join(root, 'site');
+    const staleSource = 'site_name: Site\nnav:\n  - Old: old.md\n';
+    await writeTree(appRoot, {
+      'mkdocs.yml': staleSource,
+      'docs/index.md': indexPage('Home', ['[Page](page.md)']),
+      'docs/page.md': '# Page\n',
+    });
+
+    const stale = await syncDocsNavigation({ appRoot, check: true });
+    expect(stale.stale).toEqual(['mkdocs.yml']);
+    await expect(readFile(join(appRoot, 'mkdocs.yml'), 'utf8')).resolves.toBe(
+      staleSource,
+    );
+
+    await syncDocsNavigation({ appRoot });
+    const fresh = await syncDocsNavigation({ appRoot, check: true });
+    expect(fresh.stale).toEqual([]);
+  });
+
   it('fails when no docs framework marker is present', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-docs-unknown-'));
     createdRoots.push(root);
@@ -467,6 +551,11 @@ describe('docs nav sync command (Fumadocs)', () => {
   const createdRoots: string[] = [];
   let originalExitCode: typeof process.exitCode;
 
+  beforeEach(() => {
+    originalExitCode = process.exitCode;
+    process.exitCode = undefined;
+  });
+
   afterEach(async () => {
     process.exitCode = originalExitCode;
     const { rm } = await import('node:fs/promises');
@@ -476,8 +565,11 @@ describe('docs nav sync command (Fumadocs)', () => {
     createdRoots.length = 0;
   });
 
-  async function run(appRoot: string, json: boolean) {
-    originalExitCode = process.exitCode;
+  async function run(
+    appRoot: string,
+    json: boolean,
+    args: string[] = ['--target-dir', '.'],
+  ) {
     const capture = createLoggerCapture();
     const command = createDocsNavSyncCommand({
       buildCommandContext: () => ({
@@ -493,7 +585,7 @@ describe('docs nav sync command (Fumadocs)', () => {
     });
     const program = new Command().name('oat').exitOverride();
     program.addCommand(command);
-    await program.parseAsync(['sync', '--target-dir', '.'], { from: 'user' });
+    await program.parseAsync(['sync', ...args], { from: 'user' });
     return capture;
   }
 
@@ -528,5 +620,136 @@ describe('docs nav sync command (Fumadocs)', () => {
     expect(output).toContain('guides/advanced/hidden.md');
     expect(output).toContain('orphan/');
     expect(output).toContain('stray.md');
+  });
+
+  it('--check passes when navigation is current and every page is listed', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-docs-check-ok-'));
+    createdRoots.push(root);
+    const appRoot = await createListedFumadocsFixture(root);
+    await run(appRoot, false);
+
+    const capture = await run(appRoot, true, ['--target-dir', '.', '--check']);
+
+    expect(process.exitCode).toBe(0);
+    expect(capture.jsonPayloads).toEqual([
+      expect.objectContaining({
+        status: 'ok',
+        check: true,
+        framework: 'fumadocs',
+        stale: [],
+        unlisted: [],
+      }),
+    ]);
+  });
+
+  it('--check fails on a new unlisted page and names it', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-docs-check-unlisted-'));
+    createdRoots.push(root);
+    const appRoot = await createListedFumadocsFixture(root);
+    await run(appRoot, false);
+    await writeFile(join(appRoot, 'docs', 'new-page.md'), '# New\n', 'utf8');
+
+    const capture = await run(appRoot, false, ['--target-dir', '.', '--check']);
+
+    expect(process.exitCode).toBe(1);
+    const output = [...capture.info, ...capture.error].join('\n');
+    expect(output).toContain('new-page.md');
+  });
+
+  it('--check fails on a stale meta.json and writes nothing', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-docs-check-stale-'));
+    createdRoots.push(root);
+    const appRoot = await createListedFumadocsFixture(root);
+    await run(appRoot, false);
+    const docsRoot = join(appRoot, 'docs');
+    await writeFile(
+      join(docsRoot, 'index.md'),
+      indexPage(
+        'Home',
+        [
+          '[Guides](guides/index.md)',
+          '[Fancy](fancy.mdx)',
+          '[Start](start.md)',
+        ],
+        'Listed Docs',
+      ),
+      'utf8',
+    );
+    const before = await readFile(join(docsRoot, 'meta.json'), 'utf8');
+
+    const capture = await run(appRoot, true, ['--target-dir', '.', '--check']);
+
+    expect(process.exitCode).toBe(1);
+    expect(capture.jsonPayloads).toEqual([
+      expect.objectContaining({
+        status: 'drift',
+        check: true,
+        stale: ['meta.json'],
+        unlisted: [],
+      }),
+    ]);
+    await expect(readFile(join(docsRoot, 'meta.json'), 'utf8')).resolves.toBe(
+      before,
+    );
+  });
+
+  it('--check writes no meta.json into an app that has none', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-docs-check-empty-'));
+    createdRoots.push(root);
+    const appRoot = await createListedFumadocsFixture(root);
+
+    await run(appRoot, true, ['--target-dir', '.', '--check']);
+
+    expect(process.exitCode).toBe(1);
+    await expect(
+      readFile(join(appRoot, 'docs', 'meta.json'), 'utf8'),
+    ).rejects.toThrow();
+    await expect(
+      readFile(join(appRoot, 'docs', 'guides', 'meta.json'), 'utf8'),
+    ).rejects.toThrow();
+  });
+
+  async function createConfiguredRepo(documentationRoot: string) {
+    const repoRoot = await mkdtemp(join(tmpdir(), 'oat-docs-config-'));
+    createdRoots.push(repoRoot);
+    await mkdir(join(repoRoot, '.git'), { recursive: true });
+    await writeTree(repoRoot, {
+      '.oat/config.json': `${JSON.stringify({
+        version: 1,
+        documentation: { root: documentationRoot, tooling: 'fumadocs' },
+      })}\n`,
+      // No mkdocs.yml and no source.config.* marker in the app.
+      'app/docs/index.md': indexPage('Home', ['[Page](page.md)']),
+      'app/docs/page.md': '# Page\n',
+    });
+    return repoRoot;
+  }
+
+  it('falls back to documentation.tooling when the target is the configured root', async () => {
+    const repoRoot = await createConfiguredRepo('app');
+
+    const capture = await run(repoRoot, true, ['--target-dir', 'app']);
+
+    expect(process.exitCode).toBe(0);
+    expect(capture.jsonPayloads).toEqual([
+      expect.objectContaining({ status: 'ok', framework: 'fumadocs' }),
+    ]);
+    await expect(readMeta(join(repoRoot, 'app', 'docs'), '.')).resolves.toEqual(
+      { title: 'Home', pages: ['index', 'page'] },
+    );
+  });
+
+  it('ignores documentation.tooling when the target is not the configured root', async () => {
+    const repoRoot = await createConfiguredRepo('other-app');
+
+    const capture = await run(repoRoot, true, ['--target-dir', 'app']);
+
+    expect(process.exitCode).toBe(1);
+    expect(capture.jsonPayloads).toEqual([
+      expect.objectContaining({
+        status: 'error',
+        message: expect.stringContaining('Could not detect the docs framework'),
+      }),
+    ]);
   });
 });

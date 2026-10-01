@@ -20,6 +20,7 @@ export type DocsNavFramework = 'fumadocs' | 'mkdocs';
 
 interface DocsNavSyncCommandOptions {
   targetDir?: string;
+  check?: boolean;
 }
 
 interface SyncDocsNavigationOptions {
@@ -29,6 +30,8 @@ interface SyncDocsNavigationOptions {
    * configured docs root. Used only when no framework marker file is found.
    */
   configuredTooling?: string | null;
+  /** Compute the navigation and compare it with the files; write nothing. */
+  check?: boolean;
 }
 
 interface MkDocsNavigationResult {
@@ -37,6 +40,8 @@ interface MkDocsNavigationResult {
   docsRoot: string;
   mkdocsPath: string;
   nav: DocsNavTree;
+  /** `['mkdocs.yml']` when its `nav:` block differed before this run. */
+  stale: string[];
 }
 
 interface FumadocsNavigationResult {
@@ -45,6 +50,7 @@ interface FumadocsNavigationResult {
   docsRoot: string;
   metaFiles: FumadocsMetaFile[];
   written: string[];
+  stale: string[];
   unlisted: string[];
 }
 
@@ -170,7 +176,10 @@ export async function syncDocsNavigation(
   );
 
   if (framework === 'fumadocs') {
-    const result = await syncFumadocsNavigation({ docsRoot });
+    const result = await syncFumadocsNavigation({
+      docsRoot,
+      check: options.check,
+    });
     return {
       framework,
       appRoot: options.appRoot,
@@ -188,7 +197,10 @@ export async function syncDocsNavigation(
     'nav',
     navSection,
   );
-  await writeFile(mkdocsPath, `${updatedMkdocsSource.trimEnd()}\n`, 'utf8');
+  const nextMkdocsSource = `${updatedMkdocsSource.trimEnd()}\n`;
+  if (!options.check) {
+    await writeFile(mkdocsPath, nextMkdocsSource, 'utf8');
+  }
 
   return {
     framework,
@@ -196,6 +208,7 @@ export async function syncDocsNavigation(
     docsRoot,
     mkdocsPath,
     nav,
+    stale: nextMkdocsSource === mkdocsSource ? [] : ['mkdocs.yml'],
   };
 }
 
@@ -239,6 +252,61 @@ function reportFumadocsResult(
   }
 }
 
+/**
+ * `--check`: report drift without writing. Fails (exit 1) when any generated
+ * navigation file would change or, for Fumadocs, any page or folder is
+ * unlisted, since strict navigation hides it from the sidebar.
+ */
+function reportCheckResult(
+  context: CommandContext,
+  targetDir: string,
+  result: SyncDocsNavigationResult,
+): boolean {
+  const unlisted = result.framework === 'fumadocs' ? result.unlisted : [];
+  const current = result.stale.length === 0 && unlisted.length === 0;
+
+  if (context.json) {
+    context.logger.json({
+      status: current ? 'ok' : 'drift',
+      check: true,
+      framework: result.framework,
+      appRoot: result.appRoot,
+      docsRoot: result.docsRoot,
+      stale: result.stale,
+      unlisted,
+    });
+    return current;
+  }
+
+  if (current) {
+    context.logger.info(`Docs navigation is up to date in ${targetDir}`);
+    return current;
+  }
+
+  context.logger.error(`Docs navigation is out of date in ${targetDir}`);
+  if (result.stale.length > 0) {
+    context.logger.error(
+      `  ${result.stale.length} generated file(s) differ from the index.md Contents maps:`,
+    );
+    for (const path of result.stale) {
+      context.logger.error(`    ${path}`);
+    }
+  }
+  if (unlisted.length > 0) {
+    context.logger.error(
+      `  ${unlisted.length} path(s) are not listed in any index.md Contents map ` +
+        'and would be hidden from the sidebar:',
+    );
+    for (const path of unlisted) {
+      context.logger.error(`    ${path}`);
+    }
+  }
+  context.logger.error(
+    `  List every page in its directory's ## Contents, then run \`oat docs nav sync --target-dir ${targetDir}\`.`,
+  );
+  return current;
+}
+
 async function runDocsNavSyncCommand(
   context: CommandContext,
   options: DocsNavSyncCommandOptions,
@@ -253,7 +321,13 @@ async function runDocsNavSyncCommand(
         context.cwd,
         appRoot,
       ),
+      check: options.check === true,
     });
+
+    if (options.check) {
+      process.exitCode = reportCheckResult(context, targetDir, result) ? 0 : 1;
+      return;
+    }
 
     if (result.framework === 'fumadocs') {
       reportFumadocsResult(context, targetDir, result);
@@ -299,6 +373,12 @@ export function createDocsNavSyncCommand(
       new Option(
         '--target-dir <path>',
         'Docs app directory containing mkdocs.yml or source.config.ts',
+      ),
+    )
+    .addOption(
+      new Option(
+        '--check',
+        'Write nothing; exit 1 if any navigation file is stale or any page is unlisted',
       ),
     )
     .action(async (options: DocsNavSyncCommandOptions, command: Command) => {

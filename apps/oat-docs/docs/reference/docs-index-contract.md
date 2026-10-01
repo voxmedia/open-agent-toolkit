@@ -66,6 +66,9 @@ Fumadocs generated behavior:
 - The folder `title` comes from the `index.md` frontmatter `title`, falling back to its first `#` heading.
 - Keys nav sync does not own, such as `icon` or `defaultOpen`, are kept.
 - Existing files are compared by meaning, not bytes, so a second run with no docs changes writes nothing, even after a formatter rewrites the files.
+- `.md` and `.mdx` pages can both be listed; each appears in `pages` by its file name without the extension.
+
+`oat docs nav sync --check` computes the same result and writes nothing. It exits 1 when a `meta.json` file would change or a page or folder is unlisted, and names each one. In this app, `prebuild` runs it, so `pnpm build:docs` fails until the `## Contents` maps and the committed `meta.json` files agree.
 
 ## MkDocs Nav Sync
 

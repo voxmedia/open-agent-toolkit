@@ -397,7 +397,8 @@ If the app is Fumadocs (a `source.config.ts` beside `docs/`), its sidebar comes 
 3. Flag a `"..."` or `"z...a"` rest entry as a hand edit; nav sync output is strict.
 4. Flag pages that no `## Contents` map lists: under strict `meta.json` they are
    hidden from the sidebar. Recommend listing them, not adding a rest entry.
-5. Do not run `oat docs nav sync` during analysis; it writes files.
+5. During analysis, run only the read-only `oat docs nav sync --check` (it
+   names stale `meta.json` files and unlisted pages); plain nav sync writes files.
 
 If `mkdocs.yml` exists:
 

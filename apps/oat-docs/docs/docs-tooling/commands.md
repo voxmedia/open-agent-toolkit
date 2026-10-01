@@ -30,7 +30,7 @@ and **MkDocs Material**.
 
 Use the framework-specific generated-artifact command:
 
-- Fumadocs apps run `fumadocs-mdx` and `oat docs generate-index`. In this repo, `predev` and `prebuild` regenerate `apps/oat-docs/index.md` from `apps/oat-docs/docs`. They also use `oat docs nav sync` to write the committed `meta.json` sidebar files from authored directory `index.md` `## Contents` sections.
+- Fumadocs apps run `fumadocs-mdx` and `oat docs generate-index`. In this repo, `predev` and `prebuild` regenerate `apps/oat-docs/index.md` from `apps/oat-docs/docs`. Run `oat docs nav sync` yourself after structural changes to rewrite the committed `meta.json` sidebar files from authored directory `index.md` `## Contents` sections; the hooks never write them. `prebuild` runs `oat docs nav sync --check`, so a build fails when those files are stale or a page is unlisted.
 - MkDocs apps use `oat docs nav sync` to regenerate the `nav:` block in `mkdocs.yml` from authored directory `index.md` `## Contents` sections.
 
 Both frameworks keep authored `## Contents` sections as the source of local discovery. The generated artifact differs by framework.
@@ -198,6 +198,12 @@ The command reads only the reserved `## Contents` section from each directory
   meaning, so a rerun with no docs changes writes nothing. Commit the
   generated `meta.json` files.
 
+Use `--check` in builds and CI. It computes the same navigation, writes
+nothing, and exits 1 when any generated file would change or, for Fumadocs,
+any page or folder is unlisted, naming each one (`stale` and `unlisted` in
+`--json`). This repository's `apps/oat-docs` `prebuild` runs it, so
+`pnpm build:docs` fails on stale navigation.
+
 Fumadocs apps also regenerate the root markdown manifest with
 `oat docs generate-index`; the two commands write different artifacts.
 
@@ -205,6 +211,7 @@ Example:
 
 ```bash
 oat docs nav sync --target-dir apps/oat-docs
+oat docs nav sync --target-dir apps/oat-docs --check
 ```
 
 Related reference:

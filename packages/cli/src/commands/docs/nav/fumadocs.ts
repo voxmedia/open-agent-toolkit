@@ -31,13 +31,18 @@ export interface SyncFumadocsNavigationResult {
   /** Docs-relative paths of the `meta.json` files this run wrote. */
   written: string[];
   /**
+   * Docs-relative paths of the `meta.json` files that were missing or differed
+   * by meaning before this run. Equal to `written` unless `check` was set.
+   */
+  stale: string[];
+  /**
    * Docs-relative paths no Contents map places in the page tree. A folder is
    * reported once as `folder/` instead of once per page inside it.
    */
   unlisted: string[];
 }
 
-const PAGE_EXTENSIONS = new Set(['.md', '.mdx']);
+const PAGE_EXTENSIONS = ['.md', '.mdx'];
 const GROUP_FOLDER = /^\(.+\)$/;
 const H1 = /^#\s+(.+?)\s*#*\s*$/;
 const FENCE = /^\s*(```|~~~)/;
@@ -69,7 +74,10 @@ async function inventoryDocs(docsRoot: string): Promise<DocsInventory> {
       const entryPath = posix.join(relativeDir, entry.name);
       if (entry.isDirectory()) {
         await walk(entryPath);
-      } else if (entry.isFile() && PAGE_EXTENSIONS.has(extname(entry.name))) {
+      } else if (
+        entry.isFile() &&
+        PAGE_EXTENSIONS.includes(extname(entry.name))
+      ) {
         pages.push(entryPath);
       }
     }
@@ -79,6 +87,21 @@ async function inventoryDocs(docsRoot: string): Promise<DocsInventory> {
   directories.sort();
   pages.sort();
   return { directories, pages };
+}
+
+/**
+ * Reduce a Markdown heading to the plain text a sidebar shows: images and
+ * links keep their text, code spans keep their content, and emphasis and
+ * strikethrough markers are dropped.
+ */
+export function stripInlineMarkdown(text: string): string {
+  return text
+    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/(`+)(.+?)\1/g, '$2')
+    .replace(/(\*\*|__|~~)(.+?)\1/g, '$2')
+    .replace(/(^|[^\w*])[*_]([^*_]+?)[*_](?=[^\w*]|$)/g, '$1$2')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 /** Folder title: frontmatter `title`, else the first H1 outside code fences. */
@@ -113,7 +136,7 @@ export function resolveFolderTitle(markdown: string): string | undefined {
     }
     const heading = line.match(H1);
     if (heading?.[1]) {
-      return heading[1];
+      return stripInlineMarkdown(heading[1]) || undefined;
     }
   }
 
@@ -169,6 +192,7 @@ async function buildFolderPages(
       join(docsRoot, relativeDir),
       relativeDir,
       entry,
+      PAGE_EXTENSIONS,
     );
     const targetDir = parentDir(target.path);
     let item: string;
@@ -298,6 +322,8 @@ function collectUnlisted(
  */
 export async function syncFumadocsNavigation(options: {
   docsRoot: string;
+  /** Compute and compare only; never write. */
+  check?: boolean;
 }): Promise<SyncFumadocsNavigationResult> {
   const { docsRoot } = options;
   const inventory = await inventoryDocs(docsRoot);
@@ -329,7 +355,7 @@ export async function syncFumadocsNavigation(options: {
     const existing = await readExistingMeta(metaPath);
     const next = mergeMeta(existing, meta);
     const changed = existing === null || !isDeepStrictEqual(existing, next);
-    if (changed) {
+    if (changed && !options.check) {
       await writeFile(metaPath, `${JSON.stringify(next, null, 2)}\n`, 'utf8');
     }
     metaFiles.push({ path: relativePath, meta, changed });
@@ -337,9 +363,14 @@ export async function syncFumadocsNavigation(options: {
 
   metaFiles.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
 
+  const stale = metaFiles
+    .filter((file) => file.changed)
+    .map((file) => file.path);
+
   return {
     metaFiles,
-    written: metaFiles.filter((file) => file.changed).map((file) => file.path),
+    written: options.check ? [] : stale,
+    stale,
     unlisted: collectUnlisted(inventory, metas),
   };
 }
