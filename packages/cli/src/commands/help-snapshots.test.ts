@@ -167,6 +167,7 @@ describe('help output snapshots', () => {
         pjm               Manage project-management repo reference docs
         project           Manage OAT project workflows
         state             OAT repo state commands
+        template          Resolve OAT templates (repository, user, bundle)
         tools             Manage OAT tool packs (install, update, migrate, remove,
                           list)
         internal          Internal OAT maintenance commands
@@ -271,6 +272,58 @@ describe('help output snapshots', () => {
         archive [options] <id>                 Close out a backlog item: set a terminal status, record it in completed.md, move it to archived/, rewrite inbound .oat/repo references to it, and regenerate the index
         generate-id [options] <title-or-slug>  Generate a backlog item identifier (\`BL-YYMMDD-slug\`) from a title or slug
         help [command]                         display help for command
+      "
+    `);
+  });
+
+  it('template --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, ['template']).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat template [options] [command]
+
+      Resolve OAT templates (repository, user, bundle)
+
+      Options:
+        -h, --help                display help for command
+
+      Global Options:
+        -V, --version             output the version number
+        --json                    Output a single JSON document
+        --verbose                 Enable verbose debug output
+        --cwd <path>              Override working directory
+
+      Commands:
+        resolve [options] <name>  Report which tier supplies a template and
+                                  optionally copy it
+        help [command]            display help for command
+      "
+    `);
+  });
+
+  it('template resolve --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'template',
+      'resolve',
+    ]).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat template resolve [options] <name>
+
+      Report which tier supplies a template and optionally copy it
+
+      Arguments:
+        name             Template name, such as plan or plan.md
+
+      Options:
+        --output <path>  Copy the resolved template to this file, replacing it
+        -h, --help       display help for command
+
+      Global Options:
+        -V, --version    output the version number
+        --json           Output a single JSON document
+        --verbose        Enable verbose debug output
+        --cwd <path>     Override working directory
       "
     `);
   });

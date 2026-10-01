@@ -23,6 +23,16 @@ export interface ResolvedTemplate {
   tier: TemplateTier;
 }
 
+/** Raised when no tier supplies the requested template. */
+export class TemplateNotFoundError extends Error {
+  constructor(public readonly templateName: string) {
+    super(
+      `Template ${templateName} was not found in repository, user, or bundled templates.`,
+    );
+    this.name = 'TemplateNotFoundError';
+  }
+}
+
 async function readIfExists(path: string): Promise<string | null> {
   try {
     return await readFile(path, 'utf8');
@@ -91,7 +101,5 @@ export async function resolveTemplate(
     return { content: bundleContent, path: bundlePath, tier: 'bundle' };
   }
 
-  throw new Error(
-    `Template ${options.name} was not found in repository, user, or bundled templates.`,
-  );
+  throw new TemplateNotFoundError(options.name);
 }
