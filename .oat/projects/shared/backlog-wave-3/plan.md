@@ -377,16 +377,15 @@ Backlog: `BL-261001-make-recon-s-packet-validator`,
 
 **Step 1: Failing test first**
 
-Write the end-to-end test now, under `.agents/skills/recon/tests/`, with a
-synthetic two-source fixture: run the production helpers
-(`create-review-brief`, `reconcile-ledger`, `validate-packet`) on a
-two-source ledger with a partially uncertain semantic review (claim-scoped
-issue) and a material coverage finding. Assert the packet validates,
-unaffected claims stay verified, and affected claims are downgraded with the
-gaps visible. It fails today on all three codes; p03-t01 to p03-t03 each turn
-one green. Add a unit test only for the branch the end-to-end test does not
-reach: a single-source brief whose manifest source has fields outside the
-projection allowlist.
+Create the synthetic two-source fixture under `.agents/skills/recon/tests/`
+(a two-source ledger, a partially uncertain semantic review with a
+claim-scoped issue, and a material coverage finding) and a focused
+source-binding test on it: a brief that the production `create-review-brief`
+builds from that fixture binds every claim in `validate-packet`. It fails today
+with `REVIEW_BRIEF_MISMATCH`. Add a unit test for the branch the fixture does
+not reach: a single-source brief whose manifest source has fields outside the
+projection allowlist. The full publication assertion is activated in p03-t03,
+so the whole recon suite stays green at every task boundary.
 
 **Step 2: Implement**
 
@@ -421,9 +420,9 @@ Expected: exit 0.
 
 **Step 1: Failing test first**
 
-The p03-t01 end-to-end test still fails with
-`MATERIAL_COVERAGE_ASSURANCE_EXCEEDED`: its coverage review marks every
-statement `covered` while reporting a material question-coverage finding.
+Add a focused coverage test on the p03-t01 fixture: reconciling its coverage
+review (every statement `covered`, plus a material question-coverage finding)
+and publishing fails today with `MATERIAL_COVERAGE_ASSURANCE_EXCEEDED`.
 
 **Step 2: Implement**
 
@@ -459,8 +458,12 @@ Expected: exit 0.
 
 **Step 1: Failing test first**
 
-The p03-t01 end-to-end test still fails with `REVIEW_DISPOSITION_MISMATCH`:
-its semantic review's one claim-scoped issue blocks every verified claim.
+Activate the end-to-end publication test on the p03-t01 fixture: run the
+production helpers (`create-review-brief`, `reconcile-ledger`,
+`validate-packet`) and assert the packet validates, unaffected claims stay
+verified, and affected claims are downgraded with the gaps visible. It fails
+today only with `REVIEW_DISPOSITION_MISMATCH`, because the semantic review's
+one claim-scoped issue blocks every verified claim.
 Flip the two tests that require object entries to be rejected, and add
 negative cases for malformed scope: an empty `claimIds`, a non-string claim
 ID, a claim ID the review does not cover, an entry with neither scope form,
@@ -494,11 +497,11 @@ Expected: exit 0.
 **Files:**
 
 - Modify: the existing per-code negative tests in
-  `.agents/skills/recon/tests/` (the end-to-end test was written in p03-t01)
+  `.agents/skills/recon/tests/` (the end-to-end test is activated in p03-t03)
 
 **Step 1: Test**
 
-The p03-t01 end-to-end test now passes. Negative controls reuse the existing
+The p03-t03 end-to-end test passes. Negative controls reuse the existing
 per-code tests (`packet-validation.test.mjs` around 1635-1652, 1822, 1834;
 `integrity-contracts.test.mjs` around 332, 1757), changed to start from
 helper-produced briefs: an edited brief statement, evidence, locator, or
@@ -1056,11 +1059,17 @@ summary. (Its relationship to `BL-260711` was recorded in Wave 2.)
 
 Do not archive `BL-260806-fail-closed-when-configured` here. This project's
 own closeout starts from a configured-plus-absent state (autonomous, no
-snapshot yet), so it is the live lifecycle evidence the item asks for: at
-closeout, record in `implementation.md` the commit that persists the snapshot,
-each sequence child's commit in stored order, the approval record, and the
-completion transition, then archive the item during the closeout's
-documentation step with that trace cited.
+snapshot yet), so it is the live lifecycle evidence the item asks for. The
+effective sequence is `preApproval: [summary, document, pr]`,
+`postApproval: []`, so the trace is complete only after the PR child, the
+approval record, and the Step 16 completion transition. Owner and boundary:
+after `oat-project-implement` reports the closeout sequence `complete` and
+Step 16 has marked implementation complete, and before the autonomous run's
+final report, the root orchestrator appends the trace to `implementation.md`
+(the snapshot-persisting commit, each child's commit in stored order, the
+approval record, and the completion commit), archives the item with
+`backlog archive` citing that trace, commits, pushes, and notes the archive in
+the open PR's body.
 
 **Step 2: Index note**
 
@@ -1122,54 +1131,54 @@ edit `completion-and-closeout.md` and `oat-project-next/SKILL.md` in order.
 
 ## Acceptance Mapping
 
-| Item                                       | Criterion                                                                        | Task                                      |
-| ------------------------------------------ | -------------------------------------------------------------------------------- | ----------------------------------------- |
-| `BL-260927-expose-a-scoped-template`       | One precedence order shared by scaffold, PJM, and the command; decision recorded | p01-t01 (DR-260927-templates)             |
-|                                            | CLI command resolves a named template, `--json`, clear not-found                 | p01-t02                                   |
-|                                            | Lifecycle skills call the resolver; version bumps                                | p01-t03                                   |
-|                                            | Tests: repository override, user-only, bundle-only, isolated `HOME`              | p01-t01, p01-t02                          |
-| `BL-260718-support-fumadocs-in-oat-docs`   | Framework detection; MkDocs unchanged                                            | p02-t01                                   |
-|                                            | `meta.json` per directory from Contents order; title from heading                | p02-t01                                   |
-|                                            | Unlisted pages reported, not dropped                                             | p02-t01                                   |
-|                                            | Second run writes nothing                                                        | p02-t01, p02-t03                          |
-|                                            | Help and docs describe both frameworks; snapshot updated                         | p02-t02                                   |
-|                                            | `apps/oat-docs` sidebar matches Contents maps; files committed; `build:docs`     | p02-t03                                   |
-|                                            | Docs skills framework-correct; bumps                                             | p02-t04                                   |
-|                                            | Tests: nested fixture, unlisted, idempotence, isolated `HOME`                    | p02-t01                                   |
-| `BL-261001-make-recon-s-packet-validator`  | Shared projection and binding; briefs stay blind                                 | p03-t01                                   |
-|                                            | One coverage contract across acceptance, reconciliation, publication             | p03-t02                                   |
-|                                            | Structured unresolved issues, same rule everywhere                               | p03-t03                                   |
-|                                            | End-to-end production-helper test                                                | p03-t01                                   |
-|                                            | Negative controls proven by neutralization                                       | p03-t04                                   |
-|                                            | `recon` bump and release note                                                    | p03-t01, PR Requirements                  |
-| `BL-261001-recover-recon-lanes-after`      | Codex v2 residency note; `interrupt_agent` vs `close_agent`                      | p03-t05                                   |
-|                                            | Pre-acceptance rejection is a provider failure; accepted work kept               | p03-t05                                   |
-|                                            | At most one retry, declared; approved alternate only; otherwise stop             | p03-t05                                   |
-|                                            | No silent control changes; fresh lanes stay fresh                                | p03-t05                                   |
-| `BL-261001-recompute-oat-project-next-s`   | Next recomputes v2 with the same exclusions; pinned against implement            | p04-t01                                   |
-| `BL-260806-fail-closed-when-configured`    | Configured/autonomous closeout cannot complete without the snapshot              | p04-t02, p04-t03                          |
-|                                            | Snapshot persisted before any sequence child is dispatched                       | p04-t03                                   |
-|                                            | Transition-level tests from configured-plus-absent through completion            | p04-t02 (disk trace), closeout live trace |
-|                                            | Unconfigured path preserved; missing snapshot diagnosed                          | p04-t02                                   |
-| `BL-260902-decide-test-only-freshness`     | Append-only waiver; provenance not rewritten                                     | p04-t04                                   |
-|                                            | Operator-only, never self-issued under autonomy                                  | p04-t04                                   |
-|                                            | Waived generation stale after a later substantive change (v1 and v2)             | p04-t04                                   |
-|                                            | Waiver shown in summary and PR verification                                      | p04-t04                                   |
-|                                            | Tests: waived, unwaived, waiver-then-change, malformed                           | p04-t04                                   |
-|                                            | Implement and next bumped                                                        | p01-t03, p04-t01                          |
-| `BL-260928-keep-instructions-sync-force`   | `--force` never overwrites a linked `CLAUDE.md`, any strategy                    | p05-t01                                   |
-|                                            | Failing-first test and neutralize-and-restore proof                              | p05-t01                                   |
-| `BL-260909-give-the-dispatch-record`       | Decision recorded (validate-only)                                                | `DR-260927-dispatch-record-validates`     |
-|                                            | Persistence and its docs removed; validator kept for the managed Claude path     | p05-t02                                   |
-|                                            | No `<project>/dispatch/` written by any default path                             | p05-t02                                   |
-| `BL-260826-decide-whether-test-only-paths` | Ignore patterns equal tsconfig test exclusions; contract test                    | p05-t03                                   |
-|                                            | Test-only change passes; `src` change still requires a bump                      | p05-t03                                   |
-|                                            | AGENTS.md states the rule                                                        | p05-t03                                   |
-| `BL-260830-add-strict-yaml-validation`     | Invalid YAML fails with path and parser location                                 | p05-t04                                   |
-|                                            | Field types validated; semantic checks kept; bare-colon fixture; skills pass     | p05-t04                                   |
-| `BL-260928-route-quick-mode-discovery`     | Router and dashboard route quick discovery to quick-start; tests agree           | p05-t05                                   |
-| `BL-260903-verify-the-packs-inventory`     | Docs claim matches the code (cited paths)                                        | p05-t06                                   |
-| `BL-260829-order-phase-bookkeeping-before` | Verified against a real multi-phase run; relationship to BL-260711 recorded      | every phase review, p06-t02               |
+| Item                                       | Criterion                                                                        | Task                                                     |
+| ------------------------------------------ | -------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| `BL-260927-expose-a-scoped-template`       | One precedence order shared by scaffold, PJM, and the command; decision recorded | p01-t01 (DR-260927-templates)                            |
+|                                            | CLI command resolves a named template, `--json`, clear not-found                 | p01-t02                                                  |
+|                                            | Lifecycle skills call the resolver; version bumps                                | p01-t03                                                  |
+|                                            | Tests: repository override, user-only, bundle-only, isolated `HOME`              | p01-t01, p01-t02                                         |
+| `BL-260718-support-fumadocs-in-oat-docs`   | Framework detection; MkDocs unchanged                                            | p02-t01                                                  |
+|                                            | `meta.json` per directory from Contents order; title from heading                | p02-t01                                                  |
+|                                            | Unlisted pages reported, not dropped                                             | p02-t01                                                  |
+|                                            | Second run writes nothing                                                        | p02-t01, p02-t03                                         |
+|                                            | Help and docs describe both frameworks; snapshot updated                         | p02-t02                                                  |
+|                                            | `apps/oat-docs` sidebar matches Contents maps; files committed; `build:docs`     | p02-t03                                                  |
+|                                            | Docs skills framework-correct; bumps                                             | p02-t04                                                  |
+|                                            | Tests: nested fixture, unlisted, idempotence, isolated `HOME`                    | p02-t01                                                  |
+| `BL-261001-make-recon-s-packet-validator`  | Shared projection and binding; briefs stay blind                                 | p03-t01                                                  |
+|                                            | One coverage contract across acceptance, reconciliation, publication             | p03-t02                                                  |
+|                                            | Structured unresolved issues, same rule everywhere                               | p03-t03                                                  |
+|                                            | End-to-end production-helper test                                                | p03-t01                                                  |
+|                                            | Negative controls proven by neutralization                                       | p03-t04                                                  |
+|                                            | `recon` bump and release note                                                    | p03-t01, PR Requirements                                 |
+| `BL-261001-recover-recon-lanes-after`      | Codex v2 residency note; `interrupt_agent` vs `close_agent`                      | p03-t05                                                  |
+|                                            | Pre-acceptance rejection is a provider failure; accepted work kept               | p03-t05                                                  |
+|                                            | At most one retry, declared; approved alternate only; otherwise stop             | p03-t05                                                  |
+|                                            | No silent control changes; fresh lanes stay fresh                                | p03-t05                                                  |
+| `BL-261001-recompute-oat-project-next-s`   | Next recomputes v2 with the same exclusions; pinned against implement            | p04-t01                                                  |
+| `BL-260806-fail-closed-when-configured`    | Configured/autonomous closeout cannot complete without the snapshot              | p04-t02, p04-t03                                         |
+|                                            | Snapshot persisted before any sequence child is dispatched                       | p04-t03                                                  |
+|                                            | Transition-level tests from configured-plus-absent through completion            | p04-t02 (disk trace), post-closeout live trace (p06-t02) |
+|                                            | Unconfigured path preserved; missing snapshot diagnosed                          | p04-t02                                                  |
+| `BL-260902-decide-test-only-freshness`     | Append-only waiver; provenance not rewritten                                     | p04-t04                                                  |
+|                                            | Operator-only, never self-issued under autonomy                                  | p04-t04                                                  |
+|                                            | Waived generation stale after a later substantive change (v1 and v2)             | p04-t04                                                  |
+|                                            | Waiver shown in summary and PR verification                                      | p04-t04                                                  |
+|                                            | Tests: waived, unwaived, waiver-then-change, malformed                           | p04-t04                                                  |
+|                                            | Implement and next bumped                                                        | p01-t03, p04-t01                                         |
+| `BL-260928-keep-instructions-sync-force`   | `--force` never overwrites a linked `CLAUDE.md`, any strategy                    | p05-t01                                                  |
+|                                            | Failing-first test and neutralize-and-restore proof                              | p05-t01                                                  |
+| `BL-260909-give-the-dispatch-record`       | Decision recorded (validate-only)                                                | `DR-260927-dispatch-record-validates`                    |
+|                                            | Persistence and its docs removed; validator kept for the managed Claude path     | p05-t02                                                  |
+|                                            | No `<project>/dispatch/` written by any default path                             | p05-t02                                                  |
+| `BL-260826-decide-whether-test-only-paths` | Ignore patterns equal tsconfig test exclusions; contract test                    | p05-t03                                                  |
+|                                            | Test-only change passes; `src` change still requires a bump                      | p05-t03                                                  |
+|                                            | AGENTS.md states the rule                                                        | p05-t03                                                  |
+| `BL-260830-add-strict-yaml-validation`     | Invalid YAML fails with path and parser location                                 | p05-t04                                                  |
+|                                            | Field types validated; semantic checks kept; bare-colon fixture; skills pass     | p05-t04                                                  |
+| `BL-260928-route-quick-mode-discovery`     | Router and dashboard route quick discovery to quick-start; tests agree           | p05-t05                                                  |
+| `BL-260903-verify-the-packs-inventory`     | Docs claim matches the code (cited paths)                                        | p05-t06                                                  |
+| `BL-260829-order-phase-bookkeeping-before` | Verified against a real multi-phase run; relationship to BL-260711 recorded      | every phase review, p06-t02                              |
 
 The `BL-260909` removal criterion "no skill or doc references the command" is
 superseded by `DR-260927-dispatch-record-validates`, which keeps the
@@ -1226,7 +1235,7 @@ breaking changes must be named in the title:
 | design | artifact | pending         | -          | -                                                  | -             | -          | -                 |
 | plan   | artifact | fixes_completed | 2026-10-01 | -                                                  | -             | auto       | -                 |
 | plan   | artifact | fixes_completed | 2026-10-01 | reviews/artifact-plan-review-2026-10-01T061917Z.md | -             | gate       | codex-6-sol-xhigh |
-| plan   | artifact | received        | 2026-10-01 | reviews/artifact-plan-review-2026-10-01T063044Z.md | -             | -          | -                 |
+| plan   | artifact | fixes_completed | 2026-10-01 | reviews/artifact-plan-review-2026-10-01T063044Z.md | -             | gate       | codex-6-sol-xhigh |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
@@ -1254,6 +1263,15 @@ resolved by a closed union bound to the review's claims, with malformed
 negatives. M1 was resolved by dropping the apply-time re-check rather than
 proving it, as the complexity review recommended: a relink inside one CLI run
 is unreported, and the planning guard is proven by neutralization.
+
+Gate attempt 2 (`codex-6-sol-xhigh`) returned H1 (archiving `BL-260806`
+inside the documentation child would precede the PR child, approval, and
+completion it must cite) and M1 (the staged recon end-to-end test could not be
+green at each task's verification). H1 was resolved by moving the archive to a
+root-owned step after Step 16 and before the final report; M1 by a shared
+fixture with focused per-defect tests and the full publication assertion
+activated in p03-t03. The configured gate's `maxAttempts: 2` is exhausted, so
+readiness waits on an operator decision (QS-12 boundary).
 
 Complexity review (required by `tackle-backlog`) simplifications applied:
 reuse the existing PJM resolver; `--output` copies with no `--force`; trimmed

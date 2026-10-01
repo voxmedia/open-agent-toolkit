@@ -124,6 +124,31 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 ---
 
+## Plan Gate Feedback (quick-start, QS-12)
+
+Configured gate: `oat-project-quick-start` exit gate, `onFailure: block`,
+`maxAttempts: 2`, reviewer `codex-6-sol-xhigh` (selected by cross-family
+exclusion with `OAT_GATE_PRODUCER_IDENTITY=claude-opus-5-5:declared`).
+
+- Attempt 1 (`reviews/artifact-plan-review-2026-10-01T061917Z.md`, blocked,
+  1 High, 2 Medium): H1 no executable closeout transition proof; M1 the
+  `--force` apply-time re-check could not be shown load-bearing; M2 scoped
+  recon issues lacked fail-closed validation. Resolved in `b76f27dd3` (H1
+  disk-backed trace plus this project's own closeout as live evidence; M2
+  closed union bound to covered claims; M1 by removing the re-check per the
+  complexity review).
+- Attempt 2 (`reviews/artifact-plan-review-2026-10-01T063044Z.md`, blocked,
+  1 High, 1 Medium): H1 the `BL-260806` archive was placed inside the
+  documentation child, before the PR child, approval, and completion it must
+  cite; M1 the staged recon end-to-end test could not be green at each task
+  boundary. Both resolved in the plan after the attempt (root-owned archive
+  after Step 16; shared fixture with focused per-defect tests, full
+  assertion activated in p03-t03), without a further gate run.
+
+Attempts are exhausted with the last findings resolved in the plan but not
+re-gated, so implementation readiness waits on an operator decision (QS-12
+boundary). The plan keeps its pre-review frontmatter until then.
+
 ## Implementation Log
 
 Chronological log of implementation progress.

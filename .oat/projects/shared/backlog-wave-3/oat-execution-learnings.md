@@ -24,3 +24,9 @@ documentation-gap, candidate-skill-content, decision, and environment-limited.
 **Observation:** The slash commands load user-scope skills from `~/.agents/skills` (oat CLI 0.3.8 on PATH): `oat-project-implement` 2.3.12, which has no Step 7a pre-review bookkeeping commit. `origin/main` and the project-scope view (`.claude/skills` linked to the repo's `.agents/skills`) carry 2.3.14.
 **Impact:** `BL-260829-order-phase-bookkeeping-before` needs a run that uses Step 7a, and this wave edits the implement skill in p01 and p04, so the working-tree copy changes mid-run.
 **Recommendation:** Implementation follows `oat-project-implement` as of `origin/main` (2.3.14, read with `git show origin/main:<path>`) for the whole run, and records that version beside any BL-260829 evidence. Refresh user-scope skills with `oat tools update` after each release.
+
+## 2026-10-01T06:36:47Z - decision - Plan gate exhausted with every finding resolved in the plan
+
+**Observation:** The quick-start Codex gate blocked twice (attempt 1: 1 High, 2 Medium; attempt 2: 1 High, 1 Medium). Each round raised new, valid sequencing findings, and the last were fixed after the final allowed attempt. Wave 2's plan gate ended the same way.
+**Impact:** QS-12 `block` with `maxAttempts: 2` stops autonomous readiness at a boundary even when the remaining findings are resolved.
+**Recommendation:** For broad multi-item waves, expect the plan gate to need the operator's go-ahead after two attempts; record the post-gate fixes so the decision is cheap.
