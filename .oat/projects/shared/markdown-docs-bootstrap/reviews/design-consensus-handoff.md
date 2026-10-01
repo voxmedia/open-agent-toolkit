@@ -10,7 +10,7 @@ Consensus Review completed once against the full design at commit `7781647a23359
 - Observed provider: Claude. Model and effort were not independently exposed by the provider envelope; the reviewer claimed the requested model and effort.
 - Reviewed design SHA-256: `15dd0a1ce4af4a2cccfbdad9cc167320b93ac7f7255508b20b148f7e4d2cbbbc`.
 - Drift comparison: stable within the runtime's documented coverage.
-- Full draft remains unchanged after review. Findings are not applied, and design acceptance/planning is pending.
+- Original review artifacts and their captured draft are unchanged. The user approved the dispositions below, which have now been incorporated into the working design. That revised design has not received independent re-review.
 
 ## Canonical Artifacts
 
@@ -38,3 +38,22 @@ Read-only source checks corroborated the docs-content pointer exclusion, oat ini
 Used the clean Consensus Review skill at `/Users/tstang/Code/skills/skills/consensus-review/` because installed plugin cache `skills/consensus/0.2.5` contained unresolved merge markers and its executable failed parsing. No installed assets were changed.
 
 Read-only provider controls are not universal filesystem/network isolation. Drift detection covered HEAD, index, Git status, and selected-path hashes; unselected/ignored and transient changes can escape detection. External run retention is operator-managed. This is an independent design document review; the generic runtime's Markdown frontmatter labels it code, and no OAT artifact-review gate disposition is inferred from that label.
+
+## Approved Dispositions Applied
+
+The user approved these dispositions after the root agent presented its assessment:
+
+| Finding | Disposition | Applied design decision                                                                                                     |
+| ------- | ----------- | --------------------------------------------------------------------------------------------------------------------------- |
+| M1      | Accept      | Root managed AGENTS guidance plus contributing; no docs-root AGENTS scaffold; content excluded from pointer writes          |
+| M2      | Accept      | Shared read-only guidance classifier preview; dry-run status/exit codes and no-change contract                              |
+| M3      | Narrow      | Bootstrap preflight owns Markdown detection; general oat init remains unchanged                                             |
+| M4      | Clarify     | Markdown requires adopt; existing framework replacement prompts/--yes stay intact, including replacement of Markdown config |
+| M5      | Accept      | Canonical configured content root and authored index protected regardless of narrowed --docs-dir or symlink aliases         |
+| M6      | Accept      | Explicit consumer inventory spanning skill references, instruction sync, project-document/doctor, and docs                  |
+| L1      | Accept      | Dedicated root required; repository root and escaping paths refused                                                         |
+| L2      | Accept      | Deterministic Markdown managed section with correct authored index and contributing paths                                   |
+
+Design-only self-review checked placeholders, internal consistency, scope, and ambiguity. The independent pass remains evidence for the original draft only; no claim of re-review or implementation acceptance is made.
+
+Revised design SHA-256: `818e8db294bb0a83d09e84596bdcfd9c57df5c40502830a8731d26a74ffdafa0`. Discovery completion passed the CLI validation boundary with ready-for `oat-project-quick-start`.

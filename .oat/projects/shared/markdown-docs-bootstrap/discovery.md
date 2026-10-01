@@ -1,8 +1,8 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-quick-start
 oat_blockers: []
-oat_last_updated: 2026-09-30
+oat_last_updated: 2026-10-01
 oat_generated: false
 oat_template: false
 ---
@@ -82,9 +82,16 @@ Package drift and tooling approval work remain in the existing broader backlog r
 
 ## Open Questions
 
-- **Index ownership:** Define the authored index entrypoint and optional generated manifest behavior so default index generation cannot conflict with Markdown source files.
-- **Adoption boundary:** Define which config, index, and guidance repairs bootstrap owns versus the existing analyze/apply workflow, including behavior for an existing nonempty directory.
-- **Scaffold shape:** Choose the minimal useful Markdown scaffold and framework-independent guidance while preserving repository-specific context.
+None for quick planning. The lightweight design resolves index ownership, the explicit adoption boundary, and the minimal scaffold.
+
+## Design Decisions Confirmed After Review
+
+- Agent guidance uses the managed repository-root Documentation section and the contributing page; bootstrap does not create docs-root AGENTS.md.
+- Markdown detection stays in bootstrap preflight; general oat init is unchanged.
+- Markdown adoption requires explicit adopt; existing framework replacement semantics remain intact.
+- Generated manifests must stay outside the full configured content tree and cannot overwrite its authored index even with narrowed source flags.
+- Markdown bootstrap requires a dedicated docs directory; root-level Markdown analysis remains supported.
+- Dry-run reports planned changes and predicted guidance without writes, with explicit partial and no-change outcomes.
 
 ## Assumptions
 
@@ -105,4 +112,4 @@ Package drift and tooling approval work remain in the existing broader backlog r
 
 ## Next Steps
 
-The user selected lightweight design. Complete the collaborative design review to settle index ownership and existing-directory adoption before writing the implementation plan.
+The user selected lightweight design, requested a full draft plus independent review, and approved the root dispositions. Those revisions are complete; continue quick-start with executable plan generation.
