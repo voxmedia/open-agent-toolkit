@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
-oat_current_task_id: p03-t01
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 5     | 5/5       |
-| Phase 2 | complete | 6     | 6/6       |
-| Phase 3 | pending  | 5     | 0/5       |
-| Phase 4 | pending  | 4     | 0/4       |
-| Phase 5 | pending  | 6     | 0/6       |
-| Phase 6 | pending  | 3     | 0/3       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 5     | 5/5       |
+| Phase 2 | complete    | 6     | 6/6       |
+| Phase 3 | in_progress | 5     | 5/5       |
+| Phase 4 | pending     | 4     | 0/4       |
+| Phase 5 | pending     | 6     | 0/6       |
+| Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 11/29 tasks completed
+**Total:** 16/29 tasks completed
 
 ---
 
@@ -106,32 +106,32 @@ oat_generated: false
 
 ## Phase 3: Recon publication and Codex recovery
 
-**Status:** pending
+**Status:** in_progress
 
 ### Task p03-t01: Share review-brief source binding
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** b9482e67d
 
 ### Task p03-t02: Keep the coverage downgrade, drop the per-statement gap rule
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 59756283f
 
 ### Task p03-t03: Structure unresolved issues
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** b08951bdd
 
 ### Task p03-t04: Prove recon's negative controls against helper output
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 47c0e5f81
 
 ### Task p03-t05: Document the Codex agent-limit gotcha and allow one bounded retry
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** c4505feb3
 
 ---
 
