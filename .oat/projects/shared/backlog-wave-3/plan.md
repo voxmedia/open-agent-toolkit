@@ -627,8 +627,11 @@ From `state.md` fixtures:
 4. Every required step durably `complete` and approval recorded → `complete`.
 5. Config absent, not autonomous, not lite, no snapshot → valid (control).
 6. Malformed snapshot → fails closed.
+7. Same as case 1 with only `OAT_AUTONOMOUS=1` set in the environment (no
+   flag) → `incomplete`. Neutralize the env read, show this case passes
+   wrongly, then restore.
 
-`oat project complete-state` refuses cases 1-3 and 6 with the same message.
+`oat project complete-state` refuses cases 1-3, 6, and 7 with the same message.
 Neutralize the check and show cases 1 and 6 pass wrongly; restore.
 
 **Step 2: Implement**
@@ -636,8 +639,9 @@ Neutralize the check and show cases 1 and 6 pass wrongly; restore.
 `oat project closeout-check <project-path> [--autonomous] [--json]` is
 read-only. Inputs: lite from `oat_workflow_mode`; configured from the
 effective layered `workflow.postImplementSequence` at check time (through the
-CLI config resolver); autonomous from `--autonomous`, which callers pass when
-`OAT_AUTONOMOUS=1`. Once a snapshot exists, its recorded `source` is
+CLI config resolver); autonomous when `--autonomous` is passed or
+`OAT_AUTONOMOUS=1` is set in the environment (read through an injectable env
+dependency, so a caller that forgets the flag cannot fail open). Once a snapshot exists, its recorded `source` is
 authoritative and current config is not consulted, so a later config change
 cannot invalidate a persisted run. It reports `status`, the missing
 invariant, and the next owner. `oat project complete-state` takes the same
@@ -799,18 +803,22 @@ Expected: exit 0.
   used in `augmentDispatchRecord`), `packages/cli/src/commands/project/dispatch/index.ts`
   (`--project`, `persisted` status around 107-180), `record.test.ts`,
   `packages/cli/src/commands/help-snapshots.test.ts` (around 1137)
-- Modify: `.agents/skills/oat-dispatch-subagents/SKILL.md` (178-189) and
-  `references/record-schema.md` (366, 379),
+- Modify (persistence descriptions): `.agents/skills/oat-dispatch-subagents/SKILL.md`
+  (178-189) and `references/record-schema.md` (366, 379),
   `.agents/skills/oat-project-dispatch-subagents/SKILL.md` (161-169),
   `.agents/skills/oat-project-review-provide/SKILL.md` (around 762),
+  `.agents/skills/oat-project-review-provide-remote/SKILL.md` (around 327),
   `.agents/skills/oat-project-plan-writing/SKILL.md` (around 273),
-  `apps/oat-docs/docs/reference/cli-reference.md` (157),
-  `apps/oat-docs/docs/workflows/projects/evidence-layers.md` (around 81), and
-  the implementation-execution, orchestration-model, and scope-and-surface docs
-  that describe persistence (locate by content)
-- Modify: `packages/cli/src/commands/doctor/stale-invocations.ts` if its
-  `KNOWN_STALE_INVOCATIONS` list covers removed flags (add
-  `dispatch record --project`)
+  `.agents/skills/oat-project-implement/references/dispatch-and-dry-run.md`
+  (around 403-408), `apps/oat-docs/docs/reference/cli-reference.md` (157),
+  `apps/oat-docs/docs/workflows/projects/evidence-layers.md` (around 81),
+  `apps/oat-docs/docs/workflows/projects/orchestration-model.md` (the
+  `Journal` participant in the sequence diagram around 79-87), and the
+  implementation-execution and scope-and-surface docs that describe
+  persistence (locate by content)
+- Modify: `packages/cli/src/validation/skills.test.ts` (around 3008-3054),
+  which today requires those files to say the record is "optional and off by
+  default"; rewrite it to assert the persistence wording is absent
 
 **Step 1: Remove**
 
@@ -820,19 +828,28 @@ as the decision record requires for the managed Claude validation path. Delete
 the journal writer, lock, revisions, fallback-claim publication, related-record
 reads, `--project`, the `persisted` status, and the lineage logic only they
 used. Move the redaction assertions that read journal bytes (around 1829 and 1873) onto the validate-only output. Prune persistence tests. Leave
-`tools/smoke/evidence` alone. Bump `oat-project-dispatch-subagents`,
-`oat-project-review-provide`, and `oat-project-plan-writing`
-(`oat-dispatch-subagents` is already bumped in p03-t05).
+`tools/smoke/evidence` alone and do not add a stale-invocation doctor entry.
+Bump `oat-project-dispatch-subagents`, `oat-project-review-provide`,
+`oat-project-review-provide-remote`, and `oat-project-plan-writing`
+(`oat-dispatch-subagents` is already bumped in p03-t05, and
+`oat-project-implement` in p01-t03).
 
 **Step 2: Verify**
 
-Run: `pnpm build`, `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/dispatch src/commands/help-snapshots.test.ts src/validation`,
-`pnpm test:smoke`, `pnpm test:skills`,
-`node packages/cli/dist/index.js project dispatch record --project x` (rejected
-as an unknown option), and
-`rg -n -U 'dispatch record[^\n]*\\\n\s*--project|--project "\$PROJECT_PATH"|per-dispatch file|dispatch/` director|dispatch journal|<project>/dispatch/' .agents apps/oat-docs/docs packages/cli/src --glob '!\*_/_.test.ts'`(no persistence references remain; "validate-only, no`--project`" wording is
-allowed).
-Expected: exit 0 except the rejected probe.
+Run `pnpm build`, then
+`HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/dispatch src/commands/help-snapshots.test.ts src/validation`,
+`pnpm test:smoke`, `pnpm test:skills`, and
+`node packages/cli/dist/index.js project dispatch record --project x`
+(rejected as an unknown option). Then run this search; the expected result is
+no output (rg exits 1). Wording that says the command is validate-only and
+takes no `--project` is allowed.
+
+```bash
+rg -n -U 'dispatch record[^\n]*\\\n\s*--project|per-dispatch file|dispatch/. director|dispatch journal|<project>/dispatch/' \
+  .agents apps/oat-docs/docs packages/cli/src --glob '!**/*.test.ts'
+```
+
+Expected: every other command exits 0.
 
 **Step 3: Commit**
 
@@ -863,12 +880,15 @@ one AGENTS.md paragraph stating the rule.
 **Step 3: Verify**
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/release`.
-Real probe: in a scratch worktree off `origin/main` (`git worktree add
-"$(mktemp -d)/probe" origin/main`), with this task's ignore patterns applied,
-change only a `packages/cli/src/**/*.test.ts` file, commit, and run
-`pnpm release:check-versions` (expect exit 0); repeat with a non-test `src`
-file (expect a failure). Record both exit codes in the commit body, then
-remove the worktree with `git worktree remove`.
+Real probe: create a scratch worktree off `origin/main`
+(`git worktree add "$(mktemp -d)/probe" origin/main`) and run
+`pnpm run worktree:init` in it. Apply this task's ignore-pattern change there
+uncommitted (`release:check-versions` diffs committed history but loads the
+contract from the working tree). Commit only a change to one
+`packages/cli/src/**/*.test.ts` file and run `pnpm release:check-versions`
+(expect exit 0). Then commit a change to a non-test `src` file and run it
+again (expect a failure). Record both exit codes in the commit body, then
+remove the worktree with `git worktree remove --force <path>`.
 Expected: exit 0 for the unit tests and the test-only probe.
 
 **Step 4: Commit**
