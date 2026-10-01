@@ -1052,10 +1052,12 @@ describe('help output snapshots', () => {
     expect(help).toMatchInlineSnapshot(`
       "Usage: oat docs nav sync [options]
 
-      Regenerate docs navigation from index.md contents
+      Regenerate docs navigation from index.md contents: mkdocs.yml nav (MkDocs) or
+      strict meta.json files (Fumadocs)
 
       Options:
-        --target-dir <path>  Docs app directory containing mkdocs.yml
+        --target-dir <path>  Docs app directory containing mkdocs.yml or
+                             source.config.ts
         -h, --help           display help for command
 
       Global Options:

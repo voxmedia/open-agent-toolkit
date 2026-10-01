@@ -62,7 +62,13 @@ Documentation should ship with the code it explains. This page covers the core d
   pnpm -w run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md
   ```
 
-- In MkDocs apps, use `oat docs nav sync` to refresh `mkdocs.yml` instead. Do not use MkDocs nav sync as the Fumadocs regeneration step.
+- Then refresh the sidebar navigation. `oat docs nav sync` rewrites the committed `meta.json` files from the `## Contents` maps and reports any page no map lists; list the page in its directory's `## Contents` rather than editing `meta.json`:
+
+  ```bash
+  pnpm -w run cli:source -- docs nav sync --target-dir apps/oat-docs
+  ```
+
+- In MkDocs apps, the same `oat docs nav sync` command refreshes the `nav:` block in `mkdocs.yml` instead.
 - Use [Markdown Features](markdown-features.md) for supported syntax and examples.
 
 ## Agent guidance

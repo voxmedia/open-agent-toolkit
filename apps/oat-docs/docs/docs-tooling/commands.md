@@ -1,6 +1,6 @@
 ---
 title: Docs App Commands
-description: 'Docs scaffolding CLI surface for Fumadocs/MkDocs, migration helpers, Fumadocs index generation, and MkDocs nav sync.'
+description: 'Docs scaffolding CLI surface for Fumadocs/MkDocs, migration helpers, Fumadocs index generation, and nav sync for both frameworks.'
 ---
 
 # Docs App Commands
@@ -11,7 +11,7 @@ and **MkDocs Material**.
 
 ## Quick Look
 
-- What it does: documents the docs-specific CLI surface for scaffolding apps, migrating markdown, generating Fumadocs app-root index manifests, and syncing MkDocs navigation.
+- What it does: documents the docs-specific CLI surface for scaffolding apps, migrating markdown, generating Fumadocs app-root index manifests, and syncing MkDocs or Fumadocs navigation.
 - When to use it: when you already know you are working on a docs surface and need the exact command-level behavior.
 - Primary commands: `oat docs init`, `oat docs migrate`, `oat docs generate-index`, `oat docs nav sync`
 
@@ -22,7 +22,7 @@ and **MkDocs Material**.
 | `oat docs init`           | Scaffold a new docs app (Fumadocs or MkDocs).                                 |
 | `oat docs migrate`        | Convert MkDocs admonitions to GFM callouts and inject frontmatter.            |
 | `oat docs generate-index` | Generate a Fumadocs app-root docs index manifest from the Markdown file tree. |
-| `oat docs nav sync`       | Regenerate MkDocs `mkdocs.yml` navigation from directory `index.md` maps.     |
+| `oat docs nav sync`       | Regenerate `mkdocs.yml` nav or Fumadocs `meta.json` from `index.md` maps.     |
 | `oat docs analyze`        | CLI entrypoint that points users to the `oat-docs-analyze` skill.             |
 | `oat docs apply`          | CLI entrypoint that points users to the `oat-docs-apply` skill.               |
 
@@ -30,7 +30,7 @@ and **MkDocs Material**.
 
 Use the framework-specific generated-artifact command:
 
-- Fumadocs apps run `fumadocs-mdx` and `oat docs generate-index`. In this repo, `predev` and `prebuild` regenerate `apps/oat-docs/index.md` from `apps/oat-docs/docs`.
+- Fumadocs apps run `fumadocs-mdx` and `oat docs generate-index`. In this repo, `predev` and `prebuild` regenerate `apps/oat-docs/index.md` from `apps/oat-docs/docs`. They also use `oat docs nav sync` to write the committed `meta.json` sidebar files from authored directory `index.md` `## Contents` sections.
 - MkDocs apps use `oat docs nav sync` to regenerate the `nav:` block in `mkdocs.yml` from authored directory `index.md` `## Contents` sections.
 
 Both frameworks keep authored `## Contents` sections as the source of local discovery. The generated artifact differs by framework.
@@ -183,12 +183,23 @@ script hooks.
 
 ## `oat docs nav sync`
 
-Use nav sync in MkDocs apps after adding, removing, or renaming docs pages.
+Use nav sync after adding, removing, renaming, or reordering docs pages.
 
 The command reads only the reserved `## Contents` section from each directory
-`index.md` and regenerates the `nav:` block in `mkdocs.yml`.
+`index.md`. It detects the framework from the app directory:
 
-For Fumadocs apps, regenerate the root markdown manifest with `oat docs generate-index` instead.
+- **MkDocs** (`mkdocs.yml`): regenerates the `nav:` block in `mkdocs.yml`.
+- **Fumadocs** (`source.config.ts`): writes one `meta.json` per docs directory
+  that has an `index.md`. `pages` follows the `## Contents` order with no
+  `"..."` rest entry, so a page no map lists stays out of the sidebar and is
+  reported by path (`unlisted` in `--json`). A link to a page in another
+  directory becomes a Fumadocs link entry, and the folder `title` comes from
+  the `index.md` frontmatter `title` or first heading. Files are compared by
+  meaning, so a rerun with no docs changes writes nothing. Commit the
+  generated `meta.json` files.
+
+Fumadocs apps also regenerate the root markdown manifest with
+`oat docs generate-index`; the two commands write different artifacts.
 
 Example:
 

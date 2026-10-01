@@ -177,7 +177,7 @@ Archive sync surfaces:
 - `packages/cli/src/commands/docs/init/` — scaffold a docs app (Fumadocs or MkDocs)
 - `packages/cli/src/commands/docs/migrate/` — convert MkDocs admonitions to GFM callouts
 - `packages/cli/src/commands/docs/index-generate/` — generate a docs index from markdown files
-- `packages/cli/src/commands/docs/nav/` — regenerate mkdocs.yml nav from index.md sections
+- `packages/cli/src/commands/docs/nav/` — regenerate mkdocs.yml nav or Fumadocs meta.json from index.md sections
 - `packages/cli/src/commands/instructions/`
 - `packages/cli/src/commands/project/`
 - `packages/cli/src/commands/internal/`

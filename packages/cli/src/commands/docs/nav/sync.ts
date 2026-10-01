@@ -292,11 +292,13 @@ export function createDocsNavSyncCommand(
   };
 
   return new Command('sync')
-    .description('Regenerate docs navigation from index.md contents')
+    .description(
+      'Regenerate docs navigation from index.md contents: mkdocs.yml nav (MkDocs) or strict meta.json files (Fumadocs)',
+    )
     .addOption(
       new Option(
         '--target-dir <path>',
-        'Docs app directory containing mkdocs.yml',
+        'Docs app directory containing mkdocs.yml or source.config.ts',
       ),
     )
     .action(async (options: DocsNavSyncCommandOptions, command: Command) => {
