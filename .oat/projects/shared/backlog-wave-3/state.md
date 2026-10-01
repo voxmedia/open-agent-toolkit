@@ -91,6 +91,42 @@ oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-01T05:39:05.816Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
 oat_project_state_updated: '2026-10-01T19:53:34Z'
+oat_implement_exit_gate:
+  status: pending
+  resolution: configured
+  disposition: null
+  config_fingerprint: 'sha256:76eaea5d632f8612107755e2770d20d1331e61ca9d7d4859dfd20a64932869f2'
+  resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
+  resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
+  project_override: null
+  on_failure: block
+  max_attempts: 2
+  attempts_completed: 0
+  reviewed_head: 845ca17e3c65e7ee7161b9149196e0909397ecdd
+  implementation_base_ref: origin/main
+  implementation_fingerprint: 'sha256:effective-delta-v2:003e3c66eea3b48335fe3d8b0e956a08517ea38a8b15fa6063c79f5a265f79bc'
+  freshness_head: 845ca17e3c65e7ee7161b9149196e0909397ecdd
+  freshness_fingerprint: 'sha256:effective-delta-v2:003e3c66eea3b48335fe3d8b0e956a08517ea38a8b15fa6063c79f5a265f79bc'
+  launch_state: intent_persisted
+  launch_attempt_id: 'bw3-exit-gate-g1-1-20261001T202100Z'
+  launch_started_at: '2026-10-01T20:21:00Z'
+  launch_result_receipt: '.oat/repo/analysis/backlog-wave-3/exit-gate-1.json'
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_state: not_started
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
+  failure: null
+  updated_at: '2026-10-01T20:21:00Z'
 oat_generated: false
 oat_project_recap:
   decision: generate
