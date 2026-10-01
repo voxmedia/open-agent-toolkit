@@ -61,10 +61,13 @@ const SPEC_DRIVEN_ROUTES: Partial<Record<EarlyPhaseKey, string>> = {
   'implement:in_progress:any': 'oat-project-implement',
 };
 
+// Quick discovery hands off to quick-start, matching the oat-project-next and
+// oat-project-progress tables; the spec-driven planning skill is a two-hop
+// route for a quick project.
 const QUICK_ROUTES: Partial<Record<EarlyPhaseKey, string>> = {
   'discovery:in_progress:3': 'oat-project-discover',
-  'discovery:in_progress:2': 'oat-project-plan',
-  'discovery:complete:1': 'oat-project-plan',
+  'discovery:in_progress:2': 'oat-project-quick-start',
+  'discovery:complete:1': 'oat-project-quick-start',
   'plan:in_progress:3': 'oat-project-plan',
   'plan:in_progress:2': 'oat-project-implement',
   'plan:complete:1': 'oat-project-implement',

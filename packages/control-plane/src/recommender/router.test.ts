@@ -251,7 +251,10 @@ describe('recommendSkill', () => {
     expect(recommendSkill(state).skill).toBe('oat-project-spec');
   });
 
-  it('routes quick discovery complete to plan', () => {
+  // The quick routes agree with the oat-project-next and oat-project-progress
+  // skill tables: discovery tier 3 continues discovery, tiers 2 and 1 go to
+  // quick-start, never through the spec-driven planning skill.
+  it('routes quick discovery complete to quick-start', () => {
     const state = makeState({
       phaseStatus: 'complete',
       workflowMode: 'quick',
@@ -262,7 +265,32 @@ describe('recommendSkill', () => {
       }),
     });
 
-    expect(recommendSkill(state).skill).toBe('oat-project-plan');
+    expect(recommendSkill(state).skill).toBe('oat-project-quick-start');
+  });
+
+  it('routes quick discovery tier 2 to quick-start', () => {
+    const state = makeState({
+      workflowMode: 'quick',
+      artifacts: makeArtifacts({
+        type: 'discovery',
+        boundaryTier: 2,
+        isTemplate: false,
+      }),
+    });
+
+    expect(recommendSkill(state).skill).toBe('oat-project-quick-start');
+  });
+
+  it('keeps quick discovery tier 3 in discovery', () => {
+    const state = makeState({
+      workflowMode: 'quick',
+      artifacts: makeArtifacts({
+        type: 'discovery',
+        boundaryTier: 3,
+      }),
+    });
+
+    expect(recommendSkill(state).skill).toBe('oat-project-discover');
   });
 
   it('routes a promoted quick project artifact to quick-start', async () => {
@@ -1037,7 +1065,7 @@ Plan artifact review: skipped (workflow.autoArtifactReview.plan=false)
     });
   });
 
-  it('leaves quick implementation and discovery routes untouched', async () => {
+  it('leaves quick implementation untouched and sends discovery to quick-start', async () => {
     const notReady = `${PRE_REVIEW_FRONTMATTER}\n# Plan: demo\n${SUBSTANTIVE_PHASE}${PENDING_DISPOSITION}`;
 
     const implementing = await planState(notReady, {
@@ -1055,6 +1083,6 @@ Plan artifact review: skipped (workflow.autoArtifactReview.plan=false)
     });
 
     expect(recommendSkill(implementing).skill).toBe('oat-project-implement');
-    expect(recommendSkill(discovering).skill).toBe('oat-project-plan');
+    expect(recommendSkill(discovering).skill).toBe('oat-project-quick-start');
   });
 });
