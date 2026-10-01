@@ -538,12 +538,13 @@ match wins:
    for project lifecycle templates, `project-management` for PJM templates).
 3. **Bundle** — the templates shipped inside the installed CLI.
 
+`oat template resolve <name>` reports which tier wins, and lifecycle skills
+copy their templates with `oat template resolve <name> --output <path>`, so a
+user-scope-only install needs no repository `.oat/templates/` directory.
+
 Delete a repository template to fall back to the managed user default. If a
 template is missing from all three tiers, the command errors rather than
-inventing content. `oat template resolve <name>` reports which tier wins, and
-lifecycle skills copy their templates with `oat template resolve <name>
---output <path>`, so a user-scope-only install needs no repository
-`.oat/templates/` directory.
+inventing content.
 
 Useful options:
 

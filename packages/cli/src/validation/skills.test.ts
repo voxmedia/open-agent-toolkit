@@ -7829,6 +7829,23 @@ describe('validateOatSkills', () => {
     }
   });
 
+  it('grants oat template to curated-allowlist skills that copy templates', async () => {
+    const projectRetro = await readRepoFile(
+      '.agents/skills/oat-project-retro/SKILL.md',
+    );
+    const projectSummary = await readRepoFile(
+      '.agents/skills/oat-project-summary/SKILL.md',
+    );
+
+    for (const content of [projectRetro, projectSummary]) {
+      expect(content).toContain('oat template resolve');
+      expect(getFrontmatterForTest(content)).toContain('Bash(oat template:*)');
+    }
+    // Retro creates `references/` before the copy; `--output` creates no
+    // directories.
+    expect(getFrontmatterForTest(projectRetro)).toContain('Bash(mkdir:*)');
+  });
+
   it('pins the brainstorm persistence invariant by project scope', async () => {
     const brainstorm = await readRepoFile(
       '.agents/skills/oat-brainstorm/SKILL.md',
