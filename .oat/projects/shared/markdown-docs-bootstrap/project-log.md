@@ -76,6 +76,10 @@ target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:1,l
 
 Literal-rendering passing-gate sweep complete; refreshed final lifecycle review passed 0C/0H/0M/0L with independent 197-test and causal CLI proof. Eleven tasks complete, recovery 0; fresh exit gate and configured closeout pending.
 
+### 2026-10-01 · structural · oat gate review · final
+
+target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:0,low:1 exit=0 status=ok artifact=.oat/projects/shared/markdown-docs-bootstrap/reviews/final-review-2026-10-01T163602Z.md run=e49bf748-36dc-44ff-9fa6-1e7105fc21b3
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
