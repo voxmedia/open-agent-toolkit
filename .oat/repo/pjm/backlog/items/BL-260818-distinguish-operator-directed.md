@@ -12,7 +12,7 @@ labels:
   - skills
 assignee: null
 created: 2026-08-18T00:01:02.918Z
-updated: 2026-09-02T23:49:54Z
+updated: 2026-10-01T17:36:30Z
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/207
@@ -56,6 +56,29 @@ marking the consolidated question needs). Related, different mechanism:
 `BL-260711-skip-re-review-for-bookkeeping`. This is a Lane A, project-shaped
 item: plan it as its own OAT project, not a wave lane.
 
+### Complexity review at exhaustion (added 2026-10-01)
+
+Operator direction from Wave 3 (`backlog-wave-3`, phase p03): whenever a review
+cycle cap or a configured gate's attempt budget is exhausted, the root agent
+automatically runs a complexity review through a read-only subagent and
+presents its findings together with the reasons the loop stopped. Addressing
+the complexity review can remove the cause of the repeated loops instead of
+patching one more symptom.
+
+Evidence: every exhausted loop observed in Waves 2 and 3 had a mechanism-level
+cause rather than a run of independent defects. The Wave 2 plan gate blocked
+eleven times on broad sweeps; the Wave 3 plan gate used both attempts on new
+sequencing findings; and p03 of Wave 3 hit the three-round cap with three
+consecutive Highs in one family (field-by-field brief binding could not
+converge). An operator-requested complexity review replaced that mechanism
+with rebuild-and-compare, deleted an unrequired rule, cut 672 lines, and the
+phase gate then passed.
+
+This adds a fourth operator disposition, **simplify**: apply the complexity
+review's recommendations as bounded tasks, then run one review or gate over the
+result. The first slice ships as `BL-261001-run-a-complexity-review-when`;
+this item keeps the consolidated question and the shared authorization record.
+
 ## Acceptance Criteria
 
 - At review-cap or gate-budget exhaustion, the workflow presents one
@@ -79,3 +102,11 @@ item: plan it as its own OAT project, not a wave lane.
 - Fixtures cover each disposition kind, exhaustion, decline, resume, unrelated
   findings, and closeout validation, for both phase and final reviews and
   configured gates.
+- At exhaustion, the consolidated decision includes a complexity review of
+  the reviewed target, run by a read-only subagent before the question is
+  shown (and before an autonomous boundary report), with each open finding
+  marked as dissolved by a recommended simplification or not.
+- The operator disposition set adds **simplify**: the complexity review's
+  accepted recommendations become bounded tasks, completing them requires one
+  review or gate over the result, and the disposition is recorded in the
+  shared authorization record like the other three.

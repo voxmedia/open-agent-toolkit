@@ -3,9 +3,9 @@ name: oat-project-design
 description: Use when discovery is complete and implementation-ready decisions are needed. Runs a collaborative, selective collaborative, or draft-and-review design flow, confirms requirements and produces both `spec.md` and `design.md`, and commits artifacts before the user-review gate.
 disable-model-invocation: true
 user-invocable: true
-allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion
+allowed-tools: Read, Write, Bash(git:*), Bash(oat template:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 2.3.6
+  version: 2.3.7
 ---
 
 # Design Phase
@@ -185,7 +185,8 @@ Read `"$PROJECT_PATH/discovery.md"` and extract:
 
 **Step 2b: Initialize spec.md from template**
 
-Copy `.oat/templates/spec.md` → `"$PROJECT_PATH/spec.md"`. Update frontmatter:
+Copy the template with `oat template resolve spec --output "$PROJECT_PATH/spec.md"`.
+Update frontmatter:
 
 ```yaml
 ---
@@ -485,7 +486,8 @@ IF DESIGN_MODE == "collaborative":
   Step 2.5 Approach Reaffirmation).
 
   Once ALL sections are approved:
-    Copy `.oat/templates/design.md` → `"$PROJECT_PATH/design.md"`.
+    Copy the template:
+    `oat template resolve design --output "$PROJECT_PATH/design.md"`.
     Write each approved section into the corresponding template
     section. Update frontmatter:
       oat_status: in_progress
@@ -526,7 +528,8 @@ IF DESIGN_MODE == "selective":
         written to design.md.
 
   Once ALL sections are approved or silently accepted:
-    Copy `.oat/templates/design.md` → `"$PROJECT_PATH/design.md"`.
+    Copy the template:
+    `oat template resolve design --output "$PROJECT_PATH/design.md"`.
     Write each section into the corresponding template section.
     Update frontmatter as in Collaborative mode.
     Continue to Step 5 (Self-Review) and Step 6 (User-Review Gate).
@@ -540,7 +543,8 @@ IF DESIGN_MODE == "draft":
 
   Initialize design.md now (draft-and-review writes first, user
   reviews the committed file):
-    Copy `.oat/templates/design.md` → `"$PROJECT_PATH/design.md"`.
+    Copy the template:
+    `oat template resolve design --output "$PROJECT_PATH/design.md"`.
     Update frontmatter:
       oat_status: in_progress
       oat_ready_for: null

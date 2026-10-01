@@ -38,7 +38,12 @@ columns are ordinary states.
 
 Project-scope templates under `.oat/templates/` are owner overrides that OAT
 seeds once and never rewrites; the managed default lives at user scope and in
-the bundle. PJM templates resolve repository → user → bundle.
+the bundle. Project lifecycle and PJM templates resolve repository → user →
+bundle. Run `oat template resolve <name>` to see which tier supplies one, or
+add `--output <path>` to copy it. Idea templates under `ideas/` are different:
+the ideas skills select `.oat/templates/ideas/` or `~/.oat/templates/ideas/` by
+the ideas scope, and `oat template resolve` does not search nested
+directories.
 
 Pack intent is stored per scope:
 
@@ -172,7 +177,7 @@ Archive sync surfaces:
 - `packages/cli/src/commands/docs/init/` — scaffold a docs app (Fumadocs or MkDocs)
 - `packages/cli/src/commands/docs/migrate/` — convert MkDocs admonitions to GFM callouts
 - `packages/cli/src/commands/docs/index-generate/` — generate a docs index from markdown files
-- `packages/cli/src/commands/docs/nav/` — regenerate mkdocs.yml nav from index.md sections
+- `packages/cli/src/commands/docs/nav/` — regenerate mkdocs.yml nav or Fumadocs meta.json from index.md sections
 - `packages/cli/src/commands/instructions/`
 - `packages/cli/src/commands/project/`
 - `packages/cli/src/commands/internal/`

@@ -70,8 +70,14 @@ local `origin/main` tracking ref (falling back to a local `main` branch when no
 release fails locally the same way it fails in CI. Fetch first (`git fetch
 origin`) so that ref is current; a
 checkout with neither `origin/main` nor `main` skips the whole gate (CI uses
-`fetch-depth: 0`). Test files under `packages/cli/src/` count as publishable
-changes for this gate.
+`fetch-depth: 0`). Test-only changes do not require the bump
+(`DR-260927-test-only-paths-skip`): each public package's
+`versionPolicyIgnorePatterns` in
+`packages/cli/src/release/public-package-contract.ts` lists exactly the test
+paths its `tsconfig.json` leaves out of `dist` (for `packages/cli`,
+`src/**/*.test.ts` and `src/**/__tests__/**`), and a contract test fails if
+the two diverge. A test helper or fixture that compiles into `dist` still
+counts as a publishable change.
 
 CI runs neither `pnpm lint` nor `pnpm format`. `pnpm check` covers the
 formatting of `.agents/skills/**`, `apps/oat-docs/docs`, and `tools/smoke`

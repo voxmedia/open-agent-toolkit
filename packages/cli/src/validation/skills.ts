@@ -4,9 +4,11 @@ import { join } from 'node:path';
 import { promisify } from 'node:util';
 
 import {
+  findSkillFrontmatterTypeProblems,
   getFrontmatterBlock,
   parseSkillFrontmatter,
   resolveSkillVersion,
+  type FrontmatterProblem,
 } from '@commands/shared/frontmatter';
 
 export interface ValidationFinding {
@@ -691,13 +693,30 @@ function hasTrueFrontmatterValue(frontmatter: string, key: string): boolean {
   );
 }
 
-function unreadableFrontmatterFinding(file: string): ValidationFinding {
+/**
+ * A block-relative problem position as a SKILL.md line and column. The block
+ * starts on the line after the opening `---`, so block line N is file line
+ * N + 1.
+ */
+function fileLocation(problem: FrontmatterProblem): string | null {
+  return problem.line === null
+    ? null
+    : `line ${problem.line + 1}, column ${problem.column ?? 1}`;
+}
+
+function unreadableFrontmatterFinding(
+  file: string,
+  problem?: FrontmatterProblem,
+): ValidationFinding {
+  const location = problem ? fileLocation(problem) : null;
+  const detail = problem
+    ? `: ${location === null ? '' : `${location}: `}${problem.message}`
+    : '';
   return {
     file,
     code: 'skill-frontmatter-unreadable',
     severity: 'error',
-    message:
-      'Frontmatter must be a valid YAML mapping with unique keys (version could not be read)',
+    message: `Frontmatter must be a valid YAML mapping with unique keys (version could not be read)${detail}`,
   };
 }
 
@@ -1293,7 +1312,10 @@ async function collectChangedSkillVersionBumpFindings(
     // `validateOatSkills` runs the structural version-source pass before this
     // collector, so the same file can already carry the current-side finding.
     if (parsedCurrent?.malformed) {
-      pushUniqueFinding(findings, unreadableFrontmatterFinding(skillPath));
+      pushUniqueFinding(
+        findings,
+        unreadableFrontmatterFinding(skillPath, parsedCurrent.problem),
+      );
       continue;
     }
     if (parsedCurrent?.unusableVersionDeclaration) {
@@ -1485,8 +1507,8 @@ async function collectSkillVersionSourceFindings(
     if (parsed.malformed) {
       // Reported for every skill, not just `oat-*` ones: unreadable
       // frontmatter is exactly the state that would otherwise make a version
-      // silently unreadable everywhere.
-      findings.push(unreadableFrontmatterFinding(skillPath));
+      // silently unreadable everywhere. The parser's position travels with it.
+      findings.push(unreadableFrontmatterFinding(skillPath, parsed.problem));
       continue;
     }
 
@@ -1575,6 +1597,19 @@ export async function validateOatSkills(
           message: `Missing frontmatter key: ${key}`,
         });
       }
+    }
+
+    // Typed after parsing, beside the semantic checks below rather than in
+    // place of them; a block that does not parse is reported once, with its
+    // location, by collectSkillVersionSourceFindings.
+    for (const problem of findSkillFrontmatterTypeProblems(fm)) {
+      const location = fileLocation(problem);
+      findings.push({
+        file: skillPath,
+        code: 'skill-frontmatter-type',
+        severity: 'error',
+        message: `Frontmatter key ${problem.message}${location === null ? '' : ` (${location})`}`,
+      });
     }
 
     const frontmatterName = getFrontmatterScalar(fm, 'name');

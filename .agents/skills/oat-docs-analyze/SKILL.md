@@ -3,9 +3,9 @@ name: oat-docs-analyze
 description: Run when you need to evaluate documentation structure, navigation, and coverage against the OAT docs app contract. Produces a severity-rated analysis artifact for oat-docs-apply.
 disable-model-invocation: true
 user-invocable: true
-allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion, Task
+allowed-tools: Read, Write, Bash(git:*), Bash(oat docs nav sync --check:*), Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: 1.5.2
+  version: 1.6.0
 ---
 
 # Docs Analysis
@@ -386,6 +386,31 @@ If a generated root index or manifest exists:
    files, and representative links for each finding.
 5. Prefer source-of-truth fixes over generated-file edits.
 
+If the app is Fumadocs (a `source.config.ts` beside `docs/`), its sidebar comes from
+`docs/**/meta.json` files that `oat docs nav sync` generates from `## Contents`:
+
+1. Flag a docs directory with an `index.md` but no `meta.json` as a missing
+   generated artifact.
+2. Flag a `meta.json` whose `pages` order or entries differ from that directory's
+   `## Contents` (immediate pages and child folders by name, `index` first in the
+   docs root and in any `root: true` folder, other targets as `[Title](url)` link
+   entries) as stale; the fix is to rerun `oat docs nav sync`.
+3. Flag a `"..."` or `"z...a"` rest entry as a hand edit; nav sync output is strict.
+4. Flag pages that no `## Contents` map lists: under strict `meta.json` they are
+   hidden from the sidebar. Recommend listing them, not adding a rest entry.
+5. During analysis, run only the read-only check, with `--check` first and
+   `--target-dir` set to the resolved docs app directory (the directory that
+   holds `source.config.ts` and `docs/`, such as `apps/oat-docs`, not its `docs/`
+   content root):
+
+   ```bash
+   oat docs nav sync --check --target-dir <docs-app-dir>
+   ```
+
+   It writes nothing, names stale `meta.json` files and unlisted pages, and exits
+   1 when either exists. The skill grants only this `--check` form; plain
+   `oat docs nav sync` writes files and is not part of analysis.
+
 If `mkdocs.yml` exists:
 
 1. Compare nav entries with the docs tree.
@@ -394,7 +419,7 @@ If `mkdocs.yml` exists:
 4. Flag directories whose `index.md` `## Contents` section appears inconsistent with nav structure.
 5. Flag docs guidance that claims structure, plugin support, or workflow rules not backed by current repo evidence.
 
-If no `mkdocs.yml` exists, record whether the repo should be migrated to an OAT docs app.
+If neither `mkdocs.yml` nor a Fumadocs app exists, record whether the repo should be migrated to an OAT docs app.
 
 ### Step 7: Severity-Rate Findings
 

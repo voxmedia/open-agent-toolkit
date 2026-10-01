@@ -362,7 +362,7 @@ describe('generateStateDashboard', () => {
     expect(liteComplete.recommendedStep).toBe('oat-project-implement');
   });
 
-  it('routes only promoted quick discovery completion back through quick-start', async () => {
+  it('routes quick discovery completion to quick-start, promoted or not', async () => {
     const root = await createTempRepo();
     tempDirs.push(root);
     const projectPath = '.oat/projects/shared/promoted-quick';
@@ -399,7 +399,28 @@ describe('generateStateDashboard', () => {
       today: '2026-09-05',
       git: mockGit,
     });
-    expect(ordinary.recommendedStep).toBe('oat-project-plan');
+    // An ordinary quick discovery completion also goes to quick-start, never
+    // the spec-driven planning skill, matching the oat-project-next and
+    // oat-project-progress tables; only its reason differs.
+    expect(ordinary.recommendedStep).toBe('oat-project-quick-start');
+    expect(ordinary.recommendedReason).not.toBe(
+      'Continue the promoted quick workflow',
+    );
+
+    await writeStateFile(root, projectPath, {
+      oat_phase: 'discovery',
+      oat_phase_status: 'in_progress',
+      oat_workflow_mode: 'quick',
+      oat_ready_for: 'null',
+      oat_hill_checkpoints: '[]',
+      oat_hill_completed: '[]',
+    });
+    const discovering = await generateStateDashboard({
+      repoRoot: root,
+      today: '2026-09-05',
+      git: mockGit,
+    });
+    expect(discovering.recommendedStep).toBe('oat-project-discover');
   });
 
   it('routes lite implement closeout directly to pr-final without documentation', async () => {

@@ -1,11 +1,11 @@
 import { access, mkdir, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
-import {
-  resolvePjmTemplate,
-  type PjmTemplateTier,
-} from '@commands/pjm/template-source';
 import { stripTemplateFrontmatter } from '@commands/shared/strip-template-frontmatter';
+import {
+  resolveTemplate,
+  type TemplateTier,
+} from '@commands/shared/template-source';
 import YAML from 'yaml';
 
 import {
@@ -32,7 +32,7 @@ export interface CreateDecisionRecordResult {
   decisionsRoot: string;
   filePath: string;
   templatePath: string;
-  templateTier: PjmTemplateTier;
+  templateTier: TemplateTier;
 }
 
 async function pathExists(path: string): Promise<boolean> {
@@ -131,7 +131,7 @@ export async function createDecisionRecord(
     );
   }
 
-  const template = await resolvePjmTemplate({
+  const template = await resolveTemplate({
     name: 'decision.md',
     assetsRoot: options.assetsRoot,
     templatesRoot: options.templatesRoot,

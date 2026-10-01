@@ -143,15 +143,24 @@ Core rules:
 - the `## Contents` section should map sibling pages and immediate child directories
 - `## Contents` links should use `.md`-suffixed relative targets, including `subdir/index.md` for child directories
 
-For **MkDocs** apps, regenerate navigation after adding or moving pages:
+Regenerate navigation after adding or moving pages. In **MkDocs** apps this
+rewrites the `nav:` block in `mkdocs.yml`; in **Fumadocs** apps it writes the
+committed `meta.json` files and reports any page no `## Contents` map lists:
 
 ```bash
 oat docs nav sync --target-dir apps/my-docs
 ```
 
-For **Fumadocs** apps, the app-root docs index manifest is generated from the
-Markdown file tree automatically via `predev`/`prebuild` hooks. You can also
-run it manually:
+Generated Fumadocs `meta.json` is strict: a page no `## Contents` map lists
+stays out of the sidebar. The `prebuild` script that `oat docs init` scaffolds
+for Fumadocs does not run the read-only check. To make builds fail on stale
+navigation or an unlisted page, as `apps/oat-docs` does, append
+`&& oat docs nav sync --check` to it; the script runs from the app directory,
+which `--target-dir` defaults to.
+
+**Fumadocs** apps also have an app-root docs index manifest, generated from
+the Markdown file tree automatically via `predev`/`prebuild` hooks. You can
+also run it manually:
 
 ```bash
 oat docs generate-index --docs-dir docs
@@ -205,7 +214,7 @@ Important:
 3. `oat docs init --app-name my-docs`
 4. (optional) handle MkDocs migration as a separate workstream; use `oat docs migrate --docs-dir docs --config mkdocs.yml --apply` only for the syntax/frontmatter helper
 5. Author docs with `index.md` + `## Contents`
-6. `oat docs nav sync --target-dir apps/my-docs` (MkDocs) or `oat docs generate-index` (Fumadocs)
+6. `oat docs nav sync --target-dir apps/my-docs` (both frameworks), plus `oat docs generate-index` (Fumadocs)
 7. `/oat-docs-analyze`
 8. `/oat-docs-apply`
 9. Repeat as the codebase changes

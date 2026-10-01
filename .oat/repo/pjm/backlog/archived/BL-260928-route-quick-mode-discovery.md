@@ -1,7 +1,7 @@
 ---
 id: BL-260928-route-quick-mode-discovery
 title: Route quick-mode discovery to quick-start in the CLI recommender and dashboard
-status: open
+status: closed
 priority: low
 scope: task
 scope_estimate: XS
@@ -12,7 +12,7 @@ labels:
   - control-plane
 assignee: null
 created: 2026-09-28T10:16:23.302Z
-updated: 2026-09-28T10:16:23.302Z
+updated: '2026-10-01T19:47:56Z'
 associated_issues: []
 external_plans: []
 ---

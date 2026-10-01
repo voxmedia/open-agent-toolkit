@@ -1091,6 +1091,15 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
   // ------------------------------------------------------------------ complete
   {
     file: '.agents/skills/oat-project-complete/SKILL.md',
+    anchor: 'Step 1.5: Closeout Invariant Gate',
+    match: 'stop without writing anything and route to `oat-project-implement`',
+    classification: 'non-executing',
+    skills: ['oat-project-implement'],
+    reason:
+      'Stop boundary that names the recovery route; completion stops and does not run implement itself.',
+  },
+  {
+    file: '.agents/skills/oat-project-complete/SKILL.md',
     anchor: 'Step 2: Upfront User Questions (Batched)',
     match: 'Also preflight summary status using the same freshness rules',
     classification: 'load-required',
@@ -1409,6 +1418,25 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
   },
   {
     file: '.agents/skills/oat-project-implement/references/completion-and-closeout.md',
+    anchor: 'Step 14: Gate Execution',
+    match: 'An operator may also record a waiver before resuming implement',
+    classification: 'non-executing',
+    skills: ['oat-project-next', 'oat-project-implement'],
+    reason:
+      'Describes an operator path into a later implement run; nothing is dispatched here.',
+  },
+  {
+    file: '.agents/skills/oat-project-implement/references/completion-and-closeout.md',
+    anchor: 'Step 15: Final HiLL Closeout Sequence',
+    match:
+      'repair the persisted snapshot, and resume through `oat-project-implement`',
+    classification: 'non-executing',
+    skills: ['oat-project-implement'],
+    reason:
+      'Stop boundary naming the resume command for a later run; nothing is dispatched.',
+  },
+  {
+    file: '.agents/skills/oat-project-implement/references/completion-and-closeout.md',
     anchor: 'Step 13: Trigger Final Review',
     match: 'then executes the review per `oat-project-review-provide`',
     classification: 'non-executing',
@@ -1703,7 +1731,27 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     classification: 'load-required',
     skills: ['oat-project-implement'],
     requires: [
-      'read from the current `oat-project-implement/SKILL.md`, with only its literal state-carrier exclusion, rather than a remembered version of that algorithm',
+      'read from the current `oat-project-implement/references/completion-and-closeout.md` Step 14, rather than a remembered version of that algorithm',
+    ],
+  },
+  {
+    file: '.agents/skills/oat-project-next/SKILL.md',
+    anchor: 'Step 5: Post-Implementation Router',
+    match:
+      'When an `allowed` generation routes as stale only because of descendants no valid waiver covers',
+    classification: 'non-executing',
+    skills: ['oat-project-implement'],
+    reason:
+      'Announcement text for a read-only route; Step 6 loads and follows the selected target.',
+  },
+  {
+    file: '.agents/skills/oat-project-next/SKILL.md',
+    anchor: 'Step 5: Post-Implementation Router',
+    match: 'Operator waivers in `oat_implement_exit_gate.waivers` follow the',
+    classification: 'load-required',
+    skills: ['oat-project-implement'],
+    requires: [
+      'rules read from the current `oat-project-implement/references/completion-and-closeout.md` Step 14 rather than a remembered version of those rules',
     ],
   },
   {
@@ -1764,7 +1812,8 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
   {
     file: '.agents/skills/oat-project-next/SKILL.md',
     anchor: 'Step 5: Post-Implementation Router',
-    match: 'When the snapshot exists and is incomplete',
+    match:
+      'When it reports `status: incomplete`, route to `oat-project-implement`',
     classification: 'non-executing',
     skills: ['oat-project-implement'],
     reason:

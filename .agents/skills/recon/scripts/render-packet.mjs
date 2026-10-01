@@ -7,6 +7,12 @@ import { join, resolve } from 'node:path';
 import { hashFile } from './lib/canonical-json.mjs';
 import { isDirectExecution } from './lib/cli-entry.mjs';
 import {
+  affirmingDispositionByReviewKind,
+  classifyUnresolvedIssue,
+  requiredReviewKinds,
+  unresolvedIssuesBlockClaim,
+} from './lib/contracts.mjs';
+import {
   assertSafeExistingPath,
   assertSafeOutputPath,
   assertUnchangedRoot,
@@ -99,7 +105,7 @@ function intendedRoutingSection(manifest, routing) {
     '',
     `- **Manifest routing version:** ${routing.sourceSchemaVersion}`,
     `- **Approved authority:** ${escapeInline(routing.authority)}`,
-    `- **Approved limits:** ${routing.waves.length} waves; ${routing.waves.reduce((count, wave) => count + wave.lanes.length, 0)} lanes; concurrency ${routing.maxConcurrency}; deadline ${routing.deadlineSeconds}s; retries ${routing.retryLimit}`,
+    `- **Approved limits:** ${routing.waves.length} waves; ${routing.waves.reduce((count, wave) => count + wave.lanes.length, 0)} lanes; concurrency ${routing.maxConcurrency}; deadline ${routing.deadlineSeconds}s; pre-acceptance admission retries per lane ${routing.retryLimit}`,
     '- **Evidence boundary:** These are normalized approved intended targets and root-recorded condition dispositions. They are not launcher receipts or observations of native runtime identity, usage, cost, or conclusion correctness.',
     '',
     '### Waves',
@@ -113,6 +119,88 @@ function intendedRoutingSection(manifest, routing) {
       'None declared.',
     ),
   ];
+}
+
+// The required reviews that gave `claimId` no disposition at all. Such a
+// claim stays below `verified`, like an uncertain one, and is listed as not
+// reviewed.
+function omittedReviews(claimId, reviews) {
+  return requiredReviewKinds
+    .map((kind) => reviews.find((review) => review.reviewKind === kind))
+    .filter(
+      (review) =>
+        review &&
+        !(review.dispositions ?? []).some((item) => item.claimId === claimId),
+    );
+}
+
+function issueText(entry) {
+  return typeof entry === 'string' ? entry : (entry?.text ?? '');
+}
+
+// Every claim an incorporated review kept below `verified` (an unresolved
+// issue that applies to it, a coverage finding that names it, a
+// non-affirming disposition, or a required review that left it without a
+// disposition), with the review's own words. Key-claim status
+// alone would let a `complete` packet hide a downgraded non-key claim.
+function reviewDowngradeLines(validatedRun) {
+  const { ledger, artifacts, assuranceReviewIds } = validatedRun;
+  const assurance = new Set(assuranceReviewIds);
+  const reviews = artifacts
+    .map(({ value }) => value)
+    .filter(
+      (value) =>
+        value.kind === 'recon.review-result' && assurance.has(value.id),
+    );
+  const lines = [];
+  for (const claim of ledger.claims) {
+    if (claim.status === 'verified') continue;
+    const reasons = [];
+    for (const review of reviews) {
+      const disposition = (review.dispositions ?? []).find(
+        (item) => item.claimId === claim.id,
+      );
+      if (!disposition) continue;
+      if (
+        disposition.disposition !==
+        affirmingDispositionByReviewKind[review.reviewKind]
+      ) {
+        reasons.push(`${review.reviewKind} review: ${disposition.disposition}`);
+      }
+      if (unresolvedIssuesBlockClaim(review, claim.id)) {
+        for (const entry of review.unresolvedIssues) {
+          const classification = classifyUnresolvedIssue(entry);
+          if (
+            classification.scope === 'claims' &&
+            !classification.claimIds.includes(claim.id)
+          ) {
+            continue;
+          }
+          const scope =
+            classification.scope === 'claims' ? 'issue' : 'global issue';
+          reasons.push(`${review.reviewKind} ${scope}: ${issueText(entry)}`);
+        }
+      }
+    }
+    for (const review of omittedReviews(claim.id, reviews)) {
+      reasons.push(
+        `${review.reviewKind} review: not reviewed (no disposition)`,
+      );
+    }
+    for (const review of reviews) {
+      for (const finding of review.coverageFindings ?? []) {
+        if (!finding.claimIds.includes(claim.id)) continue;
+        reasons.push(
+          `${finding.material ? 'material ' : ''}coverage finding ${finding.code}: ${finding.message}`,
+        );
+      }
+    }
+    if (reasons.length === 0) continue;
+    lines.push(
+      `**${escapeInline(claim.id)}** (${escapeInline(claim.status)}): ${escapeInline(claim.statement)} — ${reasons.map(escapeInline).join('; ')}`,
+    );
+  }
+  return lines;
 }
 
 export function renderPacketDocument(validatedRun) {
@@ -185,6 +273,10 @@ export function renderPacketDocument(validatedRun) {
           `**${escapeInline(claim.id)}** (${escapeInline(claim.status)}): ${escapeInline(claim.statement)}${claim.qualifications.length ? ` — ${escapeInline(claim.qualifications.join('; '))}` : ''}`,
       ),
     ),
+    '',
+    '## Review Downgrades',
+    '',
+    ...bulletLines(reviewDowngradeLines(validatedRun)),
     '',
     '## Unresolved Questions',
     '',

@@ -1,7 +1,7 @@
 ---
 id: BL-260806-fail-closed-when-configured
 title: Fail closed when configured closeout snapshot is absent
-status: open
+status: closed
 priority: high
 scope: task
 scope_estimate: M
@@ -11,7 +11,7 @@ labels:
   - dx
 assignee: null
 created: 2026-08-06T23:52:48.886Z
-updated: 2026-08-06T23:52:48.886Z
+updated: '2026-10-01T21:13:47Z'
 associated_issues: []
 external_plans: []
 ---

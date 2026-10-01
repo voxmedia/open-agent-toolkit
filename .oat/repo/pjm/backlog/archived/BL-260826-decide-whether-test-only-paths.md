@@ -1,7 +1,7 @@
 ---
 id: BL-260826-decide-whether-test-only-paths
 title: Decide whether test-only paths under packages/cli/src count as publishable
-status: open
+status: closed
 priority: low
 scope: task
 scope_estimate: S
@@ -11,7 +11,7 @@ labels:
   - wave-2-follow-up
 assignee: null
 created: 2026-08-26T22:57:19.711Z
-updated: 2026-08-26T22:57:19.711Z
+updated: '2026-10-01T19:47:56Z'
 associated_issues: []
 external_plans: []
 ---

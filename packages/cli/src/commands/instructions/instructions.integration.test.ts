@@ -183,6 +183,166 @@ describe('instructions command integration', () => {
     );
   });
 
+  // A shim strategy with --force must never overwrite a CLAUDE.md that an
+  // AGENTS.md resolves to: that CLAUDE.md holds the only copy of the
+  // instructions behind the link.
+  describe('--force keeps a CLAUDE.md that an AGENTS.md resolves to', () => {
+    async function syncForce(
+      root: string,
+      strategy: 'pointer' | 'symlink' | 'copy',
+      extra: string[] = [],
+    ): Promise<{
+      exitCode: number;
+      actions: Array<{ type: string; target: string; reason: string }>;
+    }> {
+      const result = await runCli(
+        root,
+        [
+          'instructions',
+          'sync',
+          '--strategy',
+          strategy,
+          '--force',
+          ...extra,
+          '--json',
+        ],
+        ['--json'],
+      );
+      return {
+        exitCode: result.exitCode,
+        actions: JSON.parse(result.stdout).actions,
+      };
+    }
+
+    function expectKept(
+      actions: Array<{ type: string; target: string; reason: string }>,
+      claudePath: string,
+      linker: string,
+    ): void {
+      const action = actions.find(
+        (candidate) => candidate.target === claudePath,
+      );
+      expect(action).toMatchObject({ type: 'skip', result: 'skipped' });
+      expect(action?.reason).toContain(`${linker} resolves to this CLAUDE.md`);
+      expect(action?.reason).toMatch(/; kept$/);
+    }
+
+    for (const strategy of ['pointer', 'symlink'] as const) {
+      it(`keeps the CLAUDE.md behind AGENTS.md -> CLAUDE.md under --strategy ${strategy}`, async () => {
+        const root = await createWorkspace();
+        tempDirs.push(root);
+        await writeFile(join(root, 'CLAUDE.md'), '# real instructions\n');
+        await symlink('CLAUDE.md', join(root, 'AGENTS.md'));
+
+        const dryRun = await syncForce(root, strategy, ['--dry-run']);
+        expectKept(dryRun.actions, join(root, 'CLAUDE.md'), 'AGENTS.md');
+
+        const apply = await syncForce(root, strategy);
+        expect(apply.exitCode).toBe(1);
+        expectKept(apply.actions, join(root, 'CLAUDE.md'), 'AGENTS.md');
+        expect((await lstat(join(root, 'CLAUDE.md'))).isFile()).toBe(true);
+        await expect(readFile(join(root, 'AGENTS.md'), 'utf8')).resolves.toBe(
+          '# real instructions\n',
+        );
+      });
+    }
+
+    it('keeps the CLAUDE.md at the end of a symlink chain', async () => {
+      const root = await createWorkspace();
+      tempDirs.push(root);
+      await mkdir(join(root, 'docs'), { recursive: true });
+      await writeFile(join(root, 'CLAUDE.md'), '# real instructions\n');
+      await symlink('../CLAUDE.md', join(root, 'docs', 'instructions.md'));
+      await symlink('docs/instructions.md', join(root, 'AGENTS.md'));
+
+      const apply = await syncForce(root, 'pointer');
+      expect(apply.exitCode).toBe(1);
+      expectKept(apply.actions, join(root, 'CLAUDE.md'), 'AGENTS.md');
+      await expect(readFile(join(root, 'AGENTS.md'), 'utf8')).resolves.toBe(
+        '# real instructions\n',
+      );
+    });
+
+    it('keeps a CLAUDE.md that is a hard link of AGENTS.md', async () => {
+      const root = await createWorkspace();
+      tempDirs.push(root);
+      await writeFile(join(root, 'CLAUDE.md'), '# shared inode\n');
+      await link(join(root, 'CLAUDE.md'), join(root, 'AGENTS.md'));
+
+      const apply = await syncForce(root, 'pointer');
+      expect(apply.exitCode).toBe(1);
+      expectKept(apply.actions, join(root, 'CLAUDE.md'), 'AGENTS.md');
+      await expect(readFile(join(root, 'CLAUDE.md'), 'utf8')).resolves.toBe(
+        '# shared inode\n',
+      );
+    });
+
+    it('keeps a CLAUDE.md that an AGENTS.md in another directory links to', async () => {
+      const root = await createWorkspace();
+      tempDirs.push(root);
+      await mkdir(join(root, 'pkg'), { recursive: true });
+      await writeFile(join(root, 'AGENTS.md'), '# root instructions\n');
+      await writeFile(join(root, 'CLAUDE.md'), '# hand-written\n');
+      await symlink('../CLAUDE.md', join(root, 'pkg', 'AGENTS.md'));
+
+      const apply = await syncForce(root, 'pointer');
+      expectKept(apply.actions, join(root, 'CLAUDE.md'), 'pkg/AGENTS.md');
+      await expect(
+        readFile(join(root, 'pkg', 'AGENTS.md'), 'utf8'),
+      ).resolves.toBe('# hand-written\n');
+    });
+
+    // A symlinked AGENTS.md whose endpoint is a hard link of CLAUDE.md: the
+    // realpaths differ, so only the endpoint's device and inode show the link.
+    for (const strategy of ['pointer', 'symlink', 'copy'] as const) {
+      it(`keeps a CLAUDE.md that a symlinked AGENTS.md reaches through a hard link under --strategy ${strategy}`, async () => {
+        const root = await createWorkspace();
+        tempDirs.push(root);
+        await mkdir(join(root, 'pkg'), { recursive: true });
+        await writeFile(join(root, 'AGENTS.md'), '# root instructions\n');
+        await writeFile(join(root, 'CLAUDE.md'), '# shared instructions\n');
+        await link(join(root, 'CLAUDE.md'), join(root, 'alias.md'));
+        await symlink('../alias.md', join(root, 'pkg', 'AGENTS.md'));
+        const before = await lstat(join(root, 'CLAUDE.md'));
+
+        const apply = await syncForce(root, strategy);
+        expectKept(apply.actions, join(root, 'CLAUDE.md'), 'pkg/AGENTS.md');
+        const after = await lstat(join(root, 'CLAUDE.md'));
+        expect(after.isFile()).toBe(true);
+        expect(after.ino).toBe(before.ino);
+        await expect(readFile(join(root, 'CLAUDE.md'), 'utf8')).resolves.toBe(
+          '# shared instructions\n',
+        );
+      });
+    }
+
+    it('still overwrites a CLAUDE.md that no AGENTS.md resolves to', async () => {
+      const root = await createWorkspace();
+      tempDirs.push(root);
+      await mkdir(join(root, 'pkg'), { recursive: true });
+      await writeFile(join(root, 'AGENTS.md'), '# root instructions\n');
+      await writeFile(join(root, 'CLAUDE.md'), '# hand-written\n');
+      // The reverse shape: CLAUDE.md links to a regular AGENTS.md.
+      await writeFile(join(root, 'pkg', 'AGENTS.md'), '# pkg instructions\n');
+      await symlink('AGENTS.md', join(root, 'pkg', 'CLAUDE.md'));
+
+      const apply = await syncForce(root, 'pointer');
+      expect(apply.exitCode).toBe(0);
+      expect(apply.actions.map((action) => action.type)).toEqual([
+        'update',
+        'update',
+      ]);
+      for (const directory of ['.', 'pkg']) {
+        await expect(
+          readFile(join(root, directory, 'CLAUDE.md'), 'utf8'),
+        ).resolves.toBe(EXPECTED_CLAUDE_CONTENT);
+      }
+      await expect(
+        readFile(join(root, 'pkg', 'AGENTS.md'), 'utf8'),
+      ).resolves.toBe('# pkg instructions\n');
+    });
+  });
+
   it('discovers nested AGENTS.md and excludes node_modules', async () => {
     const root = await createWorkspace();
     tempDirs.push(root);

@@ -1,0 +1,14 @@
+{
+  "title": "OAT Documentation",
+  "pages": [
+    "index",
+    "quickstart",
+    "guide",
+    "provider-sync",
+    "workflows",
+    "docs-tooling",
+    "cli-utilities",
+    "contributing",
+    "reference"
+  ]
+}

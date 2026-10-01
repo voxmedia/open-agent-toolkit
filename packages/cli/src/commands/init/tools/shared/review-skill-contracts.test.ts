@@ -781,7 +781,7 @@ printf 'artifact-read\\n'`,
     }
   });
 
-  it('requires local and remote review rails to record the launch without a mandatory per-dispatch file', () => {
+  it('requires local and remote review rails to record the launch without a per-dispatch file', () => {
     for (const skill of [
       'oat-project-review-provide',
       'oat-project-review-provide-remote',
@@ -791,8 +791,12 @@ printf 'artifact-read\\n'`,
       expect(content, skill).toMatch(
         /(?:not|never)(?: in)?[^]{0,40}`implementation\.md`/i,
       );
-      expect(content, skill).toMatch(
-        /oat project dispatch record[^]{0,160}optional and off by default/i,
+      // `oat project dispatch record` is validate-only
+      // (DR-260927-dispatch-record-validates), so no rail describes persisting
+      // a per-dispatch file.
+      expect(content, skill).not.toMatch(/per-dispatch\s+file/i);
+      expect(content, skill).not.toMatch(
+        /optional\s+and\s+off\s+by\s+default/i,
       );
       expect(content, skill).not.toMatch(
         /immediately after[^]{0,200}run `oat project dispatch record/i,
@@ -1407,7 +1411,7 @@ printf 'artifact-read\\n'`,
     );
     const normalizedContent = content.replace(/\s+/g, ' ');
 
-    expect(readDeclaredVersion(content)).toBe('1.7.13');
+    expect(readDeclaredVersion(content)).toBe('1.7.14');
     expect(content).toContain(
       'if [[ "$PROJECT_SCOPE" == "shared" || "$PROJECT_SCOPE" == "synced" ]]; then',
     );
@@ -4597,7 +4601,7 @@ printf '%s\\n' "$EVENTS"`;
     );
     // The resume path must not let Step 3 rewrite an existing plan body.
     expect(normalizeProse(stepZeroFive)).toContain(
-      'Step 3 updates the existing `plan.md` in place: it reads `.oat/templates/plan.md` only when `plan.md` is missing',
+      'Step 3 updates the existing `plan.md` in place: it copies the plan template (`oat template resolve plan --output "$PROJECT_PATH/plan.md"`) only when `plan.md` is missing',
     );
     expect(normalizeProse(stepZeroFive)).toContain(
       'never replaces phases, tasks, or `## Reviews` rows that the earlier run already wrote',
@@ -4628,7 +4632,7 @@ printf '%s\\n' "$EVENTS"`;
       ),
     );
     expect(normalizeProse(stepThree)).toContain(
-      '`.oat/templates/plan.md` is read only when `"$PROJECT_PATH/plan.md"` is missing.',
+      'The template is copied, with `oat template resolve plan --output "$PROJECT_PATH/plan.md"`, only when `"$PROJECT_PATH/plan.md"` is missing.',
     );
     expect(normalizeProse(stepThree)).toContain(
       'never replaces phases, tasks, or `## Reviews` rows an earlier run already wrote',

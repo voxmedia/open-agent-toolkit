@@ -76,10 +76,10 @@ that scope.
 Before a native launch, the root constructs and redacts the complete generic
 dispatch record and OAT role event. When the host returns, it writes the
 request ID, the `Dispatch:` stamp, and the accepted or `blocked-before-start`
-result into the run record in `implementation.md`; persisting a per-dispatch
-file with `oat project dispatch record` is optional and off by default. Before
-an effort-pinned managed Claude launch, the root must still run that command
-without `--project` as a validation-only boundary. It supplies the real
+result into the run record in `implementation.md`, the only launch record.
+Before an effort-pinned managed Claude launch, the root must run
+`oat project dispatch record`, which writes nothing, as a validation-only
+boundary. It supplies the real
 resolver result, generated definition, and proposed launch payload, and launches
 only the payload returned by the accepted envelope. An accepted launch closes
 replacement. Only an explicit rejection proving no child started permits one
@@ -318,6 +318,32 @@ alter the delta make the result stale, require a current final lifecycle review,
 and start a new gate generation. Beyond the version's own exclusion set, no
 implementation or closeout output path is excluded from the comparison. Legacy unqualified fingerprints retain the older
 fail-closed descendant-path behavior and are not migrated in place.
+
+There is no automatic test-only freshness exception. An operator can instead
+waive named stale-making descendants of an `effective-delta-v1` or
+`effective-delta-v2` generation (`DR-260927-operator-waiver-for-test-only`).
+Each waiver is appended to `oat_implement_exit_gate.waivers` with who waived,
+the reason, the covered `from_commit..to_commit` range, the effective-delta
+fingerprint at the range end (in the generation's own version), and a UTC
+timestamp. A waiver never rewrites `reviewed_head`, the implementation
+fingerprint, `freshness_head`, or the freshness fingerprint, and an earlier
+waiver is never edited. Agents write a waiver only on an explicit operator
+instruction. Under `OAT_AUTONOMOUS=1` an attempted waiver write is refused,
+and a run that finds a stale generation persists `stale` and starts a new gate
+run instead of pausing. A waived generation stays fresh only while nothing
+substantive lands after the covered range, under both versions; a malformed or
+unverifiable waiver fails closed as stale. The project summary and the final PR
+description's Verification section list every waiver.
+
+The waiver is offered where staleness is found. Before an interactive
+`oat-project-implement` run persists an allowed generation as `stale` because
+of descendant commits no waiver covers, it lists those commits and asks the
+operator to waive that range or start a new gate run; it persists `stale` only
+when the operator declines. An autonomous run never offers a waiver and starts
+a new gate run. An operator may also record a waiver before resuming
+implementation, for example after `oat-project-next` reports stale state, by
+giving the range, name, and reason in the instruction that resumes
+`oat-project-implement`.
 
 This narrow merge-only exemption relies on fresh repository CI, automated
 review such as Bugbot, and lifecycle self-review to cover integration risk.

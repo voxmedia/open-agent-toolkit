@@ -436,8 +436,12 @@ export async function createPacketFixture({
         status: 'contested',
         evidence: [{ evidenceId: 'evidence-1', relation: 'qualifies' }],
         qualifications: ['Needs another source.'],
+        // Every required review disposes of claim-2 too, so no claim is left
+        // unreviewed; it stays contested on its adversarial challenge.
         reviewIds: [
-          'review-adversarial',
+          ...(achievedProfile === 'quick'
+            ? ['review-adversarial']
+            : ['review-semantic', 'review-adversarial', 'review-coverage']),
           ...(includeContradictionResolution
             ? ['review-contradiction-resolution']
             : []),
@@ -490,9 +494,10 @@ export async function createPacketFixture({
     reviewArtifacts.push(priorRef);
     const briefManifest = {
       run: { id: 'run-render' },
+      // Mirrors the manifest request below: briefs bind to its projection.
       request: {
         includedScope: ['source-1'],
-        excludedScope: [],
+        excludedScope: ['unrelated sources'],
         questions: ['What evidence exists?'],
       },
       sources: [source],
@@ -506,7 +511,7 @@ export async function createPacketFixture({
           createdAt: '2026-08-31T00:03:00.000Z',
           manifest: briefManifest,
           ledger: priorLedger,
-          claimIds: ['claim-1'],
+          claimIds: ['claim-1', 'claim-2'],
         }),
       ]),
     );
@@ -566,8 +571,16 @@ export async function createPacketFixture({
         : []),
     ];
     for (const [id, reviewKind, briefMode, disposition] of resultSpecs) {
-      const claimId =
-        reviewKind === 'contradiction-resolution' ? 'claim-2' : 'claim-1';
+      const claimIds =
+        reviewKind === 'contradiction-resolution'
+          ? ['claim-2']
+          : ['semantic', 'adversarial', 'coverage'].includes(reviewKind)
+            ? ['claim-1', 'claim-2']
+            : ['claim-1'];
+      const dispositionFor = (claimId) =>
+        claimId === 'claim-2' && reviewKind === 'adversarial'
+          ? 'challenged'
+          : disposition;
       const result = {
         kind: 'recon.review-result',
         schemaVersion: 1,
@@ -579,7 +592,10 @@ export async function createPacketFixture({
         brief: { ...briefRefs[briefMode] },
         permittedInputs: [{ ...briefRefs[briefMode] }],
         excludedInputs: ['prior_reasoning'],
-        dispositions: [{ claimId, disposition }],
+        dispositions: claimIds.map((claimId) => ({
+          claimId,
+          disposition: dispositionFor(claimId),
+        })),
         newEvidence: [],
         evidenceAssociations: [],
         coverageFindings: [],

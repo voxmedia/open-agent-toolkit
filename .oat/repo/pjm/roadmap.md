@@ -27,7 +27,6 @@ and title so this map remains readable without a board lookup.
 
 - **BL-260724-support-provider-directory: Support provider directory symlinks as full collection sync** — Prefer collection-level links until real divergence, then fall back safely to per-entry sync. Project: tool-pack-scope-provider-truthfulness.
 - **BL-260828-add-project-level-oat-guidance: Add project-level OAT guidance prompt during init and workflow installation** — Add the explicit project-adoption prompt and managed AGENTS.md section without coupling it to user-scope pack placement. Project: tool-pack-scope-provider-truthfulness.
-- **BL-260829-order-phase-bookkeeping-before: Order phase bookkeeping before per-phase review dispatch** — Prevent stale implementation/state ledgers from generating repeat Important findings before review dispatch. Project: review-gate-integrity.
 - **BL-260806-fail-closed-when-configured: Fail closed when configured closeout snapshot is absent** — Persist the normalized closeout sequence before child dispatch and prevent terminal completion until every configured child is durably recorded.
 - **BL-260820-bind-each-gate-review: Bind each gate review disposition to its exact received ledger event** — Establish event identity before provenance and no-re-review behavior. Project: review-gate-integrity.
 - **BL-260820-emit-source-qualified: Emit source-qualified provenance envelopes for review and gate receipts** — Make review, gate, and fallback outcomes auditable after event identity is stable. Project: review-gate-integrity.

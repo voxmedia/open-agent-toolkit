@@ -17,7 +17,7 @@ This file tells agents how to work inside `apps/oat-docs`, the documentation app
 ## When you need to restructure navigation
 
 1. Make changes in the authored `## Contents` sections of each affected `index.md`. That is the authoritative local map.
-2. Do **not** hand-edit generated navigation artifacts. The root-level `index.md` (if present for this framework), `mkdocs.yml` `nav:` (for MkDocs), and any other derived nav file is rewritten on every build.
+2. Do **not** hand-edit generated navigation artifacts. The root-level `index.md` (if present for this framework) is rewritten on every build. Fumadocs `docs/**/meta.json` files and `mkdocs.yml` `nav:` (for MkDocs) are committed and rewritten only by `oat docs nav sync`; `prebuild` runs `oat docs nav sync --check` and fails the build when they are stale or a page is unlisted.
 3. After editing `## Contents`, run the framework's nav sync command to regenerate derived artifacts.
 4. If you're moving pages between directories, update both source and destination `index.md` `## Contents` entries in the same commit so the site isn't broken mid-way through history.
 5. If you're reparenting an entire subtree, consider whether the moved directory's own `index.md` needs a revised "scope" paragraph.

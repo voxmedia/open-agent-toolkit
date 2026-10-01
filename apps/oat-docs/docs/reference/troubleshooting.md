@@ -97,6 +97,27 @@ Use [Instruction Sync](../provider-sync/instruction-sync.md) for the full strate
 - Per-pack install commands no longer accept the previously inert `--force`
   option.
 
+## A skill fails with `unknown command 'template'` or `'closeout-check'`
+
+Lifecycle skills from OAT 0.3.11 copy their templates with
+`oat template resolve` and check closeout with `oat project closeout-check`.
+An older `oat` on `PATH` rejects both:
+
+```text
+error: unknown command 'template'
+error: unknown command 'closeout-check'
+```
+
+`oat-project-complete` treats a failed closeout check as an incomplete
+closeout, so with an older CLI it stops and routes back to
+`oat-project-implement` even when every closeout step is done. This happens
+when the skills a host loads are newer than the CLI, for example repository
+skills from a newer checkout run against an older global CLI.
+
+Check `oat --version`. Install `@open-agent-toolkit/cli` 0.3.11 or later, then
+refresh the installed skills to that CLI's bundle with
+`oat tools update --all`.
+
 ## `sync` reports an unsafe provider parent
 
 Errors containing `Unsafe provider parent`, `symbolic links are not allowed in
@@ -200,7 +221,13 @@ OAT could not read the canonical managed-pack inventory. `oat status` keeps the
 rest of the report available and returns `packs.availability.status` as
 `unavailable` in JSON, with an empty `packs.states` array and a structured
 diagnostic. `oat doctor` emits the same condition as a warning instead of
-stopping its other checks. Reported project and home paths remain redacted.
+stopping its other checks.
+
+The diagnostic message redacts only the roots that are part of the run: the
+project root becomes a relative path (or `.`) when project scope is checked,
+and the home root becomes `~` when user scope is checked. Redaction is a literal
+replacement of those exact root paths, so a path outside them, such as a global
+bundle path in an assets error, stays absolute in the message.
 
 Rebuild the CLI workspace, then rerun the command named in the diagnostic:
 
@@ -269,16 +296,24 @@ oat pjm init
 scaffold — rerun `oat pjm init`), or `none`. `oat pjm init` records
 `pjm.initialized` in `.oat/config.json` after verifying the canonical scaffold.
 
-## A PJM template change is not taking effect
+## A template change is not taking effect
 
-PJM templates resolve repository → user → bundle, first match wins. A
-repository template under `.oat/templates/` is an owner override that pack
-updates never rewrite, so it shadows the managed user default.
-
-Delete the repository copy to fall back to the managed default, or update the
-managed default itself:
+Project lifecycle and PJM templates resolve repository → user → bundle, first
+match wins (idea templates follow the ideas scope instead). A repository
+template under `.oat/templates/` is an owner override that pack updates never
+rewrite, so it shadows the managed user default. Check which tier supplies a
+template:
 
 ```bash
+oat template resolve plan
+```
+
+Delete the repository copy to fall back to the managed default, or update the
+managed default itself (`workflows` owns the project lifecycle templates,
+`project-management` the PJM templates):
+
+```bash
+oat tools update --pack workflows --scope user
 oat tools update --pack project-management --scope user
 ```
 

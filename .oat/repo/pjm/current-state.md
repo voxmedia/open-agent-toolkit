@@ -37,6 +37,29 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- CLI `0.3.11` (`backlog-wave-3`, branch `wave/2026-09-30-backlog-wave-3`)
+  closes thirteen backlog items. Project scaffold, promote, PJM, backlog, and
+  decision commands share one template resolver in repository, user, bundle
+  order (`DR-260927-templates-resolve-repository`), and the new
+  `oat template resolve <name> [--json] [--output <path>]` is how lifecycle
+  skills copy templates, so user-scope-only installs no longer need a
+  repository `.oat/templates/` (`DR-261001-oat-template-resolve-copies`).
+  `oat docs nav sync` writes strict Fumadocs `meta.json` from `index.md`
+  Contents maps, and `--check` runs in `apps/oat-docs` `prebuild`
+  (`DR-261001-fumadocs-navigation-is-strict`). Recon publication works with
+  its own helpers (#333): the validator rebuilds each brief with the
+  production generator, and material coverage gaps downgrade claims instead
+  of failing publication (`DR-261001-recon-brief-integrity-uses`,
+  `DR-261001-recon-coverage-gaps-downgrade`). The new read-only
+  `oat project closeout-check` reports the closeout invariant and
+  `oat project complete-state` refuses a missing or incomplete snapshot
+  (`DR-261001-the-cli-owns-the-closeout`); exit-gate waivers are append-only
+  and operator-only. `oat project dispatch record` is validate-only (breaking:
+  `--project` removed), and test-only package changes skip the lockstep bump
+  (`DR-260927-test-only-paths-skip`). The updated skills need `oat` 0.3.11 or
+  later. Follow-ups: `BL-261001-escape-directive-like`,
+  `BL-261001-list-thorough-review-omissions`, and six other `BL-261001-*`
+  items.
 - CLI `0.3.9` (`backlog-wave-2`, branch `wave/2026-09-27-backlog-wave-2`)
   closes twelve backlog items. `CLAUDE.md` shims are opt-in:
   `instructions.claude.shims` (`none | pointer | symlink | copy`,

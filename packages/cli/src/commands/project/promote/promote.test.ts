@@ -14,13 +14,11 @@ import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
-import {
-  applyTemplateReplacements,
-  resolveTemplateSource as defaultResolveTemplateSource,
-} from '@commands/project/new/scaffold';
+import { applyTemplateReplacements } from '@commands/project/new/scaffold';
 import type { GitRunner } from '@commands/project/sync/git';
 import type { PushResult } from '@commands/project/sync/ref-sync';
 import { getFrontmatterBlock } from '@commands/shared/frontmatter';
+import { resolveTemplate as defaultResolveTemplate } from '@commands/shared/template-source';
 import { getProjectState } from '@open-agent-toolkit/control-plane';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -246,10 +244,14 @@ function createHarness(
     }),
     resolveProjectRoot: async () => repoRoot,
     resolveProjectsRoot: async () => '.oat/projects/shared',
-    resolveTemplateSource: async (userOatRoot, templateRepoRoot, file) =>
-      file === 'plan-lite.md' && options.liteTemplatePath
-        ? options.liteTemplatePath
-        : defaultResolveTemplateSource(userOatRoot, templateRepoRoot, file),
+    resolveTemplate: async (templateOptions) =>
+      templateOptions.name === 'plan-lite.md' && options.liteTemplatePath
+        ? {
+            content: await readFile(options.liteTemplatePath, 'utf8'),
+            path: options.liteTemplatePath,
+            tier: 'repository',
+          }
+        : defaultResolveTemplate(templateOptions),
     mkdir: async (...args: Parameters<typeof mkdir>) => {
       events.push(`mkdir:${String(args[0])}`);
       return mkdir(...args);
