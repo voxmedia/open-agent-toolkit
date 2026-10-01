@@ -107,12 +107,12 @@ oat_implement_exit_gate:
   implementation_fingerprint: 'sha256:effective-delta-v2:003e3c66eea3b48335fe3d8b0e956a08517ea38a8b15fa6063c79f5a265f79bc'
   freshness_head: 845ca17e3c65e7ee7161b9149196e0909397ecdd
   freshness_fingerprint: 'sha256:effective-delta-v2:003e3c66eea3b48335fe3d8b0e956a08517ea38a8b15fa6063c79f5a265f79bc'
-  launch_state: intent_persisted
+  launch_state: accepted
   launch_attempt_id: 'bw3-exit-gate-g1-1-20261001T202100Z'
   launch_started_at: '2026-10-01T20:21:00Z'
   launch_result_receipt: '.oat/repo/analysis/backlog-wave-3/exit-gate-1.json'
-  gate_run_marker: null
-  gate_run_id: null
+  gate_run_marker: '/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/99fcf137-4610-4d1c-985d-71c4e7bc9dce.json'
+  gate_run_id: 99fcf137-4610-4d1c-985d-71c4e7bc9dce
   envelope_status: null
   artifact: null
   handoff: null
@@ -126,7 +126,7 @@ oat_implement_exit_gate:
   receive_eligible: false
   receive_completed: false
   failure: null
-  updated_at: '2026-10-01T20:21:00Z'
+  updated_at: '2026-10-01T20:21:38Z'
 oat_generated: false
 oat_project_recap:
   decision: generate
