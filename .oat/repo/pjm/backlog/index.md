@@ -344,6 +344,7 @@
 | BL-260911-make-docs-bootstrap-a-front    | Make docs bootstrap a front door for existing docs and support the docs-directory convention          | open   | high     | feature    | M        |
 | BL-261001-make-recon-s-packet-validator  | Make recon's packet validator accept what its own helpers produce                                     | open   | high     | feature    | M        |
 | BL-260829-order-phase-bookkeeping-before | Order phase bookkeeping before per-phase review dispatch                                              | open   | high     | task       | M        |
+| BL-261001-recompute-oat-project-next-s   | Recompute oat-project-next's exit-gate fingerprint with the effective-delta-v2 exclusions             | open   | high     | task       | XS       |
 | BL-260724-support-provider-directory     | Support provider directory symlinks as full collection sync                                           | open   | high     | feature    | M        |
 | BL-260718-support-fumadocs-in-oat-docs   | Teach oat docs nav sync to write Fumadocs navigation from index.md Contents maps                      | open   | high     | feature    | M        |
 | BL-260820-track-pr-closeout-evidence     | Track PR-closeout evidence freshness against the current head                                         | open   | high     | feature    | L        |
@@ -423,6 +424,7 @@
 | BL-260908-restructure-the-authoring      | Restructure the authoring skills for progressive disclosure and decide proactive invocation           | open   | low      | feature    | M        |
 | BL-260903-retire-deprecated-pack         | Retire deprecated pack placement and dead evidence diagnostics                                        | open   | low      | task       | M        |
 | BL-260928-route-quick-mode-discovery     | Route quick-mode discovery to quick-start in the CLI recommender and dashboard                        | open   | low      | task       | XS       |
+| BL-261001-route-quick-mode-plan          | Route quick-mode plan in-progress consistently across the router, dashboard, and skill tables         | open   | low      | task       | XS       |
 | BL-260928-serialize-concurrent-agents-md | Serialize concurrent AGENTS.md guidance appends                                                       | open   | low      | task       | S        |
 | BL-260909-show-the-brainstorm-pack       | Show the brainstorm pack in the oat-doctor dashboard example and pack enumeration                     | open   | low      | task       | XS       |
 | BL-260908-tighten-the-pr-final-ledger    | Tighten the pr-final ledger guard's prose and escaped-pipe boundary                                   | open   | low      | task       | XS       |
