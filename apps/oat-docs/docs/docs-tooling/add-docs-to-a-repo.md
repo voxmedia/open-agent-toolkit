@@ -155,6 +155,8 @@ Adoption preserves existing page/index/local-instruction bytes and adds only
 missing baseline files. Missing child indexes, metadata, context, or Contents
 remain audit gaps: run `oat-docs-analyze`, then `oat-docs-apply` for approved
 repairs. Successful config/guidance setup does not prove full content conformity.
+See [Markdown setup details](commands.md#oat-docs-init) for initial Contents
+discovery and repair advice for optional child indexes and unreadable directories.
 
 Incompatible declared tooling/root/index or unsafe paths are refused before
 writes. Selecting a framework explicitly retains its existing replacement

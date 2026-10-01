@@ -62,6 +62,16 @@ Markdown setup:
 - Populated targets require `--adopt` even with `--yes`. Adoption only adds missing
   baseline files; existing malformed indexes and local instructions are preserved
   with audit advice. It does not claim full OAT conformity.
+- When the root `index.md` is missing, its initial Contents map includes existing
+  sibling pages and usable immediate child indexes. Readable child-index symlinks
+  resolving inside the repository are supported. Unusable child indexes are
+  preserved and omitted from the map with audit advice. An existing root index
+  is preserved rather than rebuilt.
+- During this discovery, directories containing only `AGENTS.md` or `CLAUDE.md`
+  do not trigger missing-index advice. If permissions prevent inspection of a
+  nested directory, bootstrap preserves it, reports that it was not inspected,
+  and continues checking readable siblings. Required root-baseline and target
+  safety checks remain strict; use analyze/apply for approved content repairs.
 - Unsafe roots and incompatible documentation config fail before writes.
   Explicit framework selection retains its existing replacement behavior over
   Markdown config, without migrating or deleting old Markdown content.
