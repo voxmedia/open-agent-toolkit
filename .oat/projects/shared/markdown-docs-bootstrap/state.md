@@ -97,7 +97,7 @@ oat_generated: false
 
 ## Current Phase
 
-Planning - Executable draft contains four sequential phases and nine tasks; High dispatch selected; additional phase gates disabled; both configured lifecycle gates retained; plan review received with two Medium findings; approved edits passed re-review; retained gate passed threshold; approved gate edits applied; re-review pending
+Planning - Executable draft contains four sequential phases and nine tasks; High dispatch selected; additional phase gates disabled; both configured lifecycle gates retained; plan review received with two Medium findings; approved edits passed re-review; retained gate passed threshold; gate edits confirmed; final automatic retry found one verification-order correction
 
 ## Artifacts
 
@@ -125,11 +125,11 @@ See `reviews/design-consensus-handoff.md` for the completed review, canonical ar
 
 ## Blockers
 
-None. None. User-approved Gate M1/L1 edits are applied; re-review remains required.
+None. Final automatic retry M1 awaits approval to move the existing p02 build before bundle-backed tests.
 
 ## Next Milestone
 
-Re-review the revised plan and complete quick-start readiness; implementation has not started
+Approve the final verification-order correction, run the retained cross-runtime gate, and complete quick-start readiness; implementation has not started
 
 ## Review Setup
 

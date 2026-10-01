@@ -186,6 +186,7 @@ Existing scaffold rows are preserved. Quick mode requires no spec; original desi
 | plan   | artifact | fixes_completed | 2026-10-01 | reviews/plan-auto-handoff.md                                | b3480f8824b175b34cdba2f76d7dcf66ee12a034 | auto       | -                    |
 | plan   | artifact | passed          | 2026-10-01 | reviews/plan-auto-rereview.md                               | 1ab8e49002716294f43b63831e13b0f9576f535b | auto       | -                    |
 | plan   | artifact | fixes_completed | 2026-10-01 | reviews/archived/artifact-plan-review-2026-10-01T060016Z.md | -                                        | gate       | claude-opus-5-5-high |
+| plan   | artifact | received        | 2026-10-01 | reviews/plan-auto-final-retry.md                            | 4f1c0d422241214859c906efb176e5a2787ba472 | auto       | -                    |
 
 Record full reviewed heads and invocation provenance for actual reviews. Preserve all rows and unknown trailing cells. Mark `passed` only for a clean result; disposition residual findings before readiness.
 
@@ -196,6 +197,10 @@ Automatic plan review: 0 Critical, 0 High, 2 Medium, 0 Low. User approved M1 (bu
 ### Gate Review Dispositions
 
 Gate passed (0 Critical, 0 High, 1 Medium, 1 Low), receive-eligible and corroborated. User approved Gate M1 (docs tools pack registration and checks) and Gate L1 (Markdown-only authored-index guard plus Fumadocs accepted control); both are applied. Re-review pending. See `reviews/plan-gate-handoff.md`. The consumed artifact is archived; its findings await re-review before readiness.
+
+### Final Automatic Retry
+
+Retry 2 of 2 returned one Medium finding: move p02-t01 build before direct bundle-backed Vitest checks. Both approved gate fixes are confirmed. Proposed ordering correction awaits user direction; see `reviews/plan-auto-final-retry.md`. No further standard automatic re-review is authorized by the exhausted bound. Readiness remains disabled.
 
 ## Implementation Complete
 
