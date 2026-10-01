@@ -201,7 +201,10 @@ commit range, the effective-delta fingerprint at the range end, and a UTC
 timestamp; it never rewrites earlier provenance. Waivers are operator-only:
 agents never infer or self-issue one, and an `OAT_AUTONOMOUS=1` run refuses to
 write one. A later substantive change after the covered range makes the
-generation stale again, and a malformed waiver fails closed. See
+generation stale again, and a malformed waiver fails closed. An interactive
+implement run offers the waiver before it persists `stale`; an operator can
+also give it when resuming implementation after `oat-project-next` reports
+stale state. See
 [Implementation Execution](../workflows/projects/implementation-execution.md).
 
 Only an artifact with `oat_review_invocation: gate` and the matching

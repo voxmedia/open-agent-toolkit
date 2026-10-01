@@ -334,6 +334,16 @@ substantive lands after the covered range, under both versions; a malformed or
 unverifiable waiver fails closed as stale. The project summary and the final PR
 description's Verification section list every waiver.
 
+The waiver is offered where staleness is found. Before an interactive
+`oat-project-implement` run persists an allowed generation as `stale` because
+of descendant commits no waiver covers, it lists those commits and asks the
+operator to waive that range or start a new gate run; it persists `stale` only
+when the operator declines. An autonomous run never offers a waiver and starts
+a new gate run. An operator may also record a waiver before resuming
+implementation, for example after `oat-project-next` reports stale state, by
+giving the range, name, and reason in the instruction that resumes
+`oat-project-implement`.
+
 This narrow merge-only exemption relies on fresh repository CI, automated
 review such as Bugbot, and lifecycle self-review to cover integration risk.
 Those checks do not substitute for the semantic gate on the full

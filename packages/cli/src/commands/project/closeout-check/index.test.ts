@@ -198,6 +198,28 @@ describe('oat project closeout-check', () => {
     });
   });
 
+  it('case 3c: an empty pre_approval names both approval writes', async () => {
+    const fixture = await createProjectFixture(tempDirs, {
+      configured: 'wait',
+      state: buildState({
+        snapshotLines: snapshotYaml({ preApproval: [] }),
+      }),
+    });
+    const { payload } = await check(fixture);
+    expect(payload).toMatchObject({
+      status: 'incomplete',
+      invariant: 'approval_pending',
+      nextOwner: {
+        kind: 'approval',
+        skill: 'oat-project-implement',
+        writes: ['approval: approved', 'approval: not_required'],
+      },
+    });
+    expect(payload.message).toContain(
+      'Next: record the final approval decision: `approval: approved` after final HiLL sign-off, or `approval: not_required` when no final checkpoint exists.',
+    );
+  });
+
   it('case 3b: an approved run still owes its post-approval steps', async () => {
     const fixture = await createProjectFixture(tempDirs, {
       state: buildState({

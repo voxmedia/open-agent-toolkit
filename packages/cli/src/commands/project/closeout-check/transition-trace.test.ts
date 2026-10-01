@@ -1,5 +1,4 @@
 import { readFile, rm, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
 
 import { createProjectCompleteStateCommand } from '@commands/project/complete-state/index';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -166,21 +165,9 @@ describe('closeout transition trace (state on disk)', () => {
     expect(check.nextOwner).toMatchObject({ step: 'summary' });
     await expectRefusedUnchanged(fixture);
 
-    // 3. Interrupted: the summary child recorded its work in_progress and the
-    //    run died before step success was recorded. Reopened, it resumes there.
-    await writeFile(
-      join(fixture.projectPath, 'summary.md'),
-      '---\noat_status: in_progress\n---\n\n# Summary\n',
-      'utf8',
-    );
-    check = await freshCheck(fixture);
-    expect(check).toMatchObject({
-      invariant: 'pre_approval_step_pending',
-      nextOwner: { step: 'summary', skill: 'oat-project-summary' },
-    });
-    await expectRefusedUnchanged(fixture);
-
-    // 3b. The same interruption persisted as a failed boundary still names it.
+    // 3. Interrupted: the snapshot has no per-step in_progress state, so an
+    //    interrupted summary dispatch persists a failed boundary. Reopened, the
+    //    check still names summary, the step to resume.
     await updateSnapshot(fixture.statePath, {
       status: 'failed',
       failure: { boundary: 'pre_approval', step: 'summary' },
@@ -193,11 +180,6 @@ describe('closeout transition trace (state on disk)', () => {
     await expectRefusedUnchanged(fixture);
 
     // 4. Resumed and recorded: summary complete, the next stored step is pr.
-    await writeFile(
-      join(fixture.projectPath, 'summary.md'),
-      '---\noat_status: complete\n---\n\n# Summary\n',
-      'utf8',
-    );
     await updateSnapshot(fixture.statePath, {
       status: 'pre_approval',
       failure: null,

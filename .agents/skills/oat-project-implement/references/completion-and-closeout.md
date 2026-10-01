@@ -677,14 +677,36 @@ waivers: # append-only; one entry per operator instruction
   waived, the reason, the covered range, the fingerprint version, and the
   timestamp.
 
+**Stale-boundary waiver offer:**
+
+When a persisted `allowed` qualified generation classifies as `stale` only
+because of descendant commits after `freshness_head` (or after the latest
+valid waiver's `to_commit`) that no valid waiver covers, do not persist
+`stale` yet. In an interactive run, list those commits and their changed paths,
+then ask the operator whether to waive that exact range or start a new gate
+run. A waiver needs the operator's name and reason; record it as above,
+commit it, and classify again. Persist `stale` and start a new generation only
+when the operator declines the waiver. When `OAT_AUTONOMOUS=1`, never offer or
+issue a waiver: persist `stale` and start a new gate run. Every other stale
+cause, such as a malformed waiver, a configuration-fingerprint mismatch, a
+re-enabled project override, a legacy unqualified generation, or a merge whose
+effective delta no longer matches, is persisted `stale` without an offer.
+
+An operator may also record a waiver before resuming implement, for example
+after `oat-project-next` routes stale state: include the range, name, and
+reason in the instruction that resumes `oat-project-implement`, which records
+it on the still-`allowed` generation before classifying freshness.
+
 Before approval-aware sequencing, final HiLL approval, implementation
 completion, or success output, run the configured gate:
 
 1. Classify persisted state. A fresh allowed generation proceeds to Step 15
    without duplicate gate or receive execution. A valid `pending` or `blocked`
    generation resumes its first incomplete boundary with its persisted
-   configuration. For absent or stale state, start a new generation and resolve
-   the gate for this skill:
+   configuration. When a persisted `allowed` generation classifies as stale,
+   apply the **Stale-boundary waiver offer** in **Operator waivers** before
+   persisting `stale`. For absent or stale state, start a new generation and
+   resolve the gate for this skill:
 
    ```bash
    oat gate resolve oat-project-implement --project "$PROJECT_PATH" --json
@@ -796,7 +818,9 @@ child dispatches.
 Before creating or resuming `oat_post_implement_sequence`, and again before
 every dispatch, final HiLL transition, completion mutation, and success output,
 require `oat_implement_exit_gate` to remain allowed and fresh. If it becomes
-stale, malformed, pending, or blocked, persist/retain that state, stop the
+stale, first apply the Step 14 **Stale-boundary waiver offer**; a recorded
+waiver that classifies fresh lets the sequence continue. If it remains stale,
+or becomes malformed, pending, or blocked, persist/retain that state, stop the
 sequence, and resume through `oat-project-implement`.
 
 For `oat_workflow_mode: lite`, there is no final HiLL approval step. A passed
@@ -950,8 +974,10 @@ CLOSEOUT_CHECK_JSON=$(oat project closeout-check "${CLOSEOUT_CHECK_ARGS[@]}") ||
 ```
 
 An incomplete result exits 1 by design; route on the JSON, not the exit code.
-Before the first child it reports `status: incomplete` with the first
-incomplete stored step as `nextOwner`, which is the step to dispatch. A
+Before the first child it reports `status: incomplete` with `nextOwner` set
+to the first incomplete stored step to dispatch, or, when `pre_approval` is
+empty, to the approval boundary to record: `approval: approved` after final
+HiLL sign-off, or `approval: not_required` when no final checkpoint exists. A
 `snapshot_missing` or `snapshot_malformed` invariant means the snapshot did not
 persist: dispatch nothing, repair the persisted snapshot, and resume through
 `oat-project-implement`. Run the same check on every resume and dispatch the

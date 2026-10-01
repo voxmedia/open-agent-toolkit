@@ -17,6 +17,10 @@ import YAML, { isMap } from 'yaml';
 
 export const SEQUENCE_FIELD = 'oat_post_implement_sequence';
 export const RECOVERY_SKILL = 'oat-project-implement';
+const APPROVAL_WRITES = [
+  'approval: approved',
+  'approval: not_required',
+] as const;
 
 const PRE_APPROVAL_STEPS = ['summary', 'document', 'pr'] as const;
 const POST_APPROVAL_STEPS = ['summary', 'document', 'pr', 'retro'] as const;
@@ -64,7 +68,15 @@ export type CloseoutInvariant =
 export type CloseoutNextOwner =
   | { kind: 'snapshot'; skill: string }
   | { kind: 'step'; phase: SequencePhase; step: SequenceStep; skill: string }
-  | { kind: 'approval'; skill: string }
+  | {
+      kind: 'approval';
+      skill: string;
+      /**
+       * The two valid approval writes: `approved` after final HiLL sign-off,
+       * `not_required` when no final checkpoint exists (Step 15 item 5).
+       */
+      writes: readonly ['approval: approved', 'approval: not_required'];
+    }
   | { kind: 'sequence-status'; skill: string };
 
 export type SnapshotRequirementReason = 'lite' | 'autonomous' | 'configured';
@@ -344,6 +356,7 @@ function evaluateSnapshot(
     return incomplete('approval_pending', 'final approval is not recorded', {
       kind: 'approval',
       skill: RECOVERY_SKILL,
+      writes: APPROVAL_WRITES,
     });
   }
   if (postPending) {
@@ -451,7 +464,7 @@ export function formatCloseoutRefusal(
     owner.kind === 'step'
       ? ` Next stored step: \`${owner.step}\` (${owner.skill}).`
       : owner.kind === 'approval'
-        ? ' Next: record final approval.'
+        ? ' Next: record the final approval decision: `approval: approved` after final HiLL sign-off, or `approval: not_required` when no final checkpoint exists.'
         : '';
   return [
     `Closeout invariant not satisfied for ${projectPath} (${result.invariant}): ${result.detail}.${next}`,

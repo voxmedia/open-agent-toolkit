@@ -1613,9 +1613,6 @@ describe('post-implementation sequence contracts', () => {
   });
 });
 
-// BL-260829-order-phase-bookkeeping-before: the per-phase reviewer must never
-// be handed a head whose task ledger is stale by construction, and moving that
-// bookkeeping earlier must not dirty the tree a bounded fix child requires.
 /**
  * Operator-only exit-gate waivers (BL-260902-decide-test-only-freshness,
  * DR-260927-operator-waiver-for-test-only). The executable check below follows
@@ -1822,6 +1819,62 @@ describe('operator-only exit-gate waivers', () => {
     );
   });
 
+  it('offers the waiver before an allowed generation is persisted stale', () => {
+    // p04 review M1: the waiver must be reachable at the stale boundary.
+    const section = normalizeWhitespace(operatorWaiverSection());
+    for (const clause of [
+      'do not persist `stale` yet.',
+      'In an interactive run, list those commits and their changed paths, then ask the operator whether to waive that exact range or start a new gate run.',
+      'Persist `stale` and start a new generation only when the operator declines the waiver.',
+      'When `OAT_AUTONOMOUS=1`, never offer or issue a waiver: persist `stale` and start a new gate run.',
+      'An operator may also record a waiver before resuming implement',
+    ]) {
+      expect(section, clause).toContain(clause);
+    }
+
+    const skill = readImplementSkill();
+    const gateExecution = requiredSlice(
+      skill,
+      '1. Classify persisted state.',
+      'oat gate resolve oat-project-implement',
+    );
+    expectMarkersInOrder(normalizeWhitespace(gateExecution), [
+      'apply the **Stale-boundary waiver offer** in **Operator waivers** before persisting `stale`',
+      'For absent or stale state, start a new generation',
+    ]);
+    const step15 = requiredSlice(
+      skill,
+      '### Step 15: Final HiLL Closeout Sequence',
+      'For `oat_workflow_mode: lite`, there is no final HiLL',
+    );
+    expect(normalizeWhitespace(step15)).toContain(
+      'If it becomes stale, first apply the Step 14 **Stale-boundary waiver offer**',
+    );
+
+    const next = normalizeWhitespace(readNextSkill());
+    expect(next).toContain(
+      'an interactive operator may record a waiver for that range when resuming `oat-project-implement`, which offers it before persisting `stale`',
+    );
+    expect(next).toContain(
+      'under `OAT_AUTONOMOUS=1` the announcement offers no waiver',
+    );
+  });
+
+  it('names the approval boundary when no pre-approval step is pending', () => {
+    // p04 review L3: an empty pre_approval stops at the approval write.
+    const step15 = normalizeWhitespace(
+      requiredSlice(
+        readImplementSkill(),
+        '**Closeout check before the first dispatch:**',
+        'The snapshot is immutable for this closeout',
+      ),
+    );
+    expect(step15).toContain(
+      'with `nextOwner` set to the first incomplete stored step to dispatch, or, when `pre_approval` is empty, to the approval boundary to record: `approval: approved` after final HiLL sign-off, or `approval: not_required` when no final checkpoint exists.',
+    );
+    expect(step15).not.toContain('which is the step to dispatch');
+  });
+
   it('shows every waiver in the summary and the PR verification section', () => {
     expect(operatorWaiverSection()).toContain(
       '`oat-project-summary` and `oat-project-pr-final` show every waiver',
@@ -1946,6 +1999,9 @@ describe('operator-only exit-gate waivers', () => {
   }
 });
 
+// BL-260829-order-phase-bookkeeping-before: the per-phase reviewer must never
+// be handed a head whose task ledger is stale by construction, and moving that
+// bookkeeping earlier must not dirty the tree a bounded fix child requires.
 describe('phase bookkeeping ordering around per-phase review', () => {
   function readPhaseExecution(): string {
     return readFileSync(

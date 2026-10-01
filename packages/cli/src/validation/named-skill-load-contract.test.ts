@@ -1418,6 +1418,15 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
   },
   {
     file: '.agents/skills/oat-project-implement/references/completion-and-closeout.md',
+    anchor: 'Step 14: Gate Execution',
+    match: 'An operator may also record a waiver before resuming implement',
+    classification: 'non-executing',
+    skills: ['oat-project-next', 'oat-project-implement'],
+    reason:
+      'Describes an operator path into a later implement run; nothing is dispatched here.',
+  },
+  {
+    file: '.agents/skills/oat-project-implement/references/completion-and-closeout.md',
     anchor: 'Step 15: Final HiLL Closeout Sequence',
     match:
       'repair the persisted snapshot, and resume through `oat-project-implement`',
@@ -1724,6 +1733,16 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     requires: [
       'read from the current `oat-project-implement/references/completion-and-closeout.md` Step 14, rather than a remembered version of that algorithm',
     ],
+  },
+  {
+    file: '.agents/skills/oat-project-next/SKILL.md',
+    anchor: 'Step 5: Post-Implementation Router',
+    match:
+      'When an `allowed` generation routes as stale only because of descendants no valid waiver covers',
+    classification: 'non-executing',
+    skills: ['oat-project-implement'],
+    reason:
+      'Announcement text for a read-only route; Step 6 loads and follows the selected target.',
   },
   {
     file: '.agents/skills/oat-project-next/SKILL.md',

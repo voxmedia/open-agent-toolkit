@@ -425,14 +425,19 @@ not_started`, null `launch_attempt_id`, `launch_started_at`,
   **Operator waivers** rules read from the current
   `oat-project-implement/references/completion-and-closeout.md` Step 14
   rather than a remembered version of those rules, for v1 and v2 generations
-  alike. A descendant inside a valid waiver's
-  `from_commit..to_commit` range is waived; a substantive or unknown descendant
+  alike. A descendant inside a valid waiver's `from_commit..to_commit` range
+  is waived; a substantive or unknown descendant
   after the covered range routes as stale. Validate every entry: all six
   fields, an operator `waived_by`, range ancestry, and a `covered_fingerprint`
   recomputed with the generation's own version prefix and exclusion set; a
   malformed or unverifiable waiver routes as stale. This read-only router never
   writes, infers, or self-issues a waiver, under `OAT_AUTONOMOUS=1` or
-  otherwise.
+  otherwise. When an `allowed` generation routes as stale only because of
+  descendants no valid waiver covers, follow the exact stale announcement
+  above with that commit range and a note that an interactive operator may
+  record a waiver for that range when resuming `oat-project-implement`, which
+  offers it before persisting `stale`; under `OAT_AUTONOMOUS=1` the
+  announcement offers no waiver.
 
 Routing is read-only: announce stale or malformed state, but leave transition
 repair, gate execution, receive, and persistence to `oat-project-implement`.
