@@ -3219,7 +3219,7 @@ Dispatch: scope=final action=review role=reviewer producer=unknown provenance=un
     "scope_reference": "final:6ad9b2223716db22dbc95a0d21d0681e363307e1..HEAD",
     "dispatch_mode": "background"
   },
-  "launch_status": "planned",
+  "launch_status": "rejected-pre-start",
   "child_outcome": null,
   "configured_invocation_evidence": [
     "project-state:high",
@@ -3229,7 +3229,8 @@ Dispatch: scope=final action=review role=reviewer producer=unknown provenance=un
   ],
   "runtime_confirmation": "not-reported",
   "diagnostics": [
-    "Current configured tuple intersects live explicit model/effort controls; runtime identity not reported."
+    "Current configured tuple intersects live explicit model/effort controls; runtime identity not reported.",
+    "unknown agent_type; native-role-unavailable; provesNoChildStarted true"
   ],
   "continuation_events": [],
   "task_class": "consequential",
