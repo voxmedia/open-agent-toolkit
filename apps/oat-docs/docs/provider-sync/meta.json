@@ -1,0 +1,11 @@
+{
+  "title": "Provider Sync",
+  "pages": [
+    "commands",
+    "config",
+    "instruction-sync",
+    "manifest-and-drift",
+    "providers",
+    "scope-and-surface"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "title": "Reference",
+  "pages": [
+    "cli-reference",
+    "file-locations",
+    "docs-index-contract",
+    "oat-directory-structure",
+    "troubleshooting"
+  ]
+}
