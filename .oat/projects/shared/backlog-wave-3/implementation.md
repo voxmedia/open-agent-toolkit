@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
-oat_current_task_id: p05-t08
+oat_current_task_id: p06-t01
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 5     | 5/5       |
-| Phase 2 | complete    | 6     | 6/6       |
-| Phase 3 | complete    | 10    | 10/10     |
-| Phase 4 | complete    | 6     | 6/6       |
-| Phase 5 | in_progress | 8     | 7/8       |
-| Phase 6 | pending     | 3     | 0/3       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 5     | 5/5       |
+| Phase 2 | complete | 6     | 6/6       |
+| Phase 3 | complete | 10    | 10/10     |
+| Phase 4 | complete | 6     | 6/6       |
+| Phase 5 | complete | 8     | 8/8       |
+| Phase 6 | pending  | 3     | 0/3       |
 
-**Total:** 34/38 tasks completed
+**Total:** 35/38 tasks completed
 
 ---
 
@@ -198,7 +198,7 @@ oat_generated: false
 
 ## Phase 5: Small fixes
 
-**Status:** in_progress
+**Status:** complete
 
 ### Task p05-t01: Keep `instructions sync --force` from overwriting a linked CLAUDE.md
 
@@ -237,8 +237,8 @@ oat_generated: false
 
 ### Task p05-t08: (review) Close p05 gate finding M1
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** f6b504c4e
 
 ---
 
@@ -545,6 +545,12 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   `reviews/archived/p05-review-2026-10-01T193643Z.md` status `ok`, 0
   Critical/High, 1 Medium (a symlinked `AGENTS.md` whose target is a hard link
   of `CLAUDE.md` evades the realpath-only check). Addressed now as `p05-t08`.
+
+- Continuation `cont-backlog-wave-3-p05-fix-2`: `f6b504c4e` closed gate M1
+  (device/inode compared through a symlinked `AGENTS.md`; combined-link
+  regression for pointer, symlink, copy failed first); 151/151.
+- Phase p05 outcome: pass after one recovery, one review-fix task, and one
+  gate-fix task (p05-t07, p05-t08); 8/8 tasks.
 
 <!-- orchestration-runs-end -->
 
