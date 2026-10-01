@@ -280,7 +280,7 @@ Source pointers retained for the already-planned consumer inventory: index gener
 
 ## Implementation Complete
 
-Implementation in progress: 12/13 tasks complete; p04-t04 complete, p04-t05 pending. Scope: 4 sequential phases, 13 atomic tasks — p01 (2), p02 (3), p03 (3), p04 (5). Prior integrated verification/review remains history; fresh final verification/review and retained exit gate precede final HiLL approval. Existing configured pre-approval steps are complete and their snapshot is unchanged.
+Implementation in progress: 13/13 tasks complete; both remote source fixes complete, full gates and fresh final review pending. Scope: 4 sequential phases, 13 atomic tasks — p01 (2), p02 (3), p03 (3), p04 (5). Prior integrated verification/review remains history; fresh final verification/review and retained exit gate precede final HiLL approval. Existing configured pre-approval steps are complete and their snapshot is unchanged.
 
 ## References
 

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
-oat_current_task_id: p04-t05
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -18,9 +18,9 @@ Eleven prior tasks are complete. Remote Bugbot M1/L1 are accepted as p04-t04/p04
 | p01   | complete    | 2     | 2/2       |
 | p02   | complete    | 3     | 3/3       |
 | p03   | complete    | 3     | 3/3       |
-| p04   | in_progress | 5     | 4/5       |
+| p04   | in_progress | 5     | 5/5       |
 
-**Total:** 12/13 tasks completed
+**Total:** 13/13 tasks completed
 
 ## Phase 1: Shared content and guidance contracts
 
@@ -129,6 +129,13 @@ None recorded.
 **Commit:** b541b04b91d8b34cb82c6a6dad6a71f4905aec9f
 **Outcome:** Optional child index discovery uses repository containment; readable in-repository aliases map normally, unusable aliases/files remain preserved with audit advice, required root-baseline and unsafe-target validation unchanged.
 **Verification:** Direct ten-file suite198 tests, build (CLI executed/four dependency replay), CLI types/lint, exact formatting/diff each exit0. Private archive public regression old1/fixed0 at intended adoption status; twelve old/twelve fixed CLI dry/live commands prove optional handling and strict required external-root refusal. Original harness instruction-prefix oracle correction retained, no production/recovery failure. Root read complete runnable evidence and independently checked source hashes, exact owned three-path commit, raw counts and intended old failure. Full gates pending t05; recovery0/10.
+
+### Task p04-t05: (review) Ignore instruction-only directories in docs advice
+
+**Status:** completed
+**Commit:** e74c06116acc294feb290c08e2677f8975de33da
+**Outcome:** Recursive authored-content detection excludes AGENTS.md/CLAUDE.md consistently with direct Contents; genuine authored Markdown and configured exclusions preserve advice semantics and existing bytes.
+**Verification:** Actual ten-file suite199 tests, CLI lint/types/build (CLI executed/four replay), scoped format/diff and six probe syntax checks each exit0. Private archive regression old1 at unwanted instructions/ advice assertion, fixed0. Six old/fixed/check-out dry/live categories all product0; independent oracle differentiates false advice correction and genuine/excluded controls. Root read complete added test and runnable evidence, validated three-path source commit/hash receipts and actual test/failure logs. Full eight gates next, recovery0/10.
 
 ## Final Summary (for PR/docs)
 
@@ -2894,3 +2901,7 @@ Resolver notices: [] (none). Current resolver native role is registered after ma
 #### Root acceptance: p04-t04
 
 Task commit and three owned paths corroborated; source diff preserves strict root reads. Existing accepted p04 handle continues t05 at same configured tuple, no recovery attempt. Pending remote row remains fixes_added until both tasks complete and independently reviewed; state current task advances p04-t05.
+
+#### Root acceptance: p04-t05
+
+Both remote source tasks accepted, 13/13 complete. Root acknowledges ordered full8gates on committed source with explicit exit/cache receipts, followed by an evidence-only append/commit to final-remote-controls.md. No other worker writes authorized; independent final review, receive/gate and closeout remain root-owned.
