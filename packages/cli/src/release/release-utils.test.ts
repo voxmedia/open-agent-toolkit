@@ -44,6 +44,30 @@ describe('findChangedWorkspaceDirsFromPaths', () => {
     ).toEqual(new Set(['packages/cli', 'packages/docs-theme']));
   });
 
+  it('ignores a CLI change limited to excluded test files', () => {
+    expect(
+      findChangedWorkspaceDirsFromPaths(
+        [
+          'packages/cli/src/release/release-utils.test.ts',
+          'packages/cli/src/commands/__tests__/helpers.ts',
+        ],
+        getPublicPackageContracts(),
+      ),
+    ).toEqual(new Set());
+  });
+
+  it('still tracks a non-test source change beside a test change', () => {
+    expect(
+      findChangedWorkspaceDirsFromPaths(
+        [
+          'packages/cli/src/release/release-utils.test.ts',
+          'packages/cli/src/release/public-package-contract.ts',
+        ],
+        getPublicPackageContracts(),
+      ),
+    ).toEqual(new Set(['packages/cli']));
+  });
+
   it('tracks shared public package changes for dependents and the package itself', () => {
     expect(
       findChangedWorkspaceDirsFromPaths(
