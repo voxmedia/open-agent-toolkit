@@ -18,6 +18,8 @@
 
 Subtracting the 12 internal candidates gives approximately 71 user-facing candidates, **not a confirmed supported catalog**.
 
+**Root mechanical check:** The retained matrix contains 83 unique skill names, exactly matching the 83 current canonical skill directories, with no missing or extraneous names. This verifies enumeration, not classification, support intent, pack membership, or guide depth.
+
 ### Internal classification evidence
 
 - Explicit `user-invocable: false`: `oat-dispatch-subagents`, `oat-project-dispatch-subagents`, `oat-project-plan-writing`, `oat-worktree-bootstrap-auto`.

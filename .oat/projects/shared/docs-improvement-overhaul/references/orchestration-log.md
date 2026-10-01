@@ -61,3 +61,13 @@
 - After `worker-show`, a fresh documented `worker-release` retry returned `retained`, reason `identity_unproven`, and `processAction: none`. Do not claim the process was stopped or resource cleanup completed. Do not escalate to an unscoped process kill.
 - A native Codex helper, `/root/orca_skill_refinement`, was then dispatched with the fixed GPT-6.1 Sol high agent role to work in the already-created Orc worktree. This is a parent-attached helper, not a successful supervised Orca worker or a verified standalone pane. It owns only the narrow skill refinement and draft PR, preserving unrelated setup output.
 - Root retains the residual Orca cleanup concern. No failed dispatch is credited with executing the task.
+
+### Narrow follow-up publication
+
+- The native GPT-6.1 Sol high helper completed the narrow four-file guidance patch in the Mini execution-host worktree `/Users/tstang/orca/workspaces/orc/orca-app-host-preflight`, branch `orca-app-host-preflight`.
+- Root independently reviewed the diff against this session's observations. The patch separates app/session/runtime identity, pins the verified executable, uses safe pre-output environment filtering only when necessary, and preserves readiness/release uncertainty.
+- The broad ADE refresh was already merged as Orc PR #45 on the worker's base; this patch does not duplicate that pending work.
+- Draft PR: [tkstang/orc#46](https://github.com/tkstang/orc/pull/46), commit `dce47635206257400f3a2719d5cb447a3d90b592`. Root verified the open/draft state, exact head, and four intended changed paths. CI was in progress at this checkpoint, not reported green.
+- The helper reports formatting, prose-coherence tests, forced typecheck/build, lint, tests, link/version checks, and normal commit/push hooks passing. These are repository checks, not a new live relay/readiness/release acceptance run.
+- Unrelated setup output in `.oat/sync/manifest.json` remains unstaged in the Orc worktree. No merge, installation of this new patch, deployment, or residual worker cleanup occurred.
+- Helper identity is `/root/orca_skill_refinement`; a separate provider session UUID was not available to root at this checkpoint. Native parent-attached execution is known; independent pane/session visibility is not claimed.
