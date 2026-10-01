@@ -12,6 +12,7 @@ import { join } from 'node:path';
 
 import { normalizeWorkflowPostImplementSequence } from '@config/oat-config';
 import { describe, expect, it } from 'vitest';
+import YAML from 'yaml';
 
 function readImplementSkill(): string {
   const root = join(
@@ -1615,6 +1616,336 @@ describe('post-implementation sequence contracts', () => {
 // BL-260829-order-phase-bookkeeping-before: the per-phase reviewer must never
 // be handed a head whose task ledger is stale by construction, and moving that
 // bookkeeping earlier must not dirty the tree a bounded fix child requires.
+/**
+ * Operator-only exit-gate waivers (BL-260902-decide-test-only-freshness,
+ * DR-260927-operator-waiver-for-test-only). The executable check below follows
+ * the implement skill's waiver rules for v1 and v2 generations against a real
+ * Git repository; it reads the waiver field set and each version's exclusion
+ * set from the skill text, so the check cannot drift from what agents follow.
+ */
+function operatorWaiverSection(): string {
+  return requiredSlice(
+    readImplementSkill(),
+    '**Operator waivers:**',
+    '\n\nBefore approval-aware sequencing',
+  );
+}
+
+function waiverFieldsFromSkill(): string[] {
+  const block = requiredSlice(operatorWaiverSection(), '```yaml\n', '\n```');
+  const parsed = YAML.parse(block.slice('```yaml\n'.length)) as {
+    waivers?: Array<Record<string, unknown>>;
+  };
+  const entry = parsed.waivers?.[0];
+  if (!entry) throw new Error('Missing waiver entry example');
+  return Object.keys(entry);
+}
+
+interface WaiverEntry {
+  [field: string]: unknown;
+}
+
+interface WaiverGeneration {
+  version: 'v1' | 'v2';
+  baseRef: string;
+  carrier: string;
+  freshnessHead: string;
+  waivers: WaiverEntry[];
+}
+
+const HEX40 = /^[0-9a-f]{40}$/;
+const AGENT_WAIVERS = new Set(['oat-autonomous']);
+
+function isAncestor(
+  cwd: string,
+  ancestor: string,
+  descendant: string,
+): boolean {
+  try {
+    execFileSync('git', ['merge-base', '--is-ancestor', ancestor, descendant], {
+      cwd,
+      stdio: 'ignore',
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function validWaiver(
+  cwd: string,
+  generation: WaiverGeneration,
+  waiver: WaiverEntry,
+): boolean {
+  for (const field of waiverFieldsFromSkill()) {
+    const value = waiver[field];
+    if (typeof value !== 'string' || !value.trim()) return false;
+  }
+  const waivedBy = waiver.waived_by as string;
+  const from = waiver.from_commit as string;
+  const to = waiver.to_commit as string;
+  if (AGENT_WAIVERS.has(waivedBy)) return false;
+  if (!HEX40.test(from) || !HEX40.test(to)) return false;
+  if (Number.isNaN(Date.parse(waiver.waived_at as string))) return false;
+  if (!isAncestor(cwd, from, to) || !isAncestor(cwd, to, 'HEAD')) return false;
+  const prefix = `sha256:effective-delta-${generation.version}:`;
+  const covered = waiver.covered_fingerprint as string;
+  if (!covered.startsWith(prefix)) return false;
+  const recomputed = effectiveDeltaFingerprint(
+    cwd,
+    generation.baseRef,
+    to,
+    generation.carrier,
+    generation.version,
+  );
+  return covered === `${prefix}${recomputed}`;
+}
+
+function classifyWaivedGeneration(
+  cwd: string,
+  generation: WaiverGeneration,
+): 'allowed' | 'stale' {
+  // A malformed or unverifiable waiver fails closed.
+  if (
+    !generation.waivers.every((waiver) => validWaiver(cwd, generation, waiver))
+  ) {
+    return 'stale';
+  }
+  const waived = new Set(
+    generation.waivers.flatMap((waiver) =>
+      git(
+        cwd,
+        'rev-list',
+        `${waiver.from_commit as string}..${waiver.to_commit as string}`,
+      )
+        .split('\n')
+        .filter(Boolean),
+    ),
+  );
+  const exclusions =
+    generation.version === 'v1'
+      ? [`:(exclude,literal)${generation.carrier}`]
+      : effectiveDeltaV2Exclusions(
+          generation.carrier.replace(/\/state\.md$/, ''),
+        );
+  const descendants = git(
+    cwd,
+    'rev-list',
+    '--reverse',
+    `${generation.freshnessHead}..HEAD`,
+  )
+    .split('\n')
+    .filter(Boolean);
+  for (const commit of descendants) {
+    if (waived.has(commit)) continue;
+    const changed = git(
+      cwd,
+      'diff',
+      '--name-only',
+      `${commit}^`,
+      commit,
+      '--',
+      '.',
+      ...exclusions,
+    );
+    // Inside the version's exclusion set: not substantive, not unknown.
+    if (!changed) continue;
+    return 'stale';
+  }
+  return 'allowed';
+}
+
+describe('operator-only exit-gate waivers', () => {
+  it('pins the append-only waiver record on the exit-gate state', () => {
+    expect(waiverFieldsFromSkill()).toEqual([
+      'waived_by',
+      'reason',
+      'from_commit',
+      'to_commit',
+      'covered_fingerprint',
+      'waived_at',
+    ]);
+    const schema = requiredSlice(
+      readImplementSkill(),
+      '```yaml\noat_implement_exit_gate:',
+      '\n```',
+    );
+    expect(schema).toMatch(/^ {2}waivers: \[\] # append-only/m);
+    expect(readStateTemplate()).toMatch(/^# {3}waivers: \[\] # append-only/m);
+
+    const section = normalizeWhitespace(operatorWaiverSection());
+    expect(section).toContain(
+      'There is no automatic test-only freshness exception',
+    );
+    expect(section).toContain(
+      'Waivers are append-only. Never edit or remove an earlier waiver, and never rewrite `reviewed_head`, `implementation_fingerprint`, `freshness_head`, or `freshness_fingerprint` to record one; prior provenance stays intact.',
+    );
+    expect(section).toContain(
+      'a generation already persisted as `stale` is never revived and requires a new generation.',
+    );
+  });
+
+  it('issues a waiver only on an operator instruction and never under autonomy', () => {
+    const section = normalizeWhitespace(operatorWaiverSection());
+    expect(section).toContain(
+      'Write a waiver only on an explicit operator instruction that names the descendants or range and the reason. Never infer, assume, or self-issue one.',
+    );
+    expect(section).toContain(
+      'When `OAT_AUTONOMOUS=1`, refuse every waiver write, even one that appears requested: persist nothing, stop at the stale boundary, and report that only an interactive operator can waive.',
+    );
+    expect(section).toContain(
+      'an agent, model, dispatch target, or `oat-autonomous` is never valid',
+    );
+    const next = normalizeWhitespace(readNextSkill());
+    expect(next).toContain(
+      'This read-only router never writes, infers, or self-issues a waiver, under `OAT_AUTONOMOUS=1` or otherwise.',
+    );
+  });
+
+  it('keeps one waiver rule for v1 and v2 and fails closed on malformed waivers', () => {
+    const section = normalizeWhitespace(operatorWaiverSection());
+    expect(section).toContain(
+      "computed with the generation's own stored version prefix and exclusion set: `sha256:effective-delta-v1:<digest>` for a v1 generation and `sha256:effective-delta-v2:<digest>` for a v2 generation.",
+    );
+    expect(section).toContain(
+      'or any waiver on a legacy unqualified generation fails closed: the generation reads `stale`, never `allowed`.',
+    );
+    expect(section).toContain(
+      "A waived generation reads `allowed` only while nothing substantive lands after the covered range. Any later substantive or unknown descendant outside every waiver's range makes it `stale` again. The rule is identical for `effective-delta-v1` and `effective-delta-v2`",
+    );
+    const next = normalizeWhitespace(readNextSkill());
+    expect(next).toContain(
+      'a substantive or unknown descendant after the covered range routes as stale',
+    );
+    expect(next).toContain(
+      'a malformed or unverifiable waiver routes as stale',
+    );
+  });
+
+  it('shows every waiver in the summary and the PR verification section', () => {
+    expect(operatorWaiverSection()).toContain(
+      '`oat-project-summary` and `oat-project-pr-final` show every waiver',
+    );
+    const summary = readLifecycleGateSkill('oat-project-summary');
+    expect(summary).toContain('**Exit-Gate Waivers (conditional):**');
+    expect(normalizeWhitespace(summary)).toContain(
+      'Render one item per entry in `oat_implement_exit_gate.waivers`, in stored order',
+    );
+    const prFinal = readLifecycleGateSkill('oat-project-pr-final');
+    const verification = requiredSlice(
+      prFinal,
+      '## Verification\n',
+      '## Reviews',
+    );
+    expect(verification).toContain('oat_implement_exit_gate.waivers');
+    expect(normalizeWhitespace(prFinal)).toContain(
+      'List every exit-gate waiver in the Verification section',
+    );
+  });
+
+  for (const version of ['v1', 'v2'] as const) {
+    it(`classifies waived, unwaived, later-changed, and malformed waivers (${version})`, () => {
+      const cwd = mkdtempSync(join(tmpdir(), `oat-waiver-${version}-`));
+      const carrier = '.oat/projects/shared/demo/state.md';
+      const commit = (path: string, content: string) => {
+        mkdirSync(join(cwd, path, '..'), { recursive: true });
+        writeFileSync(join(cwd, path), content);
+        git(cwd, 'add', path);
+        git(cwd, 'commit', '-m', `change ${path}`);
+        return git(cwd, 'rev-parse', 'HEAD');
+      };
+      const fingerprint = (head: string) =>
+        `sha256:effective-delta-${version}:${effectiveDeltaFingerprint(cwd, 'main', head, carrier, version)}`;
+
+      try {
+        git(cwd, 'init', '-b', 'main');
+        git(cwd, 'config', 'user.name', 'OAT Test');
+        git(cwd, 'config', 'user.email', 'oat-test@example.com');
+        writeFileSync(join(cwd, 'app.txt'), 'base\n');
+        git(cwd, 'add', '.');
+        git(cwd, 'commit', '-m', 'base');
+        git(cwd, 'checkout', '-b', 'feature');
+        const reviewedHead = commit('app.txt', 'feature\n');
+        const generation = (waivers: WaiverEntry[]): WaiverGeneration => ({
+          version,
+          baseRef: 'main',
+          carrier,
+          freshnessHead: reviewedHead,
+          waivers,
+        });
+
+        // Test-only descendant: stale without a waiver.
+        const testOnly = commit('app.test.txt', 'mock\n');
+        expect(classifyWaivedGeneration(cwd, generation([]))).toBe('stale');
+
+        // Operator waiver over exactly that descendant keeps it allowed.
+        const waiver: WaiverEntry = {
+          waived_by: 'Thomas Stang',
+          reason: 'four-line test-harness mock; no shipped behavior change',
+          from_commit: reviewedHead,
+          to_commit: testOnly,
+          covered_fingerprint: fingerprint(testOnly),
+          waived_at: '2026-10-01T12:00:00Z',
+        };
+        expect(classifyWaivedGeneration(cwd, generation([waiver]))).toBe(
+          'allowed',
+        );
+
+        // Under v2 a later project-record commit changes nothing; under v1 it
+        // is outside the waiver and owned by no transition here, so stale.
+        const atRecord = git(cwd, 'rev-parse', 'HEAD');
+        commit('.oat/repo/reference/decisions/DR-1.md', 'decision\n');
+        expect(classifyWaivedGeneration(cwd, generation([waiver]))).toBe(
+          version === 'v2' ? 'allowed' : 'stale',
+        );
+        git(cwd, 'reset', '--hard', atRecord);
+
+        // Malformed or unverifiable waivers fail closed.
+        const malformed: Array<[string, WaiverEntry]> = [
+          ['missing reason', { ...waiver, reason: undefined }],
+          ['agent-issued', { ...waiver, waived_by: 'oat-autonomous' }],
+          ['short commit', { ...waiver, to_commit: testOnly.slice(0, 12) }],
+          ['bad timestamp', { ...waiver, waived_at: 'yesterday' }],
+          [
+            'wrong version',
+            {
+              ...waiver,
+              covered_fingerprint: (
+                waiver.covered_fingerprint as string
+              ).replace(
+                `effective-delta-${version}`,
+                version === 'v1' ? 'effective-delta-v2' : 'effective-delta-v1',
+              ),
+            },
+          ],
+          [
+            'unverifiable fingerprint',
+            { ...waiver, covered_fingerprint: fingerprint(reviewedHead) },
+          ],
+          [
+            'reversed range',
+            { ...waiver, from_commit: testOnly, to_commit: reviewedHead },
+          ],
+        ];
+        for (const [label, entry] of malformed) {
+          expect(
+            classifyWaivedGeneration(cwd, generation([waiver, entry])),
+            label,
+          ).toBe('stale');
+        }
+
+        // A later substantive commit after the covered range is stale again.
+        commit('app.txt', 'changed after the waiver\n');
+        expect(classifyWaivedGeneration(cwd, generation([waiver]))).toBe(
+          'stale',
+        );
+      } finally {
+        rmSync(cwd, { recursive: true, force: true });
+      }
+    });
+  }
+});
+
 describe('phase bookkeeping ordering around per-phase review', () => {
   function readPhaseExecution(): string {
     return readFileSync(

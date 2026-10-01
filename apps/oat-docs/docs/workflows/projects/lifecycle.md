@@ -65,6 +65,11 @@ allowed and fresh disposition before pre-approval work starts. A
 not inferred from missing state, and a null, missing, or unrecognized resolver
 result fails closed as unresolved instead.
 
+A later substantive change makes an allowed result stale, test-only changes
+included. Only an operator can keep it fresh, by recording an append-only
+exit-gate waiver for the exact commits; agents never issue one, and autonomous
+runs stop instead. The summary and PR description list every waiver.
+
 After implementation closeout finishes:
 
 1. **Summary** (`oat-project-summary`) — generates `summary.md` as institutional memory from project artifacts; PR-final and completion will auto-refresh it if you have not already run it or if it is stale

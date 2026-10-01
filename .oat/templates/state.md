@@ -54,6 +54,7 @@ oat_workflow_origin: native # native | imported
 #   implementation_fingerprint: null # new generations use sha256:effective-delta-v2:<digest>; stored v1 values keep v1 semantics
 #   freshness_head: null # rolling accepted tree checkpoint
 #   freshness_fingerprint: null # full effective delta at freshness_head
+#   waivers: [] # append-only operator waivers {waived_by, reason, from_commit, to_commit, covered_fingerprint, waived_at}; never self-issued, never under OAT_AUTONOMOUS=1
 #   launch_state: not_started # not_started | intent_persisted | accepted | result_persisted | not_accepted
 #   launch_attempt_id: null
 #   launch_started_at: null

@@ -194,6 +194,16 @@ bookkeeping. Implementation, test, skill, template, workflow configuration, or
 unknown changed paths make the result stale and require a current final review
 and a new gate generation.
 
+An operator can waive specific stale-making descendants, such as a test-only
+fix, instead of rerunning the gate. The waiver is an append-only entry in
+`oat_implement_exit_gate.waivers` recording who waived, the reason, the covered
+commit range, the effective-delta fingerprint at the range end, and a UTC
+timestamp; it never rewrites earlier provenance. Waivers are operator-only:
+agents never infer or self-issue one, and an `OAT_AUTONOMOUS=1` run refuses to
+write one. A later substantive change after the covered range makes the
+generation stale again, and a malformed waiver fails closed. See
+[Implementation Execution](../workflows/projects/implementation-execution.md).
+
 Only an artifact with `oat_review_invocation: gate` and the matching
 `oat_gate_run_id` can satisfy configured-gate provenance. A normal final
 review, phase review, or manually produced independent review cannot substitute

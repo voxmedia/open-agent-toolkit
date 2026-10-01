@@ -255,6 +255,7 @@ spec, or design artifacts.
 | Tradeoffs Made       | plan.md `Assumptions`; implementation.md decisions            |
 | Follow-up Items      | plan.md `Out of Scope`; implementation.md deferred results    |
 | Integration Notes    | plan.md `Validation Criteria`; implementation.md test results |
+| Exit-Gate Waivers    | state.md `oat_implement_exit_gate.waivers`                    |
 
 **Non-lite section sources:**
 
@@ -273,6 +274,7 @@ spec, or design artifacts.
 | Workflow Observations          | project-log.md via `oat project log rollup` only                               |
 | Autonomous Execution Learnings | oat-execution-learnings.md dated entries                                       |
 | Explainer Outcome              | project-recap `manifest.json` and `qa/result.json`, or the recorded recap skip |
+| Exit-Gate Waivers              | state.md `oat_implement_exit_gate.waivers`                                     |
 
 **Explainer Outcome (conditional):**
 
@@ -309,6 +311,23 @@ appending a duplicate.
 Omit `Explainer Outcome` only when no project-recap attempt and no persisted
 recap skip exist. A failed or skipped recap remains visible as its own product
 outcome; do not reinterpret it as project implementation failure.
+
+**Exit-Gate Waivers (conditional):**
+
+When `oat_implement_exit_gate.waivers` in `state.md` is non-empty, render
+`## Exit-Gate Waivers`. Render one item per entry in
+`oat_implement_exit_gate.waivers`, in stored order; never merge, summarize
+away, or drop an entry:
+
+```markdown
+## Exit-Gate Waivers
+
+- `{from_commit short}..{to_commit short}` ({effective-delta-v1 | effective-delta-v2}) waived by {waived_by} at {waived_at}: {reason}
+```
+
+Copy `waived_by` and `reason` exactly as recorded. A waiver is an operator's
+recorded decision, not something this skill infers or adds. Omit the section
+only when the list is absent or empty.
 
 **Autonomous Execution Learnings (conditional):**
 

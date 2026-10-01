@@ -3244,7 +3244,7 @@ describe('validateOatSkills', () => {
       ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.7'],
       ['.agents/skills/oat-project-summary/SKILL.md', '1.5.7'],
       ['.agents/skills/oat-project-document/SKILL.md', '1.8.5'],
-      ['.agents/skills/oat-project-pr-final/SKILL.md', '1.6.6'],
+      ['.agents/skills/oat-project-pr-final/SKILL.md', '1.6.7'],
       ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.17'],
     ] as const;
 
@@ -4932,7 +4932,7 @@ describe('validateOatSkills', () => {
       ['oat-project-review-receive', '1.6.7'],
       ['oat-project-review-receive-remote', '1.5.3'],
       ['oat-project-implement', '2.3.16'],
-      ['oat-project-pr-final', '1.6.6'],
+      ['oat-project-pr-final', '1.6.7'],
       ['oat-project-pr-progress', '1.3.2'],
       ['oat-project-complete', '1.7.14'],
       ['oat-project-next', '1.1.4'],

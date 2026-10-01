@@ -1728,6 +1728,16 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
   {
     file: '.agents/skills/oat-project-next/SKILL.md',
     anchor: 'Step 5: Post-Implementation Router',
+    match: 'Operator waivers in `oat_implement_exit_gate.waivers` follow the',
+    classification: 'load-required',
+    skills: ['oat-project-implement'],
+    requires: [
+      'rules read from the current `oat-project-implement/references/completion-and-closeout.md` Step 14 rather than a remembered version of those rules',
+    ],
+  },
+  {
+    file: '.agents/skills/oat-project-next/SKILL.md',
+    anchor: 'Step 5: Post-Implementation Router',
     match: 'If `oat_implement_exit_gate` is absent',
     classification: 'non-executing',
     skills: ['oat-project-implement'],

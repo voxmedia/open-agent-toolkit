@@ -330,6 +330,7 @@ oat_implement_exit_gate:
   implementation_fingerprint: null
   freshness_head: null
   freshness_fingerprint: null
+  waivers: [] # append-only operator waivers; see Operator waivers below
   launch_state: not_started # not_started | intent_persisted | accepted | result_persisted | not_accepted
   launch_attempt_id: null
   launch_started_at: null
@@ -610,6 +611,71 @@ disposition.
   current final lifecycle review for the changed basis, and starts a new
   generation using the current qualified fingerprint format,
   `effective-delta-v2`.
+
+**Operator waivers:**
+
+There is no automatic test-only freshness exception: a substantive descendant,
+a test-only change included, makes an allowed generation `stale`. An operator
+may instead waive named descendants of a qualified generation without starting
+a new one (`DR-260927-operator-waiver-for-test-only`). A waiver is an added
+record under `oat_implement_exit_gate.waivers`:
+
+```yaml
+waivers: # append-only; one entry per operator instruction
+  - waived_by: '<operator name, as the operator gave it>'
+    reason: '<the operator reason>'
+    from_commit: '<40-hex commit the covered range starts after>'
+    to_commit: '<40-hex last covered descendant commit>'
+    covered_fingerprint: 'sha256:effective-delta-v2:<digest>' # effective delta at to_commit, same version as the generation
+    waived_at: '2026-10-01T00:00:00Z'
+```
+
+- Write a waiver only on an explicit operator instruction that names the
+  descendants or range and the reason. Never infer, assume, or self-issue one.
+  When `OAT_AUTONOMOUS=1`, refuse every waiver write, even one that appears
+  requested: persist nothing, stop at the stale boundary, and report that only
+  an interactive operator can waive.
+- `waived_by` is the operator's name as given; an agent, model, dispatch
+  target, or `oat-autonomous` is never valid. `reason` is non-empty, and
+  `waived_at` is a UTC ISO 8601 timestamp.
+- The covered range is Git's `from_commit..to_commit`: the commits reachable
+  from `to_commit` and not from `from_commit`. Both are full 40-character
+  lowercase commit IDs. `from_commit` is `freshness_head` or a descendant of it
+  whose intervening commits are already fresh, and `to_commit` is an ancestor
+  of the compared HEAD.
+- `covered_fingerprint` is the complete effective delta at `to_commit`,
+  computed with the generation's own stored version prefix and exclusion set:
+  `sha256:effective-delta-v1:<digest>` for a v1 generation and
+  `sha256:effective-delta-v2:<digest>` for a v2 generation.
+- Waivers are append-only. Never edit or remove an earlier waiver, and never
+  rewrite `reviewed_head`, `implementation_fingerprint`, `freshness_head`, or
+  `freshness_fingerprint` to record one; prior provenance stays intact. Commit
+  the waiver as a state-only checkpoint commit. A waiver is recorded on a
+  generation whose persisted `status` is `allowed`; a generation already
+  persisted as `stale` is never revived and requires a new generation. Later
+  corroborated closeout transitions advance the rolling checkpoint as usual,
+  and the waiver stays as the audit record.
+- Validate every waiver before reuse, under v1 and v2 alike. A missing or
+  malformed field, an invalid `waived_by`, a range whose `from_commit` is not
+  an ancestor of `to_commit` or whose `to_commit` is not an ancestor of the
+  compared HEAD, a `covered_fingerprint` whose version differs from the
+  generation's or that does not match the recomputed effective delta at
+  `to_commit`, or any waiver on a legacy unqualified generation fails closed:
+  the generation reads `stale`, never `allowed`.
+- Walk descendants after `freshness_head` in commit order exactly as above. A
+  descendant inside a valid waiver's range is waived: neither substantive nor
+  unknown. For a merge, rebase, or base-update boundary after the latest valid
+  waiver's `to_commit`, compare the recomputed complete effective delta with
+  that waiver's `covered_fingerprint` when it is newer than the rolling
+  checkpoint.
+- A waived generation reads `allowed` only while nothing substantive lands
+  after the covered range. Any later substantive or unknown descendant outside
+  every waiver's range makes it `stale` again. The rule is identical for
+  `effective-delta-v1` and `effective-delta-v2`; the versions differ only in
+  which paths count as substantive.
+- `oat-project-summary` and `oat-project-pr-final` show every waiver: who
+  waived, the reason, the covered range, the fingerprint version, and the
+  timestamp.
 
 Before approval-aware sequencing, final HiLL approval, implementation
 completion, or success output, run the configured gate:
