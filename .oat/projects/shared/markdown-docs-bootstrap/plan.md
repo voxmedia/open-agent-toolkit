@@ -31,8 +31,8 @@ oat_template: true
 - [x] Lightweight design and review dispositions approved
 - [x] Evaluated phase overlap and recorded sequential execution
 - [x] Defined task ownership, observable acceptance, and verification
-- [ ] Selected project dispatch policy
-- [ ] Recorded optional phase gate and configured lifecycle gate choices
+- [x] Selected project dispatch policy: High
+- [x] Recorded optional phase gate and configured lifecycle gate choices: additional phase gates disabled; both lifecycle gates kept
 - [ ] Completed plan artifact review and quick-start exit gate
 - [ ] Initialized implementation tracking and committed readiness
 
