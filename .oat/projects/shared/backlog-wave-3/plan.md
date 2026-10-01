@@ -1745,6 +1745,7 @@ breaking changes must be named in the title:
 | p04    | code     | passed          | 2026-10-01 | reviews/archived/p04-review-2026-10-01T180727Z.md   | 5033a7f56afd098a96037474e8318012e3c6c51d | gate       | codex-6-sol-xhigh |
 | p05    | code     | passed          | 2026-10-01 | reviews/archived/p05-review-2026-10-01T193643Z.md   | c48f6b5328cd453bdf17f838e4203757302b9635 | gate       | codex-6-sol-xhigh |
 | p06    | code     | passed          | 2026-10-01 | reviews/archived/p06-review-2026-10-01T200536Z.md   | 2f66ef84ec9a63e11bfcba6d7e136c50cb806c77 | gate       | codex-6-sol-xhigh |
+| final  | code     | received        | 2026-10-01 | reviews/final-review-2026-10-01T203319Z.md          | 073c003ed988b689714a5b23f80dfd15d89a79ad | gate       | codex-6-sol-xhigh |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
