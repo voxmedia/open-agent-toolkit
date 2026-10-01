@@ -18,7 +18,7 @@ oat_template: false
 
 # Implementation Plan: markdown-docs-bootstrap
 
-> Execute with `oat-project-implement` after quick-start review and readiness are complete. All thirteen implementation tasks complete; current final review passed; retained exit gate refresh remains pending.
+> Execute with `oat-project-implement` after quick-start review and readiness are complete. All fourteen implementation tasks complete; current source verification passed; fresh final source review/exit-gate refresh pending.
 
 **Goal:** Offer plain Markdown docs bootstrap with `documentation.tooling: markdown`, authored index/context conventions, additive adoption, and nonmutating dry-run.
 
@@ -278,7 +278,7 @@ Use public adoption/dry-run regressions for instruction-only direct/nested direc
 | final         | code     | passed          | 2026-10-01 | reviews/archived/final-review-2026-10-01T180731Z.md         | 9b926dbb37a93049640cf6737e5ba42f9598b8c7 | auto       | -                    |
 | remote-pr-335 | code     | passed          | 2026-10-01 | reviews/archived/remote-pr-335-review-2026-10-01T181341Z.md | -                                        | -          | -                    |
 | final         | code     | passed          | 2026-10-01 | reviews/archived/final-review-2026-10-01T184430Z.md         | 66524f780ced805111a84de22b76f63fe4767cd6 | auto       | -                    |
-| final         | code     | received        | 2026-10-01 | reviews/final-review-2026-10-01T185353Z.md                  | 909f8a68b1068b54f2a0ee870e299088a5c0da82 | gate       | claude-opus-5-5-high |
+| final         | code     | fixes_completed | 2026-10-01 | reviews/archived/final-review-2026-10-01T185353Z.md         | 909f8a68b1068b54f2a0ee870e299088a5c0da82 | gate       | claude-opus-5-5-high |
 
 Historical scaffold rows and review events are preserved. Eleven prior tasks are complete; remote M1/L1 are converted to p04-t04/p04-t05. Prior passed reviews and gates remain history; fresh final acceptance is required for the remote fixes on the integrated branch.
 
@@ -295,7 +295,7 @@ Source pointers retained for the already-planned consumer inventory: index gener
 
 ## Implementation Complete
 
-Implementation in progress: 14/14 tasks complete; both remote source fixes independently accepted; passing-gate L1 source correction verified, final eight-gate acceptance pending. Scope: 4 sequential phases, 14 atomic tasks — p01 (2), p02 (3), p03 (3), p04 (6). Prior integrated verification/review remains history; The retained exit gate refresh precedes final HiLL approval. Existing configured pre-approval steps are complete and their snapshot is unchanged.
+Implementation in progress: 14/14 tasks complete; both remote source fixes independently accepted; passing-gate L1 correction and all eight local gates passed; current final source review/exit-gate refresh pending. Scope: 4 sequential phases, 14 atomic tasks — p01 (2), p02 (3), p03 (3), p04 (6). Prior integrated verification/review remains history; current final source review and retained exit gate refresh precede final HiLL approval. Existing configured pre-approval steps are complete and their snapshot is unchanged.
 
 ## References
 

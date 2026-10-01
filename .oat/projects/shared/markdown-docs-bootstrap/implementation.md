@@ -13,12 +13,12 @@ All thirteen tasks are complete, including both remote adoption corrections. Cur
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p01   | complete    | 2     | 2/2       |
-| p02   | complete    | 3     | 3/3       |
-| p03   | complete    | 3     | 3/3       |
-| p04   | in_progress | 6     | 6/6       |
+| Phase | Status   | Tasks | Completed |
+| ----- | -------- | ----- | --------- |
+| p01   | complete | 2     | 2/2       |
+| p02   | complete | 3     | 3/3       |
+| p03   | complete | 3     | 3/3       |
+| p04   | complete | 6     | 6/6       |
 
 **Total:** 14/14 tasks completed
 
@@ -139,13 +139,13 @@ None recorded.
 
 ## Final Summary (for PR/docs)
 
-Markdown bootstrap supports documentation.tooling: markdown, literal dedicated roots, authored indexes/context/Contents/metadata, additive explicit adoption and nonmutating dry-run, with full content/index manifest protection and file-level verification. Five canonical skills, two templates and twelve documentation pages are shipped with five public packages at0.3.11. General init detection, approval classes and broader package-drift work remain outside scope.
+Markdown bootstrap supports `documentation.tooling: markdown`, literal dedicated roots, authored indexes/context/Contents/metadata, explicit additive adoption and nonmutating dry-run, protected external manifests and file verification. Five canonical skills, two templates and twelve documentation pages ship with five public packages prepared at0.3.11. General init detection, approval classes and broader package-drift work remain outside this slice.
 
-Main #334 at98d1d524624e17f55ccfce33d18b3d5535dc91ca is integrated by normal merge; seven conflict dispositions preserve package lockstep, canonical version inventory and actual main sync stamp. Original integrated8,159 workspace tests and semantic composition proof are retained. Remote PR335 M1/L1 are converted and completed as p04-t04/p04-t05: usable in-repository child indexes map, unusable optional child indexes are preserved with audit advice, and instruction-only directories are exempt from authored-content advice. Required root safety remains strict.
+Main #334 at98d1d524624e17f55ccfce33d18b3d5535dc91ca is integrated by normal merge. Seven conflicts preserve lockstep packages, canonical version inventory and main's genuine sync stamp; independently verified semantic composition and actual8,159 prior workspace tests are retained. Both Bugbot fixes are independently accepted: usable repository child indexes map, unusable optional indexes are preserved/advised, instruction-only directories are exempt. Passing-gate L1 additionally preserves inaccessible optional directories with accurate unknown-content advice; required root/target safety remains strict.
 
-Latest corrected-source eight gates pass in order at0620794717bb0039753213c24e37868b476afbdb: CLI7,969/398files actual, smoke163/skills660/scripts1actual,73docs pages actual in test dependency build. Unchanged three package test tasks and subsequent build/docs gates replay valid cache; prior actual integration proof remains inherited. Both remote regressions fail old source for intended bugs and pass fixed; focused199 and real dry/live controls pass. Exact reproducible receipts in reviews/final-remote-controls.md; evidence-only commit47b3df923fc460da9c331ebb15d12fdc15a36a4b, sources unchanged.
+All14 tasks complete, recovery0/10, no deferred review debt. Latest eight local gates pass on5237891573c59413e2b13e3f4090b8053aadfb90: actualCLI7,970/398files, root163/660/1 and73docs pages. Check/types mixed actual/cache; unchanged consumer tests and subsequent build/docs cache replay are explicit. Focused200 and exact old-failing/fixed-passing regressions plus real CLI preservation/accepted/safety controls are retained in final-remote-controls and final-unreadable-controls. Latest source fingerprints remain pinned; no extra source changes after acceptance.
 
-13/13 tasks complete, recovery0/10, no unresolved deferred finding. Remote event is fixes_completed pending independent final re-review. Existing summary/document/PR sequence is complete in stored order and actual PR335 is open; fresh final review/retained exit gate must pass before final p04 HiLL approval. Visual recap skip is interactive and immutable; written summary retained. No release, GitHub merge or deployment performed.
+Prior clean integration/remote final reviews are retained; fresh final review and configured-exit freshness are pending for the optional-directory delta. Summary/document/PR steps remain complete in their stored order and existing PR335 remains open. Their outputs are refreshed, not re-resolved. Final p04 HiLL approval remains pending; interactive visual recap skip and written summary choice persist. No publication, GitHub merge or deployment performed.
 
 ## Orchestration Runs
 
@@ -1572,7 +1572,11 @@ Accepted exact-target canonical-role route /root/markdown_p04_pinned; awaiting r
         "routeLength": 1
       },
       "original_handle": "/root/markdown_p04_pinned",
-      "status": "planned"
+      "status": "DONE",
+      "task_commit": "f27361742e42e9803246bffaf6099ab11fbf5ba2",
+      "evidence_commit": "664af22fb1c2b353f4018a99ecf353359282e1c1",
+      "gate_source_head": "5237891573c59413e2b13e3f4090b8053aadfb90",
+      "recovery_used": 0
     }
   ],
   "task_class": "consequential",
@@ -3161,3 +3165,11 @@ Dispatch: scope=p04 action=fix role=fix producer=unknown provenance=unknown mode
 Root read complete source/test and all286 evidence lines; verified exact three paths, clean tree, archive production parity, actual200 focused tests/lint/types, intended old regression failure/fixed pass. Accurate permission advice and independent dry/live/repeat preservation/Contents controls satisfy the gap; required root refusal stays strict. Single public regression, no private duplicate/hook. Original request/target and recovery0/10 retained. All14 tasks complete; all eight gates now run on this ACK head.
 
 Root check corrections: old rollup/Final Summary from13 tasks remained after planning; rollup/current pointer reconciled now before gate acceptance, current Final Summary rewrite before final review. The first log-count check encountered ANSI; the second exact test-byte check encountered one final oxfmt line-wrap difference. Root inspected the full three-line diff and corroborated identical test logic; production bytes match exactly. These are evidence-check adjustments, not product/recovery failures.
+
+Final p04-t06 acceptance: all9 command/fetch receipts and source hashes corroborated; evidence-only664af22fb1c2b353f4018a99ecf353359282e1c1 is exactly final-unreadable-controls, full514 lines read. Exact formatted regression old1/fixed0 matches currenttestSHA; no skip/sharedneutralization. Root now aligns L2 summary and current prose before independent final source review/configured gate refresh.
+
+### Retained gate74cf045f receive closure
+
+**Artifact:** reviews/archived/final-review-2026-10-01T185353Z.md
+
+Original counts0C/0H/0M/2L preserved. L1 addressed in p04-t06 with real EACCES causal proof and all eight fresh local gates; L2 addressed through the existing written-summary output refresh to14 tasks/current behavior/receipt counts. Both address-now judgments are complete; no deferrals, dismissals or waived safety. Event advances fixes_completed until independent source freshness closure. Root has already consumed the sole not-attempted confirmation and validated correlation before receiving. Original gate passed its high threshold; source changes make that generation stale instead of reusing its old fingerprint. No blocking remediation attempt/recovery consumed.

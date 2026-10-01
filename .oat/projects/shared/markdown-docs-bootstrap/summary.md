@@ -4,7 +4,7 @@ oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
 oat_generated: true
-oat_summary_last_task: p04-t03
+oat_summary_last_task: p04-t06
 oat_summary_revision_count: 0
 oat_summary_includes_revisions: []
 ---
@@ -13,7 +13,7 @@ oat_summary_includes_revisions: []
 
 ## Overview
 
-Plain Markdown is now an explicit documentation bootstrap option for repositories that need useful documentation without a site application. This quick project implements the Markdown portion of `BL-260911-make-docs-bootstrap-a-front`, including safe adoption of populated directories and the applicable OAT context, navigation, metadata, and authoring contracts. All eleven planned tasks and review dispositions are complete. Configured written-summary, documentation and PR steps are complete; final p04 HiLL approval remains pending.
+Plain Markdown is now an explicit documentation bootstrap option for repositories that need useful documentation without a site application. This quick project implements the Markdown portion of `BL-260911-make-docs-bootstrap-a-front`, including safe adoption of populated directories and the applicable OAT context, navigation, metadata, and authoring contracts. All fourteen planned and review-fix tasks and their dispositions are complete. Configured written-summary, documentation and PR steps are complete; final p04 HiLL approval remains pending.
 
 ## What Was Implemented
 
@@ -44,16 +44,19 @@ No production scope deviation was accepted. Review added bounded filename encodi
 - URI delimiters in real filenames and JavaScript replacement syntax in real user values escaped ordinary-input coverage. Independent destination resolution and YAML/Contents oracles reproduced the old bad accepted results, confirmed the fixes, and retained valid accepted controls.
 - Tracking needed its own corrections: the committed-page checker was made non-vacuous (twelve pages, 105 targets), twenty historical review rows were consolidated without losing cells, and a root checkpoint's joined YAML keys were separated and the complete frontmatter validated before further dispatch. Original failures and raw review counts remain in the evidence.
 
+- Remote Bugbot review added two bounded adoption corrections (focused suite 200 tests): usable in-repository child index aliases map normally; unusable optional child indexes remain preserved with repair advice, and instruction-only directories no longer trigger missing-index advice. Required root-baseline and unsafe-target checks remain strict.
+
 ## Tradeoffs Made
 
 Adoption preserves malformed authored content rather than rewriting it; repair remains an explicit analyze/apply action. Guidance preview is advisory because a later write can encounter different filesystem state. Framework conversion, dependency drift, approval policy, and other-repository work remain separate from this Markdown slice.
 
 ## Integration Notes
 
-- Latest corrected-source verification passed all eight CI gates in order, including fresh-main version checks and release validation for all five packages. Actual execution included 7,945 CLI tests across 398 files, smoke 163, skills 660, scripts 1, and 73 docs pages; focused verification passed 197/197. Later build/docs gates replayed valid cache and are recorded as replay, not fresh execution. See [literal-rendering controls](reviews/final-dollar-controls.md).
-- Earlier isolated-home forced workspace verification executed ten uncached tasks and 8,135 tests. It remains historical evidence for unchanged consumers; it was not repeated as a full forced run after the final fixes. Bundle parity (46 checks), isolated user/project install/update, 24 integrated CLI controls, and six retained probes passed. See [bundle controls](reviews/p04-bundle-controls.md) and [reproduction controls](reviews/p04-reproduction-controls.md).
-- Independent final lifecycle re-review passed with zero findings and reproduced the literal-rendering correction. The refreshed cross-runtime implementation exit gate passed with one Low stale-prose finding, which was dispositioned and corrected. Prior whole-project coverage is explicitly inherited for narrowed reviews; original finding counts remain preserved in [implementation history](implementation.md).
-- Native exact-role selectors were rejected before child start; accepted canonical-role approximations retained configured model/effort and original request linkage. Configured invocation is evidence distinct from independent runtime identity, which was not reported. No post-commit recovery attempt was consumed.
+- Main #334 (`98d1d524624e17f55ccfce33d18b3d5535dc91ca`) was integrated through a normal merge. All seven conflict resolutions preserve lockstep 0.3.11 packages, the canonical generated four-package inventory, and main's genuine 0.3.10 sync producer stamp. Both automatic merges preserve their Markdown and dispatch contracts. All 21 retained Markdown command/template/skill paths matched the pre-integration source bytes before the subsequent two remote review fixes. See [integration controls](reviews/final-integration-controls.md).
+- All eight CI gates passed in order after both remote corrections and the unreadable-directory sweep, with actual exits retained. Latest actual execution: CLI 7,970 tests across 398 files, root smoke 163, skills 660, scripts 1, and 73 docs pages. Unchanged control-plane 151/docs-config 10/docs-transforms 31 tests replayed cache; the preceding main-integration run executed all four workspace test tasks (8,159 total), retained as inherited consumer evidence. Check/types were mixed actual/cache; later build/docs gates replayed valid cache. See [remote correction controls](reviews/final-remote-controls.md).
+- Integrated focused verification passed 1,132 tests across 28 files; bundle parity passed 66 byte comparisons and four isolated user/project docs-pack install/update controls. Seven blank metadata and six literal-value CLI controls passed. Earlier causal old/fixed evidence remains pinned in [metadata controls](reviews/final-metadata-controls.md) and [literal-rendering controls](reviews/final-dollar-controls.md).
+- Independent main-integration review passed 1,309 focused tests with zero findings. The remote-fix final review independently executed 165 tests and 24 real CLI controls, also with zero findings; its two new public regressions demonstrably fail against their pre-fix production owners and pass fixed. A further passing-gate sweep preserves unreadable optional directories with accurate repair advice; its real-permission regression and valid safety controls pass. Retained exit-gate freshness is pending for this final source delta; original gate findings are dispositioned in [implementation history](implementation.md). Prior whole-project coverage is explicitly inherited where narrowed; original review counts and prevention failures remain preserved.
+- Native exact-role selectors were rejected before child start; accepted canonical-role approximations retained configured model/effort and original request linkage. Configured invocation is distinct from independent runtime identity, which was not reported. No post-commit recovery attempt was consumed.
 
 ## Follow-up Items
 

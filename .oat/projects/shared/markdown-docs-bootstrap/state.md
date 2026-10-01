@@ -157,13 +157,13 @@ oat_post_implement_sequence:
 
 # Project State: markdown-docs-bootstrap
 
-**Status:** Optional-directory sweep verified; final ordered acceptance pending
+**Status:** All fourteen tasks and local gates pass; final source review/gate refresh pending
 **Started:** 2026-09-30
 **Last Updated:** 2026-10-01
 
 ## Current Phase
 
-All fourteen tasks complete. Main #334 is integrated; both remote review fixes, all eight local gates and the fresh independent final review passed. Refresh the retained gate before final p04 HiLL approval. Existing pre-approval steps remain complete; PR #335 remains open.
+All fourteen tasks complete. Main #334 is integrated; both remote fixes have independent acceptance, and the optional-directory sweep plus all eight local gates pass. Refresh final source review and the retained gate before final p04 HiLL approval. Existing pre-approval steps remain complete; PR #335 remains open.
 
 ## Artifacts
 
@@ -171,15 +171,15 @@ All fourteen tasks complete. Main #334 is integrated; both remote review fixes, 
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; approved dispositions incorporated)
 - **Plan:** `plan.md` (complete; ready for oat-project-implement)
-- **Implementation:** `implementation.md` (14/14 tasks complete; current final review passed)
+- **Implementation:** `implementation.md` (14/14 tasks complete; final source review refresh pending)
 
 ## Progress
 
 - Discovery and approved lightweight design complete
-- Four sequential phases and all thirteen tasks complete, including both remote review fixes
+- Four sequential phases and all fourteen tasks complete, including both remote review fixes
 - All user-approved review edits applied
 - Prior final reviews/gates preserved; remote M1/L1 fixes independently accepted; retained gate refresh pending
-- Thirteen task commits reconciled; all eight gates passed after the remote fixes
+- Fourteen task commits reconciled; all eight gates passed after the remote fixes
 - Written summary and documentation closeout complete; visual recap skipped by explicit user choice
 - ✓ PR created
 - ⧗ Awaiting final p04 HiLL approval
