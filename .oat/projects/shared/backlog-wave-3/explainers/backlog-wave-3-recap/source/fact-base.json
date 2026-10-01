@@ -1,6 +1,6 @@
 {
   "schemaVersion": "explainer-kit.fact-base/v1",
-  "generatedAt": "2026-10-01T21:11:42.235Z",
+  "generatedAt": "2026-10-01T23:13:23.641Z",
   "mode": "supplied",
   "freshnessPolicy": "live-wins",
   "sources": [
@@ -14,7 +14,7 @@
       "id": "source-9f74c1a0c743",
       "kind": "file",
       "locator": "implementation.md",
-      "hash": "sha256:11e122ad885cd45d442d8cb6f509ab640dc705fccdf4f273482fb41d36dc9f37"
+      "hash": "sha256:4f1a89d0e65c73e594e009bb67f5367f21747c0495a3b4538fb6a9a58f9309a1"
     },
     {
       "id": "source-780bd28eb0ce",
@@ -2303,8 +2303,8 @@
       ]
     },
     {
-      "id": "claim-1f0ae3841dd677df",
-      "text": "oat_status: in_progress",
+      "id": "claim-1e9507600a5c0401",
+      "text": "oat_status: complete",
       "status": "confirmed",
       "citations": [
         {
@@ -6769,19 +6769,30 @@
       ]
     },
     {
-      "id": "claim-8f311139b840afec",
-      "text": "<!-- orchestration-runs-end -->",
+      "id": "claim-8aebe753d18d6540",
+      "text": "- Gate `IMPLEMENT-16` (autonomous final approval): every pre-approval step",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:608-608"
+          "locator": "implementation.md:610-610"
         }
       ]
     },
     {
-      "id": "claim-181e042975a14566",
-      "text": "Plan Gate Feedback (quick-start, QS-12)",
+      "id": "claim-f571bb7373606eab",
+      "text": "(summary, document, pr) completed in stored order; the final review row is",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:611-611"
+        }
+      ]
+    },
+    {
+      "id": "claim-8fe8d174a1414c5e",
+      "text": "`passed` (`reviews/archived/final-review-2026-10-01T201832Z.md`, request",
       "status": "confirmed",
       "citations": [
         {
@@ -6791,8 +6802,19 @@
       ]
     },
     {
-      "id": "claim-badec94f96bde08a",
-      "text": "Configured gate: `oat-project-quick-start` exit gate, `onFailure: block`,",
+      "id": "claim-a076b0283378f09f",
+      "text": "`bw3-final-review-1`, Dispatch stamp in Final Review above) and the exit gate",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:613-613"
+        }
+      ]
+    },
+    {
+      "id": "claim-3192aaddc67595c8",
+      "text": "is `allowed/passed` (run `99fcf137`). Project recap `built`",
       "status": "confirmed",
       "citations": [
         {
@@ -6802,8 +6824,8 @@
       ]
     },
     {
-      "id": "claim-293126c68b4b4a25",
-      "text": "`maxAttempts: 2`, reviewer `codex-6-sol-xhigh` (selected by cross-family",
+      "id": "claim-dc7d173dba673c41",
+      "text": "(run `810e34a7`, host rung; `check-terminal-outcome` ok). Approval recorded",
       "status": "confirmed",
       "citations": [
         {
@@ -6813,8 +6835,8 @@
       ]
     },
     {
-      "id": "claim-959f539ad13577a3",
-      "text": "exclusion with `OAT_GATE_PRODUCER_IDENTITY=claude-opus-5-5:declared`).",
+      "id": "claim-40905dc571cfb0f8",
+      "text": "as `approval: approved`, `approval_source: oat-autonomous`; no post-approval",
       "status": "confirmed",
       "citations": [
         {
@@ -6824,19 +6846,19 @@
       ]
     },
     {
-      "id": "claim-0878bc49298f9607",
-      "text": "- Attempt 1 (`reviews/archived/artifact-plan-review-2026-10-01T061917Z.md`, blocked,",
+      "id": "claim-ae3732de149813d9",
+      "text": "steps are configured.",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:618-618"
+          "locator": "implementation.md:617-617"
         }
       ]
     },
     {
-      "id": "claim-ef976cafeec33663",
-      "text": "1 High, 2 Medium): H1 no executable closeout transition proof; M1 the",
+      "id": "claim-2279c05678bed509",
+      "text": "BL-260806 live closeout trace",
       "status": "confirmed",
       "citations": [
         {
@@ -6846,19 +6868,8 @@
       ]
     },
     {
-      "id": "claim-7960fd76833ca096",
-      "text": "`--force` apply-time re-check could not be shown load-bearing; M2 scoped",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:620-620"
-        }
-      ]
-    },
-    {
-      "id": "claim-c3b6c8db0f5a371a",
-      "text": "recon issues lacked fail-closed validation. Resolved in `b76f27dd3` (H1",
+      "id": "claim-773fd63a6d60b85f",
+      "text": "This project's own closeout started from a configured-plus-absent state",
       "status": "confirmed",
       "citations": [
         {
@@ -6868,8 +6879,8 @@
       ]
     },
     {
-      "id": "claim-a1dff10ec09538d8",
-      "text": "disk-backed trace plus this project's own closeout as live evidence; M2",
+      "id": "claim-645a158f7ecf2c49",
+      "text": "(`workflow.postImplementSequence` set in shared config, no snapshot). The",
       "status": "confirmed",
       "citations": [
         {
@@ -6879,8 +6890,8 @@
       ]
     },
     {
-      "id": "claim-884d0020db604501",
-      "text": "closed union bound to covered claims; M1 by removing the re-check per the",
+      "id": "claim-0466277260adfdd6",
+      "text": "branch CLI's `oat project closeout-check` reported `snapshot_missing` (next",
       "status": "confirmed",
       "citations": [
         {
@@ -6890,8 +6901,8 @@
       ]
     },
     {
-      "id": "claim-d998ab4d287b32c6",
-      "text": "complexity review).",
+      "id": "claim-79166a91b0258aee",
+      "text": "owner `oat-project-implement`) before the snapshot, then tracked each",
       "status": "confirmed",
       "citations": [
         {
@@ -6901,8 +6912,8 @@
       ]
     },
     {
-      "id": "claim-e0a0e77150f2de65",
-      "text": "- Attempt 2 (`reviews/archived/artifact-plan-review-2026-10-01T063044Z.md`, blocked,",
+      "id": "claim-ea8aa5fee66ed015",
+      "text": "transition:",
       "status": "confirmed",
       "citations": [
         {
@@ -6912,19 +6923,8 @@
       ]
     },
     {
-      "id": "claim-b00f4a797a060288",
-      "text": "1 High, 1 Medium): H1 the `BL-260806` archive was placed inside the",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:626-626"
-        }
-      ]
-    },
-    {
-      "id": "claim-68ab219dbd9ba6e8",
-      "text": "documentation child, before the PR child, approval, and completion it must",
+      "id": "claim-5370a3ee5221461d",
+      "text": "1. `fedcef8bf` persisted the immutable snapshot (`source: configured`,",
       "status": "confirmed",
       "citations": [
         {
@@ -6934,8 +6934,8 @@
       ]
     },
     {
-      "id": "claim-10f5405c9e33d20a",
-      "text": "cite; M1 the staged recon end-to-end test could not be green at each task",
+      "id": "claim-9623a6ff154bbdf2",
+      "text": "`pre_approval: [summary, document, pr]`, `post_approval: []`) before any",
       "status": "confirmed",
       "citations": [
         {
@@ -6945,8 +6945,8 @@
       ]
     },
     {
-      "id": "claim-24d16ebaefbeb588",
-      "text": "boundary. Both resolved in the plan after the attempt (root-owned archive",
+      "id": "claim-e28f511fd08f044a",
+      "text": "child was dispatched; check then named `summary`.",
       "status": "confirmed",
       "citations": [
         {
@@ -6956,8 +6956,8 @@
       ]
     },
     {
-      "id": "claim-7357f4182e023852",
-      "text": "after Step 16; shared fixture with focused per-defect tests, full",
+      "id": "claim-07b2a84394a70afb",
+      "text": "2. `7b6fb8214` summary child, recorded in `a3cf2ce01`; check named `document`.",
       "status": "confirmed",
       "citations": [
         {
@@ -6967,8 +6967,8 @@
       ]
     },
     {
-      "id": "claim-4f21393355c68d93",
-      "text": "assertion activated in p03-t03), without a further gate run.",
+      "id": "claim-6586c456e4ba3b6f",
+      "text": "3. `06472d1a7`, `27b5bc93a`, `30cf8ff29` document child, recorded in",
       "status": "confirmed",
       "citations": [
         {
@@ -6978,8 +6978,19 @@
       ]
     },
     {
-      "id": "claim-36ec574c266beaa6",
-      "text": "Attempts are exhausted with the last findings resolved in the plan but not",
+      "id": "claim-d46326bbcdce241c",
+      "text": "`5bb75c313` (rolling freshness checkpoint advanced); check named `pr`.",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:632-632"
+        }
+      ]
+    },
+    {
+      "id": "claim-d3d838145f54da38",
+      "text": "4. `382d85d82`, `0ca0ece8b` PR child (#336), recorded in `1d85a4d80`; check",
       "status": "confirmed",
       "citations": [
         {
@@ -6989,8 +7000,8 @@
       ]
     },
     {
-      "id": "claim-699d2c06389c7ab9",
-      "text": "re-gated, so implementation readiness waits on an operator decision (QS-12",
+      "id": "claim-3530fdd9f108af4b",
+      "text": "stopped at the approval boundary (`approval: approved` or `not_required`).",
       "status": "confirmed",
       "citations": [
         {
@@ -7000,8 +7011,8 @@
       ]
     },
     {
-      "id": "claim-ec0db2f9bfba52af",
-      "text": "boundary). The plan keeps its pre-review frontmatter until then.",
+      "id": "claim-01d622250547a1f9",
+      "text": "5. Recap gate `built` (`3b457923b`), then `4a735e52b` awaiting approval,",
       "status": "confirmed",
       "citations": [
         {
@@ -7011,8 +7022,19 @@
       ]
     },
     {
-      "id": "claim-e9dc16460559d708",
-      "text": "Operator disposition (2026-10-01): the operator chose \"Proceed to implement\",",
+      "id": "claim-028e0b290cabd086",
+      "text": "`47cec9da6` autonomous approval (`IMPLEMENT-16`), `3d7063376` sequence",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:636-636"
+        }
+      ]
+    },
+    {
+      "id": "claim-74f3800b0a6c5dbd",
+      "text": "`complete`; check reported `complete`.",
       "status": "confirmed",
       "citations": [
         {
@@ -7022,8 +7044,8 @@
       ]
     },
     {
-      "id": "claim-4eb3c984aedd017f",
-      "text": "accepting the post-gate fixes without a third gate run. QS-12 resolved by",
+      "id": "claim-fd6005227caabde8",
+      "text": "6. `0c31e223d` marked implementation complete.",
       "status": "confirmed",
       "citations": [
         {
@@ -7033,19 +7055,30 @@
       ]
     },
     {
-      "id": "claim-4097d5a1a4000b26",
-      "text": "explicit operator decision; the plan was then marked ready.",
+      "id": "claim-6872d1a7abb7aa4b",
+      "text": "The run itself followed `oat-project-implement` 2.3.14 from `origin/main`; the",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:639-639"
+          "locator": "implementation.md:640-640"
         }
       ]
     },
     {
-      "id": "claim-9d707681eec3e034",
-      "text": "The release workflow publishes PR titles only in its release notes, so the",
+      "id": "claim-6319ee25e6679241",
+      "text": "branch CLI's check observed it without driving it.",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:641-641"
+        }
+      ]
+    },
+    {
+      "id": "claim-aa2c1d09adafe4f0",
+      "text": "<!-- orchestration-runs-end -->",
       "status": "confirmed",
       "citations": [
         {
@@ -7055,30 +7088,8 @@
       ]
     },
     {
-      "id": "claim-57d337ce68961f18",
-      "text": "breaking changes must be named in the title:",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:644-644"
-        }
-      ]
-    },
-    {
-      "id": "claim-8157a5fc77437cd0",
-      "text": "- Title uses a Conventional Commit breaking marker, for example",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:646-646"
-        }
-      ]
-    },
-    {
-      "id": "claim-896465db2a6d2d63",
-      "text": "`feat!: template resolver, Fumadocs nav sync, recon publication fixes, validate-only dispatch record (wave 3, lockstep 0.3.11)`.",
+      "id": "claim-8df8d83cbe0316a1",
+      "text": "Plan Gate Feedback (quick-start, QS-12)",
       "status": "confirmed",
       "citations": [
         {
@@ -7088,19 +7099,8 @@
       ]
     },
     {
-      "id": "claim-1110b7f195f06c45",
-      "text": "- The body opens with a **Behavior changes** callout:",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:648-648"
-        }
-      ]
-    },
-    {
-      "id": "claim-e71833caa05621d1",
-      "text": "- project scaffolding now prefers a repository template over a user template",
+      "id": "claim-09f3a8f5da36e38e",
+      "text": "Configured gate: `oat-project-quick-start` exit gate, `onFailure: block`,",
       "status": "confirmed",
       "citations": [
         {
@@ -7110,8 +7110,8 @@
       ]
     },
     {
-      "id": "claim-5db9221f3aa6fae8",
-      "text": "(repository, user, bundle), and lifecycle skills resolve templates through",
+      "id": "claim-5726ecc24037ce23",
+      "text": "`maxAttempts: 2`, reviewer `codex-6-sol-xhigh` (selected by cross-family",
       "status": "confirmed",
       "citations": [
         {
@@ -7121,8 +7121,8 @@
       ]
     },
     {
-      "id": "claim-45872d2b8b786716",
-      "text": "`oat template resolve`;",
+      "id": "claim-81290b5d79cc0b85",
+      "text": "exclusion with `OAT_GATE_PRODUCER_IDENTITY=claude-opus-5-5:declared`).",
       "status": "confirmed",
       "citations": [
         {
@@ -7132,19 +7132,8 @@
       ]
     },
     {
-      "id": "claim-a3b1327918da38f3",
-      "text": "- `oat project dispatch record --project` is removed (validate-only);",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:652-652"
-        }
-      ]
-    },
-    {
-      "id": "claim-ffd5d3c59a183921",
-      "text": "- recon: briefs built by the production helpers now bind (multi-source",
+      "id": "claim-1fd5308ff683f265",
+      "text": "- Attempt 1 (`reviews/archived/artifact-plan-review-2026-10-01T061917Z.md`, blocked,",
       "status": "confirmed",
       "citations": [
         {
@@ -7154,8 +7143,8 @@
       ]
     },
     {
-      "id": "claim-96b687d2705074b2",
-      "text": "briefs no longer fail `REVIEW_BRIEF_MISMATCH`), a material coverage gap no",
+      "id": "claim-74effc14c050730e",
+      "text": "1 High, 2 Medium): H1 no executable closeout transition proof; M1 the",
       "status": "confirmed",
       "citations": [
         {
@@ -7165,8 +7154,8 @@
       ]
     },
     {
-      "id": "claim-40b321117db9e455",
-      "text": "longer fails publication once its claims are downgraded, and",
+      "id": "claim-38a01a52103ac6cf",
+      "text": "`--force` apply-time re-check could not be shown load-bearing; M2 scoped",
       "status": "confirmed",
       "citations": [
         {
@@ -7176,8 +7165,8 @@
       ]
     },
     {
-      "id": "claim-3b5cc096aabba02b",
-      "text": "`unresolvedIssues` entries may be scoped to claim IDs. Legacy string issues",
+      "id": "claim-0a3c65bbb23cf7a7",
+      "text": "recon issues lacked fail-closed validation. Resolved in `b76f27dd3` (H1",
       "status": "confirmed",
       "citations": [
         {
@@ -7187,8 +7176,8 @@
       ]
     },
     {
-      "id": "claim-bc698dfe871e6102",
-      "text": "are read as global, so a 1.1.5 packet that failed on",
+      "id": "claim-f5efdcfaff44af1e",
+      "text": "disk-backed trace plus this project's own closeout as live evidence; M2",
       "status": "confirmed",
       "citations": [
         {
@@ -7198,8 +7187,8 @@
       ]
     },
     {
-      "id": "claim-04639a93c7b93cb0",
-      "text": "`REVIEW_DISPOSITION_MISMATCH` (the #333 packet among them) still keeps every",
+      "id": "claim-b86343fa44aa40e8",
+      "text": "closed union bound to covered claims; M1 by removing the re-check per the",
       "status": "confirmed",
       "citations": [
         {
@@ -7209,8 +7198,8 @@
       ]
     },
     {
-      "id": "claim-7023f3bd52162329",
-      "text": "covered claim below verified after re-running reconciliation; only newly",
+      "id": "claim-2b931a58c0743e46",
+      "text": "complexity review).",
       "status": "confirmed",
       "citations": [
         {
@@ -7220,8 +7209,8 @@
       ]
     },
     {
-      "id": "claim-155657c00ade25b8",
-      "text": "produced scoped issues downgrade selectively;",
+      "id": "claim-8ec8c1b596f11f63",
+      "text": "- Attempt 2 (`reviews/archived/artifact-plan-review-2026-10-01T063044Z.md`, blocked,",
       "status": "confirmed",
       "citations": [
         {
@@ -7231,8 +7220,8 @@
       ]
     },
     {
-      "id": "claim-d34e23ff397699e4",
-      "text": "- recon `packet.md` gains a Review Downgrades section listing every claim a",
+      "id": "claim-b247e8d177c0d628",
+      "text": "1 High, 1 Medium): H1 the `BL-260806` archive was placed inside the",
       "status": "confirmed",
       "citations": [
         {
@@ -7242,8 +7231,8 @@
       ]
     },
     {
-      "id": "claim-0cc47dd1f1c7db1f",
-      "text": "review kept below verified (a claim a review omitted is listed as \"not",
+      "id": "claim-4a44836a80bf1832",
+      "text": "documentation child, before the PR child, approval, and completion it must",
       "status": "confirmed",
       "citations": [
         {
@@ -7253,8 +7242,8 @@
       ]
     },
     {
-      "id": "claim-961c93838bcf1539",
-      "text": "reviewed\"), and",
+      "id": "claim-a4c50c8c61325e1d",
+      "text": "cite; M1 the staged recon end-to-end test could not be green at each task",
       "status": "confirmed",
       "citations": [
         {
@@ -7264,8 +7253,8 @@
       ]
     },
     {
-      "id": "claim-158db2a572a57160",
-      "text": "`retryLimit` now means pre-acceptance admission retries with at most one",
+      "id": "claim-fafc7e2204102f49",
+      "text": "boundary. Both resolved in the plan after the attempt (root-owned archive",
       "status": "confirmed",
       "citations": [
         {
@@ -7275,8 +7264,8 @@
       ]
     },
     {
-      "id": "claim-fb1d1da446c757cc",
-      "text": "retry per lane;",
+      "id": "claim-4f348cb6bdf9f6a8",
+      "text": "after Step 16; shared fixture with focused per-defect tests, full",
       "status": "confirmed",
       "citations": [
         {
@@ -7286,8 +7275,8 @@
       ]
     },
     {
-      "id": "claim-33789fba0c67cbef",
-      "text": "- recon publication is stricter about brief integrity: the validator",
+      "id": "claim-edcfdd02edc68a24",
+      "text": "assertion activated in p03-t03), without a further gate run.",
       "status": "confirmed",
       "citations": [
         {
@@ -7297,19 +7286,8 @@
       ]
     },
     {
-      "id": "claim-4f3d2524f63264fb",
-      "text": "rebuilds each brief with the production generator and rejects any",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:667-667"
-        }
-      ]
-    },
-    {
-      "id": "claim-0a972652e0636edc",
-      "text": "difference, so an injected claim, note, or source in any brief type fails",
+      "id": "claim-e27499fe6d0d41a7",
+      "text": "Attempts are exhausted with the last findings resolved in the plan but not",
       "status": "confirmed",
       "citations": [
         {
@@ -7319,8 +7297,8 @@
       ]
     },
     {
-      "id": "claim-1d867bb771a140b2",
-      "text": "with `REVIEW_BRIEF_MISMATCH`;",
+      "id": "claim-16b3138d5ccd0fca",
+      "text": "re-gated, so implementation readiness waits on an operator decision (QS-12",
       "status": "confirmed",
       "citations": [
         {
@@ -7330,8 +7308,8 @@
       ]
     },
     {
-      "id": "claim-9e87e35322b1f89b",
-      "text": "- `oat docs nav sync` writes strict Fumadocs `meta.json`: pages no",
+      "id": "claim-387a9d020182f6c6",
+      "text": "boundary). The plan keeps its pre-review frontmatter until then.",
       "status": "confirmed",
       "citations": [
         {
@@ -7341,19 +7319,8 @@
       ]
     },
     {
-      "id": "claim-1114dc3c224217ab",
-      "text": "`index.md` Contents map lists are left out of the sidebar and reported,",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:671-671"
-        }
-      ]
-    },
-    {
-      "id": "claim-cb1b6cf27c00afbf",
-      "text": "and `nav sync --check` (run in `apps/oat-docs` `prebuild`) fails on drift;",
+      "id": "claim-7b125c07f81583a5",
+      "text": "Operator disposition (2026-10-01): the operator chose \"Proceed to implement\",",
       "status": "confirmed",
       "citations": [
         {
@@ -7363,8 +7330,8 @@
       ]
     },
     {
-      "id": "claim-b8a176fd554ec090",
-      "text": "- `oat project complete-state` refuses a configured closeout with a missing",
+      "id": "claim-20fb3d58d6f9552c",
+      "text": "accepting the post-gate fixes without a third gate run. QS-12 resolved by",
       "status": "confirmed",
       "citations": [
         {
@@ -7374,8 +7341,8 @@
       ]
     },
     {
-      "id": "claim-90d99bb52dc1ad5f",
-      "text": "or incomplete snapshot; exit-gate waivers are operator-only;",
+      "id": "claim-3e52b855f7324ee5",
+      "text": "explicit operator decision; the plan was then marked ready.",
       "status": "confirmed",
       "citations": [
         {
@@ -7385,41 +7352,8 @@
       ]
     },
     {
-      "id": "claim-ec81203e37e84b7b",
-      "text": "- test-only package changes no longer require the lockstep bump.",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:675-675"
-        }
-      ]
-    },
-    {
-      "id": "claim-2a78ca2856f258c8",
-      "text": "- the updated lifecycle skills call `oat template resolve` and",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:676-676"
-        }
-      ]
-    },
-    {
-      "id": "claim-c7c99284b4299f7c",
-      "text": "`oat project closeout-check`, so they need `oat` 0.3.11 or later; with an",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:677-677"
-        }
-      ]
-    },
-    {
-      "id": "claim-f3299957dafbcac2",
-      "text": "older `oat` on PATH, `oat-project-complete` treats the missing command as",
+      "id": "claim-5f32142bea6d2439",
+      "text": "The release workflow publishes PR titles only in its release notes, so the",
       "status": "confirmed",
       "citations": [
         {
@@ -7429,8 +7363,8 @@
       ]
     },
     {
-      "id": "claim-9755ea0f29db837b",
-      "text": "an incomplete closeout. Update the CLI with the skills (`oat tools update`).",
+      "id": "claim-1d95a25e56759615",
+      "text": "breaking changes must be named in the title:",
       "status": "confirmed",
       "citations": [
         {
@@ -7440,19 +7374,8 @@
       ]
     },
     {
-      "id": "claim-78cabcd14fb6f715",
-      "text": "- Breaking CLI grammar, per `.github/PULL_REQUEST_TEMPLATE.md` and",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:680-680"
-        }
-      ]
-    },
-    {
-      "id": "claim-295fad951f839d38",
-      "text": "`apps/oat-docs/docs/contributing/code.md`: tick the template's grammar-change",
+      "id": "claim-fadc30892590e573",
+      "text": "- Title uses a Conventional Commit breaking marker, for example",
       "status": "confirmed",
       "citations": [
         {
@@ -7462,8 +7385,8 @@
       ]
     },
     {
-      "id": "claim-3574d22f303d1293",
-      "text": "box and include",
+      "id": "claim-2cb36514af6bd9aa",
+      "text": "`feat!: template resolver, Fumadocs nav sync, recon publication fixes, validate-only dispatch record (wave 3, lockstep 0.3.11)`.",
       "status": "confirmed",
       "citations": [
         {
@@ -7473,8 +7396,8 @@
       ]
     },
     {
-      "id": "claim-a3b13bfe3f971101",
-      "text": "`BREAKING: oat project dispatch record no longer accepts --project (validate-only)`,",
+      "id": "claim-19c28825a9bad889",
+      "text": "- The body opens with a **Behavior changes** callout:",
       "status": "confirmed",
       "citations": [
         {
@@ -7484,8 +7407,8 @@
       ]
     },
     {
-      "id": "claim-e79f47b4e939b6b1",
-      "text": "Before `oat project dispatch record --event-file - --project <path> --json`,",
+      "id": "claim-f64242d0f4da3e4f",
+      "text": "- project scaffolding now prefers a repository template over a user template",
       "status": "confirmed",
       "citations": [
         {
@@ -7495,8 +7418,8 @@
       ]
     },
     {
-      "id": "claim-5933a63a32848910",
-      "text": "After `oat project dispatch record --event-file - --json`, and the migration",
+      "id": "claim-72dec5f473363f7c",
+      "text": "(repository, user, bundle), and lifecycle skills resolve templates through",
       "status": "confirmed",
       "citations": [
         {
@@ -7506,8 +7429,8 @@
       ]
     },
     {
-      "id": "claim-9eef34e3a7a258c5",
-      "text": "action (drop `--project`; the `implementation.md` dispatch rows remain the",
+      "id": "claim-68db6bf1a33ee4a3",
+      "text": "`oat template resolve`;",
       "status": "confirmed",
       "citations": [
         {
@@ -7517,8 +7440,8 @@
       ]
     },
     {
-      "id": "claim-1e39f83f578f747a",
-      "text": "record).",
+      "id": "claim-49a91cb6ca936926",
+      "text": "- `oat project dispatch record --project` is removed (validate-only);",
       "status": "confirmed",
       "citations": [
         {
@@ -7528,8 +7451,8 @@
       ]
     },
     {
-      "id": "claim-89180b9c5331e5af",
-      "text": "- The body lists the other user-visible changes (`--force` link guard, YAML",
+      "id": "claim-79ed03a798628ec3",
+      "text": "- recon: briefs built by the production helpers now bind (multi-source",
       "status": "confirmed",
       "citations": [
         {
@@ -7539,8 +7462,8 @@
       ]
     },
     {
-      "id": "claim-e5748e56f5b03423",
-      "text": "error locations, quick discovery routing, packs docs).",
+      "id": "claim-7fbedef1918ad641",
+      "text": "briefs no longer fail `REVIEW_BRIEF_MISMATCH`), a material coverage gap no",
       "status": "confirmed",
       "citations": [
         {
@@ -7550,8 +7473,19 @@
       ]
     },
     {
-      "id": "claim-30a6303c05aaea69",
-      "text": "Additional PR body notes from implementation:",
+      "id": "claim-3f959802ff701e55",
+      "text": "longer fails publication once its claims are downgraded, and",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:690-690"
+        }
+      ]
+    },
+    {
+      "id": "claim-9103b3aae515fa6c",
+      "text": "`unresolvedIssues` entries may be scoped to claim IDs. Legacy string issues",
       "status": "confirmed",
       "citations": [
         {
@@ -7561,8 +7495,19 @@
       ]
     },
     {
-      "id": "claim-63fa49d3bf5876ad",
-      "text": "- `oat project complete-state` now refuses `claude-effort-levels` (its",
+      "id": "claim-a29d495b340148d2",
+      "text": "are read as global, so a 1.1.5 packet that failed on",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:692-692"
+        }
+      ]
+    },
+    {
+      "id": "claim-37cca9d0f3dc1ac0",
+      "text": "`REVIEW_DISPOSITION_MISMATCH` (the #333 packet among them) still keeps every",
       "status": "confirmed",
       "citations": [
         {
@@ -7572,8 +7517,8 @@
       ]
     },
     {
-      "id": "claim-28b2b517a537896c",
-      "text": "hand-written closeout snapshot is malformed) until it is repaired, and routes",
+      "id": "claim-33c23e2ea86d5012",
+      "text": "covered claim below verified after re-running reconciliation; only newly",
       "status": "confirmed",
       "citations": [
         {
@@ -7583,8 +7528,8 @@
       ]
     },
     {
-      "id": "claim-a2929b3a936e3ead",
-      "text": "legacy `pr_open` projects with no snapshot (such as `migrate-skill-versions`)",
+      "id": "claim-5f7707ce009264bb",
+      "text": "produced scoped issues downgrade selectively;",
       "status": "confirmed",
       "citations": [
         {
@@ -7594,8 +7539,8 @@
       ]
     },
     {
-      "id": "claim-c7161dae185064e5",
-      "text": "back to `oat-project-implement`.",
+      "id": "claim-48aeec2ba8651c0e",
+      "text": "- recon `packet.md` gains a Review Downgrades section listing every claim a",
       "status": "confirmed",
       "citations": [
         {
@@ -7605,8 +7550,8 @@
       ]
     },
     {
-      "id": "claim-ea0b6ea45b5f0d4a",
-      "text": "- recon: the omission-gap rule built in review rounds was removed by the",
+      "id": "claim-715489325998d536",
+      "text": "review kept below verified (a claim a review omitted is listed as \"not",
       "status": "confirmed",
       "citations": [
         {
@@ -7616,8 +7561,8 @@
       ]
     },
     {
-      "id": "claim-2730a6fefb9268d7",
-      "text": "operator-approved complexity review; a claim a review omits stays",
+      "id": "claim-14af4394401ee8de",
+      "text": "reviewed\"), and",
       "status": "confirmed",
       "citations": [
         {
@@ -7627,8 +7572,8 @@
       ]
     },
     {
-      "id": "claim-bd7b86a2187273b5",
-      "text": "`unresolved` and is listed as \"not reviewed\".",
+      "id": "claim-95adbec9e1e01bbd",
+      "text": "`retryLimit` now means pre-acceptance admission retries with at most one",
       "status": "confirmed",
       "citations": [
         {
@@ -7638,8 +7583,8 @@
       ]
     },
     {
-      "id": "claim-81c32f58e8a9b3d4",
-      "text": "- Follow-ups filed: `BL-261001-run-a-complexity-review-when`,",
+      "id": "claim-a0c4ce1b0cff1ff9",
+      "text": "retry per lane;",
       "status": "confirmed",
       "citations": [
         {
@@ -7649,8 +7594,8 @@
       ]
     },
     {
-      "id": "claim-fc6f94152d687f77",
-      "text": "`BL-261001-fail-closed-when-bundle-assets`,",
+      "id": "claim-886131f688971c4c",
+      "text": "- recon publication is stricter about brief integrity: the validator",
       "status": "confirmed",
       "citations": [
         {
@@ -7660,8 +7605,8 @@
       ]
     },
     {
-      "id": "claim-a825af910ee0f0a5",
-      "text": "`BL-261001-resolve-the-summary-template`, `BL-261001-route-quick-mode-plan`.",
+      "id": "claim-873ccf164296a6c8",
+      "text": "rebuilds each brief with the production generator and rejects any",
       "status": "confirmed",
       "citations": [
         {
@@ -7671,8 +7616,41 @@
       ]
     },
     {
-      "id": "claim-a8cf573939e9d5d9",
-      "text": "Chronological execution is recorded per phase under Orchestration Runs above",
+      "id": "claim-b9378a67b25a5109",
+      "text": "difference, so an injected claim, note, or source in any brief type fails",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:703-703"
+        }
+      ]
+    },
+    {
+      "id": "claim-db5ebe2af0111c76",
+      "text": "with `REVIEW_BRIEF_MISMATCH`;",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:704-704"
+        }
+      ]
+    },
+    {
+      "id": "claim-6cedc5702dc5c7b6",
+      "text": "- `oat docs nav sync` writes strict Fumadocs `meta.json`: pages no",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:705-705"
+        }
+      ]
+    },
+    {
+      "id": "claim-c5bddca4668f3d83",
+      "text": "`index.md` Contents map lists are left out of the sidebar and reported,",
       "status": "confirmed",
       "citations": [
         {
@@ -7682,8 +7660,8 @@
       ]
     },
     {
-      "id": "claim-8c862980e989eae4",
-      "text": "(dispatch requests, commits, reviews, gates, recovery events, the mid-wave",
+      "id": "claim-3167868481440cb6",
+      "text": "and `nav sync --check` (run in `apps/oat-docs` `prebuild`) fails on drift;",
       "status": "confirmed",
       "citations": [
         {
@@ -7693,8 +7671,8 @@
       ]
     },
     {
-      "id": "claim-7f74adaf8130a144",
-      "text": "merge of `main`, the operator's review-cap decisions, and the p03 complexity",
+      "id": "claim-5a3fdec04342b402",
+      "text": "- `oat project complete-state` refuses a configured closeout with a missing",
       "status": "confirmed",
       "citations": [
         {
@@ -7704,8 +7682,8 @@
       ]
     },
     {
-      "id": "claim-7e2e363ce9bb8d6a",
-      "text": "review). Plan-gate history is under Plan Gate Feedback.",
+      "id": "claim-84af4d82d6f6561b",
+      "text": "or incomplete snapshot; exit-gate waivers are operator-only;",
       "status": "confirmed",
       "citations": [
         {
@@ -7715,8 +7693,19 @@
       ]
     },
     {
-      "id": "claim-e13c5668d4cffb29",
-      "text": "Deferred Findings (Medium)",
+      "id": "claim-92bdb2e66472e0e7",
+      "text": "- test-only package changes no longer require the lockstep bump.",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:710-710"
+        }
+      ]
+    },
+    {
+      "id": "claim-fa82960323a63528",
+      "text": "- the updated lifecycle skills call `oat template resolve` and",
       "status": "confirmed",
       "citations": [
         {
@@ -7726,8 +7715,19 @@
       ]
     },
     {
-      "id": "claim-c5cb5fdbe409f650",
-      "text": "- Exit gate M1 (`reviews/archived/final-review-2026-10-01T203319Z.md`): Fumadocs",
+      "id": "claim-29e0f4a3668479ab",
+      "text": "`oat project closeout-check`, so they need `oat` 0.3.11 or later; with an",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:712-712"
+        }
+      ]
+    },
+    {
+      "id": "claim-7e6e67304ce7c913",
+      "text": "older `oat` on PATH, `oat-project-complete` treats the missing command as",
       "status": "confirmed",
       "citations": [
         {
@@ -7737,8 +7737,8 @@
       ]
     },
     {
-      "id": "claim-ab85b000146ec93c",
-      "text": "nav sync writes a filename starting with `!` as an exclusion directive, so the",
+      "id": "claim-16e943b429be0e9a",
+      "text": "an incomplete closeout. Update the CLI with the skills (`oat tools update`).",
       "status": "confirmed",
       "citations": [
         {
@@ -7748,8 +7748,8 @@
       ]
     },
     {
-      "id": "claim-f71c2798864b260d",
-      "text": "page is hidden while `--check` reports clean. Deferred to `BL-261001-escape-directive-like` (high):",
+      "id": "claim-22d206761564a785",
+      "text": "- Breaking CLI grammar, per `.github/PULL_REQUEST_TEMPLATE.md` and",
       "status": "confirmed",
       "citations": [
         {
@@ -7759,8 +7759,8 @@
       ]
     },
     {
-      "id": "claim-981631d9f2336bf4",
-      "text": "fixing it now would make the exit-gate generation stale and require a new",
+      "id": "claim-54d25c70515f8745",
+      "text": "`apps/oat-docs/docs/contributing/code.md`: tick the template's grammar-change",
       "status": "confirmed",
       "citations": [
         {
@@ -7770,8 +7770,8 @@
       ]
     },
     {
-      "id": "claim-65610c513597acac",
-      "text": "final review and gate; no shipped docs page is affected.",
+      "id": "claim-267290153549cf98",
+      "text": "box and include",
       "status": "confirmed",
       "citations": [
         {
@@ -7781,8 +7781,8 @@
       ]
     },
     {
-      "id": "claim-a238d2746167cf66",
-      "text": "- Exit gate M2 (same artifact): recon Review Downgrades omits claims a",
+      "id": "claim-1ec1be570781482b",
+      "text": "`BREAKING: oat project dispatch record no longer accepts --project (validate-only)`,",
       "status": "confirmed",
       "citations": [
         {
@@ -7792,8 +7792,8 @@
       ]
     },
     {
-      "id": "claim-1f2352af98f48a84",
-      "text": "thorough-profile redundant-verification review left without a disposition.",
+      "id": "claim-c479452f4d72222a",
+      "text": "Before `oat project dispatch record --event-file - --project <path> --json`,",
       "status": "confirmed",
       "citations": [
         {
@@ -7803,8 +7803,8 @@
       ]
     },
     {
-      "id": "claim-2e33d3581a5c2e42",
-      "text": "Deferred to `BL-261001-list-thorough-review-omissions` (medium): rendering-only, thorough profile only.",
+      "id": "claim-79d24b2d698fe12c",
+      "text": "After `oat project dispatch record --event-file - --json`, and the migration",
       "status": "confirmed",
       "citations": [
         {
@@ -7814,8 +7814,41 @@
       ]
     },
     {
-      "id": "claim-488cc2c613ba0d70",
-      "text": "Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.",
+      "id": "claim-6db3cfb29d028969",
+      "text": "action (drop `--project`; the `implementation.md` dispatch rows remain the",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:721-721"
+        }
+      ]
+    },
+    {
+      "id": "claim-68f8e6b99c41da89",
+      "text": "record).",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:722-722"
+        }
+      ]
+    },
+    {
+      "id": "claim-2427380bfc1c3d92",
+      "text": "- The body lists the other user-visible changes (`--force` link guard, YAML",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:723-723"
+        }
+      ]
+    },
+    {
+      "id": "claim-a12076b42fec811d",
+      "text": "error locations, quick discovery routing, packs docs).",
       "status": "confirmed",
       "citations": [
         {
@@ -7825,8 +7858,8 @@
       ]
     },
     {
-      "id": "claim-13efa69b094fcbd2",
-      "text": "| Task / Review | Source Artifact                  | Planned / Documented                                                   | Actual / Accepted                                                                                                                                                                                                                                              | Reason                                                                                                                           | Source of Truth | Follow-up                                                                   |",
+      "id": "claim-368495e0df5595a0",
+      "text": "Additional PR body notes from implementation:",
       "status": "confirmed",
       "citations": [
         {
@@ -7836,8 +7869,8 @@
       ]
     },
     {
-      "id": "claim-b7363644a8b979a2",
-      "text": "| p01-t01       | plan.md p01-t01                  | Move the resolver; flip one scaffold test                              | Also updated `promote.test.ts` and a second user-first scaffold test; lazy `assetsRoot`; \"PJM\" dropped from the invalid-name message                                                                                                                           | Required by the declared change                                                                                                  | Implementation  | None                                                                        |",
+      "id": "claim-3f013677bcd072e4",
+      "text": "- `oat project complete-state` now refuses `claude-effort-levels` (its",
       "status": "confirmed",
       "citations": [
         {
@@ -7847,8 +7880,8 @@
       ]
     },
     {
-      "id": "claim-7057de4faf774aa8",
-      "text": "| p01-t02       | plan.md p01-t02                  | Command over the shared resolver                                       | Added `TemplateNotFoundError`; the repository tier is skipped outside a git repository                                                                                                                                                                         | Distinguish a miss from a read failure                                                                                           | Implementation  | None                                                                        |",
+      "id": "claim-04f470d314cb2df5",
+      "text": "hand-written closeout snapshot is malformed) until it is repaired, and routes",
       "status": "confirmed",
       "citations": [
         {
@@ -7858,8 +7891,8 @@
       ]
     },
     {
-      "id": "claim-6e2266846674277a",
-      "text": "| p01-t03       | plan.md p01-t03                  | Listed skill call sites                                                | Also updated quick-start line 195 and the `review-skill-contracts` pins; retro creates `references/` before copying                                                                                                                                            | `--output` creates no directories                                                                                                | Implementation  | None                                                                        |",
+      "id": "claim-bec70a34a0c39836",
+      "text": "legacy `pr_open` projects with no snapshot (such as `migrate-skill-versions`)",
       "status": "confirmed",
       "citations": [
         {
@@ -7869,8 +7902,8 @@
       ]
     },
     {
-      "id": "claim-11304702f05bd126",
-      "text": "| p01-t03       | plan.md p01-t03                  | No skill copies from `.oat/templates/`                                 | `oat-wrap-up` keeps a read reference to `.oat/templates/summary.md` (schema pointer, not a copy)                                                                                                                                                               | Out of p01 scope; absent on user-scope-only installs                                                                             | Implementation  | Note at p06 index                                                           |",
+      "id": "claim-bf3a9bd9f2020ec7",
+      "text": "back to `oat-project-implement`.",
       "status": "confirmed",
       "citations": [
         {
@@ -7880,8 +7913,8 @@
       ]
     },
     {
-      "id": "claim-c1688843a3b7274e",
-      "text": "| p01-t04       | p01 review M1                    | Grants for retro and summary                                           | Also re-keyed the summary `allowed-tools` prompt site in `.agents/docs/autonomy-contract.md` (`35cb2ea1d677` to `a8983fec040c`, still `NG`)                                                                                                                    | Prompt sites are keyed by a hash of the line                                                                                     | Implementation  | None                                                                        |",
+      "id": "claim-4085d212acc57736",
+      "text": "- recon: the omission-gap rule built in review rounds was removed by the",
       "status": "confirmed",
       "citations": [
         {
@@ -7891,8 +7924,8 @@
       ]
     },
     {
-      "id": "claim-c8f1c4248fa62d11",
-      "text": "| p02-t01       | plan.md p02-t01                  | Strict meta.json from Contents maps                                    | Only the root lists `index`; links into a non-child folder become link entries; hidden folders reported once as `folder/`; unowned meta.json keys preserved; unlisted pages warn but exit 0                                                                    | Fumadocs 16.10.2 loader semantics                                                                                                | Implementation  | None                                                                        |",
+      "id": "claim-6069431b0b0939f1",
+      "text": "operator-approved complexity review; a claim a review omits stays",
       "status": "confirmed",
       "citations": [
         {
@@ -7902,8 +7935,8 @@
       ]
     },
     {
-      "id": "claim-791b09ceb2130646",
-      "text": "| p02-t02       | plan.md p02-t02                  | Listed docs pages                                                      | Also `reference/file-locations.md`, `reference/index.md`, and the regenerated `apps/oat-docs/index.md`; no change needed in `cli-reference.md`                                                                                                                 | Same MkDocs-only wording                                                                                                         | Implementation  | None                                                                        |",
+      "id": "claim-d0f8cb29eb13a0b5",
+      "text": "`unresolved` and is listed as \"not reviewed\".",
       "status": "confirmed",
       "citations": [
         {
@@ -7913,8 +7946,8 @@
       ]
     },
     {
-      "id": "claim-e3bf243edfd50d16",
-      "text": "| p02-t05       | p02 review M1                    | Report unlisted pages                                                  | Added `nav sync --check` (MkDocs and Fumadocs) run in `apps/oat-docs` `prebuild`, so `build:docs` fails on stale navigation; `oat-docs-analyze` points at the read-only form                                                                                   | Strict pages would otherwise hide new pages silently                                                                             | Implementation  | `docs-app-fuma` scaffold not wired (out of scope)                           |",
+      "id": "claim-1a42c55983fbdbee",
+      "text": "- Follow-ups filed: `BL-261001-run-a-complexity-review-when`,",
       "status": "confirmed",
       "citations": [
         {
@@ -7924,8 +7957,8 @@
       ]
     },
     {
-      "id": "claim-7c05a749e6e3ef35",
-      "text": "| p02-t06       | p02 gate M1                      | Loader-checked reachability                                            | The new `fumadocs-loader.test.ts` imports `fumadocs-core` through `apps/oat-docs/package.json`, so CLI tests need the docs app installed (a normal workspace install); a kept `pagesIndex` naming another page may over-report that page as unlisted           | Prove against the real loader                                                                                                    | Implementation  | None                                                                        |",
+      "id": "claim-6b8f645bbd3886f9",
+      "text": "`BL-261001-fail-closed-when-bundle-assets`,",
       "status": "confirmed",
       "citations": [
         {
@@ -7935,8 +7968,8 @@
       ]
     },
     {
-      "id": "claim-21d213e41997083d",
-      "text": "| p03-t03       | plan.md p03-t03                  | End-to-end test fails only with `REVIEW_DISPOSITION_MISMATCH`          | It first failed shape validation (`INVALID_UNRESOLVED_ISSUE`); added rejections for duplicate claim IDs, empty text, unknown fields, non-global scope; claim IDs validated against the review's own dispositions                                               | Stricter closed union                                                                                                            | Implementation  | None                                                                        |",
+      "id": "claim-304bfdf0cbda9d3e",
+      "text": "`BL-261001-resolve-the-summary-template`, `BL-261001-route-quick-mode-plan`.",
       "status": "confirmed",
       "citations": [
         {
@@ -7946,41 +7979,8 @@
       ]
     },
     {
-      "id": "claim-2c257af665059438",
-      "text": "| p03-t06       | p03 review H1                    | Brief claim IDs equal disposition claim IDs both ways                  | Every brief claim must be a distinct ledger claim with an exact projection; a reviewer may still omit a disposition, which reconciles to `unresolved` (honest partial)                                                                                         | Strict equality would fail the documented omitted-claim path with no retry allowed                                               | Implementation  | None                                                                        |",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:738-738"
-        }
-      ]
-    },
-    {
-      "id": "claim-a79b0883c079a340",
-      "text": "| p03-t07       | p03 round-2 M1                   | Omitted-disposition claims need a gap                                  | Contested and unsupported claims are exempt (already shown under Contradictions and Qualifications); p03-t08 bases the exemption on review dispositions                                                                                                        | Avoid double-reporting                                                                                                           | Implementation  | None                                                                        |",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:739-739"
-        }
-      ]
-    },
-    {
-      "id": "claim-34cabcf0f6f2cc50",
-      "text": "| p03-t09       | p03 round-2 M1, p03-t07, p03-t08 | Omitted-disposition claims force `partial` with a matched gap          | Rule deleted; an omission is treated like `uncertain` (claim stays `unresolved`, listed \"not reviewed\"); brief binding replaced by rebuild-and-compare                                                                                                         | Complexity review: not required by any acceptance criterion and not an inflation path; field-by-field binding could not converge | Implementation  | Reintroduce forced `partial` if a consumer acts on a silently skipped claim |",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:740-740"
-        }
-      ]
-    },
-    {
-      "id": "claim-64ded8b9e8f274cc",
-      "text": "| p04-t02       | plan.md p04-t02                  | Closeout check reports `complete` when steps are done                  | Reports `complete` only when the snapshot's own status is `complete`; \"in_progress\" modeled as snapshot status `failed`; waivers carry `covered_fingerprint`; `complete-state` reads layered config when no snapshot exists, so a malformed config now refuses | Match Step 15's final write; compare across merges                                                                               | Implementation  | None                                                                        |",
+      "id": "claim-5079ae92158cedc8",
+      "text": "Chronological execution is recorded per phase under Orchestration Runs above",
       "status": "confirmed",
       "citations": [
         {
@@ -7990,8 +7990,8 @@
       ]
     },
     {
-      "id": "claim-ecae0616304e49e5",
-      "text": "| p04-t03       | plan.md p04-t03                  | Check before `oat-project-complete`'s first mutation (around Step 3.7) | New Step 1.5 before the upfront questions, re-checked before `complete-state`                                                                                                                                                                                  | Steps 2 and 3.5 can already write                                                                                                | Implementation  | None                                                                        |",
+      "id": "claim-e4ceb7631cb854d5",
+      "text": "(dispatch requests, commits, reviews, gates, recovery events, the mid-wave",
       "status": "confirmed",
       "citations": [
         {
@@ -8001,8 +8001,8 @@
       ]
     },
     {
-      "id": "claim-36bb8cc586dea0a4",
-      "text": "| p04-t03       | plan.md p04-t03                  | Fail closed for configured closeouts                                   | `claude-effort-levels` (hand-written snapshot) will be refused by `complete-state` until repaired; legacy `pr_open` projects without a snapshot (`migrate-skill-versions`) route back to implement                                                             | Intended fail-closed behavior                                                                                                    | Implementation  | Note in the PR body                                                         |",
+      "id": "claim-f6c356adb4ce3545",
+      "text": "merge of `main`, the operator's review-cap decisions, and the p03 complexity",
       "status": "confirmed",
       "citations": [
         {
@@ -8012,8 +8012,8 @@
       ]
     },
     {
-      "id": "claim-925bb311265b7365",
-      "text": "| p05-t01       | plan.md p05-t01                  | Planning guard for linked CLAUDE.md                                    | The single planning guard also covers stray overwrites (it checks every planned CLAUDE.md update)                                                                                                                                                              | Same resolves-to check                                                                                                           | Implementation  | None                                                                        |",
+      "id": "claim-88cb32900d340265",
+      "text": "review). Plan-gate history is under Plan Gate Feedback.",
       "status": "confirmed",
       "citations": [
         {
@@ -8023,19 +8023,8 @@
       ]
     },
     {
-      "id": "claim-05bdf2e15c235e96",
-      "text": "| p05-t03       | plan.md p05-t03                  | Probe with `pnpm run worktree:init`                                    | Probe used `pnpm install --frozen-lockfile`; `worktree:init` with a throwaway `HOME` made `bundle-assets.sh` copy the repo into its own staging until the disk filled                                                                                          | Pre-existing `bundle-assets.sh` hazard                                                                                           | Implementation  | `BL-261001-fail-closed-when-bundle-assets`                                  |",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:745-745"
-        }
-      ]
-    },
-    {
-      "id": "claim-e387025a1604de49",
-      "text": "| p05-t04       | plan.md p05-t04                  | Key-type checks                                                        | Type checks run in the existing `oat-*` required-key loop; located YAML errors run for every skill                                                                                                                                                             | Existing required-key checks are `oat-*` only                                                                                    | Implementation  | None                                                                        |",
+      "id": "claim-d43baa57be2ca9b2",
+      "text": "Deferred Findings (Medium)",
       "status": "confirmed",
       "citations": [
         {
@@ -8045,19 +8034,8 @@
       ]
     },
     {
-      "id": "claim-067518d0c613cb79",
-      "text": "| p05-t05       | plan.md p05-t05                  | Listed router and dashboard files                                      | Also updated `project/split/__tests__/run.test.ts`, which pinned the old quick route                                                                                                                                                                           | Mechanical                                                                                                                       | Implementation  | None                                                                        |",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:747-747"
-        }
-      ]
-    },
-    {
-      "id": "claim-93eeea53772e61bf",
-      "text": "| p06-t03       | plan.md p06-t03                  | `HOME=$(mktemp -d) pnpm exec turbo run test --force`                   | `pnpm build` with the real `HOME`, then the isolated-`HOME` test step with `--only`                                                                                                                                                                            | Keep `bundle-assets.sh` off an isolated `HOME`                                                                                   | Implementation  | None                                                                        |",
+      "id": "claim-c03b275a00c70c55",
+      "text": "- Exit gate M1 (`reviews/archived/final-review-2026-10-01T203319Z.md`): Fumadocs",
       "status": "confirmed",
       "citations": [
         {
@@ -8067,8 +8045,41 @@
       ]
     },
     {
-      "id": "claim-0bcf612f7edc6c57",
-      "text": "Full Definition of Done at `6924afcf5` (p06-t03), CI order, every gate exit 0,",
+      "id": "claim-130e75019bf3cc53",
+      "text": "nav sync writes a filename starting with `!` as an exclusion directive, so the",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:749-749"
+        }
+      ]
+    },
+    {
+      "id": "claim-b4d153f7307e004a",
+      "text": "page is hidden while `--check` reports clean. Deferred to `BL-261001-escape-directive-like` (high):",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:750-750"
+        }
+      ]
+    },
+    {
+      "id": "claim-19186fb7d7242d01",
+      "text": "fixing it now would make the exit-gate generation stale and require a new",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:751-751"
+        }
+      ]
+    },
+    {
+      "id": "claim-19b59636e52f286a",
+      "text": "final review and gate; no shipped docs page is affected.",
       "status": "confirmed",
       "citations": [
         {
@@ -8078,8 +8089,8 @@
       ]
     },
     {
-      "id": "claim-f13517058711d0f8",
-      "text": "logs in `.oat/repo/analysis/backlog-wave-3/dod/`: `pnpm check` (0/11 cached),",
+      "id": "claim-5758f7adc643e13a",
+      "text": "- Exit gate M2 (same artifact): recon Review Downgrades omits claims a",
       "status": "confirmed",
       "citations": [
         {
@@ -8089,8 +8100,8 @@
       ]
     },
     {
-      "id": "claim-4181998049ee8d16",
-      "text": "`pnpm type-check` (0/10), `pnpm build` then",
+      "id": "claim-ffc1148987b6fc49",
+      "text": "thorough-profile redundant-verification review left without a disposition.",
       "status": "confirmed",
       "citations": [
         {
@@ -8100,8 +8111,8 @@
       ]
     },
     {
-      "id": "claim-9de9c4b4671ab3fa",
-      "text": "`HOME=$(mktemp -d) pnpm exec turbo run test --force --only` (0/4 cached; CLI",
+      "id": "claim-a21ba6402d2493d7",
+      "text": "Deferred to `BL-261001-list-thorough-review-omissions` (medium): rendering-only, thorough profile only.",
       "status": "confirmed",
       "citations": [
         {
@@ -8111,41 +8122,8 @@
       ]
     },
     {
-      "id": "claim-2ecccc81d1749876",
-      "text": "7957, control-plane 153, docs-transforms 31, docs-config 10), `pnpm build`",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:756-756"
-        }
-      ]
-    },
-    {
-      "id": "claim-fcc1c89e9659e178",
-      "text": "(0/5), `check:skill-bumps`, `release:check-versions` (after",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:757-757"
-        }
-      ]
-    },
-    {
-      "id": "claim-ab5828e094458e85",
-      "text": "`git fetch origin main`), `release:validate` (five packages at 0.3.11),",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:758-758"
-        }
-      ]
-    },
-    {
-      "id": "claim-9a0333a9b7703837",
-      "text": "`build:docs` (0/6); plus `test:smoke` 163, `test:skills` 689, `test:scripts`,",
+      "id": "claim-82d5c1a0fa6efc0d",
+      "text": "Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.",
       "status": "confirmed",
       "citations": [
         {
@@ -8155,19 +8133,8 @@
       ]
     },
     {
-      "id": "claim-61cf4f4c02c98159",
-      "text": "`pnpm lint` (0/10), `pnpm format` (0/10). No log contains a cache replay.",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:760-760"
-        }
-      ]
-    },
-    {
-      "id": "claim-b9eb22341fd66300",
-      "text": "The test gate built with the real `HOME` first and ran the isolated-`HOME`",
+      "id": "claim-067edcc7c50260f9",
+      "text": "| Task / Review | Source Artifact                  | Planned / Documented                                                   | Actual / Accepted                                                                                                                                                                                                                                              | Reason                                                                                                                           | Source of Truth | Follow-up                                                                   |",
       "status": "confirmed",
       "citations": [
         {
@@ -8177,19 +8144,8 @@
       ]
     },
     {
-      "id": "claim-887fae03e268292b",
-      "text": "tests with `--only`, so `bundle-assets.sh` never ran under an isolated `HOME`",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:762-762"
-        }
-      ]
-    },
-    {
-      "id": "claim-8c9cbc6864fe4248",
-      "text": "(`BL-261001-fail-closed-when-bundle-assets`).",
+      "id": "claim-1b8059ecc5ba749c",
+      "text": "| p01-t01       | plan.md p01-t01                  | Move the resolver; flip one scaffold test                              | Also updated `promote.test.ts` and a second user-first scaffold test; lazy `assetsRoot`; \"PJM\" dropped from the invalid-name message                                                                                                                           | Required by the declared change                                                                                                  | Implementation  | None                                                                        |",
       "status": "confirmed",
       "citations": [
         {
@@ -8199,8 +8155,41 @@
       ]
     },
     {
-      "id": "claim-fedb7c07145178c5",
-      "text": "**What shipped:**",
+      "id": "claim-663aeff0267b8dbc",
+      "text": "| p01-t02       | plan.md p01-t02                  | Command over the shared resolver                                       | Added `TemplateNotFoundError`; the repository tier is skipped outside a git repository                                                                                                                                                                         | Distinguish a miss from a read failure                                                                                           | Implementation  | None                                                                        |",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:764-764"
+        }
+      ]
+    },
+    {
+      "id": "claim-f0db2ff38666b67b",
+      "text": "| p01-t03       | plan.md p01-t03                  | Listed skill call sites                                                | Also updated quick-start line 195 and the `review-skill-contracts` pins; retro creates `references/` before copying                                                                                                                                            | `--output` creates no directories                                                                                                | Implementation  | None                                                                        |",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:765-765"
+        }
+      ]
+    },
+    {
+      "id": "claim-e33f57eed4522beb",
+      "text": "| p01-t03       | plan.md p01-t03                  | No skill copies from `.oat/templates/`                                 | `oat-wrap-up` keeps a read reference to `.oat/templates/summary.md` (schema pointer, not a copy)                                                                                                                                                               | Out of p01 scope; absent on user-scope-only installs                                                                             | Implementation  | Note at p06 index                                                           |",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:766-766"
+        }
+      ]
+    },
+    {
+      "id": "claim-c13f105a8a4566bb",
+      "text": "| p01-t04       | p01 review M1                    | Grants for retro and summary                                           | Also re-keyed the summary `allowed-tools` prompt site in `.agents/docs/autonomy-contract.md` (`35cb2ea1d677` to `a8983fec040c`, still `NG`)                                                                                                                    | Prompt sites are keyed by a hash of the line                                                                                     | Implementation  | None                                                                        |",
       "status": "confirmed",
       "citations": [
         {
@@ -8210,8 +8199,19 @@
       ]
     },
     {
-      "id": "claim-2ac25634881d1632",
-      "text": "- **Template resolver (lead).** One resolver in repository, user, bundle order",
+      "id": "claim-af1da524355da0c2",
+      "text": "| p02-t01       | plan.md p02-t01                  | Strict meta.json from Contents maps                                    | Only the root lists `index`; links into a non-child folder become link entries; hidden folders reported once as `folder/`; unowned meta.json keys preserved; unlisted pages warn but exit 0                                                                    | Fumadocs 16.10.2 loader semantics                                                                                                | Implementation  | None                                                                        |",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:768-768"
+        }
+      ]
+    },
+    {
+      "id": "claim-1342c2fa642711c0",
+      "text": "| p02-t02       | plan.md p02-t02                  | Listed docs pages                                                      | Also `reference/file-locations.md`, `reference/index.md`, and the regenerated `apps/oat-docs/index.md`; no change needed in `cli-reference.md`                                                                                                                 | Same MkDocs-only wording                                                                                                         | Implementation  | None                                                                        |",
       "status": "confirmed",
       "citations": [
         {
@@ -8221,8 +8221,8 @@
       ]
     },
     {
-      "id": "claim-5df04e933c70948d",
-      "text": "(`DR-260927-templates-resolve-repository`) shared by the project scaffold,",
+      "id": "claim-ec875b00f6f2ab4c",
+      "text": "| p02-t05       | p02 review M1                    | Report unlisted pages                                                  | Added `nav sync --check` (MkDocs and Fumadocs) run in `apps/oat-docs` `prebuild`, so `build:docs` fails on stale navigation; `oat-docs-analyze` points at the read-only form                                                                                   | Strict pages would otherwise hide new pages silently                                                                             | Implementation  | `docs-app-fuma` scaffold not wired (out of scope)                           |",
       "status": "confirmed",
       "citations": [
         {
@@ -8232,8 +8232,8 @@
       ]
     },
     {
-      "id": "claim-c852b27bb7ae0bd8",
-      "text": "promote, PJM, backlog, and decision commands, and a new",
+      "id": "claim-a04b7d29149678bd",
+      "text": "| p02-t06       | p02 gate M1                      | Loader-checked reachability                                            | The new `fumadocs-loader.test.ts` imports `fumadocs-core` through `apps/oat-docs/package.json`, so CLI tests need the docs app installed (a normal workspace install); a kept `pagesIndex` naming another page may over-report that page as unlisted           | Prove against the real loader                                                                                                    | Implementation  | None                                                                        |",
       "status": "confirmed",
       "citations": [
         {
@@ -8243,8 +8243,8 @@
       ]
     },
     {
-      "id": "claim-da836efe349d71b0",
-      "text": "`oat template resolve <name> [--json] [--output <path>]`. Eleven lifecycle",
+      "id": "claim-bdd0367766d256bd",
+      "text": "| p03-t03       | plan.md p03-t03                  | End-to-end test fails only with `REVIEW_DISPOSITION_MISMATCH`          | It first failed shape validation (`INVALID_UNRESOLVED_ISSUE`); added rejections for duplicate claim IDs, empty text, unknown fields, non-global scope; claim IDs validated against the review's own dispositions                                               | Stricter closed union                                                                                                            | Implementation  | None                                                                        |",
       "status": "confirmed",
       "citations": [
         {
@@ -8254,8 +8254,8 @@
       ]
     },
     {
-      "id": "claim-9458156559df11af",
-      "text": "skills copy templates through it (fourteen skills changed), so user-scope-only installs work; the",
+      "id": "claim-0402a9898fbf9bf6",
+      "text": "| p03-t06       | p03 review H1                    | Brief claim IDs equal disposition claim IDs both ways                  | Every brief claim must be a distinct ledger claim with an exact projection; a reviewer may still omit a disposition, which reconciles to `unresolved` (honest partial)                                                                                         | Strict equality would fail the documented omitted-claim path with no retry allowed                                               | Implementation  | None                                                                        |",
       "status": "confirmed",
       "citations": [
         {
@@ -8265,8 +8265,8 @@
       ]
     },
     {
-      "id": "claim-e5dd183329fcf13e",
-      "text": "Cursor-cloud skill's template order matches. Skills that run it gained",
+      "id": "claim-cef0c526def63bc1",
+      "text": "| p03-t07       | p03 round-2 M1                   | Omitted-disposition claims need a gap                                  | Contested and unsupported claims are exempt (already shown under Contradictions and Qualifications); p03-t08 bases the exemption on review dispositions                                                                                                        | Avoid double-reporting                                                                                                           | Implementation  | None                                                                        |",
       "status": "confirmed",
       "citations": [
         {
@@ -8276,8 +8276,8 @@
       ]
     },
     {
-      "id": "claim-b4b1f3c8b8c5c658",
-      "text": "`Bash(oat template:*)`.",
+      "id": "claim-6d467530e48a12ee",
+      "text": "| p03-t09       | p03 round-2 M1, p03-t07, p03-t08 | Omitted-disposition claims force `partial` with a matched gap          | Rule deleted; an omission is treated like `uncertain` (claim stays `unresolved`, listed \"not reviewed\"); brief binding replaced by rebuild-and-compare                                                                                                         | Complexity review: not required by any acceptance criterion and not an inflation path; field-by-field binding could not converge | Implementation  | Reintroduce forced `partial` if a consumer acts on a silently skipped claim |",
       "status": "confirmed",
       "citations": [
         {
@@ -8287,8 +8287,8 @@
       ]
     },
     {
-      "id": "claim-6531f31159534061",
-      "text": "- **Fumadocs navigation.** `oat docs nav sync` detects the framework and, for",
+      "id": "claim-b36dddf694c43577",
+      "text": "| p04-t02       | plan.md p04-t02                  | Closeout check reports `complete` when steps are done                  | Reports `complete` only when the snapshot's own status is `complete`; \"in_progress\" modeled as snapshot status `failed`; waivers carry `covered_fingerprint`; `complete-state` reads layered config when no snapshot exists, so a malformed config now refuses | Match Step 15's final write; compare across merges                                                                               | Implementation  | None                                                                        |",
       "status": "confirmed",
       "citations": [
         {
@@ -8298,8 +8298,8 @@
       ]
     },
     {
-      "id": "claim-ec82fd8fc80d6a18",
-      "text": "Fumadocs, writes strict `meta.json` from each `index.md` Contents map",
+      "id": "claim-13bcd8e735935afa",
+      "text": "| p04-t03       | plan.md p04-t03                  | Check before `oat-project-complete`'s first mutation (around Step 3.7) | New Step 1.5 before the upfront questions, re-checked before `complete-state`                                                                                                                                                                                  | Steps 2 and 3.5 can already write                                                                                                | Implementation  | None                                                                        |",
       "status": "confirmed",
       "citations": [
         {
@@ -8309,8 +8309,8 @@
       ]
     },
     {
-      "id": "claim-51e1604eaeec20e9",
-      "text": "(cross-folder links as link entries, frontmatter or H1 titles, semantic",
+      "id": "claim-99271124bffda6ae",
+      "text": "| p04-t03       | plan.md p04-t03                  | Fail closed for configured closeouts                                   | `claude-effort-levels` (hand-written snapshot) will be refused by `complete-state` until repaired; legacy `pr_open` projects without a snapshot (`migrate-skill-versions`) route back to implement                                                             | Intended fail-closed behavior                                                                                                    | Implementation  | Note in the PR body                                                         |",
       "status": "confirmed",
       "citations": [
         {
@@ -8320,8 +8320,8 @@
       ]
     },
     {
-      "id": "claim-630d2ab2eeb20acf",
-      "text": "no-op on re-run, `.mdx` targets, `root: true` folders handled against the",
+      "id": "claim-d877f58f8876af1e",
+      "text": "| p05-t01       | plan.md p05-t01                  | Planning guard for linked CLAUDE.md                                    | The single planning guard also covers stray overwrites (it checks every planned CLAUDE.md update)                                                                                                                                                              | Same resolves-to check                                                                                                           | Implementation  | None                                                                        |",
       "status": "confirmed",
       "citations": [
         {
@@ -8331,8 +8331,8 @@
       ]
     },
     {
-      "id": "claim-18c5f0193ad111e2",
-      "text": "real loader). `--check` reports drift and unlisted pages without writing and",
+      "id": "claim-a4cf9303f7d39fe7",
+      "text": "| p05-t03       | plan.md p05-t03                  | Probe with `pnpm run worktree:init`                                    | Probe used `pnpm install --frozen-lockfile`; `worktree:init` with a throwaway `HOME` made `bundle-assets.sh` copy the repo into its own staging until the disk filled                                                                                          | Pre-existing `bundle-assets.sh` hazard                                                                                           | Implementation  | `BL-261001-fail-closed-when-bundle-assets`                                  |",
       "status": "confirmed",
       "citations": [
         {
@@ -8342,8 +8342,8 @@
       ]
     },
     {
-      "id": "claim-4f9948fa8f92a49b",
-      "text": "runs in `apps/oat-docs` `prebuild`, so `build:docs` fails on stale",
+      "id": "claim-e0f8d78e87d3edf3",
+      "text": "| p05-t04       | plan.md p05-t04                  | Key-type checks                                                        | Type checks run in the existing `oat-*` required-key loop; located YAML errors run for every skill                                                                                                                                                             | Existing required-key checks are `oat-*` only                                                                                    | Implementation  | None                                                                        |",
       "status": "confirmed",
       "citations": [
         {
@@ -8353,8 +8353,8 @@
       ]
     },
     {
-      "id": "claim-aafb72ad9a368161",
-      "text": "navigation. `apps/oat-docs` has 11 committed `meta.json` files.",
+      "id": "claim-5a9ad57fdea21164",
+      "text": "| p05-t05       | plan.md p05-t05                  | Listed router and dashboard files                                      | Also updated `project/split/__tests__/run.test.ts`, which pinned the old quick route                                                                                                                                                                           | Mechanical                                                                                                                       | Implementation  | None                                                                        |",
       "status": "confirmed",
       "citations": [
         {
@@ -8364,8 +8364,8 @@
       ]
     },
     {
-      "id": "claim-2aec834d7a57e86b",
-      "text": "- **Recon publication (#333).** The brief generator, reconciler, and validator",
+      "id": "claim-1276864516f5598a",
+      "text": "| p06-t03       | plan.md p06-t03                  | `HOME=$(mktemp -d) pnpm exec turbo run test --force`                   | `pnpm build` with the real `HOME`, then the isolated-`HOME` test step with `--only`                                                                                                                                                                            | Keep `bundle-assets.sh` off an isolated `HOME`                                                                                   | Implementation  | None                                                                        |",
       "status": "confirmed",
       "citations": [
         {
@@ -8375,41 +8375,8 @@
       ]
     },
     {
-      "id": "claim-4eb1ad40f4ee9893",
-      "text": "agree: the validator rebuilds every brief with the production generator and",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:784-784"
-        }
-      ]
-    },
-    {
-      "id": "claim-18cba10cd4c938f5",
-      "text": "compares it; a material coverage gap no longer fails publication once its",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:785-785"
-        }
-      ]
-    },
-    {
-      "id": "claim-f35faa66a897e3b9",
-      "text": "claims are downgraded; `unresolvedIssues` may be scoped to claim IDs (strings",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:786-786"
-        }
-      ]
-    },
-    {
-      "id": "claim-fed32a382485b87b",
-      "text": "read as global); `packet.md` lists every review downgrade. Validation is",
+      "id": "claim-6b44919b086a1ef5",
+      "text": "Full Definition of Done at `6924afcf5` (p06-t03), CI order, every gate exit 0,",
       "status": "confirmed",
       "citations": [
         {
@@ -8419,8 +8386,8 @@
       ]
     },
     {
-      "id": "claim-c3d49f83fbbffe3a",
-      "text": "linear in claim count. The Codex agent-limit note lives in the Codex provider",
+      "id": "claim-939b6eb4af47ffaa",
+      "text": "logs in `.oat/repo/analysis/backlog-wave-3/dod/`: `pnpm check` (0/11 cached),",
       "status": "confirmed",
       "citations": [
         {
@@ -8430,8 +8397,8 @@
       ]
     },
     {
-      "id": "claim-71853a08f719e0a9",
-      "text": "reference with a recon pointer, and `retryLimit` means at most one",
+      "id": "claim-4ce9600fa469763a",
+      "text": "`pnpm type-check` (0/10), `pnpm build` then",
       "status": "confirmed",
       "citations": [
         {
@@ -8441,8 +8408,8 @@
       ]
     },
     {
-      "id": "claim-6719596215e5bb65",
-      "text": "pre-acceptance admission retry per lane.",
+      "id": "claim-2af5b28d123175d5",
+      "text": "`HOME=$(mktemp -d) pnpm exec turbo run test --force --only` (0/4 cached; CLI",
       "status": "confirmed",
       "citations": [
         {
@@ -8452,8 +8419,8 @@
       ]
     },
     {
-      "id": "claim-58d72295ad43b732",
-      "text": "- **Lifecycle closeout guards.** `oat-project-next` recomputes v2 fingerprints",
+      "id": "claim-bdb2e424f7956f6c",
+      "text": "7957, control-plane 153, docs-transforms 31, docs-config 10), `pnpm build`",
       "status": "confirmed",
       "citations": [
         {
@@ -8463,8 +8430,8 @@
       ]
     },
     {
-      "id": "claim-a83ebec4b1b6ad8d",
-      "text": "with the implement exclusions; `oat project closeout-check` reports the",
+      "id": "claim-8ca5e926d6268b9d",
+      "text": "(0/5), `check:skill-bumps`, `release:check-versions` (after",
       "status": "confirmed",
       "citations": [
         {
@@ -8474,8 +8441,8 @@
       ]
     },
     {
-      "id": "claim-c32df0dee0728dc5",
-      "text": "closeout invariant (configured, autonomous, or lite) and",
+      "id": "claim-82e083949d20d56d",
+      "text": "`git fetch origin main`), `release:validate` (five packages at 0.3.11),",
       "status": "confirmed",
       "citations": [
         {
@@ -8485,8 +8452,8 @@
       ]
     },
     {
-      "id": "claim-22dafde3017fb725",
-      "text": "`oat project complete-state` refuses a missing or incomplete snapshot;",
+      "id": "claim-fe3e27667e602f1f",
+      "text": "`build:docs` (0/6); plus `test:smoke` 163, `test:skills` 689, `test:scripts`,",
       "status": "confirmed",
       "citations": [
         {
@@ -8496,8 +8463,8 @@
       ]
     },
     {
-      "id": "claim-90af834a28f5e88a",
-      "text": "implement, next, and complete route through the check. Exit-gate waivers are",
+      "id": "claim-8aa3c283db0f1989",
+      "text": "`pnpm lint` (0/10), `pnpm format` (0/10). No log contains a cache replay.",
       "status": "confirmed",
       "citations": [
         {
@@ -8507,8 +8474,8 @@
       ]
     },
     {
-      "id": "claim-c226bc166c923bb7",
-      "text": "append-only, operator-only (never under `OAT_AUTONOMOUS`), apply to v1 and",
+      "id": "claim-e089671374fcd3a1",
+      "text": "The test gate built with the real `HOME` first and ran the isolated-`HOME`",
       "status": "confirmed",
       "citations": [
         {
@@ -8518,8 +8485,8 @@
       ]
     },
     {
-      "id": "claim-988d0fa5c204ebf2",
-      "text": "v2, and are offered interactively before a generation is persisted stale.",
+      "id": "claim-073ac6a1b77f4938",
+      "text": "tests with `--only`, so `bundle-assets.sh` never ran under an isolated `HOME`",
       "status": "confirmed",
       "citations": [
         {
@@ -8529,8 +8496,8 @@
       ]
     },
     {
-      "id": "claim-12c987c4b98211a5",
-      "text": "- **Small fixes.** `instructions sync --force` never overwrites a `CLAUDE.md`",
+      "id": "claim-fe6ddeaaaba8c8f3",
+      "text": "(`BL-261001-fail-closed-when-bundle-assets`).",
       "status": "confirmed",
       "citations": [
         {
@@ -8540,41 +8507,8 @@
       ]
     },
     {
-      "id": "claim-d96b8d96ab5c2a21",
-      "text": "that an `AGENTS.md` resolves to (symlink, chain, hard link, or a symlink to a",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:799-799"
-        }
-      ]
-    },
-    {
-      "id": "claim-c9f45b503df5b832",
-      "text": "hard link); `oat project dispatch record` is validate-only (`--project` and",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:800-800"
-        }
-      ]
-    },
-    {
-      "id": "claim-3fda2bc941d73c25",
-      "text": "journal code removed); test-only package changes, including in dependency",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:801-801"
-        }
-      ]
-    },
-    {
-      "id": "claim-a9795b7e9ce83e02",
-      "text": "packages, skip the lockstep bump; skill validation reports YAML error",
+      "id": "claim-4f9324243732c67d",
+      "text": "**What shipped:**",
       "status": "confirmed",
       "citations": [
         {
@@ -8584,19 +8518,8 @@
       ]
     },
     {
-      "id": "claim-e112d55724a05b96",
-      "text": "locations and key types; quick-mode discovery routes to quick-start; the",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:803-803"
-        }
-      ]
-    },
-    {
-      "id": "claim-0f388234ca482b97",
-      "text": "packs redaction docs claim is narrowed.",
+      "id": "claim-39694f2f627075e9",
+      "text": "- **Template resolver (lead).** One resolver in repository, user, bundle order",
       "status": "confirmed",
       "citations": [
         {
@@ -8606,8 +8529,8 @@
       ]
     },
     {
-      "id": "claim-735af68ee6d456bc",
-      "text": "- Lockstep packages bumped to 0.3.11 (`main` took 0.3.10 for #334 mid-wave);",
+      "id": "claim-a6f75c6fda3d674e",
+      "text": "(`DR-260927-templates-resolve-repository`) shared by the project scaffold,",
       "status": "confirmed",
       "citations": [
         {
@@ -8617,8 +8540,8 @@
       ]
     },
     {
-      "id": "claim-c2c4c55ee0fb5d63",
-      "text": "thirteen backlog items archived, including `BL-260829` from this wave's live",
+      "id": "claim-edcebda2e97f8bd8",
+      "text": "promote, PJM, backlog, and decision commands, and a new",
       "status": "confirmed",
       "citations": [
         {
@@ -8628,8 +8551,8 @@
       ]
     },
     {
-      "id": "claim-d31983327edb04f8",
-      "text": "evidence; `BL-260806` closes after this project's own closeout.",
+      "id": "claim-057b79832c0fd28d",
+      "text": "`oat template resolve <name> [--json] [--output <path>]`. Eleven lifecycle",
       "status": "confirmed",
       "citations": [
         {
@@ -8639,8 +8562,19 @@
       ]
     },
     {
-      "id": "claim-03539a6df8b30de0",
-      "text": "**Behavioral changes (user-facing):** see the PR Requirements hand-off above.",
+      "id": "claim-f991347d7e8f22cf",
+      "text": "skills copy templates through it (fourteen skills changed), so user-scope-only installs work; the",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:808-808"
+        }
+      ]
+    },
+    {
+      "id": "claim-605c7b4c6bd5c048",
+      "text": "Cursor-cloud skill's template order matches. Skills that run it gained",
       "status": "confirmed",
       "citations": [
         {
@@ -8650,8 +8584,19 @@
       ]
     },
     {
-      "id": "claim-7b5eccf7ec1f4e53",
-      "text": "**Key files / modules:**",
+      "id": "claim-3abe003b6ad9229b",
+      "text": "`Bash(oat template:*)`.",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:810-810"
+        }
+      ]
+    },
+    {
+      "id": "claim-3fabc2933ac906e5",
+      "text": "- **Fumadocs navigation.** `oat docs nav sync` detects the framework and, for",
       "status": "confirmed",
       "citations": [
         {
@@ -8661,8 +8606,19 @@
       ]
     },
     {
-      "id": "claim-64cdb7108853cfd9",
-      "text": "- `packages/cli/src/commands/shared/template-source.ts`,",
+      "id": "claim-07660a67b88a9365",
+      "text": "Fumadocs, writes strict `meta.json` from each `index.md` Contents map",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:812-812"
+        }
+      ]
+    },
+    {
+      "id": "claim-483cac1e10ccc22c",
+      "text": "(cross-folder links as link entries, frontmatter or H1 titles, semantic",
       "status": "confirmed",
       "citations": [
         {
@@ -8672,8 +8628,8 @@
       ]
     },
     {
-      "id": "claim-5d21b70317489e5a",
-      "text": "`packages/cli/src/commands/template/**` - template resolution",
+      "id": "claim-27c678d6a9d98079",
+      "text": "no-op on re-run, `.mdx` targets, `root: true` folders handled against the",
       "status": "confirmed",
       "citations": [
         {
@@ -8683,8 +8639,8 @@
       ]
     },
     {
-      "id": "claim-b4ad28166ec3a9a3",
-      "text": "- `packages/cli/src/commands/docs/nav/**` - Fumadocs writer and `--check`",
+      "id": "claim-06a571dc44050f80",
+      "text": "real loader). `--check` reports drift and unlisted pages without writing and",
       "status": "confirmed",
       "citations": [
         {
@@ -8694,8 +8650,8 @@
       ]
     },
     {
-      "id": "claim-66766a78346cb09f",
-      "text": "- `.agents/skills/recon/scripts/**` - brief rebuild-and-compare, issues,",
+      "id": "claim-529bc04b2ebcdc53",
+      "text": "runs in `apps/oat-docs` `prebuild`, so `build:docs` fails on stale",
       "status": "confirmed",
       "citations": [
         {
@@ -8705,8 +8661,8 @@
       ]
     },
     {
-      "id": "claim-9cde5e75724501d3",
-      "text": "coverage, Review Downgrades",
+      "id": "claim-58da3946afd4d821",
+      "text": "navigation. `apps/oat-docs` has 11 committed `meta.json` files.",
       "status": "confirmed",
       "citations": [
         {
@@ -8716,8 +8672,8 @@
       ]
     },
     {
-      "id": "claim-0b9dc0ace5992fc4",
-      "text": "- `packages/cli/src/commands/project/closeout-check/**`,",
+      "id": "claim-755a6bbf4b3fefab",
+      "text": "- **Recon publication (#333).** The brief generator, reconciler, and validator",
       "status": "confirmed",
       "citations": [
         {
@@ -8727,8 +8683,8 @@
       ]
     },
     {
-      "id": "claim-5942fe4288897317",
-      "text": "`packages/cli/src/commands/project/complete-state/**`,",
+      "id": "claim-dbd051e992973ab7",
+      "text": "agree: the validator rebuilds every brief with the production generator and",
       "status": "confirmed",
       "citations": [
         {
@@ -8738,8 +8694,8 @@
       ]
     },
     {
-      "id": "claim-d66690c45c709d21",
-      "text": "`.agents/skills/oat-project-implement/references/completion-and-closeout.md` -",
+      "id": "claim-02d9610089c6f11e",
+      "text": "compares it; a material coverage gap no longer fails publication once its",
       "status": "confirmed",
       "citations": [
         {
@@ -8749,8 +8705,8 @@
       ]
     },
     {
-      "id": "claim-cc7f099eafc5b8c5",
-      "text": "closeout guards and waivers",
+      "id": "claim-b3264743795a2b5c",
+      "text": "claims are downgraded; `unresolvedIssues` may be scoped to claim IDs (strings",
       "status": "confirmed",
       "citations": [
         {
@@ -8760,8 +8716,8 @@
       ]
     },
     {
-      "id": "claim-c477105d4633bde9",
-      "text": "- `packages/cli/src/commands/instructions/**`,",
+      "id": "claim-f7289e7bf5d5f76e",
+      "text": "read as global); `packet.md` lists every review downgrade. Validation is",
       "status": "confirmed",
       "citations": [
         {
@@ -8771,8 +8727,8 @@
       ]
     },
     {
-      "id": "claim-d02bd65a86df18a2",
-      "text": "`packages/cli/src/commands/project/dispatch/**`,",
+      "id": "claim-0a1acbb3a0a24ae6",
+      "text": "linear in claim count. The Codex agent-limit note lives in the Codex provider",
       "status": "confirmed",
       "citations": [
         {
@@ -8782,8 +8738,8 @@
       ]
     },
     {
-      "id": "claim-b95976dd45cf5168",
-      "text": "`packages/cli/src/release/**`, `tools/release/release-utils.ts`,",
+      "id": "claim-acc5616be9f15c1d",
+      "text": "reference with a recon pointer, and `retryLimit` means at most one",
       "status": "confirmed",
       "citations": [
         {
@@ -8793,8 +8749,8 @@
       ]
     },
     {
-      "id": "claim-c080850df25bac0b",
-      "text": "`packages/cli/src/validation/skills.ts` - small fixes",
+      "id": "claim-38d7c3c615edcdda",
+      "text": "pre-acceptance admission retry per lane.",
       "status": "confirmed",
       "citations": [
         {
@@ -8804,8 +8760,19 @@
       ]
     },
     {
-      "id": "claim-b6d15d54b967f977",
-      "text": "**Verification performed:**",
+      "id": "claim-e100cd95cf2879ba",
+      "text": "- **Lifecycle closeout guards.** `oat-project-next` recomputes v2 fingerprints",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:826-826"
+        }
+      ]
+    },
+    {
+      "id": "claim-6ff593cab68d5725",
+      "text": "with the implement exclusions; `oat project closeout-check` reports the",
       "status": "confirmed",
       "citations": [
         {
@@ -8815,8 +8782,19 @@
       ]
     },
     {
-      "id": "claim-d5f50af3fe8ae4ab",
-      "text": "- Failing-first tests for every behavior change and neutralize-and-restore",
+      "id": "claim-7fb559216b355310",
+      "text": "closeout invariant (configured, autonomous, or lite) and",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:828-828"
+        }
+      ]
+    },
+    {
+      "id": "claim-89bb2929950c5f3b",
+      "text": "`oat project complete-state` refuses a missing or incomplete snapshot;",
       "status": "confirmed",
       "citations": [
         {
@@ -8826,8 +8804,8 @@
       ]
     },
     {
-      "id": "claim-357f382c74c00597",
-      "text": "proofs per clause for negative controls; branch-CLI probes in scratch repos.",
+      "id": "claim-c59cd0e3a6f7aec0",
+      "text": "implement, next, and complete route through the check. Exit-gate waivers are",
       "status": "confirmed",
       "citations": [
         {
@@ -8837,8 +8815,8 @@
       ]
     },
     {
-      "id": "claim-ec3b0292b589ee9d",
-      "text": "- Opus 5.5 high root review and Codex `codex-6-sol-xhigh` gate on every phase;",
+      "id": "claim-e39c0d31bc426250",
+      "text": "append-only, operator-only (never under `OAT_AUTONOMOUS`), apply to v1 and",
       "status": "confirmed",
       "citations": [
         {
@@ -8848,8 +8826,8 @@
       ]
     },
     {
-      "id": "claim-8d8159a0e4213083",
-      "text": "p03 went three root rounds, an operator-extended fourth, and an",
+      "id": "claim-6245d2e8471f4d71",
+      "text": "v2, and are offered interactively before a generation is persisted stale.",
       "status": "confirmed",
       "citations": [
         {
@@ -8859,8 +8837,8 @@
       ]
     },
     {
-      "id": "claim-089c7f3a3c7d1c3a",
-      "text": "operator-requested complexity-review simplification before its gate passed.",
+      "id": "claim-73261b358021203e",
+      "text": "- **Small fixes.** `instructions sync --force` never overwrites a `CLAUDE.md`",
       "status": "confirmed",
       "citations": [
         {
@@ -8870,8 +8848,8 @@
       ]
     },
     {
-      "id": "claim-8cb9b3e661b15df4",
-      "text": "- Full Definition of Done at `6924afcf5`, all gates exit 0 uncached (see Test",
+      "id": "claim-f9033f080a9f1766",
+      "text": "that an `AGENTS.md` resolves to (symlink, chain, hard link, or a symlink to a",
       "status": "confirmed",
       "citations": [
         {
@@ -8881,8 +8859,8 @@
       ]
     },
     {
-      "id": "claim-b919fc0bf6fca0de",
-      "text": "Results).",
+      "id": "claim-36a2b5f0917a3cb5",
+      "text": "hard link); `oat project dispatch record` is validate-only (`--project` and",
       "status": "confirmed",
       "citations": [
         {
@@ -8892,8 +8870,19 @@
       ]
     },
     {
-      "id": "claim-8896379aa26eb49b",
-      "text": "**Design deltas (if any):**",
+      "id": "claim-362960d6bb800953",
+      "text": "journal code removed); test-only package changes, including in dependency",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:836-836"
+        }
+      ]
+    },
+    {
+      "id": "claim-0c340519d5fdb266",
+      "text": "packages, skip the lockstep bump; skill validation reports YAML error",
       "status": "confirmed",
       "citations": [
         {
@@ -8903,8 +8892,19 @@
       ]
     },
     {
-      "id": "claim-1b1551410cb4b8cb",
-      "text": "- The recon omission-gap rule and field-by-field brief binding were replaced by",
+      "id": "claim-25b0e1ea0ec9efb9",
+      "text": "locations and key types; quick-mode discovery routes to quick-start; the",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:838-838"
+        }
+      ]
+    },
+    {
+      "id": "claim-907581f4a3c70900",
+      "text": "packs redaction docs claim is narrowed.",
       "status": "confirmed",
       "citations": [
         {
@@ -8914,8 +8914,8 @@
       ]
     },
     {
-      "id": "claim-fc192f14f0c76443",
-      "text": "rebuild-and-compare after the complexity review; see Deviations.",
+      "id": "claim-fe5373a87bb34a97",
+      "text": "- Lockstep packages bumped to 0.3.11 (`main` took 0.3.10 for #334 mid-wave);",
       "status": "confirmed",
       "citations": [
         {
@@ -8925,8 +8925,8 @@
       ]
     },
     {
-      "id": "claim-ee84b4906bf8c4c7",
-      "text": "- `main` advanced mid-wave (#334); the branch merged it, re-bumped collided",
+      "id": "claim-ed3eada65fe5437a",
+      "text": "thirteen backlog items archived, including `BL-260829` from this wave's live",
       "status": "confirmed",
       "citations": [
         {
@@ -8936,8 +8936,8 @@
       ]
     },
     {
-      "id": "claim-c0dc0ef7b67de5a8",
-      "text": "skills, and moved the lockstep target to 0.3.11.",
+      "id": "claim-7274e07ddb2a00a5",
+      "text": "evidence; `BL-260806` closes after this project's own closeout.",
       "status": "confirmed",
       "citations": [
         {
@@ -8947,8 +8947,19 @@
       ]
     },
     {
-      "id": "claim-d7668cc0cabeb8c9",
-      "text": "- Plan: `plan.md`",
+      "id": "claim-d566814e51d4a866",
+      "text": "**Behavioral changes (user-facing):** see the PR Requirements hand-off above.",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:844-844"
+        }
+      ]
+    },
+    {
+      "id": "claim-1e4ec188fbab39e3",
+      "text": "**Key files / modules:**",
       "status": "confirmed",
       "citations": [
         {
@@ -8958,24 +8969,321 @@
       ]
     },
     {
-      "id": "claim-790a0cec89163526",
-      "text": "- Discovery: `discovery.md`",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-9f74c1a0c743",
-          "locator": "implementation.md:847-847"
-        }
-      ]
-    },
-    {
-      "id": "claim-9b30d5de516d889b",
-      "text": "- Execution learnings: `oat-execution-learnings.md`",
+      "id": "claim-70bcd256d9d67286",
+      "text": "- `packages/cli/src/commands/shared/template-source.ts`,",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-9f74c1a0c743",
           "locator": "implementation.md:848-848"
+        }
+      ]
+    },
+    {
+      "id": "claim-99c05120aa14da52",
+      "text": "`packages/cli/src/commands/template/**` - template resolution",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:849-849"
+        }
+      ]
+    },
+    {
+      "id": "claim-43d62feb0490b217",
+      "text": "- `packages/cli/src/commands/docs/nav/**` - Fumadocs writer and `--check`",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:850-850"
+        }
+      ]
+    },
+    {
+      "id": "claim-af5ecdd1320bd2da",
+      "text": "- `.agents/skills/recon/scripts/**` - brief rebuild-and-compare, issues,",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:851-851"
+        }
+      ]
+    },
+    {
+      "id": "claim-83866819eeb5b7de",
+      "text": "coverage, Review Downgrades",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:852-852"
+        }
+      ]
+    },
+    {
+      "id": "claim-0468d009b8bc43cd",
+      "text": "- `packages/cli/src/commands/project/closeout-check/**`,",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:853-853"
+        }
+      ]
+    },
+    {
+      "id": "claim-db88a5e894bb32c2",
+      "text": "`packages/cli/src/commands/project/complete-state/**`,",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:854-854"
+        }
+      ]
+    },
+    {
+      "id": "claim-78055dfd0fe66133",
+      "text": "`.agents/skills/oat-project-implement/references/completion-and-closeout.md` -",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:855-855"
+        }
+      ]
+    },
+    {
+      "id": "claim-9007460410d524b6",
+      "text": "closeout guards and waivers",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:856-856"
+        }
+      ]
+    },
+    {
+      "id": "claim-385a7fe521be81d4",
+      "text": "- `packages/cli/src/commands/instructions/**`,",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:857-857"
+        }
+      ]
+    },
+    {
+      "id": "claim-2afd1b341c95425d",
+      "text": "`packages/cli/src/commands/project/dispatch/**`,",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:858-858"
+        }
+      ]
+    },
+    {
+      "id": "claim-da71f212fabe8149",
+      "text": "`packages/cli/src/release/**`, `tools/release/release-utils.ts`,",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:859-859"
+        }
+      ]
+    },
+    {
+      "id": "claim-4dd41ee202088933",
+      "text": "`packages/cli/src/validation/skills.ts` - small fixes",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:860-860"
+        }
+      ]
+    },
+    {
+      "id": "claim-ad5c1be855e13756",
+      "text": "**Verification performed:**",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:862-862"
+        }
+      ]
+    },
+    {
+      "id": "claim-631379b137a751d9",
+      "text": "- Failing-first tests for every behavior change and neutralize-and-restore",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:864-864"
+        }
+      ]
+    },
+    {
+      "id": "claim-ae56db0cb927d791",
+      "text": "proofs per clause for negative controls; branch-CLI probes in scratch repos.",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:865-865"
+        }
+      ]
+    },
+    {
+      "id": "claim-4312fc1ccfcf93ef",
+      "text": "- Opus 5.5 high root review and Codex `codex-6-sol-xhigh` gate on every phase;",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:866-866"
+        }
+      ]
+    },
+    {
+      "id": "claim-7cd98eeb2832f258",
+      "text": "p03 went three root rounds, an operator-extended fourth, and an",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:867-867"
+        }
+      ]
+    },
+    {
+      "id": "claim-8cf230172dd03974",
+      "text": "operator-requested complexity-review simplification before its gate passed.",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:868-868"
+        }
+      ]
+    },
+    {
+      "id": "claim-8cdce1dc83bce6c0",
+      "text": "- Full Definition of Done at `6924afcf5`, all gates exit 0 uncached (see Test",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:869-869"
+        }
+      ]
+    },
+    {
+      "id": "claim-b7b954576983d899",
+      "text": "Results).",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:870-870"
+        }
+      ]
+    },
+    {
+      "id": "claim-4206d4533cc98857",
+      "text": "**Design deltas (if any):**",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:872-872"
+        }
+      ]
+    },
+    {
+      "id": "claim-de5a26f8c07b576b",
+      "text": "- The recon omission-gap rule and field-by-field brief binding were replaced by",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:874-874"
+        }
+      ]
+    },
+    {
+      "id": "claim-46d80f1a20f58efc",
+      "text": "rebuild-and-compare after the complexity review; see Deviations.",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:875-875"
+        }
+      ]
+    },
+    {
+      "id": "claim-d931d0e34d131fdd",
+      "text": "- `main` advanced mid-wave (#334); the branch merged it, re-bumped collided",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:876-876"
+        }
+      ]
+    },
+    {
+      "id": "claim-6983024d064845db",
+      "text": "skills, and moved the lockstep target to 0.3.11.",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:877-877"
+        }
+      ]
+    },
+    {
+      "id": "claim-2f8fb70679a9af9c",
+      "text": "- Plan: `plan.md`",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:881-881"
+        }
+      ]
+    },
+    {
+      "id": "claim-445d18b4be1b9a6a",
+      "text": "- Discovery: `discovery.md`",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:882-882"
+        }
+      ]
+    },
+    {
+      "id": "claim-6221ee48e3626ac9",
+      "text": "- Execution learnings: `oat-execution-learnings.md`",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:883-883"
         }
       ]
     },

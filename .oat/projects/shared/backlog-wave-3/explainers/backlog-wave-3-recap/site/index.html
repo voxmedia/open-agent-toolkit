@@ -500,7 +500,7 @@
           <div class="stat"><span class="stat__value">0.3.11</span><span class="stat__label">lockstep version for the five public packages</span></div>
           <div class="stat stat--ok"><span class="stat__value">exit 0</span><span class="stat__label">every Definition of Done gate, uncached, at <code>6924afcf5</code></span></div>
         </div>
-        <p class="lede">All plan tasks are done, every phase gate and the final exit gate passed, and two exit-gate Mediums were moved to the backlog. Project closeout is the remaining lifecycle step.</p>
+        <p class="lede">All plan tasks are done, every phase gate and the final exit gate passed, and two exit-gate Mediums were moved to the backlog. The closeout sequence then ran to the end with autonomous final approval, and implementation is marked complete.</p>
 
         <section id="original-request">
           <h2>Original request</h2>
@@ -735,6 +735,7 @@
                 <tr><td>Final Review</td><td>Claude cross-context final review</td><td>0 Critical/High/Medium and 4 Low, all fixed in the records</td></tr>
                 <tr><td>Implementation exit gate</td><td>Codex final gate on the <code>effective-delta-v2</code> fingerprint</td><td>Envelope ok, 0 Critical/High; 2 Medium deferred to the backlog</td></tr>
                 <tr><td>Notable Challenges</td><td>Codex gate Medium on quadratic recon validation</td><td>Fixed: 800 claims went from 4,402 ms to 97 ms</td></tr>
+                <tr><td>Final HiLL approval and completion</td><td>Autonomous final approval, gate IMPLEMENT-16</td><td>Approved after the summary, document, and PR steps; final review passed, exit gate allowed, project recap built</td></tr>
               </tbody>
             </table>
           </div>
@@ -774,6 +775,8 @@
               </thead>
               <tbody>
                 <tr><td>summary.md</td><td>Status complete, last updated 2026-10-01, revision count 0</td></tr>
+                <tr><td>implementation.md</td><td>Status complete after the autonomous final approval</td></tr>
+                <tr><td>BL-260806 live closeout trace</td><td>This project's own closeout started with no snapshot; <code>oat project closeout-check</code> tracked the summary, document, and PR (<a href="https://github.com/voxmedia/open-agent-toolkit/pull/336">#336</a>) steps until it reported complete</td></tr>
                 <tr><td>Summary: backlog-wave-3</td><td>The institutional summary for Wave 3</td></tr>
                 <tr><td>Overview</td><td>Wave 3 delivered 14 approved items as one PR, including the recon failure reported in <a href="https://github.com/voxmedia/open-agent-toolkit/issues/333">issue #333</a></td></tr>
                 <tr><td>wave-3</td><td>Branch <code>wave/2026-09-30-backlog-wave-3</code></td></tr>
@@ -807,7 +810,8 @@
           </div>
           <h3>Next steps for the reader</h3>
           <ul>
-            <li>Review and merge the wave PR, then run project closeout; BL-260806-fail-closed-when-configured retires once closeout runs.</li>
+            <li>Review and merge <a href="https://github.com/voxmedia/open-agent-toolkit/pull/336">the wave PR on GitHub</a>; this project's closeout sequence has already run.</li>
+            <li>BL-260806-fail-closed-when-configured closes on this project's own closeout trace, in which the branch CLI's check observed each transition.</li>
             <li>Take the high-priority follow-ups first, starting with the navigation directive escape the exit gate found.</li>
             <li>Wiring <code>nav sync --check</code> into the <code>docs-app-fuma</code> scaffold was noted but not filed.</li>
           </ul>

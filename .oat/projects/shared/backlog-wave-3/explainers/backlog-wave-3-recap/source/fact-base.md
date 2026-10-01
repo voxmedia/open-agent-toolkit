@@ -206,7 +206,7 @@
 - Gate review 99fcf137-4610-4d1c-985d-71c4e7bc9dce reconciled three completed read-only recon lanes in two task-class waves; artifact .oat/projects/shared/backlog-wave-3/reviews/final-review-2026-10-01T203319Z.md; findings 0 critical, 0 high, 2 medium, 0 low.
 - 2026-10-01 · structural · oat gate review · final
 - target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:2,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-3/reviews/final-review-2026-10-01T203319Z.md run=99fcf137-4610-4d1c-985d-71c4e7bc9dce
-- oat_status: in_progress
+- oat_status: complete
 - oat_ready_for: null
 - oat_blockers: []
 - oat_last_updated: 2026-10-01
@@ -612,6 +612,34 @@
 - (`reviews/archived/final-review-2026-10-01T203319Z.md`). Received: both
 - Mediums deferred to backlog (see Deferred Findings); the final gate row is
 - `passed`; disposition `allowed/passed`.
+- - Gate `IMPLEMENT-16` (autonomous final approval): every pre-approval step
+- (summary, document, pr) completed in stored order; the final review row is
+- `passed` (`reviews/archived/final-review-2026-10-01T201832Z.md`, request
+- `bw3-final-review-1`, Dispatch stamp in Final Review above) and the exit gate
+- is `allowed/passed` (run `99fcf137`). Project recap `built`
+- (run `810e34a7`, host rung; `check-terminal-outcome` ok). Approval recorded
+- as `approval: approved`, `approval_source: oat-autonomous`; no post-approval
+- steps are configured.
+- BL-260806 live closeout trace
+- This project's own closeout started from a configured-plus-absent state
+- (`workflow.postImplementSequence` set in shared config, no snapshot). The
+- branch CLI's `oat project closeout-check` reported `snapshot_missing` (next
+- owner `oat-project-implement`) before the snapshot, then tracked each
+- transition:
+- 1. `fedcef8bf` persisted the immutable snapshot (`source: configured`,
+- `pre_approval: [summary, document, pr]`, `post_approval: []`) before any
+- child was dispatched; check then named `summary`.
+- 2. `7b6fb8214` summary child, recorded in `a3cf2ce01`; check named `document`.
+- 3. `06472d1a7`, `27b5bc93a`, `30cf8ff29` document child, recorded in
+- `5bb75c313` (rolling freshness checkpoint advanced); check named `pr`.
+- 4. `382d85d82`, `0ca0ece8b` PR child (#336), recorded in `1d85a4d80`; check
+- stopped at the approval boundary (`approval: approved` or `not_required`).
+- 5. Recap gate `built` (`3b457923b`), then `4a735e52b` awaiting approval,
+- `47cec9da6` autonomous approval (`IMPLEMENT-16`), `3d7063376` sequence
+- `complete`; check reported `complete`.
+- 6. `0c31e223d` marked implementation complete.
+- The run itself followed `oat-project-implement` 2.3.14 from `origin/main`; the
+- branch CLI's check observed it without driving it.
 - <!-- orchestration-runs-end -->
 - Plan Gate Feedback (quick-start, QS-12)
 - Configured gate: `oat-project-quick-start` exit gate, `onFailure: block`,
