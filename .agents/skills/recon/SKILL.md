@@ -65,7 +65,9 @@ problem:
 - `worker`: an accepted lane failed, was cancelled, or wrote an invalid
   artifact;
 - `provider/dispatch`: the launch surface could not satisfy the approved
-  envelope, or a launched axis drifted from approval;
+  envelope, a launched axis drifted from approval, or the provider rejected a
+  launch before any child was accepted (for example a Codex agent-limit
+  rejection). A pre-acceptance rejection is never a worker failure;
 - `contract validation`: artifacts were produced but the packet or a
   candidate failed deterministic validation;
 - `source availability`: a declared source was unavailable, stale, or lacked
@@ -188,7 +190,8 @@ The proposal shown for approval includes:
 
 - every wave's exact effective provider, route, role, model, effort, reasoning
   mode, and service tier;
-- authority level, maximum concurrency, per-lane deadline, and retry limit; and
+- authority level, maximum concurrency, per-lane deadline, and retry limit
+  (pre-acceptance admission retries per lane); and
 - every wave with its mode, task class, class floor, selection reason, target,
   and conditional flag; every condition with its predecessor, destination,
   predicate, and single-activation cap; and every lane with its identity, read
@@ -221,6 +224,24 @@ approved role, model, effort, and authority level, and can return each lane's
 result. If any approved axis cannot be satisfied, stop with a
 `provider/dispatch` diagnostic, leave the run at `awaiting-approval`, and
 launch nothing. Never substitute a different axis to make the launch fit.
+
+**Pre-acceptance rejections.** A launch the provider rejects before any child
+is accepted, such as a Codex `agent thread limit reached` rejection, is a
+`provider/dispatch` failure for that lane, never a worker failure; keep every
+accepted artifact. `retryLimit` counts these pre-acceptance admission retries
+per lane. With `retryLimit` of at least 1, allow at most one admission retry,
+and only after checking that completed agents are eligible to be unloaded; the
+default of 0 allows none and is never silently overridden. If the retry is
+rejected or not allowed, use an alternate route only when the approved envelope
+already names it. Otherwise stop with a partial run: record the lane with a
+material `PASS_OMITTED` gap carrying its exact `waveId` and `laneId`, and ask
+for a concrete continuation amendment instead of inventing fallback authority.
+No retry or route changes model, effort, role behavior, data authority, output
+limits, or reviewer blindness. Fresh review lanes stay fresh, and an accepted
+lane is never rerun to free capacity. Provider lifecycle mechanics, including
+Codex v2 residency and the `interrupt_agent` versus `close_agent` distinction,
+live in the dispatch dependency's
+`oat-dispatch-subagents/references/provider-codex.md`; do not copy them here.
 
 Launch each wave through the dispatch dependency with exactly the approved
 axes. On Cursor, launch both the custom worker role and the pre-approved generic

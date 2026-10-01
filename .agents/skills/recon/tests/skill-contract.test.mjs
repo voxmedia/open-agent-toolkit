@@ -281,6 +281,64 @@ test('controller publishes honest partials and never retries or substitutes sile
   assert.match(skill, /structural failure[\s\S]{0,240}no `packet\.md`/i);
 });
 
+test('pre-acceptance rejections are dispatch failures with one bounded admission retry', async () => {
+  const { skill, packetContract, profiles } = await readContracts();
+  assert.match(
+    skill,
+    /`provider\/dispatch`[\s\S]{0,260}rejected a\s+launch before any child was accepted[\s\S]{0,160}never a worker failure/i,
+  );
+  assert.match(
+    skill,
+    /Pre-acceptance rejections\.[\s\S]{0,400}keep every\s+accepted artifact/i,
+  );
+  assert.match(
+    skill,
+    /at most one admission retry,\s+and only after checking that completed agents are eligible to be unloaded/i,
+  );
+  assert.match(
+    skill,
+    /default of 0 allows none and is never silently overridden/i,
+  );
+  assert.match(
+    skill,
+    /alternate route only when the approved envelope\s+already names it[\s\S]{0,200}`PASS_OMITTED`[\s\S]{0,200}continuation amendment/i,
+  );
+  assert.match(
+    skill,
+    /No retry or route changes model, effort, role behavior, data authority, output\s+limits, or reviewer blindness/i,
+  );
+  assert.match(skill, /accepted\s+lane is never rerun to free capacity/i);
+  assert.match(skill, /oat-dispatch-subagents\/references\/provider-codex\.md/);
+  assert.doesNotMatch(skill, /residency lock|pending mailbox/i);
+  assert.match(
+    packetContract,
+    /`retryLimit` counts\s+pre-acceptance admission retries per lane/i,
+  );
+  assert.match(profiles, /retried at most once and only within `retryLimit`/i);
+
+  const codex = await readFile(
+    new URL(
+      '../../oat-dispatch-subagents/references/provider-codex.md',
+      import.meta.url,
+    ),
+    'utf8',
+  );
+  assert.match(codex, /## Agent-Limit Rejections and v2 Residency/);
+  assert.match(codex, /not by itself evidence of\s+cumulative or lifetime/i);
+  assert.match(
+    codex,
+    /no active turn, has no pending mailbox items, and holds no\s+residency lock/i,
+  );
+  assert.match(
+    codex,
+    /`interrupt_agent`, which interrupts work but does not\s+unregister/i,
+  );
+  assert.match(codex, /`close_agent`/);
+  assert.match(codex, /queue-only message to a completed v2 agent can pin it/i);
+  assert.match(codex, /Do not archive or delete sessions to free capacity/i);
+  assert.match(codex, /rust-v0\.159\.2/);
+});
+
 test('Cursor leaves stay background and durable artifacts outrank stream errors', async () => {
   const { skill, worker, workerContract } = await readContracts();
   assert.match(worker, /^is_background:\s*true$/m);

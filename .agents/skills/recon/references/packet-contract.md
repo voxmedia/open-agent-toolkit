@@ -111,7 +111,12 @@ it is not an unknown-value fallback.
 
 The other execution fields include `authority` as `provider-enforced` or
 `contract-enforced`; integer `maxConcurrency` and `deadlineSeconds` values of
-at least 1; and an integer `retryLimit` of at least 0. Each closed wave adds:
+at least 1; and an integer `retryLimit` of at least 0. `retryLimit` counts
+pre-acceptance admission retries per lane: relaunches after the provider
+rejects a launch before any child is accepted. The controller makes at most one
+such retry per lane, whatever the limit, and never reruns an accepted lane. The
+preview's worst-case lane attempts stay lanes times (`retryLimit` + 1). Each closed
+wave adds:
 
 - `classFloor`, from the same durable task-class order and not above
   `taskClass`;

@@ -99,7 +99,7 @@ function intendedRoutingSection(manifest, routing) {
     '',
     `- **Manifest routing version:** ${routing.sourceSchemaVersion}`,
     `- **Approved authority:** ${escapeInline(routing.authority)}`,
-    `- **Approved limits:** ${routing.waves.length} waves; ${routing.waves.reduce((count, wave) => count + wave.lanes.length, 0)} lanes; concurrency ${routing.maxConcurrency}; deadline ${routing.deadlineSeconds}s; retries ${routing.retryLimit}`,
+    `- **Approved limits:** ${routing.waves.length} waves; ${routing.waves.reduce((count, wave) => count + wave.lanes.length, 0)} lanes; concurrency ${routing.maxConcurrency}; deadline ${routing.deadlineSeconds}s; pre-acceptance admission retries per lane ${routing.retryLimit}`,
     '- **Evidence boundary:** These are normalized approved intended targets and root-recorded condition dispositions. They are not launcher receipts or observations of native runtime identity, usage, cost, or conclusion correctness.',
     '',
     '### Waves',
