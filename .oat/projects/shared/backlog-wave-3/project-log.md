@@ -60,6 +60,10 @@ target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:1,low:
 
 bw3-p01-outcome: phase p01 passed (root review 0 Critical/High; Codex gate ok); fix-loop count 2 (p01-t04 review fixes, p01-t05 gate fixes).
 
+### 2026-10-01 · structural · oat-project-review-provide · p02
+
+gate-3b53a413-p02-recon: completed one awaited read-only intelligent-recon docs lane; root reconciled evidence and wrote reviews/p02-review-2026-10-01T122403Z.md.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
