@@ -187,6 +187,7 @@ root reviewer and a Codex `codex-6-sol-xhigh` gate on every phase:
   run ID, outcome, and QA verdict are recorded in the recap's own
   `manifest.json` and `qa/result.json` (this section names no run, so the
   recap's inputs stay unchanged after it is built).
+- Recap export: [`.oat/repo/reference/project-recaps/20261001-backlog-wave-3/site/index.html`](../project-recaps/20261001-backlog-wave-3/site/index.html)
 
 ## Follow-up Items
 
