@@ -104,6 +104,10 @@ target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:1,low:
 
 bw3-p05-outcome: phase p05 passed (root review 0 Critical/High; Codex gate ok); fix-loop count 2 (p05-t07 review fixes, p05-t08 gate fix); one phase recovery (bw3-p05-recovery-1).
 
+### 2026-10-01 · structural · oat gate review · p06
+
+target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-3/reviews/p06-review-2026-10-01T200536Z.md run=96320cb5-8127-42cd-adfd-6e1541bb4662
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
