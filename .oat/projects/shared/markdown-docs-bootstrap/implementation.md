@@ -13,12 +13,12 @@ Phase p01 is complete after independent review: 2/9 tasks completed. Next task p
 
 ## Progress Overview
 
-| Phase | Status   | Tasks | Completed |
-| ----- | -------- | ----- | --------- |
-| p01   | complete | 2     | 2/2       |
-| p02   | pending  | 2     | 0/2       |
-| p03   | pending  | 3     | 0/3       |
-| p04   | pending  | 2     | 0/2       |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p01   | complete    | 2     | 2/2       |
+| p02   | in_progress | 2     | 0/2       |
+| p03   | pending     | 3     | 0/3       |
+| p04   | pending     | 2     | 0/2       |
 
 **Total:** 2/9 tasks completed
 
@@ -42,7 +42,7 @@ Phase p01 is complete after independent review: 2/9 tasks completed. Next task p
 
 ## Phase 2: Markdown initialization and adoption
 
-**Status:** pending
+**Status:** in_progress
 
 ### Task p02-t01: Add fresh Markdown scaffold and CLI mode
 
@@ -491,3 +491,147 @@ Accepted reviewer handle `/root/markdown_p01_review_pinned`; exact controls reta
 - L1 accepted and resolved in this root-owned bookkeeping: current implementation introduction and Final Summary now agree with completed task rows and p02-t01 pointer. Raw review counts are preserved; no production fix/re-review needed for this tracking-only repair. Review event remains fixes_completed rather than claiming an independently clean re-review.
 - Reviewer independently ran all 672 tests/13 actual files and type-check, exit 0; corrected guessed test filters are disclosed in artifact. It reproduced pre/post overwrite, accepted external/Fumadocs controls and both regression neutralizations in an isolated archive.
 - No unresolved findings, recovery attempts, optional nested dispatch, scope deviations or additional phase gate. Continue p02; final HiLL remains p04.
+
+#### p02 implementation dispatch
+
+Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high-3da8a37eed
+
+```json
+{
+  "request_id": "markdown-p02-implement-20261001",
+  "caller": "oat-project-implement",
+  "scope": "p02",
+  "objective": "Implement fresh Markdown scaffolding, safe additive adoption and read-only dry-run through existing docs init.",
+  "action": "implementation",
+  "role_name": "oat-phase-implementer",
+  "role_class": "worker",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "codex-root-20261001",
+    "source": "tool-schema",
+    "observed_at": "2026-10-01"
+  },
+  "authority": "bounded phase code commits in current worktree",
+  "role_selector": "oat-phase-implementer-gpt-6-1-sol-high-3da8a37eed",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-09-24",
+  "guidance_verified_at": "2026-09-24",
+  "guidance_status": "review-required",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/medium", "gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 3600,
+  "retry_limit": 2,
+  "payload": {
+    "agent_type": "oat-phase-implementer-gpt-6-1-sol-high-3da8a37eed",
+    "fork_turns": "none",
+    "scope_reference": ".oat/projects/shared/markdown-docs-bootstrap/plan.md#phase-2-markdown-initialization-and-adoption",
+    "dispatch_mode": "background"
+  },
+  "launch_status": "blocked-before-start",
+  "child_outcome": null,
+  "configured_invocation_evidence": [
+    "project-state:high",
+    "user-config:gpt-6.1-sol/high",
+    "tool-schema:gpt-6.1-sol low-through-ultra",
+    "canonical-role:sha256:a9c0b0be772025a6115005b6870ea9d5de4cb9e07c23790ff94dfac07fe6e005"
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [
+    "Model guidance is dated; current configured target and live model selector control this invocation.",
+    "No independent service-tier control selected."
+  ],
+  "continuation_events": [],
+  "task_class": "hard-reasoning",
+  "model_class_floor": "hard-reasoning",
+  "classification_source": "caller",
+  "classification_reason": "Adoption must preserve existing content and config while handling unsafe paths and partial guidance consistently.",
+  "floor_satisfaction": "satisfied"
+}
+```
+
+Native pre-start rejection unknown agent_type: native-role-unavailable; provesNoChildStarted true. Canonical role still direct project role v1.1.6, digest sha256:a9c0b0be772025a6115005b6870ea9d5de4cb9e07c23790ff94dfac07fe6e005.
+
+Accepted handle `/root/markdown_p02_pinned`; awaiting root ACK before work.
+
+```json
+{
+  "request_id": "markdown-p02-pinned-20261001",
+  "caller": "oat-project-implement",
+  "scope": "p02",
+  "objective": "Implement fresh Markdown scaffolding, safe additive adoption and read-only dry-run through existing docs init.",
+  "action": "implementation",
+  "role_name": "oat-phase-implementer",
+  "role_class": "worker",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "codex-root-20261001",
+    "source": "tool-schema",
+    "observed_at": "2026-10-01"
+  },
+  "authority": "bounded phase code commits in current worktree",
+  "role_selector": "default",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-09-24",
+  "guidance_verified_at": "2026-09-24",
+  "guidance_status": "review-required",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/medium", "gpt-6.1-sol/high"],
+  "selection_reason": "pre-start-rejection",
+  "selected_route": "native",
+  "deadline_seconds": 3600,
+  "retry_limit": 2,
+  "payload": {
+    "agent_type": "default",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "high",
+    "fork_turns": "none",
+    "scope_reference": ".oat/projects/shared/markdown-docs-bootstrap/plan.md#phase-2-markdown-initialization-and-adoption",
+    "dispatch_mode": "background"
+  },
+  "launch_status": "accepted",
+  "child_outcome": null,
+  "configured_invocation_evidence": [
+    "project-state:high",
+    "user-config:gpt-6.1-sol/high",
+    "tool-schema:gpt-6.1-sol low-through-ultra",
+    "canonical-role:sha256:a9c0b0be772025a6115005b6870ea9d5de4cb9e07c23790ff94dfac07fe6e005"
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [
+    "Model guidance is dated; current configured target and live model selector control this invocation.",
+    "No independent service-tier control selected."
+  ],
+  "continuation_events": [
+    {
+      "event": "exact-target-approximation",
+      "from_request_id": "markdown-p02-implement-20261001",
+      "provesNoChildStarted": true,
+      "canonicalRoleDigest": "sha256:a9c0b0be772025a6115005b6870ea9d5de4cb9e07c23790ff94dfac07fe6e005",
+      "approximation": true
+    }
+  ],
+  "task_class": "hard-reasoning",
+  "model_class_floor": "hard-reasoning",
+  "classification_source": "caller",
+  "classification_reason": "Adoption must preserve existing content and config while handling unsafe paths and partial guidance consistently.",
+  "floor_satisfaction": "satisfied"
+}
+```
