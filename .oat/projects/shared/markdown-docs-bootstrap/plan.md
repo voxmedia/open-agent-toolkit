@@ -81,7 +81,7 @@ All phases run sequentially (`oat_plan_parallel_groups: []`). p02 consumes p01's
 
 ### Task p02-t01: Add fresh Markdown scaffold and CLI mode
 
-**Files:** Modify `packages/cli/src/commands/docs/init/resolve-options.ts`, `scaffold.ts`, `index.ts`, `docs-commands.ts`, their existing tests, and `packages/cli/src/commands/docs/index.ts` help wiring as needed. Create `.oat/templates/docs-markdown/index.md` and `contributing.md`. Inspect `packages/cli/scripts/bundle-assets.sh` and template registration; update explicit inventories if required to ship the new shape.
+**Files:** Modify `packages/cli/src/commands/docs/init/resolve-options.ts`, `scaffold.ts`, `index.ts`, `docs-commands.ts`, their existing tests, and `packages/cli/src/commands/docs/index.ts` help wiring as needed. Create `.oat/templates/docs-markdown/index.md` and `contributing.md`. Modify `packages/cli/scripts/bundle-inputs.mjs` to register `docs-markdown` in `templateDirectories`; retain the existing bundle-assets copying mechanism.
 
 **Steps:**
 
@@ -91,7 +91,7 @@ All phases run sequentially (`oat_plan_parallel_groups: []`). p02 consumes p01's
 4. Produce deterministic managed root Documentation guidance naming the literal root, Markdown tooling, authored index, and contributing path. Extend existing result reporting without site install/dev/build commands, package discovery/dependencies, root package/Turbo patches, or framework files.
 5. Preserve Fumadocs/MkDocs prompts, replacement behavior, and results, including explicitly authorized framework initialization over configured Markdown.
 
-**Verify:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/docs/init/resolve-options.test.ts src/commands/docs/init/scaffold.test.ts src/commands/docs/init/index.test.ts src/commands/docs/init/integration.test.ts src/commands/docs/init/docs-commands.test.ts src/commands/docs/init/root-package.test.ts src/commands/docs/init/mkdocs-compat.test.ts` and CLI type-check. Fresh default/custom roots produce literal config and meaningful pages/guidance; package files remain unchanged; unsafe/config conflicts fail before writes; framework controls retain existing behavior.
+**Verify:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/docs/init/resolve-options.test.ts src/commands/docs/init/scaffold.test.ts src/commands/docs/init/index.test.ts src/commands/docs/init/integration.test.ts src/commands/docs/init/docs-commands.test.ts src/commands/docs/init/root-package.test.ts src/commands/docs/init/mkdocs-compat.test.ts` and CLI type-check. Fresh default/custom roots produce literal config and meaningful pages/guidance; package files remain unchanged; unsafe/config conflicts fail before writes; framework controls retain existing behavior. Run `pnpm build`; verify `node packages/cli/scripts/bundle-inputs.mjs --list templateDirectories` includes `docs-markdown` and the built `packages/cli/assets/templates/docs-markdown/` contains both `index.md` and `contributing.md`.
 
 **Commit:** `feat(p02-t01): bootstrap plain markdown documentation`.
 
@@ -118,7 +118,7 @@ All phases run sequentially (`oat_plan_parallel_groups: []`). p02 consumes p01's
 
 **Steps:** Offer Markdown explicitly. Keep plain-doc evidence detection in bootstrap preflight with config authoritative and framework evidence first. A root README alone is insufficient; empty targets remain fresh setup. Lead existing authored trees to adopt/audit, call explicit CLI adoption, and delegate content repairs to analyze/apply. Skip app/package-manager/site-build questions for Markdown while retaining context/Contents/metadata/link expectations. Config inspection, instructions, and walkthrough distinguish authored entrypoint from optional manifests. Do not scaffold docs-root AGENTS or modify general `oat init` detection/config.
 
-**Verify:** `pnpm oat:validate-skills`, `pnpm test:skills`, and `pnpm test:smoke`. Run any newly added exact test file with `node --test <new path>` first. Inspect fresh/populated plain-doc workflow commands against branch CLI in temporary repositories and record routing/audit handoff. Adoption must not claim full OAT conformity solely from config and guidance.
+**Verify:** Run `pnpm build` first to refresh the changed CLI and bundled assets, then `pnpm oat:validate-skills`, `pnpm test:skills`, and `pnpm test:smoke`. Run any newly added exact test file with `node --test <new path>` first. Inspect fresh/populated plain-doc workflow commands against branch CLI in temporary repositories and record routing/audit handoff. Adoption must not claim full OAT conformity solely from config and guidance.
 
 **Commit:** `feat(p03-t01): offer markdown in docs bootstrap workflow`.
 
@@ -172,7 +172,7 @@ All phases run sequentially (`oat_plan_parallel_groups: []`). p02 consumes p01's
 
 ## Reviews
 
-Existing scaffold rows are preserved. Quick mode requires no spec; original design review and approved revisions are recorded in `reviews/design-consensus-handoff.md`. The pending design row does not claim re-review of the revised design. Plan review returned two Medium findings; user approval of the proposed artifact edits is pending and readiness remains disabled.
+Existing scaffold rows are preserved. Quick mode requires no spec; original design review and approved revisions are recorded in `reviews/design-consensus-handoff.md`. The pending design row does not claim re-review of the revised design. Plan review returned two Medium findings; user approved both artifact edits and they are applied; re-review is pending and readiness remains disabled.
 
 | Scope  | Type     | Status   | Date       | Artifact                     | Reviewed Head                            | Invocation | Gate Target |
 | ------ | -------- | -------- | ---------- | ---------------------------- | ---------------------------------------- | ---------- | ----------- |
@@ -187,9 +187,9 @@ Existing scaffold rows are preserved. Quick mode requires no spec; original desi
 
 Record full reviewed heads and invocation provenance for actual reviews. Preserve all rows and unknown trailing cells. Mark `passed` only for a clean result; disposition residual findings before readiness.
 
-### Plan Review Disposition Pending
+### Plan Review Dispositions
 
-Automatic plan review: 0 Critical, 0 High, 2 Medium, 0 Low. Root recommends applying M1 (build before p03 smoke/CLI walkthrough) and M2 (explicit Markdown bundle inventory ownership and verification). See `reviews/plan-auto-handoff.md`. No edits applied yet; retained quick-start gate has not run.
+Automatic plan review: 0 Critical, 0 High, 2 Medium, 0 Low. User approved M1 (build before p03 smoke/CLI walkthrough) and M2 (explicit Markdown bundle inventory ownership and verification); both are resolved in the plan. See `reviews/plan-auto-handoff.md`. Re-review pending; retained quick-start gate has not run.
 
 ## Implementation Complete
 

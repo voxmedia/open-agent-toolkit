@@ -30,3 +30,7 @@ These are implementation-stage commands, not tests to run for this prose-only re
 - `node packages/cli/scripts/bundle-inputs.mjs --list templateDirectories`
 
 After user-approved artifact edits, rerun structured plan review within the configured retry bound, then run and disposition the retained quick-start lifecycle gate. Preserve all existing review rows.
+
+## Approved Edits
+
+On 2026-10-01 the user approved both M1 and M2. Both proposed edits were applied to plan.md. Re-review attempt 1 of the two-retry bound is pending. The original findings above remain historical evidence.
