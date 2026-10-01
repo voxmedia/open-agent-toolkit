@@ -84,6 +84,10 @@ target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:1,low:
 
 bw3-p03-outcome: phase p03 passed (Codex gate ok after the complexity-review simplification); fix-loop count 5 (p03-t06..t10), including an operator-extended round and an operator-approved simplification.
 
+### 2026-10-01 · structural · oat gate review · p04
+
+target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:1,low:1 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-3/reviews/p04-review-2026-10-01T180727Z.md run=8c951355-42cc-421b-b4a8-126330068b4d
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
