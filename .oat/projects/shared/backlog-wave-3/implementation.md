@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
-oat_current_task_id: p05-t01
+oat_current_task_id: p04-t06
 oat_generated: false
 ---
 
@@ -29,11 +29,11 @@ oat_generated: false
 | Phase 1 | complete    | 5     | 5/5       |
 | Phase 2 | complete    | 6     | 6/6       |
 | Phase 3 | complete    | 10    | 10/10     |
-| Phase 4 | in_progress | 5     | 5/5       |
+| Phase 4 | in_progress | 6     | 5/6       |
 | Phase 5 | pending     | 6     | 0/6       |
 | Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 26/35 tasks completed
+**Total:** 26/36 tasks completed
 
 ---
 
@@ -188,6 +188,11 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** 06051d26f
+
+### Task p04-t06: (review) Close p04 gate findings M1, L1
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -470,6 +475,12 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   (no-op trace step removed), L2 (comment placement), L3 (`nextOwner` names
   `approval: approved` or `not_required`); three new prompt sites mapped `NG`;
   2165 tests pass.
+
+- Phase gate (`codex-6-sol-xhigh`) at `5033a7f56`:
+  `reviews/archived/p04-review-2026-10-01T180727Z.md` status `ok`, 0
+  Critical/High, 1 Medium (a failed snapshot can name a post-approval step
+  before approval), 1 Low (docs say autonomous stale handling stops).
+  Addressed now as `p04-t06`.
 
 <!-- orchestration-runs-end -->
 

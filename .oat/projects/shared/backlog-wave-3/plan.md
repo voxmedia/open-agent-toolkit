@@ -1157,6 +1157,38 @@ Expected: exit 0.
 
 ---
 
+### Task p04-t06: (review) Close p04 gate findings M1, L1
+
+Source: `reviews/archived/p04-review-2026-10-01T180727Z.md` (Codex phase gate,
+`ok`: 0 Critical/High, 1 Medium, 1 Low).
+
+**Step 1: Fix**
+
+- M1: in the failed-snapshot branch (`closeout-invariant.ts` around 338),
+  choose the next owner in approval-aware order: pending pre-approval work,
+  then the pending approval boundary, then pending post-approval work, then
+  sequence-status repair; never name a post-approval step while approval is
+  pending. Add the gate's fixture as a command-boundary regression (all
+  pre-approval steps complete, `approval: pending`, `status: failed`, pending
+  post-approval `retro`).
+- L1: align `apps/oat-docs/docs/workflows/projects/implementation-execution.md`
+  (around 331) and `lifecycle.md` (around 70): an autonomous run that finds a
+  stale generation persists `stale` and starts a new gate run; it refuses only
+  an attempted waiver write.
+
+**Step 2: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli build`,
+`HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project`,
+`pnpm --filter oat-docs check`.
+Expected: exit 0.
+
+**Step 3: Commit**
+
+`fix(p04-t06): close p04 gate findings`
+
+---
+
 ## Phase 5: Small fixes
 
 Backlog: `BL-260928-keep-instructions-sync-force`,
@@ -1637,7 +1669,7 @@ breaking changes must be named in the title:
 | plan   | artifact | fixes_completed | 2026-10-01 | reviews/artifact-plan-review-2026-10-01T063044Z.md | -                                        | gate       | codex-6-sol-xhigh |
 | p01    | code     | passed          | 2026-10-01 | reviews/archived/p01-review-2026-10-01T114001Z.md  | 91b1dde7c5f589226a852c41da4ba80fb0de012c | gate       | codex-6-sol-xhigh |
 | p02    | code     | passed          | 2026-10-01 | reviews/archived/p02-review-2026-10-01T122403Z.md  | 4fa0c5f3258f73adfc0a78f21596af11ffa789b7 | gate       | codex-6-sol-xhigh |
-| p04    | code     | received        | 2026-10-01 | reviews/p04-review-2026-10-01T180727Z.md           | 5033a7f56afd098a96037474e8318012e3c6c51d | gate       | codex-6-sol-xhigh |
+| p04    | code     | fixes_added     | 2026-10-01 | reviews/archived/p04-review-2026-10-01T180727Z.md  | 5033a7f56afd098a96037474e8318012e3c6c51d | gate       | codex-6-sol-xhigh |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
@@ -1708,11 +1740,11 @@ criterion.
 - Phase 1: 5 tasks - Template resolver
 - Phase 2: 6 tasks - Fumadocs navigation
 - Phase 3: 10 tasks - Recon publication and Codex recovery
-- Phase 4: 5 tasks - Lifecycle closeout guards
+- Phase 4: 6 tasks - Lifecycle closeout guards
 - Phase 5: 6 tasks - Small fixes
 - Phase 6: 3 tasks - Release fan-in
 
-**Total: 35 tasks**
+**Total: 36 tasks**
 
 Ready for code review and merge.
 
