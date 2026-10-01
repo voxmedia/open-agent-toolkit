@@ -1,3 +1,8 @@
+import {
+  commonReviewSourceFields,
+  reviewSourceKindFields,
+} from './review-binding.mjs';
+
 export const SCHEMA_VERSION = 1;
 export const MANIFEST_SCHEMA_VERSION = 2;
 
@@ -1806,36 +1811,6 @@ function validateDossier(value, errors) {
     requiredArray(value, key, errors);
   }
 }
-
-const reviewSourceKindFields = {
-  repository: ['root', 'revision', 'dirty', 'contentHashes'],
-  file: ['path', 'contentHash'],
-  url: ['url', 'capturePath', 'captureDigest', 'validatorState'],
-  'command-output': [
-    'argv',
-    'cwd',
-    'exitStatus',
-    'outputPath',
-    'outputDigest',
-    'environmentNames',
-  ],
-  'connected-resource': [
-    'system',
-    'resourceId',
-    'resourceVersion',
-    'retrievalToken',
-    'capturePath',
-    'captureDigest',
-  ],
-};
-const commonReviewSourceFields = [
-  'id',
-  'kind',
-  'available',
-  'authority',
-  'observedAt',
-  'validationState',
-];
 
 function validateReviewBriefSource(source, index, errors) {
   const path = `$.sources[${index}]`;

@@ -12,6 +12,7 @@ import {
   profiles,
   validateArtifactShape,
 } from './lib/contracts.mjs';
+import { reviewBriefBindsClaim } from './lib/review-binding.mjs';
 import { normalizeManifestRouting } from './lib/routing.mjs';
 import {
   assertCanonicalRoot,
@@ -1316,46 +1317,6 @@ function resolveTerminalReconciliation(
     priorLedger,
     outputLedger: outputLedgerEntry?.value ?? null,
   };
-}
-
-function reviewBriefBindsClaim(brief, reviewKind, claim, ledger, manifest) {
-  const projected =
-    reviewKind === 'semantic' || reviewKind === 'redundant-verification'
-      ? brief?.claims?.find((item) => item.id === claim.id)
-      : reviewKind === 'adversarial' ||
-          reviewKind === 'contradiction-resolution'
-        ? brief?.provisionalStatements?.find((item) => item.id === claim.id)
-        : brief?.claims?.find((item) => item.id === claim.id);
-  if (!projected || projected.statement !== claim.statement) return false;
-  if (reviewKind !== 'semantic' && reviewKind !== 'redundant-verification') {
-    return Object.keys(projected).sort().join(',') === 'id,statement';
-  }
-  const evidenceById = new Map(ledger.evidence.map((item) => [item.id, item]));
-  const expectedEvidence = claim.evidence.map((link) => {
-    const evidence = evidenceById.get(link.evidenceId);
-    return evidence
-      ? {
-          id: evidence.id,
-          sourceId: evidence.sourceId,
-          displayExcerpt: evidence.displayExcerpt,
-          locator: evidence.locator,
-        }
-      : null;
-  });
-  if (
-    expectedEvidence.some((item) => !item) ||
-    hashCanonicalJson(projected.evidence) !==
-      hashCanonicalJson(expectedEvidence)
-  ) {
-    return false;
-  }
-  const sourceIds = new Set(expectedEvidence.map((item) => item.sourceId));
-  const expectedSources = manifest.sources.filter((source) =>
-    sourceIds.has(source.id),
-  );
-  return (
-    hashCanonicalJson(brief.sources) === hashCanonicalJson(expectedSources)
-  );
 }
 
 function validateReviewBindings(
