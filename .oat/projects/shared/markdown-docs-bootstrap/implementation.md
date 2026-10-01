@@ -3,24 +3,24 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
-oat_current_task_id: p03-t01
+oat_current_task_id: p02-t03
 oat_generated: false
 ---
 
 # Implementation: markdown-docs-bootstrap
 
-Phase p01 is complete after independent review: 4/9 tasks completed. Fresh Markdown initialization is also implemented. Both p02 tasks are implemented, with phase verification/review pending. Next planned task p03-t01; the overall implementation remains in progress.
+Phase p01 is complete after independent review. Four of ten tasks are complete. Phase p02 review found one valid Medium navigation defect; p02-t03 fixes it before phase acceptance. Next task p02-t03; final HiLL remains p04.
 
 ## Progress Overview
 
 | Phase | Status      | Tasks | Completed |
 | ----- | ----------- | ----- | --------- |
 | p01   | complete    | 2     | 2/2       |
-| p02   | in_progress | 2     | 2/2       |
+| p02   | in_progress | 3     | 2/3       |
 | p03   | pending     | 3     | 0/3       |
 | p04   | pending     | 2     | 0/2       |
 
-**Total:** 4/9 tasks completed
+**Total:** 4/10 tasks completed
 
 ## Phase 1: Shared content and guidance contracts
 
@@ -57,6 +57,13 @@ Phase p01 is complete after independent review: 4/9 tasks completed. Fresh Markd
 **Commit:** b224018c8d8cafe23827286352ed33db008d47ad
 **Outcome:** Plan-permitted internal markdown.ts helper owns read-only planning, literal/canonical target and config validation, actual Contents mapping with existing exclusion matcher, exclusive missing-baseline writes, preserved/malformed-content reporting and partial-write evidence. Explicit --adopt preserves content/local instructions; repeats converge. Command-local --dry-run exposes planned files/config plus shared read-only guidance preview; no scaffold/config/upsert mutations.
 **Verification:** pnpm build exit 0 (CLI executed, 4 unchanged dependency cache replays); declared focused 4-file suite 122 tests, CLI type-check/lint, exact five-file formatting and diff checks each exit 0. Combined 10-file phase suite 194 tests passed before final lint-only edits; final focused suite and 13 real built-CLI controls repeated after edits. Dry-run/preservation guard neutralization causes intended byte/tree failures; exact restored sources pass. Pre-commit prevention fixed actual Commander --dry-run wiring missed by old harness and two lint issues; recovery 0/10.
+
+### Task p02-t03: (review) Encode Markdown adoption link destinations
+
+**Status:** pending
+**Commit:** -
+**Outcome:** M1 accepted; encoded filename destinations required.
+**Verification:** Not run
 
 ## Phase 3: Bootstrap workflow and docs consumers
 
@@ -824,3 +831,10 @@ Accepted handle `/root/markdown_p02_review_pinned`, exact model/effort retained,
 #### p02 independent review received
 
 Root read the complete review and validated scope, full reviewed head, range and severity lists. Findings: 0 Critical, 0 High, 1 Medium, 0 Low. Exactly one Reconnaissance: not-attempted signal; no review-local orchestration or reconnaissance-log append. M1 is valid: encodeURI preserves URI query/fragment delimiters, breaking actual file navigation. Convert to a Minor bounded p02 fix task before phase acceptance. Reviewer independently executed 194 tests/10 files, direct CLI build, types and lint plus existing public controls; archive-wide Turbo build environment limitation remains disclosed, with full repository gates pending p04.
+
+### Review Received: p02
+
+**Date:** 2026-10-01
+**Review artifact:** reviews/archived/p02-review-2026-10-01T125830Z.md
+**Findings:** 0 Critical, 0 High, 1 Medium, 0 Low.
+**New tasks added:** p02-t03. M1 convert to task; Minor scope; working filename links are required by the approved actual-Contents contract. No design drift, deferrals or rejected findings. Next: execute p02-t03 on the accepted phase handle, update this bound event to fixes_completed, then independent re-review.

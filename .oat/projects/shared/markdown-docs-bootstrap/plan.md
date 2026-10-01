@@ -112,6 +112,18 @@ All phases run sequentially (`oat_plan_parallel_groups: []`). p02 consumes p01's
 
 **Commit:** `feat(p02-t02): adopt markdown docs additively with dry-run`.
 
+### Task p02-t03: (review) Encode Markdown adoption link destinations
+
+**Files:** Modify `packages/cli/src/commands/docs/init/markdown.ts` and `integration.test.ts` only.
+
+**Finding:** M1 from `reviews/archived/p02-review-2026-10-01T125830Z.md`; `encodeURI` preserves query/fragment delimiters and creates broken links for actual authored filenames and child indexes. Root agrees; Task Scope: Minor.
+
+**Steps:** Encode each relative path segment as filename data while preserving slash separators. Escape characters that can terminate Markdown destinations, including parentheses. Preserve authored bytes and ordinary relative links. Add a public adoption regression with query/fragment characters, parentheses and a child directory index; resolve generated destinations through an independent URI reader and verify they address the actual existing files.
+
+**Verify:** Build before the real CLI probe. Run the p02 ten-file direct Vitest suite and CLI type-check/lint. Reproduce the original filename defect with the old encoder, then verify encoded destinations and unchanged existing bytes with the fix. Record exact probe and categorical outcomes; no own-module mock as proof.
+
+**Commit:** `fix(p02-t03): encode markdown adoption link destinations`.
+
 ## Phase 3: Bootstrap workflow and docs consumers
 
 ### Task p03-t01: Offer Markdown throughout bootstrap
@@ -194,7 +206,7 @@ Existing scaffold rows and historical review events are preserved. Quick mode re
 
 Record full reviewed heads and invocation provenance for actual reviews. Preserve all rows and unknown trailing cells. Mark `passed` only for a clean result; disposition residual findings before readiness.
 
-| p02 | code | received | 2026-10-01 | reviews/p02-review-2026-10-01T125830Z.md | 95250d626e6fb7bf4f382be4d4e10eae18e330c0 | auto | - |
+| p02 | code | fixes_added | 2026-10-01 | reviews/archived/p02-review-2026-10-01T125830Z.md | 95250d626e6fb7bf4f382be4d4e10eae18e330c0 | auto | - |
 
 ### Plan Review Dispositions
 
@@ -207,7 +219,7 @@ Source pointers retained for the already-planned consumer inventory: index gener
 
 ## Implementation Complete
 
-Not started. Planned scope: 4 sequential phases, 9 atomic tasks — p01 (2), p02 (2), p03 (3), p04 (2). Replace this with a completion summary only after implementation and required reviews/gates pass.
+Not started. Planned scope: 4 sequential phases, 10 atomic tasks — p01 (2), p02 (3), p03 (3), p04 (2). Replace this with a completion summary only after implementation and required reviews/gates pass.
 
 ## References
 
