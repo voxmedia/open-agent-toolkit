@@ -248,6 +248,38 @@ Expected: exit 0.
 
 ---
 
+### Task p01-t05: (review) Close p01 gate findings M1, L1
+
+Source: `reviews/archived/p01-review-2026-10-01T114001Z.md` (Codex phase gate,
+`ok`: 0 Critical/High, 1 Medium, 1 Low).
+
+**Step 1: Fix**
+
+- M1: add `Bash(oat template:*)` to the `allowed-tools` of
+  `.agents/skills/oat-project-design/SKILL.md`,
+  `.agents/skills/oat-project-spec/SKILL.md`, and
+  `.agents/skills/oat-project-plan/SKILL.md`, and extend the p01-t04
+  allowlist contract test to cover them. Re-key any prompt site in
+  `.agents/docs/autonomy-contract.md` the edit changes. No further bumps.
+- L1: in `apps/oat-docs/docs/reference/file-locations.md` (around 41),
+  `apps/oat-docs/docs/cli-utilities/tool-packs.md` (around 531), and
+  `apps/oat-docs/docs/reference/troubleshooting.md` (around 274), limit the
+  precedence claim to project lifecycle and PJM templates; the ideas pack keeps
+  its scope-selected templates. Do not extend the resolver to nested names.
+
+**Step 2: Verify**
+
+Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation`,
+`pnpm oat:validate-skills`, `pnpm run check:skill-bumps`,
+`pnpm --filter oat-docs check`.
+Expected: exit 0.
+
+**Step 3: Commit**
+
+`fix(p01-t05): close p01 gate findings`
+
+---
+
 ## Phase 2: Fumadocs navigation
 
 Backlog: `BL-260718-support-fumadocs-in-oat-docs`.
@@ -1270,7 +1302,7 @@ breaking changes must be named in the title:
 | plan   | artifact | fixes_completed | 2026-10-01 | -                                                  | -                                        | auto       | -                 |
 | plan   | artifact | fixes_completed | 2026-10-01 | reviews/artifact-plan-review-2026-10-01T061917Z.md | -                                        | gate       | codex-6-sol-xhigh |
 | plan   | artifact | fixes_completed | 2026-10-01 | reviews/artifact-plan-review-2026-10-01T063044Z.md | -                                        | gate       | codex-6-sol-xhigh |
-| p01    | code     | received        | 2026-10-01 | reviews/p01-review-2026-10-01T114001Z.md           | 91b1dde7c5f589226a852c41da4ba80fb0de012c | gate       | codex-6-sol-xhigh |
+| p01    | code     | fixes_added     | 2026-10-01 | reviews/archived/p01-review-2026-10-01T114001Z.md  | 91b1dde7c5f589226a852c41da4ba80fb0de012c | gate       | codex-6-sol-xhigh |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
@@ -1338,14 +1370,14 @@ criterion.
 
 **Summary:**
 
-- Phase 1: 4 tasks - Template resolver
+- Phase 1: 5 tasks - Template resolver
 - Phase 2: 4 tasks - Fumadocs navigation
 - Phase 3: 5 tasks - Recon publication and Codex recovery
 - Phase 4: 4 tasks - Lifecycle closeout guards
 - Phase 5: 6 tasks - Small fixes
 - Phase 6: 3 tasks - Release fan-in
 
-**Total: 26 tasks**
+**Total: 27 tasks**
 
 Ready for code review and merge.
 

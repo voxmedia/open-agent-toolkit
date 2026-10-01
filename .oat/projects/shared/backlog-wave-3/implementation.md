@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
-oat_current_task_id: p02-t01
+oat_current_task_id: p01-t05
 oat_generated: false
 ---
 
@@ -26,14 +26,14 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 4     | 4/4       |
+| Phase 1 | in_progress | 5     | 4/5       |
 | Phase 2 | pending     | 4     | 0/4       |
 | Phase 3 | pending     | 5     | 0/5       |
 | Phase 4 | pending     | 4     | 0/4       |
 | Phase 5 | pending     | 6     | 0/6       |
 | Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 4/26 tasks completed
+**Total:** 4/27 tasks completed
 
 ---
 
@@ -60,6 +60,11 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** 294618df8
+
+### Task p01-t05: (review) Close p01 gate findings M1, L1
+
+**Status:** pending
+**Commit:** -
 
 ---
 
