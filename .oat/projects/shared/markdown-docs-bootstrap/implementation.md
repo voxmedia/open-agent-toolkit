@@ -3,13 +3,13 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
-oat_current_task_id: p03-t03
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
 # Implementation: markdown-docs-bootstrap
 
-Phases p01 and p02 are complete after independent reviews. Seven of ten tasks are complete; bootstrap and consumer guidance are implemented. Next p03-t03 documents the verified behavior. Final HiLL remains p04.
+Phases p01 and p02 are complete after independent reviews. Eight of ten tasks are complete; p03 bootstrap, consumer and docs tasks are implemented, pending phase verification and independent review. Next planned task p04-t01; final HiLL remains p04.
 
 ## Progress Overview
 
@@ -20,7 +20,7 @@ Phases p01 and p02 are complete after independent reviews. Seven of ten tasks ar
 | p03   | pending  | 3     | 0/3       |
 | p04   | pending  | 2     | 0/2       |
 
-**Total:** 7/10 tasks completed
+**Total:** 8/10 tasks completed
 
 ## Phase 1: Shared content and guidance contracts
 
@@ -85,10 +85,10 @@ Phases p01 and p02 are complete after independent reviews. Seven of ten tasks ar
 
 ### Task p03-t03: Document commands and index ownership
 
-**Status:** pending
-**Commit:** -
-**Outcome:** Not started
-**Verification:** Not run
+**Status:** completed
+**Commit:** 58f6772f0e302f5a8ec408b382156bcf651e403e
+**Outcome:** Twelve existing source pages document Markdown selection/config/adoption/dry-run, authored index/context ownership, explicit external manifests, preserved local instructions and framework behavior. CLI/config/reference/template inventories and instruction-sync aligned; Fumadocs manifest regenerated through its owning CLI. No added/moved pages; existing Contents labels updated. Source-backed delta traced to accepted p01/p02 behavior and actual init/config/output/bundle owners.
+**Verification:** Docs check 70 pages, exact formatting/check, diff, CLI regeneration nine top-level manifest entries and build:docs six uncached builds/73 static pages each exit 0. Twelve page metadata/105 relative-target checks pass; documented CLI examples pass fresh adoption preview/nonmutation, adoption/repeat no-change and genuine managed-guidance partial preview exit 1. No recovery or nested dispatch; phase verification/review pending.
 
 ## Phase 4: Integration, bundled release, and acceptance
 
@@ -1184,3 +1184,7 @@ Accepted exact-target canonical-role route /root/markdown_p03_pinned; awaiting r
 | User CLI/config/reference/instruction-sync docs             | p03-t03 pending; final inventory recheck required p04                                                                                                                                                                               |
 
 Walkthrough proof uses the executable p03 controls: fresh authored structure passes; adopted incomplete context remains authored with metadata/Contents/child-index recommendations; nested handbook keeps parent plus child docs/index; framework branch retains app/derived checks. It does not claim CLI probes execute an agent's prose workflow. Source-aware inspection provides the skill routing evidence separately.
+
+#### p03 docs task acceptance
+
+Root verified clean append-only 13-file task commit: docs-tooling/{add-docs-to-a-repo,commands,index,workflows}.md; cli-utilities/{configuration,tool-packs}.md; provider-sync/{commands,instruction-sync}.md; reference/{cli-reference,docs-index-contract,file-locations,oat-directory-structure}.md; generated apps/oat-docs/index.md. Explicit in-plan docs task authorizes these source-backed changes; no new approval required. Actual documented Fumadocs regeneration is the framework-equivalent nav step, not MkDocs nav sync. CLI examples and link checker retained in reviews/p03-walkthrough-controls.md. Root deliberate-testing review retains public behavior controls with independent URI/filesystem oracles; no own-module mock, no new prose-mirroring automated tests.
