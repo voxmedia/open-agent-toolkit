@@ -6,6 +6,8 @@ oat_last_updated: 2026-10-01
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_parallel_groups: []
+oat_plan_hill_phases: ['p04']
+oat_auto_review_at_hill_checkpoints: true
 oat_plan_source: quick
 oat_import_reference: null
 oat_import_source_path: null
@@ -16,7 +18,7 @@ oat_template: false
 
 # Implementation Plan: markdown-docs-bootstrap
 
-> Execute with `oat-project-implement` after quick-start review and readiness are complete. Implementation has not started.
+> Execute with `oat-project-implement` after quick-start review and readiness are complete. Implementation setup has started; production tasks remain pending.
 
 **Goal:** Offer plain Markdown docs bootstrap with `documentation.tooling: markdown`, authored index/context conventions, additive adoption, and nonmutating dry-run.
 
@@ -36,7 +38,7 @@ oat_template: false
 - [x] Completed plan artifact review and quick-start exit gate; all findings dispositioned
 - [x] Initialized implementation tracking for p01-t01 and committed readiness
 
-No implementation-phase HiLL choice has been confirmed. `oat_plan_hill_phases` is intentionally unset; implementation setup must resolve the effective policy without treating the former scaffold placeholder as a user choice. Lifecycle approvals and review gates are separate settings.
+Implementation setup resolved `workflow.hillCheckpointDefault: final` and `workflow.autoReviewAtHillCheckpoints: true`: stop after p04 with automatic final review. Standard root-owned phase reviews remain required; additional cross-runtime phase gates remain disabled.
 
 ## Parallelism
 
