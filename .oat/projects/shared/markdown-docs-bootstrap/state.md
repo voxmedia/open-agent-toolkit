@@ -18,7 +18,7 @@ oat_dispatch_policy:
   source: project-state
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: in_progress
+oat_phase_status: pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -81,11 +81,11 @@ oat_workflow_origin: native # native | imported
 #   failure: null
 #   updated_at: '2026-07-18T00:00:00Z'
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: ready # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/335' # tracked open PR
 oat_project_created: '2026-09-30T18:58:24.831Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-01T17:04:49.785Z'
+oat_project_state_updated: '2026-10-01T17:07:52.185Z'
 oat_generated: false
 oat_implement_exit_gate:
   disposition: passed
@@ -156,13 +156,13 @@ oat_post_implement_sequence:
 
 # Project State: markdown-docs-bootstrap
 
-**Status:** Tasks, final review and retained exit gate passed; configured closeout in progress
+**Status:** PR open for review; configured closeout and final p04 HiLL approval pending
 **Started:** 2026-09-30
 **Last Updated:** 2026-10-01
 
 ## Current Phase
 
-All eleven tasks and final lifecycle review complete. Refreshed retained exit gate received and passed; all findings settled with original counts retained. Written summary complete; documentation and PR closeout precede final p04 HiLL approval.
+Implementation — PR open; completion may run before or after merge.
 
 ## Artifacts
 
@@ -180,6 +180,8 @@ All eleven tasks and final lifecycle review complete. Refreshed retained exit ga
 - Final cross-runtime gate passed; both Low findings dispositioned as already-covered scope
 - Eleven task commits reconciled; full checks passed after metadata and literal-rendering repairs
 - Written summary complete; visual recap skipped by explicit user choice
+- ✓ PR created
+- ⧗ Awaiting human review
 
 ## Review Setup
 
@@ -198,4 +200,10 @@ None
 
 ## Next Milestone
 
-Complete configured documentation and PR steps, then request final p04 HiLL approval.
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- Complete before merge: run `oat-project-complete` now, then merge the PR.
+- Merge before completion: merge the PR, then run `oat-project-complete`.
+
+Final p04 HiLL approval remains pending under the configured implementation sequence.
