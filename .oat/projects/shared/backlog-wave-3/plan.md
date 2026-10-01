@@ -1727,7 +1727,7 @@ breaking changes must be named in the title:
 | p03    | code     | passed          | 2026-10-01 | reviews/archived/p03-review-2026-10-01T165604Z.md  | 2cb68863a5b6eb3ff54e9cb9176db401d7c9932d | gate       | codex-6-sol-xhigh |
 | p04    | code     | fixes_completed | 2026-10-01 | reviews/archived/p04-review-2026-10-01T174412Z.md  | 310f3902b8e4d869f0b437262f95b3deb661e708 | auto       | -                 |
 | p05    | code     | fixes_completed | 2026-10-01 | reviews/archived/p05-review-2026-10-01T191719Z.md  | b35e07d1e3924c6b2f8b14b704b6378bf7974f37 | auto       | -                 |
-| p06    | code     | pending         | -          | -                                                  | -                                        | -          | -                 |
+| p06    | code     | fixes_completed | 2026-10-01 | reviews/archived/p06-review-2026-10-01T195803Z.md  | 04a31caa1c163b5bd8ff1a3aa73ea9b9395fc183 | auto       | -                 |
 | final  | code     | pending         | -          | -                                                  | -                                        | -          | -                 |
 | spec   | artifact | pending         | -          | -                                                  | -                                        | -          | -                 |
 | design | artifact | pending         | -          | -                                                  | -                                        | -          | -                 |

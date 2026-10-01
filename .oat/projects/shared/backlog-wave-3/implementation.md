@@ -246,7 +246,7 @@ oat_generated: false
 
 **Status:** in_progress
 
-### Task p06-t01: Bump the lockstep public packages to 0.3.10
+### Task p06-t01: Bump the lockstep public packages to 0.3.11
 
 **Status:** completed
 **Commit:** 5cb25aa41
@@ -552,6 +552,27 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Phase p05 outcome: pass after one recovery, one review-fix task, and one
   gate-fix task (p05-t07, p05-t08); 8/8 tasks.
 
+### Phase p06 dispatch
+
+- Request `bw3-p06-impl-1`: accepted and returned `DONE_WITH_CONCERNS`
+  (success invariants passed); target
+  `oat-phase-implementer-claude-claude-opus-5-5-high`; commits `5cb25aa41`
+  (lockstep 0.3.11), `6924afcf5` (13 items archived, curated note); p06-t03
+  Definition of Done all exit 0 uncached (see Test Results); recovery 0/10.
+  `Dispatch: scope=p06 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
+- Step 7a ledger commit `04a31caa1`.
+- Request `bw3-p06-review-1` (`oat-reviewer-claude-claude-opus-5-5-high`,
+  reconnaissance not-attempted) at `04a31caa1`:
+  `reviews/archived/p06-review-2026-10-01T195803Z.md`, 0 Critical/High,
+  1 Medium (PR Requirements not copied into the hand-off; Final Summary still
+  a template), 2 Low (stale 0.3.10 ledger heading; the BL-260829 archive left a
+  broken link in `review-gate-integrity/discovery.md` and rewrote one line of
+  the Wave 2 recap's `fact-base.md` but not `fact-base.json`). All fixed by
+  root: hand-off and Final Summary written, heading corrected, the discovery
+  link repointed to `archived/`, and the recap line reverted so both copies
+  match. BL-260829 evidence and the version bump were verified.
+  `Dispatch: scope=p06 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -584,6 +605,63 @@ boundary). The plan keeps its pre-review frontmatter until then.
 Operator disposition (2026-10-01): the operator chose "Proceed to implement",
 accepting the post-gate fixes without a third gate run. QS-12 resolved by
 explicit operator decision; the plan was then marked ready.
+
+### PR Requirements (hand-off to oat-project-pr-final)
+
+The release workflow publishes PR titles only in its release notes, so the
+breaking changes must be named in the title:
+
+- Title uses a Conventional Commit breaking marker, for example
+  `feat!: template resolver, Fumadocs nav sync, recon publication fixes, validate-only dispatch record (wave 3, lockstep 0.3.11)`.
+- The body opens with a **Behavior changes** callout:
+  - project scaffolding now prefers a repository template over a user template
+    (repository, user, bundle), and lifecycle skills resolve templates through
+    `oat template resolve`;
+  - `oat project dispatch record --project` is removed (validate-only);
+  - recon: briefs built by the production helpers now bind (multi-source
+    briefs no longer fail `REVIEW_BRIEF_MISMATCH`), a material coverage gap no
+    longer fails publication once its claims are downgraded, and
+    `unresolvedIssues` entries may be scoped to claim IDs. Legacy string issues
+    are read as global, so a 1.1.5 packet that failed on
+    `REVIEW_DISPOSITION_MISMATCH` (the #333 packet among them) still keeps every
+    covered claim below verified after re-running reconciliation; only newly
+    produced scoped issues downgrade selectively;
+  - recon `packet.md` gains a Review Downgrades section listing every claim a
+    review kept below verified (a claim a review omitted is listed as "not
+    reviewed"), and
+    `retryLimit` now means pre-acceptance admission retries with at most one
+    retry per lane;
+  - recon publication is stricter about brief integrity: the validator
+    rebuilds each brief with the production generator and rejects any
+    difference, so an injected claim, note, or source in any brief type fails
+    with `REVIEW_BRIEF_MISMATCH`;
+  - `oat docs nav sync` writes Fumadocs `meta.json`;
+  - `oat project complete-state` refuses a configured closeout with a missing
+    or incomplete snapshot; exit-gate waivers are operator-only;
+  - test-only package changes no longer require the lockstep bump.
+- Breaking CLI grammar, per `.github/PULL_REQUEST_TEMPLATE.md` and
+  `apps/oat-docs/docs/contributing/code.md`: tick the template's grammar-change
+  box and include
+  `BREAKING: oat project dispatch record no longer accepts --project (validate-only)`,
+  Before `oat project dispatch record --event-file - --project <path> --json`,
+  After `oat project dispatch record --event-file - --json`, and the migration
+  action (drop `--project`; the `implementation.md` dispatch rows remain the
+  record).
+- The body lists the other user-visible changes (`--force` link guard, YAML
+  error locations, quick discovery routing, packs docs).
+
+Additional PR body notes from implementation:
+
+- `oat project complete-state` now refuses `claude-effort-levels` (its
+  hand-written closeout snapshot is malformed) until it is repaired, and routes
+  legacy `pr_open` projects with no snapshot (such as `migrate-skill-versions`)
+  back to `oat-project-implement`.
+- recon: the omission-gap rule built in review rounds was removed by the
+  operator-approved complexity review; a claim a review omits stays
+  `unresolved` and is listed as "not reviewed".
+- Follow-ups filed: `BL-261001-run-a-complexity-review-when`,
+  `BL-261001-fail-closed-when-bundle-assets`,
+  `BL-261001-resolve-the-summary-template`, `BL-261001-route-quick-mode-plan`.
 
 ## Implementation Log
 
@@ -671,24 +749,80 @@ tests with `--only`, so `bundle-assets.sh` never ran under an isolated `HOME`
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- **Template resolver (lead).** One resolver in repository, user, bundle order
+  (`DR-260927-templates-resolve-repository`) shared by the project scaffold,
+  promote, PJM, backlog, and decision commands, and a new
+  `oat template resolve <name> [--json] [--output <path>]`. Fourteen lifecycle
+  skills copy templates through it, so user-scope-only installs work; the
+  Cursor-cloud skill's template order matches. Skills that run it gained
+  `Bash(oat template:*)`.
+- **Fumadocs navigation.** `oat docs nav sync` detects the framework and, for
+  Fumadocs, writes strict `meta.json` from each `index.md` Contents map
+  (cross-folder links as link entries, frontmatter or H1 titles, semantic
+  no-op on re-run, `.mdx` targets, `root: true` folders handled against the
+  real loader). `--check` reports drift and unlisted pages without writing and
+  runs in `apps/oat-docs` `prebuild`, so `build:docs` fails on stale
+  navigation. `apps/oat-docs` has 11 committed `meta.json` files.
+- **Recon publication (#333).** The brief generator, reconciler, and validator
+  agree: the validator rebuilds every brief with the production generator and
+  compares it; a material coverage gap no longer fails publication once its
+  claims are downgraded; `unresolvedIssues` may be scoped to claim IDs (strings
+  read as global); `packet.md` lists every review downgrade. Validation is
+  linear in claim count. The Codex agent-limit note lives in the Codex provider
+  reference with a recon pointer, and `retryLimit` means at most one
+  pre-acceptance admission retry per lane.
+- **Lifecycle closeout guards.** `oat-project-next` recomputes v2 fingerprints
+  with the implement exclusions; `oat project closeout-check` reports the
+  closeout invariant (configured, autonomous, or lite) and
+  `oat project complete-state` refuses a missing or incomplete snapshot;
+  implement, next, and complete route through the check. Exit-gate waivers are
+  append-only, operator-only (never under `OAT_AUTONOMOUS`), apply to v1 and
+  v2, and are offered interactively before a generation is persisted stale.
+- **Small fixes.** `instructions sync --force` never overwrites a `CLAUDE.md`
+  that an `AGENTS.md` resolves to (symlink, chain, hard link, or a symlink to a
+  hard link); `oat project dispatch record` is validate-only (`--project` and
+  journal code removed); test-only package changes, including in dependency
+  packages, skip the lockstep bump; skill validation reports YAML error
+  locations and key types; quick-mode discovery routes to quick-start; the
+  packs redaction docs claim is narrowed.
+- Lockstep packages bumped to 0.3.11 (`main` took 0.3.10 for #334 mid-wave);
+  thirteen backlog items archived, including `BL-260829` from this wave's live
+  evidence; `BL-260806` closes after this project's own closeout.
 
-**Behavioral changes (user-facing):**
-
-- {bullet}
+**Behavioral changes (user-facing):** see the PR Requirements hand-off above.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `packages/cli/src/commands/shared/template-source.ts`,
+  `packages/cli/src/commands/template/**` - template resolution
+- `packages/cli/src/commands/docs/nav/**` - Fumadocs writer and `--check`
+- `.agents/skills/recon/scripts/**` - brief rebuild-and-compare, issues,
+  coverage, Review Downgrades
+- `packages/cli/src/commands/project/closeout-check/**`,
+  `packages/cli/src/commands/project/complete-state/**`,
+  `.agents/skills/oat-project-implement/references/completion-and-closeout.md` -
+  closeout guards and waivers
+- `packages/cli/src/commands/instructions/**`,
+  `packages/cli/src/commands/project/dispatch/**`,
+  `packages/cli/src/release/**`, `tools/release/release-utils.ts`,
+  `packages/cli/src/validation/skills.ts` - small fixes
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- Failing-first tests for every behavior change and neutralize-and-restore
+  proofs per clause for negative controls; branch-CLI probes in scratch repos.
+- Opus 5.5 high root review and Codex `codex-6-sol-xhigh` gate on every phase;
+  p03 went three root rounds, an operator-extended fourth, and an
+  operator-requested complexity-review simplification before its gate passed.
+- Full Definition of Done at `6924afcf5`, all gates exit 0 uncached (see Test
+  Results).
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- The recon omission-gap rule and field-by-field brief binding were replaced by
+  rebuild-and-compare after the complexity review; see Deviations.
+- `main` advanced mid-wave (#334); the branch merged it, re-bumped collided
+  skills, and moved the lockstep target to 0.3.11.
 
 ## References
 
