@@ -685,10 +685,28 @@ describe('recordProjectDispatch', () => {
     });
   });
 
-  it('refuses a fallback link, whose trigger record it has no journal to read', async () => {
+  it('refuses fallback-link and fallback-claim as unknown event kinds', async () => {
+    // Both kinds only existed to publish journal lineage; the validate-only
+    // command has no event kind for them.
     await expect(
       recordProjectDispatch({ input: fallbackInput('dispatch-fallback-1') }),
-    ).rejects.toThrow(/Fallback requires the rejected trigger record/);
+    ).rejects.toThrow(/Invalid discriminator value/);
+    await expect(
+      recordProjectDispatch({
+        input: {
+          record: genericRecord(),
+          event: {
+            kind: 'fallback-claim',
+            requestId: 'dispatch-native-1',
+            source: 'provider-wrapper',
+            claim: {
+              fallbackRequestId: 'dispatch-fallback-1',
+              claimedAt: '2026-09-02T00:00:02.000Z',
+            },
+          },
+        },
+      }),
+    ).rejects.toThrow(/Invalid discriminator value/);
   });
 
   it('rejects request traversal and sensitive stdin-shaped input', () => {

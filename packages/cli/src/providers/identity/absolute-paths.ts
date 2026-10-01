@@ -11,9 +11,10 @@
  *
  * Before this module there were two independent notions of
  * "looks like a path": a regex inside `redactDispatchMessage`, which only
- * scrubbed error text, and nothing at all on the persistence boundary. The
- * durable journal is committed to a shared repository, so a username or local
- * layout that reaches it is in git history permanently.
+ * scrubbed error text, and nothing at all on the record boundary. A validated
+ * record is printed verbatim and a caller may copy it into a committed
+ * artifact, so a username or local layout that reaches it can land in git
+ * history permanently.
  *
  * Message redaction and record sanitization now share this detector, because
  * the gap between them is precisely what allowed paths to be scrubbed from a
@@ -164,21 +165,4 @@ export function collectAbsolutePathViolations(
 export function assertNoAbsolutePath(value: unknown, path: string): void {
   const [first] = collectAbsolutePathViolations(value, path);
   if (first) throw new Error(first.message);
-}
-
-/**
- * The publication postcondition, scoped to what is actually guaranteed.
- *
- * It hard-fails on a path in an identity or control field, which is the half of
- * NFR1 that is enforceable. It deliberately does **not** claim that no absolute
- * path remains anywhere in the revision: prose redaction is best-effort, and a
- * postcondition that asserted more than the sanitizer can deliver would be a
- * false guarantee rather than a check.
- */
-export function assertJournalIdentityHasNoAbsolutePath(
-  identityFields: Readonly<Record<string, unknown>>,
-): void {
-  for (const [field, value] of Object.entries(identityFields)) {
-    assertNoAbsolutePath(value, `<journal>.${field}`);
-  }
 }
