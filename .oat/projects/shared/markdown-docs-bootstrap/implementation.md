@@ -171,7 +171,7 @@ Dispatch: scope=p01 action=implementation role=implementer producer=unknown prov
     "scope_reference": ".oat/projects/shared/markdown-docs-bootstrap/plan.md#phase-1-shared-content-and-guidance-contracts",
     "dispatch_mode": "background"
   },
-  "launch_status": "planned",
+  "launch_status": "blocked-before-start",
   "child_outcome": null,
   "configured_invocation_evidence": [
     "project-state:high",
@@ -192,3 +192,7 @@ Dispatch: scope=p01 action=implementation role=implementer producer=unknown prov
   "floor_satisfaction": "satisfied"
 }
 ```
+
+Native pre-start rejection: `unknown agent_type 'oat-phase-implementer-gpt-6-1-sol-high-3da8a37eed'`. No child started (`provesNoChildStarted: true`, `native-role-unavailable`). Canonical role resolved from loaded project scope, version 1.1.6, digest `sha256:a9c0b0be772025a6115005b6870ea9d5de4cb9e07c23790ff94dfac07fe6e005`.
+
+Target-preserving fresh child eligible: request `markdown-p01-pinned-20261001`, links rejected `markdown-p01-implement-20261001`; approximation true; explicit model gpt-6.1-sol, reasoning effort high, canonical role `.agents/agents/oat-phase-implementer.md`, fresh context, same scope, authority, deadline, retry/recovery budgets, and route. Native variant remains the resolver target; fresh payload uses default agent plus exact model/effort controls after the proven rejection.
