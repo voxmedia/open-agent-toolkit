@@ -210,6 +210,7 @@ function link(label: string, path: string): string {
 }
 
 async function buildContents(
+  repoRoot: string,
   appRoot: string,
   excludes: string[],
   advice: string[],
@@ -257,7 +258,15 @@ async function buildContents(
     } else if (entry.isDirectory() && !matcher.excludesDirectory(entry.name)) {
       const indexPath = `${entry.name}/index.md`;
       if (matcher.excludesFile(indexPath)) continue;
-      const index = await readBaseline(appRoot, join(appRoot, indexPath));
+      let index: string | null;
+      try {
+        index = await readBaseline(repoRoot, join(appRoot, indexPath));
+      } catch {
+        advice.push(
+          `${indexPath} is not a usable in-repository file; it was preserved and omitted from Contents. Run oat-docs-analyze for repair recommendations.`,
+        );
+        continue;
+      }
       if (index !== null) {
         links.push(link(humanizeAppName(entry.name), indexPath));
       } else if (await hasMarkdown(join(appRoot, entry.name), entry.name)) {
@@ -314,6 +323,7 @@ export async function planMarkdownDocs(
   const contents =
     index == null
       ? await buildContents(
+          options.repoRoot,
           appRoot,
           options.documentation?.excludes ?? [],
           auditAdvice,

@@ -1044,6 +1044,78 @@ describe('Markdown docs init public boundary', () => {
       expect(await readFile(join(root, 'docs', path), 'utf8')).toBe(content);
   });
 
+  it('adopts usable repository child aliases and preserves unusable optional indexes', async () => {
+    const root = await temporaryRepo();
+    const outside = await temporaryRepo();
+    await writeFile(join(root, 'shared.md'), '# Shared authored index\n');
+    await writeFile(
+      join(outside, 'external.md'),
+      '# External private content\n',
+    );
+    for (const child of [
+      'alias',
+      'ordinary',
+      'dangling',
+      'external',
+      'nonfile',
+    ])
+      await mkdir(join(root, 'docs', child), { recursive: true });
+    await symlink('../../shared.md', join(root, 'docs', 'alias', 'index.md'));
+    await writeFile(
+      join(root, 'docs', 'ordinary', 'index.md'),
+      '# Ordinary index\n',
+    );
+    await symlink('missing.md', join(root, 'docs', 'dangling', 'index.md'));
+    await symlink(
+      join(outside, 'external.md'),
+      join(root, 'docs', 'external', 'index.md'),
+    );
+    await mkdir(join(root, 'docs', 'nonfile', 'index.md'));
+    await writeFile(
+      join(root, 'docs', 'nonfile', 'index.md', 'keep.md'),
+      '# Preserve directory content\n',
+    );
+    const before = await snapshotTree(root);
+    const externalBefore = await snapshotTree(outside);
+    const preview = await runMarkdown(root, ['--adopt'], true);
+    expect(preview.exit).toBe(0);
+    expect(preview.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      auditAdvice: expect.arrayContaining(
+        ['dangling', 'external', 'nonfile'].map((child) =>
+          expect.stringContaining(
+            `${child}/index.md is not a usable in-repository file`,
+          ),
+        ),
+      ),
+    });
+    expect(await snapshotTree(root)).toEqual(before);
+    const adopted = await runMarkdown(root, ['--adopt']);
+    expect(adopted.exit).toBe(0);
+    const indexPath = join(root, 'docs', 'index.md');
+    const index = await readFile(indexPath, 'utf8');
+    const destinations = [...index.matchAll(/^- \[.*\]\(([^)]*)\)$/gm)].map(
+      (match) => match[1]!,
+    );
+    expect(destinations.sort()).toEqual([
+      'alias/index.md',
+      'contributing.md',
+      'ordinary/index.md',
+    ]);
+    expect(
+      await readFile(
+        fileURLToPath(new URL('alias/index.md', pathToFileURL(indexPath))),
+        'utf8',
+      ),
+    ).toBe('# Shared authored index\n');
+    const after = await snapshotTree(root);
+    for (const [path, bytes] of Object.entries(before))
+      expect(after[path], path).toBe(bytes);
+    expect(await snapshotTree(outside)).toEqual(externalBefore);
+    expect((await runMarkdown(root, ['--adopt'])).exit).toBe(0);
+    expect(await snapshotTree(root)).toEqual(after);
+  });
+
   it('adopts an existing empty directory and refuses unusable baseline entrypoints before writes', async () => {
     const root = await temporaryRepo();
     await mkdir(join(root, 'docs'));
