@@ -1,0 +1,841 @@
+<!doctype html>
+<!--
+  Neutral production shell. Worked content: ../examples/
+  TEMPLATE CONTRACT: THEME_CSS, TITLE, DESCRIPTION, EYEBROW, NAVIGATION, CONTENT, FOOTER
+  All replacement values are validated and escaped by the renderer.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Backlog wave 3: user-scope templates, Fumadocs navigation, and recon publication fixed</title>
+    <meta name="description" content="Recap of the backlog-wave-3 OAT project: what the operator asked for, what shipped across six phases, the decisions behind it, the review and test evidence, and what is left." />
+    <style>
+      :root {
+        --canvas: hsl(210 20% 98%);
+        --panel: hsl(0 0% 100%);
+        --panel-muted: hsl(210 16% 94%);
+        --border: hsl(210 14% 82%);
+        --ink: hsl(215 24% 16%);
+        --muted: hsl(215 12% 38%);
+        --accent: hsl(215 28% 32%);
+        --success: hsl(145 45% 28%);
+        --warning: hsl(38 70% 30%);
+        --danger: hsl(0 55% 36%);
+        --sans: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        --serif: ui-serif, Georgia, serif;
+        --mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+        --radius: 0.65rem;
+        --canvas: #f4f6f9;
+        --panel: #ffffff;
+        --panel-muted: #eef1f5;
+        --border: #d3d9e2;
+        --ink: #16202e;
+        --muted: #4a5568;
+        --accent: #2f56c9;
+        --accent-2: #0e7180;
+        --success: #157a54;
+        --warning: #965108;
+        --danger: #bd3a2c;
+        --sans: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        --serif: ui-serif, Georgia, serif;
+        --mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+        --radius: 8px;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        color-scheme: light dark;
+        scroll-behavior: smooth;
+      }
+      body {
+        margin: 0;
+        background: var(--canvas);
+        color: var(--ink);
+        font-family: var(--sans);
+        line-height: 1.6;
+      }
+      a {
+        color: var(--accent);
+      }
+      .wrap {
+        display: grid;
+        grid-template-columns: minmax(10rem, 14rem) minmax(0, 1fr);
+        gap: 2rem;
+        max-width: 74rem;
+        margin: auto;
+        padding: 2rem;
+      }
+      .toc {
+        position: sticky;
+        top: 2rem;
+        align-self: start;
+        max-height: calc(100dvh - 4rem);
+        overflow-y: auto;
+      }
+      .toc-label,
+      .eyebrow {
+        color: var(--muted);
+        font: 0.72rem/1.4 var(--mono);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+      .toc a {
+        display: block;
+        border-inline-start: 2px solid transparent;
+        padding: 0.3rem 0.7rem;
+        text-decoration: none;
+      }
+      .toc a.active {
+        border-inline-start-color: var(--accent);
+        font-weight: 650;
+      }
+      main {
+        min-width: 0;
+      }
+      h1,
+      h2,
+      h3 {
+        font-family: var(--serif);
+        line-height: 1.2;
+        text-wrap: balance;
+      }
+      h1 {
+        font-size: clamp(2rem, 5vw, 3.4rem);
+        margin-block: 0.5rem 1rem;
+      }
+      h2 {
+        border-block-end: 1px solid var(--border);
+        padding-block-end: 0.45rem;
+        scroll-margin-top: 1rem;
+      }
+      section {
+        margin-block: 2.5rem;
+      }
+      .cards,
+      .lanes {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+        gap: 1rem;
+      }
+      .card,
+      .lane,
+      .callout {
+        min-width: 0;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--panel);
+        padding: 1rem;
+        overflow-wrap: anywhere;
+      }
+      .callout {
+        border-inline-start: 0.25rem solid var(--accent);
+      }
+      .callout--tip,
+      .callout--note {
+        border-inline-start-color: var(--accent);
+      }
+      .callout--important {
+        border-inline-start-color: var(--success);
+      }
+      .callout--warning {
+        border-inline-start-color: var(--warning);
+      }
+      .callout--caution {
+        border-inline-start-color: var(--danger);
+      }
+      .callout__label {
+        color: var(--muted);
+        font: 0.72rem/1.4 var(--mono);
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      blockquote {
+        margin-inline: 0;
+        border-inline-start: 0.2rem solid var(--border);
+        padding-inline-start: 1rem;
+        color: var(--muted);
+      }
+      .task-list {
+        padding-inline-start: 0;
+        list-style: none;
+      }
+      .task-list li {
+        display: flex;
+        align-items: baseline;
+        gap: 0.5rem;
+      }
+      .task-list li > p {
+        margin-block: 0.2rem;
+      }
+      .timeline {
+        display: grid;
+        gap: 0.8rem;
+        padding-inline-start: 0;
+        list-style: none;
+      }
+      .timeline li {
+        display: grid;
+        grid-template-columns: minmax(7rem, 0.25fr) 1fr;
+        gap: 1rem;
+        border-inline-start: 0.2rem solid var(--accent);
+        padding-inline-start: 1rem;
+      }
+      .timeline time {
+        color: var(--muted);
+        font-family: var(--mono);
+      }
+      .table-scroll,
+      .diagram-scroll,
+      pre {
+        max-width: 100%;
+        overflow-x: auto;
+      }
+      .diagram-scroll > svg {
+        display: block;
+      }
+      pre {
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--panel-muted);
+        padding: 1rem;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        border-block-end: 1px solid var(--border);
+        padding: 0.6rem;
+        text-align: start;
+      }
+      code,
+      pre {
+        font-family: var(--mono);
+      }
+      :not(pre) > code {
+        border-radius: calc(var(--radius) / 2);
+        background: var(--panel-muted);
+        padding: 0.1em 0.3em;
+      }
+      figure {
+        margin-inline: 0;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--panel);
+        padding: 1rem;
+      }
+      figcaption {
+        margin-block-start: 0.5rem;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+      footer {
+        border-block-start: 1px solid var(--border);
+        color: var(--muted);
+        margin-block-start: 3rem;
+        padding-block-start: 1rem;
+      }
+      @media (max-width: 46rem) {
+        .wrap {
+          grid-template-columns: 1fr;
+          padding: 1rem;
+        }
+        .toc {
+          position: sticky;
+          top: 0;
+          z-index: 2;
+          display: flex;
+          gap: 0.25rem;
+          max-height: none;
+          overflow-x: auto;
+          background: var(--canvas);
+          border-block-end: 1px solid var(--border);
+          padding-block: 0.5rem;
+        }
+        .toc-label {
+          display: none;
+        }
+        .toc a {
+          flex: none;
+          white-space: nowrap;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <nav class="toc" aria-label="Page sections">
+        <div class="toc-label">OAT project recap · backlog-wave-3</div>
+        <a href="#original-request">What was asked</a>
+        <a href="#key-agent-decisions">Decisions that shaped it</a>
+        <a href="#as-built-architecture">As-built architecture</a>
+        <a href="#implementation-record">Implementation record</a>
+        <a href="#validation-evidence">Validation evidence</a>
+        <a href="#outcome">Outcome and follow-ups</a>
+      </nav>
+      <main>
+        <header>
+          <div class="eyebrow">OAT project recap · backlog-wave-3</div>
+          <h1>Backlog wave 3: user-scope templates, Fumadocs navigation, and recon publication fixed</h1>
+          <p>Recap of the backlog-wave-3 OAT project: what the operator asked for, what shipped across six phases, the decisions behind it, the review and test evidence, and what is left.</p>
+        </header>
+        <style>
+          @media (prefers-color-scheme: dark) {
+            :root {
+              --canvas: #111827;
+              --panel: #1f2937;
+              --panel-muted: #374151;
+              --border: #4b5563;
+              --ink: #f9fafb;
+              --muted: #d1d5db;
+              --accent: #93c5fd;
+              --accent-2: #5eead4;
+              --success: #86efac;
+              --warning: #fde047;
+              --danger: #fca5a5;
+            }
+          }
+          .lede {
+            max-width: 46rem;
+            font-size: 1.125rem;
+            color: var(--muted);
+          }
+          .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+            gap: 0.75rem;
+            margin-block: 1.25rem 0.5rem;
+          }
+          .stat {
+            min-width: 0;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--panel);
+            padding: 0.75rem 0.9rem;
+          }
+          .stat__value {
+            display: block;
+            font: 700 1.5rem/1.2 var(--sans);
+          }
+          .stat__label {
+            display: block;
+            color: var(--muted);
+            font-size: 0.85rem;
+            line-height: 1.35;
+          }
+          .stat--ok {
+            border-inline-start: 0.25rem solid var(--success);
+          }
+          .section-lede {
+            color: var(--muted);
+            max-width: 48rem;
+          }
+          .decisions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
+            gap: 1rem;
+          }
+          .decision {
+            min-width: 0;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--panel);
+            padding: 1rem 1.1rem;
+          }
+          .decision h3 {
+            margin-block: 0 0.6rem;
+            font-size: 1.08rem;
+          }
+          .decision p {
+            margin-block: 0.4rem;
+            font-size: 0.95rem;
+          }
+          .tag {
+            display: inline-block;
+            border-radius: 999px;
+            background: var(--panel-muted);
+            color: var(--muted);
+            font: 600 0.72rem/1.6 var(--mono);
+            letter-spacing: 0.04em;
+            padding: 0 0.55rem;
+          }
+          .table-scroll {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--panel);
+          }
+          .table-scroll table {
+            min-width: 36rem;
+            font-size: 0.93rem;
+          }
+          th {
+            background: var(--panel-muted);
+            font-size: 0.8rem;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+            color: var(--muted);
+          }
+          td:first-child {
+            font-weight: 600;
+            overflow-wrap: break-word;
+          }
+          .nowrap-first td:first-child {
+            white-space: nowrap;
+          }
+          .diagram-scroll {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--panel);
+          }
+          .diagram-scroll svg {
+            min-width: 46rem;
+            width: 100%;
+            height: auto;
+          }
+          .dg-lane {
+            fill: var(--panel-muted);
+            stroke: none;
+          }
+          .dg-lane-label {
+            fill: var(--muted);
+            font: 700 12px var(--mono);
+            letter-spacing: 0.08em;
+          }
+          .dg-node rect {
+            fill: var(--panel);
+            stroke: var(--accent);
+            stroke-width: 1.5;
+          }
+          .dg-node--new rect {
+            stroke: var(--accent-2);
+            stroke-width: 2.5;
+          }
+          .dg-node--gate rect {
+            stroke: var(--warning);
+            stroke-dasharray: 5 3;
+          }
+          .dg-node text {
+            fill: var(--ink);
+            font: 600 13px var(--sans);
+          }
+          .dg-node .dg-sub {
+            fill: var(--muted);
+            font: 400 11px var(--sans);
+          }
+          .dg-edge {
+            fill: none;
+            stroke: var(--muted);
+            stroke-width: 1.6;
+          }
+          .dg-edge-label {
+            fill: var(--muted);
+            font: italic 11px var(--sans);
+          }
+          .dg-arrow {
+            fill: var(--muted);
+          }
+          .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem 1.25rem;
+            color: var(--muted);
+            font-size: 0.85rem;
+            list-style: none;
+            padding: 0;
+          }
+          .swatch {
+            display: inline-block;
+            width: 0.9rem;
+            height: 0.9rem;
+            margin-inline-end: 0.35rem;
+            border: 2px solid var(--accent);
+            border-radius: 3px;
+            vertical-align: -0.1rem;
+          }
+          .swatch--new {
+            border-color: var(--accent-2);
+            border-width: 3px;
+          }
+          .swatch--gate {
+            border-color: var(--warning);
+            border-style: dashed;
+          }
+          .components {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+            gap: 0.9rem;
+            padding: 0;
+            list-style: none;
+          }
+          .components li {
+            min-width: 0;
+            border-inline-start: 0.25rem solid var(--accent);
+            background: var(--panel);
+            border-radius: var(--radius);
+            padding: 0.75rem 0.9rem;
+            font-size: 0.95rem;
+          }
+          .outcome-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+            gap: 1rem;
+          }
+          .outcome-grid h3 {
+            margin-block-start: 0;
+          }
+        </style>
+
+        <div class="stats" aria-label="Project at a glance">
+          <div class="stat stat--ok"><span class="stat__value">14</span><span class="stat__label">approved backlog items in one PR</span></div>
+          <div class="stat stat--ok"><span class="stat__value">38 / 38</span><span class="stat__label">plan tasks done across 6 sequential phases</span></div>
+          <div class="stat"><span class="stat__value">0.3.11</span><span class="stat__label">lockstep version for the five public packages</span></div>
+          <div class="stat stat--ok"><span class="stat__value">exit 0</span><span class="stat__label">every Definition of Done gate, uncached, at <code>6924afcf5</code></span></div>
+        </div>
+        <p class="lede">All plan tasks are done, every phase gate and the final exit gate passed, and two exit-gate Mediums were moved to the backlog. Project closeout is the remaining lifecycle step.</p>
+
+        <section id="original-request">
+          <h2>Original request</h2>
+          <p>The operator picked this batch through <code>tackle-backlog</code> and approved it as proposed, as a single PR on branch <code>wave/2026-09-30-backlog-wave-3</code>.</p>
+          <p>Three priorities framed the wave:</p>
+          <ul>
+            <li><strong>Lead with the template break.</strong> Lifecycle skills copied templates from <code>.oat/templates/</code>, a folder that user-scope-only installs do not have, so those skills broke on every such install.</li>
+            <li><strong>Teach Fumadocs to the navigation command.</strong> <code>oat docs nav sync</code> knew only MkDocs; it should write Fumadocs navigation too.</li>
+            <li><strong>Fix recon publication.</strong> Fold in the packet-publication failure from <a href="https://github.com/voxmedia/open-agent-toolkit/issues/333">the recon publication issue on GitHub</a>, plus a Codex agent-limit note and one bounded retry.</li>
+          </ul>
+          <h3>Approved items and where each landed</h3>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr><th scope="col">Backlog item</th><th scope="col">Phase</th><th scope="col">Requested change</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>BL-260927-expose-a-scoped-template</td><td>p01</td><td>One template resolver and a command skills can call</td></tr>
+                <tr><td>BL-260718-support-fumadocs-in-oat-docs</td><td>p02</td><td>Fumadocs <code>meta.json</code> generated from Contents maps</td></tr>
+                <tr><td>BL-261001-make-recon-s-packet-validator</td><td>p03</td><td>Make recon's publication contracts agree</td></tr>
+                <tr><td>BL-261001-recover-recon-lanes-after</td><td>p03</td><td>Codex agent-limit note and one admission retry</td></tr>
+                <tr><td>BL-260806-fail-closed-when-configured</td><td>p04</td><td>Refuse closeout when the configured snapshot is missing</td></tr>
+                <tr><td>BL-260902-decide-test-only-freshness</td><td>p04</td><td>Operator-only exit-gate waivers</td></tr>
+                <tr><td>BL-261001-recompute-oat-project-next-s</td><td>p04</td><td>Fix the next-skill fingerprint defect found in reconnaissance</td></tr>
+                <tr><td>BL-260928-keep-instructions-sync-force</td><td>p05</td><td>Stop <code>--force</code> from destroying a linked <code>CLAUDE.md</code></td></tr>
+                <tr><td>BL-260909-give-the-dispatch-record</td><td>p05</td><td>Remove the dispatch-record journal</td></tr>
+                <tr><td>BL-260826-decide-whether-test-only-paths</td><td>p05</td><td>Test-only changes skip the lockstep bump</td></tr>
+                <tr><td>BL-260830-add-strict-yaml-validation</td><td>p05</td><td>Positioned YAML errors and key-type checks</td></tr>
+                <tr><td>BL-260928-route-quick-mode-discovery</td><td>p05</td><td>Quick-mode discovery routes to quick-start</td></tr>
+                <tr><td>BL-260903-verify-the-packs-inventory</td><td>p05</td><td>Narrow an overstated docs claim</td></tr>
+                <tr><td>BL-260829-order-phase-bookkeeping-before</td><td>p06</td><td>Retire using this wave's own phase reviews as live evidence</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <h3>Success criteria</h3>
+          <ul>
+            <li>Every acceptance criterion passes, with failing-first evidence for behavior changes and neutralize-and-restore proof for each negative control.</li>
+            <li>A user-scope-only install can run the lifecycle skills that copy templates.</li>
+            <li><code>oat docs nav sync</code> writes committed <code>meta.json</code> files for <code>apps/oat-docs</code>, and the docs build passes.</li>
+            <li>Recon's production helpers produce a packet the validator accepts, end to end.</li>
+            <li>A branch that changes only test files passes the release version check.</li>
+            <li>The full Definition of Done passes and the PR ships at the new lockstep version with the items archived.</li>
+          </ul>
+          <div class="callout callout--note">
+            <div class="callout__label">Fixed constraints</div>
+            <p>Templates resolve in repository, user, bundle order. Exit-gate waivers are operator-only and never self-issued under <code>OAT_AUTONOMOUS</code>. Recon briefs stay blind to the full manifest. The <code>--force</code> fix must leave every non-linked case unchanged.</p>
+          </div>
+        </section>
+
+        <section id="key-agent-decisions">
+          <h2>Key agent decisions</h2>
+          <p class="section-lede">Six choices shaped what shipped. Each pairs the reason with what it changed for users and later work.</p>
+          <div class="decisions">
+            <article class="decision">
+              <span class="tag">p01</span>
+              <h3>Skills copy templates through a CLI command</h3>
+              <p><strong>Why:</strong> skills should never need to know where a package manager put the CLI.</p>
+              <p><strong>Effect:</strong> <code>oat template resolve</code> returns a path only for the repository and user tiers; <code>--output</code> copies the resolved content for any tier.</p>
+            </article>
+            <article class="decision">
+              <span class="tag">p02</span>
+              <h3>Fumadocs navigation is strict</h3>
+              <p><strong>Why:</strong> a page missing from a Contents map should be reported, not shown silently.</p>
+              <p><strong>Effect:</strong> generated <code>meta.json</code> lists exactly the Contents-map entries, and <code>nav sync --check</code> in the docs prebuild stops strictness from hiding new pages.</p>
+            </article>
+            <article class="decision">
+              <span class="tag">p03</span>
+              <h3>Recon brief integrity uses rebuild-and-compare</h3>
+              <p><strong>Why:</strong> field-by-field binding let a new unbound field slip through in every review round and never converged.</p>
+              <p><strong>Effect:</strong> the validator rebuilds each brief with the production generator and rejects any difference. A claim a review omits stays unresolved and is listed as not reviewed.</p>
+            </article>
+            <article class="decision">
+              <span class="tag">p03</span>
+              <h3>Coverage gaps downgrade claims instead of blocking publication</h3>
+              <p><strong>Why:</strong> the extra per-statement <code>gap</code> check stopped valid packets from publishing.</p>
+              <p><strong>Effect:</strong> the forced downgrade stays. <code>unresolvedIssues</code> now name claim IDs or a global scope, and legacy string entries read as global.</p>
+            </article>
+            <article class="decision">
+              <span class="tag">p04</span>
+              <h3>The CLI owns the closeout check</h3>
+              <p><strong>Why:</strong> no skill script parsed the post-implement sequence, and <code>complete-state</code> already owned the final transition.</p>
+              <p><strong>Effect:</strong> <code>oat project closeout-check</code> is reachable from every skill and testable at the transition itself.</p>
+            </article>
+            <article class="decision">
+              <span class="tag">wave</span>
+              <h3>Sequential phases with one fan-in</h3>
+              <p><strong>Why:</strong> phases shared help snapshots, skill version pins, and docs pages, so parallel work would collide.</p>
+              <p><strong>Effect:</strong> each skill gets one version bump, made by the first phase that touches it; the fan-in owns the lockstep release bump.</p>
+            </article>
+          </div>
+        </section>
+
+        <section id="as-built-architecture">
+          <h2>As-built architecture</h2>
+          <p class="section-lede">Four delivered paths, one per lane. Teal boxes are new commands or checks; dashed boxes are guards that stop a bad state.</p>
+          <figure>
+            <div class="diagram-scroll">
+              <svg viewBox="0 0 960 640" role="img" aria-labelledby="dg-title dg-desc" xmlns="http://www.w3.org/2000/svg">
+                <title id="dg-title">Backlog wave three as-built paths</title>
+                <desc id="dg-desc">Four lanes. Templates: lifecycle skills call oat template resolve, which uses the shared resolver that also serves scaffold and record commands, trying the repository tier, then user, then bundle. Docs: nav sync reads index.md Contents maps and writes meta.json, and a prebuild check stops the docs build on drift. Recon: the validator rebuilds each brief with the production generator and compares before publishing. Closeout: closing skills run closeout-check, and complete-state refuses a missing snapshot.</desc>
+                <defs>
+                  <marker id="dg-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                    <path class="dg-arrow" d="M0 0 L10 5 L0 10 z" />
+                  </marker>
+                </defs>
+
+                <rect class="dg-lane" x="8" y="8" width="944" height="168" rx="10" />
+                <text class="dg-lane-label" x="24" y="30">TEMPLATES · p01</text>
+                <g class="dg-node"><rect x="24" y="48" width="180" height="44" rx="8" /><text x="40" y="75">Lifecycle skills</text></g>
+                <g class="dg-node"><rect x="24" y="112" width="180" height="52" rx="8" /><text x="40" y="134">Project commands</text><text class="dg-sub" x="40" y="152">scaffold, promote, records</text></g>
+                <g class="dg-node dg-node--new"><rect x="270" y="48" width="190" height="44" rx="8" /><text x="286" y="75">oat template resolve</text></g>
+                <g class="dg-node"><rect x="526" y="80" width="170" height="44" rx="8" /><text x="542" y="107">Shared resolver</text></g>
+                <g class="dg-node"><rect x="766" y="36" width="170" height="36" rx="8" /><text x="782" y="59">Repository tier</text></g>
+                <g class="dg-node"><rect x="766" y="84" width="170" height="36" rx="8" /><text x="782" y="107">User tier</text></g>
+                <g class="dg-node"><rect x="766" y="132" width="170" height="36" rx="8" /><text x="782" y="155">Bundle tier</text></g>
+                <path class="dg-edge" d="M204 70 L268 70" marker-end="url(#dg-arrow)" />
+                <text class="dg-edge-label" x="210" y="62">--output</text>
+                <path class="dg-edge" d="M460 70 L524 96" marker-end="url(#dg-arrow)" />
+                <path class="dg-edge" d="M204 138 L524 110" marker-end="url(#dg-arrow)" />
+                <text class="dg-edge-label" x="330" y="140">same resolver</text>
+                <path class="dg-edge" d="M696 96 L764 56" marker-end="url(#dg-arrow)" />
+                <text class="dg-edge-label" x="700" y="66">first</text>
+                <path class="dg-edge" d="M851 72 L851 82" marker-end="url(#dg-arrow)" />
+                <path class="dg-edge" d="M851 120 L851 130" marker-end="url(#dg-arrow)" />
+
+                <rect class="dg-lane" x="8" y="186" width="944" height="146" rx="10" />
+                <text class="dg-lane-label" x="24" y="208">DOCS NAVIGATION · p02</text>
+                <g class="dg-node"><rect x="24" y="226" width="180" height="44" rx="8" /><text x="40" y="253">index.md Contents maps</text></g>
+                <g class="dg-node dg-node--new"><rect x="270" y="226" width="190" height="44" rx="8" /><text x="286" y="253">oat docs nav sync</text></g>
+                <g class="dg-node"><rect x="526" y="226" width="170" height="44" rx="8" /><text x="542" y="253">meta.json per folder</text></g>
+                <g class="dg-node"><rect x="766" y="226" width="170" height="44" rx="8" /><text x="782" y="253">Docs site build</text></g>
+                <g class="dg-node dg-node--gate"><rect x="526" y="282" width="170" height="40" rx="8" /><text x="542" y="307">nav sync --check</text></g>
+                <path class="dg-edge" d="M204 248 L268 248" marker-end="url(#dg-arrow)" />
+                <text class="dg-edge-label" x="216" y="240">reads</text>
+                <path class="dg-edge" d="M460 248 L524 248" marker-end="url(#dg-arrow)" />
+                <text class="dg-edge-label" x="472" y="240">writes</text>
+                <path class="dg-edge" d="M696 248 L764 248" marker-end="url(#dg-arrow)" />
+                <text class="dg-edge-label" x="702" y="240">navigation</text>
+                <path class="dg-edge" d="M696 302 L780 302 L840 272" marker-end="url(#dg-arrow)" />
+                <text class="dg-edge-label" x="704" y="318">prebuild stops on drift</text>
+
+                <rect class="dg-lane" x="8" y="342" width="944" height="136" rx="10" />
+                <text class="dg-lane-label" x="24" y="364">RECON PUBLICATION · p03</text>
+                <g class="dg-node"><rect x="24" y="382" width="180" height="44" rx="8" /><text x="40" y="409">Production generator</text></g>
+                <g class="dg-node"><rect x="270" y="382" width="190" height="44" rx="8" /><text x="286" y="409">Recon packet and briefs</text></g>
+                <g class="dg-node dg-node--gate"><rect x="526" y="382" width="170" height="44" rx="8" /><text x="542" y="409">Publication validator</text></g>
+                <g class="dg-node"><rect x="766" y="382" width="170" height="44" rx="8" /><text x="782" y="409">Published packet</text></g>
+                <path class="dg-edge" d="M204 404 L268 404" marker-end="url(#dg-arrow)" />
+                <path class="dg-edge" d="M460 404 L524 404" marker-end="url(#dg-arrow)" />
+                <path class="dg-edge" d="M696 404 L764 404" marker-end="url(#dg-arrow)" />
+                <text class="dg-edge-label" x="708" y="396">accepts</text>
+                <path class="dg-edge" d="M610 426 L610 456 L114 456 L114 428" marker-end="url(#dg-arrow)" />
+                <text class="dg-edge-label" x="250" y="470">validator rebuilds each brief with the generator and compares</text>
+
+                <rect class="dg-lane" x="8" y="488" width="944" height="144" rx="10" />
+                <text class="dg-lane-label" x="24" y="510">CLOSEOUT · p04</text>
+                <g class="dg-node"><rect x="24" y="528" width="180" height="44" rx="8" /><text x="40" y="555">Closing skills</text></g>
+                <g class="dg-node dg-node--new"><rect x="270" y="528" width="190" height="44" rx="8" /><text x="286" y="555">oat project closeout-check</text></g>
+                <g class="dg-node dg-node--gate"><rect x="526" y="528" width="170" height="44" rx="8" /><text x="542" y="555">complete-state</text></g>
+                <g class="dg-node"><rect x="766" y="528" width="170" height="44" rx="8" /><text x="782" y="555">Project archived</text></g>
+                <g class="dg-node dg-node--gate"><rect x="270" y="584" width="190" height="40" rx="8" /><text x="286" y="609">Operator-only waiver</text></g>
+                <path class="dg-edge" d="M204 550 L268 550" marker-end="url(#dg-arrow)" />
+                <path class="dg-edge" d="M460 550 L524 550" marker-end="url(#dg-arrow)" />
+                <path class="dg-edge" d="M696 550 L764 550" marker-end="url(#dg-arrow)" />
+                <text class="dg-edge-label" x="712" y="542">valid</text>
+                <path class="dg-edge" d="M460 604 L610 604 L610 574" marker-end="url(#dg-arrow)" />
+                <text class="dg-edge-label" x="470" y="622">covers a stale gate</text>
+              </svg>
+            </div>
+            <figcaption>Delivered paths by phase. Arrows show calls or data flow; the recon loop shows the validator regenerating briefs before it accepts a packet.</figcaption>
+          </figure>
+          <ul class="legend" aria-label="Diagram legend">
+            <li><span class="swatch swatch--new"></span>New command or check</li>
+            <li><span class="swatch swatch--gate"></span>Guard that refuses a bad state</li>
+            <li><span class="swatch"></span>Existing component</li>
+          </ul>
+          <h3>Component boundaries</h3>
+          <ul class="components">
+            <li><strong>p01 templates.</strong> One resolver serves project scaffold, promote, PJM, backlog, and decision commands. Lifecycle skills copy through <code>oat template resolve --output</code>, and the Cursor-cloud skill's reversed order now matches.</li>
+            <li><strong>p02 docs navigation.</strong> <code>oat docs nav sync</code> detects the framework. For Fumadocs it writes strict <code>meta.json</code>, turns cross-folder links into link entries, and takes titles from frontmatter or the first heading. A second run writes nothing.</li>
+            <li><strong>p03 recon.</strong> The brief generator, reconciler, and validator agree. <code>packet.md</code> gains a Review Downgrades section, validation is linear in claim count, and <code>retryLimit</code> allows at most one admission retry per lane.</li>
+            <li><strong>p04 closeout.</strong> <code>oat-project-next</code> recomputes exit-gate fingerprints with implement's exclusions. Waivers are append-only, operator-only, and offered before a generation is marked stale.</li>
+            <li><strong>p05 small fixes.</strong> <code>instructions sync --force</code> keeps a <code>CLAUDE.md</code> that <code>AGENTS.md</code> resolves to, through a symlink, a chain, or a hard link. <code>oat project dispatch record</code> is validate-only, and skill validation reports YAML error locations and key types.</li>
+          </ul>
+        </section>
+
+        <section id="implementation-record">
+          <h2>Implementation record</h2>
+          <p class="section-lede">Phases ran one after another, each with a Claude implementer, a root review, and an independent Codex phase gate. The reviewer routes reused the wave-2 setup.</p>
+          <div class="table-scroll">
+            <table class="nowrap-first">
+              <thead>
+                <tr><th scope="col">Phase</th><th scope="col">Focus</th><th scope="col">Tasks</th><th scope="col">Status</th><th scope="col">Notable changes</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Phase 1</td><td>Template resolver</td><td>5</td><td>complete</td><td>Shared resolver, <code>oat template resolve</code>, lifecycle skills routed through it</td></tr>
+                <tr><td>Phase 2</td><td>Fumadocs navigation</td><td>6</td><td>complete</td><td>Strict <code>meta.json</code> writer, help and docs for both frameworks, committed navigation for <code>apps/oat-docs</code></td></tr>
+                <tr><td>Phase 3</td><td>Recon publication and Codex recovery</td><td>10</td><td>complete</td><td>Shared brief binding, structured unresolved issues, then a simplification to rebuild-and-compare</td></tr>
+                <tr><td>Phase 4</td><td>Lifecycle closeout guards</td><td>6</td><td>complete</td><td>Fingerprint fix in next, CLI closeout check, operator-only waivers</td></tr>
+                <tr><td>Phase 5</td><td>Small fixes</td><td>8</td><td>complete</td><td>Linked <code>CLAUDE.md</code> protection, validate-only dispatch record, test-only bump rule, YAML locations</td></tr>
+                <tr><td>Phase 6</td><td>Release fan-in</td><td>3</td><td>complete</td><td>Lockstep bump, archived backlog items, full Definition of Done</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <h3>What happened along the way</h3>
+          <ul>
+            <li>p03 did not converge under review. Each root review round found a new High in the same family, an unbound brief field. The operator extended a fourth fix round past the cap, then approved a complexity-review simplification; the phase finished with a fix-loop count of 5.</li>
+            <li>During p03, <a href="https://github.com/voxmedia/open-agent-toolkit/pull/334">PR #334</a> merged to <code>main</code> and took the lockstep and skill versions this branch had already bumped. The branch merged <code>origin/main</code>, resolved two test pin hunks, and re-bumped the collided skills above <code>main</code>.</li>
+            <li>p05 needed one bounded recovery: three test files outside its verification set still used the removed <code>--project</code> flag.</li>
+            <li>A p05 probe found that running <code>worktree:init</code> under a throwaway <code>HOME</code> made <code>bundle-assets.sh</code> copy the repository into its own staging until the disk filled, so probes switched to a frozen-lockfile install.</li>
+          </ul>
+        </section>
+
+        <section id="validation-evidence">
+          <h2>Validation evidence</h2>
+          <p class="section-lede">Every phase had a root review and a Codex phase gate. A Claude cross-context final review and the Codex implementation exit gate followed, and the full Definition of Done ran uncached at the fan-in.</p>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr><th scope="col">Record</th><th scope="col">Check</th><th scope="col">Observed result</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Test Results</td><td>Definition of Done in CI order at <code>6924afcf5</code>: check, type-check, build, tests, skill bumps, version checks, release validate, docs build</td><td>Every gate exit 0; <code>pnpm check</code> 0/11 cached; no log replays a cache</td></tr>
+                <tr><td>Test Results</td><td>Uncached workspace tests with an isolated <code>HOME</code></td><td>CLI 7957, control-plane 153, docs-transforms 31, docs-config 10</td></tr>
+                <tr><td>Test Results</td><td>Extra suites and release validation</td><td><code>test:smoke</code> 163, <code>test:skills</code> 689; release validation at 0.3.11</td></tr>
+                <tr><td>p01</td><td>Root review and Codex phase gate</td><td>Root 0 Critical/High; gate ok with 1 Medium, 1 Low; fix-loop count 2</td></tr>
+                <tr><td>p02</td><td>Root review and Codex phase gate</td><td>Root 0 Critical/High; gate ok with 2 Medium, 1 Low; fix-loop count 2</td></tr>
+                <tr><td>p03</td><td>Root review rounds and Codex phase gate</td><td>3 review rounds before simplification; gate ok with 1 Medium; fix-loop count 5</td></tr>
+                <tr><td>p04</td><td>Root review and Codex phase gate</td><td>Root 0 Critical/High; gate ok with 1 Medium, 1 Low; fix-loop count 2</td></tr>
+                <tr><td>p05</td><td>Root review and Codex phase gate</td><td>Root 0 Critical/High; gate ok with 1 Medium; fix-loop count 2; recovery 1/10</td></tr>
+                <tr><td>p06</td><td>Root review and Codex phase gate</td><td>Gate ok with 0 findings; fix-loop count 0</td></tr>
+                <tr><td>Final Review</td><td>Claude cross-context final review</td><td>0 Critical/High/Medium and 4 Low, all fixed in the records</td></tr>
+                <tr><td>Implementation exit gate</td><td>Codex final gate on the <code>effective-delta-v2</code> fingerprint</td><td>Envelope ok, 0 Critical/High; 2 Medium deferred to the backlog</td></tr>
+                <tr><td>Notable Challenges</td><td>Codex gate Medium on quadratic recon validation</td><td>Fixed: 800 claims went from 4,402 ms to 97 ms</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="callout callout--warning">
+            <div class="callout__label">Limits</div>
+            <p>The Codex plan gate blocked on both allowed attempts with new, valid findings. The operator accepted the post-gate plan fixes without a third run and relied on the per-phase and final gates.</p>
+            <p>BL-261001-fail-closed-when-bundle-assets records why the test gate ran <code>pnpm build</code> with the real <code>HOME</code> first and then ran the isolated-<code>HOME</code> tests with <code>--only</code>: <code>bundle-assets.sh</code> never ran under a throwaway <code>HOME</code>.</p>
+          </div>
+        </section>
+
+        <section id="outcome">
+          <h2>Outcome</h2>
+          <div class="outcome-grid">
+            <div>
+              <h3>What now works</h3>
+              <ul>
+                <li>User-scope-only installs can run the template-copying lifecycle skills (p01).</li>
+                <li>The docs app's navigation is generated from Contents maps, and the docs build stops on stale navigation (p02).</li>
+                <li>Recon packets made by the production helpers publish, and coverage gaps downgrade claims instead of blocking (p03).</li>
+                <li>Closeout refuses to finish without a valid snapshot, and only an operator can waive a stale exit gate (p04).</li>
+              </ul>
+            </div>
+            <div>
+              <h3>What changes for users</h3>
+              <ul>
+                <li>Update the CLI together with the skills (<code>oat tools update</code>); the updated skills call commands an older CLI lacks.</li>
+                <li>Breaking: <code>oat project dispatch record --project</code> is gone. The dispatch rows in <code>implementation.md</code> remain the record.</li>
+                <li>Recon publication rejects any brief that differs from the production generator's output.</li>
+              </ul>
+            </div>
+          </div>
+          <h3>Summary record at a glance</h3>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr><th scope="col">Summary section</th><th scope="col">Recorded facts</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>summary.md</td><td>Status complete, last updated 2026-10-01, revision count 0</td></tr>
+                <tr><td>Summary: backlog-wave-3</td><td>The institutional summary for Wave 3</td></tr>
+                <tr><td>Overview</td><td>Wave 3 delivered 14 approved items as one PR, including the recon failure reported in <a href="https://github.com/voxmedia/open-agent-toolkit/issues/333">issue #333</a></td></tr>
+                <tr><td>wave-3</td><td>Branch <code>wave/2026-09-30-backlog-wave-3</code></td></tr>
+                <tr><td>What Was Implemented</td><td>38 tasks in 6 phases with a Claude Opus 5.5 implementer and a <code>codex-6-sol-xhigh</code> gate; 11 committed <code>meta.json</code> files; <code>complete-state</code> refuses an incomplete snapshot; the bookkeeping-order item closed on this wave's own run</td></tr>
+                <tr><td>Design Deltas</td><td>Rebuild-and-compare replaced the brief binding built in review rounds (production scripts net +172/-399), with a way back if a consumer acts on a silently skipped claim; closeout check at Step 1.5, not near Step 3.7; lockstep 0.3.11 because <a href="https://github.com/voxmedia/open-agent-toolkit/pull/334">PR #334</a> took 0.3.10</td></tr>
+                <tr><td>p03</td><td>PR #334 merged mid-wave during this phase</td></tr>
+                <tr><td>Notable Challenges</td><td>Complexity review cut 672 lines net; a merged mid-wave PR forced re-bumps; the Definition of Done built with the real <code>HOME</code>; one bounded recovery used 1/10 attempts</td></tr>
+                <tr><td>Tradeoffs Made</td><td>Two exit-gate Mediums deferred to the backlog rather than invalidating the exit-gate generation</td></tr>
+                <tr><td>Integration Notes</td><td>Updated skills need <code>oat</code> 0.3.11 or later; an older CLI makes closeout read as incomplete</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <h3>What did not ship</h3>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr><th scope="col">Follow-up</th><th scope="col">Priority</th><th scope="col">What remains</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>BL-261001-escape-directive-like</td><td>high</td><td>Nav sync writes a filename starting with <code>!</code> as an exclusion directive, hiding the page while <code>--check</code> reports clean; exit gate M1, deferred</td></tr>
+                <tr><td>BL-261001-list-thorough-review-omissions</td><td>medium</td><td>Review Downgrades omits claims a thorough-profile redundant review left without a disposition; exit gate M2, deferred</td></tr>
+                <tr><td>BL-261001-run-a-complexity-review-when</td><td>high</td><td>Run a complexity review when a review or gate budget runs out</td></tr>
+                <tr><td>BL-261001-fail-closed-when-bundle-assets</td><td>high</td><td>Fail closed when <code>bundle-assets.sh</code> lookups come back empty</td></tr>
+                <tr><td>BL-261001-resolve-the-summary-template</td><td>low</td><td><code>oat-wrap-up</code> still reads the summary template from <code>.oat/templates/</code></td></tr>
+                <tr><td>BL-261001-route-quick-mode-plan</td><td>low</td><td>Route a quick-mode plan in progress the same way across the router and dashboards</td></tr>
+                <tr><td>BL-261001-record-mixed-native-and-cli</td><td>later</td><td>Mixed native and CLI continuation records, deferred from issue #333</td></tr>
+                <tr><td>BL-261001-make-recon-controller-setup</td><td>later</td><td>Recon controller setup, held back with the item above</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <h3>Next steps for the reader</h3>
+          <ul>
+            <li>Review and merge the wave PR, then run project closeout; BL-260806-fail-closed-when-configured retires once closeout runs.</li>
+            <li>Take the high-priority follow-ups first, starting with the navigation directive escape the exit gate found.</li>
+            <li>Wiring <code>nav sync --check</code> into the <code>docs-app-fuma</code> scaffold was noted but not filed.</li>
+          </ul>
+        </section>
+        <footer>Built from the approved project artifacts (discovery, plan, implementation, summary, and project log) with the project-recap recipe and the clean-neutral theme. Exact counts and statuses follow the project summary and implementation record.</footer>
+      </main>
+    </div>
+    <script>
+      (() => {
+        const links = [...document.querySelectorAll('.toc a[href^="#"]')];
+        const targets = links
+          .map((link) => document.querySelector(link.getAttribute('href')))
+          .filter(Boolean);
+        const observer = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (!entry.isIntersecting) continue;
+              links.forEach((link) =>
+                link.classList.toggle(
+                  'active',
+                  link.getAttribute('href') === `#${entry.target.id}`,
+                ),
+              );
+            }
+          },
+          { rootMargin: '-15% 0px -70% 0px' },
+        );
+        targets.forEach((target) => observer.observe(target));
+      })();
+    </script>
+  </body>
+</html>
