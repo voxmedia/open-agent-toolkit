@@ -71,3 +71,10 @@
 - The helper reports formatting, prose-coherence tests, forced typecheck/build, lint, tests, link/version checks, and normal commit/push hooks passing. These are repository checks, not a new live relay/readiness/release acceptance run.
 - Unrelated setup output in `.oat/sync/manifest.json` remains unstaged in the Orc worktree. No merge, installation of this new patch, deployment, or residual worker cleanup occurred.
 - Helper identity is `/root/orca_skill_refinement`; a separate provider session UUID was not available to root at this checkpoint. Native parent-attached execution is known; independent pane/session visibility is not claimed.
+
+### Post-merge installation on both hosts
+
+- User merged Orc PR #46 and explicitly requested installation on both Macs. Verified merged commit `bbb5a11cd8c5588d5a13d999a4f53ccc584df7b0`; fast-forwarded both clean primary Orc checkouts to that revision.
+- Dry runs found one stale skill on the Mini and four on the laptop. Ran the standard skills installer on each host without force or pruning. Final dry runs reported all seven current; independent recursive comparisons verified all seven installed skill trees match source on both machines. `orca-orchestration` is version `1.3.3`.
+- Laptop SSH installation copied the skills successfully but its provider-sync subprocess failed with `spawn oat ENOENT`. A login-shell lookup located the existing `oat` under the host's user pnpm directory. Retried the installer with only that invocation's PATH adjusted; installation and provider sync then exited zero. No global shell configuration changed.
+- Mini provider sync required no changes. Laptop sync updated managed Codex configuration and reported restart-required visibility. Installed files and sync are verified; fresh provider-session catalog acceptance is not claimed. Both primary Orc checkouts remained clean.
