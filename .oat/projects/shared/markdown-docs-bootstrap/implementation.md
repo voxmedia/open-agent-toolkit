@@ -3287,7 +3287,7 @@ Accepted exact-target canonical-role route /root/markdown_final_unreadable_pinne
     "reasoning_effort": "high"
   },
   "launch_status": "accepted",
-  "child_outcome": null,
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     "project-state:high",
     "user-config:gpt-6.1-sol/high",
@@ -3314,3 +3314,11 @@ Accepted exact-target canonical-role route /root/markdown_final_unreadable_pinne
   "floor_satisfaction": "satisfied"
 }
 ```
+
+### Final optional-directory review received — 2026-10-01T192917Z
+
+**Artifact:** reviews/archived/final-review-2026-10-01T192917Z.md
+
+Root consumed exactly one **Reconnaissance: not-attempted** return before full106-line artifact/provenance validation; no orchestration wave/log applies. Current canonical receive1.6.7 inline under the implementation lifecycle, root-owned judgment. Explicit6ad9b2223716db22dbc95a0d21d0681e363307e1..da14976fe0fa87e0f18e80be5aacd5b1a64b9e4b range/head/stamp and exact two-file artifact/plan commit corroborated. 0C/0H/0M/0L,166actualtests and14realCLIcontrols; strict required permission refusal and optional external directory symlink non-traversal independently pass. Exact old-failing/fixed-passing formatted regression, current all8 source receipts/hash/cache corroborated. Earlier main/remote/full coverage inherited explicitly; no new broad/provider claims.
+
+L1 source and L2 summary alignment from original passing gate74cf045f are independently accepted; its bound event advances passed while old raw counts/provenance remain unchanged. Routing generation remains stale because sourcefingerprint changed; this final review does not replace configured-gate provenance. No deferred findings/new tasks/failure-cycle or recovery consumption. Existing output sequence and interactive recap skip persist. Next: new retained configured generation for current source, final output/PR sync, final p04 HiLL approval.
