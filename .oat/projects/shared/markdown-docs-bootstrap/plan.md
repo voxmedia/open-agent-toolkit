@@ -221,9 +221,9 @@ All phases run sequentially (`oat_plan_parallel_groups: []`). p02 consumes p01's
 | final  | code     | passed          | 2026-10-01 | reviews/archived/final-review-2026-10-01T155302Z.md         | 697f529e8641ade24140fd7a9b88483799aa204a | auto       | -                    |
 | final  | code     | fixes_completed | 2026-10-01 | reviews/archived/final-review-2026-10-01T160046Z.md         | 265230677e7f0d1675c7afce25128293801e195f | gate       | claude-opus-5-5-high |
 | final  | code     | passed          | 2026-10-01 | reviews/archived/final-review-2026-10-01T163133Z.md         | 2f6ba887966806222f3a585e27f2e55885eb91c1 | auto       | -                    |
-| final  | code     | received        | 2026-10-01 | reviews/final-review-2026-10-01T163602Z.md                  | 3925d7b4f772efef14494eb10fc8cd60eed85e4d | gate       | claude-opus-5-5-high |
+| final  | code     | passed          | 2026-10-01 | reviews/archived/final-review-2026-10-01T163602Z.md         | 3925d7b4f772efef14494eb10fc8cd60eed85e4d | gate       | claude-opus-5-5-high |
 
-Historical scaffold rows and review events are preserved. All implementation tasks and the standard final review are complete. The retained implementation gate passed its High threshold; its Medium rendering finding and Low ledger finding are being addressed in a non-pausing judgment sweep.
+Historical scaffold rows and review events are preserved. All implementation tasks and the standard final review are complete. The retained implementation gate passed its High threshold. Its rendering and ledger findings are resolved and independently accepted by `reviews/archived/final-review-2026-10-01T163133Z.md`; the refreshed gate also passed, and its stale prose finding is corrected in this receive.
 
 Record full reviewed heads and invocation provenance for actual reviews. Preserve all rows and unknown trailing cells. Mark `passed` only for a clean result; disposition residual findings before readiness.
 
@@ -238,7 +238,7 @@ Source pointers retained for the already-planned consumer inventory: index gener
 
 ## Implementation Complete
 
-Implementation in progress: 11/11 tasks complete; final review passed; retained exit gate and closeout pending. Planned scope: 4 sequential phases, 11 atomic tasks — p01 (2), p02 (3), p03 (3), p04 (3). Replace this with a completion summary only after implementation and required reviews/gates pass.
+Implementation in progress: 11/11 tasks complete; final review and retained exit gate passed with all dispositions settled; configured closeout and final HiLL approval pending. Planned scope: 4 sequential phases, 11 atomic tasks — p01 (2), p02 (3), p03 (3), p04 (3). Replace this with a completion summary only after implementation and required reviews/gates pass.
 
 ## References
 
