@@ -1166,6 +1166,7 @@ describe('help output snapshots', () => {
 
       Commands:
         archive [options] [project-path]             Manage archived project data
+        closeout-check [options] <project-path>      Report whether a project closeout snapshot permits terminal completion (read-only)
         complete-discovery [options] <project-path>  Validate and mark a project discovery.md complete
         complete-state [options] <project-path>      Update a project state.md to the completed lifecycle shape
         dispatch                                     Validate and persist project dispatch provenance
@@ -1268,6 +1269,35 @@ describe('help output snapshots', () => {
     `);
   });
 
+  it('project closeout-check --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'project',
+      'closeout-check',
+    ]).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat project closeout-check [options] <project-path>
+
+      Report whether a project closeout snapshot permits terminal completion
+      (read-only)
+
+      Arguments:
+        project-path   Project path to check
+
+      Options:
+        --autonomous   Treat the closeout as autonomous (also implied by
+                       OAT_AUTONOMOUS=1)
+        -h, --help     display help for command
+
+      Global Options:
+        -V, --version  output the version number
+        --json         Output a single JSON document
+        --verbose      Enable verbose debug output
+        --cwd <path>   Override working directory
+      "
+    `);
+  });
+
   it('project complete-state --help matches snapshot', () => {
     const program = createRegisteredProgram();
     const help = getCommandByPath(program, [
@@ -1284,6 +1314,8 @@ describe('help output snapshots', () => {
 
       Options:
         --archived     Mark the completed project as archived locally
+        --autonomous   Treat the closeout as autonomous (also implied by
+                       OAT_AUTONOMOUS=1)
         -h, --help     display help for command
 
       Global Options:
