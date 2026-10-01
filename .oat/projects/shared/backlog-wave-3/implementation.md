@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
-oat_current_task_id: p01-t05
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -24,22 +24,22 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 5     | 4/5       |
-| Phase 2 | pending     | 4     | 0/4       |
-| Phase 3 | pending     | 5     | 0/5       |
-| Phase 4 | pending     | 4     | 0/4       |
-| Phase 5 | pending     | 6     | 0/6       |
-| Phase 6 | pending     | 3     | 0/3       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 5     | 5/5       |
+| Phase 2 | pending  | 4     | 0/4       |
+| Phase 3 | pending  | 5     | 0/5       |
+| Phase 4 | pending  | 4     | 0/4       |
+| Phase 5 | pending  | 6     | 0/6       |
+| Phase 6 | pending  | 3     | 0/3       |
 
-**Total:** 4/27 tasks completed
+**Total:** 5/27 tasks completed
 
 ---
 
 ## Phase 1: Template resolver
 
-**Status:** in_progress
+**Status:** complete
 
 ### Task p01-t01: Share one template resolver in repository, user, bundle order
 
@@ -63,8 +63,8 @@ oat_generated: false
 
 ### Task p01-t05: (review) Close p01 gate findings M1, L1
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 4596d3956
 
 ---
 
@@ -261,6 +261,15 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   `294618df8` closed M1 (retro and summary `allowed-tools` grants, pinned;
   failing-first recorded) and L1 (docs placement); src/validation 391 tests,
   validate-skills, skill bumps, docs check all exit 0.
+
+- Phase gate (`codex-6-sol-xhigh`, `exit_nonzero_on: high`) at `91b1dde7c`:
+  `reviews/archived/p01-review-2026-10-01T114001Z.md` status `ok`,
+  receive-eligible, 0 Critical/High, 1 Medium, 1 Low. Judgment sweep: both
+  addressed now as `p01-t05` (`4596d3956`: `Bash(oat template:*)` for design,
+  spec, and plan; docs precedence claim limited to lifecycle and PJM
+  templates; design and plan prompt sites re-keyed).
+- Phase p01 outcome: pass after one review-fix round and one gate-fix task
+  (p01-t04, p01-t05); 5/5 tasks.
 
 <!-- orchestration-runs-end -->
 
