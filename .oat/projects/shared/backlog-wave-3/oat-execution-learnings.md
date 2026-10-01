@@ -18,3 +18,9 @@ documentation-gap, candidate-skill-content, decision, and environment-limited.
 **Observation:** The Skill tool refuses user-invocable-only skills, so the operator ran `/oat-project-autonomous` after the coordinator scaffolded the project and wrote the phase-gate setting.
 **Impact:** Tackle-backlog waves need one operator hand-off between batch approval and planning.
 **Recommendation:** Scaffold and write `oat_phase_review_gate` before handing off, as this wave did.
+
+## 2026-10-01T06:07:46Z - environment-limited - The run loads user-scope lifecycle skills older than main
+
+**Observation:** The slash commands load user-scope skills from `~/.agents/skills` (oat CLI 0.3.8 on PATH): `oat-project-implement` 2.3.12, which has no Step 7a pre-review bookkeeping commit. `origin/main` and the project-scope view (`.claude/skills` linked to the repo's `.agents/skills`) carry 2.3.14.
+**Impact:** `BL-260829-order-phase-bookkeeping-before` needs a run that uses Step 7a, and this wave edits the implement skill in p01 and p04, so the working-tree copy changes mid-run.
+**Recommendation:** Implementation follows `oat-project-implement` as of `origin/main` (2.3.14, read with `git show origin/main:<path>`) for the whole run, and records that version beside any BL-260829 evidence. Refresh user-scope skills with `oat tools update` after each release.
