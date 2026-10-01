@@ -614,7 +614,7 @@ Accepted handle `/root/markdown_p02_pinned`; awaiting root ACK before work.
     "dispatch_mode": "background"
   },
   "launch_status": "accepted",
-  "child_outcome": null,
+  "child_outcome": "DONE",
   "configured_invocation_evidence": [
     "project-state:high",
     "user-config:gpt-6.1-sol/high",
@@ -641,7 +641,7 @@ Accepted handle `/root/markdown_p02_pinned`; awaiting root ACK before work.
       "review": "reviews/archived/p02-review-2026-10-01T125830Z.md",
       "accepted_handle": "/root/markdown_p02_pinned",
       "dispatch_stamp": "Dispatch: scope=p02-t03 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high-3da8a37eed",
-      "status": "accepted-awaiting-ack"
+      "status": "completed"
     }
   ],
   "task_class": "hard-reasoning",
@@ -857,3 +857,82 @@ Host followup_task accepted continuation on /root/markdown_p02_pinned. Exact tar
 #### p02-t03 root task acceptance
 
 Root verified the append-only two-file code commit, clean tree and intended failing old-encoder control. Exact runnable probe retained in reviews/p02-reproduction-controls.md. M1 fix complete; bound first review event fixes_completed, independently reviewed acceptance pending. Full phase report awaits root tracking ACK.
+
+#### p02 complete phase report accepted for re-review
+
+Root validated same-handle DONE report, three task commits, original phase base through 3b0dcece7de72b3156700d74629170d7b4102e55, clean tree, 195 actual phase tests and passing scoped gates. Recovery remains 0/10; no pending event or nested dispatch. M1 fixes_completed pending fresh independent round two.
+
+#### p02 independent re-review dispatch
+
+Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high-3da8a37eed
+
+```json
+{
+  "request_id": "markdown-p02-rereview-20261001",
+  "caller": "oat-project-implement",
+  "scope": "p02",
+  "objective": "Independently re-review complete p02 and M1 filename fix",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "reviewer",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "codex-root-20261001",
+    "source": "tool-schema",
+    "observed_at": "2026-10-01"
+  },
+  "authority": "read-only code and one review artifact",
+  "role_selector": "oat-reviewer-gpt-6-1-sol-high-3da8a37eed",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-09-24",
+  "guidance_verified_at": "2026-09-24",
+  "guidance_status": "review-required",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/medium", "gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 3600,
+  "retry_limit": 2,
+  "payload": {
+    "agent_type": "oat-reviewer-gpt-6-1-sol-high-3da8a37eed",
+    "fork_turns": "none",
+    "scope_reference": "p02:0fc23346236890d44afe9abdd50d325e9a51d559..HEAD",
+    "dispatch_mode": "background"
+  },
+  "launch_status": "planned",
+  "child_outcome": null,
+  "configured_invocation_evidence": [
+    "project-state:high",
+    "user-config:gpt-6.1-sol/high",
+    "tool-schema:gpt-6.1-sol low-through-ultra",
+    "canonical-role:sha256:eb1bd78d0a5a48ed5d1867e313e19a07859a86aedec14d759beda8f97d26ce55"
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [
+    "Model guidance is dated; current configured target and live model selector control this invocation.",
+    "No independent service-tier control selected."
+  ],
+  "continuation_events": [
+    {
+      "event": "review-fix-round",
+      "round": 2,
+      "previous_review": "reviews/archived/p02-review-2026-10-01T125830Z.md",
+      "fix_task": "p02-t03",
+      "fix_commit": "cc3f828f04abf21533c88faf5aab413c4b2a09cb"
+    }
+  ],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Independent review of preservation guards and guidance identity behavior.",
+  "floor_satisfaction": "satisfied"
+}
+```
