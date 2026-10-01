@@ -3119,3 +3119,5 @@ The prior generation is preserved below exactly as routing metadata before repla
 ```
 
 Fresh retained gate launch intent: `markdown-implement-exit-remote-2026-10-01T185139Z`; stdout receipt `.oat/projects/shared/markdown-docs-bootstrap/reviews/gate-receipts/remote-2026-10-01T185139Z.json`. The current resolver declaration is persisted verbatim; normal HOME, PATH runtime and command argv are unchanged. No child is accepted until its unique current run marker is corroborated.
+
+Gate acceptance corroborated: unique current project/final/code marker `74cf045f-60fb-4931-a434-8cc9eaa5df19`, start 2026-10-01T18:51:48.352Z after persisted launch intent, target `claude-opus-5-5-high`, runtime Claude. The configured command was launched unchanged; result/receive are still pending.

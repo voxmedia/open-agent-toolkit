@@ -92,8 +92,8 @@ oat_implement_exit_gate:
   launch_attempt_id: markdown-implement-exit-remote-2026-10-01T185139Z
   launch_started_at: '2026-10-01T18:51:39Z'
   launch_result_receipt: .oat/projects/shared/markdown-docs-bootstrap/reviews/gate-receipts/remote-2026-10-01T185139Z.json
-  gate_run_marker: null
-  gate_run_id: null
+  gate_run_marker: /var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/74cf045f-60fb-4931-a434-8cc9eaa5df19.json
+  gate_run_id: 74cf045f-60fb-4931-a434-8cc9eaa5df19
   envelope_status: null
   artifact: null
   handoff: null
@@ -117,11 +117,11 @@ oat_implement_exit_gate:
   implementation_fingerprint: sha256:effective-delta-v2:964fb0d52950ca56e6316ac94eb24eae9f7c03c77ad098c083e9919a9b794324
   freshness_head: 14ecdcc0dbb876dc1225a3ef4ca332ae88796cc0
   freshness_fingerprint: sha256:effective-delta-v2:964fb0d52950ca56e6316ac94eb24eae9f7c03c77ad098c083e9919a9b794324
-  launch_state: intent_persisted
+  launch_state: accepted
   receive_state: not_started
   receive_eligible: false
   receive_completed: false
-  updated_at: '2026-10-01T18:51:39Z'
+  updated_at: '2026-10-01T18:52:25Z'
   config_fingerprint: sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324
 oat_project_recap:
   decision: skip
