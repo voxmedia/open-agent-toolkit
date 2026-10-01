@@ -146,6 +146,7 @@ oat_post_implement_sequence:
     - pr
   pre_approval_completed:
     - summary
+    - document
   approval: pending
   approval_source: null
   post_approval: []
