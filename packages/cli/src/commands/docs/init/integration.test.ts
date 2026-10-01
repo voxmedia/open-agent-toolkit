@@ -925,6 +925,72 @@ describe('Markdown docs init public boundary', () => {
     expect(config.documentation.requireForProjectCompletion).toBe(true);
   });
 
+  it('audits authored Markdown while exempting recursive instruction-only content', async () => {
+    const root = await temporaryRepo();
+    const files = new Map([
+      ['AGENTS.md', '# Docs local ownership\n'],
+      ['CLAUDE.md', '# Docs provider instructions\n'],
+      ['guide.md', '# Direct authored guide\n'],
+      ['instructions/AGENTS.md', '# Child ownership\n'],
+      ['instructions/deep/CLAUDE.md', '# Nested provider instructions\n'],
+      ['instructions/deep/diagram.svg', '<svg/>'],
+      ['direct/guide.md', '# Direct child authored guide\n'],
+      ['nested/deep/guide.md', '# Nested child authored guide\n'],
+      ['excluded/guide.md', '# Excluded authored draft\n'],
+    ]);
+    for (const [path, content] of files) {
+      await mkdir(dirname(join(root, 'docs', path)), { recursive: true });
+      await writeFile(join(root, 'docs', path), content);
+    }
+    await mkdir(join(root, '.oat'));
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      JSON.stringify({
+        version: 1,
+        documentation: { excludes: ['excluded/guide.md'] },
+      }),
+    );
+    const before = await snapshotTree(root);
+    const expectedAdvice = ['direct', 'nested'].map(
+      (child) =>
+        `${child}/ has Markdown but no authored index.md; run oat-docs-analyze for repair recommendations.`,
+    );
+    const preview = await runMarkdown(root, ['--adopt'], true);
+    expect(preview.exit).toBe(0);
+    expect(
+      (preview.jsonPayloads[0] as { auditAdvice: string[] }).auditAdvice.filter(
+        (advice) => advice.includes('has Markdown'),
+      ),
+    ).toEqual(expectedAdvice);
+    expect(await snapshotTree(root)).toEqual(before);
+    const adopted = await runMarkdown(root, ['--adopt']);
+    expect(adopted.exit).toBe(0);
+    expect(
+      (adopted.jsonPayloads[0] as { auditAdvice: string[] }).auditAdvice.filter(
+        (advice) => advice.includes('has Markdown'),
+      ),
+    ).toEqual(expectedAdvice);
+    const indexPath = join(root, 'docs', 'index.md');
+    const index = await readFile(indexPath, 'utf8');
+    const destinations = [...index.matchAll(/^- \[.*\]\(([^)]*)\)$/gm)].map(
+      (match) => match[1]!,
+    );
+    expect(destinations.sort()).toEqual(['contributing.md', 'guide.md']);
+    for (const destination of destinations)
+      await readFile(
+        fileURLToPath(new URL(destination, pathToFileURL(indexPath))),
+      );
+    for (const [path, content] of files)
+      expect(await readFile(join(root, 'docs', path), 'utf8')).toBe(content);
+    const config = JSON.parse(
+      await readFile(join(root, '.oat', 'config.json'), 'utf8'),
+    );
+    expect(config.documentation.excludes).toEqual(['excluded/guide.md']);
+    const after = await snapshotTree(root);
+    expect((await runMarkdown(root, ['--adopt'])).exit).toBe(0);
+    expect(await snapshotTree(root)).toEqual(after);
+  });
+
   it('renders external Markdown template values literally during adoption', async () => {
     const cases = [
       { value: '$&', href: 'guide-%24%26.md' },

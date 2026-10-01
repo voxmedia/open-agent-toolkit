@@ -231,6 +231,7 @@ async function buildContents(
       if (
         entry.isFile() &&
         /\.md$/i.test(entry.name) &&
+        !['AGENTS.md', 'CLAUDE.md'].includes(entry.name) &&
         !matcher.excludesFile(path)
       )
         return true;
