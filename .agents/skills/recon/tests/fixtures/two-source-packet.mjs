@@ -1,4 +1,5 @@
-// Synthetic two-source standard packet produced by recon's own helpers.
+// Synthetic two-source standard or thorough packet produced by recon's own
+// helpers.
 //
 // Provenance: synthetic. The shape mirrors the live recon 1.1.5 run behind
 // GitHub issue #333 (one verification brief spanning several sources, a
@@ -17,6 +18,7 @@ import {
   hashCanonicalJson,
   hashFile,
 } from '../../scripts/lib/canonical-json.mjs';
+import { reviewBriefEntries } from '../../scripts/lib/review-binding.mjs';
 import { reconcileLedger } from '../../scripts/reconcile-ledger.mjs';
 import { createPacketFixture } from './packet-fixture.mjs';
 
@@ -78,17 +80,21 @@ function fileEvidence(id, sourceId, path, line, excerpt, provenance) {
  * `complete`. `mutateBrief` receives each production brief (`verify`,
  * `adversary`, `coverage`) before it is written, for adversarial probes.
  * `omitDispositions` lists `{ reviewKind, claimId }` pairs a review leaves
- * without a disposition. The run status is `partial` whenever a material gap
- * is recorded.
+ * without a disposition. `profile: 'thorough'` adds a redundant-verification
+ * review whose production brief lists `redundantClaimIds` (every claim by
+ * default) and which affirms each briefed claim it does not omit. The run
+ * status is `partial` whenever a material gap is recorded.
  */
 export async function createTwoSourcePacket({
+  profile = 'standard',
   semanticIssues = [structuredClone(twoSourceSemanticIssue)],
   withCoverageFinding = true,
   mutateBrief,
   omitDispositions = [],
+  redundantClaimIds,
 } = {}) {
   const packet = await createPacketFixture({
-    profile: 'standard',
+    profile,
     status: 'complete',
   });
   const { packetRoot, manifest } = packet;
@@ -96,6 +102,9 @@ export async function createTwoSourcePacket({
     manifest.artifacts.find(
       (reference) => reference.path === 'raw/dossiers/gather.json',
     ),
+  );
+  const redundantGatherRef = manifest.artifacts.find(
+    (reference) => reference.path === 'raw/dossiers/pass-redundant-gather.json',
   );
 
   const secondPath = join(packet.sourceRoot, 'second.txt');
@@ -183,7 +192,10 @@ export async function createTwoSourcePacket({
     schemaVersion: 1,
     runId: manifest.run.id,
     revision: 1,
-    inputArtifacts: [structuredClone(dossierRef)],
+    inputArtifacts: [
+      structuredClone(dossierRef),
+      ...(redundantGatherRef ? [structuredClone(redundantGatherRef)] : []),
+    ],
     synthesis: {
       answer: 'Both sources record evidence; one release link is unconfirmed.',
       keyClaimIds: [
@@ -213,31 +225,39 @@ export async function createTwoSourcePacket({
 
   const briefs = {};
   const briefRefs = {};
-  for (const mode of ['verify', 'adversary', 'coverage']) {
-    briefs[mode] = createReviewBrief({
-      id: `brief-${mode}`,
+  const briefSpecs = [
+    ['verify', 'verify'],
+    ['adversary', 'adversary'],
+    ['coverage', 'coverage'],
+    ...(profile === 'thorough' ? [['redundant-verify', 'verify']] : []),
+  ];
+  for (const [name, mode] of briefSpecs) {
+    briefs[name] = createReviewBrief({
+      id: `brief-${name}`,
       mode,
       createdAt: '2026-08-31T00:03:00.000Z',
       manifest,
       ledger: priorLedger,
+      ...(name === 'redundant-verify' && redundantClaimIds
+        ? { claimIds: [...redundantClaimIds] }
+        : {}),
     });
     if (mutateBrief) {
       await mutateBrief({
-        mode,
-        brief: briefs[mode],
+        mode: name,
+        brief: briefs[name],
         manifest,
         sourceRoot: packet.sourceRoot,
       });
     }
-    const path = join(packetRoot, 'reviews', 'briefs', `${mode}.json`);
-    await writeJson(path, briefs[mode]);
-    briefRefs[mode] = {
-      path: `reviews/briefs/${mode}.json`,
+    const path = join(packetRoot, 'reviews', 'briefs', `${name}.json`);
+    await writeJson(path, briefs[name]);
+    briefRefs[name] = {
+      path: `reviews/briefs/${name}.json`,
       digest: await hashFile(path),
     };
   }
 
-  const claimIds = claims.map((item) => item.id);
   const review = (reviewKind, briefMode, dispositionFor, extra = {}) => ({
     kind: 'recon.review-result',
     schemaVersion: 1,
@@ -249,7 +269,9 @@ export async function createTwoSourcePacket({
     brief: { ...briefRefs[briefMode] },
     permittedInputs: [{ ...briefRefs[briefMode] }],
     excludedInputs: ['prior_reasoning'],
-    dispositions: claimIds
+    // A review disposes of exactly the claims its brief lists.
+    dispositions: reviewBriefEntries(briefs[briefMode], reviewKind)
+      .map((item) => item.id)
       .filter(
         (claimId) =>
           !omitDispositions.some(
@@ -281,6 +303,15 @@ export async function createTwoSourcePacket({
         ? [structuredClone(twoSourceCoverageFinding)]
         : [],
     }),
+    ...(profile === 'thorough'
+      ? {
+          'redundant-verification': review(
+            'redundant-verification',
+            'redundant-verify',
+            () => 'affirmed',
+          ),
+        }
+      : {}),
   };
   const reviewResults = [];
   for (const [kind, value] of Object.entries(reviews)) {
