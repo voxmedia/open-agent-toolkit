@@ -8,7 +8,7 @@
   front door for existing docs and support the docs-directory convention**
   remains open. Its [Markdown slice](../../../projects/shared/markdown-docs-bootstrap/summary.md)
   passed fourteen tasks and current independent final review; closeout outputs
-  are complete, retained exit-gate refresh and final HiLL approval are pending. Package drift, approval classes,
+  are complete and the retained exit gate passed with all dispositions settled. Final HiLL approval is pending. Package drift, approval classes,
   pntr automation and external-repository acceptance remain outside the slice.
 
 - 2026-09-28: the `backlog-wave-2` project (lockstep 0.3.9) closed twelve

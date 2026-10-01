@@ -96,6 +96,10 @@ target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:0,l
 
 target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:0,low:3 exit=0 status=ok artifact=.oat/projects/shared/markdown-docs-bootstrap/reviews/final-review-2026-10-01T193637Z.md run=39b33a8d-8a63-41e5-af34-145a5d525935
 
+### 2026-10-01 · structural · oat-project-implement · final
+
+markdown-bootstrap-main-remote-final-awaiting-hill-20261001: Main #334 integrated; all 14 tasks, both Bugbot corrections, optional-directory permission preservation and all eight local gates pass. Current independent final review has zero findings; retained gate 39b33a8d-8a63-41e5-af34-145a5d525935 passed with 0C/0H/0M/3L, one scoped rejection and two documentation corrections settled. Gate receive is allowed/fresh; existing summary/document/pr outputs are refreshed without resetting their completed sequence. Await final p04 HiLL approval; see implementation.md and reviews/final-unreadable-controls.md.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

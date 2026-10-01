@@ -112,3 +112,19 @@ target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:0,l
 ### 2026-10-01 · structural · oat-project-implement · final
 
 Refreshed independent implementation exit gate passed; 0C/0H/0M/1L, sole stale plan-prose Low addressed. All findings settled; proceeding to configured summary/document/pr sequence, final HiLL pending.
+
+### 2026-10-01 · structural · oat-project-implement · final-hill
+
+markdown-bootstrap-awaiting-hill-20261001: park for configured final p04 HiLL approval; all 11 tasks, final review, retained gate and summary/document/pr steps passed; PR #335 open; recap skipped interactive; approval pending.
+
+### 2026-10-01 · structural · oat gate review · final
+
+target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:0,low:2 exit=0 status=ok artifact=.oat/projects/shared/markdown-docs-bootstrap/reviews/final-review-2026-10-01T185353Z.md run=74cf045f-60fb-4931-a434-8cc9eaa5df19
+
+### 2026-10-01 · structural · oat gate review · final
+
+target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:0,low:3 exit=0 status=ok artifact=.oat/projects/shared/markdown-docs-bootstrap/reviews/final-review-2026-10-01T193637Z.md run=39b33a8d-8a63-41e5-af34-145a5d525935
+
+### 2026-10-01 · structural · oat-project-implement · final
+
+markdown-bootstrap-main-remote-final-awaiting-hill-20261001: Main #334 integrated; all 14 tasks, both Bugbot corrections, optional-directory permission preservation and all eight local gates pass. Current independent final review has zero findings; retained gate 39b33a8d-8a63-41e5-af34-145a5d525935 passed with 0C/0H/0M/3L, one scoped rejection and two documentation corrections settled. Gate receive is allowed/fresh; existing summary/document/pr outputs are refreshed without resetting their completed sequence. Await final p04 HiLL approval; see implementation.md and reviews/final-unreadable-controls.md.

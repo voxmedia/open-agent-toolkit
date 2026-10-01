@@ -47,7 +47,7 @@ copying their content here. -->
   applicable Markdown contracts without site tooling. All fourteen tasks and
   current independent final review passed, including both Bugbot fixes and
   unreadable optional-directory preservation. Completed closeout outputs are
-  refreshed; retained exit-gate refresh and final HiLL approval remain pending. See the
+  refreshed; the retained exit gate passed with all dispositions settled. Final HiLL approval remains pending. See the
   [project summary](../../projects/shared/markdown-docs-bootstrap/summary.md).
   **BL-260911-make-docs-bootstrap-a-front: Make docs bootstrap a front door
   for existing docs and support the docs-directory convention** remains open

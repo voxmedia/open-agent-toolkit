@@ -9,7 +9,7 @@ oat_generated: false
 
 # Implementation: markdown-docs-bootstrap
 
-All fourteen tasks are complete, including both remote adoption corrections and optional-directory permission preservation. Current-main integration, all eight local gates and independent final source review passed. The retained exit gate passed; its final documentation dispositions are being received before final p04 HiLL approval. Written summary, documentation and PR steps remain complete; current evidence is reflected in their outputs.
+All fourteen tasks are complete, including both remote adoption corrections and optional-directory permission preservation. Current-main integration, all eight local gates and independent final source review passed. The retained exit gate passed; all three final Low dispositions are settled, and final p04 HiLL approval is pending. Written summary, documentation and PR steps remain complete; current evidence is reflected in their outputs.
 
 ## Progress Overview
 
