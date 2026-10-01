@@ -24,14 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 5     | 5/5       |
-| Phase 2 | complete    | 6     | 6/6       |
-| Phase 3 | complete    | 10    | 10/10     |
-| Phase 4 | complete    | 6     | 6/6       |
-| Phase 5 | complete    | 8     | 8/8       |
-| Phase 6 | in_progress | 3     | 3/3       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 5     | 5/5       |
+| Phase 2 | complete | 6     | 6/6       |
+| Phase 3 | complete | 10    | 10/10     |
+| Phase 4 | complete | 6     | 6/6       |
+| Phase 5 | complete | 8     | 8/8       |
+| Phase 6 | complete | 3     | 3/3       |
 
 **Total:** 38/38 tasks completed
 
@@ -244,7 +244,7 @@ oat_generated: false
 
 ## Phase 6: Release fan-in
 
-**Status:** in_progress
+**Status:** complete
 
 ### Task p06-t01: Bump the lockstep public packages to 0.3.11
 
@@ -572,6 +572,10 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   link repointed to `archived/`, and the recap line reverted so both copies
   match. BL-260829 evidence and the version bump were verified.
   `Dispatch: scope=p06 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
+
+- Phase gate (`codex-6-sol-xhigh`) at `2f66ef84e`:
+  `reviews/archived/p06-review-2026-10-01T200536Z.md` status `ok`, 0 findings.
+- Phase p06 outcome: pass; 3/3 tasks.
 
 <!-- orchestration-runs-end -->
 
