@@ -44,6 +44,10 @@ Entries are chronological and append-only.
 
 target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:1,low:1 exit=0 status=ok artifact=.oat/projects/shared/markdown-docs-bootstrap/reviews/artifact-plan-review-2026-10-01T060016Z.md run=db5ebb2c-f554-4275-aa5c-165f92ff8c4b
 
+### 2026-10-01 · structural · oat gate review · plan
+
+target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:0,low:2 exit=0 status=ok artifact=.oat/projects/shared/markdown-docs-bootstrap/reviews/artifact-plan-review-2026-10-01T112231Z.md run=645bbca3-db69-4867-812e-22f31388aa11
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
