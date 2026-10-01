@@ -1,10 +1,10 @@
 ---
 id: BL-261001-recover-recon-lanes-after
-title: Recover recon lanes after a Codex agent-limit rejection
+title: Document the Codex agent-limit gotcha in recon and allow one bounded retry
 status: open
-priority: medium
+priority: high
 scope: feature
-scope_estimate: M
+scope_estimate: S
 labels:
   - recon
   - skills
@@ -37,27 +37,28 @@ to a completed v2 agent can pin it (openai/codex#32353). The exact blocker in
 this run was not established.
 
 The issue's author (the operator) asked for a recon-skill note on this and a
-bounded recovery policy. Building the mixed-route continuation records adds
-manifest machinery, so weigh it against the open question of how much recon
-machinery earns its keep (see `BL-260928-settle-codex-read-authority`) before
-committing to the full design.
+bounded recovery policy. Decided 2026-10-01 (operator): this item covers the
+note and the bounded retry and joins the next backlog wave. Recording mixed
+native and CLI continuations in the manifest is deferred to
+`BL-261001-record-mixed-native-and-cli` until the friction recurs.
 
 ## Acceptance Criteria
 
 - The recon skill documents the Codex v2 residency and mailbox gotcha and
   distinguishes `interrupt_agent` from `close_agent`. It does not describe
-  every limit failure as cumulative exhaustion and does not recommend archiving
-  or deleting sessions.
+  every limit failure as cumulative exhaustion, does not recommend archiving
+  or deleting sessions, and warns that queue-only messages to completed agents
+  can pin them.
 - A pre-acceptance agent-limit rejection is recorded as a provider or dispatch
   failure, never a worker failure, and every accepted artifact is kept.
-- Recovery is bounded and declared in the dispatch envelope before use: at
-  most one admission retry after eligibility checks, and an alternate route
-  only when one was already approved. Otherwise the skill asks for a concrete
-  continuation amendment.
+- At most one admission retry, after checking that completed agents are
+  eligible to be unloaded, and only when the dispatch envelope allows it. The
+  current zero-retry default is not silently overridden.
+- If the retry fails, the controller uses an alternate route only when one was
+  already approved. Otherwise it stops with a partial run and asks for a
+  concrete continuation amendment instead of inventing fallback authority.
 - No fallback silently changes model, effort, role behavior, data authority,
-  output limits, or reviewer blindness. Fresh review lanes stay fresh.
-- A mixed native and CLI wave is representable without rewriting the targets
-  of completed lanes: approved intent stays immutable, and amendments and
-  per-lane launch observations are appended.
-- Tests simulate a pre-start rejection, show no accepted work is lost, and
-  show recovery attempts are recorded before use.
+  output limits, or reviewer blindness. Fresh review lanes stay fresh, and an
+  accepted lane is never rerun to free capacity.
+- `recon` `metadata.version` bumped (shared with any other recon change in the
+  same PR).

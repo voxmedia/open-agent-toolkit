@@ -53,7 +53,8 @@ semantic issue).
 
 Related: `BL-260928-settle-codex-read-authority` (Codex recon lanes on the
 released CLI). The dispatch-capacity half of #333 is
-`BL-261001-recover-recon-lanes-after`; the setup and preflight friction is
+`BL-261001-recover-recon-lanes-after` (with mixed-route records deferred to
+`BL-261001-record-mixed-native-and-cli`); the setup and preflight friction is
 `BL-261001-make-recon-controller-setup`.
 
 ## Acceptance Criteria

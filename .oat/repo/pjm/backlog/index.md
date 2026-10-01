@@ -11,12 +11,14 @@
   criteria: `oat docs nav sync` writes Fumadocs `meta.json` files from the
   authored `index.md` Contents maps. Wave 2's GitHub issues #322 and #295 were
   closed against #332. GitHub issue #333 (a live recon run that could not
-  publish a packet) is split three ways:
+  publish a packet) is split four ways:
   `BL-261001-make-recon-s-packet-validator` (high, joins the wave: the packet
   validator rejects what recon's own brief generator and reconciler produce),
-  `BL-261001-recover-recon-lanes-after` (medium: Codex agent-limit recovery,
-  weighed against recon's machinery cost first), and
-  `BL-261001-make-recon-controller-setup` (low: setup and preflight friction).
+  `BL-261001-recover-recon-lanes-after` (high, joins the wave: a recon note on
+  the Codex agent-limit gotcha and one bounded retry),
+  `BL-261001-record-mixed-native-and-cli` (low, deferred until mixed-route
+  continuations recur), and `BL-261001-make-recon-controller-setup` (low:
+  setup and preflight friction).
 - 2026-09-28: the `backlog-wave-2` project (lockstep 0.3.9) closed twelve
   items: `BL-260903-close-manual-only-agents-md`,
   `BL-260927-name-only-installed-pack`, `BL-260909-fix-the-agents-md-unsafe`
@@ -331,6 +333,7 @@
 | BL-260720-add-oat-project-complete-auto  | Add oat-project-complete-auto companion skill for autonomous closeouts                                | open   | high     | task       | M        |
 | BL-260711-add-root-owned-dispatch-broker | Add root-owned dispatch broker for exact OAT subagent launches                                        | open   | high     | feature    | M        |
 | BL-260820-bind-each-gate-review          | Bind each gate review disposition to its exact received ledger event                                  | open   | high     | task       | M        |
+| BL-261001-recover-recon-lanes-after      | Document the Codex agent-limit gotcha in recon and allow one bounded retry                            | open   | high     | feature    | S        |
 | BL-260820-emit-source-qualified          | Emit source-qualified provenance envelopes for review and gate receipts                               | open   | high     | feature    | M        |
 | BL-260927-expose-a-scoped-template       | Expose a scoped template resolver command and route lifecycle skills through it                       | open   | high     | feature    | M        |
 | BL-260806-fail-closed-when-configured    | Fail closed when configured closeout snapshot is absent                                               | open   | high     | task       | M        |
@@ -376,7 +379,6 @@
 | BL-260830-re-evaluate-same-target-gate   | Re-evaluate same-target gate execution                                                                | open   | medium   | idea       | L        |
 | BL-260906-re-evaluate-universal-plan     | Re-evaluate universal plan proof strategy and test-first guidance                                     | open   | medium   | feature    | L        |
 | BL-260907-recognize-phase-level          | Recognize phase-level completion records so bullet-list revision phases do not read as incomplete     | open   | medium   | task       | S        |
-| BL-261001-recover-recon-lanes-after      | Recover recon lanes after a Codex agent-limit rejection                                               | open   | medium   | feature    | M        |
 | BL-260827-refresh-provider-codex-md      | Refresh provider-codex.md for the ultra effort tier, the GPT-5.4 retirement, and per-subcommand flags | open   | medium   | task       | S        |
 | BL-260908-remove-the-top-level-skill     | Remove the top-level skill version read after the alias error has been quiet                          | open   | medium   | task       | S        |
 | BL-260909-restamp-a-stale-copy-strategy  | Restamp a stale copy-strategy contentHash on skip and retire the pre-framing digest bridge            | open   | medium   | task       | M        |
@@ -415,6 +417,7 @@
 | BL-260830-memory-subsystem-ownership     | Memory subsystem ownership decision for OAT                                                           | open   | low      | idea       | XL       |
 | BL-260906-project-journal-reservation    | Project journal reservation state into the smoke evidence bundle                                      | open   | low      | task       | S        |
 | BL-260909-re-source-the-surviving-codex  | Re-source the surviving Codex provider claims and repair the dead provider-reference URLs             | open   | low      | task       | S        |
+| BL-261001-record-mixed-native-and-cli    | Record mixed native and CLI recon continuations in the manifest                                       | open   | low      | feature    | M        |
 | BL-260908-repair-or-exempt-archived      | Repair or exempt archived project ledgers that fail the pr-final path guard                           | open   | low      | task       | S        |
 | BL-260906-report-errno-for-asset-root    | Report errno for asset root stat failures and reset the statRedirects test seam                       | open   | low      | task       | XS       |
 | BL-260908-restructure-the-authoring      | Restructure the authoring skills for progressive disclosure and decide proactive invocation           | open   | low      | feature    | M        |
