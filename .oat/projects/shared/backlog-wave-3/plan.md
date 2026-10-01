@@ -1226,6 +1226,7 @@ breaking changes must be named in the title:
 | design | artifact | pending         | -          | -                                                  | -             | -          | -                 |
 | plan   | artifact | fixes_completed | 2026-10-01 | -                                                  | -             | auto       | -                 |
 | plan   | artifact | fixes_completed | 2026-10-01 | reviews/artifact-plan-review-2026-10-01T061917Z.md | -             | gate       | codex-6-sol-xhigh |
+| plan   | artifact | received        | 2026-10-01 | reviews/artifact-plan-review-2026-10-01T063044Z.md | -             | -          | -                 |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
