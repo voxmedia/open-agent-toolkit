@@ -2940,7 +2940,7 @@ describe('oat config', () => {
         ),
       ) as Record<string, unknown>;
 
-      expect(recommendation.version).toBe('2026-09-25.1');
+      expect(recommendation.version).toBe('2026-10-01.1');
       expect(recommendation.providers).toMatchObject({
         codex: {
           economy: {
@@ -2958,14 +2958,14 @@ describe('oat config', () => {
           },
           high: {
             candidates: [
-              { model: 'gpt-6-sol', effort: 'low' },
-              { model: 'gpt-6-sol', effort: 'medium' },
-              { model: 'gpt-6-sol', effort: 'high' },
+              { model: 'gpt-6.1-sol', effort: 'low' },
+              { model: 'gpt-6.1-sol', effort: 'medium' },
+              { model: 'gpt-6.1-sol', effort: 'high' },
             ],
           },
           frontier: {
             candidates: [
-              { model: 'gpt-6-sol', effort: 'xhigh' },
+              { model: 'gpt-6.1-sol', effort: 'xhigh' },
               { model: 'gpt-6-astra', effort: 'high' },
               { model: 'gpt-6-astra', effort: 'xhigh' },
             ],
@@ -2975,7 +2975,7 @@ describe('oat config', () => {
           economy: {
             candidates: [
               'haiku',
-              { model: 'claude-sonnet-5', effort: 'medium' },
+              { model: 'claude-sonnet-5-5', effort: 'medium' },
             ],
           },
           balanced: {
@@ -3036,9 +3036,9 @@ describe('oat config', () => {
     it.each([
       [
         'economy',
-        'claude-sonnet-5',
+        'claude-sonnet-5-5',
         'medium',
-        'oat-reviewer-claude-claude-sonnet-5-medium',
+        'oat-reviewer-claude-claude-sonnet-5-5-medium',
       ],
       [
         'balanced',

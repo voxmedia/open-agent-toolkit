@@ -7,7 +7,8 @@ description: 'Runbook for probe-verifying a Cursor model pin before shipping it:
 
 A Cursor model pin maps an OAT ladder model ID to the frontmatter selector that
 materialized role files carry, for example `gpt-5.6-sol-medium` to
-`gpt-5.6-sol[reasoning=medium]`. Adding one to
+`gpt-5.6-sol[reasoning=medium]`, or the verified exact ID
+`claude-sonnet-5-5-medium`. Adding one to
 `packages/cli/src/providers/cursor/codec/catalog.ts` requires evidence that
 Cursor actually resolves that selector to the intended model.
 
@@ -81,10 +82,22 @@ flat IDs such as `grok-4.7-medium` resolved exactly. Two lessons follow:
   control and probe non-default rungs. Here even `effort=low,fast=false`
   landed on the high-fast default.
 
-Approved mappings are bracket-form only
-(`DR-260718-explicit-cursor-pin-mapping`), so Grok 4.7 has no mapping until
-that decision is revisited. The redacted evidence is in the same fixtures
-directory.
+The 2026-10-01 revision of `DR-260718-explicit-cursor-pin-mapping` permits
+verified exact-ID entries as well as bracket selectors. Grok 4.7 remains
+outside the shipped catalog until its own entry is added and approved. The
+redacted evidence is in the same fixtures directory.
+
+The 2026-10-01 Sonnet 5.5 probe on Cursor 3.22.12 confirmed the same syntax
+distinction: every `claude-sonnet-5-5[effort=...]` selector fell back to
+`grok-4.7-high-fast`, but all five exact IDs
+`claude-sonnet-5-5-low|medium|high|xhigh|max` resolved correctly. Both rounds
+included a working Opus 5.5 low control and unknown-family and unsupported-effort
+controls that fell back. The summary and 64 correlated native events are
+retained beside the earlier fixtures.
+
+[Cursor documents specific model IDs and bracket parameters](https://cursor.com/docs/subagents#model-configuration).
+Choose a candidate from the live catalog, then probe its exact frontmatter
+spelling. Documentation and catalog presence do not replace native evidence.
 
 ## Prerequisites
 
@@ -272,10 +285,19 @@ approved it:
 
 ```ts
 approvedMapping(
-  'gpt-5.6-sol-medium',
-  'gpt-5.6-sol[reasoning=medium]',
-  'gpt-reasoning',
-  { probeName: 'zz-pin-probe-sol56-medium', verifiedAt: '2026-07-25', evidencePath: '...' },
+  'claude-sonnet-5-5-medium',
+  'claude-sonnet-5-5-medium',
+  'explicit-model-id',
+  {
+    probeName: 'zz-pin-probe-sonnet55-flat-medium',
+    probeRecord: {
+      submittedSelector: 'claude-sonnet-5-5-medium',
+      resolvedModel: 'claude-sonnet-5-5-medium',
+      verifiedAt: '2026-10-01',
+      evidencePath:
+        'packages/cli/src/providers/cursor/codec/__fixtures__/cursor-pin-probe-2026-10-01.jsonl',
+    },
+  },
 ),
 ```
 
@@ -286,6 +308,13 @@ than inheriting an approval that never covered the new selector.
 
 Retain the raw payloads alongside the summary. They are the primary evidence;
 the summary is an interpretation of them.
+
+For an exact-ID mapping, use the `explicit-model-id` syntax family and a
+mapping-specific probe record. The frontmatter selector must equal the ladder
+ID, and the independently captured submitted selector and resolved model must
+agree with both. Missing or mismatched evidence must fail materialization;
+there is no generic model-ID pass-through. Preserve rejected selector results
+and control observations alongside the successful rungs.
 
 ## Cleanup
 

@@ -7,6 +7,7 @@ import { validateRealPathWithinScope } from '@fs/paths';
 import YAML from 'yaml';
 
 import type { CursorModelPinMapping } from './catalog';
+import { assertApprovedCursorModelPinMapping } from './mapping-validation';
 import {
   buildCursorMaterializedRoleName,
   isOatManagedCursorRoleFile,
@@ -36,23 +37,6 @@ export interface CursorMaterializeAgentOptions {
   owner: CursorRoleOwner;
 }
 
-function assertApprovedMapping(mapping: CursorModelPinMapping): void {
-  if (
-    mapping.gateEvidence.gate !== 'g01' ||
-    mapping.gateEvidence.disposition !== 'approved' ||
-    !mapping.gateEvidence.probeName.trim()
-  ) {
-    throw new CliError(
-      `Cannot materialize Cursor model ${mapping.ladderModelId}: mapping-specific gate g01 approval is required.`,
-    );
-  }
-  if (!/\[[^\]]+\]$/.test(mapping.frontmatterModel)) {
-    throw new CliError(
-      `Cannot materialize Cursor model ${mapping.ladderModelId}: frontmatter model must include a non-empty bracket segment.`,
-    );
-  }
-}
-
 function optionalCursorBoolean(
   agent: CanonicalAgentDocument,
   field: 'readonly' | 'is_background',
@@ -67,7 +51,7 @@ export function materializeCursorAgent({
   mapping,
   owner,
 }: CursorMaterializeAgentOptions): CursorMaterializedAgent {
-  assertApprovedMapping(mapping);
+  assertApprovedCursorModelPinMapping(mapping);
   const roleName = buildCursorMaterializedRoleName({
     agentName: agent.name,
     ladderModelId: mapping.ladderModelId,

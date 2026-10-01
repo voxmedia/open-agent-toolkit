@@ -389,8 +389,11 @@ Provider controls remain exact: Codex uses
 `providers.claude.dispatchArgs.variant` for an effort-pinned target and
 `providers.claude.dispatchArgs.model` only for a legacy model-only target; and
 Cursor uses `providers.cursor.dispatchArgs.variant`. Cursor launches that exact
-resolver-selected native agent type first; the flat ID and bracket-form pin
+resolver-selected native agent type first; the flat ID and frontmatter pin
 remain inside the explicit mapping and are never normalized by workflow prose.
+A mapping may retain a verified bracket-form selector or use a separately
+verified exact ID, as Sonnet 5.5 does. Exact IDs require an approved mapping
+and native probe evidence; catalog presence alone never enables pass-through.
 The launcher records this selection as `configured`, while runtime identity
 remains `not-reported` without independent observation. Only a pre-start native
 role-selection rejection permits another target-preserving route.

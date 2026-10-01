@@ -1,7 +1,7 @@
 ---
-guidance_version: 2026-09-23
-last_verified: 2026-09-23
-review_after: 2026-12-22
+guidance_version: 2026-10-01
+last_verified: 2026-10-01
+review_after: 2026-12-30
 ---
 
 # Claude Model Selection
@@ -17,7 +17,12 @@ the dated model examples below. Launch mechanics for OAT dispatch live in
   high-volume, mechanically verified work.
 - `claude-opus-5-5`: normal substantive route and the default for
   interpretation-heavy implementation, hard reasoning, and consequential work.
-- `claude-sonnet-5`: conditional route when measured latency, throughput,
+- `claude-sonnet-5-5`: supported conditional route at `low`, `medium`,
+  `high`, `xhigh`, and `max`; qualify it against the relevant Opus route on
+  representative work. The bundled Economy tier selects medium by explicit
+  user direction; this is separate from task-performance qualification.
+- `claude-sonnet-5`: supported compatibility and established-workflow route
+  when measured latency, throughput,
   access, rate limits, or established-workflow economics beat the relevant
   Opus route.
 - `claude-fable-5-1`: eligibility-gated specialist for a directly relevant
@@ -45,6 +50,12 @@ host.
   is the bottleneck or an evaluated long-horizon workload benefits. Max is
   exceptional and requires a workload-specific effort sweep or an explicit
   quality-first exception.
+- Sonnet 5.5: availability and its five efforts are documented in the
+  [Sonnet 5.5 overview](https://platform.claude.com/docs/en/models/sonnet-5-5/overview)
+  and [effort reference](https://platform.claude.com/docs/en/build-with-claude/effort).
+  The existing conditional-route posture applies; availability is not an
+  evaluated workload ranking. Check the installed Claude Code version and
+  returned assistant model before launch.
 - Sonnet 5: use medium or high only when measured latency, throughput, access,
   or workload economics justify the conditional route. Do not preserve xhigh
   or max as generic workhorse settings.
@@ -65,13 +76,13 @@ These routes are dated guidance and benchmark-derived routing hypotheses.
 Evaluate them on representative local work before treating fine boundaries as
 stable.
 
-| Task class               | Default                               | Economy                                                | Escalation                                            | Floor notes                                                                                     |
-| ------------------------ | ------------------------------------- | ------------------------------------------------------ | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `mechanical-recon`       | Haiku 4.5                             | Same, with strict output and mechanical verification   | Opus 5.5 medium                                       | Haiku is below floor for semantic audits and silent-miss-prone exploration.                     |
-| `intelligent-recon`      | Opus 5.5 low                          | Sonnet 5 medium/high only when its measured route wins | Opus 5.5 medium; high when deeper reasoning is needed | Verify silent-miss-prone conclusions; do not use Sonnet low for open-ended recon.               |
-| `default-implementation` | Opus 5.5 medium                       | Sonnet 5 medium/high for evaluated bounded throughput  | Opus 5.5 high                                         | Fable is not a routine implementation or economy route.                                         |
-| `hard-reasoning`         | Opus 5.5 high                         | Opus 5.5 medium only after narrowing and evaluation    | Opus 5.5 xhigh for a reasoning-depth bottleneck       | Use max only after a workload-specific effort sweep.                                            |
-| `consequential`          | Opus 5.5 high plus independent review | No routine economy route                               | Opus 5.5 xhigh when deeper reasoning is also required | Consequence adds review and root authorization; it does not automatically require xhigh or max. |
+| Task class               | Default                               | Economy                                                  | Escalation                                            | Floor notes                                                                                     |
+| ------------------------ | ------------------------------------- | -------------------------------------------------------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `mechanical-recon`       | Haiku 4.5                             | Same, with strict output and mechanical verification     | Opus 5.5 medium                                       | Haiku is below floor for semantic audits and silent-miss-prone exploration.                     |
+| `intelligent-recon`      | Opus 5.5 low                          | Sonnet 5.5 medium/high only when its measured route wins | Opus 5.5 medium; high when deeper reasoning is needed | Verify silent-miss-prone conclusions; do not use Sonnet low for open-ended recon.               |
+| `default-implementation` | Opus 5.5 medium                       | Sonnet 5.5 medium/high for evaluated bounded throughput  | Opus 5.5 high                                         | Fable is not a routine implementation or economy route.                                         |
+| `hard-reasoning`         | Opus 5.5 high                         | Opus 5.5 medium only after narrowing and evaluation      | Opus 5.5 xhigh for a reasoning-depth bottleneck       | Use max only after a workload-specific effort sweep.                                            |
+| `consequential`          | Opus 5.5 high plus independent review | No routine economy route                                 | Opus 5.5 xhigh when deeper reasoning is also required | Consequence adds review and root authorization; it does not automatically require xhigh or max. |
 
 ## Root and Subagent Cost Posture
 
@@ -108,7 +119,9 @@ verified before selection.
 
 Eligibility filters the candidate set before capability or economy is compared.
 A route that fails one of these gates is unavailable regardless of benchmark
-standing. The non-Opus constraints are dated observations; reverify against the live
+standing. The table below records existing generations; it does not establish Sonnet 5.5
+retention, service tiers, or context limits. Verify those separately.
+The non-Opus constraints are dated observations; reverify against the live
 schema and the organization's actual plan before launch. Do not transfer Opus 5
 service-tier or retention claims to Opus 5.5 without fresh evidence.
 

@@ -46,6 +46,7 @@ import {
   SUPPORTED_CURSOR_ROLE_TARGETS,
   type CursorModelPinMapping,
 } from './catalog';
+import { assertApprovedCursorModelPinMapping } from './mapping-validation';
 import {
   assertNoUnmanagedCursorAgentCollisions,
   materializeCursorAgent,
@@ -128,23 +129,6 @@ function isUserCursorScope(
   );
 }
 
-function assertApprovedMapping(mapping: CursorModelPinMapping): void {
-  if (
-    mapping.gateEvidence.gate !== 'g01' ||
-    mapping.gateEvidence.disposition !== 'approved' ||
-    !mapping.gateEvidence.probeName.trim()
-  ) {
-    throw new CliError(
-      `Cannot materialize Cursor model ${mapping.ladderModelId}: mapping-specific gate g01 approval is required.`,
-    );
-  }
-  if (!/\[[^\]]+\]$/.test(mapping.frontmatterModel)) {
-    throw new CliError(
-      `Cannot materialize Cursor model ${mapping.ladderModelId}: approved mapping must include a non-empty bracket segment.`,
-    );
-  }
-}
-
 function addCursorTarget(
   ladderModelId: string,
   owner: CursorRoleOwner,
@@ -160,7 +144,7 @@ function addCursorTarget(
       `Cannot materialize unknown Cursor model mapping "${ladderModelId}" from ${source}. Add mapping-specific gate g01 evidence before using this target.`,
     );
   }
-  assertApprovedMapping(mapping);
+  assertApprovedCursorModelPinMapping(mapping);
 
   const existing = targets.get(ladderModelId);
   if (
