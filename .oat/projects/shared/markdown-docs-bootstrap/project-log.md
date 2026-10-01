@@ -92,6 +92,10 @@ markdown-bootstrap-awaiting-hill-20261001: park for configured final p04 HiLL ap
 
 target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:0,low:2 exit=0 status=ok artifact=.oat/projects/shared/markdown-docs-bootstrap/reviews/final-review-2026-10-01T185353Z.md run=74cf045f-60fb-4931-a434-8cc9eaa5df19
 
+### 2026-10-01 · structural · oat gate review · final
+
+target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:0,low:3 exit=0 status=ok artifact=.oat/projects/shared/markdown-docs-bootstrap/reviews/final-review-2026-10-01T193637Z.md run=39b33a8d-8a63-41e5-af34-145a5d525935
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
