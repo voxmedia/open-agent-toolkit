@@ -211,6 +211,7 @@ Record full reviewed heads and invocation provenance for actual reviews. Preserv
 | p02 | code | passed | 2026-10-01 | reviews/p02-review-2026-10-01T132908Z.md | f715c2ece20b5650d64d3b55bb6b9f44b2c98495 | auto | - |
 
 | p03 | code | fixes_completed | 2026-10-01 | reviews/p03-review-2026-10-01T140627Z.md | 1e03f88dcb5ae9713ff36a4b3327ac02d1b4f953 | auto | - |
+| p04 | code | passed | 2026-10-01 | reviews/p04-review-2026-10-01T150035Z.md | f4d76f977968c4d4e00d86153e48a9781649a2d1 | auto | - |
 
 ### Plan Review Dispositions
 

@@ -9,16 +9,16 @@ oat_generated: false
 
 # Implementation: markdown-docs-bootstrap
 
-All ten implementation tasks are complete. Phases p01–p03 have independent reviews and settled dispositions; p04 integration and release verification passed, with phase review pending. Five public packages are 0.3.11 above fresh main 0.3.10. Final review, retained exit gate and p04 HiLL approval remain pending.
+All ten implementation tasks are complete. Phases p01–p03 have independent reviews and settled dispositions; p04 integration, release verification and independent phase review passed. Five public packages are 0.3.11 above fresh main 0.3.10. Final review, retained exit gate and p04 HiLL approval remain pending.
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p01   | complete    | 2     | 2/2       |
-| p02   | complete    | 3     | 3/3       |
-| p03   | complete    | 3     | 3/3       |
-| p04   | in_progress | 2     | 2/2       |
+| Phase | Status   | Tasks | Completed |
+| ----- | -------- | ----- | --------- |
+| p01   | complete | 2     | 2/2       |
+| p02   | complete | 3     | 3/3       |
+| p03   | complete | 3     | 3/3       |
+| p04   | complete | 2     | 2/2       |
 
 **Total:** 10/10 tasks completed
 
@@ -92,7 +92,7 @@ All ten implementation tasks are complete. Phases p01–p03 have independent rev
 
 ## Phase 4: Integration, bundled release, and acceptance
 
-**Status:** in_progress
+**Status:** complete
 
 ### Task p04-t01: Apply release versions and verify bundles
 
@@ -118,7 +118,7 @@ None recorded.
 
 ## Final Summary (for PR/docs)
 
-Markdown bootstrap, additive adoption, nonmutating preview, literal documentation roots, authored-index protection, skill workflows and user documentation are implemented. Five public packages and bundled inventory are 0.3.11; full ordered CI gates and actual forced execution passed. p04 phase review, final review, retained exit gate and final HiLL approval remain pending.
+Markdown bootstrap, additive adoption, nonmutating preview, literal documentation roots, authored-index protection, skill workflows and user documentation are implemented. Five public packages and bundled inventory are 0.3.11; full ordered CI gates and actual forced execution passed. All four phase reviews are settled. Final review, retained exit gate and final HiLL approval remain pending.
 
 ## Orchestration Runs
 
@@ -1653,7 +1653,7 @@ Accepted exact-target canonical-role route /root/markdown_p04_review_pinned; awa
     "reasoning_effort": "high"
   },
   "launch_status": "accepted",
-  "child_outcome": null,
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     "project-state:high",
     "user-config:gpt-6.1-sol/high",
@@ -1685,3 +1685,7 @@ Accepted exact-target canonical-role route /root/markdown_p04_review_pinned; awa
 #### p04 full phase report validation
 
 Root reconciled DONE report: base 7e8abb5b377ffc2f16d9576a0023e7a6cf4a46fd through ea016dc7c8b2ee60de80b19bdb2887408d6dc382, two exact task commits and separate tracking ACKs, clean tree, gates and durable control receipts verified. Recovery 0/10, pending null, no nested dispatch or production deviation. Independent review binds subsequent committed ledger head f4d76f977968c4d4e00d86153e48a9781649a2d1; final acceptance pending.
+
+#### p04 independent phase review disposition
+
+Root consumed exactly one not-attempted reconnaissance signal before validation, with no Review Orchestration or recon-log entry. Read complete reviews/p04-review-2026-10-01T150035Z.md; bound full head f4d76f977968c4d4e00d86153e48a9781649a2d1 and exact phase range verified, standard counts/severity sections agree: zero Critical, High, Medium and Low. Independent bundle46parity/four lifecycle commands,24CLI controls,six retained probes,303focused tests,release versions and pre-guard overwrite/post-guard refusal/external acceptance pass. Actual full-gate receipts independently inspected; broad gates not rerun. Review passed; all tasks/dispositions complete, no selected phase gate, p04 complete, fix iterations0/recovery0/10. All four phases complete; distinct final review and retained exit gate precede p04 HiLL approval.
