@@ -13,7 +13,7 @@ oat_summary_includes_revisions: []
 
 ## Overview
 
-Plain Markdown is now an explicit documentation bootstrap option for repositories that need useful documentation without a site application. This quick project implements the Markdown portion of `BL-260911-make-docs-bootstrap-a-front`, including safe adoption of populated directories and the applicable OAT context, navigation, metadata, and authoring contracts. All eleven planned tasks and review dispositions are complete; configured closeout and final HiLL approval remain pending.
+Plain Markdown is now an explicit documentation bootstrap option for repositories that need useful documentation without a site application. This quick project implements the Markdown portion of `BL-260911-make-docs-bootstrap-a-front`, including safe adoption of populated directories and the applicable OAT context, navigation, metadata, and authoring contracts. All eleven planned tasks and review dispositions are complete. Configured written-summary, documentation and PR steps are complete; final p04 HiLL approval remains pending.
 
 ## What Was Implemented
 
@@ -58,7 +58,7 @@ Adoption preserves malformed authored content rather than rewriting it; repair r
 ## Follow-up Items
 
 - [BL-260911-make-docs-bootstrap-a-front](../../../repo/pjm/backlog/items/BL-260911-make-docs-bootstrap-a-front.md) remains **open** for its broader approval classes, package/version drift, and other-repository acceptance. This project supplies only the Markdown portion and has no unresolved Medium/Low review debt.
-- Final HiLL approval and the remaining configured closeout steps are pending. Release assets are validated; no publication, normal user-scope installation, merge, or deployment is claimed.
+- Configured closeout steps are complete and [PR #335](https://github.com/voxmedia/open-agent-toolkit/pull/335) is open; final p04 HiLL approval is pending. Release assets are validated; no publication, normal user-scope installation, merge, or deployment is claimed.
 
 ## Explainer Outcome
 

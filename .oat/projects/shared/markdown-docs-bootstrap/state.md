@@ -85,7 +85,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/335' # tracked open PR
 oat_project_created: '2026-09-30T18:58:24.831Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-01T17:07:52.185Z'
+oat_project_state_updated: '2026-10-01T17:15:00Z'
 oat_generated: false
 oat_implement_exit_gate:
   disposition: passed
@@ -137,7 +137,7 @@ oat_project_recap:
   source: interactive
   decided_at: '2026-10-01T16:19:52.974Z'
 oat_post_implement_sequence:
-  status: pre_approval
+  status: awaiting_approval
   source: configured
   final_phase: p04
   pre_approval:
@@ -157,13 +157,13 @@ oat_post_implement_sequence:
 
 # Project State: markdown-docs-bootstrap
 
-**Status:** PR open for review; configured closeout and final p04 HiLL approval pending
+**Status:** PR open; all pre-approval steps complete; awaiting final p04 HiLL approval
 **Started:** 2026-09-30
 **Last Updated:** 2026-10-01
 
 ## Current Phase
 
-Implementation — PR open; completion may run before or after merge.
+Implementation — PR #335 open. All eleven tasks, final review, retained implementation gate and configured summary/document/PR steps complete. Final p04 HiLL approval is pending; implementation has not been marked complete.
 
 ## Artifacts
 
@@ -176,13 +176,13 @@ Implementation — PR open; completion may run before or after merge.
 ## Progress
 
 - Discovery and approved lightweight design complete
-- Four sequential phases and eleven executable tasks planned, including p02 encoding and final metadata fixes
+- Four sequential phases and all eleven executable tasks complete, including filename encoding and metadata fixes
 - All user-approved review edits applied
-- Final cross-runtime gate passed; both Low findings dispositioned as already-covered scope
+- Independent final lifecycle review and refreshed retained exit gate passed; all findings settled
 - Eleven task commits reconciled; full checks passed after metadata and literal-rendering repairs
-- Written summary complete; visual recap skipped by explicit user choice
+- Written summary and documentation closeout complete; visual recap skipped by explicit user choice
 - ✓ PR created
-- ⧗ Awaiting human review
+- ⧗ Awaiting final p04 HiLL approval
 
 ## Review Setup
 
@@ -201,10 +201,6 @@ None
 
 ## Next Milestone
 
-PR is open for review.
+Approve final p04 implementation closeout. All configured pre-approval steps are complete; no post-approval steps are configured. Resume with `oat-project-implement` to record explicit approval and finish implementation state.
 
-- To incorporate feedback: run `oat-project-revise`
-- Complete before merge: run `oat-project-complete` now, then merge the PR.
-- Merge before completion: merge the PR, then run `oat-project-complete`.
-
-Final p04 HiLL approval remains pending under the configured implementation sequence.
+PR #335 remains open for review: https://github.com/voxmedia/open-agent-toolkit/pull/335. Merge and release have not been performed.
