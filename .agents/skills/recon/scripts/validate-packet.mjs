@@ -1328,13 +1328,17 @@ function resolveTerminalReconciliation(
 // lists, and require identical canonical JSON. Any edited, injected,
 // duplicated, or unprojected field differs, so no field-by-field binding is
 // needed. Briefs stay blind because the generator is the only projection.
-function checkReviewBrief(brief, reviewKind, { manifest, ledger }) {
+function checkReviewBrief(
+  brief,
+  reviewKind,
+  { manifest, ledger, rebuildReviewBrief = createReviewBrief },
+) {
   const entryIds = reviewBriefEntries(brief, reviewKind).map(
     (entry) => entry?.id,
   );
   let rebuilt;
   try {
-    rebuilt = createReviewBrief({
+    rebuilt = rebuildReviewBrief({
       id: brief.id,
       mode: brief.mode,
       createdAt: brief.createdAt,
@@ -1363,6 +1367,27 @@ function checkReviewBrief(brief, reviewKind, { manifest, ledger }) {
   return { ok: false, entryIds, reason: `differs at ${keys[0]}` };
 }
 
+// One rebuild per distinct brief per validation pass. The key is the exact
+// artifact reference (path and digest) plus the review kind that selects the
+// brief's entries; the cache lives only as long as this pass's checker.
+function createBriefChecker({ manifest, ledger, rebuildReviewBrief }) {
+  const results = new Map();
+  return (briefEntry, reviewKind) => {
+    const key = `${briefEntry.reference?.path}\u0000${briefEntry.reference?.digest}\u0000${reviewKind}`;
+    if (!results.has(key)) {
+      results.set(
+        key,
+        checkReviewBrief(briefEntry.value, reviewKind, {
+          manifest,
+          ledger,
+          rebuildReviewBrief,
+        }),
+      );
+    }
+    return results.get(key);
+  };
+}
+
 function validateReviewBindings(
   manifest,
   ledger,
@@ -1370,6 +1395,7 @@ function validateReviewBindings(
   artifactsByPath,
   reconciliationContext,
   errors,
+  checkBrief,
 ) {
   const claims = new Map(ledger.claims.map((claim) => [claim.id, claim]));
   const priorLedger = reconciliationContext.priorLedger;
@@ -1383,11 +1409,12 @@ function validateReviewBindings(
     ) {
       continue;
     }
-    const brief = [...artifactsByPath.values()].find(
+    const briefEntry = [...artifactsByPath.values()].find(
       ({ reference, value }) =>
         sameReference(reference, result.brief) &&
         value.kind === 'recon.review-brief',
-    )?.value;
+    );
+    const brief = briefEntry?.value;
     const expectedMode =
       result.reviewKind === 'semantic' ||
       result.reviewKind === 'redundant-verification'
@@ -1406,10 +1433,7 @@ function validateReviewBindings(
       );
       continue;
     }
-    const check = checkReviewBrief(brief, result.reviewKind, {
-      manifest,
-      ledger: priorLedger ?? ledger,
-    });
+    const check = checkBrief(briefEntry, result.reviewKind);
     if (!check.ok) {
       errors.push(
         issue(
@@ -1973,7 +1997,7 @@ function validateDerivedSourceGaps(manifest, ledger, errors) {
   }
 }
 
-function validateAssurance(validatedRun, errors) {
+function validateAssurance(validatedRun, errors, checkBrief) {
   const { manifest, ledger, achievedProfile } = validatedRun;
   const exactEvidence = new Set(validatedRun.exactEvidenceIds);
   const assuranceReviewIds = new Set(validatedRun.assuranceReviewIds);
@@ -2127,11 +2151,12 @@ function validateAssurance(validatedRun, errors) {
           );
         }
         reviewerLanes.add(artifact.reviewerLane);
-        const brief = [...artifactsById.values()].find(
+        const briefEntry = [...artifactsById.values()].find(
           ({ reference, value }) =>
             sameReference(reference, artifact.brief) &&
             value.kind === 'recon.review-brief',
-        )?.value;
+        );
+        const brief = briefEntry?.value;
         const expectedMode =
           artifact.reviewKind === 'semantic' ||
           artifact.reviewKind === 'redundant-verification'
@@ -2141,10 +2166,7 @@ function validateAssurance(validatedRun, errors) {
               ? 'adversary'
               : 'coverage';
         const briefCheck = brief
-          ? checkReviewBrief(brief, artifact.reviewKind, {
-              manifest,
-              ledger: validatedRun.priorLedger ?? ledger,
-            })
+          ? checkBrief(briefEntry, artifact.reviewKind)
           : null;
         if (
           !brief ||
@@ -2278,7 +2300,12 @@ function validateAssurance(validatedRun, errors) {
   }
 }
 
-export async function compileValidatedRun(packetDirectory) {
+// `rebuildReviewBrief` is a test seam for counting brief rebuilds; production
+// callers use the default generator.
+export async function compileValidatedRun(
+  packetDirectory,
+  { rebuildReviewBrief = createReviewBrief } = {},
+) {
   const packetRoot = resolve(packetDirectory);
   const errors = [];
   const warnings = [];
@@ -2530,6 +2557,11 @@ export async function compileValidatedRun(packetDirectory) {
         errors,
       );
     }
+    const checkBrief = createBriefChecker({
+      manifest,
+      ledger: reconciliationContext.priorLedger ?? ledger,
+      rebuildReviewBrief,
+    });
     validateReviewBindings(
       manifest,
       ledger,
@@ -2537,6 +2569,7 @@ export async function compileValidatedRun(packetDirectory) {
       artifactsByPath,
       reconciliationContext,
       errors,
+      checkBrief,
     );
     validateReconciliation(
       manifest,
@@ -2584,7 +2617,7 @@ export async function compileValidatedRun(packetDirectory) {
         assuranceReviewIds,
         reconciliationContext,
       });
-      validateAssurance(validatedRun, errors);
+      validateAssurance(validatedRun, errors, checkBrief);
     }
 
     const valid = errors.length === 0;

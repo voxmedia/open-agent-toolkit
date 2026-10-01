@@ -5,7 +5,10 @@ import { afterEach, test } from 'node:test';
 
 import { createReviewBrief } from '../scripts/create-review-brief.mjs';
 import { hashFile } from '../scripts/lib/canonical-json.mjs';
-import { validatePacket } from '../scripts/validate-packet.mjs';
+import {
+  compileValidatedRun,
+  validatePacket,
+} from '../scripts/validate-packet.mjs';
 import { createTwoSourcePacket } from './fixtures/two-source-packet.mjs';
 
 const tempRoots = [];
@@ -285,4 +288,22 @@ test('every tampered production brief fails closed with REVIEW_BRIEF_MISMATCH', 
       );
     });
   }
+});
+
+test('a validation pass rebuilds each distinct brief once, not once per claim', async () => {
+  const packet = await twoSourcePacket({ withCoverageFinding: false });
+  const verifiedClaims = packet.ledger.claims.filter(
+    (claim) => claim.status === 'verified',
+  );
+  assert.ok(verifiedClaims.length >= 2, 'per-claim rebuilding would show');
+  let rebuilds = 0;
+  const result = await compileValidatedRun(packet.packetRoot, {
+    rebuildReviewBrief: (input) => {
+      rebuilds += 1;
+      return createReviewBrief(input);
+    },
+  });
+  assert.equal(result.valid, true, JSON.stringify(result, null, 2));
+  // Three briefs (verify, adversary, coverage), each rebuilt exactly once.
+  assert.equal(rebuilds, 3);
 });
