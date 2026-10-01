@@ -9495,6 +9495,107 @@ describe('authoring contract — executable backstops for standing claims', () =
   });
 });
 
+describe('strict skill frontmatter YAML', () => {
+  const tempDirs: string[] = [];
+
+  afterEach(async () => {
+    await Promise.all(
+      tempDirs.map((dir) => rm(dir, { recursive: true, force: true })),
+    );
+    tempDirs.length = 0;
+  });
+
+  async function validateOne(
+    skillName: string,
+    replace: (lines: string[]) => string[],
+  ): Promise<{ skillPath: string; findings: unknown[] }> {
+    const root = await mkdtemp(join(tmpdir(), 'oat-strict-yaml-'));
+    tempDirs.push(root);
+    const skillPath = await createSkillFile(
+      root,
+      skillName,
+      replace(validSkillContent(skillName).split('\n')).join('\n'),
+    );
+    const result = await validateOatSkills(root);
+    return { skillPath, findings: result.findings };
+  }
+
+  it('accepts the valid fixture with no findings', async () => {
+    const { findings } = await validateOne(
+      'oat-strict-valid',
+      (lines) => lines,
+    );
+    expect(findings).toEqual([]);
+  });
+
+  it('reports a bare colon in an unquoted scalar with its file line and column', async () => {
+    const { skillPath, findings } = await validateOne(
+      'oat-strict-bare-colon',
+      (lines) =>
+        lines.map((line) =>
+          line.startsWith('description:')
+            ? 'description: Use when testing key: value'
+            : line,
+        ),
+    );
+    expect(findings).toContainEqual({
+      file: skillPath,
+      code: 'skill-frontmatter-unreadable',
+      severity: 'error',
+      message:
+        'Frontmatter must be a valid YAML mapping with unique keys (version could not be read): line 3, column 14: Nested mappings are not allowed in compact mappings',
+    });
+  });
+
+  it('reports a non-string name with its location', async () => {
+    const { skillPath, findings } = await validateOne(
+      'oat-strict-name',
+      (lines) =>
+        lines.map((line) => (line.startsWith('name:') ? 'name: 123' : line)),
+    );
+    expect(findings).toContainEqual({
+      file: skillPath,
+      code: 'skill-frontmatter-type',
+      severity: 'error',
+      message: 'Frontmatter key name must be a string (line 2, column 7)',
+    });
+  });
+
+  it('reports a non-boolean user-invocable with its location', async () => {
+    const { skillPath, findings } = await validateOne(
+      'oat-strict-invocable',
+      (lines) =>
+        lines.map((line) =>
+          line.startsWith('user-invocable:') ? 'user-invocable: "true"' : line,
+        ),
+    );
+    expect(findings).toContainEqual({
+      file: skillPath,
+      code: 'skill-frontmatter-type',
+      severity: 'error',
+      message:
+        'Frontmatter key user-invocable must be a boolean (line 5, column 17)',
+    });
+  });
+
+  it('reports a non-object metadata with its location', async () => {
+    const { skillPath, findings } = await validateOne(
+      'oat-strict-metadata',
+      (lines) =>
+        lines
+          .filter((line) => line !== '  version: 1.0.0')
+          .map((line) => (line === 'metadata:' ? 'metadata: [1.0.0]' : line)),
+    );
+    expect(findings).toContainEqual({
+      file: skillPath,
+      code: 'skill-frontmatter-unreadable',
+      severity: 'error',
+      message:
+        'Frontmatter must be a valid YAML mapping with unique keys (version could not be read): line 7, column 11: metadata must be a mapping',
+    });
+  });
+});
+
 describe('skill version resolution across both validators', () => {
   const tempDirs: string[] = [];
 
@@ -9902,7 +10003,7 @@ describe('skill version resolution across both validators', () => {
       code: 'skill-frontmatter-unreadable',
       severity: 'error',
       message:
-        'Frontmatter must be a valid YAML mapping with unique keys (version could not be read)',
+        'Frontmatter must be a valid YAML mapping with unique keys (version could not be read): line 3, column 11: metadata must be a mapping',
     });
   });
 
@@ -9922,7 +10023,7 @@ describe('skill version resolution across both validators', () => {
         code: 'skill-frontmatter-unreadable',
         severity: 'error',
         message:
-          'Frontmatter must be a valid YAML mapping with unique keys (version could not be read)',
+          'Frontmatter must be a valid YAML mapping with unique keys (version could not be read): line 4, column 11: metadata must be a mapping',
       },
     ]);
   });
@@ -9954,7 +10055,7 @@ describe('skill version resolution across both validators', () => {
         code: 'skill-frontmatter-unreadable',
         severity: 'error',
         message:
-          'Frontmatter must be a valid YAML mapping with unique keys (version could not be read)',
+          'Frontmatter must be a valid YAML mapping with unique keys (version could not be read): line 4, column 11: metadata must be a mapping',
       },
     ]);
   });
@@ -10030,7 +10131,7 @@ describe('skill version resolution across both validators', () => {
         code: 'skill-frontmatter-unreadable',
         severity: 'error',
         message:
-          'Frontmatter must be a valid YAML mapping with unique keys (version could not be read)',
+          'Frontmatter must be a valid YAML mapping with unique keys (version could not be read): line 4, column 11: metadata must be a mapping',
       },
     ]);
   });
@@ -10491,7 +10592,7 @@ describe('skill version resolution across both validators', () => {
         code: 'skill-frontmatter-unreadable',
         severity: 'error',
         message:
-          'Frontmatter must be a valid YAML mapping with unique keys (version could not be read)',
+          'Frontmatter must be a valid YAML mapping with unique keys (version could not be read): line 3, column 1: Map keys must be unique',
       },
     ]);
   });
