@@ -788,6 +788,46 @@ Expected: exit 0.
 
 ---
 
+### Task p03-t08: (review) Close p03 round-3 findings H1, M1, M2
+
+Source: `reviews/archived/p03-review-2026-10-01T133903Z.md` (auto review,
+round 3, blocking: 0 Critical, 1 High, 2 Medium, 1 Low). Operator-authorized
+fourth fix cycle (2026-10-01) beyond the three-round review cap; the Codex
+phase gate reviews the result instead of a fourth root review round. L1 is
+root bookkeeping.
+
+**Step 1: Fix**
+
+- H1: brief `questions` and `scope` are copied from the manifest request
+  (`create-review-brief.mjs` around 113 and 141) and never checked. Add one
+  shared request projection in `scripts/lib/review-binding.mjs`, used by the
+  generator and by `validateReviewBindings`, and require equality for every
+  brief type. Tests: an injected note in adversarial `questions`, in coverage
+  `questions`, and in `scope.included` each fail closed with
+  `REVIEW_BRIEF_MISMATCH`; neutralize the check once. Make the
+  `packet-contract.md` sentence (around 393) true as written.
+- M1: base the omission exemption on a `rejected` or `challenged` disposition
+  in the reviews (`review-omissions.mjs` around 19 and 48), not on the
+  published claim status. Test that an omitted claim relabeled `contested` or
+  `unsupported` without such a disposition still needs its gap.
+- M2: one table-driven test that pins each of the five gap-match checks
+  (code, material flag, wave, lane, claim IDs), so removing any one fails.
+
+No version bumps.
+
+**Step 2: Verify**
+
+Run: `node --test .agents/skills/recon/tests/*.test.mjs`,
+`HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation`,
+`pnpm run check:skill-bumps`, `pnpm lint`.
+Expected: exit 0.
+
+**Step 3: Commit**
+
+`fix(p03-t08): close p03 round-3 review findings`
+
+---
+
 ## Phase 4: Lifecycle closeout guards
 
 Backlog: `BL-261001-recompute-oat-project-next-s`,
@@ -1433,7 +1473,8 @@ breaking changes must be named in the title:
     claims, and a claim a required review left without a disposition needs a
     material `REVIEW_DISPOSITION_OMITTED` gap (the reconciler now returns
     them), so an existing packet that omitted one fails with
-    `MISSING_REVIEW_OMISSION_GAP` until those gaps are recorded;
+    `MISSING_REVIEW_OMISSION_GAP` until those gaps are recorded and the packet
+    is republished as `partial`;
   - `oat docs nav sync` writes Fumadocs `meta.json`;
   - `oat project complete-state` refuses a configured closeout with a missing
     or incomplete snapshot; exit-gate waivers are operator-only;
@@ -1459,7 +1500,7 @@ breaking changes must be named in the title:
 | p02    | code     | fixes_completed | 2026-10-01 | reviews/archived/p02-review-2026-10-01T120623Z.md  | c129e82aba9a93c067b587718e576ad31edd372e | auto       | -                 |
 | p03    | code     | fixes_completed | 2026-10-01 | reviews/archived/p03-review-2026-10-01T130314Z.md  | 3769d125fc8499b681305a7565fbdab66b9174a5 | auto       | -                 |
 | p03    | code     | fixes_completed | 2026-10-01 | reviews/archived/p03-review-2026-10-01T131855Z.md  | a3d625b312d892dbdd33270582fb2561ec39533c | auto       | -                 |
-| p03    | code     | received        | 2026-10-01 | reviews/archived/p03-review-2026-10-01T133903Z.md  | 18012ae901c3ba7460af9cb82d2010fb6b8d1970 | auto       | -                 |
+| p03    | code     | fixes_added     | 2026-10-01 | reviews/archived/p03-review-2026-10-01T133903Z.md  | 18012ae901c3ba7460af9cb82d2010fb6b8d1970 | auto       | -                 |
 | p04    | code     | pending         | -          | -                                                  | -                                        | -          | -                 |
 | p05    | code     | pending         | -          | -                                                  | -                                        | -          | -                 |
 | p06    | code     | pending         | -          | -                                                  | -                                        | -          | -                 |
@@ -1540,12 +1581,12 @@ criterion.
 
 - Phase 1: 5 tasks - Template resolver
 - Phase 2: 6 tasks - Fumadocs navigation
-- Phase 3: 7 tasks - Recon publication and Codex recovery
+- Phase 3: 8 tasks - Recon publication and Codex recovery
 - Phase 4: 4 tasks - Lifecycle closeout guards
 - Phase 5: 6 tasks - Small fixes
 - Phase 6: 3 tasks - Release fan-in
 
-**Total: 31 tasks**
+**Total: 32 tasks**
 
 Ready for code review and merge.
 

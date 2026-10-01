@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
-oat_current_task_id: p04-t01
+oat_current_task_id: p03-t08
 oat_generated: false
 ---
 
@@ -28,12 +28,12 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 5     | 5/5       |
 | Phase 2 | complete    | 6     | 6/6       |
-| Phase 3 | in_progress | 7     | 7/7       |
+| Phase 3 | in_progress | 8     | 7/8       |
 | Phase 4 | pending     | 4     | 0/4       |
 | Phase 5 | pending     | 6     | 0/6       |
 | Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 18/31 tasks completed
+**Total:** 18/32 tasks completed
 
 ---
 
@@ -142,6 +142,11 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** a28109fc3
+
+### Task p03-t08: (review) Close p03 round-3 findings H1, M1, M2
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -384,6 +389,11 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   operator decision (`IMPLEMENT` review-cap boundary).
   `Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
 
+- Operator decision (2026-10-01): "One more fix round" — a fourth fix cycle
+  beyond the review cap, covering round-3 H1, M1, M2 (and L1 as root
+  bookkeeping), with the Codex phase gate reviewing the result instead of a
+  fourth root review. Converted to `p03-t08`.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -473,6 +483,7 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 | p02-t06       | p02 gate M1     | Loader-checked reachability                                   | The new `fumadocs-loader.test.ts` imports `fumadocs-core` through `apps/oat-docs/package.json`, so CLI tests need the docs app installed (a normal workspace install); a kept `pagesIndex` naming another page may over-report that page as unlisted | Prove against the real loader                                                      | Implementation  | None                                              |
 | p03-t03       | plan.md p03-t03 | End-to-end test fails only with `REVIEW_DISPOSITION_MISMATCH` | It first failed shape validation (`INVALID_UNRESOLVED_ISSUE`); added rejections for duplicate claim IDs, empty text, unknown fields, non-global scope; claim IDs validated against the review's own dispositions                                     | Stricter closed union                                                              | Implementation  | None                                              |
 | p03-t06       | p03 review H1   | Brief claim IDs equal disposition claim IDs both ways         | Every brief claim must be a distinct ledger claim with an exact projection; a reviewer may still omit a disposition, which reconciles to `unresolved` (honest partial)                                                                               | Strict equality would fail the documented omitted-claim path with no retry allowed | Implementation  | None                                              |
+| p03-t07       | p03 round-2 M1  | Omitted-disposition claims need a gap                         | Contested and unsupported claims are exempt (already shown under Contradictions and Qualifications); p03-t08 bases the exemption on review dispositions                                                                                              | Avoid double-reporting                                                             | Implementation  | None                                              |
 
 ## Test Results
 
