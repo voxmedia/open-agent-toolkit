@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
-oat_current_task_id: p03-t08
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -28,12 +28,12 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 5     | 5/5       |
 | Phase 2 | complete    | 6     | 6/6       |
-| Phase 3 | in_progress | 8     | 7/8       |
+| Phase 3 | in_progress | 8     | 8/8       |
 | Phase 4 | pending     | 4     | 0/4       |
 | Phase 5 | pending     | 6     | 0/6       |
 | Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 18/32 tasks completed
+**Total:** 19/32 tasks completed
 
 ---
 
@@ -145,8 +145,8 @@ oat_generated: false
 
 ### Task p03-t08: (review) Close p03 round-3 findings H1, M1, M2
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 0101fd21c
 
 ---
 
@@ -393,6 +393,14 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   beyond the review cap, covering round-3 H1, M1, M2 (and L1 as root
   bookkeeping), with the Codex phase gate reviewing the result instead of a
   fourth root review. Converted to `p03-t08`.
+
+- Continuation `cont-backlog-wave-3-p03-fix-3`: `0101fd21c` closed round-3
+  H1 (one request projection for `scope`, `questions`, and `excludedInputs`
+  bound for every brief type; brief-field audit: every field bound or
+  structurally fixed; `id` limited to a 64-character slug and `createdAt` to
+  UTC ISO-8601, not bound), M1 (omission exemption read from `rejected` or
+  adversarial `challenged` dispositions), M2 (table test pinning each gap-match
+  check); recon 375/375. Residual: the brief `id` is constrained, not derived.
 
 <!-- orchestration-runs-end -->
 
