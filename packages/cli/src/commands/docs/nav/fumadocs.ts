@@ -174,17 +174,39 @@ function hrefFragment(href: string): string {
  * folders. There is never a `"..."` rest entry: pages the Contents map does
  * not list stay out of the tree and are reported instead.
  */
+/**
+ * Whether the fumadocs-core 16.10.2 page-tree builder supplies this folder's
+ * `index` page on its own, given the folder's effective metadata.
+ *
+ * `buildFolder` attaches `<folder>/index` as the folder index only when the
+ * folder is not a root folder (the docs root, or a preserved `root: true`)
+ * and no `pagesIndex` names a different page. Otherwise the page is shown
+ * only if `pages` lists it.
+ */
+function hasImplicitIndex(
+  relativeDir: string,
+  existing: Record<string, unknown> | null,
+): boolean {
+  if (relativeDir === '.' || existing?.root === true) {
+    return false;
+  }
+  const pagesIndex = existing?.pagesIndex;
+  return pagesIndex === undefined || pagesIndex === 'index';
+}
+
 async function buildFolderPages(
   docsRoot: string,
   relativeDir: string,
   markdown: string,
+  implicitIndex: boolean,
 ): Promise<string[]> {
   const indexPath = join(docsRoot, relativeDir, 'index.md');
   const entries = parseIndexContents(markdown, indexPath);
-  // fumadocs-core treats the root folder as having no index page, so the root
-  // lists `index` explicitly. In a subfolder, listing `index` would demote the
-  // folder index to an ordinary child, so it is left implicit there.
-  const pages: string[] = relativeDir === '.' ? ['index'] : [];
+  // A folder the loader gives no implicit index (the docs root, a `root: true`
+  // folder) must list `index` to show its landing page. Elsewhere, listing
+  // `index` would demote the folder index to an ordinary child, so it is left
+  // implicit.
+  const pages: string[] = implicitIndex ? [] : ['index'];
 
   for (const entry of entries) {
     const target = await resolveEntryTarget(
@@ -253,6 +275,7 @@ function mergeMeta(
 function collectUnlisted(
   inventory: DocsInventory,
   metas: Map<string, FumadocsMeta>,
+  implicitIndexDirs: ReadonlySet<string>,
 ): string[] {
   const reachableDirs = new Set<string>();
   const reachablePages = new Set<string>();
@@ -269,8 +292,10 @@ function collectUnlisted(
     if (!meta) {
       return;
     }
+    // A landing page is reachable only when the loader attaches it as the
+    // folder index or `pages` lists it, never just because the file exists.
     const index = pagesByFlattenPath.get(posix.join(relativeDir, 'index'));
-    if (index) {
+    if (index && implicitIndexDirs.has(relativeDir)) {
       reachablePages.add(index);
     }
     for (const item of meta.pages) {
@@ -328,17 +353,34 @@ export async function syncFumadocsNavigation(options: {
   const { docsRoot } = options;
   const inventory = await inventoryDocs(docsRoot);
   const metas = new Map<string, FumadocsMeta>();
+  const existingMetas = new Map<string, Record<string, unknown> | null>();
+  const implicitIndexDirs = new Set<string>();
 
   for (const relativeDir of inventory.directories) {
     const indexPath = join(docsRoot, relativeDir, 'index.md');
     if (!(await fileExists(indexPath))) {
       continue;
     }
+    // Index handling depends on the effective metadata, which keeps the
+    // author-owned `root` and `pagesIndex` keys of an existing meta.json.
+    const existing = await readExistingMeta(
+      join(docsRoot, relativeDir, 'meta.json'),
+    );
+    existingMetas.set(relativeDir, existing);
+    const implicitIndex = hasImplicitIndex(relativeDir, existing);
+    if (implicitIndex) {
+      implicitIndexDirs.add(relativeDir);
+    }
     const markdown = await readFile(indexPath, 'utf8');
     const title = resolveFolderTitle(markdown);
     metas.set(relativeDir, {
       ...(title === undefined ? {} : { title }),
-      pages: await buildFolderPages(docsRoot, relativeDir, markdown),
+      pages: await buildFolderPages(
+        docsRoot,
+        relativeDir,
+        markdown,
+        implicitIndex,
+      ),
     });
   }
 
@@ -352,7 +394,7 @@ export async function syncFumadocsNavigation(options: {
   for (const [relativeDir, meta] of metas) {
     const relativePath = posix.join(relativeDir, 'meta.json');
     const metaPath = join(docsRoot, relativePath);
-    const existing = await readExistingMeta(metaPath);
+    const existing = existingMetas.get(relativeDir) ?? null;
     const next = mergeMeta(existing, meta);
     const changed = existing === null || !isDeepStrictEqual(existing, next);
     if (changed && !options.check) {
@@ -371,6 +413,6 @@ export async function syncFumadocsNavigation(options: {
     metaFiles,
     written: options.check ? [] : stale,
     stale,
-    unlisted: collectUnlisted(inventory, metas),
+    unlisted: collectUnlisted(inventory, metas, implicitIndexDirs),
   };
 }

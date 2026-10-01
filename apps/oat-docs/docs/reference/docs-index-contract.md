@@ -60,7 +60,7 @@ In a Fumadocs app (detected by its `source.config.ts`), `oat docs nav sync --tar
 
 Fumadocs generated behavior:
 
-- `pages` follows the order of the directory's `## Contents` links. The root list starts with `index`; a child directory appears by its folder name, and its own `index.md` becomes that folder's landing page.
+- `pages` follows the order of the directory's `## Contents` links. The root list starts with `index`; a child directory appears by its folder name, and its own `index.md` becomes that folder's landing page. A folder whose `meta.json` keeps `root: true` also lists `index` first, because Fumadocs gives a root folder no implicit landing page.
 - Navigation is strict: there is no `"..."` rest entry. A page or folder that no `## Contents` map lists stays out of the sidebar, and the command reports it by path in its human output and in `--json` (`unlisted`). Add the page to its directory's `## Contents` map to show it.
 - A `## Contents` link to a page in another directory is written as a Fumadocs link entry such as `[Writing Skills](/contributing/skills)`, so each page belongs to exactly one folder.
 - The folder `title` comes from the `index.md` frontmatter `title`, falling back to its first `#` heading.

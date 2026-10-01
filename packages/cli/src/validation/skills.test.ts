@@ -7852,6 +7852,23 @@ describe('validateOatSkills', () => {
     expect(getFrontmatterForTest(projectRetro)).toContain('Bash(mkdir:*)');
   });
 
+  it('grants oat-docs-analyze only the read-only nav sync check', async () => {
+    const docsAnalyze = await readRepoFile(
+      '.agents/skills/oat-docs-analyze/SKILL.md',
+    );
+    const frontmatter = getFrontmatterForTest(docsAnalyze);
+
+    // The grant is a prefix match, so `--check` comes first: a plain
+    // `oat docs nav sync`, which writes meta.json, stays ungranted.
+    expect(docsAnalyze).toContain(
+      'oat docs nav sync --check --target-dir <docs-app-dir>',
+    );
+    expect(frontmatter).toContain('Bash(oat docs nav sync --check:*)');
+    expect(frontmatter).not.toMatch(
+      /Bash\(oat(?: docs(?: nav(?: sync)?)?)?:\*\)|Bash\(\*\)|Bash,|Bash$/m,
+    );
+  });
+
   it('pins the brainstorm persistence invariant by project scope', async () => {
     const brainstorm = await readRepoFile(
       '.agents/skills/oat-brainstorm/SKILL.md',
