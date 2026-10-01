@@ -614,7 +614,7 @@ Accepted handle `/root/markdown_p02_pinned`; awaiting root ACK before work.
     "dispatch_mode": "background"
   },
   "launch_status": "accepted",
-  "child_outcome": "DONE",
+  "child_outcome": null,
   "configured_invocation_evidence": [
     "project-state:high",
     "user-config:gpt-6.1-sol/high",
@@ -633,6 +633,15 @@ Accepted handle `/root/markdown_p02_pinned`; awaiting root ACK before work.
       "provesNoChildStarted": true,
       "canonicalRoleDigest": "sha256:a9c0b0be772025a6115005b6870ea9d5de4cb9e07c23790ff94dfac07fe6e005",
       "approximation": true
+    },
+    {
+      "event": "review-task-continuation",
+      "task": "p02-t03",
+      "finding": "M1",
+      "review": "reviews/archived/p02-review-2026-10-01T125830Z.md",
+      "accepted_handle": "/root/markdown_p02_pinned",
+      "dispatch_stamp": "Dispatch: scope=p02-t03 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high-3da8a37eed",
+      "status": "accepted-awaiting-ack"
     }
   ],
   "task_class": "hard-reasoning",
@@ -799,7 +808,7 @@ Accepted handle `/root/markdown_p02_review_pinned`, exact model/effort retained,
     "dispatch_mode": "background"
   },
   "launch_status": "accepted",
-  "child_outcome": null,
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     "project-state:high",
     "user-config:gpt-6.1-sol/high",
@@ -838,3 +847,9 @@ Root read the complete review and validated scope, full reviewed head, range and
 **Review artifact:** reviews/archived/p02-review-2026-10-01T125830Z.md
 **Findings:** 0 Critical, 0 High, 1 Medium, 0 Low.
 **New tasks added:** p02-t03. M1 convert to task; Minor scope; working filename links are required by the approved actual-Contents contract. No design drift, deferrals or rejected findings. Next: execute p02-t03 on the accepted phase handle, update this bound event to fixes_completed, then independent re-review.
+
+#### p02-t03 accepted same-handle continuation
+
+Dispatch: scope=p02-t03 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high-3da8a37eed
+
+Host followup_task accepted continuation on /root/markdown_p02_pinned. Exact target retained; scope only the newly added filename link fix. No new child or routing fallback. Awaiting root ACK.
