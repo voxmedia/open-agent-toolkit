@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
-oat_current_task_id: p06-t01
+oat_current_task_id: p05-t07
 oat_generated: false
 ---
 
@@ -30,10 +30,10 @@ oat_generated: false
 | Phase 2 | complete    | 6     | 6/6       |
 | Phase 3 | complete    | 10    | 10/10     |
 | Phase 4 | complete    | 6     | 6/6       |
-| Phase 5 | in_progress | 6     | 6/6       |
+| Phase 5 | in_progress | 7     | 6/7       |
 | Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 33/36 tasks completed
+**Total:** 33/37 tasks completed
 
 ---
 
@@ -229,6 +229,11 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** 09ff750c4
+
+### Task p05-t07: (review) Close p05 review findings M1, M2
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -503,6 +508,28 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Verification: focused 1362/1362 and phase 5979/5979 before and after the commit; whole CLI suite 8012/8012
 - Reason: three test files outside p05-t02's verification set still used `--project` or the removed opt-in wording; test-only bounded correction
 
+### Phase p05 dispatch
+
+- Request `bw3-p05-impl-1`: accepted and returned `DONE_WITH_CONCERNS` (all
+  success invariants passed); target
+  `oat-phase-implementer-claude-claude-opus-5-5-high`; commits
+  `b6afdb905..09ff750c4` (p05-t01..t06) plus recovery `6e2cc2956`
+  (`bw3-p05-recovery-1`, 1/10, test-only); CLI 5979, smoke 163, skills 689,
+  `pnpm check` 0 cached; bumped dispatch-subagents (project) 1.1.7,
+  review-provide 1.5.12, review-provide-remote 1.1.9, plan-writing 1.2.35.
+  `Dispatch: scope=p05 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
+- Step 7a ledger commit `b35e07d1e` (recovery marker cleared, usage 1).
+- Request `bw3-p05-review-1` (`oat-reviewer-claude-claude-opus-5-5-high`,
+  reconnaissance not-attempted) at `b35e07d1e`:
+  `reviews/archived/p05-review-2026-10-01T191719Z.md`, 0 Critical/High,
+  2 Medium (dependency-package test-only paths still force the bump; journal-only
+  helpers left with no caller), 1 Low (deviation rows) (passes). No ledger or
+  resume-pointer finding. M1 and M2 converted to `p05-t07`; L1 handled by root.
+  The reviewer saw two e2e tool-guidance tests fail only when `src/e2e` runs in
+  the same vitest invocation as the full suite (unrelated to p05; checked by the
+  Definition of Done).
+  `Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -597,6 +624,10 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 | p04-t02       | plan.md p04-t02                  | Closeout check reports `complete` when steps are done                  | Reports `complete` only when the snapshot's own status is `complete`; "in_progress" modeled as snapshot status `failed`; waivers carry `covered_fingerprint`; `complete-state` reads layered config when no snapshot exists, so a malformed config now refuses | Match Step 15's final write; compare across merges                                                                               | Implementation  | None                                                                        |
 | p04-t03       | plan.md p04-t03                  | Check before `oat-project-complete`'s first mutation (around Step 3.7) | New Step 1.5 before the upfront questions, re-checked before `complete-state`                                                                                                                                                                                  | Steps 2 and 3.5 can already write                                                                                                | Implementation  | None                                                                        |
 | p04-t03       | plan.md p04-t03                  | Fail closed for configured closeouts                                   | `claude-effort-levels` (hand-written snapshot) will be refused by `complete-state` until repaired; legacy `pr_open` projects without a snapshot (`migrate-skill-versions`) route back to implement                                                             | Intended fail-closed behavior                                                                                                    | Implementation  | Note in the PR body                                                         |
+| p05-t01       | plan.md p05-t01                  | Planning guard for linked CLAUDE.md                                    | The single planning guard also covers stray overwrites (it checks every planned CLAUDE.md update)                                                                                                                                                              | Same resolves-to check                                                                                                           | Implementation  | None                                                                        |
+| p05-t03       | plan.md p05-t03                  | Probe with `pnpm run worktree:init`                                    | Probe used `pnpm install --frozen-lockfile`; `worktree:init` with a throwaway `HOME` made `bundle-assets.sh` copy the repo into its own staging until the disk filled                                                                                          | Pre-existing `bundle-assets.sh` hazard                                                                                           | Implementation  | `BL-261001-fail-closed-when-bundle`                                         |
+| p05-t04       | plan.md p05-t04                  | Key-type checks                                                        | Type checks run in the existing `oat-*` required-key loop; located YAML errors run for every skill                                                                                                                                                             | Existing required-key checks are `oat-*` only                                                                                    | Implementation  | None                                                                        |
+| p05-t05       | plan.md p05-t05                  | Listed router and dashboard files                                      | Also updated `project/split/__tests__/run.test.ts`, which pinned the old quick route                                                                                                                                                                           | Mechanical                                                                                                                       | Implementation  | None                                                                        |
 
 ## Test Results
 

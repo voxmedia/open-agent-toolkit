@@ -1426,6 +1426,45 @@ Expected: exit 0.
 
 ---
 
+### Task p05-t07: (review) Close p05 review findings M1, M2
+
+Source: `reviews/archived/p05-review-2026-10-01T191719Z.md` (auto review,
+passing: 0 Critical/High, 2 Medium, 1 Low). L1 (deviation rows) is root
+bookkeeping.
+
+**Step 1: Fix**
+
+- M1: `tools/release/release-utils.ts` (around 215-227) checks a dependency
+  package's changed paths against the dependent package's ignore patterns, so
+  a test-only change in control-plane or docs-transforms still forces the
+  lockstep bump. Check each changed path against the patterns of the package
+  that owns it. Tests use the real dependency map: a control-plane test-only
+  change and a docs-transforms test-only change mark nothing; a non-test `src`
+  change in a dependency still marks its dependents (negative control).
+- M2: delete the journal-only machinery with no production caller:
+  `withContainedWriterLock`, `journalErrorCode`, `redactedFsError`, and
+  `publishContainedJsonRevision` in `packages/cli/src/fs/io.ts` (and their
+  tests), `assertJournalIdentityHasNoAbsolutePath` in
+  `packages/cli/src/providers/identity/absolute-paths.ts`, and the
+  `triggerRecord`/`relatedRecords` inputs and the `fallback-link` and
+  unreachable `fallback-claim` paths in `oat-dispatch-record.ts` (around
+  750-907). The validate-only command and the managed Claude validation path
+  stay unchanged.
+
+**Step 2: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli build`,
+`HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/release src/fs src/providers src/commands/project/dispatch`,
+`pnpm test:smoke`, `pnpm --filter @open-agent-toolkit/cli type-check`,
+`pnpm lint`.
+Expected: exit 0.
+
+**Step 3: Commit**
+
+`fix(p05-t07): close p05 review findings`
+
+---
+
 ## Phase 6: Release fan-in
 
 ### Task p06-t01: Bump the lockstep public packages to 0.3.11
@@ -1659,7 +1698,7 @@ breaking changes must be named in the title:
 | p03    | code     | fixes_completed | 2026-10-01 | reviews/archived/p03-review-2026-10-01T133903Z.md  | 18012ae901c3ba7460af9cb82d2010fb6b8d1970 | auto       | -                 |
 | p03    | code     | passed          | 2026-10-01 | reviews/archived/p03-review-2026-10-01T165604Z.md  | 2cb68863a5b6eb3ff54e9cb9176db401d7c9932d | gate       | codex-6-sol-xhigh |
 | p04    | code     | fixes_completed | 2026-10-01 | reviews/archived/p04-review-2026-10-01T174412Z.md  | 310f3902b8e4d869f0b437262f95b3deb661e708 | auto       | -                 |
-| p05    | code     | pending         | -          | -                                                  | -                                        | -          | -                 |
+| p05    | code     | fixes_added     | 2026-10-01 | reviews/archived/p05-review-2026-10-01T191719Z.md  | b35e07d1e3924c6b2f8b14b704b6378bf7974f37 | auto       | -                 |
 | p06    | code     | pending         | -          | -                                                  | -                                        | -          | -                 |
 | final  | code     | pending         | -          | -                                                  | -                                        | -          | -                 |
 | spec   | artifact | pending         | -          | -                                                  | -                                        | -          | -                 |
@@ -1741,10 +1780,10 @@ criterion.
 - Phase 2: 6 tasks - Fumadocs navigation
 - Phase 3: 10 tasks - Recon publication and Codex recovery
 - Phase 4: 6 tasks - Lifecycle closeout guards
-- Phase 5: 6 tasks - Small fixes
+- Phase 5: 7 tasks - Small fixes
 - Phase 6: 3 tasks - Release fan-in
 
-**Total: 36 tasks**
+**Total: 37 tasks**
 
 Ready for code review and merge.
 
