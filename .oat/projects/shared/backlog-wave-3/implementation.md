@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
-oat_current_task_id: p04-t01
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 5     | 5/5       |
-| Phase 2 | complete | 6     | 6/6       |
-| Phase 3 | complete | 10    | 10/10     |
-| Phase 4 | pending  | 4     | 0/4       |
-| Phase 5 | pending  | 6     | 0/6       |
-| Phase 6 | pending  | 3     | 0/3       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 5     | 5/5       |
+| Phase 2 | complete    | 6     | 6/6       |
+| Phase 3 | complete    | 10    | 10/10     |
+| Phase 4 | in_progress | 4     | 4/4       |
+| Phase 5 | pending     | 6     | 0/6       |
+| Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 21/34 tasks completed
+**Total:** 25/34 tasks completed
 
 ---
 
@@ -162,27 +162,27 @@ oat_generated: false
 
 ## Phase 4: Lifecycle closeout guards
 
-**Status:** pending
+**Status:** in_progress
 
 ### Task p04-t01: Recompute next's exit-gate fingerprint with the v2 exclusions
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 91fcf42e1
 
 ### Task p04-t02: Add a CLI closeout check and make complete-state refuse a missing snapshot
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 84e37c0de
 
 ### Task p04-t03: Route terminal closeout through the check
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 57f8ca1df
 
 ### Task p04-t04: Add operator-only exit-gate waivers
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** e9ac593f9
 
 ---
 
