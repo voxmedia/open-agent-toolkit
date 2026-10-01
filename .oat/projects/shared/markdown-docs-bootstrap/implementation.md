@@ -111,7 +111,7 @@ None recorded.
 
 ## Final Summary (for PR/docs)
 
-Not complete. Shared Markdown root/output protection and guidance preview are implemented and independently reviewed; CLI bootstrap/adoption, skill/docs alignment and final integration/release validation remain pending.
+Not complete. Shared Markdown root/output protection and guidance preview are implemented and independently reviewed; CLI bootstrap/adoption/dry-run are implemented with p02 independent review pending; skill/docs alignment and final integration/release validation remain pending.
 
 ## Orchestration Runs
 
@@ -607,7 +607,7 @@ Accepted handle `/root/markdown_p02_pinned`; awaiting root ACK before work.
     "dispatch_mode": "background"
   },
   "launch_status": "accepted",
-  "child_outcome": null,
+  "child_outcome": "DONE",
   "configured_invocation_evidence": [
     "project-state:high",
     "user-config:gpt-6.1-sol/high",
@@ -672,3 +672,74 @@ Root verified clean worktree, append-only task commit and exact declared/helper 
 | Safe retry after config failure          | ok/exit 0      | Preserved baseline, config/guidance converged         |
 
 Latest thirteen-case proof results originally at temp `oat-p02-adoption-proof-qdfkvrgs/results.json`; task logs `/tmp/oat-p02-t02-{build,tests,types,lint}.log` and `/tmp/oat-p02-phase-tests.log`. Neutralization: dry-run write guard disabled → two actual tree-mutation test failures; existing-content skip/exclusive-open guards disabled → two authored-byte mutation failures. Mutated Vitest exits 1; restored exits 0 and original source hashes match. No recovery attempts/events, no optional nested dispatch.
+
+#### p02 phase report accepted before review
+
+Root validated DONE report for markdown-p02-pinned-20261001, base 0fc23346236890d44afe9abdd50d325e9a51d559 through b88955cd748c153b2e6cfed59b040075218d8959. Exact two append-only code task commits and their separate tracking commits reconcile, declared boundaries plus permitted markdown.ts helper, clean tree, recovery 0/10/no pending event, no nested dispatch. Post-all-commits full phase suite 194/194 across 10 actual files and CLI type-check exit 0; logs /tmp/oat-p02-phase-final-{tests,types}.log. Phase remains in_progress until review.
+
+#### p02 review dispatch
+
+Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high-3da8a37eed
+
+```json
+{
+  "request_id": "markdown-p02-review-20261001",
+  "caller": "oat-project-implement",
+  "scope": "p02",
+  "objective": "Independently review fresh Markdown bootstrap, adoption, dry-run, preservation and bundle installation against approved requirements.",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "reviewer",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "codex-root-20261001",
+    "source": "tool-schema",
+    "observed_at": "2026-10-01"
+  },
+  "authority": "read-only code and one review artifact",
+  "role_selector": "oat-reviewer-gpt-6-1-sol-high-3da8a37eed",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-09-24",
+  "guidance_verified_at": "2026-09-24",
+  "guidance_status": "review-required",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/medium", "gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 3600,
+  "retry_limit": 2,
+  "payload": {
+    "agent_type": "oat-reviewer-gpt-6-1-sol-high-3da8a37eed",
+    "fork_turns": "none",
+    "scope_reference": "p02:0fc23346236890d44afe9abdd50d325e9a51d559..HEAD",
+    "dispatch_mode": "background"
+  },
+  "launch_status": "planned",
+  "child_outcome": null,
+  "configured_invocation_evidence": [
+    "project-state:high",
+    "user-config:gpt-6.1-sol/high",
+    "tool-schema:gpt-6.1-sol low-through-ultra",
+    "canonical-role:sha256:eb1bd78d0a5a48ed5d1867e313e19a07859a86aedec14d759beda8f97d26ce55"
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [
+    "Model guidance is dated; current configured target and live model selector control this invocation.",
+    "No independent service-tier control selected."
+  ],
+  "continuation_events": [],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Independent review of preservation guards and guidance identity behavior.",
+  "floor_satisfaction": "satisfied"
+}
+```
