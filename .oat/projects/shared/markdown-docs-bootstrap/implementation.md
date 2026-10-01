@@ -196,3 +196,78 @@ Dispatch: scope=p01 action=implementation role=implementer producer=unknown prov
 Native pre-start rejection: `unknown agent_type 'oat-phase-implementer-gpt-6-1-sol-high-3da8a37eed'`. No child started (`provesNoChildStarted: true`, `native-role-unavailable`). Canonical role resolved from loaded project scope, version 1.1.6, digest `sha256:a9c0b0be772025a6115005b6870ea9d5de4cb9e07c23790ff94dfac07fe6e005`.
 
 Target-preserving fresh child eligible: request `markdown-p01-pinned-20261001`, links rejected `markdown-p01-implement-20261001`; approximation true; explicit model gpt-6.1-sol, reasoning effort high, canonical role `.agents/agents/oat-phase-implementer.md`, fresh context, same scope, authority, deadline, retry/recovery budgets, and route. Native variant remains the resolver target; fresh payload uses default agent plus exact model/effort controls after the proven rejection.
+
+Accepted fresh handle `/root/markdown_p01_pinned`; no writes allowed until launch acknowledgement. Configured invocation model/effort pinned; runtime identity not reported.
+
+```json
+{
+  "request_id": "markdown-p01-pinned-20261001",
+  "caller": "oat-project-implement",
+  "scope": "p01",
+  "objective": "Implement literal Markdown roots, authored-index output protection, and shared read-only guidance preview.",
+  "action": "implementation",
+  "role_name": "oat-phase-implementer",
+  "role_class": "worker",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "codex-root-20261001",
+    "source": "tool-schema",
+    "observed_at": "2026-10-01"
+  },
+  "authority": "bounded phase code commits in current worktree",
+  "role_selector": "default",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-09-24",
+  "guidance_verified_at": "2026-09-24",
+  "guidance_status": "review-required",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/medium", "gpt-6.1-sol/high"],
+  "selection_reason": "pre-start-rejection",
+  "selected_route": "native",
+  "deadline_seconds": 3600,
+  "retry_limit": 2,
+  "payload": {
+    "agent_type": "default",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "high",
+    "fork_turns": "none",
+    "scope_reference": ".oat/projects/shared/markdown-docs-bootstrap/plan.md#phase-1-shared-content-and-guidance-contracts",
+    "dispatch_mode": "background"
+  },
+  "launch_status": "accepted",
+  "child_outcome": null,
+  "configured_invocation_evidence": [
+    "project-state:high",
+    "user-config:gpt-6.1-sol/high",
+    "tool-schema:gpt-6.1-sol low-through-ultra",
+    "canonical-role:sha256:a9c0b0be772025a6115005b6870ea9d5de4cb9e07c23790ff94dfac07fe6e005"
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [
+    "Model guidance is dated; current configured target and live model selector control this invocation.",
+    "No independent service-tier control selected."
+  ],
+  "continuation_events": [
+    {
+      "event": "exact-target-approximation",
+      "from_request_id": "markdown-p01-implement-20261001",
+      "provesNoChildStarted": true,
+      "canonicalRoleDigest": "sha256:a9c0b0be772025a6115005b6870ea9d5de4cb9e07c23790ff94dfac07fe6e005",
+      "approximation": true
+    }
+  ],
+  "task_class": "hard-reasoning",
+  "model_class_floor": "hard-reasoning",
+  "classification_source": "caller",
+  "classification_reason": "Canonical roots, symlink aliases, and authored-index preservation require semantic safety reasoning.",
+  "floor_satisfaction": "satisfied"
+}
+```
