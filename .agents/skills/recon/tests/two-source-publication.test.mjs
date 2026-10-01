@@ -191,3 +191,60 @@ test('a claim a required review left without a disposition stays unresolved and 
     /claim-epsilon\*\* \(unresolved\)[^\n]*semantic review: not reviewed \(no disposition\)/,
   );
 });
+
+test('a thorough review that left a briefed claim without a disposition lists it as not reviewed, and only for briefed claims', async () => {
+  // The redundant-verification brief lists every claim except delta. Epsilon
+  // is held below verified by a semantic omission, so the packet is valid;
+  // the redundant reviewer also leaves it without a disposition.
+  const packet = await createTwoSourcePacket({
+    profile: 'thorough',
+    withCoverageFinding: false,
+    redundantClaimIds: [
+      twoSourceClaimIds.firstSource,
+      twoSourceClaimIds.secondSource,
+      twoSourceClaimIds.coverageGap,
+    ],
+    omitDispositions: [
+      { reviewKind: 'semantic', claimId: twoSourceClaimIds.coverageGap },
+      {
+        reviewKind: 'redundant-verification',
+        claimId: twoSourceClaimIds.coverageGap,
+      },
+    ],
+  });
+  tempRoots.push(packet.tempRoot);
+  assert.deepEqual(
+    packet.briefs['redundant-verify'].claims.map((claim) => claim.id),
+    [
+      twoSourceClaimIds.firstSource,
+      twoSourceClaimIds.secondSource,
+      twoSourceClaimIds.coverageGap,
+    ],
+  );
+  const status = Object.fromEntries(
+    packet.ledger.claims.map((claim) => [claim.id, claim.status]),
+  );
+  assert.equal(status[twoSourceClaimIds.coverageGap], 'unresolved');
+  assert.equal(status[twoSourceClaimIds.uncertain], 'unresolved');
+
+  const validation = await validatePacket(packet.packetRoot);
+  assert.equal(validation.valid, true, JSON.stringify(validation, null, 2));
+  assert.equal(validation.status, 'complete');
+  assert.equal(validation.achievedProfile, 'thorough');
+  await renderPacket(packet.packetRoot);
+  const downgrades = reviewDowngrades(
+    await readFile(join(packet.packetRoot, 'packet.md'), 'utf8'),
+  );
+  assert.match(
+    downgrades,
+    /claim-epsilon\*\* \(unresolved\)[^\n]*semantic review: not reviewed \(no disposition\)[^\n]*redundant-verification review: not reviewed \(no disposition\)/,
+  );
+  // Delta is outside the redundant-verification brief: it is downgraded by
+  // its uncertain semantic disposition, never as a redundant omission.
+  const delta = downgrades
+    .split('\n')
+    .find((line) => line.includes(`${twoSourceClaimIds.uncertain}**`));
+  assert.ok(delta, downgrades);
+  assert.match(delta, /semantic review: uncertain/);
+  assert.doesNotMatch(delta, /not reviewed/);
+});

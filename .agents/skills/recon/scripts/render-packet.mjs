@@ -9,9 +9,9 @@ import { isDirectExecution } from './lib/cli-entry.mjs';
 import {
   affirmingDispositionByReviewKind,
   classifyUnresolvedIssue,
-  requiredReviewKinds,
   unresolvedIssuesBlockClaim,
 } from './lib/contracts.mjs';
+import { reviewBriefEntries } from './lib/review-binding.mjs';
 import {
   assertSafeExistingPath,
   assertSafeOutputPath,
@@ -121,17 +121,34 @@ function intendedRoutingSection(manifest, routing) {
   ];
 }
 
-// The required reviews that gave `claimId` no disposition at all. Such a
-// claim stays below `verified`, like an uncertain one, and is listed as not
-// reviewed.
+const assuranceReviewKinds = Object.keys(affirmingDispositionByReviewKind);
+
+// The claim IDs a review was briefed on: the entries of the immutable brief
+// its exact reference resolves to, read the way the validator reads them.
+function briefedClaimIds(review, artifacts) {
+  const brief = artifacts.find(
+    ({ reference, value }) =>
+      value.kind === 'recon.review-brief' &&
+      reference.path === review.brief?.path &&
+      reference.digest === review.brief?.digest,
+  )?.value;
+  return new Set(
+    reviewBriefEntries(brief, review.reviewKind).map((entry) => entry.id),
+  );
+}
+
+// Every incorporated assurance review, core or thorough, whose brief listed
+// `claimId` but which gave it no disposition. Such a claim is listed as not
+// reviewed. A claim outside a review's brief was never that review's to
+// dispose of, so it is not an omission.
 function omittedReviews(claimId, reviews) {
-  return requiredReviewKinds
-    .map((kind) => reviews.find((review) => review.reviewKind === kind))
+  return reviews
     .filter(
-      (review) =>
-        review &&
-        !(review.dispositions ?? []).some((item) => item.claimId === claimId),
-    );
+      ({ value, briefed }) =>
+        briefed.has(claimId) &&
+        !(value.dispositions ?? []).some((item) => item.claimId === claimId),
+    )
+    .map(({ value }) => value);
 }
 
 function issueText(entry) {
@@ -140,8 +157,8 @@ function issueText(entry) {
 
 // Every claim an incorporated review kept below `verified` (an unresolved
 // issue that applies to it, a coverage finding that names it, a
-// non-affirming disposition, or a required review that left it without a
-// disposition), with the review's own words. Key-claim status
+// non-affirming disposition, or an assurance review that left a briefed claim
+// without a disposition), with the review's own words. Key-claim status
 // alone would let a `complete` packet hide a downgraded non-key claim.
 function reviewDowngradeLines(validatedRun) {
   const { ledger, artifacts, assuranceReviewIds } = validatedRun;
@@ -151,6 +168,16 @@ function reviewDowngradeLines(validatedRun) {
     .filter(
       (value) =>
         value.kind === 'recon.review-result' && assurance.has(value.id),
+    );
+  // Claim-bearing assurance reviews in table order, each with its brief
+  // membership.
+  const briefedReviews = reviews
+    .filter((review) => assuranceReviewKinds.includes(review.reviewKind))
+    .map((value) => ({ value, briefed: briefedClaimIds(value, artifacts) }))
+    .sort(
+      (left, right) =>
+        assuranceReviewKinds.indexOf(left.value.reviewKind) -
+        assuranceReviewKinds.indexOf(right.value.reviewKind),
     );
   const lines = [];
   for (const claim of ledger.claims) {
@@ -182,7 +209,7 @@ function reviewDowngradeLines(validatedRun) {
         }
       }
     }
-    for (const review of omittedReviews(claim.id, reviews)) {
+    for (const review of omittedReviews(claim.id, briefedReviews)) {
       reasons.push(
         `${review.reviewKind} review: not reviewed (no disposition)`,
       );
