@@ -264,6 +264,7 @@ Use public adoption/dry-run regressions for instruction-only direct/nested direc
 | final         | code     | passed          | 2026-10-01 | reviews/archived/final-review-2026-10-01T163602Z.md         | 3925d7b4f772efef14494eb10fc8cd60eed85e4d | gate       | claude-opus-5-5-high |
 | final         | code     | passed          | 2026-10-01 | reviews/archived/final-review-2026-10-01T180731Z.md         | 9b926dbb37a93049640cf6737e5ba42f9598b8c7 | auto       | -                    |
 | remote-pr-335 | code     | fixes_completed | 2026-10-01 | reviews/archived/remote-pr-335-review-2026-10-01T181341Z.md | -                                        | -          | -                    |
+| final         | code     | received        | 2026-10-01 | reviews/final-review-2026-10-01T184430Z.md                  | 66524f780ced805111a84de22b76f63fe4767cd6 | auto       | -                    |
 
 Historical scaffold rows and review events are preserved. Eleven prior tasks are complete; remote M1/L1 are converted to p04-t04/p04-t05. Prior passed reviews and gates remain history; fresh final acceptance is required for the remote fixes on the integrated branch.
 
