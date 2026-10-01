@@ -131,9 +131,9 @@ Markdown authored indexes are protected from manifest generation throughout the 
 
 Key owners are CLI docs init/markdown planning, shared root resolution and managed-guidance preview, index generation, bundle inputs/docs-pack manifest, two baseline templates, five canonical lifecycle/docs skills and twelve source documentation pages. Five public packages plus generated CLI version inventory are lockstep 0.3.11, above fresh main 0.3.10.
 
-All eleven tasks complete, including final M1 meaningful metadata defaults; independent final re-review pending. Verification: eight CI gates passed in order, root lint/format passed; forced isolated-home execution ran ten uncached tasks and 8,135 workspace tests, with docs compilation/generation 73/73. Normal test separately executed smoke163/skills660/scripts1. Bundle parity46, user/project install/update,24 integrated CLI controls and six retained probes passed; independent reviews reproduced pre-fix overwrite/broken navigation and restored negative/accepted controls. Original failures and cache replays remain distinguished in durable receipts.
+All eleven tasks complete, including final M1 meaningful metadata defaults; independent final re-review pending. Current corrected-source verification: all eight CI gates passed in order; changed CLI suite actually executed 7,944 tests, plus smoke163/skills660/scripts1, and docs compiled/generated73pages. Focused196tests/CLItypes/lint/exactformat passed. Earlier root lint/format and isolated-home forced ten-task/8,135-test run remain unchanged-consumer evidence, with cache replays distinguished. Bundle parity46, user/project install/update,24 integrated CLI controls and six retained probes passed; independent reviews reproduced pre-fix overwrite/broken navigation and restored negative/accepted controls. Original failures and cache replays remain distinguished in durable receipts.
 
-Design deltas: no production scope deviation. The p02 review added bounded filename-encoding correction; p04 acceptance repaired two stale help snapshots and two canonical skill-version literals under its planned acceptance-defect clause. Source backlog remains open for the broader approvals/version-drift work. Final review, retained implementation exit gate and configured pre-approval closeout work remain pending; no release has occurred.
+Design deltas: no production scope deviation. Final M1 added defaulting of blank Markdown title/description before planning/writes, preserving valid supplied bytes and frameworks. The p02 review added bounded filename-encoding correction; p04 acceptance repaired two stale help snapshots and two canonical skill-version literals under its planned acceptance-defect clause. Source backlog remains open for the broader approvals/version-drift work. Final review, retained implementation exit gate and configured pre-approval closeout work remain pending; no release has occurred.
 
 ## Orchestration Runs
 
@@ -1874,3 +1874,70 @@ M1 converted to p04-t03 in the last phase per final-review receive routing. Publ
 #### p04-t03 root task acceptance
 
 Root read the three-file committed diff and complete reviews/final-metadata-controls.md, verified direct gate receipts (nine records, all0 including fetch), causal independent YAML assertion and meaningful accepted controls, exact file boundary/order and clean tree. Pre-commit wrapper diagnostic correction retained; no product recovery event. Same original phase handle/target, review fix iteration1, recovery0/10,pendingnull. First final event fixes_completed after committed metadata repair; final independent re-review pending. Full current verification now binds production commit4962a907932b21d18ce75954a8ec83f6c1e0cc08; prior full forced workspace evidence remains historical and unchanged-consumer proof.
+
+#### final review dispatch
+
+Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high-3da8a37eed
+
+```json
+{
+  "request_id": "markdown-final-r2-native-20261001",
+  "caller": "oat-project-implement",
+  "scope": "final",
+  "objective": "Consequential narrowed final re-review of M1 public metadata boundary correction and actual current-source verification, inheriting unchanged coverage from prior full final review.",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "reviewer",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "codex-root-20261001",
+    "source": "tool-schema",
+    "observed_at": "2026-10-01"
+  },
+  "authority": "read-only code and one review artifact",
+  "role_selector": "oat-reviewer-gpt-6-1-sol-high-3da8a37eed",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-09-24",
+  "guidance_verified_at": "2026-09-24",
+  "guidance_status": "review-required",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/medium", "gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 3600,
+  "retry_limit": 2,
+  "payload": {
+    "agent_type": "oat-reviewer-gpt-6-1-sol-high-3da8a37eed",
+    "fork_turns": "none",
+    "scope_reference": "final:f7b7acb6f041d9b016bc67af4196c40a0f689e6d..HEAD",
+    "dispatch_mode": "background"
+  },
+  "launch_status": "planned",
+  "child_outcome": null,
+  "configured_invocation_evidence": [
+    "project-state:high",
+    "user-config:gpt-6.1-sol/high",
+    "tool-schema:gpt-6.1-sol low-through-ultra",
+    "canonical-role:sha256:eb1bd78d0a5a48ed5d1867e313e19a07859a86aedec14d759beda8f97d26ce55"
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [
+    "Model guidance is dated; current configured target and live model selector control this invocation.",
+    "No independent service-tier control selected."
+  ],
+  "continuation_events": [],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Consequential narrowed final re-review of M1 public metadata boundary correction and actual current-source verification, inheriting unchanged coverage from prior full final review.",
+  "floor_satisfaction": "satisfied"
+}
+```
