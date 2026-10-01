@@ -125,17 +125,17 @@ None recorded.
 
 ## Final Summary (for PR/docs)
 
-The docs bootstrap workflow offers plain Markdown and `oat docs init --framework markdown` records `documentation.tooling: "markdown"` with a literal dedicated root (default `docs`). Fresh initialization creates authored context/index and contributing guidance; explicit additive `--adopt` maps real pages and child indexes while preserving all existing content and local instructions. Command-local `--dry-run` previews files, configuration and managed guidance without mutation; partial guidance outcomes remain explicit.
+Plain Markdown is an explicit bootstrap option. `oat docs init --framework markdown` records `documentation.tooling: "markdown"`, a literal dedicated root (default `docs`) and its authored index. Fresh initialization creates context/index and contributing guidance; explicit additive `--adopt` preserves existing content/local instructions and maps real pages/child indexes. Command-local `--dry-run` previews files, config and managed guidance without mutation; partial outcomes remain explicit.
 
-Markdown authored indexes are protected from manifest generation throughout the configured content root, including narrowed source scans and symlink aliases. An explicit output outside that root remains supported. Relative filename segments encode query/fragment/parenthesis characters. Existing Fumadocs and MkDocs behavior, instruction consumers and general init boundaries remain verified.
+Authored indexes and the full configured Markdown content root are protected from optional manifest generation, including narrowed scans and symlink aliases; explicit external output remains supported. Filename segments encode delimiters. Blank metadata defaults meaningfully and supplied dollar/token-shaped values render literally in one pass. Existing framework behavior, instruction consumers and general initialization boundaries remain covered.
 
-Key owners are CLI docs init/markdown planning, shared root resolution and managed-guidance preview, index generation, bundle inputs/docs-pack manifest, two baseline templates, five canonical lifecycle/docs skills and twelve source documentation pages. Five public packages plus generated CLI version inventory are lockstep 0.3.11, above fresh main 0.3.10.
+Owners include CLI docs init, shared root/guidance contracts, index generation, docs-pack bundle inputs, two templates, five canonical docs/lifecycle skills and twelve source pages. All five public packages and generated version inventory are 0.3.11, above integrated main 0.3.10. Main #334 was merged normally in `2e21aa9b75311d2d4b4a62e1e27f682b4dbf07dc`; all seven conflicts followed the recorded resolutions, both automatic merges preserve their contracts, and Markdown implementation paths remain byte-identical.
 
-All eleven tasks and review dispositions are complete. Final full review plus narrowed M1 re-review passed; no unresolved findings or deferred Medium/Low debt. Current corrected-source verification: all eight CI gates passed in order; changed CLI suite actually executed 7,945 tests, plus smoke163/skills660/scripts1, and docs compiled/generated73pages. Focused196tests/CLItypes/lint/exactformat passed. Earlier root lint/format and isolated-home forced ten-task/8,135-test run remain unchanged-consumer evidence, with cache replays distinguished. Bundle parity46, user/project install/update,24 integrated CLI controls and six retained probes passed; independent reviews reproduced pre-fix overwrite/broken navigation and restored negative/accepted controls. Original failures and cache replays remain distinguished in durable receipts.
+Current integrated-HEAD verification passed all eight CI gates in order. Actual workspace test execution: CLI7,967 + control-plane151 + docs-config10 + transforms31 (8,159 total), root smoke163/skills660/scripts1, docs73. Isolated focused1,132 tests/28files, bundle66parity/four temporary lifecycle commands, seven blank and six literal CLI controls passed. Preflight compiled all five packages; subsequent build/docs gates replayed valid output. Five public tarballs were packed/validated. Exact runnable controls and cache labels are in reviews/final-integration-controls.md.
 
-Design deltas: no production scope deviation. Final M1 added defaulting of blank Markdown title/description before planning/writes, preserving valid supplied bytes and frameworks. The p02 review added bounded filename-encoding correction; p04 acceptance repaired two stale help snapshots and two canonical skill-version literals under its planned acceptance-defect clause. Source backlog remains open for the broader approvals/version-drift work. Final review passed. Retained implementation exit gate and configured pre-approval closeout work remain pending; no release has occurred.
+All eleven planned tasks and prior review dispositions are complete; no deferred finding debt. Filename encoding, blank metadata and literal-rendering corrections stay within existing contracts; no production scope expansion. Earlier forced8,135-test, focused197 and causal pre-fix/guard-neutralization evidence remains historical, with original failures preserved. Source backlog remains open for broader approval classes, package drift and external acceptance.
 
-Latest passing-gate sweep corrected literal dollar/token rendering with independent old/fixed proof; all eight CI gates passed after that source change. Final lifecycle re-review and refreshed implementation exit gate passed; all findings are dispositioned. Configured pre-approval closeout and final HiLL approval remain pending. Visual project recap is explicitly skipped by the user; written summary remains configured.
+Configured written-summary/document/PR steps completed in stored order and PR #335 is open. The pre-integration final review and exit gate are preserved as passed history; the integrated basis requires fresh final review and retained gate before final p04 HiLL approval. Implementation is still in progress; visual recap is skipped interactively, written summary retained, no merge/release/deployment claimed.
 
 ## Orchestration Runs
 
@@ -1524,8 +1524,11 @@ Accepted exact-target canonical-role route /root/markdown_p04_pinned; awaiting r
       "exact_target_preserved": true,
       "integration_base": "98d1d524624e17f55ccfce33d18b3d5535dc91ca",
       "baseline": "c5b3f541addc5ab03d33b79b1854f49a8403469c",
-      "outcome": "pending",
-      "phase_recovery_attempts_used": 0
+      "outcome": "DONE",
+      "phase_recovery_attempts_used": 0,
+      "merge_commit": "2e21aa9b75311d2d4b4a62e1e27f682b4dbf07dc",
+      "evidence_commit": "99d931ca96e26127c12248bf8ec0d2deb71791ed",
+      "verification": "all-eight-gates-passed"
     }
   ],
   "task_class": "consequential",
@@ -2709,3 +2712,7 @@ All immutable pre-approval steps completed in stored order: summary, document, P
 #### Integration-base conflict disposition
 
 Final GH preflight reports PR #335 merge conflicts against origin/main `98d1d524624e17f55ccfce33d18b3d5535dc91ca` (only incoming #334 model-pin support). Read-only merge-tree/recon confirmed seven conflicts: five public package versions, generated release inventory and sync manifest producer version; automatic docs-configuration and skill-validation merges compose both contracts. Root disposition: retain all five 0.3.11 public versions, regenerate release inventory through canonical bundling, preserve main sync producer stamp 0.3.10 with unchanged schema/93 entries. Existing accepted p04 worker continues bounded integration/release scope; no new feature/task or automatic-recovery attempt. Source baseline integration requires all eight CI gates, composition controls, refreshed independent final review and retained gate before asking final HiLL. Existing sequence order/completion and pending approval remain immutable; pre-integration review/gate receipts retained as history.
+
+#### Integration continuation accepted
+
+Root accepted merge `2e21aa9b75311d2d4b4a62e1e27f682b4dbf07dc` and separate evidence `99d931ca96e26127c12248bf8ec0d2deb71791ed`. Read complete evidence and exact receipts; independently verified 61 main paths, 21 unchanged Markdown paths, both auto-merge blobs, five manifest fields except retained versions, main sync bytes and source hashes. Actual all-eight exits and four uncached workspace test tasks corroborated. Existing accepted handle/tuple/request preserved, no recovery or added task. Current source requires integrated final review and a new gate generation, preserving previous receipts and immutable completed sequence.
