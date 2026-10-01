@@ -4597,7 +4597,7 @@ printf '%s\\n' "$EVENTS"`;
     );
     // The resume path must not let Step 3 rewrite an existing plan body.
     expect(normalizeProse(stepZeroFive)).toContain(
-      'Step 3 updates the existing `plan.md` in place: it reads `.oat/templates/plan.md` only when `plan.md` is missing',
+      'Step 3 updates the existing `plan.md` in place: it copies the plan template (`oat template resolve plan --output "$PROJECT_PATH/plan.md"`) only when `plan.md` is missing',
     );
     expect(normalizeProse(stepZeroFive)).toContain(
       'never replaces phases, tasks, or `## Reviews` rows that the earlier run already wrote',
@@ -4628,7 +4628,7 @@ printf '%s\\n' "$EVENTS"`;
       ),
     );
     expect(normalizeProse(stepThree)).toContain(
-      '`.oat/templates/plan.md` is read only when `"$PROJECT_PATH/plan.md"` is missing.',
+      'The template is copied, with `oat template resolve plan --output "$PROJECT_PATH/plan.md"`, only when `"$PROJECT_PATH/plan.md"` is missing.',
     );
     expect(normalizeProse(stepThree)).toContain(
       'never replaces phases, tasks, or `## Reviews` rows an earlier run already wrote',

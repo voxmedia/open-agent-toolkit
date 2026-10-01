@@ -38,7 +38,9 @@ columns are ordinary states.
 
 Project-scope templates under `.oat/templates/` are owner overrides that OAT
 seeds once and never rewrites; the managed default lives at user scope and in
-the bundle. PJM templates resolve repository → user → bundle.
+the bundle. Every template, project lifecycle and PJM alike, resolves
+repository → user → bundle. Run `oat template resolve <name>` to see which tier
+supplies a template, or add `--output <path>` to copy it.
 
 Pack intent is stored per scope:
 

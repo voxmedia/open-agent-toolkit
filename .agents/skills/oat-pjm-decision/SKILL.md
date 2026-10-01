@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.1.1
+  version: 1.1.2
 ---
 
 # Record Repo Decision
@@ -90,7 +90,8 @@ The CLI:
 
 - Generates a deterministic `DR-YYMMDD-slug` ID from the creation date and title.
 - Writes one record file whose filename stem equals the ID.
-- Strips template frontmatter and seeds the body from `.oat/templates/decision.md`.
+- Strips template frontmatter and seeds the body from the `decision.md` template, resolved
+  repository (`.oat/templates/`), then user (`~/.oat/templates/`), then bundled.
 - Regenerates the managed decision index.
 
 The slug is **capped at 30 characters** at the last whole-word boundary, with trailing

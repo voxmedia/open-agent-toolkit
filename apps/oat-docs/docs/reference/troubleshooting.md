@@ -269,16 +269,23 @@ oat pjm init
 scaffold — rerun `oat pjm init`), or `none`. `oat pjm init` records
 `pjm.initialized` in `.oat/config.json` after verifying the canonical scaffold.
 
-## A PJM template change is not taking effect
+## A template change is not taking effect
 
-PJM templates resolve repository → user → bundle, first match wins. A
-repository template under `.oat/templates/` is an owner override that pack
-updates never rewrite, so it shadows the managed user default.
-
-Delete the repository copy to fall back to the managed default, or update the
-managed default itself:
+Templates, project lifecycle and PJM alike, resolve repository → user → bundle,
+first match wins. A repository template under `.oat/templates/` is an owner
+override that pack updates never rewrite, so it shadows the managed user
+default. Check which tier supplies a template:
 
 ```bash
+oat template resolve plan
+```
+
+Delete the repository copy to fall back to the managed default, or update the
+managed default itself (`workflows` owns the project lifecycle templates,
+`project-management` the PJM templates):
+
+```bash
+oat tools update --pack workflows --scope user
 oat tools update --pack project-management --scope user
 ```
 

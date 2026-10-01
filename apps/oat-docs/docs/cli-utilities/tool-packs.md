@@ -528,17 +528,22 @@ repository that adopted PJM with a user-scope pack is diagnosed correctly.
 
 ### Template precedence
 
-PJM templates resolve through three tiers, first match wins:
+Templates, project lifecycle and PJM alike, resolve through three tiers, first
+match wins:
 
 1. **Repository** — `.oat/templates/<name>` in this repo. An existing repository
    template is an owner override and is never rewritten by pack updates.
 2. **User** — `~/.oat/templates/<name>`, the managed default that
-   `oat tools update --pack project-management --scope user` keeps current.
+   `oat tools update --pack <pack> --scope user` keeps current (`workflows`
+   for project lifecycle templates, `project-management` for PJM templates).
 3. **Bundle** — the templates shipped inside the installed CLI.
 
 Delete a repository template to fall back to the managed user default. If a
 template is missing from all three tiers, the command errors rather than
-inventing content.
+inventing content. `oat template resolve <name>` reports which tier wins, and
+lifecycle skills copy their templates with `oat template resolve <name>
+--output <path>`, so a user-scope-only install needs no repository
+`.oat/templates/` directory.
 
 Useful options:
 

@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 2.0.3
+  version: 2.0.4
 ---
 
 # Specification Phase
@@ -148,7 +148,7 @@ Read for context:
 
 ### Step 5: Initialize Specification Document
 
-Copy template: `.oat/templates/spec.md` → `"$PROJECT_PATH/spec.md"`
+Copy template: `oat template resolve spec --output "$PROJECT_PATH/spec.md"`
 
 Update frontmatter:
 
