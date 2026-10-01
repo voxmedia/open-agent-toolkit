@@ -342,6 +342,7 @@
 | BL-261001-recover-recon-lanes-after      | Document the Codex agent-limit gotcha in recon and allow one bounded retry                            | open   | high     | feature    | S        |
 | BL-260820-emit-source-qualified          | Emit source-qualified provenance envelopes for review and gate receipts                               | open   | high     | feature    | M        |
 | BL-260927-expose-a-scoped-template       | Expose a scoped template resolver command and route lifecycle skills through it                       | open   | high     | feature    | M        |
+| BL-261001-fail-closed-when-bundle-assets | Fail closed when bundle-assets lookups come back empty                                                | open   | high     | task       | S        |
 | BL-260806-fail-closed-when-configured    | Fail closed when configured closeout snapshot is absent                                               | open   | high     | task       | M        |
 | BL-260909-give-the-dispatch-record       | Give the dispatch record a consumer or remove it                                                      | open   | high     | task       | S        |
 | BL-260906-harden-dispatch-launch         | Harden dispatch launch baselines and terminal reconciliation                                          | open   | high     | feature    | M        |
@@ -428,6 +429,7 @@
 | BL-261001-record-mixed-native-and-cli    | Record mixed native and CLI recon continuations in the manifest                                       | open   | low      | feature    | M        |
 | BL-260908-repair-or-exempt-archived      | Repair or exempt archived project ledgers that fail the pr-final path guard                           | open   | low      | task       | S        |
 | BL-260906-report-errno-for-asset-root    | Report errno for asset root stat failures and reset the statRedirects test seam                       | open   | low      | task       | XS       |
+| BL-261001-resolve-the-summary-template   | Resolve the summary template in oat-wrap-up through oat template resolve                              | open   | low      | task       | XS       |
 | BL-260908-restructure-the-authoring      | Restructure the authoring skills for progressive disclosure and decide proactive invocation           | open   | low      | feature    | M        |
 | BL-260903-retire-deprecated-pack         | Retire deprecated pack placement and dead evidence diagnostics                                        | open   | low      | task       | M        |
 | BL-260928-route-quick-mode-discovery     | Route quick-mode discovery to quick-start in the CLI recommender and dashboard                        | open   | low      | task       | XS       |
