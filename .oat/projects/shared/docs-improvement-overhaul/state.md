@@ -79,7 +79,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-01T22:42:17.072Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-01T22:42:17.072Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-10-01T22:43:07Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -91,7 +91,7 @@ oat_generated: false
 
 ## Current Phase
 
-Discovery - Gathering requirements for a quick workflow before planning
+Discovery and brainstorming. Initial evaluations and Codex/Fable IA consensus are captured for user review; navigation scope and content coverage remain open. No docs implementation is authorized by this checkpoint.
 
 ## Artifacts
 
@@ -100,12 +100,14 @@ Discovery - Gathering requirements for a quick workflow before planning
 - **Design:** N/A (quick mode unless lightweight design is needed)
 - **Plan:** `plan.md` (scaffolded template — not started)
 - **Implementation:** `implementation.md` (scaffolded template — not started)
+- **References:** [Evidence index](references/index.md), including initial evaluations, the proposed IA, Fable's skill inventory advisory, and orchestration observations.
 
 ## Progress
 
-- ✓ Discovery started
-- ✓ Execution artifacts scaffolded
-- ⧗ Awaiting user input
+- Discovery started in quick mode at the user's request.
+- Archived readability project, skills-repo comparison, and rendered-site observations retained.
+- Codex and Fable agree on a proposed IA; user approval remains pending.
+- Plan and implementation are templates only, not ready for execution.
 
 ## Blockers
 
@@ -113,4 +115,4 @@ None
 
 ## Next Milestone
 
-Complete discovery and generate a quick implementation plan
+Review the proposed IA with the user and continue discovery. Decide navigation authority, supported-skill coverage, and scope before selecting design depth or generating a plan.

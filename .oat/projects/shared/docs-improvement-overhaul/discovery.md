@@ -8,135 +8,134 @@ oat_generated: false
 
 # Discovery: docs-improvement-overhaul
 
-## Phase Guardrails (Discovery)
-
-Discovery is for requirements and decisions, not implementation details.
-
-- Prefer outcomes and constraints over concrete deliverables (no specific scripts, file paths, or function names).
-- If an implementation detail comes up, capture it as an **Open Question** for design (or a constraint), not as a deliverable list.
-
 ## Initial Request
 
-{Copy of user's initial request}
+Improve the documentation's organization, skill coverage, and human reading experience. The user finds the current docs substantially less consumable than their `~/Code/skills` repository despite the recent readability reorganization. Start by having Codex and Fable 5.1 reach consensus on a proposed navigation/IA structure, informed by the archived `docs-readability-reorg` project and the rendered site, before applying a broad sweep.
+
+On 2026-10-01 the user selected quick mode and named this project `docs-improvement-overhaul`, explicitly keeping the work in discovery and brainstorming. Initial evaluations belong in this project's `references/` directory. This is not implementation approval.
 
 ## Clarifying Questions
 
-### Question 1: {Topic}
+### Priority and collaboration
 
-**Q:** {Question}
-**A:** {User's answer}
-**Decision:** {What this means for the project}
+**User direction:** First converge on a proposed navigation/IA structure. Codex drives; Fable advises. Use bounded reconnaissance and inspect the rendered docs, not just source Markdown.
+
+**Implication:** Preserve peer consensus as a recommendation for user review, not as user approval. Cross-scope judgment stays with the lead agent.
+
+### Workflow stage
+
+**User direction:** We are currently in discovery and brainstorming; scaffold a quick project to retain the evidence.
+
+**Implication:** Discovery remains `in_progress`. The generated plan and implementation files are placeholders, not a runnable plan or an implementation handoff.
+
+### Orchestration feedback
+
+**User direction:** Log friction and improve Orc's orchestration skill in a separate worktree/PR. The app runs on the laptop; both collaborating sessions execute on the Mini.
+
+**Implication:** Treat app host, execution host, and answering runtime as distinct. The authorized Orc side task is independent of this project's docs implementation scope.
 
 ## Solution Space
 
-_Include this section only when the request is exploratory or multiple viable approaches exist. For well-understood requests with an obvious approach, omit or replace with a single sentence stating the chosen direction._
+This is exploratory: reader needs are clear, but scope, navigation ownership, and the content model still require decisions.
 
-{Divergent exploration of the problem space before converging on an approach. Capture genuinely distinct strategies, not minor variations. Include 2-3 approaches as needed.}
+### Approach 1: Reader-first IA with enforceable navigation _(Recommended)_
 
-### Approach 1: {Strategy Name} _(Recommended)_
+Make entrypoints match user tasks, expose every supported user-facing skill through one discovery surface, and give each capability one canonical guide. Address the gap between authored navigation intent and the rendered sidebar as a separately scoped prerequisite. Separate content moves from new coverage.
 
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
+**When appropriate:** The goal is durable discovery and a coherent rendered experience, not merely cleaner Markdown.
 
-### Approach 2: {Strategy Name}
+**Tradeoff:** Requires navigation/tooling work and governance changes in addition to editorial work. Scope and validation must make those boundaries explicit.
 
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
+### Approach 2: Editorial repair within the current sections
+
+Improve landing pages, skill descriptions, and links without changing the navigation mechanism or main section structure.
+
+**When appropriate:** Immediate, bounded readability relief matters more than structural change.
+
+**Tradeoff:** Faster and lower migration risk, but preserves poor sidebar ordering and leaves universal discovery largely inside page bodies.
+
+### Approach 3: Framework-native navigation ownership
+
+Adopt the skills repo's manually authored Fumadocs metadata pattern, updating the OAT authoring contract so it no longer implies that Contents alone controls the sidebar.
+
+**When appropriate:** Fast, explicit control of the rendered site is preferred over a portable navigation-authoring contract.
+
+**Tradeoff:** Avoids building a generator first, but introduces separately maintained navigation surfaces unless their responsibilities are carefully redefined.
 
 ### Chosen Direction
 
-**Approach:** {Which approach was selected}
-**Rationale:** {Why this approach over the alternatives}
-**User validated:** {Yes/No — explicit buy-in before proceeding}
+**Proposed approach:** Approach 1. Codex and Fable agree on the seven-section IA and a separately scoped navigation prerequisite.
+
+**Rationale:** The prior reorganization's adoption lanes remain useful, but independent skill discovery is buried and authored Contents do not drive the rendered sidebar. Repeating a source-only reorganization would not resolve both problems.
+
+**User validated:** Not yet. The user approved starting this quick project and retaining discovery, not the proposed IA or its implementation.
 
 ## Options Considered
 
-{Specific implementation options within the chosen approach. More granular than Solution Space — captures decisions about libraries, patterns, data formats, etc.}
-
-### Option A: {Option Name}
-
-**Description:** {What this option involves}
-
-**Pros:**
-
-- {Benefit 1}
-- {Benefit 2}
-
-**Cons:**
-
-- {Drawback 1}
-- {Drawback 2}
-
-**Chosen:** {A/B/Neither}
-
-**Summary:** {1-2 sentence summary of the chosen option and why}
+- **Navigation authority:** Derive Fumadocs metadata from Contents (agent recommendation) versus explicitly author framework metadata under a revised contract. No implementation choice approved yet.
+- **Skill coverage:** One page per skill versus canonical family guides with per-skill anchors. Agents recommend family guides with enough per-skill detail to distinguish invocation, prerequisites, and outcomes; avoid dozens of duplicated skill specifications.
+- **Discovery taxonomy:** Standalone-only versus all supported user-facing skills. Agents recommend universal discovery, organized by task rather than install pack or lifecycle membership.
 
 ## Key Decisions
 
-1. **{Decision Category}:** {Decision made and why}
-2. **{Decision Category}:** {Decision made and why}
+1. **User-approved workflow:** Quick mode; discovery and brainstorming only for now.
+2. **User-approved collaboration:** Codex leads, Fable 5.1 advises, and direct peer communication is authorized.
+3. **User-approved evidence retention:** Store initial evaluations and proposed IA under project references.
+4. **Agent consensus, pending user approval:** Overview Home separate from Getting Started, Skills, Workflows, Provider Sync, Docs Tooling, Reference, and Contributing. See [IA proposal](references/ia-consensus.md).
 
 ## Constraints
 
-- {Constraint 1}
-- {Constraint 2}
+- Preserve existing information and compatibility routes during moves; do not quietly delete content under a readability claim.
+- Keep one canonical owner per guide, with multiple discovery paths rather than duplicated prose.
+- Do not infer prerequisites or public support from lifecycle names or pack membership. Current prerequisites are prose, not structured frontmatter.
+- Use approved analyze/apply recommendations for the eventual broad docs pass. A navigation capability change is not a docs-only apply action.
+- Judge the rendered experience as well as source contracts; retain evidence levels and unresolved classification intent.
+- Follow task-class dispatch guidance; user requested Sol 6.1 medium/high and Luna xhigh for bounded recon.
 
 ## Success Criteria
 
-- {Criterion 1}
-- {Criterion 2}
+Proposed criteria to confirm before planning:
+
+- A newcomer can find installation and first success without learning OAT's internal architecture first.
+- Readers can discover a supported named skill or choose a skill for a task without assuming they need an active project.
+- Each supported skill resolves to useful canonical guidance, with prerequisites and related variants distinguished.
+- Authored order, labels, groups, and cross-section discovery links appear as intended in the rendered site.
+- Workflow entrypoints distinguish choosing a mode, executing a project, capturing ideas, planning a backlog, and operating waves.
+- Compatibility links continue to resolve, with obsolete migration language removed from primary reader paths.
+- Coverage and navigation validation make future drift detectable rather than relying on another periodic reorganization.
 
 ## Out of Scope
 
-- {Thing we explicitly decided not to do}
-- {Thing we explicitly decided not to include in this phase}
+- Implementing the proposed navigation or rewriting docs during this discovery checkpoint.
+- Changing skill runtime behavior or project lifecycle semantics as an incidental docs fix.
+- Merging, deploying, or treating the separate Orc skill PR as OAT project completion.
 
 ## Deferred Ideas
 
-{Ideas that came up during discovery but are intentionally out of scope for now}
-
-- {Idea 1} - {Why deferred}
-- {Idea 2} - {Why deferred}
+- Generated skill catalog and navigation metadata: candidate design work after IA approval, not existing capabilities.
+- Lightweight design: likely useful for navigation ownership and content coverage contracts; no depth decision requested yet because discovery is still open.
 
 ## Open Questions
 
-{Questions that need resolution before or during specification (and later design)}
-
-- **{Question Category}:** {Question that needs answering}
-- **{Question Category}:** {Question that needs answering}
+- Does the user approve the seven-section IA and canonical family-guide approach?
+- Should Contents remain the single authored navigation authority through generated Fumadocs metadata, or should the contract change to framework-native metadata?
+- Which unshipped/repo-only skills are intentionally internal, and what defines the supported catalog?
+- How much new skill-guide authoring belongs in this overhaul versus a separately tracked follow-up?
+- What evidence and enforcement should prevent recurrence: catalog coverage, navigation parity, link compatibility, and rendered journey checks?
 
 ## Assumptions
 
-{Assumptions we're making that need validation}
-
-- {Assumption 1}
-- {Assumption 2}
+- The useful pattern to borrow from the skills repo is one canonical capability guide with multiple discovery paths, not its entire product taxonomy.
+- Fable's approximately 71 user-facing candidates are provisional; six of the 12 internal classifications include distribution-intent uncertainty.
+- The deployed site inspection is evidence of the current reader experience, not proof of parity with this checkout's exact revision.
 
 ## Risks
 
-{Potential risks identified during discovery}
-
-- **{Risk Name}:** {Description}
-  - **Likelihood:** Low / Medium / High
-  - **Impact:** Low / Medium / High
-  - **Mitigation Ideas:** {How to address}
+- **Paper-only IA:** Changing Contents without connecting it to Fumadocs leaves sidebar UX unchanged. Verify the actual page tree and browser experience.
+- **Catalog drift:** Repeating SKILL.md mechanically in many hand-written guides creates another stale inventory. Generate only fields that really exist; curate applicability and usage prose.
+- **Scope expansion:** Navigation machinery, content migration, and new coverage are different workstreams. Scope and validate them separately before implementation.
+- **Misleading classifications:** Project entry skills need no active project; review twins span ad-hoc and project contexts. Prefer task/family ownership and per-skill applicability.
 
 ## Next Steps
 
-Use this discovery artifact to drive the next workflow step:
-
-- **Spec-driven mode:** continue to `oat-project-design` (which confirms
-  requirements and produces both `spec.md` and `design.md`).
-- **Spec-driven mode → formalize-only:** use `oat-project-spec` standalone
-  if you want a formalized requirements artifact but aren't ready to
-  design yet.
-- **Quick mode → straight to plan:** proceed directly to `plan.md` when
-  scope is clear and no architecture decisions remain.
-- **Quick mode → optional lightweight design:** produce a focused
-  `design.md` (architecture, components, data flow, testing) before
-  planning. Choose this when discovery surfaced architecture choices
-  or component boundaries.
-- **Quick mode → promote:** escalate to spec-driven if discovery revealed
-  the scope is larger or more complex than expected.
+Review the [proposed navigation](references/ia-consensus.md) with the user, then continue discovery on the open choices. Keep [initial evaluations](references/initial-evaluations.md), [skill findings](references/skill-inventory-advisory.md), and the [orchestration log](references/orchestration-log.md) as evidence. Do not mark discovery complete or generate execution tasks until the user is ready to converge.
