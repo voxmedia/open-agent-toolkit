@@ -136,6 +136,20 @@ oat_project_recap:
   decision: skip
   source: interactive
   decided_at: '2026-10-01T16:19:52.974Z'
+oat_post_implement_sequence:
+  status: pre_approval
+  source: configured
+  final_phase: p04
+  pre_approval:
+    - summary
+    - document
+    - pr
+  pre_approval_completed: []
+  approval: pending
+  approval_source: null
+  post_approval: []
+  post_approval_completed: []
+  failure: null
 ---
 
 # Project State: markdown-docs-bootstrap
