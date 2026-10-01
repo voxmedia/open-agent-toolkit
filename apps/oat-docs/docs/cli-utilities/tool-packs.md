@@ -528,8 +528,8 @@ repository that adopted PJM with a user-scope pack is diagnosed correctly.
 
 ### Template precedence
 
-Templates, project lifecycle and PJM alike, resolve through three tiers, first
-match wins:
+Project lifecycle and PJM templates resolve through three tiers, first match
+wins (idea templates instead follow the ideas scope the ideas skills select):
 
 1. **Repository** — `.oat/templates/<name>` in this repo. An existing repository
    template is an owner override and is never rewritten by pack updates.

@@ -7837,7 +7837,13 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-summary/SKILL.md',
     );
 
-    for (const content of [projectRetro, projectSummary]) {
+    const curatedCallers = await Promise.all(
+      ['design', 'spec', 'plan'].map((name) =>
+        readRepoFile(`.agents/skills/oat-project-${name}/SKILL.md`),
+      ),
+    );
+
+    for (const content of [projectRetro, projectSummary, ...curatedCallers]) {
       expect(content).toContain('oat template resolve');
       expect(getFrontmatterForTest(content)).toContain('Bash(oat template:*)');
     }

@@ -271,10 +271,11 @@ scaffold — rerun `oat pjm init`), or `none`. `oat pjm init` records
 
 ## A template change is not taking effect
 
-Templates, project lifecycle and PJM alike, resolve repository → user → bundle,
-first match wins. A repository template under `.oat/templates/` is an owner
-override that pack updates never rewrite, so it shadows the managed user
-default. Check which tier supplies a template:
+Project lifecycle and PJM templates resolve repository → user → bundle, first
+match wins (idea templates follow the ideas scope instead). A repository
+template under `.oat/templates/` is an owner override that pack updates never
+rewrite, so it shadows the managed user default. Check which tier supplies a
+template:
 
 ```bash
 oat template resolve plan

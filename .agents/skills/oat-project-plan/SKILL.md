@@ -4,7 +4,7 @@ description: Use when design.md is complete and executable implementation tasks 
 oat_gateable: true
 disable-model-invocation: true
 user-invocable: true
-allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion
+allowed-tools: Read, Write, Bash(git:*), Bash(oat template:*), Glob, Grep, AskUserQuestion
 metadata:
   version: 1.4.16
 ---
