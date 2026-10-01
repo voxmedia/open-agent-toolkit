@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-09-30
+oat_last_updated: 2026-10-01
 oat_phase: plan
 oat_phase_status: in_progress
 oat_plan_parallel_groups: []
@@ -172,20 +172,24 @@ All phases run sequentially (`oat_plan_parallel_groups: []`). p02 consumes p01's
 
 ## Reviews
 
-Existing scaffold rows are preserved. Quick mode requires no spec; original design review and approved revisions are recorded in `reviews/design-consensus-handoff.md`. The pending design row does not claim re-review of the revised design. Plan review remains pending and readiness is disabled.
+Existing scaffold rows are preserved. Quick mode requires no spec; original design review and approved revisions are recorded in `reviews/design-consensus-handoff.md`. The pending design row does not claim re-review of the revised design. Plan review returned two Medium findings; user approval of the proposed artifact edits is pending and readiness remains disabled.
 
-| Scope  | Type     | Status  | Date | Artifact | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | ------- | ---- | -------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending | -    | -        | -             | -          | -           |
-| p02    | code     | pending | -    | -        | -             | -          | -           |
-| final  | code     | pending | -    | -        | -             | -          | -           |
-| spec   | artifact | pending | -    | -        | -             | -          | -           |
-| design | artifact | pending | -    | -        | -             | -          | -           |
-| p03    | code     | pending | -    | -        | -             | -          | -           |
-| p04    | code     | pending | -    | -        | -             | -          | -           |
-| plan   | artifact | pending | -    | -        | -             | -          | -           |
+| Scope  | Type     | Status   | Date       | Artifact                     | Reviewed Head                            | Invocation | Gate Target |
+| ------ | -------- | -------- | ---------- | ---------------------------- | ---------------------------------------- | ---------- | ----------- |
+| p01    | code     | pending  | -          | -                            | -                                        | -          | -           |
+| p02    | code     | pending  | -          | -                            | -                                        | -          | -           |
+| final  | code     | pending  | -          | -                            | -                                        | -          | -           |
+| spec   | artifact | pending  | -          | -                            | -                                        | -          | -           |
+| design | artifact | pending  | -          | -                            | -                                        | -          | -           |
+| p03    | code     | pending  | -          | -                            | -                                        | -          | -           |
+| p04    | code     | pending  | -          | -                            | -                                        | -          | -           |
+| plan   | artifact | received | 2026-10-01 | reviews/plan-auto-handoff.md | b3480f8824b175b34cdba2f76d7dcf66ee12a034 | auto       | -           |
 
 Record full reviewed heads and invocation provenance for actual reviews. Preserve all rows and unknown trailing cells. Mark `passed` only for a clean result; disposition residual findings before readiness.
+
+### Plan Review Disposition Pending
+
+Automatic plan review: 0 Critical, 0 High, 2 Medium, 0 Low. Root recommends applying M1 (build before p03 smoke/CLI walkthrough) and M2 (explicit Markdown bundle inventory ownership and verification). See `reviews/plan-auto-handoff.md`. No edits applied yet; retained quick-start gate has not run.
 
 ## Implementation Complete
 
