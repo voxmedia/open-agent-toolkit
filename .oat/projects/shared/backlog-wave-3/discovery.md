@@ -92,7 +92,7 @@ sequencing, covered under Key Decisions.
    diff, made by the first phase that changes it (later phases check
    `git diff origin/main` and do not bump again), so every phase gate sees a
    passing `check:skill-bumps`. The fan-in owns the five-package lockstep bump
-   from 0.3.9 to 0.3.10.
+   from 0.3.9 to 0.3.11 (`main` took 0.3.10 for #334 during the wave).
 3. **Template command shape:** `oat template resolve <name> [--json]
 [--output <path>]`. It reports the matching tier (repository, user,
    bundle) and returns a filesystem path only for the repository and user
@@ -166,7 +166,7 @@ sequencing, covered under Key Decisions.
   end-to-end test.
 - `pnpm run release:check-versions` passes on a branch that changes only test
   files.
-- The full Definition of Done passes, and the PR opens at lockstep 0.3.10 with
+- The full Definition of Done passes, and the PR opens at lockstep 0.3.11 with
   the items archived.
 
 ## Out of Scope

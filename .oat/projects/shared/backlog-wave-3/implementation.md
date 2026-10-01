@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
-oat_current_task_id: p04-t01
+oat_current_task_id: p03-t06
 oat_generated: false
 ---
 
@@ -28,12 +28,12 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 5     | 5/5       |
 | Phase 2 | complete    | 6     | 6/6       |
-| Phase 3 | in_progress | 5     | 5/5       |
+| Phase 3 | in_progress | 6     | 5/6       |
 | Phase 4 | pending     | 4     | 0/4       |
 | Phase 5 | pending     | 6     | 0/6       |
 | Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 16/29 tasks completed
+**Total:** 16/30 tasks completed
 
 ---
 
@@ -132,6 +132,11 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** c4505feb3
+
+### Task p03-t06: (review) Close p03 review findings H1, M2, L1
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -313,6 +318,30 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   grant, pinned), L1 (`--target-dir` in the analysis command); 583 tests pass.
 - Phase p02 outcome: pass after one review-fix round and one gate-fix task
   (p02-t05, p02-t06); 6/6 tasks.
+
+### Phase p03 dispatch
+
+- Request `bw3-p03-impl-1`: accepted and returned `DONE_WITH_CONCERNS` (all
+  success invariants passed; concerns non-blocking); target
+  `oat-phase-implementer-claude-claude-opus-5-5-high`; commits
+  `b9482e67d..c4505feb3` (p03-t01..t05); recon 344/344, `pnpm lint`,
+  `pnpm format`, `pnpm check` exit 0; recovery 0/10.
+  `Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
+- Step 7a ledger commit `3769d125f` before the review.
+- Request `bw3-p03-review-1` (`oat-reviewer-claude-claude-opus-5-5-high`,
+  reconnaissance not-attempted) at `3769d125f`:
+  `reviews/archived/p03-review-2026-10-01T130314Z.md`, 0 Critical, 1 High
+  (an extra brief claim, even one carrying an injected source, validates), 3
+  Medium, 1 Low (blocking). No ledger or resume-pointer finding. H1, M2, L1
+  converted to `p03-t06`.
+  `Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
+- Root merge `a8e2d2cd4`: PR #334 (Sonnet 5.5 and GPT-6.1 Sol pins) merged
+  to `main` during p03 with lockstep 0.3.10, `oat-dispatch-subagents` 1.2.11,
+  and `oat-project-implement` 2.3.15, colliding with this branch's bumps
+  (review M3). Merged `origin/main`, resolved two `skills.test.ts` pin hunks,
+  and moved implement to 2.3.16 and dispatch-subagents to 1.2.12; the fan-in
+  lockstep target is now 0.3.11. `check:skill-bumps` (20), recon and implement
+  node tests, and `src/validation` pass.
 
 <!-- orchestration-runs-end -->
 

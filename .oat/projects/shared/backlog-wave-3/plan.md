@@ -29,7 +29,8 @@ oat_phase_review_gate:
 **Goal:** Ship Wave 3 of the backlog as one PR: close fourteen backlog items
 with evidence (template resolver, Fumadocs navigation, recon publication and
 Codex recovery, lifecycle closeout guards, and six small fixes) and bump the
-lockstep packages to 0.3.10.
+lockstep packages to 0.3.11 (`main` reached 0.3.10 through #334 during
+the wave).
 
 **Architecture:** Five sequential phases grouped by write set: template
 resolver (p01), Fumadocs nav sync (p02), recon (p03), lifecycle closeout
@@ -711,6 +712,44 @@ Expected: exit 0.
 
 ---
 
+### Task p03-t06: (review) Close p03 review findings H1, M2, L1
+
+Source: `reviews/archived/p03-review-2026-10-01T130314Z.md` (auto review,
+blocking: 0 Critical, 1 High, 3 Medium, 1 Low). M3 (skill-bump drift after
+#334) was resolved by the root merge of `origin/main`; M4 (release-note
+wording) is fixed in the PR Requirements.
+
+**Step 1: Fix**
+
+- H1: require a semantic or verification brief's claim IDs to equal the
+  review's disposition claim IDs in both directions (and the reconciled
+  ledger's claims for that brief), so an extra brief claim, with or without a
+  new source, fails closed. Add tests for an extra claim citing an existing
+  source and one citing an injected source; neutralize the new check once.
+- M2: `render-packet.mjs` (around 124) shows every claim a review downgraded
+  (claim-scoped or global issue, coverage finding) with its issue text, even
+  when it is not a key claim, so a `complete` packet cannot hide an
+  unresolved claim. Revert the fixture's all-key workaround and test it.
+- L1: rename the approval-preview "Retry limit" label in
+  `scripts/lib/routing.mjs` (around 431 and 515) to the new meaning and
+  compute the worst case from at most one admission retry per lane; mention the
+  rule in `apps/oat-docs/docs/workflows/skills/recon.md`.
+
+No further version bumps (recon is bumped on this branch).
+
+**Step 2: Verify**
+
+Run: `node --test .agents/skills/recon/tests/*.test.mjs`,
+`HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation`,
+`pnpm run check:skill-bumps`, `pnpm --filter oat-docs check`, `pnpm lint`.
+Expected: exit 0.
+
+**Step 3: Commit**
+
+`fix(p03-t06): close p03 review findings`
+
+---
+
 ## Phase 4: Lifecycle closeout guards
 
 Backlog: `BL-261001-recompute-oat-project-next-s`,
@@ -1154,14 +1193,14 @@ Expected: exit 0.
 
 ## Phase 6: Release fan-in
 
-### Task p06-t01: Bump the lockstep public packages to 0.3.10
+### Task p06-t01: Bump the lockstep public packages to 0.3.11
 
 **Files:**
 
 - Modify: `packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`
   and any tracked version manifest the release tooling reads (follow the files
-  the 0.3.9 bump changed: `git log -1 --stat 8f6d5b1d2` filtered to version
-  files)
+  the 0.3.10 bump on `main` changed: `git show --stat 98d1d5246` filtered to
+  version files)
 
 **Step 1: Verify**
 
@@ -1171,7 +1210,7 @@ Expected: exit 0.
 
 **Step 2: Commit**
 
-`chore(p06-t01): bump lockstep public packages to 0.3.10`
+`chore(p06-t01): bump lockstep public packages to 0.3.11`
 
 ---
 
@@ -1334,16 +1373,20 @@ The release workflow publishes PR titles only in its release notes, so the
 breaking changes must be named in the title:
 
 - Title uses a Conventional Commit breaking marker, for example
-  `feat!: template resolver, Fumadocs nav sync, recon publication fixes, validate-only dispatch record (wave 3, lockstep 0.3.10)`.
+  `feat!: template resolver, Fumadocs nav sync, recon publication fixes, validate-only dispatch record (wave 3, lockstep 0.3.11)`.
 - The body opens with a **Behavior changes** callout:
   - project scaffolding now prefers a repository template over a user template
     (repository, user, bundle), and lifecycle skills resolve templates through
     `oat template resolve`;
   - `oat project dispatch record --project` is removed (validate-only);
-  - recon `unresolvedIssues` entries may be structured; string entries are read
-    as global; packets that failed only on `REVIEW_BRIEF_MISMATCH`,
-    `MATERIAL_COVERAGE_ASSURANCE_EXCEEDED`, or `REVIEW_DISPOSITION_MISMATCH`
-    from the production helpers now validate;
+  - recon: briefs built by the production helpers now bind (multi-source
+    briefs no longer fail `REVIEW_BRIEF_MISMATCH`), a material coverage gap no
+    longer fails publication once its claims are downgraded, and
+    `unresolvedIssues` entries may be scoped to claim IDs. Legacy string issues
+    are read as global, so a 1.1.5 packet that failed on
+    `REVIEW_DISPOSITION_MISMATCH` (the #333 packet among them) still keeps every
+    covered claim below verified after re-running reconciliation; only newly
+    produced scoped issues downgrade selectively;
   - `oat docs nav sync` writes Fumadocs `meta.json`;
   - `oat project complete-state` refuses a configured closeout with a missing
     or incomplete snapshot; exit-gate waivers are operator-only;
@@ -1367,7 +1410,7 @@ breaking changes must be named in the title:
 | ------ | -------- | --------------- | ---------- | -------------------------------------------------- | ---------------------------------------- | ---------- | ----------------- |
 | p01    | code     | fixes_completed | 2026-10-01 | reviews/archived/p01-review-2026-10-01T112852Z.md  | de9c98848aeb2379f0b9a81ead945664351d1f2b | auto       | -                 |
 | p02    | code     | fixes_completed | 2026-10-01 | reviews/archived/p02-review-2026-10-01T120623Z.md  | c129e82aba9a93c067b587718e576ad31edd372e | auto       | -                 |
-| p03    | code     | pending         | -          | -                                                  | -                                        | -          | -                 |
+| p03    | code     | fixes_added     | 2026-10-01 | reviews/archived/p03-review-2026-10-01T130314Z.md  | 3769d125fc8499b681305a7565fbdab66b9174a5 | auto       | -                 |
 | p04    | code     | pending         | -          | -                                                  | -                                        | -          | -                 |
 | p05    | code     | pending         | -          | -                                                  | -                                        | -          | -                 |
 | p06    | code     | pending         | -          | -                                                  | -                                        | -          | -                 |
@@ -1448,12 +1491,12 @@ criterion.
 
 - Phase 1: 5 tasks - Template resolver
 - Phase 2: 6 tasks - Fumadocs navigation
-- Phase 3: 5 tasks - Recon publication and Codex recovery
+- Phase 3: 6 tasks - Recon publication and Codex recovery
 - Phase 4: 4 tasks - Lifecycle closeout guards
 - Phase 5: 6 tasks - Small fixes
 - Phase 6: 3 tasks - Release fan-in
 
-**Total: 29 tasks**
+**Total: 30 tasks**
 
 Ready for code review and merge.
 
