@@ -15,6 +15,7 @@ import { basename, dirname, join } from 'node:path';
 import { afterEach, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
+import { createReviewBrief } from '../scripts/create-review-brief.mjs';
 import { hashCanonicalJson, hashFile } from '../scripts/lib/canonical-json.mjs';
 import { validateArtifactShape } from '../scripts/lib/contracts.mjs';
 import {
@@ -319,65 +320,35 @@ async function makePacket({
     ledger.inputArtifacts.push(priorRef);
     reviewArtifacts.push(priorRef);
 
-    const verifyBrief = {
-      kind: 'recon.review-brief',
-      schemaVersion: 1,
-      id: 'brief-verify',
-      runId: 'run-1',
-      mode: 'verify',
-      createdAt: '2026-08-31T00:03:00.000Z',
-      excludedInputs: ['prior_reasoning'],
-      claims: [
-        {
-          id: 'claim-1',
-          statement: ledger.claims[0].statement,
-          evidence: [
-            {
-              id: evidence.id,
-              sourceId: evidence.sourceId,
-              displayExcerpt: evidence.displayExcerpt,
-              locator: structuredClone(evidence.locator),
-            },
-          ],
-        },
-      ],
-      sources: [structuredClone(source)],
+    // Briefs come from the production generator so every negative control
+    // below starts from helper output rather than a hand-built projection.
+    const briefManifest = {
+      run: { id: 'run-1' },
+      request: {
+        questions: ['What evidence exists?'],
+        includedScope: ['fixture'],
+        excludedScope: [],
+      },
+      sources: [source],
     };
-    const adversaryBrief = {
-      kind: 'recon.review-brief',
-      schemaVersion: 1,
-      id: 'brief-adversary',
-      runId: 'run-1',
-      mode: 'adversary',
-      createdAt: '2026-08-31T00:03:00.000Z',
-      excludedInputs: ['prior_reasoning'],
-      scope: { included: ['fixture'], excluded: [] },
-      questions: ['What evidence exists?'],
-      provisionalStatements: [
-        { id: 'claim-1', statement: ledger.claims[0].statement },
-      ],
-    };
-    const coverageBrief = {
-      kind: 'recon.review-brief',
-      schemaVersion: 1,
-      id: 'brief-coverage',
-      runId: 'run-1',
-      mode: 'coverage',
-      createdAt: '2026-08-31T00:03:00.000Z',
-      excludedInputs: ['prior_reasoning'],
-      scope: { included: ['fixture'], excluded: [] },
-      questions: ['What evidence exists?'],
-      claims: [{ id: 'claim-1', statement: ledger.claims[0].statement }],
-    };
+    const helperBrief = (id, mode) =>
+      createReviewBrief({
+        id,
+        mode,
+        createdAt: '2026-08-31T00:03:00.000Z',
+        manifest: briefManifest,
+        ledger: priorLedger,
+        claimIds: ['claim-1'],
+      });
     const briefSpecs = [
-      ['verify', verifyBrief],
-      ['adversary', adversaryBrief],
-      ['coverage', coverageBrief],
+      ['verify', helperBrief('brief-verify', 'verify')],
+      ['adversary', helperBrief('brief-adversary', 'adversary')],
+      ['coverage', helperBrief('brief-coverage', 'coverage')],
       ...(profile === 'thorough'
         ? [
             [
               'redundant-verify',
-              { ...structuredClone(verifyBrief), id: 'brief-redundant-verify' },
+              helperBrief('brief-redundant-verify', 'verify'),
             ],
           ]
         : []),
@@ -1629,12 +1600,14 @@ test('detects source drift, wrong excerpts, and shifted lines', async () => {
   await writeFile(drift.sourcePath, 'changed evidence\n', 'utf8');
   await expectInvalid(drift, 'SOURCE_DRIFT');
 
-  const excerpt = await makePacket();
+  // Standard packets carry helper-produced briefs, so these controls start
+  // from production output.
+  const excerpt = await makePacket({ profile: 'standard' });
   excerpt.ledger.evidence[0].displayExcerpt = 'wrong excerpt';
   await persist(excerpt);
   await expectInvalid(excerpt, 'LOCATOR_EXCERPT_MISMATCH');
 
-  const shifted = await makePacket();
+  const shifted = await makePacket({ profile: 'standard' });
   shifted.ledger.evidence[0].locator.lineStart = 2;
   shifted.ledger.evidence[0].locator.lineEnd = 2;
   await persist(shifted);
@@ -1642,7 +1615,7 @@ test('detects source drift, wrong excerpts, and shifted lines', async () => {
 });
 
 test('rejects paraphrased excerpts that are not contiguous source substrings', async () => {
-  const packet = await makePacket();
+  const packet = await makePacket({ profile: 'standard' });
   packet.ledger.evidence[0].displayExcerpt =
     'alpha evidence, paraphrased for readability';
   packet.ledger.evidence[0].contentHash = hashCanonicalJson(
@@ -1839,6 +1812,21 @@ test('verified claims require unique complete typed review results bound to immu
   await persistReview(disposition, 'review-adversarial');
   await expectInvalid(disposition, 'REVIEW_DISPOSITION_MISMATCH');
 
+  // The reconciler keeps covered claims below verified under a global issue;
+  // this bad state bypasses it and leaves the claim verified.
+  for (const issueEntry of [
+    { text: 'The source may predate the release.', scope: 'global' },
+    'A legacy string issue is global.',
+  ]) {
+    const globalIssue = await makePacket({ profile: 'standard' });
+    globalIssue.reviewPaths.get('review-semantic').value.unresolvedIssues = [
+      issueEntry,
+    ];
+    await persistReview(globalIssue, 'review-semantic');
+    assert.equal(globalIssue.ledger.claims[0].status, 'verified');
+    await expectInvalid(globalIssue, 'REVIEW_DISPOSITION_MISMATCH');
+  }
+
   const tampered = await makePacket({ profile: 'standard' });
   tampered.reviewPaths
     .get('review-coverage')
@@ -1846,6 +1834,46 @@ test('verified claims require unique complete typed review results bound to immu
   await persistReview(tampered, 'review-coverage', { updateManifest: false });
   await expectInvalid(tampered, 'ARTIFACT_DIGEST_MISMATCH');
 });
+
+async function rebindEditedBrief(packet, briefKey, reviewId, mutate) {
+  const brief = packet.reviewPaths.get(briefKey);
+  mutate(brief.value);
+  await writeJson(brief.path, brief.value);
+  brief.ref.digest = await hashFile(brief.path);
+  const review = packet.reviewPaths.get(reviewId).value;
+  review.brief = { ...brief.ref };
+  review.permittedInputs = [{ ...brief.ref }];
+  await persistReview(packet, reviewId);
+}
+
+const briefEdits = {
+  statement: (brief) => {
+    brief.claims[0].statement = 'The fixture contains omega evidence.';
+  },
+  evidence: (brief) => {
+    brief.claims[0].evidence[0].displayExcerpt = 'beta context';
+  },
+  locator: (brief) => {
+    brief.claims[0].evidence[0].locator.lineStart = 2;
+    brief.claims[0].evidence[0].locator.lineEnd = 2;
+  },
+  descriptor: (brief) => {
+    brief.sources[0].contentHash = `sha256:${'f'.repeat(64)}`;
+  },
+};
+
+for (const [label, mutate] of Object.entries(briefEdits)) {
+  test(`an edited helper-produced brief ${label} fails review binding`, async () => {
+    const packet = await makePacket({ profile: 'standard' });
+    await rebindEditedBrief(packet, 'brief-verify', 'review-semantic', mutate);
+    const result = await expectInvalid(packet, 'REVIEW_BRIEF_MISMATCH');
+    // The edit is the only defect: every other binding stays exact.
+    assert.deepEqual(
+      [...new Set(result.errors.map((error) => error.code))],
+      ['REVIEW_BRIEF_MISMATCH'],
+    );
+  });
+}
 
 test('persisted review evidence associations reject cross-claim, duplicate, conflicting, and unincorporated links', async () => {
   const evidenceFor = (packet, id, excerpt = 'Review evidence.') => ({

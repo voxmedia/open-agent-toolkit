@@ -169,3 +169,23 @@ test('brief sources must equal the projected union of the brief claims', () => {
     false,
   );
 });
+
+test('an edited second-source descriptor in a two-source brief fails binding', async () => {
+  const packet = await twoSourcePacket();
+  const brief = structuredClone(packet.briefs.verify);
+  assert.equal(brief.sources[1].id, 'source-2');
+  brief.sources[1].contentHash = `sha256:${'f'.repeat(64)}`;
+  const briefRef = await packet.rewriteArtifact(
+    'reviews/briefs/verify.json',
+    brief,
+  );
+  const semantic = structuredClone(packet.reviews.semantic);
+  semantic.brief = { ...briefRef };
+  semantic.permittedInputs = [{ ...briefRef }];
+  await packet.rewriteArtifact('reviews/semantic.json', semantic);
+  const validation = await validatePacket(packet.packetRoot);
+  assert.ok(
+    briefMismatches(validation).length > 0,
+    JSON.stringify(validation, null, 2),
+  );
+});
