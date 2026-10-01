@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
-oat_current_task_id: p01-t01
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -24,37 +24,37 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status  | Tasks | Completed |
-| ------- | ------- | ----- | --------- |
-| Phase 1 | pending | 3     | 0/3       |
-| Phase 2 | pending | 4     | 0/4       |
-| Phase 3 | pending | 5     | 0/5       |
-| Phase 4 | pending | 4     | 0/4       |
-| Phase 5 | pending | 6     | 0/6       |
-| Phase 6 | pending | 3     | 0/3       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | in_progress | 3     | 3/3       |
+| Phase 2 | pending     | 4     | 0/4       |
+| Phase 3 | pending     | 5     | 0/5       |
+| Phase 4 | pending     | 4     | 0/4       |
+| Phase 5 | pending     | 6     | 0/6       |
+| Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 0/25 tasks completed
+**Total:** 3/25 tasks completed
 
 ---
 
 ## Phase 1: Template resolver
 
-**Status:** pending
+**Status:** in_progress
 
 ### Task p01-t01: Share one template resolver in repository, user, bundle order
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** c7b78324d
 
 ### Task p01-t02: Add `oat template resolve`
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** ed5a2c3ca
 
 ### Task p01-t03: Route lifecycle skills through the resolver
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** c1886c3fc
 
 ---
 
