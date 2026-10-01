@@ -3,13 +3,13 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
-oat_current_task_id: p04-t03
+oat_current_task_id: null
 oat_generated: false
 ---
 
 # Implementation: markdown-docs-bootstrap
 
-Ten of eleven tasks are complete. Original phase reviews are settled; final M1 metadata normalization is queued as p04-t03. Packages remain0.3.11; source repair verification, final re-review and retained exit gate precede configured closeout/HiLL.
+All eleven tasks are complete, including final M1 metadata normalization. Required verification passed on the corrected source. Original phase reviews remain preserved; p04 final-fix acceptance and final re-review are pending, followed by the retained exit gate and configured closeout/HiLL.
 
 ## Progress Overview
 
@@ -18,9 +18,9 @@ Ten of eleven tasks are complete. Original phase reviews are settled; final M1 m
 | p01   | complete    | 2     | 2/2       |
 | p02   | complete    | 3     | 3/3       |
 | p03   | complete    | 3     | 3/3       |
-| p04   | in_progress | 3     | 2/3       |
+| p04   | in_progress | 3     | 3/3       |
 
-**Total:** 10/11 tasks completed
+**Total:** 11/11 tasks completed
 
 ## Phase 1: Shared content and guidance contracts
 
@@ -110,10 +110,10 @@ Ten of eleven tasks are complete. Original phase reviews are settled; final M1 m
 
 ### Task p04-t03: (review) Normalize blank Markdown metadata inputs
 
-**Status:** pending
-**Commit:** -
-**Outcome:** Queued from final M1; normalize blank inputs to meaningful defaults without changing frameworks.
-**Verification:** Pending failing-before/passing-after public regression and required full gates.
+**Status:** completed
+**Commit:** 4962a907932b21d18ce75954a8ec83f6c1e0cc08
+**Outcome:** Blank Markdown metadata uses meaningful repository defaults before plans/writes; nonblank values retain bytes, interactive null cancellation and framework semantics preserved.
+**Verification:** Independent YAML public regression old resolver fails1 at intended title assertion/fixed0; seven actual CLI control cases, dry-run/nonmutation and repeated adoption pass. Direct ten-file196tests/types/lint/exactformat/diff0. All eight ordered CI gates/fresh fetch0; actual7,944CLItests plus smoke163/skills660/scripts1 and docs73. Exact three-file hook hashes preserved, clean; recovery0/10.
 
 ## Review and Acceptance Evidence
 
@@ -131,7 +131,7 @@ Markdown authored indexes are protected from manifest generation throughout the 
 
 Key owners are CLI docs init/markdown planning, shared root resolution and managed-guidance preview, index generation, bundle inputs/docs-pack manifest, two baseline templates, five canonical lifecycle/docs skills and twelve source documentation pages. Five public packages plus generated CLI version inventory are lockstep 0.3.11, above fresh main 0.3.10.
 
-Ten original tasks and four original phase reviews are complete; final M1 adds p04-t03 metadata normalization, pending. Verification: eight CI gates passed in order, root lint/format passed; forced isolated-home execution ran ten uncached tasks and 8,135 workspace tests, with docs compilation/generation 73/73. Normal test separately executed smoke163/skills660/scripts1. Bundle parity46, user/project install/update,24 integrated CLI controls and six retained probes passed; independent reviews reproduced pre-fix overwrite/broken navigation and restored negative/accepted controls. Original failures and cache replays remain distinguished in durable receipts.
+All eleven tasks complete, including final M1 meaningful metadata defaults; independent final re-review pending. Verification: eight CI gates passed in order, root lint/format passed; forced isolated-home execution ran ten uncached tasks and 8,135 workspace tests, with docs compilation/generation 73/73. Normal test separately executed smoke163/skills660/scripts1. Bundle parity46, user/project install/update,24 integrated CLI controls and six retained probes passed; independent reviews reproduced pre-fix overwrite/broken navigation and restored negative/accepted controls. Original failures and cache replays remain distinguished in durable receipts.
 
 Design deltas: no production scope deviation. The p02 review added bounded filename-encoding correction; p04 acceptance repaired two stale help snapshots and two canonical skill-version literals under its planned acceptance-defect clause. Source backlog remains open for the broader approvals/version-drift work. Final review, retained implementation exit gate and configured pre-approval closeout work remain pending; no release has occurred.
 
@@ -1870,3 +1870,7 @@ Root consumed exactly one not-attempted signal before validation; no Review Orch
 #### Final M1 automatic receive disposition
 
 M1 converted to p04-t03 in the last phase per final-review receive routing. Public init metadata boundary is the distinct test owner; no duplicate private-layer coverage, fixture infrastructure or production-only test hook. Normalize blank values to meaningful defaults as allowed by the review and approved fresh-docs contract; retain original failure and valid control. Bound first final review event fixes_added and archived only after raw artifact committed. Same original p04 handle/High target resumes in fix mode, final fix iteration1, recovery usage unchanged0/10. No user deferral or additional permission needed under auto-disposition.
+
+#### p04-t03 root task acceptance
+
+Root read the three-file committed diff and complete reviews/final-metadata-controls.md, verified direct gate receipts (nine records, all0 including fetch), causal independent YAML assertion and meaningful accepted controls, exact file boundary/order and clean tree. Pre-commit wrapper diagnostic correction retained; no product recovery event. Same original phase handle/target, review fix iteration1, recovery0/10,pendingnull. First final event fixes_completed after committed metadata repair; final independent re-review pending. Full current verification now binds production commit4962a907932b21d18ce75954a8ec83f6c1e0cc08; prior full forced workspace evidence remains historical and unchanged-consumer proof.
