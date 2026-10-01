@@ -1028,6 +1028,97 @@ describe('post-implementation sequence contracts', () => {
     expect(next).not.toContain('with only its literal state-carrier exclusion');
   });
 
+  describe('terminal closeout routes through the closeout check', () => {
+    // BL-260806-fail-closed-when-configured: every terminal consumer runs the
+    // read-only CLI check and routes an incomplete closeout to implement.
+    const autonomousArg =
+      /\$\{OAT_AUTONOMOUS:-\}"\s*==?\s*"1"[\s\S]{0,80}--autonomous/;
+
+    it('persists the snapshot and checks it before any sequence child', () => {
+      const skill = readImplementSkill();
+      const step15 = requiredSlice(
+        skill,
+        '### Step 15: Final HiLL Closeout Sequence',
+        '### Step 16: Mark Implementation Complete',
+      );
+      expectMarkersInOrder(step15, [
+        '```yaml\noat_post_implement_sequence:',
+        '**Closeout check before the first dispatch:**',
+        'oat project closeout-check "${CLOSEOUT_CHECK_ARGS[@]}"',
+        'For every pending `summary`, `document`, `pr`, or `retro`, dispatch',
+      ]);
+      const gate = requiredSlice(
+        step15,
+        '**Closeout check before the first dispatch:**',
+        'For every pending `summary`',
+      );
+      expect(gate).toMatch(autonomousArg);
+      expect(normalizeWhitespace(gate)).toContain(
+        'A `snapshot_missing` or `snapshot_malformed` invariant means the snapshot did not persist: dispatch nothing',
+      );
+    });
+
+    it('runs the check before marking implementation complete', () => {
+      const step16 = requiredSlice(
+        readImplementSkill(),
+        '### Step 16: Mark Implementation Complete',
+        '### Step 17: Prompt for Next Steps',
+      );
+      expectMarkersInOrder(step16, [
+        'oat project closeout-check "${CLOSEOUT_CHECK_ARGS[@]}"',
+        'Update `"$PROJECT_PATH/implementation.md"` frontmatter:',
+      ]);
+      expect(step16).toMatch(autonomousArg);
+      expect(normalizeWhitespace(step16)).toContain(
+        'Continue only when `status` is `complete` or `not_required`.',
+      );
+    });
+
+    it('routes the next router through the check before any later route', () => {
+      const next = readNextSkill();
+      const section = requiredSlice(
+        next,
+        '**5.1: Incomplete approval-aware post-implementation sequence**',
+        '**5.2: Incomplete revision tasks**',
+      );
+      expect(section).toContain(
+        'oat project closeout-check "${CLOSEOUT_CHECK_ARGS[@]}"',
+      );
+      expect(section).toMatch(autonomousArg);
+      expect(normalizeWhitespace(section)).toContain(
+        'When it reports `status: incomplete`, route to `oat-project-implement` and announce the reported `invariant` and `nextOwner`',
+      );
+    });
+
+    it('checks before completion mutations and before complete-state', () => {
+      const complete = readLifecycleGateSkill('oat-project-complete');
+      const preamble = requiredSlice(
+        complete,
+        '### Step 1.5: Closeout Invariant Gate',
+        '### Step 2: Upfront User Questions (Batched)',
+      );
+      expect(preamble).toContain(
+        'oat project closeout-check "${CLOSEOUT_CHECK_ARGS[@]}"',
+      );
+      expect(preamble).toMatch(autonomousArg);
+      expect(
+        complete.indexOf('### Step 1.5: Closeout Invariant Gate'),
+      ).toBeLessThan(
+        complete.indexOf('### Step 3.7: Project Log Completion Gate'),
+      );
+      const step5 = requiredSlice(
+        complete,
+        '### Step 5: Set Lifecycle Complete',
+        '### Step 6:',
+      );
+      expectMarkersInOrder(step5, [
+        'oat project closeout-check "${CLOSEOUT_CHECK_ARGS[@]}"',
+        'COMPLETE_STATE_ARGS+=("--autonomous")',
+        'oat project complete-state "${COMPLETE_STATE_ARGS[@]}"',
+      ]);
+    });
+  });
+
   it('uses one immutable snapshot and its stored order across every closeout boundary', () => {
     const skill = readImplementSkill();
     const normalized = normalizeWhitespace(skill);

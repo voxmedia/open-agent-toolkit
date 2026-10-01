@@ -1407,7 +1407,7 @@ printf 'artifact-read\\n'`,
     );
     const normalizedContent = content.replace(/\s+/g, ' ');
 
-    expect(readDeclaredVersion(content)).toBe('1.7.13');
+    expect(readDeclaredVersion(content)).toBe('1.7.14');
     expect(content).toContain(
       'if [[ "$PROJECT_SCOPE" == "shared" || "$PROJECT_SCOPE" == "synced" ]]; then',
     );

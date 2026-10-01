@@ -427,10 +427,27 @@ repair, gate execution, receive, and persistence to `oat-project-implement`.
 
 **5.1: Incomplete approval-aware post-implementation sequence**
 
-Before every other post-implementation route, inspect `oat_post_implement_sequence`
-in project state. When the snapshot exists and is incomplete, route to
-`oat-project-implement`. This applies even when `oat_phase_status` is `pr_open`
-or a summary exists. A completed snapshot falls through to the normal router.
+Before every other post-implementation route, run the read-only closeout
+check. It reads `oat_post_implement_sequence` from project state and also
+covers a closeout that owes a snapshot but has none:
+
+```bash
+CLOSEOUT_CHECK_ARGS=("$PROJECT_PATH" --json)
+if [ "${OAT_AUTONOMOUS:-}" = "1" ]; then
+  CLOSEOUT_CHECK_ARGS+=(--autonomous)
+fi
+CLOSEOUT_CHECK_EXIT=0
+CLOSEOUT_CHECK_JSON=$(oat project closeout-check "${CLOSEOUT_CHECK_ARGS[@]}") || CLOSEOUT_CHECK_EXIT=$?
+```
+
+When it reports `status: incomplete`, route to
+`oat-project-implement` and announce the reported `invariant` and `nextOwner`,
+for example: "Closeout incomplete (`snapshot_missing`) — resume with
+`oat-project-implement`." This applies even when `oat_phase_status` is `pr_open` or a summary exists, and
+covers a configured, autonomous, or lite closeout whose snapshot is absent or
+malformed. A command error routes the same way. Only `complete` (a completed
+snapshot) or `not_required` (no snapshot owed) falls through to the normal
+router. The check is read-only, so running it keeps this router read-only.
 
 **5.2: Incomplete revision tasks**
 

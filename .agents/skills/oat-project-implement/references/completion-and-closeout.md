@@ -869,6 +869,28 @@ discard a nonempty preference. Replace both with the exact normalized arrays
 resolved above. Never add `retro` unless the configured `postApproval` array
 explicitly contains it; the autonomous default remains `postApproval: []`.
 
+**Closeout check before the first dispatch:**
+
+Commit the snapshot before dispatching any sequence child, then run the
+read-only closeout check against the committed `state.md`:
+
+```bash
+CLOSEOUT_CHECK_ARGS=("$PROJECT_PATH" --json)
+if [ "${OAT_AUTONOMOUS:-}" = "1" ]; then
+  CLOSEOUT_CHECK_ARGS+=(--autonomous)
+fi
+CLOSEOUT_CHECK_EXIT=0
+CLOSEOUT_CHECK_JSON=$(oat project closeout-check "${CLOSEOUT_CHECK_ARGS[@]}") || CLOSEOUT_CHECK_EXIT=$?
+```
+
+An incomplete result exits 1 by design; route on the JSON, not the exit code.
+Before the first child it reports `status: incomplete` with the first
+incomplete stored step as `nextOwner`, which is the step to dispatch. A
+`snapshot_missing` or `snapshot_malformed` invariant means the snapshot did not
+persist: dispatch nothing, repair the persisted snapshot, and resume through
+`oat-project-implement`. Run the same check on every resume and dispatch the
+step it names.
+
 The snapshot is immutable for this closeout: never re-resolve
 `workflow.postImplementSequence` while it is incomplete. Iterate
 `pre_approval` and `post_approval` in their stored array order; do not sort or
@@ -1020,6 +1042,24 @@ policy-allowed disposition, including an allowed no-gate outcome, and the Step
 15 closeout sequence has reached its terminal allowed state. A configured gate
 that is blocked, unresolved, malformed, or stale leaves implementation in
 progress.
+
+Before any Step 16 write, run the closeout check against the committed
+`state.md`:
+
+```bash
+CLOSEOUT_CHECK_ARGS=("$PROJECT_PATH" --json)
+if [ "${OAT_AUTONOMOUS:-}" = "1" ]; then
+  CLOSEOUT_CHECK_ARGS+=(--autonomous)
+fi
+CLOSEOUT_CHECK_EXIT=0
+CLOSEOUT_CHECK_JSON=$(oat project closeout-check "${CLOSEOUT_CHECK_ARGS[@]}") || CLOSEOUT_CHECK_EXIT=$?
+```
+
+Continue only when `status` is `complete` or `not_required`. An `incomplete`
+result leaves implementation in progress: report its `invariant` and
+`nextOwner`, write nothing, and resume Step 15 at that owner. `not_required`
+means no snapshot was owed: the closeout is not configured, not autonomous,
+and not lite. A command error fails closed the same way.
 
 Update `"$PROJECT_PATH/implementation.md"` frontmatter:
 
