@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
-oat_current_task_id: p04-t05
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -29,11 +29,11 @@ oat_generated: false
 | Phase 1 | complete    | 5     | 5/5       |
 | Phase 2 | complete    | 6     | 6/6       |
 | Phase 3 | complete    | 10    | 10/10     |
-| Phase 4 | in_progress | 5     | 4/5       |
+| Phase 4 | in_progress | 5     | 5/5       |
 | Phase 5 | pending     | 6     | 0/6       |
 | Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 25/35 tasks completed
+**Total:** 26/35 tasks completed
 
 ---
 
@@ -186,8 +186,8 @@ oat_generated: false
 
 ### Task p04-t05: (review) Close p04 review findings M1, L1-L3
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 06051d26f
 
 ---
 
@@ -463,6 +463,13 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   deviation rows), 3 Low (passes). No ledger or resume-pointer finding. M1 and
   L1-L3 converted to `p04-t05`; M2 handled by root (Deviations table).
   `Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
+
+- Continuation `cont-backlog-wave-3-p04-fix-1`: `06051d26f` closed M1 (a
+  stale-boundary waiver offer before `stale` is persisted: interactive asks,
+  autonomous reruns the gate and never waives; next 5.0 mirrors it), L1
+  (no-op trace step removed), L2 (comment placement), L3 (`nextOwner` names
+  `approval: approved` or `not_required`); three new prompt sites mapped `NG`;
+  2165 tests pass.
 
 <!-- orchestration-runs-end -->
 

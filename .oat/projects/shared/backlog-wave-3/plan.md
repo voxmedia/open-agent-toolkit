@@ -1626,7 +1626,7 @@ breaking changes must be named in the title:
 | p03    | code     | fixes_completed | 2026-10-01 | reviews/archived/p03-review-2026-10-01T131855Z.md  | a3d625b312d892dbdd33270582fb2561ec39533c | auto       | -                 |
 | p03    | code     | fixes_completed | 2026-10-01 | reviews/archived/p03-review-2026-10-01T133903Z.md  | 18012ae901c3ba7460af9cb82d2010fb6b8d1970 | auto       | -                 |
 | p03    | code     | passed          | 2026-10-01 | reviews/archived/p03-review-2026-10-01T165604Z.md  | 2cb68863a5b6eb3ff54e9cb9176db401d7c9932d | gate       | codex-6-sol-xhigh |
-| p04    | code     | fixes_added     | 2026-10-01 | reviews/archived/p04-review-2026-10-01T174412Z.md  | 310f3902b8e4d869f0b437262f95b3deb661e708 | auto       | -                 |
+| p04    | code     | fixes_completed | 2026-10-01 | reviews/archived/p04-review-2026-10-01T174412Z.md  | 310f3902b8e4d869f0b437262f95b3deb661e708 | auto       | -                 |
 | p05    | code     | pending         | -          | -                                                  | -                                        | -          | -                 |
 | p06    | code     | pending         | -          | -                                                  | -                                        | -          | -                 |
 | final  | code     | pending         | -          | -                                                  | -                                        | -          | -                 |
