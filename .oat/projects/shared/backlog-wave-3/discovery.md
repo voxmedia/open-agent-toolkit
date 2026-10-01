@@ -87,9 +87,12 @@ sequencing, covered under Key Decisions.
 
 1. **Sequencing:** Five sequential phases plus a fan-in. Phases share help
    snapshots, skill version pins, and several docs pages, so they do not run
-   in parallel; the fan-in owns every version bump.
-2. **Lockstep:** One five-package bump from 0.3.9 to 0.3.10, and one
-   `metadata.version` bump per changed skill in the final PR diff.
+   in parallel.
+2. **Versions:** Each skill gets one `metadata.version` bump in the final PR
+   diff, made by the first phase that changes it (later phases check
+   `git diff origin/main` and do not bump again), so every phase gate sees a
+   passing `check:skill-bumps`. The fan-in owns the five-package lockstep bump
+   from 0.3.9 to 0.3.10.
 3. **Template command shape:** `oat template resolve <name> [--json]
 [--output <path>]`. It reports the matching tier (repository, user,
    bundle) and returns a filesystem path only for the repository and user
