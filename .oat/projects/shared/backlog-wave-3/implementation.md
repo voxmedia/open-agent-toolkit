@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
-oat_current_task_id: p02-t06
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 5     | 5/5       |
-| Phase 2 | in_progress | 6     | 5/6       |
-| Phase 3 | pending     | 5     | 0/5       |
-| Phase 4 | pending     | 4     | 0/4       |
-| Phase 5 | pending     | 6     | 0/6       |
-| Phase 6 | pending     | 3     | 0/3       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 5     | 5/5       |
+| Phase 2 | complete | 6     | 6/6       |
+| Phase 3 | pending  | 5     | 0/5       |
+| Phase 4 | pending  | 4     | 0/4       |
+| Phase 5 | pending  | 6     | 0/6       |
+| Phase 6 | pending  | 3     | 0/3       |
 
-**Total:** 10/29 tasks completed
+**Total:** 11/29 tasks completed
 
 ---
 
@@ -70,7 +70,7 @@ oat_generated: false
 
 ## Phase 2: Fumadocs navigation
 
-**Status:** in_progress
+**Status:** complete
 
 ### Task p02-t01: Write Fumadocs `meta.json` from Contents maps
 
@@ -99,8 +99,8 @@ oat_generated: false
 
 ### Task p02-t06: (review) Close p02 gate findings M1, M2, L1
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 35e104eb3
 
 ---
 
@@ -307,6 +307,13 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   Critical/High, 2 Medium, 1 Low. Judgment sweep: all three addressed now as
   `p02-t06`.
 
+- Continuation `cont-backlog-wave-3-p02-fix-2`: `35e104eb3` closed gate M1
+  (merged-metadata index inclusion; real-loader tests for ordinary and
+  `root: true` folders), M2 (read-only `Bash(oat docs nav sync --check:*)`
+  grant, pinned), L1 (`--target-dir` in the analysis command); 583 tests pass.
+- Phase p02 outcome: pass after one review-fix round and one gate-fix task
+  (p02-t05, p02-t06); 6/6 tasks.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -383,16 +390,17 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented                      | Actual / Accepted                                                                                                                                                                           | Reason                                               | Source of Truth | Follow-up                                         |
-| ------------- | --------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- | --------------- | ------------------------------------------------- |
-| p01-t01       | plan.md p01-t01 | Move the resolver; flip one scaffold test | Also updated `promote.test.ts` and a second user-first scaffold test; lazy `assetsRoot`; "PJM" dropped from the invalid-name message                                                        | Required by the declared change                      | Implementation  | None                                              |
-| p01-t02       | plan.md p01-t02 | Command over the shared resolver          | Added `TemplateNotFoundError`; the repository tier is skipped outside a git repository                                                                                                      | Distinguish a miss from a read failure               | Implementation  | None                                              |
-| p01-t03       | plan.md p01-t03 | Listed skill call sites                   | Also updated quick-start line 195 and the `review-skill-contracts` pins; retro creates `references/` before copying                                                                         | `--output` creates no directories                    | Implementation  | None                                              |
-| p01-t03       | plan.md p01-t03 | No skill copies from `.oat/templates/`    | `oat-wrap-up` keeps a read reference to `.oat/templates/summary.md` (schema pointer, not a copy)                                                                                            | Out of p01 scope; absent on user-scope-only installs | Implementation  | Note at p06 index                                 |
-| p01-t04       | p01 review M1   | Grants for retro and summary              | Also re-keyed the summary `allowed-tools` prompt site in `.agents/docs/autonomy-contract.md` (`35cb2ea1d677` to `a8983fec040c`, still `NG`)                                                 | Prompt sites are keyed by a hash of the line         | Implementation  | None                                              |
-| p02-t01       | plan.md p02-t01 | Strict meta.json from Contents maps       | Only the root lists `index`; links into a non-child folder become link entries; hidden folders reported once as `folder/`; unowned meta.json keys preserved; unlisted pages warn but exit 0 | Fumadocs 16.10.2 loader semantics                    | Implementation  | None                                              |
-| p02-t02       | plan.md p02-t02 | Listed docs pages                         | Also `reference/file-locations.md`, `reference/index.md`, and the regenerated `apps/oat-docs/index.md`; no change needed in `cli-reference.md`                                              | Same MkDocs-only wording                             | Implementation  | None                                              |
-| p02-t05       | p02 review M1   | Report unlisted pages                     | Added `nav sync --check` (MkDocs and Fumadocs) run in `apps/oat-docs` `prebuild`, so `build:docs` fails on stale navigation; `oat-docs-analyze` points at the read-only form                | Strict pages would otherwise hide new pages silently | Implementation  | `docs-app-fuma` scaffold not wired (out of scope) |
+| Task / Review | Source Artifact | Planned / Documented                      | Actual / Accepted                                                                                                                                                                                                                                    | Reason                                               | Source of Truth | Follow-up                                         |
+| ------------- | --------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- | --------------- | ------------------------------------------------- |
+| p01-t01       | plan.md p01-t01 | Move the resolver; flip one scaffold test | Also updated `promote.test.ts` and a second user-first scaffold test; lazy `assetsRoot`; "PJM" dropped from the invalid-name message                                                                                                                 | Required by the declared change                      | Implementation  | None                                              |
+| p01-t02       | plan.md p01-t02 | Command over the shared resolver          | Added `TemplateNotFoundError`; the repository tier is skipped outside a git repository                                                                                                                                                               | Distinguish a miss from a read failure               | Implementation  | None                                              |
+| p01-t03       | plan.md p01-t03 | Listed skill call sites                   | Also updated quick-start line 195 and the `review-skill-contracts` pins; retro creates `references/` before copying                                                                                                                                  | `--output` creates no directories                    | Implementation  | None                                              |
+| p01-t03       | plan.md p01-t03 | No skill copies from `.oat/templates/`    | `oat-wrap-up` keeps a read reference to `.oat/templates/summary.md` (schema pointer, not a copy)                                                                                                                                                     | Out of p01 scope; absent on user-scope-only installs | Implementation  | Note at p06 index                                 |
+| p01-t04       | p01 review M1   | Grants for retro and summary              | Also re-keyed the summary `allowed-tools` prompt site in `.agents/docs/autonomy-contract.md` (`35cb2ea1d677` to `a8983fec040c`, still `NG`)                                                                                                          | Prompt sites are keyed by a hash of the line         | Implementation  | None                                              |
+| p02-t01       | plan.md p02-t01 | Strict meta.json from Contents maps       | Only the root lists `index`; links into a non-child folder become link entries; hidden folders reported once as `folder/`; unowned meta.json keys preserved; unlisted pages warn but exit 0                                                          | Fumadocs 16.10.2 loader semantics                    | Implementation  | None                                              |
+| p02-t02       | plan.md p02-t02 | Listed docs pages                         | Also `reference/file-locations.md`, `reference/index.md`, and the regenerated `apps/oat-docs/index.md`; no change needed in `cli-reference.md`                                                                                                       | Same MkDocs-only wording                             | Implementation  | None                                              |
+| p02-t05       | p02 review M1   | Report unlisted pages                     | Added `nav sync --check` (MkDocs and Fumadocs) run in `apps/oat-docs` `prebuild`, so `build:docs` fails on stale navigation; `oat-docs-analyze` points at the read-only form                                                                         | Strict pages would otherwise hide new pages silently | Implementation  | `docs-app-fuma` scaffold not wired (out of scope) |
+| p02-t06       | p02 gate M1     | Loader-checked reachability               | The new `fumadocs-loader.test.ts` imports `fumadocs-core` through `apps/oat-docs/package.json`, so CLI tests need the docs app installed (a normal workspace install); a kept `pagesIndex` naming another page may over-report that page as unlisted | Prove against the real loader                        | Implementation  | None                                              |
 
 ## Test Results
 
