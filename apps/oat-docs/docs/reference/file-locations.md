@@ -169,7 +169,7 @@ Archive sync surfaces:
 - `packages/cli/src/commands/cleanup/project/`
 - `packages/cli/src/commands/cleanup/artifacts/`
 - `packages/cli/src/commands/docs/` — `oat docs` command family
-- `packages/cli/src/commands/docs/init/` — scaffold a docs app (Fumadocs or MkDocs)
+- `packages/cli/src/commands/docs/init/` — bootstrap/adopt authored Markdown or scaffold a docs app (Fumadocs or MkDocs)
 - `packages/cli/src/commands/docs/migrate/` — convert MkDocs admonitions to GFM callouts
 - `packages/cli/src/commands/docs/index-generate/` — generate a docs index from markdown files
 - `packages/cli/src/commands/docs/nav/` — regenerate mkdocs.yml nav from index.md sections
@@ -191,3 +191,5 @@ Archive sync surfaces:
 
 - `.oat/templates/docs-app-fuma/` — Fumadocs (Next.js) scaffold template
 - `.oat/templates/docs-app-mkdocs/` — MkDocs Material scaffold template
+
+- `.oat/templates/docs-markdown/` — authored `index.md` and `contributing.md` baseline templates; installed by the docs pack, with no app or docs-root AGENTS template

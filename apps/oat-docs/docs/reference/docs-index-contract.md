@@ -1,6 +1,6 @@
 ---
 title: Docs Index Contract
-description: 'Docs source contract: authored index.md maps, generated Fumadocs manifests, and MkDocs nav sync.'
+description: 'Docs source contract: authored Markdown context/maps, optional external inventories, Fumadocs manifests, and MkDocs nav sync.'
 ---
 
 # Docs Index Contract
@@ -9,7 +9,8 @@ OAT docs navigation starts from authored `docs/**/index.md` files. Each `## Cont
 
 ## Rules
 
-- Every documentation directory must contain an `index.md`.
+- Every non-excluded Markdown-bearing content directory must contain an authored `index.md`; asset-only directories are exempt.
+- Preserve useful audience/scope context, ownership guidance, and existing local instructions. Authored pages need nonempty title/description metadata.
 - Every `index.md` must include a `## Contents` section.
 - The `## Contents` section is the machine-readable local map for sibling pages and child directories.
 - Every `## Contents` link should use a `.md`-suffixed relative target, including child directory links such as `subdir/index.md`.
@@ -34,6 +35,20 @@ Notes:
 - Child directories should link to their `index.md`.
 - Leaf pages should link to their `.md` filename.
 - Prose outside `## Contents` is ignored by nav generation and remains freeform; it can explain scope, reader paths, or migration status.
+
+## Plain Markdown Ownership
+
+Configured Markdown uses `documentation.root` literally, even with a child named
+`docs`. The configured `<root>/index.md` is authored context plus a Contents map;
+edit it directly. Bootstrap/adoption creates missing baseline files and root
+guidance, but content gaps remain analyze/apply work. No app package, site build,
+nav sync, default manifest, or docs-root AGENTS creation is required.
+
+Optional inventories need explicit output outside the full configured content
+tree, for example `oat docs generate-index --docs-dir docs --output .oat/docs-manifest.md`.
+Default generation is refused, as is output to the authored index or any part of
+the full root, even with narrowed source flags or symlink aliases. Generation
+never repoints the configured authored index.
 
 ## Fumadocs Generation
 
@@ -67,7 +82,7 @@ MkDocs generated behavior:
 
 ## Generated-file boundaries
 
-- Edit authored files under `docs/`, especially the nearest `index.md` and `## Contents`.
+- Edit authored files under the resolved content root (`docs/` inside framework apps, or the literal configured Markdown root), especially the nearest `index.md` and `## Contents`.
 - Do not hand-edit a Fumadocs app-root generated `index.md`; regenerate it from the docs source tree.
 - Do not hand-maintain MkDocs `nav:` entries when the local workflow uses `oat docs nav sync`.
 - If a Fumadocs generated manifest lists pages that are missing from authored `## Contents`, treat that as authored-source drift or intentional generator-inventory behavior to verify before relying on the generated file as navigation evidence.
@@ -77,7 +92,7 @@ MkDocs generated behavior:
 - Use `index.md` as the local discovery surface for humans and agents.
 - Add a short topic description next to each link so agents can choose the right file without opening every page.
 - Update `## Contents` whenever you add, remove, rename, or reorder docs files in a directory.
-- Regenerate the framework-specific artifact after structural changes: `generate-index` for Fumadocs root manifests, `nav sync` for MkDocs `mkdocs.yml`.
+- Markdown checks authored files/links, regenerating optional external manifests only when declared. Frameworks regenerate their artifact after structural changes: `generate-index` for Fumadocs root manifests, `nav sync` for MkDocs `mkdocs.yml`.
 - Refresh or freshness-check the generated artifact before committing structural docs changes.
 
 ## If You Are Trying To...
