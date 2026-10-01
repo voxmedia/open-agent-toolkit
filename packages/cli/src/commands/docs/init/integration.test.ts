@@ -511,6 +511,81 @@ describe('Markdown docs init public boundary', () => {
     return snapshot;
   }
 
+  it('defaults blank Markdown metadata before writing authored pages', async () => {
+    const cases = [
+      { args: ['--site-name', ''], title: 'Operator Handbook' },
+      { args: ['--site-name', ' \t '], title: 'Operator Handbook' },
+      {
+        args: ['--site-name', 'Operations Guide', '--description', ' \t '],
+        title: 'Operations Guide',
+      },
+      {
+        args: [
+          '--site-name',
+          ' Operators: "Service" ',
+          '--description',
+          ' Runtime ownership and escalation ',
+        ],
+        title: ' Operators: "Service" ',
+        description: ' Runtime ownership and escalation ',
+      },
+      { args: [], title: 'Operator Handbook' },
+      {
+        args: ['--site-name', 'Operations Guide', '--description', ''],
+        title: 'Operations Guide',
+      },
+      { args: [], title: 'Documentation', repoName: '___' },
+    ];
+    for (const fixture of cases) {
+      const parent = await temporaryRepo();
+      const root = join(parent, fixture.repoName ?? 'operator-handbook');
+      await mkdir(join(root, '.oat'), { recursive: true });
+      await writeFile(
+        join(root, 'package.json'),
+        '{"name":"service","scripts":{"build":"existing-build"}}\n',
+      );
+      await writeFile(
+        join(root, '.oat/config.json'),
+        '{"version":1,"documentation":{"excludes":["drafts/**"]},"worktrees":{"root":"custom-worktrees"}}\n',
+      );
+      const before = await snapshotTree(root);
+      const preview = await runMarkdown(root, fixture.args, true);
+      expect(preview.exit ?? 0).toBe(0);
+      expect(await snapshotTree(root)).toEqual(before);
+      const result = await runMarkdown(root, fixture.args);
+      expect(result.exit ?? 0).toBe(0);
+      expect(result.jsonPayloads[0]).toMatchObject({ status: 'ok' });
+      const index = await readFile(join(root, 'docs/index.md'), 'utf8');
+      const frontmatter = index.match(/^---\n([\s\S]*?)\n---/)?.[1];
+      expect(frontmatter).toBeDefined();
+      const metadata = parseYaml(frontmatter!) as {
+        title: string;
+        description: string;
+      };
+      expect(metadata.title).toBe(fixture.title);
+      expect(metadata.description).toBe(
+        fixture.description ??
+          (fixture.repoName === '___'
+            ? 'Documentation for ___.'
+            : 'Documentation for operator-handbook.'),
+      );
+      expect((await snapshotTree(root))['package.json']).toBe(
+        before['package.json'],
+      );
+      expect(
+        JSON.parse(await readFile(join(root, '.oat/config.json'), 'utf8')),
+      ).toMatchObject({
+        documentation: {
+          tooling: 'markdown',
+          root: 'docs',
+          index: 'docs/index.md',
+          excludes: ['drafts/**'],
+        },
+        worktrees: { root: 'custom-worktrees' },
+      });
+    }
+  });
+
   it.each(['docs', 'handbook/team'])(
     'creates authored docs at %s without changing app/package files',
     async (target) => {

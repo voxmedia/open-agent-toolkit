@@ -198,16 +198,21 @@ export async function resolveDocsInitOptions(
   }
 
   if (framework === 'markdown') {
-    const siteName =
+    const defaultSiteName =
+      humanizeAppName(basename(input.repoRoot)).trim() || 'Documentation';
+    const requestedSiteName =
       input.providedSiteName ??
       (input.interactive && !input.acceptDefaults
         ? await input.inputWithDefault(
             'Documentation title',
-            humanizeAppName(basename(input.repoRoot)),
+            defaultSiteName,
             ctx,
           )
-        : humanizeAppName(basename(input.repoRoot)));
-    if (siteName === null) return null;
+        : defaultSiteName);
+    if (requestedSiteName === null) return null;
+    const siteName = requestedSiteName.trim()
+      ? requestedSiteName
+      : defaultSiteName;
     const targetDir =
       input.providedTargetDir?.trim() ||
       (input.interactive && !input.acceptDefaults
@@ -221,9 +226,9 @@ export async function resolveDocsInitOptions(
       appName: 'docs',
       siteName,
       targetDir,
-      siteDescription:
-        input.providedSiteDescription ||
-        `Documentation for ${basename(input.repoRoot)}.`,
+      siteDescription: input.providedSiteDescription?.trim()
+        ? input.providedSiteDescription
+        : `Documentation for ${basename(input.repoRoot).trim() || 'this repository'}.`,
       lint: input.providedLint ?? 'none',
       format: input.providedFormat ?? 'none',
       rootPatch: false,
