@@ -511,7 +511,7 @@ Accepted reviewer handle `/root/markdown_p01_review_pinned`; exact controls reta
 #### p01 terminal phase outcome
 
 - Verdict: pass; fix iterations 0; both planned task commits preserved, root tracking committed separately.
-- Independent review: reviews/p01-review-2026-10-01T120229Z.md; reviewed full head 47f4fddad5b3618e5146631b729e435a0a4a5f4a; auto invocation; 0 Critical, 0 High, 0 Medium, 1 Low. Exactly one not-attempted reconnaissance signal; no Review Orchestration section, no reconnaissance-log append. Scope/range/frontmatter and severity lists validated.
+- Independent review: reviews/archived/p01-review-2026-10-01T120229Z.md; reviewed full head 47f4fddad5b3618e5146631b729e435a0a4a5f4a; auto invocation; 0 Critical, 0 High, 0 Medium, 1 Low. Exactly one not-attempted reconnaissance signal; no Review Orchestration section, no reconnaissance-log append. Scope/range/frontmatter and severity lists validated.
 - L1 accepted and resolved in this root-owned bookkeeping: current implementation introduction and Final Summary now agree with completed task rows and p02-t01 pointer. Raw review counts are preserved; no production fix/re-review needed for this tracking-only repair. Review event remains fixes_completed rather than claiming an independently clean re-review.
 - Reviewer independently ran all 672 tests/13 actual files and type-check, exit 0; corrected guessed test filters are disclosed in artifact. It reproduced pre/post overwrite, accepted external/Fumadocs controls and both regression neutralizations in an isolated archive.
 - No unresolved findings, recovery attempts, optional nested dispatch, scope deviations or additional phase gate. Continue p02; final HiLL remains p04.
@@ -1039,7 +1039,7 @@ Native pre-start rejection unknown agent_type; exact-target canonical-role route
 
 #### p02 terminal review acceptance
 
-Clean full-phase round two reviews/p02-review-2026-10-01T132908Z.md at f715c2ece20b5650d64d3b55bb6b9f44b2c98495: 0 Critical, High, Medium or Low. Exactly one not-attempted reconnaissance signal, no orchestration section or recon-log append. Root read complete artifact, validated scope/range/head and evidence. Prior M1 independently reproduced pre-fix and verified fixed; first event remains fixes_completed and raw counts retained, clean round event passed. All tasks and dispositions complete; phase p02 complete, one review-fix iteration, recovery 0/10. Archive Turbo limitation disclosed; direct CLI build/195 actual tests/types/lint and public controls pass. Final full gates pending p04. Continue p03.
+Clean full-phase round two reviews/archived/p02-review-2026-10-01T132908Z.md at f715c2ece20b5650d64d3b55bb6b9f44b2c98495: 0 Critical, High, Medium or Low. Exactly one not-attempted reconnaissance signal, no orchestration section or recon-log append. Root read complete artifact, validated scope/range/head and evidence. Prior M1 independently reproduced pre-fix and verified fixed; first event remains fixes_completed and raw counts retained, clean round event passed. All tasks and dispositions complete; phase p02 complete, one review-fix iteration, recovery 0/10. Archive Turbo limitation disclosed; direct CLI build/195 actual tests/types/lint and public controls pass. Final full gates pending p04. Continue p03.
 
 #### p03 implementation dispatch
 
@@ -1355,7 +1355,7 @@ Accepted exact-target canonical-role route /root/markdown_p03_review_pinned; awa
 
 #### p03 terminal review acceptance and Low dispositions
 
-Root read complete reviews/p03-review-2026-10-01T140627Z.md, reviewed head 1e03f88dcb5ae9713ff36a4b3327ac02d1b4f953, full phase range validated. Raw counts retained: 0 Critical, 0 High, 0 Medium, 2 Low. Exactly one not-attempted reconnaissance signal; no orchestration section or recon-log append.
+Root read complete reviews/archived/p03-review-2026-10-01T140627Z.md, reviewed head 1e03f88dcb5ae9713ff36a4b3327ac02d1b4f953, full phase range validated. Raw counts retained: 0 Critical, 0 High, 0 Medium, 2 Low. Exactly one not-attempted reconnaissance signal; no orchestration section or recon-log append.
 
 - L1 (first Low bullet), tracking drift: accepted, Negligible scope. Corrected the overview by parsed phase-cell content and Final Summary to match all three completed p03 task rows. The stale whitespace-based replacement was a root bookkeeping defect. This repair is the already-required Step 7b tracking alignment; no new production task or re-review loop needed.
 - L2 (second Low bullet), vacuous committed-page checker: accepted, Negligible scope. Pinned its actual committed phase range, require exactly twelve source pages and nonzero links, and rerun against clean committed sources. It now checks twelve metadata records and 105 destinations, exit 0. Raw prior replay zero-coverage result remains in the review; no claim that its original retained command was reproducible.
@@ -1722,7 +1722,7 @@ Root reconciled DONE report: base 7e8abb5b377ffc2f16d9576a0023e7a6cf4a46fd throu
 
 #### p04 independent phase review disposition
 
-Root consumed exactly one not-attempted reconnaissance signal before validation, with no Review Orchestration or recon-log entry. Read complete reviews/p04-review-2026-10-01T150035Z.md; bound full head f4d76f977968c4d4e00d86153e48a9781649a2d1 and exact phase range verified, standard counts/severity sections agree: zero Critical, High, Medium and Low. Independent bundle46parity/four lifecycle commands,24CLI controls,six retained probes,303focused tests,release versions and pre-guard overwrite/post-guard refusal/external acceptance pass. Actual full-gate receipts independently inspected; broad gates not rerun. Review passed; all tasks/dispositions complete, no selected phase gate, p04 complete, fix iterations0/recovery0/10. All four phases complete; distinct final review and retained exit gate precede p04 HiLL approval.
+Root consumed exactly one not-attempted reconnaissance signal before validation, with no Review Orchestration or recon-log entry. Read complete reviews/archived/p04-review-2026-10-01T150035Z.md; bound full head f4d76f977968c4d4e00d86153e48a9781649a2d1 and exact phase range verified, standard counts/severity sections agree: zero Critical, High, Medium and Low. Independent bundle46parity/four lifecycle commands,24CLI controls,six retained probes,303focused tests,release versions and pre-guard overwrite/post-guard refusal/external acceptance pass. Actual full-gate receipts independently inspected; broad gates not rerun. Review passed; all tasks/dispositions complete, no selected phase gate, p04 complete, fix iterations0/recovery0/10. All four phases complete; distinct final review and retained exit gate precede p04 HiLL approval.
 
 #### Final closeout baseline and verification
 
