@@ -24,84 +24,174 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase   | Status  | Tasks | Completed |
+| ------- | ------- | ----- | --------- |
+| Phase 1 | pending | 3     | 0/3       |
+| Phase 2 | pending | 4     | 0/4       |
+| Phase 3 | pending | 5     | 0/5       |
+| Phase 4 | pending | 4     | 0/4       |
+| Phase 5 | pending | 6     | 0/6       |
+| Phase 6 | pending | 3     | 0/3       |
 
-**Total:** 0/{N} tasks completed
-
----
-
-## Phase 1: {Phase Name}
-
-**Status:** in_progress
-**Started:** 2026-10-01
-
-### Phase Summary (fill when phase is complete)
-
-**Outcome (what changed):**
-
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
-
-**Key files touched:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {trade-offs or deviations discovered during implementation}
-
-### Task p01-t01: {Task Name}
-
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
-
-**Outcome (required when completed):**
-
-- {what materially changed (not “did task”, but “system now does X”)}
-
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
+**Total:** 0/25 tasks completed
 
 ---
 
-### Task p01-t02: {Task Name}
+## Phase 1: Template resolver
+
+**Status:** pending
+
+### Task p01-t01: Share one template resolver in repository, user, bundle order
 
 **Status:** pending
 **Commit:** -
 
-**Notes:**
+### Task p01-t02: Add `oat template resolve`
 
-- {Notes will be added during implementation}
+**Status:** pending
+**Commit:** -
+
+### Task p01-t03: Route lifecycle skills through the resolver
+
+**Status:** pending
+**Commit:** -
 
 ---
 
-## Phase 2: {Phase Name}
+## Phase 2: Fumadocs navigation
 
 **Status:** pending
-**Started:** -
 
-### Task p02-t01: {Task Name}
+### Task p02-t01: Write Fumadocs `meta.json` from Contents maps
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t02: Describe both frameworks in help and docs
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t03: Generate and commit `apps/oat-docs` navigation
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t04: Update the docs skills
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 3: Recon publication and Codex recovery
+
+**Status:** pending
+
+### Task p03-t01: Share review-brief source binding
+
+**Status:** pending
+**Commit:** -
+
+### Task p03-t02: Keep the coverage downgrade, drop the per-statement gap rule
+
+**Status:** pending
+**Commit:** -
+
+### Task p03-t03: Structure unresolved issues
+
+**Status:** pending
+**Commit:** -
+
+### Task p03-t04: Prove recon's negative controls against helper output
+
+**Status:** pending
+**Commit:** -
+
+### Task p03-t05: Document the Codex agent-limit gotcha and allow one bounded retry
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 4: Lifecycle closeout guards
+
+**Status:** pending
+
+### Task p04-t01: Recompute next's exit-gate fingerprint with the v2 exclusions
+
+**Status:** pending
+**Commit:** -
+
+### Task p04-t02: Add a CLI closeout check and make complete-state refuse a missing snapshot
+
+**Status:** pending
+**Commit:** -
+
+### Task p04-t03: Route terminal closeout through the check
+
+**Status:** pending
+**Commit:** -
+
+### Task p04-t04: Add operator-only exit-gate waivers
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 5: Small fixes
+
+**Status:** pending
+
+### Task p05-t01: Keep `instructions sync --force` from overwriting a linked CLAUDE.md
+
+**Status:** pending
+**Commit:** -
+
+### Task p05-t02: Remove dispatch-record persistence
+
+**Status:** pending
+**Commit:** -
+
+### Task p05-t03: Let test-only changes skip the lockstep bump
+
+**Status:** pending
+**Commit:** -
+
+### Task p05-t04: Report YAML errors with their location and check key types
+
+**Status:** pending
+**Commit:** -
+
+### Task p05-t05: Route quick-mode discovery to quick-start
+
+**Status:** pending
+**Commit:** -
+
+### Task p05-t06: Narrow the packs inventory redaction claim
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 6: Release fan-in
+
+**Status:** pending
+
+### Task p06-t01: Bump the lockstep public packages to 0.3.10
+
+**Status:** pending
+**Commit:** -
+
+### Task p06-t02: Archive the shipped backlog items
+
+**Status:** pending
+**Commit:** -
+
+### Task p06-t03: Run the full Definition of Done
 
 **Status:** pending
 **Commit:** -
@@ -119,6 +209,25 @@ _- Outstanding Items_
 <!-- orchestration-runs-start -->
 
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
+
+### Run 1
+
+- Started: 2026-10-01; autonomous (`oat-project-autonomous`), Tier 1 subagents.
+- Implement contract: `oat-project-implement` 2.3.14 as of `origin/main`
+  (`8f6d5b1d2`), not the installed user-scope 2.3.12 and not this branch's
+  working tree, which p01 and p04 edit (see the learnings log).
+- Gate `IMPLEMENT-03`: HiLL checkpoints resolved to `["p06"]` (final phase,
+  first run, field absent) with `oat_auto_review_at_hill_checkpoints: true`.
+- Gate `IMPLEMENT-08`: not needed; Claude Code Task-tool dispatch of the
+  generated `oat-phase-implementer` and `oat-reviewer` variants is available
+  without extra authorization.
+- Phase review gate: `oat_phase_review_gate` enabled for every phase
+  (`review_type: code`, `exit_nonzero_on: high`); the configured target
+  resolves to `codex-6-sol-xhigh` through cross-family exclusion with
+  `OAT_GATE_PRODUCER_IDENTITY=claude-opus-5-5:declared`.
+- Dispatch policy: managed `high` from project state; implementer and reviewer
+  launches use the resolver-returned Claude variants after a validation-only
+  `oat project dispatch record` with the branch CLI.
 
 <!-- orchestration-runs-end -->
 
