@@ -1,5 +1,5 @@
 {
-  "version": "2026-09-25.1",
+  "version": "2026-10-01.1",
   "providers": {
     "codex": {
       "economy": {
@@ -39,17 +39,17 @@
         "candidates": [
           {
             "harness": "codex",
-            "model": "gpt-6-sol",
+            "model": "gpt-6.1-sol",
             "effort": "low"
           },
           {
             "harness": "codex",
-            "model": "gpt-6-sol",
+            "model": "gpt-6.1-sol",
             "effort": "medium"
           },
           {
             "harness": "codex",
-            "model": "gpt-6-sol",
+            "model": "gpt-6.1-sol",
             "effort": "high"
           }
         ]
@@ -58,7 +58,7 @@
         "candidates": [
           {
             "harness": "codex",
-            "model": "gpt-6-sol",
+            "model": "gpt-6.1-sol",
             "effort": "xhigh"
           },
           {
@@ -80,7 +80,7 @@
           "haiku",
           {
             "harness": "claude",
-            "model": "claude-sonnet-5",
+            "model": "claude-sonnet-5-5",
             "effort": "medium"
           }
         ]

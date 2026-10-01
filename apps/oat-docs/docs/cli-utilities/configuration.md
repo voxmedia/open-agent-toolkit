@@ -497,11 +497,11 @@ The example above is illustrative rather than a copy of the bundled ladder; its
 tiers are trimmed for readability.
 
 The bundled recommendation covers 11 Codex model/effort combinations: GPT-6
-Luna at `low` through `max`, GPT-6 Sol at `low` through `high` plus `xhigh`,
+Luna at `low` through `max`, GPT-6.1 Sol at `low` through `high` plus `xhigh`,
 and GPT-6 Astra at `high` and `xhigh`.
 Claude covers `haiku`, plus explicit Sonnet, Opus, and Fable
 model/effort pairs. Effort-pinned Claude cells require a recognized versioned
-model ID (`fable-5-1`, `fable-5`, `opus-5-5`, `sonnet-5`,
+model ID (`fable-5-1`, `fable-5`, `opus-5-5`, `sonnet-5-5`, `sonnet-5`,
 `opus-4-7`, `opus-4-6`, or `sonnet-4-6`) or a matching
 `ANTHROPIC_DEFAULT_<FAMILY>_MODEL` pin. A custom provider pin must declare
 matching capability through `<PIN>_SUPPORTED_CAPABILITIES`: `effort` enables
@@ -513,14 +513,17 @@ Model-only Claude aliases remain compatible through the per-call model argument
 and report `effortAxis: not-applicable` because the Agent API exposes no
 per-call effort argument. The recommendation carries 16 Cursor candidates
 across four tiers, drawn from a materialization
-catalogue with 26 catalogued multi-family flat IDs spanning Composer, Claude
-(Sonnet, Opus 5.5, Fable 5, and Fable 5.1), GPT, and Grok 4.5 and 4.6; the two figures differ because some
+catalogue with 31 catalogued multi-family flat IDs spanning Composer, Claude
+(Sonnet 5, Sonnet 5.5, Opus 5.5, Fable 5, and Fable 5.1), GPT, and Grok 4.5 and 4.6; the two figures differ because some
 approved mappings stay materializable without being recommended. An explicit
-mapping connects each flat ladder ID to a separate bracket-form frontmatter
-model; configuration and skills never derive or normalize either form.
+mapping connects each flat ladder ID to its verified frontmatter model.
+Existing mappings keep their bracket selectors; Sonnet 5.5 uses per-pin
+verified exact IDs. The 31 mappings produce 62 pinned role variants.
+Configuration and skills never derive selectors or admit arbitrary flat IDs.
 
 The corresponding pinned Codex variant catalogue includes
-`gpt-5.6-luna-high`, `gpt-5.6-terra-xhigh`, `gpt-5.6-sol-high`, and
+`gpt-6-1-sol-high` and `gpt-6-1-sol-max`, alongside compatible older targets
+such as `gpt-5.6-luna-high`, `gpt-5.6-terra-xhigh`, `gpt-5.6-sol-high`, and
 `gpt-5.6-sol-max`. Configuration selects from that materialized catalogue; it
 does not construct an unregistered role during dispatch.
 
@@ -664,7 +667,8 @@ the exact registered role, pinned child, or resolver-returned model argument.
 
 `oat doctor` compares configured Cursor flat IDs with the current Cursor
 catalogue and reports availability drift. This check is diagnostic: catalogue
-presence does not prove that a bracket-form definition pin was honored.
+presence does not prove that a definition pin was honored, whether its
+selector is bracket-form or an approved exact ID.
 
 Each shipped mapping has mapping-specific native-launch evidence, but Cursor
 can silently fallback when account, plan, or administration constraints prevent

@@ -2159,7 +2159,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-implement',
-        version: '2.3.15',
+        version: '2.3.16',
         finalizedHeading: '### Step 13: Trigger Final Review',
         gateHeading: '### Step 14: Gate Execution',
         completionHeading: '### Step 16: Mark Implementation Complete',
@@ -2640,7 +2640,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(readDeclaredVersion(content)).toBe('2.3.15');
+    expect(readDeclaredVersion(content)).toBe('2.3.16');
   });
 
   it('requires classified resolver calls and effective terminal reviewer notices before launch', async () => {
@@ -2970,7 +2970,7 @@ describe('validateOatSkills', () => {
     );
     const combined = `${content}\n${dispatchReference}`;
 
-    expect(readDeclaredVersion(content)).toBe('2.3.15');
+    expect(readDeclaredVersion(content)).toBe('2.3.16');
     expect(dispatchReference).toContain(
       '${IMPLEMENTER_AGENT_PROVIDER_ROOT}/agents/oat-phase-implementer.md',
     );
@@ -3059,7 +3059,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(readDeclaredVersion(content)).toBe('2.3.15');
+    expect(readDeclaredVersion(content)).toBe('2.3.16');
     expect(content).toMatch(
       /accepted native reviewer[\s\S]{0,260}(?:poll|nudge|continue)[\s\S]{0,180}existing handle/i,
     );
@@ -3165,7 +3165,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-plan-writing/SKILL.md',
     );
 
-    expect(readDeclaredVersion(shared)).toBe('1.2.33');
+    expect(readDeclaredVersion(shared)).toBe('1.2.34');
     expect(shared).toContain(
       '${WORKFLOWS_AGENT_PROVIDER_ROOT}/agents/oat-reviewer.md',
     );
@@ -3210,7 +3210,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-plan-writing/SKILL.md',
     );
 
-    expect(readDeclaredVersion(shared)).toBe('1.2.33');
+    expect(readDeclaredVersion(shared)).toBe('1.2.34');
     expect(shared).toMatch(/Planning-Time Artifact Formatting Contract/);
     expect(shared).toMatch(
       /applicable[\s\S]{0,120}`AGENTS\.md`[\s\S]{0,40}`CLAUDE\.md`[\s\S]{0,160}relevant package\s+manifests/i,
@@ -3354,7 +3354,7 @@ describe('validateOatSkills', () => {
     expect(adoptionContract).toMatch(
       /when adoption is required[\s\S]{0,200}bundled recommendation/i,
     );
-    expect(readDeclaredVersion(shared)).toBe('1.2.33');
+    expect(readDeclaredVersion(shared)).toBe('1.2.34');
   });
 
   it('auto-selects an existing dispatch-ladder scope only under explicit autonomy', async () => {
@@ -3561,7 +3561,7 @@ describe('validateOatSkills', () => {
       /implements one plan phase end-to-end/i,
     );
     expect(agent.match(/^tools:\s*(.+)$/m)?.[1]).toContain('Task');
-    expect(readDeclaredVersion(implement)).toBe('2.3.15');
+    expect(readDeclaredVersion(implement)).toBe('2.3.16');
     expect(agent).toMatch(
       /directly execute(?:s)? every task in dependency order/i,
     );
@@ -4604,8 +4604,11 @@ describe('validateOatSkills', () => {
       ['configuration', configuration],
     ] as const) {
       expect(content, `${name} flat ladder ID`).toMatch(/flat(?: ladder)? ID/i);
-      expect(content, `${name} bracket frontmatter mapping`).toMatch(
-        /bracket-form[\s\S]{0,160}(?:frontmatter|model)/i,
+      expect(
+        content,
+        `${name} verified bracket and exact-ID frontmatter mappings`,
+      ).toMatch(
+        /frontmatter model[\s\S]{0,160}bracket(?:-form)?[\s\S]{0,160}exact IDs?/i,
       );
       expect(content, `${name} supported ownership`).toContain(
         'supported-catalogue',
@@ -4735,7 +4738,7 @@ describe('validateOatSkills', () => {
     expect(reviewer).toMatch(/legacy model-only and inherited/i);
 
     expect(dispatch).toContain(
-      'Dispatch policy: balanced; selected=claude-sonnet-5/high; cap=claude-sonnet-5/high (claude, enforced — native variant oat-phase-implementer-claude-claude-sonnet-5-high)',
+      'Dispatch policy: balanced; selected=claude-sonnet-5-5/high; cap=claude-sonnet-5-5/high (claude, enforced — native variant oat-phase-implementer-claude-claude-sonnet-5-5-high)',
     );
     expect(dispatch).not.toContain(
       'Dispatch policy: balanced; selected=sonnet; cap=sonnet (claude, enforced — Task model arg)',
@@ -4924,11 +4927,11 @@ describe('validateOatSkills', () => {
 
   it('defines append-ordered monotonic review events across lifecycle skills', async () => {
     const expectedVersions = [
-      ['oat-project-plan-writing', '1.2.33'],
+      ['oat-project-plan-writing', '1.2.34'],
       ['oat-project-review-provide', '1.5.11'],
       ['oat-project-review-receive', '1.6.7'],
       ['oat-project-review-receive-remote', '1.5.3'],
-      ['oat-project-implement', '2.3.15'],
+      ['oat-project-implement', '2.3.16'],
       ['oat-project-pr-final', '1.6.6'],
       ['oat-project-pr-progress', '1.3.2'],
       ['oat-project-complete', '1.7.13'],
@@ -6203,10 +6206,10 @@ describe('validateOatSkills', () => {
     expect(scope).not.toMatch(/user-scope role generation remains.*deferred/i);
 
     expect(providers).toMatch(
-      /Project sync (?:writes|maintains)[\s\S]{0,120}version-controlled[\s\S]{0,180}GPT-6 Luna, Sol, and Astra[\s\S]{0,350}56 pinned variants/i,
+      /Project sync (?:writes|maintains)[\s\S]{0,120}version-controlled[\s\S]{0,180}GPT-6\.1 Sol and GPT-6 Luna, Sol, and Astra[\s\S]{0,350}66 pinned variants/i,
     );
     expect(providers).toMatch(
-      /Codex `max`[\s\S]{0,120}GPT-6 Luna, Sol, and Astra[\s\S]{0,100}GPT-5\.6 Sol/i,
+      /Codex `max`[\s\S]{0,120}GPT-6\.1 Sol, GPT-6 Luna, Sol, and Astra[\s\S]{0,100}GPT-5\.6 Sol/i,
     );
     expect(providers).not.toMatch(
       /26 pinned variants|max.*only for the Sol family/i,
@@ -6265,7 +6268,7 @@ describe('validateOatSkills', () => {
 
   it('tracks the p04 planning skill contract versions', async () => {
     const expectedVersions = [
-      ['oat-project-plan-writing', '1.2.33'],
+      ['oat-project-plan-writing', '1.2.34'],
       ['oat-project-plan', '1.4.16'],
       ['oat-project-quick-start', '2.3.17'],
       ['oat-project-import-plan', '1.4.19'],
@@ -6339,7 +6342,7 @@ describe('validateOatSkills', () => {
 
   it('tracks Dispatch Report V1 workflow contract versions and provenance boundaries', async () => {
     const expectedVersions = [
-      ['oat-project-implement', '2.3.15'],
+      ['oat-project-implement', '2.3.16'],
       ['oat-project-review-provide', '1.5.11'],
       ['oat-project-review-provide-remote', '1.1.8'],
     ] as const;
@@ -6416,7 +6419,7 @@ describe('validateOatSkills', () => {
     ];
 
     expect(engine).toMatch(/^name:\s*oat-dispatch-subagents$/m);
-    expect(readDeclaredVersion(engine)).toBe('1.2.11');
+    expect(readDeclaredVersion(engine)).toBe('1.2.12');
     expect(engine).toMatch(/^user-invocable:\s*false$/m);
     expect(adapter).toMatch(/^name:\s*oat-project-dispatch-subagents$/m);
     expect(readDeclaredVersion(adapter)).toBe('1.1.6');
@@ -6575,7 +6578,7 @@ describe('validateOatSkills', () => {
 
   it('pins portable utility-pack callers to installed-root sibling reads', async () => {
     const callers = [
-      ['.agents/skills/oat-dispatch-subagents/SKILL.md', '1.2.11'],
+      ['.agents/skills/oat-dispatch-subagents/SKILL.md', '1.2.12'],
       ['.agents/skills/oat-repo-improve/SKILL.md', '2.1.6'],
       ['.agents/skills/oat-review-provide-remote/SKILL.md', '1.1.4'],
     ] as const;
@@ -6793,7 +6796,7 @@ describe('validateOatSkills', () => {
     }
 
     expect(cursor).toMatch(
-      /dispatchArgs\.variant[\s\S]{0,420}(?:native agent type|native role)/i,
+      /dispatchArgs\.variant[\s\S]{0,700}(?:native agent type|native role)/i,
     );
     expect(cursor).toMatch(/omit(?:ted)? variant[\s\S]{0,120}inherit/i);
     expect(cursor).toMatch(
@@ -8495,7 +8498,7 @@ describe('lite mode skill contracts', () => {
     expect(proofDisposition(true, false)).toBe('BLOCKED');
     expect(proofDisposition(false, false)).toBe('NEEDS_CONTEXT');
     expect(proofDisposition(true, true)).toBe('performed');
-    expect(readDeclaredVersion(implementWorkflow)).toBe('2.3.15');
+    expect(readDeclaredVersion(implementWorkflow)).toBe('2.3.16');
     expect(readDeclaredVersion(implementer)).toBe('1.1.6');
   });
 

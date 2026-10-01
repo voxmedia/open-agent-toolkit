@@ -85,13 +85,15 @@ Run the same command without `--dry-run` to replace bundled cells. Use
 `--shared` or `--local` instead when that scope owns the ladder. Add
 `--keep-existing` to fill only missing cells and preserve existing choices.
 
-Version `2026-09-25.1` is the current bundled recommendation. It prefers
-GPT-6 Luna and Sol in Codex, then Sol xhigh, Astra high, and Astra xhigh in
+Version `2026-10-01.1` is the current bundled recommendation. It prefers
+GPT-6 Luna and GPT-6.1 Sol in Codex, then Sol 6.1 xhigh, Astra high, and Astra xhigh in
 Codex Frontier. Astra's task advantage has not been measured locally; this is
 an explicit user-directed preference, not acceptance by the separately
-maintained model-selection policy. Opus 5.5 low/medium/high remains in Claude High.
+maintained model-selection policy. Sonnet 5.5 medium replaces Sonnet 5 medium
+in Claude Economy; the older generation stays supported for explicit cells.
+Opus 5.5 low/medium/high remains in Claude High.
 The Claude low option suits bounded intelligent recon in Balanced or High;
-medium remains the implementation starting point under High. GPT-5.6 targets remain
+medium remains the implementation starting point under High. GPT-6 Sol and GPT-5.6 targets remain
 supported for explicit Codex and Cursor configurations. Cursor's preferred
 ladder interleaves verified GPT-5.6 and Opus 5.5 mappings: Balanced adds
 Opus 5.5 low above Terra high, High orders Sol medium, Opus low, Sol high,
@@ -249,19 +251,23 @@ oat_dispatch_policy:
 The bundled ladder is a curated subset of the supported targets:
 
 - **Codex:** GPT-6 Luna at `low` through `max` across Economy and Balanced;
-  GPT-6 Sol at `low` through `high` in High and `xhigh` in Frontier; then
+  GPT-6.1 Sol at `low` through `high` in High and `xhigh` in Frontier; then
   GPT-6 Astra at `high` and `xhigh` in Frontier. Astra and Sol remain supported
-  at `low`, `medium`, `high`, `xhigh`, and `max`, while GPT-5.6 variants remain
+  at `low`, `medium`, `high`, `xhigh`, and `max`, while GPT-6 Sol and GPT-5.6 variants remain
   available outside this preferred ladder.
-- **Claude:** `haiku` and Sonnet 5 at Economy/Balanced, Opus 5.5 at High and
-  Frontier, and Fable 5.1 at Frontier.
+- **Claude:** `haiku` and Sonnet 5.5 medium at Economy; Opus 5.5 low at
+  Balanced, low/medium/high at High, and xhigh/max at Frontier; Fable 5.1
+  high ends Frontier. Sonnet 5 remains supported for explicit configurations.
 - **Cursor:** the preferred ladder uses approved Composer 2.5, GPT-5.6, Grok
   4.6, Opus 5.5, and Fable 5.1 targets. The catalogue maps each flat ladder ID
-  to its separately verified bracket-form frontmatter model. Grok 4.6 (`low`
+  to its separately verified frontmatter model. Sonnet 5.5 exact-ID pins
+  remain supported outside the ladder; existing families keep their bracket
+  selectors. Grok 4.6 (`low`
   through `xhigh`) and Fable 5.1 (`low` through `max`, thinking variants) were
   approved from a 2026-09-25 [native desktop probe](../../contributing/verifying-cursor-pins.md);
   targets outside the ladder remain available for explicit selection. Grok
-  4.7 has no approved mapping because it ignores bracket selectors.
+  4.7 stays outside the shipped catalogue pending its own approved mapping
+  and per-pin evidence; exact-ID support does not admit arbitrary CLI IDs.
 
 The final candidate in a named tier defines that tier's reviewer ceiling. Lower
 reviewer selection requires a separate reviewed contract; a normal reviewer
@@ -363,9 +369,9 @@ branch replaces, rather than supplements, preferred selection.
 
 An effort-pinned Claude candidate must establish the exact generation and that
 generation's supported effort. Current directly recognized generations include
-`claude-fable-5-1`, `claude-fable-5`, `claude-opus-5-5`, `claude-sonnet-5`,
+`claude-fable-5-1`, `claude-fable-5`, `claude-opus-5-5`, `claude-sonnet-5-5`, `claude-sonnet-5`,
 `claude-opus-4-7`, `claude-opus-4-6`, and `claude-sonnet-4-6`.
-Opus 5.5 supports `low`, `medium`, `high`, `xhigh`, and `max`; consult the
+Opus 5.5 and Sonnet 5.5 support `low`, `medium`, `high`, `xhigh`, and `max`; consult the
 [updating guide](../../contributing/updating-model-guidance.md) before adding
 further generations or rungs. Retired Opus 5.0 and 4.8 are no longer directly
 recognized for effort-pinned dispatch.
@@ -413,8 +419,9 @@ Cursor selection, pin mapping, catalogue availability, and runtime identity are
 separate evidence layers:
 
 - The candidate ladder and resolver use an opaque flat ID.
-- The materialized definition uses the mapping's explicit bracket-form
-  frontmatter model.
+- The materialized definition uses the mapping's explicit frontmatter model,
+  either a verified bracket selector or a separately verified exact ID.
+  Sonnet 5.5 uses exact IDs; existing families keep their bracket mappings.
 - Mapping-specific native-launch evidence authorizes the shipped mapping data.
   An approved mapping may carry a probe record whose `submittedSelector` must
   equal the mapping's `frontmatterModel` and whose `resolvedModel` must equal

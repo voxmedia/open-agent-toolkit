@@ -14,16 +14,21 @@ function baseRoleFor(role: Role) {
   return role === 'reviewer' ? 'oat-reviewer' : 'oat-phase-implementer';
 }
 
-function resolution(role: Role = 'implementer', effort = 'high') {
+function resolution(
+  role: Role = 'implementer',
+  effort = 'high',
+  model = 'claude-sonnet-5',
+  generation = 'sonnet-5',
+) {
   const target = {
     harness: 'claude',
-    model: 'claude-sonnet-5',
+    model,
     effort,
     capabilityEvidence: {
       source: 'explicit-model-id',
-      modelReference: 'claude-sonnet-5',
+      modelReference: model,
       exactModel: true,
-      generation: 'sonnet-5',
+      generation,
       capabilitiesSource: 'dispatch-target-model',
       supportedEfforts: ['low', 'medium', 'high', 'xhigh', 'max'],
     },
@@ -36,13 +41,13 @@ function resolution(role: Role = 'implementer', effort = 'high') {
     policy: 'high',
     providers: {
       claude: {
-        value: 'claude-sonnet-5',
+        value: model,
         mode: 'enforced',
         mechanism: 'pinned-variant',
         dispatchArgs: {
-          variant: `${baseRoleFor(role)}-claude-claude-sonnet-5-${effort}`,
+          variant: `${baseRoleFor(role)}-claude-${model}-${effort}`,
         },
-        modelAxis: 'selected:claude-sonnet-5',
+        modelAxis: `selected:${model}`,
         effortAxis: `selected:${effort}`,
         target,
         selection: { role, policyMode: 'managed', policy: 'high', target },
@@ -51,14 +56,18 @@ function resolution(role: Role = 'implementer', effort = 'high') {
   };
 }
 
-function definition(role: Role = 'implementer', effort = 'high') {
+function definition(
+  role: Role = 'implementer',
+  effort = 'high',
+  model = 'claude-sonnet-5',
+) {
   return materializeClaudeAgent({
     agent: {
       name: baseRoleFor(role),
       description: 'Managed Claude envelope fixture.',
       body: '\n## Role\n\nExecute the bounded task.\n',
     },
-    target: { model: 'claude-sonnet-5', effort, owner: 'project-config' },
+    target: { model, effort, owner: 'project-config' },
   }).content;
 }
 
@@ -108,6 +117,21 @@ describe('collectClaudeLaunchViolations', () => {
       });
     },
   );
+
+  it('accepts the distinct Sonnet 5.5 capability through the launch envelope', () => {
+    expect(
+      collectClaudeLaunchViolations({
+        resolution: resolution(
+          'reviewer',
+          'max',
+          'claude-sonnet-5-5',
+          'sonnet-5-5',
+        ),
+        definition: definition('reviewer', 'max', 'claude-sonnet-5-5'),
+        payload: { variant: 'oat-reviewer-claude-claude-sonnet-5-5-max' },
+      }),
+    ).toEqual({ resolverRole: 'reviewer', violations: [], skipped: [] });
+  });
 
   it('reports every independent launch inconsistency in one run', () => {
     const launch = claudeLaunch();

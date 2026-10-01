@@ -3629,6 +3629,15 @@ describe('oat project dispatch-ceiling resolve', () => {
 
   it.each([
     {
+      model: 'claude-sonnet-5-5',
+      effort: 'max',
+      evidence: {
+        source: 'explicit-model-id',
+        exactModel: true,
+        generation: 'sonnet-5-5',
+      },
+    },
+    {
       model: 'claude-sonnet-5',
       effort: 'xhigh',
       evidence: {
@@ -4242,102 +4251,108 @@ describe('oat project dispatch-ceiling resolve', () => {
     }
   });
 
-  it('rejects unsupported ultra candidates while accepting max as the Frontier ceiling', async () => {
-    const { root, home } = await setup();
-    const configPath = join(root, '.oat', 'config.json');
-    await writeJson(configPath, {
-      version: 1,
-      workflow: {
-        dispatchPolicy: { mode: 'managed', policy: 'frontier' },
-        dispatchCeiling: {
-          providers: {
-            codex: {
-              frontier: {
-                candidates: [
-                  { harness: 'codex', model: 'gpt-6-sol', effort: 'max' },
-                ],
+  it.each([
+    ['gpt-6-sol', 'oat-phase-implementer-gpt-6-sol-max'],
+    ['gpt-6.1-sol', 'oat-phase-implementer-gpt-6-1-sol-max'],
+  ])(
+    'rejects unsupported ultra candidates while accepting %s max as the Frontier ceiling',
+    async (model, variant) => {
+      const { root, home } = await setup();
+      const configPath = join(root, '.oat', 'config.json');
+      await writeJson(configPath, {
+        version: 1,
+        workflow: {
+          dispatchPolicy: { mode: 'managed', policy: 'frontier' },
+          dispatchCeiling: {
+            providers: {
+              codex: {
+                frontier: {
+                  candidates: [{ harness: 'codex', model, effort: 'max' }],
+                },
               },
             },
           },
         },
-      },
-    });
-    const valid = createHarness({ cwd: root, home });
-    await runCommand(valid.command, [
-      '--provider',
-      'codex',
-      '--candidate-model',
-      'gpt-6-sol',
-      '--candidate-effort',
-      'max',
-      '--json',
-    ]);
-    expect(valid.capture.jsonPayloads[0]).toMatchObject({
-      status: 'resolved',
-      providers: {
-        codex: {
-          dispatchArgs: { variant: 'oat-phase-implementer-gpt-6-sol-max' },
-          selection: {
-            requestedCandidate: { model: 'gpt-6-sol', effort: 'max' },
+      });
+      const valid = createHarness({ cwd: root, home });
+      await runCommand(valid.command, [
+        '--provider',
+        'codex',
+        '--candidate-model',
+        model,
+        '--candidate-effort',
+        'max',
+        '--json',
+      ]);
+      expect(valid.capture.jsonPayloads[0]).toMatchObject({
+        status: 'resolved',
+        providers: {
+          codex: {
+            dispatchArgs: {
+              variant,
+            },
+            selection: {
+              requestedCandidate: { model, effort: 'max' },
+            },
           },
         },
-      },
-    });
-    expect(process.exitCode).toBe(0);
+      });
+      expect(process.exitCode).toBe(0);
 
-    process.exitCode = 0;
-    const invalid = createHarness({ cwd: root, home });
-    await runCommand(invalid.command, [
-      '--provider',
-      'codex',
-      '--candidate-model',
-      'gpt-6-sol',
-      '--candidate-effort',
-      'ultra',
-      '--json',
-    ]);
-    expect(invalid.capture.jsonPayloads[0]).toMatchObject({ status: 'error' });
-    expect(invalid.capture.jsonPayloads[0]?.message).toContain(
-      'Invalid Codex candidate effort',
-    );
-    expect(process.exitCode).toBe(1);
+      process.exitCode = 0;
+      const invalid = createHarness({ cwd: root, home });
+      await runCommand(invalid.command, [
+        '--provider',
+        'codex',
+        '--candidate-model',
+        model,
+        '--candidate-effort',
+        'ultra',
+        '--json',
+      ]);
+      expect(invalid.capture.jsonPayloads[0]).toMatchObject({
+        status: 'error',
+      });
+      expect(invalid.capture.jsonPayloads[0]?.message).toContain(
+        'Invalid Codex candidate effort',
+      );
+      expect(process.exitCode).toBe(1);
 
-    await writeJson(configPath, {
-      version: 1,
-      workflow: {
-        dispatchPolicy: { mode: 'managed', policy: 'frontier' },
-        dispatchCeiling: {
-          providers: {
-            codex: {
-              frontier: {
-                candidates: [
-                  { harness: 'codex', model: 'gpt-6-sol', effort: 'ultra' },
-                ],
+      await writeJson(configPath, {
+        version: 1,
+        workflow: {
+          dispatchPolicy: { mode: 'managed', policy: 'frontier' },
+          dispatchCeiling: {
+            providers: {
+              codex: {
+                frontier: {
+                  candidates: [{ harness: 'codex', model, effort: 'ultra' }],
+                },
               },
             },
           },
         },
-      },
-    });
-    process.exitCode = 0;
-    const configuredInvalid = createHarness({ cwd: root, home });
-    await runCommand(configuredInvalid.command, [
-      '--provider',
-      'codex',
-      '--candidate-model',
-      'gpt-6-sol',
-      '--candidate-effort',
-      'max',
-      '--json',
-    ]);
-    expect(configuredInvalid.capture.jsonPayloads[0]).toMatchObject({
-      status: 'error',
-    });
-    expect(configuredInvalid.capture.jsonPayloads[0]?.message).toContain(
-      'Codex candidates require a model and supported effort.',
-    );
-    expect(process.exitCode).toBe(1);
-  });
+      });
+      process.exitCode = 0;
+      const configuredInvalid = createHarness({ cwd: root, home });
+      await runCommand(configuredInvalid.command, [
+        '--provider',
+        'codex',
+        '--candidate-model',
+        model,
+        '--candidate-effort',
+        'max',
+        '--json',
+      ]);
+      expect(configuredInvalid.capture.jsonPayloads[0]).toMatchObject({
+        status: 'error',
+      });
+      expect(configuredInvalid.capture.jsonPayloads[0]?.message).toContain(
+        'Codex candidates require a model and supported effort.',
+      );
+      expect(process.exitCode).toBe(1);
+    },
+  );
 
   it('keeps the Codex catalogue effort order ascending for candidate ranking', () => {
     const firstSeenEfforts = [
