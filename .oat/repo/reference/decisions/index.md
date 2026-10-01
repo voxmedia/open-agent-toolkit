@@ -10,6 +10,11 @@
 
 | ID                                       | Date       | Status     | Title                                                                                                  | Legacy  |
 | ---------------------------------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------ | ------- |
+| DR-261001-additive-markdown-adoption     | 2026-10-01 | accepted   | Additive Markdown adoption                                                                             | -       |
+| DR-261001-authored-markdown-indexes      | 2026-10-01 | accepted   | Authored Markdown indexes                                                                              | -       |
+| DR-261001-bootstrap-detection-boundary   | 2026-10-01 | accepted   | Bootstrap detection boundary                                                                           | -       |
+| DR-261001-explicit-markdown-roots        | 2026-10-01 | accepted   | Explicit Markdown roots                                                                                | -       |
+| DR-261001-markdown-file-verification     | 2026-10-01 | accepted   | Markdown file verification                                                                             | -       |
 | DR-260928-agents-md-guidance-appends     | 2026-09-28 | accepted   | AGENTS.md guidance appends absent managed blocks                                                       | -       |
 | DR-260928-backlog-archive-rewrites       | 2026-09-28 | accepted   | Backlog archive rewrites inbound references                                                            | -       |
 | DR-260928-commit-the-phase-task-ledger   | 2026-09-28 | accepted   | Commit the phase task ledger before per-phase review dispatch                                          | -       |
