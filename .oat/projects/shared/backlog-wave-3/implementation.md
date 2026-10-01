@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
-oat_current_task_id: p03-t09
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -28,12 +28,12 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 5     | 5/5       |
 | Phase 2 | complete    | 6     | 6/6       |
-| Phase 3 | in_progress | 9     | 8/9       |
+| Phase 3 | in_progress | 9     | 9/9       |
 | Phase 4 | pending     | 4     | 0/4       |
 | Phase 5 | pending     | 6     | 0/6       |
 | Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 19/33 tasks completed
+**Total:** 20/33 tasks completed
 
 ---
 
@@ -150,8 +150,8 @@ oat_generated: false
 
 ### Task p03-t09: Simplify recon brief integrity and drop the omission-gap rule
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** b880bccf4
 
 ---
 
@@ -413,6 +413,14 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   Highs in one family) and the omission-gap rule is unsupported by any
   criterion. Operator decision (2026-10-01): apply it as `p03-t09`, including
   deleting the omission-gap rule. The Codex phase gate reviews the result.
+
+- Continuation `cont-backlog-wave-3-p03-fix-4`: `b880bccf4` applied the
+  complexity review: one rebuild-and-compare brief check (every brief type is
+  built from the prior ledger, so no overlay was needed), the omission-gap rule
+  deleted (omission behaves like `uncertain`, listed "not reviewed"), one issue
+  classifier, one shared disposition table, a 17-row tamper table that fails
+  as a whole when the check is neutralized; net -672 lines (production scripts
+  +172/-399); recon 357/357.
 
 <!-- orchestration-runs-end -->
 
