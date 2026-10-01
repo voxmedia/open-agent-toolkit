@@ -129,12 +129,12 @@
       "value": "incomplete"
     },
     {
-      "subject": "BL-261001-fail-closed-when-bundle-assets",
-      "value": "closed"
+      "subject": "Explainer Outcome",
+      "value": "built"
     },
     {
-      "subject": "BL-261001-record-mixed-native-and-cli",
-      "value": "deferred"
+      "subject": "BL-261001-fail-closed-when-bundle-assets",
+      "value": "closed"
     }
   ],
   "claims": [
@@ -529,334 +529,340 @@
       "claimId": "claim-a3d938ba98577588"
     },
     {
+      "subject": "Explainer Outcome",
+      "value": "built",
+      "kind": "status",
+      "claimId": "claim-398180a9286615a2"
+    },
+    {
       "subject": "BL-261001-escape-directive-like",
       "value": "261001",
       "kind": "number",
-      "claimId": "claim-0cb8c380353af798"
+      "claimId": "claim-534b1aeeee9473ee"
     },
     {
       "subject": "BL-261001-list-thorough-review-omissions",
       "value": "261001",
       "kind": "number",
-      "claimId": "claim-19ca2c1100eb3d38"
+      "claimId": "claim-8f2c6bd7d3cb9904"
     },
     {
       "subject": "BL-261001-fail-closed-when-bundle-assets",
       "value": "261001",
       "kind": "number",
-      "claimId": "claim-232ae505c04b6f5f"
+      "claimId": "claim-ae9f7c1f459101fd"
     },
     {
       "subject": "BL-261001-fail-closed-when-bundle-assets",
       "value": "closed",
       "kind": "status",
-      "claimId": "claim-232ae505c04b6f5f"
+      "claimId": "claim-ae9f7c1f459101fd"
     },
     {
       "subject": "BL-261001-resolve-the-summary-template",
       "value": "261001",
       "kind": "number",
-      "claimId": "claim-f8af26712cf4ef29"
+      "claimId": "claim-fa9ba9f3d3a0a1ee"
     },
     {
       "subject": "BL-261001-route-quick-mode-plan",
       "value": "261001",
       "kind": "number",
-      "claimId": "claim-aa7008bfeb9ae9d3"
+      "claimId": "claim-89ae09cb6ad044df"
     },
     {
       "subject": "BL-261001-record-mixed-native-and-cli",
       "value": "333",
       "kind": "number",
-      "claimId": "claim-9382601ce66042e5"
+      "claimId": "claim-8ff4a81f1df0ed46"
     },
     {
       "subject": "BL-261001-record-mixed-native-and-cli",
       "value": "261001",
       "kind": "number",
-      "claimId": "claim-9382601ce66042e5"
+      "claimId": "claim-8ff4a81f1df0ed46"
     },
     {
       "subject": "BL-261001-record-mixed-native-and-cli",
       "value": "deferred",
       "kind": "status",
-      "claimId": "claim-9382601ce66042e5"
+      "claimId": "claim-8ff4a81f1df0ed46"
     },
     {
       "subject": "BL-261001-make-recon-controller-setup",
       "value": "261001",
       "kind": "number",
-      "claimId": "claim-4fa61a7c4f946dbd"
+      "claimId": "claim-c5eee15f8f01a8d1"
     },
     {
       "subject": "2026-10-01 · structural · oat gate review · plan",
       "value": "2026-10-01",
       "kind": "date",
-      "claimId": "claim-1a883213a2cc076b"
+      "claimId": "claim-9834bb2778d1105b"
     },
     {
       "subject": "wave-3",
       "value": "6",
       "kind": "number",
-      "claimId": "claim-811abeb720b8a44a"
+      "claimId": "claim-d4bb05cc127a0a01"
     },
     {
       "subject": "wave-3",
       "value": "0",
       "kind": "number",
-      "claimId": "claim-811abeb720b8a44a"
+      "claimId": "claim-d4bb05cc127a0a01"
     },
     {
       "subject": "wave-3",
       "value": "1",
       "kind": "number",
-      "claimId": "claim-811abeb720b8a44a"
+      "claimId": "claim-d4bb05cc127a0a01"
     },
     {
       "subject": "wave-3",
       "value": "2",
       "kind": "number",
-      "claimId": "claim-811abeb720b8a44a"
+      "claimId": "claim-d4bb05cc127a0a01"
     },
     {
       "subject": "wave-3",
       "value": "2026",
       "kind": "number",
-      "claimId": "claim-811abeb720b8a44a"
+      "claimId": "claim-d4bb05cc127a0a01"
     },
     {
       "subject": "wave-3",
       "value": "10",
       "kind": "number",
-      "claimId": "claim-811abeb720b8a44a"
+      "claimId": "claim-d4bb05cc127a0a01"
     },
     {
       "subject": "wave-3",
       "value": "9449",
       "kind": "number",
-      "claimId": "claim-811abeb720b8a44a"
+      "claimId": "claim-d4bb05cc127a0a01"
     },
     {
       "subject": "2026-10-01 · structural · oat-project-review-provide · plan",
       "value": "2026-10-01",
       "kind": "date",
-      "claimId": "claim-87ffbc36c854f1a5"
+      "claimId": "claim-2bc1df3817c188fb"
     },
     {
       "subject": "wave-3",
       "value": "4728",
       "kind": "number",
-      "claimId": "claim-4d9400c62025ae8c"
+      "claimId": "claim-e981da4c3d2fefd8"
     },
     {
       "subject": "wave-3",
       "value": "6.1",
       "kind": "number",
-      "claimId": "claim-4d9400c62025ae8c"
+      "claimId": "claim-e981da4c3d2fefd8"
     },
     {
       "subject": "2026-10-01 · structural · oat gate review · p01",
       "value": "2026-10-01",
       "kind": "date",
-      "claimId": "claim-9855265f0112c725"
+      "claimId": "claim-d05cd8ef7a696af5"
     },
     {
       "subject": "2026-10-01 · structural · oat-project-implement · p01",
       "value": "2026-10-01",
       "kind": "date",
-      "claimId": "claim-3c1a51ce2c93cf1d"
+      "claimId": "claim-204a5caccdefc341"
     },
     {
       "subject": "p01",
       "value": "0",
       "kind": "number",
-      "claimId": "claim-c1d5e779edd31cd4"
+      "claimId": "claim-744e9f2794dd9485"
     },
     {
       "subject": "p01",
       "value": "2",
       "kind": "number",
-      "claimId": "claim-c1d5e779edd31cd4"
+      "claimId": "claim-744e9f2794dd9485"
     },
     {
       "subject": "2026-10-01 · structural · oat-project-review-provide · p02",
       "value": "2026-10-01",
       "kind": "date",
-      "claimId": "claim-a77c4c4ff434a390"
+      "claimId": "claim-1585cf7e26f519df"
     },
     {
       "subject": "p02",
       "value": "2026",
       "kind": "number",
-      "claimId": "claim-3bc19c74c62bdd2c"
+      "claimId": "claim-1e0d45f606e37410"
     },
     {
       "subject": "p02",
       "value": "10",
       "kind": "number",
-      "claimId": "claim-3bc19c74c62bdd2c"
+      "claimId": "claim-1e0d45f606e37410"
     },
     {
       "subject": "2026-10-01 · structural · oat gate review · p02",
       "value": "2026-10-01",
       "kind": "date",
-      "claimId": "claim-2d146f84525d3a14"
+      "claimId": "claim-6ded827a79300fd0"
     },
     {
       "subject": "2026-10-01 · structural · oat-project-implement · p02",
       "value": "2026-10-01",
       "kind": "date",
-      "claimId": "claim-5da3744e9769b8a4"
+      "claimId": "claim-fadaf2be556556cb"
     },
     {
       "subject": "p02",
       "value": "0",
       "kind": "number",
-      "claimId": "claim-d4f1a7663a513589"
+      "claimId": "claim-ca3b26ef3ec6043a"
     },
     {
       "subject": "p02",
       "value": "2",
       "kind": "number",
-      "claimId": "claim-d4f1a7663a513589"
+      "claimId": "claim-ca3b26ef3ec6043a"
     },
     {
       "subject": "2026-10-01 · structural · oat-project-implement · p03",
       "value": "2026-10-01",
       "kind": "date",
-      "claimId": "claim-edfe3dfe8849c903"
+      "claimId": "claim-20442927e7bfb372"
     },
     {
       "subject": "p03",
       "value": "1",
       "kind": "number",
-      "claimId": "claim-e325b6bc03a43874"
+      "claimId": "claim-0726fd5ba2480931"
     },
     {
       "subject": "p03",
       "value": "3",
       "kind": "number",
-      "claimId": "claim-e325b6bc03a43874"
+      "claimId": "claim-0726fd5ba2480931"
     },
     {
       "subject": "p03",
       "value": "2",
       "kind": "number",
-      "claimId": "claim-e325b6bc03a43874"
+      "claimId": "claim-0726fd5ba2480931"
     },
     {
       "subject": "2026-10-01 · structural · oat gate review · p03",
       "value": "2026-10-01",
       "kind": "date",
-      "claimId": "claim-02723eba02b79713"
+      "claimId": "claim-867c76dfb02ed1f5"
     },
     {
       "subject": "p03",
       "value": "5",
       "kind": "number",
-      "claimId": "claim-0155b2afa1753fc9"
+      "claimId": "claim-c1687bf7cebd504f"
     },
     {
       "subject": "2026-10-01 · structural · oat gate review · p04",
       "value": "2026-10-01",
       "kind": "date",
-      "claimId": "claim-6ddee898f2620d11"
+      "claimId": "claim-874c121c3bf9824e"
     },
     {
       "subject": "2026-10-01 · structural · oat-project-implement · p04",
       "value": "2026-10-01",
       "kind": "date",
-      "claimId": "claim-4be8e2e84b5cc67c"
+      "claimId": "claim-5de29afc43ce434a"
     },
     {
       "subject": "p04",
       "value": "0",
       "kind": "number",
-      "claimId": "claim-6b8284b0d5b8a44d"
+      "claimId": "claim-d64170204ce126d3"
     },
     {
       "subject": "p04",
       "value": "2",
       "kind": "number",
-      "claimId": "claim-6b8284b0d5b8a44d"
+      "claimId": "claim-d64170204ce126d3"
     },
     {
       "subject": "2026-10-01 · structural · oat-project-review-provide · p05",
       "value": "2026-10-01",
       "kind": "date",
-      "claimId": "claim-3f38711cadf971f0"
+      "claimId": "claim-f620f3bdeba6a4c5"
     },
     {
       "subject": "2026-10-01 · structural · oat gate review · p05",
       "value": "2026-10-01",
       "kind": "date",
-      "claimId": "claim-28229c517d94b9eb"
+      "claimId": "claim-63e0682608c63945"
     },
     {
       "subject": "2026-10-01 · structural · oat-project-implement · p05",
       "value": "2026-10-01",
       "kind": "date",
-      "claimId": "claim-d9ec29b387c4ab86"
+      "claimId": "claim-70b69e43af6fda0f"
     },
     {
       "subject": "p05",
       "value": "0",
       "kind": "number",
-      "claimId": "claim-d4d4d4740bfb4321"
+      "claimId": "claim-8b28709ab61790c1"
     },
     {
       "subject": "p05",
       "value": "2",
       "kind": "number",
-      "claimId": "claim-d4d4d4740bfb4321"
+      "claimId": "claim-8b28709ab61790c1"
     },
     {
       "subject": "p05",
       "value": "1",
       "kind": "number",
-      "claimId": "claim-d4d4d4740bfb4321"
+      "claimId": "claim-8b28709ab61790c1"
     },
     {
       "subject": "2026-10-01 · structural · oat gate review · p06",
       "value": "2026-10-01",
       "kind": "date",
-      "claimId": "claim-03c211e1a4c2704d"
+      "claimId": "claim-9efaec7ccb8b7312"
     },
     {
       "subject": "wave-3",
       "value": "8127",
       "kind": "number",
-      "claimId": "claim-2363d86a44bc055d"
+      "claimId": "claim-815ca15f12b40e0e"
     },
     {
       "subject": "2026-10-01 · structural · oat-project-implement · p06",
       "value": "2026-10-01",
       "kind": "date",
-      "claimId": "claim-723ba7da04481a3f"
+      "claimId": "claim-9f63ace8a9504b5f"
     },
     {
       "subject": "p06",
       "value": "0",
       "kind": "number",
-      "claimId": "claim-5d537f59fa984d6e"
+      "claimId": "claim-eb6b3bc2d9fa26d1"
     },
     {
       "subject": "2026-10-01 · structural · oat-project-review-provide · final",
       "value": "2026-10-01",
       "kind": "date",
-      "claimId": "claim-c66ca4f5ac1b5105"
+      "claimId": "claim-f558289997c5e2b5"
     },
     {
       "subject": "wave-3",
       "value": "4610",
       "kind": "number",
-      "claimId": "claim-cf75ec5b22d6c13b"
+      "claimId": "claim-438f1243ad7cb3cc"
     },
     {
       "subject": "2026-10-01 · structural · oat gate review · final",
       "value": "2026-10-01",
       "kind": "date",
-      "claimId": "claim-7274229c65ba63f8"
+      "claimId": "claim-672d72cbe1f41ad3"
     },
     {
       "subject": "implementation.md",

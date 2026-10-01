@@ -1,6 +1,6 @@
 {
   "schemaVersion": "explainer-kit.fact-base/v1",
-  "generatedAt": "2026-10-01T21:01:48.845Z",
+  "generatedAt": "2026-10-01T21:11:42.235Z",
   "mode": "supplied",
   "freshnessPolicy": "live-wins",
   "sources": [
@@ -8,7 +8,7 @@
       "id": "source-f13dd30d608d",
       "kind": "file",
       "locator": "summary.md",
-      "hash": "sha256:7a18d53df5d76149c4d93826327436bf66fc109a5a7847a3f6fe0bb855d511a6"
+      "hash": "sha256:f0640a514480ce263d9917b238105d28ae269dc4b32e115bcc3bc11131327a68"
     },
     {
       "id": "source-9f74c1a0c743",
@@ -1643,8 +1643,8 @@
       ]
     },
     {
-      "id": "claim-0cb8c380353af798",
-      "text": "- `BL-261001-escape-directive-like` (high): nav sync writes a filename starting",
+      "id": "claim-398180a9286615a2",
+      "text": "- **project-recap:** built at closeout (unattended, host-rung visual QA); the",
       "status": "confirmed",
       "citations": [
         {
@@ -1654,8 +1654,8 @@
       ]
     },
     {
-      "id": "claim-b945431ba344181b",
-      "text": "with `!` as an exclusion directive, so the page is hidden while `--check`",
+      "id": "claim-065b132ed405dc3d",
+      "text": "run ID, outcome, and QA verdict are recorded in the recap's own",
       "status": "confirmed",
       "citations": [
         {
@@ -1665,8 +1665,8 @@
       ]
     },
     {
-      "id": "claim-d14bf88d7a05ebc5",
-      "text": "reports clean (exit gate M1).",
+      "id": "claim-f444bfcb1db34d39",
+      "text": "`manifest.json` and `qa/result.json` (this section names no run, so the",
       "status": "confirmed",
       "citations": [
         {
@@ -1676,8 +1676,8 @@
       ]
     },
     {
-      "id": "claim-19ca2c1100eb3d38",
-      "text": "- `BL-261001-list-thorough-review-omissions` (medium): Review Downgrades omits",
+      "id": "claim-5b270f223c8e7551",
+      "text": "recap's inputs stay unchanged after it is built).",
       "status": "confirmed",
       "citations": [
         {
@@ -1687,41 +1687,8 @@
       ]
     },
     {
-      "id": "claim-c90e24f95e761bea",
-      "text": "claims a thorough-profile redundant review left undisposed (exit gate M2).",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:190-190"
-        }
-      ]
-    },
-    {
-      "id": "claim-be976be0abfc4f0c",
-      "text": "- `BL-261001-run-a-complexity-review-when` (high): run a complexity review when",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:191-191"
-        }
-      ]
-    },
-    {
-      "id": "claim-e66826a2e906b1d7",
-      "text": "a review or gate budget is exhausted.",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:192-192"
-        }
-      ]
-    },
-    {
-      "id": "claim-232ae505c04b6f5f",
-      "text": "- `BL-261001-fail-closed-when-bundle-assets` (high): fail closed when",
+      "id": "claim-534b1aeeee9473ee",
+      "text": "- `BL-261001-escape-directive-like` (high): nav sync writes a filename starting",
       "status": "confirmed",
       "citations": [
         {
@@ -1731,8 +1698,8 @@
       ]
     },
     {
-      "id": "claim-3bf0927eea19c0db",
-      "text": "`bundle-assets.sh` lookups come back empty.",
+      "id": "claim-816df41c03bef311",
+      "text": "with `!` as an exclusion directive, so the page is hidden while `--check`",
       "status": "confirmed",
       "citations": [
         {
@@ -1742,8 +1709,8 @@
       ]
     },
     {
-      "id": "claim-f8af26712cf4ef29",
-      "text": "- `BL-261001-resolve-the-summary-template` (low): `oat-wrap-up` still reads",
+      "id": "claim-770dc09a694ba096",
+      "text": "reports clean (exit gate M1).",
       "status": "confirmed",
       "citations": [
         {
@@ -1753,8 +1720,8 @@
       ]
     },
     {
-      "id": "claim-37d05c3d9caf0b4d",
-      "text": "`.oat/templates/summary.md` directly.",
+      "id": "claim-8f2c6bd7d3cb9904",
+      "text": "- `BL-261001-list-thorough-review-omissions` (medium): Review Downgrades omits",
       "status": "confirmed",
       "citations": [
         {
@@ -1764,8 +1731,8 @@
       ]
     },
     {
-      "id": "claim-aa7008bfeb9ae9d3",
-      "text": "- `BL-261001-route-quick-mode-plan` (low): route a quick-mode plan in progress",
+      "id": "claim-90676489654ee4f1",
+      "text": "claims a thorough-profile redundant review left undisposed (exit gate M2).",
       "status": "confirmed",
       "citations": [
         {
@@ -1775,8 +1742,8 @@
       ]
     },
     {
-      "id": "claim-888249ba41951f57",
-      "text": "consistently across the router and dashboards.",
+      "id": "claim-d5bd07f13ca74b48",
+      "text": "- `BL-261001-run-a-complexity-review-when` (high): run a complexity review when",
       "status": "confirmed",
       "citations": [
         {
@@ -1786,8 +1753,8 @@
       ]
     },
     {
-      "id": "claim-9382601ce66042e5",
-      "text": "- Deferred from #333: `BL-261001-record-mixed-native-and-cli` and",
+      "id": "claim-9119649ffe883ec0",
+      "text": "a review or gate budget is exhausted.",
       "status": "confirmed",
       "citations": [
         {
@@ -1797,8 +1764,8 @@
       ]
     },
     {
-      "id": "claim-4fa61a7c4f946dbd",
-      "text": "`BL-261001-make-recon-controller-setup`. Not filed: wiring",
+      "id": "claim-ae9f7c1f459101fd",
+      "text": "- `BL-261001-fail-closed-when-bundle-assets` (high): fail closed when",
       "status": "confirmed",
       "citations": [
         {
@@ -1808,8 +1775,8 @@
       ]
     },
     {
-      "id": "claim-2053a199da356083",
-      "text": "`nav sync --check` into the `docs-app-fuma` scaffold.",
+      "id": "claim-36bc8e5e4bfead4c",
+      "text": "`bundle-assets.sh` lookups come back empty.",
       "status": "confirmed",
       "citations": [
         {
@@ -1819,8 +1786,41 @@
       ]
     },
     {
-      "id": "claim-1a883213a2cc076b",
-      "text": "2026-10-01 · structural · oat gate review · plan",
+      "id": "claim-fa9ba9f3d3a0a1ee",
+      "text": "- `BL-261001-resolve-the-summary-template` (low): `oat-wrap-up` still reads",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-f13dd30d608d",
+          "locator": "summary.md:202-202"
+        }
+      ]
+    },
+    {
+      "id": "claim-3679dfca4a5139b3",
+      "text": "`.oat/templates/summary.md` directly.",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-f13dd30d608d",
+          "locator": "summary.md:203-203"
+        }
+      ]
+    },
+    {
+      "id": "claim-89ae09cb6ad044df",
+      "text": "- `BL-261001-route-quick-mode-plan` (low): route a quick-mode plan in progress",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-f13dd30d608d",
+          "locator": "summary.md:204-204"
+        }
+      ]
+    },
+    {
+      "id": "claim-f4d3f82671479de2",
+      "text": "consistently across the router and dashboards.",
       "status": "confirmed",
       "citations": [
         {
@@ -1830,8 +1830,19 @@
       ]
     },
     {
-      "id": "claim-811abeb720b8a44a",
-      "text": "target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:2,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-3/reviews/artifact-plan-review-2026-10-01T061917Z.md run=e44bde62-cfaa-45c8-9449-42b58de6090b",
+      "id": "claim-8ff4a81f1df0ed46",
+      "text": "- Deferred from #333: `BL-261001-record-mixed-native-and-cli` and",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-f13dd30d608d",
+          "locator": "summary.md:206-206"
+        }
+      ]
+    },
+    {
+      "id": "claim-c5eee15f8f01a8d1",
+      "text": "`BL-261001-make-recon-controller-setup`. Not filed: wiring",
       "status": "confirmed",
       "citations": [
         {
@@ -1841,420 +1852,453 @@
       ]
     },
     {
-      "id": "claim-87ffbc36c854f1a5",
-      "text": "2026-10-01 · structural · oat-project-review-provide · plan",
+      "id": "claim-9676000b78cfb3be",
+      "text": "`nav sync --check` into the `docs-app-fuma` scaffold.",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:209-209"
+          "locator": "summary.md:208-208"
         }
       ]
     },
     {
-      "id": "claim-4d9400c62025ae8c",
-      "text": "53c0bf7f-34ad-4728-b165-0dc580ac0db9 artifact=.oat/projects/shared/backlog-wave-3/reviews/artifact-plan-review-2026-10-01T063044Z.md recon=template-nav class=intelligent-recon target=gpt-6.1-sol/medium outcome=completed floor=satisfied fallback=unused reconciliation=primary-source-reopened",
-      "status": "confirmed",
-      "citations": [
-        {
-          "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:211-211"
-        }
-      ]
-    },
-    {
-      "id": "claim-523d3ef4548291dd",
+      "id": "claim-9834bb2778d1105b",
       "text": "2026-10-01 · structural · oat gate review · plan",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:213-213"
+          "locator": "summary.md:212-212"
         }
       ]
     },
     {
-      "id": "claim-a7679d613d397e73",
+      "id": "claim-d4bb05cc127a0a01",
+      "text": "target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:2,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-3/reviews/artifact-plan-review-2026-10-01T061917Z.md run=e44bde62-cfaa-45c8-9449-42b58de6090b",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-f13dd30d608d",
+          "locator": "summary.md:214-214"
+        }
+      ]
+    },
+    {
+      "id": "claim-2bc1df3817c188fb",
+      "text": "2026-10-01 · structural · oat-project-review-provide · plan",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-f13dd30d608d",
+          "locator": "summary.md:216-216"
+        }
+      ]
+    },
+    {
+      "id": "claim-e981da4c3d2fefd8",
+      "text": "53c0bf7f-34ad-4728-b165-0dc580ac0db9 artifact=.oat/projects/shared/backlog-wave-3/reviews/artifact-plan-review-2026-10-01T063044Z.md recon=template-nav class=intelligent-recon target=gpt-6.1-sol/medium outcome=completed floor=satisfied fallback=unused reconciliation=primary-source-reopened",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-f13dd30d608d",
+          "locator": "summary.md:218-218"
+        }
+      ]
+    },
+    {
+      "id": "claim-494f783f964c3280",
+      "text": "2026-10-01 · structural · oat gate review · plan",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-f13dd30d608d",
+          "locator": "summary.md:220-220"
+        }
+      ]
+    },
+    {
+      "id": "claim-1a9b6d1fd7aa60f2",
       "text": "target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:1,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-3/reviews/artifact-plan-review-2026-10-01T063044Z.md run=53c0bf7f-34ad-4728-b165-0dc580ac0db9",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:215-215"
+          "locator": "summary.md:222-222"
         }
       ]
     },
     {
-      "id": "claim-9855265f0112c725",
+      "id": "claim-d05cd8ef7a696af5",
       "text": "2026-10-01 · structural · oat gate review · p01",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:217-217"
+          "locator": "summary.md:224-224"
         }
       ]
     },
     {
-      "id": "claim-228041b9dab3b66a",
+      "id": "claim-c43cd86be9f0c975",
       "text": "target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:1,low:1 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-3/reviews/p01-review-2026-10-01T114001Z.md run=08df24f3-3c7a-477b-a7d8-cab4fb2cd12d",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:219-219"
+          "locator": "summary.md:226-226"
         }
       ]
     },
     {
-      "id": "claim-3c1a51ce2c93cf1d",
+      "id": "claim-204a5caccdefc341",
       "text": "2026-10-01 · structural · oat-project-implement · p01",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:221-221"
+          "locator": "summary.md:228-228"
         }
       ]
     },
     {
-      "id": "claim-c1d5e779edd31cd4",
+      "id": "claim-744e9f2794dd9485",
       "text": "bw3-p01-outcome: phase p01 passed (root review 0 Critical/High; Codex gate ok); fix-loop count 2 (p01-t04 review fixes, p01-t05 gate fixes).",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:223-223"
+          "locator": "summary.md:230-230"
         }
       ]
     },
     {
-      "id": "claim-a77c4c4ff434a390",
+      "id": "claim-1585cf7e26f519df",
       "text": "2026-10-01 · structural · oat-project-review-provide · p02",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:225-225"
+          "locator": "summary.md:232-232"
         }
       ]
     },
     {
-      "id": "claim-3bc19c74c62bdd2c",
+      "id": "claim-1e0d45f606e37410",
       "text": "gate-3b53a413-p02-recon: completed one awaited read-only intelligent-recon docs lane; root reconciled evidence and wrote reviews/p02-review-2026-10-01T122403Z.md.",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:227-227"
+          "locator": "summary.md:234-234"
         }
       ]
     },
     {
-      "id": "claim-2d146f84525d3a14",
+      "id": "claim-6ded827a79300fd0",
       "text": "2026-10-01 · structural · oat gate review · p02",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:229-229"
+          "locator": "summary.md:236-236"
         }
       ]
     },
     {
-      "id": "claim-e00b90a9fb4c179a",
+      "id": "claim-09d34d800e0e6944",
       "text": "target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:2,low:1 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-3/reviews/p02-review-2026-10-01T122403Z.md run=3b53a413-11e2-4d96-b358-9bd3307e60ad",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:231-231"
+          "locator": "summary.md:238-238"
         }
       ]
     },
     {
-      "id": "claim-5da3744e9769b8a4",
+      "id": "claim-fadaf2be556556cb",
       "text": "2026-10-01 · structural · oat-project-implement · p02",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:233-233"
+          "locator": "summary.md:240-240"
         }
       ]
     },
     {
-      "id": "claim-d4f1a7663a513589",
+      "id": "claim-ca3b26ef3ec6043a",
       "text": "bw3-p02-outcome: phase p02 passed (root review 0 Critical/High; Codex gate ok); fix-loop count 2 (p02-t05 review fixes, p02-t06 gate fixes).",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:235-235"
+          "locator": "summary.md:242-242"
         }
       ]
     },
     {
-      "id": "claim-edfe3dfe8849c903",
+      "id": "claim-20442927e7bfb372",
       "text": "2026-10-01 · structural · oat-project-implement · p03",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:237-237"
+          "locator": "summary.md:244-244"
         }
       ]
     },
     {
-      "id": "claim-e325b6bc03a43874",
+      "id": "claim-0726fd5ba2480931",
       "text": "bw3-p03-stop-1: p03 stopped at the review-cap boundary after three review rounds; round 3 found 1 High (unchecked brief questions/scope fields) and 2 Medium; awaiting operator decision.",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:239-239"
+          "locator": "summary.md:246-246"
         }
       ]
     },
     {
-      "id": "claim-02723eba02b79713",
+      "id": "claim-867c76dfb02ed1f5",
       "text": "2026-10-01 · structural · oat gate review · p03",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:241-241"
+          "locator": "summary.md:248-248"
         }
       ]
     },
     {
-      "id": "claim-5cd67379c2a95353",
+      "id": "claim-d29ac70328abfbc0",
       "text": "target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:1,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-3/reviews/p03-review-2026-10-01T165604Z.md run=c8db6062-c7e2-46d6-a6d0-bde81af2b63f",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:243-243"
+          "locator": "summary.md:250-250"
         }
       ]
     },
     {
-      "id": "claim-1bc14cc0dee5e56b",
+      "id": "claim-ad8849a55de484ae",
       "text": "2026-10-01 · structural · oat-project-implement · p03",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:245-245"
+          "locator": "summary.md:252-252"
         }
       ]
     },
     {
-      "id": "claim-0155b2afa1753fc9",
+      "id": "claim-c1687bf7cebd504f",
       "text": "bw3-p03-outcome: phase p03 passed (Codex gate ok after the complexity-review simplification); fix-loop count 5 (p03-t06..t10), including an operator-extended round and an operator-approved simplification.",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:247-247"
+          "locator": "summary.md:254-254"
         }
       ]
     },
     {
-      "id": "claim-6ddee898f2620d11",
+      "id": "claim-874c121c3bf9824e",
       "text": "2026-10-01 · structural · oat gate review · p04",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:249-249"
+          "locator": "summary.md:256-256"
         }
       ]
     },
     {
-      "id": "claim-a5375fe4c6ca1547",
+      "id": "claim-14cb67c0bf35523d",
       "text": "target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:1,low:1 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-3/reviews/p04-review-2026-10-01T180727Z.md run=8c951355-42cc-421b-b4a8-126330068b4d",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:251-251"
+          "locator": "summary.md:258-258"
         }
       ]
     },
     {
-      "id": "claim-4be8e2e84b5cc67c",
+      "id": "claim-5de29afc43ce434a",
       "text": "2026-10-01 · structural · oat-project-implement · p04",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:253-253"
+          "locator": "summary.md:260-260"
         }
       ]
     },
     {
-      "id": "claim-6b8284b0d5b8a44d",
+      "id": "claim-d64170204ce126d3",
       "text": "bw3-p04-outcome: phase p04 passed (root review 0 Critical/High; Codex gate ok); fix-loop count 2 (p04-t05 review fixes, p04-t06 gate fixes).",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:255-255"
+          "locator": "summary.md:262-262"
         }
       ]
     },
     {
-      "id": "claim-3f38711cadf971f0",
+      "id": "claim-f620f3bdeba6a4c5",
       "text": "2026-10-01 · structural · oat-project-review-provide · p05",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:257-257"
+          "locator": "summary.md:264-264"
         }
       ]
     },
     {
-      "id": "claim-9fdc60aa0f1e3ae2",
+      "id": "claim-aa8e7a2ce0377739",
       "text": "Gate review 669f8362-d6af-46ea-847b-c0a6baa86cbe reconciled three read-only consequential recon lanes; artifact .oat/projects/shared/backlog-wave-3/reviews/p05-review-2026-10-01T193643Z.md; findings 0 critical, 0 high, 1 medium, 0 low.",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:259-259"
+          "locator": "summary.md:266-266"
         }
       ]
     },
     {
-      "id": "claim-28229c517d94b9eb",
+      "id": "claim-63e0682608c63945",
       "text": "2026-10-01 · structural · oat gate review · p05",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:261-261"
+          "locator": "summary.md:268-268"
         }
       ]
     },
     {
-      "id": "claim-50ccfb4363e32011",
+      "id": "claim-2bac5389a7f17076",
       "text": "target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:1,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-3/reviews/p05-review-2026-10-01T193643Z.md run=669f8362-d6af-46ea-847b-c0a6baa86cbe",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:263-263"
+          "locator": "summary.md:270-270"
         }
       ]
     },
     {
-      "id": "claim-d9ec29b387c4ab86",
+      "id": "claim-70b69e43af6fda0f",
       "text": "2026-10-01 · structural · oat-project-implement · p05",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:265-265"
+          "locator": "summary.md:272-272"
         }
       ]
     },
     {
-      "id": "claim-d4d4d4740bfb4321",
+      "id": "claim-8b28709ab61790c1",
       "text": "bw3-p05-outcome: phase p05 passed (root review 0 Critical/High; Codex gate ok); fix-loop count 2 (p05-t07 review fixes, p05-t08 gate fix); one phase recovery (bw3-p05-recovery-1).",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:267-267"
+          "locator": "summary.md:274-274"
         }
       ]
     },
     {
-      "id": "claim-03c211e1a4c2704d",
+      "id": "claim-9efaec7ccb8b7312",
       "text": "2026-10-01 · structural · oat gate review · p06",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:269-269"
+          "locator": "summary.md:276-276"
         }
       ]
     },
     {
-      "id": "claim-2363d86a44bc055d",
+      "id": "claim-815ca15f12b40e0e",
       "text": "target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-3/reviews/p06-review-2026-10-01T200536Z.md run=96320cb5-8127-42cd-adfd-6e1541bb4662",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:271-271"
+          "locator": "summary.md:278-278"
         }
       ]
     },
     {
-      "id": "claim-723ba7da04481a3f",
+      "id": "claim-9f63ace8a9504b5f",
       "text": "2026-10-01 · structural · oat-project-implement · p06",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:273-273"
+          "locator": "summary.md:280-280"
         }
       ]
     },
     {
-      "id": "claim-5d537f59fa984d6e",
+      "id": "claim-eb6b3bc2d9fa26d1",
       "text": "bw3-p06-outcome: phase p06 passed (root review findings fixed by root; Codex gate ok with 0 findings); fix-loop count 0.",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:275-275"
+          "locator": "summary.md:282-282"
         }
       ]
     },
     {
-      "id": "claim-c66ca4f5ac1b5105",
+      "id": "claim-f558289997c5e2b5",
       "text": "2026-10-01 · structural · oat-project-review-provide · final",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:277-277"
+          "locator": "summary.md:284-284"
         }
       ]
     },
     {
-      "id": "claim-cf75ec5b22d6c13b",
+      "id": "claim-438f1243ad7cb3cc",
       "text": "Gate review 99fcf137-4610-4d1c-985d-71c4e7bc9dce reconciled three completed read-only recon lanes in two task-class waves; artifact .oat/projects/shared/backlog-wave-3/reviews/final-review-2026-10-01T203319Z.md; findings 0 critical, 0 high, 2 medium, 0 low.",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:279-279"
+          "locator": "summary.md:286-286"
         }
       ]
     },
     {
-      "id": "claim-7274229c65ba63f8",
+      "id": "claim-672d72cbe1f41ad3",
       "text": "2026-10-01 · structural · oat gate review · final",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:281-281"
+          "locator": "summary.md:288-288"
         }
       ]
     },
     {
-      "id": "claim-c0351ae8b7172b6e",
+      "id": "claim-8ddb76dc1fa5c983",
       "text": "target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:2,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-3/reviews/final-review-2026-10-01T203319Z.md run=99fcf137-4610-4d1c-985d-71c4e7bc9dce",
       "status": "confirmed",
       "citations": [
         {
           "sourceId": "source-f13dd30d608d",
-          "locator": "summary.md:283-283"
+          "locator": "summary.md:290-290"
         }
       ]
     },

@@ -146,6 +146,10 @@
 - - **Fetch `main` and run `check:skill-bumps` before each phase review.**
 - Rationale: bumps are relative to a moving base (#334 collided). Source:
 - [2026-10-01T13:12:23Z — gotcha — Another PR took the same skill and lockstep versions mid-wave](oat-execution-learnings.md#2026-10-01t131223z---gotcha---another-pr-took-the-same-skill-and-lockstep-versions-mid-wave)
+- - **project-recap:** built at closeout (unattended, host-rung visual QA); the
+- run ID, outcome, and QA verdict are recorded in the recap's own
+- `manifest.json` and `qa/result.json` (this section names no run, so the
+- recap's inputs stay unchanged after it is built).
 - - `BL-261001-escape-directive-like` (high): nav sync writes a filename starting
 - with `!` as an exclusion directive, so the page is hidden while `--check`
 - reports clean (exit gate M1).
