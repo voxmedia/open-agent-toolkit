@@ -623,6 +623,165 @@ async function appendAbsentSections(
   return outcome;
 }
 
+interface SectionClassification {
+  results: Record<string, UpsertSectionResult>;
+  absentBlocks: string[];
+}
+
+/** Read-only ownership/conflict classification shared by preview and mutation. */
+function classifySections(
+  plan: AgentsMdPlan,
+  desired: readonly { key: string; block: string }[],
+  content: string,
+  removeSectionKeys: readonly string[],
+  appendRefusal?: string,
+): SectionClassification {
+  if (plan.kind === 'missing') {
+    return {
+      results: Object.fromEntries(
+        desired.map(({ key }) => [key, { action: 'created' }]),
+      ),
+      absentBlocks: [],
+    };
+  }
+
+  const managed = desired.map(({ key, block }) => ({
+    key,
+    block,
+    range: findManagedSection(content, key),
+  }));
+  const legacy = [...new Set(removeSectionKeys)]
+    .filter((key) => !desired.some((section) => section.key === key))
+    .map((key) => ({ key, range: findManagedSection(content, key) }))
+    .filter(
+      (entry): entry is { key: string; range: ManagedRange } =>
+        entry.range !== undefined,
+    );
+  assertManagedSectionsAreDisjoint([
+    ...managed.flatMap(({ range }) => (range ? [range] : [])),
+    ...legacy.map(({ range }) => range),
+  ]);
+  const changed = managed.filter(
+    ({ block, range }) =>
+      !range || content.slice(range.start, range.end) !== block,
+  );
+  if (changed.length === 0 && legacy.length === 0) {
+    return {
+      results: Object.fromEntries(
+        desired.map(({ key }) => [key, { action: 'no-change' }]),
+      ),
+      absentBlocks: [],
+    };
+  }
+
+  // Appending cannot remove a legacy block, so any legacy block keeps the
+  // whole request on the zero-write manual patch.
+  if (legacy.length > 0) {
+    const manualPatch = createManualPatch(
+      plan,
+      (changed.length > 0 ? changed : desired).map(({ block }) => block),
+      legacy.map(({ key }) => key),
+    );
+    return {
+      results: Object.fromEntries(
+        managed.map(({ key }) => [
+          key,
+          { action: 'manual-required', manualPatch },
+        ]),
+      ),
+      absentBlocks: [],
+    };
+  }
+
+  const absent = managed.filter(({ range }) => !range);
+  const different = managed.filter(
+    ({ block, range }) =>
+      range !== undefined && content.slice(range.start, range.end) !== block,
+  );
+  const refusal =
+    appendRefusal ??
+    (absent.length > 0 && plan.targetLinkCount !== 1
+      ? HARD_LINK_REFUSAL
+      : undefined);
+  if (refusal !== undefined) {
+    const manualPatch = createManualPatch(
+      plan,
+      changed.map(({ block }) => block),
+      [],
+      refusal,
+    );
+    return {
+      results: Object.fromEntries(
+        managed.map(({ key, range }) => [
+          key,
+          range && !different.some((entry) => entry.key === key)
+            ? { action: 'no-change' }
+            : { action: 'manual-required', manualPatch },
+        ]),
+      ),
+      absentBlocks: [],
+    };
+  }
+  const differentPatch =
+    different.length > 0
+      ? createManualPatch(
+          plan,
+          different.map(({ block }) => block),
+          [],
+        )
+      : undefined;
+  return {
+    results: Object.fromEntries(
+      managed.map(({ key, range }) => {
+        if (!range) return [key, { action: 'appended' }];
+        if (differentPatch && different.some((entry) => entry.key === key)) {
+          return [
+            key,
+            { action: 'manual-required', manualPatch: differentPatch },
+          ];
+        }
+        return [key, { action: 'no-change' }];
+      }),
+    ),
+    absentBlocks: absent.map(({ block }) => block),
+  };
+}
+
+interface InspectedSections {
+  content: string;
+  desired: { key: string; block: string }[];
+  classification: SectionClassification;
+}
+
+/** Inspect current bytes and identity without opening a write handle. */
+async function inspectSections(
+  plan: AgentsMdPlan,
+  sections: readonly AgentsMdSectionInput[],
+  removeSectionKeys: readonly string[],
+  fileSystem: AgentsMdFileSystem,
+): Promise<InspectedSections> {
+  const desired = sections.map(({ key, body }) => ({
+    key,
+    block: buildSection(key, body),
+  }));
+  const content =
+    plan.kind === 'missing'
+      ? ''
+      : await fileSystem.readFile(plan.targetPath, 'utf8');
+  const classification = classifySections(
+    plan,
+    desired,
+    content,
+    removeSectionKeys,
+  );
+  await assertPlanUnchanged(
+    plan,
+    fileSystem,
+    plan.kind === 'missing' ? undefined : content,
+  );
+  return { content, desired, classification };
+}
+
 async function upsertSectionsInternal(
   repoRoot: string,
   sections: readonly AgentsMdSectionInput[],
@@ -638,153 +797,108 @@ async function upsertSectionsInternal(
     return Object.fromEntries(sections.map(({ key }) => [key, blocked]));
   }
 
-  const desired = sections.map(({ key, body }) => ({
-    key,
-    block: buildSection(key, body),
-  }));
-  if (plan.kind === 'missing') {
-    const content = `${desired.map(({ block }) => block).join('\n\n')}\n`;
-    const creation = await createMissingFile(plan, content, fileSystem);
-    if (creation === 'created') {
-      return Object.fromEntries(
-        desired.map(({ key }) => [key, { action: 'created' }]),
-      );
-    }
-    if (creation === 'appeared' && allowReplan) {
-      return upsertSectionsInternal(
-        repoRoot,
-        sections,
-        removeSectionKeys,
-        fileSystem,
-        false,
-      );
-    }
-    const blocked = blockedResult(
-      new Error('Repository or AGENTS.md identity changed during planning.'),
-      targetIdentifier(plan),
-    );
-    return Object.fromEntries(desired.map(({ key }) => [key, blocked]));
-  }
-
   try {
-    const content = await fileSystem.readFile(plan.targetPath, 'utf8');
-    const managed = desired.map(({ key, block }) => ({
-      key,
-      block,
-      range: findManagedSection(content, key),
-    }));
-    const legacy = [...new Set(removeSectionKeys)]
-      .filter((key) => !desired.some((section) => section.key === key))
-      .map((key) => ({ key, range: findManagedSection(content, key) }))
-      .filter(
-        (entry): entry is { key: string; range: ManagedRange } =>
-          entry.range !== undefined,
-      );
-    assertManagedSectionsAreDisjoint([
-      ...managed.flatMap(({ range }) => (range ? [range] : [])),
-      ...legacy.map(({ range }) => range),
-    ]);
-    await assertPlanUnchanged(plan, fileSystem, content);
-
-    const changed = managed.filter(
-      ({ block, range }) =>
-        !range || content.slice(range.start, range.end) !== block,
-    );
-    if (changed.length === 0 && legacy.length === 0) {
-      return Object.fromEntries(
-        desired.map(({ key }) => [key, { action: 'no-change' }]),
-      );
-    }
-
-    // Appending cannot remove a legacy block, so any legacy block keeps the
-    // whole request on the zero-write manual patch.
-    if (legacy.length === 0) {
-      const absent = managed.filter(({ range }) => !range);
-      const different = managed.filter(
-        ({ block, range }) =>
-          range !== undefined &&
-          content.slice(range.start, range.end) !== block,
-      );
-      let appendRefusal: string | undefined;
-      if (absent.length > 0) {
-        if (plan.targetLinkCount !== 1) {
-          appendRefusal = HARD_LINK_REFUSAL;
-        } else {
-          const appended = await appendAbsentSections(
-            plan,
-            absent.map(({ block }) => block),
-            fileSystem,
-          );
-          if (appended.kind === 'blocked') throw new Error(appended.reason);
-          if (appended.kind === 'refused') appendRefusal = appended.cause;
-        }
-      }
-      if (appendRefusal !== undefined) {
-        // Zero bytes were written: every absent or different block goes on
-        // one manual patch that names why OAT did not append.
-        const refusalPatch = createManualPatch(
-          plan,
-          managed
-            .filter(
-              ({ block, range }) =>
-                !range || content.slice(range.start, range.end) !== block,
-            )
-            .map(({ block }) => block),
-          [],
-          appendRefusal,
-        );
-        return Object.fromEntries(
-          managed.map(({ key, range }) => [
-            key,
-            range && !different.some((entry) => entry.key === key)
-              ? { action: 'no-change' }
-              : { action: 'manual-required', manualPatch: refusalPatch },
-          ]),
-        );
-      }
-      const differentPatch =
-        different.length > 0
-          ? createManualPatch(
-              plan,
-              different.map(({ block }) => block),
-              [],
-            )
-          : undefined;
-      return Object.fromEntries(
-        managed.map(({ key, range }) => {
-          if (!range) return [key, { action: 'appended' }];
-          if (differentPatch && different.some((entry) => entry.key === key)) {
-            return [
-              key,
-              { action: 'manual-required', manualPatch: differentPatch },
-            ];
-          }
-          return [key, { action: 'no-change' }];
-        }),
-      );
-    }
-
-    const manualPatch = createManualPatch(
+    const { desired, content, classification } = await inspectSections(
       plan,
-      changed.length > 0
-        ? changed.map(({ block }) => block)
-        : desired.map(({ block }) => block),
-      legacy.map(({ key }) => key),
+      sections,
+      removeSectionKeys,
+      fileSystem,
     );
-    return Object.fromEntries(
-      managed.map(({ key, block, range }) => [
-        key,
-        range &&
-        content.slice(range.start, range.end) === block &&
-        legacy.length === 0
-          ? { action: 'no-change' }
-          : { action: 'manual-required', manualPatch },
-      ]),
-    );
+    if (plan.kind === 'missing') {
+      const creation = await createMissingFile(
+        plan,
+        `${desired.map(({ block }) => block).join('\n\n')}\n`,
+        fileSystem,
+      );
+      if (creation === 'created') return classification.results;
+      if (creation === 'appeared' && allowReplan) {
+        return upsertSectionsInternal(
+          repoRoot,
+          sections,
+          removeSectionKeys,
+          fileSystem,
+          false,
+        );
+      }
+      throw new Error(IDENTITY_CHANGED);
+    }
+    if (classification.absentBlocks.length > 0) {
+      const appended = await appendAbsentSections(
+        plan,
+        classification.absentBlocks,
+        fileSystem,
+      );
+      if (appended.kind === 'blocked') throw new Error(appended.reason);
+      if (appended.kind === 'refused') {
+        return classifySections(
+          plan,
+          desired,
+          content,
+          removeSectionKeys,
+          appended.cause,
+        ).results;
+      }
+    }
+    return classification.results;
   } catch (error) {
     const blocked = blockedResult(error, targetIdentifier(plan));
-    return Object.fromEntries(desired.map(({ key }) => [key, blocked]));
+    return Object.fromEntries(sections.map(({ key }) => [key, blocked]));
   }
+}
+
+/**
+ * Predict managed guidance actions from current bytes without writing. This
+ * advisory result does not establish write permission or guarantee a later
+ * upsert; mutation independently rechecks path identity and opened handles.
+ */
+export async function previewAgentsMdSections(
+  repoRoot: string,
+  sections: readonly AgentsMdSectionInput[],
+  options: Pick<AgentsMdMutationOptions, 'fileSystem'> = {},
+): Promise<Record<string, UpsertSectionResult>> {
+  if (sections.length === 0) return {};
+  return previewSectionsInternal(
+    repoRoot,
+    sections,
+    [],
+    options.fileSystem ?? defaultFileSystem,
+  );
+}
+
+async function previewSectionsInternal(
+  repoRoot: string,
+  sections: readonly AgentsMdSectionInput[],
+  removeSectionKeys: readonly string[],
+  fileSystem: AgentsMdFileSystem,
+): Promise<Record<string, UpsertSectionResult>> {
+  let plan: AgentsMdPlan | undefined;
+  try {
+    plan = await planAgentsMd(repoRoot, fileSystem);
+    return (
+      await inspectSections(plan, sections, removeSectionKeys, fileSystem)
+    ).classification.results;
+  } catch (error) {
+    const blocked = blockedResult(
+      error,
+      plan ? targetIdentifier(plan) : 'AGENTS.md',
+    );
+    return Object.fromEntries(sections.map(({ key }) => [key, blocked]));
+  }
+}
+
+export async function previewAgentsMdSection(
+  repoRoot: string,
+  key: string,
+  body: string,
+  options: AgentsMdMutationOptions = {},
+): Promise<UpsertSectionResult> {
+  const results = await previewSectionsInternal(
+    repoRoot,
+    [{ key, body }],
+    options.removeSectionKeys ?? [],
+    options.fileSystem ?? defaultFileSystem,
+  );
+  return results[key] ?? blockedResult(new Error('AGENTS.md guidance failed.'));
 }
 
 export async function upsertAgentsMdSections(
