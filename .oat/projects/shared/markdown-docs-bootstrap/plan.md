@@ -174,17 +174,18 @@ All phases run sequentially (`oat_plan_parallel_groups: []`). p02 consumes p01's
 
 Existing scaffold rows are preserved. Quick mode requires no spec; original design review and approved revisions are recorded in `reviews/design-consensus-handoff.md`. The pending design row does not claim re-review of the revised design. Plan review returned two Medium findings; user-approved edits passed re-review with no findings; the retained gate remains pending and readiness remains disabled.
 
-| Scope  | Type     | Status          | Date       | Artifact                      | Reviewed Head                            | Invocation | Gate Target |
-| ------ | -------- | --------------- | ---------- | ----------------------------- | ---------------------------------------- | ---------- | ----------- |
-| p01    | code     | pending         | -          | -                             | -                                        | -          | -           |
-| p02    | code     | pending         | -          | -                             | -                                        | -          | -           |
-| final  | code     | pending         | -          | -                             | -                                        | -          | -           |
-| spec   | artifact | pending         | -          | -                             | -                                        | -          | -           |
-| design | artifact | pending         | -          | -                             | -                                        | -          | -           |
-| p03    | code     | pending         | -          | -                             | -                                        | -          | -           |
-| p04    | code     | pending         | -          | -                             | -                                        | -          | -           |
-| plan   | artifact | fixes_completed | 2026-10-01 | reviews/plan-auto-handoff.md  | b3480f8824b175b34cdba2f76d7dcf66ee12a034 | auto       | -           |
-| plan   | artifact | passed          | 2026-10-01 | reviews/plan-auto-rereview.md | 1ab8e49002716294f43b63831e13b0f9576f535b | auto       | -           |
+| Scope  | Type     | Status          | Date       | Artifact                                           | Reviewed Head                            | Invocation | Gate Target |
+| ------ | -------- | --------------- | ---------- | -------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
+| p01    | code     | pending         | -          | -                                                  | -                                        | -          | -           |
+| p02    | code     | pending         | -          | -                                                  | -                                        | -          | -           |
+| final  | code     | pending         | -          | -                                                  | -                                        | -          | -           |
+| spec   | artifact | pending         | -          | -                                                  | -                                        | -          | -           |
+| design | artifact | pending         | -          | -                                                  | -                                        | -          | -           |
+| p03    | code     | pending         | -          | -                                                  | -                                        | -          | -           |
+| p04    | code     | pending         | -          | -                                                  | -                                        | -          | -           |
+| plan   | artifact | fixes_completed | 2026-10-01 | reviews/plan-auto-handoff.md                       | b3480f8824b175b34cdba2f76d7dcf66ee12a034 | auto       | -           |
+| plan   | artifact | passed          | 2026-10-01 | reviews/plan-auto-rereview.md                      | 1ab8e49002716294f43b63831e13b0f9576f535b | auto       | -           |
+| plan   | artifact | received        | 2026-10-01 | reviews/artifact-plan-review-2026-10-01T060016Z.md | -                                        | -          | -           |
 
 Record full reviewed heads and invocation provenance for actual reviews. Preserve all rows and unknown trailing cells. Mark `passed` only for a clean result; disposition residual findings before readiness.
 
