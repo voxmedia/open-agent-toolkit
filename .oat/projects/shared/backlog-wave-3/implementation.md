@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
-oat_current_task_id: p05-t07
+oat_current_task_id: p06-t01
 oat_generated: false
 ---
 
@@ -30,10 +30,10 @@ oat_generated: false
 | Phase 2 | complete    | 6     | 6/6       |
 | Phase 3 | complete    | 10    | 10/10     |
 | Phase 4 | complete    | 6     | 6/6       |
-| Phase 5 | in_progress | 7     | 6/7       |
+| Phase 5 | in_progress | 7     | 7/7       |
 | Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 33/37 tasks completed
+**Total:** 34/37 tasks completed
 
 ---
 
@@ -232,8 +232,8 @@ oat_generated: false
 
 ### Task p05-t07: (review) Close p05 review findings M1, M2
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** d65cb355c
 
 ---
 
@@ -529,6 +529,12 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   the same vitest invocation as the full suite (unrelated to p05; checked by the
   Definition of Done).
   `Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
+
+- Continuation `cont-backlog-wave-3-p05-fix-1` (root first sent a wrong base
+  SHA and corrected it before work began): `d65cb355c` closed M1 (changed
+  paths judged by the owning package's patterns; real-dependency-map tests)
+  and M2 (journal-only helpers and fallback event kinds deleted; validate-only
+  output shape unchanged); whole CLI suite 7954, smoke 163.
 
 <!-- orchestration-runs-end -->
 
