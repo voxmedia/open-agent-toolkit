@@ -886,6 +886,32 @@ Expected: exit 0.
 
 ---
 
+### Task p03-t10: (review) Close p03 gate finding M1
+
+Source: `reviews/archived/p03-review-2026-10-01T165604Z.md` (Codex phase gate,
+`ok`: 0 Critical/High, 1 Medium).
+
+**Step 1: Fix**
+
+- M1: `validateAssurance` rebuilds each review brief once per verified claim
+  (`validate-packet.mjs` around 2143), so validation grows quadratically.
+  Compute the rebuild-and-compare result once per distinct brief within a
+  validation pass and reuse its validity and entry-ID set, scoped to that
+  pass. Keep every guard and tamper control. Add a test that counts brief
+  rebuilds (or an equivalent bound) so a regression to per-claim rebuilding
+  fails.
+
+**Step 2: Verify**
+
+Run: `node --test .agents/skills/recon/tests/*.test.mjs`, `pnpm lint`.
+Expected: exit 0.
+
+**Step 3: Commit**
+
+`perf(p03-t10): rebuild each recon brief once per validation pass`
+
+---
+
 ## Phase 4: Lifecycle closeout guards
 
 Backlog: `BL-261001-recompute-oat-project-next-s`,
@@ -1558,7 +1584,7 @@ breaking changes must be named in the title:
 | p03    | code     | fixes_completed | 2026-10-01 | reviews/archived/p03-review-2026-10-01T130314Z.md  | 3769d125fc8499b681305a7565fbdab66b9174a5 | auto       | -                 |
 | p03    | code     | fixes_completed | 2026-10-01 | reviews/archived/p03-review-2026-10-01T131855Z.md  | a3d625b312d892dbdd33270582fb2561ec39533c | auto       | -                 |
 | p03    | code     | fixes_completed | 2026-10-01 | reviews/archived/p03-review-2026-10-01T133903Z.md  | 18012ae901c3ba7460af9cb82d2010fb6b8d1970 | auto       | -                 |
-| p03    | code     | received        | 2026-10-01 | reviews/p03-review-2026-10-01T165604Z.md           | 2cb68863a5b6eb3ff54e9cb9176db401d7c9932d | gate       | codex-6-sol-xhigh |
+| p03    | code     | fixes_added     | 2026-10-01 | reviews/archived/p03-review-2026-10-01T165604Z.md  | 2cb68863a5b6eb3ff54e9cb9176db401d7c9932d | gate       | codex-6-sol-xhigh |
 | p04    | code     | pending         | -          | -                                                  | -                                        | -          | -                 |
 | p05    | code     | pending         | -          | -                                                  | -                                        | -          | -                 |
 | p06    | code     | pending         | -          | -                                                  | -                                        | -          | -                 |
@@ -1639,12 +1665,12 @@ criterion.
 
 - Phase 1: 5 tasks - Template resolver
 - Phase 2: 6 tasks - Fumadocs navigation
-- Phase 3: 9 tasks - Recon publication and Codex recovery
+- Phase 3: 10 tasks - Recon publication and Codex recovery
 - Phase 4: 4 tasks - Lifecycle closeout guards
 - Phase 5: 6 tasks - Small fixes
 - Phase 6: 3 tasks - Release fan-in
 
-**Total: 33 tasks**
+**Total: 34 tasks**
 
 Ready for code review and merge.
 
