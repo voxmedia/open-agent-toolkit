@@ -196,35 +196,76 @@ All phases run sequentially (`oat_plan_parallel_groups: []`). p02 consumes p01's
 
 **Commit:** `fix(p04-t03): normalize blank markdown metadata inputs`.
 
+### Task p04-t04: (review) Preserve adoption across optional child index aliases
+
+**Files:** Modify `packages/cli/src/commands/docs/init/markdown.ts` and `integration.test.ts`; retain reproduction evidence in `reviews/final-remote-controls.md`.
+
+**Step 1: Analyze failure context**
+
+Remote M1, comment 4158307658. Root reproduced a readable in-repository child index alias outside docs and a dangling child index aborting public adoption/dry-run. Optional navigation discovery must preserve these entries and continue; required root baseline validation remains strict.
+
+**Step 2: Implement fix**
+
+Use repository scope for usable child index aliases. When an optional child index is dangling, unreadable, outside repository containment or not a file, preserve it, omit its Contents link and report actionable audit advice without aborting the entire adoption. Do not weaken target/root-baseline safety or traverse outside-repository content. Keep exclusion handling, dry-run nonmutation and repeat preservation.
+
+**Step 3: Verify targeted behavior and project commands**
+
+At the real docs init boundary, use in-repository readable aliases, dangling aliases and outside-repository/file-type controls; independently inspect Contents and snapshot existing bytes/symlink targets. New regressions must fail on original source for the intended defect and pass with the fix; valid ordinary index and unsafe-target controls remain valid. Build before bundle-backed focused tests/CLI controls, then exact affected init suite, CLI types/lint and scoped format/diff checks. Preserve runnable old/fixed receipts in final-remote-controls. Coordinate p04-t05 before the full eight repository gates; final review/gate is root-owned.
+
+**Step 4: Commit**
+
+`fix(p04-t04): preserve adoption across child index aliases`. Commit only owned source/test/evidence, report TASK_DONE and await root ACK before the next task.
+
+### Task p04-t05: (review) Ignore instruction-only directories in docs advice
+
+**Files:** Modify `packages/cli/src/commands/docs/init/markdown.ts` and `integration.test.ts`; extend `reviews/final-remote-controls.md`.
+
+**Step 1: Analyze failure context**
+
+Remote L1, comment 4158307666. Root reproduced instruction-only child directories being labeled as Markdown content needing an authored index. Direct Contents already excludes AGENTS.md/CLAUDE.md.
+
+**Step 2: Implement fix**
+
+Keep recursive content discovery consistent with instruction-file exclusion. Preserve instruction files and asset-only directories; real authored Markdown still triggers missing-index repair advice, including nested content and configured exclusions.
+
+**Step 3: Verify targeted behavior and project commands**
+
+Use public adoption/dry-run regressions for instruction-only direct/nested directories, genuine Markdown and excluded Markdown controls. Independent advice/byte oracles must fail on old source and pass with the fix; no internal-helper mocks or duplicated private tests. Build first, run affected direct suite and actual CLI controls, then all eight repository CI gates in order with explicit exit receipts and fresh origin/main before versions. Distinguish cache replay from execution, preserve prior integrated consumer proof, and run lint/format if touched surfaces require them. Root owns final review, receive, retained gate and summary/PR refresh.
+
+**Step 4: Commit**
+
+`fix(p04-t05): exclude instruction files from docs advice`. Commit only owned source/test/evidence, report TASK_DONE with verification and await root ACK.
+
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target          |
-| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | -------------------- |
-| p01    | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
-| p02    | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
-| final  | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
-| spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                    |
-| design | artifact | pending         | -          | -                                                           | -                                        | -          | -                    |
-| p03    | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
-| p04    | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
-| plan   | artifact | fixes_completed | 2026-10-01 | reviews/archived/plan-auto-handoff.md                       | b3480f8824b175b34cdba2f76d7dcf66ee12a034 | auto       | -                    |
-| plan   | artifact | passed          | 2026-10-01 | reviews/archived/plan-auto-rereview.md                      | 1ab8e49002716294f43b63831e13b0f9576f535b | auto       | -                    |
-| plan   | artifact | fixes_completed | 2026-10-01 | reviews/archived/artifact-plan-review-2026-10-01T060016Z.md | -                                        | gate       | claude-opus-5-5-high |
-| plan   | artifact | fixes_completed | 2026-10-01 | reviews/archived/plan-auto-final-retry.md                   | 4f1c0d422241214859c906efb176e5a2787ba472 | auto       | -                    |
-| plan   | artifact | passed          | 2026-10-01 | reviews/archived/artifact-plan-review-2026-10-01T112231Z.md | -                                        | gate       | claude-opus-5-5-high |
-| p01    | code     | fixes_completed | 2026-10-01 | reviews/archived/p01-review-2026-10-01T120229Z.md           | 47f4fddad5b3618e5146631b729e435a0a4a5f4a | auto       | -                    |
-| p02    | code     | fixes_completed | 2026-10-01 | reviews/archived/p02-review-2026-10-01T125830Z.md           | 95250d626e6fb7bf4f382be4d4e10eae18e330c0 | auto       | -                    |
-| p02    | code     | passed          | 2026-10-01 | reviews/archived/p02-review-2026-10-01T132908Z.md           | f715c2ece20b5650d64d3b55bb6b9f44b2c98495 | auto       | -                    |
-| p03    | code     | fixes_completed | 2026-10-01 | reviews/archived/p03-review-2026-10-01T140627Z.md           | 1e03f88dcb5ae9713ff36a4b3327ac02d1b4f953 | auto       | -                    |
-| p04    | code     | passed          | 2026-10-01 | reviews/archived/p04-review-2026-10-01T150035Z.md           | f4d76f977968c4d4e00d86153e48a9781649a2d1 | auto       | -                    |
-| final  | code     | fixes_completed | 2026-10-01 | reviews/archived/final-review-2026-10-01T151606Z.md         | f7b7acb6f041d9b016bc67af4196c40a0f689e6d | auto       | -                    |
-| final  | code     | passed          | 2026-10-01 | reviews/archived/final-review-2026-10-01T155302Z.md         | 697f529e8641ade24140fd7a9b88483799aa204a | auto       | -                    |
-| final  | code     | fixes_completed | 2026-10-01 | reviews/archived/final-review-2026-10-01T160046Z.md         | 265230677e7f0d1675c7afce25128293801e195f | gate       | claude-opus-5-5-high |
-| final  | code     | passed          | 2026-10-01 | reviews/archived/final-review-2026-10-01T163133Z.md         | 2f6ba887966806222f3a585e27f2e55885eb91c1 | auto       | -                    |
-| final  | code     | passed          | 2026-10-01 | reviews/archived/final-review-2026-10-01T163602Z.md         | 3925d7b4f772efef14494eb10fc8cd60eed85e4d | gate       | claude-opus-5-5-high |
-| final  | code     | passed          | 2026-10-01 | reviews/archived/final-review-2026-10-01T180731Z.md         | 9b926dbb37a93049640cf6737e5ba42f9598b8c7 | auto       | -                    |
+| Scope         | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target          |
+| ------------- | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | -------------------- |
+| p01           | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
+| p02           | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
+| final         | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
+| spec          | artifact | pending         | -          | -                                                           | -                                        | -          | -                    |
+| design        | artifact | pending         | -          | -                                                           | -                                        | -          | -                    |
+| p03           | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
+| p04           | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
+| plan          | artifact | fixes_completed | 2026-10-01 | reviews/archived/plan-auto-handoff.md                       | b3480f8824b175b34cdba2f76d7dcf66ee12a034 | auto       | -                    |
+| plan          | artifact | passed          | 2026-10-01 | reviews/archived/plan-auto-rereview.md                      | 1ab8e49002716294f43b63831e13b0f9576f535b | auto       | -                    |
+| plan          | artifact | fixes_completed | 2026-10-01 | reviews/archived/artifact-plan-review-2026-10-01T060016Z.md | -                                        | gate       | claude-opus-5-5-high |
+| plan          | artifact | fixes_completed | 2026-10-01 | reviews/archived/plan-auto-final-retry.md                   | 4f1c0d422241214859c906efb176e5a2787ba472 | auto       | -                    |
+| plan          | artifact | passed          | 2026-10-01 | reviews/archived/artifact-plan-review-2026-10-01T112231Z.md | -                                        | gate       | claude-opus-5-5-high |
+| p01           | code     | fixes_completed | 2026-10-01 | reviews/archived/p01-review-2026-10-01T120229Z.md           | 47f4fddad5b3618e5146631b729e435a0a4a5f4a | auto       | -                    |
+| p02           | code     | fixes_completed | 2026-10-01 | reviews/archived/p02-review-2026-10-01T125830Z.md           | 95250d626e6fb7bf4f382be4d4e10eae18e330c0 | auto       | -                    |
+| p02           | code     | passed          | 2026-10-01 | reviews/archived/p02-review-2026-10-01T132908Z.md           | f715c2ece20b5650d64d3b55bb6b9f44b2c98495 | auto       | -                    |
+| p03           | code     | fixes_completed | 2026-10-01 | reviews/archived/p03-review-2026-10-01T140627Z.md           | 1e03f88dcb5ae9713ff36a4b3327ac02d1b4f953 | auto       | -                    |
+| p04           | code     | passed          | 2026-10-01 | reviews/archived/p04-review-2026-10-01T150035Z.md           | f4d76f977968c4d4e00d86153e48a9781649a2d1 | auto       | -                    |
+| final         | code     | fixes_completed | 2026-10-01 | reviews/archived/final-review-2026-10-01T151606Z.md         | f7b7acb6f041d9b016bc67af4196c40a0f689e6d | auto       | -                    |
+| final         | code     | passed          | 2026-10-01 | reviews/archived/final-review-2026-10-01T155302Z.md         | 697f529e8641ade24140fd7a9b88483799aa204a | auto       | -                    |
+| final         | code     | fixes_completed | 2026-10-01 | reviews/archived/final-review-2026-10-01T160046Z.md         | 265230677e7f0d1675c7afce25128293801e195f | gate       | claude-opus-5-5-high |
+| final         | code     | passed          | 2026-10-01 | reviews/archived/final-review-2026-10-01T163133Z.md         | 2f6ba887966806222f3a585e27f2e55885eb91c1 | auto       | -                    |
+| final         | code     | passed          | 2026-10-01 | reviews/archived/final-review-2026-10-01T163602Z.md         | 3925d7b4f772efef14494eb10fc8cd60eed85e4d | gate       | claude-opus-5-5-high |
+| final         | code     | passed          | 2026-10-01 | reviews/archived/final-review-2026-10-01T180731Z.md         | 9b926dbb37a93049640cf6737e5ba42f9598b8c7 | auto       | -                    |
+| remote-pr-335 | code     | fixes_added     | 2026-10-01 | reviews/archived/remote-pr-335-review-2026-10-01T181341Z.md | -                                        | -          | -                    |
 
-Historical scaffold rows and review events are preserved. All implementation tasks and the standard final review are complete. The retained implementation gate passed its High threshold. Its rendering and ledger findings are resolved and independently accepted by `reviews/archived/final-review-2026-10-01T163133Z.md`; the refreshed gate also passed, and its stale prose finding is corrected in this receive.
+Historical scaffold rows and review events are preserved. Eleven prior tasks are complete; remote M1/L1 are converted to p04-t04/p04-t05. Prior passed reviews and gates remain history; fresh final acceptance is required for the remote fixes on the integrated branch.
 
 Record full reviewed heads and invocation provenance for actual reviews. Preserve all rows and unknown trailing cells. Mark `passed` only for a clean result; disposition residual findings before readiness.
 
@@ -239,7 +280,7 @@ Source pointers retained for the already-planned consumer inventory: index gener
 
 ## Implementation Complete
 
-Implementation in progress: 11/11 tasks complete; final review and retained exit gate passed with all dispositions settled; configured closeout and final HiLL approval pending. Planned scope: 4 sequential phases, 11 atomic tasks — p01 (2), p02 (3), p03 (3), p04 (3). Replace this with a completion summary only after implementation and required reviews/gates pass.
+Implementation in progress: 11/13 tasks complete; remote p04-t04/p04-t05 pending. Scope: 4 sequential phases, 13 atomic tasks — p01 (2), p02 (3), p03 (3), p04 (5). Prior integrated verification/review remains history; fresh final verification/review and retained exit gate precede final HiLL approval. Existing configured pre-approval steps are complete and their snapshot is unchanged.
 
 ## References
 

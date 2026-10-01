@@ -3,24 +3,24 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
-oat_current_task_id: null
+oat_current_task_id: p04-t04
 oat_generated: false
 ---
 
 # Implementation: markdown-docs-bootstrap
 
-All eleven tasks are complete, including final M1 metadata normalization. Required verification passed on the corrected source. All phase and final-review dispositions are settled. Final metadata re-review passed without findings; retained exit gate and configured closeout precede HiLL.
+Eleven prior tasks are complete. Remote Bugbot M1/L1 are accepted as p04-t04/p04-t05; resume implementation at p04-t04. Main is integrated and prior verification/review is preserved, while fresh final acceptance and retained gate remain required before HiLL.
 
 ## Progress Overview
 
-| Phase | Status   | Tasks | Completed |
-| ----- | -------- | ----- | --------- |
-| p01   | complete | 2     | 2/2       |
-| p02   | complete | 3     | 3/3       |
-| p03   | complete | 3     | 3/3       |
-| p04   | complete | 3     | 3/3       |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p01   | complete    | 2     | 2/2       |
+| p02   | complete    | 3     | 3/3       |
+| p03   | complete    | 3     | 3/3       |
+| p04   | in_progress | 5     | 3/5       |
 
-**Total:** 11/11 tasks completed
+**Total:** 11/13 tasks completed
 
 ## Phase 1: Shared content and guidance contracts
 
@@ -2861,3 +2861,7 @@ Accepted exact-target canonical-role route /root/markdown_final_integration_pinn
 ### Integrated final review received
 
 Root consumed exactly one **Reconnaissance:** not-attempted signal before validating the complete artifact; no Review Orchestration section, no reconnaissance-log append. Review `final-review-2026-10-01T180731Z.md` covers explicit c5b3f541addc5ab03d33b79b1854f49a8403469c..9b926dbb37a93049640cf6737e5ba42f9598b8c7, with 0 Critical/High/Medium/Low. Counts/provenance/stamp and unique received ledger event corroborate; raw commit47081ab16 preserves artifact. Root verified integration evidence and independent focused1309/control13/bundle66 receipts. Deferred Medium/Low0 within this scope; inherited full-project coverage explicitly bounded. New remote M1/L1 on unchanged navigation edges are independently reproduced and will be converted next; this clean integration event does not accept those defects or waive fresh final source review/gate. Archive reference/received-to-passed transition preserves all prior/unknown cells. Duplicate remote-follow-up prose in raw artifact is harmless repetition and not silently amended. Existing sequence and recap skip remain unchanged.
+
+## Remote Review Received: PR #335
+
+Date: 2026-10-01T18:13:41Z. Artifact: reviews/archived/remote-pr-335-review-2026-10-01T181341Z.md. Findings: 0 Critical, 0 High, 1 Medium, 1 Low. M1/L1 accepted and converted to p04-t04/p04-t05 respectively (both Minor). No deferrals/dismissals. Informational PR summary excluded from findings; source OAT provenance unknown. Root reproduced both public CLI defects; actual baseline receipts /tmp/markdown-remote-before.json. No GitHub replies posted. First remote receive cycle of3. Existing integration review covers its declared basis; source fixes require fresh final review/gate. Summary/document/PR completed snapshot and recap skip remain unchanged; pending approval is not granted.
