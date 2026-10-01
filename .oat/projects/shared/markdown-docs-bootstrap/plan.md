@@ -219,7 +219,7 @@ All phases run sequentially (`oat_plan_parallel_groups: []`). p02 consumes p01's
 | p04    | code     | passed          | 2026-10-01 | reviews/p04-review-2026-10-01T150035Z.md                    | f4d76f977968c4d4e00d86153e48a9781649a2d1 | auto       | -                    |
 | final  | code     | fixes_completed | 2026-10-01 | reviews/archived/final-review-2026-10-01T151606Z.md         | f7b7acb6f041d9b016bc67af4196c40a0f689e6d | auto       | -                    |
 | final  | code     | passed          | 2026-10-01 | reviews/archived/final-review-2026-10-01T155302Z.md         | 697f529e8641ade24140fd7a9b88483799aa204a | auto       | -                    |
-| final  | code     | received        | 2026-10-01 | reviews/final-review-2026-10-01T160046Z.md                  | 265230677e7f0d1675c7afce25128293801e195f | gate       | claude-opus-5-5-high |
+| final  | code     | fixes_completed | 2026-10-01 | reviews/archived/final-review-2026-10-01T160046Z.md         | 265230677e7f0d1675c7afce25128293801e195f | gate       | claude-opus-5-5-high |
 
 Historical scaffold rows and review events are preserved. All implementation tasks and the standard final review are complete. The retained implementation gate passed its High threshold; its Medium rendering finding and Low ledger finding are being addressed in a non-pausing judgment sweep.
 
