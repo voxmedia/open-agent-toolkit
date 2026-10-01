@@ -813,9 +813,11 @@ Expected: exit 0.
   (around 403-408), `apps/oat-docs/docs/reference/cli-reference.md` (157),
   `apps/oat-docs/docs/workflows/projects/evidence-layers.md` (around 81),
   `apps/oat-docs/docs/workflows/projects/orchestration-model.md` (the
-  `Journal` participant in the sequence diagram around 79-87), and the
-  implementation-execution and scope-and-surface docs that describe
-  persistence (locate by content)
+  `Journal` participant in the sequence diagram around 79-87 and the
+  persistence sentence around 125-131),
+  `apps/oat-docs/docs/workflows/projects/implementation-execution.md` (around
+  76-82), and the
+  scope-and-surface doc that describes persistence (locate by content)
 - Modify: `packages/cli/src/validation/skills.test.ts` (around 3008-3054),
   which today requires those files to say the record is "optional and off by
   default"; rewrite it to assert the persistence wording is absent
@@ -845,8 +847,8 @@ no output (rg exits 1). Wording that says the command is validate-only and
 takes no `--project` is allowed.
 
 ```bash
-rg -n -U 'dispatch record[^\n]*\\\n\s*--project|per-dispatch file|dispatch/. director|dispatch journal|<project>/dispatch/' \
-  .agents apps/oat-docs/docs packages/cli/src --glob '!**/*.test.ts'
+rg -n -U 'dispatch record[^\n]*\\\n\s*--project|per-dispatch\s+file|dispatch/. director|dispatch journal|<project>/dispatch/' \
+  .agents apps/oat-docs/docs packages/cli/src --glob '!**/*.test.ts' --glob '!**/tests/**'
 ```
 
 Expected: every other command exits 0.
@@ -1182,24 +1184,34 @@ breaking changes must be named in the title:
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date | Artifact | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | ------- | ---- | -------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending | -    | -        | -             | -          | -           |
-| p02    | code     | pending | -    | -        | -             | -          | -           |
-| p03    | code     | pending | -    | -        | -             | -          | -           |
-| p04    | code     | pending | -    | -        | -             | -          | -           |
-| p05    | code     | pending | -    | -        | -             | -          | -           |
-| p06    | code     | pending | -    | -        | -             | -          | -           |
-| final  | code     | pending | -    | -        | -             | -          | -           |
-| spec   | artifact | pending | -    | -        | -             | -          | -           |
-| design | artifact | pending | -    | -        | -             | -          | -           |
-| plan   | artifact | pending | -    | -        | -             | -          | -           |
+| Scope  | Type     | Status          | Date       | Artifact | Reviewed Head | Invocation | Gate Target |
+| ------ | -------- | --------------- | ---------- | -------- | ------------- | ---------- | ----------- |
+| p01    | code     | pending         | -          | -        | -             | -          | -           |
+| p02    | code     | pending         | -          | -        | -             | -          | -           |
+| p03    | code     | pending         | -          | -        | -             | -          | -           |
+| p04    | code     | pending         | -          | -        | -             | -          | -           |
+| p05    | code     | pending         | -          | -        | -             | -          | -           |
+| p06    | code     | pending         | -          | -        | -             | -          | -           |
+| final  | code     | pending         | -          | -        | -             | -          | -           |
+| spec   | artifact | pending         | -          | -        | -             | -          | -           |
+| design | artifact | pending         | -          | -        | -             | -          | -           |
+| plan   | artifact | fixes_completed | 2026-10-01 | -        | -             | auto       | -           |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
 `Gate Target` is populated only for gate events. Legacy five-column rows remain
 valid. Writers must preserve every existing row and every unknown trailing
 cell; never truncate a widened row back to five columns.
+
+Plan artifact disposition: the automatic structured review (Opus 5.5 high,
+exception route because the planning parent's effort was unknown) ran three
+attempts within the retry bound of 2. Attempt 1 findings (H1-H3, M1-M5,
+L1-L5) and attempt 2 findings (H1 search and inventory, M1 env-read
+autonomy, L1 probe setup, L2 stale-invocation entry) were applied and
+re-reviewed. Attempt 3's single Medium (the p05-t02 search always matched a
+hash-attested fixture and missed wrapped sentences) was applied after the
+bound without a further structured pass and is covered by the configured
+gate.
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
