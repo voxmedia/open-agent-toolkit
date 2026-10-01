@@ -144,7 +144,6 @@ describe('oat project dispatch canonical-role', () => {
     expect(JSON.stringify(result.payload)).not.toContain(home);
 
     const recorded = await recordProjectDispatch({
-      projectPath: null,
       input: {
         record: genericRecord('managed-claude-implementation'),
         event: result.payload,

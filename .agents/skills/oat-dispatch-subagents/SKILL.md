@@ -176,17 +176,9 @@ terminal outcome, not a pre-start rejection, and must be recorded through
 `provesNoChildStarted: true`, and no fallback is authorized.
 
 The calling workflow records each launch in its own run record (request ID,
-`Dispatch:` stamp, launch status, terminal outcome). Writing a per-dispatch file with `oat project dispatch record` is optional and off by default: no lifecycle skill or command consumes those files, so do not write them unless the host has explicitly opted in. A host that has opted
-in passes the validated record and event on standard input:
-
-```bash
-oat project dispatch record \
-  --project "$PROJECT_PATH" \
-  --event-file - \
-  --json
-```
-
-The command validates and persists evidence only. It never launches a provider.
+`Dispatch:` stamp, launch status, terminal outcome); that run record is the
+only launch record. `oat project dispatch record --event-file - --json`
+validates a record and event and writes nothing. It never launches a provider.
 
 ## Capability and Authorization
 

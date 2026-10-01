@@ -1169,7 +1169,7 @@ describe('help output snapshots', () => {
         closeout-check [options] <project-path>      Report whether a project closeout snapshot permits terminal completion (read-only)
         complete-discovery [options] <project-path>  Validate and mark a project discovery.md complete
         complete-state [options] <project-path>      Update a project state.md to the completed lifecycle shape
-        dispatch                                     Validate and persist project dispatch provenance
+        dispatch                                     Validate project dispatch provenance
         dispatch-ceiling                             Resolve OAT project dispatch ceiling metadata
         list [options]                               List tracked OAT projects
         links [options] [project-path|slug]          Render pinned reviewer links for a synced OAT project
@@ -1192,7 +1192,7 @@ describe('help output snapshots', () => {
     `);
   });
 
-  it('project dispatch record --help documents project and stdin recording', () => {
+  it('project dispatch record --help documents validate-only stdin input', () => {
     const program = createRegisteredProgram();
     const help = getCommandByPath(program, [
       'project',
@@ -1200,7 +1200,8 @@ describe('help output snapshots', () => {
       'record',
     ]).helpInformation();
 
-    expect(help).toContain('--project <project-path>');
+    expect(help).not.toContain('--project');
+    expect(help).toContain('writes nothing');
     expect(help).toContain('--event-file <json-file-or-dash>');
     expect(help).toMatch(/or -\s+for standard input/);
     expect(help).not.toMatch(/launch/i);

@@ -1,15 +1,4 @@
-import { createHash } from 'node:crypto';
-import {
-  chmod,
-  mkdtemp,
-  mkdir,
-  readFile,
-  readdir,
-  rm,
-  writeFile,
-} from 'node:fs/promises';
-import { hostname, tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { readFile } from 'node:fs/promises';
 
 import { materializeClaudeAgent } from '@providers/claude/codec/materialize';
 import {
@@ -22,7 +11,7 @@ import {
   ROOT_ROLLOUT,
 } from '@providers/identity/codex-runtime-observation.fixtures';
 import type { GenericDispatchRecord } from '@providers/identity/generic-dispatch-record';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { createProjectDispatchCommand } from './index';
 import {
@@ -30,8 +19,6 @@ import {
   recordProjectDispatch,
   redactDispatchMessage,
 } from './record';
-
-const roots: string[] = [];
 
 function genericRecord(
   overrides: Partial<GenericDispatchRecord> = {},
@@ -206,27 +193,6 @@ const target = {
   selectedRoute: 'native',
 };
 
-function rejectionEvent(requestId = 'dispatch-native-1') {
-  return {
-    kind: 'pre-start-rejection-attestation' as const,
-    requestId,
-    source: 'provider-wrapper' as const,
-    expectedLaunchStatus: 'blocked-before-start' as const,
-    rejection: {
-      code: 'native-role-unavailable',
-      rejectedAt: '2026-09-02T00:00:01.000Z',
-      provesNoChildStarted: true as const,
-    },
-  };
-}
-
-function blockedRecord() {
-  return genericRecord({
-    launch_status: 'blocked-before-start',
-    child_outcome: 'not-started',
-  });
-}
-
 function fallbackInput(fallbackRequestId: string) {
   return {
     record: genericRecord({
@@ -261,56 +227,51 @@ function fallbackInput(fallbackRequestId: string) {
   };
 }
 
-/** Request IDs present in the append-only journal, latest revision per ID. */
-async function journalRequests(projectPath: string): Promise<string[]> {
-  const names = await readdir(join(projectPath, 'dispatch'));
-  return [
-    ...new Set(
-      names
-        .filter((name) => name.endsWith('.json'))
-        .map((name) => name.slice(0, -'.json'.length).split('@')[0]),
-    ),
-  ].sort();
+/**
+ * Run `oat project dispatch record --event-file - --json` on `input` and return
+ * the exact JSON the command prints. Redaction is asserted on this output: the
+ * command writes nothing, so what it prints is all a caller can ever see.
+ */
+async function validatedOutput(input: unknown): Promise<string> {
+  const json = vi.fn();
+  const previousExitCode = process.exitCode;
+  process.exitCode = undefined;
+  try {
+    const command = createProjectDispatchCommand({
+      buildCommandContext: () => ({
+        scope: 'all',
+        dryRun: false,
+        verbose: false,
+        json: true,
+        cwd: process.cwd(),
+        home: process.cwd(),
+        interactive: false,
+        logger: {
+          debug: vi.fn(),
+          info: vi.fn(),
+          warn: vi.fn(),
+          error: vi.fn(),
+          success: vi.fn(),
+          json,
+        },
+      }),
+      resolveProjectRoot: async () => process.cwd(),
+      readFile: async () => {
+        throw new Error('event file should not be read');
+      },
+      readStdin: async () => JSON.stringify(input),
+    });
+    await command.parseAsync(['record', '--event-file', '-'], {
+      from: 'user',
+    });
+    expect(process.exitCode).toBe(0);
+    const payload = json.mock.calls.at(-1)?.[0] as { status?: string };
+    expect(payload.status).toBe('validated-only');
+    return JSON.stringify(payload);
+  } finally {
+    process.exitCode = previousExitCode;
+  }
 }
-
-async function latestRecord(projectPath: string, requestId: string) {
-  const names = (await readdir(join(projectPath, 'dispatch')))
-    .filter(
-      (name) =>
-        name.endsWith('.json') &&
-        name.slice(0, -'.json'.length).split('@')[0] === requestId,
-    )
-    .sort();
-  const newest = names[names.length - 1];
-  return JSON.parse(
-    await readFile(join(projectPath, 'dispatch', newest), 'utf8'),
-  );
-}
-
-async function seedRejectedTrigger() {
-  const projectPath = await mkdtemp(join(tmpdir(), 'oat-dispatch-project-'));
-  roots.push(projectPath);
-  await writeFile(
-    join(projectPath, 'state.md'),
-    '---\noat_status: active\n---\n',
-  );
-  await recordProjectDispatch({
-    projectPath,
-    input: { record: blockedRecord(), event: canonicalEvent() },
-  });
-  await recordProjectDispatch({
-    projectPath,
-    input: { record: blockedRecord(), event: rejectionEvent() },
-  });
-  return projectPath;
-}
-
-afterEach(async () => {
-  await Promise.all(
-    roots.map((root) => rm(root, { recursive: true, force: true })),
-  );
-  roots.length = 0;
-});
 
 describe('managed Claude launch production boundary', () => {
   it.each([
@@ -481,7 +442,6 @@ describe('managed Claude single-run violation reporting', () => {
 
   it('still returns validated-only for a valid managed input', async () => {
     const result = await recordProjectDispatch({
-      projectPath: null,
       input: managedClaudeInput('reviewer'),
     });
     expect(result.status).toBe('validated-only');
@@ -650,7 +610,7 @@ describe('managed Claude single-run violation reporting', () => {
         observedAt: '2026-09-27T00:00:00.000Z',
       },
     };
-    const result = await recordProjectDispatch({ projectPath: null, input });
+    const result = await recordProjectDispatch({ input });
     expect(result.status).toBe('validated-only');
     expect(result.runtimeIdentity.match).toBe('matching');
   });
@@ -710,86 +670,25 @@ describe('managed Claude single-run violation reporting', () => {
 });
 
 describe('recordProjectDispatch', () => {
-  it('creates and updates one request journal atomically', async () => {
-    const projectPath = await mkdtemp(join(tmpdir(), 'oat-dispatch-project-'));
-    roots.push(projectPath);
-    await writeFile(
-      join(projectPath, 'state.md'),
-      '---\noat_status: active\n---\n',
-    );
-    const record = genericRecord();
-
-    const created = await recordProjectDispatch({
-      projectPath,
-      input: { record, event: canonicalEvent() },
+  it('validates one record and event and writes nothing', async () => {
+    const result = await recordProjectDispatch({
+      input: { record: genericRecord(), event: canonicalEvent() },
     });
-    expect(created).toMatchObject({ status: 'persisted', created: true });
-    expect(created.record.oat.canonicalRole).toMatchObject({
+    expect(Object.keys(result).sort()).toEqual([
+      'record',
+      'runtimeIdentity',
+      'status',
+    ]);
+    expect(result.status).toBe('validated-only');
+    expect(result.record.oat.canonicalRole).toMatchObject({
       status: 'resolved',
     });
-
-    const updated = await recordProjectDispatch({
-      projectPath,
-      input: {
-        record,
-        event: {
-          kind: 'runtime-observation',
-          requestId: record.request_id,
-          source: 'runtime-observer',
-          observation: { status: 'not-reported' },
-        },
-      },
-    });
-    expect(updated).toMatchObject({ status: 'persisted', created: false });
-    expect(updated.record.oat.canonicalRole).toEqual(
-      created.record.oat.canonicalRole,
-    );
-    // Append-only: the update publishes a new revision instead of replacing
-    // the first one, which stays byte-identical.
-    expect((await readdir(join(projectPath, 'dispatch'))).sort()).toEqual([
-      'dispatch-native-1.json',
-      'dispatch-native-1@0002.json',
-    ]);
-    expect(created.path).toBe('dispatch/dispatch-native-1.json');
-    expect(updated.path).toBe('dispatch/dispatch-native-1@0002.json');
-    expect(
-      JSON.parse(
-        await readFile(
-          join(projectPath, 'dispatch', 'dispatch-native-1.json'),
-          'utf8',
-        ),
-      ).oat.runtimeObservation,
-    ).toEqual({ status: 'not-reported' });
   });
 
-  it('preserves a prior record when generic fields are redefined', async () => {
-    const projectPath = await mkdtemp(join(tmpdir(), 'oat-dispatch-project-'));
-    roots.push(projectPath);
-    await recordProjectDispatch({
-      projectPath,
-      input: { record: genericRecord(), event: canonicalEvent() },
-    });
-    const path = join(projectPath, 'dispatch', 'dispatch-native-1.json');
-    const before = await readFile(path, 'utf8');
-
+  it('refuses a fallback link, whose trigger record it has no journal to read', async () => {
     await expect(
-      recordProjectDispatch({
-        projectPath,
-        input: {
-          record: genericRecord({ model_selector: 'different-model' }),
-          event: canonicalEvent(),
-        },
-      }),
-    ).rejects.toThrow(/generic fields/i);
-    await expect(readFile(path, 'utf8')).resolves.toBe(before);
-  });
-
-  it('validates without persistence outside a project', async () => {
-    const result = await recordProjectDispatch({
-      projectPath: null,
-      input: { record: genericRecord(), event: canonicalEvent() },
-    });
-    expect(result).toMatchObject({ status: 'validated-only', path: null });
+      recordProjectDispatch({ input: fallbackInput('dispatch-fallback-1') }),
+    ).rejects.toThrow(/Fallback requires the rejected trigger record/);
   });
 
   it('rejects request traversal and sensitive stdin-shaped input', () => {
@@ -830,238 +729,32 @@ describe('recordProjectDispatch', () => {
     'sessionId',
     '\u0430piKey',
     '\uff30\uff21\uff33\uff33\uff37\uff2f\uff32\uff24',
-  ])(
-    'refuses to persist %s and leaves no journal or temporary file',
-    async (key) => {
-      const projectPath = await mkdtemp(
-        join(tmpdir(), 'oat-dispatch-project-'),
-      );
-      roots.push(projectPath);
-      await writeFile(
-        join(projectPath, 'state.md'),
-        '---\noat_status: active\n---\n',
-      );
-
-      expect(() =>
-        parseDispatchRecordInput({
+  ])('refuses %s as sensitive dispatch content', async (key) => {
+    expect(() =>
+      parseDispatchRecordInput({
+        record: genericRecord({ payload: { nested: { [key]: 'value' } } }),
+        event: canonicalEvent(),
+      }),
+    ).toThrow(/sensitive dispatch content/i);
+    await expect(
+      recordProjectDispatch({
+        input: {
           record: genericRecord({ payload: { nested: { [key]: 'value' } } }),
           event: canonicalEvent(),
-        }),
-      ).toThrow(/sensitive dispatch content/i);
-      await expect(
-        recordProjectDispatch({
-          projectPath,
-          input: {
-            record: genericRecord({ payload: { nested: { [key]: 'value' } } }),
-            event: canonicalEvent(),
-          },
-        }),
-      ).rejects.toThrow(/sensitive dispatch content/i);
-      await expect(
-        recordProjectDispatch({
-          projectPath,
-          input: {
-            record: genericRecord(),
-            event: { ...canonicalEvent(), [key]: 'value' },
-          },
-        }),
-      ).rejects.toThrow(/sensitive dispatch content/i);
-
-      await expect(
-        readdir(join(projectPath, 'dispatch')),
-      ).rejects.toMatchObject({ code: 'ENOENT' });
-      expect(await readdir(projectPath)).toEqual(['state.md']);
-    },
-  );
-
-  it('persists exactly one fallback when a second claim interleaves deterministically', async () => {
-    const projectPath = await seedRejectedTrigger();
-
-    let winner: Awaited<ReturnType<typeof recordProjectDispatch>> | null = null;
+        },
+      }),
+    ).rejects.toThrow(/sensitive dispatch content/i);
     await expect(
       recordProjectDispatch({
-        projectPath,
-        input: fallbackInput('fallback-a'),
-        raceBarriers: {
-          // `fallback-a` has already read the trigger revision; `fallback-b`
-          // now claims and publishes before `fallback-a` takes the lock.
-          afterRead: async () => {
-            winner = await recordProjectDispatch({
-              projectPath,
-              input: fallbackInput('fallback-b'),
-            });
-          },
-        },
-      }),
-    ).rejects.toThrow(
-      /concurrent update was preserved|already has a fallback/i,
-    );
-
-    expect(winner).toMatchObject({ status: 'persisted', created: true });
-    expect(await journalRequests(projectPath)).toEqual([
-      'dispatch-native-1',
-      'fallback-b',
-    ]);
-    const trigger = await latestRecord(projectPath, 'dispatch-native-1');
-    expect(trigger.oat.fallbackClaim).toMatchObject({
-      fallbackRequestId: 'fallback-b',
-    });
-    expect(await readdir(projectPath)).not.toContain('.dispatch-lock');
-  });
-
-  it('persists exactly one fallback under real concurrency', async () => {
-    const projectPath = await seedRejectedTrigger();
-
-    const results = await Promise.allSettled([
-      recordProjectDispatch({
-        projectPath,
-        input: fallbackInput('fallback-a'),
-      }),
-      recordProjectDispatch({
-        projectPath,
-        input: fallbackInput('fallback-b'),
-      }),
-    ]);
-
-    expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
-    expect(results.filter((r) => r.status === 'rejected')).toHaveLength(1);
-    const requests = await journalRequests(projectPath);
-    expect(requests).toHaveLength(2);
-    expect(requests).toContain('dispatch-native-1');
-  });
-
-  it('fails a stale concurrent update instead of losing the winning event', async () => {
-    const projectPath = await seedRejectedTrigger();
-
-    await expect(
-      recordProjectDispatch({
-        projectPath,
         input: {
-          record: blockedRecord(),
-          event: {
-            kind: 'runtime-observation',
-            requestId: 'dispatch-native-1',
-            source: 'runtime-observer',
-            observation: { status: 'not-reported' },
-          },
-        },
-        raceBarriers: {
-          afterRead: async () => {
-            await recordProjectDispatch({
-              projectPath,
-              input: {
-                record: blockedRecord(),
-                event: {
-                  kind: 'runtime-observation',
-                  requestId: 'dispatch-native-1',
-                  source: 'runtime-observer',
-                  observation: {
-                    status: 'reported',
-                    provider: 'codex',
-                    source: 'codex-session',
-                    observedAt: '2026-09-02T00:00:02.000Z',
-                    match: 'matching',
-                  },
-                },
-              },
-            });
-          },
+          record: genericRecord(),
+          event: { ...canonicalEvent(), [key]: 'value' },
         },
       }),
-    ).rejects.toThrow(/concurrent update was preserved/i);
-
-    const final = await latestRecord(projectPath, 'dispatch-native-1');
-    expect(final.oat.preStartRejection).toMatchObject({
-      code: 'native-role-unavailable',
-    });
-    expect(final.oat.runtimeObservation).toMatchObject({
-      status: 'reported',
-      // Derived, not caller-asserted: this observation reports no comparable
-      // axis, so it can only be `not-comparable`.
-      match: 'not-comparable',
-    });
-    expect(await readdir(projectPath)).not.toContain('.dispatch-lock');
+    ).rejects.toThrow(/sensitive dispatch content/i);
   });
 
-  it('preserves both events when two different events race for one request', async () => {
-    const projectPath = await seedRejectedTrigger();
-
-    const results = await Promise.allSettled([
-      recordProjectDispatch({
-        projectPath,
-        input: {
-          record: blockedRecord(),
-          event: {
-            kind: 'runtime-observation',
-            requestId: 'dispatch-native-1',
-            source: 'runtime-observer',
-            observation: {
-              status: 'reported',
-              provider: 'codex',
-              source: 'codex-session',
-              observedAt: '2026-09-02T00:00:02.000Z',
-              match: 'matching',
-            },
-          },
-        },
-      }),
-      recordProjectDispatch({
-        projectPath,
-        input: { record: blockedRecord(), event: canonicalEvent() },
-      }),
-    ]);
-
-    const fulfilled = results.filter((r) => r.status === 'fulfilled');
-    expect(fulfilled.length).toBeGreaterThanOrEqual(1);
-    const final = await latestRecord(projectPath, 'dispatch-native-1');
-    // Whatever the interleaving, no accepted write may erase evidence that was
-    // already published.
-    expect(final.oat.preStartRejection).toMatchObject({
-      code: 'native-role-unavailable',
-    });
-    expect(final.oat.canonicalRole).toMatchObject({ status: 'resolved' });
-  });
-
-  it('never leaks an absolute path when a stale write loses the revision race', async () => {
-    const projectPath = await seedRejectedTrigger();
-
-    const error = await recordProjectDispatch({
-      projectPath,
-      input: {
-        record: blockedRecord(),
-        event: {
-          kind: 'runtime-observation',
-          requestId: 'dispatch-native-1',
-          source: 'runtime-observer',
-          observation: { status: 'not-reported' },
-        },
-      },
-      raceBarriers: {
-        afterRead: async () => {
-          await recordProjectDispatch({
-            projectPath,
-            input: { record: blockedRecord(), event: canonicalEvent() },
-          });
-        },
-      },
-    }).catch((raised: Error) => raised);
-
-    expect(error).toBeInstanceOf(Error);
-    expect((error as Error).message).toMatch(
-      /concurrent update was preserved/i,
-    );
-    expect((error as Error).message).not.toContain(projectPath);
-    expect((error as Error).message).not.toContain(tmpdir());
-  });
-
-  it('refuses to persist free-form prompt text smuggled through evidence arrays', async () => {
-    const projectPath = await mkdtemp(join(tmpdir(), 'oat-dispatch-project-'));
-    roots.push(projectPath);
-    await writeFile(
-      join(projectPath, 'state.md'),
-      '---\noat_status: active\n---\n',
-    );
-
+  it('refuses free-form prompt text smuggled through evidence arrays', async () => {
     for (const field of [
       'continuation_events',
       'configured_invocation_evidence',
@@ -1069,7 +762,6 @@ describe('recordProjectDispatch', () => {
     ] as const) {
       await expect(
         recordProjectDispatch({
-          projectPath,
           input: {
             record: genericRecord({
               [field]:
@@ -1086,232 +778,34 @@ describe('recordProjectDispatch', () => {
         }),
       ).rejects.toThrow(/closed control projection/i);
     }
-
-    await expect(readdir(join(projectPath, 'dispatch'))).rejects.toMatchObject({
-      code: 'ENOENT',
-    });
-    expect(await readdir(projectPath)).toEqual(['state.md']);
-  });
-
-  it('reports a redacted relative path when another writer holds the lock', async () => {
-    const projectPath = await mkdtemp(join(tmpdir(), 'oat-dispatch-project-'));
-    roots.push(projectPath);
-    await writeFile(
-      join(projectPath, 'state.md'),
-      '---\noat_status: active\n---\n',
-    );
-    const lock = join(projectPath, '.dispatch-lock');
-    await mkdir(lock);
-    await writeFile(
-      join(lock, 'holder.json'),
-      `${JSON.stringify({
-        hostId: createHash('sha256')
-          .update(hostname(), 'utf8')
-          .digest('hex')
-          .slice(0, 16),
-        pid: process.pid,
-        processStartedAt: Date.now(),
-        acquiredAt: new Date().toISOString(),
-      })}\n`,
-      'utf8',
-    );
-
-    const error = await recordProjectDispatch({
-      projectPath,
-      input: { record: genericRecord(), event: canonicalEvent() },
-    }).catch((raised: Error) => raised);
-
-    expect(error).toBeInstanceOf(Error);
-    expect((error as Error).message).toContain('.dispatch-lock');
-    expect((error as Error).message).not.toContain(projectPath);
-    expect((error as Error).message).not.toContain(tmpdir());
-    await expect(readdir(join(projectPath, 'dispatch'))).rejects.toMatchObject({
-      code: 'ENOENT',
-    });
-  }, 20_000);
-
-  it('redacts a damaged journal directory instead of leaking its absolute path', async () => {
-    const projectPath = await mkdtemp(join(tmpdir(), 'oat-dispatch-project-'));
-    roots.push(projectPath);
-    await writeFile(
-      join(projectPath, 'state.md'),
-      '---\noat_status: active\n---\n',
-    );
-    // `dispatch` occupied by a regular file: readdir raises ENOTDIR.
-    await writeFile(join(projectPath, 'dispatch'), 'not a directory', 'utf8');
-
-    const error = await recordProjectDispatch({
-      projectPath,
-      input: { record: genericRecord(), event: canonicalEvent() },
-    }).catch((raised: Error) => raised);
-
-    expect(error).toMatchObject({ code: 'ENOTDIR' });
-    expect((error as Error).message).toContain('dispatch/');
-    expect((error as Error).message).not.toContain(projectPath);
-    expect((error as Error).message).not.toContain(tmpdir());
-  });
-
-  it('redacts an unreadable revision file instead of leaking its absolute path', async () => {
-    const projectPath = await mkdtemp(join(tmpdir(), 'oat-dispatch-project-'));
-    roots.push(projectPath);
-    await writeFile(
-      join(projectPath, 'state.md'),
-      '---\noat_status: active\n---\n',
-    );
-    await recordProjectDispatch({
-      projectPath,
-      input: { record: genericRecord(), event: canonicalEvent() },
-    });
-    const published = join(projectPath, 'dispatch', 'dispatch-native-1.json');
-    await chmod(published, 0o000);
-    try {
-      const error = await recordProjectDispatch({
-        projectPath,
-        input: { record: genericRecord(), event: canonicalEvent() },
-      }).catch((raised: Error) => raised);
-
-      expect(error).toMatchObject({ code: 'EACCES' });
-      expect((error as Error).message).toContain(
-        'dispatch/dispatch-native-1.json',
-      );
-      expect((error as Error).message).not.toContain(projectPath);
-      expect((error as Error).message).not.toContain(tmpdir());
-    } finally {
-      await chmod(published, 0o644);
-    }
   });
 
   it('scrubs absolute paths at the command boundary regardless of producer', () => {
     expect(
       redactDispatchMessage(
-        "ENOTDIR: not a directory, scandir '/home/u/repo/proj/dispatch'",
-        { project: '/home/u/repo/proj', repo: '/home/u/repo', home: '/home/u' },
+        "ENOENT: no such file or directory, open '/home/u/repo/events/e.json'",
+        { repo: '/home/u/repo', home: '/home/u' },
       ),
-    ).toBe("ENOTDIR: not a directory, scandir '<project>/dispatch'");
+    ).toBe("ENOENT: no such file or directory, open '<repo>/events/e.json'");
     // A producer this boundary has never seen still cannot leak.
     expect(
       redactDispatchMessage('EACCES: permission denied, open /var/x/y/z.json'),
     ).toBe('EACCES: permission denied, open <redacted-path>');
-    expect(redactDispatchMessage('Another writer holds .dispatch-lock.')).toBe(
-      'Another writer holds .dispatch-lock.',
+    expect(redactDispatchMessage('Event file events/request-1.json.')).toBe(
+      'Event file events/request-1.json.',
     );
-    expect(
-      redactDispatchMessage('Journal revision dispatch/request-1.json exists.'),
-    ).toBe('Journal revision dispatch/request-1.json exists.');
-  });
-
-  it('redacts a damaged-journal path through the JSON command surface', async () => {
-    const projectPath = await mkdtemp(join(tmpdir(), 'oat-dispatch-project-'));
-    roots.push(projectPath);
-    await writeFile(
-      join(projectPath, 'state.md'),
-      '---\noat_status: active\n---\n',
-    );
-    await writeFile(join(projectPath, 'dispatch'), 'not a directory', 'utf8');
-
-    const json = vi.fn();
-    const previousExitCode = process.exitCode;
-    process.exitCode = undefined;
-    try {
-      const command = createProjectDispatchCommand({
-        buildCommandContext: () => ({
-          scope: 'all',
-          dryRun: false,
-          verbose: false,
-          json: true,
-          cwd: projectPath,
-          home: projectPath,
-          interactive: false,
-          logger: {
-            debug: vi.fn(),
-            info: vi.fn(),
-            warn: vi.fn(),
-            error: vi.fn(),
-            success: vi.fn(),
-            json,
-          },
-        }),
-        resolveProjectRoot: async () => projectPath,
-        readFile: async () => {
-          throw new Error('event file should not be read');
-        },
-        readStdin: async () =>
-          JSON.stringify({ record: genericRecord(), event: canonicalEvent() }),
-      });
-      await command.parseAsync(
-        ['record', '--project', '.', '--event-file', '-'],
-        { from: 'user' },
-      );
-
-      const payload = json.mock.calls.at(-1)?.[0] as { message?: string };
-      expect(payload.message).toBeDefined();
-      expect(payload.message).not.toContain(projectPath);
-      expect(payload.message).not.toContain(tmpdir());
-    } finally {
-      process.exitCode = previousExitCode;
-    }
-  });
-
-  it('does not adopt a pre-existing invalid journal', async () => {
-    const projectPath = await mkdtemp(join(tmpdir(), 'oat-dispatch-project-'));
-    roots.push(projectPath);
-    await mkdir(join(projectPath, 'dispatch'));
-    await writeFile(
-      join(projectPath, 'dispatch', 'dispatch-native-1.json'),
-      '{"unexpected":true}\n',
-    );
-    await expect(
-      recordProjectDispatch({
-        projectPath,
-        input: { record: genericRecord(), event: canonicalEvent() },
-      }),
-    ).rejects.toThrow();
-    await expect(
-      readFile(join(projectPath, 'dispatch', 'dispatch-native-1.json'), 'utf8'),
-    ).resolves.toBe('{"unexpected":true}\n');
   });
 
   it('reads one complete record and event from stdin', async () => {
-    const json = vi.fn();
-    const previousExitCode = process.exitCode;
-    process.exitCode = undefined;
-    try {
-      const command = createProjectDispatchCommand({
-        buildCommandContext: () => ({
-          scope: 'all',
-          dryRun: false,
-          verbose: false,
-          json: true,
-          cwd: process.cwd(),
-          home: process.cwd(),
-          interactive: false,
-          logger: {
-            debug: vi.fn(),
-            info: vi.fn(),
-            warn: vi.fn(),
-            error: vi.fn(),
-            success: vi.fn(),
-            json,
-          },
-        }),
-        resolveProjectRoot: async () => process.cwd(),
-        readFile: async () => {
-          throw new Error('event file should not be read');
-        },
-        readStdin: async () =>
-          JSON.stringify({ record: genericRecord(), event: canonicalEvent() }),
-      });
-      await command.parseAsync(['record', '--event-file', '-'], {
-        from: 'user',
-      });
-
-      expect(json).toHaveBeenCalledWith(
-        expect.objectContaining({ status: 'validated-only', path: null }),
-      );
-      expect(process.exitCode).toBe(0);
-    } finally {
-      process.exitCode = previousExitCode;
-    }
+    const output = JSON.parse(
+      await validatedOutput({
+        record: genericRecord(),
+        event: canonicalEvent(),
+      }),
+    );
+    expect(output).toMatchObject({ status: 'validated-only' });
+    expect(output).not.toHaveProperty('path');
+    expect(output).not.toHaveProperty('created');
   });
 });
 
@@ -1366,16 +860,12 @@ describe('runtime observation integration', () => {
     overrides: Partial<GenericDispatchRecord> = {},
     provider = 'codex',
   ) {
-    const projectPath = await mkdtemp(join(tmpdir(), 'oat-dispatch-project-'));
-    roots.push(projectPath);
-    const result = await recordProjectDispatch({
-      projectPath,
-      input: {
-        record: genericRecord(overrides),
-        event: observationEvent(entries, provider),
-      },
-    });
-    return { projectPath, result };
+    const input = {
+      record: genericRecord(overrides),
+      event: observationEvent(entries, provider),
+    };
+    const result = await recordProjectDispatch({ input });
+    return { input, result };
   }
 
   it('records a matching observation without touching configured evidence', async () => {
@@ -1521,17 +1011,12 @@ describe('runtime observation integration', () => {
     ['claude', 'MAIN_SESSION_TRANSCRIPT', MAIN_SESSION_TRANSCRIPT],
     ['claude', 'SIDECHAIN_TRANSCRIPT', SIDECHAIN_TRANSCRIPT],
   ])(
-    'drives the real %s fixture %s through the durable-write boundary',
+    'drives the real %s fixture %s through the validation boundary',
     async (provider, _name, entries) => {
       // The captured shapes must survive the boundary they cross in
       // production. Testing the parsers alone let a projection that the
       // sensitive-content boundary refuses ship twice.
-      const projectPath = await mkdtemp(
-        join(tmpdir(), 'oat-dispatch-project-'),
-      );
-      roots.push(projectPath);
       const result = await recordProjectDispatch({
-        projectPath,
         input: {
           record: genericRecord({ provider }),
           event: {
@@ -1546,57 +1031,15 @@ describe('runtime observation integration', () => {
           },
         },
       });
-      expect(result.status).toBe('persisted');
+      expect(result.status).toBe('validated-only');
       expect(result.record.oat.runtimeObservation).toMatchObject({
         status: 'reported',
       });
-      await expect(
-        readFile(
-          join(projectPath, 'dispatch', 'dispatch-native-1.json'),
-          'utf8',
-        ),
-      ).resolves.toContain('runtimeObservation');
     },
   );
 
-  it('refuses a second differing observation and leaves the journal intact', async () => {
-    const { projectPath } = await record(codexEntries);
-    const path = join(projectPath, 'dispatch', 'dispatch-native-1.json');
-    const before = await readFile(path, 'utf8');
-    const revisionsBefore = (
-      await readdir(join(projectPath, 'dispatch'))
-    ).sort();
-
-    await expect(
-      recordProjectDispatch({
-        projectPath,
-        input: {
-          record: genericRecord(),
-          event: {
-            kind: 'runtime-observation',
-            requestId: 'dispatch-native-1',
-            source: 'runtime-observer',
-            metadata: {
-              provider: 'codex',
-              observedAt: '2026-09-02T13:00:00.000Z',
-              entries: codexEntries,
-            },
-          },
-        },
-      }),
-    ).rejects.toThrow(/immutable once reported/i);
-
-    await expect(readFile(path, 'utf8')).resolves.toBe(before);
-    expect((await readdir(join(projectPath, 'dispatch'))).sort()).toEqual(
-      revisionsBefore,
-    );
-  });
-
   it('degrades an over-bound envelope instead of losing the record', async () => {
-    const projectPath = await mkdtemp(join(tmpdir(), 'oat-dispatch-project-'));
-    roots.push(projectPath);
     const result = await recordProjectDispatch({
-      projectPath,
       input: {
         record: genericRecord(),
         event: {
@@ -1614,8 +1057,8 @@ describe('runtime observation integration', () => {
       },
     });
     // The observation layer is optional; a size violation on it must never
-    // destroy the mandatory record write.
-    expect(result.status).toBe('persisted');
+    // fail validation of the mandatory record.
+    expect(result.status).toBe('validated-only');
     expect(result.record.oat.runtimeObservation).toEqual({
       status: 'not-reported',
     });
@@ -1624,7 +1067,6 @@ describe('runtime observation integration', () => {
   it('refuses a reported observation for a provider with no capability', async () => {
     await expect(
       recordProjectDispatch({
-        projectPath: null,
         input: {
           record: genericRecord({
             provider: 'cursor',
@@ -1749,9 +1191,6 @@ describe('runtime observation integration', () => {
 
   it('never emits an unredacted path in a degradation reason', async () => {
     const json = vi.fn();
-    const projectPath = await mkdtemp(join(tmpdir(), 'oat-dispatch-project-'));
-    roots.push(projectPath);
-    await writeFile(join(projectPath, 'state.md'), '# state\n', 'utf8');
     const secret = '/Users/someone/secret/key.pem';
     const previousExitCode = process.exitCode;
     try {
@@ -1761,7 +1200,7 @@ describe('runtime observation integration', () => {
           dryRun: false,
           verbose: false,
           json: true,
-          cwd: projectPath,
+          cwd: process.cwd(),
           home: '/Users/someone',
           interactive: false,
           logger: {
@@ -1773,7 +1212,7 @@ describe('runtime observation integration', () => {
             json,
           },
         }),
-        resolveProjectRoot: async () => projectPath,
+        resolveProjectRoot: async () => process.cwd(),
         readFile: async () => '',
         readStdin: async () =>
           JSON.stringify({
@@ -1826,9 +1265,7 @@ describe('runtime observation integration', () => {
     }
   });
 
-  it('redacts absolute paths out of the journal bytes', async () => {
-    const projectPath = await mkdtemp(join(tmpdir(), 'oat-dispatch-project-'));
-    roots.push(projectPath);
+  it('redacts absolute paths out of the validate-only output', async () => {
     const secrets = {
       objective: '/Users/tstang/.ssh/id_rsa',
       payload: '/Users/tstang/private/payload',
@@ -1839,40 +1276,34 @@ describe('runtime observation integration', () => {
       expected: 'file:///Users/tstang/expected',
       verification: '/secret',
     };
-    const result = await recordProjectDispatch({
-      projectPath,
-      input: {
-        record: genericRecord({
-          objective: `read ${secrets.objective} then continue`,
-          payload: { note: secrets.payload },
-          configured_invocation_evidence: [secrets.evidence],
-          diagnostics: [secrets.diagnostic],
-          continuation_events: [{ at: secrets.continuation }],
-          escalate_when: [secrets.escalate],
-          expected_output: secrets.expected,
-          verification_evidence: `run ${secrets.verification}`,
-        }),
-        event: canonicalEvent(),
-      },
-    });
+    const input = {
+      record: genericRecord({
+        objective: `read ${secrets.objective} then continue`,
+        payload: { note: secrets.payload },
+        configured_invocation_evidence: [secrets.evidence],
+        diagnostics: [secrets.diagnostic],
+        continuation_events: [{ at: secrets.continuation }],
+        escalate_when: [secrets.escalate],
+        expected_output: secrets.expected,
+        verification_evidence: `run ${secrets.verification}`,
+      }),
+      event: canonicalEvent(),
+    };
 
-    // Assert on the bytes actually written, not on the in-memory result.
-    const journal = await readFile(
-      join(projectPath, 'dispatch', 'dispatch-native-1.json'),
-      'utf8',
-    );
+    // Assert on the exact JSON the command prints, not on an in-memory value.
+    const output = await validatedOutput(input);
     for (const [name, secret] of Object.entries(secrets)) {
-      expect(journal, name).not.toContain(secret);
+      expect(output, name).not.toContain(JSON.stringify(secret).slice(1, -1));
     }
-    expect(journal).toContain('<redacted-path>');
+    expect(output).toContain('<redacted-path>');
     // Redaction, not deletion: the surrounding prose survives.
-    expect(result.record.objective).toBe('read <redacted-path> then continue');
-    expect(journal).not.toContain('/Users/');
+    expect(JSON.parse(output).record.objective).toBe(
+      'read <redacted-path> then continue',
+    );
+    expect(output).not.toContain('/Users/');
   });
 
-  it('redacts assignment-form paths out of the journal bytes', async () => {
-    const projectPath = await mkdtemp(join(tmpdir(), 'oat-dispatch-project-'));
-    roots.push(projectPath);
+  it('redacts assignment-form paths out of the validate-only output', async () => {
     const secrets = {
       objective: 'cwd=/Users/alice/private',
       diagnostic: 'source=file:///etc/passwd',
@@ -1880,24 +1311,17 @@ describe('runtime observation integration', () => {
       payload: 'drive=C:\\Users\\alice\\x',
       continuation: 'paths=/etc/a,/etc/b',
     };
-    await recordProjectDispatch({
-      projectPath,
-      input: {
-        record: genericRecord({
-          objective: `run with ${secrets.objective} now`,
-          diagnostics: [secrets.diagnostic],
-          configured_invocation_evidence: [secrets.evidence],
-          payload: { note: secrets.payload },
-          continuation_events: [{ at: secrets.continuation }],
-        }),
-        event: canonicalEvent(),
-      },
+    const output = await validatedOutput({
+      record: genericRecord({
+        objective: `run with ${secrets.objective} now`,
+        diagnostics: [secrets.diagnostic],
+        configured_invocation_evidence: [secrets.evidence],
+        payload: { note: secrets.payload },
+        continuation_events: [{ at: secrets.continuation }],
+      }),
+      event: canonicalEvent(),
     });
 
-    const journal = await readFile(
-      join(projectPath, 'dispatch', 'dispatch-native-1.json'),
-      'utf8',
-    );
     for (const probe of [
       '/Users/alice/private',
       'file:///etc/passwd',
@@ -1906,17 +1330,15 @@ describe('runtime observation integration', () => {
       '/etc/a',
       '/etc/b',
     ]) {
-      expect(journal, probe).not.toContain(probe);
+      expect(output, probe).not.toContain(JSON.stringify(probe).slice(1, -1));
     }
-    expect(journal).toContain('<redacted-path>');
+    expect(output).toContain('<redacted-path>');
   });
 
-  it('refuses an oversized-after-redaction record and publishes nothing', async () => {
+  it('refuses an oversized-after-redaction record', async () => {
     // `<redacted-path>` is far longer than `/a`, so sanitizing inflates the
-    // record. The size checks ran before redaction, so an append-only journal
-    // that never prunes could gain a revision too large to read back.
-    const projectPath = await mkdtemp(join(tmpdir(), 'oat-dispatch-project-'));
-    roots.push(projectPath);
+    // record. The size checks ran before redaction, so the redacted result is
+    // measured again.
     const command = '/a '.repeat(3400).trim();
     const input = {
       record: genericRecord(),
@@ -1938,20 +1360,14 @@ describe('runtime observation integration', () => {
       64 * 1024,
     );
 
-    await expect(recordProjectDispatch({ projectPath, input })).rejects.toThrow(
+    await expect(recordProjectDispatch({ input })).rejects.toThrow(
       /byte|limit/i,
     );
-
-    await expect(
-      readFile(join(projectPath, 'dispatch', 'dispatch-native-1.json'), 'utf8'),
-    ).rejects.toMatchObject({ code: 'ENOENT' });
   });
 
-  it('refuses a record that only exceeds the limit once published', async () => {
-    // The writer emits pretty-printed JSON plus a newline. Validating compact
-    // bytes let a record validated at 65,536 land on disk at 65,874.
-    const projectPath = await mkdtemp(join(tmpdir(), 'oat-dispatch-project-'));
-    roots.push(projectPath);
+  it('refuses a record that only exceeds the limit in its serialized form', async () => {
+    // The limit is measured on pretty-printed JSON plus a newline. Validating
+    // compact bytes let a record validated at 65,536 measure 65,874.
     // Sized to stay inside every per-field bound (430 values, ~15 KiB each)
     // so only the compact-vs-published difference can trip the ceiling.
     const entry = (prefix: string, i: number) =>
@@ -1972,33 +1388,20 @@ describe('runtime observation integration', () => {
 
     await expect(
       recordProjectDispatch({
-        projectPath,
         input: { record: oversized, event: canonicalEvent() },
       }),
     ).rejects.toThrow(/byte|limit/i);
-
-    await expect(
-      readFile(join(projectPath, 'dispatch', 'dispatch-native-1.json'), 'utf8'),
-    ).rejects.toMatchObject({ code: 'ENOENT' });
   });
 
-  it('refuses to publish a revision with an identity-field path', async () => {
-    // The publication postcondition guarantees identity and control fields
-    // only, and must hold even if the parse-layer rejection is bypassed.
-    const projectPath = await mkdtemp(join(tmpdir(), 'oat-dispatch-project-'));
-    roots.push(projectPath);
+  it('refuses an identity-field path through the recorder', async () => {
     await expect(
       recordProjectDispatch({
-        projectPath,
         input: {
           record: genericRecord({ caller: '/Users/alice/secret' }),
           event: canonicalEvent(),
         },
       }),
     ).rejects.toThrow(/absolute filesystem path/i);
-    await expect(
-      readFile(join(projectPath, 'dispatch', 'dispatch-native-1.json'), 'utf8'),
-    ).rejects.toMatchObject({ code: 'ENOENT' });
   });
 
   it('rejects a colon-prefixed path in an identity field', () => {
@@ -2021,41 +1424,25 @@ describe('runtime observation integration', () => {
     );
   });
 
-  it('refuses to publish a revision that still carries a path', async () => {
-    // The postcondition runs on the exact value being written, so it holds even
-    // if an earlier stage is bypassed.
-    const projectPath = await mkdtemp(join(tmpdir(), 'oat-dispatch-project-'));
-    roots.push(projectPath);
-    await expect(
-      recordProjectDispatch({
-        projectPath,
-        input: {
-          record: genericRecord(),
-          event: {
-            ...canonicalEvent(),
-            evidence: {
-              ...canonicalEvent().evidence,
-              dependency: '/Users/tstang/dependency',
-            },
-          },
+  it('redacts a path in nested event evidence out of the validate-only output', async () => {
+    const output = await validatedOutput({
+      record: genericRecord(),
+      event: {
+        ...canonicalEvent(),
+        evidence: {
+          ...canonicalEvent().evidence,
+          dependency: '/Users/tstang/dependency',
         },
-      }),
-    ).resolves.toMatchObject({ status: 'persisted' });
-    const journal = await readFile(
-      join(projectPath, 'dispatch', 'dispatch-native-1.json'),
-      'utf8',
-    );
-    expect(journal).not.toContain('/Users/tstang/dependency');
-    expect(journal).toContain('<redacted-path>');
+      },
+    });
+    expect(output).not.toContain('/Users/tstang/dependency');
+    expect(output).toContain('<redacted-path>');
   });
 
   it('keeps the parser source through the command layer', async () => {
     // Provenance is not idempotent under re-parsing: a resolved observation
     // looks caller-supplied. This pins that the command layer parses once.
     const json = vi.fn();
-    const projectPath = await mkdtemp(join(tmpdir(), 'oat-dispatch-project-'));
-    roots.push(projectPath);
-    await writeFile(join(projectPath, 'state.md'), '# state\n', 'utf8');
     const previousExitCode = process.exitCode;
     try {
       const command = createProjectDispatchCommand({
@@ -2064,8 +1451,8 @@ describe('runtime observation integration', () => {
           dryRun: false,
           verbose: false,
           json: true,
-          cwd: projectPath,
-          home: projectPath,
+          cwd: process.cwd(),
+          home: process.cwd(),
           interactive: false,
           logger: {
             debug: vi.fn(),
@@ -2076,7 +1463,7 @@ describe('runtime observation integration', () => {
             json,
           },
         }),
-        resolveProjectRoot: async () => projectPath,
+        resolveProjectRoot: async () => process.cwd(),
         readFile: async () => '',
         readStdin: async () =>
           JSON.stringify({
@@ -2115,7 +1502,6 @@ describe('runtime observation integration', () => {
 
   it('never lets a caller borrow a parser source string', async () => {
     const result = await recordProjectDispatch({
-      projectPath: null,
       input: {
         record: genericRecord(),
         event: {
@@ -2145,8 +1531,8 @@ describe('runtime observation integration', () => {
     // Real rollouts carry `session_id` (which classifies as sensitive),
     // `base_instructions`, and conversation entries. The allowlist projection
     // is the guarantee: they are dropped before anything is asserted or
-    // persisted, so a caller never has to hand-roll a stripper.
-    const { projectPath, result } = await record([
+    // emitted, so a caller never has to hand-roll a stripper.
+    const { input, result } = await record([
       {
         ordinal: 0,
         type: 'session_meta',
@@ -2194,10 +1580,7 @@ describe('runtime observation integration', () => {
       role: 'oat-phase-implementer',
       model: 'gpt-5.6-sol',
     });
-    const journal = await readFile(
-      join(projectPath, 'dispatch', 'dispatch-native-1.json'),
-      'utf8',
-    );
+    const output = await validatedOutput(input);
     for (const secret of [
       'SECRET-SYSTEM-PROMPT',
       'SECRET-USER-MESSAGE',
@@ -2207,49 +1590,45 @@ describe('runtime observation integration', () => {
       'session_id',
       'entries',
     ]) {
-      expect(journal, secret).not.toContain(secret);
+      expect(output, secret).not.toContain(secret);
     }
   });
 
   it('drops a Claude result answer instead of merely ignoring it', async () => {
-    const projectPath = await mkdtemp(join(tmpdir(), 'oat-dispatch-project-'));
-    roots.push(projectPath);
-    const result = await recordProjectDispatch({
-      projectPath,
-      input: {
-        record: genericRecord({
+    const input = {
+      record: genericRecord({
+        provider: 'claude',
+        model_selector: 'claude-opus-5',
+        role_selector: 'oat-phase-implementer',
+        service_tier_selector: 'standard',
+      }),
+      event: {
+        kind: 'runtime-observation',
+        requestId: 'dispatch-native-1',
+        source: 'runtime-observer',
+        metadata: {
           provider: 'claude',
-          model_selector: 'claude-opus-5',
-          role_selector: 'oat-phase-implementer',
-          service_tier_selector: 'standard',
-        }),
-        event: {
-          kind: 'runtime-observation',
-          requestId: 'dispatch-native-1',
-          source: 'runtime-observer',
-          metadata: {
-            provider: 'claude',
-            observedAt: '2026-09-02T12:00:00.000Z',
-            entries: [
-              {
-                type: 'system',
-                subtype: 'init',
-                session_id: 'sess-claude-1',
-                model: 'claude-opus-5',
-                service_tier: 'standard',
-                agent: 'oat-phase-implementer',
-              },
-              {
-                type: 'result',
-                subtype: 'success',
-                result: 'SECRET-ASSISTANT-ANSWER in full prose form.',
-                modelUsage: { 'claude-opus-5': { serviceTier: 'standard' } },
-              },
-            ],
-          },
+          observedAt: '2026-09-02T12:00:00.000Z',
+          entries: [
+            {
+              type: 'system',
+              subtype: 'init',
+              session_id: 'sess-claude-1',
+              model: 'claude-opus-5',
+              service_tier: 'standard',
+              agent: 'oat-phase-implementer',
+            },
+            {
+              type: 'result',
+              subtype: 'success',
+              result: 'SECRET-ASSISTANT-ANSWER in full prose form.',
+              modelUsage: { 'claude-opus-5': { serviceTier: 'standard' } },
+            },
+          ],
         },
       },
-    });
+    };
+    const result = await recordProjectDispatch({ input });
 
     expect(result.record.oat.runtimeObservation).toMatchObject({
       status: 'reported',
@@ -2259,11 +1638,9 @@ describe('runtime observation integration', () => {
     expect(JSON.stringify(result.record)).not.toContain(
       'SECRET-ASSISTANT-ANSWER',
     );
-    const journal = await readFile(
-      join(projectPath, 'dispatch', 'dispatch-native-1.json'),
-      'utf8',
+    expect(await validatedOutput(input)).not.toContain(
+      'SECRET-ASSISTANT-ANSWER',
     );
-    expect(journal).not.toContain('SECRET-ASSISTANT-ANSWER');
   });
 
   it('recomputes a caller-asserted match instead of trusting it', () => {

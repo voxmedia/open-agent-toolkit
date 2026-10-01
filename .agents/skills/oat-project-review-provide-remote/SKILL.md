@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, Task, AskUserQuestion
 metadata:
-  version: 1.1.8
+  version: 1.1.9
 ---
 
 # Remote Review Provide (Project-Scoped GitHub PR)
@@ -324,7 +324,7 @@ stamp it already copies into the posted review's dispatch audit metadata; it
 never writes `implementation.md` (the remote rail runs in an ephemeral worktree
 and forbids that mutation) and adds no request-id, launch-status, or outcome
 field anywhere. Construct and redact the complete generic record plus OAT role
-event before the native call. Writing a per-dispatch file with `oat project dispatch record` is optional and off by default: no lifecycle skill or command consumes those files, so do not write them unless the host has explicitly opted in. A rejected launch must attest
+event before the native call. A rejected launch must attest
 `provesNoChildStarted: true`; only it permits one exact-target approximation
 with a fresh request ID. Preserve exact model, effort, route, authority, and
 provider controls. Timeout, `BLOCKED`, refusal after acceptance, runtime

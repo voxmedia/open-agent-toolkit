@@ -1,5 +1,4 @@
 import { readFile } from 'node:fs/promises';
-import { isAbsolute, join } from 'node:path';
 
 import {
   buildCommandContext,
@@ -7,8 +6,7 @@ import {
   type GlobalOptions,
 } from '@app/command-context';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
-import { fileExists } from '@fs/io';
-import { resolveProjectRoot, validateRealPathWithinScope } from '@fs/paths';
+import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
 
 import { createCanonicalRoleCommand } from './canonical-role';
@@ -19,7 +17,6 @@ import {
 } from './record';
 
 interface DispatchRecordCommandOptions {
-  project?: string;
   eventFile: string;
 }
 
@@ -42,19 +39,6 @@ const DEFAULT_DEPENDENCIES: ProjectDispatchCommandDependencies = {
     return Buffer.concat(chunks).toString('utf8');
   },
 };
-
-async function resolveProjectPath(
-  repoRoot: string,
-  project: string | undefined,
-): Promise<string | null> {
-  if (!project) return null;
-  const candidate = isAbsolute(project) ? project : join(repoRoot, project);
-  const validated = await validateRealPathWithinScope(candidate, repoRoot);
-  if (!(await fileExists(join(validated.realPath, 'state.md')))) {
-    throw new Error('Project path must contain a readable state.md.');
-  }
-  return validated.realPath;
-}
 
 function axes(values: readonly (readonly [string, string | null])[]): string {
   return values
@@ -104,20 +88,15 @@ async function runRecordCommand(
   dependencies: ProjectDispatchCommandDependencies,
 ): Promise<void> {
   let repoRoot: string | null = null;
-  let projectPath: string | null = null;
   try {
     repoRoot = await dependencies.resolveProjectRoot(context.cwd);
-    projectPath = await resolveProjectPath(repoRoot, options.project);
     const content =
       options.eventFile === '-'
         ? await dependencies.readStdin()
         : await dependencies.readFile(options.eventFile);
     // Hand the raw event to the recorder; it owns the single authoritative
     // parse, and parsing twice would relabel the provenance of its own output.
-    const raw = await recordProjectDispatch({
-      projectPath,
-      input: JSON.parse(content),
-    });
+    const raw = await recordProjectDispatch({ input: JSON.parse(content) });
     // The degradation reason is caller-influenced text on the success path, so
     // it goes through the same single redaction boundary as every failure
     // message. Producing a message that skips this boundary is exactly the
@@ -130,7 +109,6 @@ async function runRecordCommand(
           raw.runtimeIdentity.reason === null
             ? null
             : redactDispatchMessage(raw.runtimeIdentity.reason, {
-                project: projectPath,
                 repo: repoRoot,
                 home: context.home,
               }),
@@ -139,13 +117,7 @@ async function runRecordCommand(
     if (context.json) {
       context.logger.json(result);
     } else {
-      if (result.status === 'persisted') {
-        context.logger.success(`Recorded project dispatch: ${result.path}`);
-      } else {
-        context.logger.info(
-          'Dispatch evidence is valid; no project path was supplied, so nothing was persisted.',
-        );
-      }
+      context.logger.info('Dispatch evidence is valid; nothing was written.');
       for (const line of runtimeIdentityLines(result.runtimeIdentity)) {
         context.logger.info(line);
       }
@@ -155,7 +127,7 @@ async function runRecordCommand(
     // Single redaction boundary for every failure this command can surface.
     const message = redactDispatchMessage(
       error instanceof Error ? error.message : String(error),
-      { project: projectPath, repo: repoRoot, home: context.home },
+      { repo: repoRoot, home: context.home },
     );
     if (context.json) {
       context.logger.json({ status: 'error', message });
@@ -171,13 +143,11 @@ export function createProjectDispatchCommand(
 ): Command {
   const dependencies = { ...DEFAULT_DEPENDENCIES, ...overrides };
   return new Command('dispatch')
-    .description('Validate and persist project dispatch provenance')
+    .description('Validate project dispatch provenance')
     .addCommand(
       new Command('record')
-        .description('Record one generic dispatch plus namespaced OAT evidence')
-        .option(
-          '--project <project-path>',
-          'Project path; omit to validate without persistence',
+        .description(
+          'Validate one generic dispatch plus namespaced OAT evidence (writes nothing)',
         )
         .requiredOption(
           '--event-file <json-file-or-dash>',
