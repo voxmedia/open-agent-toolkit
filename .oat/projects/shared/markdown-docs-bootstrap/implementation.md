@@ -3,13 +3,13 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
-oat_current_task_id: p03-t01
+oat_current_task_id: p03-t02
 oat_generated: false
 ---
 
 # Implementation: markdown-docs-bootstrap
 
-Phase p01 is complete after independent review. Five of ten tasks are complete. Phase p02 is complete after a clean independent full-phase re-review, including the M1 filename navigation fix. Next planned task p03-t01; final HiLL remains p04.
+Phases p01 and p02 are complete after independent reviews. Six of ten tasks are complete; p03 bootstrap guidance is implemented and consumer alignment is next. Final HiLL remains p04.
 
 ## Progress Overview
 
@@ -20,7 +20,7 @@ Phase p01 is complete after independent review. Five of ten tasks are complete. 
 | p03   | pending  | 3     | 0/3       |
 | p04   | pending  | 2     | 0/2       |
 
-**Total:** 5/10 tasks completed
+**Total:** 6/10 tasks completed
 
 ## Phase 1: Shared content and guidance contracts
 
@@ -67,14 +67,14 @@ Phase p01 is complete after independent review. Five of ten tasks are complete. 
 
 ## Phase 3: Bootstrap workflow and docs consumers
 
-**Status:** pending
+**Status:** in_progress
 
 ### Task p03-t01: Offer Markdown throughout bootstrap
 
-**Status:** pending
-**Commit:** -
-**Outcome:** Not started
-**Verification:** Not run
+**Status:** completed
+**Commit:** 7eadecbbe5d8dc6fac031d5896a031bf9d008864
+**Outcome:** Bootstrap offers Markdown with configured tooling/framework-first preflight, explicit adopt/audit, file checks, partial reporting and authored-index ownership. Framework instruction template is gated; no Markdown docs-root AGENTS. Skill version 1.2.1 to 1.3.0 once. General init/CLI owners unchanged.
+**Verification:** Build before suites: five actual uncached builds; validate 65 skills, skills 660 tests, smoke 163 tests, lint/format, exact two-file formatting and diff checks all exit 0. Public fresh/populated/nested-root/framework-conflict walkthrough passed; exact runnable controls retained in reviews/p03-walkthrough-controls.md. No new automated prose tests, recovery or nested dispatch.
 
 ### Task p03-t02: Align analyze, apply, authoring, and lifecycle consumers
 
