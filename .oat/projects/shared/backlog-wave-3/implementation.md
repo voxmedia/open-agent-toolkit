@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
-oat_current_task_id: p06-t01
+oat_current_task_id: p05-t08
 oat_generated: false
 ---
 
@@ -30,10 +30,10 @@ oat_generated: false
 | Phase 2 | complete    | 6     | 6/6       |
 | Phase 3 | complete    | 10    | 10/10     |
 | Phase 4 | complete    | 6     | 6/6       |
-| Phase 5 | in_progress | 7     | 7/7       |
+| Phase 5 | in_progress | 8     | 7/8       |
 | Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 34/37 tasks completed
+**Total:** 34/38 tasks completed
 
 ---
 
@@ -234,6 +234,11 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** d65cb355c
+
+### Task p05-t08: (review) Close p05 gate finding M1
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -535,6 +540,11 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   paths judged by the owning package's patterns; real-dependency-map tests)
   and M2 (journal-only helpers and fallback event kinds deleted; validate-only
   output shape unchanged); whole CLI suite 7954, smoke 163.
+
+- Phase gate (`codex-6-sol-xhigh`) at `c48f6b532`:
+  `reviews/archived/p05-review-2026-10-01T193643Z.md` status `ok`, 0
+  Critical/High, 1 Medium (a symlinked `AGENTS.md` whose target is a hard link
+  of `CLAUDE.md` evades the realpath-only check). Addressed now as `p05-t08`.
 
 <!-- orchestration-runs-end -->
 

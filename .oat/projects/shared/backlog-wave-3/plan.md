@@ -1465,6 +1465,34 @@ Expected: exit 0.
 
 ---
 
+### Task p05-t08: (review) Close p05 gate finding M1
+
+Source: `reviews/archived/p05-review-2026-10-01T193643Z.md` (Codex phase gate,
+`ok`: 0 Critical/High, 1 Medium).
+
+**Step 1: Fix**
+
+- M1: the link check (`instructions.utils.ts` around 303, consumed by
+  `sync.ts` around 341) compares realpaths only when `AGENTS.md` is a symlink,
+  so `pkg/AGENTS.md -> ../alias.md` with `alias.md` hard-linked to `CLAUDE.md`
+  is missed. Resolve the symlink endpoint and compare its device/inode with the
+  `CLAUDE.md` endpoint, keeping fail-closed read errors and the ordinary
+  `CLAUDE.md -> AGENTS.md` shim distinction. Add the combined-link
+  command-boundary regression for pointer, symlink, and copy with `--force`
+  (the `CLAUDE.md` action is skipped; content and inode unchanged), keeping
+  the direct-symlink and ordinary-overwrite controls.
+
+**Step 2: Verify**
+
+Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/instructions`.
+Expected: exit 0.
+
+**Step 3: Commit**
+
+`fix(p05-t08): compare inodes through symlinked AGENTS.md`
+
+---
+
 ## Phase 6: Release fan-in
 
 ### Task p06-t01: Bump the lockstep public packages to 0.3.11
@@ -1709,7 +1737,7 @@ breaking changes must be named in the title:
 | p01    | code     | passed          | 2026-10-01 | reviews/archived/p01-review-2026-10-01T114001Z.md  | 91b1dde7c5f589226a852c41da4ba80fb0de012c | gate       | codex-6-sol-xhigh |
 | p02    | code     | passed          | 2026-10-01 | reviews/archived/p02-review-2026-10-01T122403Z.md  | 4fa0c5f3258f73adfc0a78f21596af11ffa789b7 | gate       | codex-6-sol-xhigh |
 | p04    | code     | passed          | 2026-10-01 | reviews/archived/p04-review-2026-10-01T180727Z.md  | 5033a7f56afd098a96037474e8318012e3c6c51d | gate       | codex-6-sol-xhigh |
-| p05    | code     | received        | 2026-10-01 | reviews/p05-review-2026-10-01T193643Z.md           | c48f6b5328cd453bdf17f838e4203757302b9635 | gate       | codex-6-sol-xhigh |
+| p05    | code     | fixes_added     | 2026-10-01 | reviews/archived/p05-review-2026-10-01T193643Z.md  | c48f6b5328cd453bdf17f838e4203757302b9635 | gate       | codex-6-sol-xhigh |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
@@ -1781,10 +1809,10 @@ criterion.
 - Phase 2: 6 tasks - Fumadocs navigation
 - Phase 3: 10 tasks - Recon publication and Codex recovery
 - Phase 4: 6 tasks - Lifecycle closeout guards
-- Phase 5: 7 tasks - Small fixes
+- Phase 5: 8 tasks - Small fixes
 - Phase 6: 3 tasks - Release fan-in
 
-**Total: 37 tasks**
+**Total: 38 tasks**
 
 Ready for code review and merge.
 
