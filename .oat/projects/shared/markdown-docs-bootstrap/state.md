@@ -1,6 +1,6 @@
 ---
-oat_current_task: p02-t01
-oat_last_commit: f0e97c14928b578dfcb27f2dd051b65653f44278
+oat_current_task: p02-t02
+oat_last_commit: 3be63e9c5d2dd7370f04db4485c98f0b1ec3647b
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -85,7 +85,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-30T18:58:24.831Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-01T12:06:01Z'
+oat_project_state_updated: '2026-10-01T12:20:32Z'
 oat_generated: false
 ---
 
@@ -97,7 +97,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation setup complete. p01 complete after independent review; p02-t01 next; standard root-owned reviews run after each phase and the final HiLL checkpoint follows p04.
+Implementation setup complete. p01 complete; p02-t01 complete, additive adoption/dry-run next; standard root-owned reviews run after each phase and the final HiLL checkpoint follows p04.
 
 ## Artifacts
 
@@ -105,7 +105,7 @@ Implementation setup complete. p01 complete after independent review; p02-t01 ne
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; approved dispositions incorporated)
 - **Plan:** `plan.md` (complete; ready for oat-project-implement)
-- **Implementation:** `implementation.md` (tracking initialized; 2/9 tasks completed)
+- **Implementation:** `implementation.md` (tracking initialized; 3/9 tasks completed)
 
 ## Progress
 
@@ -132,4 +132,4 @@ None
 
 ## Next Milestone
 
-Execute p02-t01 and p02-t02 through the next phase implementer.
+Continue p02-t02 through the same accepted phase implementer.

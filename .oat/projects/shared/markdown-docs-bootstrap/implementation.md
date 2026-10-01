@@ -3,24 +3,24 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
-oat_current_task_id: p02-t01
+oat_current_task_id: p02-t02
 oat_generated: false
 ---
 
 # Implementation: markdown-docs-bootstrap
 
-Phase p01 is complete after independent review: 2/9 tasks completed. Next task p02-t01; the overall implementation remains in progress.
+Phase p01 is complete after independent review: 3/9 tasks completed. Fresh Markdown initialization is also implemented. Next task p02-t02; the overall implementation remains in progress.
 
 ## Progress Overview
 
 | Phase | Status      | Tasks | Completed |
 | ----- | ----------- | ----- | --------- |
 | p01   | complete    | 2     | 2/2       |
-| p02   | in_progress | 2     | 0/2       |
+| p02   | in_progress | 2     | 1/2       |
 | p03   | pending     | 3     | 0/3       |
 | p04   | pending     | 2     | 0/2       |
 
-**Total:** 2/9 tasks completed
+**Total:** 3/9 tasks completed
 
 ## Phase 1: Shared content and guidance contracts
 
@@ -46,10 +46,10 @@ Phase p01 is complete after independent review: 2/9 tasks completed. Next task p
 
 ### Task p02-t01: Add fresh Markdown scaffold and CLI mode
 
-**Status:** pending
-**Commit:** -
-**Outcome:** Not started
-**Verification:** Not run
+**Status:** completed
+**Commit:** 3be63e9c5d2dd7370f04db4485c98f0b1ec3647b
+**Outcome:** Fresh --framework markdown uses literal docs/default/custom roots, authored pages with safe metadata, config and managed root guidance; app-only options reported, no package/dependency patches. Registered docs-markdown in bundle inputs and docs pack manifest; installed both baseline templates in isolated user/project lifecycle checks. Existing Fumadocs replacement-over-Markdown accepted; non-Markdown --adopt refused.
+**Verification:** pnpm build exit 0 before direct bundle-backed tests (CLI executed, 4 unchanged dependency build cache replays); exact nine-file declared Vitest suite 118 tests/9 files, exit 0; CLI type-check/lint, exact ten-file oxfmt write/check and git diff --check exit 0. Bundle inventory lists docs-markdown; built assets contain index.md and contributing.md. Title with apostrophe/double quotes parses using independent YAML parser. Formatter placeholder and lint-shadowing failures fixed before commit; no recovery consumed.
 
 ### Task p02-t02: Implement additive adoption and nonmutating dry-run
 
@@ -635,3 +635,22 @@ Accepted handle `/root/markdown_p02_pinned`; awaiting root ACK before work.
   "floor_satisfaction": "satisfied"
 }
 ```
+
+### p02-t01 reproducible controls
+
+Built public CLI controls use `node packages/cli/dist/index.js --cwd <fixture> --json docs init --framework markdown --yes` at base `0fc23346236890d44afe9abdd50d325e9a51d559` and task commit `3be63e9c5d2dd7370f04db4485c98f0b1ec3647b`. Build each source before its invocation. Fixture has `.git/` plus these exact preexisting UTF-8 files:
+
+```json
+{
+  "AGENTS.md": "# Repository guidance\n\nDo not change local ownership.\n",
+  "docs/index.md": "# Existing operator handbook\n\nKeep this audience-specific introduction.\n",
+  "docs/deploy.md": "# Deployment\n\nUse the reviewed release checklist.\n"
+}
+```
+
+| Control                                                                                                                                    | Base outcome                            | Task outcome                                                 | Preservation                                                  |
+| ------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------- |
+| Existing tree, Markdown --yes without adoption                                                                                             | exit 1, Commander lacks Markdown choice | exit 1, intended nonempty/--adopt refusal                    | All three file hashes identical before/after both invocations |
+| Empty repo with package.json, same command plus `--site-name 'Operators\' Handbook: "Service"'` passed as one argument via subprocess argv | not supported at base                   | exit 0/status ok, index/contributing/config/guidance created | Package SHA unchanged; valid YAML metadata                    |
+
+Baseline hashes: AGENTS `c654f3d07100dd9dbafed9cd037cd3f4b586f3932a9b2e3529c35173aeeedde3`; index `8baf827386dcb539a2e985748bba2d807d36ff93085db9938adcc1d013854f16`; deployment `bbb6b1a4eda54f3eba0f368ef6aca5385676908efb3fd8b8e4477617902857a7`. Exact argv/results/snapshots originally recorded in temp `oat-p02-evidence-33rg9wns/{before.json,t01-after.json}`; task logs `/tmp/oat-p02-t01-{tests,lint,types,build}.log`. Public-boundary integration tests preserve the same unsafe/config/framework acceptance contracts.
