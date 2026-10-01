@@ -1463,7 +1463,7 @@ Accepted exact-target canonical-role route /root/markdown_p04_pinned; awaiting r
     "reasoning_effort": "high"
   },
   "launch_status": "accepted",
-  "child_outcome": null,
+  "child_outcome": "DONE",
   "configured_invocation_evidence": [
     "project-state:high",
     "user-config:gpt-6.1-sol/high",
@@ -1538,3 +1538,70 @@ Initial full CI stopped at test exit 1: five stale expectations in two existing 
 #### p04-t02 root acceptance
 
 Root verified the exact five-file append-only task commit, unchanged prior evidence/backlog status, bounded two-file mechanical test repairs, clean tree, direct gate exits and actual forced execution receipt. All ten tasks complete; p04 remains in_progress for independent review. No recovery event, production deviation or nested dispatch.
+
+#### p04 review dispatch
+
+Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high-3da8a37eed
+
+```json
+{
+  "request_id": "markdown-p04-review-native-20261001",
+  "caller": "oat-project-implement",
+  "scope": "p04",
+  "objective": "Consequential independent review of release packaging, content-preservation controls and integrated acceptance; use configured High reviewer ceiling.",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "reviewer",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "codex-root-20261001",
+    "source": "tool-schema",
+    "observed_at": "2026-10-01"
+  },
+  "authority": "read-only code and one review artifact",
+  "role_selector": "oat-reviewer-gpt-6-1-sol-high-3da8a37eed",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-09-24",
+  "guidance_verified_at": "2026-09-24",
+  "guidance_status": "review-required",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/medium", "gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 3600,
+  "retry_limit": 2,
+  "payload": {
+    "agent_type": "oat-reviewer-gpt-6-1-sol-high-3da8a37eed",
+    "fork_turns": "none",
+    "scope_reference": "p04:7e8abb5b377ffc2f16d9576a0023e7a6cf4a46fd..HEAD",
+    "dispatch_mode": "background"
+  },
+  "launch_status": "planned",
+  "child_outcome": null,
+  "configured_invocation_evidence": [
+    "project-state:high",
+    "user-config:gpt-6.1-sol/high",
+    "tool-schema:gpt-6.1-sol low-through-ultra",
+    "canonical-role:sha256:eb1bd78d0a5a48ed5d1867e313e19a07859a86aedec14d759beda8f97d26ce55"
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [
+    "Model guidance is dated; current configured target and live model selector control this invocation.",
+    "No independent service-tier control selected."
+  ],
+  "continuation_events": [],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Consequential independent review of release packaging, content-preservation controls and integrated acceptance; use configured High reviewer ceiling.",
+  "floor_satisfaction": "satisfied"
+}
+```
