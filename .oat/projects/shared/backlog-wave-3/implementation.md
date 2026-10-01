@@ -149,6 +149,10 @@ Attempts are exhausted with the last findings resolved in the plan but not
 re-gated, so implementation readiness waits on an operator decision (QS-12
 boundary). The plan keeps its pre-review frontmatter until then.
 
+Operator disposition (2026-10-01): the operator chose "Proceed to implement",
+accepting the post-gate fixes without a third gate run. QS-12 resolved by
+explicit operator decision; the plan was then marked ready.
+
 ## Implementation Log
 
 Chronological log of implementation progress.
