@@ -112,6 +112,7 @@ export const BUNDLE_INPUTS = Object.freeze({
     'ideas',
     'docs-app-mkdocs',
     'docs-app-fuma',
+    'docs-markdown',
   ]),
   oatScripts: Object.freeze([
     'generate-oat-state.sh',

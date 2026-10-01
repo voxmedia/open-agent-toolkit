@@ -1,4 +1,10 @@
-import { readdir, readFile, writeFile } from 'node:fs/promises';
+import {
+  lstat,
+  realpath,
+  readdir,
+  readFile,
+  writeFile,
+} from 'node:fs/promises';
 import {
   basename,
   dirname,
@@ -10,6 +16,7 @@ import {
 
 import type { OatDocumentationConfig } from '@config/oat-config';
 import { dirExists, ensureDir, fileExists } from '@fs/io';
+import { normalizeToPosixPath, validatePathWithinScope } from '@fs/paths';
 import { OAT_VERSION } from '@shared/oat-version';
 
 import { buildDocsCommands } from './docs-commands';
@@ -90,7 +97,10 @@ interface FrameworkConfig {
   sentinelFile: string;
 }
 
-const FRAMEWORK_CONFIGS: Record<DocsFramework, FrameworkConfig> = {
+const FRAMEWORK_CONFIGS: Record<
+  Exclude<DocsFramework, 'markdown'>,
+  FrameworkConfig
+> = {
   mkdocs: {
     templateFiles: MKDOCS_TEMPLATE_FILES,
     sentinelFile: 'mkdocs.yml',
@@ -414,6 +424,13 @@ export function buildDocumentationConfig(
   framework: DocsFramework,
   targetDir: string,
 ): OatDocumentationConfig {
+  if (framework === 'markdown') {
+    return {
+      root: targetDir,
+      tooling: 'markdown',
+      index: join(targetDir, 'index.md'),
+    };
+  }
   if (framework === 'fumadocs') {
     return {
       root: targetDir,
@@ -441,10 +458,119 @@ async function ensureTargetWritable(appRoot: string): Promise<void> {
   }
 }
 
+/** Validate a dedicated Markdown root, including existing symlink ancestors. */
+export async function validateMarkdownTarget(
+  repoRoot: string,
+  targetDir: string,
+): Promise<string> {
+  const target = validatePathWithinScope(
+    resolve(repoRoot, targetDir),
+    repoRoot,
+  );
+  const relativeTarget = relative(resolve(repoRoot), target);
+  if (!relativeTarget)
+    throw new Error(
+      'Markdown docs require a dedicated directory; the repository root is unsafe.',
+    );
+  const canonicalRoot = await realpath(repoRoot);
+  let ancestor = target;
+  while (true) {
+    try {
+      await lstat(ancestor);
+      break;
+    } catch (error) {
+      if (
+        !(error instanceof Error && 'code' in error && error.code === 'ENOENT')
+      )
+        throw error;
+      ancestor = dirname(ancestor);
+    }
+  }
+  const canonicalAncestor = await realpath(ancestor);
+  const canonicalTarget = resolve(
+    canonicalAncestor,
+    relative(ancestor, target),
+  );
+  validatePathWithinScope(canonicalTarget, canonicalRoot);
+  if (canonicalTarget === canonicalRoot)
+    throw new Error(
+      'Markdown docs require a dedicated directory; target resolves to the repository root.',
+    );
+  if (
+    ancestor === target &&
+    !(await lstat(target)).isDirectory() &&
+    !(await lstat(target)).isSymbolicLink()
+  ) {
+    throw new Error(`Markdown docs target must be a directory: ${target}`);
+  }
+  return normalizeToPosixPath(relativeTarget);
+}
+
+function renderMarkdownTemplate(
+  template: string,
+  options: DocsInitResolvedOptions,
+): string {
+  const replacements: Record<string, string> = {
+    "'{{TITLE_METADATA}}'": JSON.stringify(options.siteName),
+    "'{{DESCRIPTION_METADATA}}'": JSON.stringify(options.siteDescription),
+    '{{SITE_NAME}}': options.siteName,
+    '{{REPO_NAME}}': basename(options.repoRoot),
+    '{{CONTENTS}}': '- [Contributing](contributing.md)',
+    '{{LINT_MODE}}': options.lint,
+    '{{FORMAT_MODE}}': options.format,
+  };
+  return Object.entries(replacements).reduce(
+    (content, [token, value]) => content.replaceAll(token, value),
+    template,
+  );
+}
+
+async function scaffoldMarkdownDocs(
+  options: ScaffoldDocsAppOptions,
+): Promise<ScaffoldDocsAppResult> {
+  const targetDir = await validateMarkdownTarget(
+    options.repoRoot,
+    options.targetDir,
+  );
+  const appRoot = resolve(options.repoRoot, targetDir);
+  if (await dirExists(appRoot)) {
+    if ((await readdir(appRoot)).length > 0)
+      throw new Error(
+        `Markdown docs target is not empty: ${targetDir}. Use --adopt to preserve existing docs, then run oat-docs-analyze for content gaps.`,
+      );
+  }
+  const templateRoot = join(options.assetsRoot, 'templates', 'docs-markdown');
+  // Read every template before any target writes.
+  const templates = await Promise.all(
+    ['index.md', 'contributing.md'].map(async (name) => ({
+      name,
+      content: renderMarkdownTemplate(
+        await readFile(join(templateRoot, name), 'utf8'),
+        options,
+      ),
+    })),
+  );
+  await ensureDir(appRoot);
+  const createdFiles: string[] = [];
+  for (const { name, content } of templates) {
+    await writeFile(join(appRoot, name), content, {
+      encoding: 'utf8',
+      flag: 'wx',
+    });
+    createdFiles.push(name);
+  }
+  return {
+    appRoot,
+    createdFiles,
+    documentationConfig: buildDocumentationConfig('markdown', targetDir),
+  };
+}
+
 export async function scaffoldDocsApp(
   options: ScaffoldDocsAppOptions,
   overrides: Partial<ScaffoldDocsAppDependencies> = {},
 ): Promise<ScaffoldDocsAppResult> {
+  if (options.framework === 'markdown') return scaffoldMarkdownDocs(options);
   const appRoot = join(options.repoRoot, options.targetDir);
   const templateDir = getTemplateDir(options.framework);
   const templateRoot = join(options.assetsRoot, 'templates', templateDir);

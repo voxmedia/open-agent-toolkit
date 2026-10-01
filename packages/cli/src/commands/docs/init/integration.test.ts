@@ -1,11 +1,25 @@
-import { mkdir, mkdtemp, readdir, readFile, writeFile } from 'node:fs/promises';
+import {
+  mkdir,
+  mkdtemp,
+  readdir,
+  readFile,
+  rm,
+  symlink,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import type { CommandContext, GlobalOptions } from '@app/command-context';
+import { createLoggerCapture } from '@commands/__tests__/helpers';
+import { resolveAssetsRoot } from '@fs/assets';
 import { OAT_VERSION } from '@shared/oat-version';
+import { Command } from 'commander';
 import { afterEach, describe, expect, it } from 'vitest';
+import { parse as parseYaml } from 'yaml';
 
+import { createDocsInitCommand } from './index';
 import { scaffoldDocsApp } from './scaffold';
 
 const THIS_DIR = dirname(fileURLToPath(import.meta.url));
@@ -41,7 +55,6 @@ describe('scaffold integration', () => {
   let assetsRoot: string;
 
   afterEach(async () => {
-    const { rm } = await import('node:fs/promises');
     const toClean = [...createdRoots];
     if (assetsRoot) toClean.push(assetsRoot);
     await Promise.all(
@@ -412,6 +425,273 @@ describe('scaffold integration', () => {
       expect(contributing).toContain(
         'Run Markdown formatting and linting as configured for this docs app.',
       );
+    },
+  );
+});
+
+// These cases exercise the command with real config, scaffold and guidance writers.
+describe('Markdown docs init public boundary', () => {
+  const roots: string[] = [];
+  const originalExit = process.exitCode;
+  afterEach(async () => {
+    await Promise.all(
+      roots.splice(0).map((root) => rm(root, { recursive: true, force: true })),
+    );
+    process.exitCode = originalExit;
+  });
+
+  async function temporaryRepo(): Promise<string> {
+    const root = await mkdtemp(join(tmpdir(), 'oat-markdown-init-'));
+    roots.push(root);
+    return root;
+  }
+
+  async function runMarkdown(
+    root: string,
+    args: string[] = [],
+    dryRun = false,
+    json = true,
+  ) {
+    const capture = createLoggerCapture();
+    const command = createDocsInitCommand({
+      buildCommandContext: (options: GlobalOptions): CommandContext => ({
+        scope: 'project',
+        cwd: root,
+        home: root,
+        interactive: false,
+        dryRun: options.dryRun ?? false,
+        json: options.json ?? false,
+        verbose: false,
+        logger: capture.logger,
+      }),
+      resolveAssetsRoot,
+    });
+    const program = new Command()
+      .option('--json')
+      .option('--dry-run')
+      .addCommand(new Command('docs').addCommand(command));
+    process.exitCode = undefined;
+    await program.parseAsync(
+      [
+        ...(json ? ['--json'] : []),
+        ...(dryRun ? ['--dry-run'] : []),
+        'docs',
+        'init',
+        '--framework',
+        'markdown',
+        '--yes',
+        ...args,
+      ],
+      { from: 'user' },
+    );
+    return { ...capture, exit: process.exitCode };
+  }
+
+  it.each(['docs', 'handbook/team'])(
+    'creates authored docs at %s without changing app/package files',
+    async (target) => {
+      const root = await temporaryRepo();
+      const packageBytes =
+        '{"name":"service","scripts":{"build":"turbo run build"}}\n';
+      const turboBytes = '{"tasks":{"build":{"dependsOn":["^build"]}}}\n';
+      await writeFile(join(root, 'package.json'), packageBytes);
+      await writeFile(join(root, 'turbo.json'), turboBytes);
+      await writeFile(
+        join(root, 'pnpm-workspace.yaml'),
+        'packages:\n  - packages/*\n',
+      );
+      await mkdir(join(root, '.oat'));
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        '{"version":1,"documentation":{"excludes":["drafts/**"],"requireForProjectCompletion":true}}\n',
+      );
+      const result = await runMarkdown(root, [
+        '--target-dir',
+        target,
+        '--site-name',
+        'Operators\' Handbook: "Service"',
+        '--description',
+        'Runtime: operations and ownership',
+        '--app-name',
+        'ignored-app',
+        '--no-root-patch',
+        '--lint',
+        'markdownlint-cli2',
+        '--format',
+        'oxfmt',
+      ]);
+      expect(result.exit).toBe(0);
+      expect(result.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        targetDir: target,
+        createdFiles: ['index.md', 'contributing.md'],
+        inapplicableOptions: ['--app-name', '--no-root-patch'],
+      });
+      expect(await readdir(join(root, target))).toEqual([
+        'contributing.md',
+        'index.md',
+      ]);
+      const index = await readFile(join(root, target, 'index.md'), 'utf8');
+      expect(parseYaml(index.split('---')[1]!)).toMatchObject({
+        title: 'Operators\' Handbook: "Service"',
+        description: 'Runtime: operations and ownership',
+      });
+      expect(index).toContain('[Contributing](contributing.md)');
+      const guidance = await readFile(join(root, 'AGENTS.md'), 'utf8');
+      expect(guidance).toContain(`**Authored index:** \`${target}/index.md\``);
+      expect(guidance).toContain(
+        `**Contributing:** \`${target}/contributing.md\``,
+      );
+      expect(guidance).not.toContain(`${target}/docs/index.md`);
+      const config = JSON.parse(
+        await readFile(join(root, '.oat', 'config.json'), 'utf8'),
+      );
+      expect(config.documentation).toEqual({
+        root: target,
+        tooling: 'markdown',
+        index: `${target}/index.md`,
+        excludes: ['drafts/**'],
+        requireForProjectCompletion: true,
+      });
+      expect(await readFile(join(root, 'package.json'), 'utf8')).toBe(
+        packageBytes,
+      );
+      expect(await readFile(join(root, 'turbo.json'), 'utf8')).toBe(turboBytes);
+    },
+  );
+
+  it('defaults to literal docs even in a monorepo and emits file-level next steps', async () => {
+    const root = await temporaryRepo();
+    await writeFile(
+      join(root, 'pnpm-workspace.yaml'),
+      'packages:\n  - packages/*\n',
+    );
+    const result = await runMarkdown(root, [], false, false);
+    expect(result.exit).toBe(0);
+    expect(await readdir(join(root, 'docs'))).toEqual([
+      'contributing.md',
+      'index.md',
+    ]);
+    expect(result.info.join('\n')).toContain('Read docs/index.md');
+    expect(result.info.join('\n')).not.toContain('pnpm install');
+    expect(result.info.join('\n')).not.toContain('pnpm build');
+  });
+
+  it.each(['.', '../escaped'])(
+    'refuses unsafe target %s before writes',
+    async (target) => {
+      const root = await temporaryRepo();
+      await writeFile(join(root, 'README.md'), '# Existing service\n');
+      const result = await runMarkdown(root, ['--target-dir', target]);
+      expect(result.exit).toBe(1);
+      expect(result.jsonPayloads[0]).toMatchObject({ status: 'error' });
+      expect(await readdir(root)).toEqual(['README.md']);
+    },
+  );
+
+  it('refuses an escaping symlink ancestor before creating a child', async () => {
+    const root = await temporaryRepo();
+    const outside = await temporaryRepo();
+    await symlink(outside, join(root, 'alias'));
+    const result = await runMarkdown(root, ['--target-dir', 'alias/docs']);
+    expect(result.exit).toBe(1);
+    expect(await readdir(root)).toEqual(['alias']);
+    expect(await readdir(outside)).toEqual([]);
+  });
+
+  it('refuses populated content with --yes and preserves meaningful docs and instructions', async () => {
+    const root = await temporaryRepo();
+    await mkdir(join(root, 'docs'));
+    const index = '# Operator handbook\n\nKeep escalation ownership here.\n';
+    const agents =
+      '# Local guidance\n\nConsult the team before changing runbooks.\n';
+    await writeFile(join(root, 'docs', 'index.md'), index);
+    await writeFile(join(root, 'AGENTS.md'), agents);
+    const result = await runMarkdown(root);
+    expect(result.exit).toBe(1);
+    expect(result.jsonPayloads[0]).toMatchObject({
+      status: 'error',
+      message: expect.stringContaining('Use --adopt'),
+    });
+    expect(await readFile(join(root, 'docs', 'index.md'), 'utf8')).toBe(index);
+    expect(await readFile(join(root, 'AGENTS.md'), 'utf8')).toBe(agents);
+    expect(await readdir(root)).toEqual(['AGENTS.md', 'docs']);
+    expect(await readdir(join(root, 'docs'))).toEqual(['index.md']);
+  });
+
+  it('keeps explicitly authorized framework initialization over configured Markdown', async () => {
+    const root = await temporaryRepo();
+    await mkdir(join(root, '.oat'));
+    await mkdir(join(root, 'docs'));
+    const index =
+      '# Existing handbook\n\nRetain the incident response context.\n';
+    await writeFile(join(root, 'docs', 'index.md'), index);
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      '{"version":1,"documentation":{"tooling":"markdown","root":"docs","index":"docs/index.md"}}',
+    );
+    const result = await runMarkdown(root, [
+      '--framework',
+      'fumadocs',
+      '--target-dir',
+      'site',
+    ]);
+    expect(result.exit).toBe(0);
+    expect(result.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      framework: 'fumadocs',
+    });
+    const config = JSON.parse(
+      await readFile(join(root, '.oat', 'config.json'), 'utf8'),
+    );
+    expect(config.documentation).toMatchObject({
+      tooling: 'fumadocs',
+      root: 'site',
+      index: 'site/index.md',
+    });
+    expect(await readFile(join(root, 'docs', 'index.md'), 'utf8')).toBe(index);
+    expect(
+      await readFile(join(root, 'site', 'next.config.js'), 'utf8'),
+    ).toContain('createDocsConfig');
+  });
+
+  it('rejects --adopt for app frameworks before writes', async () => {
+    const root = await temporaryRepo();
+    const result = await runMarkdown(root, [
+      '--framework',
+      'mkdocs',
+      '--adopt',
+    ]);
+    expect(result.exit).toBe(1);
+    expect(result.jsonPayloads[0]).toMatchObject({
+      status: 'error',
+      message: '--adopt applies only to --framework markdown.',
+    });
+    expect(await readdir(root)).toEqual([]);
+  });
+
+  it.each([
+    { tooling: 'fumadocs', root: 'apps/docs', index: 'apps/docs/index.md' },
+    { tooling: 'custom-engine', root: 'docs' },
+    { tooling: 'markdown', root: 'handbook', index: 'handbook/index.md' },
+    { tooling: 'markdown', root: 'docs', index: 'docs/other.md' },
+  ])(
+    'refuses incompatible declared config %j before writes',
+    async (documentation) => {
+      const root = await temporaryRepo();
+      await mkdir(join(root, '.oat'));
+      const bytes = JSON.stringify({ version: 1, documentation });
+      await writeFile(join(root, '.oat', 'config.json'), bytes);
+      const result = await runMarkdown(root);
+      expect(result.exit).toBe(1);
+      expect(result.jsonPayloads[0]).toMatchObject({
+        status: 'error',
+        message: expect.stringContaining('incompatible'),
+      });
+      expect(await readFile(join(root, '.oat', 'config.json'), 'utf8')).toBe(
+        bytes,
+      );
+      expect(await readdir(root)).toEqual(['.oat']);
     },
   );
 });

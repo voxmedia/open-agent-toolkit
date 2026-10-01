@@ -1,4 +1,4 @@
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 
 import {
   buildCommandContext,
@@ -42,7 +42,7 @@ import {
   patchRootPackageJson,
   type RootPackagePatchResult,
 } from './root-package';
-import { scaffoldDocsApp } from './scaffold';
+import { scaffoldDocsApp, validateMarkdownTarget } from './scaffold';
 
 interface DocsInitCommandOptions {
   framework?: DocsFramework;
@@ -54,12 +54,13 @@ interface DocsInitCommandOptions {
   format?: DocsFormatMode;
   rootPatch?: boolean;
   yes?: boolean;
+  adopt?: boolean;
 }
 
 interface DocsInitExecutionResult {
   createdFiles: string[];
   appRoot: string;
-  rootPackagePatch: RootPackagePatchResult;
+  rootPackagePatch?: RootPackagePatchResult;
 }
 
 interface DocsInitDependencies {
@@ -150,12 +151,15 @@ const DEFAULT_DEPENDENCIES: DocsInitDependencies = {
       assetsRoot,
       ...options,
     });
-    const rootPackagePatch = await patchRootPackageJson({
-      repoRoot: context.cwd,
-      appName: options.appName,
-      dryRun: context.dryRun,
-      enabled: options.rootPatch,
-    });
+    const rootPackagePatch =
+      options.framework === 'markdown'
+        ? undefined
+        : await patchRootPackageJson({
+            repoRoot: context.cwd,
+            appName: options.appName,
+            dryRun: context.dryRun,
+            enabled: options.rootPatch,
+          });
 
     const config = await readOatConfig(context.cwd);
     config.documentation = {
@@ -165,13 +169,17 @@ const DEFAULT_DEPENDENCIES: DocsInitDependencies = {
     await writeOatConfig(context.cwd, config);
 
     if (!context.json) {
-      context.logger.info(`Scaffolded docs app at ${options.targetDir}`);
+      context.logger.info(
+        `Scaffolded ${options.framework === 'markdown' ? 'Markdown documentation' : 'docs app'} at ${options.targetDir}`,
+      );
       context.logger.info(`  Framework: ${options.framework}`);
-      context.logger.info(`  Repo shape: ${options.repoShape}`);
-      context.logger.info(`  App name: ${options.appName}`);
+      if (options.framework !== 'markdown') {
+        context.logger.info(`  Repo shape: ${options.repoShape}`);
+        context.logger.info(`  App name: ${options.appName}`);
+      }
       context.logger.info(`  Lint: ${options.lint}`);
       context.logger.info(`  Format: ${options.format}`);
-      logRootPackagePatch(context, rootPackagePatch);
+      if (rootPackagePatch) logRootPackagePatch(context, rootPackagePatch);
     }
     return {
       createdFiles: result.createdFiles,
@@ -187,6 +195,7 @@ const DEFAULT_DEPENDENCIES: DocsInitDependencies = {
 const FRAMEWORK_LABELS: Record<DocsFramework, string> = {
   fumadocs: 'Fumadocs (Next.js + MDX)',
   mkdocs: 'MkDocs (Python)',
+  markdown: 'Markdown',
 };
 
 /**
@@ -201,6 +210,19 @@ const FRAMEWORK_LABELS: Record<DocsFramework, string> = {
  * `documentation.index` is the nav YAML the Config bullet already names.
  */
 export function buildDocsSectionBody(options: DocsInitResolvedOptions): string {
+  if (options.framework === 'markdown') {
+    return [
+      '## Documentation',
+      '',
+      `- **Docs root:** \`${options.targetDir}\``,
+      '- **Tooling:** Markdown',
+      `- **Authored index:** \`${options.targetDir}/index.md\``,
+      `- **Contributing:** \`${options.targetDir}/contributing.md\``,
+      '',
+      'Keep authored context, title/description metadata, and Contents maps with relative Markdown links current. Preserve local instructions; asset-only directories are exempt from indexes.',
+      'Use `oat-docs-analyze` to audit gaps and `oat-docs-apply` for approved repairs. Optional generated inventories belong outside the content tree and do not replace the authored index.',
+    ].join('\n');
+  }
   const lines = [
     '## Documentation',
     '',
@@ -257,8 +279,44 @@ async function runDocsInitCommand(
       return;
     }
 
+    if (options.adopt && resolved.framework !== 'markdown') {
+      throw new Error('--adopt applies only to --framework markdown.');
+    }
+    const inapplicableOptions: string[] = [];
     const existingConfig = await dependencies.readOatConfig(context.cwd);
-    if (existingConfig.documentation?.root) {
+    if (resolved.framework === 'markdown') {
+      resolved.targetDir = await validateMarkdownTarget(
+        context.cwd,
+        resolved.targetDir,
+      );
+      const declared = existingConfig.documentation;
+      if (
+        (declared?.tooling &&
+          declared.tooling.trim().toLowerCase() !== 'markdown') ||
+        (declared?.root &&
+          resolve(context.cwd, declared.root) !==
+            resolve(context.cwd, resolved.targetDir)) ||
+        (declared?.index &&
+          resolve(context.cwd, declared.index) !==
+            resolve(context.cwd, resolved.targetDir, 'index.md')) ||
+        declared?.config
+      ) {
+        throw new Error(
+          'Existing documentation config is incompatible with Markdown setup. Preserve it and choose adoption or framework replacement explicitly.',
+        );
+      }
+      if (options.appName !== undefined) inapplicableOptions.push('--app-name');
+      if (options.rootPatch === false)
+        inapplicableOptions.push('--no-root-patch');
+      if (context.dryRun)
+        throw new Error(
+          'Markdown dry-run is not available yet. No changes were made.',
+        );
+      if (!context.json && inapplicableOptions.length)
+        context.logger.warn(
+          `Inapplicable to Markdown: ${inapplicableOptions.join(', ')}. No app or package changes will be made.`,
+        );
+    } else if (existingConfig.documentation?.root) {
       const configDesc = `root: ${existingConfig.documentation.root}, tooling: ${existingConfig.documentation.tooling ?? 'unknown'}`;
       if (context.json) {
         // JSON mode: include warning in output, proceed only with --yes
@@ -337,6 +395,7 @@ async function runDocsInitCommand(
         ...resolved,
         ...scaffold,
         guidance: sectionResult,
+        ...(resolved.framework === 'markdown' ? { inapplicableOptions } : {}),
       });
     } else if (sectionResult.action !== 'no-change') {
       context.logger.info(`AGENTS.md docs section ${sectionResult.action}.`);
@@ -345,6 +404,16 @@ async function runDocsInitCommand(
     if (!context.json) {
       context.logger.info('');
       context.logger.info('Next steps:');
+      if (resolved.framework === 'markdown') {
+        context.logger.info(
+          `  Read ${resolved.targetDir}/index.md and ${resolved.targetDir}/contributing.md.`,
+        );
+        context.logger.info(
+          '  Use oat-docs-analyze to audit documentation and oat-docs-apply for approved repairs.',
+        );
+        process.exitCode = 0;
+        return;
+      }
       const commands = buildDocsCommands(
         resolved.repoShape,
         resolved.targetDir,
@@ -389,24 +458,33 @@ export function createDocsInitCommand(
   };
 
   return new Command('init')
-    .description('Scaffold an OAT docs app')
+    .description('Bootstrap an OAT docs app or authored Markdown documentation')
     .addOption(
       new Option('--framework <framework>', 'Documentation framework').choices([
         'fumadocs',
         'mkdocs',
+        'markdown',
       ]),
     )
-    .addOption(new Option('--app-name <name>', 'Docs app name'))
     .addOption(
       new Option(
-        '--site-name <name>',
-        'Display title (distinct from --app-name)',
+        '--app-name <name>',
+        'Docs app name (inapplicable to Markdown)',
       ),
     )
     .addOption(
-      new Option('--target-dir <path>', 'Target directory for the docs app'),
+      new Option(
+        '--site-name <name>',
+        'Site display title or Markdown documentation title',
+      ),
     )
-    .addOption(new Option('--description <text>', 'Site description'))
+    .addOption(
+      new Option(
+        '--target-dir <path>',
+        'Docs directory (Markdown defaults to docs; requires a dedicated directory)',
+      ),
+    )
+    .addOption(new Option('--description <text>', 'Documentation description'))
     .addOption(
       new Option('--lint <mode>', 'Markdown lint mode').choices([
         'none',
@@ -419,7 +497,14 @@ export function createDocsInitCommand(
         'none',
       ]),
     )
-    .option('--no-root-patch', 'Skip patching the consumer root package.json')
+    .option(
+      '--no-root-patch',
+      'Skip root package.json patch (inapplicable to Markdown)',
+    )
+    .option(
+      '--adopt',
+      'Add missing baseline files to existing Markdown docs; preserve authored content (Markdown only)',
+    )
     .option('--yes', 'Accept defaults without prompting')
     .action(async (options: DocsInitCommandOptions, command: Command) => {
       const context = dependencies.buildCommandContext(

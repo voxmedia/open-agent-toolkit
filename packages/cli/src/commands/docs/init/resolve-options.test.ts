@@ -317,3 +317,37 @@ describe('docs init option resolution', () => {
     expect(selectWithAbort).not.toHaveBeenCalled();
   });
 });
+
+describe('Markdown option resolution', () => {
+  it.each(['monorepo', 'single-package', 'nested-standalone'] as const)(
+    'uses docs and no tools in %s without app questions',
+    async (repoShape) => {
+      const inputWithDefault = vi.fn(
+        async (_message: string, fallback: string) => fallback,
+      );
+      const selectWithAbort = vi.fn(async () => null);
+      const result = await resolveDocsInitOptions({
+        repoRoot: '/workspace/team-service',
+        repoShape,
+        interactive: true,
+        acceptDefaults: false,
+        providedFramework: 'markdown',
+        inputWithDefault,
+        selectWithAbort,
+      });
+      expect(result).toMatchObject({
+        framework: 'markdown',
+        targetDir: 'docs',
+        siteName: 'Team Service',
+        lint: 'none',
+        format: 'none',
+        rootPatch: false,
+      });
+      expect(inputWithDefault.mock.calls.map(([message]) => message)).toEqual([
+        'Documentation title',
+        'Documentation directory',
+      ]);
+      expect(selectWithAbort).not.toHaveBeenCalled();
+    },
+  );
+});
