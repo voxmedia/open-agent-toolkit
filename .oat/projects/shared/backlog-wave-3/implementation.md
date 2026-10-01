@@ -276,6 +276,27 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Phase p01 outcome: pass after one review-fix round and one gate-fix task
   (p01-t04, p01-t05); 5/5 tasks.
 
+### Phase p02 dispatch
+
+- Request `bw3-p02-impl-1`: accepted and returned `DONE`; target
+  `oat-phase-implementer-claude-claude-opus-5-5-high`; commits
+  `580e7045c..77a9669bd` (p02-t01..t04); nav sync on `apps/oat-docs` wrote 11
+  `meta.json` files with nothing unlisted; `build:docs` 0/6 cached; recovery
+  0/10; four docs skills bumped (analyze minor).
+  `Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
+- Step 7a ledger commit `c129e82ab` before the review.
+- Request `bw3-p02-review-1` (`oat-reviewer-claude-claude-opus-5-5-high`,
+  reconnaissance not-attempted) at `c129e82ab`:
+  `reviews/archived/p02-review-2026-10-01T120623Z.md`, 0 Critical/High,
+  3 Medium, 3 Low (passes); no ledger or resume-pointer finding (the reviewer
+  confirmed the task ledger current). All six converted to `p02-t05`.
+  `Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
+- Continuation `cont-backlog-wave-3-p02-fix-1`: `6f533ac7c` closed M1
+  (`nav sync --check` in `prebuild`; a probe page made prebuild exit 1), M2
+  (`.mdx` targets), M3 and L1 (docs), L2 (detection tests with
+  neutralize-and-restore), L3 (plain-text titles); 277 tests and an uncached
+  `build:docs` pass.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -352,13 +373,16 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented                      | Actual / Accepted                                                                                                                           | Reason                                               | Source of Truth | Follow-up         |
-| ------------- | --------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- | --------------- | ----------------- |
-| p01-t01       | plan.md p01-t01 | Move the resolver; flip one scaffold test | Also updated `promote.test.ts` and a second user-first scaffold test; lazy `assetsRoot`; "PJM" dropped from the invalid-name message        | Required by the declared change                      | Implementation  | None              |
-| p01-t02       | plan.md p01-t02 | Command over the shared resolver          | Added `TemplateNotFoundError`; the repository tier is skipped outside a git repository                                                      | Distinguish a miss from a read failure               | Implementation  | None              |
-| p01-t03       | plan.md p01-t03 | Listed skill call sites                   | Also updated quick-start line 195 and the `review-skill-contracts` pins; retro creates `references/` before copying                         | `--output` creates no directories                    | Implementation  | None              |
-| p01-t03       | plan.md p01-t03 | No skill copies from `.oat/templates/`    | `oat-wrap-up` keeps a read reference to `.oat/templates/summary.md` (schema pointer, not a copy)                                            | Out of p01 scope; absent on user-scope-only installs | Implementation  | Note at p06 index |
-| p01-t04       | p01 review M1   | Grants for retro and summary              | Also re-keyed the summary `allowed-tools` prompt site in `.agents/docs/autonomy-contract.md` (`35cb2ea1d677` to `a8983fec040c`, still `NG`) | Prompt sites are keyed by a hash of the line         | Implementation  | None              |
+| Task / Review | Source Artifact | Planned / Documented                      | Actual / Accepted                                                                                                                                                                           | Reason                                               | Source of Truth | Follow-up                                         |
+| ------------- | --------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- | --------------- | ------------------------------------------------- |
+| p01-t01       | plan.md p01-t01 | Move the resolver; flip one scaffold test | Also updated `promote.test.ts` and a second user-first scaffold test; lazy `assetsRoot`; "PJM" dropped from the invalid-name message                                                        | Required by the declared change                      | Implementation  | None                                              |
+| p01-t02       | plan.md p01-t02 | Command over the shared resolver          | Added `TemplateNotFoundError`; the repository tier is skipped outside a git repository                                                                                                      | Distinguish a miss from a read failure               | Implementation  | None                                              |
+| p01-t03       | plan.md p01-t03 | Listed skill call sites                   | Also updated quick-start line 195 and the `review-skill-contracts` pins; retro creates `references/` before copying                                                                         | `--output` creates no directories                    | Implementation  | None                                              |
+| p01-t03       | plan.md p01-t03 | No skill copies from `.oat/templates/`    | `oat-wrap-up` keeps a read reference to `.oat/templates/summary.md` (schema pointer, not a copy)                                                                                            | Out of p01 scope; absent on user-scope-only installs | Implementation  | Note at p06 index                                 |
+| p01-t04       | p01 review M1   | Grants for retro and summary              | Also re-keyed the summary `allowed-tools` prompt site in `.agents/docs/autonomy-contract.md` (`35cb2ea1d677` to `a8983fec040c`, still `NG`)                                                 | Prompt sites are keyed by a hash of the line         | Implementation  | None                                              |
+| p02-t01       | plan.md p02-t01 | Strict meta.json from Contents maps       | Only the root lists `index`; links into a non-child folder become link entries; hidden folders reported once as `folder/`; unowned meta.json keys preserved; unlisted pages warn but exit 0 | Fumadocs 16.10.2 loader semantics                    | Implementation  | None                                              |
+| p02-t02       | plan.md p02-t02 | Listed docs pages                         | Also `reference/file-locations.md`, `reference/index.md`, and the regenerated `apps/oat-docs/index.md`; no change needed in `cli-reference.md`                                              | Same MkDocs-only wording                             | Implementation  | None                                              |
+| p02-t05       | p02 review M1   | Report unlisted pages                     | Added `nav sync --check` (MkDocs and Fumadocs) run in `apps/oat-docs` `prebuild`, so `build:docs` fails on stale navigation; `oat-docs-analyze` points at the read-only form                | Strict pages would otherwise hide new pages silently | Implementation  | `docs-app-fuma` scaffold not wired (out of scope) |
 
 ## Test Results
 
