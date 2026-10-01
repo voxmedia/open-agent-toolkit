@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
-oat_current_task_id: p01-t02
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -15,12 +15,12 @@ Implementation setup resolved from effective workflow configuration. Production 
 
 | Phase | Status      | Tasks | Completed |
 | ----- | ----------- | ----- | --------- |
-| p01   | in_progress | 2     | 1/2       |
+| p01   | in_progress | 2     | 2/2       |
 | p02   | pending     | 2     | 0/2       |
 | p03   | pending     | 3     | 0/3       |
 | p04   | pending     | 2     | 0/2       |
 
-**Total:** 1/9 tasks completed
+**Total:** 2/9 tasks completed
 
 ## Phase 1: Shared content and guidance contracts
 
@@ -35,10 +35,10 @@ Implementation setup resolved from effective workflow configuration. Production 
 
 ### Task p01-t02: Share read-only managed guidance classification
 
-**Status:** pending
-**Commit:** -
-**Outcome:** Not started
-**Verification:** Not run
+**Status:** completed
+**Commit:** f0e97c14928b578dfcb27f2dd051b65653f44278
+**Outcome:** Added previewAgentsMdSection/previewAgentsMdSections sharing read-only inspection and pure classification. Upsert retains independent exclusive-create, opened-handle identity, append and conflict checks.
+**Verification:** 62/62 guidance tests; CLI type-check/lint/scoped build, scoped formatting/check and diff check each exit 0. Four nonmutation tests fail when preview calls real upsert, then all 62 pass after restoration.
 
 ## Phase 2: Markdown initialization and adoption
 
@@ -172,7 +172,7 @@ Dispatch: scope=p01 action=implementation role=implementer producer=unknown prov
     "dispatch_mode": "background"
   },
   "launch_status": "blocked-before-start",
-  "child_outcome": null,
+  "child_outcome": "DONE",
   "configured_invocation_evidence": [
     "project-state:high",
     "user-config:gpt-6.1-sol/high",
@@ -307,3 +307,35 @@ run('fumadocs-index-accepted',['--output',str(repo/'apps'/'docs'/'index.md')],{'
 
 run('fumadocs-transition-accepted',['--output',str(repo/'apps'/'docs'/'index.md')],{'version':1,'documentation':{'tooling':'fumadocs','root':'apps/docs','index':'apps/docs/docs/index.md'}})
 ```
+
+#### p01 phase report accepted before review
+
+Request `markdown-p01-pinned-20261001`; base `c3abaf0e40bc5794882fa2a956fca737b4eee98c`; task commits `59dd7f0341d2d8a19152345510031614961db0ce` and `f0e97c14928b578dfcb27f2dd051b65653f44278`, append-only with separate root tracking between them. Root verified clean worktree, exact task-file boundaries, commit order and production diff. Status DONE; recovery 0/10, no pending attempt/events; nested dispatches none; no scope expansion/deviation. Phase verification: direct Vitest across 13 files, 672 tests, exit 0 before and after final committed HEAD, no Turbo replay. Existing docs-init/tools/workflows/PJM/decision guidance consumers compose with the shared helper. Phase stays in_progress until independent review.
+
+Reproduction-grade preview nonmutation control (run in an isolated checkout with no concurrent writer; it temporarily routes preview through real upsert and always restores production bytes):
+
+```python
+# Run from repository root. Temporarily neutralizes the read-only boundary,
+# expects Vitest exit 1 with four mutation failures, and always restores bytes.
+import pathlib, subprocess
+path = pathlib.Path('packages/cli/src/commands/shared/agents-md.ts')
+saved = path.read_bytes()
+source = saved.decode()
+for function, next_function, body in [
+ ('previewAgentsMdSections', 'async function previewSectionsInternal', '  return upsertAgentsMdSections(repoRoot, sections, options);'),
+ ('previewAgentsMdSection', 'export async function upsertAgentsMdSections', '  return upsertAgentsMdSection(repoRoot, key, body, options);'),
+]:
+ start = source.index('export async function ' + function + '(')
+ end = source.index('\n' + next_function + '(', start)
+ signature_end = source.index(' {\n', start) + 3
+ source = source[:signature_end] + body + '\n}\n' + source[end:]
+try:
+ path.write_text(source)
+ result = subprocess.run(['pnpm', '--filter', '@open-agent-toolkit/cli', 'exec', 'vitest', 'run', 'src/commands/shared/agents-md.test.ts', '-t', 'read-only guidance preview'], capture_output=True, text=True)
+ print(result.stdout + result.stderr)
+ print('expected_exit=1 observed_exit=' + str(result.returncode))
+finally:
+ path.write_bytes(saved)
+```
+
+Expected inner Vitest exit 1 with four mutation failures; observed exit 1. Restored focused suite 62/62, exit 0.

@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t02
-oat_last_commit: 59dd7f0341d2d8a19152345510031614961db0ce
+oat_current_task: p02-t01
+oat_last_commit: f0e97c14928b578dfcb27f2dd051b65653f44278
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -97,7 +97,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation setup complete. p01-t01 complete; p01-t02 is next; standard root-owned reviews run after each phase and the final HiLL checkpoint follows p04.
+Implementation setup complete. p01 tasks complete; independent phase review pending; standard root-owned reviews run after each phase and the final HiLL checkpoint follows p04.
 
 ## Artifacts
 
@@ -105,7 +105,7 @@ Implementation setup complete. p01-t01 complete; p01-t02 is next; standard root-
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; approved dispositions incorporated)
 - **Plan:** `plan.md` (complete; ready for oat-project-implement)
-- **Implementation:** `implementation.md` (tracking initialized; 1/9 tasks completed)
+- **Implementation:** `implementation.md` (tracking initialized; 2/9 tasks completed)
 
 ## Progress
 
@@ -132,4 +132,4 @@ None
 
 ## Next Milestone
 
-Continue p01-t02 through the same accepted phase implementer.
+Review p01 against its committed task ledger before p02.
