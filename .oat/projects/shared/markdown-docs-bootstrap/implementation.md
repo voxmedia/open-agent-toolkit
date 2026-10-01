@@ -1701,3 +1701,70 @@ Root consumed exactly one not-attempted reconnaissance signal before validation,
 #### Final closeout baseline and verification
 
 All four phases/ten task commits reconcile with state and plan; task pointers null and implementation remains in_progress. Final verification reuses the completed p04 full ordered gates plus forced actual execution at final production commit 8f3f7fd95c49d33e4ded4c1dc57aa0515a849c59. Subsequent changes are project bookkeeping/review artifacts only; no new source change, failure or unresolved concern warrants repeating passing full suites. Required distinct final code review follows; deferred Medium/Low ledger is empty after settled prior dispositions. Review execution: subagent from workflow.reviewExecutionModel.
+
+#### final review dispatch
+
+Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high-3da8a37eed
+
+```json
+{
+  "request_id": "markdown-final-review-native-20261001",
+  "caller": "oat-project-implement",
+  "scope": "final",
+  "objective": "Consequential final review of combined Markdown bootstrap, preservation, path-safety, skill/doc contracts and bundled release assets; configured High review ceiling.",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "reviewer",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "codex-root-20261001",
+    "source": "tool-schema",
+    "observed_at": "2026-10-01"
+  },
+  "authority": "read-only code and one review artifact",
+  "role_selector": "oat-reviewer-gpt-6-1-sol-high-3da8a37eed",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-09-24",
+  "guidance_verified_at": "2026-09-24",
+  "guidance_status": "review-required",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/medium", "gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 3600,
+  "retry_limit": 2,
+  "payload": {
+    "agent_type": "oat-reviewer-gpt-6-1-sol-high-3da8a37eed",
+    "fork_turns": "none",
+    "scope_reference": "final:c3abaf0e40bc5794882fa2a956fca737b4eee98c..HEAD",
+    "dispatch_mode": "background"
+  },
+  "launch_status": "planned",
+  "child_outcome": null,
+  "configured_invocation_evidence": [
+    "project-state:high",
+    "user-config:gpt-6.1-sol/high",
+    "tool-schema:gpt-6.1-sol low-through-ultra",
+    "canonical-role:sha256:eb1bd78d0a5a48ed5d1867e313e19a07859a86aedec14d759beda8f97d26ce55"
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [
+    "Model guidance is dated; current configured target and live model selector control this invocation.",
+    "No independent service-tier control selected."
+  ],
+  "continuation_events": [],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Consequential final review of combined Markdown bootstrap, preservation, path-safety, skill/doc contracts and bundled release assets; configured High review ceiling.",
+  "floor_satisfaction": "satisfied"
+}
+```
