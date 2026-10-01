@@ -615,14 +615,14 @@ Configured gate: `oat-project-quick-start` exit gate, `onFailure: block`,
 `maxAttempts: 2`, reviewer `codex-6-sol-xhigh` (selected by cross-family
 exclusion with `OAT_GATE_PRODUCER_IDENTITY=claude-opus-5-5:declared`).
 
-- Attempt 1 (`reviews/artifact-plan-review-2026-10-01T061917Z.md`, blocked,
+- Attempt 1 (`reviews/archived/artifact-plan-review-2026-10-01T061917Z.md`, blocked,
   1 High, 2 Medium): H1 no executable closeout transition proof; M1 the
   `--force` apply-time re-check could not be shown load-bearing; M2 scoped
   recon issues lacked fail-closed validation. Resolved in `b76f27dd3` (H1
   disk-backed trace plus this project's own closeout as live evidence; M2
   closed union bound to covered claims; M1 by removing the re-check per the
   complexity review).
-- Attempt 2 (`reviews/artifact-plan-review-2026-10-01T063044Z.md`, blocked,
+- Attempt 2 (`reviews/archived/artifact-plan-review-2026-10-01T063044Z.md`, blocked,
   1 High, 1 Medium): H1 the `BL-260806` archive was placed inside the
   documentation child, before the PR child, approval, and completion it must
   cite; M1 the staged recon end-to-end test could not be green at each task
