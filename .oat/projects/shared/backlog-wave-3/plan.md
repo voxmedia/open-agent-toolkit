@@ -750,6 +750,44 @@ Expected: exit 0.
 
 ---
 
+### Task p03-t07: (review) Close p03 round-2 findings H1, M1, M2
+
+Source: `reviews/archived/p03-review-2026-10-01T131855Z.md` (auto review,
+round 2, blocking: 0 Critical, 1 High, 2 Medium, 1 Low). L1 (PR list) is root
+bookkeeping in the PR Requirements.
+
+**Step 1: Fix**
+
+- H1: apply the p03-t06 brief binding (every brief entry is a distinct ledger
+  claim with an exact projection; no duplicate IDs) to every brief type, not
+  only verification briefs: adversarial briefs (`provisionalStatements`) and
+  coverage briefs too. Add the three round-2 probes as tests (an injected
+  adversarial note, an invented coverage claim, a duplicate claim ID); each
+  fails closed with `REVIEW_BRIEF_MISMATCH`. Neutralize the generalized check
+  once.
+- M1: a claim that a required review left without a disposition must not hide
+  in a `complete` packet. Publication requires the packet to be partial with
+  a material gap naming the claim and the review, and the Review Downgrades
+  section lists it as not reviewed. Test the omitted-disposition path through
+  the production helpers (do not set the partial status or gap by hand).
+- M2: add a test that fails when only the duplicate-ID clause is removed
+  (a second `claim-alpha` entry with forged evidence on an injected source).
+
+No further version bumps.
+
+**Step 2: Verify**
+
+Run: `node --test .agents/skills/recon/tests/*.test.mjs`,
+`HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation`,
+`pnpm run check:skill-bumps`, `pnpm lint`.
+Expected: exit 0.
+
+**Step 3: Commit**
+
+`fix(p03-t07): close p03 round-2 review findings`
+
+---
+
 ## Phase 4: Lifecycle closeout guards
 
 Backlog: `BL-261001-recompute-oat-project-next-s`,
@@ -1387,6 +1425,10 @@ breaking changes must be named in the title:
     `REVIEW_DISPOSITION_MISMATCH` (the #333 packet among them) still keeps every
     covered claim below verified after re-running reconciliation; only newly
     produced scoped issues downgrade selectively;
+  - recon `packet.md` gains a Review Downgrades section listing every claim a
+    review kept below verified (including claims a review omitted), and
+    `retryLimit` now means pre-acceptance admission retries with at most one
+    retry per lane;
   - `oat docs nav sync` writes Fumadocs `meta.json`;
   - `oat project complete-state` refuses a configured closeout with a missing
     or incomplete snapshot; exit-gate waivers are operator-only;
@@ -1411,6 +1453,7 @@ breaking changes must be named in the title:
 | p01    | code     | fixes_completed | 2026-10-01 | reviews/archived/p01-review-2026-10-01T112852Z.md  | de9c98848aeb2379f0b9a81ead945664351d1f2b | auto       | -                 |
 | p02    | code     | fixes_completed | 2026-10-01 | reviews/archived/p02-review-2026-10-01T120623Z.md  | c129e82aba9a93c067b587718e576ad31edd372e | auto       | -                 |
 | p03    | code     | fixes_completed | 2026-10-01 | reviews/archived/p03-review-2026-10-01T130314Z.md  | 3769d125fc8499b681305a7565fbdab66b9174a5 | auto       | -                 |
+| p03    | code     | fixes_added     | 2026-10-01 | reviews/archived/p03-review-2026-10-01T131855Z.md  | a3d625b312d892dbdd33270582fb2561ec39533c | auto       | -                 |
 | p04    | code     | pending         | -          | -                                                  | -                                        | -          | -                 |
 | p05    | code     | pending         | -          | -                                                  | -                                        | -          | -                 |
 | p06    | code     | pending         | -          | -                                                  | -                                        | -          | -                 |
@@ -1491,12 +1534,12 @@ criterion.
 
 - Phase 1: 5 tasks - Template resolver
 - Phase 2: 6 tasks - Fumadocs navigation
-- Phase 3: 6 tasks - Recon publication and Codex recovery
+- Phase 3: 7 tasks - Recon publication and Codex recovery
 - Phase 4: 4 tasks - Lifecycle closeout guards
 - Phase 5: 6 tasks - Small fixes
 - Phase 6: 3 tasks - Release fan-in
 
-**Total: 30 tasks**
+**Total: 31 tasks**
 
 Ready for code review and merge.
 

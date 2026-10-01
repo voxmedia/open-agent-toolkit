@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
-oat_current_task_id: p04-t01
+oat_current_task_id: p03-t07
 oat_generated: false
 ---
 
@@ -28,12 +28,12 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 5     | 5/5       |
 | Phase 2 | complete    | 6     | 6/6       |
-| Phase 3 | in_progress | 6     | 6/6       |
+| Phase 3 | in_progress | 7     | 6/7       |
 | Phase 4 | pending     | 4     | 0/4       |
 | Phase 5 | pending     | 6     | 0/6       |
 | Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 17/30 tasks completed
+**Total:** 17/31 tasks completed
 
 ---
 
@@ -137,6 +137,11 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** e60ec3a72
+
+### Task p03-t07: (review) Close p03 round-2 findings H1, M1, M2
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -348,6 +353,18 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   probes fail closed; deviation from strict equality recorded and accepted by
   root), M2 (Review Downgrades section in `packet.md`), L1 (admission-retry
   label and worst case); recon 349/349, `pnpm lint` exit 0.
+
+- Request `bw3-p03-review-2` (round 2) at `a3d625b31`:
+  `reviews/archived/p03-review-2026-10-01T131855Z.md`, 0 Critical, 1 High
+  (binding enforced for verification briefs only; adversarial and coverage
+  briefs still accept injected entries), 2 Medium (an omitted-disposition
+  claim can hide in a `complete` packet; the duplicate-ID clause had no
+  failing test), 1 Low (PR list). Deviation adjudicated sound: the
+  omitted-disposition path cannot promote a claim to verified. Round-1 M3, M4,
+  L1 closed; merge `a8e2d2cd4` lost nothing. H1, M1, M2 converted to
+  `p03-t07` (third and final cycle under the review cap); L1 fixed in the PR
+  Requirements.
+  `Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
 
 <!-- orchestration-runs-end -->
 
