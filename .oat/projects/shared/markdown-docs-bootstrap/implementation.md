@@ -2378,7 +2378,7 @@ Dispatch: scope=summary action=implementation role=implementer producer=unknown 
     "accepted_handle": "/root/markdown_closeout_summary"
   },
   "launch_status": "accepted",
-  "child_outcome": null,
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     "project-state:high",
     "current dispatch resolver model/effort tuple: gpt-6.1-sol/medium",
@@ -2405,3 +2405,7 @@ Dispatch: scope=summary action=implementation role=implementer producer=unknown 
   "floor_satisfaction": "satisfied"
 }
 ```
+
+#### Pre-approval summary completed
+
+Accepted summary child `markdown-closeout-summary-pinned-20261001` completed in `15aad4f4f0cfa4f214e62ac48dba5cd5d3b3ab10`: 111-line written summary, five confirmed CLI-promoted decision records and CLI-generated index. Root read the complete summary and decisions, checked exact seven-path diff and actual exit-zero formatting/rollup receipts; state/plan/implementation/log remained unchanged, immutable sequence verified before success. Eleven structural log entries, zero judgments; rollup deduplicated and byte-idempotent. Broader backlog remains open, all five packages 0.3.11, no publication/merge claimed. Visual recap skipped (interactive); final HiLL pending.

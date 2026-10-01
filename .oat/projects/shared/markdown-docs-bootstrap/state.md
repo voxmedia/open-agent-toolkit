@@ -144,7 +144,8 @@ oat_post_implement_sequence:
     - summary
     - document
     - pr
-  pre_approval_completed: []
+  pre_approval_completed:
+    - summary
   approval: pending
   approval_source: null
   post_approval: []
@@ -154,13 +155,13 @@ oat_post_implement_sequence:
 
 # Project State: markdown-docs-bootstrap
 
-**Status:** Tasks and final review complete; exit gate pending
+**Status:** Tasks, final review and retained exit gate passed; configured closeout in progress
 **Started:** 2026-09-30
 **Last Updated:** 2026-10-01
 
 ## Current Phase
 
-All eleven tasks and final review complete. Metadata M1 independently resolved; original counts retained. Retained exit gate and configured pre-approval sequence precede final HiLL.
+All eleven tasks and final lifecycle review complete. Refreshed retained exit gate received and passed; all findings settled with original counts retained. Written summary complete; documentation and PR closeout precede final p04 HiLL approval.
 
 ## Artifacts
 
@@ -176,7 +177,8 @@ All eleven tasks and final review complete. Metadata M1 independently resolved; 
 - Four sequential phases and eleven executable tasks planned, including p02 encoding and final metadata fixes
 - All user-approved review edits applied
 - Final cross-runtime gate passed; both Low findings dispositioned as already-covered scope
-- Eleven task commits reconciled; full checks passed after metadata repair
+- Eleven task commits reconciled; full checks passed after metadata and literal-rendering repairs
+- Written summary complete; visual recap skipped by explicit user choice
 
 ## Review Setup
 
@@ -195,4 +197,4 @@ None
 
 ## Next Milestone
 
-Run the retained implementation exit gate, then configured pre-approval closeout steps and final HiLL.
+Complete configured documentation and PR steps, then request final p04 HiLL approval.
