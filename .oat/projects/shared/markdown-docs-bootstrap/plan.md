@@ -18,7 +18,7 @@ oat_template: false
 
 # Implementation Plan: markdown-docs-bootstrap
 
-> Execute with `oat-project-implement` after quick-start review and readiness are complete. All ten implementation tasks are complete; final acceptance reviews/gate and HiLL approval remain pending.
+> Execute with `oat-project-implement` after quick-start review and readiness are complete. Ten of eleven implementation tasks complete; final M1 repair and acceptance remain pending.
 
 **Goal:** Offer plain Markdown docs bootstrap with `documentation.tooling: markdown`, authored index/context conventions, additive adoption, and nonmutating dry-run.
 
@@ -184,6 +184,18 @@ All phases run sequentially (`oat_plan_parallel_groups: []`). p02 consumes p01's
 
 **Commit:** `chore(p04-t02): record markdown docs acceptance and verification`.
 
+### Task p04-t03: (review) Normalize blank Markdown metadata inputs
+
+**Files:** Modify `packages/cli/src/commands/docs/init/resolve-options.ts` and `integration.test.ts`; retain exact public controls in `reviews/final-metadata-controls.md`. No framework, skill, dependency or version changes.
+
+**Finding:** Final M1 from `reviews/archived/final-review-2026-10-01T151606Z.md`. Root agrees; Task Scope: Minor. Empty/whitespace title and whitespace description are accepted with blank authored metadata.
+
+**Steps:** Normalize blank Markdown title/description inputs to meaningful repository defaults before planning or writes. Preserve interactive null cancellation, valid supplied values, exactly empty-description default, framework semantics and additive adoption. Public-command regression protects generated metadata at the real init boundary; independent YAML and complete filesystem/config snapshots supply the oracle. Existing positive-input coverage misses the blank boundary. Show the new regression failing on pre-fix source, then passing after restoration. Keep a valid accepted input/default control.
+
+**Verify:** Build before bundle-backed focused tests and real CLI walkthrough. Direct p02 ten-file init/guidance suite plus CLI type-check/lint and exact formatting/diff. Reproduce three original bad states, corrected meaningful output and accepted valid control with independent metadata reader. Re-run all eight repository CI gates in required order with fresh origin/main fetch before version gate and direct exits; record actual versus cached results. No redundant full forced run needed if changed CLI suite executes and unchanged consumer proof remains valid. Commit only declared task/evidence files, yield TASK_DONE for root tracking ACK, then return same-target fix report. Final independent re-review and exit gate remain root-owned.
+
+**Commit:** `fix(p04-t03): normalize blank markdown metadata inputs`.
+
 ## Reviews
 
 Existing scaffold rows and historical review events are preserved. Quick mode requires no spec. All approved plan edits are applied; the final cross-runtime gate passed and its two Low findings were dispositioned as already-covered scope. See `reviews/plan-gate-final-handoff.md` for receipt evidence. Implementation is in progress; p01 tasks and independent review complete.
@@ -212,7 +224,7 @@ Record full reviewed heads and invocation provenance for actual reviews. Preserv
 
 | p03 | code | fixes_completed | 2026-10-01 | reviews/p03-review-2026-10-01T140627Z.md | 1e03f88dcb5ae9713ff36a4b3327ac02d1b4f953 | auto | - |
 | p04 | code | passed | 2026-10-01 | reviews/p04-review-2026-10-01T150035Z.md | f4d76f977968c4d4e00d86153e48a9781649a2d1 | auto | - |
-| final | code | received | 2026-10-01 | reviews/final-review-2026-10-01T151606Z.md | f7b7acb6f041d9b016bc67af4196c40a0f689e6d | auto | - |
+| final | code | fixes_added | 2026-10-01 | reviews/archived/final-review-2026-10-01T151606Z.md | f7b7acb6f041d9b016bc67af4196c40a0f689e6d | auto | - |
 
 ### Plan Review Dispositions
 
@@ -225,7 +237,7 @@ Source pointers retained for the already-planned consumer inventory: index gener
 
 ## Implementation Complete
 
-Implementation in progress: 10/10 tasks complete; final acceptance pending. Planned scope: 4 sequential phases, 10 atomic tasks — p01 (2), p02 (3), p03 (3), p04 (2). Replace this with a completion summary only after implementation and required reviews/gates pass.
+Implementation in progress: 10/11 tasks complete; final review M1 repair pending. Planned scope: 4 sequential phases, 11 atomic tasks — p01 (2), p02 (3), p03 (3), p04 (3). Replace this with a completion summary only after implementation and required reviews/gates pass.
 
 ## References
 

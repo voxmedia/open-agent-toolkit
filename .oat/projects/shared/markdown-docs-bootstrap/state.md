@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p04-t03
 oat_last_commit: 8f3f7fd95c49d33e4ded4c1dc57aa0515a849c59
 oat_blockers: []
 associated_issues:
@@ -85,19 +85,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-30T18:58:24.831Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-01T15:03:49Z'
+oat_project_state_updated: '2026-10-01T15:23:19Z'
 oat_generated: false
 ---
 
 # Project State: markdown-docs-bootstrap
 
-**Status:** Tasks complete; final acceptance in progress
+**Status:** Final review repair in progress
 **Started:** 2026-09-30
 **Last Updated:** 2026-10-01
 
 ## Current Phase
 
-All ten tasks complete. p01–p03 are reviewed with settled dispositions; p04 integration, release checks and independent phase review passed. Distinct final review and the retained exit gate precede the final HiLL checkpoint.
+Ten of eleven tasks complete. Final code review found one valid Medium: blank Markdown inputs produce invalid fresh metadata. p04-t03 is queued; original reviews and raw counts remain history. Final re-review and retained exit gate precede closeout/HiLL.
 
 ## Artifacts
 
@@ -105,15 +105,15 @@ All ten tasks complete. p01–p03 are reviewed with settled dispositions; p04 in
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; approved dispositions incorporated)
 - **Plan:** `plan.md` (complete; ready for oat-project-implement)
-- **Implementation:** `implementation.md` (10/10 tasks completed; final acceptance pending)
+- **Implementation:** `implementation.md` (10/11 tasks completed; final review M1 repair pending)
 
 ## Progress
 
 - Discovery and approved lightweight design complete
-- Four sequential phases and ten executable tasks planned, including p02 review fix
+- Four sequential phases and eleven executable tasks planned, including p02 encoding and final metadata fixes
 - All user-approved review edits applied
 - Final cross-runtime gate passed; both Low findings dispositioned as already-covered scope
-- All ten task commits and separate bookkeeping reconciled; full implementation checks passed
+- Ten task commits reconciled; full checks passed before new final metadata repair
 
 ## Review Setup
 
@@ -132,4 +132,4 @@ None
 
 ## Next Milestone
 
-Complete final review and retained implementation exit gate, then present the final HiLL checkpoint.
+Complete p04-t03 metadata normalization, required verification and final re-review, then retained exit gate and closeout.

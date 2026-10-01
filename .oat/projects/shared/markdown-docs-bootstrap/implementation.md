@@ -3,24 +3,24 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
-oat_current_task_id: null
+oat_current_task_id: p04-t03
 oat_generated: false
 ---
 
 # Implementation: markdown-docs-bootstrap
 
-All ten implementation tasks are complete. Phases p01–p03 have independent reviews and settled dispositions; p04 integration, release verification and independent phase review passed. Five public packages are 0.3.11 above fresh main 0.3.10. Final review, retained exit gate and p04 HiLL approval remain pending.
+Ten of eleven tasks are complete. Original phase reviews are settled; final M1 metadata normalization is queued as p04-t03. Packages remain0.3.11; source repair verification, final re-review and retained exit gate precede configured closeout/HiLL.
 
 ## Progress Overview
 
-| Phase | Status   | Tasks | Completed |
-| ----- | -------- | ----- | --------- |
-| p01   | complete | 2     | 2/2       |
-| p02   | complete | 3     | 3/3       |
-| p03   | complete | 3     | 3/3       |
-| p04   | complete | 2     | 2/2       |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p01   | complete    | 2     | 2/2       |
+| p02   | complete    | 3     | 3/3       |
+| p03   | complete    | 3     | 3/3       |
+| p04   | in_progress | 3     | 2/3       |
 
-**Total:** 10/10 tasks completed
+**Total:** 10/11 tasks completed
 
 ## Phase 1: Shared content and guidance contracts
 
@@ -92,7 +92,7 @@ All ten implementation tasks are complete. Phases p01–p03 have independent rev
 
 ## Phase 4: Integration, bundled release, and acceptance
 
-**Status:** complete
+**Status:** in_progress
 
 ### Task p04-t01: Apply release versions and verify bundles
 
@@ -107,6 +107,13 @@ All ten implementation tasks are complete. Phases p01–p03 have independent rev
 **Commit:** 8f3f7fd95c49d33e4ded4c1dc57aa0515a849c59
 **Outcome:** Integrated Markdown and framework controls, consumer inventory, release receipts and partial backlog note recorded. Two stale help snapshots and two skill-version literals repaired within the planned acceptance-defect scope; original failure retained.
 **Verification:** All eight CI gates passed in order, plus root lint/format. Forced isolated-home workspace run executed ten uncached tasks, 8,135 tests and docs generation 73/73; normal test separately ran smoke 163, skills 660 and scripts 1. Twenty-four integrated controls and six retained probes pass. Recovery 0/10, no pending event, no nested dispatch.
+
+### Task p04-t03: (review) Normalize blank Markdown metadata inputs
+
+**Status:** pending
+**Commit:** -
+**Outcome:** Queued from final M1; normalize blank inputs to meaningful defaults without changing frameworks.
+**Verification:** Pending failing-before/passing-after public regression and required full gates.
 
 ## Review and Acceptance Evidence
 
@@ -124,7 +131,7 @@ Markdown authored indexes are protected from manifest generation throughout the 
 
 Key owners are CLI docs init/markdown planning, shared root resolution and managed-guidance preview, index generation, bundle inputs/docs-pack manifest, two baseline templates, five canonical lifecycle/docs skills and twelve source documentation pages. Five public packages plus generated CLI version inventory are lockstep 0.3.11, above fresh main 0.3.10.
 
-All ten tasks and four independent phase reviews are complete. Verification: eight CI gates passed in order, root lint/format passed; forced isolated-home execution ran ten uncached tasks and 8,135 workspace tests, with docs compilation/generation 73/73. Normal test separately executed smoke163/skills660/scripts1. Bundle parity46, user/project install/update,24 integrated CLI controls and six retained probes passed; independent reviews reproduced pre-fix overwrite/broken navigation and restored negative/accepted controls. Original failures and cache replays remain distinguished in durable receipts.
+Ten original tasks and four original phase reviews are complete; final M1 adds p04-t03 metadata normalization, pending. Verification: eight CI gates passed in order, root lint/format passed; forced isolated-home execution ran ten uncached tasks and 8,135 workspace tests, with docs compilation/generation 73/73. Normal test separately executed smoke163/skills660/scripts1. Bundle parity46, user/project install/update,24 integrated CLI controls and six retained probes passed; independent reviews reproduced pre-fix overwrite/broken navigation and restored negative/accepted controls. Original failures and cache replays remain distinguished in durable receipts.
 
 Design deltas: no production scope deviation. The p02 review added bounded filename-encoding correction; p04 acceptance repaired two stale help snapshots and two canonical skill-version literals under its planned acceptance-defect clause. Source backlog remains open for the broader approvals/version-drift work. Final review, retained implementation exit gate and configured pre-approval closeout work remain pending; no release has occurred.
 
@@ -1490,6 +1497,17 @@ Accepted exact-target canonical-role route /root/markdown_p04_pinned; awaiting r
       "provesNoChildStarted": true,
       "canonicalRoleDigest": "sha256:a9c0b0be772025a6115005b6870ea9d5de4cb9e07c23790ff94dfac07fe6e005",
       "approximation": true
+    },
+    {
+      "event": "review-fix-continuation",
+      "mode": "fix",
+      "review_artifact": "reviews/archived/final-review-2026-10-01T151606Z.md",
+      "finding_ids": ["M1"],
+      "task_ids": ["p04-t03"],
+      "original_request_id": "markdown-p04-pinned-20261001",
+      "accepted_handle": "/root/markdown_p04_pinned",
+      "exact_target_preserved": true,
+      "fix_iteration": 1
     }
   ],
   "task_class": "consequential",
@@ -1848,3 +1866,7 @@ Accepted exact-target canonical-role route /root/markdown_final_review_pinned; a
 #### Final review round one received
 
 Root consumed exactly one not-attempted signal before validation; no Review Orchestration or recon-log append. Read complete reviews/final-review-2026-10-01T151606Z.md; full final range and head f7b7acb6f041d9b016bc67af4196c40a0f689e6d validated, counts/sections agree: 0 Critical,0 High,1 Medium,0 Low. Prior deferred Medium/Low ledger empty. M1 valid: Markdown resolver accepts empty/whitespace title and whitespace description, producing empty-in-practice authored metadata while reporting ok. Existing empty-description default is a valid control. Task Scope Minor; source/plan/docs fresh metadata contract establishes meaningful fields. Auto receive converts M1 to bounded p04-t03, with repository-default normalization, public command regression and independent YAML/byte oracle. No deferral or production scope expansion; final review not passed.
+
+#### Final M1 automatic receive disposition
+
+M1 converted to p04-t03 in the last phase per final-review receive routing. Public init metadata boundary is the distinct test owner; no duplicate private-layer coverage, fixture infrastructure or production-only test hook. Normalize blank values to meaningful defaults as allowed by the review and approved fresh-docs contract; retain original failure and valid control. Bound first final review event fixes_added and archived only after raw artifact committed. Same original p04 handle/High target resumes in fix mode, final fix iteration1, recovery usage unchanged0/10. No user deferral or additional permission needed under auto-disposition.
