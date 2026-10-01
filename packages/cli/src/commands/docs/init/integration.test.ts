@@ -925,6 +925,68 @@ describe('Markdown docs init public boundary', () => {
     expect(config.documentation.requireForProjectCompletion).toBe(true);
   });
 
+  it('renders external Markdown template values literally during adoption', async () => {
+    const cases = [
+      { value: '$&', href: 'guide-%24%26.md' },
+      { value: "$'", href: "guide-%24'.md" },
+      { value: '$`', href: 'guide-%24%60.md' },
+      { value: '$$', href: 'guide-%24%24.md' },
+      {
+        value: '{{CONTENTS}}-{{REPO_NAME}}',
+        href: 'guide-%7B%7BCONTENTS%7D%7D-%7B%7BREPO_NAME%7D%7D.md',
+        label: 'Guide {{CONTENTS}} {{REPO NAME}}',
+      },
+      { value: 'ordinary', href: 'guide-ordinary.md', label: 'Guide Ordinary' },
+    ];
+    for (const fixture of cases) {
+      const parent = await temporaryRepo();
+      const repoName = `repo-${fixture.value}`;
+      const root = join(parent, repoName);
+      await mkdir(join(root, 'docs'), { recursive: true });
+      const filename = `guide-${fixture.value}.md`;
+      const page = '# Preserved guidance\n';
+      await writeFile(join(root, 'docs', filename), page);
+      const title = `Operators ${fixture.value}`;
+      const description = `Ownership ${fixture.value}`;
+      const args = [
+        '--adopt',
+        '--site-name',
+        title,
+        '--description',
+        description,
+      ];
+      const before = await snapshotTree(root);
+      const preview = await runMarkdown(root, args, true);
+      expect(preview.exit ?? 0).toBe(0);
+      expect(await snapshotTree(root)).toEqual(before);
+      const result = await runMarkdown(root, args);
+      expect(result.exit ?? 0).toBe(0);
+      expect(result.jsonPayloads[0]).toMatchObject({ status: 'ok' });
+      const indexPath = join(root, 'docs', 'index.md');
+      const index = await readFile(indexPath, 'utf8');
+      const metadata = parseYaml(index.match(/^---\n([\s\S]*?)\n---/)![1]!);
+      expect(metadata).toMatchObject({ title, description });
+      expect(index).toContain(`**${repoName}**`);
+      expect(index.match(/^## Contents$/gm)).toHaveLength(1);
+      const contents = index.split('\n## Contents\n\n')[1]!.trim();
+      expect(contents).toBe(
+        `- [${fixture.label ?? `Guide ${fixture.value}`}](${fixture.href})\n- [Contributing](contributing.md)`,
+      );
+      const destinations = [
+        ...contents.matchAll(/^- \[.*\]\(([^)]*)\)$/gm),
+      ].map((match) => match[1]!);
+      expect(destinations).toEqual([fixture.href, 'contributing.md']);
+      for (const destination of destinations) {
+        const uri = new URL(destination, pathToFileURL(indexPath));
+        await readFile(fileURLToPath(uri), 'utf8');
+      }
+      expect(await readFile(join(root, 'docs', filename), 'utf8')).toBe(page);
+      expect(
+        await readFile(join(root, 'docs', 'contributing.md'), 'utf8'),
+      ).toContain(`**${repoName}**`);
+    }
+  });
+
   it('adoption links resolve to authored filenames containing URI delimiters and parentheses', async () => {
     const root = await temporaryRepo();
     const originalFiles = new Map([

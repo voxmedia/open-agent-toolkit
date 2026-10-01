@@ -81,9 +81,9 @@ function renderMarkdownTemplate(
     '{{LINT_MODE}}': options.lint,
     '{{FORMAT_MODE}}': options.format,
   };
-  return Object.entries(replacements).reduce(
-    (content, [token, value]) => content.replaceAll(token, value),
-    template,
+  return template.replace(
+    /'\{\{(?:TITLE|DESCRIPTION)_METADATA\}\}'|\{\{[A-Z_]+\}\}/g,
+    (token) => replacements[token] ?? token,
   );
 }
 
