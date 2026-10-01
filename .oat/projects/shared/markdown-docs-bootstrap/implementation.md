@@ -3,13 +3,13 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
-oat_current_task_id: p03-t02
+oat_current_task_id: p03-t03
 oat_generated: false
 ---
 
 # Implementation: markdown-docs-bootstrap
 
-Phases p01 and p02 are complete after independent reviews. Six of ten tasks are complete; p03 bootstrap guidance is implemented and consumer alignment is next. Final HiLL remains p04.
+Phases p01 and p02 are complete after independent reviews. Seven of ten tasks are complete; bootstrap and consumer guidance are implemented. Next p03-t03 documents the verified behavior. Final HiLL remains p04.
 
 ## Progress Overview
 
@@ -20,7 +20,7 @@ Phases p01 and p02 are complete after independent reviews. Six of ten tasks are 
 | p03   | pending  | 3     | 0/3       |
 | p04   | pending  | 2     | 0/2       |
 
-**Total:** 6/10 tasks completed
+**Total:** 7/10 tasks completed
 
 ## Phase 1: Shared content and guidance contracts
 
@@ -78,10 +78,10 @@ Phases p01 and p02 are complete after independent reviews. Six of ten tasks are 
 
 ### Task p03-t02: Align analyze, apply, authoring, and lifecycle consumers
 
-**Status:** pending
-**Commit:** -
-**Outcome:** Not started
-**Verification:** Not run
+**Status:** completed
+**Commit:** 6675f596333b6e9f83b4453027d2a0f1dd1c5466
+**Outcome:** Configured Markdown roots remain literal, authored index/context/Contents/metadata and local instructions retain ownership, and file/link checks replace app-only assumptions. Relevant additional authoring validation/targeted/lifecycle resources stay within declared skill ownership. Four skills bumped once: analyze 1.6.0, apply 1.4.0, authoring 1.1.0, project-document 1.8.6. Doctor unchanged after conflict inspection.
+**Verification:** Exact ten-file formatting/check and diff, validate 65, actual 660 skill tests, lint ten uncached package tasks and root pass, format and public walkthrough repeat each exit 0. Source-aware traces cover fresh/adopted incomplete/nested Markdown and framework controls; incomplete authored context and local instructions remain unchanged with recommendations. No recovery or nested dispatch.
 
 ### Task p03-t03: Document commands and index ownership
 
@@ -1166,3 +1166,21 @@ Accepted exact-target canonical-role route /root/markdown_p03_pinned; awaiting r
   "floor_satisfaction": "satisfied"
 }
 ```
+
+#### p03 design-listed consumer inventory (before docs task)
+
+| Consumer                                                    | Disposition and evidence                                                                                                                                                                                                            |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Bootstrap preflight/config/walkthrough/instruction template | Changed p03-t01 `.agents/skills/oat-docs-bootstrap/{SKILL.md,assets/AGENTS.md.template}`; Markdown seven-step route, framework-only bridge                                                                                          |
+| Analyze root/quality checks                                 | Changed `.agents/skills/oat-docs-analyze/{SKILL.md,references/quality-checklist.md}`                                                                                                                                                |
+| Apply root/file verification                                | Changed `.agents/skills/oat-docs-apply/SKILL.md`                                                                                                                                                                                    |
+| Authoring source/ownership/validation/lifecycle             | Changed `.agents/skills/oat-docs-authoring/{SKILL.md,references/docs-root-resolution.md,references/oat-fumadocs-contract.md,references/validation.md,references/targeted-authoring-workflow.md,references/lifecycle-boundaries.md}` |
+| Project documentation                                       | Changed `.agents/skills/oat-project-document/SKILL.md` conflicting root/generated/build assumptions                                                                                                                                 |
+| Doctor docs config consumer                                 | Verified unchanged `.agents/skills/oat-doctor/SKILL.md`: presence/config/audit routing makes no app/index/build assumption                                                                                                          |
+| Shared content resolver and instruction consumers           | p01 owns `packages/cli/src/config/oat-config.ts`; p03 verified shared resolver and `instructions/instructions.utils.ts`, sync/validate consumers unchanged                                                                          |
+| Manifest source/safety/config transition                    | p01 owns `packages/cli/src/commands/docs/index-generate/index.ts`; p03 verified full-root/authored-index safety and Fumadocs-only transition unchanged                                                                              |
+| CLI init options/results/help                               | p02 owns docs/init options/index/help; p03 verifies unchanged                                                                                                                                                                       |
+| General oat init detection/config                           | Deliberately unchanged `packages/cli/src/commands/init/{detect-docs.ts,index.ts}`                                                                                                                                                   |
+| User CLI/config/reference/instruction-sync docs             | p03-t03 pending; final inventory recheck required p04                                                                                                                                                                               |
+
+Walkthrough proof uses the executable p03 controls: fresh authored structure passes; adopted incomplete context remains authored with metadata/Contents/child-index recommendations; nested handbook keeps parent plus child docs/index; framework branch retains app/derived checks. It does not claim CLI probes execute an agent's prose workflow. Source-aware inspection provides the skill routing evidence separately.
