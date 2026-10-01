@@ -37,6 +37,22 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- Markdown docs bootstrap (`markdown-docs-bootstrap`, branch
+  `t3code/support-markdown-docs-bootstrap`; five public packages prepared at
+  `0.3.11`, not published) supports `oat docs init --framework markdown`,
+  literal content roots, authored indexes, explicit additive `--adopt`, and
+  nonmutating `--dry-run`. Optional generated manifests require external
+  output; existing content and local instructions remain authoritative.
+  Bootstrap, analyze/apply, authoring and instruction consumers retain the
+  applicable Markdown contracts without site tooling. All eleven tasks,
+  final review and retained implementation exit gate passed; configured
+  closeout and final HiLL approval remain pending. See the
+  [project summary](../../projects/shared/markdown-docs-bootstrap/summary.md).
+  **BL-260911-make-docs-bootstrap-a-front: Make docs bootstrap a front door
+  for existing docs and support the docs-directory convention** remains open
+  for package drift, approval classes, pntr automation and external-repository
+  acceptance.
+
 - CLI `0.3.9` (`backlog-wave-2`, branch `wave/2026-09-27-backlog-wave-2`)
   closes twelve backlog items. `CLAUDE.md` shims are opt-in:
   `instructions.claude.shims` (`none | pointer | symlink | copy`,
