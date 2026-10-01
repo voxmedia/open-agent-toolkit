@@ -78,7 +78,7 @@ Backlog: `BL-260927-expose-a-scoped-template` (lead item;
 - Create: `packages/cli/src/commands/shared/template-source.ts` and its test
 - Modify: `packages/cli/src/commands/project/new/scaffold.ts`
   (`resolveTemplateSource`, around line 447) and its callers, including
-  `packages/cli/src/commands/project/promote.ts` (around lines 395 and 427)
+  `packages/cli/src/commands/project/promote/promote.ts` (around lines 395 and 427)
 - Modify: `packages/cli/src/commands/pjm/template-source.ts`
   (`resolvePjmTemplate`) to delegate to the shared module, keeping its exported
   shape for existing callers
@@ -107,7 +107,7 @@ body: neither copies a lifecycle template a user-scope install lacks.
 
 **Step 3: Verify**
 
-Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/shared/template-source.test.ts src/commands/project src/commands/pjm`
+Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/shared/template-source.test.ts src/commands/project src/commands/pjm src/commands/backlog src/commands/decision`
 Expected: exit 0.
 
 **Step 4: Commit**
@@ -128,14 +128,15 @@ Expected: exit 0.
 
 **Step 1: Failing tests first**
 
-Cover `oat template resolve <name> [--json] [--output <path>]`:
+Cover `oat template resolve <name> [--json] [--output <path> [--force]]`:
 
 - Human and `--json` output report `name`, `found`, `tier`, and `path`. `path`
   is set only for the repository and user tiers; it is `null` for the bundle.
 - `<name>` accepts `plan` or `plan.md` and rejects separators and `..`.
-- `--output <path>` writes the resolved content, creates no parent
-  directories, and refuses to overwrite an existing file (exit 1, clear
-  message).
+- `--output <path>` writes the resolved content and creates no parent
+  directories. It refuses to overwrite an existing file (exit 1, clear
+  message) unless `--force` is given, which replaces it. Test both modes,
+  including a target that already exists.
 - A missing template exits 1 with a message naming the three tiers and no
   package-manager path.
 - Integration: a temporary repository with no `.oat/templates`, an isolated
@@ -174,8 +175,13 @@ Expected: exit 0.
   `oat-project-import-plan/SKILL.md` (193, 493),
   `oat-project-promote-spec-driven/SKILL.md` (108),
   `oat-project-implement/references/plan-and-resume.md` (339)
-- Modify: `.agents/skills/oat-cursor-cloud-projects/SKILL.md` (around lines
-  185-200) to repository, user, bundle order
+- Modify: `.agents/skills/oat-cursor-cloud-projects/SKILL.md` (the
+  "Resolve Assets with User Scope First" step, around lines 184-204) and
+  `apps/oat-docs/docs/workflows/projects/cursor-cloud.md` (around 94-99):
+  templates only. Template resolution goes through `oat template resolve`
+  (repository, user, bundle); skill and script resolution keep their
+  user-first order, and the staleness rationale is reworded so it no longer
+  covers templates
 - Modify: descriptive mentions where they state a copy source:
   `oat-project-new/SKILL.md` (14, 95), `oat-repo-improve/SKILL.md` (266),
   `oat-pjm-decision/SKILL.md` (93)
@@ -189,8 +195,13 @@ Expected: exit 0.
 
 Each skill resolves its template with `oat template resolve <name> --output
 "$PROJECT_PATH/<file>"` (or reads `--json` when it only needs to know the tier)
-instead of assuming `.oat/templates/`. A skill that only fills a missing file
-keeps that condition. The ideas skills already resolve scope correctly; leave
+instead of assuming `.oat/templates/`. Keep each call site's current
+semantics and list them in the commit body: an unconditional copy onto a file
+`oat project new` already scaffolded (discover's `state.md` and
+`discovery.md`, spec's `spec.md`, design's `spec.md` and `design.md`, plan's
+**Overwrite** branch) passes `--force`; a fill-if-missing copy omits it and
+keeps its existing condition. The pinned plan-overwrite text in
+`packages/cli/src/validation/skills.test.ts` (around line 5806) moves with it. The ideas skills already resolve scope correctly; leave
 them. Bump each changed skill once per the worker rules.
 
 **Step 2: Verify**
@@ -267,11 +278,11 @@ Expected: exit 0.
 **Files:**
 
 - Modify: `packages/cli/src/commands/docs/nav/sync.ts` help text (around line 142) and `packages/cli/src/commands/help-snapshots.test.ts` (around line 992)
-- Modify: `apps/oat-docs/docs/docs-tooling/docs-index-contract.md` (18, 49, 59,
+- Modify: `apps/oat-docs/docs/reference/docs-index-contract.md` (18, 49, 59,
   72, 80), `apps/oat-docs/docs/contributing/documentation.md` (65),
   `apps/oat-docs/docs/docs-tooling/commands.md` (25, 34, 184-196),
   `apps/oat-docs/docs/docs-tooling/workflows.md` (21, 69),
-  `apps/oat-docs/docs/guides/add-docs-to-a-repo.md` (149, 208), and the nav
+  `apps/oat-docs/docs/docs-tooling/add-docs-to-a-repo.md` (149, 208), and the nav
   sync entry in `apps/oat-docs/docs/reference/cli-reference.md`
 
 **Step 1: Edit**
@@ -354,8 +365,9 @@ Expected: exit 0.
 
 Backlog: `BL-261001-make-recon-s-packet-validator`,
 `BL-261001-recover-recon-lanes-after` (GitHub issue #333). The first task bumps
-`recon` 1.1.5 → 1.1.6 and updates the pin in
-`.agents/skills/recon/tests/skill-contract.test.mjs` (around line 50).
+`recon` 1.1.5 → 1.1.6 and updates its pins in
+`.agents/skills/recon/tests/skill-contract.test.mjs` (around line 50) and
+`packages/cli/src/validation/skills.test.ts` (around line 8731).
 
 ### Task p03-t01: Share review-brief source binding
 
@@ -387,7 +399,9 @@ fail.
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/recon/tests/*.test.mjs`.
+Run: `node --test .agents/skills/recon/tests/*.test.mjs`,
+`HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation`,
+`pnpm run check:skill-bumps`.
 Expected: exit 0.
 
 **Step 4: Commit**
@@ -509,7 +523,8 @@ Expected: exit 0.
   112-114), `.agents/skills/recon/references/profiles.md` (81-83),
   `.agents/skills/recon/tests/skill-contract.test.mjs`
 - Modify: `.agents/skills/oat-dispatch-subagents/references/provider-codex.md`
-  (add the note) and bump `oat-dispatch-subagents` once
+  (add the note) and bump `oat-dispatch-subagents` once, updating its pins in
+  `packages/cli/src/validation/skills.test.ts` (around lines 6419 and 6578)
 
 **Step 1: Edit**
 
@@ -535,7 +550,8 @@ Expected: exit 0.
 
 Run: `node --test .agents/skills/recon/tests/*.test.mjs .agents/skills/oat-dispatch-subagents/tests/*.test.mjs`
 (skip a glob that matches nothing), `pnpm oat:validate-skills`,
-`pnpm run check:skill-bumps`.
+`pnpm run check:skill-bumps`,
+`HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation`.
 Expected: exit 0.
 
 **Step 3: Commit**
@@ -569,7 +585,10 @@ A contract test extracts the `effective-delta-v2` exclusion pathspecs from
 **Step 2: Edit**
 
 `oat-project-next` recomputes a v2 fingerprint with the same three literal
-exclusions and a v1 fingerprint with v1 rules. Bump `oat-project-next`.
+exclusions and a v1 fingerprint with v1 rules. Repoint its algorithm reference
+(around line 403, "the current `oat-project-implement/SKILL.md`") to
+`oat-project-implement/references/completion-and-closeout.md` Step 14, where
+the algorithm lives. Bump `oat-project-next`.
 
 **Step 3: Verify**
 
@@ -597,15 +616,16 @@ Expected: exit 0.
 
 From `state.md` fixtures:
 
-1. Configured (or autonomous, or lite) closeout with no
+1. Configured (effective `workflow.postImplementSequence` set), autonomous
+   (`--autonomous`), or lite (`oat_workflow_mode: lite`) closeout with no
    `oat_post_implement_sequence` snapshot → `incomplete`, route
-   `oat-project-implement`, invariant named.
+   `oat-project-implement`, invariant named. One fixture per input.
 2. Snapshot persisted with steps pending → `incomplete`, next step named in
    stored order (summary, document, PR).
 3. Pre-approval steps complete, approval not recorded → `incomplete` at the
    approval transition.
 4. Every required step durably `complete` and approval recorded → `complete`.
-5. Unconfigured, non-autonomous closeout with no snapshot → valid (control).
+5. Config absent, not autonomous, not lite, no snapshot → valid (control).
 6. Malformed snapshot → fails closed.
 
 `oat project complete-state` refuses cases 1-3 and 6 with the same message.
@@ -613,11 +633,18 @@ Neutralize the check and show cases 1 and 6 pass wrongly; restore.
 
 **Step 2: Implement**
 
-`oat project closeout-check <project-path> [--json]` is read-only. It resolves
-"configured" from the project's own persisted snapshot and recorded
-configuration source, not from current config, so a later config change cannot
-make a valid project look wrong. It reports `status`, the missing invariant,
-and the next owner.
+`oat project closeout-check <project-path> [--autonomous] [--json]` is
+read-only. Inputs: lite from `oat_workflow_mode`; configured from the
+effective layered `workflow.postImplementSequence` at check time (through the
+CLI config resolver); autonomous from `--autonomous`, which callers pass when
+`OAT_AUTONOMOUS=1`. Once a snapshot exists, its recorded `source` is
+authoritative and current config is not consulted, so a later config change
+cannot invalidate a persisted run. It reports `status`, the missing
+invariant, and the next owner. `oat project complete-state` takes the same
+`--autonomous` flag. A project that reached implementation before snapshots
+existed recovers by running `oat-project-implement`, which persists the
+snapshot at Step 15; the refusal message names that route, and the docs say
+so. There is no override flag.
 
 **Step 3: Verify**
 
@@ -641,14 +668,22 @@ Expected: exit 0.
   before any sequence child is dispatched, and Step 16 runs the check),
   `.agents/skills/oat-project-next/SKILL.md` (5.1, around 421-424),
   `.agents/skills/oat-project-complete/SKILL.md` (before `complete-state`),
-  `.agents/skills/oat-project-autonomous/SKILL.md` and
-  `references/gate-inventory.md` (terminal routing)
+  `.agents/skills/oat-project-autonomous/SKILL.md` and its
+  `references/gate-inventory.md`, a symlink to `.agents/docs/autonomy-contract.md`
+  (edit the target; it is pinned by
+  `packages/cli/src/validation/autonomy-gate-inventory.test.ts`)
 - Modify: contract tests that pin these texts
 
 **Step 1: Edit**
 
-Each terminal consumer runs `oat project closeout-check` and routes to
-`oat-project-implement` with the reported invariant when it is incomplete.
+Each terminal consumer runs `oat project closeout-check` (passing
+`--autonomous` under `OAT_AUTONOMOUS=1`) and routes to `oat-project-implement`
+with the reported invariant when it is incomplete. The control-plane
+recommender (`packages/control-plane/src/recommender/router.ts` around
+305-308) and the state dashboard (`packages/cli/src/commands/state/generate.ts`
+around 740) still recommend `oat-project-complete` after the PR opens; they
+are out of scope here and rely on `complete-state`'s refusal (follow-up:
+note it in the p06-t02 index note).
 Bump `oat-project-complete` and `oat-project-autonomous`; `oat-project-implement`
 and `oat-project-next` are already bumped on this branch.
 
@@ -696,7 +731,8 @@ waiver is written only on an explicit operator instruction; the skills never
 infer or self-issue one, including under `OAT_AUTONOMOUS=1` (autonomous runs
 stop and ask). A waived generation reads `allowed` only while nothing
 substantive lands after the covered range. Summary and PR-final show every
-waiver. Bump `oat-project-summary` and `oat-project-pr-final`.
+waiver. Bump `oat-project-pr-final`; `oat-project-summary` is already bumped
+in p01-t03.
 
 **Step 3: Verify**
 
@@ -726,7 +762,7 @@ Backlog: `BL-260928-keep-instructions-sync-force`,
 - Modify: `packages/cli/src/commands/instructions/instructions.utils.ts`
   (extract the resolves-to check used by the `none` strategy, around 196-236),
   `packages/cli/src/commands/instructions/sync/sync.ts` (plan around 289-306;
-  apply around 539-557), sync tests
+  apply in `applySyncActions` around 310), sync tests
 
 **Step 1: Failing test first**
 
@@ -766,9 +802,15 @@ Expected: exit 0.
 - Modify: `.agents/skills/oat-dispatch-subagents/SKILL.md` (178-189) and
   `references/record-schema.md` (366, 379),
   `.agents/skills/oat-project-dispatch-subagents/SKILL.md` (161-169),
-  `apps/oat-docs/docs/reference/cli-reference.md` (157), and the
-  implementation-execution, orchestration-model, and scope-and-surface docs
+  `.agents/skills/oat-project-review-provide/SKILL.md` (around 762),
+  `.agents/skills/oat-project-plan-writing/SKILL.md` (around 273),
+  `apps/oat-docs/docs/reference/cli-reference.md` (157),
+  `apps/oat-docs/docs/workflows/projects/evidence-layers.md` (around 81), and
+  the implementation-execution, orchestration-model, and scope-and-surface docs
   that describe persistence (locate by content)
+- Modify: `packages/cli/src/commands/doctor/stale-invocations.ts` if its
+  `KNOWN_STALE_INVOCATIONS` list covers removed flags (add
+  `dispatch record --project`)
 
 **Step 1: Remove**
 
@@ -778,7 +820,8 @@ as the decision record requires for the managed Claude validation path. Delete
 the journal writer, lock, revisions, fallback-claim publication, related-record
 reads, `--project`, the `persisted` status, and the lineage logic only they
 used. Move the redaction assertions that read journal bytes (around 1829 and 1873) onto the validate-only output. Prune persistence tests. Leave
-`tools/smoke/evidence` alone. Bump `oat-project-dispatch-subagents`
+`tools/smoke/evidence` alone. Bump `oat-project-dispatch-subagents`,
+`oat-project-review-provide`, and `oat-project-plan-writing`
 (`oat-dispatch-subagents` is already bumped in p03-t05).
 
 **Step 2: Verify**
@@ -787,8 +830,8 @@ Run: `pnpm build`, `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec
 `pnpm test:smoke`, `pnpm test:skills`,
 `node packages/cli/dist/index.js project dispatch record --project x` (rejected
 as an unknown option), and
-`rg -n "dispatch record.*--project|<project>/dispatch/" .agents apps/oat-docs/docs packages/cli/src --glob '!**/*.test.ts'`
-(no persistence references remain).
+`rg -n -U 'dispatch record[^\n]*\\\n\s*--project|--project "\$PROJECT_PATH"|per-dispatch file|dispatch/` director|dispatch journal|<project>/dispatch/' .agents apps/oat-docs/docs packages/cli/src --glob '!\*_/_.test.ts'`(no persistence references remain; "validate-only, no`--project`" wording is
+allowed).
 Expected: exit 0 except the rejected probe.
 
 **Step 3: Commit**
@@ -802,8 +845,8 @@ Expected: exit 0 except the rejected probe.
 **Files:**
 
 - Modify: `packages/cli/src/release/public-package-contract.ts` (ignore
-  patterns around 133-177), `public-package-contract.test.ts`,
-  `tools/release/check-version-bumps.test.ts` or `release-utils.test.ts`,
+  patterns around 133-177) and
+  `packages/cli/src/release/{public-package-contract,check-version-bumps,release-utils}.test.ts`,
   `AGENTS.md` (Package Management)
 
 **Step 1: Failing tests first**
@@ -819,10 +862,14 @@ one AGENTS.md paragraph stating the rule.
 
 **Step 3: Verify**
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/release`,
-`pnpm test:scripts`, and the release tooling tests that cover
-`check-version-bumps`.
-Expected: exit 0.
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/release`.
+Real probe: in a scratch worktree off `origin/main` (`git worktree add
+"$(mktemp -d)/probe" origin/main`), with this task's ignore patterns applied,
+change only a `packages/cli/src/**/*.test.ts` file, commit, and run
+`pnpm release:check-versions` (expect exit 0); repeat with a non-test `src`
+file (expect a failure). Record both exit codes in the commit body, then
+remove the worktree with `git worktree remove`.
+Expected: exit 0 for the unit tests and the test-only probe.
 
 **Step 4: Commit**
 
@@ -867,10 +914,14 @@ Expected: exit 0.
   `packages/cli/src/commands/state/generate.ts` (around 411-414),
   `packages/cli/src/commands/state/generate.test.ts` (365-405)
 
-**Step 1: Flip the pinned tests first** (they fail), then the routes, so quick
-`discovery:in_progress` and `discovery:complete` route to
-`oat-project-quick-start`, matching the `oat-project-next` and
-`oat-project-progress` tables. Leave quick `plan:in_progress` routing alone
+**Step 1: Flip the pinned tests first** (they fail), then the routes. Change
+exactly: router.ts `discovery:in_progress:2` and `discovery:complete:1` →
+`oat-project-quick-start`; generate.ts `quick:discovery:complete` →
+`oat-project-quick-start`. Keep router `discovery:in_progress:3` and the
+dashboard's `quick:discovery:in_progress` (generate.ts around 407) at
+`oat-project-discover`, which matches the `oat-project-next` (around 254) and
+`oat-project-progress` (around 278) tables, and add tests pinning those
+unchanged routes. Leave quick `plan:in_progress` routing alone
 (`BL-261001-route-quick-mode-plan`).
 
 **Step 2: Verify**
@@ -948,15 +999,23 @@ After `pnpm build`, run `node packages/cli/dist/index.js backlog archive <id>
 `BL-260902-decide-test-only-freshness`, `BL-260928-keep-instructions-sync-force`,
 `BL-260909-give-the-dispatch-record`, `BL-260826-decide-whether-test-only-paths`,
 `BL-260830-add-strict-yaml-validation`, `BL-260928-route-quick-mode-discovery`,
-`BL-260903-verify-the-packs-inventory`. Archive
+`BL-260903-verify-the-packs-inventory`. The `--summary` for
+`BL-260909-give-the-dispatch-record` cites `DR-260927-dispatch-record-validates`
+(validate-only command kept, so its "no skill or doc references the command"
+removal criterion is superseded), and the one for
+`BL-261001-recover-recon-lanes-after` cites discovery Key Decision 8 (the
+Codex note lives in `provider-codex.md` behind a recon pointer). Archive
 `BL-260829-order-phase-bookkeeping-before` only if `implementation.md` records
 a phase whose reviewed head was its Step 7a bookkeeping commit and whose review
-raised no ledger or resume-pointer finding; cite that phase in the summary and
-record its relationship to `BL-260711-skip-re-review-for-bookkeeping`.
+raised no ledger or resume-pointer finding, together with the
+`oat-project-implement` version and path that ran it; cite that phase in the
+summary. (Its relationship to `BL-260711` was recorded in Wave 2.)
 
 **Step 2: Index note**
 
-Add a curated overview note to `.oat/repo/pjm/backlog/index.md`, run
+Add a curated overview note to `.oat/repo/pjm/backlog/index.md` (including
+that the CLI recommender and dashboard still suggest completion without the
+closeout check, per p04-t03), run
 `node packages/cli/dist/index.js backlog regenerate-index` and
 `node packages/cli/dist/index.js pjm doctor --json` (no new warnings).
 
@@ -995,10 +1054,10 @@ In CI order, each captured as `pnpm <gate> > <log> 2>&1; echo "exit=$?"`:
 The plan is fully sequential (`oat_plan_parallel_groups: []`). Every adjacent
 phase pair shares a write:
 
-- p01 and p02 both edit `packages/cli/src/commands/help-snapshots.test.ts`,
-  `apps/oat-docs/docs/reference/cli-reference.md`, and skill version pins in
-  `packages/cli/src/validation/skills.test.ts`.
-- p02 and p03 both bump skills pinned in `packages/cli/src/validation/skills.test.ts`.
+- p01 and p02 both edit `packages/cli/src/commands/help-snapshots.test.ts` and
+  `apps/oat-docs/docs/reference/cli-reference.md`.
+- p02 and p03 both change the branch's skill-bump state that
+  `check:skill-bumps` evaluates at each phase head.
 - p03 and p04 share the skill-bump state (`check:skill-bumps`) and p05 edits
   `oat-dispatch-subagents`, which p03 bumps.
 - p04 and p05 both edit `help-snapshots.test.ts` and `cli-reference.md`.
@@ -1088,6 +1147,14 @@ breaking changes must be named in the title:
   - `oat project complete-state` refuses a configured closeout with a missing
     or incomplete snapshot; exit-gate waivers are operator-only;
   - test-only package changes no longer require the lockstep bump.
+- Breaking CLI grammar, per `.github/PULL_REQUEST_TEMPLATE.md` and
+  `apps/oat-docs/docs/contributing/code.md`: tick the template's grammar-change
+  box and include
+  `BREAKING: oat project dispatch record no longer accepts --project (validate-only)`,
+  Before `oat project dispatch record --event-file - --project <path> --json`,
+  After `oat project dispatch record --event-file - --json`, and the migration
+  action (drop `--project`; the `implementation.md` dispatch rows remain the
+  record).
 - The body lists the other user-visible changes (`--force` link guard, YAML
   error locations, quick discovery routing, packs docs).
 

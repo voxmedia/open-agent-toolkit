@@ -204,8 +204,8 @@ Decision 11.
   shared version pins in `validation/skills.test.ts`.
   - **Likelihood:** High
   - **Impact:** Medium
-  - **Mitigation Ideas:** Phases edit skill text only; the fan-in owns bumps
-    and pins.
+  - **Mitigation Ideas:** The first phase to change a skill bumps it and
+    its pins once (Key Decision 2).
 - **Lifecycle self-reference:** Phase 4 edits the implement and next skills
   this run uses through user-scope links.
   - **Likelihood:** Medium
