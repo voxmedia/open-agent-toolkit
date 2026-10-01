@@ -23,6 +23,7 @@ export interface DocsInitResolvedOptions {
   lint: DocsLintMode;
   format: DocsFormatMode;
   rootPatch: boolean;
+  adopt?: boolean;
 }
 
 export interface ResolveDocsInitOptionsInput {
@@ -31,6 +32,7 @@ export interface ResolveDocsInitOptionsInput {
   interactive: boolean;
   acceptDefaults: boolean;
   providedFramework?: DocsFramework;
+  providedAdopt?: boolean;
   providedAppName?: string;
   providedSiteName?: string;
   providedTargetDir?: string;
@@ -225,6 +227,7 @@ export async function resolveDocsInitOptions(
       lint: input.providedLint ?? 'none',
       format: input.providedFormat ?? 'none',
       rootPatch: false,
+      adopt: input.providedAdopt ?? false,
     };
   }
 

@@ -1,8 +1,10 @@
 import {
+  chmod,
   mkdir,
   mkdtemp,
   readdir,
   readFile,
+  readlink,
   rm,
   symlink,
   writeFile,
@@ -468,23 +470,45 @@ describe('Markdown docs init public boundary', () => {
     });
     const program = new Command()
       .option('--json')
-      .option('--dry-run')
       .addCommand(new Command('docs').addCommand(command));
     process.exitCode = undefined;
     await program.parseAsync(
       [
         ...(json ? ['--json'] : []),
-        ...(dryRun ? ['--dry-run'] : []),
         'docs',
         'init',
         '--framework',
         'markdown',
         '--yes',
+        ...(dryRun ? ['--dry-run'] : []),
         ...args,
       ],
       { from: 'user' },
     );
     return { ...capture, exit: process.exitCode };
+  }
+
+  // Protects complete dry-run/refusal nonmutation, including empty directories and
+  // symlink identity; earlier framework cases do not inspect that whole boundary.
+  async function snapshotTree(root: string): Promise<Record<string, string>> {
+    const snapshot: Record<string, string> = {};
+    async function scan(directory: string, prefix = ''): Promise<void> {
+      for (const entry of await readdir(directory, { withFileTypes: true })) {
+        const path = prefix ? `${prefix}/${entry.name}` : entry.name;
+        if (entry.isDirectory()) {
+          snapshot[`${path}/`] = 'directory';
+          await scan(join(directory, entry.name), path);
+        } else if (entry.isSymbolicLink())
+          snapshot[path] =
+            `symlink:${await readlink(join(directory, entry.name))}`;
+        else
+          snapshot[path] = (
+            await readFile(join(directory, entry.name))
+          ).toString('base64');
+      }
+    }
+    await scan(root);
+    return snapshot;
   }
 
   it.each(['docs', 'handbook/team'])(
@@ -692,6 +716,349 @@ describe('Markdown docs init public boundary', () => {
         bytes,
       );
       expect(await readdir(root)).toEqual(['.oat']);
+    },
+  );
+  it('adopts populated docs additively, preserves authored/local bytes, and converges without duplicated guidance', async () => {
+    const root = await temporaryRepo();
+    await mkdir(join(root, 'docs'));
+    const index =
+      '---\ntitle: Operator handbook\ndescription: Escalation and deployment context.\n---\n\n# Operator handbook\n\nThe runtime team owns these runbooks.\n\n## Contents\n\n- [Deployment](deploy.md)\n';
+    const page =
+      '# Deployment\n\nOnly deploy reviewed releases; consult the on-call operator.\n';
+    const local =
+      '# Docs owners\n\nRetain our incident escalation audience and examples.\n';
+    const guidance =
+      '# Repository instructions\n\nKeep local team ownership.\n';
+    await writeFile(join(root, 'docs', 'index.md'), index);
+    await writeFile(join(root, 'docs', 'deploy.md'), page);
+    await writeFile(join(root, 'docs', 'AGENTS.md'), local);
+    await writeFile(join(root, 'AGENTS.md'), guidance);
+    const initial = await snapshotTree(root);
+    const preview = await runMarkdown(root, ['--adopt'], true);
+    expect(preview.exit).toBe(0);
+    expect(preview.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      dryRun: true,
+      createdFiles: [],
+      plannedFiles: ['contributing.md'],
+      changes: { files: ['contributing.md'], config: true, guidance: true },
+      guidance: { action: 'appended' },
+    });
+    expect(await snapshotTree(root)).toEqual(initial);
+    const adopted = await runMarkdown(root, ['--adopt']);
+    expect(adopted.exit).toBe(0);
+    expect(await readFile(join(root, 'docs', 'index.md'), 'utf8')).toBe(index);
+    expect(adopted.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      createdFiles: ['contributing.md'],
+      preservedFiles: ['index.md'],
+      configStatus: 'updated',
+      auditAdvice: [expect.stringContaining('audit context')],
+    });
+    expect(await readFile(join(root, 'docs', 'deploy.md'), 'utf8')).toBe(page);
+    expect(await readFile(join(root, 'docs', 'AGENTS.md'), 'utf8')).toBe(local);
+    expect(
+      (await readFile(join(root, 'AGENTS.md'), 'utf8')).startsWith(guidance),
+    ).toBe(true);
+    const after = await snapshotTree(root);
+    const repeated = await runMarkdown(root, ['--adopt']);
+    expect(repeated.exit).toBe(0);
+    expect(repeated.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      createdFiles: [],
+      configStatus: 'no-change',
+      changes: { files: [], config: false, guidance: false },
+      guidance: { action: 'no-change' },
+    });
+    expect(await snapshotTree(root)).toEqual(after);
+    const converged = await runMarkdown(root, ['--adopt'], true);
+    expect(converged.exit).toBe(0);
+    expect(converged.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      dryRun: true,
+      plannedFiles: [],
+      changes: { files: [], config: false, guidance: false },
+      guidance: { action: 'no-change' },
+    });
+    expect(await snapshotTree(root)).toEqual(after);
+  });
+
+  it('maps actual sibling pages and child indexes with excludes, leaves missing child indexes for audit', async () => {
+    const root = await temporaryRepo();
+    await mkdir(join(root, 'handbook', 'operations'), { recursive: true });
+    await mkdir(join(root, 'handbook', 'no-index'));
+    await mkdir(join(root, 'handbook', 'assets'));
+    await mkdir(join(root, 'handbook', 'drafts'));
+    await mkdir(join(root, '.oat'));
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      '{"version":1,"worktrees":{"root":"custom-worktrees"},"documentation":{"excludes":["secret.md","drafts/"],"requireForProjectCompletion":true}}',
+    );
+    await writeFile(
+      join(root, 'handbook', 'deploy.md'),
+      '# Deployment\n\nReviewed deployment steps.\n',
+    );
+    await writeFile(join(root, 'handbook', 'secret.md'), '# Private draft\n');
+    await writeFile(
+      join(root, 'handbook', 'operations', 'index.md'),
+      '# Operations\n\nOn-call ownership.\n',
+    );
+    await writeFile(
+      join(root, 'handbook', 'no-index', 'incident.md'),
+      '# Incident response\n',
+    );
+    await writeFile(join(root, 'handbook', 'assets', 'diagram.svg'), '<svg/>');
+    await writeFile(
+      join(root, 'handbook', 'drafts', 'index.md'),
+      '# Unreviewed drafts\n',
+    );
+    const before = await snapshotTree(root);
+    const preview = await runMarkdown(
+      root,
+      ['--adopt', '--target-dir', 'handbook'],
+      true,
+    );
+    expect(preview.exit).toBe(0);
+    expect(await snapshotTree(root)).toEqual(before);
+    const result = await runMarkdown(root, [
+      '--adopt',
+      '--target-dir',
+      'handbook',
+    ]);
+    expect(result.exit).toBe(0);
+    const index = await readFile(join(root, 'handbook', 'index.md'), 'utf8');
+    expect(index).toContain('[Deploy](deploy.md)');
+    expect(index).toContain('[Operations](operations/index.md)');
+    expect(index).toContain('[Contributing](contributing.md)');
+    expect(index).not.toContain('secret.md');
+    expect(index).not.toContain('drafts/index.md');
+    expect(index).not.toContain('no-index/index.md');
+    expect(index).not.toContain('assets/index.md');
+    expect(result.jsonPayloads[0]).toMatchObject({
+      auditAdvice: expect.arrayContaining([
+        expect.stringContaining('no-index/'),
+      ]),
+    });
+    expect(await readdir(join(root, 'handbook', 'no-index'))).toEqual([
+      'incident.md',
+    ]);
+    const config = JSON.parse(
+      await readFile(join(root, '.oat', 'config.json'), 'utf8'),
+    );
+    expect(config.worktrees.root).toBe('custom-worktrees');
+    expect(config.documentation.excludes).toEqual(['secret.md', 'drafts/']);
+    expect(config.documentation.requireForProjectCompletion).toBe(true);
+  });
+
+  it('adopts an existing empty directory and refuses unusable baseline entrypoints before writes', async () => {
+    const root = await temporaryRepo();
+    await mkdir(join(root, 'docs'));
+    const adopted = await runMarkdown(root, ['--adopt']);
+    expect(adopted.exit).toBe(0);
+    expect(adopted.jsonPayloads[0]).toMatchObject({
+      createdFiles: ['index.md', 'contributing.md'],
+    });
+    const invalid = await temporaryRepo();
+    await mkdir(join(invalid, 'docs', 'index.md'), { recursive: true });
+    await writeFile(
+      join(invalid, 'docs', 'index.md', 'keep.md'),
+      '# Existing entrypoint directory\n',
+    );
+    const before = await snapshotTree(invalid);
+    const refusal = await runMarkdown(invalid, ['--adopt']);
+    expect(refusal.exit).toBe(1);
+    expect(refusal.jsonPayloads[0]).toMatchObject({
+      status: 'error',
+      message: expect.stringContaining('readable file'),
+    });
+    expect(await snapshotTree(invalid)).toEqual(before);
+  });
+
+  it.each(['', '---\ntitle: [broken\n---\n\n# Existing context\n'])(
+    'preserves empty/malformed indexes and reports audit advice',
+    async (index) => {
+      const root = await temporaryRepo();
+      await mkdir(join(root, 'docs'));
+      await writeFile(join(root, 'docs', 'index.md'), index);
+      const result = await runMarkdown(root, ['--adopt']);
+      expect(result.exit).toBe(0);
+      expect(await readFile(join(root, 'docs', 'index.md'), 'utf8')).toBe(
+        index,
+      );
+      expect(result.jsonPayloads[0]).toMatchObject({
+        createdFiles: ['contributing.md'],
+        auditAdvice: expect.arrayContaining([
+          expect.stringContaining('index.md'),
+        ]),
+      });
+    },
+  );
+
+  it.each([false, true])(
+    'dry-run plans empty target with adopt=%s and writes no directory/config/instructions',
+    async (adopt) => {
+      const root = await temporaryRepo();
+      const before = await snapshotTree(root);
+      const result = await runMarkdown(root, adopt ? ['--adopt'] : [], true);
+      expect(result.exit).toBe(0);
+      expect(await snapshotTree(root)).toEqual(before);
+      expect(result.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        dryRun: true,
+        createdFiles: [],
+        plannedFiles: ['index.md', 'contributing.md'],
+        guidance: { action: 'created' },
+        changes: {
+          files: ['index.md', 'contributing.md'],
+          config: true,
+          guidance: true,
+        },
+      });
+    },
+  );
+
+  it.each(['manual-required', 'blocked'] as const)(
+    'dry-run reports %s root guidance as partial/planned and preserves complete state',
+    async (action) => {
+      const root = await temporaryRepo();
+      await mkdir(join(root, 'docs'));
+      await writeFile(
+        join(root, 'docs', 'runbook.md'),
+        '# Runbook\n\nOperator escalation guidance.\n',
+      );
+      if (action === 'blocked') {
+        await mkdir(join(root, 'AGENTS.md'));
+        await writeFile(
+          join(root, 'AGENTS.md', 'ownership.md'),
+          'Keep this directory.\n',
+        );
+      } else
+        await writeFile(
+          join(root, 'AGENTS.md'),
+          '# Local root guidance\n\n<!-- OAT docs -->\n## Documentation\n\nPreserve custom team docs routing.\n<!-- END OAT docs -->\n',
+        );
+      const before = await snapshotTree(root);
+      const result = await runMarkdown(root, ['--adopt'], true);
+      expect(result.exit).toBe(1);
+      expect(result.jsonPayloads[0]).toMatchObject({
+        status: 'partial',
+        dryRun: true,
+        createdFiles: [],
+        plannedFiles: ['index.md', 'contributing.md'],
+        scaffold: { status: 'planned' },
+        guidance: { action },
+      });
+      expect(await snapshotTree(root)).toEqual(before);
+      const human = await runMarkdown(root, ['--adopt'], true, false);
+      expect(human.exit).toBe(1);
+      expect(human.warn.join('\n')).toContain('Docs scaffold planned');
+      expect(await snapshotTree(root)).toEqual(before);
+    },
+  );
+
+  it('real adoption reports created scaffold separately from manual-required guidance', async () => {
+    const root = await temporaryRepo();
+    const guidance =
+      '<!-- OAT docs -->\n## Documentation\n\nUse the private handbook.\n<!-- END OAT docs -->\n';
+    await writeFile(join(root, 'AGENTS.md'), guidance);
+    const result = await runMarkdown(root, ['--adopt']);
+    expect(result.exit).toBe(1);
+    expect(result.jsonPayloads[0]).toMatchObject({
+      status: 'partial',
+      dryRun: false,
+      createdFiles: ['index.md', 'contributing.md'],
+      configStatus: 'updated',
+      scaffold: { status: 'complete' },
+      guidance: { action: 'manual-required' },
+    });
+    expect(await readFile(join(root, 'AGENTS.md'), 'utf8')).toBe(guidance);
+    expect(await readdir(join(root, 'docs'))).toEqual([
+      'contributing.md',
+      'index.md',
+    ]);
+  });
+
+  it.each([false, true])(
+    'refuses incompatible config during adoption dryRun=%s without mutation',
+    async (dryRun) => {
+      const root = await temporaryRepo();
+      await mkdir(join(root, 'docs'));
+      await mkdir(join(root, '.oat'));
+      await writeFile(
+        join(root, 'docs', 'deploy.md'),
+        '# Deployment ownership\n',
+      );
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        '{"version":1,"documentation":{"tooling":"mkdocs","root":"docs","index":"docs/mkdocs.yml"}}',
+      );
+      const before = await snapshotTree(root);
+      const result = await runMarkdown(root, ['--adopt'], dryRun);
+      expect(result.exit).toBe(1);
+      expect(result.jsonPayloads[0]).toMatchObject({
+        status: 'error',
+        message: expect.stringContaining('incompatible'),
+      });
+      expect(await snapshotTree(root)).toEqual(before);
+    },
+  );
+
+  it('refuses escaping baseline symlinks before adopting or persisting config', async () => {
+    const root = await temporaryRepo();
+    const outside = await temporaryRepo();
+    await mkdir(join(root, 'docs'));
+    await writeFile(join(outside, 'index.md'), '# External owner\n');
+    await symlink(join(outside, 'index.md'), join(root, 'docs', 'index.md'));
+    const before = await snapshotTree(root);
+    const result = await runMarkdown(root, ['--adopt']);
+    expect(result.exit).toBe(1);
+    expect(result.jsonPayloads[0]).toMatchObject({
+      status: 'error',
+      message: expect.stringContaining('outside scope root'),
+    });
+    expect(await snapshotTree(root)).toEqual(before);
+    expect(await readFile(join(outside, 'index.md'), 'utf8')).toBe(
+      '# External owner\n',
+    );
+  });
+
+  it.skipIf(process.getuid?.() === 0)(
+    'reports actual partial state when config persistence fails after scaffold',
+    async () => {
+      const root = await temporaryRepo();
+      await mkdir(join(root, '.oat'));
+      const config = '{"version":1,"documentation":{"excludes":["drafts/"]}}\n';
+      await writeFile(join(root, '.oat', 'config.json'), config);
+      await chmod(join(root, '.oat'), 0o555);
+      try {
+        const result = await runMarkdown(root);
+        expect(result.exit).toBe(1);
+        expect(result.jsonPayloads[0]).toMatchObject({
+          status: 'partial',
+          createdFiles: ['index.md', 'contributing.md'],
+          configStatus: 'failed',
+          failure: { stage: 'config' },
+          scaffold: { status: 'complete' },
+          guidance: { action: 'not-attempted' },
+        });
+        expect(await readFile(join(root, '.oat', 'config.json'), 'utf8')).toBe(
+          config,
+        );
+        expect(await readdir(join(root, 'docs'))).toEqual([
+          'contributing.md',
+          'index.md',
+        ]);
+        expect(await readdir(root)).toEqual(['.oat', 'docs']);
+      } finally {
+        await chmod(join(root, '.oat'), 0o755);
+      }
+      const retry = await runMarkdown(root, ['--adopt']);
+      expect(retry.exit).toBe(0);
+      expect(retry.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        createdFiles: [],
+        configStatus: 'updated',
+      });
     },
   );
 });
