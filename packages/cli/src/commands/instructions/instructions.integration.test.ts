@@ -606,7 +606,7 @@ describe('instructions command integration', () => {
       {
         claudeExcludes,
         ...documentation
-      }: { root?: string; claudeExcludes?: unknown },
+      }: { root?: string; tooling?: string; claudeExcludes?: unknown },
     ): Promise<void> {
       await mkdir(join(root, '.oat'), { recursive: true });
       await writeFile(
@@ -634,6 +634,70 @@ describe('instructions command integration', () => {
         'utf8',
       );
     }
+
+    it.each(['docs', 'handbook'])(
+      'excludes the entire Markdown root %s, including local guidance and nested docs',
+      async (contentRoot) => {
+        const root = await createWorkspace();
+        tempDirs.push(root);
+        await seedRepoCarveIn(root);
+        await writeDocumentationConfig(root, {
+          root: contentRoot,
+          tooling: 'markdown',
+        });
+        const local =
+          '# Local documentation instructions\n\nKeep authored context.\n';
+        const existingClaude = '# Local Claude documentation guidance\n';
+        for (const part of ['', 'guides', 'docs']) {
+          const directory = join(root, contentRoot, part);
+          await mkdir(directory, { recursive: true });
+          await writeFile(join(directory, 'AGENTS.md'), local);
+        }
+        await writeFile(join(root, contentRoot, 'CLAUDE.md'), existingClaude);
+
+        const synced = await runCli(
+          root,
+          ['instructions', 'sync', '--strategy', 'pointer', '--json'],
+          ['--json'],
+        );
+        const payload = JSON.parse(synced.stdout);
+        expect(payload.excludedPaths).toEqual([contentRoot]);
+        expect(synced.exitCode).toBe(0);
+        expect(
+          payload.actions.some((action: { target: string }) =>
+            action.target.includes(join(root, contentRoot)),
+          ),
+        ).toBe(false);
+        for (const part of ['', 'guides', 'docs']) {
+          await expect(
+            readFile(join(root, contentRoot, part, 'AGENTS.md'), 'utf8'),
+          ).resolves.toBe(local);
+        }
+        await expect(
+          readFile(join(root, contentRoot, 'CLAUDE.md'), 'utf8'),
+        ).resolves.toBe(existingClaude);
+        for (const part of ['guides', 'docs']) {
+          await expect(
+            pathExists(join(root, contentRoot, part, 'CLAUDE.md')),
+          ).resolves.toBe(false);
+        }
+        const validated = await runCli(
+          root,
+          ['instructions', 'validate', '--strategy', 'pointer', '--json'],
+          ['--json'],
+        );
+        expect(validated.exitCode).toBe(0);
+        expect(JSON.parse(validated.stdout).excludedPaths).toEqual([
+          contentRoot,
+        ]);
+        expect(
+          JSON.parse(validated.stdout).entries.some(
+            (entry: { agentsPath: string }) =>
+              entry.agentsPath.includes(join(root, contentRoot)),
+          ),
+        ).toBe(false);
+      },
+    );
 
     it('(a) skips the docs child while still pointing the app root, idempotently', async () => {
       const root = await createWorkspace();
