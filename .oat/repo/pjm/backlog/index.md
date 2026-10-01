@@ -4,6 +4,13 @@
 
 ## Curated Overview
 
+- 2026-09-30: next-wave priorities. `BL-260927-expose-a-scoped-template` is
+  raised to high and leads the wave (user-scope installs have no repository
+  `.oat/templates/`, so lifecycle skills that copy templates fail).
+  `BL-260718-support-fumadocs-in-oat-docs` is raised to high with acceptance
+  criteria: `oat docs nav sync` writes Fumadocs `meta.json` files from the
+  authored `index.md` Contents maps. Wave 2's GitHub issues #322 and #295 were
+  closed against #332.
 - 2026-09-28: the `backlog-wave-2` project (lockstep 0.3.9) closed twelve
   items: `BL-260903-close-manual-only-agents-md`,
   `BL-260927-name-only-installed-pack`, `BL-260909-fix-the-agents-md-unsafe`
@@ -319,6 +326,7 @@
 | BL-260711-add-root-owned-dispatch-broker | Add root-owned dispatch broker for exact OAT subagent launches                                        | open   | high     | feature    | M        |
 | BL-260820-bind-each-gate-review          | Bind each gate review disposition to its exact received ledger event                                  | open   | high     | task       | M        |
 | BL-260820-emit-source-qualified          | Emit source-qualified provenance envelopes for review and gate receipts                               | open   | high     | feature    | M        |
+| BL-260927-expose-a-scoped-template       | Expose a scoped template resolver command and route lifecycle skills through it                       | open   | high     | feature    | M        |
 | BL-260806-fail-closed-when-configured    | Fail closed when configured closeout snapshot is absent                                               | open   | high     | task       | M        |
 | BL-260909-give-the-dispatch-record       | Give the dispatch record a consumer or remove it                                                      | open   | high     | task       | S        |
 | BL-260906-harden-dispatch-launch         | Harden dispatch launch baselines and terminal reconciliation                                          | open   | high     | feature    | M        |
@@ -327,6 +335,7 @@
 | BL-260911-make-docs-bootstrap-a-front    | Make docs bootstrap a front door for existing docs and support the docs-directory convention          | open   | high     | feature    | M        |
 | BL-260829-order-phase-bookkeeping-before | Order phase bookkeeping before per-phase review dispatch                                              | open   | high     | task       | M        |
 | BL-260724-support-provider-directory     | Support provider directory symlinks as full collection sync                                           | open   | high     | feature    | M        |
+| BL-260718-support-fumadocs-in-oat-docs   | Teach oat docs nav sync to write Fumadocs navigation from index.md Contents maps                      | open   | high     | feature    | M        |
 | BL-260820-track-pr-closeout-evidence     | Track PR-closeout evidence freshness against the current head                                         | open   | high     | feature    | L        |
 | BL-260718-add-generated-runbook          | Add generated-runbook verification command pass                                                       | open   | medium   | feature    | M        |
 | BL-260719-add-pinned-recon-agents        | Add pinned recon agents for reusable orchestration                                                    | open   | medium   | feature    | M        |
@@ -345,7 +354,6 @@
 | BL-260718-document-execution-program     | Document execution-program artifact as stable OAT contract                                            | open   | medium   | feature    | M        |
 | BL-260912-evaluate-replacing-explainer   | Evaluate replacing Explainer Kit authoring guidance with a pinned Effective HTML subset               | open   | medium   | task       | M        |
 | BL-260927-export-only-the-recap-page     | Export only the recap page to project-recaps and fix its broken source links                          | open   | medium   | feature    | M        |
-| BL-260927-expose-a-scoped-template       | Expose a scoped template resolver command and route lifecycle skills through it                       | open   | medium   | feature    | M        |
 | BL-260902-file-deferred-repository       | File deferred repository follow-ups from a passing receive                                            | open   | medium   | feature    | M        |
 | BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs                                     | open   | medium   | feature    | L        |
 | BL-260927-give-gate-receipts-portable    | Give gate receipts portable ownership, path-neutral identities, and a shipped ignore rule             | open   | medium   | feature    | M        |
@@ -369,7 +377,6 @@
 | BL-260713-root-agent-judgment-logging    | Root-agent judgment logging responsibility for project log                                            | open   | medium   | feature    | S        |
 | BL-260927-share-one-hook-safe-exact-path | Share one hook-safe exact-path commit primitive across CLI and skill lifecycle commits                | open   | medium   | feature    | L        |
 | BL-260827-span-based-prose-guards        | Span-based prose guards, anchored probe records, and a shared probe runner for skill contract tests   | open   | medium   | task       | S        |
-| BL-260718-support-fumadocs-in-oat-docs   | Support Fumadocs in oat docs nav sync (currently MkDocs-only)                                         | open   | medium   | task       |          |
 | BL-260911-support-per-tool-scope         | Support per-tool scope migration in oat tools migrate                                                 | open   | medium   | task       | S        |
 | BL-260909-surface-config-warnings        | Surface config warnings on every reader path and document the warnings field                          | open   | medium   | task       | M        |
 | BL-260907-type-check-cli-test-files      | Type-check CLI test files with a test-scoped tsconfig gate                                            | open   | medium   | task       | M        |

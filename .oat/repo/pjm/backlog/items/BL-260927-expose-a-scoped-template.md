@@ -2,7 +2,7 @@
 id: BL-260927-expose-a-scoped-template
 title: Expose a scoped template resolver command and route lifecycle skills through it
 status: open
-priority: medium
+priority: high
 scope: feature
 scope_estimate: M
 labels:
@@ -12,7 +12,7 @@ labels:
   - user-scope
 assignee: null
 created: 2026-09-27T03:35:36.485Z
-updated: 2026-09-27T03:35:36.485Z
+updated: 2026-10-01T04:36:56.000Z
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/296
@@ -25,6 +25,9 @@ About nine lifecycle skills (project-retro, discover, design, plan, spec, summar
 
 Decided 2026-09-27 in `DR-260927-templates-resolve-repository`: repository, then
 user, then bundle.
+
+Raised to high on 2026-09-30 as the lead item of the next backlog wave: every
+user-scope install currently breaks the lifecycle skills that copy templates.
 
 ## Acceptance Criteria
 
