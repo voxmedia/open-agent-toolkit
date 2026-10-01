@@ -284,3 +284,231 @@ for name,argv in [('focused',['pnpm','--filter','@open-agent-toolkit/cli','exec'
 ```
 
 Scoped format/diff checks and durable probe syntax are retained as `task-format-check.log`, `task-diff-check.log` and `task-artifact-checks.json`; owned pre/post-hook hashes and clean exact three-file boundary as `task-postcommit.json`. The eight final ordered CI gates await root tracking ACK after this task commit. Final review/configured gate and approval remain pending and root-owned. Existing five public versions0.3.11/PR-scoped skill bumps are unchanged.
+
+## Final committed-source acceptance
+
+Root acknowledged p04-t06 source commit `f27361742e42e9803246bffaf6099ab11fbf5ba2` and committed reconciled tracking at `5237891573c59413e2b13e3f4090b8053aadfb90`. All final gates below ran sequentially on that exact committed source head, with source fingerprints pinned before and confirmed unchanged after. No source changes followed the task commit. This append/commit owns this evidence artifact only; final review, retained configured-gate refresh, summary/PR synchronization and approval remain root-owned and pending. Recovery remains 0/10.
+
+### Exact final formatted regression proof
+
+Root inspected the earlier archive test against the final committed regression and identified only one final oxfmt line wrap (three-line textual diff); production bytes were exact. Initial proof receipts are retained unchanged. The permitted cheap follow-up copies the exact committed formatted regression into that same private archive and runs only the selected test against old then fixed TypeScript production source. No rebuild or broad suite repeat was needed; built assets were already present and unchanged, while Vitest reads the private source. The selected permission regression again fails old for the intended public preview exit1 and passes fixed exit 0. Actual EACCES remains enforced. Both test hashes are exactly `52d486787ef07f4728513f4337d919b4a041107a072d19c36cf5f06a3fd0264c`, equal to the final committed test. No shared source neutralization occurred.
+
+Exact supplemental logs: `/tmp/oat-markdown-unreadable-evidence/final-formatted-old-regression.log`, `final-formatted-fixed-regression.log`, `final-formatted-contrast-run.log`; structured receipt `final-formatted-contrast.json`.
+
+```json
+{
+  "archive": "/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-remote-task-contrast-5eese8q2",
+  "baseline": "6ad9b2223716db22dbc95a0d21d0681e363307e1",
+  "isolatedHome": "/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-unreadable-formatted-home-7mi42du6",
+  "sharedSourcesNeutralized": false,
+  "buildRepeated": false,
+  "records": [
+    {
+      "mode": "old",
+      "command": [
+        "pnpm",
+        "--filter",
+        "@open-agent-toolkit/cli",
+        "exec",
+        "vitest",
+        "run",
+        "src/commands/docs/init/integration.test.ts",
+        "-t",
+        "preserves inaccessible optional directories while adopting readable siblings"
+      ],
+      "exit": 1,
+      "log": "/tmp/oat-markdown-unreadable-evidence/final-formatted-old-regression.log",
+      "testSha256": "52d486787ef07f4728513f4337d919b4a041107a072d19c36cf5f06a3fd0264c",
+      "sourceSha256": "4f8b3b890280c76535c7bdf5c1b6d3eb199133801421de37ffe2369b99b148dd"
+    },
+    {
+      "mode": "fixed",
+      "command": [
+        "pnpm",
+        "--filter",
+        "@open-agent-toolkit/cli",
+        "exec",
+        "vitest",
+        "run",
+        "src/commands/docs/init/integration.test.ts",
+        "-t",
+        "preserves inaccessible optional directories while adopting readable siblings"
+      ],
+      "exit": 0,
+      "log": "/tmp/oat-markdown-unreadable-evidence/final-formatted-fixed-regression.log",
+      "testSha256": "52d486787ef07f4728513f4337d919b4a041107a072d19c36cf5f06a3fd0264c",
+      "sourceSha256": "141bf4c528b601653469edb543a2f67ecc83fff3915045fe584d697dc04225f8"
+    }
+  ]
+}
+```
+
+Save as `/tmp/oat-markdown-unreadable-evidence/final-formatted-contrast.py` to repeat the selected test using the retained private archive:
+
+```python
+import pathlib,subprocess,tempfile,os,json,hashlib
+repo=pathlib.Path.cwd();out=pathlib.Path('/tmp/oat-markdown-unreadable-evidence');receipt=json.loads((out/'task-contrast.json').read_text());archive=pathlib.Path(receipt['archive']);test='packages/cli/src/commands/docs/init/integration.test.ts';source='packages/cli/src/commands/docs/init/markdown.ts';(archive/test).write_bytes((repo/test).read_bytes());home=tempfile.mkdtemp(prefix='oat-unreadable-formatted-home-');env={k:os.environ[k]for k in ['PATH','TMPDIR','LANG','LC_ALL','SHELL','USER','LOGNAME']if k in os.environ};env.update(HOME=home,CI='1');records=[]
+for mode in ['old','fixed']:
+ (archive/source).write_bytes(subprocess.check_output(['git','show',receipt['base']+':'+source])if mode=='old'else(repo/source).read_bytes());argv=['pnpm','--filter','@open-agent-toolkit/cli','exec','vitest','run','src/commands/docs/init/integration.test.ts','-t','preserves inaccessible optional directories while adopting readable siblings'];p=subprocess.run(argv,cwd=archive,env=env,capture_output=True,text=True);log=out/('final-formatted-'+mode+'-regression.log');log.write_text(p.stdout+p.stderr);records.append({'mode':mode,'command':argv,'exit':p.returncode,'log':str(log),'testSha256':hashlib.sha256((archive/test).read_bytes()).hexdigest(),'sourceSha256':hashlib.sha256((archive/source).read_bytes()).hexdigest()});(out/'final-formatted-contrast.json').write_text(json.dumps({'archive':str(archive),'baseline':receipt['base'],'isolatedHome':home,'sharedSourcesNeutralized':False,'buildRepeated':False,'records':records},indent=2)+'\n');assert p.returncode==(1 if mode=='old'else 0),(p.stdout,p.stderr)
+ if mode=='old':assert 'expected 1 to be +0' in p.stdout+p.stderr
+print(json.dumps(records,indent=2))
+```
+
+### Ordered repository gates
+
+The sequential runner and each individual command returned actual exit 0. It stops on any nonzero command and captures the command status directly, without a filter/pager pipeline. Every pnpm subprocess uses a new isolated HOME and an environment allowlist without provider credentials. Fresh fetch uses the existing authorized Git transport; it returned 0 and confirmed origin/main `98d1d524624e17f55ccfce33d18b3d5535dc91ca` before the version gate.
+
+| Order       | Command                     | Exit | Execution and cache                                                                                   | Log under /tmp/oat-markdown-unreadable-evidence |
+| ----------- | --------------------------- | ---- | ----------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| 1           | pnpm check                  | 0    | CLI check/build and docs check actual; 8 other tasks cached; root skill/docs/format validation actual | 01-check.log                                    |
+| 2           | pnpm type-check             | 0    | CLI types actual; 9 tasks cached                                                                      | 02-types.log                                    |
+| 3           | pnpm test                   | 0    | CLI 398 files/7,970tests and docs build actual; 8 tasks cached                                        | 03-test.log                                     |
+| 4           | pnpm build                  | 0    | All 5 tasks cached; actual CLI builds retained above and at step 1                                    | 04-build.log                                    |
+| 5           | pnpm run check:skill-bumps  | 0    | Actual script validates 5 changed skill/role bump checks                                              | 05-skills.log                                   |
+| Between 5/6 | git fetch origin main       | 0    | Actual fresh fetch, exact main SHA above                                                              | fetch-main.log                                  |
+| 6           | pnpm release:check-versions | 0    | Actual version script                                                                                 | 06-versions.log                                 |
+| 7           | pnpm release:validate       | 0    | Actual five-public-package tarball validation, versions 0.3.11                                        | 07-release.log                                  |
+| 8           | pnpm build:docs             | 0    | All 6 tasks cached; actual docs build generated 73/73 pages at step 3                                 | 08-docs.log                                     |
+
+The pnpm test root Node suites also actually execute: smoke 163/163, skills 660/660 and scripts 1/1, each fail 0. Unchanged control-plane 151, docs-config 10 and docs-transforms 31 test results are cached replay; their prior actual integration controls remain retained at `reviews/final-integration-controls.md` and `/tmp/oat-markdown-integration-evidence/`. No forced unchanged workspace suites were repeated. Positive suite success is accompanied by the old-failing/fixed-passing real-permission regression and independent CLI categorical/byte/link controls above.
+
+### Exact gate and source receipt
+
+```json
+{
+  "sourceHead": "5237891573c59413e2b13e3f4090b8053aadfb90",
+  "sourceHashes": {
+    "packages/cli/src/commands/docs/init/markdown.ts": "141bf4c528b601653469edb543a2f67ecc83fff3915045fe584d697dc04225f8",
+    "packages/cli/src/commands/docs/init/integration.test.ts": "52d486787ef07f4728513f4337d919b4a041107a072d19c36cf5f06a3fd0264c"
+  },
+  "isolatedHome": "/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-unreadable-gates-home-lb19shr7",
+  "pnpmEnvironmentKeys": [
+    "CI",
+    "HOME",
+    "LANG",
+    "LC_ALL",
+    "LOGNAME",
+    "NO_UPDATE_NOTIFIER",
+    "PATH",
+    "SHELL",
+    "TMPDIR",
+    "USER"
+  ],
+  "providerCredentialsPassedToGates": false,
+  "fetchUsesExistingGitTransport": true,
+  "commands": [
+    {
+      "name": "01-check",
+      "command": ["pnpm", "check"],
+      "exit": 0,
+      "seconds": 13.65,
+      "log": "/tmp/oat-markdown-unreadable-evidence/01-check.log",
+      "cacheHitLines": 8,
+      "cacheMissLines": 3
+    },
+    {
+      "name": "02-types",
+      "command": ["pnpm", "type-check"],
+      "exit": 0,
+      "seconds": 2.0,
+      "log": "/tmp/oat-markdown-unreadable-evidence/02-types.log",
+      "cacheHitLines": 9,
+      "cacheMissLines": 1
+    },
+    {
+      "name": "03-test",
+      "command": ["pnpm", "test"],
+      "exit": 0,
+      "seconds": 193.36,
+      "log": "/tmp/oat-markdown-unreadable-evidence/03-test.log",
+      "cacheHitLines": 8,
+      "cacheMissLines": 2
+    },
+    {
+      "name": "04-build",
+      "command": ["pnpm", "build"],
+      "exit": 0,
+      "seconds": 1.58,
+      "log": "/tmp/oat-markdown-unreadable-evidence/04-build.log",
+      "cacheHitLines": 5,
+      "cacheMissLines": 0
+    },
+    {
+      "name": "05-skills",
+      "command": ["pnpm", "run", "check:skill-bumps"],
+      "exit": 0,
+      "seconds": 2.24,
+      "log": "/tmp/oat-markdown-unreadable-evidence/05-skills.log",
+      "cacheHitLines": 0,
+      "cacheMissLines": 0
+    },
+    {
+      "name": "fetch-main",
+      "command": ["git", "fetch", "origin", "main"],
+      "exit": 0,
+      "seconds": 0.29,
+      "log": "/tmp/oat-markdown-unreadable-evidence/fetch-main.log",
+      "cacheHitLines": 0,
+      "cacheMissLines": 0,
+      "mainSha": "98d1d524624e17f55ccfce33d18b3d5535dc91ca"
+    },
+    {
+      "name": "06-versions",
+      "command": ["pnpm", "release:check-versions"],
+      "exit": 0,
+      "seconds": 0.7,
+      "log": "/tmp/oat-markdown-unreadable-evidence/06-versions.log",
+      "cacheHitLines": 0,
+      "cacheMissLines": 0
+    },
+    {
+      "name": "07-release",
+      "command": ["pnpm", "release:validate"],
+      "exit": 0,
+      "seconds": 3.16,
+      "log": "/tmp/oat-markdown-unreadable-evidence/07-release.log",
+      "cacheHitLines": 0,
+      "cacheMissLines": 0
+    },
+    {
+      "name": "08-docs",
+      "command": ["pnpm", "build:docs"],
+      "exit": 0,
+      "seconds": 2.27,
+      "log": "/tmp/oat-markdown-unreadable-evidence/08-docs.log",
+      "cacheHitLines": 6,
+      "cacheMissLines": 0
+    }
+  ]
+}
+```
+
+### Runnable gate runner
+
+Save as `/tmp/oat-markdown-unreadable-evidence/run-gates.py` and run at the pinned committed source head. Its HEAD guard intentionally refuses a different source instead of treating it as this acceptance receipt.
+
+```python
+import pathlib,subprocess,json,time,sys,tempfile,os,hashlib
+out=pathlib.Path('/tmp/oat-markdown-unreadable-evidence');records=[];head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip();assert head=='5237891573c59413e2b13e3f4090b8053aadfb90';home=tempfile.mkdtemp(prefix='oat-unreadable-gates-home-');env={k:os.environ[k]for k in ['PATH','TMPDIR','LANG','LC_ALL','SHELL','USER','LOGNAME']if k in os.environ};env.update(HOME=home,CI='1',NO_UPDATE_NOTIFIER='1');sources=['packages/cli/src/commands/docs/init/markdown.ts','packages/cli/src/commands/docs/init/integration.test.ts'];hashes={p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()for p in sources}
+commands=[('01-check',['pnpm','check']),('02-types',['pnpm','type-check']),('03-test',['pnpm','test']),('04-build',['pnpm','build']),('05-skills',['pnpm','run','check:skill-bumps']),('fetch-main',['git','fetch','origin','main']),('06-versions',['pnpm','release:check-versions']),('07-release',['pnpm','release:validate']),('08-docs',['pnpm','build:docs'])]
+for name,argv in commands:
+ start=time.time();log=out/(name+'.log')
+ with log.open('w')as stream:p=subprocess.run(argv,env=None if name=='fetch-main'else env,stdout=stream,stderr=subprocess.STDOUT)
+ text=log.read_text();r={'name':name,'command':argv,'exit':p.returncode,'seconds':round(time.time()-start,2),'log':str(log),'cacheHitLines':text.count('cache hit, replaying logs'),'cacheMissLines':text.count('cache miss, executing')};records.append(r)
+ if name=='fetch-main':r['mainSha']=subprocess.check_output(['git','rev-parse','origin/main'],text=True).strip()
+ (out/'gate-receipts.json').write_text(json.dumps({'sourceHead':head,'sourceHashes':hashes,'isolatedHome':home,'pnpmEnvironmentKeys':sorted(env),'providerCredentialsPassedToGates':False,'fetchUsesExistingGitTransport':True,'commands':records},indent=2)+'\n');print(json.dumps(r),flush=True)
+ if p.returncode:sys.exit(p.returncode)
+assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()==head
+assert hashes=={p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()for p in sources}
+```
+
+```bash
+python3 /tmp/oat-markdown-unreadable-evidence/run-gates.py > /tmp/oat-markdown-unreadable-evidence/gate-run.log 2>&1
+result=$?
+printf 'exit=%s\n' "$result"
+exit "$result"
+```
+
+### Evidence-only commit controls
+
+Scoped formatter/check, diff and five runnable fenced-probe syntax checks plus exact embedded JSON validation are retained as `acceptance-format.log`, `acceptance-format-check.log`, `acceptance-diff-check.log` and `acceptance-artifact-checks.json`. The evidence-only commit must preserve pre/post-hook artifact hashes, identical gated source fingerprints and a clean worktree; the exact postcommit receipt is `acceptance-postcommit.json`. No tracking/provider/normal-home/live-installation/publication/push changes occurred. Original accepted request/target remain unchanged.
