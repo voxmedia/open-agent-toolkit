@@ -1557,6 +1557,22 @@ Accepted exact-target canonical-role route /root/markdown_p04_pinned; awaiting r
       ],
       "evidence_commit": "47b3df923fc460da9c331ebb15d12fdc15a36a4b",
       "verification": "all-eight-gates-passed"
+    },
+    {
+      "event": "passing-gate-address-now",
+      "scope": "p04-t06",
+      "finding": "L1",
+      "gate_run_id": "74cf045f-60fb-4931-a434-8cc9eaa5df19",
+      "configured_target": {
+        "harness": "codex",
+        "model": "gpt-6.1-sol",
+        "effort": "high",
+        "crossHarness": false,
+        "routeIndex": 0,
+        "routeLength": 1
+      },
+      "original_handle": "/root/markdown_p04_pinned",
+      "status": "planned"
     }
   ],
   "task_class": "consequential",
@@ -3125,3 +3141,14 @@ Gate acceptance corroborated: unique current project/final/code marker `74cf045f
 Gate result received: run74cf045f-60fb-4931-a434-8cc9eaa5df19, structured ok/high threshold, 0C/0H/0M/2L, eligible corroborated handoff. Root consumed the sole **Reconnaissance: not-attempted** artifact confirmation before full artifact/provenance validation. No orchestration wave/log applies. Reviewer source head909f8a68b1068b54f2a0ee870e299088a5c0da82 is a tracking-only descendant of the immutable launch basis; production/test hashes remain identical. Low findings require durable judgment before acceptance.
 
 Root receipt-check correction: the live marker is cleaned by the CLI after terminal completion; its previously captured and committed acceptance metadata remains authoritative. An initial post-result check attempted the cleaned path and failed before receive. The command group unfortunately continued to persist receive intent; no receive was invoked. Root corroborated the retained marker JSON with the complete envelope/artifact and persisted the result before any actual receive/disposition work. Later command groups fail on the first error. No replacement gate or child launched.
+
+### Passing retained gate judgment sweep — 74cf045f-60fb-4931-a434-8cc9eaa5df19
+
+Root read the complete artifact and applied current receive1.6.7 Step2.6 non-pausing judgment. 0C/0H/0M/2L; deferred debt zero.
+
+- L1 unreadable nested directory abort: agree, real EACCES gap in optional discovery. Task Scope: Minor. Address now p04-t06; accurate unreadable/preserved advice avoids falsely confirming unknown Markdown. Required safety remains strict. Source changes require final/configured-exit freshness, not a phase blocking retry.
+- L2 stale summary: agree, already-pending output refresh. Task Scope: Negligible. Address now via completed summary/document/PR output refresh after acceptance; no duplicate blocking task/snapshot reset.
+
+Raw artifact correction: empty merge --cc does not prove no conflict resolutions. Seven conflicts were resolved, verified in final-integration-controls and independent integration review. Preserve raw counts/statements but reject that inference; actual version/inventory/sync dispositions remain authoritative. Reviewer temporary contrasts were restored; current source hashes/tree corroborated clean. Root resolver's initial --project option was rejected before any child; corrected documented --project-path. No extra child or recovery/blocked attempt consumed.
+
+Dispatch: scope=p04 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high

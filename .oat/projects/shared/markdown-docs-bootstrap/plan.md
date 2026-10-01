@@ -236,6 +236,19 @@ Use public adoption/dry-run regressions for instruction-only direct/nested direc
 
 `fix(p04-t05): exclude instruction files from docs advice`. Commit only owned source/test/evidence, report TASK_DONE with verification and await root ACK.
 
+### Task p04-t06: (review) Preserve adoption across unreadable optional directories
+
+**Status:** pending
+
+**Source:** Passing retained gate 74cf045f-60fb-4931-a434-8cc9eaa5df19 L1; address-now judgment (Minor), not a phase blocking retry.
+
+**Ownership:** packages/cli/src/commands/docs/init/markdown.ts, packages/cli/src/commands/docs/init/integration.test.ts, reviews/final-unreadable-controls.md only.
+
+1. Reproduce real non-root EACCES at public init/adoption for an optional nested directory with no index; retain readable authored and required-root refusal controls.
+2. Make only optional recursive discovery tolerant. Preserve inaccessible directories, emit accurate path-specific unreadable/preserved repair advice, omit their Contents links and continue readable siblings. Never label unknown content confirmed Markdown; required root/target safety and symlink non-traversal remain strict.
+3. Add one genuine-permission public regression for dry/live/repeat with literal advice/link/bytes oracles. Skip explicitly only when permissions cannot enforce refusal; restore in finally. Prove old-source failure for this bug and fixed success in an isolated archive. No helper mocks or production test hooks.
+4. Build before focused bundle-backed init/guard consumers and real CLI controls; CLI lint/types and scoped format/diff; then all eight repository gates in order with fresh main and explicit exit/cache receipts. Isolate subprocess HOME/allowlisted environment only. Commit exact ownership with fix(p04-t06); return TASK_DONE and await root ACK before terminal gate receipts. Root owns receive, final/configured-gate freshness, summary/PR.
+
 ## Reviews
 
 | Scope         | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target          |
@@ -282,7 +295,7 @@ Source pointers retained for the already-planned consumer inventory: index gener
 
 ## Implementation Complete
 
-Implementation in progress: 13/13 tasks complete; both remote source fixes complete, all eight local gates passed and fresh independent final review passed. Scope: 4 sequential phases, 13 atomic tasks — p01 (2), p02 (3), p03 (3), p04 (5). Prior integrated verification/review remains history; The retained exit gate refresh precedes final HiLL approval. Existing configured pre-approval steps are complete and their snapshot is unchanged.
+Implementation in progress: 13/14 tasks complete; both remote source fixes independently accepted; passing-gate L1 address-now fix pending. Scope: 4 sequential phases, 14 atomic tasks — p01 (2), p02 (3), p03 (3), p04 (6). Prior integrated verification/review remains history; The retained exit gate refresh precedes final HiLL approval. Existing configured pre-approval steps are complete and their snapshot is unchanged.
 
 ## References
 
