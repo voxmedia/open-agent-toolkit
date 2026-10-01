@@ -64,6 +64,10 @@ bw3-p01-outcome: phase p01 passed (root review 0 Critical/High; Codex gate ok); 
 
 gate-3b53a413-p02-recon: completed one awaited read-only intelligent-recon docs lane; root reconciled evidence and wrote reviews/p02-review-2026-10-01T122403Z.md.
 
+### 2026-10-01 · structural · oat gate review · p02
+
+target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:2,low:1 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-3/reviews/p02-review-2026-10-01T122403Z.md run=3b53a413-11e2-4d96-b358-9bd3307e60ad
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
