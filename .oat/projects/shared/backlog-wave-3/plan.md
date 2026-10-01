@@ -1429,6 +1429,11 @@ breaking changes must be named in the title:
     review kept below verified (including claims a review omitted), and
     `retryLimit` now means pre-acceptance admission retries with at most one
     retry per lane;
+  - recon publication is stricter: every brief type must bind to ledger
+    claims, and a claim a required review left without a disposition needs a
+    material `REVIEW_DISPOSITION_OMITTED` gap (the reconciler now returns
+    them), so an existing packet that omitted one fails with
+    `MISSING_REVIEW_OMISSION_GAP` until those gaps are recorded;
   - `oat docs nav sync` writes Fumadocs `meta.json`;
   - `oat project complete-state` refuses a configured closeout with a missing
     or incomplete snapshot; exit-gate waivers are operator-only;
@@ -1453,7 +1458,7 @@ breaking changes must be named in the title:
 | p01    | code     | fixes_completed | 2026-10-01 | reviews/archived/p01-review-2026-10-01T112852Z.md  | de9c98848aeb2379f0b9a81ead945664351d1f2b | auto       | -                 |
 | p02    | code     | fixes_completed | 2026-10-01 | reviews/archived/p02-review-2026-10-01T120623Z.md  | c129e82aba9a93c067b587718e576ad31edd372e | auto       | -                 |
 | p03    | code     | fixes_completed | 2026-10-01 | reviews/archived/p03-review-2026-10-01T130314Z.md  | 3769d125fc8499b681305a7565fbdab66b9174a5 | auto       | -                 |
-| p03    | code     | fixes_added     | 2026-10-01 | reviews/archived/p03-review-2026-10-01T131855Z.md  | a3d625b312d892dbdd33270582fb2561ec39533c | auto       | -                 |
+| p03    | code     | fixes_completed | 2026-10-01 | reviews/archived/p03-review-2026-10-01T131855Z.md  | a3d625b312d892dbdd33270582fb2561ec39533c | auto       | -                 |
 | p04    | code     | pending         | -          | -                                                  | -                                        | -          | -                 |
 | p05    | code     | pending         | -          | -                                                  | -                                        | -          | -                 |
 | p06    | code     | pending         | -          | -                                                  | -                                        | -          | -                 |

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
-oat_current_task_id: p03-t07
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -28,12 +28,12 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 5     | 5/5       |
 | Phase 2 | complete    | 6     | 6/6       |
-| Phase 3 | in_progress | 7     | 6/7       |
+| Phase 3 | in_progress | 7     | 7/7       |
 | Phase 4 | pending     | 4     | 0/4       |
 | Phase 5 | pending     | 6     | 0/6       |
 | Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 17/31 tasks completed
+**Total:** 18/31 tasks completed
 
 ---
 
@@ -140,8 +140,8 @@ oat_generated: false
 
 ### Task p03-t07: (review) Close p03 round-2 findings H1, M1, M2
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** a28109fc3
 
 ---
 
@@ -365,6 +365,13 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   `p03-t07` (third and final cycle under the review cap); L1 fixed in the PR
   Requirements.
   `Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
+
+- Continuation `cont-backlog-wave-3-p03-fix-2`: `a28109fc3` closed round-2
+  H1 (binding for every brief type; three probes fail closed), M1
+  (`REVIEW_DISPOSITION_OMITTED` gaps from the reconciler, shared
+  `review-omissions.mjs`, `MISSING_REVIEW_OMISSION_GAP` at publication,
+  "not reviewed" in Review Downgrades), M2 (duplicate-ID test); fixtures now
+  have every required review dispose of `claim-2`; recon 356/356.
 
 <!-- orchestration-runs-end -->
 
