@@ -13,8 +13,8 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: design
-oat_phase_status: complete
+oat_phase: plan
+oat_phase_status: in_progress
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -87,20 +87,20 @@ oat_generated: false
 
 # Project State: markdown-docs-bootstrap
 
-**Status:** Lightweight design
+**Status:** Planning
 **Started:** 2026-09-30
 **Last Updated:** 2026-09-30
 
 ## Current Phase
 
-Lightweight design - Approved review dispositions incorporated; lightweight design complete for planning
+Planning - Executable draft contains four sequential phases and nine tasks; dispatch policy and review-gate setup await user choices before review and readiness
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete; CLI validation passed)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; approved dispositions incorporated)
-- **Plan:** `plan.md` (scaffolded template — not started)
+- **Plan:** `plan.md` (drafted; review pending; not implementation-ready)
 - **Implementation:** `implementation.md` (scaffolded template — not started)
 
 ## Progress
@@ -112,6 +112,8 @@ Lightweight design - Approved review dispositions incorporated; lightweight desi
 - ✓ Independent design review received: pass, 6 medium and 2 low findings
 - ✓ User approved all review dispositions
 - ✓ Design revised with the agreed decisions
+- ✓ Executable plan drafted with consumer coverage, preservation controls, and release validation
+- ✓ Sequential phase dependencies assessed
 
 ## Design Review
 
@@ -123,4 +125,4 @@ None
 
 ## Next Milestone
 
-Continue quick-start to generate and review the implementation plan; implementation has not started
+Select project dispatch policy and review-gate posture, then complete quick-start plan review and readiness; implementation has not started
