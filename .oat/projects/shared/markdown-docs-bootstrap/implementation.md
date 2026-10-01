@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
-oat_current_task_id: p01-t01
+oat_current_task_id: p01-t02
 oat_generated: false
 ---
 
@@ -13,25 +13,25 @@ Implementation setup resolved from effective workflow configuration. Production 
 
 ## Progress Overview
 
-| Phase | Status  | Tasks | Completed |
-| ----- | ------- | ----- | --------- |
-| p01   | pending | 2     | 0/2       |
-| p02   | pending | 2     | 0/2       |
-| p03   | pending | 3     | 0/3       |
-| p04   | pending | 2     | 0/2       |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p01   | in_progress | 2     | 1/2       |
+| p02   | pending     | 2     | 0/2       |
+| p03   | pending     | 3     | 0/3       |
+| p04   | pending     | 2     | 0/2       |
 
-**Total:** 0/9 tasks completed
+**Total:** 1/9 tasks completed
 
 ## Phase 1: Shared content and guidance contracts
 
-**Status:** pending
+**Status:** in_progress
 
 ### Task p01-t01: Resolve literal Markdown roots and protect authored indexes
 
-**Status:** pending
-**Commit:** -
-**Outcome:** Not started
-**Verification:** Not run
+**Status:** completed
+**Commit:** 59dd7f0341d2d8a19152345510031614961db0ce
+**Outcome:** Markdown resolves its literal configured root; default manifest output refuses and explicit output protects the full canonical content tree plus authored index. Existing instruction consumers inherit the resolver correction; production instruction utils unchanged.
+**Verification:** Declared six-file Vitest run 425/425 exit 0; CLI type-check, lint, scoped build, scoped oxfmt write/check, and git diff --check each exit 0. Eleven new regressions fail against original production files and pass against restored changes (literal roots, agreement, instruction exclusion, omitted output, narrowed output aliases).
 
 ### Task p01-t02: Share read-only managed guidance classification
 
@@ -270,4 +270,40 @@ Accepted fresh handle `/root/markdown_p01_pinned`; no writes allowed until launc
   "classification_reason": "Canonical roots, symlink aliases, and authored-index preservation require semantic safety reasoning.",
   "floor_satisfaction": "satisfied"
 }
+```
+
+### p01-t01 reproducible controls
+
+Run the following Python probe from this repository root. It creates a meaningful authored index and valid config, and invokes the public source CLI; repeat at phase base `c3abaf0e40bc5794882fa2a956fca737b4eee98c` and task commit `59dd7f0341d2d8a19152345510031614961db0ce` in isolated checkouts. Temporary log files were `/tmp/markdown-p01-evidence/{pre,post}.jsonl` and `task01-{tests,type,lint,build,format,prefix-regressions}.log`; the durable probe and categorical results are preserved here.
+
+| Control                                | Before change             | After change                              | Expected evidence                                    |
+| -------------------------------------- | ------------------------- | ----------------------------------------- | ---------------------------------------------------- |
+| Narrowed source targets authored index | exit 0, index overwritten | exit 1, protected Markdown output refusal | Authored bytes and config preserved after refusal    |
+| Explicit external Markdown manifest    | exit 0                    | exit 0                                    | Authored index/config preserved                      |
+| Explicit configured Fumadocs index     | exit 0                    | exit 0                                    | Existing output accepted                             |
+| Fumadocs seed-index transition         | exit 0                    | exit 0                                    | Config changes to generated app-root index as before |
+
+Authored baseline SHA-256: `42c5916dacf7e04212faadce73ddff1da9d84bdf78b87c0072da5776df48bc1b`. Pre-fix overwritten SHA-256: `3e0b0dc0bf1c5c3a3d7632fcd2734011e99db688461ed3c469cd033cada08469`. Post-fix refusal retains the baseline SHA. No recovery attempt consumed.
+
+```python
+import hashlib, json, pathlib, subprocess, tempfile
+repo = pathlib.Path(tempfile.mkdtemp(prefix='oat-markdown-p01-'))
+(repo/'.git').mkdir(); (repo/'.oat').mkdir(); (repo/'docs'/'sub').mkdir(parents=True)
+authored = '---\ntitle: Team handbook\ndescription: Authored team context\n---\n\n# Team handbook\n\nAudience: maintainers. Ownership: docs team.\n\n## Contents\n\n- [Guide](sub/guide.md)\n'
+(repo/'docs'/'sub'/'guide.md').write_text('---\ntitle: Guide\ndescription: Operate the system\n---\n\n# Guide\n')
+config = {'version':1,'documentation':{'tooling':'markdown','root':'docs','index':'docs/index.md'}}
+configpath=repo/'.oat'/'config.json'
+def run(label, args, cfg=config):
+    configpath.write_text(json.dumps(cfg,indent=2)+'\n'); before_config=configpath.read_bytes()
+    (repo/'docs'/'index.md').write_text(authored); before=(repo/'docs'/'index.md').read_bytes()
+    command=['pnpm','-w','run','cli:source','--','--cwd',str(repo),'--json','docs','generate-index',*args]
+    result=subprocess.run(command,capture_output=True,text=True)
+    after=(repo/'docs'/'index.md').read_bytes()
+    print(json.dumps({'label':label,'fixture':str(repo),'command':command,'exit':result.returncode,'index_preserved':before==after,'config_preserved':configpath.read_bytes()==before_config,'before_sha256':hashlib.sha256(before).hexdigest(),'after_sha256':hashlib.sha256(after).hexdigest(),'stdout':result.stdout,'stderr':result.stderr}))
+run('narrowed-authored-overwrite',['--docs-dir',str(repo/'docs'/'sub'),'--output',str(repo/'docs'/'index.md')])
+run('markdown-external',['--output',str(repo/'manifest.md')])
+(repo/'apps'/'docs'/'docs').mkdir(parents=True); (repo/'apps'/'docs'/'docs'/'guide.md').write_text((repo/'docs'/'sub'/'guide.md').read_text())
+run('fumadocs-index-accepted',['--output',str(repo/'apps'/'docs'/'index.md')],{'version':1,'documentation':{'tooling':'fumadocs','root':'apps/docs','index':'apps/docs/index.md'}})
+
+run('fumadocs-transition-accepted',['--output',str(repo/'apps'/'docs'/'index.md')],{'version':1,'documentation':{'tooling':'fumadocs','root':'apps/docs','index':'apps/docs/docs/index.md'}})
 ```

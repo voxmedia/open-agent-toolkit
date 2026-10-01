@@ -11,7 +11,7 @@ oat_template: false
 
 ## Design Review Status
 
-The full lightweight design was independently reviewed through Consensus Review, which returned pass with 0 critical, 0 high, 6 medium, and 2 low findings. The user approved the root agent's dispositions, and all eight are incorporated below. The review applies to the original draft at `7781647a2`; this revision has not received an independent re-review. The design is complete for quick planning; implementation is not approved or started. No `spec.md` is required. See `reviews/design-consensus-handoff.md` for the original evidence and disposition ledger.
+The full lightweight design was independently reviewed through Consensus Review, which returned pass with 0 critical, 0 high, 6 medium, and 2 low findings. The user approved the root agent's dispositions, and all eight are incorporated below. The review applies to the original draft at `7781647a2`; this revision has not received an independent re-review. The design is complete for quick planning; implementation was authorized by the explicit oat-project-implement invocation on 2026-10-01 and is in progress. No `spec.md` is required. See `reviews/design-consensus-handoff.md` for the original evidence and disposition ledger.
 
 ## Overview
 
