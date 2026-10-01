@@ -13,6 +13,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { toFumadocsPageItem } from './fumadocs';
 import { syncDocsNavigation } from './sync';
 
 /**
@@ -59,7 +60,6 @@ async function listFiles(root: string, dir = '.'): Promise<string[]> {
 
 /** Docs-relative paths of every page the real loader puts in the tree. */
 async function pagesInLoadedTree(docsRoot: string): Promise<string[]> {
-  const loader = await importFumadocsLoader();
   const files: Array<Record<string, unknown>> = [];
   for (const path of await listFiles(docsRoot)) {
     if (path.endsWith('meta.json')) {
@@ -72,7 +72,13 @@ async function pagesInLoadedTree(docsRoot: string): Promise<string[]> {
       files.push({ type: 'page', path, data: { title: path } });
     }
   }
+  return pagesInTreeOf(files);
+}
 
+async function pagesInTreeOf(
+  files: Array<Record<string, unknown>>,
+): Promise<string[]> {
+  const loader = await importFumadocsLoader();
   const pages: string[] = [];
   const walk = (node: PageTreeNode): void => {
     if (node.type === 'page' && node.$ref) pages.push(node.$ref);
@@ -197,5 +203,141 @@ describe('generated meta.json against the installed Fumadocs loader', () => {
 
     if (check.framework !== 'fumadocs') throw new Error('unreachable');
     expect(check.stale).toEqual(['section/meta.json']);
+  });
+
+  it('escapes directive-like page and folder names so the loader keeps them', async () => {
+    const appRoot = join(await scratch(), 'app');
+    const docsRoot = join(appRoot, 'docs');
+    await mkdir(join(docsRoot, '!drafts'), { recursive: true });
+    await writeFile(join(appRoot, 'source.config.ts'), 'export {};\n', 'utf8');
+    await writeFile(
+      join(docsRoot, 'index.md'),
+      [
+        '# Home',
+        '',
+        '## Contents',
+        '',
+        '- [Hidden](!hidden.md) - exclusion prefix',
+        '- [Reversed](z...a.md) - reversed rest entry',
+        '- [Divider](---.md) - separator',
+        '- [Plain](plain.md) - ordinary name',
+        '- [Drafts](!drafts/index.md) - folder with an exclusion prefix',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+    for (const name of ['!hidden', 'z...a', '---', 'plain']) {
+      await writeFile(join(docsRoot, `${name}.md`), `# ${name}\n`, 'utf8');
+    }
+    await writeFile(
+      join(docsRoot, '!drafts', 'index.md'),
+      '# Drafts\n\n## Contents\n\n- [Draft](draft.md) - draft\n',
+      'utf8',
+    );
+    await writeFile(join(docsRoot, '!drafts', 'draft.md'), '# Draft\n', 'utf8');
+
+    const result = await syncDocsNavigation({ appRoot });
+
+    if (result.framework !== 'fumadocs') throw new Error('unreachable');
+    expect(result.unlisted).toEqual([]);
+    const rootMeta = JSON.parse(
+      await readFile(join(docsRoot, 'meta.json'), 'utf8'),
+    ) as { pages: string[] };
+    expect(rootMeta.pages).toEqual([
+      'index',
+      './!hidden',
+      './z...a',
+      './---',
+      'plain',
+      './!drafts',
+    ]);
+    await expect(pagesInLoadedTree(docsRoot)).resolves.toEqual(
+      [
+        '!drafts/draft.md',
+        '!drafts/index.md',
+        '!hidden.md',
+        '---.md',
+        'index.md',
+        'plain.md',
+        'z...a.md',
+      ].sort(),
+    );
+
+    const check = await syncDocsNavigation({ appRoot, check: true });
+    if (check.framework !== 'fumadocs') throw new Error('unreachable');
+    expect(check.stale).toEqual([]);
+    expect(check.unlisted).toEqual([]);
+  });
+
+  it('--check flags an unescaped directive-like entry the loader drops', async () => {
+    const appRoot = join(await scratch(), 'app');
+    const docsRoot = join(appRoot, 'docs');
+    await mkdir(docsRoot, { recursive: true });
+    await writeFile(join(appRoot, 'source.config.ts'), 'export {};\n', 'utf8');
+    await writeFile(
+      join(docsRoot, 'index.md'),
+      '# Home\n\n## Contents\n\n- [Hidden](!hidden.md) - hidden\n',
+      'utf8',
+    );
+    await writeFile(join(docsRoot, '!hidden.md'), '# Hidden\n', 'utf8');
+    // What an unescaped nav sync wrote: the loader reads `!hidden` as an
+    // exclusion and drops the page.
+    await writeFile(
+      join(docsRoot, 'meta.json'),
+      `${JSON.stringify({ title: 'Home', pages: ['index', '!hidden'] })}\n`,
+      'utf8',
+    );
+    await expect(pagesInLoadedTree(docsRoot)).resolves.toEqual(['index.md']);
+
+    const check = await syncDocsNavigation({ appRoot, check: true });
+
+    if (check.framework !== 'fumadocs') throw new Error('unreachable');
+    expect(check.stale).toEqual(['meta.json']);
+    expect(check.unlisted).toEqual([]);
+  });
+
+  it('writes every loader directive form as a local path the loader resolves', async () => {
+    // Each name is one the fumadocs-core 16.10.2 builder would otherwise read
+    // as a rest, extract, exclude, separator, or link directive.
+    const names = [
+      '...',
+      'z...a',
+      '...folder',
+      '!hidden',
+      '---',
+      '---Group---',
+      '[a](b)',
+      'external:[a](b)',
+    ];
+    const files: Array<Record<string, unknown>> = [
+      {
+        type: 'meta',
+        path: 'meta.json',
+        data: { pages: ['index', ...names.map(toFumadocsPageItem)] },
+      },
+      { type: 'page', path: 'index.md', data: { title: 'index' } },
+      ...names.map((name) => ({
+        type: 'page',
+        path: `${name}.md`,
+        data: { title: name },
+      })),
+    ];
+
+    for (const name of names) {
+      expect(toFumadocsPageItem(name)).toBe(`./${name}`);
+    }
+    for (const name of [
+      'plain',
+      'index',
+      '(group)',
+      'a...b',
+      'x!',
+      '.hidden',
+    ]) {
+      expect(toFumadocsPageItem(name)).toBe(name);
+    }
+    await expect(pagesInTreeOf(files)).resolves.toEqual(
+      ['index.md', ...names.map((name) => `${name}.md`)].sort(),
+    );
   });
 });
