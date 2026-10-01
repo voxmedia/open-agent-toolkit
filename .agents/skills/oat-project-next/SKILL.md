@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Glob, Grep, Bash(git:*), Bash(oat:*), Skill
 metadata:
-  version: 1.1.3
+  version: 1.1.4
 ---
 
 # Project Next
@@ -400,8 +400,17 @@ not_started`, null `launch_attempt_id`, `launch_started_at`,
   lowercase hexadecimal implementation/freshness digests are mandatory.
   Missing or malformed inputs route as stale. When HEAD differs from
   `freshness_head`, use the full raw Git byte algorithm read from the current
-  `oat-project-implement/SKILL.md`, with only its literal state-carrier
-  exclusion, rather than a remembered version of that algorithm. Verify
+  `oat-project-implement/references/completion-and-closeout.md` Step 14,
+  rather than a remembered version of that algorithm, and recompute each
+  stored value with its own version prefix and exclusion set. For a stored
+  `sha256:effective-delta-v2:<digest>` value, prefix the input with
+  `effective-delta-v2\0` and use Git's literal exclusion pathspecs
+  `:(exclude,literal)$PROJECT_PATH/state.md`, `:(exclude,literal).oat/projects`,
+  and `:(exclude,literal).oat/repo`, not globs. A descendant whose changes all
+  fall inside that set leaves the effective delta unchanged and is never stale.
+  For a stored `sha256:effective-delta-v1:<digest>` value, prefix the input
+  with `effective-delta-v1\0` and use only the literal exclusion pathspec
+  `:(exclude,literal)$PROJECT_PATH/state.md`; never reinterpret it as v2. Verify
   and ignore state-only checkpoint commits before classification. An unchanged
   qualified fingerprint preserves freshness across a merge, rebase, or base
   update but routes to `oat-project-implement` to persist the advanced rolling

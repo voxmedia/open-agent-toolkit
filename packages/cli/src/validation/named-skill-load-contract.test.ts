@@ -1703,7 +1703,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     classification: 'load-required',
     skills: ['oat-project-implement'],
     requires: [
-      'read from the current `oat-project-implement/SKILL.md`, with only its literal state-carrier exclusion, rather than a remembered version of that algorithm',
+      'read from the current `oat-project-implement/references/completion-and-closeout.md` Step 14, rather than a remembered version of that algorithm',
     ],
   },
   {

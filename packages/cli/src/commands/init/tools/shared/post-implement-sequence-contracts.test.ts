@@ -87,15 +87,22 @@ function git(cwd: string, ...args: string[]): string {
  * `effective-delta-v2`, read from the skill itself so the git-level test below
  * exercises the exact text an agent follows.
  */
-function effectiveDeltaV2Exclusions(projectPath: string): string[] {
-  const skill = normalizeWhitespace(readImplementSkill());
-  const sentence = skill.match(
-    /Use Git's literal exclusion pathspecs ([^.]*(?:\.[^ ][^.]*)*), not globs\./,
-  );
-  if (!sentence) {
-    throw new Error('Missing effective-delta-v2 exclusion pathspecs');
+function effectiveDeltaV2Exclusions(
+  projectPath: string,
+  source: string = readImplementSkill(),
+): string[] {
+  const skill = normalizeWhitespace(source);
+  const sentences = [
+    ...skill.matchAll(
+      /[Uu]se Git's literal exclusion pathspecs ([^.]*(?:\.[^ ][^.]*)*), not globs\./g,
+    ),
+  ];
+  if (sentences.length !== 1) {
+    throw new Error(
+      `Expected one effective-delta-v2 exclusion pathspec sentence, found ${sentences.length}`,
+    );
   }
-  return [...sentence[1]!.matchAll(/`(:\(exclude,literal\)[^`]+)`/g)].map(
+  return [...sentences[0]![1]!.matchAll(/`(:\(exclude,literal\)[^`]+)`/g)].map(
     (match) => match[1]!.replace('$PROJECT_PATH', projectPath),
   );
 }
@@ -987,6 +994,38 @@ describe('post-implementation sequence contracts', () => {
     } finally {
       rmSync(cwd, { recursive: true, force: true });
     }
+  });
+
+  it('pins the router fingerprint exclusions to the implement skill for v1 and v2', () => {
+    // BL-261001-recompute-oat-project-next-s: the read-only router recomputes a
+    // stored fingerprint itself, so its exclusion set must be the implement
+    // skill's, read from both texts so the two cannot drift again.
+    const implementV2 = effectiveDeltaV2Exclusions('$PROJECT_PATH');
+    const nextV2 = effectiveDeltaV2Exclusions('$PROJECT_PATH', readNextSkill());
+    expect(implementV2).toEqual([
+      ':(exclude,literal)$PROJECT_PATH/state.md',
+      ':(exclude,literal).oat/projects',
+      ':(exclude,literal).oat/repo',
+    ]);
+    expect(nextV2).toEqual(implementV2);
+
+    const next = normalizeWhitespace(readNextSkill());
+    // v1 keeps only the state carrier, as the implement skill states.
+    const v1Rule = next.match(
+      /stored `sha256:effective-delta-v1:<digest>` value[^.]*?only the literal exclusion pathspec `([^`]+)`/,
+    );
+    expect(v1Rule?.[1]).toBe(implementV2[0]);
+    expect(normalizeWhitespace(readImplementSkill())).toContain(
+      'recompute them with the `effective-delta-v1\\0` prefix and only the exact `$PROJECT_PATH/state.md` exclusion.',
+    );
+    // Each stored value is recomputed with its own version prefix.
+    expect(next).toContain('`effective-delta-v2\\0`');
+    expect(next).toContain('`effective-delta-v1\\0`');
+    // The algorithm lives in the completion reference, not the entry skill.
+    expect(next).toContain(
+      '`oat-project-implement/references/completion-and-closeout.md` Step 14',
+    );
+    expect(next).not.toContain('with only its literal state-carrier exclusion');
   });
 
   it('uses one immutable snapshot and its stored order across every closeout boundary', () => {
