@@ -13,10 +13,11 @@ import { dirname, resolve } from 'node:path';
 import { canonicalJson, hashFile } from './lib/canonical-json.mjs';
 import { isDirectExecution } from './lib/cli-entry.mjs';
 import {
+  affirmingDispositionByReviewKind,
+  requiredReviewKinds,
   unresolvedIssuesBlockClaim,
   validateArtifactShape,
 } from './lib/contracts.mjs';
-import { reviewOmissionGaps } from './lib/review-omissions.mjs';
 import {
   assertCanonicalRoot,
   assertSafeExistingPath,
@@ -24,11 +25,12 @@ import {
   assertUnchangedRoot,
 } from './lib/safe-path.mjs';
 
-const requiredDispositions = new Map([
-  ['semantic', 'affirmed'],
-  ['adversarial', 'unchallenged'],
-  ['coverage', 'covered'],
-]);
+const requiredDispositions = new Map(
+  requiredReviewKinds.map((kind) => [
+    kind,
+    affirmingDispositionByReviewKind[kind],
+  ]),
+);
 
 const permittedDispositions = new Map([
   ['semantic', new Set(['affirmed', 'rejected', 'uncertain'])],
@@ -66,7 +68,6 @@ export function reconcileLedger({
   priorReference,
   runId = priorLedger?.runId,
   reviewerLane = 'controller:reconcile-ledger-v1',
-  manifest,
 }) {
   if (!priorLedger || priorLedger.runId !== runId || priorLedger.revision < 1) {
     throw new Error(
@@ -385,11 +386,7 @@ export function reconcileLedger({
       `Reconciliation rejects schema-invalid review evidence: ${ledgerValidation.errors.map((error) => error.code).join(', ')}`,
     );
   }
-  // Claims a required review left without a disposition are kept below
-  // verified above; the controller records these material gaps in the
-  // manifest so the omission is published, not hidden.
-  const gaps = reviewOmissionGaps({ manifest, ledger, reviews: reviewResults });
-  return { ledger, reconciliation, gaps };
+  return { ledger, reconciliation };
 }
 
 function parseArgs(argv) {
@@ -600,7 +597,6 @@ async function main(argv = process.argv.slice(2)) {
     priorReference,
     runId: manifest.run.id,
     reviewerLane: declaration.producer,
-    manifest,
   });
   await assertUnchangedRoot(packetIdentity);
   await writeAtomicPair(
@@ -627,7 +623,6 @@ async function main(argv = process.argv.slice(2)) {
           path: declaration.outputReview,
           digest: await hashFile(resolvedOutputs.get('output-review')),
         },
-        gaps: result.gaps,
       },
       null,
       2,

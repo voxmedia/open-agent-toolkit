@@ -7,10 +7,11 @@ import { join, resolve } from 'node:path';
 import { hashFile } from './lib/canonical-json.mjs';
 import { isDirectExecution } from './lib/cli-entry.mjs';
 import {
+  affirmingDispositionByReviewKind,
   classifyUnresolvedIssue,
+  requiredReviewKinds,
   unresolvedIssuesBlockClaim,
 } from './lib/contracts.mjs';
-import { omittedReviews } from './lib/review-omissions.mjs';
 import {
   assertSafeExistingPath,
   assertSafeOutputPath,
@@ -120,12 +121,18 @@ function intendedRoutingSection(manifest, routing) {
   ];
 }
 
-const affirmingDispositions = new Set([
-  'affirmed',
-  'unchallenged',
-  'covered',
-  'resolved',
-]);
+// The required reviews that gave `claimId` no disposition at all. Such a
+// claim stays below `verified`, like an uncertain one, and is listed as not
+// reviewed.
+function omittedReviews(claimId, reviews) {
+  return requiredReviewKinds
+    .map((kind) => reviews.find((review) => review.reviewKind === kind))
+    .filter(
+      (review) =>
+        review &&
+        !(review.dispositions ?? []).some((item) => item.claimId === claimId),
+    );
+}
 
 function issueText(entry) {
   return typeof entry === 'string' ? entry : (entry?.text ?? '');
@@ -154,20 +161,23 @@ function reviewDowngradeLines(validatedRun) {
         (item) => item.claimId === claim.id,
       );
       if (!disposition) continue;
-      if (!affirmingDispositions.has(disposition.disposition)) {
+      if (
+        disposition.disposition !==
+        affirmingDispositionByReviewKind[review.reviewKind]
+      ) {
         reasons.push(`${review.reviewKind} review: ${disposition.disposition}`);
       }
       if (unresolvedIssuesBlockClaim(review, claim.id)) {
         for (const entry of review.unresolvedIssues) {
           const classification = classifyUnresolvedIssue(entry);
           if (
-            classification?.scope === 'claims' &&
+            classification.scope === 'claims' &&
             !classification.claimIds.includes(claim.id)
           ) {
             continue;
           }
           const scope =
-            classification?.scope === 'claims' ? 'issue' : 'global issue';
+            classification.scope === 'claims' ? 'issue' : 'global issue';
           reasons.push(`${review.reviewKind} ${scope}: ${issueText(entry)}`);
         }
       }

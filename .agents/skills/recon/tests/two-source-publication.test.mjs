@@ -34,6 +34,14 @@ test('production helpers publish a two-source packet with scoped downgrades', as
   assert.deepEqual(packet.reviews.semantic.unresolvedIssues, [
     structuredClone(twoSourceSemanticIssue),
   ]);
+  // KD6 precondition: the coverage reviewer marks every statement covered
+  // while reporting a material question omission.
+  assert.ok(
+    packet.reviews.coverage.dispositions.every(
+      (item) => item.disposition === 'covered',
+    ),
+  );
+  assert.equal(twoSourceCoverageFinding.material, true);
 
   const validation = await validatePacket(packet.packetRoot);
   assert.equal(validation.valid, true, JSON.stringify(validation, null, 2));
@@ -112,21 +120,6 @@ test('an issue scoped to an affirmed claim downgrades only that claim', async ()
   assert.equal(validation.valid, true, JSON.stringify(validation, null, 2));
 });
 
-test('a global issue keeps every covered claim below verified', async () => {
-  const packet = await createTwoSourcePacket({
-    semanticIssues: [
-      { text: 'Both sources may predate the release.', scope: 'global' },
-    ],
-  });
-  tempRoots.push(packet.tempRoot);
-  assert.ok(
-    packet.ledger.claims.every((claim) => claim.status !== 'verified'),
-    JSON.stringify(packet.ledger.claims, null, 2),
-  );
-  const validation = await validatePacket(packet.packetRoot);
-  assert.equal(validation.valid, true, JSON.stringify(validation, null, 2));
-});
-
 test('a complete packet still shows a scoped downgrade on a non-key claim', async () => {
   const packet = await createTwoSourcePacket({ withCoverageFinding: false });
   tempRoots.push(packet.tempRoot);
@@ -145,7 +138,7 @@ test('a complete packet still shows a scoped downgrade on a non-key claim', asyn
   );
 });
 
-test('a global issue renders on every claim it downgrades', async () => {
+test('a global issue keeps every covered claim below verified and renders on each', async () => {
   const packet = await createTwoSourcePacket({
     semanticIssues: [
       { text: 'Both sources may predate the release.', scope: 'global' },
@@ -153,6 +146,12 @@ test('a global issue renders on every claim it downgrades', async () => {
     withCoverageFinding: false,
   });
   tempRoots.push(packet.tempRoot);
+  assert.ok(
+    packet.ledger.claims.every((claim) => claim.status !== 'verified'),
+    JSON.stringify(packet.ledger.claims, null, 2),
+  );
+  const validation = await validatePacket(packet.packetRoot);
+  assert.equal(validation.valid, true, JSON.stringify(validation, null, 2));
   await renderPacket(packet.packetRoot);
   const downgrades = reviewDowngrades(
     await readFile(join(packet.packetRoot, 'packet.md'), 'utf8'),
@@ -168,185 +167,27 @@ test('a global issue renders on every claim it downgrades', async () => {
   }
 });
 
-const omittedEpsilon = [
-  { reviewKind: 'semantic', claimId: twoSourceClaimIds.coverageGap },
-];
-
-test('a claim a required review left without a disposition publishes only as a named partial', async () => {
+test('a claim a required review left without a disposition stays unresolved and is listed as not reviewed', async () => {
   const packet = await createTwoSourcePacket({
     withCoverageFinding: false,
-    omitDispositions: omittedEpsilon,
+    omitDispositions: [
+      { reviewKind: 'semantic', claimId: twoSourceClaimIds.coverageGap },
+    ],
   });
   tempRoots.push(packet.tempRoot);
-  assert.ok(
-    !packet.ledger.synthesis.keyClaimIds.includes(
-      twoSourceClaimIds.coverageGap,
-    ),
-  );
-  // The gap comes from the production reconciler, not from this test.
-  assert.deepEqual(
-    packet.omissionGaps.map((gap) => [
-      gap.code,
-      gap.material,
-      gap.waveId,
-      gap.laneId,
-      gap.claimIds,
-    ]),
-    [
-      [
-        'REVIEW_DISPOSITION_OMITTED',
-        true,
-        'wave-semantic-verification',
-        'lane-semantic',
-        [twoSourceClaimIds.coverageGap],
-      ],
-    ],
-  );
-  const validation = await validatePacket(packet.packetRoot);
-  assert.equal(validation.valid, true, JSON.stringify(validation, null, 2));
-  assert.equal(validation.status, 'partial');
   const epsilon = packet.ledger.claims.find(
     (claim) => claim.id === twoSourceClaimIds.coverageGap,
   );
   assert.equal(epsilon.status, 'unresolved');
-
-  await renderPacket(packet.packetRoot);
-  const document = await readFile(join(packet.packetRoot, 'packet.md'), 'utf8');
-  assert.match(
-    reviewDowngrades(document),
-    /claim-epsilon\*\* \(unresolved\)[^\n]*semantic review: not reviewed \(no disposition\)/,
-  );
-  assert.match(document, /REVIEW\\_DISPOSITION\\_OMITTED/);
-});
-
-for (const [label, options] of [
-  ['an omitted disposition', { omitDispositions: omittedEpsilon }],
-  [
-    'a claim left out of the brief and the review',
-    {
-      omitDispositions: omittedEpsilon,
-      mutateBrief: ({ mode, brief }) => {
-        if (mode !== 'verify') return;
-        brief.claims = brief.claims.filter(
-          (claim) => claim.id !== twoSourceClaimIds.coverageGap,
-        );
-      },
-    },
-  ],
-]) {
-  test(`${label} cannot hide in a complete packet`, async () => {
-    const packet = await createTwoSourcePacket({
-      withCoverageFinding: false,
-      recordOmissionGaps: false,
-      ...options,
-    });
-    tempRoots.push(packet.tempRoot);
-    assert.equal(packet.manifest.run.status, 'complete');
-    const validation = await validatePacket(packet.packetRoot);
-    assert.equal(validation.valid, false);
-    assert.deepEqual(
-      [...new Set(validation.errors.map((error) => error.code))],
-      ['MISSING_REVIEW_OMISSION_GAP'],
-    );
-  });
-}
-
-function relabel(claimId, status) {
-  return ({ ledger, reconciliation }) => {
-    ledger.claims.find((claim) => claim.id === claimId).status = status;
-    for (const transitions of [
-      ledger.transitions,
-      reconciliation.transitions,
-    ]) {
-      transitions.find((item) => item.claimId === claimId).to = status;
-    }
-  };
-}
-
-for (const status of ['contested', 'unsupported']) {
-  test(`an omitted claim relabeled ${status} without a review characterizing it still needs its gap`, async () => {
-    const packet = await createTwoSourcePacket({
-      withCoverageFinding: false,
-      omitDispositions: omittedEpsilon,
-      recordOmissionGaps: false,
-      editReconciled: relabel(twoSourceClaimIds.coverageGap, status),
-    });
-    tempRoots.push(packet.tempRoot);
-    assert.equal(
-      packet.ledger.claims.find(
-        (claim) => claim.id === twoSourceClaimIds.coverageGap,
-      ).status,
-      status,
-    );
-    assert.equal(packet.manifest.run.status, 'complete');
-    const validation = await validatePacket(packet.packetRoot);
-    assert.equal(validation.valid, false);
-    assert.deepEqual(
-      [...new Set(validation.errors.map((error) => error.code))],
-      ['MISSING_REVIEW_OMISSION_GAP'],
-    );
-  });
-}
-
-test('a claim the adversarial review challenged needs no omission gap', async () => {
-  const packet = await createTwoSourcePacket({
-    withCoverageFinding: false,
-    omitDispositions: omittedEpsilon,
-    dispositionOverrides: [
-      {
-        reviewKind: 'adversarial',
-        claimId: twoSourceClaimIds.coverageGap,
-        disposition: 'challenged',
-      },
-    ],
-  });
-  tempRoots.push(packet.tempRoot);
-  assert.deepEqual(packet.omissionGaps, []);
+  // Like an uncertain disposition, an omission is not forced partial.
   const validation = await validatePacket(packet.packetRoot);
   assert.equal(validation.valid, true, JSON.stringify(validation, null, 2));
   assert.equal(validation.status, 'complete');
-});
-
-// Each clause of the gap match is pinned: a recorded gap that differs in any
-// one of them does not discharge the omission.
-const gapMismatches = [
-  ['code', (gap) => Object.assign(gap, { code: 'INCOMPLETE_REVIEW' })],
-  ['material flag', (gap) => Object.assign(gap, { material: false })],
-  ['wave', (gap) => Object.assign(gap, { waveId: 'wave-adversarial' })],
-  ['lane', (gap) => Object.assign(gap, { laneId: 'lane-adversarial' })],
-  [
-    'claim IDs',
-    (gap) => Object.assign(gap, { claimIds: [twoSourceClaimIds.firstSource] }),
-  ],
-];
-
-for (const [label, edit] of gapMismatches) {
-  test(`an omission gap with the wrong ${label} does not discharge the omission`, async () => {
-    const packet = await createTwoSourcePacket({
-      withCoverageFinding: false,
-      omitDispositions: omittedEpsilon,
-      editOmissionGaps: (gaps) => gaps.forEach(edit),
-    });
-    tempRoots.push(packet.tempRoot);
-    const validation = await validatePacket(packet.packetRoot);
-    assert.equal(validation.valid, false);
-    assert.ok(
-      validation.errors.some(
-        (error) => error.code === 'MISSING_REVIEW_OMISSION_GAP',
-      ),
-      JSON.stringify(validation.errors, null, 2),
-    );
-  });
-}
-
-test('an omission gap naming a superset of claims discharges the omission', async () => {
-  const packet = await createTwoSourcePacket({
-    withCoverageFinding: false,
-    omitDispositions: omittedEpsilon,
-    editOmissionGaps: (gaps) =>
-      gaps.forEach((gap) => gap.claimIds.push(twoSourceClaimIds.firstSource)),
-  });
-  tempRoots.push(packet.tempRoot);
-  const validation = await validatePacket(packet.packetRoot);
-  assert.equal(validation.valid, true, JSON.stringify(validation, null, 2));
+  await renderPacket(packet.packetRoot);
+  assert.match(
+    reviewDowngrades(
+      await readFile(join(packet.packetRoot, 'packet.md'), 'utf8'),
+    ),
+    /claim-epsilon\*\* \(unresolved\)[^\n]*semantic review: not reviewed \(no disposition\)/,
+  );
 });

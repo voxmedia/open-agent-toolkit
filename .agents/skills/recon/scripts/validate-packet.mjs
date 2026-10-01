@@ -3,25 +3,20 @@
 import { readFile, rm } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 
+import { createReviewBrief } from './create-review-brief.mjs';
 import { hashCanonicalJson, hashFile, sha256 } from './lib/canonical-json.mjs';
 import { isDirectExecution } from './lib/cli-entry.mjs';
 import {
+  affirmingDispositionByReviewKind,
   isDigest,
   isObject,
   issue,
   profiles,
+  requiredReviewKinds,
   unresolvedIssuesBlockClaim,
   validateArtifactShape,
 } from './lib/contracts.mjs';
-import {
-  reviewBriefBindsClaim,
-  reviewBriefEntries,
-  reviewBriefRequestBinds,
-} from './lib/review-binding.mjs';
-import {
-  gapCoversReviewOmission,
-  reviewOmissionGaps,
-} from './lib/review-omissions.mjs';
+import { reviewBriefEntries } from './lib/review-binding.mjs';
 import { normalizeManifestRouting } from './lib/routing.mjs';
 import {
   assertCanonicalRoot,
@@ -1328,6 +1323,46 @@ function resolveTerminalReconciliation(
   };
 }
 
+// Brief integrity is one check: rebuild the brief with the production
+// generator from the prior ledger and the manifest, for the claim IDs it
+// lists, and require identical canonical JSON. Any edited, injected,
+// duplicated, or unprojected field differs, so no field-by-field binding is
+// needed. Briefs stay blind because the generator is the only projection.
+function checkReviewBrief(brief, reviewKind, { manifest, ledger }) {
+  const entryIds = reviewBriefEntries(brief, reviewKind).map(
+    (entry) => entry?.id,
+  );
+  let rebuilt;
+  try {
+    rebuilt = createReviewBrief({
+      id: brief.id,
+      mode: brief.mode,
+      createdAt: brief.createdAt,
+      manifest,
+      ledger,
+      claimIds: entryIds,
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      entryIds,
+      reason: `rebuild failed: ${error instanceof Error ? error.message : error}`,
+    };
+  }
+  if (hashCanonicalJson(rebuilt) === hashCanonicalJson(brief)) {
+    return { ok: true, entryIds };
+  }
+  const keys = [...new Set([...Object.keys(brief), ...Object.keys(rebuilt)])]
+    .sort()
+    .filter(
+      (key) =>
+        !Object.hasOwn(brief, key) ||
+        !Object.hasOwn(rebuilt, key) ||
+        hashCanonicalJson(brief[key]) !== hashCanonicalJson(rebuilt[key]),
+    );
+  return { ok: false, entryIds, reason: `differs at ${keys[0]}` };
+}
+
 function validateReviewBindings(
   manifest,
   ledger,
@@ -1371,79 +1406,29 @@ function validateReviewBindings(
       );
       continue;
     }
-    // Every brief's claim set is bound in both directions: every disposition
-    // claim binds to a brief projection (below), and every brief entry
-    // (verification and coverage `claims`, adversarial `provisionalStatements`)
-    // is a distinct ledger claim whose exact projection binds. Projection
-    // lookup binds the first entry with an ID, so a duplicate ID is rejected on
-    // its own. An injected entry (a note to a blind reviewer, an invented
-    // claim, or a forged source) fails closed. A real ledger claim the reviewer
-    // left without a disposition still binds; it is handled as an omission.
-    if (!reviewBriefRequestBinds(brief, manifest)) {
+    const check = checkReviewBrief(brief, result.reviewKind, {
+      manifest,
+      ledger: priorLedger ?? ledger,
+    });
+    if (!check.ok) {
       errors.push(
         issue(
           'REVIEW_BRIEF_MISMATCH',
-          `Review ${result.id} brief exclusions, scope, or questions differ from the approved request projection`,
-          result.id,
-        ),
-      );
-    }
-    const briefEntries = reviewBriefEntries(brief, result.reviewKind);
-    const briefClaimIds = briefEntries.map((entry) => entry?.id);
-    if (new Set(briefClaimIds).size !== briefClaimIds.length) {
-      errors.push(
-        issue(
-          'REVIEW_BRIEF_MISMATCH',
-          `Review ${result.id} brief repeats a claim ID`,
-          result.id,
-        ),
-      );
-    }
-    if (
-      briefClaimIds.some((claimId) => {
-        const priorClaim = priorClaims.get(claimId);
-        const ledgerClaim = priorClaim ?? claims.get(claimId);
-        return (
-          !ledgerClaim ||
-          !reviewBriefBindsClaim(
-            brief,
-            result.reviewKind,
-            ledgerClaim,
-            priorClaim ? priorLedger : ledger,
-            manifest,
-          )
-        );
-      })
-    ) {
-      errors.push(
-        issue(
-          'REVIEW_BRIEF_MISMATCH',
-          `Review ${result.id} brief entries must each be an exact ledger claim projection`,
+          `Review ${result.id} brief is not the production brief rebuilt from the prior ledger and manifest (${check.reason})`,
           result.id,
         ),
       );
     }
     const seen = new Set();
     for (const disposition of result.dispositions) {
-      const currentClaim = claims.get(disposition.claimId);
-      const priorClaim = priorClaims.get(disposition.claimId);
-      const claim = priorClaim ?? currentClaim;
-      const bindingLedger = priorClaim ? priorLedger : ledger;
       if (
-        !claim ||
         seen.has(disposition.claimId) ||
-        !reviewBriefBindsClaim(
-          brief,
-          result.reviewKind,
-          claim,
-          bindingLedger,
-          manifest,
-        )
+        !check.entryIds.includes(disposition.claimId)
       ) {
         errors.push(
           issue(
             'REVIEW_BRIEF_MISMATCH',
-            `Review ${result.id} dispositions must exactly match claim-bearing brief projections`,
+            `Review ${result.id} dispositions must be unique members of its brief's claims`,
             result.id,
           ),
         );
@@ -1850,26 +1835,6 @@ function validateReconciliation(
     );
   }
 
-  for (const expected of reviewOmissionGaps({
-    manifest,
-    ledger,
-    reviews: incorporatedReviews,
-  })) {
-    if (
-      !(manifest.gaps ?? []).some((gap) =>
-        gapCoversReviewOmission(gap, expected),
-      )
-    ) {
-      errors.push(
-        issue(
-          'MISSING_REVIEW_OMISSION_GAP',
-          `Claim ${expected.claimIds[0]} lacks a ${expected.laneId ?? 'review'} disposition and needs a material ${expected.code} gap naming the claim and the review's wave and lane`,
-          expected.claimIds[0],
-        ),
-      );
-    }
-  }
-
   const coverageResults = (passes.get('coverage') ?? [])
     .map((id) => artifactsById.get(id)?.value)
     .filter(Boolean);
@@ -2018,9 +1983,6 @@ function validateAssurance(validatedRun, errors) {
   const evidenceById = new Map(
     (ledger.evidence ?? []).map((item) => [item.id, item]),
   );
-  const priorClaims = new Map(
-    (validatedRun.priorLedger?.claims ?? []).map((claim) => [claim.id, claim]),
-  );
   const claimIds = new Set((ledger.claims ?? []).map((claim) => claim.id));
   for (const claimId of ledger.synthesis?.keyClaimIds ?? []) {
     if (!claimIds.has(claimId)) {
@@ -2095,14 +2057,12 @@ function validateAssurance(validatedRun, errors) {
           ),
         );
       }
-      const required = new Map([
-        ['semantic', 'affirmed'],
-        ['adversarial', 'unchallenged'],
-        ['coverage', 'covered'],
-      ]);
-      if (achievedProfile === 'thorough') {
-        required.set('redundant-verification', 'affirmed');
-      }
+      const required = new Map(
+        [
+          ...requiredReviewKinds,
+          ...(achievedProfile === 'thorough' ? ['redundant-verification'] : []),
+        ].map((kind) => [kind, affirmingDispositionByReviewKind[kind]]),
+      );
       const satisfied = new Set();
       const reviewerLanes = new Set();
       for (const reviewId of new Set(claim.reviewIds ?? [])) {
@@ -2180,17 +2140,18 @@ function validateAssurance(validatedRun, errors) {
                 artifact.reviewKind === 'contradiction-resolution'
               ? 'adversary'
               : 'coverage';
+        const briefCheck = brief
+          ? checkReviewBrief(brief, artifact.reviewKind, {
+              manifest,
+              ledger: validatedRun.priorLedger ?? ledger,
+            })
+          : null;
         if (
           !brief ||
           brief.runId !== ledger.runId ||
           brief.mode !== expectedMode ||
-          !reviewBriefBindsClaim(
-            brief,
-            artifact.reviewKind,
-            priorClaims.get(claim.id) ?? claim,
-            priorClaims.has(claim.id) ? validatedRun.priorLedger : ledger,
-            manifest,
-          ) ||
+          !briefCheck.ok ||
+          !briefCheck.entryIds.includes(claim.id) ||
           !artifact.permittedInputs?.some((reference) =>
             sameReference(reference, artifact.brief),
           )
@@ -2207,9 +2168,7 @@ function validateAssurance(validatedRun, errors) {
           (item) => item.claimId === claim.id,
         );
         const expectedDisposition =
-          artifact.reviewKind === 'contradiction-resolution'
-            ? 'resolved'
-            : required.get(artifact.reviewKind);
+          affirmingDispositionByReviewKind[artifact.reviewKind];
         if (
           dispositions.length !== 1 ||
           dispositions[0].disposition !== expectedDisposition

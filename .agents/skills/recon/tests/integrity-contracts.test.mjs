@@ -967,7 +967,6 @@ test('production reconciliation transitions uncertain and incomplete provisional
     {
       name: 'missing coverage disposition',
       reviewPath: 'reviews/coverage.json',
-      omittedLane: 'lane-coverage',
       mutate(review) {
         review.dispositions = [];
       },
@@ -992,11 +991,10 @@ test('production reconciliation transitions uncertain and incomplete provisional
     scenario.mutate(review);
     await replaceArtifact(packet, scenario.reviewPath, review);
 
-    const { ledger, reconciliation, gaps } = reconcileLedger({
+    const { ledger, reconciliation } = reconcileLedger({
       priorLedger,
       reviewResults: await coreReviewResults(packet),
       priorReference,
-      manifest: packet.manifest,
     });
     assert.equal(ledger.claims[0].status, 'unresolved', scenario.name);
     assert.deepEqual(
@@ -1014,25 +1012,15 @@ test('production reconciliation transitions uncertain and incomplete provisional
     );
 
     packet.manifest.run.status = 'partial';
-    if (scenario.omittedLane) {
-      // The omission gap comes from the production reconciler.
-      assert.deepEqual(
-        gaps.map((gap) => [gap.code, gap.laneId, gap.claimIds]),
-        [['REVIEW_DISPOSITION_OMITTED', scenario.omittedLane, ['claim-1']]],
-      );
-      packet.manifest.gaps.push(...gaps);
-    } else {
-      assert.deepEqual(gaps, [], scenario.name);
-      packet.manifest.gaps.push({
-        id: `gap-${scenario.name.replaceAll(' ', '-')}`,
-        code: 'INCOMPLETE_REVIEW',
-        message: `Claim review remained incomplete: ${scenario.name}.`,
-        material: true,
-        sourceIds: [],
-        claimIds: ['claim-1'],
-        coverageFindingIds: [],
-      });
-    }
+    packet.manifest.gaps.push({
+      id: `gap-${scenario.name.replaceAll(' ', '-')}`,
+      code: 'INCOMPLETE_REVIEW',
+      message: `Claim review remained incomplete: ${scenario.name}.`,
+      material: true,
+      sourceIds: [],
+      claimIds: ['claim-1'],
+      coverageFindingIds: [],
+    });
     await replaceArtifact(packet, 'claims.json', ledger);
     await replaceArtifact(
       packet,
@@ -1078,11 +1066,10 @@ test('production reconciliation transitions a provisional claim omitted by every
     await replaceArtifact(packet, relative, review);
   }
 
-  const { ledger, reconciliation, gaps } = reconcileLedger({
+  const { ledger, reconciliation } = reconcileLedger({
     priorLedger,
     reviewResults: await coreReviewResults(packet),
     priorReference,
-    manifest: packet.manifest,
   });
   assert.equal(ledger.claims[0].status, 'unresolved');
   assert.deepEqual(
@@ -1092,33 +1079,16 @@ test('production reconciliation transitions a provisional claim omitted by every
     [{ claimId: 'claim-1', from: 'provisional', to: 'unresolved' }],
   );
 
-  // One production-derived material gap per omitting review, each naming the
-  // claim and that review's exact wave and lane.
-  assert.deepEqual(
-    gaps.map((gap) => [gap.code, gap.waveId, gap.laneId, gap.claimIds]),
-    [
-      [
-        'REVIEW_DISPOSITION_OMITTED',
-        'wave-semantic-verification',
-        'lane-semantic',
-        ['claim-1'],
-      ],
-      [
-        'REVIEW_DISPOSITION_OMITTED',
-        'wave-adversarial',
-        'lane-adversarial',
-        ['claim-1'],
-      ],
-      [
-        'REVIEW_DISPOSITION_OMITTED',
-        'wave-coverage',
-        'lane-coverage',
-        ['claim-1'],
-      ],
-    ],
-  );
   packet.manifest.run.status = 'partial';
-  packet.manifest.gaps.push(...gaps);
+  packet.manifest.gaps.push({
+    id: 'gap-claim-omitted-by-all-reviews',
+    code: 'INCOMPLETE_REVIEW',
+    message: 'The claim was omitted by every required review.',
+    material: true,
+    sourceIds: [],
+    claimIds: ['claim-1'],
+    coverageFindingIds: [],
+  });
   await replaceArtifact(packet, 'claims.json', ledger);
   await replaceArtifact(packet, 'reviews/reconciliation.json', reconciliation);
   const compiled = await compileValidatedRun(packet.packetRoot);

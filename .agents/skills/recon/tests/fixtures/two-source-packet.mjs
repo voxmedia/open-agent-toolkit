@@ -78,22 +78,14 @@ function fileEvidence(id, sourceId, path, line, excerpt, provenance) {
  * `complete`. `mutateBrief` receives each production brief (`verify`,
  * `adversary`, `coverage`) before it is written, for adversarial probes.
  * `omitDispositions` lists `{ reviewKind, claimId }` pairs a review leaves
- * without a disposition. The reconciler's omission gaps are recorded in the
- * manifest as the controller records them, unless `recordOmissionGaps` is
- * false; the run status is `partial` whenever a material gap is recorded.
- * Adversarial probes may also override a review's disposition
- * (`dispositionOverrides`), forge the reconciled ledger before it is written
- * (`editReconciled`), or edit the recorded omission gaps (`editOmissionGaps`).
+ * without a disposition. The run status is `partial` whenever a material gap
+ * is recorded.
  */
 export async function createTwoSourcePacket({
   semanticIssues = [structuredClone(twoSourceSemanticIssue)],
   withCoverageFinding = true,
   mutateBrief,
   omitDispositions = [],
-  recordOmissionGaps = true,
-  dispositionOverrides = [],
-  editReconciled,
-  editOmissionGaps,
 } = {}) {
   const packet = await createPacketFixture({
     profile: 'standard',
@@ -267,12 +259,7 @@ export async function createTwoSourcePacket({
       )
       .map((claimId) => ({
         claimId,
-        disposition:
-          dispositionOverrides.find(
-            (override) =>
-              override.reviewKind === reviewKind &&
-              override.claimId === claimId,
-          )?.disposition ?? dispositionFor(claimId),
+        disposition: dispositionFor(claimId),
       })),
     newEvidence: [],
     evidenceAssociations: [],
@@ -308,18 +295,12 @@ export async function createTwoSourcePacket({
     });
   }
 
-  const {
-    ledger,
-    reconciliation,
-    gaps: omissionGaps,
-  } = reconcileLedger({
+  const { ledger, reconciliation } = reconcileLedger({
     priorLedger,
     reviewResults,
     priorReference,
     runId: manifest.run.id,
-    manifest,
   });
-  if (editReconciled) editReconciled({ ledger, reconciliation });
   await writeJson(join(packetRoot, 'raw/drafts/claims-v2.json'), ledger);
   await writeJson(
     join(packetRoot, 'reviews/reconciliation.json'),
@@ -338,11 +319,6 @@ export async function createTwoSourcePacket({
       coverageFindingIds: [twoSourceCoverageFinding.id],
     });
   }
-  if (recordOmissionGaps) {
-    const recorded = structuredClone(omissionGaps);
-    if (editOmissionGaps) editOmissionGaps(recorded);
-    manifest.gaps.push(...recorded);
-  }
   manifest.run.status = manifest.gaps.some((gap) => gap.material === true)
     ? 'partial'
     : 'complete';
@@ -355,7 +331,6 @@ export async function createTwoSourcePacket({
     ...packet,
     manifest,
     ledger,
-    omissionGaps,
     priorLedger,
     reconciliation,
     briefs,

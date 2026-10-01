@@ -1835,46 +1835,6 @@ test('verified claims require unique complete typed review results bound to immu
   await expectInvalid(tampered, 'ARTIFACT_DIGEST_MISMATCH');
 });
 
-async function rebindEditedBrief(packet, briefKey, reviewId, mutate) {
-  const brief = packet.reviewPaths.get(briefKey);
-  mutate(brief.value);
-  await writeJson(brief.path, brief.value);
-  brief.ref.digest = await hashFile(brief.path);
-  const review = packet.reviewPaths.get(reviewId).value;
-  review.brief = { ...brief.ref };
-  review.permittedInputs = [{ ...brief.ref }];
-  await persistReview(packet, reviewId);
-}
-
-const briefEdits = {
-  statement: (brief) => {
-    brief.claims[0].statement = 'The fixture contains omega evidence.';
-  },
-  evidence: (brief) => {
-    brief.claims[0].evidence[0].displayExcerpt = 'beta context';
-  },
-  locator: (brief) => {
-    brief.claims[0].evidence[0].locator.lineStart = 2;
-    brief.claims[0].evidence[0].locator.lineEnd = 2;
-  },
-  descriptor: (brief) => {
-    brief.sources[0].contentHash = `sha256:${'f'.repeat(64)}`;
-  },
-};
-
-for (const [label, mutate] of Object.entries(briefEdits)) {
-  test(`an edited helper-produced brief ${label} fails review binding`, async () => {
-    const packet = await makePacket({ profile: 'standard' });
-    await rebindEditedBrief(packet, 'brief-verify', 'review-semantic', mutate);
-    const result = await expectInvalid(packet, 'REVIEW_BRIEF_MISMATCH');
-    // The edit is the only defect: every other binding stays exact.
-    assert.deepEqual(
-      [...new Set(result.errors.map((error) => error.code))],
-      ['REVIEW_BRIEF_MISMATCH'],
-    );
-  });
-}
-
 test('persisted review evidence associations reject cross-claim, duplicate, conflicting, and unincorporated links', async () => {
   const evidenceFor = (packet, id, excerpt = 'Review evidence.') => ({
     ...structuredClone(packet.ledger.evidence[0]),

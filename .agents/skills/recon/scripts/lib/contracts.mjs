@@ -2280,37 +2280,89 @@ function validateReviewBriefArtifact(value, errors) {
   }
 }
 
+// The affirming disposition each review kind gives a claim it supports. The
+// first three are the required reviews for `verified`. The reconciler, the
+// validator, and the renderer all read this one table.
+export const affirmingDispositionByReviewKind = Object.freeze({
+  semantic: 'affirmed',
+  adversarial: 'unchallenged',
+  coverage: 'covered',
+  'redundant-verification': 'affirmed',
+  'contradiction-resolution': 'resolved',
+});
+
+export const requiredReviewKinds = Object.freeze([
+  'semantic',
+  'adversarial',
+  'coverage',
+]);
+
 // `unresolvedIssues` entries are a closed union:
 // - a string (legacy), read as a global issue;
-// - `{ text, claimIds }`, scoped to a non-empty list of claims the review
-//   covers; or
+// - `{ text, claimIds }`, scoped to a non-empty list of unique claims the
+//   review covers; or
 // - `{ text, scope: 'global' }`.
-// Anything else is rejected at artifact acceptance. It is never read as "no
-// issue": `unresolvedIssuesBlockClaim` treats an unclassifiable entry as
-// global.
-export function classifyUnresolvedIssue(entry) {
+// Returns `{ scope: 'global' }`, `{ scope: 'claims', claimIds }`, or
+// `{ error }`. `coveredClaimIds`, when given, also rejects a scoped claim the
+// review does not cover. An error is rejected at artifact acceptance and is
+// never read as "no issue": `unresolvedIssuesBlockClaim` treats it as global.
+export function classifyUnresolvedIssue(entry, coveredClaimIds = null) {
   if (typeof entry === 'string') return { scope: 'global' };
-  if (
-    !isObject(entry) ||
-    typeof entry.text !== 'string' ||
-    entry.text.trim().length === 0
-  ) {
-    return null;
+  if (!isObject(entry)) {
+    return {
+      error: 'unresolvedIssues members must be strings or scoped issue objects',
+    };
   }
-  const keys = Object.keys(entry).sort().join(',');
-  if (keys === 'scope,text' && entry.scope === 'global') {
-    return { scope: 'global' };
+  if (typeof entry.text !== 'string' || entry.text.trim().length === 0) {
+    return { error: 'Scoped unresolved issues require non-empty text' };
   }
-  if (
-    keys === 'claimIds,text' &&
-    Array.isArray(entry.claimIds) &&
-    entry.claimIds.length > 0 &&
-    entry.claimIds.every((id) => typeof id === 'string' && id.length > 0) &&
-    new Set(entry.claimIds).size === entry.claimIds.length
-  ) {
-    return { scope: 'claims', claimIds: [...entry.claimIds] };
+  const hasClaimIds = Object.hasOwn(entry, 'claimIds');
+  const hasScope = Object.hasOwn(entry, 'scope');
+  if (hasClaimIds && hasScope) {
+    return {
+      error: 'An unresolved issue names claimIds or a global scope, not both',
+    };
   }
-  return null;
+  if (!hasClaimIds && !hasScope) {
+    return {
+      error: 'An unresolved issue object requires claimIds or scope: global',
+    };
+  }
+  const unknown = Object.keys(entry).filter(
+    (key) => !['text', hasClaimIds ? 'claimIds' : 'scope'].includes(key),
+  );
+  if (unknown.length > 0) {
+    return {
+      error: `Unresolved issue has unknown fields: ${unknown.join(', ')}`,
+    };
+  }
+  if (hasScope) {
+    return entry.scope === 'global'
+      ? { scope: 'global' }
+      : { error: 'An unresolved issue scope must be global' };
+  }
+  if (!Array.isArray(entry.claimIds) || entry.claimIds.length === 0) {
+    return {
+      error: 'Scoped unresolved issues require a non-empty claimIds array',
+    };
+  }
+  if (!entry.claimIds.every((id) => typeof id === 'string' && id.length > 0)) {
+    return {
+      error: 'Scoped unresolved issue claim IDs must be non-empty strings',
+    };
+  }
+  if (new Set(entry.claimIds).size !== entry.claimIds.length) {
+    return { error: 'Scoped unresolved issue claim IDs must be unique' };
+  }
+  const uncovered = coveredClaimIds
+    ? entry.claimIds.filter((id) => !coveredClaimIds.has(id))
+    : [];
+  if (uncovered.length > 0) {
+    return {
+      error: `Scoped unresolved issue names claims the review does not cover: ${uncovered.join(', ')}`,
+    };
+  }
+  return { scope: 'claims', claimIds: [...entry.claimIds] };
 }
 
 // True when any of the review's unresolved issues applies to `claimId`. Call
@@ -2321,52 +2373,9 @@ export function unresolvedIssuesBlockClaim(review, claimId) {
     Array.isArray(review?.unresolvedIssues) ? review.unresolvedIssues : []
   ).some((entry) => {
     const classification = classifyUnresolvedIssue(entry);
-    if (!classification || classification.scope === 'global') return true;
+    if (classification.scope !== 'claims') return true;
     return classification.claimIds.includes(claimId);
   });
-}
-
-function unresolvedIssueDiagnostic(entry, coveredClaimIds) {
-  if (typeof entry === 'string') return null;
-  if (!isObject(entry)) {
-    return 'unresolvedIssues members must be strings or scoped issue objects';
-  }
-  if (typeof entry.text !== 'string' || entry.text.trim().length === 0) {
-    return 'Scoped unresolved issues require non-empty text';
-  }
-  const hasClaimIds = Object.hasOwn(entry, 'claimIds');
-  const hasScope = Object.hasOwn(entry, 'scope');
-  if (hasClaimIds && hasScope) {
-    return 'An unresolved issue names claimIds or a global scope, not both';
-  }
-  if (!hasClaimIds && !hasScope) {
-    return 'An unresolved issue object requires claimIds or scope: global';
-  }
-  const unknown = Object.keys(entry).filter(
-    (key) => !['text', hasClaimIds ? 'claimIds' : 'scope'].includes(key),
-  );
-  if (unknown.length > 0) {
-    return `Unresolved issue has unknown fields: ${unknown.join(', ')}`;
-  }
-  if (hasScope) {
-    return entry.scope === 'global'
-      ? null
-      : 'An unresolved issue scope must be global';
-  }
-  if (!Array.isArray(entry.claimIds) || entry.claimIds.length === 0) {
-    return 'Scoped unresolved issues require a non-empty claimIds array';
-  }
-  if (!entry.claimIds.every((id) => typeof id === 'string' && id.length > 0)) {
-    return 'Scoped unresolved issue claim IDs must be non-empty strings';
-  }
-  if (new Set(entry.claimIds).size !== entry.claimIds.length) {
-    return 'Scoped unresolved issue claim IDs must be unique';
-  }
-  const uncovered = entry.claimIds.filter((id) => !coveredClaimIds.has(id));
-  if (uncovered.length > 0) {
-    return `Scoped unresolved issue names claims the review does not cover: ${uncovered.join(', ')}`;
-  }
-  return null;
 }
 
 function validateUnresolvedIssues(value, errors) {
@@ -2376,15 +2385,12 @@ function validateUnresolvedIssues(value, errors) {
       .filter((id) => typeof id === 'string'),
   );
   for (const [index, entry] of value.unresolvedIssues.entries()) {
-    const message = unresolvedIssueDiagnostic(entry, coveredClaimIds);
-    if (
-      message ||
-      (typeof entry !== 'string' && !classifyUnresolvedIssue(entry))
-    ) {
+    const { error } = classifyUnresolvedIssue(entry, coveredClaimIds);
+    if (error) {
       errors.push(
         issue(
           'INVALID_UNRESOLVED_ISSUE',
-          message ?? 'Unresolved issue is not a recognized form',
+          error,
           `$.unresolvedIssues[${index}]`,
         ),
       );
