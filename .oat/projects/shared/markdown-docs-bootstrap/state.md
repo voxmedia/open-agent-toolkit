@@ -97,7 +97,7 @@ oat_generated: false
 
 ## Current Phase
 
-Planning - Executable draft contains four sequential phases and nine tasks; High dispatch selected; additional phase gates disabled; both configured lifecycle gates retained; plan review received with two Medium findings; approved edits passed re-review; retained gate pending
+Planning - Executable draft contains four sequential phases and nine tasks; High dispatch selected; additional phase gates disabled; both configured lifecycle gates retained; plan review received with two Medium findings; approved edits passed re-review; retained gate passed threshold; new artifact findings await approval
 
 ## Artifacts
 
@@ -125,11 +125,11 @@ See `reviews/design-consensus-handoff.md` for the completed review, canonical ar
 
 ## Blockers
 
-None. Approved plan edits passed re-review; the retained gate remains required.
+None. Gate M1/L1 require user disposition before plan readiness. The gate passed its blocking threshold.
 
 ## Next Milestone
 
-Run the retained quick-start gate and complete readiness; implementation has not started
+Approve Gate M1/L1 artifact edits, re-review, and complete readiness; implementation has not started
 
 ## Review Setup
 

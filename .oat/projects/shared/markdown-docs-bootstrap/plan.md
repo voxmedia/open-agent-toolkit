@@ -174,24 +174,28 @@ All phases run sequentially (`oat_plan_parallel_groups: []`). p02 consumes p01's
 
 Existing scaffold rows are preserved. Quick mode requires no spec; original design review and approved revisions are recorded in `reviews/design-consensus-handoff.md`. The pending design row does not claim re-review of the revised design. Plan review returned two Medium findings; user-approved edits passed re-review with no findings; the retained gate remains pending and readiness remains disabled.
 
-| Scope  | Type     | Status          | Date       | Artifact                                           | Reviewed Head                            | Invocation | Gate Target |
-| ------ | -------- | --------------- | ---------- | -------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
-| p01    | code     | pending         | -          | -                                                  | -                                        | -          | -           |
-| p02    | code     | pending         | -          | -                                                  | -                                        | -          | -           |
-| final  | code     | pending         | -          | -                                                  | -                                        | -          | -           |
-| spec   | artifact | pending         | -          | -                                                  | -                                        | -          | -           |
-| design | artifact | pending         | -          | -                                                  | -                                        | -          | -           |
-| p03    | code     | pending         | -          | -                                                  | -                                        | -          | -           |
-| p04    | code     | pending         | -          | -                                                  | -                                        | -          | -           |
-| plan   | artifact | fixes_completed | 2026-10-01 | reviews/plan-auto-handoff.md                       | b3480f8824b175b34cdba2f76d7dcf66ee12a034 | auto       | -           |
-| plan   | artifact | passed          | 2026-10-01 | reviews/plan-auto-rereview.md                      | 1ab8e49002716294f43b63831e13b0f9576f535b | auto       | -           |
-| plan   | artifact | received        | 2026-10-01 | reviews/artifact-plan-review-2026-10-01T060016Z.md | -                                        | -          | -           |
+| Scope  | Type     | Status          | Date       | Artifact                                           | Reviewed Head                            | Invocation | Gate Target          |
+| ------ | -------- | --------------- | ---------- | -------------------------------------------------- | ---------------------------------------- | ---------- | -------------------- |
+| p01    | code     | pending         | -          | -                                                  | -                                        | -          | -                    |
+| p02    | code     | pending         | -          | -                                                  | -                                        | -          | -                    |
+| final  | code     | pending         | -          | -                                                  | -                                        | -          | -                    |
+| spec   | artifact | pending         | -          | -                                                  | -                                        | -          | -                    |
+| design | artifact | pending         | -          | -                                                  | -                                        | -          | -                    |
+| p03    | code     | pending         | -          | -                                                  | -                                        | -          | -                    |
+| p04    | code     | pending         | -          | -                                                  | -                                        | -          | -                    |
+| plan   | artifact | fixes_completed | 2026-10-01 | reviews/plan-auto-handoff.md                       | b3480f8824b175b34cdba2f76d7dcf66ee12a034 | auto       | -                    |
+| plan   | artifact | passed          | 2026-10-01 | reviews/plan-auto-rereview.md                      | 1ab8e49002716294f43b63831e13b0f9576f535b | auto       | -                    |
+| plan   | artifact | received        | 2026-10-01 | reviews/artifact-plan-review-2026-10-01T060016Z.md | -                                        | gate       | claude-opus-5-5-high |
 
 Record full reviewed heads and invocation provenance for actual reviews. Preserve all rows and unknown trailing cells. Mark `passed` only for a clean result; disposition residual findings before readiness.
 
 ### Plan Review Dispositions
 
-Automatic plan review: 0 Critical, 0 High, 2 Medium, 0 Low. User approved M1 (build before p03 smoke/CLI walkthrough) and M2 (explicit Markdown bundle inventory ownership and verification); both are resolved in the plan. See `reviews/plan-auto-handoff.md`. Re-review passed with no findings; retained quick-start gate has not run.
+Automatic plan review: 0 Critical, 0 High, 2 Medium, 0 Low. User approved M1 (build before p03 smoke/CLI walkthrough) and M2 (explicit Markdown bundle inventory ownership and verification); both are resolved in the plan. See `reviews/plan-auto-handoff.md`. Re-review passed with no findings; retained quick-start gate passed its High threshold with one Medium and one Low finding; disposition is pending.
+
+### Gate Review Disposition Pending
+
+Gate passed (0 Critical, 0 High, 1 Medium, 1 Low), receive-eligible and corroborated. Root recommends Gate M1 (docs tools pack registration and checks) and Gate L1 (Markdown-only authored-index guard plus Fumadocs accepted control). User approval pending; no edits applied. See `reviews/plan-gate-handoff.md`. This received artifact is not yet consumed or archived.
 
 ## Implementation Complete
 
