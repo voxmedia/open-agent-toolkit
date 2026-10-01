@@ -222,7 +222,7 @@ All phases run sequentially (`oat_plan_parallel_groups: []`). p02 consumes p01's
 | final  | code     | fixes_completed | 2026-10-01 | reviews/archived/final-review-2026-10-01T160046Z.md         | 265230677e7f0d1675c7afce25128293801e195f | gate       | claude-opus-5-5-high |
 | final  | code     | passed          | 2026-10-01 | reviews/archived/final-review-2026-10-01T163133Z.md         | 2f6ba887966806222f3a585e27f2e55885eb91c1 | auto       | -                    |
 | final  | code     | passed          | 2026-10-01 | reviews/archived/final-review-2026-10-01T163602Z.md         | 3925d7b4f772efef14494eb10fc8cd60eed85e4d | gate       | claude-opus-5-5-high |
-| final  | code     | received        | 2026-10-01 | reviews/final-review-2026-10-01T180731Z.md                  | 9b926dbb37a93049640cf6737e5ba42f9598b8c7 | auto       | -                    |
+| final  | code     | passed          | 2026-10-01 | reviews/archived/final-review-2026-10-01T180731Z.md         | 9b926dbb37a93049640cf6737e5ba42f9598b8c7 | auto       | -                    |
 
 Historical scaffold rows and review events are preserved. All implementation tasks and the standard final review are complete. The retained implementation gate passed its High threshold. Its rendering and ledger findings are resolved and independently accepted by `reviews/archived/final-review-2026-10-01T163133Z.md`; the refreshed gate also passed, and its stale prose finding is corrected in this receive.
 
