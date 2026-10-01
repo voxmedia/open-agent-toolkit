@@ -29,8 +29,10 @@
   and the state dashboard still suggest completion without running the new
   closeout check; they rely on `oat project complete-state` refusing a
   configured closeout whose snapshot is missing.
-  `BL-260806-fail-closed-when-configured` stays open until this project's own
-  closeout trace is recorded, then closes.
+  `BL-260806-fail-closed-when-configured` closed after this project's own
+  configured-plus-absent closeout trace was recorded (14 items archived in
+  total). The exit gate deferred `BL-261001-escape-directive-like` and
+  `BL-261001-list-thorough-review-omissions`.
 - 2026-10-01: after Wave 3's p03 hit the review cap and an operator-requested
   complexity review ended the loop, the operator asked that every exhausted
   review or gate budget automatically run a complexity review and present it
@@ -369,7 +371,6 @@
 | BL-260820-emit-source-qualified          | Emit source-qualified provenance envelopes for review and gate receipts                               | open   | high     | feature    | M        |
 | BL-261001-escape-directive-like          | Escape directive-like filenames in Fumadocs nav sync output                                           | open   | high     | task       | S        |
 | BL-261001-fail-closed-when-bundle-assets | Fail closed when bundle-assets lookups come back empty                                                | open   | high     | task       | S        |
-| BL-260806-fail-closed-when-configured    | Fail closed when configured closeout snapshot is absent                                               | open   | high     | task       | M        |
 | BL-260906-harden-dispatch-launch         | Harden dispatch launch baselines and terminal reconciliation                                          | open   | high     | feature    | M        |
 | BL-260718-harden-full-surface-gate       | Harden full-surface gate reviews against budget and recursive dispatch                                | open   | high     | feature    | M        |
 | BL-260729-implement-reviewplan-first     | Implement ReviewPlan-first reviewer workflow                                                          | open   | high     | feature    | L        |
