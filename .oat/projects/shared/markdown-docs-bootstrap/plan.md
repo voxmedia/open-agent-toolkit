@@ -208,6 +208,8 @@ Record full reviewed heads and invocation provenance for actual reviews. Preserv
 
 | p02 | code | fixes_completed | 2026-10-01 | reviews/archived/p02-review-2026-10-01T125830Z.md | 95250d626e6fb7bf4f382be4d4e10eae18e330c0 | auto | - |
 
+| p02 | code | passed | 2026-10-01 | reviews/p02-review-2026-10-01T132908Z.md | f715c2ece20b5650d64d3b55bb6b9f44b2c98495 | auto | - |
+
 ### Plan Review Dispositions
 
 - Original automatic review M1/M2: user approved and resolved; first automatic re-review passed.

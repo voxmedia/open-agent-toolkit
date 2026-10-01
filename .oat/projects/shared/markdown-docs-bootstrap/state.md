@@ -97,7 +97,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation setup complete. p01 complete; p02 original tasks complete; Medium navigation fix p02-t03 complete; independent re-review pending; standard root-owned reviews run after each phase and the final HiLL checkpoint follows p04.
+Implementation setup complete. p01 and p02 complete after independent reviews; p03 begins next; standard root-owned reviews run after each phase and the final HiLL checkpoint follows p04.
 
 ## Artifacts
 
@@ -132,4 +132,4 @@ None
 
 ## Next Milestone
 
-Independently re-review p02 after M1 fix before starting p03.
+Implement p03 bootstrap, consumer and documentation alignment.

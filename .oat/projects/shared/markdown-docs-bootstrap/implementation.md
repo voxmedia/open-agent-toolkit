@@ -9,16 +9,16 @@ oat_generated: false
 
 # Implementation: markdown-docs-bootstrap
 
-Phase p01 is complete after independent review. Five of ten tasks are complete. All three p02 tasks, including the M1 filename navigation fix, are complete; independent re-review is pending. Next planned task p03-t01; final HiLL remains p04.
+Phase p01 is complete after independent review. Five of ten tasks are complete. Phase p02 is complete after a clean independent full-phase re-review, including the M1 filename navigation fix. Next planned task p03-t01; final HiLL remains p04.
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p01   | complete    | 2     | 2/2       |
-| p02   | in_progress | 3     | 3/3       |
-| p03   | pending     | 3     | 0/3       |
-| p04   | pending     | 2     | 0/2       |
+| Phase | Status   | Tasks | Completed |
+| ----- | -------- | ----- | --------- |
+| p01   | complete | 2     | 2/2       |
+| p02   | complete | 3     | 3/3       |
+| p03   | pending  | 3     | 0/3       |
+| p04   | pending  | 2     | 0/2       |
 
 **Total:** 5/10 tasks completed
 
@@ -42,7 +42,7 @@ Phase p01 is complete after independent review. Five of ten tasks are complete. 
 
 ## Phase 2: Markdown initialization and adoption
 
-**Status:** in_progress
+**Status:** complete
 
 ### Task p02-t01: Add fresh Markdown scaffold and CLI mode
 
@@ -118,7 +118,7 @@ None recorded.
 
 ## Final Summary (for PR/docs)
 
-Not complete. Shared Markdown root/output protection and guidance preview are implemented and independently reviewed; CLI bootstrap/adoption/dry-run are implemented with p02 independent review pending; skill/docs alignment and final integration/release validation remain pending.
+Not complete. Shared Markdown root/output protection and guidance preview are implemented and independently reviewed; CLI bootstrap/adoption/dry-run are implemented and independently reviewed; skill/docs alignment and final integration/release validation remain pending.
 
 ## Orchestration Runs
 
@@ -984,7 +984,7 @@ Native pre-start rejection unknown agent_type; exact-target canonical-role route
     "reasoning_effort": "high"
   },
   "launch_status": "accepted",
-  "child_outcome": null,
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     "project-state:high",
     "user-config:gpt-6.1-sol/high",
@@ -1019,3 +1019,7 @@ Native pre-start rejection unknown agent_type; exact-target canonical-role route
   "floor_satisfaction": "satisfied"
 }
 ```
+
+#### p02 terminal review acceptance
+
+Clean full-phase round two reviews/p02-review-2026-10-01T132908Z.md at f715c2ece20b5650d64d3b55bb6b9f44b2c98495: 0 Critical, High, Medium or Low. Exactly one not-attempted reconnaissance signal, no orchestration section or recon-log append. Root read complete artifact, validated scope/range/head and evidence. Prior M1 independently reproduced pre-fix and verified fixed; first event remains fixes_completed and raw counts retained, clean round event passed. All tasks and dispositions complete; phase p02 complete, one review-fix iteration, recovery 0/10. Archive Turbo limitation disclosed; direct CLI build/195 actual tests/types/lint and public controls pass. Final full gates pending p04. Continue p03.
