@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
-oat_current_task_id: p04-t06
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 5     | 5/5       |
-| Phase 2 | complete    | 6     | 6/6       |
-| Phase 3 | complete    | 10    | 10/10     |
-| Phase 4 | in_progress | 6     | 5/6       |
-| Phase 5 | pending     | 6     | 0/6       |
-| Phase 6 | pending     | 3     | 0/3       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 5     | 5/5       |
+| Phase 2 | complete | 6     | 6/6       |
+| Phase 3 | complete | 10    | 10/10     |
+| Phase 4 | complete | 6     | 6/6       |
+| Phase 5 | pending  | 6     | 0/6       |
+| Phase 6 | pending  | 3     | 0/3       |
 
-**Total:** 26/36 tasks completed
+**Total:** 27/36 tasks completed
 
 ---
 
@@ -162,7 +162,7 @@ oat_generated: false
 
 ## Phase 4: Lifecycle closeout guards
 
-**Status:** in_progress
+**Status:** complete
 
 ### Task p04-t01: Recompute next's exit-gate fingerprint with the v2 exclusions
 
@@ -191,8 +191,8 @@ oat_generated: false
 
 ### Task p04-t06: (review) Close p04 gate findings M1, L1
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** deb4c200f
 
 ---
 
@@ -481,6 +481,12 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   Critical/High, 1 Medium (a failed snapshot can name a post-approval step
   before approval), 1 Low (docs say autonomous stale handling stops).
   Addressed now as `p04-t06`.
+
+- Continuation `cont-backlog-wave-3-p04-fix-2`: `deb4c200f` closed gate M1
+  (approval-aware owner order for failed snapshots; the gate's fixture is a
+  command-boundary regression that failed first) and L1 (docs); 1254 tests.
+- Phase p04 outcome: pass after one review-fix task and one gate-fix task
+  (p04-t05, p04-t06); 6/6 tasks.
 
 <!-- orchestration-runs-end -->
 
