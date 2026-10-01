@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
-oat_current_task_id: p01-t04
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -26,14 +26,14 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 4     | 3/4       |
+| Phase 1 | in_progress | 4     | 4/4       |
 | Phase 2 | pending     | 4     | 0/4       |
 | Phase 3 | pending     | 5     | 0/5       |
 | Phase 4 | pending     | 4     | 0/4       |
 | Phase 5 | pending     | 6     | 0/6       |
 | Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 3/26 tasks completed
+**Total:** 4/26 tasks completed
 
 ---
 
@@ -58,8 +58,8 @@ oat_generated: false
 
 ### Task p01-t04: (review) Close p01 review findings M1, L1
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 294618df8
 
 ---
 
@@ -234,6 +234,29 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   launches use the resolver-returned Claude variants after a validation-only
   `oat project dispatch record` with the branch CLI.
 
+### Phase p01 dispatch
+
+- Request `bw3-p01-impl-1`: accepted and returned `DONE`; target
+  `oat-phase-implementer-claude-claude-opus-5-5-high`; commits
+  `c7b78324d..c1886c3fc` (p01-t01..t03), phase verification pass (CLI
+  `src/commands` + `src/validation` 5823 tests; `pnpm check` 0/11 cached),
+  recovery 0/10, 14 skills bumped once.
+  `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
+- Step 7a ledger commit `de9c98848` before the review.
+- Request `bw3-p01-review-1`: accepted; target
+  `oat-reviewer-claude-claude-opus-5-5-high`; reconnaissance not-attempted;
+  reviewed head `de9c98848` (the Step 7a bookkeeping commit);
+  `reviews/archived/p01-review-2026-10-01T112852Z.md`: 0 Critical, 0 High,
+  1 Medium, 2 Low (passes). No ledger or resume-pointer finding: L2 concerned
+  the deviations table, not the task ledger, which the reviewer confirmed
+  current (`BL-260829` evidence; implement contract 2.3.14 from `origin/main`).
+  M1 and L1 converted to `p01-t04`; L2 handled by root (Deviations table).
+  `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
+- Continuation `cont-backlog-wave-3-p01-fix-1` (same handle, fix mode):
+  `294618df8` closed M1 (retro and summary `allowed-tools` grants, pinned;
+  failing-first recorded) and L1 (docs placement); src/validation 391 tests,
+  validate-skills, skill bumps, docs check all exit 0.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -310,9 +333,13 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review | Source Artifact | Planned / Documented                      | Actual / Accepted                                                                                                                           | Reason                                               | Source of Truth | Follow-up         |
+| ------------- | --------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- | --------------- | ----------------- |
+| p01-t01       | plan.md p01-t01 | Move the resolver; flip one scaffold test | Also updated `promote.test.ts` and a second user-first scaffold test; lazy `assetsRoot`; "PJM" dropped from the invalid-name message        | Required by the declared change                      | Implementation  | None              |
+| p01-t02       | plan.md p01-t02 | Command over the shared resolver          | Added `TemplateNotFoundError`; the repository tier is skipped outside a git repository                                                      | Distinguish a miss from a read failure               | Implementation  | None              |
+| p01-t03       | plan.md p01-t03 | Listed skill call sites                   | Also updated quick-start line 195 and the `review-skill-contracts` pins; retro creates `references/` before copying                         | `--output` creates no directories                    | Implementation  | None              |
+| p01-t03       | plan.md p01-t03 | No skill copies from `.oat/templates/`    | `oat-wrap-up` keeps a read reference to `.oat/templates/summary.md` (schema pointer, not a copy)                                            | Out of p01 scope; absent on user-scope-only installs | Implementation  | Note at p06 index |
+| p01-t04       | p01 review M1   | Grants for retro and summary              | Also re-keyed the summary `allowed-tools` prompt site in `.agents/docs/autonomy-contract.md` (`35cb2ea1d677` to `a8983fec040c`, still `NG`) | Prompt sites are keyed by a hash of the line         | Implementation  | None              |
 
 ## Test Results
 
