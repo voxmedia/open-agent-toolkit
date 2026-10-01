@@ -28,5 +28,5 @@ Closing it means tracing the `packs:inventory` diagnostic's actual path handling
 
 ## Acceptance Criteria
 
-- {Outcome 1}
-- {Outcome 2}
+- The `packs:inventory` entry in `apps/oat-docs/docs/reference/troubleshooting.md` states what the code redacts: the project root and the home root, each only when that scope is part of the run, by literal replacement of the exact root path.
+- The entry states that paths outside those roots, such as a global bundle path in an assets error, stay absolute, matching `status/index.ts` (`unavailablePackReport`), `tools/shared/format-pack-inventory.ts` (`redactPackText`), and `doctor/index.ts` (the `packs:inventory` check).

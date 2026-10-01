@@ -200,7 +200,13 @@ OAT could not read the canonical managed-pack inventory. `oat status` keeps the
 rest of the report available and returns `packs.availability.status` as
 `unavailable` in JSON, with an empty `packs.states` array and a structured
 diagnostic. `oat doctor` emits the same condition as a warning instead of
-stopping its other checks. Reported project and home paths remain redacted.
+stopping its other checks.
+
+The diagnostic message redacts only the roots that are part of the run: the
+project root becomes a relative path (or `.`) when project scope is checked,
+and the home root becomes `~` when user scope is checked. Redaction is a literal
+replacement of those exact root paths, so a path outside them, such as a global
+bundle path in an assets error, stays absolute in the message.
 
 Rebuild the CLI workspace, then rerun the command named in the diagnostic:
 
