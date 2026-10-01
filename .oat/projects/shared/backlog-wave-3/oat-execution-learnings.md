@@ -30,3 +30,9 @@ documentation-gap, candidate-skill-content, decision, and environment-limited.
 **Observation:** The quick-start Codex gate blocked twice (attempt 1: 1 High, 2 Medium; attempt 2: 1 High, 1 Medium). Each round raised new, valid sequencing findings, and the last were fixed after the final allowed attempt. Wave 2's plan gate ended the same way.
 **Impact:** QS-12 `block` with `maxAttempts: 2` stops autonomous readiness at a boundary even when the remaining findings are resolved.
 **Recommendation:** For broad multi-item waves, expect the plan gate to need the operator's go-ahead after two attempts; record the post-gate fixes so the decision is cheap.
+
+## 2026-10-01T13:12:23Z - gotcha - Another PR took the same skill and lockstep versions mid-wave
+
+**Observation:** PR #334 merged to `main` during p03 and set lockstep 0.3.10, `oat-dispatch-subagents` 1.2.11, and `oat-project-implement` 2.3.15, the exact versions this branch had already bumped to. `check:skill-bumps` (which compares against `origin/main`) turned red at the p03 review head, though it was green when the implementer ran it.
+**Impact:** Version bumps are relative to a moving base; a long wave branch must re-bump above `main` after each merge from `main`.
+**Recommendation:** `git fetch origin main` before each phase review and run `check:skill-bumps`; when `main` moves, merge it, resolve pin conflicts, bump every collided skill one patch above `main`, and move the fan-in lockstep target.
