@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
-oat_current_task_id: p05-t01
+oat_current_task_id: p06-t01
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 5     | 5/5       |
-| Phase 2 | complete | 6     | 6/6       |
-| Phase 3 | complete | 10    | 10/10     |
-| Phase 4 | complete | 6     | 6/6       |
-| Phase 5 | pending  | 6     | 0/6       |
-| Phase 6 | pending  | 3     | 0/3       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 5     | 5/5       |
+| Phase 2 | complete    | 6     | 6/6       |
+| Phase 3 | complete    | 10    | 10/10     |
+| Phase 4 | complete    | 6     | 6/6       |
+| Phase 5 | in_progress | 6     | 6/6       |
+| Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 27/36 tasks completed
+**Total:** 33/36 tasks completed
 
 ---
 
@@ -198,37 +198,37 @@ oat_generated: false
 
 ## Phase 5: Small fixes
 
-**Status:** pending
+**Status:** in_progress
 
 ### Task p05-t01: Keep `instructions sync --force` from overwriting a linked CLAUDE.md
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** b6afdb905
 
 ### Task p05-t02: Remove dispatch-record persistence
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** a92f397fd
 
 ### Task p05-t03: Let test-only changes skip the lockstep bump
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 35d2fcc50
 
 ### Task p05-t04: Report YAML errors with their location and check key types
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** da264d338
 
 ### Task p05-t05: Route quick-mode discovery to quick-start
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 5f827139a
 
 ### Task p05-t06: Narrow the packs inventory redaction claim
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 09ff750c4
 
 ---
 
@@ -487,6 +487,21 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   command-boundary regression that failed first) and L1 (docs); 1254 tests.
 - Phase p04 outcome: pass after one review-fix task and one gate-fix task
   (p04-t05, p04-t06); 6/6 tasks.
+
+### Recovery Event bw3-p05-recovery-1
+
+- Phase/task: p05 / p05-t02
+- Original request: bw3-p05-impl-1
+- Original commit: a92f397fd67c5bb4db037fe6dc6bee3d91bd73e4
+- Defect class: test
+- Discovered by: `HOME=$(mktemp -d) pnpm exec vitest run src/commands/project src/e2e src/commands/commands.integration.test.ts`; phase: `vitest run src/commands src/validation src/release`
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: oat-phase-implementer-claude-claude-opus-5-5-high
+- Recovery commit: 6e2cc2956a662791c8808a0bfc437c090ff1ecd6
+- Verification: focused 1362/1362 and phase 5979/5979 before and after the commit; whole CLI suite 8012/8012
+- Reason: three test files outside p05-t02's verification set still used `--project` or the removed opt-in wording; test-only bounded correction
 
 <!-- orchestration-runs-end -->
 
