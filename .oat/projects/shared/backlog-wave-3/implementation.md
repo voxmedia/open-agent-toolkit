@@ -373,6 +373,17 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   "not reviewed" in Review Downgrades), M2 (duplicate-ID test); fixtures now
   have every required review dispose of `claim-2`; recon 356/356.
 
+- Request `bw3-p03-review-3` (round 3, final cycle under the review cap) at
+  `18012ae90`: `reviews/archived/p03-review-2026-10-01T133903Z.md`, 0
+  Critical, 1 High (brief `questions` and `scope` fields, copied from the
+  manifest request, are never checked, so an injected note in an adversarial
+  or coverage brief still publishes; pre-existing), 2 Medium (the
+  contested/unsupported exemption trusts a forgeable status; the five gap-match
+  checks are unpinned), 1 Low (deviation row and release-note wording). All
+  round-2 findings closed. Retry exhaustion: the run stops at a boundary for an
+  operator decision (`IMPLEMENT` review-cap boundary).
+  `Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
+
 <!-- orchestration-runs-end -->
 
 ---

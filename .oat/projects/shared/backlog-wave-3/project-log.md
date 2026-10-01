@@ -72,6 +72,10 @@ target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:2,low:
 
 bw3-p02-outcome: phase p02 passed (root review 0 Critical/High; Codex gate ok); fix-loop count 2 (p02-t05 review fixes, p02-t06 gate fixes).
 
+### 2026-10-01 · structural · oat-project-implement · p03
+
+bw3-p03-stop-1: p03 stopped at the review-cap boundary after three review rounds; round 3 found 1 High (unchecked brief questions/scope fields) and 2 Medium; awaiting operator decision.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
