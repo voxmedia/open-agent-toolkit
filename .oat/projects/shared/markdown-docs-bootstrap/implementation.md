@@ -2268,3 +2268,67 @@ Accepted exact-target canonical-role route /root/markdown_final_r3_pinned; await
 - Original counts remain 0 Critical, 0 High, 0 Medium, 1 Low. Prior rendering and ledger findings independently confirmed resolved; 53 focused tests actually executed by the gate reviewer. Full-project coverage outside the guarded narrowed range is inherited.
 - L1 addressed now: obsolete “being addressed” wording is replaced with completed dispositions and a pointer to the clean lifecycle re-review. This is project-artifact alignment to authoritative accepted implementation, has no substantive code change, and requires no blocking task, new standard reviewer or gate rerun. No deferred Medium/Low or waived requirements. The bound event is passed after this non-pausing judgment sweep.
 - Eleven planned tasks complete. Written summary/documentation/PR pre-approval sequence remains pending; visual recap explicitly skipped by the user. Final HiLL approval is pending. Release, merge and live installation have not occurred.
+
+#### Pre-approval summary dispatch
+
+Dispatch: scope=summary action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium-2f7731ed84
+
+```json
+{
+  "request_id": "markdown-closeout-summary-native-20261001",
+  "caller": "oat-project-implement",
+  "scope": "summary",
+  "objective": "Execute current oat-project-summary skill for immutable configured pre-approval sequence.",
+  "action": "closeout",
+  "role_name": "oat-project-summary",
+  "role_class": "generator",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "codex-root-closeout-summary",
+    "source": "current-tool-schema",
+    "observed_at": "2026-10-01T16:41:51.602236+00:00"
+  },
+  "authority": "Only named closeout step owned outputs and commits; preserve authoritative sequence snapshot.",
+  "role_selector": "oat-phase-implementer-gpt-6-1-sol-medium-2f7731ed84",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact",
+  "effort_selector": "medium",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-09-24",
+  "guidance_verified_at": "2026-09-24",
+  "guidance_status": "review-required",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/medium", "gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 3600,
+  "retry_limit": 2,
+  "payload": {
+    "agent_type": "oat-phase-implementer-gpt-6-1-sol-medium-2f7731ed84",
+    "fork_turns": "none",
+    "dispatch_mode": "background"
+  },
+  "launch_status": "planned",
+  "child_outcome": null,
+  "configured_invocation_evidence": [
+    "project-state:high",
+    "current dispatch resolver model/effort tuple: gpt-6.1-sol/medium",
+    "tool-schema:worker exact explicit model and reasoning_effort"
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [
+    "Native model-pinned worker first; named current closeout skill owns action and output boundary. Runtime identity not reported."
+  ],
+  "continuation_events": [],
+  "task_class": "default-implementation",
+  "model_class_floor": "default-implementation",
+  "classification_source": "caller",
+  "classification_reason": "Bounded closeout artifact synthesis and reconciliation using committed project evidence.",
+  "floor_satisfaction": "satisfied"
+}
+```
