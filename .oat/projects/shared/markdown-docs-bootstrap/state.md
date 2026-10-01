@@ -18,7 +18,7 @@ oat_dispatch_policy:
   source: project-state
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: pr_open
+oat_phase_status: in_progress
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -112,8 +112,8 @@ oat_implement_exit_gate:
     source_filename: final-review-2026-10-01T163602Z.md
   receive_pre_head: f45ae26d7ef579c7dd01df768d6b6c8f0ee7b584
   receive_commit: a0cd25b4ed544f214c0fb9f69a399d71b6959df3
-  failure: null
-  status: allowed
+  failure: Integration base update required for seven PR conflicts; refreshed final verification, review and retained gate required before HiLL.
+  status: stale
   resolution: configured
   resolved_command: oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."
   resolved_description: Semantic cross-family final implementation review before oat-project-implement exits.
@@ -130,7 +130,7 @@ oat_implement_exit_gate:
   receive_state: completed
   receive_eligible: true
   receive_completed: true
-  updated_at: '2026-10-01T17:16:43Z'
+  updated_at: '2026-10-01T17:25:07Z'
   config_fingerprint: sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324
 oat_project_recap:
   decision: skip
@@ -157,13 +157,13 @@ oat_post_implement_sequence:
 
 # Project State: markdown-docs-bootstrap
 
-**Status:** PR open; all pre-approval steps complete; awaiting final p04 HiLL approval
+**Status:** PR open; integrating current main before refreshed final verification
 **Started:** 2026-09-30
 **Last Updated:** 2026-10-01
 
 ## Current Phase
 
-Implementation — PR #335 open. All eleven tasks, final review, retained implementation gate and configured summary/document/PR steps complete. Final p04 HiLL approval is pending; implementation has not been marked complete.
+Implementation — all eleven tasks and pre-approval steps complete; PR #335 open with seven integration-base conflicts. Integrate current main and refresh verification, final review and retained gate before final p04 HiLL approval.
 
 ## Artifacts
 

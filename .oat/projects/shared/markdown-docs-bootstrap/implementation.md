@@ -1516,6 +1516,16 @@ Accepted exact-target canonical-role route /root/markdown_p04_pinned; awaiting r
       "tracking_ack": "4838da45cd0cd1ee82c0da220d80341b36e368b1",
       "verification": "passed",
       "phase_recovery_attempts_used": 0
+    },
+    {
+      "event": "integration-base-update",
+      "original_request_id": "markdown-p04-pinned-20261001",
+      "accepted_handle": "/root/markdown_p04_pinned",
+      "exact_target_preserved": true,
+      "integration_base": "98d1d524624e17f55ccfce33d18b3d5535dc91ca",
+      "baseline": "c5b3f541addc5ab03d33b79b1854f49a8403469c",
+      "outcome": "pending",
+      "phase_recovery_attempts_used": 0
     }
   ],
   "task_class": "consequential",
@@ -2695,3 +2705,7 @@ Accepted `markdown-closeout-pr-pinned-20261001` executed the current final-PR sk
 #### Final p04 HiLL awaiting approval
 
 All immutable pre-approval steps completed in stored order: summary, document, PR. Root re-read persisted recap through the current adapter consumer and terminal guard: skipped/interactive, exit 0, no run path or discovery/generation. Written summary refreshed only for factual closeout completion and the actual PR link; one Explainer Outcome remains. Sequence now awaits explicit user approval with approval pending, no approval source and no post-approval steps. Final review and retained gate remain passed/fresh. Implementation stays in progress; no HiLL completion, merge, release or external-repository acceptance claimed.
+
+#### Integration-base conflict disposition
+
+Final GH preflight reports PR #335 merge conflicts against origin/main `98d1d524624e17f55ccfce33d18b3d5535dc91ca` (only incoming #334 model-pin support). Read-only merge-tree/recon confirmed seven conflicts: five public package versions, generated release inventory and sync manifest producer version; automatic docs-configuration and skill-validation merges compose both contracts. Root disposition: retain all five 0.3.11 public versions, regenerate release inventory through canonical bundling, preserve main sync producer stamp 0.3.10 with unchanged schema/93 entries. Existing accepted p04 worker continues bounded integration/release scope; no new feature/task or automatic-recovery attempt. Source baseline integration requires all eight CI gates, composition controls, refreshed independent final review and retained gate before asking final HiLL. Existing sequence order/completion and pending approval remain immutable; pre-integration review/gate receipts retained as history.
