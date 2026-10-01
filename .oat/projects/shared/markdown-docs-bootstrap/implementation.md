@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
-oat_current_task_id: p04-t04
+oat_current_task_id: p04-t05
 oat_generated: false
 ---
 
@@ -18,9 +18,9 @@ Eleven prior tasks are complete. Remote Bugbot M1/L1 are accepted as p04-t04/p04
 | p01   | complete    | 2     | 2/2       |
 | p02   | complete    | 3     | 3/3       |
 | p03   | complete    | 3     | 3/3       |
-| p04   | in_progress | 5     | 3/5       |
+| p04   | in_progress | 5     | 4/5       |
 
-**Total:** 11/13 tasks completed
+**Total:** 12/13 tasks completed
 
 ## Phase 1: Shared content and guidance contracts
 
@@ -122,6 +122,13 @@ Planning reviews and gate receipt are recorded in plan.md and reviews/plan-gate-
 ## Deviations from Plan / Design
 
 None recorded.
+
+### Task p04-t04: (review) Preserve adoption across optional child index aliases
+
+**Status:** completed
+**Commit:** b541b04b91d8b34cb82c6a6dad6a71f4905aec9f
+**Outcome:** Optional child index discovery uses repository containment; readable in-repository aliases map normally, unusable aliases/files remain preserved with audit advice, required root-baseline and unsafe-target validation unchanged.
+**Verification:** Direct ten-file suite198 tests, build (CLI executed/four dependency replay), CLI types/lint, exact formatting/diff each exit0. Private archive public regression old1/fixed0 at intended adoption status; twelve old/twelve fixed CLI dry/live commands prove optional handling and strict required external-root refusal. Original harness instruction-prefix oracle correction retained, no production/recovery failure. Root read complete runnable evidence and independently checked source hashes, exact owned three-path commit, raw counts and intended old failure. Full gates pending t05; recovery0/10.
 
 ## Final Summary (for PR/docs)
 
@@ -2883,3 +2890,7 @@ Date: 2026-10-01T18:13:41Z. Artifact: reviews/archived/remote-pr-335-review-2026
 Dispatch: scope=p04 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high
 
 Resolver notices: [] (none). Current resolver native role is registered after main integration; the existing accepted exact canonical-role handle is resumed with unchanged gpt-6.1-sol/high controls, not replaced or relabeled. Root first preflight used invalid CLI role spelling before any launch; corrected from actual help. This is explicit remote review-fix continuation, not post-commit recovery; usage remains0/10. Root owns tracking ACK/receive/review/gate/PR, worker owns source/test/evidence for p04-t04/p04-t05.
+
+#### Root acceptance: p04-t04
+
+Task commit and three owned paths corroborated; source diff preserves strict root reads. Existing accepted p04 handle continues t05 at same configured tuple, no recovery attempt. Pending remote row remains fixes_added until both tasks complete and independently reviewed; state current task advances p04-t05.
