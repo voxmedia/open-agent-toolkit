@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
-oat_current_task_id: p02-t01
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 5     | 5/5       |
-| Phase 2 | pending  | 4     | 0/4       |
-| Phase 3 | pending  | 5     | 0/5       |
-| Phase 4 | pending  | 4     | 0/4       |
-| Phase 5 | pending  | 6     | 0/6       |
-| Phase 6 | pending  | 3     | 0/3       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 5     | 5/5       |
+| Phase 2 | in_progress | 4     | 4/4       |
+| Phase 3 | pending     | 5     | 0/5       |
+| Phase 4 | pending     | 4     | 0/4       |
+| Phase 5 | pending     | 6     | 0/6       |
+| Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 5/27 tasks completed
+**Total:** 9/27 tasks completed
 
 ---
 
@@ -70,27 +70,27 @@ oat_generated: false
 
 ## Phase 2: Fumadocs navigation
 
-**Status:** pending
+**Status:** in_progress
 
 ### Task p02-t01: Write Fumadocs `meta.json` from Contents maps
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 580e7045c
 
 ### Task p02-t02: Describe both frameworks in help and docs
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** d7d9d706a
 
 ### Task p02-t03: Generate and commit `apps/oat-docs` navigation
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 7643d548f
 
 ### Task p02-t04: Update the docs skills
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 77a9669bd
 
 ---
 
