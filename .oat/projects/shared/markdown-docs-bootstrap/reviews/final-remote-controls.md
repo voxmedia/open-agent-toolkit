@@ -502,3 +502,164 @@ for name,argv in [('focused',['pnpm','--filter','@open-agent-toolkit/cli','exec'
 ```
 
 Scoped formatting, diff and fenced-probe syntax checks are captured at `t05-format-check.log`, `t05-diff-check.log` and `t05-artifact-checks.json`. Owned pre/post-hook hashes and exact commit boundary are recorded at `t05-postcommit.json`. Final ordered eight CI gates await the explicit root tracking ACK after this source task commit; independent final review and retained implementation-exit gate remain root-owned and pending. Recovery remains 0/10.
+
+## Final remote fix acceptance verification
+
+Root acknowledged p04-t05 and committed tracking at `0620794717bb0039753213c24e37868b476afbdb`; the following gates ran sequentially on that committed source head. Both source hashes were pinned before the run and verified unchanged afterward. The source commits are p04-t04 `b541b04b91d8b34cb82c6a6dad6a71f4905aec9f` and p04-t05 `e74c06116acc294feb290c08e2677f8975de33da`. No source edits followed those commits. This section is an evidence-only acceptance append authorized by root, not a new source task or recovery.
+
+All eight required gate commands and the intervening fresh fetch have actual exit 0. The exact durable receipt below includes every argv, log path, elapsed time, cache labels, source hashes and isolated subprocess HOME. The runner exited 0 and stopped on any possible nonzero command; no pipeline/filter status was used. The pnpm gates inherited an environment allowlist without provider credentials. Fresh fetch used the existing authorized Git transport and confirmed `origin/main` at `98d1d524624e17f55ccfce33d18b3d5535dc91ca` before the version gate.
+
+| Order       | Gate                        | Exit | Actual execution / cache limitation                                                           | Log under /tmp/oat-markdown-remote-evidence |
+| ----------- | --------------------------- | ---- | --------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| 1           | pnpm check                  | 0    | CLI and docs check actual; 9 other tasks cached; root skill/Markdown/format validation actual | 01-check.log                                |
+| 2           | pnpm type-check             | 0    | CLI types actual; 9 other tasks cached                                                        | 02-types.log                                |
+| 3           | pnpm test                   | 0    | CLI 398 files / 7,969 tests actual; docs dependency build actual; 8 tasks cached              | 03-test.log                                 |
+| 4           | pnpm build                  | 0    | All 5 tasks cached; actual CLI builds retained above                                          | 04-build.log                                |
+| 5           | pnpm run check:skill-bumps  | 0    | Actual script, all 5 changed skill/role bump checks pass                                      | 05-skills.log                               |
+| Between 5/6 | git fetch origin main       | 0    | Actual fresh fetch, main SHA pinned above                                                     | fetch-main.log                              |
+| 6           | pnpm release:check-versions | 0    | Actual release version script                                                                 | 06-versions.log                             |
+| 7           | pnpm release:validate       | 0    | Actual five-package tarball validation, all public versions 0.3.11                            | 07-release.log                              |
+| 8           | pnpm build:docs             | 0    | All 6 tasks cached; docs actually generated 73/73 pages in step 3                             | 08-docs.log                                 |
+
+Step 3 also actually ran root Node suites: smoke 163/163, skills 660/660, scripts 1/1; each reports fail 0. The unchanged control-plane 151, docs-config 10 and docs-transforms 31 tests were cached replay, not claimed as fresh runs. Their prior actual integration controls remain retained in `reviews/final-integration-controls.md` and `/tmp/oat-markdown-integration-evidence/`. No redundant forced workspace run was required or performed. Positive results are supported by the separately retained old-failing/fixed-passing regression and real public CLI categorical controls above.
+
+### Exact source and gate receipt
+
+```json
+{
+  "sourceHead": "0620794717bb0039753213c24e37868b476afbdb",
+  "sourceHashes": {
+    "packages/cli/src/commands/docs/init/markdown.ts": "4f8b3b890280c76535c7bdf5c1b6d3eb199133801421de37ffe2369b99b148dd",
+    "packages/cli/src/commands/docs/init/integration.test.ts": "742102bb675855d7f50c550c8c04ffcef068cd4573c02d942b0e64b4feaaa0f9"
+  },
+  "isolatedHome": "/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-remote-gates-home-nmnhidxv",
+  "pnpmEnvironmentKeys": [
+    "CI",
+    "HOME",
+    "LANG",
+    "LC_ALL",
+    "LOGNAME",
+    "NO_UPDATE_NOTIFIER",
+    "PATH",
+    "SHELL",
+    "TMPDIR",
+    "USER"
+  ],
+  "providerCredentialsPassedToGates": false,
+  "fetchUsesExistingGitTransport": true,
+  "commands": [
+    {
+      "name": "01-check",
+      "command": ["pnpm", "check"],
+      "exit": 0,
+      "seconds": 8.68,
+      "log": "/tmp/oat-markdown-remote-evidence/01-check.log",
+      "cacheHitLines": 9,
+      "cacheMissLines": 2
+    },
+    {
+      "name": "02-types",
+      "command": ["pnpm", "type-check"],
+      "exit": 0,
+      "seconds": 1.57,
+      "log": "/tmp/oat-markdown-remote-evidence/02-types.log",
+      "cacheHitLines": 9,
+      "cacheMissLines": 1
+    },
+    {
+      "name": "03-test",
+      "command": ["pnpm", "test"],
+      "exit": 0,
+      "seconds": 133.43,
+      "log": "/tmp/oat-markdown-remote-evidence/03-test.log",
+      "cacheHitLines": 8,
+      "cacheMissLines": 2
+    },
+    {
+      "name": "04-build",
+      "command": ["pnpm", "build"],
+      "exit": 0,
+      "seconds": 1.51,
+      "log": "/tmp/oat-markdown-remote-evidence/04-build.log",
+      "cacheHitLines": 5,
+      "cacheMissLines": 0
+    },
+    {
+      "name": "05-skills",
+      "command": ["pnpm", "run", "check:skill-bumps"],
+      "exit": 0,
+      "seconds": 2.25,
+      "log": "/tmp/oat-markdown-remote-evidence/05-skills.log",
+      "cacheHitLines": 0,
+      "cacheMissLines": 0
+    },
+    {
+      "name": "fetch-main",
+      "command": ["git", "fetch", "origin", "main"],
+      "exit": 0,
+      "seconds": 0.31,
+      "log": "/tmp/oat-markdown-remote-evidence/fetch-main.log",
+      "cacheHitLines": 0,
+      "cacheMissLines": 0,
+      "mainSha": "98d1d524624e17f55ccfce33d18b3d5535dc91ca"
+    },
+    {
+      "name": "06-versions",
+      "command": ["pnpm", "release:check-versions"],
+      "exit": 0,
+      "seconds": 0.71,
+      "log": "/tmp/oat-markdown-remote-evidence/06-versions.log",
+      "cacheHitLines": 0,
+      "cacheMissLines": 0
+    },
+    {
+      "name": "07-release",
+      "command": ["pnpm", "release:validate"],
+      "exit": 0,
+      "seconds": 3.28,
+      "log": "/tmp/oat-markdown-remote-evidence/07-release.log",
+      "cacheHitLines": 0,
+      "cacheMissLines": 0
+    },
+    {
+      "name": "08-docs",
+      "command": ["pnpm", "build:docs"],
+      "exit": 0,
+      "seconds": 2.13,
+      "log": "/tmp/oat-markdown-remote-evidence/08-docs.log",
+      "cacheHitLines": 6,
+      "cacheMissLines": 0
+    }
+  ]
+}
+```
+
+### Runnable sequential gate runner
+
+Save as `/tmp/oat-markdown-remote-evidence/run-gates.py` and run at the pinned committed source head. It deliberately refuses a different HEAD rather than treating another source as this acceptance receipt.
+
+```python
+import pathlib,subprocess,json,time,sys,tempfile,os,hashlib
+out=pathlib.Path('/tmp/oat-markdown-remote-evidence');records=[];head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip();assert head=='0620794717bb0039753213c24e37868b476afbdb';home=tempfile.mkdtemp(prefix='oat-remote-gates-home-');env={k:os.environ[k]for k in ['PATH','TMPDIR','LANG','LC_ALL','SHELL','USER','LOGNAME']if k in os.environ};env.update(HOME=home,CI='1',NO_UPDATE_NOTIFIER='1');sources=['packages/cli/src/commands/docs/init/markdown.ts','packages/cli/src/commands/docs/init/integration.test.ts'];hashes={p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()for p in sources}
+commands=[('01-check',['pnpm','check']),('02-types',['pnpm','type-check']),('03-test',['pnpm','test']),('04-build',['pnpm','build']),('05-skills',['pnpm','run','check:skill-bumps']),('fetch-main',['git','fetch','origin','main']),('06-versions',['pnpm','release:check-versions']),('07-release',['pnpm','release:validate']),('08-docs',['pnpm','build:docs'])]
+for name,argv in commands:
+ start=time.time();log=out/(name+'.log')
+ with log.open('w')as stream:p=subprocess.run(argv,env=None if name=='fetch-main'else env,stdout=stream,stderr=subprocess.STDOUT)
+ text=log.read_text();r={'name':name,'command':argv,'exit':p.returncode,'seconds':round(time.time()-start,2),'log':str(log),'cacheHitLines':text.count('cache hit, replaying logs'),'cacheMissLines':text.count('cache miss, executing')};records.append(r)
+ if name=='fetch-main':r['mainSha']=subprocess.check_output(['git','rev-parse','origin/main'],text=True).strip()
+ (out/'gate-receipts.json').write_text(json.dumps({'sourceHead':head,'sourceHashes':hashes,'isolatedHome':home,'pnpmEnvironmentKeys':sorted(env),'providerCredentialsPassedToGates':False,'fetchUsesExistingGitTransport':True,'commands':records},indent=2)+'\n');print(json.dumps(r),flush=True)
+ if p.returncode:sys.exit(p.returncode)
+assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()==head
+assert hashes=={p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()for p in sources}
+```
+
+```bash
+python3 /tmp/oat-markdown-remote-evidence/run-gates.py > /tmp/oat-markdown-remote-evidence/gate-run.log 2>&1
+result=$?
+printf 'exit=%s\n' "$result"
+exit "$result"
+```
+
+### Evidence commit boundary
+
+Only this artifact is changed for the acceptance evidence commit. Scoped `oxfmt --check`, `git diff --check`, all seven retained runnable probe syntax checks and exact pre/post-hook hashes are captured under `/tmp/oat-markdown-remote-evidence/` as `acceptance-format-check.log`, `acceptance-diff-check.log`, `acceptance-artifact-checks.json` and `acceptance-postcommit.json`. Source fingerprints must remain identical to the receipt above and the worktree must be clean. Root final review, implementation-exit gate refresh, PR synchronization and final approval remain pending and root-owned. Original request/accepted target controls and recovery 0/10 remain unchanged; no live installation, provider workload, publication or push occurred.
