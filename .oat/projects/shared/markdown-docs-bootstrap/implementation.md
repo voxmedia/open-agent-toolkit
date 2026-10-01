@@ -13,14 +13,14 @@ All thirteen tasks are complete, including both remote adoption corrections. Cur
 
 ## Progress Overview
 
-| Phase | Status   | Tasks | Completed |
-| ----- | -------- | ----- | --------- |
-| p01   | complete | 2     | 2/2       |
-| p02   | complete | 3     | 3/3       |
-| p03   | complete | 3     | 3/3       |
-| p04   | complete | 5     | 5/5       |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p01   | complete    | 2     | 2/2       |
+| p02   | complete    | 3     | 3/3       |
+| p03   | complete    | 3     | 3/3       |
+| p04   | in_progress | 6     | 6/6       |
 
-**Total:** 13/13 tasks completed
+**Total:** 14/14 tasks completed
 
 ## Phase 1: Shared content and guidance contracts
 
@@ -3152,3 +3152,12 @@ Root read the complete artifact and applied current receive1.6.7 Step2.6 non-pau
 Raw artifact correction: empty merge --cc does not prove no conflict resolutions. Seven conflicts were resolved, verified in final-integration-controls and independent integration review. Preserve raw counts/statements but reject that inference; actual version/inventory/sync dispositions remain authoritative. Reviewer temporary contrasts were restored; current source hashes/tree corroborated clean. Root resolver's initial --project option was rejected before any child; corrected documented --project-path. No extra child or recovery/blocked attempt consumed.
 
 Dispatch: scope=p04 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high
+
+### p04-t06 root task acceptance and tracking ACK
+
+**Status:** completed
+**Commit:** f27361742e42e9803246bffaf6099ab11fbf5ba2
+
+Root read complete source/test and all286 evidence lines; verified exact three paths, clean tree, archive production parity, actual200 focused tests/lint/types, intended old regression failure/fixed pass. Accurate permission advice and independent dry/live/repeat preservation/Contents controls satisfy the gap; required root refusal stays strict. Single public regression, no private duplicate/hook. Original request/target and recovery0/10 retained. All14 tasks complete; all eight gates now run on this ACK head.
+
+Root check corrections: old rollup/Final Summary from13 tasks remained after planning; rollup/current pointer reconciled now before gate acceptance, current Final Summary rewrite before final review. The first log-count check encountered ANSI; the second exact test-byte check encountered one final oxfmt line-wrap difference. Root inspected the full three-line diff and corroborated identical test logic; production bytes match exactly. These are evidence-check adjustments, not product/recovery failures.

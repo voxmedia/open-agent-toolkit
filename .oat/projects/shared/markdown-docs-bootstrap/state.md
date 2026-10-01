@@ -1,5 +1,5 @@
 ---
-oat_current_task: p04-t06
+oat_current_task: null
 oat_last_commit: e74c06116acc294feb290c08e2677f8975de33da
 oat_blockers: []
 associated_issues:
@@ -157,13 +157,13 @@ oat_post_implement_sequence:
 
 # Project State: markdown-docs-bootstrap
 
-**Status:** Main/remote fixes accepted; passing-gate optional-directory sweep in progress
+**Status:** Optional-directory sweep verified; final ordered acceptance pending
 **Started:** 2026-09-30
 **Last Updated:** 2026-10-01
 
 ## Current Phase
 
-Thirteen of fourteen tasks complete. Main #334 is integrated; both remote review fixes, all eight local gates and the fresh independent final review passed. Refresh the retained gate before final p04 HiLL approval. Existing pre-approval steps remain complete; PR #335 remains open.
+All fourteen tasks complete. Main #334 is integrated; both remote review fixes, all eight local gates and the fresh independent final review passed. Refresh the retained gate before final p04 HiLL approval. Existing pre-approval steps remain complete; PR #335 remains open.
 
 ## Artifacts
 
@@ -171,7 +171,7 @@ Thirteen of fourteen tasks complete. Main #334 is integrated; both remote review
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; approved dispositions incorporated)
 - **Plan:** `plan.md` (complete; ready for oat-project-implement)
-- **Implementation:** `implementation.md` (13/14 tasks complete; current final review passed)
+- **Implementation:** `implementation.md` (14/14 tasks complete; current final review passed)
 
 ## Progress
 

@@ -238,7 +238,7 @@ Use public adoption/dry-run regressions for instruction-only direct/nested direc
 
 ### Task p04-t06: (review) Preserve adoption across unreadable optional directories
 
-**Status:** pending
+**Status:** completed
 
 **Source:** Passing retained gate 74cf045f-60fb-4931-a434-8cc9eaa5df19 L1; address-now judgment (Minor), not a phase blocking retry.
 
@@ -295,7 +295,7 @@ Source pointers retained for the already-planned consumer inventory: index gener
 
 ## Implementation Complete
 
-Implementation in progress: 13/14 tasks complete; both remote source fixes independently accepted; passing-gate L1 address-now fix pending. Scope: 4 sequential phases, 14 atomic tasks — p01 (2), p02 (3), p03 (3), p04 (6). Prior integrated verification/review remains history; The retained exit gate refresh precedes final HiLL approval. Existing configured pre-approval steps are complete and their snapshot is unchanged.
+Implementation in progress: 14/14 tasks complete; both remote source fixes independently accepted; passing-gate L1 source correction verified, final eight-gate acceptance pending. Scope: 4 sequential phases, 14 atomic tasks — p01 (2), p02 (3), p03 (3), p04 (6). Prior integrated verification/review remains history; The retained exit gate refresh precedes final HiLL approval. Existing configured pre-approval steps are complete and their snapshot is unchanged.
 
 ## References
 
