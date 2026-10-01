@@ -385,13 +385,13 @@ Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unkn
     "scope_reference": "p01:c3abaf0e40bc5794882fa2a956fca737b4eee98c..HEAD",
     "dispatch_mode": "background"
   },
-  "launch_status": "planned",
+  "launch_status": "blocked-before-start",
   "child_outcome": null,
   "configured_invocation_evidence": [
     "project-state:high",
     "user-config:gpt-6.1-sol/high",
     "tool-schema:gpt-6.1-sol low-through-ultra",
-    "canonical-role:sha256:a9c0b0be772025a6115005b6870ea9d5de4cb9e07c23790ff94dfac07fe6e005"
+    "canonical-role:sha256:eb1bd78d0a5a48ed5d1867e313e19a07859a86aedec14d759beda8f97d26ce55"
   ],
   "runtime_confirmation": "not-reported",
   "diagnostics": [
@@ -399,6 +399,83 @@ Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unkn
     "No independent service-tier control selected."
   ],
   "continuation_events": [],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Independent review of preservation guards and guidance identity behavior.",
+  "floor_satisfaction": "satisfied"
+}
+```
+
+Reviewer native pre-start rejection: unknown agent_type; native-role-unavailable, provesNoChildStarted true. Canonical reviewer resolved from loaded project scope version 1.2.10, digest sha256:eb1bd78d0a5a48ed5d1867e313e19a07859a86aedec14d759beda8f97d26ce55.
+
+Accepted reviewer handle `/root/markdown_p01_review_pinned`; exact controls retained, fresh context, awaiting ACK.
+
+```json
+{
+  "request_id": "markdown-p01-review-pinned-20261001",
+  "caller": "oat-project-implement",
+  "scope": "p01",
+  "objective": "Independently review phase p01 correctness, content preservation, and guidance preview against approved requirements.",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "reviewer",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "codex-root-20261001",
+    "source": "tool-schema",
+    "observed_at": "2026-10-01"
+  },
+  "authority": "read-only code and one review artifact",
+  "role_selector": "default",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-09-24",
+  "guidance_verified_at": "2026-09-24",
+  "guidance_status": "review-required",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/medium", "gpt-6.1-sol/high"],
+  "selection_reason": "pre-start-rejection",
+  "selected_route": "native",
+  "deadline_seconds": 1800,
+  "retry_limit": 2,
+  "payload": {
+    "agent_type": "default",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "high",
+    "fork_turns": "none",
+    "scope_reference": "p01:c3abaf0e40bc5794882fa2a956fca737b4eee98c..HEAD",
+    "dispatch_mode": "background"
+  },
+  "launch_status": "accepted",
+  "child_outcome": null,
+  "configured_invocation_evidence": [
+    "project-state:high",
+    "user-config:gpt-6.1-sol/high",
+    "tool-schema:gpt-6.1-sol low-through-ultra",
+    "canonical-role:sha256:eb1bd78d0a5a48ed5d1867e313e19a07859a86aedec14d759beda8f97d26ce55"
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [
+    "Model guidance is dated; current configured target and live model selector control this invocation.",
+    "No independent service-tier control selected."
+  ],
+  "continuation_events": [
+    {
+      "event": "exact-target-approximation",
+      "from_request_id": "markdown-p01-review-20261001",
+      "provesNoChildStarted": true,
+      "canonicalRoleDigest": "sha256:eb1bd78d0a5a48ed5d1867e313e19a07859a86aedec14d759beda8f97d26ce55",
+      "approximation": true
+    }
+  ],
   "task_class": "consequential",
   "model_class_floor": "consequential",
   "classification_source": "caller",
