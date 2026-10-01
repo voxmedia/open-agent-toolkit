@@ -198,8 +198,6 @@ All phases run sequentially (`oat_plan_parallel_groups: []`). p02 consumes p01's
 
 ## Reviews
 
-Existing scaffold rows and historical review events are preserved. Quick mode requires no spec. All approved plan edits are applied; the final cross-runtime gate passed and its two Low findings were dispositioned as already-covered scope. See `reviews/plan-gate-final-handoff.md` for receipt evidence. Implementation is in progress; p01 tasks and independent review complete.
-
 | Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target          |
 | ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | -------------------- |
 | p01    | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
@@ -215,18 +213,17 @@ Existing scaffold rows and historical review events are preserved. Quick mode re
 | plan   | artifact | fixes_completed | 2026-10-01 | reviews/plan-auto-final-retry.md                            | 4f1c0d422241214859c906efb176e5a2787ba472 | auto       | -                    |
 | plan   | artifact | passed          | 2026-10-01 | reviews/archived/artifact-plan-review-2026-10-01T112231Z.md | -                                        | gate       | claude-opus-5-5-high |
 | p01    | code     | fixes_completed | 2026-10-01 | reviews/p01-review-2026-10-01T120229Z.md                    | 47f4fddad5b3618e5146631b729e435a0a4a5f4a | auto       | -                    |
+| p02    | code     | fixes_completed | 2026-10-01 | reviews/archived/p02-review-2026-10-01T125830Z.md           | 95250d626e6fb7bf4f382be4d4e10eae18e330c0 | auto       | -                    |
+| p02    | code     | passed          | 2026-10-01 | reviews/p02-review-2026-10-01T132908Z.md                    | f715c2ece20b5650d64d3b55bb6b9f44b2c98495 | auto       | -                    |
+| p03    | code     | fixes_completed | 2026-10-01 | reviews/p03-review-2026-10-01T140627Z.md                    | 1e03f88dcb5ae9713ff36a4b3327ac02d1b4f953 | auto       | -                    |
+| p04    | code     | passed          | 2026-10-01 | reviews/p04-review-2026-10-01T150035Z.md                    | f4d76f977968c4d4e00d86153e48a9781649a2d1 | auto       | -                    |
+| final  | code     | fixes_completed | 2026-10-01 | reviews/archived/final-review-2026-10-01T151606Z.md         | f7b7acb6f041d9b016bc67af4196c40a0f689e6d | auto       | -                    |
+| final  | code     | passed          | 2026-10-01 | reviews/archived/final-review-2026-10-01T155302Z.md         | 697f529e8641ade24140fd7a9b88483799aa204a | auto       | -                    |
+| final  | code     | received        | 2026-10-01 | reviews/final-review-2026-10-01T160046Z.md                  | 265230677e7f0d1675c7afce25128293801e195f | gate       | claude-opus-5-5-high |
+
+Historical scaffold rows and review events are preserved. All implementation tasks and the standard final review are complete. The retained implementation gate passed its High threshold; its Medium rendering finding and Low ledger finding are being addressed in a non-pausing judgment sweep.
 
 Record full reviewed heads and invocation provenance for actual reviews. Preserve all rows and unknown trailing cells. Mark `passed` only for a clean result; disposition residual findings before readiness.
-
-| p02 | code | fixes_completed | 2026-10-01 | reviews/archived/p02-review-2026-10-01T125830Z.md | 95250d626e6fb7bf4f382be4d4e10eae18e330c0 | auto | - |
-
-| p02 | code | passed | 2026-10-01 | reviews/p02-review-2026-10-01T132908Z.md | f715c2ece20b5650d64d3b55bb6b9f44b2c98495 | auto | - |
-
-| p03 | code | fixes_completed | 2026-10-01 | reviews/p03-review-2026-10-01T140627Z.md | 1e03f88dcb5ae9713ff36a4b3327ac02d1b4f953 | auto | - |
-| p04 | code | passed | 2026-10-01 | reviews/p04-review-2026-10-01T150035Z.md | f4d76f977968c4d4e00d86153e48a9781649a2d1 | auto | - |
-| final | code | fixes_completed | 2026-10-01 | reviews/archived/final-review-2026-10-01T151606Z.md | f7b7acb6f041d9b016bc67af4196c40a0f689e6d | auto | - |
-| final | code | passed | 2026-10-01 | reviews/archived/final-review-2026-10-01T155302Z.md | 697f529e8641ade24140fd7a9b88483799aa204a | auto | - |
-| final | code | received | 2026-10-01 | reviews/final-review-2026-10-01T160046Z.md | 265230677e7f0d1675c7afce25128293801e195f | gate | claude-opus-5-5-high |
 
 ### Plan Review Dispositions
 

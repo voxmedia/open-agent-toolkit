@@ -2035,3 +2035,11 @@ Root consumed exactly one not-attempted signal before artifact validation, no or
 #### Configured implementation exit gate generation
 
 Current passed final lifecycle review head697f529e8641ade24140fd7a9b88483799aa204a is the immutable reviewed basis. Effective gate resolution configured, user source, block/maxAttempts2, no project override. Exact command/global JSON/project/no-target shape validated without rewriting configuration. Configuration canonical SHA-256 and effective-delta-v2 Git raw-NUL fingerprint persisted in state; logical default base origin/main, unique merge base, literal project/repo exclusions. Gate pending, no launch accepted yet; final approval/completion remain gated.
+
+### Passing implementation gate judgment sweep — 2026-10-01
+
+- Run `a8646353-1fff-430a-aee3-e8b32dd2966e`, exact configured target `claude-opus-5-5-high`, returned a corroborated `ok` envelope and exit 0 (0 Critical, 0 High, 1 Medium, 1 Low). Exactly one returned `**Reconnaissance:** not-attempted` confirmation was consumed; the artifact contains no Review Orchestration section.
+- M1 accepted for address-now: the Markdown renderer passes external strings as replacement strings, so JavaScript interprets dollar substitution syntax. This is a contained literal-insertion correction with a public integration regression and old/fixed contrast; no deferral or blocking plan task is needed for this passing-gate sweep.
+- L1 accepted for address-now: all 20 review event rows are consolidated beneath their existing header and separator, with every cell and historical event preserved. The prose moves below the contiguous table.
+- Gate acceptance was reconciled from the unique captured marker record, complete run-correlated receipt, artifact and CLI corroboration after the terminal process removed its active marker. No replacement launch occurred.
+- The rendering change will invalidate the implementation exit gate fingerprint. Preserve this run and receive provenance, then refresh final lifecycle review and start a fresh configured gate generation for the changed code before closeout. This follows final-exit freshness; no phase gate is introduced.
