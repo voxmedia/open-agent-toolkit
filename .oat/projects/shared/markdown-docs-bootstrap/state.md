@@ -111,9 +111,9 @@ oat_implement_exit_gate:
     type: code
     source_filename: final-review-2026-10-01T185353Z.md
   receive_pre_head: a7ca3b640623ebd2b417206af67a9dd3fb12caaa
-  receive_commit: null
-  failure: null
-  status: pending
+  receive_commit: 81cdda44ee85fcfb1e654466e0cf2a140b6197b0
+  failure: Passing-gate L1 address-now source correction changes the effective delta; current final source review and new retained generation required.
+  status: stale
   resolution: configured
   resolved_command: oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."
   resolved_description: Semantic cross-family final implementation review before oat-project-implement exits.
@@ -127,10 +127,10 @@ oat_implement_exit_gate:
   freshness_head: 14ecdcc0dbb876dc1225a3ef4ca332ae88796cc0
   freshness_fingerprint: sha256:effective-delta-v2:964fb0d52950ca56e6316ac94eb24eae9f7c03c77ad098c083e9919a9b794324
   launch_state: result_persisted
-  receive_state: intent_persisted
+  receive_state: completed
   receive_eligible: true
-  receive_completed: false
-  updated_at: '2026-10-01T18:57:40Z'
+  receive_completed: true
+  updated_at: '2026-10-01T19:22:53Z'
   config_fingerprint: sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324
 oat_project_recap:
   decision: skip
