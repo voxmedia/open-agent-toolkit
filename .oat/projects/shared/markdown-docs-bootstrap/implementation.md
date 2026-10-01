@@ -2595,7 +2595,7 @@ Dispatch: scope=pr action=implementation role=implementer producer=unknown prove
     "fork_turns": "none",
     "dispatch_mode": "background"
   },
-  "launch_status": "planned",
+  "launch_status": "rejected-pre-start",
   "child_outcome": null,
   "configured_invocation_evidence": [
     "project-state:high",
@@ -2604,9 +2604,82 @@ Dispatch: scope=pr action=implementation role=implementer producer=unknown prove
   ],
   "runtime_confirmation": "not-reported",
   "diagnostics": [
-    "Native model-pinned worker first; named current closeout skill owns action and output boundary. Runtime identity not reported."
+    "Native model-pinned worker first; named current closeout skill owns action and output boundary. Runtime identity not reported.",
+    "native-role-unavailable; unknown agent_type; provesNoChildStarted true"
   ],
   "continuation_events": [],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "External PR publication with fail-closed review provenance and branch-state reconciliation.",
+  "floor_satisfaction": "satisfied"
+}
+```
+
+```json
+{
+  "request_id": "markdown-closeout-pr-pinned-20261001",
+  "caller": "oat-project-implement",
+  "scope": "pr",
+  "objective": "Execute current oat-project-pr-final skill for immutable configured pre-approval sequence.",
+  "action": "closeout",
+  "role_name": "oat-project-pr-final",
+  "role_class": "worker",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "codex-root-closeout-pr",
+    "source": "current-tool-schema",
+    "observed_at": "2026-10-01T17:00:45.172806+00:00"
+  },
+  "authority": "Only named closeout step owned outputs and commits; preserve authoritative sequence snapshot.",
+  "role_selector": "default",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-09-24",
+  "guidance_verified_at": "2026-09-24",
+  "guidance_status": "review-required",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/medium", "gpt-6.1-sol/high"],
+  "selection_reason": "pre-start-rejection",
+  "selected_route": "native",
+  "deadline_seconds": 3600,
+  "retry_limit": 2,
+  "payload": {
+    "agent_type": "default",
+    "fork_turns": "none",
+    "dispatch_mode": "background",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "high",
+    "accepted_handle": "/root/markdown_closeout_pr_pinned"
+  },
+  "launch_status": "accepted",
+  "child_outcome": null,
+  "configured_invocation_evidence": [
+    "project-state:high",
+    "current dispatch resolver model/effort tuple: gpt-6.1-sol/high",
+    "tool-schema:worker exact explicit model and reasoning_effort"
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [
+    "Native model-pinned worker first; named current closeout skill owns action and output boundary. Runtime identity not reported.",
+    "native-role-unavailable; unknown agent_type; provesNoChildStarted true"
+  ],
+  "continuation_events": [
+    {
+      "event": "exact-target-approximation",
+      "from_request_id": "markdown-closeout-pr-native-20261001",
+      "provesNoChildStarted": true,
+      "canonicalRoleDigest": "sha256:a9c0b0be772025a6115005b6870ea9d5de4cb9e07c23790ff94dfac07fe6e005",
+      "approximation": true
+    }
+  ],
   "task_class": "consequential",
   "model_class_floor": "consequential",
   "classification_source": "caller",
