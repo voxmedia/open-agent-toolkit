@@ -91,7 +91,7 @@ All phases run sequentially (`oat_plan_parallel_groups: []`). p02 consumes p01's
 4. Produce deterministic managed root Documentation guidance naming the literal root, Markdown tooling, authored index, and contributing path. Extend existing result reporting without site install/dev/build commands, package discovery/dependencies, root package/Turbo patches, or framework files.
 5. Preserve Fumadocs/MkDocs prompts, replacement behavior, and results, including explicitly authorized framework initialization over configured Markdown.
 
-**Verify:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/docs/init/resolve-options.test.ts src/commands/docs/init/scaffold.test.ts src/commands/docs/init/index.test.ts src/commands/docs/init/integration.test.ts src/commands/docs/init/docs-commands.test.ts src/commands/docs/init/root-package.test.ts src/commands/docs/init/mkdocs-compat.test.ts src/commands/init/tools/shared/bundle-consistency.test.ts src/commands/tools/shared/pack-lifecycle.test.ts` and CLI type-check. Fresh default/custom roots produce literal config and meaningful pages/guidance; package files remain unchanged; unsafe/config conflicts fail before writes; framework controls retain existing behavior. Run `pnpm build`; verify `node packages/cli/scripts/bundle-inputs.mjs --list templateDirectories` includes `docs-markdown` and the built `packages/cli/assets/templates/docs-markdown/` contains both `index.md` and `contributing.md`.
+**Verify:** Run `pnpm build` first to refresh packaged assets before direct bundle-backed tests. Then run `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/docs/init/resolve-options.test.ts src/commands/docs/init/scaffold.test.ts src/commands/docs/init/index.test.ts src/commands/docs/init/integration.test.ts src/commands/docs/init/docs-commands.test.ts src/commands/docs/init/root-package.test.ts src/commands/docs/init/mkdocs-compat.test.ts src/commands/init/tools/shared/bundle-consistency.test.ts src/commands/tools/shared/pack-lifecycle.test.ts` and CLI type-check. Fresh default/custom roots produce literal config and meaningful pages/guidance; package files remain unchanged; unsafe/config conflicts fail before writes; framework controls retain existing behavior. Verify `node packages/cli/scripts/bundle-inputs.mjs --list templateDirectories` includes `docs-markdown` and the built `packages/cli/assets/templates/docs-markdown/` contains both `index.md` and `contributing.md`.
 
 **Commit:** `feat(p02-t01): bootstrap plain markdown documentation`.
 
@@ -200,7 +200,7 @@ Gate passed (0 Critical, 0 High, 1 Medium, 1 Low), receive-eligible and corrobor
 
 ### Final Automatic Retry
 
-Retry 2 of 2 returned one Medium finding: move p02-t01 build before direct bundle-backed Vitest checks. Both approved gate fixes are confirmed. Proposed ordering correction awaits user direction; see `reviews/plan-auto-final-retry.md`. No further standard automatic re-review is authorized by the exhausted bound. Readiness remains disabled.
+Retry 2 of 2 returned one Medium finding: move p02-t01 build before direct bundle-backed Vitest checks. Both approved gate fixes are confirmed. User approved the ordering correction and it is applied; retained cross-runtime gate pending; see `reviews/plan-auto-final-retry.md`. No further standard automatic re-review is authorized by the exhausted bound. Readiness remains disabled.
 
 ## Implementation Complete
 

@@ -125,11 +125,11 @@ See `reviews/design-consensus-handoff.md` for the completed review, canonical ar
 
 ## Blockers
 
-None. Final automatic retry M1 awaits approval to move the existing p02 build before bundle-backed tests.
+None. None. The approved p02 verification ordering correction is applied; retained gate pending.
 
 ## Next Milestone
 
-Approve the final verification-order correction, run the retained cross-runtime gate, and complete quick-start readiness; implementation has not started
+Run the retained cross-runtime gate and complete quick-start readiness; implementation has not started
 
 ## Review Setup
 

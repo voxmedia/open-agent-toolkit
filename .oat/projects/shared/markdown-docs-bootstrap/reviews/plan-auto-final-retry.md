@@ -19,3 +19,7 @@ Location: plan.md:94. The new direct Vitest lifecycle checks precede the paragra
 Proposed disposition: resolve_in_artifact by moving the already required `pnpm build` to the beginning of p02-t01 Verify, before direct Vitest, retaining the inventory/file checks. Task Scope: Minor. User direction pending; no correction applied. No implementation fix tasks are added.
 
 The standard automatic review loop has reached its retry bound. After this approved correction, proceed to the retained cross-runtime quick-start gate for independent re-review; do not start another standard automatic reviewer without an explicit retry override. Preserve the actual residual status rather than claiming this automatic review passed.
+
+## Approved Correction
+
+User approved moving p02-t01 build before direct bundle-backed Vitest checks and running the retained gate. The ordering correction is applied; the standard automatic retry bound remains exhausted. No pass is claimed for this historical review.
