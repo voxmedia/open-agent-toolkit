@@ -241,7 +241,7 @@ line. The reviewer's resolver stamp describes the project reviewer policy, so
 gate-originated artifacts label it as the policy view:
 
 ```markdown
-**Dispatch audit (policy view):** `Dispatch: scope=p01 action=review role=reviewer ... target=oat-reviewer-gpt-6-sol-high`
+**Dispatch audit (policy view):** `Dispatch: scope=p01 action=review role=reviewer ... target=oat-reviewer-gpt-6-1-sol-high`
 ```
 
 The gate reads reviewer stamps (`action=review role=reviewer`) from audit lines

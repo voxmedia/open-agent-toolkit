@@ -8,8 +8,12 @@ import {
 } from './catalog';
 
 describe('supported Codex role catalogue', () => {
-  it('contains the exact immutable 28-target product set', () => {
+  it('contains the exact immutable 33-target product set', () => {
     expect(SUPPORTED_CODEX_ROLE_TARGETS).toEqual([
+      ...['low', 'medium', 'high', 'xhigh', 'max'].map((effort) => ({
+        model: 'gpt-6.1-sol',
+        effort,
+      })),
       ...['low', 'medium', 'high', 'xhigh', 'max'].map((effort) => ({
         model: 'gpt-6-astra',
         effort,
@@ -42,12 +46,12 @@ describe('supported Codex role catalogue', () => {
     ]);
   });
 
-  it('expands deterministically to exactly 56 unique pinned variants', () => {
+  it('expands deterministically to exactly 66 unique pinned variants', () => {
     const catalogue = expandSupportedCodexRoleCatalogue();
     const roleNames = catalogue.map((entry) => entry.roleName);
 
-    expect(catalogue).toHaveLength(56);
-    expect(new Set(roleNames)).toHaveLength(56);
+    expect(catalogue).toHaveLength(66);
+    expect(new Set(roleNames)).toHaveLength(66);
     expect(roleNames).toEqual([...roleNames].sort());
     expect(roleNames).toContain('oat-phase-implementer-gpt-6-astra-low');
     expect(roleNames).toContain('oat-phase-implementer-gpt-6-astra-medium');
@@ -63,6 +67,9 @@ describe('supported Codex role catalogue', () => {
     expect(roleNames).toContain('oat-phase-implementer-gpt-5-6-sol-max');
     expect(roleNames).toContain('oat-reviewer-gpt-5-6-sol-max');
     expect(roleNames).not.toContain('oat-reviewer-gpt-6-sol-ultra');
+    expect(roleNames).toContain('oat-phase-implementer-gpt-6-1-sol-max');
+    expect(roleNames).toContain('oat-reviewer-gpt-6-1-sol-xhigh');
+    expect(roleNames).not.toContain('oat-reviewer-gpt-6-1-sol-ultra');
     expect(roleNames).toContain('oat-phase-implementer-gpt-6-luna-max');
     expect(roleNames.some((name) => name.includes('gpt-5-6-luna-max'))).toBe(
       false,
@@ -71,6 +78,14 @@ describe('supported Codex role catalogue', () => {
   });
 
   it('recognizes supported targets without accepting near misses', () => {
+    expect(
+      isSupportedCodexRoleTarget({ model: 'gpt-6.1-sol', effort: 'max' }),
+    ).toBe(true);
+    for (const effort of ['ultra', 'none', 'minimal']) {
+      expect(isSupportedCodexRoleTarget({ model: 'gpt-6.1-sol', effort })).toBe(
+        false,
+      );
+    }
     expect(
       isSupportedCodexRoleTarget({ model: 'gpt-5.6-sol', effort: 'max' }),
     ).toBe(true);

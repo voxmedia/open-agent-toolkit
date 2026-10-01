@@ -22,6 +22,7 @@ const generationSchema = z.enum([
   'fable-5-1',
   'fable-5',
   'opus-5-5',
+  'sonnet-5-5',
   'sonnet-5',
   'opus-4-7',
   'opus-4-6',

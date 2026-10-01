@@ -1,12 +1,14 @@
 ---
-guidance_version: 2026-09-25
-last_verified: 2026-09-25
-review_after: 2026-12-24
+guidance_version: 2026-10-01
+last_verified: 2026-10-01
+review_after: 2026-12-30
 catalog_basis:
   Cursor desktop 3.21.18 resolved Grok 4.6 and Fable 5.1 effort selectors in
   native subagent hooks, and Grok 4.7 only as bare flat IDs; Cursor desktop
   3.20.14 resolved all five Opus 5.5 effort selectors; GPT-6 Sol/Luna were
-  absent from the observed Cursor catalog
+  absent from the observed Cursor catalog; the 2026-10-01 CLI catalog lists
+  Sonnet 5.5 flat IDs; Cursor desktop 3.22.12 matched five exact-ID Sonnet
+  5.5 pins while every bracket-form Sonnet 5.5 probe fell back
 ---
 
 # Cursor Model Selection
@@ -51,8 +53,8 @@ Cursor desktop 3.20.14 resolved all five `claude-opus-5-5[effort=...]`
 selectors to corresponding flat IDs in native hooks; on 2026-09-25, Cursor
 desktop 3.21.18 did the same for Grok 4.6 and Fable 5.1. See the
 probe records at `packages/cli/src/providers/cursor/codec/__fixtures__/README.md`.
-GPT-6 Sol/Luna were absent from the observed Cursor catalogue, so their Codex
-availability does not authorize Cursor routes.
+GPT-6 Sol/Luna and GPT-6.1 Sol were absent from the 2026-10-01 Cursor CLI
+catalogue, so their Codex availability does not authorize Cursor routes.
 
 | Task class               | Default                                                             | Economy                                            | Escalation                                                  | Floor notes                                                                                                      |
 | ------------------------ | ------------------------------------------------------------------- | -------------------------------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
@@ -90,8 +92,34 @@ Grok 4.7 has no approved mapping. Every bracket spelling tried
 (`grok-4.7[effort=...]` with and without `fast`, `reasoning=`, and
 `grok-4-7[...]`) fell back to that same account default, which is easy to
 mistake for success because it is itself a Grok 4.7 model. Only bare flat IDs
-such as `grok-4.7-medium` resolved as requested, and the approved catalogue
-does not emit bare IDs. Do not pin Grok 4.7 until a mapping is approved.
+such as `grok-4.7-medium` resolved as requested, but Grok 4.7 still lacks
+its own approved registry entry and complete per-pin evidence. It stays outside
+the shipped catalogue. This is a family-specific admission gap, not a blanket
+prohibition of exact-ID pins.
+
+## Sonnet 5.5 Exact-ID Pin Evidence
+
+The 2026-10-01 Cursor CLI catalogue lists
+`claude-sonnet-5-5-low|medium|high|xhigh|max`. In Cursor desktop 3.22.12,
+every `claude-sonnet-5-5[effort=...]` probe fell back to the account default,
+`grok-4.7-high-fast`. Exact-ID pins
+`claude-sonnet-5-5-low|medium|high|xhigh|max` instead matched their requested
+rungs in `subagentStart`, Shell `preToolUse`, and `subagentStop`. The Opus 5.5
+low positive control matched its established mapping; unknown-family and
+Sonnet 5.5 `ultra` exact-ID controls both fell back to `grok-4.7-high-fast`.
+Catalog visibility or a subagent self-report does not establish those results.
+The 16 correlated summary rows and 64 native events from both rounds live in
+`packages/cli/src/providers/cursor/codec/__fixtures__/cursor-pin-probe-2026-10-01.jsonl`
+and `cursor-pin-probe-2026-10-01-events.jsonl`; the adjacent `README.md` records
+provenance and excludes unrelated discovery calls.
+
+Sonnet 5.5 mappings write the verified exact ID as frontmatter `model`.
+Existing Sonnet 5, Opus, Fable, GPT, and Grok mappings retain their independently
+verified selectors. Neither selector form is universally valid: every exact-ID
+mapping requires native hook evidence, non-default-rung and invalid-selector
+controls, and an explicit approved registry entry. There is no generic
+pass-through of flat CLI IDs. See the
+[probe runbook](../../../../apps/oat-docs/docs/contributing/verifying-cursor-pins.md).
 
 ## Historical Opus Cursor Probe Evidence (Retired)
 
@@ -177,8 +205,10 @@ and non-thinking variants.
 - `claude-fable-5-1-thinking-high`: eligible specialist for hard reasoning and
   the bundled Frontier terminal target; xhigh only for evaluated long-horizon
   work. Cursor lists Fable as "NO ZDR"; confirm retention eligibility.
-- `claude-sonnet-5-thinking-high`: strong provider-diversity alternative for
-  normal implementation and agentic work when available.
+- `claude-sonnet-5-5-high`: exact-ID provider-diversity option for normal
+  implementation and agentic work; qualify task performance separately.
+- `claude-sonnet-5-thinking-high`: supported compatibility option for
+  established workflows.
 - `gpt-5.4-mini-medium`: economical general tool and coding worker.
 - `gpt-5.4-nano-medium`: strict extraction, classification, ranking, and simple
   read-only tool calls. Not a semantic repository worker.

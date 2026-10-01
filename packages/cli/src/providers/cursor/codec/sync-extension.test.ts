@@ -100,9 +100,7 @@ describe('cursor sync extension', () => {
     );
 
     expect(first.provider).toBe('cursor');
-    expect(first.managedEntries).toHaveLength(
-      SUPPORTED_CURSOR_ROLE_TARGETS.length * 2,
-    );
+    expect(first.managedEntries).toHaveLength(62);
     expect(
       first.operations.every(({ provider }) => provider === 'cursor'),
     ).toBe(true);
@@ -302,6 +300,35 @@ describe('cursor sync extension', () => {
       }),
     ).rejects.toThrow(/mapping-specific gate g01 approval/i);
   });
+
+  it.each(['missing record', 'mismatched resolved model'])(
+    'rejects direct-ID %s during target collection even without canonical roles',
+    async (failure) => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-cursor-extension-'));
+      tempDirs.push(root);
+      const approved = CURSOR_MODEL_PIN_MAPPINGS.find(
+        ({ ladderModelId }) => ladderModelId === 'claude-sonnet-5-5-low',
+      )!;
+      const invalid: CursorModelPinMapping = structuredClone(approved);
+      if (failure === 'missing record') delete invalid.gateEvidence.probeRecord;
+      else
+        invalid.gateEvidence.probeRecord!.resolvedModel = 'grok-4.7-high-fast';
+      await expect(
+        computeCursorProjectExtensionPlan(root, [], undefined, {
+          modelMappings: [invalid],
+          supportedTargets: [invalid],
+        }),
+      ).rejects.toThrow(
+        /explicit model ID requires matching mapping-specific native probe evidence/i,
+      );
+      await expect(
+        computeCursorProjectExtensionPlan(root, [], undefined, {
+          modelMappings: [approved],
+          supportedTargets: [approved],
+        }),
+      ).resolves.toMatchObject({ operations: [], managedEntries: [] });
+    },
+  );
 
   it('removes only stale roles for applicable owners on full sync', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-cursor-extension-'));

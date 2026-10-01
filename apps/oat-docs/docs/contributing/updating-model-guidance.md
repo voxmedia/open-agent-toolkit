@@ -26,7 +26,9 @@ they choose to adopt a newer recommendation.
 
 A model can remain supported for a user's explicit configuration without being
 recommended by the new ladder. For example, this refresh keeps GPT-5.6 Codex
-and Cursor targets available while preferring GPT-6 in Codex. Claude Opus 4.8
+and Cursor targets available while preferring GPT-6.1 Sol and GPT-6 Luna in
+Codex. GPT-6 Sol remains supported for explicit compatibility configurations.
+Claude Opus 4.8
 and 5.0 have left current supported generations and recommendations; historical
 probe records can still describe past behavior, clearly labeled as historical.
 
@@ -34,7 +36,11 @@ probe records can still describe past behavior, clearly labeled as historical.
 
 Check the provider's official model documentation and the local runtime before
 editing an ID or effort range. The [OpenAI model catalog](https://developers.openai.com/api/docs/models)
-lists GPT-6 Astra, Sol, and Luna. The
+lists GPT-6.1 Sol and GPT-6 Astra, Sol, and Luna. The
+[GPT-6.1 Sol model page](https://developers.openai.com/api/docs/models/gpt-6.1-sol)
+identifies `gpt-6.1-sol` and supports `low`, `medium`, `high`, `xhigh`, and
+`max`; `none` and `minimal` are not supported efforts for this family. Direct
+API tool calls require the Responses API. The
 [Astra model page](https://developers.openai.com/api/docs/models/gpt-6-astra)
 names `gpt-6-astra` and documents `low`, `medium`, `high`, `xhigh`, and `max`;
 compare it with the installed Codex runtime model cache for the exact names and
@@ -42,7 +48,11 @@ local effort set. Catalog presence establishes support, not relative task
 quality. The
 [Anthropic Opus 5.5 documentation](https://www.anthropic.com/claude-opus-5-5)
 names `claude-opus-5-5`; confirm a Claude Code invocation reports that exact
-assistant model before admitting it to the Claude catalog. Claude subagent
+assistant model before admitting it to the Claude catalog. The
+[Sonnet 5.5 overview](https://platform.claude.com/docs/en/models/sonnet-5-5/overview)
+and [effort reference](https://platform.claude.com/docs/en/build-with-claude/effort)
+identify `claude-sonnet-5-5` and its five low-through-max efforts. Verify
+Claude Code identity separately. Claude subagent
 `model` and `effort` frontmatter select a per-agent route; see the
 [Claude Code subagent fields](https://code.claude.com/docs/en/sub-agents).
 An API model announcement alone does not prove a third-party harness supports
@@ -66,13 +76,31 @@ The positive Sonnet control resolved, while invalid family and effort controls
 fell back to defaults. Five Opus 5.5 mappings are now approved for desktop
 subagents; the CLI result alone does not establish that the same bracket syntax
 works as a CLI top-level `--model` argument. Likewise, do not add GPT-6
-Cursor targets until that runtime lists and verifies them.
+or GPT-6.1 Cursor targets until that runtime lists and verifies them.
 
 A 2026-09-25 desktop 3.21.18 probe added Grok 4.6 and Fable 5.1 mappings
 and moved the bundled Cursor ladder to them. The same probe showed Grok 4.7
-resolves only bare flat IDs, never bracket selectors, so it stays out of the
-catalogue; see [Verifying Cursor Pins](verifying-cursor-pins.md). See [Dispatch Policy](../workflows/projects/dispatch-ceiling.md#cursor-evidence-authority)
+resolves only bare flat IDs, never bracket selectors. It still needs its own
+approved registry entry and complete per-pin evidence before admission; see [Verifying Cursor Pins](verifying-cursor-pins.md). See [Dispatch Policy](../workflows/projects/dispatch-ceiling.md#cursor-evidence-authority)
 for the distinction between catalog, configured mapping, and runtime identity.
+
+The October 1 refresh migrates Codex Sol defaults and examples to
+`gpt-6.1-sol` while preserving existing effort choices, including medium for
+intelligent recon. Claude Economy moves to `claude-sonnet-5-5` medium by user
+direction. GPT-6 Sol and Sonnet 5 remain explicitly supported. Cursor lists
+Sonnet 5.5 flat IDs at low through max. Cursor 3.22.12 native probes matched
+those exact IDs at start, Shell execution, and stop while every Sonnet 5.5
+bracket pin fell back to the account default. The existing Opus low control
+matched; unknown-family and Sonnet `ultra` exact-ID controls fell back. The
+fixture summary and event records at
+`packages/cli/src/providers/cursor/codec/__fixtures__/cursor-pin-probe-2026-10-01{,-events}.jsonl`
+retain both rounds. Ship explicit, evidence-backed exact-ID mappings for that family;
+keep existing bracket mappings. An exact-ID mapping requires the same per-pin
+native evidence and controls as a bracket mapping. Do not enable generic
+pass-through of CLI IDs. Cursor does not list GPT-6 Sol or
+GPT-6.1 Sol in the observed catalog. Do not carry Codex model IDs into Cursor
+configurations. These selector changes do not import a separate vault policy
+refresh or claim newly measured task-performance gains.
 
 ## Change and Validate
 
