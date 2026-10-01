@@ -781,7 +781,7 @@ printf 'artifact-read\\n'`,
     }
   });
 
-  it('requires local and remote review rails to record the launch without a mandatory per-dispatch file', () => {
+  it('requires local and remote review rails to record the launch without a per-dispatch file', () => {
     for (const skill of [
       'oat-project-review-provide',
       'oat-project-review-provide-remote',
@@ -791,8 +791,12 @@ printf 'artifact-read\\n'`,
       expect(content, skill).toMatch(
         /(?:not|never)(?: in)?[^]{0,40}`implementation\.md`/i,
       );
-      expect(content, skill).toMatch(
-        /oat project dispatch record[^]{0,160}optional and off by default/i,
+      // `oat project dispatch record` is validate-only
+      // (DR-260927-dispatch-record-validates), so no rail describes persisting
+      // a per-dispatch file.
+      expect(content, skill).not.toMatch(/per-dispatch\s+file/i);
+      expect(content, skill).not.toMatch(
+        /optional\s+and\s+off\s+by\s+default/i,
       );
       expect(content, skill).not.toMatch(
         /immediately after[^]{0,200}run `oat project dispatch record/i,
