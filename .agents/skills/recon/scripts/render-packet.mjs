@@ -7,6 +7,10 @@ import { join, resolve } from 'node:path';
 import { hashFile } from './lib/canonical-json.mjs';
 import { isDirectExecution } from './lib/cli-entry.mjs';
 import {
+  classifyUnresolvedIssue,
+  unresolvedIssuesBlockClaim,
+} from './lib/contracts.mjs';
+import {
   assertSafeExistingPath,
   assertSafeOutputPath,
   assertUnchangedRoot,
@@ -115,6 +119,73 @@ function intendedRoutingSection(manifest, routing) {
   ];
 }
 
+const affirmingDispositions = new Set([
+  'affirmed',
+  'unchallenged',
+  'covered',
+  'resolved',
+]);
+
+function issueText(entry) {
+  return typeof entry === 'string' ? entry : (entry?.text ?? '');
+}
+
+// Every claim an incorporated review kept below `verified` (an unresolved
+// issue that applies to it, a coverage finding that names it, or a
+// non-affirming disposition), with the review's own words. Key-claim status
+// alone would let a `complete` packet hide a downgraded non-key claim.
+function reviewDowngradeLines(validatedRun) {
+  const { ledger, artifacts, assuranceReviewIds } = validatedRun;
+  const assurance = new Set(assuranceReviewIds);
+  const reviews = artifacts
+    .map(({ value }) => value)
+    .filter(
+      (value) =>
+        value.kind === 'recon.review-result' && assurance.has(value.id),
+    );
+  const lines = [];
+  for (const claim of ledger.claims) {
+    if (claim.status === 'verified') continue;
+    const reasons = [];
+    for (const review of reviews) {
+      const disposition = (review.dispositions ?? []).find(
+        (item) => item.claimId === claim.id,
+      );
+      if (!disposition) continue;
+      if (!affirmingDispositions.has(disposition.disposition)) {
+        reasons.push(`${review.reviewKind} review: ${disposition.disposition}`);
+      }
+      if (unresolvedIssuesBlockClaim(review, claim.id)) {
+        for (const entry of review.unresolvedIssues) {
+          const classification = classifyUnresolvedIssue(entry);
+          if (
+            classification?.scope === 'claims' &&
+            !classification.claimIds.includes(claim.id)
+          ) {
+            continue;
+          }
+          const scope =
+            classification?.scope === 'claims' ? 'issue' : 'global issue';
+          reasons.push(`${review.reviewKind} ${scope}: ${issueText(entry)}`);
+        }
+      }
+    }
+    for (const review of reviews) {
+      for (const finding of review.coverageFindings ?? []) {
+        if (!finding.claimIds.includes(claim.id)) continue;
+        reasons.push(
+          `${finding.material ? 'material ' : ''}coverage finding ${finding.code}: ${finding.message}`,
+        );
+      }
+    }
+    if (reasons.length === 0) continue;
+    lines.push(
+      `**${escapeInline(claim.id)}** (${escapeInline(claim.status)}): ${escapeInline(claim.statement)} — ${reasons.map(escapeInline).join('; ')}`,
+    );
+  }
+  return lines;
+}
+
 export function renderPacketDocument(validatedRun) {
   const { manifest, ledger, routing } = assertValidatedRun(validatedRun);
   const evidenceById = new Map(
@@ -185,6 +256,10 @@ export function renderPacketDocument(validatedRun) {
           `**${escapeInline(claim.id)}** (${escapeInline(claim.status)}): ${escapeInline(claim.statement)}${claim.qualifications.length ? ` — ${escapeInline(claim.qualifications.join('; '))}` : ''}`,
       ),
     ),
+    '',
+    '## Review Downgrades',
+    '',
+    ...bulletLines(reviewDowngradeLines(validatedRun)),
     '',
     '## Unresolved Questions',
     '',

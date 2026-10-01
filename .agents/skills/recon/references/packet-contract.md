@@ -115,7 +115,7 @@ at least 1; and an integer `retryLimit` of at least 0. `retryLimit` counts
 pre-acceptance admission retries per lane: relaunches after the provider
 rejects a launch before any child is accepted. The controller makes at most one
 such retry per lane, whatever the limit, and never reruns an accepted lane. The
-preview's worst-case lane attempts stay lanes times (`retryLimit` + 1). Each closed
+preview's worst-case lane attempts are lanes times (min(`retryLimit`, 1) + 1). Each closed
 wave adds:
 
 - `classFloor`, from the same durable task-class order and not above
@@ -384,6 +384,10 @@ briefs, claim dispositions, and explicit affected-contradiction dispositions.
 Create immutable mode-specific review projections with
 `scripts/create-review-brief.mjs`. Verification briefs expose only claim
 statements, display excerpts, typed locators, and required source descriptors.
+Each verification-brief claim is an exact projection of a distinct ledger claim,
+each review disposition names a brief claim, and the brief's sources are the
+projected union of those claims' sources, so a brief cannot carry an injected
+claim or source.
 Adversarial briefs expose only scope, questions, and provisional statements.
 Coverage briefs expose only scope, questions, and claim ID/statement pairs.
 All reject dossier paths, compiler reasoning, synthesis prose, provenance

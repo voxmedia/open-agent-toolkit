@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict';
-import { rm } from 'node:fs/promises';
+import { rm, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { afterEach, test } from 'node:test';
 
 import { createReviewBrief } from '../scripts/create-review-brief.mjs';
+import { hashFile } from '../scripts/lib/canonical-json.mjs';
 import {
   briefSourcesBind,
   reviewBriefBindsClaim,
@@ -184,6 +186,59 @@ test('an edited second-source descriptor in a two-source brief fails binding', a
   semantic.permittedInputs = [{ ...briefRef }];
   await packet.rewriteArtifact('reviews/semantic.json', semantic);
   const validation = await validatePacket(packet.packetRoot);
+  assert.ok(
+    briefMismatches(validation).length > 0,
+    JSON.stringify(validation, null, 2),
+  );
+});
+
+function injectedClaim(sourceId, path) {
+  return {
+    id: 'claim-injected',
+    statement: 'An injected claim the ledger never made.',
+    evidence: [
+      {
+        id: 'evidence-injected',
+        sourceId,
+        displayExcerpt: 'fabricated gatherer reasoning',
+        locator: { kind: 'file', path, lineStart: 1, lineEnd: 1 },
+      },
+    ],
+  };
+}
+
+test('an extra undispositioned brief claim citing an existing source fails closed', async () => {
+  const packet = await twoSourcePacket({
+    mutateVerifyBrief: ({ brief }) => {
+      brief.claims.push(injectedClaim('source-1', brief.sources[0].path));
+    },
+  });
+  const validation = await validatePacket(packet.packetRoot);
+  assert.equal(validation.valid, false);
+  assert.ok(
+    briefMismatches(validation).length > 0,
+    JSON.stringify(validation, null, 2),
+  );
+});
+
+test('an extra brief claim citing an injected source fails closed', async () => {
+  const packet = await twoSourcePacket({
+    mutateVerifyBrief: async ({ brief, manifest, sourceRoot }) => {
+      const injectedPath = join(sourceRoot, 'injected.txt');
+      await writeFile(injectedPath, 'fabricated gatherer reasoning\n', 'utf8');
+      const injected = {
+        ...structuredClone(manifest.sources[0]),
+        id: 'source-3',
+        path: injectedPath,
+        contentHash: await hashFile(injectedPath),
+      };
+      manifest.sources.push(injected);
+      brief.sources.push(structuredClone(injected));
+      brief.claims.push(injectedClaim('source-3', injectedPath));
+    },
+  });
+  const validation = await validatePacket(packet.packetRoot);
+  assert.equal(validation.valid, false);
   assert.ok(
     briefMismatches(validation).length > 0,
     JSON.stringify(validation, null, 2),

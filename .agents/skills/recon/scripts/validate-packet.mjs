@@ -1363,6 +1363,41 @@ function validateReviewBindings(
       );
       continue;
     }
+    // A verification brief carries evidence and sources, so its claim set is
+    // bound in both directions: every disposition claim binds to a brief
+    // projection (below), and every brief claim is a distinct ledger claim
+    // whose exact projection binds. An injected brief claim, with or without
+    // an injected source, would otherwise widen the brief-level source union
+    // unchecked. A real ledger claim the reviewer left without a disposition
+    // still binds; reconciliation keeps it below verified as incomplete.
+    if (expectedMode === 'verify') {
+      const briefClaimIds = (
+        Array.isArray(brief.claims) ? brief.claims : []
+      ).map((claim) => claim?.id);
+      const unbound = briefClaimIds.some((claimId) => {
+        const priorClaim = priorClaims.get(claimId);
+        const ledgerClaim = priorClaim ?? claims.get(claimId);
+        return (
+          !ledgerClaim ||
+          !reviewBriefBindsClaim(
+            brief,
+            result.reviewKind,
+            ledgerClaim,
+            priorClaim ? priorLedger : ledger,
+            manifest,
+          )
+        );
+      });
+      if (unbound || new Set(briefClaimIds).size !== briefClaimIds.length) {
+        errors.push(
+          issue(
+            'REVIEW_BRIEF_MISMATCH',
+            `Review ${result.id} brief claims must each be an exact ledger claim projection`,
+            result.id,
+          ),
+        );
+      }
+    }
     const seen = new Set();
     for (const disposition of result.dispositions) {
       const currentClaim = claims.get(disposition.claimId);

@@ -73,14 +73,19 @@ function fileEvidence(id, sourceId, path, line, excerpt, provenance) {
  * Builds the two-source packet on disk and returns its parts.
  *
  * `semanticIssues` defaults to the one claim-scoped issue. Callers that
- * isolate a different rule may replace it.
+ * isolate a different rule may replace it. `withCoverageFinding: false` drops
+ * the material coverage finding (and its gap), so the run may publish as
+ * `complete`. `mutateVerifyBrief` receives the production verification brief
+ * before it is written, for adversarial probes.
  */
 export async function createTwoSourcePacket({
   semanticIssues = [structuredClone(twoSourceSemanticIssue)],
+  withCoverageFinding = true,
+  mutateVerifyBrief,
 } = {}) {
   const packet = await createPacketFixture({
     profile: 'standard',
-    status: 'partial',
+    status: withCoverageFinding ? 'partial' : 'complete',
   });
   const { packetRoot, manifest } = packet;
   const dossierRef = structuredClone(
@@ -177,9 +182,10 @@ export async function createTwoSourcePacket({
     inputArtifacts: [structuredClone(dossierRef)],
     synthesis: {
       answer: 'Both sources record evidence; one release link is unconfirmed.',
-      // Every claim is a key claim so the rendered packet shows each
-      // reconciled state, including the downgraded ones.
-      keyClaimIds: Object.values(twoSourceClaimIds),
+      keyClaimIds: [
+        twoSourceClaimIds.firstSource,
+        twoSourceClaimIds.secondSource,
+      ],
       caveats: ['The epsilon release question remains open.'],
       unresolvedQuestionIds: ['question-1'],
     },
@@ -211,6 +217,13 @@ export async function createTwoSourcePacket({
       manifest,
       ledger: priorLedger,
     });
+    if (mode === 'verify' && mutateVerifyBrief) {
+      await mutateVerifyBrief({
+        brief: briefs[mode],
+        manifest,
+        sourceRoot: packet.sourceRoot,
+      });
+    }
     const path = join(packetRoot, 'reviews', 'briefs', `${mode}.json`);
     await writeJson(path, briefs[mode]);
     briefRefs[mode] = {
@@ -251,7 +264,9 @@ export async function createTwoSourcePacket({
     ),
     adversarial: review('adversarial', 'adversary', () => 'unchallenged'),
     coverage: review('coverage', 'coverage', () => 'covered', {
-      coverageFindings: [structuredClone(twoSourceCoverageFinding)],
+      coverageFindings: withCoverageFinding
+        ? [structuredClone(twoSourceCoverageFinding)]
+        : [],
     }),
   };
   const reviewResults = [];
@@ -280,15 +295,17 @@ export async function createTwoSourcePacket({
   );
   await writeJson(packet.claimsPath, ledger);
 
-  manifest.gaps.push({
-    id: twoSourceCoverageFinding.gapId,
-    code: twoSourceCoverageFinding.code,
-    message: twoSourceCoverageFinding.message,
-    material: true,
-    sourceIds: [],
-    claimIds: [...twoSourceCoverageFinding.claimIds],
-    coverageFindingIds: [twoSourceCoverageFinding.id],
-  });
+  if (withCoverageFinding) {
+    manifest.gaps.push({
+      id: twoSourceCoverageFinding.gapId,
+      code: twoSourceCoverageFinding.code,
+      message: twoSourceCoverageFinding.message,
+      material: true,
+      sourceIds: [],
+      claimIds: [...twoSourceCoverageFinding.claimIds],
+      coverageFindingIds: [twoSourceCoverageFinding.id],
+    });
+  }
   for (const reference of manifest.artifacts) {
     reference.digest = await hashFile(join(packetRoot, reference.path));
   }
