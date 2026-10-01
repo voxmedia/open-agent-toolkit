@@ -96,7 +96,7 @@ oat_post_implement_sequence:
   source: configured
   final_phase: p06
   pre_approval: [summary, document, pr]
-  pre_approval_completed: [summary]
+  pre_approval_completed: [summary, document]
   approval: pending
   approval_source: null
   post_approval: []
@@ -116,8 +116,8 @@ oat_implement_exit_gate:
   reviewed_head: 845ca17e3c65e7ee7161b9149196e0909397ecdd
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v2:003e3c66eea3b48335fe3d8b0e956a08517ea38a8b15fa6063c79f5a265f79bc'
-  freshness_head: 7b6fb8214
-  freshness_fingerprint: 'sha256:effective-delta-v2:003e3c66eea3b48335fe3d8b0e956a08517ea38a8b15fa6063c79f5a265f79bc'
+  freshness_head: 30cf8ff29
+  freshness_fingerprint: 'sha256:effective-delta-v2:f3c61805fbb1c651186816c50f02e64aee221c8f4facf5215d76126a05e5c203'
   launch_state: result_persisted
   launch_attempt_id: 'bw3-exit-gate-g1-1-20261001T202100Z'
   launch_started_at: '2026-10-01T20:21:00Z'
@@ -137,7 +137,7 @@ oat_implement_exit_gate:
   receive_eligible: true
   receive_completed: true
   failure: null
-  updated_at: '2026-10-01T20:49:08Z'
+  updated_at: '2026-10-01T20:55:51Z'
 oat_generated: false
 oat_project_recap:
   decision: generate
