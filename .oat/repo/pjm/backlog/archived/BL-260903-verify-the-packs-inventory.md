@@ -1,7 +1,7 @@
 ---
 id: BL-260903-verify-the-packs-inventory
 title: Verify the packs:inventory path-redaction claim in troubleshooting docs
-status: open
+status: closed
 priority: low
 scope: task
 scope_estimate: XS
@@ -11,7 +11,7 @@ labels:
   - verification
 assignee: null
 created: 2026-09-03T17:54:25.647Z
-updated: 2026-09-03T17:54:25.647Z
+updated: '2026-10-01T19:47:57Z'
 associated_issues: []
 external_plans: []
 ---

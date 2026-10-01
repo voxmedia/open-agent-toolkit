@@ -1930,7 +1930,7 @@
 - `.agents/skills/oat-project-implement/tests/` for `Step 7: Artifact Updates`
 - and `bookkeeping`)
 - - Modify: `.oat/repo/pjm/backlog/items/BL-260711-skip-re-review-for-bookkeeping.md`
-- and `.oat/repo/pjm/backlog/items/BL-260829-order-phase-bookkeeping-before.md`
+- and `.oat/repo/pjm/backlog/archived/BL-260829-order-phase-bookkeeping-before.md`
 - (notes)
 - - Modify: version pins
 - **Step 1: Write the contract test (RED)**

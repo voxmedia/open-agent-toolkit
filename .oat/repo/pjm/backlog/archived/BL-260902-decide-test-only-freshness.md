@@ -1,7 +1,7 @@
 ---
 id: BL-260902-decide-test-only-freshness
 title: Decide test-only freshness exception for the implement exit gate
-status: open
+status: closed
 priority: medium
 scope: idea
 scope_estimate: S
@@ -11,7 +11,7 @@ labels:
   - policy
 assignee: null
 created: 2026-09-02T23:48:33.763Z
-updated: 2026-09-02T23:49:54Z
+updated: '2026-10-01T19:47:55Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/237

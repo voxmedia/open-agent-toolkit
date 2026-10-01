@@ -1,7 +1,7 @@
 ---
 id: BL-261001-recover-recon-lanes-after
 title: Document the Codex agent-limit gotcha in recon and allow one bounded retry
-status: open
+status: closed
 priority: high
 scope: feature
 scope_estimate: S
@@ -11,7 +11,7 @@ labels:
   - codex
 assignee: null
 created: 2026-10-01T04:38:13.286Z
-updated: 2026-10-01T04:38:13.286Z
+updated: '2026-10-01T19:47:54Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/333

@@ -2,7 +2,7 @@
 id: BL-261001-recompute-oat-project-next-s
 title: Recompute oat-project-next's exit-gate fingerprint with the
   effective-delta-v2 exclusions
-status: open
+status: closed
 priority: high
 scope: task
 scope_estimate: XS
@@ -12,7 +12,7 @@ labels:
   - exit-gate
 assignee: null
 created: 2026-10-01T05:38:45.534Z
-updated: 2026-10-01T05:38:45.534Z
+updated: '2026-10-01T19:47:54Z'
 associated_issues: []
 external_plans: []
 ---

@@ -1,7 +1,7 @@
 ---
 id: BL-260927-expose-a-scoped-template
 title: Expose a scoped template resolver command and route lifecycle skills through it
-status: open
+status: closed
 priority: high
 scope: feature
 scope_estimate: M
@@ -12,7 +12,7 @@ labels:
   - user-scope
 assignee: null
 created: 2026-09-27T03:35:36.485Z
-updated: 2026-10-01T04:36:56.000Z
+updated: '2026-10-01T19:47:53Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/296

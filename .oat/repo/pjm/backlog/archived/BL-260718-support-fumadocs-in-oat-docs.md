@@ -1,7 +1,7 @@
 ---
 id: BL-260718-support-fumadocs-in-oat-docs
 title: Teach oat docs nav sync to write Fumadocs navigation from index.md Contents maps
-status: open
+status: closed
 priority: high
 scope: feature
 scope_estimate: M
@@ -10,7 +10,7 @@ labels:
   - fumadocs
 assignee: null
 created: 2026-07-18T18:04:19.719Z
-updated: 2026-10-01T04:36:56.000Z
+updated: '2026-10-01T19:47:53Z'
 associated_issues: []
 external_plans: []
 ---

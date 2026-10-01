@@ -2,7 +2,7 @@
 id: BL-260928-keep-instructions-sync-force
 title: Keep instructions sync --force from overwriting the only CLAUDE.md behind
   an AGENTS.md link
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: S
@@ -13,7 +13,7 @@ labels:
   - safety
 assignee: null
 created: 2026-09-28T10:16:23.132Z
-updated: 2026-09-28T10:16:23.132Z
+updated: '2026-10-01T19:47:55Z'
 associated_issues: []
 external_plans: []
 ---

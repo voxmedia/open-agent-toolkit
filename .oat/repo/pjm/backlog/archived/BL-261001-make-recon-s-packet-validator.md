@@ -1,7 +1,7 @@
 ---
 id: BL-261001-make-recon-s-packet-validator
 title: Make recon's packet validator accept what its own helpers produce
-status: open
+status: closed
 priority: high
 scope: feature
 scope_estimate: M
@@ -11,7 +11,7 @@ labels:
   - correctness
 assignee: null
 created: 2026-10-01T04:38:13.057Z
-updated: 2026-10-01T04:38:13.057Z
+updated: '2026-10-01T19:47:54Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/333
