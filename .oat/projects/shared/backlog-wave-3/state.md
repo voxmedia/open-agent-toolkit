@@ -92,9 +92,9 @@ oat_project_created: '2026-10-01T05:39:05.816Z' # ISO 8601 UTC timestamp — set
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
 oat_project_state_updated: '2026-10-01T19:53:34Z'
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: 'sha256:76eaea5d632f8612107755e2770d20d1331e61ca9d7d4859dfd20a64932869f2'
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
@@ -116,17 +116,17 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: '.oat/projects/shared/backlog-wave-3/reviews/final-review-2026-10-01T203319Z.md'
   handoff: 'Gate passed at the high threshold, but the final review still contains non-blocking findings (medium=2). Run oat-project-review-receive for .oat/projects/shared/backlog-wave-3/reviews/final-review-2026-10-01T203319Z.md to disposition them before marking the final review row passed.'
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation: 'run=99fcf137-4610-4d1c-985d-71c4e7bc9dce; handoff=receive; source=reviews/final-review-2026-10-01T203319Z.md; scope=final; type=code'
   receive_source_artifact: '.oat/projects/shared/backlog-wave-3/reviews/final-review-2026-10-01T203319Z.md'
   receive_archived_artifact: '.oat/projects/shared/backlog-wave-3/reviews/archived/final-review-2026-10-01T203319Z.md'
   receive_event_identity: 'final | code | final-review-2026-10-01T203319Z.md'
   receive_pre_head: 8d2cdc95618e60974b21743bd972b519a36110f2
-  receive_commit: null
+  receive_commit: a3b590886
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: '2026-10-01T20:42:26Z'
+  updated_at: '2026-10-01T20:43:01Z'
 oat_generated: false
 oat_project_recap:
   decision: generate
