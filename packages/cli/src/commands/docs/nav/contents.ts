@@ -62,7 +62,7 @@ function toPosixPath(path: string): string {
   return path.replaceAll('\\', '/');
 }
 
-async function resolveEntryTarget(
+export async function resolveEntryTarget(
   docsRoot: string,
   directoryPath: string,
   dirRelativePath: string,
