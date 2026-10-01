@@ -92,6 +92,10 @@ target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:1,low:
 
 bw3-p04-outcome: phase p04 passed (root review 0 Critical/High; Codex gate ok); fix-loop count 2 (p04-t05 review fixes, p04-t06 gate fixes).
 
+### 2026-10-01 · structural · oat-project-review-provide · p05
+
+Gate review 669f8362-d6af-46ea-847b-c0a6baa86cbe reconciled three read-only consequential recon lanes; artifact .oat/projects/shared/backlog-wave-3/reviews/p05-review-2026-10-01T193643Z.md; findings 0 critical, 0 high, 1 medium, 0 low.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
