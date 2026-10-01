@@ -3,24 +3,24 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
-oat_current_task_id: p02-t02
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
 # Implementation: markdown-docs-bootstrap
 
-Phase p01 is complete after independent review: 3/9 tasks completed. Fresh Markdown initialization is also implemented. Next task p02-t02; the overall implementation remains in progress.
+Phase p01 is complete after independent review: 4/9 tasks completed. Fresh Markdown initialization is also implemented. Both p02 tasks are implemented, with phase verification/review pending. Next planned task p03-t01; the overall implementation remains in progress.
 
 ## Progress Overview
 
 | Phase | Status      | Tasks | Completed |
 | ----- | ----------- | ----- | --------- |
 | p01   | complete    | 2     | 2/2       |
-| p02   | in_progress | 2     | 1/2       |
+| p02   | in_progress | 2     | 2/2       |
 | p03   | pending     | 3     | 0/3       |
 | p04   | pending     | 2     | 0/2       |
 
-**Total:** 3/9 tasks completed
+**Total:** 4/9 tasks completed
 
 ## Phase 1: Shared content and guidance contracts
 
@@ -53,10 +53,10 @@ Phase p01 is complete after independent review: 3/9 tasks completed. Fresh Markd
 
 ### Task p02-t02: Implement additive adoption and nonmutating dry-run
 
-**Status:** pending
-**Commit:** -
-**Outcome:** Not started
-**Verification:** Not run
+**Status:** completed
+**Commit:** b224018c8d8cafe23827286352ed33db008d47ad
+**Outcome:** Plan-permitted internal markdown.ts helper owns read-only planning, literal/canonical target and config validation, actual Contents mapping with existing exclusion matcher, exclusive missing-baseline writes, preserved/malformed-content reporting and partial-write evidence. Explicit --adopt preserves content/local instructions; repeats converge. Command-local --dry-run exposes planned files/config plus shared read-only guidance preview; no scaffold/config/upsert mutations.
+**Verification:** pnpm build exit 0 (CLI executed, 4 unchanged dependency cache replays); declared focused 4-file suite 122 tests, CLI type-check/lint, exact five-file formatting and diff checks each exit 0. Combined 10-file phase suite 194 tests passed before final lint-only edits; final focused suite and 13 real built-CLI controls repeated after edits. Dry-run/preservation guard neutralization causes intended byte/tree failures; exact restored sources pass. Pre-commit prevention fixed actual Commander --dry-run wiring missed by old harness and two lint issues; recovery 0/10.
 
 ## Phase 3: Bootstrap workflow and docs consumers
 
@@ -654,3 +654,21 @@ Built public CLI controls use `node packages/cli/dist/index.js --cwd <fixture> -
 | Empty repo with package.json, same command plus `--site-name 'Operators\' Handbook: "Service"'` passed as one argument via subprocess argv | not supported at base                   | exit 0/status ok, index/contributing/config/guidance created | Package SHA unchanged; valid YAML metadata                    |
 
 Baseline hashes: AGENTS `c654f3d07100dd9dbafed9cd037cd3f4b586f3932a9b2e3529c35173aeeedde3`; index `8baf827386dcb539a2e985748bba2d807d36ff93085db9938adcc1d013854f16`; deployment `bbb6b1a4eda54f3eba0f368ef6aca5385676908efb3fd8b8e4477617902857a7`. Exact argv/results/snapshots originally recorded in temp `oat-p02-evidence-33rg9wns/{before.json,t01-after.json}`; task logs `/tmp/oat-p02-t01-{tests,lint,types,build}.log`. Public-boundary integration tests preserve the same unsafe/config/framework acceptance contracts.
+
+### p02-t02 public controls and task acceptance
+
+Root verified clean worktree, append-only task commit and exact declared/helper boundaries. The helper is explicitly permitted by p02-t02; no scope widening. Final phase composition and independent review remain pending. Exact fixtures, executable public probes and neutralization steps are preserved in `reviews/p02-reproduction-controls.md`; run destructive neutralization only in an isolated checkout with no concurrent writer.
+
+| Built CLI control                        | Outcome        | Bytes/state                                           |
+| ---------------------------------------- | -------------- | ----------------------------------------------------- |
+| Populated tree without --adopt           | error/exit 1   | Tree unchanged                                        |
+| Adoption preview                         | ok/exit 0      | Planned baseline/config/guidance only; unchanged tree |
+| Explicit adoption                        | ok/exit 0      | Existing page/index/local instructions preserved      |
+| Repeat adoption + converged preview      | ok/exit 0      | No change, no duplicate guidance                      |
+| Missing root index + excludes            | ok/exit 0      | Maps real sibling pages/child indexes only            |
+| Manual-required/blocked guidance dry-run | partial/exit 1 | Planned scaffold, unchanged tree                      |
+| Fresh preview + accepted fresh setup     | ok/exit 0      | Preview unchanged; real run creates expected baseline |
+| Config permission failure                | partial/exit 1 | Actual baseline paths reported; guidance not written  |
+| Safe retry after config failure          | ok/exit 0      | Preserved baseline, config/guidance converged         |
+
+Latest thirteen-case proof results originally at temp `oat-p02-adoption-proof-qdfkvrgs/results.json`; task logs `/tmp/oat-p02-t02-{build,tests,types,lint}.log` and `/tmp/oat-p02-phase-tests.log`. Neutralization: dry-run write guard disabled → two actual tree-mutation test failures; existing-content skip/exclusive-open guards disabled → two authored-byte mutation failures. Mutated Vitest exits 1; restored exits 0 and original source hashes match. No recovery attempts/events, no optional nested dispatch.
