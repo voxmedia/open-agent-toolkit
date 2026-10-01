@@ -200,7 +200,12 @@ function indexAdvice(content: string): string[] {
 
 function link(label: string, path: string): string {
   const safeLabel = label.replace(/[\r\n]/g, ' ').replace(/([[\]\\])/g, '\\$1');
-  const href = encodeURI(path).replaceAll('(', '%28').replaceAll(')', '%29');
+  const href = path
+    .split('/')
+    .map((segment) =>
+      encodeURIComponent(segment).replaceAll('(', '%28').replaceAll(')', '%29'),
+    )
+    .join('/');
   return `- [${safeLabel}](${href})`;
 }
 

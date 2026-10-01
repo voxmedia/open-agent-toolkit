@@ -11,7 +11,7 @@ import {
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 import { createLoggerCapture } from '@commands/__tests__/helpers';
@@ -848,6 +848,63 @@ describe('Markdown docs init public boundary', () => {
     expect(config.worktrees.root).toBe('custom-worktrees');
     expect(config.documentation.excludes).toEqual(['secret.md', 'drafts/']);
     expect(config.documentation.requireForProjectCompletion).toBe(true);
+  });
+
+  it('adoption links resolve to authored filenames containing URI delimiters and parentheses', async () => {
+    const root = await temporaryRepo();
+    const originalFiles = new Map([
+      [
+        'release#owner.md',
+        '# Release ownership\n\nThe runtime team approves each release.\n',
+      ],
+      [
+        'faq?audience.md',
+        '# Audience FAQ\n\nOperators and reviewers share these answers.\n',
+      ],
+      [
+        'deploy(operator).md',
+        '# Operator deployment\n\nUse the reviewed deployment checklist.\n',
+      ],
+      [
+        'operations#on-call?(primary)/index.md',
+        '# Primary on-call operations\n\nEscalation ownership and handoff context.\n',
+      ],
+      [
+        'ordinary.md',
+        '# Ordinary page\n\nThis normal relative link must remain usable.\n',
+      ],
+    ]);
+    for (const [path, content] of originalFiles) {
+      await mkdir(dirname(join(root, 'docs', path)), { recursive: true });
+      await writeFile(join(root, 'docs', path), content);
+    }
+    const result = await runMarkdown(root, ['--adopt']);
+    expect(result.exit).toBe(0);
+    const indexPath = join(root, 'docs', 'index.md');
+    const index = await readFile(indexPath, 'utf8');
+    const destinations = [...index.matchAll(/^- \[.*\]\(([^)]*)\)$/gm)].map(
+      (match) => match[1]!,
+    );
+    const actualPaths: string[] = [];
+    for (const destination of destinations) {
+      const uri = new URL(destination, pathToFileURL(indexPath));
+      expect(uri.search, destination).toBe('');
+      expect(uri.hash, destination).toBe('');
+      const actualPath = fileURLToPath(uri);
+      await readFile(actualPath);
+      actualPaths.push(actualPath);
+    }
+    expect(actualPaths.sort()).toEqual(
+      [...originalFiles.keys(), 'contributing.md']
+        .map((path) => join(root, 'docs', path))
+        .sort(),
+    );
+    expect(destinations).toContain('ordinary.md');
+    expect(destinations).toContain(
+      'operations%23on-call%3F%28primary%29/index.md',
+    );
+    for (const [path, content] of originalFiles)
+      expect(await readFile(join(root, 'docs', path), 'utf8')).toBe(content);
   });
 
   it('adopts an existing empty directory and refuses unusable baseline entrypoints before writes', async () => {
