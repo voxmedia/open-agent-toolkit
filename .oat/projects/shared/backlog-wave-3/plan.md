@@ -1184,18 +1184,19 @@ breaking changes must be named in the title:
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | --------------- | ---------- | -------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending         | -          | -        | -             | -          | -           |
-| p02    | code     | pending         | -          | -        | -             | -          | -           |
-| p03    | code     | pending         | -          | -        | -             | -          | -           |
-| p04    | code     | pending         | -          | -        | -             | -          | -           |
-| p05    | code     | pending         | -          | -        | -             | -          | -           |
-| p06    | code     | pending         | -          | -        | -             | -          | -           |
-| final  | code     | pending         | -          | -        | -             | -          | -           |
-| spec   | artifact | pending         | -          | -        | -             | -          | -           |
-| design | artifact | pending         | -          | -        | -             | -          | -           |
-| plan   | artifact | fixes_completed | 2026-10-01 | -        | -             | auto       | -           |
+| Scope  | Type     | Status          | Date       | Artifact                                           | Reviewed Head | Invocation | Gate Target |
+| ------ | -------- | --------------- | ---------- | -------------------------------------------------- | ------------- | ---------- | ----------- |
+| p01    | code     | pending         | -          | -                                                  | -             | -          | -           |
+| p02    | code     | pending         | -          | -                                                  | -             | -          | -           |
+| p03    | code     | pending         | -          | -                                                  | -             | -          | -           |
+| p04    | code     | pending         | -          | -                                                  | -             | -          | -           |
+| p05    | code     | pending         | -          | -                                                  | -             | -          | -           |
+| p06    | code     | pending         | -          | -                                                  | -             | -          | -           |
+| final  | code     | pending         | -          | -                                                  | -             | -          | -           |
+| spec   | artifact | pending         | -          | -                                                  | -             | -          | -           |
+| design | artifact | pending         | -          | -                                                  | -             | -          | -           |
+| plan   | artifact | fixes_completed | 2026-10-01 | -                                                  | -             | auto       | -           |
+| plan   | artifact | received        | 2026-10-01 | reviews/artifact-plan-review-2026-10-01T061917Z.md | -             | -          | -           |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
