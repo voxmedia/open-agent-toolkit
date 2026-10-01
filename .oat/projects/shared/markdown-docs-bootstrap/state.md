@@ -112,8 +112,10 @@ oat_implement_exit_gate:
     source_filename: final-review-2026-10-01T160046Z.md
   receive_pre_head: cec06ae01ae9ea44d3a96f76e7d3002511b424ac
   receive_commit: 3fbac190ae754bb3c60642b11cf1540564cafb88
-  failure: null
-  status: allowed
+  failure:
+    reason: substantive_rendering_sweep_fix
+    commit: fbeebbdde26ffb3b4b885118d24f3eda2e1a4359
+  status: stale
   resolution: configured
   resolved_command: oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."
   resolved_description: Semantic cross-family final implementation review before oat-project-implement exits.
@@ -130,8 +132,9 @@ oat_implement_exit_gate:
   receive_state: completed
   receive_eligible: true
   receive_completed: true
-  updated_at: '2026-10-01T16:20:49Z'
-  config_fingerprint: sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324oat_project_recap:
+  updated_at: '2026-10-01T16:21:35Z'
+  config_fingerprint: sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324
+oat_project_recap:
   decision: skip
   source: interactive
   decided_at: '2026-10-01T16:19:52.974Z'
