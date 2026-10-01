@@ -4,6 +4,12 @@
 
 ## Curated Overview
 
+- 2026-10-01: after Wave 3's p03 hit the review cap and an operator-requested
+  complexity review ended the loop, the operator asked that every exhausted
+  review or gate budget automatically run a complexity review and present it
+  with the gate's reasons. `BL-261001-run-a-complexity-review-when` (high) is
+  the first slice; `BL-260818-distinguish-operator-directed` gains the
+  complexity-review input and a fourth disposition, **simplify**.
 - 2026-09-30: next-wave priorities. `BL-260927-expose-a-scoped-template` is
   raised to high and leads the wave (user-scope installs have no repository
   `.oat/templates/`, so lifecycle skills that copy templates fail).
@@ -345,6 +351,7 @@
 | BL-261001-make-recon-s-packet-validator  | Make recon's packet validator accept what its own helpers produce                                     | open   | high     | feature    | M        |
 | BL-260829-order-phase-bookkeeping-before | Order phase bookkeeping before per-phase review dispatch                                              | open   | high     | task       | M        |
 | BL-261001-recompute-oat-project-next-s   | Recompute oat-project-next's exit-gate fingerprint with the effective-delta-v2 exclusions             | open   | high     | task       | XS       |
+| BL-261001-run-a-complexity-review-when   | Run a complexity review when a review or gate budget is exhausted                                     | open   | high     | feature    | M        |
 | BL-260724-support-provider-directory     | Support provider directory symlinks as full collection sync                                           | open   | high     | feature    | M        |
 | BL-260718-support-fumadocs-in-oat-docs   | Teach oat docs nav sync to write Fumadocs navigation from index.md Contents maps                      | open   | high     | feature    | M        |
 | BL-260820-track-pr-closeout-evidence     | Track PR-closeout evidence freshness against the current head                                         | open   | high     | feature    | L        |
