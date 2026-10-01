@@ -116,6 +116,10 @@ bw3-p06-outcome: phase p06 passed (root review findings fixed by root; Codex gat
 
 Gate review 99fcf137-4610-4d1c-985d-71c4e7bc9dce reconciled three completed read-only recon lanes in two task-class waves; artifact .oat/projects/shared/backlog-wave-3/reviews/final-review-2026-10-01T203319Z.md; findings 0 critical, 0 high, 2 medium, 0 low.
 
+### 2026-10-01 · structural · oat gate review · final
+
+target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:2,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-3/reviews/final-review-2026-10-01T203319Z.md run=99fcf137-4610-4d1c-985d-71c4e7bc9dce
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
