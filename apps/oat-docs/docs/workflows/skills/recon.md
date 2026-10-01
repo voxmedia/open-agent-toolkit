@@ -275,6 +275,12 @@ them. Adversarial reviewers receive the declared scope, questions, and
 provisional statements. Neither pass receives gatherer reasoning, synthesis
 prose, dossier paths, or earlier review conclusions.
 
+Review briefs come only from the production brief generator. The packet
+validator rebuilds every brief from the prior claim ledger and manifest with
+that same generator and rejects any difference with `REVIEW_BRIEF_MISMATCH`, so
+a brief carrying an injected claim, note, or source fails publication. A
+review's dispositions must also be unique members of its brief's claims.
+
 Each lane receives one explicit authority envelope and one unique output path.
 Its enforcement is recorded as:
 
@@ -298,7 +304,11 @@ scoped to it or global to its review, a coverage finding that names it, or a
 non-affirming disposition) is listed under Review Downgrades with the review's
 own text, even when it is not a key claim, so a `complete` packet cannot hide a
 downgraded claim. A claim that a required review left without a disposition stays
-`unresolved` and is listed there as not reviewed. A run may be partial even when it achieved the requested
+`unresolved` and is listed there as not reviewed. A review's
+`unresolvedIssues` entry may name the claim IDs it affects or apply to the
+whole review; a legacy plain-string entry is read as review-wide. A material
+coverage gap does not fail publication by itself: the claims it affects stay
+below `verified` and the run publishes as an honest `partial`. A run may be partial even when it achieved the requested
 profile if a material evidence gap remains. The achieved profile is derived from the
 complete typed artifacts in the packet; each required pass without a complete
 result needs a material `PASS_FAILED` or `PASS_OMITTED` gap. Each approved lane

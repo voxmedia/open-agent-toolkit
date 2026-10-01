@@ -151,6 +151,13 @@ committed `meta.json` files and reports any page no `## Contents` map lists:
 oat docs nav sync --target-dir apps/my-docs
 ```
 
+Generated Fumadocs `meta.json` is strict: a page no `## Contents` map lists
+stays out of the sidebar. The `prebuild` script that `oat docs init` scaffolds
+for Fumadocs does not run the read-only check. To make builds fail on stale
+navigation or an unlisted page, as `apps/oat-docs` does, append
+`&& oat docs nav sync --check` to it; the script runs from the app directory,
+which `--target-dir` defaults to.
+
 **Fumadocs** apps also have an app-root docs index manifest, generated from
 the Markdown file tree automatically via `predev`/`prebuild` hooks. You can
 also run it manually:

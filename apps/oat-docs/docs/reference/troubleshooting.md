@@ -97,6 +97,27 @@ Use [Instruction Sync](../provider-sync/instruction-sync.md) for the full strate
 - Per-pack install commands no longer accept the previously inert `--force`
   option.
 
+## A skill fails with `unknown command 'template'` or `'closeout-check'`
+
+Lifecycle skills from OAT 0.3.11 copy their templates with
+`oat template resolve` and check closeout with `oat project closeout-check`.
+An older `oat` on `PATH` rejects both:
+
+```text
+error: unknown command 'template'
+error: unknown command 'closeout-check'
+```
+
+`oat-project-complete` treats a failed closeout check as an incomplete
+closeout, so with an older CLI it stops and routes back to
+`oat-project-implement` even when every closeout step is done. This happens
+when the skills a host loads are newer than the CLI, for example repository
+skills from a newer checkout run against an older global CLI.
+
+Check `oat --version`. Install `@open-agent-toolkit/cli` 0.3.11 or later, then
+refresh the installed skills to that CLI's bundle with
+`oat tools update --all`.
+
 ## `sync` reports an unsafe provider parent
 
 Errors containing `Unsafe provider parent`, `symbolic links are not allowed in

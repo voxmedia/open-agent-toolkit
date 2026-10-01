@@ -81,7 +81,7 @@ After implementation closeout finishes:
    - GitHub PR feedback delegates to `oat-project-review-receive-remote`
    - Review artifacts delegate to `oat-project-review-receive`
    - After revision tasks complete, state returns to `pr_open`
-5. **Complete** (`oat-project-complete`) — accepts any phase status (`pr_open`, `complete`, `in_progress`), auto-refreshes `summary.md` before closeout when needed, and archives when selected by the workflow preference or completion prompt
+5. **Complete** (`oat-project-complete`) — accepts any phase status (`pr_open`, `complete`, `in_progress`), auto-refreshes `summary.md` before closeout when needed, and archives when selected by the workflow preference or completion prompt. Before any completion write it runs the read-only `oat project closeout-check`: a configured, autonomous, or lite closeout whose `oat_post_implement_sequence` snapshot is missing, malformed, or incomplete stops and routes back to `oat-project-implement`, and `oat project complete-state` refuses the same state. There is no override; see the [CLI reference](../../reference/cli-reference.md).
 
 ### Project-recap gate (non-lite)
 
