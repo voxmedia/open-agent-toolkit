@@ -3062,3 +3062,60 @@ Root consumed exactly one **Reconnaissance: not-attempted** confirmation before 
 Findings: 0 Critical, 0 High, 0 Medium, 0 Low. Root accepts both remote source corrections with independently executed 165 tests and 24 real CLI controls, preserved required root containment, retained causal contrasts and all eight current gate receipts. Earlier clean integration/full-project coverage is inherited explicitly; no repeated full-suite or live-provider claim is made. Source/test hashes remain those accepted by the current verification. Deferred Medium/Low debt is zero. No new task, deferral, dismissal or artifact drift was found. The distinct remote PR event advances to passed only because both fixes now have this independent passing re-review; GitHub threads are not marked resolved and no replies are posted.
 
 This is the first review of the newly accepted remote source delta, not an additional failed automatic fix cycle; prior review history/counters remain unchanged. All 13 tasks complete, current task null; retained gate is stale and must be refreshed before approval.
+
+### Retained gate replacement after main integration and remote fixes
+
+The prior generation is preserved below exactly as routing metadata before replacement. Its earlier allowed outcome is historical; its effective source delta changed through the integrated base and two remote fixes. Current source has all eight passing gates and the received clean final review. A fresh configured generation is required; completed pre-approval snapshot, recap skip and review/recovery counters remain unchanged.
+
+```json
+{
+  "disposition": "passed",
+  "launch_attempt_id": "markdown-implement-exit-2026-10-01T163427Z",
+  "launch_started_at": "2026-10-01T16:34:27Z",
+  "launch_result_receipt": ".oat/projects/shared/markdown-docs-bootstrap/reviews/markdown-implement-exit-2026-10-01T163427Z.json",
+  "gate_run_marker": "/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/e49bf748-36dc-44ff-9fa6-1e7105fc21b3.json",
+  "gate_run_id": "e49bf748-36dc-44ff-9fa6-1e7105fc21b3",
+  "envelope_status": "ok",
+  "artifact": ".oat/projects/shared/markdown-docs-bootstrap/reviews/final-review-2026-10-01T163602Z.md",
+  "handoff": "Gate passed at the high threshold, but the final review still contains non-blocking findings (low=1). Run oat-project-review-receive for .oat/projects/shared/markdown-docs-bootstrap/reviews/final-review-2026-10-01T163602Z.md to disposition them before marking the final review row passed.",
+  "receive_correlation": {
+    "run_id": "e49bf748-36dc-44ff-9fa6-1e7105fc21b3",
+    "handoff": "Gate passed at the high threshold, but the final review still contains non-blocking findings (low=1). Run oat-project-review-receive for .oat/projects/shared/markdown-docs-bootstrap/reviews/final-review-2026-10-01T163602Z.md to disposition them before marking the final review row passed.",
+    "source_artifact": ".oat/projects/shared/markdown-docs-bootstrap/reviews/final-review-2026-10-01T163602Z.md",
+    "scope": "final",
+    "type": "code",
+    "source_filename": "final-review-2026-10-01T163602Z.md"
+  },
+  "receive_source_artifact": ".oat/projects/shared/markdown-docs-bootstrap/reviews/final-review-2026-10-01T163602Z.md",
+  "receive_archived_artifact": ".oat/projects/shared/markdown-docs-bootstrap/reviews/archived/final-review-2026-10-01T163602Z.md",
+  "receive_event_identity": {
+    "scope": "final",
+    "type": "code",
+    "source_filename": "final-review-2026-10-01T163602Z.md"
+  },
+  "receive_pre_head": "f45ae26d7ef579c7dd01df768d6b6c8f0ee7b584",
+  "receive_commit": "a0cd25b4ed544f214c0fb9f69a399d71b6959df3",
+  "failure": "Integration base update required for seven PR conflicts; refreshed final verification, review and retained gate required before HiLL.",
+  "status": "stale",
+  "resolution": "configured",
+  "resolved_command": "oat --json gate review --project \"$PROJECT_PATH\" --review-type code --review-scope final --exit-nonzero-on important \"Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings.\"",
+  "resolved_description": "Semantic cross-family final implementation review before oat-project-implement exits.",
+  "project_override": null,
+  "on_failure": "block",
+  "max_attempts": 2,
+  "attempts_completed": 0,
+  "reviewed_head": "2f6ba887966806222f3a585e27f2e55885eb91c1",
+  "implementation_base_ref": "origin/main",
+  "implementation_fingerprint": "sha256:effective-delta-v2:2484819cabd75262a0bf304bd25ec8cc802a80871753e664759c42995f3fd37c",
+  "freshness_head": "4eb2de8e29edb056c033a483f45202d03a6bc7f4",
+  "freshness_fingerprint": "sha256:effective-delta-v2:2484819cabd75262a0bf304bd25ec8cc802a80871753e664759c42995f3fd37c",
+  "launch_state": "result_persisted",
+  "receive_state": "completed",
+  "receive_eligible": true,
+  "receive_completed": true,
+  "updated_at": "2026-10-01T17:25:07Z",
+  "config_fingerprint": "sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324"
+}
+```
+
+Fresh retained gate launch intent: `markdown-implement-exit-remote-2026-10-01T185139Z`; stdout receipt `.oat/projects/shared/markdown-docs-bootstrap/reviews/gate-receipts/remote-2026-10-01T185139Z.json`. The current resolver declaration is persisted verbatim; normal HOME, PATH runtime and command argv are unchanged. No child is accepted until its unique current run marker is corroborated.

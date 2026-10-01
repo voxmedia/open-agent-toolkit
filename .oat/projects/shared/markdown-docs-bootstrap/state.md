@@ -88,32 +88,23 @@ oat_project_completed: null # ISO 8601 UTC timestamp — set when project is com
 oat_project_state_updated: '2026-10-01T18:51:09Z'
 oat_generated: false
 oat_implement_exit_gate:
-  disposition: passed
-  launch_attempt_id: markdown-implement-exit-2026-10-01T163427Z
-  launch_started_at: '2026-10-01T16:34:27Z'
-  launch_result_receipt: .oat/projects/shared/markdown-docs-bootstrap/reviews/markdown-implement-exit-2026-10-01T163427Z.json
-  gate_run_marker: /var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/e49bf748-36dc-44ff-9fa6-1e7105fc21b3.json
-  gate_run_id: e49bf748-36dc-44ff-9fa6-1e7105fc21b3
-  envelope_status: ok
-  artifact: .oat/projects/shared/markdown-docs-bootstrap/reviews/final-review-2026-10-01T163602Z.md
-  handoff: Gate passed at the high threshold, but the final review still contains non-blocking findings (low=1). Run oat-project-review-receive for .oat/projects/shared/markdown-docs-bootstrap/reviews/final-review-2026-10-01T163602Z.md to disposition them before marking the final review row passed.
-  receive_correlation:
-    run_id: e49bf748-36dc-44ff-9fa6-1e7105fc21b3
-    handoff: Gate passed at the high threshold, but the final review still contains non-blocking findings (low=1). Run oat-project-review-receive for .oat/projects/shared/markdown-docs-bootstrap/reviews/final-review-2026-10-01T163602Z.md to disposition them before marking the final review row passed.
-    source_artifact: .oat/projects/shared/markdown-docs-bootstrap/reviews/final-review-2026-10-01T163602Z.md
-    scope: final
-    type: code
-    source_filename: final-review-2026-10-01T163602Z.md
-  receive_source_artifact: .oat/projects/shared/markdown-docs-bootstrap/reviews/final-review-2026-10-01T163602Z.md
-  receive_archived_artifact: .oat/projects/shared/markdown-docs-bootstrap/reviews/archived/final-review-2026-10-01T163602Z.md
-  receive_event_identity:
-    scope: final
-    type: code
-    source_filename: final-review-2026-10-01T163602Z.md
-  receive_pre_head: f45ae26d7ef579c7dd01df768d6b6c8f0ee7b584
-  receive_commit: a0cd25b4ed544f214c0fb9f69a399d71b6959df3
-  failure: Integration base update required for seven PR conflicts; refreshed final verification, review and retained gate required before HiLL.
-  status: stale
+  disposition: null
+  launch_attempt_id: markdown-implement-exit-remote-2026-10-01T185139Z
+  launch_started_at: '2026-10-01T18:51:39Z'
+  launch_result_receipt: .oat/projects/shared/markdown-docs-bootstrap/reviews/gate-receipts/remote-2026-10-01T185139Z.json
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  failure: null
+  status: pending
   resolution: configured
   resolved_command: oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."
   resolved_description: Semantic cross-family final implementation review before oat-project-implement exits.
@@ -121,16 +112,16 @@ oat_implement_exit_gate:
   on_failure: block
   max_attempts: 2
   attempts_completed: 0
-  reviewed_head: 2f6ba887966806222f3a585e27f2e55885eb91c1
+  reviewed_head: 14ecdcc0dbb876dc1225a3ef4ca332ae88796cc0
   implementation_base_ref: origin/main
-  implementation_fingerprint: sha256:effective-delta-v2:2484819cabd75262a0bf304bd25ec8cc802a80871753e664759c42995f3fd37c
-  freshness_head: 4eb2de8e29edb056c033a483f45202d03a6bc7f4
-  freshness_fingerprint: sha256:effective-delta-v2:2484819cabd75262a0bf304bd25ec8cc802a80871753e664759c42995f3fd37c
-  launch_state: result_persisted
-  receive_state: completed
-  receive_eligible: true
-  receive_completed: true
-  updated_at: '2026-10-01T17:25:07Z'
+  implementation_fingerprint: sha256:effective-delta-v2:964fb0d52950ca56e6316ac94eb24eae9f7c03c77ad098c083e9919a9b794324
+  freshness_head: 14ecdcc0dbb876dc1225a3ef4ca332ae88796cc0
+  freshness_fingerprint: sha256:effective-delta-v2:964fb0d52950ca56e6316ac94eb24eae9f7c03c77ad098c083e9919a9b794324
+  launch_state: intent_persisted
+  receive_state: not_started
+  receive_eligible: false
+  receive_completed: false
+  updated_at: '2026-10-01T18:51:39Z'
   config_fingerprint: sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324
 oat_project_recap:
   decision: skip
