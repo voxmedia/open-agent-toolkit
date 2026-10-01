@@ -25,6 +25,8 @@ import {
   readConfiguredInstructionSyncStrategy,
   resolveInstructionPointerExcludes,
   resolveInstructionSyncStrategy,
+  describeLinkers,
+  findAgentsResolvingTo,
   findLeftoverClaudeFiles,
   findLinksThrough,
   inspectManagedShim,
@@ -305,6 +307,64 @@ function planSyncActions({
   }
 
   return actions;
+}
+
+/**
+ * Under a shim strategy, keep every CLAUDE.md that an AGENTS.md resolves to
+ * (a symlink, a symlink chain, or a hard link) instead of overwriting it:
+ * that CLAUDE.md holds the only copy of the instructions behind the link.
+ * Planning-time only; a planned overwrite of any other file is unchanged.
+ */
+async function keepClaudeFilesAgentsResolveTo(
+  actions: InstructionActionRecord[],
+  entries: InstructionEntry[],
+  dependencies: InstructionsSyncCommandDependencies,
+  repoRoot: string,
+): Promise<InstructionActionRecord[]> {
+  const claudePaths = new Set(entries.map((entry) => entry.claudePath));
+  const agentsPaths = entries.flatMap((entry) =>
+    entry.agentsPath === null || hasUnreadableCanonicalAgents(entry)
+      ? []
+      : [entry.agentsPath],
+  );
+
+  if (agentsPaths.length === 0) {
+    return actions;
+  }
+
+  const kept: InstructionActionRecord[] = [];
+  for (const action of actions) {
+    if (action.type !== 'update' || !claudePaths.has(action.target)) {
+      kept.push(action);
+      continue;
+    }
+    const resolution = await findAgentsResolvingTo(
+      action.target,
+      agentsPaths,
+      dependencies,
+    );
+    if ('unreadable' in resolution) {
+      kept.push({
+        type: 'skip',
+        target: action.target,
+        reason: `cannot tell whether an AGENTS.md resolves to this CLAUDE.md (${resolution.unreadable}); kept`,
+        result: 'skipped',
+      });
+      continue;
+    }
+    if (resolution.linkers.length === 0) {
+      kept.push(action);
+      continue;
+    }
+    const verb = resolution.linkers.length === 1 ? 'resolves' : 'resolve';
+    kept.push({
+      type: 'skip',
+      target: action.target,
+      reason: `${describeLinkers(repoRoot, resolution.linkers)} ${verb} to this CLAUDE.md, so it holds the instructions; kept`,
+      result: 'skipped',
+    });
+  }
+  return kept;
 }
 
 async function applySyncActions(
@@ -664,11 +724,20 @@ export function createInstructionsSyncCommand(
             entries,
             leftoversBeforeSync,
           );
-          const unblockedActions = planSyncActions({
+          const plannedOverwrites = planSyncActions({
             entries,
             force: options.force ?? false,
             strategy,
           });
+          const unblockedActions =
+            strategy === 'none'
+              ? plannedOverwrites
+              : await keepClaudeFilesAgentsResolveTo(
+                  plannedOverwrites,
+                  entries,
+                  dependencies,
+                  repoRoot,
+                );
           const heldBack = unblockedActions
             .filter((action) => action.type === 'remove')
             .map((action) => action.target);

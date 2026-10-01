@@ -209,23 +209,17 @@ export async function inspectManagedShim(
       detail: `unable to read AGENTS.md (${getErrorCode(error) ?? 'unknown error'})`,
     };
   }
-  let agentsResolvesToClaude =
-    agentsStats.dev === claudeStats.dev && agentsStats.ino === claudeStats.ino;
-  if (agentsStats.isSymbolicLink()) {
-    try {
-      const [realAgents, realClaude] = await Promise.all([
-        dependencies.realpath(agentsPath),
-        dependencies.realpath(claudePath),
-      ]);
-      agentsResolvesToClaude = realAgents === realClaude;
-    } catch (error) {
-      return {
-        kind: 'unreadable',
-        detail: `unable to resolve AGENTS.md (${getErrorCode(error) ?? 'unknown error'})`,
-      };
-    }
+  const resolution = await agentsResolvesToClaude(
+    agentsPath,
+    agentsStats,
+    claudePath,
+    claudeStats,
+    dependencies,
+  );
+  if (typeof resolution === 'string') {
+    return { kind: 'unreadable', detail: resolution };
   }
-  if (agentsResolvesToClaude) {
+  if (resolution) {
     return {
       kind: 'unmanaged',
       detail:
@@ -276,6 +270,113 @@ export async function inspectManagedShim(
     kind: 'unmanaged',
     detail: 'hand-written or modified CLAUDE.md; kept',
   };
+}
+
+/** The `lstat` fields the resolves-to check compares. */
+interface NodeIdentity {
+  dev: number;
+  ino: number;
+  isSymbolicLink(): boolean;
+}
+
+/**
+ * Whether `agentsPath` resolves to the regular file `claudePath`: a hard link
+ * of it (same device and inode), or a symlink whose chain ends at it. Such a
+ * CLAUDE.md holds the only copy of the instructions behind that AGENTS.md.
+ * Both stats come from `lstat`, so a symlink is judged by where it leads.
+ *
+ * Returns the answer, or the reason it could not be decided.
+ */
+async function agentsResolvesToClaude(
+  agentsPath: string,
+  agentsStats: NodeIdentity,
+  claudePath: string,
+  claudeStats: NodeIdentity,
+  dependencies: Pick<LinkResolutionDependencies, 'realpath'>,
+): Promise<boolean | string> {
+  if (!agentsStats.isSymbolicLink()) {
+    return (
+      agentsStats.dev === claudeStats.dev && agentsStats.ino === claudeStats.ino
+    );
+  }
+  try {
+    const [realAgents, realClaude] = await Promise.all([
+      dependencies.realpath(agentsPath),
+      dependencies.realpath(claudePath),
+    ]);
+    return realAgents === realClaude;
+  } catch (error) {
+    return `unable to resolve AGENTS.md (${getErrorCode(error) ?? 'unknown error'})`;
+  }
+}
+
+/**
+ * The AGENTS.md files among `agentsPaths` that resolve to `claudePath`, the
+ * check that keeps `instructions sync --force` from overwriting the only copy
+ * of the instructions under a shim strategy. A regular CLAUDE.md is judged as
+ * the `none` classification judges it (hard link, or a symlink chain that
+ * ends at it); a CLAUDE.md that is itself a symlink counts only when an
+ * AGENTS.md chain passes through it, so the ordinary `CLAUDE.md -> AGENTS.md`
+ * shim is never mistaken for a link the other way.
+ *
+ * A missing CLAUDE.md or AGENTS.md links nothing. Any other read failure is
+ * returned as the reason the answer is unknown, and the caller keeps the file.
+ */
+export async function findAgentsResolvingTo(
+  claudePath: string,
+  agentsPaths: readonly string[],
+  dependencies: LinkResolutionDependencies,
+): Promise<{ linkers: string[] } | { unreadable: string }> {
+  let claudeStats: NodeIdentity & { isFile(): boolean };
+  try {
+    claudeStats = await dependencies.lstat(claudePath);
+  } catch (error) {
+    const errorCode = getErrorCode(error);
+    return errorCode === 'ENOENT'
+      ? { linkers: [] }
+      : {
+          unreadable: `unable to read CLAUDE.md (${errorCode ?? 'unknown error'})`,
+        };
+  }
+
+  if (claudeStats.isSymbolicLink()) {
+    return {
+      linkers: await findLinksThrough(claudePath, agentsPaths, dependencies),
+    };
+  }
+  if (!claudeStats.isFile()) {
+    return { linkers: [] };
+  }
+
+  const linkers: string[] = [];
+  for (const agentsPath of new Set(agentsPaths)) {
+    let agentsStats: NodeIdentity;
+    try {
+      agentsStats = await dependencies.lstat(agentsPath);
+    } catch (error) {
+      const errorCode = getErrorCode(error);
+      if (errorCode === 'ENOENT') {
+        continue;
+      }
+      return {
+        unreadable: `unable to read AGENTS.md (${errorCode ?? 'unknown error'})`,
+      };
+    }
+    const resolution = await agentsResolvesToClaude(
+      agentsPath,
+      agentsStats,
+      claudePath,
+      claudeStats,
+      dependencies,
+    );
+    if (typeof resolution === 'string') {
+      return { unreadable: resolution };
+    }
+    if (resolution) {
+      linkers.push(agentsPath);
+    }
+  }
+  return { linkers: linkers.sort((left, right) => left.localeCompare(right)) };
 }
 
 /** The filesystem reads link-chain resolution needs. */
@@ -357,7 +458,10 @@ export async function findLinksThrough(
 }
 
 /** `a` / `a and b` / `a, b, and c`, repository-relative. */
-function describeLinkers(repoRoot: string, linkers: readonly string[]): string {
+export function describeLinkers(
+  repoRoot: string,
+  linkers: readonly string[],
+): string {
   const paths = linkers.map((path) => toPosixPath(relative(repoRoot, path)));
   if (paths.length <= 2) {
     return paths.join(' and ');
