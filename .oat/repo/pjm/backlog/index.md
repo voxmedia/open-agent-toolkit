@@ -433,6 +433,7 @@
 | BL-260901-consolidate-terminal-remote    | Consolidate terminal remote-ref advertisement parsing                                                 | open   | low      | task       | M        |
 | BL-260908-date-decision-record-ids       | Date decision-record IDs in local time or document UTC                                                | open   | low      | task       | XS       |
 | BL-260830-decide-whether-oat-owns        | Decide whether OAT owns dependency intelligence                                                       | open   | low      | idea       | L        |
+| BL-261001-downgrade-claims-that-thorough | Downgrade claims that thorough-profile reviews leave without a disposition                            | open   | low      | task       | S        |
 | BL-260719-evaluate-broader-final-gate    | Evaluate broader final-gate freshness policy after narrow optimization                                | open   | low      | feature    | M        |
 | BL-260906-give-project-state-frontmatter | Give PROJECT_STATE_FRONTMATTER_FIELDS a production consumer or delete it                              | open   | low      | task       | S        |
 | BL-260928-harden-the-backlog-reference   | Harden the backlog reference rewriter's atomic replace edge cases                                     | open   | low      | task       | S        |
