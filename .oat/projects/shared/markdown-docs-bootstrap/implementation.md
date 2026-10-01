@@ -3379,3 +3379,5 @@ Complete preceding generation is retained exactly below before replacement. Its 
 ```
 
 New final retained launch intent `markdown-implement-exit-unreadable-2026-10-01T193437Z`, receipt `.oat/projects/shared/markdown-docs-bootstrap/reviews/gate-receipts/unreadable-2026-10-01T193437Z.json`; exact configured argv/normalHOME/PATH unchanged. No replacement of an in-flight run. Root current PJM adoption declared; doctor warn/exit1 only eleven pre-existing completed-log archive warnings, no unrelated repair or new decision capture. Five existing Key Decisions deduplicate exactly. Completed output snapshot is refreshed inline, unchanged.
+
+Accepted current retained run `39b33a8d-8a63-41e5-af34-145a5d525935`, marker `/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/39b33a8d-8a63-41e5-af34-145a5d525935.json`; target `claude-opus-5-5-high`/runtimeclaude, current project/final/code start2026-10-01T19:34:48.454Z after launch intent. Result/receive pending; no replacement/retry.
