@@ -925,6 +925,85 @@ describe('Markdown docs init public boundary', () => {
     expect(config.documentation.requireForProjectCompletion).toBe(true);
   });
 
+  it('preserves inaccessible optional directories while adopting readable siblings', async (context) => {
+    const root = await temporaryRepo();
+    const blocked = join(root, 'docs', 'optional', 'blocked');
+    const files = new Map([
+      ['optional/blocked/keep.md', '# Uninspected authored bytes\n'],
+      ['ordinary/index.md', '# Readable sibling index\n'],
+      ['guide.md', '# Readable root guide\n'],
+    ]);
+    for (const [path, content] of files) {
+      await mkdir(dirname(join(root, 'docs', path)), { recursive: true });
+      await writeFile(join(root, 'docs', path), content);
+    }
+    const before = await snapshotTree(root);
+    await chmod(blocked, 0);
+    try {
+      let permissionsEnforced = false;
+      try {
+        await readdir(blocked);
+      } catch (error) {
+        if (
+          error instanceof Error &&
+          'code' in error &&
+          error.code === 'EACCES'
+        )
+          permissionsEnforced = true;
+        else throw error;
+      }
+      if (!permissionsEnforced)
+        context.skip(
+          true,
+          'This runtime cannot enforce directory EACCES with chmod.',
+        );
+      const preview = await runMarkdown(root, ['--adopt'], true);
+      expect(preview.exit).toBe(0);
+      const expectedAdvice =
+        'optional/blocked/ could not be inspected due to permissions; it was preserved. Run oat-docs-analyze for repair recommendations.';
+      const advice = (preview.jsonPayloads[0] as { auditAdvice: string[] })
+        .auditAdvice;
+      expect(advice).toContain(expectedAdvice);
+      expect(advice.some((entry) => entry.includes('has Markdown'))).toBe(
+        false,
+      );
+      await chmod(blocked, 0o755);
+      expect(await snapshotTree(root)).toEqual(before);
+      await chmod(blocked, 0);
+      const adopted = await runMarkdown(root, ['--adopt']);
+      expect(adopted.exit).toBe(0);
+      expect(
+        (adopted.jsonPayloads[0] as { auditAdvice: string[] }).auditAdvice,
+      ).toContain(expectedAdvice);
+      const indexPath = join(root, 'docs', 'index.md');
+      const index = await readFile(indexPath, 'utf8');
+      const destinations = [...index.matchAll(/^- \[.*\]\(([^)]*)\)$/gm)].map(
+        (match) => match[1]!,
+      );
+      expect(destinations.sort()).toEqual([
+        'contributing.md',
+        'guide.md',
+        'ordinary/index.md',
+      ]);
+      for (const destination of destinations)
+        await readFile(
+          fileURLToPath(new URL(destination, pathToFileURL(indexPath))),
+        );
+      await chmod(blocked, 0o755);
+      const after = await snapshotTree(root);
+      for (const [path, bytes] of Object.entries(before))
+        expect(after[path], path).toBe(bytes);
+      await chmod(blocked, 0);
+      expect((await runMarkdown(root, ['--adopt'])).exit).toBe(0);
+      await chmod(blocked, 0o755);
+      expect(await snapshotTree(root)).toEqual(after);
+      for (const [path, content] of files)
+        expect(await readFile(join(root, 'docs', path), 'utf8')).toBe(content);
+    } finally {
+      await chmod(blocked, 0o755);
+    }
+  });
+
   it('audits authored Markdown while exempting recursive instruction-only content', async () => {
     const root = await temporaryRepo();
     const files = new Map([

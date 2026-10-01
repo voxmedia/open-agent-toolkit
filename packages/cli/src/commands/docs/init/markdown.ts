@@ -226,7 +226,23 @@ async function buildContents(
     directory: string,
     prefix: string,
   ): Promise<boolean> {
-    for (const entry of await readdir(directory, { withFileTypes: true })) {
+    let children;
+    try {
+      children = await readdir(directory, { withFileTypes: true });
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        'code' in error &&
+        (error.code === 'EACCES' || error.code === 'EPERM')
+      ) {
+        advice.push(
+          `${prefix}/ could not be inspected due to permissions; it was preserved. Run oat-docs-analyze for repair recommendations.`,
+        );
+        return false;
+      }
+      throw error;
+    }
+    for (const entry of children) {
       const path = `${prefix}/${entry.name}`;
       if (
         entry.isFile() &&
