@@ -2,19 +2,25 @@ import { readFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { basename, join } from 'node:path';
 
-export type PjmTemplateTier = 'repository' | 'user' | 'bundle';
+export type TemplateTier = 'repository' | 'user' | 'bundle';
 
-export interface ResolvePjmTemplateOptions {
+export interface ResolveTemplateOptions {
   name: string;
-  assetsRoot: string;
+  /**
+   * Bundled assets root, or a function that returns it. A function is only
+   * called when the repository and user tiers both miss, so a caller whose
+   * template usually comes from an earlier tier does not need a valid bundle.
+   */
+  assetsRoot: string | (() => Promise<string>);
+  /** Repository template directory, normally `<repo>/.oat/templates`. */
   templatesRoot?: string;
   home?: string;
 }
 
-export interface ResolvedPjmTemplate {
+export interface ResolvedTemplate {
   content: string;
   path: string;
-  tier: PjmTemplateTier;
+  tier: TemplateTier;
 }
 
 async function readIfExists(path: string): Promise<string | null> {
@@ -33,11 +39,15 @@ async function readIfExists(path: string): Promise<string | null> {
   }
 }
 
-export async function resolvePjmTemplate(
-  options: ResolvePjmTemplateOptions,
-): Promise<ResolvedPjmTemplate> {
+/**
+ * Resolve a template in repository, user, then bundle order
+ * (`DR-260927-templates-resolve-repository`).
+ */
+export async function resolveTemplate(
+  options: ResolveTemplateOptions,
+): Promise<ResolvedTemplate> {
   if (basename(options.name) !== options.name) {
-    throw new Error(`Invalid PJM template name: ${options.name}`);
+    throw new Error(`Invalid template name: ${options.name}`);
   }
 
   // Resolve the same home the installer writes to. `CommandContext.home` is
@@ -45,7 +55,7 @@ export async function resolvePjmTemplate(
   // tier entirely wherever HOME is unset but `homedir()` resolves (Windows
   // derives it from USERPROFILE).
   const home = options.home ?? homedir();
-  const candidates: Array<{ path: string; tier: PjmTemplateTier }> = [
+  const candidates: Array<{ path: string; tier: TemplateTier }> = [
     ...(options.templatesRoot
       ? [
           {
@@ -62,10 +72,6 @@ export async function resolvePjmTemplate(
           },
         ]
       : []),
-    {
-      path: join(options.assetsRoot, 'templates', options.name),
-      tier: 'bundle',
-    },
   ];
 
   for (const candidate of candidates) {
@@ -75,7 +81,17 @@ export async function resolvePjmTemplate(
     }
   }
 
+  const assetsRoot =
+    typeof options.assetsRoot === 'function'
+      ? await options.assetsRoot()
+      : options.assetsRoot;
+  const bundlePath = join(assetsRoot, 'templates', options.name);
+  const bundleContent = await readIfExists(bundlePath);
+  if (bundleContent !== null) {
+    return { content: bundleContent, path: bundlePath, tier: 'bundle' };
+  }
+
   throw new Error(
-    `Template ${options.name} was not found in repository, user, or bundled PJM templates.`,
+    `Template ${options.name} was not found in repository, user, or bundled templates.`,
   );
 }

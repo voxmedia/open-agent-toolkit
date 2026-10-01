@@ -6,11 +6,11 @@ import {
   serializeAssociatedIssues,
   type SerializedAssociatedIssue,
 } from '@commands/pjm/remote/association';
-import {
-  resolvePjmTemplate,
-  type PjmTemplateTier,
-} from '@commands/pjm/template-source';
 import { stripTemplateFrontmatter } from '@commands/shared/strip-template-frontmatter';
+import {
+  resolveTemplate,
+  type TemplateTier,
+} from '@commands/shared/template-source';
 import YAML from 'yaml';
 
 import { initializeBacklog } from './init';
@@ -46,7 +46,7 @@ export interface CreateBacklogItemResult {
   backlogRoot: string;
   filePath: string;
   templatePath: string;
-  templateTier: PjmTemplateTier;
+  templateTier: TemplateTier;
   index: RegenerateBacklogIndexResult;
 }
 
@@ -229,7 +229,7 @@ export async function createBacklogItem(
     );
   }
 
-  const template = await resolvePjmTemplate({
+  const template = await resolveTemplate({
     name: 'backlog-item.md',
     assetsRoot: options.assetsRoot,
     templatesRoot: options.templatesRoot,

@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { resolvePjmTemplate } from './template-source';
+import { resolveTemplate } from './template-source';
 
 // On POSIX, the real `os.homedir()` reads `$HOME` first, so only a mocked
 // `homedir()` can prove which source the resolver actually consults.
@@ -13,7 +13,7 @@ vi.mock('node:os', async (importOriginal) => {
   return { ...actual, homedir: vi.fn(actual.homedir) };
 });
 
-describe('resolvePjmTemplate', () => {
+describe('resolveTemplate', () => {
   const tempDirs: string[] = [];
 
   afterEach(async () => {
@@ -28,7 +28,7 @@ describe('resolvePjmTemplate', () => {
     home: string;
     templatesRoot: string;
   }> {
-    const root = await mkdtemp(join(tmpdir(), 'oat-pjm-template-'));
+    const root = await mkdtemp(join(tmpdir(), 'oat-template-'));
     tempDirs.push(root);
     return {
       assetsRoot: join(root, 'assets'),
@@ -52,7 +52,7 @@ describe('resolvePjmTemplate', () => {
     await seed(bundle, 'bundle');
 
     await expect(
-      resolvePjmTemplate({ ...roots, name: 'decision.md' }),
+      resolveTemplate({ ...roots, name: 'decision.md' }),
     ).resolves.toEqual({
       content: 'repository',
       path: repository,
@@ -61,12 +61,12 @@ describe('resolvePjmTemplate', () => {
 
     await rm(repository);
     await expect(
-      resolvePjmTemplate({ ...roots, name: 'decision.md' }),
+      resolveTemplate({ ...roots, name: 'decision.md' }),
     ).resolves.toEqual({ content: 'user', path: user, tier: 'user' });
 
     await rm(user);
     await expect(
-      resolvePjmTemplate({ ...roots, name: 'decision.md' }),
+      resolveTemplate({ ...roots, name: 'decision.md' }),
     ).resolves.toEqual({ content: 'bundle', path: bundle, tier: 'bundle' });
   });
 
@@ -81,7 +81,7 @@ describe('resolvePjmTemplate', () => {
     delete process.env.HOME;
     try {
       await expect(
-        resolvePjmTemplate({
+        resolveTemplate({
           assetsRoot: roots.assetsRoot,
           home: roots.home,
           name: 'decision.md',
@@ -111,7 +111,7 @@ describe('resolvePjmTemplate', () => {
     vi.mocked(homedir).mockReturnValue(roots.home);
     try {
       await expect(
-        resolvePjmTemplate({
+        resolveTemplate({
           assetsRoot: roots.assetsRoot,
           name: 'decision.md',
         }),
@@ -131,7 +131,37 @@ describe('resolvePjmTemplate', () => {
     const roots = await createRoots();
 
     await expect(
-      resolvePjmTemplate({ ...roots, name: 'missing.md' }),
-    ).rejects.toThrow(/repository, user, or bundled/);
+      resolveTemplate({ ...roots, name: 'missing.md' }),
+    ).rejects.toThrow(
+      'Template missing.md was not found in repository, user, or bundled templates.',
+    );
+  });
+
+  it('rejects a name with a path separator', async () => {
+    const roots = await createRoots();
+
+    await expect(
+      resolveTemplate({ ...roots, name: '../decision.md' }),
+    ).rejects.toThrow('Invalid template name: ../decision.md');
+  });
+
+  it('resolves a lazy assets root only when earlier tiers miss', async () => {
+    const roots = await createRoots();
+    const repository = join(roots.templatesRoot, 'plan.md');
+    const bundle = join(roots.assetsRoot, 'templates', 'plan.md');
+    await seed(repository, 'repository');
+    await seed(bundle, 'bundle');
+    const assetsRoot = vi.fn(async () => roots.assetsRoot);
+
+    await expect(
+      resolveTemplate({ ...roots, assetsRoot, name: 'plan.md' }),
+    ).resolves.toMatchObject({ tier: 'repository' });
+    expect(assetsRoot).not.toHaveBeenCalled();
+
+    await rm(repository);
+    await expect(
+      resolveTemplate({ ...roots, assetsRoot, name: 'plan.md' }),
+    ).resolves.toEqual({ content: 'bundle', path: bundle, tier: 'bundle' });
+    expect(assetsRoot).toHaveBeenCalledTimes(1);
   });
 });
