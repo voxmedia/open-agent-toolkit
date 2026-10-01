@@ -18,7 +18,7 @@ oat_dispatch_policy:
   source: project-state
 oat_parallel_execution: false
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -85,54 +85,51 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-30T18:58:24.831Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-01T06:14:19Z'
+oat_project_state_updated: '2026-10-01T11:28:10Z'
 oat_generated: false
 ---
 
 # Project State: markdown-docs-bootstrap
 
-**Status:** Planning
+**Status:** Ready for implementation
 **Started:** 2026-09-30
-**Last Updated:** 2026-09-30
+**Last Updated:** 2026-10-01
 
 ## Current Phase
 
-Planning - Executable draft contains four sequential phases and nine tasks; High dispatch selected; additional phase gates disabled; both configured lifecycle gates retained; plan review received with two Medium findings; approved edits passed re-review; retained gate passed threshold; gate edits confirmed; final automatic retry found one verification-order correction
+Plan complete. Quick-start readiness recorded after approved edits, automatic reviews, cross-runtime gate, and durable receive dispositions. Implementation has not started.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete; CLI validation passed)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; approved dispositions incorporated)
-- **Plan:** `plan.md` (drafted; review pending; not implementation-ready)
-- **Implementation:** `implementation.md` (scaffolded template — not started)
+- **Plan:** `plan.md` (complete; ready for oat-project-implement)
+- **Implementation:** `implementation.md` (tracking initialized; 0/9 tasks completed)
 
 ## Progress
 
-- ✓ Discovery complete and validated
-- ✓ Execution artifacts scaffolded
-- ✓ Requirements captured from the current conversation
-- ✓ Lightweight design selected
-- ✓ Independent design review received: pass, 6 medium and 2 low findings
-- ✓ User approved all review dispositions
-- ✓ Design revised with the agreed decisions
-- ✓ Executable plan drafted with consumer coverage, preservation controls, and release validation
-- ✓ Sequential phase dependencies assessed
-
-## Design Review
-
-See `reviews/design-consensus-handoff.md` for the completed review, canonical artifacts, provenance limits, and the applied disposition ledger.
-
-## Blockers
-
-None. None. The approved p02 verification ordering correction is applied; retained gate pending.
-
-## Next Milestone
-
-Run the retained cross-runtime gate and complete quick-start readiness; implementation has not started
+- Discovery and approved lightweight design complete
+- Four sequential phases and nine executable tasks planned
+- All user-approved review edits applied
+- Final cross-runtime gate passed; both Low findings dispositioned as already-covered scope
+- Plan readiness validated; first task p01-t01
 
 ## Review Setup
 
-- Project dispatch: High (managed; project state only).
-- Additional cross-runtime phase gate: Disabled by user; setting remains absent. Built-in phase/final reviews still apply.
-- Configured quick-start and implementation lifecycle gates: Keep both; no project override map added.
+- Project dispatch: High (managed; project state only)
+- Additional cross-runtime phase gate: Disabled by user; setting remains absent
+- Configured quick-start and implementation lifecycle gates: Keep both; no override map
+- Implementation-phase HiLL choice remains unset until implementation setup
+
+## Review Evidence
+
+See `reviews/design-consensus-handoff.md`, automatic review handoffs, and `reviews/plan-gate-final-handoff.md`. Historical raw counts and actual review statuses are preserved; no implementation is claimed.
+
+## Blockers
+
+None
+
+## Next Milestone
+
+Run oat-project-implement starting with p01-t01, after confirming implementation-phase checkpoints.

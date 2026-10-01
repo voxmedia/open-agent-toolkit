@@ -1,17 +1,17 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-10-01
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_parallel_groups: []
 oat_plan_source: quick
 oat_import_reference: null
 oat_import_source_path: null
 oat_import_provider: null
 oat_generated: false
-oat_template: true
+oat_template: false
 ---
 
 # Implementation Plan: markdown-docs-bootstrap
@@ -33,8 +33,8 @@ oat_template: true
 - [x] Defined task ownership, observable acceptance, and verification
 - [x] Selected project dispatch policy: High
 - [x] Recorded optional phase gate and configured lifecycle gate choices: additional phase gates disabled; both lifecycle gates kept
-- [ ] Completed plan artifact review and quick-start exit gate
-- [ ] Initialized implementation tracking and committed readiness
+- [x] Completed plan artifact review and quick-start exit gate; all findings dispositioned
+- [x] Initialized implementation tracking for p01-t01 and committed readiness
 
 No implementation-phase HiLL choice has been confirmed. `oat_plan_hill_phases` is intentionally unset; implementation setup must resolve the effective policy without treating the former scaffold placeholder as a user choice. Lifecycle approvals and review gates are separate settings.
 
@@ -172,7 +172,7 @@ All phases run sequentially (`oat_plan_parallel_groups: []`). p02 consumes p01's
 
 ## Reviews
 
-Existing scaffold rows are preserved. Quick mode requires no spec; original design review and approved revisions are recorded in `reviews/design-consensus-handoff.md`. The pending design row does not claim re-review of the revised design. Plan review returned two Medium findings; user-approved edits passed re-review with no findings; the retained gate remains pending and readiness remains disabled.
+Existing scaffold rows and historical review events are preserved. Quick mode requires no spec. All approved plan edits are applied; the final cross-runtime gate passed and its two Low findings were dispositioned as already-covered scope. See `reviews/plan-gate-final-handoff.md` for receipt evidence. Implementation remains unstarted.
 
 | Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target          |
 | ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | -------------------- |
@@ -186,22 +186,19 @@ Existing scaffold rows are preserved. Quick mode requires no spec; original desi
 | plan   | artifact | fixes_completed | 2026-10-01 | reviews/plan-auto-handoff.md                                | b3480f8824b175b34cdba2f76d7dcf66ee12a034 | auto       | -                    |
 | plan   | artifact | passed          | 2026-10-01 | reviews/plan-auto-rereview.md                               | 1ab8e49002716294f43b63831e13b0f9576f535b | auto       | -                    |
 | plan   | artifact | fixes_completed | 2026-10-01 | reviews/archived/artifact-plan-review-2026-10-01T060016Z.md | -                                        | gate       | claude-opus-5-5-high |
-| plan   | artifact | received        | 2026-10-01 | reviews/plan-auto-final-retry.md                            | 4f1c0d422241214859c906efb176e5a2787ba472 | auto       | -                    |
-| plan   | artifact | received        | 2026-10-01 | reviews/artifact-plan-review-2026-10-01T112231Z.md          | -                                        | -          | -                    |
+| plan   | artifact | fixes_completed | 2026-10-01 | reviews/plan-auto-final-retry.md                            | 4f1c0d422241214859c906efb176e5a2787ba472 | auto       | -                    |
+| plan   | artifact | passed          | 2026-10-01 | reviews/archived/artifact-plan-review-2026-10-01T112231Z.md | -                                        | gate       | claude-opus-5-5-high |
 
 Record full reviewed heads and invocation provenance for actual reviews. Preserve all rows and unknown trailing cells. Mark `passed` only for a clean result; disposition residual findings before readiness.
 
 ### Plan Review Dispositions
 
-Automatic plan review: 0 Critical, 0 High, 2 Medium, 0 Low. User approved M1 (build before p03 smoke/CLI walkthrough) and M2 (explicit Markdown bundle inventory ownership and verification); both are resolved in the plan. See `reviews/plan-auto-handoff.md`. Re-review passed with no findings; retained quick-start gate passed its High threshold with one Medium and one Low finding; approved artifact edits are applied and re-review is pending.
+- Original automatic review M1/M2: user approved and resolved; first automatic re-review passed.
+- First gate M1/L1: user approved and resolved; artifact consumed and archived. It passed its High threshold.
+- Final automatic retry M1: user approved and resolved by moving p02 build before bundle-backed tests. The automatic retry bound is exhausted; its historical event remains fixes_completed.
+- Final cross-runtime gate: passed with 0 Critical, 0 High, 0 Medium, 2 Low. Root rejected both missing-scope claims with source-verified coverage rationale; no unresolved findings or waived requirements. Artifact received, dispositioned, and archived. See `reviews/plan-gate-final-handoff.md`.
 
-### Gate Review Dispositions
-
-Gate passed (0 Critical, 0 High, 1 Medium, 1 Low), receive-eligible and corroborated. User approved Gate M1 (docs tools pack registration and checks) and Gate L1 (Markdown-only authored-index guard plus Fumadocs accepted control); both are applied. Re-review pending. See `reviews/plan-gate-handoff.md`. The consumed artifact is archived; its findings await re-review before readiness.
-
-### Final Automatic Retry
-
-Retry 2 of 2 returned one Medium finding: move p02-t01 build before direct bundle-backed Vitest checks. Both approved gate fixes are confirmed. User approved the ordering correction and it is applied; retained cross-runtime gate pending; see `reviews/plan-auto-final-retry.md`. No further standard automatic re-review is authorized by the exhausted bound. Readiness remains disabled.
+Source pointers retained for the already-planned consumer inventory: index generation's independent root default in `packages/cli/src/commands/docs/index-generate/index.ts:384-389`; resolver agreement test in `packages/cli/src/config/oat-config.test.ts:633`; template reference pages `apps/oat-docs/docs/reference/file-locations.md` and `reference/oat-directory-structure.md`.
 
 ## Implementation Complete
 
