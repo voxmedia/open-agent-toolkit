@@ -85,7 +85,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/335' # tracked open PR
 oat_project_created: '2026-09-30T18:58:24.831Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-01T18:13:41Z'
+oat_project_state_updated: '2026-10-01T18:51:09Z'
 oat_generated: false
 oat_implement_exit_gate:
   disposition: passed
@@ -157,13 +157,13 @@ oat_post_implement_sequence:
 
 # Project State: markdown-docs-bootstrap
 
-**Status:** Current main and remote fixes verified; fresh final review/gate pending
+**Status:** Main and remote fixes verified and reviewed; retained gate refresh pending
 **Started:** 2026-09-30
 **Last Updated:** 2026-10-01
 
 ## Current Phase
 
-All thirteen tasks complete. Main #334 is integrated and prior checks passed; execute remote review fixes p04-t04/p04-t05, then fresh final verification/review and retained gate before final p04 HiLL approval. Existing pre-approval steps remain complete; PR #335 remains open.
+All thirteen tasks complete. Main #334 is integrated; both remote review fixes, all eight local gates and the fresh independent final review passed. Refresh the retained gate before final p04 HiLL approval. Existing pre-approval steps remain complete; PR #335 remains open.
 
 ## Artifacts
 
@@ -171,14 +171,14 @@ All thirteen tasks complete. Main #334 is integrated and prior checks passed; ex
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; approved dispositions incorporated)
 - **Plan:** `plan.md` (complete; ready for oat-project-implement)
-- **Implementation:** `implementation.md` (13/13 tasks complete; fresh final review pending)
+- **Implementation:** `implementation.md` (13/13 tasks complete; current final review passed)
 
 ## Progress
 
 - Discovery and approved lightweight design complete
 - Four sequential phases and all thirteen tasks complete, including both remote review fixes
 - All user-approved review edits applied
-- Prior final reviews/gates preserved; remote M1/L1 fixes and fresh acceptance pending
+- Prior final reviews/gates preserved; remote M1/L1 fixes independently accepted; retained gate refresh pending
 - Thirteen task commits reconciled; all eight gates passed after the remote fixes
 - Written summary and documentation closeout complete; visual recap skipped by explicit user choice
 - ✓ PR created
@@ -201,6 +201,6 @@ None
 
 ## Next Milestone
 
-Execute p04-t04/p04-t05, refresh final verification/review and retained gate, update the written summary and existing PR, then request final p04 HiLL approval. Configured pre-approval steps stay complete; no post-approval steps are configured.
+Refresh the retained gate, update the written summary and existing PR evidence, push the integrated branch, then request final p04 HiLL approval. Configured pre-approval steps stay complete; no post-approval steps are configured.
 
 PR #335 remains open for review: https://github.com/voxmedia/open-agent-toolkit/pull/335. Merge and release have not been performed.
