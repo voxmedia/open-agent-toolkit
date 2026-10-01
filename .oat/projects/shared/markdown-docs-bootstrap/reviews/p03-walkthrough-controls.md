@@ -208,10 +208,17 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import assert from 'node:assert/strict';
-const files = execFileSync('git', ['diff', '--name-only'], { encoding: 'utf8' })
+const range =
+  '255bcd04bfa8487a622e9201073f27214d187a8f..1e03f88dcb5ae9713ff36a4b3327ac02d1b4f953';
+const files = execFileSync(
+  'git',
+  ['diff', '--name-only', range, '--', 'apps/oat-docs/docs'],
+  { encoding: 'utf8' },
+)
   .trim()
   .split('\n')
   .filter((x) => x.startsWith('apps/oat-docs/docs/') && x.endsWith('.md'));
+assert.equal(files.length, 12, 'Expected twelve committed phase source pages');
 let count = 0;
 for (const file of files) {
   const source = readFileSync(file, 'utf8').replace(/^```[\s\S]*?^```/gm, '');
@@ -224,6 +231,7 @@ for (const file of files) {
     count++;
   }
 }
+assert(count > 0, 'Expected nonzero relative link coverage');
 console.log(
   JSON.stringify({
     files: files.length,

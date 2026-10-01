@@ -97,7 +97,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation setup complete. p01 and p02 complete after independent reviews; p03 tasks complete; phase verification and independent review next; standard root-owned reviews run after each phase and the final HiLL checkpoint follows p04.
+Implementation setup complete. p01 and p02 complete after independent reviews; p03 complete after independent review and Low tracking/evidence fixes; p04 begins next; standard root-owned reviews run after each phase and the final HiLL checkpoint follows p04.
 
 ## Artifacts
 
