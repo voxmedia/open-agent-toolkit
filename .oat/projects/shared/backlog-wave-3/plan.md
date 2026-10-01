@@ -1116,6 +1116,47 @@ Expected: exit 0.
 
 ---
 
+### Task p04-t05: (review) Close p04 review findings M1, L1-L3
+
+Source: `reviews/archived/p04-review-2026-10-01T174412Z.md` (auto review,
+passing: 0 Critical/High, 2 Medium, 3 Low). M2 (deviation rows) is root
+bookkeeping.
+
+**Step 1: Fix**
+
+- M1: make the waiver reachable. In
+  `oat-project-implement/references/completion-and-closeout.md` (Step 14
+  around 686 and Step 15 around 796-800), before an `allowed` generation is
+  persisted `stale`, an interactive run asks the operator to waive the covered
+  range or start a new gate run; an autonomous run starts a new gate run and
+  never offers or issues a waiver. Document that an operator may also record a
+  waiver before resuming implement. Mirror the rule in `oat-project-next`
+  section 5.0 if it routes the same state, and pin it in the contract tests.
+- L1: remove or repurpose transition-trace step 3
+  (`transition-trace.test.ts` around 169) so every step adds coverage.
+- L2: move the BL-260829 comment in
+  `post-implement-sequence-contracts.test.ts` (around 1616) back above its own
+  `describe` (around 1949).
+- L3: when `pre_approval` is empty, the closeout check's next owner and
+  message name the correct write (`approval: not_required`), and Step 15's
+  wording (around 953) matches (`closeout-invariant.ts` around 343-348 and
+  454); test it.
+
+No further version bumps (implement and next are bumped on this branch).
+
+**Step 2: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli build`,
+`HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project src/commands/init/tools/shared src/validation`,
+`pnpm run check:skill-bumps`.
+Expected: exit 0.
+
+**Step 3: Commit**
+
+`fix(p04-t05): close p04 review findings`
+
+---
+
 ## Phase 5: Small fixes
 
 Backlog: `BL-260928-keep-instructions-sync-force`,
@@ -1585,7 +1626,7 @@ breaking changes must be named in the title:
 | p03    | code     | fixes_completed | 2026-10-01 | reviews/archived/p03-review-2026-10-01T131855Z.md  | a3d625b312d892dbdd33270582fb2561ec39533c | auto       | -                 |
 | p03    | code     | fixes_completed | 2026-10-01 | reviews/archived/p03-review-2026-10-01T133903Z.md  | 18012ae901c3ba7460af9cb82d2010fb6b8d1970 | auto       | -                 |
 | p03    | code     | passed          | 2026-10-01 | reviews/archived/p03-review-2026-10-01T165604Z.md  | 2cb68863a5b6eb3ff54e9cb9176db401d7c9932d | gate       | codex-6-sol-xhigh |
-| p04    | code     | pending         | -          | -                                                  | -                                        | -          | -                 |
+| p04    | code     | fixes_added     | 2026-10-01 | reviews/archived/p04-review-2026-10-01T174412Z.md  | 310f3902b8e4d869f0b437262f95b3deb661e708 | auto       | -                 |
 | p05    | code     | pending         | -          | -                                                  | -                                        | -          | -                 |
 | p06    | code     | pending         | -          | -                                                  | -                                        | -          | -                 |
 | final  | code     | pending         | -          | -                                                  | -                                        | -          | -                 |
@@ -1666,11 +1707,11 @@ criterion.
 - Phase 1: 5 tasks - Template resolver
 - Phase 2: 6 tasks - Fumadocs navigation
 - Phase 3: 10 tasks - Recon publication and Codex recovery
-- Phase 4: 4 tasks - Lifecycle closeout guards
+- Phase 4: 5 tasks - Lifecycle closeout guards
 - Phase 5: 6 tasks - Small fixes
 - Phase 6: 3 tasks - Release fan-in
 
-**Total: 34 tasks**
+**Total: 35 tasks**
 
 Ready for code review and merge.
 
