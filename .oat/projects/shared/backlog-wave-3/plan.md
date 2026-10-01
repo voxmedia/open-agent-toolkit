@@ -216,6 +216,38 @@ Expected: exit 0.
 
 ---
 
+### Task p01-t04: (review) Close p01 review findings M1, L1
+
+Source: `reviews/archived/p01-review-2026-10-01T112852Z.md` (auto review,
+passing: 0 Critical/High, 1 Medium, 2 Low). L2 (deviations not recorded in the
+ledger) is root bookkeeping.
+
+**Step 1: Fix**
+
+- M1: add `Bash(oat template:*)` to the `allowed-tools` of
+  `.agents/skills/oat-project-retro/SKILL.md` and
+  `.agents/skills/oat-project-summary/SKILL.md` (plus `Bash(mkdir:*)` for the
+  retro step that creates `references/`), and pin both grants in
+  `packages/cli/src/validation/skills.test.ts` the way the `Bash(oat tools:*)`
+  grant is pinned (around line 7828). Check every other skill p01-t03 changed
+  for the same gap. No further version bumps (all are bumped on this branch).
+- L1: in `apps/oat-docs/docs/cli-utilities/tool-packs.md` (around line 548),
+  move the `oat template resolve` sentence so the "Useful options" list stays
+  attached to `oat pjm init`.
+
+**Step 2: Verify**
+
+Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation`,
+`pnpm oat:validate-skills`, `pnpm run check:skill-bumps`,
+`pnpm --filter oat-docs check`.
+Expected: exit 0.
+
+**Step 3: Commit**
+
+`fix(p01-t04): close p01 review findings`
+
+---
+
 ## Phase 2: Fumadocs navigation
 
 Backlog: `BL-260718-support-fumadocs-in-oat-docs`.
@@ -1224,20 +1256,20 @@ breaking changes must be named in the title:
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                           | Reviewed Head | Invocation | Gate Target       |
-| ------ | -------- | --------------- | ---------- | -------------------------------------------------- | ------------- | ---------- | ----------------- |
-| p01    | code     | pending         | -          | -                                                  | -             | -          | -                 |
-| p02    | code     | pending         | -          | -                                                  | -             | -          | -                 |
-| p03    | code     | pending         | -          | -                                                  | -             | -          | -                 |
-| p04    | code     | pending         | -          | -                                                  | -             | -          | -                 |
-| p05    | code     | pending         | -          | -                                                  | -             | -          | -                 |
-| p06    | code     | pending         | -          | -                                                  | -             | -          | -                 |
-| final  | code     | pending         | -          | -                                                  | -             | -          | -                 |
-| spec   | artifact | pending         | -          | -                                                  | -             | -          | -                 |
-| design | artifact | pending         | -          | -                                                  | -             | -          | -                 |
-| plan   | artifact | fixes_completed | 2026-10-01 | -                                                  | -             | auto       | -                 |
-| plan   | artifact | fixes_completed | 2026-10-01 | reviews/artifact-plan-review-2026-10-01T061917Z.md | -             | gate       | codex-6-sol-xhigh |
-| plan   | artifact | fixes_completed | 2026-10-01 | reviews/artifact-plan-review-2026-10-01T063044Z.md | -             | gate       | codex-6-sol-xhigh |
+| Scope  | Type     | Status          | Date       | Artifact                                           | Reviewed Head                            | Invocation | Gate Target       |
+| ------ | -------- | --------------- | ---------- | -------------------------------------------------- | ---------------------------------------- | ---------- | ----------------- |
+| p01    | code     | fixes_added     | 2026-10-01 | reviews/archived/p01-review-2026-10-01T112852Z.md  | de9c98848aeb2379f0b9a81ead945664351d1f2b | auto       | -                 |
+| p02    | code     | pending         | -          | -                                                  | -                                        | -          | -                 |
+| p03    | code     | pending         | -          | -                                                  | -                                        | -          | -                 |
+| p04    | code     | pending         | -          | -                                                  | -                                        | -          | -                 |
+| p05    | code     | pending         | -          | -                                                  | -                                        | -          | -                 |
+| p06    | code     | pending         | -          | -                                                  | -                                        | -          | -                 |
+| final  | code     | pending         | -          | -                                                  | -                                        | -          | -                 |
+| spec   | artifact | pending         | -          | -                                                  | -                                        | -          | -                 |
+| design | artifact | pending         | -          | -                                                  | -                                        | -          | -                 |
+| plan   | artifact | fixes_completed | 2026-10-01 | -                                                  | -                                        | auto       | -                 |
+| plan   | artifact | fixes_completed | 2026-10-01 | reviews/artifact-plan-review-2026-10-01T061917Z.md | -                                        | gate       | codex-6-sol-xhigh |
+| plan   | artifact | fixes_completed | 2026-10-01 | reviews/artifact-plan-review-2026-10-01T063044Z.md | -                                        | gate       | codex-6-sol-xhigh |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
@@ -1305,14 +1337,14 @@ criterion.
 
 **Summary:**
 
-- Phase 1: 3 tasks - Template resolver
+- Phase 1: 4 tasks - Template resolver
 - Phase 2: 4 tasks - Fumadocs navigation
 - Phase 3: 5 tasks - Recon publication and Codex recovery
 - Phase 4: 4 tasks - Lifecycle closeout guards
 - Phase 5: 6 tasks - Small fixes
 - Phase 6: 3 tasks - Release fan-in
 
-**Total: 25 tasks**
+**Total: 26 tasks**
 
 Ready for code review and merge.
 

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
-oat_current_task_id: p02-t01
+oat_current_task_id: p01-t04
 oat_generated: false
 ---
 
@@ -26,14 +26,14 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 3     | 3/3       |
+| Phase 1 | in_progress | 4     | 3/4       |
 | Phase 2 | pending     | 4     | 0/4       |
 | Phase 3 | pending     | 5     | 0/5       |
 | Phase 4 | pending     | 4     | 0/4       |
 | Phase 5 | pending     | 6     | 0/6       |
 | Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 3/25 tasks completed
+**Total:** 3/26 tasks completed
 
 ---
 
@@ -55,6 +55,11 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** c1886c3fc
+
+### Task p01-t04: (review) Close p01 review findings M1, L1
+
+**Status:** pending
+**Commit:** -
 
 ---
 
