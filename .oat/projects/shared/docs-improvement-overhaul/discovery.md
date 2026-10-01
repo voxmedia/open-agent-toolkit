@@ -16,6 +16,8 @@ On 2026-10-01 the user selected quick mode and named this project `docs-improvem
 
 Later in the same session, the user authorized continuation through lightweight design and planning until the plan is ready, with Fable reviewing throughout. Resume this project in place; do not start implementation. The [planning reconnaissance](references/planning-recon.md) captures the next technical evidence pass.
 
+The user also explicitly expanded the overhaul to substantially improve the root README and add useful visuals throughout the docs. Inspect SVG/Mermaid precedents in `~/Code/vox/gizmo-slack-app` and selectively other relevant repositories. Treat this as reader-experience work, not incidental decoration.
+
 ## Clarifying Questions
 
 ### Priority and collaboration
@@ -105,6 +107,8 @@ Proposed criteria to confirm before planning:
 - Workflow entrypoints distinguish choosing a mode, executing a project, capturing ideas, planning a backlog, and operating waves.
 - Compatibility links continue to resolve, with obsolete migration language removed from primary reader paths.
 - Coverage and navigation validation make future drift detectable rather than relying on another periodic reorganization.
+- The README explains OAT's value, independent adoption choices, and a first success before contributor-oriented setup. It routes readers into the new docs IA without duplicating the docs site.
+- Purposeful SVG/Mermaid visuals clarify adoption paths, skill/workflow relationships, and selected system flows. They remain readable in the actual GitHub and Fumadocs renderers, in light/dark themes and narrow layouts, with textual equivalents and accessible descriptions.
 
 ## Out of Scope
 
