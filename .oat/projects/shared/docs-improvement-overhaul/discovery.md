@@ -14,6 +14,8 @@ Improve the documentation's organization, skill coverage, and human reading expe
 
 On 2026-10-01 the user selected quick mode and named this project `docs-improvement-overhaul`, explicitly keeping the work in discovery and brainstorming. Initial evaluations belong in this project's `references/` directory. This is not implementation approval.
 
+Later in the same session, the user authorized continuation through lightweight design and planning until the plan is ready, with Fable reviewing throughout. Resume this project in place; do not start implementation. The [planning reconnaissance](references/planning-recon.md) captures the next technical evidence pass.
+
 ## Clarifying Questions
 
 ### Priority and collaboration

@@ -4,6 +4,7 @@ Captured 2026-10-01. These are discovery inputs, not approved implementation ins
 
 ## Contents
 
+- [Planning reconnaissance](planning-recon.md): static-route baseline, Contents/Fumadocs constraints, and candidate acceptance boundaries.
 - [Initial evaluations](initial-evaluations.md): prior project, comparison repo, rendered observations, and navigation mechanism findings.
 - [IA consensus proposal](ia-consensus.md): jointly recommended navigation and ownership, pending user approval.
 - [Skill inventory advisory](skill-inventory-advisory.md): Fable's inventory, exceptions, coverage candidates, and evidence limits.
