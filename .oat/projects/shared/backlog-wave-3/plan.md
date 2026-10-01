@@ -828,6 +828,64 @@ Expected: exit 0.
 
 ---
 
+### Task p03-t09: Simplify recon brief integrity and drop the omission-gap rule
+
+Source: complexity review of the p03 recon changes (2026-10-01, requested by
+the operator after three review rounds; verdict partially compliant).
+Operator decision: delete the omission-gap rule.
+
+**Step 1: Simplify**
+
+- Brief integrity: in `validateReviewBindings`, replace field-by-field binding
+  (the duplicate-ID clause, the entry loop, the per-disposition
+  `reviewBriefBindsClaim`, `briefSourceIds`, `briefSourcesBind`,
+  `safeProjectReviewSources`, `reviewBriefProjection`, and the p03-t08 request
+  projection checks) with one check: rebuild each brief with the production
+  `createReviewBrief({ id, mode, createdAt, manifest, ledger: priorLedger,
+claimIds: <brief entry ids> })` and compare `hashCanonicalJson` of the stored
+  and rebuilt briefs; a throw or a difference is `REVIEW_BRIEF_MISMATCH`
+  (report the first differing top-level key). Then require disposition IDs to
+  be unique and members of the brief's entries. First confirm every brief type
+  (including contradiction-resolution) is built from the prior ledger; if any
+  is not, rebuild it against a prior-over-current overlay. Keep the projection
+  allowlists and functions in `review-binding.mjs` that the generator uses,
+  and the schema limits on `id` and `createdAt`.
+- Delete the omission-gap protocol: `reviewOmissionGaps`,
+  `gapCoversReviewOmission`, `REVIEW_OMISSION_GAP_CODE`, the reconciler's
+  `gaps` return and `manifest` parameter, `MISSING_REVIEW_OMISSION_GAP`, the
+  SKILL.md Step 6 duty to record gaps, the `packet-contract.md` paragraph, the
+  docs sentence, the fixture gap plumbing, and the p03-t07 and p03-t08
+  omission tests. An omitted disposition is treated like `uncertain`: the
+  claim stays `unresolved`, the packet is not forced `partial`, and Review
+  Downgrades still lists it as "not reviewed" (keep a small helper in the
+  renderer). The shared-fixture changes that make every review dispose of
+  `claim-2` may stay.
+- Fold `unresolvedIssueDiagnostic` into `classifyUnresolvedIssue` (one
+  function returning `{scope, claimIds}` or `{error}`; no behavior change).
+- Review Downgrades imports the shared disposition table instead of
+  redefining it.
+- Tests: one table-driven brief-tamper test (statement, evidence, locator,
+  descriptor, injected claim, injected source, injected note, duplicate ID,
+  `questions`, `scope`, full-descriptor copy), each expecting
+  `REVIEW_BRIEF_MISMATCH`, with one neutralization proof; delete
+  `coverage-publication.test.mjs` after moving its precondition assertion into
+  end-to-end test 1; merge the two global-issue tests.
+
+No version bumps (recon is bumped on this branch).
+
+**Step 2: Verify**
+
+Run: `node --test .agents/skills/recon/tests/*.test.mjs`,
+`HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation`,
+`pnpm run check:skill-bumps`, `pnpm lint`, `pnpm --filter oat-docs check`.
+Expected: exit 0.
+
+**Step 3: Commit**
+
+`refactor(p03-t09): rebuild recon briefs to check integrity and drop omission gaps`
+
+---
+
 ## Phase 4: Lifecycle closeout guards
 
 Backlog: `BL-261001-recompute-oat-project-next-s`,
@@ -1466,15 +1524,14 @@ breaking changes must be named in the title:
     covered claim below verified after re-running reconciliation; only newly
     produced scoped issues downgrade selectively;
   - recon `packet.md` gains a Review Downgrades section listing every claim a
-    review kept below verified (including claims a review omitted), and
+    review kept below verified (a claim a review omitted is listed as "not
+    reviewed"), and
     `retryLimit` now means pre-acceptance admission retries with at most one
     retry per lane;
-  - recon publication is stricter: every brief type must bind to ledger
-    claims, and a claim a required review left without a disposition needs a
-    material `REVIEW_DISPOSITION_OMITTED` gap (the reconciler now returns
-    them), so an existing packet that omitted one fails with
-    `MISSING_REVIEW_OMISSION_GAP` until those gaps are recorded and the packet
-    is republished as `partial`;
+  - recon publication is stricter about brief integrity: the validator
+    rebuilds each brief with the production generator and rejects any
+    difference, so an injected claim, note, or source in any brief type fails
+    with `REVIEW_BRIEF_MISMATCH`;
   - `oat docs nav sync` writes Fumadocs `meta.json`;
   - `oat project complete-state` refuses a configured closeout with a missing
     or incomplete snapshot; exit-gate waivers are operator-only;
@@ -1581,12 +1638,12 @@ criterion.
 
 - Phase 1: 5 tasks - Template resolver
 - Phase 2: 6 tasks - Fumadocs navigation
-- Phase 3: 8 tasks - Recon publication and Codex recovery
+- Phase 3: 9 tasks - Recon publication and Codex recovery
 - Phase 4: 4 tasks - Lifecycle closeout guards
 - Phase 5: 6 tasks - Small fixes
 - Phase 6: 3 tasks - Release fan-in
 
-**Total: 32 tasks**
+**Total: 33 tasks**
 
 Ready for code review and merge.
 

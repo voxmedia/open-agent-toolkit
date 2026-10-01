@@ -36,3 +36,9 @@ documentation-gap, candidate-skill-content, decision, and environment-limited.
 **Observation:** PR #334 merged to `main` during p03 and set lockstep 0.3.10, `oat-dispatch-subagents` 1.2.11, and `oat-project-implement` 2.3.15, the exact versions this branch had already bumped to. `check:skill-bumps` (which compares against `origin/main`) turned red at the p03 review head, though it was green when the implementer ran it.
 **Impact:** Version bumps are relative to a moving base; a long wave branch must re-bump above `main` after each merge from `main`.
 **Recommendation:** `git fetch origin main` before each phase review and run `check:skill-bumps`; when `main` moves, merge it, resolve pin conflicts, bump every collided skill one patch above `main`, and move the fan-in lockstep target.
+
+## 2026-10-01T16:40:26Z - candidate-skill-content - Recompute-and-compare beats field-by-field integrity checks
+
+**Observation:** p03 brief integrity was enforced one field at a time. Three adversarial review rounds each found an unlisted field (claims, adversarial and coverage entries, then questions and scope), and the per-clause neutralization rule multiplied the test cost of each new clause. A complexity review recommended rebuilding the brief with the production generator and comparing hashes, and found the omission-gap rule unsupported by any criterion.
+**Impact:** Four fix rounds on one phase; the operator approved the simplification and deleted the omission rule.
+**Recommendation:** For assurance-bearing integrity checks, prefer "recompute with the production helper and compare" over listing protected fields. When two review rounds raise a High in the same family, stop and run a complexity review before adding a clause.
