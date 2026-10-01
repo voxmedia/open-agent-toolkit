@@ -9,7 +9,7 @@ oat_generated: false
 
 # Implementation: markdown-docs-bootstrap
 
-Phases p01 and p02 are complete after independent reviews. Eight of ten tasks are complete; p03 bootstrap, consumer and docs tasks are implemented, pending phase verification and independent review. Next planned task p04-t01; final HiLL remains p04.
+Phases p01 and p02 are complete after independent reviews. Eight of ten tasks are complete; p03 bootstrap, consumer and docs tasks are complete after independent review and Low bookkeeping fixes. Next planned task p04-t01; final HiLL remains p04.
 
 ## Progress Overview
 
@@ -17,7 +17,7 @@ Phases p01 and p02 are complete after independent reviews. Eight of ten tasks ar
 | ----- | -------- | ----- | --------- |
 | p01   | complete | 2     | 2/2       |
 | p02   | complete | 3     | 3/3       |
-| p03   | pending  | 3     | 0/3       |
+| p03   | complete | 3     | 3/3       |
 | p04   | pending  | 2     | 0/2       |
 
 **Total:** 8/10 tasks completed
@@ -67,7 +67,7 @@ Phases p01 and p02 are complete after independent reviews. Eight of ten tasks ar
 
 ## Phase 3: Bootstrap workflow and docs consumers
 
-**Status:** in_progress
+**Status:** complete
 
 ### Task p03-t01: Offer Markdown throughout bootstrap
 
@@ -118,7 +118,7 @@ None recorded.
 
 ## Final Summary (for PR/docs)
 
-Not complete. Shared Markdown root/output protection and guidance preview are implemented and independently reviewed; CLI bootstrap/adoption/dry-run are implemented and independently reviewed; skill/docs alignment and final integration/release validation remain pending.
+Not complete. Shared Markdown root/output protection and guidance preview are implemented and independently reviewed; CLI bootstrap/adoption/dry-run are implemented and independently reviewed; skill/docs alignment is implemented and reviewed; final integration/release validation remains pending.
 
 ## Orchestration Runs
 
@@ -1307,7 +1307,7 @@ Accepted exact-target canonical-role route /root/markdown_p03_review_pinned; awa
     "reasoning_effort": "high"
   },
   "launch_status": "accepted",
-  "child_outcome": null,
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     "project-state:high",
     "user-config:gpt-6.1-sol/high",
@@ -1335,3 +1335,12 @@ Accepted exact-target canonical-role route /root/markdown_p03_review_pinned; awa
   "floor_satisfaction": "satisfied"
 }
 ```
+
+#### p03 terminal review acceptance and Low dispositions
+
+Root read complete reviews/p03-review-2026-10-01T140627Z.md, reviewed head 1e03f88dcb5ae9713ff36a4b3327ac02d1b4f953, full phase range validated. Raw counts retained: 0 Critical, 0 High, 0 Medium, 2 Low. Exactly one not-attempted reconnaissance signal; no orchestration section or recon-log append.
+
+- L1 (first Low bullet), tracking drift: accepted, Negligible scope. Corrected the overview by parsed phase-cell content and Final Summary to match all three completed p03 task rows. The stale whitespace-based replacement was a root bookkeeping defect. This repair is the already-required Step 7b tracking alignment; no new production task or re-review loop needed.
+- L2 (second Low bullet), vacuous committed-page checker: accepted, Negligible scope. Pinned its actual committed phase range, require exactly twelve source pages and nonzero links, and rerun against clean committed sources. It now checks twelve metadata records and 105 destinations, exit 0. Raw prior replay zero-coverage result remains in the review; no claim that its original retained command was reproducible.
+
+Both findings resolved in this root-owned tracking/evidence commit. Bound review event fixes_completed; no independent clean re-review is claimed. Source phase passes, every disposition settled, no source fix iteration/recovery, p03 complete. Reviewer independently executed five uncached builds, 660 skill tests, 163 smoke tests, 65 skill validations, 34 actual framework/init tests, twelve-page/105-target checks and CLI controls. Corrected archive setup failures and alternate docs compiler limitation disclosed; actual default build in working checkout passed task verification and is rerun in p04 full gates. Continue p04; final HiLL unchanged.
