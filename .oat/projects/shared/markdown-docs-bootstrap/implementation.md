@@ -3,13 +3,13 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-01
-oat_current_task_id: p04-t02
+oat_current_task_id: null
 oat_generated: false
 ---
 
 # Implementation: markdown-docs-bootstrap
 
-Phases p01–p03 are complete after independent reviews and recorded dispositions. Nine of ten tasks are complete. Public packages and bundled version inventory are 0.3.11 above fresh main0.3.10; integrated acceptance/full CI checks are next in p04-t02. Final reviews, retained exit gate and p04 HiLL approval remain pending.
+All ten implementation tasks are complete. Phases p01–p03 have independent reviews and settled dispositions; p04 integration and release verification passed, with phase review pending. Five public packages are 0.3.11 above fresh main 0.3.10. Final review, retained exit gate and p04 HiLL approval remain pending.
 
 ## Progress Overview
 
@@ -18,9 +18,9 @@ Phases p01–p03 are complete after independent reviews and recorded disposition
 | p01   | complete    | 2     | 2/2       |
 | p02   | complete    | 3     | 3/3       |
 | p03   | complete    | 3     | 3/3       |
-| p04   | in_progress | 2     | 1/2       |
+| p04   | in_progress | 2     | 2/2       |
 
-**Total:** 9/10 tasks completed
+**Total:** 10/10 tasks completed
 
 ## Phase 1: Shared content and guidance contracts
 
@@ -103,10 +103,10 @@ Phases p01–p03 are complete after independent reviews and recorded disposition
 
 ### Task p04-t02: Prove integrated acceptance and complete verification
 
-**Status:** pending
-**Commit:** -
-**Outcome:** Not started
-**Verification:** Not run
+**Status:** completed
+**Commit:** 8f3f7fd95c49d33e4ded4c1dc57aa0515a849c59
+**Outcome:** Integrated Markdown and framework controls, consumer inventory, release receipts and partial backlog note recorded. Two stale help snapshots and two skill-version literals repaired within the planned acceptance-defect scope; original failure retained.
+**Verification:** All eight CI gates passed in order, plus root lint/format. Forced isolated-home workspace run executed ten uncached tasks, 8,135 tests and docs generation 73/73; normal test separately ran smoke 163, skills 660 and scripts 1. Twenty-four integrated controls and six retained probes pass. Recovery 0/10, no pending event, no nested dispatch.
 
 ## Review and Acceptance Evidence
 
@@ -118,7 +118,7 @@ None recorded.
 
 ## Final Summary (for PR/docs)
 
-Not complete. Shared Markdown root/output protection and guidance preview are implemented and independently reviewed; CLI bootstrap/adoption/dry-run are implemented and independently reviewed; skill/docs alignment is implemented and reviewed; final integration/release validation remains pending.
+Markdown bootstrap, additive adoption, nonmutating preview, literal documentation roots, authored-index protection, skill workflows and user documentation are implemented. Five public packages and bundled inventory are 0.3.11; full ordered CI gates and actual forced execution passed. p04 phase review, final review, retained exit gate and final HiLL approval remain pending.
 
 ## Orchestration Runs
 
@@ -1534,3 +1534,7 @@ All eight required CI gates passed in order after the bounded repairs; fresh fet
 ### Bounded pre-commit integration repairs
 
 Initial full CI stopped at test exit 1: five stale expectations in two existing files (pre-Markdown docs help snapshots and project-document version 1.8.5). Root authorized the task2 acceptance-defect clause to update only those two snapshots and two literals to approved public help and canonical 1.8.6. Effective task boundary adds `packages/cli/src/commands/help-snapshots.test.ts` and `packages/cli/src/validation/skills.test.ts`; no source/skill changes or weakened/deleted assertions. Attribution and the original failing receipt remain in the reproduction artifact. Full CI restarts in order after focused checks; recovery remains 0/10 because this is task2 pre-commit prevention.
+
+#### p04-t02 root acceptance
+
+Root verified the exact five-file append-only task commit, unchanged prior evidence/backlog status, bounded two-file mechanical test repairs, clean tree, direct gate exits and actual forced execution receipt. All ten tasks complete; p04 remains in_progress for independent review. No recovery event, production deviation or nested dispatch.

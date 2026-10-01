@@ -18,7 +18,7 @@ oat_template: false
 
 # Implementation Plan: markdown-docs-bootstrap
 
-> Execute with `oat-project-implement` after quick-start review and readiness are complete. Implementation setup has started; production tasks remain pending.
+> Execute with `oat-project-implement` after quick-start review and readiness are complete. All ten implementation tasks are complete; final acceptance reviews/gate and HiLL approval remain pending.
 
 **Goal:** Offer plain Markdown docs bootstrap with `documentation.tooling: markdown`, authored index/context conventions, additive adoption, and nonmutating dry-run.
 
@@ -223,7 +223,7 @@ Source pointers retained for the already-planned consumer inventory: index gener
 
 ## Implementation Complete
 
-Implementation in progress: 9/10 tasks complete. Planned scope: 4 sequential phases, 10 atomic tasks — p01 (2), p02 (3), p03 (3), p04 (2). Replace this with a completion summary only after implementation and required reviews/gates pass.
+Implementation in progress: 10/10 tasks complete; final acceptance pending. Planned scope: 4 sequential phases, 10 atomic tasks — p01 (2), p02 (3), p03 (3), p04 (2). Replace this with a completion summary only after implementation and required reviews/gates pass.
 
 ## References
 
