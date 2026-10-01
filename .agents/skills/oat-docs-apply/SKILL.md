@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash(git:*), Bash(gh:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.3.1
+  version: 1.4.0
 ---
 
 # Docs Apply
@@ -106,6 +106,12 @@ Validate that each recommendation in the artifact includes:
 
 If the artifact is missing that detail, stop and tell the user to re-run `oat-docs-analyze`.
 
+Resolve the artifact target against `.oat/config.json` and cited local guidance.
+With `documentation.tooling: markdown`, the configured root is the literal
+content tree even when it contains a child `docs`; the configured index is
+authored. Preserve excludes, useful audience/context/ownership prose and existing
+local AGENTS files. A changed or incompatible target requires fresh analysis.
+
 ### Step 1: Build the Recommendation Plan
 
 Read the analysis artifact and build the plan from its recommendations.
@@ -117,7 +123,8 @@ Common docs actions:
 - Add or repair `## Contents`
 - Convert `overview.md` usage to the `index.md` contract
 - Add or update `docs/contributing.md` plugin guidance
-- Scaffold an OAT docs app when no docs app exists
+- Route approved setup/adoption to `oat-docs-bootstrap`; a Markdown tree does
+  not require app scaffolding
 - Run `oat docs nav sync` after approved structural changes
 
 Carry forward the artifact's evidence refs, confidence, disclosure mode, and link targets into the apply plan.
@@ -214,7 +221,17 @@ Negative rules:
 
 ### Step 5: Verify and Sync Navigation
 
-Run the smallest relevant verification set based on what changed:
+For configured Markdown, check touched authored indexes/context, nonempty
+title/description metadata, Contents reachability, sibling `.md` and child
+`section/index.md` destinations, configured excludes and local instructions.
+Keep existing context while applying only approved repairs. Run documented
+existing file/link/lint/format checks; no install or site build is required.
+Do not invoke default `generate-index` or site `nav sync`. Regenerate an optional
+external manifest only when locally declared, with explicit output outside the
+full configured content tree; keep the authored config index unchanged.
+
+For framework apps, discover actual scripts and run the smallest relevant
+verification set based on what changed; these examples apply only when present:
 
 - `oat docs nav sync`
 - `pnpm --dir <docs-app> docs:lint` (no-op when no linter is configured)

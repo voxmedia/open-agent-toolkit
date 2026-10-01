@@ -4,7 +4,10 @@ Use this checklist when evaluating a docs surface.
 
 ## Structure
 
-- Every docs directory has an `index.md`.
+- Every non-excluded Markdown-bearing docs directory has an authored `index.md`.
+- Authored entrypoints preserve useful audience, scope, ownership, and context.
+- Authored pages have nonempty `title` and `description` metadata.
+- Configured excludes and existing local instructions are respected.
 - Every `index.md` includes a `## Contents` section.
 - `## Contents` is useful content, not a placeholder comment, empty list, or
   generic "add links here" scaffold.
@@ -22,7 +25,7 @@ Use this checklist when evaluating a docs surface.
 ## Links
 
 - Local relative Markdown links resolve from the page where they appear.
-- OAT/Fumadocs docs apps use `.md`-suffixed local links for docs pages,
+- Configured Markdown and OAT/Fumadocs docs apps use `.md`-suffixed local links for docs pages,
   including `subdir/index.md` for child directory maps.
 - Anchors on `.md` links are allowed, such as `page.md#section`.
 - Extensionless local docs links are flagged when local guidance follows the
@@ -58,7 +61,17 @@ Use this checklist when evaluating a docs surface.
 - Topic names are specific enough for agents to select the right page quickly.
 - Large sections summarize what each child page covers.
 
-## Docs App Contract
+## Documentation Surface Contract
+
+- For configured Markdown, `documentation.root` is the literal content root,
+  including when it contains a nested `docs` directory.
+- For Markdown, `documentation.index` is authored; optional generated manifests
+  live outside the full configured content tree and do not replace its entrypoint.
+- Markdown needs no app package, framework config, docs-root AGENTS, default
+  manifest, nav generation, installation, or site build. Use applicable existing
+  file/link/lint checks. Adoption alone is not proof of complete content conformity.
+- Managed root guidance, contributing guidance, and preserved local instructions
+  identify the root and authoring/audit/apply workflow.
 
 - For `mkdocs-app`, `mkdocs.yml` exists.
 - For `mkdocs-app`, navigation is consistent with the docs tree.

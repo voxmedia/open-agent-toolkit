@@ -8,7 +8,17 @@ description: Local validation, generated-index checks, and render spot-check gui
 Validation is local to the docs app. Read scripts and instructions before
 choosing commands.
 
-## Script Discovery
+## Markdown File Checks
+
+For configured Markdown, use the literal content root, honor excludes and local
+instructions, and verify context, title/description metadata, Contents and actual
+relative `.md` destinations. Discover existing repository lint/link/format checks;
+no package creation, install, site build, or site nav generation is required.
+An external generated manifest is optional; regenerate only when local guidance
+declares one, with explicit output outside the full content tree. Keep authored
+indexes and `documentation.index` intact.
+
+## Script Discovery (Framework Apps)
 
 Inspect the docs app `package.json` and local instructions for:
 
