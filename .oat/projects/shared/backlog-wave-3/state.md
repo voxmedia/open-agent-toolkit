@@ -92,13 +92,13 @@ oat_project_created: '2026-10-01T05:39:05.816Z' # ISO 8601 UTC timestamp — set
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
 oat_project_state_updated: '2026-10-01T21:15:00Z'
 oat_post_implement_sequence:
-  status: awaiting_approval
+  status: post_approval
   source: configured
   final_phase: p06
   pre_approval: [summary, document, pr]
   pre_approval_completed: [summary, document, pr]
-  approval: pending
-  approval_source: null
+  approval: approved
+  approval_source: oat-autonomous
   post_approval: []
   post_approval_completed: []
   failure: null

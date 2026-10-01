@@ -605,6 +605,17 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   Mediums deferred to backlog (see Deferred Findings); the final gate row is
   `passed`; disposition `allowed/passed`.
 
+### Final HiLL approval and completion
+
+- Gate `IMPLEMENT-16` (autonomous final approval): every pre-approval step
+  (summary, document, pr) completed in stored order; the final review row is
+  `passed` (`reviews/archived/final-review-2026-10-01T201832Z.md`, request
+  `bw3-final-review-1`, Dispatch stamp in Final Review above) and the exit gate
+  is `allowed/passed` (run `99fcf137`). Project recap `built`
+  (run `810e34a7`, host rung; `check-terminal-outcome` ok). Approval recorded
+  as `approval: approved`, `approval_source: oat-autonomous`; no post-approval
+  steps are configured.
+
 <!-- orchestration-runs-end -->
 
 ---
