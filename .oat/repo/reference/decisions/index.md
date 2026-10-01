@@ -10,6 +10,11 @@
 
 | ID                                       | Date       | Status     | Title                                                                                                  | Legacy  |
 | ---------------------------------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------ | ------- |
+| DR-261001-fumadocs-navigation-is-strict  | 2026-10-01 | accepted   | Fumadocs navigation is strict and generated from Contents maps                                         | -       |
+| DR-261001-oat-template-resolve-copies    | 2026-10-01 | accepted   | oat template resolve copies content for skills                                                         | -       |
+| DR-261001-recon-brief-integrity-uses     | 2026-10-01 | accepted   | Recon brief integrity uses rebuild-and-compare                                                         | -       |
+| DR-261001-recon-coverage-gaps-downgrade  | 2026-10-01 | accepted   | Recon coverage gaps downgrade claims instead of failing publication                                    | -       |
+| DR-261001-the-cli-owns-the-closeout      | 2026-10-01 | accepted   | The CLI owns the closeout completeness check                                                           | -       |
 | DR-260928-agents-md-guidance-appends     | 2026-09-28 | accepted   | AGENTS.md guidance appends absent managed blocks                                                       | -       |
 | DR-260928-backlog-archive-rewrites       | 2026-09-28 | accepted   | Backlog archive rewrites inbound references                                                            | -       |
 | DR-260928-commit-the-phase-task-ledger   | 2026-09-28 | accepted   | Commit the phase task ledger before per-phase review dispatch                                          | -       |
