@@ -292,6 +292,30 @@ describe('instructions command integration', () => {
       ).resolves.toBe('# hand-written\n');
     });
 
+    // A symlinked AGENTS.md whose endpoint is a hard link of CLAUDE.md: the
+    // realpaths differ, so only the endpoint's device and inode show the link.
+    for (const strategy of ['pointer', 'symlink', 'copy'] as const) {
+      it(`keeps a CLAUDE.md that a symlinked AGENTS.md reaches through a hard link under --strategy ${strategy}`, async () => {
+        const root = await createWorkspace();
+        tempDirs.push(root);
+        await mkdir(join(root, 'pkg'), { recursive: true });
+        await writeFile(join(root, 'AGENTS.md'), '# root instructions\n');
+        await writeFile(join(root, 'CLAUDE.md'), '# shared instructions\n');
+        await link(join(root, 'CLAUDE.md'), join(root, 'alias.md'));
+        await symlink('../alias.md', join(root, 'pkg', 'AGENTS.md'));
+        const before = await lstat(join(root, 'CLAUDE.md'));
+
+        const apply = await syncForce(root, strategy);
+        expectKept(apply.actions, join(root, 'CLAUDE.md'), 'pkg/AGENTS.md');
+        const after = await lstat(join(root, 'CLAUDE.md'));
+        expect(after.isFile()).toBe(true);
+        expect(after.ino).toBe(before.ino);
+        await expect(readFile(join(root, 'CLAUDE.md'), 'utf8')).resolves.toBe(
+          '# shared instructions\n',
+        );
+      });
+    }
+
     it('still overwrites a CLAUDE.md that no AGENTS.md resolves to', async () => {
       const root = await createWorkspace();
       tempDirs.push(root);

@@ -212,7 +212,6 @@ export async function inspectManagedShim(
   const resolution = await agentsResolvesToClaude(
     agentsPath,
     agentsStats,
-    claudePath,
     claudeStats,
     dependencies,
   );
@@ -281,18 +280,23 @@ interface NodeIdentity {
 
 /**
  * Whether `agentsPath` resolves to the regular file `claudePath`: a hard link
- * of it (same device and inode), or a symlink whose chain ends at it. Such a
- * CLAUDE.md holds the only copy of the instructions behind that AGENTS.md.
- * Both stats come from `lstat`, so a symlink is judged by where it leads.
+ * of it, or a symlink chain whose endpoint is that file or a hard link of it.
+ * Such a CLAUDE.md holds the only copy of the instructions behind that
+ * AGENTS.md. Both stats come from `lstat`, and a symlinked AGENTS.md is judged
+ * by the device and inode of its resolved endpoint, not by its realpath
+ * spelling: `pkg/AGENTS.md -> ../alias.md`, with `alias.md` hard-linked to
+ * CLAUDE.md, has a different realpath but reaches the same file.
+ *
+ * Callers pass a regular CLAUDE.md, so the ordinary `CLAUDE.md -> AGENTS.md`
+ * shim, where CLAUDE.md is the symlink, never reaches this check.
  *
  * Returns the answer, or the reason it could not be decided.
  */
 async function agentsResolvesToClaude(
   agentsPath: string,
   agentsStats: NodeIdentity,
-  claudePath: string,
   claudeStats: NodeIdentity,
-  dependencies: Pick<LinkResolutionDependencies, 'realpath'>,
+  dependencies: Pick<LinkResolutionDependencies, 'lstat' | 'realpath'>,
 ): Promise<boolean | string> {
   if (!agentsStats.isSymbolicLink()) {
     return (
@@ -300,11 +304,10 @@ async function agentsResolvesToClaude(
     );
   }
   try {
-    const [realAgents, realClaude] = await Promise.all([
-      dependencies.realpath(agentsPath),
-      dependencies.realpath(claudePath),
-    ]);
-    return realAgents === realClaude;
+    const endpoint = await dependencies.lstat(
+      await dependencies.realpath(agentsPath),
+    );
+    return endpoint.dev === claudeStats.dev && endpoint.ino === claudeStats.ino;
   } catch (error) {
     return `unable to resolve AGENTS.md (${getErrorCode(error) ?? 'unknown error'})`;
   }
@@ -365,7 +368,6 @@ export async function findAgentsResolvingTo(
     const resolution = await agentsResolvesToClaude(
       agentsPath,
       agentsStats,
-      claudePath,
       claudeStats,
       dependencies,
     );
