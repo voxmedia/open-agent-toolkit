@@ -157,7 +157,7 @@ oat_post_implement_sequence:
 
 # Project State: markdown-docs-bootstrap
 
-**Status:** Current main integrated; remote review fixes in progress
+**Status:** Current main and remote fixes verified; fresh final review/gate pending
 **Started:** 2026-09-30
 **Last Updated:** 2026-10-01
 
@@ -171,15 +171,15 @@ All thirteen tasks complete. Main #334 is integrated and prior checks passed; ex
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; approved dispositions incorporated)
 - **Plan:** `plan.md` (complete; ready for oat-project-implement)
-- **Implementation:** `implementation.md` (11/11 tasks completed; final review passed)
+- **Implementation:** `implementation.md` (13/13 tasks complete; fresh final review pending)
 
 ## Progress
 
 - Discovery and approved lightweight design complete
-- Four sequential phases and all eleven executable tasks complete, including filename encoding and metadata fixes
+- Four sequential phases and all thirteen tasks complete, including both remote review fixes
 - All user-approved review edits applied
 - Prior final reviews/gates preserved; remote M1/L1 fixes and fresh acceptance pending
-- Eleven task commits reconciled; full checks passed after metadata and literal-rendering repairs
+- Thirteen task commits reconciled; all eight gates passed after the remote fixes
 - Written summary and documentation closeout complete; visual recap skipped by explicit user choice
 - ✓ PR created
 - ⧗ Awaiting final p04 HiLL approval

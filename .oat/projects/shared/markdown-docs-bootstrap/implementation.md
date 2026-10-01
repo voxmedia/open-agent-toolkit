@@ -9,16 +9,16 @@ oat_generated: false
 
 # Implementation: markdown-docs-bootstrap
 
-Eleven prior tasks are complete. Remote Bugbot M1/L1 are accepted as p04-t04/p04-t05; resume implementation at p04-t04. Main is integrated and prior verification/review is preserved, while fresh final acceptance and retained gate remain required before HiLL.
+All thirteen tasks are complete, including both remote adoption corrections. Current-main integration and all eight local gates passed; independent final review and retained exit-gate refresh remain pending before final p04 HiLL approval. Written summary/document/PR steps remain complete; their outputs will be refreshed with current evidence.
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p01   | complete    | 2     | 2/2       |
-| p02   | complete    | 3     | 3/3       |
-| p03   | complete    | 3     | 3/3       |
-| p04   | in_progress | 5     | 5/5       |
+| Phase | Status   | Tasks | Completed |
+| ----- | -------- | ----- | --------- |
+| p01   | complete | 2     | 2/2       |
+| p02   | complete | 3     | 3/3       |
+| p03   | complete | 3     | 3/3       |
+| p04   | complete | 5     | 5/5       |
 
 **Total:** 13/13 tasks completed
 
@@ -139,17 +139,13 @@ None recorded.
 
 ## Final Summary (for PR/docs)
 
-Plain Markdown is an explicit bootstrap option. `oat docs init --framework markdown` records `documentation.tooling: "markdown"`, a literal dedicated root (default `docs`) and its authored index. Fresh initialization creates context/index and contributing guidance; explicit additive `--adopt` preserves existing content/local instructions and maps real pages/child indexes. Command-local `--dry-run` previews files, config and managed guidance without mutation; partial outcomes remain explicit.
+Markdown bootstrap supports documentation.tooling: markdown, literal dedicated roots, authored indexes/context/Contents/metadata, additive explicit adoption and nonmutating dry-run, with full content/index manifest protection and file-level verification. Five canonical skills, two templates and twelve documentation pages are shipped with five public packages at0.3.11. General init detection, approval classes and broader package-drift work remain outside scope.
 
-Authored indexes and the full configured Markdown content root are protected from optional manifest generation, including narrowed scans and symlink aliases; explicit external output remains supported. Filename segments encode delimiters. Blank metadata defaults meaningfully and supplied dollar/token-shaped values render literally in one pass. Existing framework behavior, instruction consumers and general initialization boundaries remain covered.
+Main #334 at98d1d524624e17f55ccfce33d18b3d5535dc91ca is integrated by normal merge; seven conflict dispositions preserve package lockstep, canonical version inventory and actual main sync stamp. Original integrated8,159 workspace tests and semantic composition proof are retained. Remote PR335 M1/L1 are converted and completed as p04-t04/p04-t05: usable in-repository child indexes map, unusable optional child indexes are preserved with audit advice, and instruction-only directories are exempt from authored-content advice. Required root safety remains strict.
 
-Owners include CLI docs init, shared root/guidance contracts, index generation, docs-pack bundle inputs, two templates, five canonical docs/lifecycle skills and twelve source pages. All five public packages and generated version inventory are 0.3.11, above integrated main 0.3.10. Main #334 was merged normally in `2e21aa9b75311d2d4b4a62e1e27f682b4dbf07dc`; all seven conflicts followed the recorded resolutions, both automatic merges preserve their contracts, and Markdown implementation paths remain byte-identical.
+Latest corrected-source eight gates pass in order at0620794717bb0039753213c24e37868b476afbdb: CLI7,969/398files actual, smoke163/skills660/scripts1actual,73docs pages actual in test dependency build. Unchanged three package test tasks and subsequent build/docs gates replay valid cache; prior actual integration proof remains inherited. Both remote regressions fail old source for intended bugs and pass fixed; focused199 and real dry/live controls pass. Exact reproducible receipts in reviews/final-remote-controls.md; evidence-only commit47b3df923fc460da9c331ebb15d12fdc15a36a4b, sources unchanged.
 
-Current integrated-HEAD verification passed all eight CI gates in order. Actual workspace test execution: CLI7,967 + control-plane151 + docs-config10 + transforms31 (8,159 total), root smoke163/skills660/scripts1, docs73. Isolated focused1,132 tests/28files, bundle66parity/four temporary lifecycle commands, seven blank and six literal CLI controls passed. Preflight compiled all five packages; subsequent build/docs gates replayed valid output. Five public tarballs were packed/validated. Exact runnable controls and cache labels are in reviews/final-integration-controls.md.
-
-All eleven planned tasks and prior review dispositions are complete; no deferred finding debt. Filename encoding, blank metadata and literal-rendering corrections stay within existing contracts; no production scope expansion. Earlier forced8,135-test, focused197 and causal pre-fix/guard-neutralization evidence remains historical, with original failures preserved. Source backlog remains open for broader approval classes, package drift and external acceptance.
-
-Configured written-summary/document/PR steps completed in stored order and PR #335 is open. The pre-integration final review and exit gate are preserved as passed history; the integrated basis requires fresh final review and retained gate before final p04 HiLL approval. Implementation is still in progress; visual recap is skipped interactively, written summary retained, no merge/release/deployment claimed.
+13/13 tasks complete, recovery0/10, no unresolved deferred finding. Remote event is fixes_completed pending independent final re-review. Existing summary/document/PR sequence is complete in stored order and actual PR335 is open; fresh final review/retained exit gate must pass before final p04 HiLL approval. Visual recap skip is interactive and immutable; written summary retained. No release, GitHub merge or deployment performed.
 
 ## Orchestration Runs
 
@@ -1547,14 +1543,20 @@ Accepted exact-target canonical-role route /root/markdown_p04_pinned; awaiting r
     {
       "event": "remote-review-fix-continuation",
       "scope": "p04-t04,p04-t05",
-      "status": "planned",
+      "status": "DONE",
       "accepted_handle": "/root/markdown_p04_pinned",
       "original_request_id": "markdown-p04-pinned-20261001",
       "model": "gpt-6.1-sol",
       "effort": "high",
       "recovery_attempt_consumed": false,
       "remote_event": "remote-pr-335-review-2026-10-01T181341Z.md",
-      "resolution_notices": []
+      "resolution_notices": [],
+      "task_commits": [
+        "b541b04b91d8b34cb82c6a6dad6a71f4905aec9f",
+        "e74c06116acc294feb290c08e2677f8975de33da"
+      ],
+      "evidence_commit": "47b3df923fc460da9c331ebb15d12fdc15a36a4b",
+      "verification": "all-eight-gates-passed"
     }
   ],
   "task_class": "consequential",
@@ -2905,3 +2907,73 @@ Task commit and three owned paths corroborated; source diff preserves strict roo
 #### Root acceptance: p04-t05
 
 Both remote source tasks accepted, 13/13 complete. Root acknowledges ordered full8gates on committed source with explicit exit/cache receipts, followed by an evidence-only append/commit to final-remote-controls.md. No other worker writes authorized; independent final review, receive/gate and closeout remain root-owned.
+
+### Remote continuation terminal reconciliation
+
+Root read full task/evidence append, corroborated actual9command exits (eight gates/fetch), current source fingerprints and CLI cache-miss7969 count, exact one-file evidencecommit and clean posthook. Thirteen task outcomes complete; remote event advances fixes_completed preserving unknown provenance. Fresh final review covers both corrections with prior clean integration coverage inherited; retry/recovery counters are not reset or consumed.
+
+#### final review dispatch
+
+Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high
+
+```json
+{
+  "request_id": "markdown-final-remote-native-20261001",
+  "caller": "oat-project-implement",
+  "scope": "final",
+  "objective": "Independent final review of two remote adoption corrections and current eight-gate evidence, inheriting clean main integration and prior full Markdown coverage; new remote feedback is not another failed retry of prior review loops.",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "reviewer",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "codex-root-20261001",
+    "source": "tool-schema",
+    "observed_at": "2026-10-01"
+  },
+  "authority": "read-only code and one review artifact",
+  "role_selector": "oat-reviewer-gpt-6-1-sol-high",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-10-01",
+  "guidance_verified_at": "2026-10-01",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 3600,
+  "retry_limit": 2,
+  "payload": {
+    "agent_type": "oat-reviewer-gpt-6-1-sol-high",
+    "fork_turns": "none",
+    "scope_reference": "final:9b926dbb37a93049640cf6737e5ba42f9598b8c7..HEAD",
+    "dispatch_mode": "background"
+  },
+  "launch_status": "planned",
+  "child_outcome": null,
+  "configured_invocation_evidence": [
+    "project-state:high",
+    "user-config:gpt-6.1-sol/high",
+    "tool-schema:gpt-6.1-sol low-through-ultra",
+    "canonical-role:sha256:eb1bd78d0a5a48ed5d1867e313e19a07859a86aedec14d759beda8f97d26ce55"
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [
+    "Current configured tuple intersects live explicit model/effort controls; runtime identity not reported."
+  ],
+  "continuation_events": [],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Independent final review of two remote adoption corrections and current eight-gate evidence, inheriting clean main integration and prior full Markdown coverage; new remote feedback is not another failed retry of prior review loops.",
+  "floor_satisfaction": "satisfied"
+}
+```
