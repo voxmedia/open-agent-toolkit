@@ -14,6 +14,11 @@ const APPROVED_G01_MAPPINGS = [
   ['composer-2.5-fast', 'composer-2.5[fast=true]'],
   ['claude-sonnet-5-thinking-high', 'claude-sonnet-5[effort=high]'],
   ['claude-sonnet-5-high', 'claude-sonnet-5[effort=high]'],
+  ['claude-sonnet-5-5-low', 'claude-sonnet-5-5-low'],
+  ['claude-sonnet-5-5-medium', 'claude-sonnet-5-5-medium'],
+  ['claude-sonnet-5-5-high', 'claude-sonnet-5-5-high'],
+  ['claude-sonnet-5-5-xhigh', 'claude-sonnet-5-5-xhigh'],
+  ['claude-sonnet-5-5-max', 'claude-sonnet-5-5-max'],
   ['claude-opus-5-5-low', 'claude-opus-5-5[effort=low]'],
   ['claude-opus-5-5-medium', 'claude-opus-5-5[effort=medium]'],
   ['claude-opus-5-5-high', 'claude-opus-5-5[effort=high]'],
@@ -52,15 +57,20 @@ describe('cursor model pin catalogue', () => {
     ).toEqual(APPROVED_G01_MAPPINGS);
   });
 
-  it('requires mapping-specific approved evidence and non-empty brackets', () => {
+  it('requires mapping-specific approval for bracket and exact-ID selectors', () => {
     for (const mapping of CURSOR_MODEL_PIN_MAPPINGS) {
       expect(mapping.gateEvidence).toMatchObject({
         gate: 'g01',
         disposition: 'approved',
       });
       expect(mapping.gateEvidence.probeName).not.toBe('');
-      expect(mapping.frontmatterModel).toMatch(/\[[^\]]+\]$/);
-      expect(mapping.frontmatterModel).not.toBe(mapping.ladderModelId);
+      if (mapping.syntaxFamily === 'explicit-model-id') {
+        expect(mapping.frontmatterModel).toBe(mapping.ladderModelId);
+        expect(mapping.gateEvidence.probeRecord).toBeDefined();
+      } else {
+        expect(mapping.frontmatterModel).toMatch(/\[[^\]]+\]$/);
+        expect(mapping.frontmatterModel).not.toBe(mapping.ladderModelId);
+      }
     }
   });
 
@@ -85,9 +95,12 @@ describe('cursor model pin catalogue', () => {
       gateEvidence.probeName.startsWith('zz-pin-probe-'),
     );
 
-    expect(probed).toHaveLength(15);
+    expect(probed).toHaveLength(20);
     expect(probed.map(({ ladderModelId }) => ladderModelId)).toEqual([
       'claude-sonnet-5-thinking-high',
+      ...['low', 'medium', 'high', 'xhigh', 'max'].map(
+        (effort) => `claude-sonnet-5-5-${effort}`,
+      ),
       ...['low', 'medium', 'high', 'xhigh', 'max'].map(
         (effort) => `claude-opus-5-5-${effort}`,
       ),
@@ -327,6 +340,130 @@ describe('cursor model pin catalogue', () => {
     }
   });
 
+  it('matches Sonnet 5.5 exact pins to native desktop evidence and excludes failed bracket selectors', () => {
+    type ProbeRecord = {
+      agent: string;
+      round: number;
+      submitted_selector: string;
+      subagent_start_model: string;
+      shell_model: string;
+      stop_model: string;
+      cursor_version: string;
+      shell_command: string;
+    };
+    type NativeEvent = {
+      hook_event_name: string;
+      tool_name?: string;
+      subagent_type?: string;
+      call_ref: string;
+      model: string;
+      subagent_model?: string;
+      shell_command?: string;
+      status?: string;
+      round: number;
+      model_override_present?: boolean;
+      session_ref?: string;
+      child_session_ref?: string;
+    };
+    const readJsonl = <T>(name: string): T[] =>
+      readFileSync(new URL(`./__fixtures__/${name}`, import.meta.url), 'utf8')
+        .trim()
+        .split('\n')
+        .map((line) => JSON.parse(line) as T);
+    const records = readJsonl<ProbeRecord>('cursor-pin-probe-2026-10-01.jsonl');
+    const nativeEvents = readJsonl<NativeEvent>(
+      'cursor-pin-probe-2026-10-01-events.jsonl',
+    );
+    expect(records).toHaveLength(16);
+    expect(nativeEvents).toHaveLength(64);
+    for (const record of records) {
+      const events = nativeEvents.filter(
+        (event) =>
+          event.round === record.round &&
+          (event.subagent_type === record.agent ||
+            event.shell_command === record.shell_command),
+      );
+      expect(
+        events.map(({ hook_event_name, tool_name }) =>
+          tool_name ? `${hook_event_name}:${tool_name}` : hook_event_name,
+        ),
+      ).toEqual([
+        'preToolUse:Task',
+        'subagentStart',
+        'preToolUse:Shell',
+        'subagentStop',
+      ]);
+      const [task, start, shell, stop] = events;
+      expect(task.model_override_present).toBe(false);
+      expect(start.call_ref).toBe(task.call_ref);
+      expect(shell.call_ref).toBe(task.call_ref);
+      expect(stop.call_ref).toBe(task.call_ref);
+      expect(stop.child_session_ref).toBe(shell.session_ref);
+      expect(start.subagent_model).toBe(record.subagent_start_model);
+      expect(start.model).toBe(record.subagent_start_model);
+      expect(shell.model).toBe(record.shell_model);
+      expect(stop.model).toBe(record.stop_model);
+      expect(stop.status).toBe('completed');
+      expect(record.cursor_version).toBe('3.22.12');
+    }
+    const byAgent = (agent: string) =>
+      records.find((record) => record.agent === agent);
+    for (const effort of ['low', 'medium', 'high', 'xhigh', 'max']) {
+      const mapping = findCursorModelPinMapping(`claude-sonnet-5-5-${effort}`);
+      const exact = byAgent(`zz-pin-probe-sonnet55-flat-${effort}`)!;
+      expect(exact).toMatchObject({
+        submitted_selector: `claude-sonnet-5-5-${effort}`,
+        subagent_start_model: `claude-sonnet-5-5-${effort}`,
+        shell_model: `claude-sonnet-5-5-${effort}`,
+        stop_model: `claude-sonnet-5-5-${effort}`,
+        round: 2,
+      });
+      expect(mapping?.syntaxFamily).toBe('explicit-model-id');
+      expect(mapping?.gateEvidence.probeName).toBe(exact.agent);
+      expect(mapping?.frontmatterModel).toBe(exact.submitted_selector);
+      expect(mapping?.ladderModelId).toBe(exact.subagent_start_model);
+      expect(mapping?.gateEvidence.probeRecord).toMatchObject({
+        submittedSelector: exact.submitted_selector,
+        resolvedModel: exact.subagent_start_model,
+        verifiedAt: '2026-10-01',
+        evidencePath:
+          'packages/cli/src/providers/cursor/codec/__fixtures__/cursor-pin-probe-2026-10-01.jsonl',
+      });
+      const bracket = byAgent(`zz-pin-probe-sonnet55-${effort}`)!;
+      expect(bracket).toMatchObject({
+        submitted_selector: `claude-sonnet-5-5[effort=${effort}]`,
+        subagent_start_model: 'grok-4.7-high-fast',
+        shell_model: 'grok-4.7-high-fast',
+        stop_model: 'grok-4.7-high-fast',
+        round: 1,
+      });
+      expect(
+        CURSOR_MODEL_PIN_MAPPINGS.some(
+          ({ frontmatterModel }) =>
+            frontmatterModel === bracket.submitted_selector,
+        ),
+      ).toBe(false);
+    }
+    for (const prefix of ['zz-pin-probe-ctl', 'zz-pin-probe-flat-ctl']) {
+      expect(byAgent(`${prefix}-pos-opus55-low`)).toMatchObject({
+        subagent_start_model: 'claude-opus-5-5-low',
+        shell_model: 'claude-opus-5-5-low',
+        stop_model: 'claude-opus-5-5-low',
+      });
+      for (const suffix of ['neg-sonnet55-ultra', 'neg-unknown']) {
+        const negative = byAgent(`${prefix}-${suffix}`)!;
+        expect(negative).toMatchObject({
+          subagent_start_model: 'grok-4.7-high-fast',
+          shell_model: 'grok-4.7-high-fast',
+          stop_model: 'grok-4.7-high-fast',
+        });
+        expect(
+          findCursorModelPinMapping(negative.submitted_selector),
+        ).toBeUndefined();
+      }
+    }
+  });
+
   it('keeps approved aliases materializable outside the supported catalogue', () => {
     const supported = new Set(
       SUPPORTED_CURSOR_ROLE_TARGETS.map(({ ladderModelId }) => ladderModelId),
@@ -340,7 +477,7 @@ describe('cursor model pin catalogue', () => {
     expect(supported).not.toContain('composer-2.5-fast');
     expect(supported).not.toContain('cursor-grok-4.5-high-fast');
     expect(supported).not.toContain('claude-fable-5-xhigh');
-    expect(SUPPORTED_CURSOR_ROLE_TARGETS).toHaveLength(26);
+    expect(SUPPORTED_CURSOR_ROLE_TARGETS).toHaveLength(31);
   });
 
   it('materializes every Cursor candidate in the bundled recommendation', () => {
@@ -356,7 +493,7 @@ describe('cursor model pin catalogue', () => {
       };
     };
 
-    expect(recommendation.version).toBe('2026-09-25.1');
+    expect(recommendation.version).toBe('2026-10-01.1');
     const candidates = Object.values(recommendation.providers.cursor).flatMap(
       ({ candidates: tierCandidates }) => tierCandidates,
     );

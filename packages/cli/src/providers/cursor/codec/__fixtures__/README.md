@@ -32,5 +32,34 @@ identity, original IDs, workspace roots, and transcript paths were removed.
 - Round 3: bare `grok-4.7-high` and `grok-4.7-xhigh` resolved as requested,
   and an unknown bare ID fell back to the account default.
 
-Grok 4.7 mappings are not in the catalog: shipping bare flat IDs as
-frontmatter needs a revision of `DR-260718-explicit-cursor-pin-mapping`.
+Grok 4.7 mappings remain outside the shipped catalog. The 2026-10-01 revision
+of `DR-260718-explicit-cursor-pin-mapping` permits verified exact-ID entries;
+this historical probe does not itself add a catalog entry.
+
+# Cursor Sonnet 5.5 native pin probe
+
+`cursor-pin-probe-2026-10-01.jsonl` summarizes 16 temporary Cursor desktop
+3.22.12 subagents launched from Agent Chat in two rounds on 2026-10-01.
+`cursor-pin-probe-2026-10-01-events.jsonl` retains their 64 correlated native
+Task, `subagentStart`, Shell `preToolUse`, and `subagentStop` events. The
+observe-only hooks captured 41 events per round; nine incidental parent
+discovery events in each round are excluded from these correlated records.
+
+- Round 1 submitted `claude-sonnet-5-5[effort=...]` at low, medium, high,
+  xhigh, and max. All five resolved to `grok-4.7-high-fast`, matching the
+  unknown-family fallback. The Sonnet ultra control also fell back. The
+  Opus 5.5 low positive control resolved to `claude-opus-5-5-low`.
+- Round 2 submitted the exact IDs `claude-sonnet-5-5-low`,
+  `claude-sonnet-5-5-medium`, `claude-sonnet-5-5-high`,
+  `claude-sonnet-5-5-xhigh`, and `claude-sonnet-5-5-max`. Each matched in
+  start, child Shell, and stop events. The positive Opus control reproduced;
+  `claude-sonnet-5-5-ultra` and `claude-sonnet-9-high` fell back to
+  `grok-4.7-high-fast`.
+
+Native Task inputs omitted model overrides; the events record this explicitly.
+The summary's submitted selectors were transcribed from the temporary agents'
+frontmatter, not derived from resolved models. Task/start/Shell/stop correlation
+was checked against original call and conversation IDs before replacing them
+with stable pseudonymous references. Identity fields, absolute paths, original
+IDs, task prose, and discovery payloads are omitted. The retained timestamps,
+model fields, exact echo commands, and categorical controls are captured data.

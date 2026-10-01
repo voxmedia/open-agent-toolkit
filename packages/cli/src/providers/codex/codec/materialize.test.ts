@@ -10,26 +10,40 @@ import {
 import { OAT_MANAGED_ROLE_HEADER } from './shared';
 
 describe('materializeCodexRole', () => {
-  it('materializes a canonical agent with explicit model and effort', () => {
-    const canonical = parseCanonicalAgentMarkdown(
-      `---\nname: oat-reviewer\ndescription: Reviewer\nreadonly: true\n---\n\nReview carefully.`,
-    );
+  it.each([
+    [
+      'gpt-5.6-sol',
+      'oat-reviewer-gpt-5-6-sol-xhigh',
+      'agents/oat-reviewer-gpt-5-6-sol-xhigh.toml',
+    ],
+    [
+      'gpt-6.1-sol',
+      'oat-reviewer-gpt-6-1-sol-xhigh',
+      'agents/oat-reviewer-gpt-6-1-sol-xhigh.toml',
+    ],
+  ])(
+    'materializes a canonical agent with explicit %s model and effort',
+    (model, roleName, configFile) => {
+      const canonical = parseCanonicalAgentMarkdown(
+        `---\nname: oat-reviewer\ndescription: Reviewer\nreadonly: true\n---\n\nReview carefully.`,
+      );
 
-    const role = materializeCodexRole({
-      agent: canonical,
-      model: 'gpt-5.6-sol',
-      effort: 'xhigh',
-    });
+      const role = materializeCodexRole({
+        agent: canonical,
+        model,
+        effort: 'xhigh',
+      });
 
-    expect(role.roleName).toBe('oat-reviewer-gpt-5-6-sol-xhigh');
-    expect(role.configFile).toBe('agents/oat-reviewer-gpt-5-6-sol-xhigh.toml');
-    expect(role.content).toContain(OAT_MANAGED_ROLE_HEADER);
+      expect(role.roleName).toBe(roleName);
+      expect(role.configFile).toBe(configFile);
+      expect(role.content).toContain(OAT_MANAGED_ROLE_HEADER);
 
-    const parsed = TOML.parse(role.content) as Record<string, unknown>;
-    expect(parsed.model).toBe('gpt-5.6-sol');
-    expect(parsed.model_reasoning_effort).toBe('xhigh');
-    expect(parsed.sandbox_mode).toBe('read-only');
-  });
+      const parsed = TOML.parse(role.content) as Record<string, unknown>;
+      expect(parsed.model).toBe(model);
+      expect(parsed.model_reasoning_effort).toBe('xhigh');
+      expect(parsed.sandbox_mode).toBe('read-only');
+    },
+  );
 
   it('normalizes model IDs safely for default role names', () => {
     expect(

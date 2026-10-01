@@ -1,4 +1,5 @@
 export type CursorPinSyntaxFamily =
+  | 'explicit-model-id'
   | 'gpt-reasoning'
   | 'claude-effort'
   | 'composer-fast'
@@ -94,6 +95,81 @@ export const CURSOR_MODEL_PIN_MAPPINGS = [
     'claude-sonnet-5[effort=high]',
     'claude-effort',
     { catalogue: false },
+  ),
+  approvedMapping(
+    'claude-sonnet-5-5-low',
+    'claude-sonnet-5-5-low',
+    'explicit-model-id',
+    {
+      probeName: 'zz-pin-probe-sonnet55-flat-low',
+      probeRecord: {
+        submittedSelector: 'claude-sonnet-5-5-low',
+        resolvedModel: 'claude-sonnet-5-5-low',
+        verifiedAt: '2026-10-01',
+        evidencePath:
+          'packages/cli/src/providers/cursor/codec/__fixtures__/cursor-pin-probe-2026-10-01.jsonl',
+      },
+    },
+  ),
+  approvedMapping(
+    'claude-sonnet-5-5-medium',
+    'claude-sonnet-5-5-medium',
+    'explicit-model-id',
+    {
+      probeName: 'zz-pin-probe-sonnet55-flat-medium',
+      probeRecord: {
+        submittedSelector: 'claude-sonnet-5-5-medium',
+        resolvedModel: 'claude-sonnet-5-5-medium',
+        verifiedAt: '2026-10-01',
+        evidencePath:
+          'packages/cli/src/providers/cursor/codec/__fixtures__/cursor-pin-probe-2026-10-01.jsonl',
+      },
+    },
+  ),
+  approvedMapping(
+    'claude-sonnet-5-5-high',
+    'claude-sonnet-5-5-high',
+    'explicit-model-id',
+    {
+      probeName: 'zz-pin-probe-sonnet55-flat-high',
+      probeRecord: {
+        submittedSelector: 'claude-sonnet-5-5-high',
+        resolvedModel: 'claude-sonnet-5-5-high',
+        verifiedAt: '2026-10-01',
+        evidencePath:
+          'packages/cli/src/providers/cursor/codec/__fixtures__/cursor-pin-probe-2026-10-01.jsonl',
+      },
+    },
+  ),
+  approvedMapping(
+    'claude-sonnet-5-5-xhigh',
+    'claude-sonnet-5-5-xhigh',
+    'explicit-model-id',
+    {
+      probeName: 'zz-pin-probe-sonnet55-flat-xhigh',
+      probeRecord: {
+        submittedSelector: 'claude-sonnet-5-5-xhigh',
+        resolvedModel: 'claude-sonnet-5-5-xhigh',
+        verifiedAt: '2026-10-01',
+        evidencePath:
+          'packages/cli/src/providers/cursor/codec/__fixtures__/cursor-pin-probe-2026-10-01.jsonl',
+      },
+    },
+  ),
+  approvedMapping(
+    'claude-sonnet-5-5-max',
+    'claude-sonnet-5-5-max',
+    'explicit-model-id',
+    {
+      probeName: 'zz-pin-probe-sonnet55-flat-max',
+      probeRecord: {
+        submittedSelector: 'claude-sonnet-5-5-max',
+        resolvedModel: 'claude-sonnet-5-5-max',
+        verifiedAt: '2026-10-01',
+        evidencePath:
+          'packages/cli/src/providers/cursor/codec/__fixtures__/cursor-pin-probe-2026-10-01.jsonl',
+      },
+    },
   ),
   approvedMapping(
     'claude-opus-5-5-low',

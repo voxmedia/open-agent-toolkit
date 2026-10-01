@@ -1,7 +1,7 @@
 ---
-guidance_version: 2026-09-24
-last_verified: 2026-09-24
-review_after: 2026-12-22
+guidance_version: 2026-10-01
+last_verified: 2026-10-01
+review_after: 2026-12-30
 ---
 
 # Codex and OpenAI Model Selection
@@ -13,16 +13,19 @@ model examples below. Launch mechanics for OAT dispatch live in
 
 ## Current Families
 
-Use verified GPT-6 Sol/Luna model IDs for routine new Codex work. GPT-6 Astra
+Use `gpt-6.1-sol` for new Sol routes and `gpt-6-luna` for bounded Luna work.
+This Sol selector migration preserves the existing task-class effort guidance;
+it does not claim a newly measured workload advantage. GPT-6 Astra
 is a supported Frontier candidate:
 
 - `gpt-6-astra`: Frontier candidate for especially demanding work; the bundled
   recommendation uses high and xhigh, while the supported catalogue also
   permits low, medium, and max;
-- `gpt-6-sol`: high-capability implementation and reasoning route;
+- `gpt-6.1-sol`: high-capability implementation and reasoning route;
 - `gpt-6-luna`: cost-sensitive, bounded work.
 
-Public engineering benchmarks show task-dependent Astra gains over Sol, with
+The earlier public engineering benchmarks show task-dependent Astra gains
+over GPT-6 Sol, with
 cost and runtime tradeoffs; they do not establish a universal replacement. The
 September frontier-release comparison remains review-pending in the separate
 model-selection vault, and no matched OAT workload evaluation has qualified a
@@ -30,8 +33,8 @@ routine default change. Astra's Frontier inclusion is a user-directed
 preference. Keep the Sol task-class defaults below while that evidence is
 reconciled and local task fit is evaluated.
 
-The GPT-5.6 Sol/Luna/Terra targets remain supported for explicit configurations
-and established workloads. Re-evaluate economics and qualitative routing on
+GPT-6 Sol (`gpt-6-sol`) and the GPT-5.6 Sol/Luna/Terra targets remain supported
+for explicit configurations and established workloads. Re-evaluate economics and qualitative routing on
 representative work before carrying over GPT-5.6-specific comparisons.
 
 Direct API specialist routes:
@@ -48,18 +51,24 @@ name includes `codex`.
 ## Dated Task-Class Matrix
 
 These are current task-class starting points, not an evaluated ordering across
-providers or a promise about relative GPT-6 latency and price. All shown
+providers or a promise about relative GPT-6 or GPT-6.1 latency and price. All shown
 model/effort pairs are in the local Codex catalogue.
 
-| Task class               | Default                                    | Escalation                                                            | Floor notes                                                                   |
-| ------------------------ | ------------------------------------------ | --------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| `mechanical-recon`       | `gpt-6-luna`, high                         | `gpt-6-sol`, medium                                                   | Lower effort is suitable only when a miss is cheap and mechanically detected. |
-| `intelligent-recon`      | `gpt-6-sol`, medium                        | Sol high                                                              | Preserve verification for silent-miss-prone reconnaissance.                   |
-| `default-implementation` | `gpt-6-sol`, medium                        | Sol high                                                              | Luna is for independently bounded, strongly verified work.                    |
-| `hard-reasoning`         | `gpt-6-sol`, high                          | Sol xhigh                                                             | Narrow the problem before raising effort.                                     |
-| `consequential`          | `gpt-6-sol`, high, plus independent review | Sol xhigh for a reasoning-depth bottleneck; max only after evaluation | The root retains consequential authorization.                                 |
+| Task class               | Default                                      | Escalation                                                            | Floor notes                                                                   |
+| ------------------------ | -------------------------------------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `mechanical-recon`       | `gpt-6-luna`, high                           | `gpt-6.1-sol`, medium                                                 | Lower effort is suitable only when a miss is cheap and mechanically detected. |
+| `intelligent-recon`      | `gpt-6.1-sol`, medium                        | Sol high                                                              | Preserve verification for silent-miss-prone reconnaissance.                   |
+| `default-implementation` | `gpt-6.1-sol`, medium                        | Sol high                                                              | Luna is for independently bounded, strongly verified work.                    |
+| `hard-reasoning`         | `gpt-6.1-sol`, high                          | Sol xhigh                                                             | Narrow the problem before raising effort.                                     |
+| `consequential`          | `gpt-6.1-sol`, high, plus independent review | Sol xhigh for a reasoning-depth bottleneck; max only after evaluation | The root retains consequential authorization.                                 |
 
-The bundled Frontier ladder ends with Astra xhigh after Sol xhigh and Astra
+[OpenAI's GPT-6.1 Sol model reference](https://developers.openai.com/api/docs/models/gpt-6.1-sol)
+identifies `gpt-6.1-sol` and the supported efforts `low`, `medium`, `high`,
+`xhigh`, and `max`. Do not emit `none` or `minimal` for this family. For direct
+API tool calls, use the Responses API. Verify the launching Codex runtime
+independently of API availability.
+
+The bundled Frontier ladder ends with Astra xhigh after Sol 6.1 xhigh and Astra
 high. The supported Astra and Sol effort sets both end at max, so Sol max
 remains available for explicit configuration even though it is no longer in
 the bundled Frontier recommendation.

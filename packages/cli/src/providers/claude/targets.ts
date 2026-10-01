@@ -12,6 +12,7 @@ const CLAUDE_GENERATION_EFFORTS = {
   'fable-5-1': CLAUDE_EFFORT_ORDER,
   'fable-5': CLAUDE_EFFORT_ORDER,
   'opus-5-5': CLAUDE_EFFORT_ORDER,
+  'sonnet-5-5': CLAUDE_EFFORT_ORDER,
   'sonnet-5': CLAUDE_EFFORT_ORDER,
   'opus-4-7': CLAUDE_EFFORT_ORDER,
   'opus-4-6': ['low', 'medium', 'high', 'max'],
@@ -76,9 +77,10 @@ export function claudeModelGeneration(
   model: string,
 ): ClaudeModelGeneration | null {
   const normalized = model.toLowerCase().replace(/\[1m\]$/u, '');
-  for (const generation of Object.keys(
-    CLAUDE_GENERATION_EFFORTS,
-  ) as ClaudeModelGeneration[]) {
+  const generations = (
+    Object.keys(CLAUDE_GENERATION_EFFORTS) as ClaudeModelGeneration[]
+  ).sort((left, right) => right.length - left.length);
+  for (const generation of generations) {
     const [family, ...versionParts] = generation.split('-');
     const version = versionParts.join('[-.]');
     const pattern = new RegExp(

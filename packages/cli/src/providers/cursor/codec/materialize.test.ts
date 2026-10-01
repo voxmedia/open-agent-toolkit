@@ -6,7 +6,10 @@ import { parseCanonicalAgentMarkdown } from '@agents/canonical';
 import { afterEach, describe, expect, it } from 'vitest';
 import YAML from 'yaml';
 
-import { CURSOR_MODEL_PIN_MAPPINGS } from './catalog';
+import {
+  CURSOR_MODEL_PIN_MAPPINGS,
+  type CursorModelPinMapping,
+} from './catalog';
 import {
   assertNoUnmanagedCursorAgentCollisions,
   materializeCursorAgent,
@@ -111,6 +114,100 @@ describe('cursor markdown materializer', () => {
       }).content,
     );
     expect(rendered.frontmatter.is_background).toBe(true);
+  });
+
+  it.each(['low', 'medium', 'high', 'xhigh', 'max'])(
+    'renders the verified Sonnet 5.5 %s exact ID',
+    (effort) => {
+      const canonical = parseCanonicalAgentMarkdown(
+        '---\nname: oat-reviewer\ndescription: Review.\n---\n\nBody',
+      );
+      const mapping = CURSOR_MODEL_PIN_MAPPINGS.find(
+        ({ ladderModelId }) => ladderModelId === `claude-sonnet-5-5-${effort}`,
+      )!;
+      const rendered = materializeCursorAgent({
+        agent: canonical,
+        mapping,
+        owner: 'supported-catalogue',
+      });
+      expect(rendered.roleName).toBe(
+        `oat-reviewer-claude-sonnet-5-5-${effort}`,
+      );
+      expect(parseRendered(rendered.content).frontmatter.model).toBe(
+        `claude-sonnet-5-5-${effort}`,
+      );
+    },
+  );
+
+  it.each([
+    'missing record',
+    'mismatched submitted selector',
+    'mismatched resolved model',
+    'missing evidence path',
+    'missing verification date',
+    'different frontmatter ID',
+    'malformed direct selector',
+  ])('rejects a direct-ID pin with %s before rendering', (failure) => {
+    const canonical = parseCanonicalAgentMarkdown(
+      '---\nname: oat-reviewer\ndescription: Review.\n---\n\nBody',
+    );
+    const approved = CURSOR_MODEL_PIN_MAPPINGS.find(
+      ({ ladderModelId }) => ladderModelId === 'claude-sonnet-5-5-low',
+    )!;
+    const mapping: CursorModelPinMapping = structuredClone(approved);
+    const record = mapping.gateEvidence.probeRecord!;
+    if (failure === 'missing record') delete mapping.gateEvidence.probeRecord;
+    if (failure === 'mismatched submitted selector')
+      record.submittedSelector = 'claude-sonnet-5-5-high';
+    if (failure === 'mismatched resolved model')
+      record.resolvedModel = 'grok-4.7-high-fast';
+    if (failure === 'missing evidence path') record.evidencePath = ' ';
+    if (failure === 'missing verification date') record.verifiedAt = '';
+    if (failure === 'different frontmatter ID') {
+      mapping.frontmatterModel = 'claude-sonnet-5-5-high';
+      record.submittedSelector = mapping.frontmatterModel;
+    }
+    if (failure === 'malformed direct selector') {
+      mapping.frontmatterModel = mapping.ladderModelId =
+        'claude-sonnet-5-5[effort=low]';
+      record.submittedSelector = record.resolvedModel =
+        mapping.frontmatterModel;
+    }
+    expect(() =>
+      materializeCursorAgent({
+        agent: canonical,
+        mapping,
+        owner: 'project-config',
+      }),
+    ).toThrow(
+      /explicit model ID requires matching mapping-specific native probe evidence/i,
+    );
+  });
+
+  it('retains gate approval and bracket requirements for unverified selectors', () => {
+    const canonical = parseCanonicalAgentMarkdown(
+      '---\nname: oat-reviewer\ndescription: Review.\n---\n\nBody',
+    );
+    const approved = CURSOR_MODEL_PIN_MAPPINGS[0]!;
+    expect(() =>
+      materializeCursorAgent({
+        agent: canonical,
+        owner: 'project-config',
+        mapping: {
+          ...approved,
+          gateEvidence: { ...approved.gateEvidence, probeName: '' },
+        },
+      }),
+    ).toThrow(/mapping-specific gate g01 approval/i);
+    for (const selector of ['unknown-cursor-model', 'composer-2.5[]']) {
+      expect(() =>
+        materializeCursorAgent({
+          agent: canonical,
+          owner: 'project-config',
+          mapping: { ...approved, frontmatterModel: selector },
+        }),
+      ).toThrow(/non-empty bracket segment/i);
+    }
   });
 
   it('rejects normalized desired-name collisions before writes', () => {

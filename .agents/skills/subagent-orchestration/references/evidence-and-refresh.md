@@ -1,10 +1,10 @@
 # Evidence and Refresh Policy
 
 ```yaml
-guidance_version: 2026-09-24
-last_verified: 2026-09-24
-review_after: 2026-10-08
-stale_after: 2026-10-23
+guidance_version: 2026-10-01
+last_verified: 2026-10-01
+review_after: 2026-10-15
+stale_after: 2026-10-30
 ```
 
 This file governs dated provider examples. It does not override a live catalog,
@@ -17,7 +17,9 @@ authorization boundary.
 - `review-required`: older than 45 days, a newer family is observed, or a material control, price, tool, context, alias, or harness change is detected.
 - `stale`: older than 90 days, named models are unavailable or deprecated, or the launching surface can no longer express the recorded controls.
 
-The named routes were refreshed against provider catalogues on 2026-09-23.
+The October 1 availability refresh adds GPT-6.1 Sol and Sonnet 5.5 support;
+it migrates active Codex Sol selectors by user direction while preserving
+efforts. Earlier provider observations retain their own dates.
 The benchmark observations below remain dated to 2026-07-25 and require
 review before making a new cross-provider performance claim. Each provider
 reference carries its own verification date; availability refresh does not
@@ -83,8 +85,9 @@ publish a provider-independent effort conversion.
   explicit user direction. No local task evaluation establishes an Astra
   advantage, and this preference is not acceptance by the separately
   maintained model-selection policy.
-- GPT-6 Sol and Luna are selectable in the current Codex catalogue and are
-  the default new-work routes in `provider-codex.md`. GPT-5.6 Sol/Luna/Terra
+- GPT-6.1 Sol and GPT-6 Luna are the default new-work selectors in
+  `provider-codex.md`. The Sol migration preserves existing effort choices,
+  including medium for intelligent recon. GPT-6 Sol and GPT-5.6 Sol/Luna/Terra
   remain supported for explicit configurations. The July independent coding
   data on GPT-5.6 Luna/Terra supported a mechanical floor of Luna high; this
   is historical evidence, not a measured GPT-6 performance comparison.
@@ -93,7 +96,12 @@ publish a provider-independent effort conversion.
   evidence. Earlier Opus 5 effort observations are historical and do not
   establish an Opus 5.5 benchmark result. Consequence adds independent review
   rather than automatically raising effort.
-- Sonnet 5 is a conditional route when measured latency, throughput, access,
+- Sonnet 5.5 is a supported Claude conditional route and the user-selected
+  Economy medium candidate. Cursor 3.22.12 native probes matched Sonnet 5.5
+  exact-ID pins; its bracket-form pins fell back. Every pin requires its own
+  approved evidence and registry entry. Sonnet 5 remains
+  supported for compatibility and established workflows. Sonnet is a
+  conditional route when measured latency, throughput, access,
   rate limits, or end-to-end workload economics win. Fable 5 is an
   eligibility-gated specialist; its missing-domain-concept or long-horizon
   reviewer instantiation remains provisional, and zero-data-retention
@@ -194,6 +202,10 @@ family nor across families, because a harness may substitute a default for any
 component it cannot resolve. Probe a non-default rung as well, or a result that
 merely matches the family default cannot distinguish an honored parameter from
 an ignored one.
+
+An exact-ID Cursor pin meets the same evidence gate as a bracket-form pin;
+CLI catalog presence alone never permits generic pass-through. The Sonnet 5.5
+refresh uses explicit exact-ID mappings because its bracket-form pins fell back.
 
 The six Cursor `claude-opus-5` and `claude-opus-4-8` mappings shipped on
 2026-07-25 met this gate; their resolved identities are listed in
