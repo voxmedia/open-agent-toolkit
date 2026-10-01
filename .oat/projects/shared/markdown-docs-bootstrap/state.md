@@ -97,11 +97,20 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: .oat/projects/shared/markdown-docs-bootstrap/reviews/final-review-2026-10-01T160046Z.md
   handoff: Gate passed at the high threshold, but the final review still contains non-blocking findings (medium=1, low=1). Run oat-project-review-receive for .oat/projects/shared/markdown-docs-bootstrap/reviews/final-review-2026-10-01T160046Z.md to disposition them before marking the final review row passed.
-  receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
+  receive_correlation:
+    run_id: a8646353-1fff-430a-aee3-e8b32dd2966e
+    handoff: Gate passed at the high threshold, but the final review still contains non-blocking findings (medium=1, low=1). Run oat-project-review-receive for .oat/projects/shared/markdown-docs-bootstrap/reviews/final-review-2026-10-01T160046Z.md to disposition them before marking the final review row passed.
+    source_artifact: .oat/projects/shared/markdown-docs-bootstrap/reviews/final-review-2026-10-01T160046Z.md
+    scope: final
+    type: code
+    source_filename: final-review-2026-10-01T160046Z.md
+  receive_source_artifact: .oat/projects/shared/markdown-docs-bootstrap/reviews/final-review-2026-10-01T160046Z.md
+  receive_archived_artifact: .oat/projects/shared/markdown-docs-bootstrap/reviews/archived/final-review-2026-10-01T160046Z.md
+  receive_event_identity:
+    scope: final
+    type: code
+    source_filename: final-review-2026-10-01T160046Z.md
+  receive_pre_head: cec06ae01ae9ea44d3a96f76e7d3002511b424ac
   receive_commit: null
   failure: null
   status: pending
@@ -118,10 +127,10 @@ oat_implement_exit_gate:
   freshness_head: 697f529e8641ade24140fd7a9b88483799aa204a
   freshness_fingerprint: sha256:effective-delta-v2:a96f98e44fac955295b9d420135e93e985f665e96e99daa0ba31c2401fdef824
   launch_state: result_persisted
-  receive_state: not_started
+  receive_state: intent_persisted
   receive_eligible: true
   receive_completed: false
-  updated_at: '2026-10-01T16:05:29Z'
+  updated_at: '2026-10-01T16:05:32Z'
   config_fingerprint: sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324
 ---
 
