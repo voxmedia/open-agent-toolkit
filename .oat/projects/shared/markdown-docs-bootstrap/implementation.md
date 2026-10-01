@@ -2550,3 +2550,67 @@ Dispatch: scope=document action=implementation role=implementer producer=unknown
 #### Pre-approval documentation completed
 
 Accepted `markdown-closeout-document-pinned-20261001` executed the current document skill and mandatory repository-reference update. Commits `842f45bf94309bb56bf47bf35ea4297e400bca02` (four scoped PJM references) and `5fbe524a2e585de6dfc8b691beaebccbf98b08b5` (state timestamp only) distinguish completed feature verification from pending final HiLL, preserve the broader backlog as open and packages as prepared 0.3.11, and retain `oat_docs_updated: complete`. Bounded source/docs inventory found all shipped capability areas adequately covered; no public-page or navigation changes were needed. Root read exact complete diffs, corroborated unchanged sequence/gate/recap and source boundary, and accepted actual file-scoped format/YAML/link checks. No broad tests or site build repeated; twelve-page/105-link coverage remains prior evidence.
+
+#### Pre-approval pr dispatch
+
+Dispatch: scope=pr action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high-3da8a37eed
+
+```json
+{
+  "request_id": "markdown-closeout-pr-native-20261001",
+  "caller": "oat-project-implement",
+  "scope": "pr",
+  "objective": "Execute current oat-project-pr-final skill for immutable configured pre-approval sequence.",
+  "action": "closeout",
+  "role_name": "oat-project-pr-final",
+  "role_class": "worker",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "codex-root-closeout-pr",
+    "source": "current-tool-schema",
+    "observed_at": "2026-10-01T17:00:45.172806+00:00"
+  },
+  "authority": "Only named closeout step owned outputs and commits; preserve authoritative sequence snapshot.",
+  "role_selector": "oat-phase-implementer-gpt-6-1-sol-high-3da8a37eed",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-09-24",
+  "guidance_verified_at": "2026-09-24",
+  "guidance_status": "review-required",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/medium", "gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 3600,
+  "retry_limit": 2,
+  "payload": {
+    "agent_type": "oat-phase-implementer-gpt-6-1-sol-high-3da8a37eed",
+    "fork_turns": "none",
+    "dispatch_mode": "background"
+  },
+  "launch_status": "planned",
+  "child_outcome": null,
+  "configured_invocation_evidence": [
+    "project-state:high",
+    "current dispatch resolver model/effort tuple: gpt-6.1-sol/high",
+    "tool-schema:worker exact explicit model and reasoning_effort"
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [
+    "Native model-pinned worker first; named current closeout skill owns action and output boundary. Runtime identity not reported."
+  ],
+  "continuation_events": [],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "External PR publication with fail-closed review provenance and branch-state reconciliation.",
+  "floor_satisfaction": "satisfied"
+}
+```
