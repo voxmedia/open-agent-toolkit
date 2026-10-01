@@ -1529,6 +1529,18 @@ Accepted exact-target canonical-role route /root/markdown_p04_pinned; awaiting r
       "merge_commit": "2e21aa9b75311d2d4b4a62e1e27f682b4dbf07dc",
       "evidence_commit": "99d931ca96e26127c12248bf8ec0d2deb71791ed",
       "verification": "all-eight-gates-passed"
+    },
+    {
+      "event": "remote-review-fix-continuation",
+      "scope": "p04-t04,p04-t05",
+      "status": "planned",
+      "accepted_handle": "/root/markdown_p04_pinned",
+      "original_request_id": "markdown-p04-pinned-20261001",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "recovery_attempt_consumed": false,
+      "remote_event": "remote-pr-335-review-2026-10-01T181341Z.md",
+      "resolution_notices": []
     }
   ],
   "task_class": "consequential",
@@ -2865,3 +2877,9 @@ Root consumed exactly one **Reconnaissance:** not-attempted signal before valida
 ## Remote Review Received: PR #335
 
 Date: 2026-10-01T18:13:41Z. Artifact: reviews/archived/remote-pr-335-review-2026-10-01T181341Z.md. Findings: 0 Critical, 0 High, 1 Medium, 1 Low. M1/L1 accepted and converted to p04-t04/p04-t05 respectively (both Minor). No deferrals/dismissals. Informational PR summary excluded from findings; source OAT provenance unknown. Root reproduced both public CLI defects; actual baseline receipts /tmp/markdown-remote-before.json. No GitHub replies posted. First remote receive cycle of3. Existing integration review covers its declared basis; source fixes require fresh final review/gate. Summary/document/PR completed snapshot and recap skip remain unchanged; pending approval is not granted.
+
+### Remote fix continuation dispatch
+
+Dispatch: scope=p04 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high
+
+Resolver notices: [] (none). Current resolver native role is registered after main integration; the existing accepted exact canonical-role handle is resumed with unchanged gpt-6.1-sol/high controls, not replaced or relabeled. Root first preflight used invalid CLI role spelling before any launch; corrected from actual help. This is explicit remote review-fix continuation, not post-commit recovery; usage remains0/10. Root owns tracking ACK/receive/review/gate/PR, worker owns source/test/evidence for p04-t04/p04-t05.
