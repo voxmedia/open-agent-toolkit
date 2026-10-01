@@ -67,8 +67,9 @@ result fails closed as unresolved instead.
 
 A later substantive change makes an allowed result stale, test-only changes
 included. Only an operator can keep it fresh, by recording an append-only
-exit-gate waiver for the exact commits; agents never issue one, and autonomous
-runs stop instead. The summary and PR description list every waiver.
+exit-gate waiver for the exact commits; agents never issue one. An autonomous
+run that finds a stale result persists `stale` and starts a new gate run; it
+refuses only an attempted waiver write. The summary and PR description list every waiver.
 
 After implementation closeout finishes:
 

@@ -310,6 +310,10 @@ function stepOwner(
   return { kind: 'step', phase, step, skill: STEP_SKILLS[step] };
 }
 
+function approvalOwner(): CloseoutNextOwner {
+  return { kind: 'approval', skill: RECOVERY_SKILL, writes: APPROVAL_WRITES };
+}
+
 function evaluateSnapshot(
   snapshot: CloseoutSnapshot,
   inputs: CloseoutInputs,
@@ -336,13 +340,27 @@ function evaluateSnapshot(
   });
 
   if (snapshot.status === 'failed') {
-    const step = prePending ?? postPending;
+    // Approval-aware order: pending pre-approval work, then the pending
+    // approval boundary, then post-approval work, then status repair. A
+    // post-approval step is never named while approval is pending.
+    const approvalPending = snapshot.approval === 'pending';
+    const owner: CloseoutNextOwner = prePending
+      ? stepOwner('pre_approval', prePending)
+      : approvalPending
+        ? approvalOwner()
+        : postPending
+          ? stepOwner('post_approval', postPending)
+          : { kind: 'sequence-status', skill: RECOVERY_SKILL };
+    const at =
+      owner.kind === 'step'
+        ? ` at \`${owner.step}\``
+        : owner.kind === 'approval'
+          ? ' at the approval boundary'
+          : '';
     return incomplete(
       'sequence_failed',
-      `the post-implementation sequence recorded a failure${step ? ` at \`${step}\`` : ''}`,
-      step
-        ? stepOwner(prePending ? 'pre_approval' : 'post_approval', step)
-        : { kind: 'sequence-status', skill: RECOVERY_SKILL },
+      `the post-implementation sequence recorded a failure${at}`,
+      owner,
     );
   }
   if (prePending) {
@@ -353,11 +371,11 @@ function evaluateSnapshot(
     );
   }
   if (snapshot.approval === 'pending') {
-    return incomplete('approval_pending', 'final approval is not recorded', {
-      kind: 'approval',
-      skill: RECOVERY_SKILL,
-      writes: APPROVAL_WRITES,
-    });
+    return incomplete(
+      'approval_pending',
+      'final approval is not recorded',
+      approvalOwner(),
+    );
   }
   if (postPending) {
     return incomplete(

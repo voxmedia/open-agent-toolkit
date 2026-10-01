@@ -328,8 +328,9 @@ fingerprint at the range end (in the generation's own version), and a UTC
 timestamp. A waiver never rewrites `reviewed_head`, the implementation
 fingerprint, `freshness_head`, or the freshness fingerprint, and an earlier
 waiver is never edited. Agents write a waiver only on an explicit operator
-instruction and never under `OAT_AUTONOMOUS=1`, where the run stops at the
-stale boundary instead. A waived generation stays fresh only while nothing
+instruction. Under `OAT_AUTONOMOUS=1` an attempted waiver write is refused,
+and a run that finds a stale generation persists `stale` and starts a new gate
+run instead of pausing. A waived generation stays fresh only while nothing
 substantive lands after the covered range, under both versions; a malformed or
 unverifiable waiver fails closed as stale. The project summary and the final PR
 description's Verification section list every waiver.

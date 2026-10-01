@@ -220,6 +220,80 @@ describe('oat project closeout-check', () => {
     );
   });
 
+  describe('a failed snapshot picks its owner in approval-aware order', () => {
+    // p04 gate M1 (reviews/archived/p04-review-2026-10-01T180727Z.md): the
+    // exact reproduction fixture. Pre-approval work is complete, approval is
+    // pending, and the run failed with post-approval retro still stored.
+    const GATE_FIXTURE = [
+      'oat_post_implement_sequence:',
+      '  status: failed',
+      '  source: configured',
+      '  pre_approval: [document, summary, pr]',
+      '  pre_approval_completed: [document, summary, pr]',
+      '  approval: pending',
+      '  approval_source: null',
+      '  post_approval: [retro]',
+      '  post_approval_completed: []',
+      '  failure: { boundary: approval, detail: interrupted before sign-off }',
+    ];
+
+    it('names the approval boundary, never retro, while approval is pending', async () => {
+      const fixture = await createProjectFixture(tempDirs, {
+        configured: 'docs-pr',
+        state: buildState({ snapshotLines: GATE_FIXTURE }),
+      });
+      const { payload, exitCode } = await check(fixture);
+      expect(payload).toMatchObject({
+        status: 'incomplete',
+        invariant: 'sequence_failed',
+        route: 'oat-project-implement',
+        nextOwner: {
+          kind: 'approval',
+          writes: ['approval: approved', 'approval: not_required'],
+        },
+      });
+      expect(payload.nextOwner).not.toHaveProperty('step');
+      expect(payload.message).not.toContain('retro');
+      expect(exitCode).toBe(1);
+    });
+
+    it('names pending pre-approval work before the approval boundary', async () => {
+      const fixture = await createProjectFixture(tempDirs, {
+        state: buildState({
+          snapshotLines: GATE_FIXTURE.map((line) =>
+            line.startsWith('  pre_approval_completed:')
+              ? '  pre_approval_completed: [document]'
+              : line,
+          ),
+        }),
+      });
+      const { payload } = await check(fixture);
+      expect(payload).toMatchObject({
+        invariant: 'sequence_failed',
+        nextOwner: { kind: 'step', phase: 'pre_approval', step: 'summary' },
+      });
+    });
+
+    it('names post-approval work only once approval is recorded', async () => {
+      const fixture = await createProjectFixture(tempDirs, {
+        state: buildState({
+          snapshotLines: GATE_FIXTURE.map((line) =>
+            line.startsWith('  approval: ')
+              ? '  approval: approved'
+              : line.startsWith('  approval_source:')
+                ? '  approval_source: user'
+                : line,
+          ),
+        }),
+      });
+      const { payload } = await check(fixture);
+      expect(payload).toMatchObject({
+        invariant: 'sequence_failed',
+        nextOwner: { kind: 'step', phase: 'post_approval', step: 'retro' },
+      });
+    });
+  });
+
   it('case 3b: an approved run still owes its post-approval steps', async () => {
     const fixture = await createProjectFixture(tempDirs, {
       state: buildState({
