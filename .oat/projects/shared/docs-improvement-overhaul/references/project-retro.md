@@ -25,7 +25,7 @@ oat_retro_evidence_sources:
   - source: claude-subagent-transcripts
     status: used
 oat_retro_promotions: complete
-oat_retro_filing: partial
+oat_retro_filing: complete
 oat_generated: true
 oat_template: false
 ---
@@ -91,11 +91,10 @@ Times below are UTC. Claims are confirmed by durable evidence unless marked
 ## Current State
 
 - **Promotions:** `complete`. RP-01 and RP-02 are applied (`AGENTS.md`).
-- **Filing:** `partial`. RP-03 to RP-06 are filed as local backlog items
-  (`BL-261002-require-exactly-one-h1-per`, `BL-261002-commit-a-headless-rendered`,
-  `BL-261002-catch-hardcoded-docs-paths`, `BL-261002-theme-mermaid-diagrams`),
-  pushed. UP-01 to UP-06 are at `proposed` with no destination.
-- **Unsettled items:** UP-01 to UP-06 (file upstream when wanted).
+- **Filing:** `complete`. RP-03 to RP-06 and UP-01, UP-02, UP-04, UP-05,
+  UP-06 are filed as local backlog items (pushed). UP-03 is linked to issue
+  #339.
+- **Unsettled items:** None.
 
 ## What Went Well
 
@@ -399,12 +398,12 @@ as the skills site does.
 
 ### UP-01: Warn when main has moved under the plan
 
-- **Status:** proposed
-- **Destination:** —
-- **Destination-receipt:** —
-- **Remote-visibility:** —
+- **Status:** filed
+- **Destination:** `.oat/repo/pjm/backlog/items/BL-261002-warn-when-the-default-branch.md`
+- **Destination-receipt:** f7b9a7cc976f6ff569295752cf13251438fa1873
+- **Remote-visibility:** pushed
 - **Sanitized:** no
-- **Disposition-note:** —
+- **Disposition-note:** Filed as a new local backlog item; related items noted in its description.
 
 Quick-start, plan and implement do not check whether the default branch has
 changed the plan's target paths since the branch base. In this run main
@@ -414,12 +413,12 @@ planned paths and asks before continuing.
 
 ### UP-02: Re-review only when a round finds Critical or High issues
 
-- **Status:** proposed
-- **Destination:** —
-- **Destination-receipt:** —
-- **Remote-visibility:** —
+- **Status:** filed
+- **Destination:** `.oat/repo/pjm/backlog/items/BL-261002-re-review-a-phase-only-after.md`
+- **Destination-receipt:** f7b9a7cc976f6ff569295752cf13251438fa1873
+- **Remote-visibility:** pushed
 - **Sanitized:** no
-- **Disposition-note:** —
+- **Disposition-note:** Filed as a new local backlog item; related items noted in its description.
 
 Phase code reviews and artifact reviews ran until a clean round: 1 High, then
 1 Low, then 0. Each extra round cost a dispatch, a fix and gates. Make the
@@ -428,12 +427,12 @@ re-review only after Critical or High findings; cap rounds.
 
 ### UP-03: Gate review parser rejects valid findings over formatting
 
-- **Status:** proposed
-- **Destination:** —
+- **Status:** filed
+- **Destination:** https://github.com/voxmedia/open-agent-toolkit/issues/339
 - **Destination-receipt:** —
 - **Remote-visibility:** —
 - **Sanitized:** no
-- **Disposition-note:** —
+- **Disposition-note:** Linked to existing open issue #339 (same parser, same failure); nothing posted.
 
 `oat gate review` returned `artifact_validation_failed` because the reviewer
 wrote findings as bold paragraphs rather than list items. Either accept that
@@ -442,12 +441,12 @@ validate it with a clear message.
 
 ### UP-04: Flag pending reviews when a project reaches a pull request
 
-- **Status:** proposed
-- **Destination:** —
-- **Destination-receipt:** —
-- **Remote-visibility:** —
+- **Status:** filed
+- **Destination:** `.oat/repo/pjm/backlog/items/BL-261002-list-pending-required-reviews.md`
+- **Destination-receipt:** f7b9a7cc976f6ff569295752cf13251438fa1873
+- **Remote-visibility:** pushed
 - **Sanitized:** no
-- **Disposition-note:** —
+- **Disposition-note:** Filed as a new local backlog item; related items noted in its description.
 
 This project reached `pr_open` with p03–p06 and the final code review still
 `pending` in the plan's Reviews table, and nothing flagged it. The PR skills
@@ -456,12 +455,12 @@ waiver, or stop.
 
 ### UP-05: Size evidence to the change type and resume cleanly under a new driver
 
-- **Status:** proposed
-- **Destination:** —
-- **Destination-receipt:** —
-- **Remote-visibility:** —
+- **Status:** filed
+- **Destination:** `.oat/repo/pjm/backlog/items/BL-261002-let-plans-declare-an-evidence.md`
+- **Destination-receipt:** f7b9a7cc976f6ff569295752cf13251438fa1873
+- **Remote-visibility:** pushed
 - **Sanitized:** no
-- **Disposition-note:** —
+- **Disposition-note:** Filed as a new local backlog item; related items noted in its description.
 
 Implement gave a docs-only page move the same proof machinery as a code
 change. When the driving agent changed mid-run, no step refreshed `state.md`
@@ -472,12 +471,12 @@ tracking with git history before continuing.
 
 ### UP-06: Let skills declare their side effects in metadata
 
-- **Status:** proposed
-- **Destination:** —
-- **Destination-receipt:** —
-- **Remote-visibility:** —
+- **Status:** filed
+- **Destination:** `.oat/repo/pjm/backlog/items/BL-261002-let-skills-declare-their-side.md`
+- **Destination-receipt:** f7b9a7cc976f6ff569295752cf13251438fa1873
+- **Remote-visibility:** pushed
 - **Sanitized:** no
-- **Disposition-note:** —
+- **Disposition-note:** Filed as a new local backlog item; related items noted in its description.
 
 The most common verifier finding across 71 skill guides was an understated
 side effect: commits, pushes and pull requests made without asking. If
