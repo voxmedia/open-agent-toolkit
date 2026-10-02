@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p04-t01
+oat_current_task_id: p03-t04
 oat_generated: false
 ---
 
@@ -28,13 +28,13 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 8     | 8/8       |
 | Phase 2 | complete    | 3     | 3/3       |
-| Phase 3 | in_progress | 3     | 3/3       |
+| Phase 3 | in_progress | 4     | 3/4       |
 | Phase 4 | pending     | 7     | 0/7       |
 | Phase 5 | pending     | 4     | 0/4       |
 | Phase 6 | pending     | 3     | 0/3       |
 | Phase 7 | pending     | 3     | 0/3       |
 
-**Total:** 14/31 tasks completed
+**Total:** 14/32 tasks completed
 
 ---
 
@@ -123,6 +123,11 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** d53936682
+
+### Task p03-t04: (review) Close p03 review findings M1, L1, L2
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -414,6 +419,16 @@ oat_generated: false
   non-comment change in detector and hash). Root spot-check: drift and sync
   165/165.
   `Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
+
+- Step 7a ledger commit `2f98690d8` before the review.
+- Request `bw4-p03-review-1`: accepted; reconnaissance not-attempted;
+  `reviews/archived/p03-review-2026-10-02T195441Z.md`: 0 Critical, 0 High, 1 Medium,
+  2 Low (passes; criteria 1-4 met, criterion 5 untouched). Converted to
+  `p03-t04`: M1 restamp on a row whose provider path differs from the checked
+  path creates a drift sync never clears; L1 dry-run summary misses `error`
+  entries and the partial-failure message drops the restamp count; L2 sync
+  docs page.
+  `Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
 
 <!-- orchestration-runs-end -->
 

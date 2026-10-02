@@ -648,6 +648,38 @@ Expected: exit 0.
 
 ---
 
+### Task p03-t04: (review) Close p03 review findings M1, L1, L2
+
+**Files:**
+
+- Modify: `packages/cli/src/engine/compute-plan.ts`, `packages/cli/src/engine/execute-plan.ts`
+- Modify: `packages/cli/src/commands/sync/dry-run.ts`, `packages/cli/src/commands/sync/apply.ts`
+- Modify: the matching engine and `commands/sync` tests
+- Modify: `apps/oat-docs/docs/provider-sync/commands.md`
+
+**Step 1: Failing tests first**
+
+- M1: a manifest row whose provider path differs from the path sync checked is
+  not restamped (planner and `ensureSkipEntryManaged`), so `oat status` does
+  not turn a previously `in_sync` row into a drift that sync never clears.
+- L1: dry-run JSON `summary.failed` counts `error` entries; the partial-failure
+  apply message keeps the restamp count.
+
+**Step 2: Implement** the path-match guard, the summary counts, and document the
+`error` operation and restamp messages in `provider-sync/commands.md` (L2).
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/engine src/drift src/commands/sync`
+Expected: exit 0; neutralize the path-match guard and show its test fails,
+restore.
+
+**Step 4: Commit**
+
+`fix(p03-t04): close p03 review findings M1, L1, L2`
+
+---
+
 ## Phase 4: Review-loop skills
 
 ### Task p04-t01: Add the condensed complexity-review guidance
@@ -1439,7 +1471,7 @@ rewrites the four inventory rows last.
 | ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------- |
 | p01    | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-review-2026-10-02T172532Z.md           | 0b6b623199310aeb93ed7c4a5c9f6e8842a3f20a | auto       | -                 |
 | p02    | code     | fixes_completed | 2026-10-02 | reviews/archived/p02-review-2026-10-02T191106Z.md           | d7f496827a4c3f624e14e0ae19b00f25df37f5d4 | auto       | -                 |
-| p03    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| p03    | code     | fixes_added     | 2026-10-02 | reviews/archived/p03-review-2026-10-02T195441Z.md           | 2f98690d8461effb013ee934efda7c8aab9f56eb | auto       | -                 |
 | p04    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | p05    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | p06    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
@@ -1469,13 +1501,13 @@ Quick-start plan gate attempt 2 of 2 (run `fe6bbe0a`): `blocked`, receive-eligib
 
 - Phase 1: 8 tasks - Build assets
 - Phase 2: 3 tasks - Gate timeouts
-- Phase 3: 3 tasks - Sync correctness
+- Phase 3: 4 tasks - Sync correctness
 - Phase 4: 7 tasks - Review-loop skills
 - Phase 5: 4 tasks - Completion
 - Phase 6: 3 tasks - Small fixes
 - Phase 7: 3 tasks - Release fan-in
 
-**Total: 31 tasks**
+**Total: 32 tasks**
 
 Ready for code review and merge.
 
