@@ -3522,6 +3522,7 @@ describe('named-skill execution contract', () => {
         '.agents/docs/autonomy-contract.md',
         '.agents/docs/complexity-review-fallback.md',
         '.agents/docs/cursor-rules-files.md',
+        '.agents/docs/gate-approval-record.md',
         '.agents/docs/provider-reference.md',
         '.agents/docs/rules-files.md',
         '.agents/docs/skills-guide.md',
@@ -3529,11 +3530,11 @@ describe('named-skill execution contract', () => {
     );
 
     // One entry per shared doc, not per link: six links resolve onto
-    // `autonomy-contract.md` and three onto `complexity-review-fallback.md`,
-    // and the realpath key collapses them.
+    // `autonomy-contract.md`, three onto `complexity-review-fallback.md`, and
+    // four onto `gate-approval-record.md`, and the realpath key collapses them.
     expect(
       live.filter((file) => file.startsWith('.agents/docs/')),
-    ).toHaveLength(7);
+    ).toHaveLength(8);
 
     // Deduplication is a property of the whole inventory, not just the links.
     expect(new Set(live).size).toBe(live.length);

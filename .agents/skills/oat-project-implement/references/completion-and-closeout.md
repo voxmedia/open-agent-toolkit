@@ -320,7 +320,11 @@ or satisfies this configured exit gate.
 **Persisted transition contract:**
 
 `"$PROJECT_PATH/state.md"` is the routing source of truth. Store one closeout
-generation as a sibling of `oat_post_implement_sequence`:
+generation as a sibling of `oat_post_implement_sequence`. Its `status`,
+`disposition`, `config_fingerprint`, `reviewed_head`, and `decided_at` fields
+are the shared lifecycle gate record core defined in
+`references/docs/gate-approval-record.md`; the additional values and fields
+below, and the freshness rules in this step, belong to this carrier:
 
 ```yaml
 oat_implement_exit_gate:
@@ -360,6 +364,7 @@ oat_implement_exit_gate:
   receive_completed: false
   failure: null
   updated_at: '2026-07-18T00:00:00Z'
+  decided_at: null # ISO 8601 UTC; set with every allowed or blocked outcome
 ```
 
 At the start of a new closeout generation, require a current passed final
@@ -559,6 +564,9 @@ disposition.
 - An explicit prompt continuation persists `allowed/prompt_approved`; defer or
   no response persists `blocked` and stops. A warn continuation persists
   `allowed/warned` before closeout proceeds.
+- Every write that sets `status` to `allowed` or `blocked` also sets
+  `decided_at` to the current ISO 8601 UTC time; `pending` and `stale` writes
+  leave it unchanged.
 
 **Interruption, resume, and freshness:**
 

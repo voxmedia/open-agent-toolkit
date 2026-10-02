@@ -126,6 +126,7 @@ export const BUNDLE_INPUTS = Object.freeze({
     '.agents/docs/autonomy-contract.md',
     '.agents/docs/complexity-review-fallback.md',
     '.agents/docs/cursor-rules-files.md',
+    '.agents/docs/gate-approval-record.md',
     '.agents/docs/provider-reference.md',
     '.agents/docs/rules-files.md',
     '.agents/docs/skills-guide.md',

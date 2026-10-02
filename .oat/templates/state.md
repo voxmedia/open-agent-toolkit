@@ -75,6 +75,13 @@ oat_workflow_origin: native # native | imported
 #   receive_completed: false
 #   failure: null
 #   updated_at: '2026-07-18T00:00:00Z'
+#   decided_at: null # ISO 8601 UTC; set with every allowed or blocked outcome (core record: gate-approval-record.md)
+# oat_quick_start_gate: # optional; persisted quick-start plan gate outcome, absent when no gate is configured (core record: gate-approval-record.md)
+#   status: allowed # allowed | blocked
+#   disposition: passed # passed | warned | prompt_approved | project_disabled; null when blocked
+#   config_fingerprint: '<stable hash of resolved gate declaration>'
+#   reviewed_head: null # full SHA of the commit the gate reviewed; provenance only
+#   decided_at: null # ISO 8601 UTC
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists

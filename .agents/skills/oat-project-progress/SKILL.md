@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Glob, Grep, Bash(git:*), Bash(oat:*), AskUserQuestion
 metadata:
-  version: 1.4.3
+  version: 1.4.4
 ---
 
 # Progress Router

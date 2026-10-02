@@ -4982,7 +4982,7 @@ describe('validateOatSkills', () => {
       ['oat-project-pr-final', '1.6.8'],
       ['oat-project-pr-progress', '1.3.2'],
       ['oat-project-complete', '1.7.14'],
-      ['oat-project-next', '1.1.4'],
+      ['oat-project-next', '1.1.5'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {
@@ -6096,14 +6096,14 @@ describe('validateOatSkills', () => {
     expect(planTier3Row(specTable)).toContain('`oat-project-plan`');
     expect(planTier3Row(importTable)).toContain('`oat-project-import-plan`');
     expect(planTier3Row(liteTable)).toContain('`oat-project-lite`');
-    expect(readDeclaredVersion(next)).toBe('1.1.4');
+    expect(readDeclaredVersion(next)).toBe('1.1.5');
   });
 
   it('supports project completion before or after PR merge in every mode', async () => {
     const progress = await readRepoFile(
       '.agents/skills/oat-project-progress/SKILL.md',
     );
-    expect(readDeclaredVersion(progress)).toBe('1.4.3');
+    expect(readDeclaredVersion(progress)).toBe('1.4.4');
 
     const modeSections = [
       [

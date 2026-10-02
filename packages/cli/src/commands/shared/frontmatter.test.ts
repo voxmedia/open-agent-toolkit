@@ -521,6 +521,42 @@ describe('frontmatter', () => {
       },
     );
 
+    it.each([
+      {
+        name: 'allowed',
+        frontmatter: `oat_quick_start_gate:
+  status: allowed
+  disposition: prompt_approved
+  config_fingerprint: sha256:abc
+  reviewed_head: 0123456789abcdef0123456789abcdef01234567
+  decided_at: '2026-10-02T15:20:00Z'`,
+      },
+      {
+        name: 'blocked',
+        frontmatter: `oat_quick_start_gate:
+  status: blocked
+  disposition: null
+  config_fingerprint: sha256:abc
+  reviewed_head: 0123456789abcdef0123456789abcdef01234567
+  decided_at: '2026-10-02T15:20:00Z'`,
+      },
+    ])(
+      'recognizes and preserves $name quick-start gate approval state',
+      ({ frontmatter }) => {
+        const parsed = YAML.parse(frontmatter) as Record<string, unknown>;
+        const preserved = Object.fromEntries(
+          Object.entries(parsed).filter(([field]) =>
+            isProjectStateFrontmatterField(field),
+          ),
+        );
+
+        expect(isProjectStateFrontmatterField('oat_quick_start_gate')).toBe(
+          true,
+        );
+        expect(preserved).toEqual(parsed);
+      },
+    );
+
     describe('parseSkillGateOverrides', () => {
       const STATE_PATH = '.oat/projects/shared/demo/state.md';
 
