@@ -175,7 +175,7 @@ Implementation is complete. Codex paused for a usage reset during phases 3–6 a
 - **Design:** `design.md` (complete; independently reviewed)
 - **Plan:** `plan.md` (20 tasks across 6 phases; added scope requires amendment review before p06)
 - **Implementation:** `implementation.md` (20/20 tasks; p01 superseded by main; p03–p06 closed under the Fable takeover)
-- **Review receipt:** `reviews/plan-review-round-03.md` (gate provenance, fixes, independent verification and Fable final confirmation)
+- **Review receipt:** `reviews/archived/plan-review-round-03.md` (gate provenance, fixes, independent verification and Fable final confirmation)
 - **References:** [Evidence index](references/index.md), including initial evaluations, the proposed IA, Fable's skill inventory advisory, and orchestration observations.
 
 ## Progress

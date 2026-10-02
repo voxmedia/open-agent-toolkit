@@ -380,7 +380,7 @@ Generic dispatch record (launcher-owned; runtime identity not reported):
       "target": "oat-phase-implementer-gpt-6-1-sol-high",
       "launch_status": "accepted",
       "base_head": "d054882593181f5a3e727db7ac281607ec707825",
-      "artifact": "reviews/p01-code-review-2026-10-02T045526Z.md",
+      "artifact": "reviews/archived/p01-code-review-2026-10-02T045526Z.md",
       "authority": "root accepted H1/M1-M3/L1 and Fable P1/P2/P4; exact-byte ownership design amendment committed",
       "child_outcome": "completed",
       "dispatch_stamp": "Dispatch: scope=p01 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high",
@@ -395,7 +395,7 @@ Generic dispatch record (launcher-owned; runtime identity not reported):
       "target": "oat-phase-implementer-gpt-6-1-sol-high",
       "launch_status": "accepted",
       "base_head": "68a7a043b187f6cfab94308b185a2e34b75ccb23",
-      "artifact": "reviews/p01-code-review-round02-2026-10-02T055341Z.md",
+      "artifact": "reviews/archived/p01-code-review-round02-2026-10-02T055341Z.md",
       "authority": "root accepted only compact and bare separator variants of L1; two nav files",
       "child_outcome": "completed",
       "head_sha": "727c40abb5be32885d37d28b21887ac7c986ea42"
@@ -685,7 +685,7 @@ Phase implementation return: DONE_WITH_CONCERNS, three planned task commits in o
     "fork_turns": "none",
     "reviewed_head": "6145054067bef937d74cf7e952a0c56da67f4264",
     "scope": "plan-amendment",
-    "output": "reviews/phase06-plan-amendment-2026-10-02T045216Z.md",
+    "output": "reviews/archived/phase06-plan-amendment-2026-10-02T045216Z.md",
     "message_evidence": "Full Review Scope in accepted native tool invocation"
   },
   "configured_invocation_evidence": [
@@ -1087,7 +1087,7 @@ Task p01-t02 accepted after root resolved disposable-output restoration. Exact b
 
 ### Plan artifact review received: 2026-10-02
 
-Eligible gate run `7b51c81d-c62c-42d2-aab5-1316713014c1`: 0 critical, 0 high, 1 medium, 1 low. Root resolved both findings directly in plan/design, with clean native re-review and Fable final readiness confirmation. No implementation fix tasks or deferrals. Review archived at `reviews/archived/artifact-plan-review-2026-10-02T032232Z.md`; durable provenance/dispositions in `reviews/plan-review-round-03.md`.
+Eligible gate run `7b51c81d-c62c-42d2-aab5-1316713014c1`: 0 critical, 0 high, 1 medium, 1 low. Root resolved both findings directly in plan/design, with clean native re-review and Fable final readiness confirmation. No implementation fix tasks or deferrals. Review archived at `reviews/archived/artifact-plan-review-2026-10-02T032232Z.md`; durable provenance/dispositions in `reviews/archived/plan-review-round-03.md`.
 
 The earlier invalid gate artifact is superseded history, not a received gate pass. Implementation authorization arrived separately after this planning receipt; current implementation progress is tracked above.
 
@@ -1138,37 +1138,27 @@ Root first phase-gate sequence at committed head6145054067bef937d74cf7e952a0c56d
 
 ### Phase 6 amendment review disposition
 
-Artifact reviews/phase06-plan-amendment-2026-10-02T045216Z.md returned exactly `**Reconnaissance:** not-attempted`, with no Review Orchestration, and reviewed the exact authored614505406 head. Zero critical/high, one medium and one low. Root accepted M1: p04-t03 now explicitly owns existing validator/test files, durable skill-scenario-audit.md and scoped tooling/audit formatting with docs:test. Root accepted L1: current design/plan summaries now reflect six phases and separate implementation authorization, with implementation.md as progress authority. Artifact fixes were formatted and diff-checked; Fable amendment review remains pending. No automatic review-receive workflow was invoked and no implementation fix tasks created for artifact-only findings.
+Artifact reviews/archived/phase06-plan-amendment-2026-10-02T045216Z.md returned exactly `**Reconnaissance:** not-attempted`, with no Review Orchestration, and reviewed the exact authored614505406 head. Zero critical/high, one medium and one low. Root accepted M1: p04-t03 now explicitly owns existing validator/test files, durable skill-scenario-audit.md and scoped tooling/audit formatting with docs:test. Root accepted L1: current design/plan summaries now reflect six phases and separate implementation authorization, with implementation.md as progress authority. Artifact fixes were formatted and diff-checked; Fable amendment review remains pending. No automatic review-receive workflow was invoked and no implementation fix tasks created for artifact-only findings.
 
 ### Root eight gates and p01 re-review round 2
 
 At reviewed snapshot ee1675e6be034f64a644d7fdc04aee3862cf4436 (source686b2663), all eight ordered gates exit0: check, type-check, isolated-HOME test, build, skill-bumps, release:check-versions after fetch0, release:validate, build:docs. Receipts/logs /tmp/docs-overhaul-p01-fix1-gates/. Check/types each six executed/five cached; tests five executed/six cached, CLI7937 passed plus smoke163/skills660/scripts1. Root build five cached and docs six cached are replay, not new execution proof; implementer post-commit forced docs build executed all six at686b. Additional applicable lint/format passed in implementer evidence. No publication.
 
-Re-review artifact reviews/p01-code-review-round02-2026-10-02T055341Z.md returned exactly not-attempted and no Review Orchestration, scope p01/code/auto, reviewed head ee1675e6be034f64a644d7fdc04aee3862cf4436 validated. Zero Critical/High/Medium, one Low: compact or bare separator spellings remain silently ignored. Root accepts this bounded L1 completion for fix round2/2; two review cycles used, third terminal review permitted by the independent three-cycle cap. Artifact phrase “round2 of configured limit2” refers to the review iteration, not exhaustion of the separate two-fix budget. No endless additional polish or other source scope. Phase stays in_review until final verification/re-review.
+Re-review artifact reviews/archived/p01-code-review-round02-2026-10-02T055341Z.md returned exactly not-attempted and no Review Orchestration, scope p01/code/auto, reviewed head ee1675e6be034f64a644d7fdc04aee3862cf4436 validated. Zero Critical/High/Medium, one Low: compact or bare separator spellings remain silently ignored. Root accepts this bounded L1 completion for fix round2/2; two review cycles used, third terminal review permitted by the independent three-cycle cap. Artifact phrase “round2 of configured limit2” refers to the review iteration, not exhaustion of the separate two-fix budget. No endless additional polish or other source scope. Phase stays in_review until final verification/re-review.
 
 ## Final Summary (for PR/docs)
 
-### Phase 1 accepted: 2026-10-02
+All 23 task implementations across six phases are accepted. Delivered: reader-first canonical documentation, 71 eligible supported-skill guides and a generated parity-checked catalog, an evaluator README with one original SVG, four docs diagrams with text equivalents, and configuration choice/default/tradeoff guidance on 18 pages. Main's #336/#338 navigation and #335 Markdown foundation supersede p01's duplicate compiler/sidecar/flags; retained app validators, tests and guidance remain branch deliverables. Moved URLs intentionally break without aliases or redirects.
 
-Terminal native artifact reviews/p01-code-review-round03-2026-10-02T060828Z.md returned exactly not-attempted, no Review Orchestration, valid p01/code/auto provenance and reviewed head24d1bddfbf1ea4467125c2b8ca88c65ce57fc06a. Zero findings at all severities. Reviewer independently ran35 nav/MkDocs tests, six real app tests, source validation and additional installed-loader/source controls. Root accepts p01 after two bounded fixes and three independent review cycles; no implementation recovery used.
+Late corrections cover reference-style Markdown validation, native-read adoption guidance and final reconciliation. All 859 post-main content units have differentiated named dispositions; matching names/counts alone do not prove semantic conservation. Nine command spellings, 76 scoped option declarations and 39 scoped config keys/patterns remain explicit reference gaps. See summary.md and references/conservation-closeout.md.
 
-All eight new-head gates exit0, plus main fetch0, recorded in /tmp/docs-overhaul-p01-fix2-gates/receipts.txt. Check3 executed/8cached, types2/9, tests3/8; root test actually rebuilt oat-docs and executed7939 CLI tests/six app tests, followed by smoke163/skills660/scripts1. Build5 and final docs6 replay cached results; the actual docs build ran earlier in the same root test gate. Required per-phase Mini computer-use smoke remains the retained bounded implementer desktop/dark evidence, not final independent QA. Applicable lint/format evidence passed. No source finding or configured phase gate remains outstanding.
+Fully non-author native Mini QA covered seven journeys, four diagrams, both themes and simulated narrow views; GitHub README judgment was artifact-only from root's published captures. Historical p03–p06 native per-phase reviewer omissions remain disclosed. Fable authored the user-requested/accepted CSS. Phone-label readability, backlogged dense-page restructuring and owner-authored stability/support/non-goals wording remain limits.
 
-Fable's p01 fixed-diff advisory request is queued via Orca, consumption unverified because the pane has an unsent human draft. Root preserves it and proceeds with the p02 inventory only; the migration map still requires Fable review before moves. Optional docs-branch publication approval remains pending and does not authorize a push. The phase 6 A1/A2 readiness conditions are implemented; Fable's conditional readiness is recorded, not falsely represented as a new executed re-review.
+Eight ordered gates passed through 64a48da1e with partial execution and build/docs cache replays disclosed. After c916af45c, direct docs validation and 13 focused tests passed, and forced docs build executed all six tasks without cache; the full eight gates were not repeated after that line. The document step repaired two README pointers at 3c1fa029b, validated all 20 links and ran direct docs validation. Root records fresh fetch/version-gate exit zero before PR preparation.
 
-### Fable amendment and phase-one review disposition: 2026-10-02
+Final correction re-review returned zero findings. The configured fresh non-author Claude gate passed High with 0 Critical / 0 High / 1 Medium / 2 Low; its different-family report covers four p01/p02 OpenAI stamps, not every Fable-authored phase. Ordered dispositions: M1 pointers fixed at 5e3bed75b; L1 README pointers fixed at 3c1fa029b; L2 local README Turbo hashing deferred, with direct docs:validate available. Gate waivers are empty.
 
-Fable reviewed committed 3daaacfec and read p01 source at 257517ab..61450540, executing nothing. Root accepts A1/A2: page/heading-keyed normalized section hashes protect the pure move; independently verified fact ledgers are created only before existing prose changes. One editorial round and one persona rerun end in one consensus triage of bounded small fixes or explicitly reported residuals; safety, conservation and blocking findings cannot be waived. A3/A4 are adopted with honest source-blindness limits and current-tree capability re-inventory. This is the second bounded amendment correction; Fable readiness was conditional only on A1/A2, now implemented. No new user checkpoint.
-
-Native p01 artifact returned exactly `**Reconnaissance:** not-attempted`, contains no Review Orchestration, and has validated p01/code/auto/full-head provenance. Root accepts H1, M1-M3 and L1 for bounded same-handle fix round 1 of 2. H1 needs current-main skill versions and relevant upstream composition checked; M1 needs parsed renderer-compatible anchors shared by validators; M2 needs actual Markdown-descendant classification; M3 needs fail-closed native stem collisions; L1 needs unsupported separator diagnostics. No review-receive workflow is implicitly invoked.
-
-Root accepts Fable P1/P2/P4: interrupted-output recovery only on exact equality with newly computed bytes (explicit design change above), contextual malformed-fragment diagnostics, and dev-server restart guidance. Negative controls must retain refusal for genuinely different authored/unowned files, malformed manifests and symlink/traversal paths. Check mode never adopts or writes. This changes the original unconditional unowned-file refusal, not the previous formatter incident disposition. P3 is an accepted IA consequence: Skills sidebar contains Skills-owned guides only; Workflows/Docs Tooling family discovery is through the body/catalog. Journeys 2 and 5 must exercise that route.
-
-First native review dispatch outcome: completed, 0 Critical / 1 High / 3 Medium / 1 Low. Reviewer read/ran focused real-loader controls; source fixes and all ordered release gates remain pending. Original three task commits remain immutable; review-fix commits are append-only, with separate root bookkeeping. No project-log write occurs between this review and fix dispatch.
-
-Orc follow-up is independently owned and published as draft PR https://github.com/tkstang/orc/pull/47 at 69fa78ae5411cf4c5f4da81c89e7a7380f3d220c, Mini worktree /Users/tstang/orca/workspaces/orc/docs-qa-orchestration-guidance, branch docs-qa-orchestration-guidance. Native helper attached to root; Orca CLI registration verified, standalone chat visibility not claimed. Six repository gates passed, with type/build cache replay disclosed. Not merged or installed; docs-branch publication is separately unapproved and does not block local execution.
-
-Implementation is underway, not published or merged. Phase 1 source foundation is accepted after implementer proof, ordered root gates and a clean terminal independent review. Reader-facing migration, catalog/scenarios, persona/editorial work and final independent acceptance remain pending.
+Summary and document are complete; PR #342 refresh is prepared for root publication, not published by this worker. Final p06 approval remains pending. Sequence arrays, gate/source/freshness fields and existing OPEN/non-draft PR state remain unchanged. Merge, release and the unanswered recap request are separate decisions.
 
 ## References
 

@@ -414,35 +414,35 @@ Complete seven journeys using sidebar/search/links/anchors: provider-sync-only i
 
 ## Reviews
 
-| Scope          | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target          |
-| -------------- | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | -------------------- |
-| p01            | code     | passed          | 2026-10-02 | reviews/p01-code-review-round03-2026-10-02T060828Z.md       | 24d1bddfbf1ea4467125c2b8ca88c65ce57fc06a | auto       | -                    |
-| p01            | code     | fixes_completed | 2026-10-02 | reviews/p01-code-review-round02-2026-10-02T055341Z.md       | ee1675e6be034f64a644d7fdc04aee3862cf4436 | auto       | -                    |
-| p01            | code     | fixes_completed | 2026-10-02 | reviews/p01-code-review-2026-10-02T045526Z.md               | 6145054067bef937d74cf7e952a0c56da67f4264 | auto       | -                    |
-| p02            | code     | passed          | 2026-10-02 | reviews/p02-review-2026-10-02T145912Z.md                    | 2173d81d1659bf2124826244a869ca54b14b49ad | auto       | -                    |
-| p02-map        | artifact | fixes_completed | 2026-10-02 | reviews/p02-migration-draft-review.md                       | -                                        | auto       | -                    |
-| p02-map        | artifact | passed          | 2026-10-02 | reviews/p02-migration-draft-review-round02.md               | -                                        | auto       | -                    |
-| final          | code     | fixes_completed | 2026-10-02 | reviews/archived/final-review-2026-10-02T213720Z.md         | c0f10a8f8d3a05cd9ac4d1f2265e8bb0f7e7c697 | auto       | -                    |
-| final          | code     | passed          | 2026-10-02 | reviews/archived/final-review-2026-10-02T221307Z.md         | 75c4467aba032f6dd3b9857351a064cd18ab067c | auto       | -                    |
-| spec           | artifact | pending         | -          | -                                                           | -                                        | -          | -                    |
-| design         | artifact | fixes_completed | 2026-10-01 | reviews/fable-design-01.md                                  | -                                        | manual     | -                    |
-| p03            | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
-| p04            | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
-| p05            | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
-| p06            | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
-| plan-amendment | artifact | fixes_completed | 2026-10-02 | reviews/phase06-plan-amendment-2026-10-02T045216Z.md        | -                                        | auto       | -                    |
-| plan           | artifact | fixes_completed | 2026-10-01 | reviews/plan-review-round-01.md                             | 86aa78523952ec8e324d44dc4b61dfa961414e5e | auto       | -                    |
-| plan           | artifact | passed          | 2026-10-01 | reviews/plan-review-round-02.md                             | 884b56d80769cb4d94fa289f34e027973137e410 | auto       | -                    |
-| design         | artifact | passed          | 2026-10-01 | reviews/plan-review-round-02.md                             | 884b56d80769cb4d94fa289f34e027973137e410 | manual     | -                    |
-| plan           | artifact | fixes_completed | 2026-10-02 | reviews/archived/artifact-plan-review-2026-10-02T031625Z.md | 2e5e8e5374b101b90c5b72fde9c702d328743b38 | gate       | claude-opus-5-5-high |
-| plan           | artifact | passed          | 2026-10-02 | reviews/archived/artifact-plan-review-2026-10-02T032232Z.md | fdf2953acacced6d6703763ef0c50624ad4755ef | gate       | claude-opus-5-5-high |
-| plan           | artifact | passed          | 2026-10-02 | reviews/plan-review-round-03.md                             | -                                        | auto       | -                    |
-| design         | artifact | passed          | 2026-10-02 | reviews/plan-review-round-03.md                             | -                                        | manual     | -                    |
-| final          | code     | passed          | 2026-10-02 | reviews/archived/final-review-2026-10-02T222323Z.md         | 1cbdd5b6b6b7870551394db6314705b66a97abcd | gate       | claude-opus-5-5-high |
+| Scope          | Type     | Status          | Date       | Artifact                                                       | Reviewed Head                            | Invocation | Gate Target          |
+| -------------- | -------- | --------------- | ---------- | -------------------------------------------------------------- | ---------------------------------------- | ---------- | -------------------- |
+| p01            | code     | passed          | 2026-10-02 | reviews/archived/p01-code-review-round03-2026-10-02T060828Z.md | 24d1bddfbf1ea4467125c2b8ca88c65ce57fc06a | auto       | -                    |
+| p01            | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-code-review-round02-2026-10-02T055341Z.md | ee1675e6be034f64a644d7fdc04aee3862cf4436 | auto       | -                    |
+| p01            | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-code-review-2026-10-02T045526Z.md         | 6145054067bef937d74cf7e952a0c56da67f4264 | auto       | -                    |
+| p02            | code     | passed          | 2026-10-02 | reviews/archived/p02-review-2026-10-02T145912Z.md              | 2173d81d1659bf2124826244a869ca54b14b49ad | auto       | -                    |
+| p02-map        | artifact | fixes_completed | 2026-10-02 | reviews/archived/p02-migration-draft-review.md                 | -                                        | auto       | -                    |
+| p02-map        | artifact | passed          | 2026-10-02 | reviews/archived/p02-migration-draft-review-round02.md         | -                                        | auto       | -                    |
+| final          | code     | fixes_completed | 2026-10-02 | reviews/archived/final-review-2026-10-02T213720Z.md            | c0f10a8f8d3a05cd9ac4d1f2265e8bb0f7e7c697 | auto       | -                    |
+| final          | code     | passed          | 2026-10-02 | reviews/archived/final-review-2026-10-02T221307Z.md            | 75c4467aba032f6dd3b9857351a064cd18ab067c | auto       | -                    |
+| spec           | artifact | pending         | -          | -                                                              | -                                        | -          | -                    |
+| design         | artifact | fixes_completed | 2026-10-01 | reviews/archived/fable-design-01.md                            | -                                        | manual     | -                    |
+| p03            | code     | pending         | -          | -                                                              | -                                        | -          | -                    |
+| p04            | code     | pending         | -          | -                                                              | -                                        | -          | -                    |
+| p05            | code     | pending         | -          | -                                                              | -                                        | -          | -                    |
+| p06            | code     | pending         | -          | -                                                              | -                                        | -          | -                    |
+| plan-amendment | artifact | fixes_completed | 2026-10-02 | reviews/archived/phase06-plan-amendment-2026-10-02T045216Z.md  | -                                        | auto       | -                    |
+| plan           | artifact | fixes_completed | 2026-10-01 | reviews/archived/plan-review-round-01.md                       | 86aa78523952ec8e324d44dc4b61dfa961414e5e | auto       | -                    |
+| plan           | artifact | passed          | 2026-10-01 | reviews/archived/plan-review-round-02.md                       | 884b56d80769cb4d94fa289f34e027973137e410 | auto       | -                    |
+| design         | artifact | passed          | 2026-10-01 | reviews/archived/plan-review-round-02.md                       | 884b56d80769cb4d94fa289f34e027973137e410 | manual     | -                    |
+| plan           | artifact | fixes_completed | 2026-10-02 | reviews/archived/artifact-plan-review-2026-10-02T031625Z.md    | 2e5e8e5374b101b90c5b72fde9c702d328743b38 | gate       | claude-opus-5-5-high |
+| plan           | artifact | passed          | 2026-10-02 | reviews/archived/artifact-plan-review-2026-10-02T032232Z.md    | fdf2953acacced6d6703763ef0c50624ad4755ef | gate       | claude-opus-5-5-high |
+| plan           | artifact | passed          | 2026-10-02 | reviews/archived/plan-review-round-03.md                       | -                                        | auto       | -                    |
+| design         | artifact | passed          | 2026-10-02 | reviews/archived/plan-review-round-03.md                       | -                                        | manual     | -                    |
+| final          | code     | passed          | 2026-10-02 | reviews/archived/final-review-2026-10-02T222323Z.md            | 1cbdd5b6b6b7870551394db6314705b66a97abcd | gate       | claude-opus-5-5-high |
 
 Preserved spec row is not applicable in quick mode; no spec.md required. Events are append-ordered and bound to artifact filenames; never overwrite a bound event with a different review. No code/browser review is claimed in planning.
 
-Attempt 1 was artifact_validation_failed and ineligible for receipt; fixes_completed records independently resolved feedback, not a gate pass. Attempt 2 passed its configured threshold and was eligible for receipt; its medium/low findings were resolved in artifacts and independently re-reviewed clean. [Final receipt and peer dispositions](reviews/plan-review-round-03.md) preserve both outcomes. No planning findings remain unresolved.
+Attempt 1 was artifact_validation_failed and ineligible for receipt; fixes_completed records independently resolved feedback, not a gate pass. Attempt 2 passed its configured threshold and was eligible for receipt; its medium/low findings were resolved in artifacts and independently re-reviewed clean. [Final receipt and peer dispositions](reviews/archived/plan-review-round-03.md) preserve both outcomes. No planning findings remain unresolved.
 
 ## Implementation Complete
 
@@ -466,5 +466,5 @@ Planned scope summary; implementation.md is the authoritative live task-progress
 - [Skill inventory](references/skill-inventory-matrix.md)
 - [Visual precedents](references/visual-precedents.md)
 - [Fable approach review](references/fable-approach-review.md)
-- [Fable design review](reviews/fable-design-01.md)
+- [Fable design review](reviews/archived/fable-design-01.md)
 - [Orchestration log](references/orchestration-log.md)
