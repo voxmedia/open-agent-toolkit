@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p04-t01
+oat_current_task_id: p03-t05
 oat_generated: false
 ---
 
@@ -28,13 +28,13 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 8     | 8/8       |
 | Phase 2 | complete    | 3     | 3/3       |
-| Phase 3 | in_progress | 4     | 4/4       |
+| Phase 3 | in_progress | 5     | 4/5       |
 | Phase 4 | pending     | 7     | 0/7       |
 | Phase 5 | pending     | 4     | 0/4       |
 | Phase 6 | pending     | 3     | 0/3       |
 | Phase 7 | pending     | 3     | 0/3       |
 
-**Total:** 15/32 tasks completed
+**Total:** 15/33 tasks completed
 
 ---
 
@@ -128,6 +128,11 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** 5313d24ec
+
+### Task p03-t05: (review) Address p03 gate finding M1 (normalized executor path guard)
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -436,6 +441,12 @@ oat_generated: false
   restamp count on partial failure, and documents both in
   `provider-sync/commands.md`; engine/drift/sync 398 pass; root spot-check
   engine and sync pass.
+
+- Phase gate (`codex-6-sol-xhigh`, run `b2f32273`) at `2fae69e03`:
+  `reviews/archived/p03-review-2026-10-02T200622Z.md` status `ok`, receive-eligible,
+  0 Critical/High, 1 Medium. Judgment sweep: M1 (executor path guard compares
+  raw text while the planner normalizes) addressed now as `p03-t05` (small,
+  contained); no re-review or re-gate for an address-now fix.
 
 <!-- orchestration-runs-end -->
 
