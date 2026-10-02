@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p02-t01
+oat_current_task_id: p01-t05
 oat_generated: false
 ---
 
@@ -26,7 +26,7 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 4     | 4/4       |
+| Phase 1 | in_progress | 5     | 4/5       |
 | Phase 2 | pending     | 2     | 0/2       |
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 7     | 0/7       |
@@ -34,7 +34,7 @@ oat_generated: false
 | Phase 6 | pending     | 3     | 0/3       |
 | Phase 7 | pending     | 3     | 0/3       |
 
-**Total:** 4/26 tasks completed
+**Total:** 4/27 tasks completed
 
 ---
 
@@ -61,6 +61,11 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** 8ef15f758
+
+### Task p01-t05: (review) Correct the bundle destination guard comment (p01 re-review L1)
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -267,6 +272,14 @@ oat_generated: false
   `NOTICES.md` protected by physical path); three bounded cases with
   per-guard neutralization; uncached CLI tests 8060 pass. Root spot-check:
   `bundle-consistency.test.ts` passes.
+
+- Request `bw4-p01-review-2` (re-review narrowed to `eafd73d19..66212d970`):
+  accepted; reconnaissance not-attempted;
+  `reviews/archived/p01-review-2026-10-02T175407Z.md`: 0 Critical, 0 High, 0 Medium,
+  1 Low (passes; gate H1 confirmed fixed with reviewer-run neutralization).
+  L1 split: the inaccurate guard comment converted to `p01-t05`; replacing an
+  arbitrary existing destination directory is pre-existing behavior outside
+  the item, deferred to a follow-up backlog item at the fan-in.
 
 <!-- orchestration-runs-end -->
 
