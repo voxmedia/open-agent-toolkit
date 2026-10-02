@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p02-t02
+oat_current_task_id: p02-t03
 oat_generated: false
 ---
 
@@ -16,13 +16,13 @@ The user invoked oat-project-implement after the reviewed plan handoff. Implemen
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 3     | 3/3       |
-| Phase 2 | in_progress | 3     | 1/3       |
+| Phase 2 | in_progress | 3     | 2/3       |
 | Phase 3 | pending     | 2     | 0/2       |
 | Phase 4 | pending     | 4     | 0/4       |
 | Phase 5 | pending     | 3     | 0/3       |
 | Phase 6 | pending     | 5     | 0/5       |
 
-**Total:** 4/20 tasks completed.
+**Total:** 5/20 tasks completed.
 
 ## Phase 1: Make the Current Sidebar Enforceable
 
@@ -49,7 +49,7 @@ The user invoked oat-project-implement after the reviewed plan handoff. Implemen
 
 ## Phase 2: Migrate Information Without Rewriting It
 
-**Status:** in_progress; reviewed t01 complete, preservation-only move authorized
+**Status:** in_progress; inventory and preservation-only move accepted, consumer repair underway
 **Started:** 2026-10-02
 
 ### Task p02-t01: Review the complete migration map
@@ -60,13 +60,13 @@ The user invoked oat-project-implement after the reviewed plan handoff. Implemen
 
 ### Task p02-t02: Apply the preservation-only move
 
-**Status:** in_progress
-**Commit:** -
-**Verification:** Not run.
+**Status:** completed
+**Commit:** 7f824c2276fe53d8e544842cddb6d2c268cc2aa0
+**Verification:** 816 protected units, 24 router units, 42 CLI guidance units and three narrow H1 transitions pass. Named table supplement preserves real AST/raw payloads; 13 negatives reject, isolated exact-span guard neutralization accepts only its unlisted-edge control while other guards remain active. Map, baseline and proposal unchanged. Source checks/types and nine direct tests pass before/after commit; hook changes zero bytes across77 nondeleted staged files. Fresh six-task docs build actually executed, zero cached;76 canonical export/search routes,6288 search records, retired routes absent. Mini author browser smoke checks hierarchy, moved leaf/fragment link, Skills body owner and actual404 search recovery; privacy-cropped Home screenshot inspected by root, not an independent computer-use tour. Evidence in references/p02-t02-\*. No final QA or phase acceptance claim.
 
 ### Task p02-t03: Repair consumers and verify migrated journeys
 
-**Status:** pending
+**Status:** in_progress
 **Commit:** -
 **Verification:** Not run.
 
@@ -815,6 +815,14 @@ Round02 artifact accepted: exactly one not-attempted confirmation and no Review 
 Required peer-review boundary: Fable map approval has not arrived. Verified owning laptop relay/runtime and Mini execution worktree; Fable pane still has unsent text "what's the question codex is waiting on?". Do not overwrite, clear or submit it. Queued msg_abd20b8047be contains exact corrected map, specific review request and direct return instructions; delivered_at null and no response, so enqueue is not consumption. No page moved, p02-t01 not complete, no phase 2 acceptance claimed. Same phase handle remains available; resume after actual peer response, not by replacing its session. Two app source drafts remain intentionally uncommitted and owned by phase02. Reviewed project evidence is preserved separately as draft bookkeeping.
 
 ## Implementation Log
+
+### p02-t02 accepted and consumer continuation: 2026-10-02
+
+Root verified the single planned task commit7f824c2276fe53d8e544842cddb6d2c268cc2aa0 follows a7d3171a,79 changed-file records within sanctioned source/app/generated/evidence bounds, and clean worktree. Read actual build/cache/control/export receipts and Mini action provenance; viewed the cropped Home image. Root evidence review is not an independent browser pass. Pre-commit assembler failure and formatter-boundary failure remain disclosed; no recovery event or suppressed content change. Frozen original records unchanged. Local author export server127.0.0.1:54824 remains available.
+
+Same phase02 continuation cont-docs-overhaul-p02-t03-consumers accepted at unchanged materialized gpt-6.1-sol/high target and holds until this bookkeeping release. Owns inventoried live consumers, canonical topic table and skill bumps, permanent project-free path checks/tests, generated bundles and required Mini smoke. Source-derived hosted targets are checked against local export, not unpublished hosted-site health. Derived .agents/README.md and app AGENTS pointers are in the existing live-consumer boundary. No archived evidence rewrite, new coverage prose, core/tracking writes or publication. Root owns docsApply tracking after task verification, ordered phase gates and independent native/Fable phase reviews.
+
+Accepted bounded Orc helper follow-up orca-parsed-help-guidance on /root/orca_draft_override_refinement, same explicit worker gpt-6.1-sol/high, holding until release. Mini worktree /Users/tstang/orca/workspaces/orc/docs-qa-orchestration-guidance, branch same, draftPR47 head3b7e1c55. Ownership only skills/orca-orchestration/references/supervised-workers.md and optional playbook addendum; no commit/push/install/app/UI authority. Objective records observed parsed-help gotcha and exact FIFO acknowledgment from fresh native agent-context, not a generalized source defect. Existing PR-scoped1.3.4 retained. Consequential message-consumption boundary meets the fresh provider2026-10-01/native selector floor; configured acceptance known, runtime model identity not reported. Root reviews/owns authorized PR update.
 
 ### p02-t02 pre-commit formatter boundary: 2026-10-02
 

@@ -154,6 +154,8 @@ Capture the all-phase conservation baseline now, not retrospectively after p05. 
 
 ### Task p02-t02: Apply the preservation-only move
 
+**Execution:** Complete at `7f824c2276fe53d8e544842cddb6d2c268cc2aa0`; scoped conservation, executed build/export/search and bounded Mini author smoke accepted. Final independent QA and phase closeout remain separate.
+
 **Files:** `apps/oat-docs/docs/**` per approved map; `apps/oat-docs/app/not-found.tsx` if no useful existing not-found owner exists; mechanically regenerated `apps/oat-docs/index.md` and `packages/cli/assets/public-package-versions.json` from the required build; phase-local apply/conservation evidence. Consumer and bundle closeout remains p02-t03.
 
 **Work:** Execute the required repository-canonical oat-docs-apply workflow for approved recommendations, exact evidence, tracking, nav regeneration and verification. Deliberate project integration adaptation: reuse the implementation-authorized project/phase branch instead of its generic create-branch step; record that adaptation before applying, and do not silently spawn another branch. This plan's approval at implementation entry must cover that adaptation; planning itself creates no branch. Add real section directories/indexes; preserve leaf headings and substantive prose except authorized normalization. Consolidate obsolete routers with recorded accounting. No aliases, redirects or transitional stubs. Add small Home/search recovery affordances for missing routes, not new search machinery.
