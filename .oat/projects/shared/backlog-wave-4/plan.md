@@ -1627,6 +1627,44 @@ Expected: exit 0.
 
 ---
 
+### Task p07-t05: Port wave 4 docs into the #342 docs restructure and bump to 0.3.15
+
+`main` merged #342 (reader-first docs site, lockstep 0.3.14) after p07-t01;
+the branch merged `origin/main` at `30526fef9`, accepting #342's deletion of
+`workflows/projects/autonomy.md` and `workflows/skills/index.md`.
+
+**Files:**
+
+- Modify: `apps/oat-docs/docs/workflows/advanced/autonomy.md` (port the wave 4
+  paragraph on the complexity review at budget exhaustion and the persisted
+  quick-start gate outcome, with links to the moved pages)
+- Modify: the skill guide mapping read by `apps/oat-docs/scripts/skill-catalog.ts`
+  (add `oat-project-complete-auto`), `apps/oat-docs/docs/workflows/projects/closeout/closeout-skills.md`
+  (an `## oat-project-complete-auto` guide section), and the generated catalog
+  in `apps/oat-docs/docs/skills/index.md` (`pnpm docs:skills:generate`)
+- Modify: the five lockstep `package.json` files and
+  `packages/cli/assets/public-package-versions.json` (0.3.15)
+- Modify: any skill version that `check:skill-bumps` reports as not above
+  `origin/main` after the merge, with its pins
+
+**Step 1: Port** the two deleted pages' wave 4 content into their #342
+locations, fix every link this wave added that points at a moved page, and add
+the new skill to the mapping, guide, and catalog.
+
+**Step 2: Bump** the lockstep packages to 0.3.15.
+
+**Step 3: Verify**
+
+Run the full Definition of Done in CI order with explicit exit codes (as
+p07-t03), including `pnpm docs:skills:check` and `pnpm build:docs`, and update
+`## Test Results` in `implementation.md` with the new head.
+
+**Step 4: Commit**
+
+`chore(p07-t05): port wave 4 docs into the restructured site and bump to 0.3.15`
+
+---
+
 ## Parallelism
 
 The plan is fully sequential (`oat_plan_parallel_groups: []`).
@@ -1698,7 +1736,7 @@ rewrites the four inventory rows last.
 
 ## PR Requirements
 
-- Title: `feat: gate budgets and duplicate-gate rejection, complexity review at review caps, autonomous completion skill (wave 4, lockstep 0.3.14)`.
+- Title: `feat: gate budgets and duplicate-gate rejection, complexity review at review caps, autonomous completion skill (wave 4, lockstep 0.3.15)`.
 - The body opens with a **Behavior changes** callout:
   - artifact gate reviews default to 30 minutes (was 15);
   - a second gate for the same project, review type, and scope is rejected
@@ -1713,7 +1751,7 @@ rewrites the four inventory rows last.
     `oat_quick_start_gate`;
   - a new `workflow.autonomousComplete` config key (default off) and the
     `oat-project-complete-auto` skill;
-  - the updated skills need `oat` 0.3.14 or later for the new config keys.
+  - the updated skills need `oat` 0.3.15 or later for the new config keys.
 - After the behavior callout, a shipped summary: one plain-language problem
   statement per closed backlog item, plus the two items that stay open
   (`BL-260909-restamp-a-stale-copy-strategy` partially shipped;
@@ -1772,9 +1810,9 @@ Quick-start plan gate attempt 2 of 2 (run `fe6bbe0a`): `blocked`, receive-eligib
 - Phase 4: 9 tasks - Review-loop skills
 - Phase 5: 6 tasks - Completion
 - Phase 6: 4 tasks - Small fixes
-- Phase 7: 4 tasks - Release fan-in
+- Phase 7: 5 tasks - Release fan-in
 
-**Total: 39 tasks**
+**Total: 40 tasks**
 
 Ready for code review and merge.
 

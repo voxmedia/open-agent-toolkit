@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: null
+oat_current_task_id: p07-t05
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 8     | 8/8       |
-| Phase 2 | complete | 3     | 3/3       |
-| Phase 3 | complete | 5     | 5/5       |
-| Phase 4 | complete | 9     | 9/9       |
-| Phase 5 | complete | 6     | 6/6       |
-| Phase 6 | complete | 4     | 4/4       |
-| Phase 7 | complete | 4     | 4/4       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 8     | 8/8       |
+| Phase 2 | complete    | 3     | 3/3       |
+| Phase 3 | complete    | 5     | 5/5       |
+| Phase 4 | complete    | 9     | 9/9       |
+| Phase 5 | complete    | 6     | 6/6       |
+| Phase 6 | complete    | 4     | 4/4       |
+| Phase 7 | in_progress | 5     | 4/5       |
 
-**Total:** 39/39 tasks completed
+**Total:** 39/40 tasks completed
 
 ---
 
@@ -251,7 +251,7 @@ oat_generated: false
 
 ## Phase 7: Release fan-in
 
-**Status:** complete
+**Status:** in_progress
 
 ### Task p07-t01: Bump the lockstep public packages to 0.3.14
 
@@ -272,6 +272,11 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** c44417bb4
+
+### Task p07-t05: Port wave 4 docs into the #342 docs restructure and bump to 0.3.15
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -686,6 +691,23 @@ check`, lint, build, type-check, isolated-HOME `turbo run test --force` 10/10
   Build, scoped vitest 1326, gate 440, validate-skills, check:skill-bumps,
   format:root, docs check, type-check, test:skills exit 0.
 
+- Request `bw4-final-review-2` (narrowed `44efc6224..5bdf154cc`): accepted;
+  reconnaissance not-attempted;
+  `reviews/archived/final-review-2026-10-02T233616Z.md`: 0 Critical, 0 High,
+  0 Medium, 2 Low (passes; all round-1 findings resolved). L1 (Definition of
+  Done predates p07-t04) and L2 (HiLL fix affects every workflow mode) are
+  root-owned closeout evidence.
+- The Definition of Done rerun at `5bdf154cc` exited 0 for every gate except
+  `release:check-versions`: `main` merged #342 (reader-first docs site,
+  lockstep 0.3.14) during closeout. Merged `origin/main` at `30526fef9`:
+  resolved `reference/cli-reference.md` (kept the 30-minute artifact default,
+  took #342's link path), corrected #342's new budget sentence in
+  `workflows/advanced/workflow-gates.md`, regenerated the backlog index, and
+  accepted #342's deletion of `workflows/projects/autonomy.md` and
+  `workflows/skills/index.md`. Wave 4's edits to renamed pages merged
+  automatically. Porting the two deleted pages' content and the 0.3.15 bump
+  is `p07-t05`; the final review then re-reviews the merge and port.
+
 <!-- orchestration-runs-end -->
 
 ## Plan Gate Feedback (quick-start, QS-12)
@@ -835,6 +857,11 @@ at 0.3.13).
 **Verification:** full Definition of Done exit 0 (see Test Results); every
 phase passed a root review and a Codex GPT-6.1 Sol phase gate (p01's gate
 closed by operator override after simplification).
+
+**Note:** the dashboard HiLL fix applies to every workflow mode, not only quick
+plans: existing projects whose `oat_hill_checkpoints` use single-quoted, bare,
+or block YAML arrays (for example the spec-driven scaffold default) now show
+and route their pending HiLL gates on the dashboard, as the router already did.
 
 **Design deltas:** p01 replaced its per-path destination denylist with one
 destination rule at the review cap (operator decision); the idle kill and
