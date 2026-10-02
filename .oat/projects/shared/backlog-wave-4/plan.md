@@ -231,6 +231,38 @@ Expected: exit 0; neutralize each new guard, show its test fails, restore.
 
 ---
 
+### Task p01-t04: (review) Close p01 gate finding H1
+
+**Files:**
+
+- Modify: `packages/cli/scripts/bundle-assets.sh`
+- Modify: `packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts`
+
+**Step 1: Failing test first**
+
+A bounded case with `OAT_ASSETS_DIR` set to the repository's `NOTICES.md` (an
+individually copied source file) is refused with a clear message before any
+mutation command runs, and the file's contents are unchanged.
+
+**Step 2: Implement**
+
+Before the cleanup trap or any mutation, reject an existing non-directory
+assets destination, and protect the physical path of every individually copied
+source file (`NOTICES.md`). Disjoint and default directory destinations still
+build.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/bundle-consistency.test.ts src/release/public-package-contract.test.ts`
+and `pnpm --filter @open-agent-toolkit/cli build` (real `HOME`).
+Expected: exit 0; neutralize the guard, show the new case fails, restore.
+
+**Step 4: Commit**
+
+`fix(p01-t04): close p01 gate finding H1`
+
+---
+
 ## Phase 2: Gate timeouts
 
 ### Task p02-t01: Give full-surface artifact reviews a 30-minute default
@@ -1233,7 +1265,7 @@ rewrites the four inventory rows last.
 | plan   | artifact | passed          | 2026-10-02 | -                                                           | -                                        | auto       | -                 |
 | plan   | artifact | fixes_completed | 2026-10-02 | reviews/archived/artifact-plan-review-2026-10-02T144731Z.md | -                                        | gate       | codex-6-sol-xhigh |
 | plan   | artifact | fixes_completed | 2026-10-02 | reviews/archived/artifact-plan-review-2026-10-02T145801Z.md | -                                        | gate       | codex-6-sol-xhigh |
-| p01    | code     | received        | 2026-10-02 | reviews/p01-review-2026-10-02T174337Z.md                    | eafd73d19afde547adf41b164943620acf2de60b | gate       | codex-6-sol-xhigh |
+| p01    | code     | fixes_added     | 2026-10-02 | reviews/archived/p01-review-2026-10-02T174337Z.md           | eafd73d19afde547adf41b164943620acf2de60b | gate       | codex-6-sol-xhigh |
 
 ## Plan artifact review (`QS-11`): structured review by `oat-reviewer-claude-claude-opus-5-5-high` (exact reviewer ceiling; planning-parent effort unknown), three attempts within `oat_orchestration_retry_limit` 2: attempt 1 returned 3 High, 4 Medium, 5 Low; attempt 2 returned 2 Medium, 2 Low; attempt 3 clean. All findings were applied in plan.md and discovery.md (commits 6bae4002b, ff8d23485); no residual findings.
 
@@ -1245,7 +1277,7 @@ Quick-start plan gate attempt 2 of 2 (run `fe6bbe0a`): `blocked`, receive-eligib
 
 **Summary:**
 
-- Phase 1: 3 tasks - Build assets
+- Phase 1: 4 tasks - Build assets
 - Phase 2: 2 tasks - Gate timeouts
 - Phase 3: 3 tasks - Sync correctness
 - Phase 4: 7 tasks - Review-loop skills
@@ -1253,7 +1285,7 @@ Quick-start plan gate attempt 2 of 2 (run `fe6bbe0a`): `blocked`, receive-eligib
 - Phase 6: 3 tasks - Small fixes
 - Phase 7: 3 tasks - Release fan-in
 
-**Total: 25 tasks**
+**Total: 26 tasks**
 
 Ready for code review and merge.
 

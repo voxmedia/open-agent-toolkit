@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p02-t01
+oat_current_task_id: p01-t04
 oat_generated: false
 ---
 
@@ -26,7 +26,7 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 3     | 3/3       |
+| Phase 1 | in_progress | 4     | 3/4       |
 | Phase 2 | pending     | 2     | 0/2       |
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 7     | 0/7       |
@@ -34,7 +34,7 @@ oat_generated: false
 | Phase 6 | pending     | 3     | 0/3       |
 | Phase 7 | pending     | 3     | 0/3       |
 
-**Total:** 3/25 tasks completed
+**Total:** 3/26 tasks completed
 
 ---
 
@@ -56,6 +56,11 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** 1a1732d77
+
+### Task p01-t04: (review) Close p01 gate finding H1
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -248,6 +253,14 @@ oat_generated: false
   which never matched under macOS bash 3.2. Neutralize-and-restore per guard;
   28/28 guard cases; uncached CLI tests 8057 pass. Root spot-check:
   `bundle-consistency.test.ts` 57/57.
+
+- Phase gate attempt 1 (`codex-6-sol-xhigh`, `gpt-6.1-sol` xhigh, run
+  `79f6824b`, `exit_nonzero_on: high`) at `eafd73d19`:
+  `reviews/archived/p01-review-2026-10-02T174337Z.md` status `blocked`, receive-eligible,
+  1 High (an `OAT_ASSETS_DIR` equal to the individually copied `NOTICES.md`
+  passes containment and publication replaces the file). Converted to
+  `p01-t04`; routed to the original phase handle, then root review and the gate
+  re-run (gate retry 1 of 2).
 
 <!-- orchestration-runs-end -->
 
