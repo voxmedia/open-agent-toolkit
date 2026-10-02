@@ -5,6 +5,7 @@ oat_blockers: []
 oat_last_updated: 2026-10-02
 oat_phase: plan
 oat_phase_status: complete
+oat_plan_hill_phases: ['p07']
 oat_plan_parallel_groups: []
 oat_plan_source: quick
 oat_import_reference: null
@@ -17,6 +18,7 @@ oat_phase_review_gate:
   phases: []
   review_type: code
   exit_nonzero_on: high
+oat_auto_review_at_hill_checkpoints: true
 ---
 
 # Implementation Plan: backlog-wave-4

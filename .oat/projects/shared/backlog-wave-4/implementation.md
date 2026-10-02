@@ -26,82 +26,174 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase 1 | in_progress | 2     | 0/2       |
+| Phase 2 | pending     | 2     | 0/2       |
+| Phase 3 | pending     | 3     | 0/3       |
+| Phase 4 | pending     | 7     | 0/7       |
+| Phase 5 | pending     | 4     | 0/4       |
+| Phase 6 | pending     | 3     | 0/3       |
+| Phase 7 | pending     | 3     | 0/3       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/24 tasks completed
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Build assets
 
 **Status:** in_progress
-**Started:** 2026-10-02
 
-### Phase Summary (fill when phase is complete)
-
-**Outcome (what changed):**
-
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
-
-**Key files touched:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {trade-offs or deviations discovered during implementation}
-
-### Task p01-t01: {Task Name}
-
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
-
-**Outcome (required when completed):**
-
-- {what materially changed (not “did task”, but “system now does X”)}
-
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
-
----
-
-### Task p01-t02: {Task Name}
+### Task p01-t01: Fail closed on empty bundle-inputs lookups
 
 **Status:** pending
 **Commit:** -
 
-**Notes:**
+### Task p01-t02: Report the errno when the assets root cannot be read
 
-- {Notes will be added during implementation}
+**Status:** pending
+**Commit:** -
 
 ---
 
-## Phase 2: {Phase Name}
+## Phase 2: Gate timeouts
 
 **Status:** pending
-**Started:** -
 
-### Task p02-t01: {Task Name}
+### Task p02-t01: Give full-surface artifact reviews a 30-minute default
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t02: Reject a duplicate live gate for the same project and scope
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 3: Sync correctness
+
+**Status:** pending
+
+### Task p03-t01: Restamp stale copy hashes and bridge legacy retirement
+
+**Status:** pending
+**Commit:** -
+
+### Task p03-t02: Report a missing SKILL.md for every canonical skill directory
+
+**Status:** pending
+**Commit:** -
+
+### Task p03-t03: Stop marker-less skill and agent directories from looping
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 4: Review-loop skills
+
+**Status:** pending
+
+### Task p04-t01: Add the condensed complexity-review guidance
+
+**Status:** pending
+**Commit:** -
+
+### Task p04-t03: Run the complexity review at implement's exhaustion points and log root judgment
+
+**Status:** pending
+**Commit:** -
+
+### Task p04-t04: Run the complexity review at review-receive's cycle cap
+
+**Status:** pending
+**Commit:** -
+
+### Task p04-t05: Define the gate approval record once
+
+**Status:** pending
+**Commit:** -
+
+### Task p04-t06: Persist quick-start gate outcomes and run the complexity review at QS-12
+
+**Status:** pending
+**Commit:** -
+
+### Task p04-t07: Read both gate records in next and progress
+
+**Status:** pending
+**Commit:** -
+
+### Task p04-t08: Update the autonomy contract and the docs for the review loop
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 5: Completion
+
+**Status:** pending
+
+### Task p05-t01: Add the `workflow.autonomousComplete` opt-in
+
+**Status:** pending
+**Commit:** -
+
+### Task p05-t02: Add the `oat-project-complete-auto` companion skill
+
+**Status:** pending
+**Commit:** -
+
+### Task p05-t03: Point wave closeout at the companion skill
+
+**Status:** pending
+**Commit:** -
+
+### Task p05-t04: Tighten the pr-final ledger scan boundary prose
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 6: Small fixes
+
+**Status:** pending
+
+### Task p06-t01: Downgrade claims that thorough-profile reviews leave undisposed
+
+**Status:** pending
+**Commit:** -
+
+### Task p06-t02: Resolve oat-wrap-up's summary template through the CLI
+
+**Status:** pending
+**Commit:** -
+
+### Task p06-t03: Route quick plans on the dashboard by readiness
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 7: Release fan-in
+
+**Status:** pending
+
+### Task p07-t01: Bump the lockstep public packages to 0.3.14
+
+**Status:** pending
+**Commit:** -
+
+### Task p07-t02: Close out the backlog items
+
+**Status:** pending
+**Commit:** -
+
+### Task p07-t03: Run the full Definition of Done
 
 **Status:** pending
 **Commit:** -
@@ -110,108 +202,20 @@ oat_generated: false
 
 ## Orchestration Runs
 
-_Each run from `oat-project-implement` appends an entry below with:_
-_- Run header (number, timestamp, branch, tier, policy, phase counts)_
-_- Phase Outcomes table_
-_- Parallel Groups list_
-_- Outstanding Items_
-
 <!-- orchestration-runs-start -->
 
-_Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
+### Run 1
+
+- Started: 2026-10-02; autonomous (`oat-project-autonomous`), Tier 1 subagents.
+- Implement contract: installed user-scope `oat-project-implement` 2.3.15 (the branch edits the canonical skill in p04).
+- Gate `IMPLEMENT-03`: HiLL checkpoints resolved to `["p07"]` (final phase, first run, field absent) with `oat_auto_review_at_hill_checkpoints: true`.
+- Gate `IMPLEMENT-08`: not needed; Claude Code Task-tool dispatch of the generated `oat-phase-implementer` and `oat-reviewer` variants is available without extra authorization.
+- Phase review gate: `oat_phase_review_gate` enabled for every phase (`review_type: code`, `exit_nonzero_on: high`); the configured target resolves to `codex-6-sol-xhigh` (`gpt-6.1-sol` xhigh) through cross-family exclusion with `OAT_GATE_PRODUCER_IDENTITY=claude-opus-5-5:declared`.
+- Dispatch policy: managed `high` from project state; implementer and reviewer launches use the resolver-returned Claude variants after a validation-only `oat project dispatch record` with the branch CLI.
 
 <!-- orchestration-runs-end -->
 
----
-
-## Implementation Log
-
-Chronological log of implementation progress.
-
-### 2026-10-02
-
-**Session Start:** {time}
-
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
-
-**What changed (high level):**
-
-- {short bullets suitable for PR/docs}
-
-**Decisions:**
-
-- {Decision made and rationale}
-
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
-
-**Blockers:**
-
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
-
----
-
-### 2026-10-02
-
-**Session Start:** {time}
-
-{Continue log...}
-
----
-
-## Deviations from Plan / Design
-
-Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
-
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
-
-## Test Results
-
-Track test execution during implementation.
-
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
-
-## Final Summary (for PR/docs)
-
-**What shipped:**
-
-- {capability 1}
-- {capability 2}
-
-**Behavioral changes (user-facing):**
-
-- {bullet}
-
-**Key files / modules:**
-
-- `{path}` - {purpose}
-
-**Verification performed:**
-
-- {tests/lint/typecheck/build/manual steps}
-
-**Design deltas (if any):**
-
-- {what changed vs design.md and why}
-
-## References
-
-- Plan: `plan.md`
-- Design: `design.md`
-- Spec: `spec.md`
-
----
-
-## Quick-start Gate Escalation
+## Plan Gate Feedback (quick-start, QS-12)
 
 The configured quick-start gate (`onFailure: block`, `maxAttempts: 2`,
 target `codex-6-sol-xhigh`, `gpt-6.1-sol` xhigh) blocked on both attempts:
@@ -238,3 +242,32 @@ exception stays. On the operator's request for a recommendation, the agent
 kept batch completion mode and dropped the idle kill
 (`BL-260711-add-activity-aware-gate`) and the early-trigger config key. The
 plan was revised accordingly (24 tasks); every phase remains gated.
+
+## Implementation Log
+
+Chronological execution is recorded per phase under Orchestration Runs above.
+
+## Deferred Findings (Medium)
+
+None yet.
+
+## Deviations from Plan / Design
+
+Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
+
+| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
+| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
+
+## Test Results
+
+Pending (p07-t03).
+
+## Final Summary (for PR/docs)
+
+Pending.
+
+## References
+
+- Plan: `plan.md`
+- Discovery: `discovery.md`
+- Execution learnings: `oat-execution-learnings.md`
