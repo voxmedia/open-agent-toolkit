@@ -89,7 +89,7 @@ oat_generated: false
 
 # Project State: docs-improvement-overhaul
 
-**Status:** Phase 1 accepted; phase 2 inventory is next
+**Status:** Phase 1 accepted; phase 2 inventory in progress, no moves before map review
 **Started:** 2026-10-01
 **Last Updated:** 2026-10-02
 

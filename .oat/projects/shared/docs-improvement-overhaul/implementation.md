@@ -13,14 +13,14 @@ The user invoked oat-project-implement after the reviewed plan handoff. Implemen
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 3     | 3/3       |
-| Phase 2 | pending  | 3     | 0/3       |
-| Phase 3 | pending  | 2     | 0/2       |
-| Phase 4 | pending  | 4     | 0/4       |
-| Phase 5 | pending  | 3     | 0/3       |
-| Phase 6 | pending  | 5     | 0/5       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 3     | 3/3       |
+| Phase 2 | in_progress | 3     | 0/3       |
+| Phase 3 | pending     | 2     | 0/2       |
+| Phase 4 | pending     | 4     | 0/4       |
+| Phase 5 | pending     | 3     | 0/3       |
+| Phase 6 | pending     | 5     | 0/5       |
 
 **Total:** 3/20 tasks completed.
 
@@ -49,8 +49,8 @@ The user invoked oat-project-implement after the reviewed plan handoff. Implemen
 
 ## Phase 2: Migrate Information Without Rewriting It
 
-**Status:** pending
-**Started:** Not started
+**Status:** in_progress; t01 inventory draft only, review required before moves
+**Started:** 2026-10-02
 
 ### Task p02-t01: Review the complete migration map
 
@@ -566,6 +566,76 @@ Phase implementation return: DONE_WITH_CONCERNS, three planned task commits in o
   "dispatch_stamp": "Dispatch: scope=plan-amendment action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high"
 }
 ```
+
+### p02 implementation dispatch
+
+```json
+{
+  "request_id": "docs-overhaul-run1-p02-implementation",
+  "caller": "oat-project-implement",
+  "scope": "p02",
+  "objective": "Preservation-only IA migration with mechanical conservation baseline and live-consumer repair",
+  "action": "implementation",
+  "role_name": "oat-phase-implementer",
+  "role_class": "worker",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "root-native-20261002",
+    "source": "agents.spawn_agent tool schema",
+    "observed_at": "2026-10-02"
+  },
+  "authority": "p02 declared files and mechanical route consumers; no core writes/publication; t01 review handoff before moves",
+  "role_selector": "oat-phase-implementer-gpt-6-1-sol-high",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "materialized-native-role",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": ".agents/skills/subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-10-01",
+  "guidance_verified_at": "2026-10-01",
+  "guidance_status": "fresh",
+  "selection_source": "policy-resolved",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "task_class": "hard-reasoning",
+  "model_class_floor": "hard-reasoning",
+  "classification_source": "caller",
+  "classification_reason": "Cross-surface source-route migration and conservation need explicit ownership and independent normalization review",
+  "floor_satisfaction": "satisfied",
+  "deadline_seconds": 14400,
+  "retry_limit": 2,
+  "launch_status": "accepted",
+  "child_outcome": null,
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [],
+  "payload": {
+    "task_name": "phase02",
+    "agent_type": "oat-phase-implementer-gpt-6-1-sol-high",
+    "fork_turns": "none",
+    "phase_base": "8b78d9a935b31ef50e65713b03a022a5d022aa59",
+    "scope": "p02 t01 draft then root continuation"
+  },
+  "configured_invocation_evidence": [
+    {
+      "source": "native launcher payload and spawn acceptance",
+      "agent_handle": "/root/phase02",
+      "role": "oat-phase-implementer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high"
+    }
+  ]
+}
+```
+
+Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high
+
+Accepted native /root/phase02 (Hilbert), holding before commands until clean bookkeeping SHA. Ownership initially t01 draft/evidence only; Fable map and non-author normalization review required before moves. No project-log append while child owns the worktree.
 
 ## Implementation Log
 
