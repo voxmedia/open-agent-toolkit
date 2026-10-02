@@ -137,7 +137,7 @@ oat_project_recap:
   source: interactive
   decided_at: '2026-10-01T16:19:52.974Z'
 oat_post_implement_sequence:
-  status: awaiting_approval
+  status: post_approval
   source: configured
   final_phase: p04
   pre_approval:
@@ -148,8 +148,8 @@ oat_post_implement_sequence:
     - summary
     - document
     - pr
-  approval: pending
-  approval_source: null
+  approval: approved
+  approval_source: user
   post_approval: []
   post_approval_completed: []
   failure: null

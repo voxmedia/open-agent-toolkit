@@ -3417,3 +3417,7 @@ Gate `ef3220d1-1ba8-4d1a-9f96-82bdacd8ea5c` returned `ok`, explicit eligible han
 - L2: Task Scope: Negligible. Address now. Refreshed the two repository reference surfaces to state that main #338 is integrated and renewed review/gate acceptance has passed. Archival reference updates follow in completion.
 
 Both corrections are artifact alignment, add no task/source change and consume no failed remediation attempt. Raw reviewer conflict-count wording (eighteen inspected remerge paths) is retained; the original merge reported nineteen unmerged paths, including the generated docs index. Root verification records the original inventory. The artifact was archived byte-for-byte and its exact ledger event marked passed. Existing sequence order/completion and recap skip remain unchanged.
+
+### Final approval recorded for requested completion
+
+The user explicitly requested merge of origin/main followed by oat-project-complete, then asked to retry after disk recovery. Root records that final sign-off as approval approved/source user only after renewed independent review, all repository gates, and allowed/fresh Opus gate receive. Existing pre-approval completions remain summary/document/pr in their original order; post-approval is empty, recap skip retained.
