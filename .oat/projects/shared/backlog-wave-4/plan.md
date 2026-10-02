@@ -318,6 +318,61 @@ Expected: exit 0; neutralize the guard, show the new case fails, restore.
 
 ---
 
+### Task p01-t07: (review) Simplify the bundle destination guard and fix the symlinked-checkout root cause
+
+Operator disposition at the p01 review cap (complexity review
+`reviews/archived/complexity-p01-2026-10-02T1830Z.md`): simplify, plus the
+root-cause fix; one targeted re-review; no further gate cycles for the
+destructive-publish family.
+
+**Files:**
+
+- Modify: `packages/cli/scripts/bundle-assets.sh`, `packages/cli/scripts/bundle-inputs.mjs`
+- Modify: `packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts`
+
+**Step 1: Failing tests first**
+
+- An existing, populated `OAT_ASSETS_DIR` without `bundle-metadata.json` (for
+  example a copy of `.agents/docs`) is refused before the cleanup trap, with
+  its contents intact.
+- An existing bundle (a directory holding `bundle-metadata.json`) and an empty
+  directory still rebuild; an absent destination still builds.
+- A build run through a symlinked checkout path (a symlink to the repository
+  root) resolves inventory lookups and succeeds.
+
+**Step 2: Implement**
+
+- Keep: the lookup guard (empty, absolute, `..`, physical repository root),
+  `physical_path` with `cd -P`, and the recursion guard that refuses a staging
+  directory at or inside the skills, templates, or docs source roots.
+- Replace with one pre-trap rule: publish only when the assets destination is
+  absent, an empty directory, or a directory holding `bundle-metadata.json`;
+  otherwise refuse with "remove it or choose an empty directory". Delete the
+  per-path destination denylist that this rule covers (agents, scripts, config
+  folders, the `NOTICES.md` entry and linked-file refusal, the non-directory
+  check, the reverse containment check, and the `PREVIOUS` loop variants).
+- Simplify: check only `STAGING` against the three recursion roots; drop the
+  lexical half of the repository-root check (the physical half covers it).
+- Root cause: resolve `SCRIPT_DIR` and `REPO_ROOT` with `pwd -P` and make the
+  `bundle-inputs.mjs` entry check compare real paths, so a symlinked checkout
+  path no longer makes every lookup print nothing.
+- Replace the denylist test rows with the cases in Step 1; keep the
+  empty-lookup, root, symlink-alias, `<link>/..`, disjoint, and default cases.
+- Rewrite the guard comment to state exactly these rules.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/bundle-consistency.test.ts src/release/public-package-contract.test.ts src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`
+and `pnpm --filter @open-agent-toolkit/cli build` (real `HOME`).
+Expected: exit 0; neutralize each kept or new guard, show its case fails,
+restore.
+
+**Step 4: Commit**
+
+`fix(p01-t07): replace the destination denylist and fix symlinked checkouts`
+
+---
+
 ## Phase 2: Gate timeouts
 
 ### Task p02-t01: Give full-surface artifact reviews a 30-minute default
@@ -1323,6 +1378,7 @@ rewrites the four inventory rows last.
 | p01    | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-review-2026-10-02T174337Z.md           | eafd73d19afde547adf41b164943620acf2de60b | gate       | codex-6-sol-xhigh |
 | p01    | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-review-2026-10-02T175407Z.md           | 66212d9708672d44f111d4d42c86df38414cec62 | auto       | -                 |
 | p01    | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-review-2026-10-02T180245Z.md           | e1194eea7e7768495a88d6207290b3860379c346 | gate       | codex-6-sol-xhigh |
+| p01    | code     | fixes_added     | 2026-10-02 | reviews/archived/p01-review-2026-10-02T181434Z.md           | 360099ac8e940404c9476e45f122f45f6cc01bb8 | auto       | -                 |
 
 ## Plan artifact review (`QS-11`): structured review by `oat-reviewer-claude-claude-opus-5-5-high` (exact reviewer ceiling; planning-parent effort unknown), three attempts within `oat_orchestration_retry_limit` 2: attempt 1 returned 3 High, 4 Medium, 5 Low; attempt 2 returned 2 Medium, 2 Low; attempt 3 clean. All findings were applied in plan.md and discovery.md (commits 6bae4002b, ff8d23485); no residual findings.
 
@@ -1334,7 +1390,7 @@ Quick-start plan gate attempt 2 of 2 (run `fe6bbe0a`): `blocked`, receive-eligib
 
 **Summary:**
 
-- Phase 1: 6 tasks - Build assets
+- Phase 1: 7 tasks - Build assets
 - Phase 2: 2 tasks - Gate timeouts
 - Phase 3: 3 tasks - Sync correctness
 - Phase 4: 7 tasks - Review-loop skills
@@ -1342,7 +1398,7 @@ Quick-start plan gate attempt 2 of 2 (run `fe6bbe0a`): `blocked`, receive-eligib
 - Phase 6: 3 tasks - Small fixes
 - Phase 7: 3 tasks - Release fan-in
 
-**Total: 28 tasks**
+**Total: 29 tasks**
 
 Ready for code review and merge.
 

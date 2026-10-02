@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p02-t01
+oat_current_task_id: p01-t07
 oat_generated: false
 ---
 
@@ -26,7 +26,7 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 6     | 6/6       |
+| Phase 1 | in_progress | 7     | 6/7       |
 | Phase 2 | pending     | 2     | 0/2       |
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 7     | 0/7       |
@@ -34,7 +34,7 @@ oat_generated: false
 | Phase 6 | pending     | 3     | 0/3       |
 | Phase 7 | pending     | 3     | 0/3       |
 
-**Total:** 6/28 tasks completed
+**Total:** 6/29 tasks completed
 
 ---
 
@@ -71,6 +71,11 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** 05c71e7c8
+
+### Task p01-t07: (review) Simplify the bundle destination guard and fix the symlinked-checkout root cause
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -295,6 +300,25 @@ oat_generated: false
   individually copied source); gate retry 2 of 2 follows.
 
 - Continuation `cont-backlog-wave-4-p01-fix-4`: `05c71e7c8` refuses a symlinked individually copied source (p01-t06); failing-first and neutralization recorded; uncached CLI tests 8061 pass; root spot-check bundle-consistency passes.
+
+- Request `bw4-p01-review-3` (narrowed to `e1194eea7..360099ac8`): accepted;
+  reconnaissance not-attempted; `reviews/archived/p01-review-2026-10-02T181434Z.md`:
+  0 Critical, 1 High, 0 Medium, 2 Low. Gate retry H1 confirmed fixed; new H1:
+  `.agents/docs`, reached through skill symlinks by `cp -RL`, is an
+  unprotected destination in the real layout. L1: arbitrary-existing-directory
+  follow-up untracked. L2: a symlinked checkout path makes inventory lookups
+  print nothing (verified at `bundle-inputs.mjs` entry check; likely the Wave 3
+  incident trigger).
+- Review cap reached for p01 (three root rounds, two gate attempts). Complexity
+  review `reviews/archived/complexity-p01-2026-10-02T1830Z.md`: partially
+  compliant; family B (destructive publish through `OAT_ASSETS_DIR`) holds 6
+  of 9 findings and every High, each fix adding one denylist entry; recommended
+  disposition **simplify**.
+- **Operator disposition (2026-10-02):** simplify plus the root-cause fix
+  (`p01-t07`), one targeted root re-review, and no further phase-gate cycles
+  for the destructive-publish family (the p01 phase gate is closed by operator
+  override once the targeted re-review passes). R3 H1 and L1 are dissolved by
+  the destination rule; L2 is fixed in `p01-t07`.
 
 <!-- orchestration-runs-end -->
 
