@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p01-t08
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -24,23 +24,23 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 8     | 7/8       |
-| Phase 2 | pending     | 2     | 0/2       |
-| Phase 3 | pending     | 3     | 0/3       |
-| Phase 4 | pending     | 7     | 0/7       |
-| Phase 5 | pending     | 4     | 0/4       |
-| Phase 6 | pending     | 3     | 0/3       |
-| Phase 7 | pending     | 3     | 0/3       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 8     | 8/8       |
+| Phase 2 | pending  | 2     | 0/2       |
+| Phase 3 | pending  | 3     | 0/3       |
+| Phase 4 | pending  | 7     | 0/7       |
+| Phase 5 | pending  | 4     | 0/4       |
+| Phase 6 | pending  | 3     | 0/3       |
+| Phase 7 | pending  | 3     | 0/3       |
 
-**Total:** 7/30 tasks completed
+**Total:** 8/30 tasks completed
 
 ---
 
 ## Phase 1: Build assets
 
-**Status:** in_progress
+**Status:** complete
 
 ### Task p01-t01: Fail closed on empty bundle-inputs lookups
 
@@ -79,8 +79,8 @@ oat_generated: false
 
 ### Task p01-t08: (review) Close p01 targeted re-review findings L1, L2
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** fbb3711c7
 
 ---
 
@@ -343,6 +343,18 @@ oat_generated: false
   counts as empty) and L2 (root check depends on `pwd -P`, untested) converted
   to `p01-t08`, applied without a further p01 review round per the operator
   disposition; the final review and exit gate cover it.
+
+- Continuation `cont-backlog-wave-4-p01-fix-6`: `fbb3711c7` (p01-t08) closed
+  L1 (unreadable destination refused) and L2 (repository-root check normalizes
+  both sides; `pwd -P` claim corrected); uncached CLI tests 8060 pass; root
+  spot-check bundle-consistency 60/60.
+- Phase p01 gate: closed by operator override at the review cap (two Codex
+  gate attempts blocked on the destructive-publish family; the operator chose
+  simplify with one targeted re-review and no further gate cycles). The final
+  review and exit gate cover the whole p01 diff.
+- Phase p01 outcome: complete; 8/8 tasks (2 planned, 6 review-fix); root
+  review rounds 4 (one operator-authorized past the cap), gate attempts 2,
+  complexity review 1.
 
 <!-- orchestration-runs-end -->
 
