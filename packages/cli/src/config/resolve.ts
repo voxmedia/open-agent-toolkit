@@ -116,6 +116,7 @@ const DEFAULT_WORKFLOW_CONFIG = {
     hillCheckpointDefault: null,
     archiveOnComplete: null,
     createPrOnComplete: null,
+    autonomousComplete: false,
     postImplementSequence: null,
     reviewExecutionModel: null,
     autoReviewAtHillCheckpoints: null,

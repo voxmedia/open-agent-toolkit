@@ -2057,6 +2057,66 @@ describe('oat config', () => {
       });
     });
 
+    it('gets workflow.autonomousComplete as false when unset', async () => {
+      const root = await createRepoRoot();
+      const home = await createHome();
+      const { command, capture } = createHarness({ cwd: root, home });
+
+      await runCommand(
+        command,
+        ['get', 'workflow.autonomousComplete'],
+        ['--json'],
+      );
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        key: 'workflow.autonomousComplete',
+        value: 'false',
+        source: 'default',
+      });
+    });
+
+    it('sets workflow.autonomousComplete as a boolean and rejects other values', async () => {
+      const root = await createRepoRoot();
+      const home = await createHome();
+      const { command } = createHarness({ cwd: root, home });
+
+      await runCommand(command, [
+        'set',
+        'workflow.autonomousComplete',
+        'true',
+        '--shared',
+      ]);
+
+      const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
+      expect(JSON.parse(raw)).toMatchObject({
+        version: 1,
+        workflow: { autonomousComplete: true },
+      });
+      expect(process.exitCode).toBe(0);
+
+      const get = createHarness({ cwd: root, home });
+      await runCommand(
+        get.command,
+        ['get', 'workflow.autonomousComplete'],
+        ['--json'],
+      );
+      expect(get.capture.jsonPayloads[0]).toMatchObject({
+        key: 'workflow.autonomousComplete',
+        value: 'true',
+        source: 'shared',
+      });
+
+      const invalid = createHarness({ cwd: root, home });
+      await runCommand(invalid.command, [
+        'set',
+        'workflow.autonomousComplete',
+        'sometimes',
+      ]);
+      expect(process.exitCode).toBe(1);
+      expect(invalid.capture.error[0]).toContain('true');
+    });
+
     it('sets and gets bounded workflow gate timeout keys', async () => {
       const root = await createRepoRoot();
       const home = await createHome();
@@ -4336,6 +4396,7 @@ describe('oat config', () => {
       expect(capture.info[0]).toContain('workflow.hillCheckpointDefault');
       expect(capture.info[0]).toContain('workflow.archiveOnComplete');
       expect(capture.info[0]).toContain('workflow.createPrOnComplete');
+      expect(capture.info[0]).toContain('workflow.autonomousComplete');
       expect(capture.info[0]).toContain('workflow.postImplementSequence');
       expect(capture.info[0]).toContain('workflow.reviewExecutionModel');
       expect(capture.info[0]).toContain('workflow.autoReviewAtHillCheckpoints');
@@ -4366,6 +4427,10 @@ describe('oat config', () => {
       ],
       [
         'workflow.createPrOnComplete',
+        'Resolution: local > shared > user > default.',
+      ],
+      [
+        'workflow.autonomousComplete',
         'Resolution: local > shared > user > default.',
       ],
       [
@@ -4422,6 +4487,19 @@ describe('oat config', () => {
       expect(capture.info[0]).toContain('Key: workflow.archiveOnComplete');
       expect(capture.info[0]).toContain('Type: boolean');
       expect(capture.info[0]).toContain('Default: unset');
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('describe workflow.autonomousComplete shows disabled-by-default boolean metadata', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, ['describe', 'workflow.autonomousComplete']);
+
+      expect(capture.info[0]).toContain('Key: workflow.autonomousComplete');
+      expect(capture.info[0]).toContain('Type: boolean');
+      expect(capture.info[0]).toContain('Default: false');
+      expect(capture.info[0]).toContain('oat-project-complete-auto');
       expect(process.exitCode).toBe(0);
     });
 

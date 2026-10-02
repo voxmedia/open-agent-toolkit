@@ -203,6 +203,7 @@ The `workflow.*` namespace holds user-facing workflow preferences that let you a
 - `workflow.hillCheckpointDefault` (`every` | `final`) — default HiLL checkpoint behavior in `oat-project-implement`
 - `workflow.archiveOnComplete` (`boolean`) — skip the archive prompt in `oat-project-complete`
 - `workflow.createPrOnComplete` (`boolean`) — skip the "Open a PR?" prompt in `oat-project-complete`
+- `workflow.autonomousComplete` (`boolean`, default `false`) — standing opt-in for the non-interactive `oat-project-complete-auto` companion; when `false` it stops with "interactive completion required"
 - `workflow.postImplementSequence` (legacy `wait` | `summary` | `pr` | `docs-pr`, or structured `{preApproval, postApproval}` arrays) — approval-aware post-implementation chaining
 - `workflow.reviewExecutionModel` (`subagent` | `inline` | `fresh-session`) — default final-review execution model
 - `workflow.autoReviewAtHillCheckpoints` (`boolean`) — auto-run the extra lifecycle review at HiLL checkpoints
