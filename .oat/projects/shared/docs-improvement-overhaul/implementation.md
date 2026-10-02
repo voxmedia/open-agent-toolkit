@@ -868,6 +868,21 @@ Required peer-review boundary: Fable map approval has not arrived. Verified owni
 
 ### p02 root gates and accepted recovery continuation
 
+### Recovery Event docs-p02-recovery-1
+
+- Phase/task: p02 / p02-t03
+- Original request: docs-overhaul-run1-p02-implementation
+- Original commit: 3f0c0b0bff06667a2745b492873f9ff69546aa92
+- Defect class: test
+- Discovered by: HOME=<isolated> pnpm test
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: oat-phase-implementer-gpt-6-1-sol-high
+- Recovery commit: 777810f5bdbeca85f1628b6808808f5624061b65
+- Verification: authoritative postcommit27/27 focused tests,12/12 docs tests, source validation and816-unit conservation pass; clean three-file bounds.
+- Reason: Root verified immutable original history, exact target/reservation, preserved citation cardinality/existence/heading checks and matching committed completed marker. Cleared only pending marker after acceptance, preserving used_attempts1. No review-fix budget consumed.
+
 At task-ledger head2173d81d, ordered root check/type-check exit0; isolated-HOME test exits1 with642/660 skill tests passing and18 failing. Remaining ordered gates were not run. Two existing skill-test consumers still assume retired paths: recon's real docs file and oat-doctor's citation extraction/read roots. This is an unambiguous mechanically derived p02 consumer defect, not an unrelated test or assurance waiver.
 
 Same phase02 target accepted `cont-docs-overhaul-p02-recovery-1`, linked to original docs-overhaul-run1-p02-implementation, original p02-t03 commit3f0c0b0b. Authority is the two named test files plus its narrow state recovery ledger; unchanged Sol/high target, default10 attempts, prior durable usage0. It holds until release, reserves attempt1 before edit and preserves original history. Root will settle the committed terminal marker only after authoritative postcommit checks. Reviewer continues read-only immutable2173d81d with artifact writes held, avoiding dirty-tree contention. No review-fix budget consumed yet.

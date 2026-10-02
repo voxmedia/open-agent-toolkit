@@ -22,16 +22,7 @@ oat_phase_recovery_policy:
   phase_attempt_usage:
     p02:
       used_attempts: 1
-      pending_attempt:
-        attempt: 1
-        event_id: docs-p02-recovery-1
-        original_request_id: docs-overhaul-run1-p02-implementation
-        original_task_id: p02-t03
-        original_commit: 3f0c0b0bff06667a2745b492873f9ff69546aa92
-        discovered_by: HOME=<isolated> pnpm test
-        dispatch_target: oat-phase-implementer-gpt-6-1-sol-high
-        reservation_head: 1d4555925cde8def542b1c688b4a5591d47b8fbc
-        status: completed
+      pending_attempt: null
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
