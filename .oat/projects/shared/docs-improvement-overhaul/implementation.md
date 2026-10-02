@@ -637,6 +637,146 @@ Dispatch: scope=p02 action=implementation role=implementer producer=unknown prov
 
 Accepted native /root/phase02 (Hilbert), holding before commands until clean bookkeeping SHA. Ownership initially t01 draft/evidence only; Fable map and non-author normalization review required before moves. No project-log append while child owns the worktree.
 
+### docs-analysis draft review dispatch
+
+```json
+{
+  "request_id": "docs-overhaul-run1-p02-analysis-review01",
+  "caller": "oat-project-implement",
+  "scope": "docs-analysis",
+  "objective": "Structured analysis accuracy review, no file writes",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "reviewer",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "root-native-20261002",
+    "source": "agents.spawn_agent tool schema",
+    "observed_at": "2026-10-02"
+  },
+  "authority": "read-only; in-memory StructuredFindings only",
+  "role_selector": "oat-reviewer-gpt-6-1-sol-high",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "materialized-native-role",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": ".agents/skills/subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-10-01",
+  "guidance_verified_at": "2026-10-01",
+  "guidance_status": "fresh",
+  "selection_source": "policy-resolved",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Independent load-bearing conservation and evidence review before moves",
+  "floor_satisfaction": "satisfied",
+  "deadline_seconds": 3600,
+  "retry_limit": 2,
+  "launch_status": "accepted",
+  "child_outcome": null,
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [],
+  "payload": {
+    "task_name": "p02_analysis_review",
+    "agent_type": "oat-reviewer-gpt-6-1-sol-high",
+    "fork_turns": "none",
+    "output_mode": "structured",
+    "committed_head": "fc3515327df51632286f0c9a373e76e7b36b8c30",
+    "source_baseline": "8b78d9a935b31ef50e65713b03a022a5d022aa59",
+    "draft_binding": "uncommitted exact SHA256; not reviewed at committed HEAD"
+  },
+  "configured_invocation_evidence": [
+    {
+      "source": "native launcher payload and spawn acceptance",
+      "agent_handle": "/root/p02_analysis_review",
+      "role": "oat-reviewer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high"
+    }
+  ]
+}
+```
+
+Dispatch: scope=docs-analysis action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high
+
+### p02-map draft review dispatch
+
+```json
+{
+  "request_id": "docs-overhaul-run1-p02-map-review01",
+  "caller": "oat-project-implement",
+  "scope": "p02-map",
+  "objective": "Non-author destination, normalization and capability inventory review; one review artifact only",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "reviewer",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "root-native-20261002",
+    "source": "agents.spawn_agent tool schema",
+    "observed_at": "2026-10-02"
+  },
+  "authority": "read-only except declared p02 draft review artifact",
+  "role_selector": "oat-reviewer-gpt-6-1-sol-high",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "materialized-native-role",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": ".agents/skills/subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-10-01",
+  "guidance_verified_at": "2026-10-01",
+  "guidance_status": "fresh",
+  "selection_source": "policy-resolved",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Independent load-bearing conservation and evidence review before moves",
+  "floor_satisfaction": "satisfied",
+  "deadline_seconds": 3600,
+  "retry_limit": 2,
+  "launch_status": "accepted",
+  "child_outcome": null,
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [],
+  "payload": {
+    "task_name": "p02_map_review",
+    "agent_type": "oat-reviewer-gpt-6-1-sol-high",
+    "fork_turns": "none",
+    "output_mode": "artifact",
+    "committed_head": "fc3515327df51632286f0c9a373e76e7b36b8c30",
+    "source_baseline": "8b78d9a935b31ef50e65713b03a022a5d022aa59",
+    "draft_binding": "uncommitted exact SHA256; not reviewed at committed HEAD"
+  },
+  "configured_invocation_evidence": [
+    {
+      "source": "native launcher payload and spawn acceptance",
+      "agent_handle": "/root/p02_map_review",
+      "role": "oat-reviewer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high"
+    }
+  ]
+}
+```
+
+Dispatch: scope=p02-map action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high
+
 ## Implementation Log
 
 Task p01-t01 implemented and independently reconciled against HEAD; root task bookkeeping committed before the same phase handle continues. Phase review and release closure remain pending.
