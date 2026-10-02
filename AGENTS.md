@@ -140,6 +140,14 @@ does not turn it red). That is why the root pass stays ungated.
 - `pnpm run cli -- help` - Run the OAT CLI help from repo root
 - `pnpm run cli -- <command> [options]` - Execute specific OAT CLI commands during local testing
 - After creating or switching to a worktree, run `pnpm run worktree:init` before using the CLI workflow.
+- Before approving a plan, at each phase start, and before dispatching
+  parallel lanes, run `git fetch origin main` and list what main changed in
+  the planned paths since the branch base:
+  `git log --oneline "$(git merge-base HEAD origin/main)..origin/main" -- <paths>`.
+  If main touched them, reconcile before continuing. Finish any open merge
+  before fanning out lanes that run the CLI in that worktree. The docs
+  overhaul rebuilt Fumadocs navigation sync in its phase 1 because main had
+  merged it (#336) hours earlier and nobody checked.
 - The pre-commit hook (lint-staged) runs `oxfmt --write` on staged Markdown,
   JSON, and JS/TS files, so a committed file can differ from the text you last
   wrote: Markdown tables are re-padded and YAML scalars may be re-quoted. After

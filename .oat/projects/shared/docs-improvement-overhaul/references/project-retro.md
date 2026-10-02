@@ -24,7 +24,7 @@ oat_retro_evidence_sources:
     status: used
   - source: claude-subagent-transcripts
     status: used
-oat_retro_promotions: proposed
+oat_retro_promotions: partial
 oat_retro_filing: proposed
 oat_generated: true
 oat_template: false
@@ -90,11 +90,12 @@ Times below are UTC. Claims are confirmed by durable evidence unless marked
 
 ## Current State
 
-- **Promotions:** `proposed`. RP-01 and RP-02 are apply items at `proposed`.
+- **Promotions:** `partial`. RP-01 is applied (`AGENTS.md`); RP-02 is at
+  `proposed`.
 - **Filing:** `proposed`. RP-03 to RP-06 and UP-01 to UP-06 are at
   `proposed` with no destination.
-- **Unsettled items:** RP-01 and RP-02 (apply), RP-03 to RP-06 (file to the
-  repository backlog), UP-01 to UP-06 (file upstream).
+- **Unsettled items:** RP-02 (apply), RP-03 to RP-06 (file to the repository
+  backlog), UP-01 to UP-06 (file upstream).
 
 ## What Went Well
 
@@ -297,9 +298,9 @@ No missing decision record is justified: these are project-scoped.
 
 - **Type:** agents-instruction
 - **Disposition:** apply
-- **Status:** proposed
+- **Status:** applied
 - **Target:** AGENTS.md
-- **Applied-ref:** —
+- **Applied-ref:** AGENTS.md
 - **Disposition-note:** —
 
 Phase 1 rebuilt Fumadocs nav sync that main had merged between the branch cut
