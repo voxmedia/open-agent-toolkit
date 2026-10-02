@@ -8,8 +8,8 @@
   front door for existing docs and support the docs-directory convention**
   remains open. Its [Markdown slice](../../../projects/shared/markdown-docs-bootstrap/summary.md)
   passed fourteen tasks and current independent final review; closeout outputs
-  are complete. Main #338 integration and renewed review/gate evidence precede
-  the requested lifecycle completion. Package drift, approval classes,
+  are complete. Main #338 is integrated and renewed review/gate evidence passed; both Low
+  artifact-alignment findings are addressed before requested lifecycle completion. Package drift, approval classes,
   pntr automation and external-repository acceptance remain outside the slice.
 
 - 2026-10-01: the `backlog-wave-3` project (lockstep 0.3.11) closed thirteen

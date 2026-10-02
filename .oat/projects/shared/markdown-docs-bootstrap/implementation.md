@@ -3408,3 +3408,12 @@ All findings dispositioned; event passed with original counts/provenance. Requir
 ### Final main-completion review received
 
 Independent native `oat-reviewer-gpt-6-1-sol-high` accepted at 5a38d447c0843e6abc47468808924693fbf7930d; result returned with 0C/0H/0M/0L and 575 actual focused tests. Root received all findings (none), archived the artifact byte-for-byte, and appended the exact final/code event; prior review rows and raw counts remain intact. Invocation/model-effort controls are configured evidence, not independently observed runtime identity. Full gates are root-owned and currently rerunning after ENOSPC; completion prose will be refreshed before the retained gate.
+
+### Renewed completion gate received
+
+Gate `ef3220d1-1ba8-4d1a-9f96-82bdacd8ea5c` returned `ok`, explicit eligible handoff, 0C/0H/0M/2L, at reviewed head `45a36add8b9c6e2513e6dc1289cb0409f619d017`. Root read the whole review and received both findings under the user's merge-and-complete instruction. Deferred Medium resurfacing: none. Raw counts, scope/range and configured invocation remain unchanged.
+
+- L1: Task Scope: Negligible. Address now. Root's native final-review row was appended after Reviews-table prose; moved its unchanged cells into the contiguous table before the later gate event. Verified both events occur in the actual table and all previous cells/append order are preserved.
+- L2: Task Scope: Negligible. Address now. Refreshed the two repository reference surfaces to state that main #338 is integrated and renewed review/gate acceptance has passed. Archival reference updates follow in completion.
+
+Both corrections are artifact alignment, add no task/source change and consume no failed remediation attempt. Raw reviewer conflict-count wording (eighteen inspected remerge paths) is retained; the original merge reported nineteen unmerged paths, including the generated docs index. Root verification records the original inventory. The artifact was archived byte-for-byte and its exact ledger event marked passed. Existing sequence order/completion and recap skip remain unchanged.

@@ -46,9 +46,9 @@ copying their content here. -->
   Bootstrap, analyze/apply, authoring and instruction consumers retain the
   applicable Markdown contracts without site tooling. All fourteen tasks and
   current independent final review passed, including both Bugbot fixes and
-  unreadable optional-directory preservation. Main #338 integration is in progress; final review and exit-gate evidence
-  will be renewed before the requested completion. Existing closeout steps stay
-  complete. See the
+  unreadable optional-directory preservation. Main #338 is integrated; independent final review and the renewed exit gate
+  passed. Both Low artifact-alignment findings are addressed. Existing closeout
+  steps stay complete; requested lifecycle completion follows. See the
   [project summary](../../projects/shared/markdown-docs-bootstrap/summary.md).
   **BL-260911-make-docs-bootstrap-a-front: Make docs bootstrap a front door
   for existing docs and support the docs-directory convention** remains open

@@ -281,7 +281,8 @@ Use public adoption/dry-run regressions for instruction-only direct/nested direc
 | final         | code     | passed          | 2026-10-01 | reviews/archived/final-review-2026-10-01T185353Z.md         | 909f8a68b1068b54f2a0ee870e299088a5c0da82 | gate       | claude-opus-5-5-high |
 | final         | code     | passed          | 2026-10-01 | reviews/archived/final-review-2026-10-01T192917Z.md         | da14976fe0fa87e0f18e80be5aacd5b1a64b9e4b | auto       | -                    |
 | final         | code     | passed          | 2026-10-01 | reviews/archived/final-review-2026-10-01T193637Z.md         | 852db5a7073fc8a6f928577e27124df57febd0df | gate       | claude-opus-5-5-high |
-| final         | code     | received        | 2026-10-02 | reviews/final-review-2026-10-02T030210Z.md                  | 45a36add8b9c6e2513e6dc1289cb0409f619d017 | gate       | claude-opus-5-5-high |
+| final         | code     | passed          | 2026-10-02 | reviews/archived/final-review-2026-10-02T025452Z.md         | 5a38d447c0843e6abc47468808924693fbf7930d | auto       | -                    |
+| final         | code     | passed          | 2026-10-02 | reviews/archived/final-review-2026-10-02T030210Z.md         | 45a36add8b9c6e2513e6dc1289cb0409f619d017 | gate       | claude-opus-5-5-high |
 
 Historical scaffold rows and review events are preserved. Eleven prior tasks are complete; remote M1/L1 are converted to p04-t04/p04-t05. Prior passed reviews and gates remain history; fresh final acceptance is required for the remote fixes on the integrated branch.
 
@@ -295,7 +296,6 @@ Record full reviewed heads and invocation provenance for actual reviews. Preserv
 - Final cross-runtime gate: passed with 0 Critical, 0 High, 0 Medium, 2 Low. Root rejected both missing-scope claims with source-verified coverage rationale; no unresolved findings or waived requirements. Artifact received, dispositioned, and archived. See `reviews/plan-gate-final-handoff.md`.
 
 Source pointers retained for the already-planned consumer inventory: index generation's independent root default in `packages/cli/src/commands/docs/index-generate/index.ts:384-389`; resolver agreement test in `packages/cli/src/config/oat-config.test.ts:633`; template reference pages `apps/oat-docs/docs/reference/file-locations.md` and `reference/oat-directory-structure.md`.
-| final | code | passed | 2026-10-02 | reviews/archived/final-review-2026-10-02T025452Z.md | 5a38d447c0843e6abc47468808924693fbf7930d | auto | - |
 
 ## Implementation Complete
 
