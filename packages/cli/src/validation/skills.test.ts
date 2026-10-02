@@ -8014,6 +8014,23 @@ describe('validateOatSkills', () => {
     expect(getFrontmatterForTest(projectRetro)).toContain('Bash(mkdir:*)');
   });
 
+  it("resolves oat-wrap-up's summary template through the CLI", async () => {
+    const [wrapUp, reportTemplate] = await Promise.all([
+      readRepoFile('.agents/skills/oat-wrap-up/SKILL.md'),
+      readRepoFile('.agents/skills/oat-wrap-up/references/report-template.md'),
+    ]);
+
+    // A user-scope-only install has no repository `.oat/templates/`, so the
+    // skill reads the template through the repository, user, bundle order.
+    expect(wrapUp).toContain('oat template resolve summary --json');
+    // The bundle tier reports `path: null`; `--output` copies its content.
+    expect(wrapUp).toMatch(/oat template resolve summary --output /);
+    expect(readDeclaredVersion(wrapUp)).toBe('1.0.4');
+    for (const content of [wrapUp, reportTemplate]) {
+      expect(content).not.toContain('.oat/templates/summary.md');
+    }
+  });
+
   it('grants oat-docs-analyze only the read-only nav sync check', async () => {
     const docsAnalyze = await readRepoFile(
       '.agents/skills/oat-docs-analyze/SKILL.md',
