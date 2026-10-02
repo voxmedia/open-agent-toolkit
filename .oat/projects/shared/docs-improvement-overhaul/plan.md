@@ -1,17 +1,17 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-10-01
+oat_last_updated: 2026-10-02
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_parallel_groups: []
 oat_plan_source: quick
 oat_import_reference: null
 oat_import_source_path: null
 oat_import_provider: null
 oat_generated: false
-oat_template: true
+oat_template: false
 ---
 
 # Implementation Plan: docs-improvement-overhaul
@@ -31,7 +31,7 @@ oat_template: true
 - [x] Evaluate phase parallelism and preserve initial task IDs/review rows.
 - [x] Leave implementation HiLL unset pending implementation-start confirmation.
 - [x] Final independent computer-use QA; targeted implementer smoke after p01/p02.
-- [ ] Finish artifact review and configured quick-start exit gate.
+- [x] Finish artifact review and configured quick-start exit gate.
 
 ## Parallelism and Reviews
 
@@ -44,6 +44,10 @@ Recommend considering implementation HiLL after p02 (visible IA) and p04-t02 (au
 ## Common Verification and Release Closeout
 
 New script names below are deliverables: p01 creates `docs:validate` and `docs:test`, enrolling them in existing CI-gated check/test scripts. p04 creates `docs:skills:generate` and `docs:skills:check`. Source validation and real-consumer tests are the useful fresh-checkout guarantee; freshly generated output compared only with itself is not drift evidence.
+
+**Fresh-checkout contract:** docs:validate is source-only: invoke the branch nav compiler with `--framework fumadocs --validate-only`, validate source-derived route/anchor targets and committed catalog parity, and never require or write ignored metadata, sidecar, .source or out. Output-comparing --check is a different mode. Export/crawl assertions run only after build. App tests generate all metadata/MDX inputs into temporary fixtures through the branch CLI and never consume app-level generated output; direct `pnpm docs:test` works without a prior docs build, even though root Turbo tests still build the app by policy.
+
+Enrollment is phased: p01-p03 validate navigation and source routes only; p04 adds mapping validation and committed catalog parity as those artifacts land. Earlier phases must not require the not-yet-created mapping or catalog block.
 
 Each shipped phase closes with canonical bundle regeneration, applicable skill metadata bumps and lockstep public versions in CLI, control-plane, docs-config, docs-theme and docs-transforms, including lockfile changes. Root coordinates these once per final phase PR diff, not per task. Choose versions against current integration/main. README-only p03 needs no artificial package bump unless its actual diff touches shipped package/bundled content; the other four phases necessarily do.
 
@@ -80,7 +84,7 @@ In p04-t01, root `docs:skills:validate` forwards to `pnpm --filter oat-docs docs
 
 **Files:** `packages/cli/src/commands/docs/nav/{index,contents,sync}.ts`; new `fumadocs.ts`, `fumadocs.test.ts` and an ownership helper if needed; existing `sync.test.ts`.
 
-**Work:** Add explicit framework/check options, preserving MkDocs default/YAML behavior. Distinguish local leaf/child/index ownership from cross-links. Use leaf/index titles with label mismatch checks, exact landing handling, orphan/duplicate/missing-target/fragment checks and fenced-example exclusion. Bound supported syntax as design specifies. Implement ignored sidecar path/hash ownership, refusal for unowned/externally edited files, exact stale cleanup and traversal/symlink protection. Prevalidate before writes; check mode never mutates. Do not invent a navigation DSL or infer custom loader configuration.
+**Work:** Add explicit framework/check options and mutually exclusive Fumadocs-only --validate-only (source diagnostics, no output dependency/comparison/write), preserving MkDocs default/YAML behavior. Distinguish local leaf/child/index ownership from cross-links. Use leaf/index titles with label mismatch checks, exact landing handling, orphan/duplicate/missing-target/fragment checks and fenced-example exclusion. Bound supported syntax as design specifies. Implement ignored sidecar path/hash ownership, refusal for unowned/externally edited files, exact stale cleanup and traversal/symlink protection. Prevalidate before writes; check mode never mutates. Do not invent a navigation DSL or infer custom loader configuration.
 
 **Verify:** Read `deliberate-testing`. Run `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/docs/nav/sync.test.ts src/commands/docs/nav/fumadocs.test.ts`. Include real Contents provenance, valid/invalid ownership controls, authored bytes preserved, stale-output check failure without writes, deterministic repeat and prevalidation failure with no writes. Neutralize the write-protection guard to prove its key test fails, then restore it. Record exit and executed test count.
 
@@ -94,7 +98,9 @@ In p04-t01, root `docs:skills:validate` forwards to `pnpm --filter oat-docs docs
 
 **Work:** First repair all current Contents/title mismatches and missing physical-parent ownership entries, preserving route order, headings and substantive prose; do not assume the earlier four-item sample was exhaustive. Then generate nav before fumadocs-mdx in app and scaffold. Ignore/exclude metadata and sidecar from Git and source bundles. Add CI-enrolled docs validation/tests. Exercise generated metadata through real installed Fumadocs/MDX consumers, not only invented expected objects. Verify order, titles, root/child landing once, native canonical ownership, breadcrumbs and previous/next even when Skills precedes Workflows. Unsafe synthetic cross-links stay in body navigation rather than prompting an unreviewed loader patch. First scaffold build must work without a second generation pass.
 
-**Verify:** `pnpm docs:test`; `pnpm docs:validate`; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/docs/init/scaffold.test.ts src/commands/docs/init/integration.test.ts`; `pnpm build:docs`. Test invalid sources independently of output parity; use stale/missing output for meaningful check-mode tests. Verify bundled Markdown remains present and build-only metadata is absent.
+The two prebuild command strings intentionally differ: this repository invokes the branch workspace `cli:source` entry; `.oat/templates/docs-app-fuma/package.json.template` invokes the installed `oat docs nav sync --framework fumadocs` binary with its scaffold-relative target. Never copy this repository's workspace script into a consumer scaffold. Verify the generated consumer app outside the OAT workspace.
+
+**Verify:** `pnpm docs:test`; `pnpm docs:validate`; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/docs/init/scaffold.test.ts src/commands/docs/init/integration.test.ts`; `pnpm build:docs`. Add a pristine-checkout control with no meta.json, sidecar, .source or out: after upstream dependencies are available, app check and direct docs:test pass and do not create app build output. Test invalid sources independently of output parity; use stale/missing output for meaningful check-mode tests. Verify bundled Markdown remains present and build-only metadata is absent.
 
 **Format:** `pnpm exec oxfmt --write apps/oat-docs/package.json package.json apps/oat-docs/scripts apps/oat-docs/tests apps/oat-docs/tsconfig.docs-tools.json apps/oat-docs/tsconfig.json apps/oat-docs/docs packages/cli/src/commands/docs/init packages/cli/scripts/bundle-inputs.mjs`; format modified JSON templates using the supported formatter and use `git diff --check` for shell/ignore files.
 
@@ -126,7 +132,9 @@ In p04-t01, root `docs:skills:validate` forwards to `pnpm --filter oat-docs docs
 
 **Verify:** Every baseline page has one destination or explicit router-consolidation accounting; every substantive section survives. Independent review checks normalization. Preservation checks are phase-local baseline comparisons, not permanent frozen-prose CI rules that would block p05 authoring. Reusable path checks remain in CI.
 
-**Permanent check inputs:** CI reads only live app docs/metadata, canonical skill sources/topic tables, the committed app skill mapping, live README links and the current exported route inventory. Assert Contents targets resolve, topic-map targets exist and hosted README links map to exported canonical routes. CI must never read `.oat/projects/**`, its route map, archived artifacts or a migration baseline SHA. Old-route absence and preservation are one-time migration evidence, not a permanent old-route blacklist. Test this boundary by running permanent checks with the project directory absent in a disposable checkout.
+**Permanent check inputs:** At check-time read only live source docs/frontmatter, canonical skill sources/topic tables, committed app skill mapping/catalog and README links. Assert Contents targets, anchors and source-derived canonical route targets resolve without generated output. After build, separately compare/crawl actual export routes. CI must never read `.oat/projects/**`, the migration map, archived artifacts or a baseline SHA. Old-route absence and preservation remain one-time migration evidence. In a disposable checkout with the project directory and all ignored docs output absent, install dependencies/build upstream dependencies and prove `pnpm --filter oat-docs check` passes without generating docs output.
+
+`tests/migration.test.ts` uses self-contained temporary fixtures to exercise reusable source-path validation; it never reads project `references/route-migration.json`. Mapping/catalog checks join the permanent validator only in p04.
 
 **Format:** `pnpm exec oxfmt --write .oat/projects/shared/docs-improvement-overhaul/references/route-migration.json .oat/projects/shared/docs-improvement-overhaul/references/migration-review.md apps/oat-docs/scripts apps/oat-docs/tests` and the resolved analysis artifact.
 
@@ -280,23 +288,27 @@ Paths named in p04/p05 express the agreed destination intent. Resolve and rechec
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                           | Reviewed Head                            | Invocation | Gate Target |
-| ------ | -------- | --------------- | ---------- | -------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
-| p01    | code     | pending         | -          | -                                                  | -                                        | -          | -           |
-| p02    | code     | pending         | -          | -                                                  | -                                        | -          | -           |
-| final  | code     | pending         | -          | -                                                  | -                                        | -          | -           |
-| spec   | artifact | pending         | -          | -                                                  | -                                        | -          | -           |
-| design | artifact | fixes_completed | 2026-10-01 | reviews/fable-design-01.md                         | -                                        | manual     | -           |
-| p03    | code     | pending         | -          | -                                                  | -                                        | -          | -           |
-| p04    | code     | pending         | -          | -                                                  | -                                        | -          | -           |
-| p05    | code     | pending         | -          | -                                                  | -                                        | -          | -           |
-| plan   | artifact | fixes_completed | 2026-10-01 | reviews/plan-review-round-01.md                    | 86aa78523952ec8e324d44dc4b61dfa961414e5e | auto       | -           |
-| plan   | artifact | passed          | 2026-10-01 | reviews/plan-review-round-02.md                    | 884b56d80769cb4d94fa289f34e027973137e410 | auto       | -           |
-| design | artifact | passed          | 2026-10-01 | reviews/plan-review-round-02.md                    | 884b56d80769cb4d94fa289f34e027973137e410 | manual     | -           |
-| plan   | artifact | received        | 2026-10-02 | reviews/artifact-plan-review-2026-10-02T031625Z.md | -                                        | -          | -           |
-| plan   | artifact | received        | 2026-10-02 | reviews/artifact-plan-review-2026-10-02T032232Z.md | -                                        | -          | -           |
+| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target          |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | -------------------- |
+| p01    | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
+| p02    | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
+| final  | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
+| spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                    |
+| design | artifact | fixes_completed | 2026-10-01 | reviews/fable-design-01.md                                  | -                                        | manual     | -                    |
+| p03    | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
+| p04    | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
+| p05    | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
+| plan   | artifact | fixes_completed | 2026-10-01 | reviews/plan-review-round-01.md                             | 86aa78523952ec8e324d44dc4b61dfa961414e5e | auto       | -                    |
+| plan   | artifact | passed          | 2026-10-01 | reviews/plan-review-round-02.md                             | 884b56d80769cb4d94fa289f34e027973137e410 | auto       | -                    |
+| design | artifact | passed          | 2026-10-01 | reviews/plan-review-round-02.md                             | 884b56d80769cb4d94fa289f34e027973137e410 | manual     | -                    |
+| plan   | artifact | fixes_completed | 2026-10-02 | reviews/archived/artifact-plan-review-2026-10-02T031625Z.md | 2e5e8e5374b101b90c5b72fde9c702d328743b38 | gate       | claude-opus-5-5-high |
+| plan   | artifact | passed          | 2026-10-02 | reviews/archived/artifact-plan-review-2026-10-02T032232Z.md | fdf2953acacced6d6703763ef0c50624ad4755ef | gate       | claude-opus-5-5-high |
+| plan   | artifact | passed          | 2026-10-02 | reviews/plan-review-round-03.md                             | -                                        | auto       | -                    |
+| design | artifact | passed          | 2026-10-02 | reviews/plan-review-round-03.md                             | -                                        | manual     | -                    |
 
 Preserved spec row is not applicable in quick mode; no spec.md required. Events are append-ordered and bound to artifact filenames; never overwrite a bound event with a different review. No code/browser review is claimed in planning.
+
+Attempt 1 was artifact_validation_failed and ineligible for receipt; fixes_completed records independently resolved feedback, not a gate pass. Attempt 2 passed its configured threshold and was eligible for receipt; its medium/low findings were resolved in artifacts and independently re-reviewed clean. [Final receipt and peer dispositions](reviews/plan-review-round-03.md) preserve both outcomes. No planning findings remain unresolved.
 
 ## Implementation Complete
 

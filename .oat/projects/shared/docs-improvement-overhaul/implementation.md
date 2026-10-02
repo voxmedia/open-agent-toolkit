@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-10-01
+oat_last_updated: 2026-10-02
 oat_current_task_id: p01-t01
 oat_generated: false
 ---
@@ -149,6 +149,12 @@ No implementation runs. Planning dispatch and review evidence is retained under 
 ## Implementation Log
 
 No implementation performed. Planning-only artifact changes do not count toward the task completion total.
+
+### Plan artifact review received: 2026-10-02
+
+Eligible gate run `7b51c81d-c62c-42d2-aab5-1316713014c1`: 0 critical, 0 high, 1 medium, 1 low. Root resolved both findings directly in plan/design, with clean native re-review and Fable final readiness confirmation. No implementation fix tasks or deferrals. Review archived at `reviews/archived/artifact-plan-review-2026-10-02T032232Z.md`; durable provenance/dispositions in `reviews/plan-review-round-03.md`.
+
+The earlier invalid gate artifact is superseded history, not a received gate pass. Next task remains p01-t01 only after separate implementation authorization and HiLL setup; progress stays 0/15.
 
 ## Deviations from Plan / Design
 

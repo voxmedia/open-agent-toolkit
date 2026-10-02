@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p01-t01
 oat_last_commit: null
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -16,7 +16,7 @@ oat_dispatch_policy:
   policy: high
   source: project-state
 oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -83,27 +83,28 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-01T22:42:17.072Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-02T00:30:35Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-10-02T03:33:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: docs-improvement-overhaul
 
-**Status:** Plan draft, independent review pending
+**Status:** Plan ready; implementation not started or authorized
 **Started:** 2026-10-01
-**Last Updated:** 2026-10-01
+**Last Updated:** 2026-10-02
 
 ## Current Phase
 
-The user authorized continuation through lightweight design and plan readiness with Fable reviewing throughout. The draft incorporates README/visual scope and final-phase reviewer computer-use QA. The user explicitly allowed moved URLs to break; no aliases will be built. Fable draft review and planning dispatch/gate setup remain to resolve. No implementation is authorized.
+The authorized lightweight design and plan are complete. Native Sol and Fable reviews are clean; configured quick-start gate attempt 2 passed, and its medium/low findings were resolved and received with durable evidence. The plan includes README/visual scope and final-phase independent reviewer computer-use QA. Moved URLs may break; no aliases. No implementation is authorized.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete through CLI validation)
 - **Spec:** N/A (quick mode)
-- **Design:** `design.md` (complete; Fable required corrections incorporated)
-- **Plan:** `plan.md` (15-task draft; artifact reviews and configured exit gate pending)
-- **Implementation:** `implementation.md` (scaffolded template — not started)
+- **Design:** `design.md` (complete; independently reviewed)
+- **Plan:** `plan.md` (ready; 15 tasks across 5 sequential phases)
+- **Implementation:** `implementation.md` (all 15 tasks pending — not started)
+- **Review receipt:** `reviews/plan-review-round-03.md` (gate provenance, fixes, independent verification and Fable final confirmation)
 - **References:** [Evidence index](references/index.md), including initial evaluations, the proposed IA, Fable's skill inventory advisory, and orchestration observations.
 
 ## Progress
@@ -111,12 +112,13 @@ The user authorized continuation through lightweight design and plan readiness w
 - Discovery started in quick mode at the user's request.
 - Archived readability project, skills-repo comparison, and rendered-site observations retained.
 - Codex and Fable agree on the IA; the user authorized drafting design and plan against it.
-- Plan and implementation are templates only, not ready for execution.
+- Plan is no longer a template and routes to implementation entry after separate authorization.
+- High dispatch resolved. Optional additional phase gate remains unconfigured; configured lifecycle gates remain enabled. Implementation HiLL remains unset until implementation entry.
 
 ## Blockers
 
-None. The user selected High dispatch and authorized autonomous collaboration through plan readiness. Fable's resumed pane and the new root return address are verified; the previous unsent-draft delivery pause is resolved. Disk has 24 GiB available at resume.
+No planning blockers. Implementation awaits separate user authorization and HiLL selection, not more planning review.
 
 ## Next Milestone
 
-Receive Fable design review, complete discovery, and produce the reviewed execution plan. Resolve the project dispatch policy and independent gate-posture choices before readiness. Stop before implementation.
+Planning handoff complete. Stop here. On an authorized implementation start, confirm HiLL and begin p01-t01; retain focused p01/p02 browser smoke and full independent final visual QA.
