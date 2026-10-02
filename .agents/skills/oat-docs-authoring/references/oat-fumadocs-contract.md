@@ -50,7 +50,9 @@ Scaffold hooks run installed `oat docs nav sync --framework fumadocs --target-di
 
 The compiler supports ordinary `.md` file-derived routes with a root loader base and relative links/fragments. External/query-bearing Contents links, MDX/custom slugs and separator syntax need a separately approved integration, not guessed loader configuration. Fenced examples are ignored; deployment basePath stays in the renderer.
 
-Ignored `docs/**/meta.json` and app-root `.oat-fumadocs-nav.json` are generated output. Replacement/deletion requires sidecar ownership and matching last-written hashes. Preserve unowned/edited bytes; never adopt them by editing hashes. Back up proven disposable output with its sidecar before removing only those files and regenerating. Traversal/symlink paths are refused, and partial writes still require inspection. Format authored Markdown, not generated JSON.
+Ignored `docs/**/meta.json` and app-root `.oat-fumadocs-nav.json` are generated output. Replacement/deletion requires sidecar ownership and matching last-written hashes. Existing bytes exactly equal to current computed output for the same path may be acknowledged without rewriting them, healing partial generation/lost sidecars; semantic JSON equality is insufficient. Different unowned/edited bytes, malformed sidecars and traversal/symlink paths still fail closed. Check remains read-only and requires sidecar parity. Preserve authored bytes; never adopt them by editing hashes. Back up proven disposable output with its sidecar before removing only those files and regenerating. Partial writes still require inspection. Format authored Markdown, not generated JSON.
+
+Contents changes during a running dev server require rerunning generation and restarting it. Predev/prebuild hooks are not a Contents watcher.
 
 ## Separate Agent Inventory
 

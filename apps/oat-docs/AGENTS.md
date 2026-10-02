@@ -28,7 +28,9 @@ This file tells agents how to work inside `apps/oat-docs`, the documentation app
 
 The compiler supports ordinary `.md` file-derived routes with a root loader base, relative links and heading fragments. External/query-bearing Contents links, MDX/custom slugs and separator syntax are unsupported; fenced examples do not count as navigation. Deployment basePath is applied by the renderer, never metadata.
 
-Generation requires sidecar ownership and matching last-written hashes before replacing or deleting metadata. Unowned, edited or symlinked output is refused before writes. Preserve authored bytes; never adopt them by editing hashes. For proven disposable output, back it up with the sidecar before removing only those files and regenerating. A partial write failure requires inspection, not a claim of multi-file transactionality.
+Generation requires sidecar ownership and matching last-written hashes before replacing or deleting metadata. Existing bytes exactly equal to the currently computed output for that same path may be acknowledged without rewriting them, healing partial generation or a lost sidecar; semantic JSON equivalence is insufficient. Different unowned/edited bytes, malformed sidecars and symlinked paths are still refused before writes. Check mode remains read-only and requires sidecar parity. Preserve authored bytes; never adopt them by editing hashes. For proven disposable output, back it up with the sidecar before removing only those files and regenerating. A partial write failure requires inspection, not a claim of multi-file transactionality.
+
+Contents changes during an active dev server require rerunning navigation generation and restarting the server. `predev` / `prebuild` hooks are not a Contents watcher.
 
 Format authored Markdown with `pnpm --filter oat-docs docs:format` or a `docs/**/*.md` file-scoped invocation. Do not recursively format `docs/`: JSON formatting changes ignored metadata bytes and correctly triggers the ownership guard. Source validation never needs output cleanup.
 

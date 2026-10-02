@@ -65,7 +65,8 @@ Documentation should ship with the code it explains. This page covers the core d
   ```
 
 - `predev` / `prebuild` run branch `cli:source` nav sync with `--framework fumadocs`, then `fumadocs-mdx`, then the separate app-root agent-index generator. Consumer scaffolds use the installed `oat` binary. MkDocs remains the default framework and refreshes `mkdocs.yml`.
-- Do not hand-edit ignored metadata or its app-root ownership sidecar. Generation refuses unowned/externally edited output; preserve bytes and back up proven disposable files with their sidecar before removing only those files and regenerating. Never edit hashes to bypass refusal.
+- Do not hand-edit ignored metadata or its app-root ownership sidecar. Generation may acknowledge existing bytes exactly equal to current computed output for the same path without rewriting them to heal partial generation/lost sidecars; semantic JSON equality is insufficient. Different unowned/edited bytes, malformed sidecars and symlinked paths still fail closed. Preserve bytes and back up proven disposable files with their sidecar before removing only those files and regenerating. Never edit hashes to bypass refusal.
+- After Contents changes during a running dev server, rerun generation and restart the server; predev/prebuild hooks are not a Contents watcher.
 - Format `docs/**/*.md`, never the whole docs directory: reformatting generated JSON correctly breaks last-written ownership hashes. `--validate-only` is source-only; output-comparing `--check` is read-only but requires generation first.
 - Use [Markdown Features](markdown-features.md) for supported syntax and examples.
 

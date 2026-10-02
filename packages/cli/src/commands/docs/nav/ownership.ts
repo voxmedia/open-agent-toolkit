@@ -18,7 +18,7 @@ interface Manifest {
   files: OwnedFile[];
 }
 
-function hash(content: string): string {
+function hash(content: string | Uint8Array): string {
   return createHash('sha256').update(content).digest('hex');
 }
 
@@ -38,8 +38,8 @@ async function safePath(root: string, path: string): Promise<void> {
   }
 }
 
-async function readOptional(path: string): Promise<string | undefined> {
-  return readFile(path, 'utf8').catch((error: NodeJS.ErrnoException) => {
+async function readOptional(path: string): Promise<Buffer | undefined> {
+  return readFile(path).catch((error: NodeJS.ErrnoException) => {
     if (error.code === 'ENOENT') return undefined;
     throw error;
   });
@@ -63,7 +63,10 @@ export async function applyOwnedMetadata(
 ): Promise<void> {
   const manifestPath = join(appRoot, '.oat-fumadocs-nav.json');
   await safePath(appRoot, manifestPath);
-  const manifestSource = await readOptional(manifestPath);
+  const manifestBytes = await readOptional(manifestPath);
+  const manifestSource = manifestBytes?.toString('utf8');
+  if (manifestBytes && !manifestBytes.equals(Buffer.from(manifestSource!)))
+    throw new Error(`Invalid ownership sidecar ${manifestPath}: invalid UTF-8`);
   const owned = new Map<string, string>();
   if (manifestSource !== undefined) {
     const manifest: unknown = JSON.parse(manifestSource);
@@ -107,7 +110,7 @@ export async function applyOwnedMetadata(
     }
   }
   await scan(docsRoot);
-  const contents = new Map<string, string | undefined>();
+  const contents = new Map<string, Buffer | undefined>();
   for (const name of new Set([
     ...output.keys(),
     ...owned.keys(),
@@ -119,7 +122,8 @@ export async function applyOwnedMetadata(
     contents.set(name, content);
     if (
       content !== undefined &&
-      (!owned.has(name) || hash(content) !== owned.get(name))
+      (!owned.has(name) || hash(content) !== owned.get(name)) &&
+      (!output.has(name) || !content.equals(Buffer.from(output.get(name)!)))
     ) {
       throw new Error(
         `Refusing unowned or externally edited metadata ${path}; preserve authored changes and remove only disposable output before regenerating`,
@@ -136,7 +140,7 @@ export async function applyOwnedMetadata(
   const nextSource = `${JSON.stringify(nextManifest, null, 2)}\n`;
   if (check) {
     for (const [name, content] of output)
-      if (contents.get(name) !== content)
+      if (!contents.get(name)?.equals(Buffer.from(content)))
         throw new Error(
           `Missing or different generated metadata ${name}; run oat docs nav sync --framework fumadocs`,
         );
@@ -153,7 +157,7 @@ export async function applyOwnedMetadata(
   }
   try {
     for (const [name, content] of output)
-      if (contents.get(name) !== content)
+      if (!contents.get(name)?.equals(Buffer.from(content)))
         await atomicWrite(join(docsRoot, name), content);
     for (const name of owned.keys())
       if (!output.has(name) && contents.get(name) !== undefined)

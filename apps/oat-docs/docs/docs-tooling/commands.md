@@ -203,7 +203,9 @@ oat docs nav sync --framework fumadocs --check --target-dir .
 
 `--check` and `--validate-only` are mutually exclusive; validate-only is Fumadocs-only. This repository's `pnpm docs:validate` additionally checks source routes/anchors, and `pnpm docs:test` runs real consumers in temporary fixtures without a prior app build.
 
-Generated `docs/**/meta.json` and `.oat-fumadocs-nav.json` are ignored build output, excluded from source bundles. The sidecar owns exact paths and last-generated hashes; unowned, edited, traversal or symlink paths are refused before writes or stale cleanup. Preserve authored bytes; never adopt files by editing hashes. Back up proven disposable output with its sidecar before removing only those files and regenerating. Partial write failures require inspection; sidecar-last atomic file writes are not a multi-file transaction. Format only authored Markdown, not generated JSON.
+Generated `docs/**/meta.json` and `.oat-fumadocs-nav.json` are ignored build output, excluded from source bundles. The sidecar owns exact paths and last-generated hashes. Existing bytes exactly equal to current computed output for the same path may be acknowledged without rewriting them to heal partial generation/lost sidecars; semantic JSON equivalence is insufficient. Different unowned/edited bytes, malformed sidecars, traversal or symlink paths are refused before writes or stale cleanup. Check remains read-only and requires sidecar parity. Preserve authored bytes; never adopt files by editing hashes. Back up proven disposable output with its sidecar before removing only those files and regenerating. Partial write failures require inspection; sidecar-last atomic file writes are not a multi-file transaction. Format only authored Markdown, not generated JSON.
+
+If Contents changes while a dev server is running, rerun navigation generation and restart the server. `predev`/`prebuild` hooks do not watch Contents.
 
 Related reference:
 

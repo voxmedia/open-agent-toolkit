@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash(git:*), Bash(gh:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.3.2
+  version: 1.3.3
 ---
 
 # Docs Apply
@@ -34,7 +34,7 @@ Generate or update documentation files from a docs analysis artifact, with expli
 **ALLOWED Activities:**
 
 - Reading analysis artifacts and the current docs surface.
-- Creating or updating docs files and `mkdocs.yml` when approved.
+- Creating or updating docs files and `mkdocs.yml` when approved. Owned Fumadocs `meta.json` files change only through explicit Fumadocs nav sync.
 - Running `oat docs nav sync` after approved structural changes.
 - Creating branches, commits, and optional PRs.
 
@@ -205,7 +205,8 @@ When approved actions involve docs app creation or nav updates:
 - Use `oat docs init` for scaffolding when appropriate.
 - Use `oat docs nav sync --framework fumadocs --target-dir <app-root>` for owned Fumadocs metadata before MDX generation; MkDocs remains the default. Keep `generate-index` as the separate agent inventory. Discover the actual local scripts; consumer scaffolds use installed `oat`, not this repository's source-entry command.
 - Contents owns membership/order and frontmatter titles own leaf/section labels. Every canonical page/child section needs one physical-parent entry; cross-links stay in page bodies to preserve breadcrumbs and previous/next. Ordinary `.md` routes, root loader base and relative fragments are supported. External/query-bearing Contents links, MDX/custom slugs and separators are unsupported; fenced examples are ignored.
-- Preserve authored or externally edited metadata. The sidecar must own paths with matching last-written hashes before replacement or stale deletion; traversal/symlink paths are refused. Never adopt bytes by editing hashes. Back up proven disposable output with its sidecar before removing only those files and regenerating. Partial file writes require inspection. Format Markdown only, never generated JSON.
+- Preserve authored or externally edited metadata. The sidecar must own paths with matching last-written hashes before replacement or stale deletion; traversal/symlink paths are refused. Existing bytes exactly equal to current computed output for the same path can be acknowledged without rewriting them to heal partial generation/lost sidecars; semantic JSON equivalence does not qualify. Different unowned/edited bytes still fail closed. Never adopt bytes by editing hashes. Back up proven disposable output with its sidecar before removing only those files and regenerating. Partial file writes require inspection. Format Markdown only, never generated JSON.
+- Resolve unlisted-page diagnostics through approved physical-parent Contents repairs, not rest entries or manual metadata edits. After Contents changes during a running dev server, rerun generation and restart it; predev/prebuild hooks do not watch Contents.
 
 Negative rules:
 

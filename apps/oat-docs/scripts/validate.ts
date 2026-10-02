@@ -3,6 +3,11 @@ import { readdir, readFile, stat } from 'node:fs/promises';
 import { dirname, extname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import {
+  decodeMarkdownFragment,
+  markdownAnchors,
+} from '@oat-repo/nav-markdown';
+
 export const appRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 export const repoRoot = resolve(appRoot, '..', '..');
 
@@ -69,23 +74,6 @@ function sourceText(markdown: string): string {
     .join('\n');
 }
 
-function anchors(markdown: string): Set<string> {
-  const result = new Set<string>();
-  for (const match of sourceText(markdown).matchAll(
-    /^ {0,3}#{1,6}\s+(.+?)\s*#*\s*$/gm,
-  )) {
-    const base = match[1]!
-      .toLowerCase()
-      .replace(/[^\p{L}\p{N}\p{M}\-_ ]/gu, '')
-      .replaceAll(' ', '-');
-    let value = base;
-    let count = 0;
-    while (result.has(value)) value = `${base}-${++count}`;
-    result.add(value);
-  }
-  return result;
-}
-
 export async function validateSourceRoutes(docsRoot: string): Promise<void> {
   const pages: string[] = [];
   async function scan(directory: string): Promise<void> {
@@ -118,8 +106,8 @@ export async function validateSourceRoutes(docsRoot: string): Promise<void> {
       if (
         fragment &&
         target.endsWith('.md') &&
-        !anchors(await readFile(target, 'utf8')).has(
-          decodeURIComponent(fragment),
+        !markdownAnchors(await readFile(target, 'utf8')).has(
+          decodeMarkdownFragment(fragment, href, page),
         )
       )
         errors.push(`${page}: unresolved source fragment ${href}`);

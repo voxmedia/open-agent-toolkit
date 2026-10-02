@@ -3,9 +3,9 @@ name: oat-docs-analyze
 description: Run when you need to evaluate documentation structure, navigation, and coverage against the OAT docs app contract. Produces a severity-rated analysis artifact for oat-docs-apply.
 disable-model-invocation: true
 user-invocable: true
-allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion, Task
+allowed-tools: Read, Write, Bash(git:*), Bash(oat docs nav sync --check:*), Bash(oat docs nav sync --framework fumadocs --validate-only:*), Bash(oat docs nav sync --framework fumadocs --check:*), Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: 1.5.3
+  version: 1.6.1
 ---
 
 # Docs Analysis
@@ -197,7 +197,7 @@ When the app uses the owned navigation compiler, source-only `oat docs nav sync 
 
 Verify Contents membership/order and frontmatter-owned leaf/section labels, exactly one physical-parent entry per canonical page/child section, and real-loader breadcrumbs/previous-next. Cross-links are validated but stay in page bodies. Flag unsupported external/query-bearing entries, MDX/custom slugs or separators rather than guessing custom loader semantics. Fenced examples are not navigation; deployment basePath is applied by the renderer once.
 
-Treat ignored `docs/**/meta.json` and `.oat-fumadocs-nav.json` as hash-owned output. Report unowned/edited bytes, stale paths, traversal or symlink refusals; never adopt, delete or rewrite them in analysis. Recommend preserving authored bytes and backing up proven disposable output with its sidecar before approved regeneration. Formatting generated JSON changes hashes; recommend Markdown-scoped formatting.
+Treat ignored `docs/**/meta.json` and `.oat-fumadocs-nav.json` as hash-owned output. Generation can acknowledge existing bytes equal to the current computed output for the same path without rewriting them, healing partial writes or a lost sidecar; semantic JSON equality is insufficient. Report genuinely different unowned/edited bytes, stale paths, traversal or symlink refusals; never adopt, delete or rewrite them in analysis. Recommend preserving authored bytes and backing up proven disposable output with its sidecar before approved regeneration. Formatting generated JSON changes hashes; recommend Markdown-scoped formatting.
 
 1. Resolve the authored docs source root and generated root index path from
    `.oat/config.json`, package scripts, generator scripts, or local guidance.
@@ -392,6 +392,14 @@ If a generated root index or manifest exists:
    files, and representative links for each finding.
 5. Prefer source-of-truth fixes over generated-file edits.
 
+For a Fumadocs app (`source.config.ts` beside `docs/`) using the owned compiler:
+
+1. Run read-only `oat docs nav sync --framework fumadocs --validate-only --target-dir <docs-app-dir>` against the app directory, not its content root. Missing ignored output on a pristine checkout is not source drift.
+2. When generated output exists and freshness is in scope, run read-only `oat docs nav sync --framework fumadocs --check --target-dir <docs-app-dir>`. It checks metadata and sidecar parity; report missing/stale output separately from source errors, never regenerate during analysis.
+3. Compare owned immediate-page/folder identifiers, titles and ordering with Contents. Root landing is `index`; other landings attach through native ownership. Cross-links remain in body navigation. Flag unexpected rest entries (`...`, `z...a`), rather than adding one to expose an orphan.
+4. Recommend approved physical-parent Contents repairs for unlisted pages. Cite the actual diagnostic; do not assume a JSON `unlisted` field or hand-edit metadata.
+5. For Contents edits during an active dev server, recommend rerunning generation and restarting it. Predev/prebuild hooks are not a Contents watcher.
+
 If `mkdocs.yml` exists:
 
 1. Compare nav entries with the docs tree.
@@ -400,7 +408,7 @@ If `mkdocs.yml` exists:
 4. Flag directories whose `index.md` `## Contents` section appears inconsistent with nav structure.
 5. Flag docs guidance that claims structure, plugin support, or workflow rules not backed by current repo evidence.
 
-If no `mkdocs.yml` exists, record whether the repo should be migrated to an OAT docs app.
+If neither `mkdocs.yml` nor a Fumadocs app exists, record whether the repo should be migrated to an OAT docs app.
 
 ### Step 7: Severity-Rate Findings
 

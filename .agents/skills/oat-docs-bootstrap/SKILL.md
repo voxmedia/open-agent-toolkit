@@ -6,7 +6,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.2.2
+  version: 1.2.3
 ---
 
 # Docs Bootstrap
@@ -936,9 +936,9 @@ Narrate:
 
 Explain source-only `oat docs nav sync --framework fumadocs --validate-only` versus output-comparing `--check`; they are mutually exclusive. The compiler supports ordinary `.md` routes with a root loader base, relative links and fragments; external/query-bearing Contents entries, MDX/custom slugs and separators are unsupported, and fenced examples are ignored. Deployment basePath stays in the renderer. Source validation works without metadata, sidecar, `.source` or export.
 
-Explain fail-closed ownership: unowned/edited metadata, traversal or symlink paths are refused before writes or cleanup. Preserve authored bytes and never edit hashes to adopt files. Back up proven disposable output with its sidecar before removing only those files and regenerating. Sidecar-last atomic file writes are not a multi-file transaction. Format authored Markdown only, not ignored generated JSON.
+Explain fail-closed ownership: different unowned/edited metadata, traversal or symlink paths are refused before writes or cleanup. Existing bytes exactly equal to current computed output for that path may be acknowledged without rewriting them to heal partial generation/lost sidecars; semantic JSON equivalence is insufficient. Preserve authored bytes and never edit hashes to adopt files. Back up proven disposable output with its sidecar before removing only those files and regenerating. Sidecar-last atomic file writes are not a multi-file transaction. Format authored Markdown only, not ignored generated JSON. Contents changes during a running dev server require rerunning generation and restarting it; predev/prebuild hooks are not a Contents watcher.
 
-End with: "Always edit `docs/index.md` and the `## Contents` sections. In Fumadocs, never edit the root-level `index.md` — your edits will disappear next build. In MkDocs, treat `mkdocs.yml` `nav:` as derived from authored Contents unless the local workflow says otherwise."
+End with: "Always edit `docs/index.md` and the `## Contents` sections. In Fumadocs, never edit the root-level `index.md` — your edits will disappear next build — and regenerate owned metadata through explicit Fumadocs nav sync instead of hand-editing it. In MkDocs, treat `mkdocs.yml` `nav:` as derived from authored Contents unless the local workflow says otherwise."
 
 #### Section C (both frameworks) — The `## Contents` contract
 
@@ -946,7 +946,7 @@ This section explains why tooling works at all — the contract every OAT docs t
 
 Narrate:
 
-- **Every directory under `docs/` has an `index.md`.** No exceptions, no `overview.md`, no README-as-index. Missing `index.md`s are the first thing `oat-docs-analyze` flags.
+- **Every content directory under `docs/` has an `index.md`.** Asset-only trees without Markdown descendants are exempt. No `overview.md` or README-as-index. Missing content indexes are the first thing `oat-docs-analyze` flags.
 - **Every `index.md` has a `## Contents` section.** The section is a plain Markdown bulleted list of links to the direct children of that directory — both subdirectory `index.md`s and leaf pages.
 - **Link targets use `.md` extensions.** Leaf pages link as `[Title](page.md)`; subdirectories link as `[Section](subdir/index.md)`. The `@open-agent-toolkit/docs-transforms` remark-links plugin normalizes these at build time for Fumadocs routing (`.md` stripped; `dir/index.md` collapsed to `dir`). `.md`-suffixed authored links render correctly **and** let agents follow each link to the target file without path inference — the best of both worlds.
 - **The `## Contents` section is the machine-readable local map.** For Fumadocs, `oat docs nav sync --framework fumadocs` projects it into owned metadata before MDX generation. The app-root manifest is a separate agent inventory. For MkDocs, default `oat docs nav sync` updates `mkdocs.yml` `nav:`. `oat-docs-analyze` reads authored maps to find orphaned pages and stale artifacts.

@@ -13,6 +13,7 @@ import {
 import YAML from 'yaml';
 
 import { parseIndexContents, withoutFencedExamples } from './contents';
+import { decodeMarkdownFragment, markdownAnchors } from './markdown';
 import { applyOwnedMetadata } from './ownership';
 
 export interface FumadocsNavigationOptions {
@@ -50,23 +51,6 @@ function titleOf(markdown: string, path: string): string {
   return data.title;
 }
 
-function anchorsOf(markdown: string): Set<string> {
-  const anchors = new Set<string>();
-  for (const match of withoutFencedExamples(markdown).matchAll(
-    /^ {0,3}#{1,6}\s+(.+?)\s*#*\s*$/gm,
-  )) {
-    const base = match[1]!
-      .toLowerCase()
-      .replace(/[^\p{L}\p{N}\p{M}\-_ ]/gu, '')
-      .replaceAll(' ', '-');
-    let anchor = base;
-    let duplicate = 0;
-    while (anchors.has(anchor)) anchor = `${base}-${++duplicate}`;
-    anchors.add(anchor);
-  }
-  return anchors;
-}
-
 export async function syncFumadocsNavigation(
   options: FumadocsNavigationOptions,
 ): Promise<{ docsRoot: string; metadata: string[] }> {
@@ -76,21 +60,18 @@ export async function syncFumadocsNavigation(
   const docsRoot = join(appRoot, 'docs');
   const pages = new Map<string, { markdown: string; title: string }>();
   const directories: string[] = [];
-  async function scan(directory: string): Promise<void> {
+  async function scan(directory: string): Promise<boolean> {
     if ((await lstat(directory)).isSymbolicLink())
       throw new Error(`Symlink docs directory is unsupported: ${directory}`);
     const entries = await readdir(directory, { withFileTypes: true });
-    const hasPages = entries.some(
-      (entry) => entry.isDirectory() || /\.mdx?$/.test(entry.name),
-    );
-    if (hasPages) directories.push(directory);
+    let hasPages = false;
     for (const entry of entries.sort((left, right) =>
       left.name.localeCompare(right.name),
     )) {
       const path = join(directory, entry.name);
       if (entry.isSymbolicLink() && entry.name !== 'meta.json')
         throw new Error(`Symlink docs source is unsupported: ${path}`);
-      if (entry.isDirectory()) await scan(path);
+      if (entry.isDirectory()) hasPages = (await scan(path)) || hasPages;
       else if (/\.mdx?$/.test(entry.name)) {
         if (extname(path) !== '.md')
           throw new Error(
@@ -98,8 +79,11 @@ export async function syncFumadocsNavigation(
           );
         const markdown = await readFile(path, 'utf8');
         pages.set(path, { markdown, title: titleOf(markdown, path) });
+        hasPages = true;
       }
     }
+    if (hasPages || directory === docsRoot) directories.push(directory);
+    return hasPages;
   }
   await scan(docsRoot);
   const ownership = new Map<string, number>();
@@ -109,7 +93,19 @@ export async function syncFumadocsNavigation(
     const index = pages.get(indexPath);
     if (!index) throw new Error(`Missing required index.md at ${indexPath}`);
     const identifiers = directory === docsRoot ? ['index'] : [];
+    const nativeOwners = new Map<string, string>([['index', indexPath]]);
     let selfEntries = 0;
+    const lines = withoutFencedExamples(index.markdown).split(/\r?\n/);
+    const start = lines.findIndex((line) =>
+      /^##\s+Contents\s*$/.test(line.trim()),
+    );
+    for (const line of lines.slice(start + 1)) {
+      if (/^##\s+/.test(line.trim())) break;
+      if (/^\s*(?:[-*+]\s+)?---(?:\s|$)/.test(line))
+        throw new Error(
+          `Unsupported Contents separator in ${indexPath}: ${line.trim()}; use ordinary Markdown links`,
+        );
+    }
     for (const entry of parseIndexContents(index.markdown, indexPath)) {
       if (
         /^[a-z][a-z\d+.-]*:/i.test(entry.href) ||
@@ -135,7 +131,9 @@ export async function syncFumadocsNavigation(
         );
       if (
         encodedFragment !== undefined &&
-        !anchorsOf(page.markdown).has(decodeURIComponent(encodedFragment))
+        !markdownAnchors(page.markdown).has(
+          decodeMarkdownFragment(encodedFragment, entry.href, indexPath),
+        )
       ) {
         throw new Error(`Missing fragment "${encodedFragment}" in ${target}`);
       }
@@ -159,9 +157,16 @@ export async function syncFumadocsNavigation(
           continue;
         }
         ownership.set(target, (ownership.get(target) ?? 0) + 1);
-        identifiers.push(
-          child ? basename(dirname(target)) : basename(target, '.md'),
-        );
+        const identifier = child
+          ? basename(dirname(target))
+          : basename(target, '.md');
+        const previous = nativeOwners.get(identifier);
+        if (previous && previous !== target)
+          throw new Error(
+            `Ambiguous native identifier "${identifier}" in ${indexPath}: ${previous} and ${target}; rename the sibling page or folder`,
+          );
+        nativeOwners.set(identifier, target);
+        identifiers.push(identifier);
       }
     }
     output.set(

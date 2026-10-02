@@ -80,7 +80,7 @@ MkDocs generated behavior:
 - Do not hand-edit a Fumadocs app-root generated `index.md`; regenerate it from the docs source tree.
 - Do not hand-maintain MkDocs `nav:` entries when the local workflow uses `oat docs nav sync`.
 - The compiler rejects orphan or duplicate ownership, unresolved targets/fragments and leaf/section label mismatches before writing.
-- Existing metadata is replaced or deleted only with sidecar ownership and matching last-written hashes. Unowned, externally edited, traversal or symlink paths fail closed. Preserve authored bytes; never edit hashes to adopt files. Back up proven disposable output with its sidecar before removing only those files and regenerating.
+- Existing metadata is replaced or deleted only with sidecar ownership and matching last-written hashes. Existing bytes exactly equal to current computed output for the same path may be acknowledged without rewriting them, healing partial generation/lost sidecars; semantic JSON equality is insufficient. Different unowned/edited bytes, malformed sidecars, traversal or symlink paths fail closed. Check remains read-only and requires sidecar parity. Preserve authored bytes; never edit hashes to adopt files. Back up proven disposable output with its sidecar before removing only those files and regenerating.
 - Metadata files are written atomically, with the sidecar last; a partial I/O failure still requires inspection. This is not a multi-file transaction.
 - Ignore metadata and sidecar in Git and source bundles. Format `docs/**/*.md`, not the entire directory: reformatting generated JSON changes ownership hashes.
 
@@ -91,6 +91,7 @@ MkDocs generated behavior:
 - Update `## Contents` whenever you add, remove, rename, or reorder docs files in a directory.
 - Regenerate framework navigation after structural changes: `nav sync --framework fumadocs` for owned metadata, or `nav sync --framework mkdocs` for `mkdocs.yml`; refresh the separate Fumadocs agent inventory with `generate-index`.
 - Refresh or freshness-check the generated artifact before committing structural docs changes.
+- After Contents changes during a running dev server, rerun generation and restart the server. Predev/prebuild hooks are not a Contents watcher.
 
 ## If You Are Trying To...
 
