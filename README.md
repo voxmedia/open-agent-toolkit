@@ -1,16 +1,16 @@
 # Open Agent Toolkit (OAT)
 
-Open Agent Toolkit is an open-source toolkit for portable, provider-agnostic agent tooling and workflows.
+Define agent capabilities once, use them across coding tools, and add as much workflow structure as your team needs. Open Agent Toolkit (OAT) is an open-source CLI, skill library, and optional project workflow system—not another agent runtime.
 
-It helps you:
+## Choose What You Need
 
-- define canonical agent assets once
-- sync those assets across providers
-- keep nested project `AGENTS.md` files valid, with no `CLAUDE.md` shims by default (Claude Code reads `AGENTS.md` itself) and opt-in pointer, symlink, or hard-copy shims
-- use provider-agnostic CLI utilities and skills
-- optionally run tracked, human-in-the-loop project workflows on top
+Adopt these three capabilities independently or combine them:
 
-## Capability Layers
+1. **Keep coding tools aligned.** Maintain canonical skills, agents, and rules; sync provider views and inspect drift instead of maintaining separate copies. Start with [Provider Sync](https://voxmedia.github.io/open-agent-toolkit/provider-sync).
+2. **Use skills for a task.** Research a decision, review code, or maintain documentation without adopting a tracked project lifecycle. Choose a [skill](https://voxmedia.github.io/open-agent-toolkit/skills) or explore [Docs Tooling](https://voxmedia.github.io/open-agent-toolkit/docs-tooling).
+3. **Make longer work resumable.** Use plans, implementation records, reviews, and human checkpoints when you need a tracked workflow. [Choose a Workflow](https://voxmedia.github.io/open-agent-toolkit/workflows/choose-workflow) that fits the work.
+
+Provider sync does not require project workflows. Standalone skills do not require an active OAT project; project-specific skills state their prerequisites in their guides.
 
 ```mermaid
 flowchart TD
@@ -18,63 +18,38 @@ flowchart TD
   TOOLS --> FLOW["Optional Workflows\ntracked projects, reviews, PR flow"]
 ```
 
-You can adopt any layer independently.
+## First Success: Inspect a Repository
 
-## Quick Start
+Requires Node.js 22.17 or newer and Git 2.31 or newer. Install the CLI, then run it in an existing repository:
 
 ```bash
-pnpm install
-pnpm run cli -- help
-pnpm run cli -- init --scope project
-pnpm run cli -- status --scope all
+npm install --global @open-agent-toolkit/cli
+cd /path/to/your-repo
+oat init --scope project
+oat status --scope project
 ```
 
-Useful next commands:
+Initialization creates canonical directories and sync state; status reports provider assets and drift. Follow the provider prompts and skip optional guided setup if you only want sync. This does not create a tracked OAT project.
 
-- `pnpm run cli -- sync --scope all`
-- `pnpm run cli -- instructions validate`
-- `pnpm run cli -- tools install`
-- `pnpm run cli -- docs init --app-name my-docs`
-- `pnpm run cli -- config describe`
-- `pnpm run cli -- config dump --json`
-- `pnpm run cli -- project status --json`
-- `pnpm run cli -- project list --json`
-- `pnpm run cli -- project validate-plan --project-path <path>`
+Once you have canonical assets, preview changes with `oat sync --scope project --dry-run` before applying them. See [CLI Bootstrap](https://voxmedia.github.io/open-agent-toolkit/getting-started/bootstrap) for setup details and [Tool Packs](https://voxmedia.github.io/open-agent-toolkit/getting-started/tool-packs) to install skills separately.
 
-For local repo development, run the ordered Definition of Done in
-[`AGENTS.md`](AGENTS.md) — it mirrors CI's gate list exactly, so a locally
-green run implies CI green. `pnpm lint` and `pnpm format` are additionally
-required when a change touches `tools/smoke` or `.agents/skills`.
+## Go Deeper
 
-## Docs
+The [documentation](https://voxmedia.github.io/open-agent-toolkit/) owns the full guides and command reference:
 
-Full documentation lives on the docs site:
+- [Quickstart](https://voxmedia.github.io/open-agent-toolkit/getting-started/quickstart) — choose an adoption path.
+- [Instruction Sync](https://voxmedia.github.io/open-agent-toolkit/provider-sync/instruction-sync) — validate nested `AGENTS.md` files and configure optional `CLAUDE.md` shims; no shims are created by default.
+- [CLI Reference](https://voxmedia.github.io/open-agent-toolkit/reference/cli-reference) and [Configuration](https://voxmedia.github.io/open-agent-toolkit/reference/config-and-local-state) — find commands, options, and local-state behavior.
 
-- [Docs Home](https://voxmedia.github.io/open-agent-toolkit/)
-- [Start Here](https://voxmedia.github.io/open-agent-toolkit/getting-started/quickstart)
-- [Provider Sync](https://voxmedia.github.io/open-agent-toolkit/provider-sync)
-- [Instruction Sync](https://voxmedia.github.io/open-agent-toolkit/provider-sync/instruction-sync)
-- [Agentic Workflows](https://voxmedia.github.io/open-agent-toolkit/workflows/choose-workflow)
-- [Docs Tooling](https://voxmedia.github.io/open-agent-toolkit/docs-tooling)
-- [CLI Utilities](https://voxmedia.github.io/open-agent-toolkit/reference#general-cli-adoption-guidance)
-- [Reference](https://voxmedia.github.io/open-agent-toolkit/reference)
-- [Contributing](https://voxmedia.github.io/open-agent-toolkit/contributing)
+## Contributing
 
-## Repo Layout
+To develop OAT itself, clone this repository and initialize your checkout:
 
-- `packages/cli` - OAT CLI for provider sync, docs tooling, project utilities, and diagnostics
-- `packages/control-plane` - read-only project-state library used by the CLI for structured OAT project status, listing, and recommendation data
-- `packages/docs-config` - config helpers for OAT-powered Fumadocs apps
-- `packages/docs-theme` - shared React components for OAT-powered Fumadocs apps
-- `packages/docs-transforms` - remark plugins and transform bundle for OAT-powered Fumadocs apps
-- `apps/oat-docs` - the OAT docs site
-- `.agents/skills` - bundled OAT skills
-- `.oat` - OAT templates, project artifacts, repo reference, and sync state
+```bash
+pnpm run worktree:init
+pnpm run cli -- help
+```
 
-## Packages
+The bootstrap installs dependencies, builds the workspace, and prepares local configuration and provider views. Follow the [contributor guide](https://voxmedia.github.io/open-agent-toolkit/contributing) and the ordered Definition of Done in [`AGENTS.md`](AGENTS.md) before submitting changes.
 
-- [`@open-agent-toolkit/cli`](./packages/cli/README.md)
-- [`@open-agent-toolkit/control-plane`](./packages/control-plane/README.md)
-- [`@open-agent-toolkit/docs-config`](./packages/docs-config/README.md)
-- [`@open-agent-toolkit/docs-theme`](./packages/docs-theme/README.md)
-- [`@open-agent-toolkit/docs-transforms`](./packages/docs-transforms/README.md)
+The workspace contains the [CLI](packages/cli/README.md), [read-only project control plane](packages/control-plane/README.md), and Fumadocs [configuration](packages/docs-config/README.md), [theme](packages/docs-theme/README.md), and [transforms](packages/docs-transforms/README.md) packages. The docs site lives in `apps/oat-docs`, bundled skills in `.agents/skills`, and templates, project artifacts, repository reference, and sync state in `.oat`.
