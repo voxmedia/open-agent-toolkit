@@ -100,6 +100,10 @@ target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:0,l
 
 markdown-bootstrap-main-remote-final-awaiting-hill-20261001: Main #334 integrated; all 14 tasks, both Bugbot corrections, optional-directory permission preservation and all eight local gates pass. Current independent final review has zero findings; retained gate 39b33a8d-8a63-41e5-af34-145a5d525935 passed with 0C/0H/0M/3L, one scoped rejection and two documentation corrections settled. Gate receive is allowed/fresh; existing summary/document/pr outputs are refreshed without resetting their completed sequence. Await final p04 HiLL approval; see implementation.md and reviews/final-unreadable-controls.md.
 
+### 2026-10-02 · structural · oat-project-retro · project-retro
+
+retro artifact=.oat/projects/shared/markdown-docs-bootstrap/references/project-retro.md evidence_used=archived-review-markdown,committed-controls,decisions-and-backlog,docs-validation-receipts,gate-receipts,git-history,lifecycle-artifacts,original-root-session,project-log evidence_unavailable=oat-execution-learnings promotions=3 upstream=0 apply=skipped filing=deferred
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
