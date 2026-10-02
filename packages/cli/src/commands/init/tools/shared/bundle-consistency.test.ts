@@ -1110,6 +1110,38 @@ describe('bundle-assets fail-closed guards', () => {
     BUNDLE_ASSETS_TEST_TIMEOUT_MS,
   );
 
+  // NOTICES.md is copied on its own from the repository root, so no directory
+  // containment covers it. Publishing onto it would rename the canonical file
+  // away, move the staging directory into its place, and delete the original.
+  it.each([
+    ['the notices file itself', 'repo/NOTICES.md'],
+    ['an existing file outside the repository', 'plain-file'],
+    ['a path below the notices file', 'repo/NOTICES.md/bundle'],
+  ])(
+    'rejects an assets destination at %s before any mutation',
+    (_label, relativeDestination) => {
+      const tree = createStubBundleTree(VALID_STUB_INVENTORY);
+      try {
+        const notices = join(tree.repoRoot, 'NOTICES.md');
+        writeFileSync(join(tree.scratch, 'plain-file'), 'keep me\n');
+
+        const run = runStubBundle(tree, {
+          assetsDir: join(tree.scratch, relativeDestination),
+          mode: 'refuse',
+        });
+
+        expectRejectedBeforeAnyCopy(tree, run, /refusing to build/);
+        expect(readFileSync(notices, 'utf8')).toBe('# Notices\n');
+        expect(readFileSync(join(tree.scratch, 'plain-file'), 'utf8')).toBe(
+          'keep me\n',
+        );
+      } finally {
+        rmSync(tree.scratch, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
+
   // Only the physical comparison can see that a symlink names the repository
   // root; the lexical check accepts `apps/root-link` as an ordinary path.
   it(

@@ -98,17 +98,25 @@ DISPATCH_MATRIX_RECOMMENDATION_SOURCE="$(require_inventory_path dispatchMatrix)"
 STAGING="${ASSETS}.staging.$$"
 PREVIOUS="${ASSETS}.previous.$$"
 
-# No destination may be, sit inside, or contain any directory the bundle copies
-# from: the recursively copied skills, templates, and docs roots, and the
+# Publishing renames whatever sits at ASSETS to PREVIOUS and deletes it, so an
+# existing destination must be a directory (a previous bundle). A file there is
+# never a bundle, and it may be a canonical source.
+if { [ -e "${ASSETS}" ] || [ -L "${ASSETS}" ]; } && [ ! -d "${ASSETS}" ]; then
+  fail_bundle "refusing to build: the assets destination (${ASSETS}) exists and is not a directory."
+fi
+
+# No destination may be, sit inside, or contain any path the bundle copies
+# from: the recursively copied skills, templates, and docs roots; the
 # directories whose files are copied one by one (agents, OAT scripts, and the
-# migration-prompt and dispatch-matrix config). A destination inside a
+# migration-prompt and dispatch-matrix config); and NOTICES.md, the one file
+# copied from a directory (the repository root) that cannot itself be listed
+# here, because the default destination lives inside it. A destination inside a
 # recursively copied root copies that tree into itself; publishing onto a
-# destination that is or contains a source directory renames the canonical
-# source away and deletes it. NOTICES.md comes from the repository root, which
-# contains every root below, so a destination at or above it is refused too.
-# Checked on physical paths before the trap is installed, so a refusal touches
-# nothing.
-COPIED_SOURCE_ROOTS=(
+# destination that is or contains a source renames the canonical source away
+# and deletes it. The repository root contains every path below, so a
+# destination at or above it is refused too. Checked on physical paths before
+# the trap is installed, so a refusal touches nothing.
+COPIED_SOURCE_PATHS=(
   "skills root|${REPO_ROOT}/.agents/skills"
   "agents directory|${REPO_ROOT}/.agents/agents"
   "templates root|${REPO_ROOT}/.oat/templates"
@@ -116,15 +124,16 @@ COPIED_SOURCE_ROOTS=(
   "docs source|${DOCS_SOURCE}"
   "migration prompt directory|$(dirname "${MIGRATION_PROMPT_SOURCE}")"
   "dispatch matrix directory|$(dirname "${DISPATCH_MATRIX_RECOMMENDATION_SOURCE}")"
+  "notices file|${REPO_ROOT}/NOTICES.md"
 )
 for destination_entry in "assets destination|${ASSETS}" "staging directory|${STAGING}" "previous-bundle directory|${PREVIOUS}"; do
   destination_label="${destination_entry%%|*}"
   destination_path="$(physical_path "${destination_entry#*|}")" || exit 1
-  for source_entry in "${COPIED_SOURCE_ROOTS[@]}"; do
+  for source_entry in "${COPIED_SOURCE_PATHS[@]}"; do
     source_label="${source_entry%%|*}"
     source_path="$(physical_path "${source_entry#*|}")" || exit 1
     if path_is_within "${destination_path}" "${source_path}"; then
-      fail_bundle "refusing to build: the ${destination_label} (${destination_path}) is inside the copied ${source_label} (${source_path})."
+      fail_bundle "refusing to build: the ${destination_label} (${destination_path}) is at or inside the copied ${source_label} (${source_path})."
     fi
     if path_is_within "${source_path}" "${destination_path}"; then
       fail_bundle "refusing to build: the copied ${source_label} (${source_path}) is inside the ${destination_label} (${destination_path})."
