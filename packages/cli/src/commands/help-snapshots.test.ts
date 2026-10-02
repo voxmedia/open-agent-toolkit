@@ -959,7 +959,8 @@ describe('help output snapshots', () => {
         analyze                   Run the docs analysis workflow
         apply                     Run the docs apply workflow
         generate-index [options]  Generate a docs index from markdown files
-        init [options]            Scaffold an OAT docs app
+        init [options]            Bootstrap an OAT docs app or authored Markdown
+                                  documentation
         migrate [options]         Migrate MkDocs markdown to Fumadocs format
                                   (admonitions, frontmatter)
         nav                       Docs navigation commands
@@ -1017,19 +1018,25 @@ describe('help output snapshots', () => {
     expect(help).toMatchInlineSnapshot(`
       "Usage: oat docs init [options]
 
-      Scaffold an OAT docs app
+      Bootstrap an OAT docs app or authored Markdown documentation
 
       Options:
         --framework <framework>  Documentation framework (choices: "fumadocs",
-                                 "mkdocs")
-        --app-name <name>        Docs app name
-        --site-name <name>       Display title (distinct from --app-name)
-        --target-dir <path>      Target directory for the docs app
-        --description <text>     Site description
+                                 "mkdocs", "markdown")
+        --app-name <name>        Docs app name (inapplicable to Markdown)
+        --site-name <name>       Site display title or Markdown documentation title
+        --target-dir <path>      Docs directory (Markdown defaults to docs; requires
+                                 a dedicated directory)
+        --description <text>     Documentation description
         --lint <mode>            Markdown lint mode (choices: "none",
                                  "markdownlint-cli2")
         --format <mode>          Markdown format mode (choices: "oxfmt", "none")
-        --no-root-patch          Skip patching the consumer root package.json
+        --no-root-patch          Skip root package.json patch (inapplicable to
+                                 Markdown)
+        --adopt                  Add missing baseline files to existing Markdown
+                                 docs; preserve authored content (Markdown only)
+        --dry-run                Preview Markdown files, config, and guidance without
+                                 writes (Markdown only)
         --yes                    Accept defaults without prompting
         -h, --help               display help for command
 

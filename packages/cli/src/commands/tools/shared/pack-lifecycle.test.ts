@@ -93,6 +93,15 @@ describe('production pack lifecycle', () => {
     await expect(
       exists(join(scopeRoot, '.oat', 'templates', 'docs-app-fuma')),
     ).resolves.toBe(true);
+    for (const root of [scopeRoot, projectRoot]) {
+      for (const page of ['index.md', 'contributing.md']) {
+        const content = await readFile(
+          join(root, '.oat', 'templates', 'docs-markdown', page),
+          'utf8',
+        );
+        expect(content).toContain('description:');
+      }
+    }
     for (const pack of ['docs', 'project-management'] as const) {
       await expect(
         readScopedPackIntent({ pack, scope: 'user', scopeRoot }),

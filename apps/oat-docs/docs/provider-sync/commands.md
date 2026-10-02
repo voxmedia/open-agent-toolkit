@@ -236,7 +236,7 @@ Key behavior:
 - Adopts Claude-only stray files by writing canonical `AGENTS.md` content first, then regenerating `CLAUDE.md` (shim strategies) or removing it (`none`)
 - Under a shim strategy, skips mismatched files unless `--force` is provided
 - Skips unreadable canonical or Claude-only sources and reports manual-repair guidance instead of forcing recovery
-- Skips the documentation content tree (`<documentation.root>/docs` when that is a directory, otherwise `documentation.root`) plus any `instructions.claude.excludes` paths, so authored pages never receive pointers; app-level instruction files such as `apps/oat-docs/AGENTS.md` are still synced
+- Skips the documentation content tree (literal `documentation.root` for tooling `markdown`, including nested `docs`; otherwise `<documentation.root>/docs` when that is a directory, falling back to `documentation.root`) plus any `instructions.claude.excludes` paths, so authored pages never receive pointers; app-level instruction files such as `apps/oat-docs/AGENTS.md` are still synced
 - Never deletes an existing `CLAUDE.md` inside an excluded tree
 - Under `none`, warns about every `CLAUDE.md` that remains after sync, including inside excluded trees, because any one of them makes Claude Code ignore every `AGENTS.md`
 - Uses pointer content `@AGENTS.md\n`, file symlinks, or hard copies depending on the selected strategy

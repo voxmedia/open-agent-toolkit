@@ -928,7 +928,7 @@ Key behavior:
 The `docs` pack contains active documentation and instruction-governance
 workflows:
 
-- **oat-docs-bootstrap** — Guide users through bootstrapping a docs app
+- **oat-docs-bootstrap** — Guide users through Markdown setup/adoption or a docs app
   end-to-end: preflight detection, input gathering, scaffold (via `oat docs
 init`) with capability-gated post-patches, build verification, config
   inspection, and an educational walkthrough.
@@ -943,6 +943,9 @@ init`) with capability-gated post-patches, build verification, config
 
 Key behavior:
 
+- The docs pack includes `docs-markdown/index.md` and `docs-markdown/contributing.md`
+  baseline templates alongside framework scaffolds. Repository templates override
+  user templates, which override bundled defaults.
 - Docs pack installs at the selected scope and defaults to user scope on a
   fresh install.
 - It complements the `core` pack: `oat-docs` answers questions from bundled

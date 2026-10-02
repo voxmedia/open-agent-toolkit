@@ -10,13 +10,13 @@ Route larger lifecycle work to its owner.
 
 ## Routing Rules
 
-| Request shape                                                           | Owner                      | Why                                                                                                                        |
-| ----------------------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| New docs app setup, scaffold repair, package/app shell bootstrap        | `oat-docs-bootstrap`       | Bootstrap owns preflight, inputs, `oat docs init`, post-scaffold checks, config inspection, and walkthrough.               |
-| Read-only docs audit, structure analysis, coverage review, drift report | `oat-docs-analyze`         | Analyze owns inventory, evidence gathering, severity-rated findings, and analysis artifacts.                               |
-| Applying approved analysis recommendations or batch docs changes        | `oat-docs-apply`           | Apply owns branch creation, approved changes, deterministic nav sync, verification, commit, and optional PR.               |
-| Docs updates derived from an active OAT project                         | `oat-project-document`     | Project-document owns artifact/code scanning, docs delta planning, approval, and project provenance.                       |
-| Existing MkDocs app to OAT/Fumadocs migration                           | Standalone migration guide | Migration needs inventory, syntax conversion, app-shell work, render checks, config/CI changes, and owner-review handling. |
+| Request shape                                                                             | Owner                      | Why                                                                                                                        |
+| ----------------------------------------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| New Markdown setup/adoption, docs app setup, scaffold repair, package/app shell bootstrap | `oat-docs-bootstrap`       | Bootstrap owns preflight, inputs, `oat docs init`, post-scaffold checks, config inspection, and walkthrough.               |
+| Read-only docs audit, structure analysis, coverage review, drift report                   | `oat-docs-analyze`         | Analyze owns inventory, evidence gathering, severity-rated findings, and analysis artifacts.                               |
+| Applying approved analysis recommendations or batch docs changes                          | `oat-docs-apply`           | Apply owns branch creation, approved changes, deterministic nav sync, verification, commit, and optional PR.               |
+| Docs updates derived from an active OAT project                                           | `oat-project-document`     | Project-document owns artifact/code scanning, docs delta planning, approval, and project provenance.                       |
+| Existing MkDocs app to OAT/Fumadocs migration                                             | Standalone migration guide | Migration needs inventory, syntax conversion, app-shell work, render checks, config/CI changes, and owner-review handling. |
 
 If a request mixes targeted authoring with lifecycle work, split it:
 

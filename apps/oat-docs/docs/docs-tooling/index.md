@@ -1,18 +1,18 @@
 ---
 title: Docs Tooling
-description: Standalone adoption lane for docs app setup, docs commands, and docs maintenance workflows.
+description: Standalone adoption lane for Markdown and docs app setup, docs commands, and docs maintenance workflows.
 ---
 
 # Docs Tooling
 
 Docs Tooling is the OAT lane for setting up, maintaining, and restructuring a documentation surface with OAT.
 
-Use this section when you are adopting the docs app workflow in a repo, maintaining generated navigation, or using the analyze/apply docs workflows. OAT supports both Fumadocs and MkDocs: the site framework changes the surrounding app setup and generated artifacts, but the underlying documentation contract stays centered on `index.md` and `## Contents`.
+Use this section when you are adopting the docs app workflow in a repo, maintaining generated navigation, or using the analyze/apply docs workflows. OAT supports Markdown, Fumadocs, and MkDocs. Plain Markdown keeps authored files without a site build; the site framework changes the surrounding app setup and generated artifacts, but the underlying documentation contract stays centered on `index.md` and `## Contents`.
 
 ## Contents
 
-- [Add Docs to a New Repo](add-docs-to-a-repo.md) - Bootstrap a docs app and adopt the docs workflow in a repo.
-- [Docs App Commands](commands.md) - Docs CLI surface for init, migration, index generation, and nav sync.
+- [Add or Adopt Docs in a Repo](add-docs-to-a-repo.md) - Set up Markdown or a docs app and safely adopt existing Markdown.
+- [Documentation Commands](commands.md) - Docs CLI surface for init, migration, index generation, and nav sync.
 - [Docs Workflows](workflows.md) - How the docs CLI helpers pair with analyze/apply workflows.
 
 ## What This Section Is
@@ -21,7 +21,7 @@ This section explains how OAT supports docs surfaces, how the index contract wor
 
 ## Who It's For
 
-- Repos adding a docs app for the first time
+- Repos setting up or adopting Markdown documentation or a docs app
 - Teams maintaining directory indexes and generated navigation
 - Users who want a controlled analyze/apply flow for docs changes
 
@@ -40,7 +40,7 @@ This section explains how OAT supports docs surfaces, how the index contract wor
 
 ## Go Deeper
 
-- [Add Docs to a Repo](add-docs-to-a-repo.md) - Bootstrap a docs app and adopt the docs workflow in a repo.
+- [Add Docs to a Repo](add-docs-to-a-repo.md) - Set up Markdown or a docs app and safely adopt existing Markdown.
 - [Commands](commands.md) - Docs CLI surface for init, migration, index generation, and nav sync.
 - [Workflows](workflows.md) - How the docs CLI helpers pair with analyze/apply workflows.
 - [Docs Index Contract](../reference/docs-index-contract.md) - Framework-neutral `index.md` rules plus Fumadocs and MkDocs generation notes.

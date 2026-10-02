@@ -1,28 +1,28 @@
 ---
 name: oat-docs-authoring
-description: Use when authoring or restructuring targeted content inside an existing OAT/Fumadocs docs app. Preserves OAT docs navigation, generated indexes, and validation boundaries.
+description: Use when authoring or restructuring targeted content inside an existing OAT Markdown surface or OAT/Fumadocs docs app. Preserves OAT docs navigation, generated indexes, and validation boundaries.
 argument-hint: '[docs task or target path]'
 disable-model-invocation: false
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 user-invocable: true
 metadata:
-  version: 1.0.2
+  version: 1.1.1
 ---
 
 # OAT Docs Authoring
 
 Use this skill for targeted documentation authoring and small structural edits
-inside an existing OAT/Fumadocs docs app.
+inside an existing OAT Markdown surface or OAT/Fumadocs docs app.
 
 This is a thin wrapper over `authoring-docs`. Load `authoring-docs` for
 universal evidence gathering, page-type selection, writing style, templates,
-and review standards. Keep this wrapper focused on OAT/Fumadocs placement,
+and review standards. Keep this wrapper focused on OAT Markdown/Fumadocs placement,
 navigation, generated artifacts, validation, and lifecycle boundaries.
 
 ## Prerequisites
 
-- The repository already has an OAT/Fumadocs docs app or a clearly identified
-  target docs app that follows OAT conventions.
+- The repository already has an OAT Markdown surface, OAT/Fumadocs docs app,
+  or clearly identified documentation target that follows OAT conventions.
 - The task is a targeted authoring, restructuring, repair, or review task, not
   a new docs-app bootstrap, broad audit, or approved bulk-apply workflow.
 
@@ -31,7 +31,7 @@ navigation, generated artifacts, validation, and lifecycle boundaries.
 **OAT MODE: Docs Authoring Wrapper**
 
 **Purpose:** Author or restructure focused docs content while preserving the
-OAT/Fumadocs source-of-truth contract.
+OAT authored-source contract.
 
 **BLOCKED Activities:**
 
@@ -134,6 +134,10 @@ defaults, and asset-only exceptions.
 
 Prefer plain Markdown for content pages. Use MDX only when local guidance and
 the task require JSX or custom components.
+
+Markdown uses its literal configured root and authored index; preserve context,
+excludes, and local instructions even with a nested `docs` directory. No app
+package or docs-root AGENTS creation is needed.
 
 ### Step 4: Check Generated Artifacts and Validation
 
