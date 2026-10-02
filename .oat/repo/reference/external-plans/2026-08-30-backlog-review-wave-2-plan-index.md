@@ -24,7 +24,7 @@ not an `oat-project-import-plan` target.
     is materially implemented by the immutable closeout snapshot/terminal
     contract. Archive the original after a focused reproduction check; any
     transition-test residual belongs in `review-gate-integrity`.
-  - [BL-260718-harden-full-surface-gate](../../pjm/backlog/items/BL-260718-harden-full-surface-gate.md)
+  - [BL-260718-harden-full-surface-gate](../../pjm/backlog/archived/BL-260718-harden-full-surface-gate.md)
     has its budget half implemented. The remaining same-window recursion/run
     identity choice requires fresh `review-gate-integrity` design after PR #190,
     not an isolated external plan.

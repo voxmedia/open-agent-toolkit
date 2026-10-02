@@ -1,7 +1,7 @@
 ---
 id: BL-260906-report-errno-for-asset-root
 title: Report errno for asset root stat failures and reset the statRedirects test seam
-status: open
+status: closed
 priority: low
 scope: task
 scope_estimate: XS
@@ -9,7 +9,7 @@ labels:
   - cli
 assignee: null
 created: 2026-09-06T01:23:56.832Z
-updated: 2026-09-06T01:23:56.832Z
+updated: '2026-10-02T22:52:13Z'
 associated_issues: []
 external_plans: []
 ---

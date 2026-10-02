@@ -1,7 +1,7 @@
 ---
 id: BL-260927-persist-quick-start-prompt
 title: Persist quick-start prompt approvals like implement
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: S
@@ -12,7 +12,7 @@ labels:
   - skills
 assignee: null
 created: 2026-09-27T13:44:45.996Z
-updated: 2026-09-27T13:44:45.996Z
+updated: '2026-10-02T22:52:14Z'
 associated_issues: []
 external_plans: []
 ---

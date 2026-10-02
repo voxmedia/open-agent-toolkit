@@ -1,7 +1,7 @@
 ---
 id: BL-261001-downgrade-claims-that-thorough
 title: Downgrade claims that thorough-profile reviews leave without a disposition
-status: open
+status: closed
 priority: low
 scope: task
 scope_estimate: S
@@ -10,7 +10,7 @@ labels:
   - skills
 assignee: null
 created: 2026-10-01T23:28:16.954Z
-updated: 2026-10-01T23:28:16.954Z
+updated: '2026-10-02T22:52:18Z'
 associated_issues: []
 external_plans: []
 ---

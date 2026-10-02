@@ -1,7 +1,7 @@
 ---
 id: BL-260908-retire-the-top-level-skill
 title: Retire the top-level skill version alias on the recorded schedule
-status: open
+status: wont_do
 priority: medium
 scope: task
 scope_estimate: S
@@ -12,7 +12,7 @@ labels:
   - migration
 assignee: null
 created: 2026-09-08T11:15:21.665Z
-updated: 2026-09-08T23:45:00.000Z
+updated: '2026-10-02T22:52:22Z'
 associated_issues: []
 external_plans:
   - .oat/repo/reference/external-plans/2026-09-08-tighten-the-skill-version-validators.md
