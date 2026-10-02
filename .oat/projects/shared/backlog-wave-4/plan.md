@@ -1623,7 +1623,7 @@ rewrites the four inventory rows last.
 | p02    | code     | fixes_completed | 2026-10-02 | reviews/archived/p02-review-2026-10-02T191106Z.md           | d7f496827a4c3f624e14e0ae19b00f25df37f5d4 | auto       | -                 |
 | p03    | code     | fixes_completed | 2026-10-02 | reviews/archived/p03-review-2026-10-02T195441Z.md           | 2f98690d8461effb013ee934efda7c8aab9f56eb | auto       | -                 |
 | p04    | code     | fixes_completed | 2026-10-02 | reviews/archived/p04-review-2026-10-02T204339Z.md           | ca1e002ac341e2553bc716b9338ea65daa251a79 | auto       | -                 |
-| p05    | code     | fixes_added     | 2026-10-02 | reviews/archived/p05-review-2026-10-02T220250Z.md           | 31b6ce71ddea67274a508334395454e00cb2935a | auto       | -                 |
+| p05    | code     | fixes_completed | 2026-10-02 | reviews/archived/p05-review-2026-10-02T220250Z.md           | 31b6ce71ddea67274a508334395454e00cb2935a | auto       | -                 |
 | p06    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | p07    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | final  | code     | pending         | -          | -                                                           | -                                        | -          | -                 |

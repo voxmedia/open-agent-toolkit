@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p05-t05
+oat_current_task_id: p06-t01
 oat_generated: false
 ---
 
@@ -30,11 +30,11 @@ oat_generated: false
 | Phase 2 | complete    | 3     | 3/3       |
 | Phase 3 | complete    | 5     | 5/5       |
 | Phase 4 | complete    | 9     | 9/9       |
-| Phase 5 | in_progress | 5     | 4/5       |
+| Phase 5 | in_progress | 5     | 5/5       |
 | Phase 6 | pending     | 3     | 0/3       |
 | Phase 7 | pending     | 3     | 0/3       |
 
-**Total:** 29/36 tasks completed
+**Total:** 30/36 tasks completed
 
 ---
 
@@ -213,8 +213,8 @@ oat_generated: false
 
 ### Task p05-t05: (review) Close p05 review findings M1, M2, L2, L3
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** cc5d5da8b
 
 ---
 
@@ -555,6 +555,15 @@ oat_generated: false
   record, which repository policy reserves for an operator request or
   confirmation; carried to the PR as an operator question.
   `Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
+
+- Continuation `cont-backlog-wave-4-p05-fix-1`: `cc5d5da8b` (p05-t05): step 8
+  defers only on opt-in, PR-precondition, or unanswered-question stops
+  (`refused_check` in the run report) and stops at a boundary otherwise; the
+  autonomous-lifecycle route admits only a skill whose SKILL.md carries the
+  exact invocation (none today); `SKILL_DIR` / `COMPLETE_SKILL_DIR` fixed; the
+  opt-in control runs the skill's own Step 1 block. Shared contracts and
+  validation 1000; build, validate-skills, check:skill-bumps, format:root,
+  root oxlint, type-check exit 0. Root spot-check: complete-auto contracts pass.
 
 <!-- orchestration-runs-end -->
 
