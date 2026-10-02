@@ -762,16 +762,16 @@ Structured return accepted from /root/p02_analysis_review; no reviewer artifact 
   "deadline_seconds": 3600,
   "retry_limit": 2,
   "launch_status": "accepted",
-  "child_outcome": "completed-two-medium-findings",
+  "child_outcome": "completed-after-clean-M1-M2-recheck",
   "runtime_confirmation": "not-reported",
   "diagnostics": [],
   "continuation_events": [
     {
       "request_id": "docs-overhaul-run1-p02-map-review02",
       "agent_handle": "/root/p02_map_review",
-      "status": "accepted-holding",
+      "status": "completed-clean-recheck",
       "authority": "M1/M2 corrected draft recheck; new round02 review artifact only",
-      "child_outcome": null
+      "child_outcome": "zero-findings-M1-M2-resolved"
     }
   ],
   "payload": {
@@ -800,6 +800,10 @@ Dispatch: scope=p02-map action=review role=reviewer producer=unknown provenance=
 Artifact-mode confirmation contains exactly one Reconnaissance: not-attempted; artifact has no Review Orchestration section. Validated draft SHA256 bindings, no reviewed commit inferred (Reviewed Head remains -). Outcome 0 Critical / 0 High / 2 Medium / 0 Low. Root independently confirmed first-match href span bug and Home index.md:19 obsolete route-only entry. Both are required pre-move corrections; no content/capability removal authorized. Same accepted /root/phase02 receives bounded pre-commit draft correction, no new phase/recovery event. Source app tests 9/9 and focused 3/3 executed; pristine receipts inspected, not rerun. Fable map approval remains pending, queued not consumed.
 
 Round02 request accepted on same reviewer handle after completed exact resolver (notices empty). Corrected map SHA256 e58c6780fae9eb1f01698018358941355e0de3f26d39caecc278f5453307436b; receipt binds other files. Source baseline unchanged; uncommitted draft is not reviewed at bookkeeping HEAD. Reviewer holds until release. Original ignored analysis copied byte-for-byte to references/docs-analysis-reviewed-snapshot.md for durable provenance; snapshot retains original historical draft status, with current verified-with-Low-residual disposition separately in docs-analysis-review-01.json. No new analysis finding fix/rewrite or reviewed-byte change.
+
+Round02 artifact accepted: exactly one not-attempted confirmation and no Review Orchestration section. Zero Critical/High/Medium/Low findings; receipt-bound draft hashes unchanged. Real-source spans, all 840 section hashes, 70 page hashes and 17 repeated-label cases independently verified; eight literal controls pass, isolated legacy child fails intended assertion. Original review remains immutable. Reviewed Head remains -: these are exact uncommitted proposal bytes, not a reviewed commit. Permanent validator/tests retain round01 executed coverage; no new phase/build/browser acceptance.
+
+Required peer-review boundary: Fable map approval has not arrived. Verified owning laptop relay/runtime and Mini execution worktree; Fable pane still has unsent text "what's the question codex is waiting on?". Do not overwrite, clear or submit it. Queued msg_abd20b8047be contains exact corrected map, specific review request and direct return instructions; delivered_at null and no response, so enqueue is not consumption. No page moved, p02-t01 not complete, no phase 2 acceptance claimed. Same phase handle remains available; resume after actual peer response, not by replacing its session. Two app source drafts remain intentionally uncommitted and owned by phase02. Reviewed project evidence is preserved separately as draft bookkeeping.
 
 ## Implementation Log
 

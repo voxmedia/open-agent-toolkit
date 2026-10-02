@@ -52,6 +52,10 @@ target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:1,l
 
 docs-overhaul-run1-p01-pass: p01 accepted after two bounded fix rounds; original native dispatch and terminal review provenance in implementation.md and reviews/p01-code-review-round03-2026-10-02T060828Z.md; all eight root gates exit zero.
 
+### 2026-10-02 · structural · oat-project-implement · p02-t01
+
+docs-overhaul-run1-p02-peer-map-blocked: STOP at required Fable migration-map review; independent M1/M2 recheck passed with zero findings, but peer pane has an unsent draft and queued request consumption is unverified. No pages moved and p02-t01 remains incomplete; evidence in reviews/p02-migration-draft-review-round02.md and references/draft-correction-receipts.json.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
