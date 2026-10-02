@@ -307,6 +307,35 @@ describe('oat-project-complete-auto identity', () => {
     expect(fm).not.toContain('AskUserQuestion');
   });
 
+  it('advertises only the activation routes that work today', () => {
+    const skill = readRepoFile(SKILL_PATH);
+    const description = frontmatter(skill).match(/^description: (.+)$/m)![1]!;
+    const activation = normalize(
+      sliceBetween(
+        skill,
+        '### Step 2: Activation Contract',
+        '### Step 3: Objective Preflight (Per Project)',
+      ),
+    );
+    const configuration = normalize(
+      readRepoFile('apps/oat-docs/docs/cli-utilities/configuration.md'),
+    );
+
+    // No lifecycle skill names the companion, so the OAT_AUTONOMOUS route
+    // refuses every claim; no surface may present it as a working trigger.
+    expect(description).not.toContain('OAT_AUTONOMOUS');
+    expect(description).toContain('oat-wave-execute closeout step 8');
+    expect(activation).toContain(
+      'No lifecycle skill carries it today, so the two workflow steps above are the only working routes.',
+    );
+    expect(configuration).not.toContain(
+      'or under an `OAT_AUTONOMOUS` lifecycle run',
+    );
+    expect(configuration).toContain(
+      'Its `OAT_AUTONOMOUS` lifecycle route refuses until a lifecycle skill names the companion, and none does today.',
+    );
+  });
+
   it('leaves the interactive oat-project-complete human gate in place', () => {
     const fm = frontmatter(readRepoFile(INTERACTIVE_PATH));
 
@@ -452,6 +481,31 @@ describe('oat-project-complete-auto three-layer guard', () => {
     expect(skill).toContain('- Requesting workflow: {--requested-by value}');
     expect(skill).toContain('- PR: {oat_pr_url} (open)');
     expect(skill).toContain('- Reason: {--reason value}');
+  });
+
+  it('routes an archived project to oat-project-complete instead of promising another companion run', () => {
+    const skill = readRepoFile(SKILL_PATH);
+    const preflight = normalize(
+      sliceBetween(
+        skill,
+        '### Step 3: Objective Preflight (Per Project)',
+        '#### PR-merge precondition',
+      ),
+    );
+    const complete = normalize(
+      sliceBetween(skill, '### Step 5: Complete the Project', '### Batch Mode'),
+    );
+
+    // closeout-check reports `Project not found` once the directory has been
+    // archived, so the companion can never reach the archive-resume branches.
+    expect(preflight).toContain('`status: error` with `Project not found`');
+    expect(preflight).toContain(
+      '`project directory absent (archived?); resume with oat-project-complete`',
+    );
+    expect(complete).not.toContain('recover the project on the next run');
+    expect(complete).toContain(
+      'A later companion run refuses at preflight once the project directory has been archived; resume with `oat-project-complete`, whose archive-resume branches finish the tail.',
+    );
   });
 
   it('batch mode sits behind the program-end checkpoint and preflights each project', () => {
@@ -698,6 +752,33 @@ describe('wave closeout invokes the companion', () => {
       expect(boundary, check).toContain(`\`${check}\``);
     }
     expect(boundary).toContain('`activation`');
+  });
+
+  it('wave-execute step 8 names oat-project-complete as the next owner of an archived wrapper', () => {
+    const boundary = waveExecuteStep8().slice(
+      waveExecuteStep8().indexOf('Any other refusal'),
+    );
+
+    expect(boundary).toContain(
+      'A `preflight:1` refusal whose reason is `project directory absent (archived?); resume with oat-project-complete`',
+    );
+    expect(boundary).toContain(
+      'the boundary report names `oat-project-complete` as the next owner',
+    );
+  });
+
+  it('the program completion checkpoint names the next step for every deferrable refusal', () => {
+    const checkpoint = waveProgramCheckpoint();
+
+    expect(checkpoint).toContain(
+      'When the companion stops with `interactive completion required`, the operator completes the wrappers with `oat-project-complete`.',
+    );
+    expect(checkpoint).toContain(
+      'List every wrapper refused for a deferrable reason (`preflight:4` or `preflight:7`) with its next step: the operator completes it with `oat-project-complete`',
+    );
+    expect(checkpoint).toContain(
+      'A wrapper refused for an objective reason keeps its deferral and reports the failing check.',
+    );
   });
 
   it('the provenance wave-execute step 8 passes completes a reviewed wave with an open tracked PR', () => {

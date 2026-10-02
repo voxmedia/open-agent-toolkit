@@ -1,6 +1,6 @@
 ---
 name: oat-project-complete-auto
-description: Use when a workflow step names this skill, or an OAT_AUTONOMOUS lifecycle run must close a project, to complete one or more OAT projects without prompts. Non-interactive companion to oat-project-complete; requires workflow.autonomousComplete.
+description: Use when a workflow step names this skill (oat-wave-execute closeout step 8 or the oat-wave-program completion checkpoint) to complete one or more OAT projects without prompts. Non-interactive companion to oat-project-complete; requires workflow.autonomousComplete.
 argument-hint: '--requested-by <requesting-step> [--completion-before-merge --reason <text>] [--batch --program-checkpoint <ledger-ref>] [<project-path>...]'
 disable-model-invocation: false
 user-invocable: false
@@ -11,8 +11,8 @@ metadata:
 
 # Autonomous Project Completion
 
-Non-interactive project completion for workflow steps and autonomous lifecycle
-runs. It decides every answer the interactive completion flow would ask for
+Non-interactive project completion for workflow steps that name this skill.
+It decides every answer the interactive completion flow would ask for
 from config and recorded project state, refuses whenever an answer would need a
 human, and then runs the interactive completion steps unchanged.
 
@@ -115,7 +115,8 @@ Run only when the invocation carries a recognized `--requested-by` value:
   `SKILL.md` contains the exact invocation
   `--requested-by oat-autonomous-lifecycle:<skill-name>`. Running under
   `OAT_AUTONOMOUS=1` is not itself a request: until a lifecycle skill carries
-  that invocation, this route refuses every claim.
+  that invocation, this route refuses every claim. No lifecycle skill carries
+  it today, so the two workflow steps above are the only working routes.
 
 Refuse, writing nothing, when `--requested-by` is missing or unrecognized, when
 `--completion-before-merge` comes from a step whose column above is `no`, or
@@ -172,7 +173,11 @@ Hard-fail the project when any of these holds:
 
 1. **Post-implement sequence incomplete:** `closeout-check` exits non-zero or
    reports a `status` other than `complete` or `not_required`. Report its
-   `invariant` and `nextOwner`.
+   `invariant` and `nextOwner`. When it reports `status: error` with
+   `Project not found` (the project directory is gone, typically archived by
+   an earlier run whose later step failed), report instead the reason
+   `project directory absent (archived?); resume with oat-project-complete`:
+   recovery belongs to the interactive skill, not to another companion run.
 2. **Incomplete tasks:** `project.progress.total` is zero or
    `project.progress.completed` is less than `project.progress.total`.
 3. **Final review not passed:** the latest appended review event whose Scope is
@@ -289,8 +294,9 @@ For each project that passed Steps 3 and 4, in the order given:
 
 If a completion step fails after it has written anything, stop the whole run,
 report the step and the state left behind, and do not start further projects.
-The interactive skill's resume branches recover the project on the next run.
-Never improvise a partial completion.
+A later companion run refuses at preflight once the project directory has been
+archived; resume with `oat-project-complete`, whose archive-resume branches
+finish the tail. Never improvise a partial completion.
 
 ### Batch Mode
 

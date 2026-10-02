@@ -4463,6 +4463,21 @@ describe('oat config', () => {
       },
     );
 
+    it('describe workflow.autonomousComplete names only the working activation routes', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, ['describe', 'workflow.autonomousComplete']);
+
+      const text = capture.info[0]!.replace(/\s+/g, ' ');
+      expect(text).toContain('runs only when a workflow names it as a step');
+      expect(text).toContain(
+        'its OAT_AUTONOMOUS lifecycle route refuses until a lifecycle skill names the companion, and none does today',
+      );
+      expect(text).not.toContain('OAT_AUTONOMOUS lifecycle run invokes');
+      expect(process.exitCode).toBe(0);
+    });
+
     it('describe workflow.hillCheckpointDefault shows enum metadata', async () => {
       const root = await createRepoRoot();
       const { command, capture } = createHarness({ cwd: root });

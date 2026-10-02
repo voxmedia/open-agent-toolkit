@@ -449,7 +449,12 @@ archive anything first.
    failing check and run neither `oat project complete-state` nor the merge
    handoff. `oat project complete-state` checks only the closeout snapshot, so
    running it after an objective refusal would mark an unhealthy wrapper
-   complete.
+   complete. A `preflight:1` refusal whose reason is
+   `project directory absent (archived?); resume with oat-project-complete`
+   means an earlier run archived the wrapper and a later completion step
+   failed: the boundary report names `oat-project-complete` as the next owner,
+   whose archive-resume branches finish the tail, and never another companion
+   run.
 
    On a deferrable stop, the wave MUST still run `oat project complete-state`
    and its then-current project bookkeeping, and the archive tail —

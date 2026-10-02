@@ -415,6 +415,7 @@
 | BL-260908-remove-the-top-level-skill     | Remove the top-level skill version read after the alias error has been quiet                          | open   | medium   | task       | S        |
 | BL-260909-restamp-a-stale-copy-strategy  | Restamp a stale copy-strategy contentHash on skip and retire the pre-framing digest bridge            | open   | medium   | task       | M        |
 | BL-260718-rewrite-worktree-bootstrap     | Rewrite worktree bootstrap-group as tested TypeScript command                                         | open   | medium   | feature    | M        |
+| BL-261002-route-validated-archive        | Route validated archive receipts from oat-project-complete-auto to the interactive resume tail        | open   | medium   | task       | M        |
 | BL-260927-share-one-hook-safe-exact-path | Share one hook-safe exact-path commit primitive across CLI and skill lifecycle commits                | open   | medium   | feature    | L        |
 | BL-260827-span-based-prose-guards        | Span-based prose guards, anchored probe records, and a shared probe runner for skill contract tests   | open   | medium   | task       | S        |
 | BL-260911-support-per-tool-scope         | Support per-tool scope migration in oat tools migrate                                                 | open   | medium   | task       | S        |
@@ -453,6 +454,7 @@
 | BL-260908-restructure-the-authoring      | Restructure the authoring skills for progressive disclosure and decide proactive invocation           | open   | low      | feature    | M        |
 | BL-260903-retire-deprecated-pack         | Retire deprecated pack placement and dead evidence diagnostics                                        | open   | low      | task       | M        |
 | BL-260928-serialize-concurrent-agents-md | Serialize concurrent AGENTS.md guidance appends                                                       | open   | low      | task       | S        |
+| BL-261002-serialize-stale-gate-claim     | Serialize stale gate-claim recovery                                                                   | open   | low      | task       | S        |
 | BL-260909-show-the-brainstorm-pack       | Show the brainstorm pack in the oat-doctor dashboard example and pack enumeration                     | open   | low      | task       | XS       |
 | BL-260909-use-handle-bound-traversal     | Use handle-bound traversal in the managed-copy and manifest filesystem readers                        | open   | low      | task       | M        |
 | BL-260909-wave-7-review-polish-leftovers | Wave-7 review polish leftovers                                                                        | open   | low      | task       | S        |

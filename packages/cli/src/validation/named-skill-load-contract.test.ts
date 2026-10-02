@@ -2735,6 +2735,24 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
   },
   {
     file: '.agents/skills/oat-project-complete-auto/SKILL.md',
+    anchor: 'Step 3: Objective Preflight (Per Project)',
+    match: 'resume with oat-project-complete`: recovery belongs to',
+    classification: 'non-executing',
+    skills: ['oat-project-complete'],
+    reason:
+      'Refusal reason naming the recovery owner; the companion refuses and does not run it.',
+  },
+  {
+    file: '.agents/skills/oat-project-complete-auto/SKILL.md',
+    anchor: 'Step 5: Complete the Project',
+    match: 'A later companion run refuses at preflight once',
+    classification: 'non-executing',
+    skills: ['oat-project-complete'],
+    reason:
+      'Names the recovery owner for an archived project; the companion stops.',
+  },
+  {
+    file: '.agents/skills/oat-project-complete-auto/SKILL.md',
     anchor: 'Step 5: Complete the Project',
     match: 'Load the current `oat-project-complete/SKILL.md`',
     classification: 'load-required',

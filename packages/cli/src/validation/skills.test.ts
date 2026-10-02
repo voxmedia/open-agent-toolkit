@@ -2609,6 +2609,18 @@ describe('validateOatSkills', () => {
     );
   });
 
+  it('documents that stale gate-claim recovery is not serialized', async () => {
+    // The gate renames a stale claim aside without a recovery lock, so the
+    // docs must not promise more than at-most-one live run in that window.
+    const workflowGates = (
+      await readRepoFile('apps/oat-docs/docs/cli-utilities/workflow-gates.md')
+    ).replace(/\s+/g, ' ');
+
+    expect(workflowGates).toContain(
+      'Replacing a stale claim is not serialized against other launches, so concurrent recovery of one orphaned claim can, rarely, admit two runs',
+    );
+  });
+
   it('requires the implementation review gate to use global JSON mode', async () => {
     const content = await readRepoFile(implementSkillPath);
     const gateSection = content.slice(

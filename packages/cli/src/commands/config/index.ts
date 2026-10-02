@@ -902,7 +902,7 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     mutability: 'read/write',
     owningCommand: 'oat config set workflow.autonomousComplete <true|false>',
     description:
-      'Standing opt-in for oat-project-complete-auto, the non-interactive completion companion that a workflow names as a step or an OAT_AUTONOMOUS lifecycle run invokes. When false (the default), that skill stops with "interactive completion required". The interactive oat-project-complete is unaffected. Resolution: local > shared > user > default.',
+      'Standing opt-in for oat-project-complete-auto, the non-interactive completion companion that runs only when a workflow names it as a step (today oat-wave-execute closeout step 8 and the oat-wave-program completion checkpoint); its OAT_AUTONOMOUS lifecycle route refuses until a lifecycle skill names the companion, and none does today. When false (the default), that skill stops with "interactive completion required". The interactive oat-project-complete is unaffected. Resolution: local > shared > user > default.',
   },
   {
     key: 'workflow.postImplementSequence',

@@ -539,6 +539,58 @@ describe('generateStateDashboard', () => {
     expect(ready.recommendedStep).toBe('oat-project-implement');
   });
 
+  it.each([
+    ['double-quoted flow', '["plan"]'],
+    ['single-quoted flow', "['plan']"],
+    ['bare flow', '[design, plan]'],
+    ['block', '\n  - design\n  - plan'],
+  ])(
+    'routes a quick plan with a pending plan HiLL checkpoint (%s array) like the router',
+    async (_form, checkpoints) => {
+      const root = await createTempRepo();
+      tempDirs.push(root);
+      const fixture = await quickPlanFixture(root, 'in_progress', {
+        oat_hill_checkpoints: checkpoints,
+      });
+
+      // A ready plan would route to implementation without the checkpoint, so
+      // only a recognized pending checkpoint sends it to the plan skill. The
+      // two surfaces word the HiLL reason differently, so compare the skill.
+      await fixture.writePlan(READY_QUICK_PLAN);
+      const dashboard = await generateStateDashboard({
+        repoRoot: root,
+        today: '2026-10-02',
+        git: mockGit,
+      });
+      const { recommendation } = await getProjectState(
+        join(root, fixture.projectPath),
+      );
+      expect(recommendation.skill).toBe('oat-project-plan');
+      expect(dashboard.recommendedStep).toBe(recommendation.skill);
+      expect(dashboard.recommendedReason).toContain('HiLL approval');
+    },
+  );
+
+  it.each([
+    ['single-quoted flow', "['plan']"],
+    ['bare flow', '[plan]'],
+    ['block', '\n  - plan'],
+  ])(
+    'treats a completed plan HiLL checkpoint (%s array) as passed like the router',
+    async (_form, completed) => {
+      const root = await createTempRepo();
+      tempDirs.push(root);
+      const fixture = await quickPlanFixture(root, 'in_progress', {
+        oat_hill_checkpoints: '["plan"]',
+        oat_hill_completed: completed,
+      });
+
+      await fixture.writePlan(READY_QUICK_PLAN);
+      const dashboard = await fixture.dashboardMatchesRouter();
+      expect(dashboard.recommendedStep).toBe('oat-project-implement');
+    },
+  );
+
   it('routes a quick plan with a pending plan HiLL checkpoint like the router', async () => {
     const root = await createTempRepo();
     tempDirs.push(root);
@@ -982,5 +1034,18 @@ describe('phaseInHillList', () => {
 
   it('returns false for empty list', () => {
     expect(phaseInHillList('design', '[]')).toBe(false);
+  });
+
+  it('accepts single-quoted and bare flow arrays', () => {
+    expect(phaseInHillList('plan', "['plan']")).toBe(true);
+    expect(phaseInHillList('plan', '[plan]')).toBe(true);
+    expect(phaseInHillList('plan', "[ 'design' , plan ]")).toBe(true);
+    expect(phaseInHillList('plan', "['plan-review']")).toBe(false);
+    expect(phaseInHillList('plan', '[planning]')).toBe(false);
+  });
+
+  it('accepts an already parsed list', () => {
+    expect(phaseInHillList('plan', ['design', 'plan'])).toBe(true);
+    expect(phaseInHillList('plan', ['design'])).toBe(false);
   });
 });

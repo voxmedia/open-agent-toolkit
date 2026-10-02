@@ -1085,7 +1085,10 @@ gate for the scope it is reviewing, a second orchestrator launch for a scope
 already under review, and simultaneous launches. Wait for the live run to
 finish; remove the named claim only when that process is not a gate. A claim
 whose owner process is dead, or whose content cannot be parsed, is replaced
-once and the run proceeds. Liveness is a process-ID check, so a stale claim
+once and the run proceeds. Replacing a stale claim is not serialized against
+other launches, so concurrent recovery of one orphaned claim can, rarely, admit
+two runs (it takes an orphaned claim plus three simultaneous launches for the
+same project, type, and scope). Liveness is a process-ID check, so a stale claim
 whose process ID was reused by an unrelated process still blocks until it is
 removed.
 

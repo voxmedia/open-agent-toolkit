@@ -10,7 +10,10 @@ import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
 import { listSyncedRecords } from '@commands/project/sync/record';
 import { buildSyncTarget } from '@commands/project/sync/ref-sync';
 import { probeSyncedTerminalRefs } from '@commands/project/sync/resolve-target';
-import { parseFrontmatterField } from '@commands/shared/frontmatter';
+import {
+  getFrontmatterBlock,
+  parseFrontmatterField,
+} from '@commands/shared/frontmatter';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import { resolveScopeRoot } from '@commands/shared/project-scope';
 import { readOatLocalConfig } from '@config/oat-config';
@@ -20,6 +23,7 @@ import {
   quickPlanNotReadyReason,
   type QuickPlanReadiness,
 } from '@open-agent-toolkit/control-plane';
+import YAML from 'yaml';
 
 export interface GitOperations {
   isGitRepo(root: string): boolean;
@@ -52,8 +56,8 @@ interface ProjectState {
   pauseTimestamp: string;
   pauseReason: string;
   blockers: string;
-  hillCheckpoints: string;
-  hillCompleted: string;
+  hillCheckpoints: string[];
+  hillCompleted: string[];
   hillStatus: string;
   workflowMode: string;
   docsUpdated: string;
@@ -157,8 +161,64 @@ async function readActiveProject(repoRoot: string): Promise<ActiveProject> {
   return result;
 }
 
-export function phaseInHillList(phase: string, listStr: string): boolean {
-  return listStr.includes(`"${phase}"`);
+/**
+ * Reads a HiLL phase list in any YAML form the router's parsed state accepts:
+ * a parsed array, or flow text with double, single, or no quotes.
+ */
+function toPhaseList(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item).trim()).filter(Boolean);
+  }
+  if (typeof value !== 'string') return [];
+  return value
+    .trim()
+    .replace(/^\[|\]$/g, '')
+    .split(',')
+    .map((item) =>
+      item
+        .trim()
+        .replace(/^(["'])(.*)\1$/, '$2')
+        .trim(),
+    )
+    .filter(Boolean);
+}
+
+export function phaseInHillList(
+  phase: string,
+  list: string | readonly string[],
+): boolean {
+  return toPhaseList(list).includes(phase);
+}
+
+/**
+ * Parses the HiLL lists from the state frontmatter as YAML, so block arrays
+ * are read whole (a line-oriented field read sees only the first item). A
+ * frontmatter block that is not valid YAML falls back to the textual lists.
+ */
+async function readHillLists(
+  stateFile: string,
+): Promise<{ checkpoints: string[]; completed: string[] }> {
+  try {
+    const block = getFrontmatterBlock(await readFile(stateFile, 'utf8'));
+    const parsed: unknown = block ? YAML.parse(block) : null;
+    if (parsed && typeof parsed === 'object') {
+      const record = parsed as Record<string, unknown>;
+      return {
+        checkpoints: toPhaseList(record.oat_hill_checkpoints),
+        completed: toPhaseList(record.oat_hill_completed),
+      };
+    }
+  } catch {
+    // Fall through to the textual read.
+  }
+  return {
+    checkpoints: toPhaseList(
+      await parseFrontmatterField(stateFile, 'oat_hill_checkpoints'),
+    ),
+    completed: toPhaseList(
+      await parseFrontmatterField(stateFile, 'oat_hill_completed'),
+    ),
+  };
 }
 
 async function readProjectState(
@@ -187,10 +247,8 @@ async function readProjectState(
       : '';
   const blockers =
     (await parseFrontmatterField(stateFile, 'oat_blockers')) || '[]';
-  const hillCheckpoints =
-    (await parseFrontmatterField(stateFile, 'oat_hill_checkpoints')) || '[]';
-  const hillCompleted =
-    (await parseFrontmatterField(stateFile, 'oat_hill_completed')) || '[]';
+  const { checkpoints: hillCheckpoints, completed: hillCompleted } =
+    await readHillLists(stateFile);
   const workflowMode =
     (await parseFrontmatterField(stateFile, 'oat_workflow_mode')) ||
     'spec-driven';

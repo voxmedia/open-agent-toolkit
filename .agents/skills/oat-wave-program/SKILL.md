@@ -131,7 +131,12 @@ target (same disclaimer as the plan indexes).
    lists as `completed` from `completion tail: deferred to program close` to
    `done`; a refused or failed wrapper keeps its deferral with the reported
    reason. When the companion stops with `interactive completion required`, the
-   operator completes the wrappers with `oat-project-complete`. On no or defer,
+   operator completes the wrappers with `oat-project-complete`. List every
+   wrapper refused for a deferrable reason (`preflight:4` or `preflight:7`)
+   with its next step: the operator completes it with `oat-project-complete`,
+   or sets the missing config and answers the checkpoint again. A wrapper
+   refused for an objective reason keeps its deferral and reports the failing
+   check. On no or defer,
    record the standing deferral and its owner in the program ledger.
    This is the program completion gate; never answer it autonomously or repeat
    it once per wave.
