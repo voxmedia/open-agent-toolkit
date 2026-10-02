@@ -361,9 +361,12 @@ function computeNextStep(
     };
   }
 
-  // HiLL checkpoint gating
+  // HiLL checkpoint gating. A quick plan phase checks a pending checkpoint at
+  // any status before quick plan readiness, as the control-plane router does.
+  const quickPlanPhase =
+    state.workflowMode === 'quick' && state.phase === 'plan';
   if (
-    state.phaseStatus === 'complete' &&
+    (state.phaseStatus === 'complete' || quickPlanPhase) &&
     phaseInHillList(state.phase, state.hillCheckpoints) &&
     !phaseInHillList(state.phase, state.hillCompleted)
   ) {
@@ -397,18 +400,13 @@ function computeNextStep(
     };
   }
 
-  // A quick plan in progress routes by quick plan readiness, as the
+  // A quick plan phase routes by quick plan readiness at every status, as the
   // control-plane router does: a plan that is not ready resumes quick-start in
   // place, and a ready plan goes to implementation (readiness implies a
   // complete plan whose `oat_ready_for` names it, so the router gives the
-  // explicit-pointer reason). The shared `plan:in_progress` route below is
-  // spec-driven planning. generate.test.ts pins parity with `recommendSkill`.
-  if (
-    state.workflowMode === 'quick' &&
-    state.phase === 'plan' &&
-    state.phaseStatus === 'in_progress' &&
-    state.quickPlanReadiness
-  ) {
+  // explicit-pointer reason). The shared `plan:*` routes below serve the other
+  // modes. generate.test.ts pins parity with `recommendSkill`.
+  if (quickPlanPhase && state.quickPlanReadiness) {
     return state.quickPlanReadiness.ready
       ? {
           step: 'oat-project-implement',

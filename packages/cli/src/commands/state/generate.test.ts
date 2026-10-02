@@ -70,6 +70,82 @@ async function writeLocalConfig(
   );
 }
 
+const QUICK_PLAN_BODY = [
+  '# Plan: demo',
+  '',
+  '## Phase 1: Foundation',
+  '',
+  '### Task p01-t01: Add the readiness predicate',
+  '',
+].join('\n');
+
+function quickPlan(frontmatter: string, reviewStatus: string): string {
+  return [
+    '---',
+    frontmatter,
+    '---',
+    '',
+    QUICK_PLAN_BODY,
+    '## Reviews',
+    '',
+    '| Scope | Type     | Status | Date       | Artifact |',
+    '| ----- | -------- | ------ | ---------- | -------- |',
+    `| plan  | artifact | ${reviewStatus} | 2026-10-02 | -        |`,
+    '',
+  ].join('\n');
+}
+
+const NOT_READY_QUICK_PLAN = quickPlan(
+  'oat_status: in_progress\noat_ready_for: null\noat_template: false',
+  'pending',
+);
+
+const READY_QUICK_PLAN = quickPlan(
+  'oat_status: complete\noat_ready_for: oat-project-implement\noat_template: false',
+  'passed',
+);
+
+/**
+ * An active quick project in its `plan` phase. `dashboardMatchesRouter`
+ * asserts that the dashboard reports the control-plane router's exact
+ * recommendation for the same project.
+ */
+async function quickPlanFixture(
+  root: string,
+  phaseStatus: string,
+  overrides: Record<string, string> = {},
+) {
+  const projectPath = '.oat/projects/shared/quick-plan';
+  await writeLocalConfig(root, { activeProject: projectPath });
+  await writeStateFile(root, projectPath, {
+    oat_phase: 'plan',
+    oat_phase_status: phaseStatus,
+    oat_workflow_mode: 'quick',
+    oat_hill_checkpoints: '[]',
+    oat_hill_completed: '[]',
+    ...overrides,
+  });
+  const planPath = join(root, projectPath, 'plan.md');
+  return {
+    projectPath,
+    writePlan: (content: string) => writeFile(planPath, content, 'utf8'),
+    removePlan: () => rm(planPath),
+    async dashboardMatchesRouter() {
+      const dashboard = await generateStateDashboard({
+        repoRoot: root,
+        today: '2026-10-02',
+        git: mockGit,
+      });
+      const { recommendation } = await getProjectState(join(root, projectPath));
+      expect({
+        skill: dashboard.recommendedStep,
+        reason: dashboard.recommendedReason,
+      }).toEqual(recommendation);
+      return dashboard;
+    },
+  };
+}
+
 describe('generateStateDashboard', () => {
   const tempDirs: string[] = [];
 
@@ -427,76 +503,63 @@ describe('generateStateDashboard', () => {
   it('routes a quick plan in progress by quick plan readiness, matching the router', async () => {
     const root = await createTempRepo();
     tempDirs.push(root);
-    const projectPath = '.oat/projects/shared/quick-plan';
-    await writeLocalConfig(root, { activeProject: projectPath });
-    await writeStateFile(root, projectPath, {
-      oat_phase: 'plan',
-      oat_phase_status: 'in_progress',
-      oat_workflow_mode: 'quick',
-      oat_hill_checkpoints: '[]',
-      oat_hill_completed: '[]',
-    });
-    const substantivePhase = [
-      '## Phase 1: Foundation',
-      '',
-      '### Task p01-t01: Add the readiness predicate',
-      '',
-    ].join('\n');
-    const reviews = (status: string) =>
-      [
-        '## Reviews',
-        '',
-        '| Scope | Type     | Status | Date       | Artifact |',
-        '| ----- | -------- | ------ | ---------- | -------- |',
-        `| plan  | artifact | ${status} | 2026-10-02 | -        |`,
-        '',
-      ].join('\n');
-    const plan = (frontmatter: string, status: string) =>
-      `---\n${frontmatter}\n---\n\n# Plan: demo\n\n${substantivePhase}\n${reviews(status)}`;
-    const writePlan = (content: string) =>
-      writeFile(join(root, projectPath, 'plan.md'), content, 'utf8');
-    const dashboardMatchesRouter = async () => {
-      const dashboard = await generateStateDashboard({
-        repoRoot: root,
-        today: '2026-10-02',
-        git: mockGit,
-      });
-      const { recommendation } = await getProjectState(join(root, projectPath));
-      expect({
-        skill: dashboard.recommendedStep,
-        reason: dashboard.recommendedReason,
-      }).toEqual(recommendation);
-      return dashboard;
-    };
+    const fixture = await quickPlanFixture(root, 'in_progress');
 
     // A pre-review plan is not ready: resume quick-start in place.
-    await writePlan(
-      plan(
-        'oat_status: in_progress\noat_ready_for: null\noat_template: false',
-        'pending',
-      ),
-    );
-    const notReady = await dashboardMatchesRouter();
+    await fixture.writePlan(NOT_READY_QUICK_PLAN);
+    const notReady = await fixture.dashboardMatchesRouter();
     expect(notReady.recommendedStep).toBe('oat-project-quick-start');
     expect(notReady.recommendedReason).toBe(
       'Quick plan is not implementation-ready (frontmatter is not the recorded plan-complete state); resume the quick workflow in place',
     );
 
     // A missing plan is not ready either.
-    await rm(join(root, projectPath, 'plan.md'));
-    const missing = await dashboardMatchesRouter();
+    await fixture.removePlan();
+    const missing = await fixture.dashboardMatchesRouter();
     expect(missing.recommendedStep).toBe('oat-project-quick-start');
     expect(missing.recommendedReason).toContain('plan.md is missing');
 
     // A ready plan routes to implementation.
-    await writePlan(
-      plan(
-        'oat_status: complete\noat_ready_for: oat-project-implement\noat_template: false',
-        'passed',
-      ),
-    );
-    const ready = await dashboardMatchesRouter();
+    await fixture.writePlan(READY_QUICK_PLAN);
+    const ready = await fixture.dashboardMatchesRouter();
     expect(ready.recommendedStep).toBe('oat-project-implement');
+  });
+
+  it('routes a quick plan at plan:complete by quick plan readiness, matching the router', async () => {
+    const root = await createTempRepo();
+    tempDirs.push(root);
+    const fixture = await quickPlanFixture(root, 'complete');
+
+    await fixture.writePlan(NOT_READY_QUICK_PLAN);
+    const notReady = await fixture.dashboardMatchesRouter();
+    expect(notReady.recommendedStep).toBe('oat-project-quick-start');
+
+    await fixture.writePlan(READY_QUICK_PLAN);
+    const ready = await fixture.dashboardMatchesRouter();
+    expect(ready.recommendedStep).toBe('oat-project-implement');
+  });
+
+  it('routes a quick plan with a pending plan HiLL checkpoint like the router', async () => {
+    const root = await createTempRepo();
+    tempDirs.push(root);
+    const fixture = await quickPlanFixture(root, 'in_progress', {
+      oat_hill_checkpoints: '["plan"]',
+    });
+
+    // The router checks a pending HiLL checkpoint before readiness, at any
+    // phase status, so the plan skill owns the approval.
+    await fixture.writePlan(NOT_READY_QUICK_PLAN);
+    const dashboard = await generateStateDashboard({
+      repoRoot: root,
+      today: '2026-10-02',
+      git: mockGit,
+    });
+    const { recommendation } = await getProjectState(
+      join(root, fixture.projectPath),
+    );
+    expect(recommendation.skill).toBe('oat-project-plan');
+    expect(dashboard.recommendedStep).toBe(recommendation.skill);
+    expect(dashboard.recommendedReason).toContain('HiLL approval');
   });
 
   it('routes lite implement closeout directly to pr-final without documentation', async () => {
