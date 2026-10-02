@@ -759,7 +759,7 @@ One doc, read by the root and by the reviewer subagent:
   recommended simplification would dissolve; a recommended disposition from
   extra cycles, proceed with override, corrective revision, or **simplify**.
 - **Decision message and record:** the root saves the report beside the review
-  artifacts (`reviews/complexity-<scope>-<timestamp>.md`), shows one decision
+  artifacts (`reviews/archived/complexity-<scope>-<timestamp>.md`; top-level `reviews/` files are read as unprocessed reviews), shows one decision
   message (why the loop stopped, the verdict and ledger highlights, dissolvable
   findings, REQUIRES-OPERATOR items in plain terms, the recommended
   disposition), and records the operator's choice with the report path in
@@ -1029,6 +1029,50 @@ Expected: exit 0.
 **Step 3: Commit**
 
 `docs(p04-t08): document the review-loop complexity review and gate records`
+
+---
+
+### Task p04-t09: (review) Close p04 review findings M1, M2, M3, L1, L2
+
+**Files:**
+
+- Modify: `.agents/docs/gate-approval-record.md`,
+  `.agents/skills/oat-project-next/SKILL.md`,
+  `.agents/skills/oat-project-progress/SKILL.md`,
+  `.agents/skills/oat-project-quick-start/SKILL.md`,
+  `.agents/skills/oat-project-review-receive/SKILL.md`,
+  `.agents/docs/complexity-review-fallback.md`,
+  `.agents/skills/oat-project-autonomous/SKILL.md` (version only)
+- Modify: the p04 contract tests and version pins
+
+**Step 1: Failing pins first** for each change below.
+
+**Step 2: Implement**
+
+- M1: readers report the quick-start record as recorded (status,
+  disposition, `decided_at`, `config_fingerprint` as provenance) and do not
+  claim a freshness comparison the CLI cannot recompute; the doc says so.
+- M2: quick-start and review-receive load `oat-project-dispatch-subagents`
+  (and its engine) before dispatching the complexity review and grant `Task`
+  in `allowed-tools`; a review-receive run outside implement resolves the
+  reviewer route with `oat project dispatch-ceiling resolve --role reviewer`.
+- M3: bump `oat-project-autonomous` (its gate inventory links the changed
+  autonomy contract).
+- L1: a re-entered receive at the cap does not dispatch a second complexity
+  review for the same exhausted loop when its report already exists.
+- L2: next's note for an absent record does not imply "no gate configured";
+  the shared doc says implement writes `allowed/no_gate` when no gate is
+  configured and that older records without `decided_at` remain valid.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation src/commands/init/tools/shared`,
+`pnpm oat:validate-skills`, `pnpm run check:skill-bumps`, `pnpm format:root`.
+Expected: exit 0.
+
+**Step 4: Commit**
+
+`fix(p04-t09): close p04 review findings M1, M2, M3, L1, L2`
 
 ---
 
@@ -1500,7 +1544,7 @@ rewrites the four inventory rows last.
 | p01    | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-review-2026-10-02T172532Z.md           | 0b6b623199310aeb93ed7c4a5c9f6e8842a3f20a | auto       | -                 |
 | p02    | code     | fixes_completed | 2026-10-02 | reviews/archived/p02-review-2026-10-02T191106Z.md           | d7f496827a4c3f624e14e0ae19b00f25df37f5d4 | auto       | -                 |
 | p03    | code     | fixes_completed | 2026-10-02 | reviews/archived/p03-review-2026-10-02T195441Z.md           | 2f98690d8461effb013ee934efda7c8aab9f56eb | auto       | -                 |
-| p04    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| p04    | code     | fixes_added     | 2026-10-02 | reviews/archived/p04-review-2026-10-02T204339Z.md           | ca1e002ac341e2553bc716b9338ea65daa251a79 | auto       | -                 |
 | p05    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | p06    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | p07    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
@@ -1531,12 +1575,12 @@ Quick-start plan gate attempt 2 of 2 (run `fe6bbe0a`): `blocked`, receive-eligib
 - Phase 1: 8 tasks - Build assets
 - Phase 2: 3 tasks - Gate timeouts
 - Phase 3: 5 tasks - Sync correctness
-- Phase 4: 7 tasks - Review-loop skills
+- Phase 4: 8 tasks - Review-loop skills
 - Phase 5: 4 tasks - Completion
 - Phase 6: 3 tasks - Small fixes
 - Phase 7: 3 tasks - Release fan-in
 
-**Total: 33 tasks**
+**Total: 34 tasks**
 
 Ready for code review and merge.
 

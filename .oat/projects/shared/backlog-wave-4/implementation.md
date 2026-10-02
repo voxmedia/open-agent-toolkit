@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p05-t01
+oat_current_task_id: p04-t09
 oat_generated: false
 ---
 
@@ -29,12 +29,12 @@ oat_generated: false
 | Phase 1 | complete    | 8     | 8/8       |
 | Phase 2 | complete    | 3     | 3/3       |
 | Phase 3 | complete    | 5     | 5/5       |
-| Phase 4 | in_progress | 7     | 7/7       |
+| Phase 4 | in_progress | 8     | 7/8       |
 | Phase 5 | pending     | 4     | 0/4       |
 | Phase 6 | pending     | 3     | 0/3       |
 | Phase 7 | pending     | 3     | 0/3       |
 
-**Total:** 23/33 tasks completed
+**Total:** 23/34 tasks completed
 
 ---
 
@@ -174,6 +174,11 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** 03933c299
+
+### Task p04-t09: (review) Close p04 review findings M1, M2, M3, L1, L2
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -474,6 +479,18 @@ oat_generated: false
   `linkedFiles`, `NOTICES.md` entry, contract and inventory pins 59/59,
   check:skill-bumps OK.
   `Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
+
+- Step 7a ledger commit `ca1e002ac` before the review.
+- Request `bw4-p04-review-1`: accepted; reconnaissance not-attempted;
+  `reviews/archived/p04-review-2026-10-02T204339Z.md`: 0 Critical, 0 High, 3 Medium,
+  3 Low (passes; the four implementer deviations judged correct). Converted to
+  `p04-t09`: M1 unrecomputable quick-start fingerprint comparison; M2
+  quick-start and review-receive lack the dispatch skill and `Task`; M3
+  `oat-project-autonomous` not bumped though its inventory links the changed
+  contract; L1 repeated complexity dispatch on re-entry; L2 absent-record and
+  legacy-record wording. L3 (plan text still named top-level `reviews/`)
+  fixed by the root in plan.md.
+  `Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
 
 <!-- orchestration-runs-end -->
 
