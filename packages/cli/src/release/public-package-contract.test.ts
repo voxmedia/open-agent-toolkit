@@ -488,7 +488,8 @@ describe('getPublicPackageContracts', () => {
         'packages/docs-transforms/src/index.test.ts',
         true,
       ],
-      ['packages/docs-theme', 'packages/docs-theme/src/index.test.ts', false],
+      ['packages/docs-theme', 'packages/docs-theme/src/index.test.ts', true],
+      ['packages/docs-theme', 'packages/docs-theme/src/index.ts', false],
     ] as const) {
       expect(
         isVersionPolicyIgnoredPath(contractFor(workspaceDir), path),

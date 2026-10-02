@@ -29,25 +29,32 @@ Terms used on this page:
 
 ## Default Topology
 
-```mermaid
-flowchart TD
-  Root["Project root\nlifecycle owner"]
-  Adapter["Project dispatch adapter"]
-  Engine["Provider-neutral dispatch engine"]
+=== "Diagram"
 
-  Root --> Adapter --> Engine
-  Engine --> P["Phase implementer\none per phase"]
-  P --> T1["Planned task commit"]
-  P --> T2["Planned task commit"]
-  P -. optional .-> Recon["Recon / specialist / isolated fanout"]
+    ![Default topology: the project root goes through the dispatch adapter and provider-neutral engine to one phase implementer per phase, which makes planned task commits and optionally a recon or specialist fanout; the engine routes an exact phase reviewer whose blocking findings return to the root, which resumes a bounded fix; dashed lanes show independent review and an external cross-runtime gate](/diagrams/orchestration-model-1-default-topology-light.svg)
+    ![Default topology: the project root goes through the dispatch adapter and provider-neutral engine to one phase implementer per phase, which makes planned task commits and optionally a recon or specialist fanout; the engine routes an exact phase reviewer whose blocking findings return to the root, which resumes a bounded fix; dashed lanes show independent review and an external cross-runtime gate](/diagrams/orchestration-model-1-default-topology-dark.svg)
 
-  Root -. independent review lane .-> Adapter
-  Engine -. exact reviewer route .-> R["Phase reviewer"]
-  R -->|blocking findings| Root
-  Root -->|resume bounded fix| P
+=== "Mermaid source"
 
-  Root -. external gate lane .-> G["Configured cross-runtime gate"]
-```
+    ```mermaid
+    flowchart TD
+      Root["Project root\nlifecycle owner"]
+      Adapter["Project dispatch adapter"]
+      Engine["Provider-neutral dispatch engine"]
+
+      Root --> Adapter --> Engine
+      Engine --> P["Phase implementer\none per phase"]
+      P --> T1["Planned task commit"]
+      P --> T2["Planned task commit"]
+      P -. optional .-> Recon["Recon / specialist / isolated fanout"]
+
+      Root -. independent review lane .-> Adapter
+      Engine -. exact reviewer route .-> R["Phase reviewer"]
+      R -->|blocking findings| Root
+      Root -->|resume bounded fix| P
+
+      Root -. external gate lane .-> G["Configured cross-runtime gate"]
+    ```
 
 The solid implementation lane is mandatory. The dotted nested lane is
 benefit-driven. A run does not fail merely because the phase agent cannot or
@@ -83,21 +90,28 @@ matrix. The lifecycle workflow remains authoritative for classification,
 selection judgment, synthesis, and state mutation. The dispatch engine does
 not edit `plan.md`, `implementation.md`, or project state.
 
-```mermaid
-sequenceDiagram
-  participant Root as Project root
-  participant Adapter as Project adapter
-  participant Engine as Dispatch engine
-  participant Record as Run record in implementation.md
-  participant Phase as Phase implementer
+=== "Diagram"
 
-  Root->>Adapter: Phase + lifecycle authority
-  Adapter->>Engine: Provider-neutral dispatch request
-  Engine-->>Root: Exact route + request ID
-  Root->>Phase: Phase Scope
-  Root->>Record: Accepted or blocked-before-start result
-  Phase-->>Root: Phase report + commits
-```
+    ![Dispatch layers sequence: the project root passes phase and lifecycle authority to the adapter, the adapter sends a provider-neutral request to the engine, the engine returns the exact route and request ID, the root sends the phase scope and records the accepted or blocked result in implementation.md, and the implementer returns its report and commits](/diagrams/orchestration-model-2-dispatch-layers-light.svg)
+    ![Dispatch layers sequence: the project root passes phase and lifecycle authority to the adapter, the adapter sends a provider-neutral request to the engine, the engine returns the exact route and request ID, the root sends the phase scope and records the accepted or blocked result in implementation.md, and the implementer returns its report and commits](/diagrams/orchestration-model-2-dispatch-layers-dark.svg)
+
+=== "Mermaid source"
+
+    ```mermaid
+    sequenceDiagram
+      participant Root as Project root
+      participant Adapter as Project adapter
+      participant Engine as Dispatch engine
+      participant Record as Run record in implementation.md
+      participant Phase as Phase implementer
+
+      Root->>Adapter: Phase + lifecycle authority
+      Adapter->>Engine: Provider-neutral dispatch request
+      Engine-->>Root: Exact route + request ID
+      Root->>Phase: Phase Scope
+      Root->>Record: Accepted or blocked-before-start result
+      Phase-->>Root: Phase report + commits
+    ```
 
 ## Phase Execution
 

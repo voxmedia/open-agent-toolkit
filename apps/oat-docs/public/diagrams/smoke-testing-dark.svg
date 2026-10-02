@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 740 884" width="740" height="884" role="img" aria-labelledby="st-title st-desc">
+  <title id="st-title">Smoke-test run lifecycle</title>
+  <desc id="st-desc">Fixture template (tools/smoke/fixture/) feeds Preflight (install + auth + fixture + local oat). If blocked, exit before provisioning. If ready, Prepare / provision (disposable worktree + isolated config + manifest), then Drive (per-harness protocol). Drive branches to Automated: runner launches provider, and Operator: printed command + prompt. Both lead to Collect (evidence bundle + report), which leads to Cleanup (manifest-scoped). With --keep, Collect leads instead to Cleanup skipped (dashed edge).</desc>
+  <style>
+    svg {
+      --bg: #161d27;
+      --node: #1d2633;
+      --node-em: #1f2d42;
+      --border: #2b3646;
+      --text: #dde4ee;
+      --text-2: #9ba7b8;
+      --accent: #8fb6ee;
+      --optional: #8693a5;
+      --warn: #f0a868;
+    }
+    .canvas { fill: var(--bg); }
+    .node { fill: var(--node); stroke: var(--border); stroke-width: 1.5; }
+    .node-em { fill: var(--node-em); stroke: var(--accent); stroke-width: 1.5; }
+    .node-warn { fill: var(--node); stroke: var(--warn); stroke-width: 1.5; }
+    .edge { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .edge-warn { fill: none; stroke: var(--warn); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .edge-opt { fill: none; stroke: var(--optional); stroke-width: 1.5; stroke-dasharray: 5 4; stroke-linejoin: round; }
+    .arrow { fill: var(--accent); }
+    .arrow-warn { fill: var(--warn); }
+    .arrow-opt { fill: var(--optional); }
+    .label-bg { fill: var(--bg); }
+    .sans { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; }
+    .mono { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; }
+    .t { fill: var(--text); font-size: 15px; font-weight: 600; }
+    .s { fill: var(--text-2); font-size: 13px; }
+    .el { fill: var(--text-2); font-size: 13px; }
+    .el-warn { fill: var(--warn); font-size: 13px; font-weight: 600; }
+  </style>
+  <defs>
+    <marker id="st-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+      <path class="arrow" d="M 0 0 L 10 5 L 0 10 z"/>
+    </marker>
+    <marker id="st-arrow-warn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+      <path class="arrow-warn" d="M 0 0 L 10 5 L 0 10 z"/>
+    </marker>
+    <marker id="st-arrow-opt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+      <path class="arrow-opt" d="M 0 0 L 10 5 L 0 10 z"/>
+    </marker>
+  </defs>
+
+  <rect class="canvas" x="0" y="0" width="740" height="884" rx="12" ry="12"/>
+
+  <!-- Edges (drawn first so nodes sit on top) -->
+  <g class="edges">
+    <!-- F -> PRE -->
+    <path class="edge" d="M 300 100 L 300 155" marker-end="url(#st-arrow)"/>
+    <!-- PRE -blocked-> STOP -->
+    <path class="edge-warn" d="M 470 190 L 559 190" marker-end="url(#st-arrow-warn)"/>
+    <!-- PRE -ready-> PREP -->
+    <path class="edge" d="M 300 224 L 300 287" marker-end="url(#st-arrow)"/>
+    <!-- PREP -> DRIVE -->
+    <path class="edge" d="M 300 356 L 300 411" marker-end="url(#st-arrow)"/>
+    <!-- DRIVE -> AUTO -->
+    <path class="edge" d="M 276 480 L 276 500 Q 276 508 268 508 L 173 508 Q 165 508 165 516 L 165 535" marker-end="url(#st-arrow)"/>
+    <!-- DRIVE -> OP -->
+    <path class="edge" d="M 324 480 L 324 500 Q 324 508 332 508 L 427 508 Q 435 508 435 516 L 435 535" marker-end="url(#st-arrow)"/>
+    <!-- AUTO -> COLLECT -->
+    <path class="edge" d="M 165 604 L 165 624 Q 165 632 173 632 L 268 632 Q 276 632 276 640 L 276 659" marker-end="url(#st-arrow)"/>
+    <!-- OP -> COLLECT -->
+    <path class="edge" d="M 435 604 L 435 624 Q 435 632 427 632 L 332 632 Q 324 632 324 640 L 324 659" marker-end="url(#st-arrow)"/>
+    <!-- COLLECT -> CLEAN -->
+    <path class="edge" d="M 300 728 L 300 783" marker-end="url(#st-arrow)"/>
+    <!-- COLLECT -.-keep-> SKIP -->
+    <path class="edge-opt" d="M 440 694 L 559 694" marker-end="url(#st-arrow-opt)"/>
+  </g>
+
+  <!-- Edge labels -->
+  <rect class="label-bg" x="483" y="179" width="64" height="22" rx="4" ry="4"/>
+  <text class="sans el-warn" x="515" y="194.5" text-anchor="middle">blocked</text>
+  <rect class="label-bg" x="274" y="245" width="52" height="22" rx="4" ry="4"/>
+  <text class="sans el" x="300" y="260.5" text-anchor="middle">ready</text>
+  <rect class="label-bg" x="455" y="683" width="88" height="22" rx="4" ry="4"/>
+  <text class="mono el" x="499" y="698.5" text-anchor="middle" letter-spacing="1">--keep</text>
+
+  <!-- F: Fixture template / tools/smoke/fixture/ -->
+  <rect class="node" x="160" y="32" width="280" height="68" rx="8" ry="8"/>
+  <text class="sans t" x="300" y="61" text-anchor="middle">Fixture template</text>
+  <text class="mono s" x="300" y="83" text-anchor="middle">tools/smoke/fixture/</text>
+
+  <!-- PRE: Preflight / install + auth + fixture + local oat -->
+  <rect class="node-em" x="130" y="156" width="340" height="68" rx="8" ry="8"/>
+  <text class="sans t" x="300" y="185" text-anchor="middle">Preflight</text>
+  <text class="sans s" x="300" y="207" text-anchor="middle">install + auth + fixture + local oat</text>
+
+  <!-- STOP: Exit before provisioning -->
+  <rect class="node-warn" x="560" y="156" width="148" height="68" rx="8" ry="8"/>
+  <text class="sans t" x="634" y="185" text-anchor="middle">Exit before</text>
+  <text class="sans t" x="634" y="205" text-anchor="middle">provisioning</text>
+
+  <!-- PREP: Prepare / provision / disposable worktree + isolated config + manifest -->
+  <rect class="node" x="90" y="288" width="420" height="68" rx="8" ry="8"/>
+  <text class="sans t" x="300" y="317" text-anchor="middle">Prepare / provision</text>
+  <text class="sans s" x="300" y="339" text-anchor="middle">disposable worktree + isolated config + manifest</text>
+
+  <!-- DRIVE: Drive / per-harness protocol -->
+  <rect class="node" x="160" y="412" width="280" height="68" rx="8" ry="8"/>
+  <text class="sans t" x="300" y="441" text-anchor="middle">Drive</text>
+  <text class="sans s" x="300" y="463" text-anchor="middle">per-harness protocol</text>
+
+  <!-- AUTO: Automated: runner launches provider -->
+  <rect class="node" x="45" y="536" width="240" height="68" rx="8" ry="8"/>
+  <text class="sans t" x="165" y="565" text-anchor="middle">Automated:</text>
+  <text class="sans t" x="165" y="585" text-anchor="middle">runner launches provider</text>
+
+  <!-- OP: Operator: printed command + prompt -->
+  <rect class="node" x="315" y="536" width="240" height="68" rx="8" ry="8"/>
+  <text class="sans t" x="435" y="565" text-anchor="middle">Operator:</text>
+  <text class="sans t" x="435" y="585" text-anchor="middle">printed command + prompt</text>
+
+  <!-- COLLECT: Collect / evidence bundle + report -->
+  <rect class="node" x="160" y="660" width="280" height="68" rx="8" ry="8"/>
+  <text class="sans t" x="300" y="689" text-anchor="middle">Collect</text>
+  <text class="sans s" x="300" y="711" text-anchor="middle">evidence bundle + report</text>
+
+  <!-- SKIP: Cleanup skipped -->
+  <rect class="node" x="560" y="666" width="148" height="56" rx="8" ry="8"/>
+  <text class="sans t" x="634" y="699" text-anchor="middle">Cleanup skipped</text>
+
+  <!-- CLEAN: Cleanup / manifest-scoped -->
+  <rect class="node" x="160" y="784" width="280" height="68" rx="8" ry="8"/>
+  <text class="sans t" x="300" y="813" text-anchor="middle">Cleanup</text>
+  <text class="sans s" x="300" y="835" text-anchor="middle">manifest-scoped</text>
+</svg>

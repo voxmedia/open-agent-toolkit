@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 740 920" width="740" height="920" role="img" aria-labelledby="ie1-title ie1-desc">
+  <title id="ie1-title">Implementation execution at a glance</title>
+  <desc id="ie1-desc">The project root (lifecycle owner) launches a phase implementer, one per phase. The phase implementer produces Task 1 and Task 2, each a bounded commit, and optionally, when benefit-driven, a recon or specialist child (dashed edge). The phase implementer returns a phase report (verification plus commits) to the project root. The root then commits the task ledger (pre-review bookkeeping), which leads to the independent phase reviewer. On pass, the flow goes to review-outcome bookkeeping plus the next phase. On blocking findings, the flow resumes the phase implementer with a bounded fix scope, which leads to a fresh root-owned review round.</desc>
+  <style>
+    svg {
+      --bg: #ffffff;
+      --node: #f4f6f9;
+      --node-em: #e8eef7;
+      --border: #c9d1dc;
+      --text: #16202e;
+      --text-2: #4b5563;
+      --accent: #1b4f8a;
+      --optional: #5d6a7c;
+      --warn: #a14a08;
+    }
+    .canvas { fill: var(--bg); }
+    .node { fill: var(--node); stroke: var(--border); stroke-width: 1.5; }
+    .node-em { fill: var(--node-em); stroke: var(--accent); stroke-width: 1.5; }
+    .decision { fill: var(--node-em); stroke: var(--accent); stroke-width: 1.5; }
+    .edge { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .edge-opt { fill: none; stroke: var(--optional); stroke-width: 1.5; stroke-dasharray: 5 4; stroke-linejoin: round; }
+    .arrow { fill: var(--accent); }
+    .arrow-opt { fill: var(--optional); }
+    .label-bg { fill: var(--bg); }
+    .sans { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; }
+    .t { fill: var(--text); font-size: 15px; font-weight: 600; }
+    .s { fill: var(--text-2); font-size: 13px; }
+    .el { fill: var(--text-2); font-size: 13px; }
+  </style>
+  <defs>
+    <marker id="ie1-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+      <path class="arrow" d="M 0 0 L 10 5 L 0 10 z"/>
+    </marker>
+    <marker id="ie1-arrow-opt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+      <path class="arrow-opt" d="M 0 0 L 10 5 L 0 10 z"/>
+    </marker>
+  </defs>
+
+  <rect class="canvas" x="0" y="0" width="740" height="920" rx="12" ry="12"/>
+
+  <!-- Edges (drawn first so nodes sit on top) -->
+  <g class="edges">
+    <!-- Root -> P -->
+    <path class="edge" d="M 250 66 L 208 66 Q 200 66 200 74 L 200 163" marker-end="url(#ie1-arrow)"/>
+    <!-- P -> T1 -->
+    <path class="edge" d="M 105 232 L 105 315" marker-end="url(#ie1-arrow)"/>
+    <!-- P -> T2 -->
+    <path class="edge" d="M 285 232 L 285 315" marker-end="url(#ie1-arrow)"/>
+    <!-- P -. optional benefit-driven .-> N -->
+    <path class="edge-opt" d="M 315 232 L 315 256 Q 315 264 323 264 L 537 264 Q 545 264 545 272 L 545 315" marker-end="url(#ie1-arrow-opt)"/>
+    <!-- P -> Report -->
+    <path class="edge" d="M 330 198 L 419 198" marker-end="url(#ie1-arrow)"/>
+    <!-- Report -> Root -->
+    <path class="edge" d="M 540 164 L 540 148 Q 540 140 532 140 L 448 140 Q 440 140 440 132 L 440 101" marker-end="url(#ie1-arrow)"/>
+    <!-- Root -> Ledger -->
+    <path class="edge" d="M 490 66 L 692 66 Q 700 66 700 74 L 700 408 Q 700 416 692 416 L 378 416 Q 370 416 370 424 L 370 443" marker-end="url(#ie1-arrow)"/>
+    <!-- Ledger -> R -->
+    <path class="edge" d="M 370 512 L 370 563" marker-end="url(#ie1-arrow)"/>
+    <!-- R -> Book (pass) -->
+    <path class="edge" d="M 340 620 L 340 644 Q 340 652 332 652 L 193 652 Q 185 652 185 660 L 185 719" marker-end="url(#ie1-arrow)"/>
+    <!-- R -> Fix (blocking findings) -->
+    <path class="edge" d="M 400 620 L 400 644 Q 400 652 408 652 L 547 652 Q 555 652 555 660 L 555 719" marker-end="url(#ie1-arrow)"/>
+    <!-- Fix -> R2 -->
+    <path class="edge" d="M 555 788 L 555 831" marker-end="url(#ie1-arrow)"/>
+  </g>
+
+  <!-- Edge labels -->
+  <rect class="label-bg" x="352" y="254" width="156" height="20" rx="4" ry="4"/>
+  <text class="sans el" x="430" y="268.5" text-anchor="middle">optional benefit-driven</text>
+  <rect class="label-bg" x="163" y="676" width="44" height="20" rx="4" ry="4"/>
+  <text class="sans el" x="185" y="690.5" text-anchor="middle">pass</text>
+  <rect class="label-bg" x="493" y="676" width="124" height="20" rx="4" ry="4"/>
+  <text class="sans el" x="555" y="690.5" text-anchor="middle">blocking findings</text>
+
+  <!-- Root: Project root / lifecycle owner -->
+  <rect class="node-em" x="250" y="32" width="240" height="68" rx="8" ry="8"/>
+  <text class="sans t" x="370" y="61" text-anchor="middle">Project root</text>
+  <text class="sans s" x="370" y="83" text-anchor="middle">lifecycle owner</text>
+
+  <!-- P: Phase implementer / one per phase -->
+  <rect class="node" x="70" y="164" width="260" height="68" rx="8" ry="8"/>
+  <text class="sans t" x="200" y="193" text-anchor="middle">Phase implementer</text>
+  <text class="sans s" x="200" y="215" text-anchor="middle">one per phase</text>
+
+  <!-- Report: Phase report / verification + commits -->
+  <rect class="node" x="420" y="164" width="240" height="68" rx="8" ry="8"/>
+  <text class="sans t" x="540" y="193" text-anchor="middle">Phase report</text>
+  <text class="sans s" x="540" y="215" text-anchor="middle">verification + commits</text>
+
+  <!-- T1: Task 1 / bounded commit -->
+  <rect class="node" x="30" y="316" width="150" height="68" rx="8" ry="8"/>
+  <text class="sans t" x="105" y="345" text-anchor="middle">Task 1</text>
+  <text class="sans s" x="105" y="367" text-anchor="middle">bounded commit</text>
+
+  <!-- T2: Task 2 / bounded commit -->
+  <rect class="node" x="210" y="316" width="150" height="68" rx="8" ry="8"/>
+  <text class="sans t" x="285" y="345" text-anchor="middle">Task 2</text>
+  <text class="sans s" x="285" y="367" text-anchor="middle">bounded commit</text>
+
+  <!-- N: Recon / specialist child -->
+  <rect class="node" x="440" y="316" width="210" height="68" rx="8" ry="8"/>
+  <text class="sans t" x="545" y="355" text-anchor="middle">Recon / specialist child</text>
+
+  <!-- Ledger: Commit task ledger / pre-review bookkeeping -->
+  <rect class="node" x="250" y="444" width="240" height="68" rx="8" ry="8"/>
+  <text class="sans t" x="370" y="473" text-anchor="middle">Commit task ledger</text>
+  <text class="sans s" x="370" y="495" text-anchor="middle">pre-review bookkeeping</text>
+
+  <!-- R: Independent phase reviewer (branch point) -->
+  <rect class="decision" x="230" y="564" width="280" height="56" rx="28" ry="28"/>
+  <text class="sans t" x="370" y="597" text-anchor="middle">Independent phase reviewer</text>
+
+  <!-- Book: Review-outcome bookkeeping / + next phase -->
+  <rect class="node" x="60" y="720" width="250" height="68" rx="8" ry="8"/>
+  <text class="sans t" x="185" y="749" text-anchor="middle">Review-outcome bookkeeping</text>
+  <text class="sans s" x="185" y="771" text-anchor="middle">+ next phase</text>
+
+  <!-- Fix: Resume phase implementer / bounded fix scope -->
+  <rect class="node" x="430" y="720" width="250" height="68" rx="8" ry="8"/>
+  <text class="sans t" x="555" y="749" text-anchor="middle">Resume phase implementer</text>
+  <text class="sans s" x="555" y="771" text-anchor="middle">bounded fix scope</text>
+
+  <!-- R2: Fresh root-owned review round -->
+  <rect class="node" x="420" y="832" width="270" height="56" rx="8" ry="8"/>
+  <text class="sans t" x="555" y="865" text-anchor="middle">Fresh root-owned review round</text>
+</svg>

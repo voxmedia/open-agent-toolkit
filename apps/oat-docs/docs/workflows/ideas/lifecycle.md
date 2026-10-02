@@ -22,31 +22,38 @@ Each level has its own independent backlog, scratchpad, and active-idea config v
 
 Start in the home that matches how formed the thought is. Every home is a fine place to stop. Dashed arrows are optional moves.
 
-```mermaid
-flowchart TD
-  Q{"How formed is\nthe thought?"}
-  BS["oat-brainstorm\n(may end inline\nor as a doc)"]
-  SP["Scratchpad seed\n.oat/ideas/\nscratchpad.md"]
-  ID["Idea\n.oat/ideas/{idea}/\ndiscovery.md"]
-  SUM["Summarized idea\n.oat/ideas/{idea}/\nsummary.md"]
-  BL["Backlog item\n.oat/repo/pjm/\nbacklog/items/"]
-  PR["Project\n.oat/projects/\n{scope}/{slug}/"]
-  SPLIT["Parent +\nchild projects"]
+=== "Diagram"
 
-  Q -->|unsure| BS
-  Q -->|seed| SP
-  Q -->|explore| ID
-  Q -->|scoped| BL
-  Q -->|ready| PR
-  BS -.-> ID
-  BS -.-> BL
-  BS -.->|"project(s)"| PR
-  SP -.->|optional| ID
-  ID -.->|optional| SUM
-  SUM -.->|optional| PR
-  BL -.->|optional| PR
-  PR -.->|"optional\n(spec-driven)"| SPLIT
-```
+    ![Where a thought starts depending on how formed it is: oat-brainstorm when unsure, a scratchpad seed, an idea, a backlog item, or a project, with optional moves between them and an optional spec-driven split into parent and child projects](/diagrams/ideas-lifecycle-light.svg)
+    ![Where a thought starts depending on how formed it is: oat-brainstorm when unsure, a scratchpad seed, an idea, a backlog item, or a project, with optional moves between them and an optional spec-driven split into parent and child projects](/diagrams/ideas-lifecycle-dark.svg)
+
+=== "Mermaid source"
+
+    ```mermaid
+    flowchart TD
+      Q{"How formed is\nthe thought?"}
+      BS["oat-brainstorm\n(may end inline\nor as a doc)"]
+      SP["Scratchpad seed\n.oat/ideas/\nscratchpad.md"]
+      ID["Idea\n.oat/ideas/{idea}/\ndiscovery.md"]
+      SUM["Summarized idea\n.oat/ideas/{idea}/\nsummary.md"]
+      BL["Backlog item\n.oat/repo/pjm/\nbacklog/items/"]
+      PR["Project\n.oat/projects/\n{scope}/{slug}/"]
+      SPLIT["Parent +\nchild projects"]
+
+      Q -->|unsure| BS
+      Q -->|seed| SP
+      Q -->|explore| ID
+      Q -->|scoped| BL
+      Q -->|ready| PR
+      BS -.-> ID
+      BS -.-> BL
+      BS -.->|"project(s)"| PR
+      SP -.->|optional| ID
+      ID -.->|optional| SUM
+      SUM -.->|optional| PR
+      BL -.->|optional| PR
+      PR -.->|"optional\n(spec-driven)"| SPLIT
+    ```
 
 Where to start:
 

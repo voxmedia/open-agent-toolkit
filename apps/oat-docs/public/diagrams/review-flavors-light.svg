@@ -1,0 +1,141 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1182" width="720" height="1182" role="img" aria-labelledby="rf-title rf-desc">
+  <title id="rf-title">Review flavors and reviewer selection</title>
+  <desc id="rf-desc">Three groups. Planning: planning-phase artifact self-review leads to inherit planning parent, which leads to parent model (root already at/above ceiling). Implementation: root-owned phase self-review leads to resolve dispatch ceiling, which branches to an at-ceiling pin (ceiling final candidate), inherit (only if dispatcher known at/above ceiling), or an exact CLI reviewer (selected pre-launch). Gates: phase review gate (external) leads to configured exec target (gates.execTargets), which leads to a separate reviewer CLI (prefers another model family; falls back with a warning). Lifecycle / final gate leads to configured exec target (gates.execTargets), which leads to a separate reviewer CLI (never replaced by self-review; falls back with a warning), which may spawn a nested managed reviewer child inside the gate.</desc>
+  <style>
+    svg {
+      --bg: #ffffff;
+      --node: #f4f6f9;
+      --node-em: #e8eef7;
+      --border: #c9d1dc;
+      --text: #16202e;
+      --text-2: #4b5563;
+      --accent: #1b4f8a;
+      --optional: #5d6a7c;
+      --warn: #a14a08;
+    }
+    .bg { fill: var(--bg); }
+    .node { fill: var(--node); stroke: var(--border); stroke-width: 1.5; }
+    .node-em { fill: var(--node-em); stroke: var(--accent); stroke-width: 1.5; }
+    .group { fill: none; stroke: var(--border); stroke-width: 1.5; }
+    .edge { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .edge-opt { fill: none; stroke: var(--optional); stroke-width: 1.5; stroke-dasharray: 5 4; }
+    .arrowhead { fill: var(--accent); }
+    .arrowhead-opt { fill: var(--optional); }
+    .label-bg { fill: var(--bg); }
+    .t { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; font-size: 15px; font-weight: 500; fill: var(--text); }
+    .t2 { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; font-size: 13px; fill: var(--text-2); }
+    .mono { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; }
+    .el { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; font-size: 13px; fill: var(--text-2); }
+    .gl { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.04em; fill: var(--text-2); }
+  </style>
+  <defs>
+    <marker id="rf-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
+      <path class="arrowhead" d="M0,0 L10,5 L0,10 z"/>
+    </marker>
+    <marker id="rf-arrow-opt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
+      <path class="arrowhead-opt" d="M0,0 L10,5 L0,10 z"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="720" height="1182" rx="12"/>
+
+  <!-- Group frames -->
+  <rect class="group" x="32" y="32" width="656" height="284" rx="12"/>
+  <text class="gl" x="50" y="56">Planning</text>
+  <rect class="group" x="32" y="340" width="656" height="336" rx="12"/>
+  <text class="gl" x="50" y="364">Implementation</text>
+  <rect class="group" x="32" y="700" width="656" height="450" rx="12"/>
+  <text class="gl" x="50" y="724">Gates</text>
+
+  <!-- Edges (drawn before nodes) -->
+  <g class="edges">
+    <!-- PL -> PLR -->
+    <path class="edge" d="M360,134 L360,161" marker-end="url(#rf-arrow)"/>
+    <!-- PLR -> PLT -->
+    <path class="edge" d="M360,208 L360,235" marker-end="url(#rf-arrow)"/>
+    <!-- IM -> IMR -->
+    <path class="edge" d="M360,442 L360,469" marker-end="url(#rf-arrow)"/>
+    <!-- IMR -> IMPIN -->
+    <path class="edge" d="M330,516 L330,536 Q330,544 322,544 L158,544 Q150,544 150,552 L150,571" marker-end="url(#rf-arrow)"/>
+    <!-- IMR -> IMINH -->
+    <path class="edge" d="M360,516 L360,571" marker-end="url(#rf-arrow)"/>
+    <!-- IMR -> IMCLI -->
+    <path class="edge" d="M390,516 L390,536 Q390,544 398,544 L562,544 Q570,544 570,552 L570,571" marker-end="url(#rf-arrow)"/>
+    <!-- PG -> PGR -->
+    <path class="edge" d="M200,802 L200,829" marker-end="url(#rf-arrow)"/>
+    <!-- PGR -> PGT -->
+    <path class="edge" d="M200,892 L200,919" marker-end="url(#rf-arrow)"/>
+    <!-- LG -> LGR -->
+    <path class="edge" d="M520,802 L520,829" marker-end="url(#rf-arrow)"/>
+    <!-- LGR -> LGT -->
+    <path class="edge" d="M520,892 L520,919" marker-end="url(#rf-arrow)"/>
+    <!-- LGT -. may spawn .-> LGN -->
+    <path class="edge-opt" d="M520,1004 L520,1067" marker-end="url(#rf-arrow-opt)"/>
+  </g>
+  <rect class="label-bg" x="481" y="1026" width="78" height="20" rx="4"/>
+  <text class="el" x="520" y="1040.5" text-anchor="middle">may spawn</text>
+
+  <!-- Planning -->
+  <rect class="node-em" x="200" y="72" width="320" height="62" rx="8"/>
+  <text class="t" x="360" y="98" text-anchor="middle">Planning-phase</text>
+  <text class="t" x="360" y="118" text-anchor="middle">artifact self-review</text>
+
+  <rect class="node" x="200" y="162" width="320" height="46" rx="8"/>
+  <text class="t" x="360" y="190" text-anchor="middle">Inherit planning parent</text>
+
+  <rect class="node" x="200" y="236" width="320" height="62" rx="8"/>
+  <text class="t" x="360" y="262" text-anchor="middle">Parent model</text>
+  <text class="t2" x="360" y="282" text-anchor="middle">(root already at/above ceiling)</text>
+
+  <!-- Implementation -->
+  <rect class="node-em" x="200" y="380" width="320" height="62" rx="8"/>
+  <text class="t" x="360" y="406" text-anchor="middle">Root-owned phase</text>
+  <text class="t" x="360" y="426" text-anchor="middle">self-review</text>
+
+  <rect class="node" x="200" y="470" width="320" height="46" rx="8"/>
+  <text class="t" x="360" y="498" text-anchor="middle">Resolve dispatch ceiling</text>
+
+  <rect class="node" x="52" y="572" width="196" height="84" rx="8"/>
+  <text class="t" x="150" y="606" text-anchor="middle">At-ceiling pin</text>
+  <text class="t2" x="150" y="626" text-anchor="middle">(ceiling final candidate)</text>
+
+  <rect class="node" x="262" y="572" width="196" height="84" rx="8"/>
+  <text class="t" x="360" y="598" text-anchor="middle">Inherit</text>
+  <text class="t2" x="360" y="618" text-anchor="middle">(only if dispatcher known</text>
+  <text class="t2" x="360" y="635" text-anchor="middle">at/above ceiling)</text>
+
+  <rect class="node" x="472" y="572" width="196" height="84" rx="8"/>
+  <text class="t" x="570" y="606" text-anchor="middle">Exact CLI reviewer</text>
+  <text class="t2" x="570" y="626" text-anchor="middle">(selected pre-launch)</text>
+
+  <!-- Gates: phase review gate column -->
+  <rect class="node-em" x="52" y="740" width="296" height="62" rx="8"/>
+  <text class="t" x="200" y="766" text-anchor="middle">Phase review gate</text>
+  <text class="t2" x="200" y="786" text-anchor="middle">(external)</text>
+
+  <rect class="node" x="52" y="830" width="296" height="62" rx="8"/>
+  <text class="t" x="200" y="856" text-anchor="middle">Configured exec target</text>
+  <text class="t2" x="200" y="876" text-anchor="middle">(<tspan class="mono">gates.execTargets</tspan>)</text>
+
+  <rect class="node" x="52" y="920" width="296" height="84" rx="8"/>
+  <text class="t" x="200" y="946" text-anchor="middle">Separate reviewer CLI</text>
+  <text class="t2" x="200" y="966" text-anchor="middle">(prefers another model family;</text>
+  <text class="t2" x="200" y="983" text-anchor="middle">falls back with a warning)</text>
+
+  <!-- Gates: lifecycle / final gate column -->
+  <rect class="node-em" x="372" y="740" width="296" height="62" rx="8"/>
+  <text class="t" x="520" y="776" text-anchor="middle">Lifecycle / final gate</text>
+
+  <rect class="node" x="372" y="830" width="296" height="62" rx="8"/>
+  <text class="t" x="520" y="856" text-anchor="middle">Configured exec target</text>
+  <text class="t2" x="520" y="876" text-anchor="middle">(<tspan class="mono">gates.execTargets</tspan>)</text>
+
+  <rect class="node" x="372" y="920" width="296" height="84" rx="8"/>
+  <text class="t" x="520" y="946" text-anchor="middle">Separate reviewer CLI</text>
+  <text class="t2" x="520" y="966" text-anchor="middle">(never replaced by self-review;</text>
+  <text class="t2" x="520" y="983" text-anchor="middle">falls back with a warning)</text>
+
+  <rect class="node" x="372" y="1068" width="296" height="62" rx="8"/>
+  <text class="t" x="520" y="1094" text-anchor="middle">Nested managed</text>
+  <text class="t" x="520" y="1114" text-anchor="middle">reviewer child inside gate</text>
+</svg>

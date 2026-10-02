@@ -66,25 +66,32 @@ skills.
 
 Diagram: bootstrap once, then analyze, approve and apply only agreed improvements.
 
-```mermaid
-flowchart TD
-  SETUP["Bootstrap once\nConfirm inputs, then oat docs init"]
-  MD["Markdown\nValidate files and config"]
-  APP["Docs app\nInstall and verify build"]
-  AN["Analyze\nRead docs, write findings"]
-  PLAN["Plan from findings\nNo docs writes yet"]
-  Q{"Approve changes?"}
-  APPLY["Apply approved items\nNew branch, verify, offer PR"]
-  STOP["Skip all\nNo docs changed"]
-  SETUP --> MD
-  SETUP --> APP
-  MD -.-> AN
-  APP -.-> AN
-  AN --> PLAN
-  PLAN --> Q
-  Q -->|"approved"| APPLY
-  Q -->|"all skipped"| STOP
-```
+=== "Diagram"
+
+    ![Bootstrap once with oat docs init into plain Markdown or a docs app, then analyze, plan, and either apply approved changes or stop when all are skipped](/diagrams/docs-workflows-light.svg)
+    ![Bootstrap once with oat docs init into plain Markdown or a docs app, then analyze, plan, and either apply approved changes or stop when all are skipped](/diagrams/docs-workflows-dark.svg)
+
+=== "Mermaid source"
+
+    ```mermaid
+    flowchart TD
+      SETUP["Bootstrap once\nConfirm inputs, then oat docs init"]
+      MD["Markdown\nValidate files and config"]
+      APP["Docs app\nInstall and verify build"]
+      AN["Analyze\nRead docs, write findings"]
+      PLAN["Plan from findings\nNo docs writes yet"]
+      Q{"Approve changes?"}
+      APPLY["Apply approved items\nNew branch, verify, offer PR"]
+      STOP["Skip all\nNo docs changed"]
+      SETUP --> MD
+      SETUP --> APP
+      MD -.-> AN
+      APP -.-> AN
+      AN --> PLAN
+      PLAN --> Q
+      Q -->|"approved"| APPLY
+      Q -->|"all skipped"| STOP
+    ```
 
 - **Setup, once.** `oat-docs-bootstrap` checks the repo without writing, asks
   you to confirm its inputs, then runs `oat docs init`. Plain Markdown setup validates authored files,

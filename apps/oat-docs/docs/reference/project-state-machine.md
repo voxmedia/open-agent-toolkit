@@ -15,26 +15,33 @@ This page is the compact contract for how project lifecycle state and review sta
 
 ## State Transition Map
 
-```mermaid
-flowchart TD
-  D["Discovery in progress"] --> RS["Ready for spec"]
-  RS --> S["Spec in progress"] --> RD["Ready for design"]
-  RD --> G["Design in progress"] --> RP["Ready for plan"]
-  RP --> P["Plan in progress"] --> RI["Ready for implement"]
-  RI --> I["Implement in progress"] --> IC["Implement complete"]
-  IC --> PRO["PR open (pr_open)"]
-  PRO --> REV["Revise (in_progress)"]
-  REV --> PRO
-  PRO --> C["Complete"]
+=== "Diagram"
 
-  I --> RV["Review received"]
-  RV --> FA["Fixes added"]
-  FA --> FC["Fixes completed"]
-  FC --> PASSED["Review passed"]
-  PASSED --> I
+    ![Project state machine: discovery, spec, design, plan and implementation phases, then PR open and complete; a review loop returns to implementation, a revise loop runs from PR open and back, and lite enters at planning](/diagrams/project-state-machine-light.svg)
+    ![Project state machine: discovery, spec, design, plan and implementation phases, then PR open and complete; a review loop returns to implementation, a revise loop runs from PR open and back, and lite enters at planning](/diagrams/project-state-machine-dark.svg)
 
-  LITE["Lite: batched interview\n(no discovery/spec/design)"] -. entry point .-> P
-```
+=== "Mermaid source"
+
+    ```mermaid
+    flowchart TD
+      D["Discovery in progress"] --> RS["Ready for spec"]
+      RS --> S["Spec in progress"] --> RD["Ready for design"]
+      RD --> G["Design in progress"] --> RP["Ready for plan"]
+      RP --> P["Plan in progress"] --> RI["Ready for implement"]
+      RI --> I["Implement in progress"] --> IC["Implement complete"]
+      IC --> PRO["PR open (pr_open)"]
+      PRO --> REV["Revise (in_progress)"]
+      REV --> PRO
+      PRO --> C["Complete"]
+
+      I --> RV["Review received"]
+      RV --> FA["Fixes added"]
+      FA --> FC["Fixes completed"]
+      FC --> PASSED["Review passed"]
+      PASSED --> I
+
+      LITE["Lite: batched interview\n(no discovery/spec/design)"] -. entry point .-> P
+    ```
 
 The solid chain is the spec-driven progression. Lite enters at **Plan in
 progress** and never sets `oat_phase` to `discovery`, `spec`, or `design`;

@@ -38,29 +38,36 @@ for the deep review request/receive mechanics.
 
 ## Flow map
 
-```mermaid
-flowchart TD
-  subgraph Planning
-    PL["Planning-phase\nartifact self-review"] --> PLR["Inherit planning parent"]
-    PLR --> PLT["Parent model\n(root already at/above ceiling)"]
-  end
+=== "Diagram"
 
-  subgraph Implementation
-    IM["Root-owned phase\nself-review"] --> IMR["Resolve dispatch ceiling"]
-    IMR --> IMPIN["At-ceiling pin\n(ceiling final candidate)"]
-    IMR --> IMINH["Inherit\n(only if dispatcher known at/above ceiling)"]
-    IMR --> IMCLI["Exact CLI reviewer\n(selected pre-launch)"]
-  end
+    ![Review flavors: planning self-review inherits the planning parent; implementation self-review resolves the dispatch ceiling to an at-ceiling pin, inherit, or an exact CLI reviewer; phase and lifecycle gates run a separate reviewer CLI from a configured exec target, and the lifecycle gate's reviewer CLI may spawn a nested reviewer child](/diagrams/review-flavors-light.svg)
+    ![Review flavors: planning self-review inherits the planning parent; implementation self-review resolves the dispatch ceiling to an at-ceiling pin, inherit, or an exact CLI reviewer; phase and lifecycle gates run a separate reviewer CLI from a configured exec target, and the lifecycle gate's reviewer CLI may spawn a nested reviewer child](/diagrams/review-flavors-dark.svg)
 
-  subgraph Gates
-    PG["Phase review gate\n(external)"] --> PGR["Configured exec target\n(gates.execTargets)"]
-    PGR --> PGT["Separate reviewer CLI\n(prefers another model family;\nfalls back with a warning)"]
+=== "Mermaid source"
 
-    LG["Lifecycle / final gate"] --> LGR["Configured exec target\n(gates.execTargets)"]
-    LGR --> LGT["Separate reviewer CLI\n(never replaced by self-review;\nfalls back with a warning)"]
-    LGT -. may spawn .-> LGN["Nested managed\nreviewer child inside gate"]
-  end
-```
+    ```mermaid
+    flowchart TD
+      subgraph Planning
+        PL["Planning-phase\nartifact self-review"] --> PLR["Inherit planning parent"]
+        PLR --> PLT["Parent model\n(root already at/above ceiling)"]
+      end
+
+      subgraph Implementation
+        IM["Root-owned phase\nself-review"] --> IMR["Resolve dispatch ceiling"]
+        IMR --> IMPIN["At-ceiling pin\n(ceiling final candidate)"]
+        IMR --> IMINH["Inherit\n(only if dispatcher known at/above ceiling)"]
+        IMR --> IMCLI["Exact CLI reviewer\n(selected pre-launch)"]
+      end
+
+      subgraph Gates
+        PG["Phase review gate\n(external)"] --> PGR["Configured exec target\n(gates.execTargets)"]
+        PGR --> PGT["Separate reviewer CLI\n(prefers another model family;\nfalls back with a warning)"]
+
+        LG["Lifecycle / final gate"] --> LGR["Configured exec target\n(gates.execTargets)"]
+        LGR --> LGT["Separate reviewer CLI\n(never replaced by self-review;\nfalls back with a warning)"]
+        LGT -. may spawn .-> LGN["Nested managed\nreviewer child inside gate"]
+      end
+    ```
 
 The dotted branch marks the only flavor that may **spawn a nested managed
 reviewer child** inside the gate exec target: the lifecycle/final gate.

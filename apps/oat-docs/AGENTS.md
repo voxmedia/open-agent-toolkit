@@ -18,6 +18,13 @@ Use real Markdown links for reader-facing guide pointers. The app checker valida
 
 The supported-skill catalog is committed source in `docs/skills/index.md` and bundled with the CLI. `skill-docs.json` assigns each shipped user-facing skill its canonical family anchor and verified project applicability; descriptions and visibility come from canonical skill metadata. Each mapped section includes a concrete `**Example scenario:**`. After changing those inputs, run `pnpm docs:skills:generate`, then nav sync and `pnpm docs:validate`. Check/dev/build validate catalog parity without silently rewriting it. Catalog tooling is repository-specific, not a public `oat` command or scaffold requirement.
 
+## When you add or change a diagram
+
+1. Write the diagram as a fenced `mermaid` block. Mermaid is the source of truth; readers can click it to enlarge it.
+2. When a diagram must read well on a phone, or is central to a page, also draw a light and a dark SVG in `public/diagrams/<name>-light.svg` and `<name>-dark.svg`. Use the site palette, keep the viewBox 600 to 760 wide where possible, and never set text below 12px. Put both images in a `=== "Diagram"` tab and the Mermaid block in a `=== "Mermaid source"` tab (see `docs/contributing/markdown-features.md`).
+3. When you change a Mermaid block that has SVGs, update both SVGs in the same commit so they show the same nodes, edges and labels.
+4. Every Markdown image is zoomable and gets the base path added; link public images with root-relative paths such as `/diagrams/name.svg`.
+
 ## When you need to restructure navigation
 
 1. Make changes in the authored `## Contents` sections of each affected `index.md`. That is the authoritative local map.

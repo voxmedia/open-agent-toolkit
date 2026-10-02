@@ -11,7 +11,14 @@ export function createDocsConfig(options: DocsConfigOptions): NextConfig {
     trailingSlash: true,
     images: { unoptimized: true },
     reactStrictMode: true,
-    ...(options.basePath ? { basePath: options.basePath } : {}),
+    ...(options.basePath
+      ? {
+          basePath: options.basePath,
+          // Exposed to client components so root-relative public assets
+          // (for example `/diagrams/x.svg` in Markdown) can carry the base path.
+          env: { NEXT_PUBLIC_BASE_PATH: options.basePath },
+        }
+      : {}),
   };
 
   const withMDX = createMDX();

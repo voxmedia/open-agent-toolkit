@@ -35,14 +35,21 @@ For a one-page view of where people approve and what runs automatically in each 
 
 ## Lifecycle Map
 
-```mermaid
-flowchart LR
-  D["Discovery"] --> S["Spec"] --> G["Design"] --> P["Plan"]
-  P --> I["Implement (oat-project-implement)"]
-  I --> R["Review loop"] --> PR["PR flow"]
-  PR --> DOC["Docs sync (optional)"]
-  DOC --> C["Complete"]
-```
+=== "Diagram"
+
+    ![Project lifecycle map: discovery, spec, design, plan, implement, review loop, PR flow, optional docs sync, complete](/diagrams/project-lifecycle-1-lifecycle-map-light.svg)
+    ![Project lifecycle map: discovery, spec, design, plan, implement, review loop, PR flow, optional docs sync, complete](/diagrams/project-lifecycle-1-lifecycle-map-dark.svg)
+
+=== "Mermaid source"
+
+    ```mermaid
+    flowchart LR
+      D["Discovery"] --> S["Spec"] --> G["Design"] --> P["Plan"]
+      P --> I["Implement (oat-project-implement)"]
+      I --> R["Review loop"] --> PR["PR flow"]
+      PR --> DOC["Docs sync (optional)"]
+      DOC --> C["Complete"]
+    ```
 
 This map shows the spec-driven default. The quick, lite, import, and capture
 lanes each skip part of it — see [Lane diagrams](#lane-diagrams) below. Lite in
@@ -341,12 +348,19 @@ See [Implementation Execution](execution/implementation-execution.md) for the fu
 
 ### Spec-Driven workflow lane
 
-```mermaid
-flowchart LR
-  D["Discover"] --> S["Spec"] --> G["Design"] --> P["Plan"]
-  P --> I["Implement (oat-project-implement)"]
-  I --> R["Review"] --> PR["PR"] --> Doc["Docs (optional)"] --> C["Complete"]
-```
+=== "Diagram"
+
+    ![Spec-driven lane: discover, spec, design, plan, implement, review, PR, optional docs, complete](/diagrams/project-lifecycle-2-spec-driven-light.svg)
+    ![Spec-driven lane: discover, spec, design, plan, implement, review, PR, optional docs, complete](/diagrams/project-lifecycle-2-spec-driven-dark.svg)
+
+=== "Mermaid source"
+
+    ```mermaid
+    flowchart LR
+      D["Discover"] --> S["Spec"] --> G["Design"] --> P["Plan"]
+      P --> I["Implement (oat-project-implement)"]
+      I --> R["Review"] --> PR["PR"] --> Doc["Docs (optional)"] --> C["Complete"]
+    ```
 
 During the Design step, `oat-project-design` asks how to work through the document unless a mode was selected by argument, environment, or `workflow.designMode`. The three full-design choices are collaborative, selective collaborative, and draft-and-review.
 
@@ -366,15 +380,22 @@ effort controls.
 
 ### Quick lane
 
-```mermaid
-flowchart LR
-  Q["Quick Start\n(adaptive discovery)"] --> D{"Design depth?"}
-  D -->|Straight to plan| P["Plan"]
-  D -->|Lightweight design| LD["Design (quick)"] --> P
-  D -->|Promote| SD["→ Spec-Driven lane"]
-  P --> QI["Implement (oat-project-implement)"]
-  QI --> QR["Review / PR"]
-```
+=== "Diagram"
+
+    ![Quick lane: quick start with adaptive discovery, then a design-depth choice (straight to plan, lightweight design, or promote to spec-driven), plan, implement, review and PR](/diagrams/project-lifecycle-3-quick-lane-light.svg)
+    ![Quick lane: quick start with adaptive discovery, then a design-depth choice (straight to plan, lightweight design, or promote to spec-driven), plan, implement, review and PR](/diagrams/project-lifecycle-3-quick-lane-dark.svg)
+
+=== "Mermaid source"
+
+    ```mermaid
+    flowchart LR
+      Q["Quick Start\n(adaptive discovery)"] --> D{"Design depth?"}
+      D -->|Straight to plan| P["Plan"]
+      D -->|Lightweight design| LD["Design (quick)"] --> P
+      D -->|Promote| SD["→ Spec-Driven lane"]
+      P --> QI["Implement (oat-project-implement)"]
+      QI --> QR["Review / PR"]
+    ```
 
 Quick lane lightweight design intentionally keeps a smaller collaborative/draft choice. Selective collaborative becomes available only after promotion into the full spec-driven design lane.
 
@@ -393,13 +414,20 @@ should use the dispatch-policy names, including explicit `Uncapped` and
 
 ### Lite lane
 
-```mermaid
-flowchart LR
-  L["Lite interview\n(one batched round)"] --> P["Single-phase plan\n(one approval)"]
-  P --> I["Implement (oat-project-implement)"]
-  I --> R["Final review"] --> PR["PR (default closeout)"]
-  P -->|Scope grows| Q["Promote to Quick"]
-```
+=== "Diagram"
+
+    ![Lite lane: one batched interview, a single-phase plan with one approval, implement, final review and PR, with promotion to quick if scope grows](/diagrams/project-lifecycle-4-lite-lane-light.svg)
+    ![Lite lane: one batched interview, a single-phase plan with one approval, implement, final review and PR, with promotion to quick if scope grows](/diagrams/project-lifecycle-4-lite-lane-dark.svg)
+
+=== "Mermaid source"
+
+    ```mermaid
+    flowchart LR
+      L["Lite interview\n(one batched round)"] --> P["Single-phase plan\n(one approval)"]
+      P --> I["Implement (oat-project-implement)"]
+      I --> R["Final review"] --> PR["PR (default closeout)"]
+      P -->|Scope grows| Q["Promote to Quick"]
+    ```
 
 Lite keeps planning and validation in `plan.md`. The interview selects a
 `minimal`, `product`, `technical`, or `both` content shape and records the
@@ -427,29 +455,36 @@ from its five core sections plus any adaptive Product Behavior and Technical
 Design, a **fresh** quick template takes over the `plan.md` path, and `state.md`
 is **rewritten** to quick mode.
 
-```mermaid
-flowchart LR
-  subgraph Before
-    LPLAN["plan.md\nfive core sections plus adaptive\nProduct Behavior / Technical Design"]
-    LSTATE["state.md\noat_workflow_mode: lite"]
-  end
+=== "Diagram"
 
-  CMD["oat project promote\n--to quick"]
+    ![Promoting a lite project to quick: oat project promote --to quick derives discovery.md from the lite plan, moves the original to references/lite-plan.md, scaffolds a fresh quick plan.md, and rewrites state.md to quick mode](/diagrams/project-lifecycle-5-promote-lite-to-quick-light.svg)
+    ![Promoting a lite project to quick: oat project promote --to quick derives discovery.md from the lite plan, moves the original to references/lite-plan.md, scaffolds a fresh quick plan.md, and rewrites state.md to quick mode](/diagrams/project-lifecycle-5-promote-lite-to-quick-dark.svg)
 
-  subgraph After
-    DISC["discovery.md\nderived from the lite plan\noat_ready_for: oat-project-quick-start"]
-    REF["references/lite-plan.md\noriginal lite plan, preserved"]
-    QPLAN["plan.md\nfresh quick-start template"]
-    QSTATE["state.md\noat_workflow_mode: quick\noat_phase: discovery (complete)\noat_ready_for: oat-project-quick-start"]
-  end
+=== "Mermaid source"
 
-  LPLAN --> CMD
-  LSTATE --> CMD
-  CMD -->|derive| DISC
-  CMD -->|move| REF
-  CMD -->|scaffold| QPLAN
-  CMD -->|rewrite| QSTATE
-```
+    ```mermaid
+    flowchart LR
+      subgraph Before
+        LPLAN["plan.md\nfive core sections plus adaptive\nProduct Behavior / Technical Design"]
+        LSTATE["state.md\noat_workflow_mode: lite"]
+      end
+
+      CMD["oat project promote\n--to quick"]
+
+      subgraph After
+        DISC["discovery.md\nderived from the lite plan\noat_ready_for: oat-project-quick-start"]
+        REF["references/lite-plan.md\noriginal lite plan, preserved"]
+        QPLAN["plan.md\nfresh quick-start template"]
+        QSTATE["state.md\noat_workflow_mode: quick\noat_phase: discovery (complete)\noat_ready_for: oat-project-quick-start"]
+      end
+
+      LPLAN --> CMD
+      LSTATE --> CMD
+      CMD -->|derive| DISC
+      CMD -->|move| REF
+      CMD -->|scaffold| QPLAN
+      CMD -->|rewrite| QSTATE
+    ```
 
 The project slug, directory, and branch are untouched, so history and any open
 work continue uninterrupted. `oat_ready_for` is stamped on **both** `discovery.md`
@@ -462,21 +497,35 @@ categorical `reason` and exit non-zero. See
 
 ### Import lane
 
-```mermaid
-flowchart LR
-  I["Import Plan"] --> II1["Implement (oat-project-implement)"]
-  II1 --> IR["Review / PR"]
-```
+=== "Diagram"
+
+    ![Import lane: import a plan, implement, then review and PR](/diagrams/project-lifecycle-6-import-lane-light.svg)
+    ![Import lane: import a plan, implement, then review and PR](/diagrams/project-lifecycle-6-import-lane-dark.svg)
+
+=== "Mermaid source"
+
+    ```mermaid
+    flowchart LR
+      I["Import Plan"] --> II1["Implement (oat-project-implement)"]
+      II1 --> IR["Review / PR"]
+    ```
 
 ### Capture lane
 
 Retroactive project creation for work done outside the OAT project workflow. Common scenario: mobile/cloud sessions where you brainstorm and implement with an agent, then want to open a PR and review from your desktop.
 
-```mermaid
-flowchart LR
-  W["Work on branch\n(no project)"] --> Cap["oat-project-capture"]
-  Cap --> R["Review / PR"]
-```
+=== "Diagram"
+
+    ![Capture lane: work on a branch without a project, run oat-project-capture, then review and PR](/diagrams/project-lifecycle-7-capture-lane-light.svg)
+    ![Capture lane: work on a branch without a project, run oat-project-capture, then review and PR](/diagrams/project-lifecycle-7-capture-lane-dark.svg)
+
+=== "Mermaid source"
+
+    ```mermaid
+    flowchart LR
+      W["Work on branch\n(no project)"] --> Cap["oat-project-capture"]
+      Cap --> R["Review / PR"]
+    ```
 
 Entry point: `/oat-project-capture` (skill-only, no CLI command — requires agent conversation context).
 

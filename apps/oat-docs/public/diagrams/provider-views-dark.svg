@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" width="640" height="400" role="img" aria-labelledby="provider-views-title provider-views-desc">
+  <title id="provider-views-title">Canonical assets and provider views</title>
+  <desc id="provider-views-desc">The canonical directories .agents/skills/, .agents/agents/ and .agents/rules/ feed oat sync, which writes the provider views .claude/, .cursor/, .github/ and .codex/.</desc>
+  <style>
+    svg {
+      --bg: #161d27;
+      --node: #1d2633;
+      --node-em: #1f2d42;
+      --border: #2b3646;
+      --text: #dde4ee;
+      --text-2: #9ba7b8;
+      --accent: #8fb6ee;
+      --optional: #8693a5;
+    }
+    .canvas { fill: var(--bg); }
+    .node { fill: var(--node); stroke: var(--border); stroke-width: 1.5; }
+    .node-em { fill: var(--node-em); stroke: var(--accent); stroke-width: 1.5; }
+    .edge { fill: none; stroke: var(--accent); stroke-width: 1.5; }
+    .edge-opt { fill: none; stroke: var(--optional); stroke-width: 1.5; stroke-dasharray: 5 4; }
+    .head { fill: var(--accent); }
+    .head-opt { fill: var(--optional); }
+    .dot { fill: var(--accent); }
+    .dot-opt { fill: var(--optional); }
+    .t { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; font-size: 15px; fill: var(--text); }
+    .t-strong { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; font-size: 15px; font-weight: 600; fill: var(--text); }
+    .t-2 { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; font-size: 13px; fill: var(--text-2); }
+    .mono { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; font-size: 15px; fill: var(--text); }
+    .mono-strong { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; font-size: 15px; font-weight: 600; fill: var(--text); }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
+      <path class="head" d="M0 0 L10 5 L0 10 Z"/>
+    </marker>
+    <marker id="arrow-opt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
+      <path class="head-opt" d="M0 0 L10 5 L0 10 Z"/>
+    </marker>
+  </defs>
+  <rect class="canvas" x="0" y="0" width="640" height="400" rx="12" ry="12"/>
+  <!-- SKILLS -->
+  <rect class="node" x="32" y="32" width="176" height="56" rx="8" ry="8"/>
+  <text class="mono" x="120" y="65" text-anchor="middle">.agents/skills/</text>
+  <!-- AGENTS -->
+  <rect class="node" x="232" y="32" width="176" height="56" rx="8" ry="8"/>
+  <text class="mono" x="320" y="65" text-anchor="middle">.agents/agents/</text>
+  <!-- RULES -->
+  <rect class="node" x="432" y="32" width="176" height="56" rx="8" ry="8"/>
+  <text class="mono" x="520" y="65" text-anchor="middle">.agents/rules/</text>
+  <!-- OAT -->
+  <rect class="node-em" x="220" y="168" width="200" height="56" rx="8" ry="8"/>
+  <text class="mono-strong" x="320" y="201" text-anchor="middle">oat sync</text>
+  <!-- sources --> oat sync -->
+  <path class="edge" d="M120 88 V116 Q120 128 132 128 H276 Q288 128 288 140 V168" marker-end="url(#arrow)"/>
+  <path class="edge" d="M320 88 V168" marker-end="url(#arrow)"/>
+  <path class="edge" d="M520 88 V116 Q520 128 508 128 H364 Q352 128 352 140 V168" marker-end="url(#arrow)"/>
+  <!-- CLAUDE -->
+  <rect class="node" x="32" y="312" width="132" height="56" rx="8" ry="8"/>
+  <text class="mono" x="98" y="345" text-anchor="middle">.claude/</text>
+  <!-- CURSOR -->
+  <rect class="node" x="180" y="312" width="132" height="56" rx="8" ry="8"/>
+  <text class="mono" x="246" y="345" text-anchor="middle">.cursor/</text>
+  <!-- COPILOT -->
+  <rect class="node" x="328" y="312" width="132" height="56" rx="8" ry="8"/>
+  <text class="mono" x="394" y="345" text-anchor="middle">.github/</text>
+  <!-- CODEX -->
+  <rect class="node" x="476" y="312" width="132" height="56" rx="8" ry="8"/>
+  <text class="mono" x="542" y="345" text-anchor="middle">.codex/</text>
+  <!-- oat sync --> provider views -->
+  <path class="edge" d="M320 224 V268"/>
+  <path class="edge" d="M320 268 H110 Q98 268 98 280 V312" marker-end="url(#arrow)"/>
+  <path class="edge" d="M320 268 H530 Q542 268 542 280 V312" marker-end="url(#arrow)"/>
+  <path class="edge" d="M246 268 V312" marker-end="url(#arrow)"/>
+  <circle class="dot" cx="246" cy="268" r="3"/>
+  <path class="edge" d="M394 268 V312" marker-end="url(#arrow)"/>
+  <circle class="dot" cx="394" cy="268" r="3"/>
+  <circle class="dot" cx="320" cy="268" r="3"/>
+</svg>
