@@ -104,7 +104,7 @@ The two prebuild command strings intentionally differ: this repository invokes t
 
 **Verify:** `pnpm docs:test`; `pnpm docs:validate`; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/docs/init/scaffold.test.ts src/commands/docs/init/integration.test.ts`; `pnpm build:docs`. Add a pristine-checkout control with no meta.json, sidecar, .source or out: after upstream dependencies are available, app check and direct docs:test pass and do not create app build output. Test invalid sources independently of output parity; use stale/missing output for meaningful check-mode tests. Verify bundled Markdown remains present and build-only metadata is absent.
 
-**Format:** `pnpm exec oxfmt --write apps/oat-docs/package.json package.json apps/oat-docs/scripts apps/oat-docs/tests apps/oat-docs/tsconfig.docs-tools.json apps/oat-docs/tsconfig.json apps/oat-docs/docs packages/cli/src/commands/docs/init packages/cli/scripts/bundle-inputs.mjs`; format modified JSON templates using the supported formatter and use `git diff --check` for shell/ignore files.
+**Format:** `pnpm exec oxfmt --write apps/oat-docs/package.json package.json apps/oat-docs/scripts apps/oat-docs/tests apps/oat-docs/tsconfig.docs-tools.json apps/oat-docs/tsconfig.json 'apps/oat-docs/docs/**/*.md' packages/cli/src/commands/docs/init packages/cli/scripts/bundle-inputs.mjs`; format modified JSON templates using the supported formatter and use `git diff --check` for shell/ignore files. Never recursively format the docs directory: ignored generated metadata is byte-owned by the nav compiler.
 
 **Commit:** `feat(p01-t02): enforce navigation at real consumer boundaries`.
 
@@ -118,7 +118,7 @@ The two prebuild command strings intentionally differ: this repository invokes t
 
 **Verify:** `pnpm docs:validate`; `pnpm docs:test`; implementer computer-use smoke for current ordering/labels, landings, breadcrumb/previous-next, family links and basePath once. Save `reviews/p01-browser-smoke.md` with screenshots/actions. Shared release closeout and Fable phase-diff review. No full independent browser tour yet.
 
-**Format:** `pnpm exec oxfmt --write apps/oat-docs/AGENTS.md apps/oat-docs/docs .agents/skills/oat-docs-bootstrap .agents/skills/oat-docs-apply .agents/skills/oat-docs-analyze .agents/skills/oat-docs-authoring`; additionally format exact changed template/release files.
+**Format:** `pnpm exec oxfmt --write apps/oat-docs/AGENTS.md 'apps/oat-docs/docs/**/*.md' .agents/skills/oat-docs-bootstrap .agents/skills/oat-docs-apply .agents/skills/oat-docs-analyze .agents/skills/oat-docs-authoring`; additionally format exact changed template/release files. Exclude generated metadata and ownership sidecars.
 
 **Commit:** `docs(p01-t03): align navigation contracts and verify foundation`.
 
