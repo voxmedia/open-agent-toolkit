@@ -15,23 +15,30 @@ This page explains how OAT remembers what it manages and how it distinguishes cl
 
 Diagram: canonical assets produce provider views and a manifest; status reports what changed and how to resolve it.
 
-```mermaid
-flowchart TD
-  CANON["Canonical assets\nEdit .agents/"]
-  SYNC["oat sync\nGenerate views"]
-  VIEWS["Provider views"]
-  MANIFEST["Sync manifest"]
-  STATUS["oat status\nInspect before resolving"]
-  TRACKED["Tracked views\nin_sync / drifted / missing"]
-  STRAY["Unmanaged files\nstray"]
-  CANON --> SYNC
-  SYNC --> VIEWS
-  SYNC --> MANIFEST
-  MANIFEST --> STATUS
-  VIEWS --> STATUS
-  STATUS --> TRACKED
-  STATUS --> STRAY
-```
+=== "Diagram"
+
+    ![You edit canonical assets in .agents/; oat sync generates provider views and the sync manifest; oat status reads both and reports tracked views as in_sync, drifted or missing, and unmanaged files as stray](/diagrams/sync-and-drift-light.svg)
+    ![You edit canonical assets in .agents/; oat sync generates provider views and the sync manifest; oat status reads both and reports tracked views as in_sync, drifted or missing, and unmanaged files as stray](/diagrams/sync-and-drift-dark.svg)
+
+=== "Mermaid source"
+
+    ```mermaid
+    flowchart TD
+      CANON["Canonical assets\nEdit .agents/"]
+      SYNC["oat sync\nGenerate views"]
+      VIEWS["Provider views"]
+      MANIFEST["Sync manifest"]
+      STATUS["oat status\nInspect before resolving"]
+      TRACKED["Tracked views\nin_sync / drifted / missing"]
+      STRAY["Unmanaged files\nstray"]
+      CANON --> SYNC
+      SYNC --> VIEWS
+      SYNC --> MANIFEST
+      MANIFEST --> STATUS
+      VIEWS --> STATUS
+      STATUS --> TRACKED
+      STATUS --> STRAY
+    ```
 
 - **What you edit.** Only the canonical files under `.agents/` (skills, agents,
   rules). `oat sync` reads them and writes provider views as symlinks or copies

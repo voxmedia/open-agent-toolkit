@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 706" width="680" height="706" role="img" aria-labelledby="title desc">
+  <title id="title">OAT docs workflow: bootstrap, analyze, approve, apply</title>
+  <desc id="desc">Bootstrap once (confirm inputs, then oat docs init) leads to either a Markdown surface (validate files and config) or a docs app (install and verify build). Either one optionally leads to Analyze (read docs, write findings), which leads to Plan from findings (no docs writes yet), then the decision Approve changes? If approved, apply approved items (new branch, verify, offer PR). If all skipped, skip all and no docs are changed.</desc>
+  <style>
+    svg {
+      --canvas: #161d27;
+      --node: #1d2633;
+      --node-em: #1f2d42;
+      --border: #2b3646;
+      --text: #dde4ee;
+      --text-2: #9ba7b8;
+      --accent: #8fb6ee;
+      --optional: #8693a5;
+    }
+    .canvas { fill: var(--canvas); }
+    .node { fill: var(--node); stroke: var(--border); stroke-width: 1.5; }
+    .node-em { fill: var(--node-em); stroke: var(--accent); stroke-width: 1.5; }
+    .decision { fill: var(--node-em); stroke: var(--accent); stroke-width: 1.5; stroke-linejoin: round; }
+    .edge { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linejoin: round; }
+    .edge-opt { fill: none; stroke: var(--optional); stroke-width: 1.5; stroke-dasharray: 5 4; stroke-linejoin: round; }
+    .arrow-accent { fill: var(--accent); }
+    .arrow-opt { fill: var(--optional); }
+    .label-bg { fill: var(--canvas); }
+    text { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; text-anchor: middle; }
+    .t1 { font-size: 15px; font-weight: 600; fill: var(--text); }
+    .t2 { font-size: 13px; fill: var(--text-2); }
+    .tq { font-size: 15px; font-weight: 600; fill: var(--accent); }
+    .el { font-size: 13px; fill: var(--text-2); }
+    .mono { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; }
+  </style>
+  <defs>
+    <marker id="arrow-accent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="arrow-accent" d="M0,1 L9,5 L0,9 Z"/>
+    </marker>
+    <marker id="arrow-opt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="arrow-opt" d="M0,1 L9,5 L0,9 Z"/>
+    </marker>
+  </defs>
+
+  <rect class="canvas" x="0" y="0" width="680" height="706" rx="12" ry="12"/>
+
+  <!-- Edges -->
+  <path class="edge" d="M340,96 V123 H180 V148" marker-end="url(#arrow-accent)"/>
+  <path class="edge" d="M340,96 V123 H500 V148" marker-end="url(#arrow-accent)"/>
+  <path class="edge-opt" d="M180,214 V242 H300 V268" marker-end="url(#arrow-opt)"/>
+  <path class="edge-opt" d="M500,214 V242 H380 V268" marker-end="url(#arrow-opt)"/>
+  <path class="edge" d="M340,334 V368" marker-end="url(#arrow-accent)"/>
+  <path class="edge" d="M340,434 V468" marker-end="url(#arrow-accent)"/>
+  <path class="edge" d="M230,514 H180 V608" marker-end="url(#arrow-accent)"/>
+  <path class="edge" d="M450,514 H500 V608" marker-end="url(#arrow-accent)"/>
+
+  <!-- Edge labels -->
+  <rect class="label-bg" x="142" y="554" width="76" height="24" rx="4"/>
+  <text class="el" x="180" y="571">approved</text>
+  <rect class="label-bg" x="456" y="554" width="88" height="24" rx="4"/>
+  <text class="el" x="500" y="571">all skipped</text>
+
+  <!-- SETUP -->
+  <rect class="node" x="190" y="32" width="300" height="64" rx="8"/>
+  <text class="t1" x="340" y="59">Bootstrap once</text>
+  <text class="t2" x="340" y="80">Confirm inputs, then <tspan class="mono">oat docs init</tspan></text>
+
+  <!-- MD -->
+  <rect class="node" x="50" y="150" width="260" height="64" rx="8"/>
+  <text class="t1" x="180" y="177">Markdown</text>
+  <text class="t2" x="180" y="198">Validate files and config</text>
+
+  <!-- APP -->
+  <rect class="node" x="370" y="150" width="260" height="64" rx="8"/>
+  <text class="t1" x="500" y="177">Docs app</text>
+  <text class="t2" x="500" y="198">Install and verify build</text>
+
+  <!-- AN -->
+  <rect class="node" x="200" y="270" width="280" height="64" rx="8"/>
+  <text class="t1" x="340" y="297">Analyze</text>
+  <text class="t2" x="340" y="318">Read docs, write findings</text>
+
+  <!-- PLAN -->
+  <rect class="node" x="200" y="370" width="280" height="64" rx="8"/>
+  <text class="t1" x="340" y="397">Plan from findings</text>
+  <text class="t2" x="340" y="418">No docs writes yet</text>
+
+  <!-- Q (decision) -->
+  <polygon class="decision" points="340,470 450,514 340,558 230,514"/>
+  <text class="tq" x="340" y="519">Approve changes?</text>
+
+  <!-- APPLY -->
+  <rect class="node-em" x="50" y="610" width="260" height="64" rx="8"/>
+  <text class="t1" x="180" y="637">Apply approved items</text>
+  <text class="t2" x="180" y="658">New branch, verify, offer PR</text>
+
+  <!-- STOP -->
+  <rect class="node" x="370" y="610" width="260" height="64" rx="8"/>
+  <text class="t1" x="500" y="637">Skip all</text>
+  <text class="t2" x="500" y="658">No docs changed</text>
+</svg>

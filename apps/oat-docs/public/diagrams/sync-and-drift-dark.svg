@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 616" width="640" height="616" role="img" aria-labelledby="sd-title sd-desc">
+  <title id="sd-title">Provider sync and drift</title>
+  <desc id="sd-desc">Flow from canonical assets to drift reporting. Canonical assets (edit .agents/) feed oat sync (generate views). oat sync produces provider views and the sync manifest. Both the sync manifest and the provider views feed oat status (inspect before resolving). oat status reports tracked views as in_sync, drifted or missing, and reports unmanaged files as stray.</desc>
+  <style>
+    svg {
+      --bg: #161d27;
+      --node: #1d2633;
+      --node-em: #1f2d42;
+      --border: #2b3646;
+      --text: #dde4ee;
+      --text-2: #9ba7b8;
+      --accent: #8fb6ee;
+      --optional: #8693a5;
+      --warn: #f0a868;
+    }
+    .canvas { fill: var(--bg); }
+    .node { fill: var(--node); stroke: var(--border); stroke-width: 1.5; }
+    .node-em { fill: var(--node-em); stroke: var(--accent); stroke-width: 1.5; }
+    .edge { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .arrow { fill: var(--accent); }
+    .sans { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; }
+    .mono { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; }
+    .t { fill: var(--text); font-size: 15px; font-weight: 600; }
+    .s { fill: var(--text-2); font-size: 13px; }
+    .warn { fill: var(--warn); font-weight: 700; }
+  </style>
+  <defs>
+    <marker id="sd-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+      <path class="arrow" d="M 0 0 L 10 5 L 0 10 z"/>
+    </marker>
+  </defs>
+
+  <rect class="canvas" x="0" y="0" width="640" height="616" rx="12" ry="12"/>
+
+  <!-- Edges (drawn first so nodes sit on top) -->
+  <g class="edges">
+    <!-- CANON -> SYNC -->
+    <path class="edge" d="M 320 100 L 320 155" marker-end="url(#sd-arrow)"/>
+    <!-- SYNC -> VIEWS -->
+    <path class="edge" d="M 296 224 L 296 244 Q 296 252 288 252 L 188 252 Q 180 252 180 260 L 180 279" marker-end="url(#sd-arrow)"/>
+    <!-- SYNC -> MANIFEST -->
+    <path class="edge" d="M 344 224 L 344 244 Q 344 252 352 252 L 452 252 Q 460 252 460 260 L 460 279" marker-end="url(#sd-arrow)"/>
+    <!-- VIEWS -> STATUS -->
+    <path class="edge" d="M 180 336 L 180 356 Q 180 364 188 364 L 288 364 Q 296 364 296 372 L 296 391" marker-end="url(#sd-arrow)"/>
+    <!-- MANIFEST -> STATUS -->
+    <path class="edge" d="M 460 336 L 460 356 Q 460 364 452 364 L 352 364 Q 344 364 344 372 L 344 391" marker-end="url(#sd-arrow)"/>
+    <!-- STATUS -> TRACKED -->
+    <path class="edge" d="M 296 460 L 296 480 Q 296 488 288 488 L 183 488 Q 175 488 175 496 L 175 515" marker-end="url(#sd-arrow)"/>
+    <!-- STATUS -> STRAY -->
+    <path class="edge" d="M 344 460 L 344 480 Q 344 488 352 488 L 457 488 Q 465 488 465 496 L 465 515" marker-end="url(#sd-arrow)"/>
+  </g>
+
+  <!-- CANON: Canonical assets / Edit .agents/ -->
+  <rect class="node" x="200" y="32" width="240" height="68" rx="8" ry="8"/>
+  <text class="sans t" x="320" y="61" text-anchor="middle">Canonical assets</text>
+  <text class="sans s" x="320" y="83" text-anchor="middle">Edit <tspan class="mono">.agents/</tspan></text>
+
+  <!-- SYNC: oat sync / Generate views -->
+  <rect class="node-em" x="200" y="156" width="240" height="68" rx="8" ry="8"/>
+  <text class="mono t" x="320" y="185" text-anchor="middle">oat sync</text>
+  <text class="sans s" x="320" y="207" text-anchor="middle">Generate views</text>
+
+  <!-- VIEWS: Provider views -->
+  <rect class="node" x="70" y="280" width="220" height="56" rx="8" ry="8"/>
+  <text class="sans t" x="180" y="313" text-anchor="middle">Provider views</text>
+
+  <!-- MANIFEST: Sync manifest -->
+  <rect class="node" x="350" y="280" width="220" height="56" rx="8" ry="8"/>
+  <text class="sans t" x="460" y="313" text-anchor="middle">Sync manifest</text>
+
+  <!-- STATUS: oat status / Inspect before resolving -->
+  <rect class="node-em" x="200" y="392" width="240" height="68" rx="8" ry="8"/>
+  <text class="mono t" x="320" y="421" text-anchor="middle">oat status</text>
+  <text class="sans s" x="320" y="443" text-anchor="middle">Inspect before resolving</text>
+
+  <!-- TRACKED: Tracked views / in_sync / drifted / missing -->
+  <rect class="node" x="40" y="516" width="270" height="68" rx="8" ry="8"/>
+  <text class="sans t" x="175" y="545" text-anchor="middle">Tracked views</text>
+  <text class="mono s" x="175" y="567" text-anchor="middle">in_sync / <tspan class="warn">drifted</tspan> / missing</text>
+
+  <!-- STRAY: Unmanaged files / stray -->
+  <rect class="node" x="330" y="516" width="270" height="68" rx="8" ry="8"/>
+  <text class="sans t" x="465" y="545" text-anchor="middle">Unmanaged files</text>
+  <text class="mono s" x="465" y="567" text-anchor="middle">stray</text>
+</svg>

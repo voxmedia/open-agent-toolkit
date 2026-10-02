@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 584" width="640" height="584" role="img" aria-labelledby="adoption-paths-title adoption-paths-desc">
+  <title id="adoption-paths-title">Choose what to adopt</title>
+  <desc id="adoption-paths-desc">Starting from the question &#8220;What do you need first?&#8221;, four independent starting paths: align coding tools (Provider Sync), help with one task (Reusable Skills), resume longer work (Workflows), and maintain documentation (Markdown or a docs site). Dashed edges from each path lead to &#8220;Add another path whenever useful&#8221;.</desc>
+  <style>
+    svg {
+      --bg: #161d27;
+      --node: #1d2633;
+      --node-em: #1f2d42;
+      --border: #2b3646;
+      --text: #dde4ee;
+      --text-2: #9ba7b8;
+      --accent: #8fb6ee;
+      --optional: #8693a5;
+    }
+    .canvas { fill: var(--bg); }
+    .node { fill: var(--node); stroke: var(--border); stroke-width: 1.5; }
+    .node-em { fill: var(--node-em); stroke: var(--accent); stroke-width: 1.5; }
+    .edge { fill: none; stroke: var(--accent); stroke-width: 1.5; }
+    .edge-opt { fill: none; stroke: var(--optional); stroke-width: 1.5; stroke-dasharray: 5 4; }
+    .head { fill: var(--accent); }
+    .head-opt { fill: var(--optional); }
+    .dot { fill: var(--accent); }
+    .dot-opt { fill: var(--optional); }
+    .t { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; font-size: 15px; fill: var(--text); }
+    .t-strong { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; font-size: 15px; font-weight: 600; fill: var(--text); }
+    .t-2 { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; font-size: 13px; fill: var(--text-2); }
+    .mono { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; font-size: 15px; fill: var(--text); }
+    .mono-strong { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; font-size: 15px; font-weight: 600; fill: var(--text); }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
+      <path class="head" d="M0 0 L10 5 L0 10 Z"/>
+    </marker>
+    <marker id="arrow-opt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
+      <path class="head-opt" d="M0 0 L10 5 L0 10 Z"/>
+    </marker>
+  </defs>
+  <rect class="canvas" x="0" y="0" width="640" height="584" rx="12" ry="12"/>
+  <!-- GOAL: decision -->
+  <rect class="node-em" x="200" y="28" width="240" height="68" rx="34" ry="34"/>
+  <text class="t-strong" x="320" y="57" text-anchor="middle">What do you</text>
+  <text class="t-strong" x="320" y="77" text-anchor="middle">need first?</text>
+  <!-- SYNC -->
+  <rect class="node" x="128" y="136" width="384" height="64" rx="8" ry="8"/>
+  <text class="t-strong" x="320" y="163" text-anchor="middle">Align coding tools</text>
+  <text class="t-2" x="320" y="183" text-anchor="middle">Provider Sync</text>
+  <!-- SKILLS -->
+  <rect class="node" x="128" y="220" width="384" height="64" rx="8" ry="8"/>
+  <text class="t-strong" x="320" y="247" text-anchor="middle">Help with one task</text>
+  <text class="t-2" x="320" y="267" text-anchor="middle">Reusable Skills</text>
+  <!-- WORK -->
+  <rect class="node" x="128" y="304" width="384" height="64" rx="8" ry="8"/>
+  <text class="t-strong" x="320" y="331" text-anchor="middle">Resume longer work</text>
+  <text class="t-2" x="320" y="351" text-anchor="middle">Workflows</text>
+  <!-- DOCS -->
+  <rect class="node" x="128" y="388" width="384" height="64" rx="8" ry="8"/>
+  <text class="t-strong" x="320" y="415" text-anchor="middle">Maintain documentation</text>
+  <text class="t-2" x="320" y="435" text-anchor="middle">Markdown or a docs site</text>
+  <!-- GOAL --> each path (solid) -->
+  <path class="edge" d="M200 62 H68 Q56 62 56 74 V408 Q56 420 68 420 H128" marker-end="url(#arrow)"/>
+  <path class="edge" d="M56 168 H128" marker-end="url(#arrow)"/>
+  <circle class="dot" cx="56" cy="168" r="3"/>
+  <path class="edge" d="M56 252 H128" marker-end="url(#arrow)"/>
+  <circle class="dot" cx="56" cy="252" r="3"/>
+  <path class="edge" d="M56 336 H128" marker-end="url(#arrow)"/>
+  <circle class="dot" cx="56" cy="336" r="3"/>
+  <!-- LATER -->
+  <rect class="node" x="200" y="492" width="240" height="64" rx="8" ry="8"/>
+  <text class="t-strong" x="320" y="519" text-anchor="middle">Add another path</text>
+  <text class="t-2" x="320" y="539" text-anchor="middle">whenever useful</text>
+  <!-- each path -.-> LATER (dashed) -->
+  <path class="edge-opt" d="M512 168 H572 Q584 168 584 180 V512 Q584 524 572 524 H440" marker-end="url(#arrow-opt)"/>
+  <path class="edge-opt" d="M512 252 H584"/>
+  <circle class="dot-opt" cx="584" cy="252" r="3"/>
+  <path class="edge-opt" d="M512 336 H584"/>
+  <circle class="dot-opt" cx="584" cy="336" r="3"/>
+  <path class="edge-opt" d="M512 420 H584"/>
+  <circle class="dot-opt" cx="584" cy="420" r="3"/>
+</svg>

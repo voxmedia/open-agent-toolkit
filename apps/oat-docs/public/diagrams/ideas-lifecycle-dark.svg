@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 828" width="600" height="828" role="img" aria-labelledby="t d">
+<title id="t">Ideas lifecycle: where a thought goes in OAT</title>
+<desc id="d">Decision flow starting from the question "How formed is the thought?". Solid edges from the question: unsure leads to oat-brainstorm (may end inline or as a doc); seed leads to a scratchpad seed at .oat/ideas/scratchpad.md; explore leads to an idea at .oat/ideas/{idea}/discovery.md; scoped leads to a backlog item under .oat/repo/pjm/backlog/items/; ready leads to a project at .oat/projects/{scope}/{slug}/. Dashed optional edges: oat-brainstorm can lead to an idea, a backlog item, or project(s); the scratchpad seed optionally leads to an idea; an idea optionally leads to a summarized idea at .oat/ideas/{idea}/summary.md; a summarized idea optionally leads to a project; a backlog item optionally leads to a project; and a project optionally (spec-driven) leads to parent plus child projects.</desc>
+<style>
+svg{--bg:#161d27;--node:#1d2633;--node-em:#1f2d42;--border:#2b3646;--text:#dde4ee;--text2:#9ba7b8;--accent:#8fb6ee;--opt:#8693a5}
+.canvas{fill:var(--bg)}.node{fill:var(--node);stroke:var(--border);stroke-width:1.5}.node.em{fill:var(--node-em)}.decision{fill:var(--node-em);stroke:var(--accent);stroke-width:1.5}.e{fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}.e.solid{stroke:var(--accent)}.e.dash{stroke:var(--opt);stroke-dasharray:5 4}.ah-accent{fill:var(--accent)}.ah-opt{fill:var(--opt)}.lbl-bg{fill:var(--bg)}text{font-family:-apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;text-anchor:middle;dominant-baseline:central}.title{font-size:15px;font-weight:600;fill:var(--text)}.mono{font-family:"JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;font-weight:600}.sub{font-size:13px;fill:var(--text2)}.path{font-family:"JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;font-size:13px;fill:var(--text2)}.q{font-size:15px;font-weight:600;fill:var(--text)}.lbl{font-size:13px}.lbl.solid{fill:var(--accent);font-weight:600}.lbl.dash{fill:var(--text2)}
+</style>
+<defs><marker id="ah-accent" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path class="ah-accent" d="M0,0.8 L10,5 L0,9.2 Z"/></marker><marker id="ah-opt" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path class="ah-opt" d="M0,0.8 L10,5 L0,9.2 Z"/></marker></defs>
+<rect class="canvas" x="0" y="0" width="600" height="828" rx="12"/>
+<g id="edges">
+<path class="e solid" d="M147,84 L147,140" marker-end="url(#ah-accent)"/>
+<path class="e solid" d="M453,84 L453,140" marker-end="url(#ah-accent)"/>
+<path class="e solid" d="M280,84 L280,305 Q280,315 270,315 L250,315" marker-end="url(#ah-accent)"/>
+<path class="e solid" d="M490,54 L570,54 Q580,54 580,64 L580,322 Q580,332 570,332 L556,332" marker-end="url(#ah-accent)"/>
+<path class="e solid" d="M110,54 L30,54 Q20,54 20,64 L20,622 Q20,632 30,632 L110,632" marker-end="url(#ah-accent)"/>
+<path class="e dash" d="M350,165 L315,165 Q305,165 305,175 L305,340 Q305,350 295,350 L250,350" marker-end="url(#ah-opt)"/>
+<path class="e dash" d="M453,224 L453,290" marker-end="url(#ah-opt)"/>
+<path class="e dash" d="M350,200 L340,200 Q330,200 330,210 L330,590" marker-end="url(#ah-opt)"/>
+<path class="e dash" d="M147,224 L147,290" marker-end="url(#ah-opt)"/>
+<path class="e dash" d="M147,374 L147,440" marker-end="url(#ah-opt)"/>
+<path class="e dash" d="M147,524 L147,590" marker-end="url(#ah-opt)"/>
+<path class="e dash" d="M453,374 L453,590" marker-end="url(#ah-opt)"/>
+<path class="e dash" d="M300,674 L300,740" marker-end="url(#ah-opt)"/>
+</g>
+<g id="nodes">
+<rect class="decision" x="110" y="24" width="380" height="60" rx="30"/>
+<text class="q" x="300" y="44">How formed is</text>
+<text class="q" x="300" y="64">the thought?</text>
+<rect class="node" x="350" y="140" width="206" height="84" rx="8"/>
+<text class="title mono" x="453" y="164">oat-brainstorm</text>
+<text class="sub" x="453" y="186">(may end inline</text>
+<text class="sub" x="453" y="204">or as a doc)</text>
+<rect class="node" x="44" y="140" width="206" height="84" rx="8"/>
+<text class="title" x="147" y="164">Scratchpad seed</text>
+<text class="path" x="147" y="186">.oat/ideas/</text>
+<text class="path" x="147" y="204">scratchpad.md</text>
+<rect class="node" x="44" y="290" width="206" height="84" rx="8"/>
+<text class="title" x="147" y="314">Idea</text>
+<text class="path" x="147" y="336">.oat/ideas/{idea}/</text>
+<text class="path" x="147" y="354">discovery.md</text>
+<rect class="node" x="350" y="290" width="206" height="84" rx="8"/>
+<text class="title" x="453" y="314">Backlog item</text>
+<text class="path" x="453" y="336">.oat/repo/pjm/</text>
+<text class="path" x="453" y="354">backlog/items/</text>
+<rect class="node" x="44" y="440" width="206" height="84" rx="8"/>
+<text class="title" x="147" y="464">Summarized idea</text>
+<text class="path" x="147" y="486">.oat/ideas/{idea}/</text>
+<text class="path" x="147" y="504">summary.md</text>
+<rect class="node em" x="110" y="590" width="380" height="84" rx="8"/>
+<text class="title" x="300" y="614">Project</text>
+<text class="path" x="300" y="636">.oat/projects/</text>
+<text class="path" x="300" y="654">{scope}/{slug}/</text>
+<rect class="node" x="190" y="740" width="220" height="64" rx="8"/>
+<text class="title" x="300" y="762">Parent +</text>
+<text class="title" x="300" y="782">child projects</text>
+</g>
+<g id="labels">
+<rect class="lbl-bg" x="126" y="102" width="42" height="20" rx="4"/>
+<text class="lbl solid" x="147" y="112">seed</text>
+<rect class="lbl-bg" x="425" y="102" width="56" height="20" rx="4"/>
+<text class="lbl solid" x="453" y="112">unsure</text>
+<rect class="lbl-bg" x="248.5" y="102" width="63" height="20" rx="4"/>
+<text class="lbl solid" x="280" y="112">explore</text>
+<rect class="lbl-bg" x="507" y="44" width="56" height="20" rx="4"/>
+<text class="lbl solid" x="535" y="54">scoped</text>
+<rect class="lbl-bg" x="40.5" y="44" width="49" height="20" rx="4"/>
+<text class="lbl solid" x="65" y="54">ready</text>
+<rect class="lbl-bg" x="288" y="472" width="84" height="20" rx="4"/>
+<text class="lbl dash" x="330" y="482">project(s)</text>
+<rect class="lbl-bg" x="112" y="247" width="70" height="20" rx="4"/>
+<text class="lbl dash" x="147" y="257">optional</text>
+<rect class="lbl-bg" x="112" y="397" width="70" height="20" rx="4"/>
+<text class="lbl dash" x="147" y="407">optional</text>
+<rect class="lbl-bg" x="112" y="547" width="70" height="20" rx="4"/>
+<text class="lbl dash" x="147" y="557">optional</text>
+<rect class="lbl-bg" x="418" y="472" width="70" height="20" rx="4"/>
+<text class="lbl dash" x="453" y="482">optional</text>
+<rect class="lbl-bg" x="247.5" y="688" width="105" height="38" rx="4"/>
+<text class="lbl dash" x="300" y="698">optional</text>
+<text class="lbl dash" x="300" y="716">(spec-driven)</text>
+</g>
+</svg>

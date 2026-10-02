@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 306" width="680" height="306" role="img" aria-labelledby="title desc">
+  <title id="title">Capture lane</title>
+  <desc id="desc">Capture lane: Work on branch (no project), then oat-project-capture, then Review / PR.</desc>
+  <style>
+    svg {
+      --bg: #161d27;
+      --node: #1d2633;
+      --node-em: #1f2d42;
+      --border: #2b3646;
+      --text: #dde4ee;
+      --text-2: #9ba7b8;
+      --accent: #8fb6ee;
+      --muted: #8693a5;
+      --warn: #f0a868;
+    }
+    .bg { fill: var(--bg); }
+    .node { fill: var(--node); stroke: var(--border); stroke-width: 1.5; }
+    .node-em { fill: var(--node-em); stroke: var(--border); stroke-width: 1.5; }
+    .decision { fill: var(--node-em); stroke: var(--accent); stroke-width: 1.5; }
+    .group { fill: none; stroke: var(--border); stroke-width: 1.5; }
+    .edge { fill: none; stroke: var(--accent); stroke-width: 1.5; }
+    .arrowhead { fill: var(--accent); }
+    .label-bg { fill: var(--bg); }
+    .t { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; font-size: 15px; font-weight: 500; fill: var(--text); }
+    .t2 { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; font-size: 13px; fill: var(--text-2); }
+    .m { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; font-size: 15px; font-weight: 500; fill: var(--text); }
+    .m2 { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; font-size: 13px; fill: var(--text-2); }
+    .el { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; font-size: 13px; fill: var(--text-2); }
+    .gl { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.04em; fill: var(--text-2); }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
+      <path class="arrowhead" d="M0,0 L10,5 L0,10 z"/>
+    </marker>
+  </defs>
+  <rect class="bg" x="0" y="0" width="680" height="306" rx="12"/>
+  <path class="edge" d="M340,98 L340,137" marker-end="url(#arrow)"/>
+  <path class="edge" d="M340,186 L340,225" marker-end="url(#arrow)"/>
+  <rect class="node-em" x="200" y="32" width="280" height="66" rx="8"/>
+  <text class="t" x="340" y="61" text-anchor="middle">Work on branch</text>
+  <text class="t2" x="340" y="79" text-anchor="middle">(no project)</text>
+  <rect class="node" x="200" y="138" width="280" height="48" rx="8"/>
+  <text class="m" x="340" y="167" text-anchor="middle">oat-project-capture</text>
+  <rect class="node" x="200" y="226" width="280" height="48" rx="8"/>
+  <text class="t" x="340" y="255" text-anchor="middle">Review / PR</text>
+</svg>
