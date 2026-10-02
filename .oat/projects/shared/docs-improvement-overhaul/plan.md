@@ -294,6 +294,7 @@ Paths named in p04/p05 express the agreed destination intent. Resolve and rechec
 | plan   | artifact | passed          | 2026-10-01 | reviews/plan-review-round-02.md                    | 884b56d80769cb4d94fa289f34e027973137e410 | auto       | -           |
 | design | artifact | passed          | 2026-10-01 | reviews/plan-review-round-02.md                    | 884b56d80769cb4d94fa289f34e027973137e410 | manual     | -           |
 | plan   | artifact | received        | 2026-10-02 | reviews/artifact-plan-review-2026-10-02T031625Z.md | -                                        | -          | -           |
+| plan   | artifact | received        | 2026-10-02 | reviews/artifact-plan-review-2026-10-02T032232Z.md | -                                        | -          | -           |
 
 Preserved spec row is not applicable in quick mode; no spec.md required. Events are append-ordered and bound to artifact filenames; never overwrite a bound event with a different review. No code/browser review is claimed in planning.
 
