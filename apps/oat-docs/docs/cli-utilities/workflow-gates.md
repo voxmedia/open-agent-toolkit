@@ -1015,10 +1015,38 @@ diagnostic because the refusal itself explains why execution stopped.
 
 Before spawn, the gate also writes a transient marker under the system temp
 directory at `oat-gate-runs/<runId>.json`; startup diagnostics print its path.
-The marker records target, runtime, project, review type/scope, start time,
-budget, and budget source. It is deleted at terminal completion. An orphaned
-marker indicates the gate parent itself stopped unexpectedly, but markers are
-diagnostic only and are never used for artifact validation.
+The marker records target, runtime, project, the resolved project directory
+(`projectRoot`), the owning gate process ID (`pid`), review type/scope, start
+time, budget, and budget source. It is deleted at terminal completion. An
+orphaned marker indicates the gate parent itself stopped unexpectedly. Markers
+are never used for artifact validation; their one other use is duplicate-run
+detection, described next.
+
+#### Nested and duplicate runs
+
+Before launching, `oat gate review` scans `oat-gate-runs/` for another live gate
+reviewing the same project directory, review type, and review scope. A marker
+counts only when it parses, carries `pid` and `projectRoot`, matches all three
+fields (type and scope compare case-insensitively), and its process is still
+alive. Dead-process markers, unparseable files, markers written by older CLIs,
+markers for another scope, and the per-run shim directories are ignored.
+
+A live match rejects the new run without launching a target, writing a marker,
+or appending a project-log entry. The run exits nonzero with `status:
+review_failed`, `outcome: review_did_not_complete`, and a message naming the
+matched run, its process ID, and its marker path. This catches a reviewer that
+launches its own gate for the scope it is reviewing, and a second orchestrator
+launch for a scope that is already under review. Wait for the live run to
+finish; remove the named marker only when that process is not a gate.
+
+The `ok`/`blocked` envelope and the `review_did_not_complete` envelope (child
+failure, timeout, refusal, or duplicate rejection) record the decision as
+`recursion`: `{ "decision": "none" }`,
+`{ "decision": "rejected", "matchedRunId": "<runId>" }`, or
+`{ "decision": "unchecked" }` when the marker directory could not be read (the
+gate warns and continues). Other envelopes keep their existing shape. JSON mode
+also writes a `gate-recursion` diagnostic line beside the `gate-run-marker`
+line; a rejection adds `matchedPid` and `markerPath`.
 
 After a review target times out, OAT re-scans the project reviews for exactly
 one artifact carrying that invocation's `oat_gate_run_id`. A recovered artifact
@@ -1052,6 +1080,7 @@ those artifacts; correct the project/run correlation and start a new gate run.
 | Passing artifact lost receive routing                                 | handoff and `receiveEligible` fixture                                                                                  |
 | Passing review reported as a failed gate after a post-selection error | post-selection recovery cases plus snapshot-replacement, non-gate-marker, and foreign-target controls                  |
 | Transient index lock turned a completed review into a failed gate     | index-lock retry cases plus persistent/transient classification, receipt fixture, and fresh-process recovery control   |
+| A second gate ran for a project and scope already under review        | duplicate-run unit cases plus live-marker rejection and dead/unparseable/other-scope/shim fake-runtime controls        |
 
 ## Current limits
 

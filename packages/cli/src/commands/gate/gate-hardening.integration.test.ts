@@ -1,5 +1,12 @@
 import { execFileSync, spawn } from 'node:child_process';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  realpath,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -35,10 +42,18 @@ interface GateRunResult {
   diagnostics: Record<string, unknown>[];
 }
 
-async function setupFixture(): Promise<{ root: string; home: string }> {
+interface GateFixture {
+  root: string;
+  home: string;
+  /** Per-fixture TMPDIR, so run markers from other processes are never seen. */
+  tmp: string;
+}
+
+async function setupFixture(): Promise<GateFixture> {
   const root = await mkdtemp(join(tmpdir(), 'oat-gate-hardening-'));
   const home = await mkdtemp(join(tmpdir(), 'oat-gate-hardening-home-'));
-  tempRoots.push(root, home);
+  const tmp = await mkdtemp(join(tmpdir(), 'oat-gate-hardening-tmp-'));
+  tempRoots.push(root, home, tmp);
   const project = '.oat/projects/shared/demo';
   execFileSync('git', ['init', '-q'], { cwd: root });
   await mkdir(join(root, project), { recursive: true });
@@ -72,11 +87,11 @@ async function setupFixture(): Promise<{ root: string; home: string }> {
       },
     })}\n`,
   );
-  return { root, home };
+  return { root, home, tmp };
 }
 
 async function runGate(
-  fixture: { root: string; home: string },
+  fixture: GateFixture,
   options: {
     env?: NodeJS.ProcessEnv;
     json?: boolean;
@@ -112,6 +127,7 @@ async function runGate(
       env: {
         ...process.env,
         HOME: fixture.home,
+        TMPDIR: fixture.tmp,
         NO_UPDATE_NOTIFIER: '1',
         OAT_GATE_LIVENESS_INTERVAL_MS: '100',
         FAKE_GATE_WRITE_ROUTE_RECEIPT_RUNTIME: 'cursor',
@@ -159,12 +175,55 @@ async function runGate(
           finalPayload ??
           jsonLines.findLast((entry) => typeof entry.status === 'string'),
         diagnostics: jsonLines.filter((entry) =>
-          ['gate-start', 'gate-liveness', 'gate-route'].includes(
-            String(entry.type),
-          ),
+          [
+            'gate-start',
+            'gate-liveness',
+            'gate-route',
+            'gate-recursion',
+          ].includes(String(entry.type)),
         ),
       });
     });
+  });
+}
+
+async function seedRunMarkers(
+  fixture: GateFixture,
+  markers: Array<{ runId: string; pid: number; reviewScope?: string }>,
+): Promise<string> {
+  const dir = join(fixture.tmp, 'oat-gate-runs');
+  const project = '.oat/projects/shared/demo';
+  const projectRoot = await realpath(join(fixture.root, project));
+  // A branch-local CLI shim directory and an unparseable marker sit beside
+  // the markers, as they can in a real run directory.
+  await mkdir(join(dir, 'shim-run', 'bin'), { recursive: true });
+  await writeFile(join(dir, 'broken.json'), '{"runId":');
+  for (const marker of markers) {
+    await writeFile(
+      join(dir, `${marker.runId}.json`),
+      `${JSON.stringify({
+        runId: marker.runId,
+        targetId: 'fake-runtime',
+        runtime: 'cursor',
+        reviewType: 'code',
+        reviewScope: marker.reviewScope ?? 'final',
+        project,
+        projectRoot,
+        pid: marker.pid,
+        startedAt: new Date().toISOString(),
+        budgetMs: 1_800_000,
+        budgetSource: 'scope-default',
+      })}\n`,
+    );
+  }
+  return dir;
+}
+
+async function exitedProcessPid(): Promise<number> {
+  return await new Promise((resolvePid, reject) => {
+    const child = spawn(process.execPath, ['-e', ''], { stdio: 'ignore' });
+    child.on('error', reject);
+    child.on('close', () => resolvePid(child.pid ?? -1));
   });
 }
 
@@ -340,6 +399,61 @@ describe(
       expect(artifact).toContain(
         `oat_gate_run_id: ${String(result.payload?.runId)}`,
       );
+    });
+
+    it('case 8: a live gate for the same project and scope rejects a duplicate launch', async () => {
+      const fixture = await setupFixture();
+      const markerDir = await seedRunMarkers(fixture, [
+        { runId: 'live-run', pid: process.pid },
+      ]);
+      const result = await runGate(fixture, {
+        env: { FAKE_GATE_ARTIFACT: 'correlated' },
+      });
+
+      expect(result.exitCode, `${result.stdout}\n${result.stderr}`).toBe(1);
+      expect(result.payload).toMatchObject({
+        status: 'review_failed',
+        outcome: 'review_did_not_complete',
+        recursion: { decision: 'rejected', matchedRunId: 'live-run' },
+      });
+      expect(result.payload).not.toHaveProperty('receiveEligible');
+      expect(result.diagnostics).toContainEqual({
+        type: 'gate-recursion',
+        runId: expect.any(String),
+        decision: 'rejected',
+        matchedRunId: 'live-run',
+        matchedPid: process.pid,
+        markerPath: join(markerDir, 'live-run.json'),
+      });
+      // Nothing launched, and the live run's marker is left alone.
+      expect(
+        result.diagnostics.filter((entry) => entry.type === 'gate-start'),
+      ).toEqual([]);
+      await expect(
+        readFile(join(markerDir, 'live-run.json'), 'utf8'),
+      ).resolves.toContain('live-run');
+    });
+
+    it('case 9: dead, unparseable, other-scope, and shim entries do not block a launch', async () => {
+      const fixture = await setupFixture();
+      await seedRunMarkers(fixture, [
+        { runId: 'dead-run', pid: await exitedProcessPid() },
+        { runId: 'other-scope', pid: process.pid, reviewScope: 'p01' },
+      ]);
+      const result = await runGate(fixture, {
+        env: { FAKE_GATE_ARTIFACT: 'correlated' },
+      });
+
+      expect(result.exitCode, `${result.stdout}\n${result.stderr}`).toBe(0);
+      expect(result.payload).toMatchObject({
+        status: 'ok',
+        recursion: { decision: 'none' },
+      });
+      expect(result.diagnostics).toContainEqual({
+        type: 'gate-recursion',
+        runId: expect.any(String),
+        decision: 'none',
+      });
     });
   },
 );

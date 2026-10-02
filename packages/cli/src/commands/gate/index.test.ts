@@ -4,6 +4,7 @@ import {
   mkdtemp,
   readdir,
   readFile,
+  realpath,
   rm,
   symlink,
   writeFile,
@@ -56,6 +57,8 @@ interface HarnessOptions {
     path: string,
     warn: (message: string) => void,
   ) => Promise<void>;
+  listGateRunMarkers?: (dir: string) => Promise<GateRunMarkerEntry[]>;
+  isProcessAlive?: (pid: number) => boolean;
   readGateRouteReceipt?: (
     path: string,
     expectedCliRoot: string,
@@ -70,6 +73,12 @@ interface HarnessOptions {
     warn: (message: string) => void,
   ) => Promise<boolean>;
   sleep?: (ms: number) => Promise<void>;
+}
+
+interface GateRunMarkerEntry {
+  name: string;
+  isFile: boolean;
+  read: () => Promise<string>;
 }
 
 interface ProcessCall {
@@ -170,6 +179,10 @@ function createHarness(options: HarnessOptions): {
     ...(options.removeGateRunMarker
       ? { removeGateRunMarker: options.removeGateRunMarker }
       : {}),
+    // Never scan the real system-temp marker directory from unit tests, where
+    // markers from unrelated processes could be observed.
+    listGateRunMarkers: options.listGateRunMarkers ?? (async () => []),
+    isProcessAlive: options.isProcessAlive ?? (() => false),
     appendProjectLog:
       options.appendProjectLog ??
       (async () => ({ status: 'skipped', reason: 'projectLog=false' })),
@@ -395,6 +408,8 @@ async function runReviewGate(options: {
   writeDiagnostic?: (message: string) => void;
   writeGateRunMarker?: HarnessOptions['writeGateRunMarker'];
   removeGateRunMarker?: HarnessOptions['removeGateRunMarker'];
+  listGateRunMarkers?: HarnessOptions['listGateRunMarkers'];
+  isProcessAlive?: HarnessOptions['isProcessAlive'];
   readGateRouteReceipt?: HarnessOptions['readGateRouteReceipt'];
   createGateActivityProbe?: HarnessOptions['createGateActivityProbe'];
   appendProjectLog?: HarnessOptions['appendProjectLog'];
@@ -413,6 +428,8 @@ async function runReviewGate(options: {
     writeDiagnostic: options.writeDiagnostic,
     writeGateRunMarker: options.writeGateRunMarker,
     removeGateRunMarker: options.removeGateRunMarker,
+    listGateRunMarkers: options.listGateRunMarkers,
+    isProcessAlive: options.isProcessAlive,
     readGateRouteReceipt: options.readGateRouteReceipt,
     createGateActivityProbe: options.createGateActivityProbe,
     appendProjectLog: options.appendProjectLog,
@@ -6893,6 +6910,8 @@ describe('oat gate', () => {
         reviewType: 'code',
         reviewScope: 'p02',
         project: projectPath,
+        projectRoot: await realpath(join(root, projectPath)),
+        pid: process.pid,
         startedAt: expect.any(String),
         budgetMs: 1_800_000,
         budgetSource: 'scope-default',
@@ -6901,6 +6920,266 @@ describe('oat gate', () => {
       expect(outcome).toBeTruthy();
     },
   );
+
+  describe('duplicate live gate runs', () => {
+    const markerEntry = (
+      name: string,
+      marker: Record<string, unknown> | string,
+    ): GateRunMarkerEntry => ({
+      name,
+      isFile: true,
+      read: async () =>
+        typeof marker === 'string' ? marker : JSON.stringify(marker),
+    });
+
+    async function liveMarker(
+      root: string,
+      projectPath: string,
+      overrides: Record<string, unknown> = {},
+    ): Promise<Record<string, unknown>> {
+      return {
+        runId: 'live-run',
+        targetId: 'codex-default',
+        runtime: 'codex',
+        reviewType: 'code',
+        reviewScope: 'p02',
+        project: projectPath,
+        projectRoot: await realpath(join(root, projectPath)),
+        pid: 4242,
+        startedAt: '2026-10-02T00:00:00.000Z',
+        budgetMs: 1_800_000,
+        budgetSource: 'scope-default',
+        ...overrides,
+      };
+    }
+
+    const reviewArgs = [
+      '--target',
+      'codex-default',
+      '--review-type',
+      'code',
+      '--review-scope',
+      'p02',
+      'Review',
+    ];
+
+    it('rejects a live gate for the same project, review type, and scope without launching', async () => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      const runner = createProcessRunner();
+      const scannedDirs: string[] = [];
+      const markerWrites: string[] = [];
+      const diagnostics: string[] = [];
+      const projectLogAppends: unknown[] = [];
+      const marker = await liveMarker(root, projectPath, {
+        reviewType: 'Code',
+        reviewScope: ' P02 ',
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        writeDiagnostic: (message) => diagnostics.push(message),
+        listGateRunMarkers: async (dir) => {
+          scannedDirs.push(dir);
+          return [markerEntry('live-run.json', marker)];
+        },
+        isProcessAlive: (pid) => pid === 4242,
+        writeGateRunMarker: async (path) => {
+          markerWrites.push(path);
+          return true;
+        },
+        appendProjectLog: async (input) => {
+          projectLogAppends.push(input);
+          return { status: 'skipped', reason: 'projectLog=false' };
+        },
+        args: reviewArgs,
+      });
+
+      expect(scannedDirs).toEqual([join(tmpdir(), 'oat-gate-runs')]);
+      expect(
+        runner.calls.filter((call) => call.purpose === 'execute'),
+      ).toHaveLength(0);
+      expect(markerWrites).toHaveLength(0);
+      expect(projectLogAppends).toHaveLength(0);
+      expect(capture.jsonPayloads).toHaveLength(1);
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'review_failed',
+        outcome: 'review_did_not_complete',
+        project: projectPath,
+        recursion: { decision: 'rejected', matchedRunId: 'live-run' },
+        message: expect.stringContaining('live-run'),
+      });
+      expect(capture.jsonPayloads[0]).not.toHaveProperty('receiveEligible');
+      expect(
+        diagnostics
+          .map((line) => JSON.parse(line) as Record<string, unknown>)
+          .filter((entry) => entry.type === 'gate-recursion'),
+      ).toEqual([
+        {
+          type: 'gate-recursion',
+          runId: expect.any(String),
+          decision: 'rejected',
+          matchedRunId: 'live-run',
+          matchedPid: 4242,
+          markerPath: join(tmpdir(), 'oat-gate-runs', 'live-run.json'),
+        },
+      ]);
+      expect(process.exitCode).toBe(1);
+    });
+
+    it('ignores dead, unparseable, unrelated, legacy, and shim-directory entries', async () => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+        },
+      });
+      const diagnostics: string[] = [];
+      const markerWrites: Array<Record<string, unknown>> = [];
+      const livenessChecks: number[] = [];
+      const deadMarker = await liveMarker(root, projectPath, {
+        runId: 'dead-run',
+        pid: 5151,
+      });
+      const otherScope = await liveMarker(root, projectPath, {
+        runId: 'other-scope',
+        reviewScope: 'p03',
+      });
+      const otherType = await liveMarker(root, projectPath, {
+        runId: 'other-type',
+        reviewType: 'artifact',
+      });
+      const otherProject = await liveMarker(root, projectPath, {
+        runId: 'other-project',
+        projectRoot: join(root, 'elsewhere'),
+      });
+      const legacy = await liveMarker(root, projectPath, {
+        runId: 'legacy-run',
+      });
+      delete legacy.pid;
+      delete legacy.projectRoot;
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        writeDiagnostic: (message) => diagnostics.push(message),
+        listGateRunMarkers: async () => [
+          markerEntry('dead-run.json', deadMarker),
+          markerEntry('broken.json', '{"runId":'),
+          {
+            name: 'vanished.json',
+            isFile: true,
+            read: async () => {
+              throw Object.assign(new Error('gone'), { code: 'ENOENT' });
+            },
+          },
+          markerEntry('other-scope.json', otherScope),
+          markerEntry('other-type.json', otherType),
+          markerEntry('other-project.json', otherProject),
+          markerEntry('legacy-run.json', legacy),
+          {
+            name: 'live-run',
+            isFile: false,
+            read: async () => {
+              throw new Error('shim directories are never read');
+            },
+          },
+          markerEntry('notes.txt', await liveMarker(root, projectPath)),
+        ],
+        isProcessAlive: (pid) => {
+          livenessChecks.push(pid);
+          return pid !== 5151;
+        },
+        writeGateRunMarker: async (_path, marker) => {
+          markerWrites.push(marker);
+          return true;
+        },
+        args: reviewArgs,
+      });
+
+      expect(livenessChecks).toEqual([5151]);
+      expect(
+        runner.calls.filter((call) => call.purpose === 'execute'),
+      ).toHaveLength(1);
+      expect(markerWrites).toHaveLength(1);
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        recursion: { decision: 'none' },
+      });
+      expect(
+        diagnostics
+          .map((line) => JSON.parse(line) as Record<string, unknown>)
+          .filter((entry) => entry.type === 'gate-recursion'),
+      ).toEqual([
+        {
+          type: 'gate-recursion',
+          runId: expect.any(String),
+          decision: 'none',
+        },
+      ]);
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('records an unchecked decision and continues when the marker scan fails', async () => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+        },
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        listGateRunMarkers: async () => {
+          throw Object.assign(new Error('permission denied'), {
+            code: 'EACCES',
+          });
+        },
+        args: reviewArgs,
+      });
+
+      expect(capture.warn).toEqual([
+        expect.stringContaining('Unable to scan gate run markers'),
+      ]);
+      expect(
+        runner.calls.filter((call) => call.purpose === 'execute'),
+      ).toHaveLength(1);
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        recursion: { decision: 'unchecked' },
+      });
+    });
+
+    it('carries the recursion decision on failure envelopes after launch', async () => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      const runner = createProcessRunner({ executeTimedOut: true });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        args: reviewArgs,
+      });
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'review_failed',
+        timedOut: true,
+        recursion: { decision: 'none' },
+      });
+    });
+  });
 
   it('warns and continues when run marker writes fail', async () => {
     const { root, home } = await setup();

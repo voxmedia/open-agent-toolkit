@@ -1,6 +1,13 @@
 import { execFileSync } from 'node:child_process';
 import { createHash, randomUUID } from 'node:crypto';
-import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  mkdir,
+  readdir,
+  readFile,
+  realpath,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import {
   basename,
@@ -157,6 +164,8 @@ interface GateCommandDependencies {
     path: string,
     warn: (message: string) => void,
   ) => Promise<void>;
+  listGateRunMarkers: (dir: string) => Promise<GateRunMarkerEntry[]>;
+  isProcessAlive: (pid: number) => boolean;
   writeGateProjectLogReceipt: (
     path: string,
     receipt: GateProjectLogReceipt,
@@ -239,9 +248,35 @@ interface GateRunMarker {
   reviewType: string | null;
   reviewScope: string | null;
   project: string;
+  /** Absolute, symlink-resolved project directory: the duplicate-run identity. */
+  projectRoot: string;
+  /** The gate process that owns the marker; a duplicate match must be alive. */
+  pid: number;
   startedAt: string;
   budgetMs: number;
   budgetSource: GateTimeoutSource;
+}
+
+/** One top-level entry of the run-marker directory, read lazily. */
+interface GateRunMarkerEntry {
+  name: string;
+  isFile: boolean;
+  read: () => Promise<string>;
+}
+
+/**
+ * Whether another live gate already reviews the same project, review type,
+ * and scope. `unchecked` means the marker scan itself failed.
+ */
+type GateRecursionDecision =
+  | { decision: 'none' }
+  | { decision: 'unchecked' }
+  | { decision: 'rejected'; matchedRunId: string };
+
+interface LiveGateRunMatch {
+  runId: string;
+  pid: number;
+  path: string;
 }
 
 type PersistedTimeoutLayer = 'local' | 'shared' | 'user';
@@ -429,6 +464,8 @@ const DEFAULT_DEPENDENCIES: GateCommandDependencies = {
   processEnv: process.env,
   writeGateRunMarker,
   removeGateRunMarker,
+  listGateRunMarkers,
+  isProcessAlive,
   writeGateProjectLogReceipt,
   sleep: async (ms) => {
     await new Promise((settle) => setTimeout(settle, ms));
@@ -479,13 +516,17 @@ const GATE_EXEC_TIMEOUT_MS = 15 * 60 * 1_000;
 const GATE_LIVENESS_INTERVAL_MS = 30_000;
 const AMBIENT_ACTIVITY_ATTRIBUTION = 'not attributable to this gate child';
 
+function gateRunMarkerDir(): string {
+  return join(tmpdir(), 'oat-gate-runs');
+}
+
 async function writeGateRunMarker(
   path: string,
   marker: GateRunMarker,
   warn: (message: string) => void,
 ): Promise<boolean> {
   try {
-    await mkdir(join(tmpdir(), 'oat-gate-runs'), { recursive: true });
+    await mkdir(gateRunMarkerDir(), { recursive: true });
     await writeFile(path, `${JSON.stringify(marker, null, 2)}\n`, 'utf8');
     return true;
   } catch (error) {
@@ -554,6 +595,123 @@ function warnWhenReceiptIsTracked(
     warn(
       `Gate project log receipt ${path} is not ignored by git. Add a gate-receipts ignore rule for this projects root, or the receipt will be committed by the next repository-wide add.`,
     );
+  }
+}
+
+/**
+ * Lists the top-level entries of the run-marker directory. Branch-local CLI
+ * shims live in per-run subdirectories of the same directory, so entries keep
+ * their file type for the caller to skip.
+ */
+async function listGateRunMarkers(dir: string): Promise<GateRunMarkerEntry[]> {
+  let entries;
+  try {
+    entries = await readdir(dir, { withFileTypes: true });
+  } catch (error) {
+    if (
+      error &&
+      typeof error === 'object' &&
+      'code' in error &&
+      error.code === 'ENOENT'
+    ) {
+      return [];
+    }
+    throw error;
+  }
+  return entries.map((entry) => ({
+    name: entry.name,
+    isFile: entry.isFile(),
+    read: async () => readFile(join(dir, entry.name), 'utf8'),
+  }));
+}
+
+function isProcessAlive(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    // EPERM: the process exists but belongs to another user.
+    return (
+      !!error &&
+      typeof error === 'object' &&
+      'code' in error &&
+      error.code === 'EPERM'
+    );
+  }
+}
+
+function normalizeGateRunKey(value: unknown): string | null {
+  if (typeof value !== 'string') {
+    return null;
+  }
+  return value.trim().toLowerCase() || null;
+}
+
+/**
+ * Finds a live gate run marker for the same project, review type, and scope.
+ * Unparseable markers, markers without a pid or project root (written by an
+ * older CLI), non-JSON entries, and shim directories are ignored. Liveness is
+ * checked only for a matching marker.
+ */
+async function findLiveGateRun(input: {
+  dir: string;
+  projectRoot: string;
+  reviewType: string | undefined;
+  reviewScope: string | undefined;
+  dependencies: Pick<
+    GateCommandDependencies,
+    'listGateRunMarkers' | 'isProcessAlive'
+  >;
+}): Promise<LiveGateRunMatch | null> {
+  const reviewType = normalizeGateRunKey(input.reviewType);
+  const reviewScope = normalizeGateRunKey(input.reviewScope);
+  for (const entry of await input.dependencies.listGateRunMarkers(input.dir)) {
+    if (!entry.isFile || !entry.name.endsWith('.json')) {
+      continue;
+    }
+    let marker: Record<string, unknown> | null;
+    try {
+      marker = rawRecord(JSON.parse(await entry.read()));
+    } catch {
+      continue;
+    }
+    if (
+      !marker ||
+      typeof marker.runId !== 'string' ||
+      typeof marker.projectRoot !== 'string' ||
+      typeof marker.pid !== 'number' ||
+      !Number.isInteger(marker.pid) ||
+      marker.pid <= 0
+    ) {
+      continue;
+    }
+    if (
+      marker.projectRoot !== input.projectRoot ||
+      normalizeGateRunKey(marker.reviewType) !== reviewType ||
+      normalizeGateRunKey(marker.reviewScope) !== reviewScope
+    ) {
+      continue;
+    }
+    if (input.dependencies.isProcessAlive(marker.pid)) {
+      return {
+        runId: marker.runId,
+        pid: marker.pid,
+        path: join(input.dir, entry.name),
+      };
+    }
+  }
+  return null;
+}
+
+async function resolveGateProjectRoot(
+  repoRoot: string,
+  projectPath: string,
+): Promise<string> {
+  const absolute = resolve(repoRoot, projectPath);
+  try {
+    return await realpath(absolute);
+  } catch {
+    return absolute;
   }
 }
 
@@ -2631,6 +2789,7 @@ function writeReviewGateResult(
     corroboration: GateInvocationCorroboration;
     lateCompletion?: true;
     postSelectionRecovery?: true;
+    recursion?: GateRecursionDecision;
   },
 ): void {
   const outcome = reviewGateOutcome(payload);
@@ -2687,16 +2846,20 @@ function writeReviewGateExecutionFailure(
     noOutputProduced?: boolean;
     refusal?: string;
     activityEvidence?: GateActivityEvidence;
+    duplicateRun?: LiveGateRunMatch & { reviewType: string; scope: string };
+    recursion?: GateRecursionDecision;
     gateInvocation: GateInvocationMetadata;
     dispatchReport: DispatchReportV1;
     corroboration?: GateInvocationCorroboration;
   },
 ): void {
-  const message = payload.refusal
-    ? `Review did not complete: reviewer refused the headless route (${payload.refusal}).`
-    : payload.timedOut
-      ? `Review did not complete: target ${payload.target} timed out after ${payload.timeoutMs}ms.`
-      : `Review did not complete: target ${payload.target} exited with code ${payload.exitCode}.`;
+  const message = payload.duplicateRun
+    ? `Review did not start: gate run ${payload.duplicateRun.runId} (pid ${payload.duplicateRun.pid}) is already reviewing ${payload.project} (${payload.duplicateRun.reviewType} review, scope ${payload.duplicateRun.scope}). Wait for it to finish, or remove its marker ${payload.duplicateRun.path} if that process is not a gate.`
+    : payload.refusal
+      ? `Review did not complete: reviewer refused the headless route (${payload.refusal}).`
+      : payload.timedOut
+        ? `Review did not complete: target ${payload.target} timed out after ${payload.timeoutMs}ms.`
+        : `Review did not complete: target ${payload.target} exited with code ${payload.exitCode}.`;
   if (context.json) {
     context.logger.json({
       status: 'review_failed',
@@ -2725,6 +2888,7 @@ function writeReviewGateExecutionFailure(
       ...(payload.activityEvidence
         ? { activityEvidence: payload.activityEvidence }
         : {}),
+      ...(payload.recursion ? { recursion: payload.recursion } : {}),
       message,
     });
     return;
@@ -4072,6 +4236,7 @@ async function runReviewGate(
   dependencies: GateCommandDependencies,
 ): Promise<void> {
   const runId = randomUUID();
+  let recursion: GateRecursionDecision | undefined;
   let runMarkerPath: string | undefined;
   let runMarkerWritten = false;
   let branchLocalGateCli: BranchLocalGateCli | undefined;
@@ -4141,6 +4306,60 @@ async function runReviewGate(
       gateInvocation,
       options.reviewScope?.trim() || 'gate-review',
     );
+    // Reject a second live gate for the same project, review type, and scope
+    // (for example a reviewer that launches its own gate) before anything is
+    // launched or logged.
+    const projectRoot = await resolveGateProjectRoot(repoRoot, projectPath);
+    let duplicateRun: LiveGateRunMatch | null = null;
+    try {
+      duplicateRun = await findLiveGateRun({
+        dir: gateRunMarkerDir(),
+        projectRoot,
+        reviewType: options.reviewType,
+        reviewScope: options.reviewScope,
+        dependencies,
+      });
+      recursion = duplicateRun
+        ? { decision: 'rejected', matchedRunId: duplicateRun.runId }
+        : { decision: 'none' };
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      context.logger.warn(
+        `Unable to scan gate run markers in ${gateRunMarkerDir()}: ${detail}; continuing without duplicate-run detection.`,
+      );
+      recursion = { decision: 'unchecked' };
+    }
+    if (context.json) {
+      dependencies.writeDiagnostic(
+        `${JSON.stringify({
+          type: 'gate-recursion',
+          runId,
+          ...recursion,
+          ...(duplicateRun
+            ? { matchedPid: duplicateRun.pid, markerPath: duplicateRun.path }
+            : {}),
+        })}\n`,
+      );
+    }
+    if (duplicateRun) {
+      writeReviewGateExecutionFailure(context, {
+        runId,
+        target: selected.id,
+        project: projectPath,
+        projectResolutionSource: reviewProject.source,
+        exitCode: 1,
+        duplicateRun: {
+          ...duplicateRun,
+          reviewType: options.reviewType?.trim() || 'untyped',
+          scope: options.reviewScope?.trim() || 'none',
+        },
+        gateInvocation,
+        dispatchReport,
+        recursion,
+      });
+      process.exitCode = 1;
+      return;
+    }
     postSelectionContext = {
       project: projectPath,
       projectResolutionSource: reviewProject.source,
@@ -4191,7 +4410,7 @@ async function runReviewGate(
         : []),
       prompt.join(' '),
     ]);
-    runMarkerPath = join(tmpdir(), 'oat-gate-runs', `${runId}.json`);
+    runMarkerPath = join(gateRunMarkerDir(), `${runId}.json`);
     runMarkerWritten = await dependencies.writeGateRunMarker(
       runMarkerPath,
       {
@@ -4201,6 +4420,8 @@ async function runReviewGate(
         reviewType: options.reviewType?.trim() || null,
         reviewScope: options.reviewScope?.trim() || null,
         project: projectPath,
+        projectRoot,
+        pid: process.pid,
         startedAt: new Date().toISOString(),
         budgetMs: timeout.timeoutMs,
         budgetSource: timeout.source,
@@ -4281,6 +4502,7 @@ async function runReviewGate(
           : {}),
         gateInvocation,
         dispatchReport,
+        recursion,
       });
       process.exitCode = 1;
       return true;
@@ -4330,6 +4552,7 @@ async function runReviewGate(
           : {}),
         gateInvocation,
         dispatchReport,
+        recursion,
       });
       process.exitCode = childExitCode;
       return;
@@ -4359,6 +4582,7 @@ async function runReviewGate(
           : {}),
         gateInvocation,
         dispatchReport,
+        recursion,
       });
       process.exitCode = childExitCode;
       return;
@@ -4500,6 +4724,7 @@ async function runReviewGate(
       dispatchReport,
       corroboration,
       ...(childResult.timedOut ? { lateCompletion: true } : {}),
+      recursion,
     });
     // Record the disposition only once the envelope is written, so a failed
     // emission cannot leave the log claiming a result no caller received.
@@ -4593,6 +4818,7 @@ async function runReviewGate(
                 ? { lateCompletion: true }
                 : {}),
               postSelectionRecovery: true,
+              recursion,
             });
             buffered.flush();
             recoveryEmitted = true;
