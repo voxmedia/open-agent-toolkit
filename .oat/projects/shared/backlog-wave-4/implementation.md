@@ -641,6 +641,16 @@ check`, lint, build, type-check, isolated-HOME `turbo run test --force` 10/10
   warning class.
   `Dispatch: scope=p07 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
 
+- Step 7a ledger commit `7d2b28957` before the review.
+- Request `bw4-p07-review-1`: accepted; reconnaissance not-attempted;
+  `reviews/archived/p07-review-2026-10-02T230322Z.md`: 0 Critical, 0 High, 0 Medium,
+  2 Low (passes; narrowed and partial item summaries verified against shipped
+  code). L1 (plan References and PR wording) fixed by the root in plan.md. L2
+  (two links in the active `review-gate-integrity` project's `discovery.md`
+  still point at moved item paths) left unchanged as another project's
+  artifact; noted for the PR.
+  `Dispatch: scope=p07 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
+
 <!-- orchestration-runs-end -->
 
 ## Plan Gate Feedback (quick-start, QS-12)

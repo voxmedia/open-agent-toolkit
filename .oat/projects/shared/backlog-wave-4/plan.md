@@ -1669,8 +1669,9 @@ rewrites the four inventory rows last.
     `oat-project-complete-auto` skill;
   - the updated skills need `oat` 0.3.14 or later for the new config keys.
 - After the behavior callout, a shipped summary: one plain-language problem
-  statement per closed backlog item, plus the partial item and what stays
-  open.
+  statement per closed backlog item, plus the two items that stay open
+  (`BL-260909-restamp-a-stale-copy-strategy` partially shipped;
+  `BL-260711-add-activity-aware-gate` left the wave) and what stays open.
 - Verification evidence: Definition of Done exit codes and the review and gate
   outcomes.
 
@@ -1686,7 +1687,7 @@ rewrites the four inventory rows last.
 | p04    | code     | fixes_completed | 2026-10-02 | reviews/archived/p04-review-2026-10-02T204339Z.md           | ca1e002ac341e2553bc716b9338ea65daa251a79 | auto       | -                 |
 | p05    | code     | fixes_completed | 2026-10-02 | reviews/archived/p05-review-2026-10-02T220250Z.md           | 31b6ce71ddea67274a508334395454e00cb2935a | auto       | -                 |
 | p06    | code     | fixes_completed | 2026-10-02 | reviews/archived/p06-review-2026-10-02T223808Z.md           | 64f04c1b42b5b202acdca4a4a8019f92a845104a | auto       | -                 |
-| p07    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| p07    | code     | passed          | 2026-10-02 | reviews/archived/p07-review-2026-10-02T230322Z.md           | 7d2b28957080760af8843b477654f759734bfc07 | auto       | -                 |
 | final  | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
 | design | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
@@ -1733,4 +1734,6 @@ Ready for code review and merge.
 - Discovery: `discovery.md`
 - Approved batch (machine-local): `.oat/repo/analysis/backlog-wave-4/approved-batch.md`
 - Backlog items listed in the Acceptance Mapping
-- Follow-up filed this wave: `BL-261002-port-the-complexity-review`
+- Follow-ups filed this wave: `BL-261002-port-the-complexity-review` (discovery),
+  `BL-261002-gitignore-project-review` (operator request),
+  `BL-261002-wire-the-complexity-review` and `BL-261002-teach-check-skill-bumps` (p07-t02)
