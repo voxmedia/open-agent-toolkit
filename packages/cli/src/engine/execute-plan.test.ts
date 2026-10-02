@@ -1293,6 +1293,77 @@ description: React components
     });
   });
 
+  describe('restamping a skip entry the manifest already owns', () => {
+    const staleHash = 'a'.repeat(64);
+    const framedHash = 'b'.repeat(64);
+
+    function manifestOwningCopy(contentHash: string): ManifestV2 {
+      return {
+        ...createEmptyManifest(),
+        lastUpdated: '2026-01-01T00:00:00.000Z',
+        entries: [
+          {
+            canonicalPath: '.agents/skills/skill-one',
+            providerPath: '.claude/skills/skill-one',
+            provider: 'claude',
+            contentType: 'skill',
+            strategy: 'copy',
+            contentHash,
+            isFile: false,
+            lastSynced: '2026-01-01T00:00:00.000Z',
+          },
+        ],
+      };
+    }
+
+    it('writes the planned framed digest when the skip entry carries a restamp', async () => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-execute-plan-'));
+      tempDirs.push(root);
+      const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+      await seedCanonical(root, 'skill-one');
+
+      const result = await executeSyncPlan(
+        createPlan([
+          {
+            ...createEntry(root, 'skill-one', 'skip', 'copy'),
+            restampContentHash: framedHash,
+          },
+        ]),
+        manifestOwningCopy(staleHash),
+        manifestPath,
+      );
+
+      expect(result).toMatchObject({ applied: 0, failed: 0, skipped: 1 });
+      const manifest = await loadManifest(manifestPath);
+      expect(manifest.entries).toHaveLength(1);
+      expect(manifest.entries[0]).toMatchObject({
+        strategy: 'copy',
+        contentHash: framedHash,
+      });
+      expect(manifest.lastUpdated).not.toBe('2026-01-01T00:00:00.000Z');
+    });
+
+    it('leaves an owned skip entry untouched without a restamp (control)', async () => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-execute-plan-'));
+      tempDirs.push(root);
+      const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+      await seedCanonical(root, 'skill-one');
+
+      await executeSyncPlan(
+        createPlan([createEntry(root, 'skill-one', 'skip', 'copy')]),
+        manifestOwningCopy(staleHash),
+        manifestPath,
+      );
+
+      const manifest = await loadManifest(manifestPath);
+      expect(manifest.entries[0]).toMatchObject({
+        contentHash: staleHash,
+        lastSynced: '2026-01-01T00:00:00.000Z',
+      });
+      expect(manifest.lastUpdated).toBe('2026-01-01T00:00:00.000Z');
+    });
+  });
+
   it('updates manifest after successful operations', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-execute-plan-'));
     tempDirs.push(root);

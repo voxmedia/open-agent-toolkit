@@ -92,6 +92,14 @@ export interface SyncPlanEntry {
   reason: string;
   renderedContent?: string;
   deferredUntilCollectionDetached?: boolean;
+  /**
+   * Set only on a copy-strategy `skip` whose provider content was verified
+   * against canonical while the manifest entry that already owns it records a
+   * different `contentHash` (a pre-framing legacy digest or a tampered value).
+   * The value is the framed digest the planner verified; `executeSyncPlan`
+   * writes exactly it, so the next plan carries no restamp.
+   */
+  restampContentHash?: string;
 }
 
 export type RemovalSyncPlanEntry = SyncPlanEntry & {

@@ -137,3 +137,20 @@ export function countPlannedOperations(scopePlans: ScopeSyncPlan[]): number {
     );
   }, 0);
 }
+
+/**
+ * Counts owned copy-strategy skips whose stale manifest `contentHash` the run
+ * restamps. A restamp writes the manifest without touching provider files, so
+ * it is not a planned operation, but it is a mutation the run must name rather
+ * than reporting that nothing needed to change.
+ */
+export function countContentRestamps(scopePlans: ScopeSyncPlan[]): number {
+  return scopePlans.reduce(
+    (total, scopePlan) =>
+      total +
+      scopePlan.plan.entries.filter(
+        (entry) => entry.restampContentHash !== undefined,
+      ).length,
+    0,
+  );
+}

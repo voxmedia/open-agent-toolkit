@@ -8,6 +8,7 @@ import type {
 } from './sync.types';
 import {
   buildCollectionLifecycle,
+  countContentRestamps,
   countPlannedOperations,
   formatCollectionLifecycle,
   toSyncOutputPlan,
@@ -156,8 +157,15 @@ export function runSyncDryRun(
   } else {
     context.logger.info(formatDryRunOutput(scopePlans, dependencies));
     context.logger.warn('\nDry-run only: no filesystem changes were made.');
+    const contentRestamps = countContentRestamps(scopePlans);
     if (summary.plannedOperations > 0) {
       context.logger.info('Run without --dry-run to apply changes.');
+    } else if (contentRestamps > 0) {
+      context.logger.info(
+        `Run without --dry-run to restamp ${contentRestamps} stale manifest content ${
+          contentRestamps === 1 ? 'hash' : 'hashes'
+        }.`,
+      );
     } else {
       context.logger.info('No changes to apply.');
     }

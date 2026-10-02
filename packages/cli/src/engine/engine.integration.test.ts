@@ -17,6 +17,7 @@ import {
   type SyncConfig,
 } from '@config/sync-config';
 import { createSymlink, createSymlinkNoClobber } from '@fs/io';
+import { computeDirectoryDigests } from '@manifest/hash';
 import {
   createEmptyManifest,
   loadManifest,
@@ -1387,6 +1388,81 @@ describe('sync engine integration', () => {
     expect(skillEntry?.strategy).toBe('copy');
     expect(skillEntry?.contentHash).toMatch(/^[a-f0-9]{64}$/);
   });
+
+  it.each(['legacy', 'tampered'] as const)(
+    'copy mode: restamps a %s recorded hash once, then the next sync is a no-op',
+    async (recorded) => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
+      tempDirs.push(root);
+      const adapter = createTestAdapter({ defaultStrategy: 'copy' });
+      const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+      await seedCanonical(root);
+      const canonicalSkill = join(root, '.agents', 'skills', 'skill-one');
+
+      async function sync() {
+        const manifest = await loadManifest(manifestPath);
+        const plan = await computeSyncPlan({
+          canonical: await scanCanonical(root, 'project'),
+          adapters: [adapter],
+          manifest,
+          scope: 'project',
+          config: COPY_SYNC_CONFIG,
+          scopeRoot: root,
+        });
+        await executeSyncPlan(plan, manifest, manifestPath);
+        return plan;
+      }
+
+      await sync();
+      const synced = await loadManifest(manifestPath);
+      const { framed, legacy } = await computeDirectoryDigests(canonicalSkill);
+      const staleHash = recorded === 'legacy' ? legacy : 'c'.repeat(64);
+      const staleLastUpdated = '2026-01-01T00:00:00.000Z';
+      await saveManifest(manifestPath, {
+        ...synced,
+        lastUpdated: staleLastUpdated,
+        entries: synced.entries.map((entry) =>
+          entry.canonicalPath === '.agents/skills/skill-one'
+            ? { ...entry, contentHash: staleHash }
+            : entry,
+        ),
+      });
+
+      const restampPlan = await sync();
+      const restampedSkill = restampPlan.entries.find(
+        (entry) => entry.canonical.name === 'skill-one',
+      );
+      expect(restampedSkill).toMatchObject({
+        operation: 'skip',
+        restampContentHash: framed,
+      });
+      expect(
+        restampPlan.entries.every((entry) => entry.operation === 'skip'),
+      ).toBe(true);
+      const restamped = await loadManifest(manifestPath);
+      expect(
+        restamped.entries.find(
+          (entry) => entry.canonicalPath === '.agents/skills/skill-one',
+        )?.contentHash,
+      ).toBe(framed);
+      expect(restamped.lastUpdated).not.toBe(staleLastUpdated);
+
+      const settledBytes = await readFile(manifestPath, 'utf8');
+      const settledPlan = await sync();
+      expect(
+        settledPlan.entries.some(
+          (entry) => entry.restampContentHash !== undefined,
+        ),
+      ).toBe(false);
+      expect(
+        settledPlan.entries.every((entry) => entry.operation === 'skip'),
+      ).toBe(true);
+      expect(await readFile(manifestPath, 'utf8')).toBe(settledBytes);
+      expect((await loadManifest(manifestPath)).lastUpdated).toBe(
+        restamped.lastUpdated,
+      );
+    },
+  );
 
   it('file-based agent: syncs via symlink', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));

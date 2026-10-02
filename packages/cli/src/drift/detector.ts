@@ -139,12 +139,12 @@ export async function detectDrift(
       }
 
       // Pre-framing manifest bridge (wave-7 final review, Critical 4).
-      // Length framing changed every directory digest, and a no-op `oat sync`
-      // does not restamp an entry it already owns (`ensureSkipEntryManaged` in
-      // `engine/execute-plan.ts` returns the manifest untouched for `skip`), so
-      // a manifest written before the change keeps its legacy value
-      // indefinitely. Without this branch every pre-existing copy-strategy
-      // install would report drift that no command repairs.
+      // Length framing changed every directory digest, so a manifest written
+      // before the change records a legacy value until the next `oat sync`
+      // restamps it on skip (`restampContentHash`, written by
+      // `ensureSkipEntryManaged` in `engine/execute-plan.ts`). Until every
+      // install has run that sync, this branch keeps a faithful pre-framing
+      // copy reading `in_sync` instead of reporting drift.
       //
       // This cannot reopen the collision. It fires only when the recorded hash
       // is the legacy digest of the canonical tree, and acceptance still rests

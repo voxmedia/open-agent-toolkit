@@ -387,7 +387,24 @@ async function ensureSkipEntryManaged(
       entry.provider === planEntry.provider,
   );
   if (existing) {
-    return manifest;
+    // An owned entry is rewritten only when the planner verified the provider
+    // content and found the recorded digest stale; it then writes exactly the
+    // digest it verified. Every other owned skip leaves the manifest as is, so
+    // a settled sync stays a no-op.
+    const restampContentHash = planEntry.restampContentHash;
+    if (
+      restampContentHash === undefined ||
+      existing.strategy === 'collection' ||
+      existing.contentHash === restampContentHash
+    ) {
+      return manifest;
+    }
+    return addManifestEntry(manifest, {
+      ...existing,
+      strategy: existing.strategy,
+      contentHash: restampContentHash,
+      lastSynced: new Date().toISOString(),
+    });
   }
 
   const manifestEntry = await toManifestEntry(planEntry, planEntry.strategy);

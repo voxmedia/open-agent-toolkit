@@ -108,16 +108,14 @@ const FRAMED_DIRECTORY_DIGEST_DOMAIN = '\0oat-directory-digest-v2\0';
  * framed digest equals a legacy digest under SHA-256 collision resistance —
  * the same assumption every other comparison here already rests on.
  *
- * `legacy` is retained for exactly one purpose: `drift/detector.ts` uses it to
- * recognize a manifest written before the framing change and re-decide with
- * `framed`. It is never an acceptance basis for provider content on its own.
- * The migration is needed because framing changes every recorded
- * `contentHash`, and `oat sync` plans `skip` for a faithful tree while
- * `ensureSkipEntryManaged` (`engine/execute-plan.ts`) does not restamp an entry
- * it already owns — so a legacy value is never rewritten by a no-op sync.
- * Measured on the built CLI: a directory-copy entry whose `contentHash` no
- * longer matches reports `drifted/modified` from `oat status`, `oat sync`
- * answers `skip` / "already in sync", and the manifest keeps the old value.
+ * `legacy` is retained for exactly one purpose: recognizing a manifest written
+ * before the framing change and re-deciding with `framed`, in
+ * `drift/detector.ts` and in the obsolete-mapping retirement classifier
+ * (`classifyObsoleteMappingRetirement` in `engine/compute-plan.ts`). It is
+ * never an acceptance basis for provider content on its own. The migration is
+ * needed because framing changes every recorded `contentHash`; `oat sync` now
+ * restamps a stale value when it plans `skip` for a faithful tree, so the
+ * bridge only covers installs that have not run such a sync yet.
  *
  * ## Bounds this digest still does not cover
  *

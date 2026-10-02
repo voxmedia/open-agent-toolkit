@@ -1285,6 +1285,108 @@ describe('createSyncCommand', () => {
     );
   });
 
+  describe('content-hash restamp visibility', () => {
+    const restampHash = 'd'.repeat(64);
+
+    function createRestampPlan(): SyncPlan {
+      const plan = createPlan('skip');
+      plan.entries[0] = {
+        ...plan.entries[0]!,
+        strategy: 'copy',
+        reason: 'already in sync; restamp stale manifest content hash',
+        restampContentHash: restampHash,
+      };
+      return plan;
+    }
+
+    it('dry-run: names the restamp and does not claim there is nothing to apply', async () => {
+      const { capture, command, executeSyncPlan } = createHarness({
+        plans: [createRestampPlan()],
+        useRealSyncPlanFormatter: true,
+      });
+
+      await runSyncCommand(command, {
+        globalArgs: ['--scope', 'project'],
+        commandArgs: ['--dry-run'],
+      });
+
+      expect(executeSyncPlan).not.toHaveBeenCalled();
+      const output = capture.info.join('\n');
+      expect(output).toContain(
+        'claude/skill-one (already in sync; restamp stale manifest content hash)',
+      );
+      expect(capture.info).toContain(
+        'Run without --dry-run to restamp 1 stale manifest content hash.',
+      );
+      expect(capture.info).not.toContain('No changes to apply.');
+    });
+
+    it('dry-run --json: carries the planned restamp on the skip entry', async () => {
+      const { capture, command } = createHarness({
+        plans: [createRestampPlan()],
+      });
+
+      await runSyncCommand(command, {
+        globalArgs: ['--scope', 'project', '--json'],
+        commandArgs: ['--dry-run'],
+      });
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        dryRun: true,
+        plans: [
+          {
+            entries: [
+              {
+                operation: 'skip',
+                restampContentHash: restampHash,
+              },
+            ],
+          },
+        ],
+        summary: { plannedOperations: 0, skipped: 1 },
+      });
+    });
+
+    it('apply: reports the restamp instead of claiming no changes were required', async () => {
+      const { capture, command, executeSyncPlan } = createHarness({
+        plans: [createRestampPlan()],
+        executeResults: [{ applied: 0, failed: 0, skipped: 1 }],
+        useRealSyncPlanFormatter: true,
+      });
+
+      await runSyncCommand(command, {
+        globalArgs: ['--scope', 'project'],
+      });
+
+      expect(executeSyncPlan).toHaveBeenCalledTimes(1);
+      const output = capture.info.join('\n');
+      expect(output).toContain(
+        'reason: already in sync; restamp stale manifest content hash',
+      );
+      expect(capture.info).toContain(
+        '\nManifest content hash restamped for 1 entry; no content changes required.',
+      );
+      expect(capture.info).not.toContain('\nNo changes required.');
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('apply: names both refreshes when the version is also restamped', async () => {
+      const { capture, command } = createHarness({
+        loadedManifests: [createManifest({ oatVersion: '0.0.1' })],
+        plans: [createRestampPlan()],
+        executeResults: [{ applied: 0, failed: 0, skipped: 1 }],
+      });
+
+      await runSyncCommand(command, {
+        globalArgs: ['--scope', 'project'],
+      });
+
+      expect(capture.info).toContain(
+        '\nManifest version refreshed and content hash restamped for 1 entry; no content changes required.',
+      );
+    });
+  });
+
   it('apply (default): executes transformed rule copy plans', async () => {
     const { command, executeSyncPlan } = createHarness({
       adapters: [createAdapter('cursor')],

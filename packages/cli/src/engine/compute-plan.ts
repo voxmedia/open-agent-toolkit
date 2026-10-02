@@ -10,7 +10,11 @@ import {
 
 import type { SyncConfig } from '@config/sync-config';
 import { CliError } from '@errors/index';
-import { computeContentHash, computeStringHash } from '@manifest/hash';
+import {
+  computeContentHash,
+  computeDirectoryDigests,
+  computeStringHash,
+} from '@manifest/hash';
 import { findEntry } from '@manifest/manager';
 import type {
   Manifest,
@@ -373,6 +377,33 @@ export async function classifyObsoleteMappingRetirement(
           'obsolete mapping has verified clean managed copy',
         );
       }
+
+      // Pre-framing manifest bridge, mirroring `drift/detector.ts`: a manifest
+      // written before length framing records the legacy digest, so the framed
+      // comparison above cannot match it and a faithful obsolete copy would be
+      // detached and left behind as a stale unmanaged tree. Accept the legacy
+      // value only when it is the legacy digest of the canonical tree *and*
+      // the copy's framed managed digest equals that same capture's framed
+      // digest, so acceptance still rests entirely on the framed digests (a
+      // tampered body or a forged recorded hash still detaches). Any failure
+      // to read the canonical tree is "cannot verify" and detaches below.
+      if (managedHash !== null) {
+        const canonicalDigests = await computeDirectoryDigests(
+          canonicalPath,
+        ).catch(() => null);
+        if (
+          canonicalDigests !== null &&
+          manifestEntry.contentHash === canonicalDigests.legacy &&
+          managedHash === canonicalDigests.framed
+        ) {
+          return createRetirementEntry(
+            manifestEntry,
+            scopeRoot,
+            'remove',
+            'obsolete mapping has verified clean managed copy',
+          );
+        }
+      }
     }
   }
 
@@ -384,12 +415,23 @@ export async function classifyObsoleteMappingRetirement(
   );
 }
 
+interface ClassifiedOperation extends Pick<
+  SyncPlanEntry,
+  'operation' | 'reason'
+> {
+  /**
+   * The canonical digest a copy-strategy `skip` was verified against: the
+   * value `toManifestEntry` records (framed for a directory).
+   */
+  verifiedContentHash?: string;
+}
+
 async function classifyOperation(
   canonicalEntry: CanonicalEntry,
   providerPath: string,
   strategy: 'symlink' | 'copy',
   renderedContent?: string,
-): Promise<Pick<SyncPlanEntry, 'operation' | 'reason'>> {
+): Promise<ClassifiedOperation> {
   if (strategy === 'symlink') {
     let providerStat: Awaited<ReturnType<typeof lstat>>;
     try {
@@ -465,6 +507,7 @@ async function classifyOperation(
     return {
       operation: 'skip',
       reason: 'already in sync',
+      verifiedContentHash: canonicalHash,
     };
   }
 
@@ -488,6 +531,7 @@ async function classifyOperation(
       return {
         operation: 'skip',
         reason: 'already in sync',
+        verifiedContentHash: canonicalHash,
       };
     }
   }
@@ -882,7 +926,7 @@ export async function computeSyncPlan({
             ? manifestEntry.strategy
             : mappingStrategy;
 
-        const operation = deferredCollectionTransition
+        const operation: ClassifiedOperation = deferredCollectionTransition
           ? {
               operation:
                 entryStrategy === 'copy'
@@ -904,17 +948,34 @@ export async function computeSyncPlan({
               );
             })();
 
+        // A faithful copy whose owning manifest entry records a different
+        // digest (a pre-framing legacy value or a tampered one) is restamped on
+        // skip. Without this `ensureSkipEntryManaged` kept the stale value
+        // forever: `oat status` reported drift that no `oat sync` repaired.
+        const { verifiedContentHash } = operation;
+        const restampContentHash =
+          operation.operation === 'skip' &&
+          verifiedContentHash !== undefined &&
+          manifestEntry?.strategy === 'copy' &&
+          manifestEntry.contentHash !== verifiedContentHash
+            ? verifiedContentHash
+            : undefined;
+
         entries.push({
           canonical: canonicalEntry,
           provider: adapter.name,
           providerPath,
           operation: operation.operation,
           strategy: entryStrategy,
-          reason: operation.reason,
+          reason:
+            restampContentHash === undefined
+              ? operation.reason
+              : `${operation.reason}; restamp stale manifest content hash`,
           renderedContent,
           ...(deferredCollectionTransition
             ? { deferredUntilCollectionDetached: true }
             : {}),
+          ...(restampContentHash === undefined ? {} : { restampContentHash }),
         });
 
         seenCanonicalKeys.add(

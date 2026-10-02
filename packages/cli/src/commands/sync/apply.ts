@@ -25,6 +25,7 @@ import type {
 } from './sync.types';
 import {
   buildCollectionLifecycle,
+  countContentRestamps,
   countPlannedOperations,
   formatCollectionLifecycle,
   toSyncOutputPlan,
@@ -270,6 +271,33 @@ function coreHumanStatus(
     default:
       return 'unknown';
   }
+}
+
+/**
+ * The trailing message of a run that planned no operation. Both restamps are
+ * real manifest mutations, so neither may be reported as "No changes
+ * required."; a content-hash restamp is named with its entry count.
+ */
+function formatNoOperationMessage(
+  versionRestamped: boolean,
+  contentRestamps: number,
+): string {
+  const contentRestamp =
+    contentRestamps > 0
+      ? `content hash restamped for ${contentRestamps} ${
+          contentRestamps === 1 ? 'entry' : 'entries'
+        }`
+      : undefined;
+  if (versionRestamped && contentRestamp) {
+    return `Manifest version refreshed and ${contentRestamp}; no content changes required.`;
+  }
+  if (versionRestamped) {
+    return 'Manifest version refreshed; no content changes required.';
+  }
+  if (contentRestamp) {
+    return `Manifest ${contentRestamp}; no content changes required.`;
+  }
+  return 'No changes required.';
 }
 
 /** The sentence `formatSyncPlan` appends to its heading for an empty plan. */
@@ -592,6 +620,7 @@ export async function runSyncApply(
     // tests instead.
     const restampOnly =
       summary.plannedOperations === 0 && versionSkew.length > 0;
+    const contentRestamps = countContentRestamps(scopePlans);
     context.logger.info(
       formatAppliedOutput(
         scopePlans,
@@ -605,9 +634,7 @@ export async function runSyncApply(
       context.logger.warn('\nSync completed with partial failures.');
     } else if (summary.plannedOperations === 0) {
       context.logger.info(
-        restampOnly
-          ? '\nManifest version refreshed; no content changes required.'
-          : '\nNo changes required.',
+        `\n${formatNoOperationMessage(restampOnly, contentRestamps)}`,
       );
     } else {
       context.logger.success('\nSync applied successfully.');
