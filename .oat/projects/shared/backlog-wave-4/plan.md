@@ -487,6 +487,50 @@ restore.
 
 ---
 
+### Task p02-t03: (review) Close p02 review findings M1, L1, L2, L3
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/gate/index.ts`
+- Modify: `packages/cli/src/commands/gate/index.test.ts`,
+  `packages/cli/src/commands/gate/gate-hardening.integration.test.ts`
+- Modify: `apps/oat-docs/docs/cli-utilities/workflow-gates.md`,
+  `apps/oat-docs/docs/cli-utilities/configuration.md`
+
+**Step 1: Failing tests first**
+
+- M1: two gates for the same project root, review type, and scope launched
+  at the same moment: exactly one runs and the other is rejected
+  (`recursion.decision: rejected`).
+- L2: a nested gate whose `TMPDIR` differs from its parent's still detects
+  the parent run (the parent passes its marker directory to the child
+  explicitly).
+- L3: an integration case where a real first gate (fake runtime with a delay)
+  is running and a second identical gate is rejected.
+
+**Step 2: Implement**
+
+Make the duplicate claim atomic: an exclusive-create claim file keyed by
+project root, review type, and scope, taken before launch and released at the
+end of the run; a claim held by a dead pid is replaced once. Keep run markers
+for observability, and simplify or drop the directory scan if the claim makes
+it redundant. Pass the marker directory to child processes through an
+environment variable and prefer it when set. Change the docs examples that set
+`"artifact": 900000` (L1) so they do not silently restore the old budget, and
+make the duplicate-run docs match the implemented guarantee.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts src/commands/gate/gate-hardening.integration.test.ts`
+Expected: exit 0; neutralize the exclusive claim and show the simultaneous
+case fails, restore.
+
+**Step 4: Commit**
+
+`fix(p02-t03): make the duplicate gate claim atomic and close p02 review lows`
+
+---
+
 ## Phase 3: Sync correctness
 
 ### Task p03-t01: Restamp stale copy hashes and bridge legacy retirement
@@ -1394,7 +1438,7 @@ rewrites the four inventory rows last.
 | Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target       |
 | ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------- |
 | p01    | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-review-2026-10-02T172532Z.md           | 0b6b623199310aeb93ed7c4a5c9f6e8842a3f20a | auto       | -                 |
-| p02    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| p02    | code     | fixes_added     | 2026-10-02 | reviews/archived/p02-review-2026-10-02T191106Z.md           | d7f496827a4c3f624e14e0ae19b00f25df37f5d4 | auto       | -                 |
 | p03    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | p04    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | p05    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
@@ -1423,14 +1467,14 @@ Quick-start plan gate attempt 2 of 2 (run `fe6bbe0a`): `blocked`, receive-eligib
 **Summary:**
 
 - Phase 1: 8 tasks - Build assets
-- Phase 2: 2 tasks - Gate timeouts
+- Phase 2: 3 tasks - Gate timeouts
 - Phase 3: 3 tasks - Sync correctness
 - Phase 4: 7 tasks - Review-loop skills
 - Phase 5: 4 tasks - Completion
 - Phase 6: 3 tasks - Small fixes
 - Phase 7: 3 tasks - Release fan-in
 
-**Total: 30 tasks**
+**Total: 31 tasks**
 
 Ready for code review and merge.
 

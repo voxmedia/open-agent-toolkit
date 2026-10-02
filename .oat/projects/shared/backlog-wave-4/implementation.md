@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p03-t01
+oat_current_task_id: p02-t03
 oat_generated: false
 ---
 
@@ -27,14 +27,14 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 8     | 8/8       |
-| Phase 2 | in_progress | 2     | 2/2       |
+| Phase 2 | in_progress | 3     | 2/3       |
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 7     | 0/7       |
 | Phase 5 | pending     | 4     | 0/4       |
 | Phase 6 | pending     | 3     | 0/3       |
 | Phase 7 | pending     | 3     | 0/3       |
 
-**Total:** 10/30 tasks completed
+**Total:** 10/31 tasks completed
 
 ---
 
@@ -97,6 +97,11 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** cdd6d0eed
+
+### Task p02-t03: (review) Close p02 review findings M1, L1, L2, L3
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -368,6 +373,14 @@ oat_generated: false
   reuse after a SIGKILL can block falsely (message names the marker).
   Root spot-check: gate-hardening integration 9/9.
   `Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
+
+- Step 7a ledger commit `d7f496827` before the review.
+- Request `bw4-p02-review-1`: accepted; reconnaissance not-attempted;
+  `reviews/archived/p02-review-2026-10-02T191106Z.md`: 0 Critical, 0 High, 1 Medium,
+  3 Low (passes). Converted to `p02-t03`: M1 simultaneous duplicate launches
+  both run (check before claim); L1 docs examples restore 900000; L2 nested
+  detection depends on an inherited `TMPDIR`; L3 no real-first-gate test.
+  `Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
 
 <!-- orchestration-runs-end -->
 
