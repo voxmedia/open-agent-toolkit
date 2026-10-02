@@ -24,15 +24,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 8     | 8/8       |
-| Phase 2 | complete    | 3     | 3/3       |
-| Phase 3 | complete    | 5     | 5/5       |
-| Phase 4 | complete    | 9     | 9/9       |
-| Phase 5 | complete    | 6     | 6/6       |
-| Phase 6 | in_progress | 4     | 4/4       |
-| Phase 7 | pending     | 3     | 0/3       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 8     | 8/8       |
+| Phase 2 | complete | 3     | 3/3       |
+| Phase 3 | complete | 5     | 5/5       |
+| Phase 4 | complete | 9     | 9/9       |
+| Phase 5 | complete | 6     | 6/6       |
+| Phase 6 | complete | 4     | 4/4       |
+| Phase 7 | pending  | 3     | 0/3       |
 
 **Total:** 35/38 tasks completed
 
@@ -225,7 +225,7 @@ oat_generated: false
 
 ## Phase 6: Small fixes
 
-**Status:** in_progress
+**Status:** complete
 
 ### Task p06-t01: Downgrade claims that thorough-profile reviews leave undisposed
 
@@ -620,6 +620,13 @@ check`, lint, build, type-check, isolated-HOME `turbo run test --force` 10/10
   checks a pending HiLL first, as the router does; generate 30/30, router
   45/45. Root spot-check: generate passes.
 
+- Phase gate (`codex-6-sol-xhigh`, run `b55e726f`) at `420660c21`:
+  `reviews/archived/p06-review-2026-10-02T224700Z.md` status `ok`, receive-eligible,
+  0 Critical/High, 1 Medium. Judgment sweep: M1 (textual HiLL array parsing in
+  the dashboard) deferred to final.
+- Phase p06 outcome: complete; 4/4 tasks (3 planned, 1 review-fix); one root
+  review round, one passing gate.
+
 <!-- orchestration-runs-end -->
 
 ## Plan Gate Feedback (quick-start, QS-12)
@@ -656,6 +663,14 @@ Chronological execution is recorded per phase under Orchestration Runs above.
 
 ## Deferred Findings (Medium)
 
+- p06 gate M1 (`reviews/archived/p06-review-2026-10-02T224700Z.md`): the dashboard's HiLL
+  membership check (`generate.ts` `phaseInHillList`) recognizes only the
+  double-quoted array spelling, so a quick project with
+  `oat_hill_checkpoints: ['plan']` or `[plan]` and a ready plan gets implement
+  on the dashboard but `oat-project-plan` from the router. The textual parser
+  predates this wave; quick projects carry no HiLL checkpoints by default.
+  Fixing it means reading the shared parsed state in the dashboard; deferred
+  to final with this rationale.
 - p05 gate M1 (`reviews/archived/p05-review-2026-10-02T221406Z.md`): the companion's
   active-directory preflight refuses before the interactive archive-resume
   recovery can run, so autonomous closeout cannot finish after a synced
