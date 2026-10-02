@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash(git:*), Bash(gh:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.3.1
+  version: 1.3.2
 ---
 
 # Docs Apply
@@ -203,7 +203,9 @@ For each approved recommendation:
 When approved actions involve docs app creation or nav updates:
 
 - Use `oat docs init` for scaffolding when appropriate.
-- Use `oat docs nav sync` instead of manually editing nav when the CLI helper can generate it.
+- Use `oat docs nav sync --framework fumadocs --target-dir <app-root>` for owned Fumadocs metadata before MDX generation; MkDocs remains the default. Keep `generate-index` as the separate agent inventory. Discover the actual local scripts; consumer scaffolds use installed `oat`, not this repository's source-entry command.
+- Contents owns membership/order and frontmatter titles own leaf/section labels. Every canonical page/child section needs one physical-parent entry; cross-links stay in page bodies to preserve breadcrumbs and previous/next. Ordinary `.md` routes, root loader base and relative fragments are supported. External/query-bearing Contents links, MDX/custom slugs and separators are unsupported; fenced examples are ignored.
+- Preserve authored or externally edited metadata. The sidecar must own paths with matching last-written hashes before replacement or stale deletion; traversal/symlink paths are refused. Never adopt bytes by editing hashes. Back up proven disposable output with its sidecar before removing only those files and regenerating. Partial file writes require inspection. Format Markdown only, never generated JSON.
 
 Negative rules:
 
@@ -216,7 +218,8 @@ Negative rules:
 
 Run the smallest relevant verification set based on what changed:
 
-- `oat docs nav sync`
+- Fumadocs source-only `oat docs nav sync --framework fumadocs --validate-only --target-dir <app-root>` (no output dependency/write), then generation through local hooks when building. Output-comparing `--check` is separate, read-only and requires generated output; it cannot be combined with validate-only.
+- MkDocs `oat docs nav sync --framework mkdocs --target-dir <app-root>`
 - `pnpm --dir <docs-app> docs:lint` (no-op when no linter is configured)
 - `pnpm --dir <docs-app> docs:format:check`
 - `pnpm --dir <docs-app> docs:build`

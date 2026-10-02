@@ -42,7 +42,17 @@ the task scope or an approved recommendation covers that change.
 - Add or preserve at least `title` and `description` frontmatter on touched
   pages unless local guidance defines a stricter schema.
 
-## Generated Root Indexes
+## Owned Sidebar Generation
+
+In apps using `oat docs nav sync --framework fumadocs`, Contents owns sidebar membership/order and frontmatter titles own leaf/section labels. Every canonical page/child section needs one physical-parent entry. Root and child landings attach once through native loader ownership. Cross-links remain in page bodies to preserve canonical breadcrumbs and previous/next.
+
+Scaffold hooks run installed `oat docs nav sync --framework fumadocs --target-dir .` from the app directory before `fumadocs-mdx`, then the separate `generate-index` inventory. Repository-specific source CLI entries do not belong in consumer scaffolds.
+
+The compiler supports ordinary `.md` file-derived routes with a root loader base and relative links/fragments. External/query-bearing Contents links, MDX/custom slugs and separator syntax need a separately approved integration, not guessed loader configuration. Fenced examples are ignored; deployment basePath stays in the renderer.
+
+Ignored `docs/**/meta.json` and app-root `.oat-fumadocs-nav.json` are generated output. Replacement/deletion requires sidecar ownership and matching last-written hashes. Preserve unowned/edited bytes; never adopt them by editing hashes. Back up proven disposable output with its sidecar before removing only those files and regenerating. Traversal/symlink paths are refused, and partial writes still require inspection. Format authored Markdown, not generated JSON.
+
+## Separate Agent Inventory
 
 Many OAT/Fumadocs apps have an app-root generated `index.md` that rolls up the
 authored docs tree. Treat it as generated output.
@@ -60,8 +70,7 @@ authored docs tree. Treat it as generated output.
 - Asset-only directories do not need `index.md` unless local guidance says so.
 - Build output, hidden tool directories, and generated artifacts are not content
   directories.
-- Optional Fumadocs metadata files, such as `meta.json`, may refine sidebar
-  presentation when local style uses them. They do not replace `## Contents`.
+- Preserve authored metadata in apps with a different approved local integration. Do not point the owned compiler at it and silently adopt it; compiler-owned metadata never replaces authored Contents.
 - Preserve local audience routers, ownership notes, and app-shell
   customizations.
 

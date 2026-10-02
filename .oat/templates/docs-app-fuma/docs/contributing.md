@@ -13,6 +13,12 @@ Documentation should ship with the code it explains. This docs app is scaffolded
 - Each `index.md` must include a `## Contents` section.
 - The `## Contents` section is the machine-readable local map for sibling pages and child directories.
 - `overview.md` is deprecated in favor of `index.md`.
+- Contents owns sidebar membership/order; frontmatter titles own leaf and section labels. Every canonical page/child section needs one physical-parent entry. Cross-links stay in page bodies, preserving breadcrumbs and previous/next.
+- `predev` / `prebuild` run installed `oat docs nav sync --framework fumadocs --target-dir .`, then `fumadocs-mdx`, then the separate agent-index generator. Do not copy repository-specific workspace source CLI commands into this app.
+- `oat docs nav sync --framework fumadocs --validate-only` is source-only; `--check` compares generated output without writes and requires generation first. The modes are mutually exclusive.
+- Ordinary `.md` routes, a root loader base and relative fragments are supported. External/query-bearing Contents entries, MDX/custom slugs and separators are unsupported; fenced examples are ignored. Deployment basePath is applied by the renderer.
+- Ignored `docs/**/meta.json` and `.oat-fumadocs-nav.json` are protected by path/hash ownership. Preserve unowned/edited bytes; never adopt files by editing hashes. Back up proven disposable output with its sidecar before removing only those files and regenerating. Traversal/symlink paths are refused. Partial writes need inspection, not a claim of multi-file transactionality.
+- Format authored Markdown only, not ignored generated JSON.
 
 ## Local workflow
 

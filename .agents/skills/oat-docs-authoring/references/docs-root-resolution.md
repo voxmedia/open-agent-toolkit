@@ -21,7 +21,8 @@ roots before editing.
    - If config is incomplete, keep resolving from local files instead of
      guessing.
 3. Inspect package scripts in likely docs app directories.
-   - Look for `predev`, `prebuild`, `fumadocs-mdx`, `oat docs generate-index`,
+   - Look for `predev`, `prebuild`, `oat docs nav sync --framework fumadocs`,
+     `fumadocs-mdx`, `oat docs generate-index`,
      docs lint/format scripts, and local build commands.
    - Use the scripts as evidence for generated-artifact ownership and
      validation, not as a substitute for reading docs instructions.

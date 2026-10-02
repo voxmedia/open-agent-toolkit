@@ -149,11 +149,10 @@ For **MkDocs** apps, regenerate navigation after adding or moving pages:
 oat docs nav sync --target-dir apps/my-docs
 ```
 
-For **Fumadocs** apps, the app-root docs index manifest is generated from the
-Markdown file tree automatically via `predev`/`prebuild` hooks. You can also
-run it manually:
+For **Fumadocs** apps, `predev` / `prebuild` first compile owned sidebar metadata, then run MDX generation and the separate agent-inventory generator. From the consumer app directory:
 
 ```bash
+oat docs nav sync --framework fumadocs --target-dir .
 oat docs generate-index --docs-dir docs
 ```
 
@@ -205,7 +204,7 @@ Important:
 3. `oat docs init --app-name my-docs`
 4. (optional) handle MkDocs migration as a separate workstream; use `oat docs migrate --docs-dir docs --config mkdocs.yml --apply` only for the syntax/frontmatter helper
 5. Author docs with `index.md` + `## Contents`
-6. `oat docs nav sync --target-dir apps/my-docs` (MkDocs) or `oat docs generate-index` (Fumadocs)
+6. `oat docs nav sync --framework mkdocs --target-dir apps/my-docs` (MkDocs) or `oat docs nav sync --framework fumadocs --target-dir apps/my-docs` before MDX and separate `oat docs generate-index` (Fumadocs)
 7. `/oat-docs-analyze`
 8. `/oat-docs-apply`
 9. Repeat as the codebase changes

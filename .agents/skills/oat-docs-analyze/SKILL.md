@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: 1.5.2
+  version: 1.5.3
 ---
 
 # Docs Analysis
@@ -192,6 +192,12 @@ For every documentation directory:
 
 For OAT/Fumadocs docs apps, also distinguish authored source maps from generated
 root indexes:
+
+When the app uses the owned navigation compiler, source-only `oat docs nav sync --framework fumadocs --validate-only --target-dir <app-root>` is safe on a pristine checkout: no metadata, sidecar, `.source` or export dependency/write. Do not generate output in this read-only audit. `--check` compares existing output and is a separate mutually exclusive mode; missing ignored output is not proof of invalid source. The app-root agent manifest is not the rendered sidebar.
+
+Verify Contents membership/order and frontmatter-owned leaf/section labels, exactly one physical-parent entry per canonical page/child section, and real-loader breadcrumbs/previous-next. Cross-links are validated but stay in page bodies. Flag unsupported external/query-bearing entries, MDX/custom slugs or separators rather than guessing custom loader semantics. Fenced examples are not navigation; deployment basePath is applied by the renderer once.
+
+Treat ignored `docs/**/meta.json` and `.oat-fumadocs-nav.json` as hash-owned output. Report unowned/edited bytes, stale paths, traversal or symlink refusals; never adopt, delete or rewrite them in analysis. Recommend preserving authored bytes and backing up proven disposable output with its sidecar before approved regeneration. Formatting generated JSON changes hashes; recommend Markdown-scoped formatting.
 
 1. Resolve the authored docs source root and generated root index path from
    `.oat/config.json`, package scripts, generator scripts, or local guidance.

@@ -12,17 +12,27 @@ This file tells agents how to work inside `apps/oat-docs`, the documentation app
 2. Add frontmatter with at minimum `title:` and `description:`. The title drives nav display and page `<title>`; the description drives search previews, social cards, and sibling summaries. Empty descriptions hurt all three.
 3. Update the nearest `index.md`'s `## Contents` section to include a link to the new page. Use `.md`-suffixed relative links: `[Title](page.md)` for leaf pages, `[Section](subdir/index.md)` for subdirectories. The `@open-agent-toolkit/docs-transforms` remark-links plugin normalizes these for Fumadocs routing at build time (strips `.md`, collapses `dir/index.md` → `dir`), so the suffixed form renders correctly **and** lets agents follow links to the target file without path inference. The `## Contents` section is the machine-readable local map — anything not listed there is effectively invisible to the navigation tooling.
 4. If the new page introduces a new subdirectory, create an `index.md` in that subdirectory with its own `## Contents` section. Every content directory must have an `index.md`.
-5. Run `oat docs nav sync` (or equivalent for this framework) to regenerate any derived navigation artifacts. Derived artifacts never replace the authored `## Contents`; they're generated from it.
+5. From the repo root, run `pnpm -w run cli:source -- docs nav sync --framework fumadocs --target-dir apps/oat-docs` before `fumadocs-mdx`. `predev` / `prebuild` already do this. Contents owns sidebar membership/order; frontmatter titles own leaf and section labels. Each page and child section needs exactly one physical-parent entry. Cross-section links remain in page bodies, not the sidebar, to preserve canonical breadcrumbs and previous/next.
 
 ## When you need to restructure navigation
 
 1. Make changes in the authored `## Contents` sections of each affected `index.md`. That is the authoritative local map.
-2. Do **not** hand-edit generated navigation artifacts. The root-level `index.md` (if present for this framework), `mkdocs.yml` `nav:` (for MkDocs), and any other derived nav file is rewritten on every build.
-3. After editing `## Contents`, run the framework's nav sync command to regenerate derived artifacts.
+2. Do **not** hand-edit ignored `docs/**/meta.json` or `.oat-fumadocs-nav.json`. The app-root generated `index.md` is a separate agent inventory, not the sidebar. MkDocs uses `mkdocs.yml` `nav:` and remains the CLI default.
+3. Run `pnpm docs:validate` for source-only checks without generated metadata, `.source`, or `out`. Run `pnpm docs:test` for temporary-fixture real-loader tests. `--check` is a separate output comparison: use it only after generation, and expect missing, different or stale output to fail without writes.
 4. If you're moving pages between directories, update both source and destination `index.md` `## Contents` entries in the same commit so the site isn't broken mid-way through history.
 5. If you're reparenting an entire subtree, consider whether the moved directory's own `index.md` needs a revised "scope" paragraph.
 
 ## When you need to audit or bulk-edit docs
+
+### Safe generation and formatting
+
+The compiler supports ordinary `.md` file-derived routes with a root loader base, relative links and heading fragments. External/query-bearing Contents links, MDX/custom slugs and separator syntax are unsupported; fenced examples do not count as navigation. Deployment basePath is applied by the renderer, never metadata.
+
+Generation requires sidecar ownership and matching last-written hashes before replacing or deleting metadata. Unowned, edited or symlinked output is refused before writes. Preserve authored bytes; never adopt them by editing hashes. For proven disposable output, back it up with the sidecar before removing only those files and regenerating. A partial write failure requires inspection, not a claim of multi-file transactionality.
+
+Format authored Markdown with `pnpm --filter oat-docs docs:format` or a `docs/**/*.md` file-scoped invocation. Do not recursively format `docs/`: JSON formatting changes ignored metadata bytes and correctly triggers the ownership guard. Source validation never needs output cleanup.
+
+### Audit and apply
 
 1. Use `oat-docs-analyze` to audit the docs surface against the `## Contents` contract and surface gaps, drift, and coverage opportunities. This is read-only; it produces a report artifact under `.oat/repo/analysis/`.
 2. Review the report with the user. The analyze output is a set of ordered recommendations — apply them selectively, not wholesale.

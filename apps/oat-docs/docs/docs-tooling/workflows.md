@@ -18,7 +18,7 @@ Install the workflow skills with `oat tools install docs` (preferred) or
 - `oat docs init` scaffolds a docs app (Fumadocs or MkDocs)
 - `oat docs migrate` converts MkDocs admonitions to GFM callouts and injects frontmatter
 - `oat docs generate-index` generates a Fumadocs app-root docs index manifest from the Markdown file tree
-- `oat docs nav sync` regenerates MkDocs `mkdocs.yml` nav from `index.md` `## Contents` sections
+- `oat docs nav sync` compiles Contents into MkDocs YAML (default) or owned Fumadocs metadata with explicit `--framework fumadocs`
 - `oat docs analyze` and `oat docs apply` expose the workflow surface in CLI help
 
 ### Skills
@@ -67,7 +67,7 @@ skills.
 5. Keep local `## Contents` sections current
 6. Refresh generated artifacts:
    - **MkDocs:** `oat docs nav sync`
-   - **Fumadocs:** `oat docs generate-index` (runs automatically via `predev`/`prebuild` hooks)
+   - **Fumadocs:** `oat docs nav sync --framework fumadocs` before `fumadocs-mdx`, then `oat docs generate-index` for the separate agent inventory (scaffold hooks run this order)
 7. Run `oat-docs-analyze`; by default it verifies the generated analysis artifact
    through `workflow.autoArtifactReview.analysis`
 8. Review the artifact and run `oat-docs-apply`

@@ -1,6 +1,6 @@
 ---
 title: Docs App Commands
-description: 'Docs scaffolding CLI surface for Fumadocs/MkDocs, migration helpers, Fumadocs index generation, and MkDocs nav sync.'
+description: 'Docs scaffolding, migration, framework-specific navigation compilation, and agent-index generation.'
 ---
 
 # Docs App Commands
@@ -11,7 +11,7 @@ and **MkDocs Material**.
 
 ## Quick Look
 
-- What it does: documents the docs-specific CLI surface for scaffolding apps, migrating markdown, generating Fumadocs app-root index manifests, and syncing MkDocs navigation.
+- What it does: documents scaffolding, Markdown migration, agent-index generation and framework-specific navigation compilation.
 - When to use it: when you already know you are working on a docs surface and need the exact command-level behavior.
 - Primary commands: `oat docs init`, `oat docs migrate`, `oat docs generate-index`, `oat docs nav sync`
 
@@ -22,7 +22,7 @@ and **MkDocs Material**.
 | `oat docs init`           | Scaffold a new docs app (Fumadocs or MkDocs).                                 |
 | `oat docs migrate`        | Convert MkDocs admonitions to GFM callouts and inject frontmatter.            |
 | `oat docs generate-index` | Generate a Fumadocs app-root docs index manifest from the Markdown file tree. |
-| `oat docs nav sync`       | Regenerate MkDocs `mkdocs.yml` navigation from directory `index.md` maps.     |
+| `oat docs nav sync`       | Compile Contents into MkDocs YAML (default) or owned Fumadocs metadata.       |
 | `oat docs analyze`        | CLI entrypoint that points users to the `oat-docs-analyze` skill.             |
 | `oat docs apply`          | CLI entrypoint that points users to the `oat-docs-apply` skill.               |
 
@@ -30,7 +30,7 @@ and **MkDocs Material**.
 
 Use the framework-specific generated-artifact command:
 
-- Fumadocs apps run `fumadocs-mdx` and `oat docs generate-index`. In this repo, `predev` and `prebuild` regenerate `apps/oat-docs/index.md` from `apps/oat-docs/docs`.
+- Fumadocs apps run `oat docs nav sync --framework fumadocs` before `fumadocs-mdx`, then `oat docs generate-index` for the separate agent inventory. This repo invokes the branch `cli:source` entry; consumer scaffolds invoke installed `oat` from the app directory.
 - MkDocs apps use `oat docs nav sync` to regenerate the `nav:` block in `mkdocs.yml` from authored directory `index.md` `## Contents` sections.
 
 Both frameworks keep authored `## Contents` sections as the source of local discovery. The generated artifact differs by framework.
@@ -55,7 +55,7 @@ Fumadocs scaffold:
 
 - thin Next.js app importing from `@open-agent-toolkit/docs-config`, `@open-agent-toolkit/docs-theme`, `@open-agent-toolkit/docs-transforms`
 - static export (`output: 'export'`) with FlexSearch, Mermaid diagrams, dark/light mode
-- `predev`/`prebuild` hooks run `oat docs generate-index` automatically
+- `predev`/`prebuild` hooks run navigation generation, `fumadocs-mdx`, then agent-index generation, in that order
 - starter docs: `docs/index.md`, `docs/getting-started.md`, `docs/contributing.md`
 
 MkDocs scaffold:
@@ -183,18 +183,27 @@ script hooks.
 
 ## `oat docs nav sync`
 
-Use nav sync in MkDocs apps after adding, removing, or renaming docs pages.
+Use nav sync after adding, removing, renaming or reordering docs pages. Omitting `--framework` preserves MkDocs YAML behavior.
 
-The command reads only the reserved `## Contents` section from each directory
-`index.md` and regenerates the `nav:` block in `mkdocs.yml`.
+The compiler reads each directory index's exact H2 Contents, excluding fenced examples. For Fumadocs, local leaves and child sections have native ownership; frontmatter titles own their labels. Missing/double ownership, label mismatches, missing files and unresolved fragments fail before writes. Cross-links stay in page bodies rather than altering canonical sidebar traversal.
 
-For Fumadocs apps, regenerate the root markdown manifest with `oat docs generate-index` instead.
+Fumadocs supports ordinary `.md` file-derived routes and a root loader base. External/query-bearing navigation entries, MDX/custom slugs and separator syntax are unsupported. Next deployment basePath is applied by the renderer once, not encoded into metadata.
 
 Example:
 
 ```bash
 oat docs nav sync --target-dir apps/oat-docs
+# Fumadocs generation, from a consumer app directory
+oat docs nav sync --framework fumadocs --target-dir .
+# Source-only validation: no metadata, sidecar, .source or out required
+oat docs nav sync --framework fumadocs --validate-only --target-dir .
+# Output comparison after generation, without writes
+oat docs nav sync --framework fumadocs --check --target-dir .
 ```
+
+`--check` and `--validate-only` are mutually exclusive; validate-only is Fumadocs-only. This repository's `pnpm docs:validate` additionally checks source routes/anchors, and `pnpm docs:test` runs real consumers in temporary fixtures without a prior app build.
+
+Generated `docs/**/meta.json` and `.oat-fumadocs-nav.json` are ignored build output, excluded from source bundles. The sidecar owns exact paths and last-generated hashes; unowned, edited, traversal or symlink paths are refused before writes or stale cleanup. Preserve authored bytes; never adopt files by editing hashes. Back up proven disposable output with its sidecar before removing only those files and regenerating. Partial write failures require inspection; sidecar-last atomic file writes are not a multi-file transaction. Format only authored Markdown, not generated JSON.
 
 Related reference:
 

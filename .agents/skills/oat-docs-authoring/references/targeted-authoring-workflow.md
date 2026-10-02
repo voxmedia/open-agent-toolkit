@@ -37,7 +37,7 @@ For page moves and renames:
 
 - update both the old parent and new parent `## Contents` sections;
 - search for links to the old path before finishing;
-- preserve optional local sidebar metadata, such as `meta.json`, when present;
+- preserve authored local metadata; in owned-compiler apps regenerate ignored `meta.json` through explicit Fumadocs nav sync before MDX, never hand-edit metadata or sidecar hashes;
 - regenerate or freshness-check the generated root index after authored maps
   change;
 - do not treat a generated-root entry as proof that the nearest parent map is
