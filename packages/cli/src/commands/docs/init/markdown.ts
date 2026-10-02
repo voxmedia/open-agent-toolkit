@@ -5,6 +5,7 @@ import {
   readdir,
   readFile,
   stat,
+  unlink,
 } from 'node:fs/promises';
 import { basename, dirname, join, relative, resolve } from 'node:path';
 
@@ -395,17 +396,10 @@ export async function applyMarkdownDocsPlan(
     if (plan.files.length) await ensureDir(plan.appRoot);
     for (const { name, content } of plan.files) {
       await validateMarkdownTarget(plan.repoRoot, plan.targetDir);
+      const path = join(plan.appRoot, name);
+      let handle;
       try {
-        const handle = await open(join(plan.appRoot, name), 'wx');
-        result.createdFiles.push(name);
-        try {
-          await handle.writeFile(content, 'utf8');
-        } catch (error) {
-          result.incompleteFiles.push(name);
-          throw error;
-        } finally {
-          await handle.close();
-        }
+        handle = await open(path, 'wx');
       } catch (error) {
         if (
           error instanceof Error &&
@@ -414,7 +408,44 @@ export async function applyMarkdownDocsPlan(
           (await readBaseline(plan.repoRoot, join(plan.appRoot, name))) !== null
         ) {
           result.preservedFiles.push(name);
+          continue;
         } else throw error;
+      }
+      let createdIdentity: { dev: number; ino: number } | undefined;
+      try {
+        createdIdentity = await handle.stat();
+        await handle.writeFile(content, 'utf8');
+        await handle.close();
+        result.createdFiles.push(name);
+      } catch (error) {
+        try {
+          await handle.close();
+        } catch {
+          // Preserve the original write/close error while attempting cleanup.
+        }
+        try {
+          await validateMarkdownTarget(plan.repoRoot, plan.targetDir);
+          const current = await lstat(path);
+          if (
+            !createdIdentity ||
+            !current.isFile() ||
+            current.dev !== createdIdentity.dev ||
+            current.ino !== createdIdentity.ino
+          ) {
+            throw new Error('Baseline file identity changed during creation.', {
+              cause: error,
+            });
+          }
+          await unlink(path);
+        } catch (cleanupError) {
+          if (!isMissing(cleanupError)) {
+            result.incompleteFiles.push(name);
+            result.auditAdvice.push(
+              `${name} could not be safely cleaned up after a failed write; inspect or repair it before retrying. Adoption preserves existing files.`,
+            );
+          }
+        }
+        throw error;
       }
     }
     if (

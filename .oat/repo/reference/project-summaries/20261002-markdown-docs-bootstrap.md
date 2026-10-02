@@ -164,3 +164,13 @@ target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:0,l
 ### 2026-10-02 · structural · oat-project-complete · retirement-sweep
 
 Retirement sweep: no absorbed projects or backlog IDs recorded. Markdown slice is complete; the broader docs-bootstrap backlog stays open for approval classes, package drift, pntr automation and external acceptance. Three retro evidence links now target the durable summary; their exact-path receipts are updated.
+
+## Post-completion PR review fix (2026-10-02)
+
+[Bugbot comment 4162610788](https://github.com/voxmedia/open-agent-toolkit/pull/335#discussion_r4162610788), reviewed at `7ba2dda0c672e0830e81980b23d62d011266b9dc`, identifies a valid Medium issue: a failed exclusive baseline write leaves an empty/truncated file which adoption subsequently preserves. The user approved this bounded follow-up on PR #335 after lifecycle completion.
+
+Failed baseline output is now removed only when the configured target remains valid and the path still identifies the regular file this attempt created. Successfully written/closed files and pre-existing authored content survive. A replacement inode is preserved. Failed cleanup reports a separate incomplete-file list and explicit inspection/repair advice; the original write error remains the cause and configuration/guidance stay unattempted.
+
+Five real-filesystem storage regressions failed against the old code and pass fixed, including first/second baseline failure, successful retry, authored-content preservation, cleanup failure and replacement ownership. The human reporting regression failed before the fix; both human/JSON controls pass fixed. Neutralizing the inode guard makes the replacement control fail with ENOENT; restoring it passes. The output-consumer tests protect a separate risk: correct storage receipts could still be omitted from human recovery guidance.
+
+Independent bounded review returned 0C/0H/0M/0L and executed 25 focused tests. All eight repository gates passed in order. The CLI workspace test task actually executed 8,027 tests across 403 files; other consumer tests/builds include cache replays, and root suites executed. [Exact exits, cache summaries and causal evidence](20261002-markdown-docs-bootstrap-follow-up-verification.json) are retained. Package 0.3.13 and existing skill bumps continue to pass the PR-scoped release gates. This follow-up leaves the original sealed archive and lifecycle record intact.

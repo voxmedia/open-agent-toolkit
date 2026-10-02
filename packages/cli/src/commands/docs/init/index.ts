@@ -72,6 +72,7 @@ interface DocsInitExecutionResult {
   dryRun?: boolean;
   plannedFiles?: string[];
   preservedFiles?: string[];
+  incompleteFiles?: string[];
   auditAdvice?: string[];
   changes?: { files: string[]; config: boolean };
   configStatus?:
@@ -458,6 +459,11 @@ async function runDocsInitCommand(
         context.logger.info(
           `Created baseline files: ${scaffold.createdFiles.join(', ') || 'none'}. Configuration: ${scaffold.configStatus}. Guidance was not attempted; preserve created content when retrying with --adopt.`,
         );
+        if (scaffold.incompleteFiles?.length) {
+          context.logger.warn(
+            `Baseline files requiring inspection: ${scaffold.incompleteFiles.join(', ')}. Automatic cleanup could not be completed; inspect or repair these paths before retrying. Adoption preserves existing files.`,
+          );
+        }
       }
       process.exitCode = 1;
       return;
