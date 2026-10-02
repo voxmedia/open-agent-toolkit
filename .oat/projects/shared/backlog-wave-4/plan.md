@@ -1253,21 +1253,21 @@ rewrites the four inventory rows last.
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date | Artifact | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | ------- | ---- | -------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending | -    | -        | -             | -          | -           |
-| p02    | code     | pending | -    | -        | -             | -          | -           |
-| p03    | code     | pending | -    | -        | -             | -          | -           |
-| p04    | code     | pending | -    | -        | -             | -          | -           |
-| p05    | code     | pending | -    | -        | -             | -          | -           |
-| p06    | code     | pending | -    | -        | -             | -          | -           |
-| p07    | code     | pending | -    | -        | -             | -          | -           |
-| final  | code     | pending | -    | -        | -             | -          | -           |
-| spec   | artifact | pending | -    | -        | -             | -          | -           |
-| design | artifact | pending | -    | -        | -             | -          | -           |
-| plan   | artifact | pending | -    | -        | -             | -          | -           |
+| Scope  | Type     | Status  | Date       | Artifact | Reviewed Head | Invocation | Gate Target |
+| ------ | -------- | ------- | ---------- | -------- | ------------- | ---------- | ----------- |
+| p01    | code     | pending | -          | -        | -             | -          | -           |
+| p02    | code     | pending | -          | -        | -             | -          | -           |
+| p03    | code     | pending | -          | -        | -             | -          | -           |
+| p04    | code     | pending | -          | -        | -             | -          | -           |
+| p05    | code     | pending | -          | -        | -             | -          | -           |
+| p06    | code     | pending | -          | -        | -             | -          | -           |
+| p07    | code     | pending | -          | -        | -             | -          | -           |
+| final  | code     | pending | -          | -        | -             | -          | -           |
+| spec   | artifact | pending | -          | -        | -             | -          | -           |
+| design | artifact | pending | -          | -        | -             | -          | -           |
+| plan   | artifact | passed  | 2026-10-02 | -        | -             | auto       | -           |
 
----
+## Plan artifact review (`QS-11`): structured review by `oat-reviewer-claude-claude-opus-5-5-high` (exact reviewer ceiling; planning-parent effort unknown), three attempts within `oat_orchestration_retry_limit` 2: attempt 1 returned 3 High, 4 Medium, 5 Low; attempt 2 returned 2 Medium, 2 Low; attempt 3 clean. All findings were applied in plan.md and discovery.md (commits 6bae4002b, ff8d23485); no residual findings.
 
 ## Implementation Complete
 
