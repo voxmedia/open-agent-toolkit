@@ -444,6 +444,18 @@ Artifact reviews/phase06-plan-amendment-2026-10-02T045216Z.md returned exactly `
 
 ## Final Summary (for PR/docs)
 
+### Fable amendment and phase-one review disposition: 2026-10-02
+
+Fable reviewed committed 3daaacfec and read p01 source at 257517ab..61450540, executing nothing. Root accepts A1/A2: page/heading-keyed normalized section hashes protect the pure move; independently verified fact ledgers are created only before existing prose changes. One editorial round and one persona rerun end in one consensus triage of bounded small fixes or explicitly reported residuals; safety, conservation and blocking findings cannot be waived. A3/A4 are adopted with honest source-blindness limits and current-tree capability re-inventory. This is the second bounded amendment correction; Fable readiness was conditional only on A1/A2, now implemented. No new user checkpoint.
+
+Native p01 artifact returned exactly `**Reconnaissance:** not-attempted`, contains no Review Orchestration, and has validated p01/code/auto/full-head provenance. Root accepts H1, M1-M3 and L1 for bounded same-handle fix round 1 of 2. H1 needs current-main skill versions and relevant upstream composition checked; M1 needs parsed renderer-compatible anchors shared by validators; M2 needs actual Markdown-descendant classification; M3 needs fail-closed native stem collisions; L1 needs unsupported separator diagnostics. No review-receive workflow is implicitly invoked.
+
+Root accepts Fable P1/P2/P4: interrupted-output recovery only on exact equality with newly computed bytes (explicit design change above), contextual malformed-fragment diagnostics, and dev-server restart guidance. Negative controls must retain refusal for genuinely different authored/unowned files, malformed manifests and symlink/traversal paths. Check mode never adopts or writes. This changes the original unconditional unowned-file refusal, not the previous formatter incident disposition. P3 is an accepted IA consequence: Skills sidebar contains Skills-owned guides only; Workflows/Docs Tooling family discovery is through the body/catalog. Journeys 2 and 5 must exercise that route.
+
+First native review dispatch outcome: completed, 0 Critical / 1 High / 3 Medium / 1 Low. Reviewer read/ran focused real-loader controls; source fixes and all ordered release gates remain pending. Original three task commits remain immutable; review-fix commits are append-only, with separate root bookkeeping. No project-log write occurs between this review and fix dispatch.
+
+Orc follow-up is independently owned and published as draft PR https://github.com/tkstang/orc/pull/47 at 69fa78ae5411cf4c5f4da81c89e7a7380f3d220c, Mini worktree /Users/tstang/orca/workspaces/orc/docs-qa-orchestration-guidance, branch docs-qa-orchestration-guidance. Native helper attached to root; Orca CLI registration verified, standalone chat visibility not claimed. Six repository gates passed, with type/build cache replay disclosed. Not merged or installed; docs-branch publication is separately unapproved and does not block local execution.
+
 Implementation is underway, not published or merged. p01 source foundation is committed with implementer proof; phase acceptance awaits root gates/review. Reader-facing migration, catalog/scenarios, persona/editorial work and final independent acceptance remain pending.
 
 ## References
