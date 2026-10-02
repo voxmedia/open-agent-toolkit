@@ -24,15 +24,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 8     | 8/8       |
-| Phase 2 | complete    | 3     | 3/3       |
-| Phase 3 | complete    | 5     | 5/5       |
-| Phase 4 | complete    | 9     | 9/9       |
-| Phase 5 | complete    | 6     | 6/6       |
-| Phase 6 | complete    | 4     | 4/4       |
-| Phase 7 | in_progress | 3     | 3/3       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 8     | 8/8       |
+| Phase 2 | complete | 3     | 3/3       |
+| Phase 3 | complete | 5     | 5/5       |
+| Phase 4 | complete | 9     | 9/9       |
+| Phase 5 | complete | 6     | 6/6       |
+| Phase 6 | complete | 4     | 4/4       |
+| Phase 7 | complete | 3     | 3/3       |
 
 **Total:** 38/38 tasks completed
 
@@ -251,7 +251,7 @@ oat_generated: false
 
 ## Phase 7: Release fan-in
 
-**Status:** in_progress
+**Status:** complete
 
 ### Task p07-t01: Bump the lockstep public packages to 0.3.14
 
@@ -650,6 +650,14 @@ check`, lint, build, type-check, isolated-HOME `turbo run test --force` 10/10
   still point at moved item paths) left unchanged as another project's
   artifact; noted for the PR.
   `Dispatch: scope=p07 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
+
+- Phase gate (`codex-6-sol-xhigh`, run `28bb7ade`) at `622ee0012`:
+  `reviews/archived/p07-review-2026-10-02T230925Z.md` status `ok`, 0 Critical/High/Medium,
+  1 Low (the same two moved-item links). Judgment sweep: addressed now by the
+  root as a mechanical link repoint in `review-gate-integrity/discovery.md`
+  (`e3ab48088`), scoped to the two links this wave's archive step broke.
+- Phase p07 outcome: complete; 3/3 tasks; one root review round, one passing
+  gate.
 
 <!-- orchestration-runs-end -->
 
