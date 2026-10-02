@@ -19,7 +19,9 @@ This document defines the project and user sync config used by provider-interop 
 Discovery note:
 
 - `oat config describe` includes both sync config scopes in its catalog so you can inspect sync/provider keys from the main config help surface.
-- Mutation ownership still lives with provider-sync commands such as `oat providers set`, not `oat config set`.
+- Enablement mutation lives with `oat providers set`, not `oat config set`.
+  Strategy fields are edited directly in sync config; the provider command does
+  not set them.
 
 It is read by:
 
@@ -143,3 +145,28 @@ safe, including after interruption.
 - [`commands.md`](commands.md)
 - [`manifest-and-drift.md`](manifest-and-drift.md)
 - [`../reference/oat-directory-structure.md`](../reference/oat-directory-structure.md)
+
+## Choosing providers and strategy
+
+| Enablement      | Choose when                               | Tradeoff                                                 |
+| --------------- | ----------------------------------------- | -------------------------------------------------------- |
+| `true`          | A provider should work in fresh checkouts | Generated views appear even without pre-existing folders |
+| `false`         | Nobody needs that provider                | Existing views remain; disabling is not deletion         |
+| Unset (default) | Folder-based detection is sufficient      | Less predictable in fresh worktrees                      |
+
+**Recommendation:** enable used tools, disable others. Init records choices;
+existing disabled folders can trigger a re-enable offer. Inspect the selection.
+
+| Strategy         | Choose when                      | Tradeoff                                                                  |
+| ---------------- | -------------------------------- | ------------------------------------------------------------------------- |
+| `auto` (default) | Normal canonical-source workflow | Existing exact folder aliases need explicit recovery before transition    |
+| `symlink`        | Per-entry links are wanted       | Link portability; refuses whole-folder aliases                            |
+| `copy`           | Links cannot be used             | Requires resync; markers contain the originating checkout's absolute path |
+
+Rules are copies regardless of strategy. OS symlink failure can fall back to
+copy, so requested strategy is not proof of the realized shape. Copied views
+can churn across clones/worktrees because of their source marker; status may
+still report a stale copy as in sync with its last generated content.
+**Recommendation (inference):** keep auto unless a concrete constraint needs
+copy. Edit strategy in sync config, retaining `version`/`defaultStrategy`.
+Adapter inspection defaults do not replace effective config.

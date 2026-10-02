@@ -121,7 +121,8 @@ Layers](evidence-layers.md) and [Reviews](../projects/reviews/index.md).
 ## HiLL and lifecycle closeout
 
 If checkpoint selection is unconfirmed when autonomy starts implementation,
-OAT takes the existing `workflow.hillCheckpointDefault: final` path explicitly:
+OAT uses an explicit autonomous checkpoint branch, ignoring the configured
+`workflow.hillCheckpointDefault` while preserving valid existing plan choices:
 
 ```yaml
 oat_plan_hill_phases: ['<final-phase-id>']
@@ -242,3 +243,18 @@ Autonomy does not let an ordinary review impersonate a configured exit gate.
 **Next step:** Inspect the final report and PR, or resolve the named boundary.
 After a restart, deliberately invoke the skill again. Persisted project state
 supports resume, but does not silently reactivate autonomy.
+
+## Choosing how unattended to run
+
+| Mode                  | Choose when                                     | Tradeoff                                                        |
+| --------------------- | ----------------------------------------------- | --------------------------------------------------------------- |
+| Interactive (default) | You want to steer approvals                     | Requires a person at prompts                                    |
+| Non-interactive       | A scripted step needs documented defaults       | Unresolved choices stop; no continuous autonomous consent       |
+| Explicit autonomous   | A clear goal can run within declared boundaries | Less live steering; review outputs and publication consequences |
+
+Autonomy needs reactivation after restart; it neither chooses unresolved policy
+nor merges. Product decisions, destructive/protected actions, credentials,
+unresolved blocking reviews, and
+unperformable required proof remain stop boundaries.
+**Recommendation:** try interactive first; establish policy, ladder ownership,
+and gate failure behavior before unattended work. Missing prompts are not consent.

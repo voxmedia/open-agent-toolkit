@@ -91,3 +91,21 @@ See [Workflow preferences in the Configuration guide](../../../reference/configu
 - `.oat/templates/plan.md`
 - `.oat/projects/<scope>/<project>/plan.md`
 - `.oat/projects/<scope>/<project>/state.md`
+
+## Choosing checkpoint frequency
+
+| Choice             | Choose when                                 | Tradeoff                              |
+| ------------------ | ------------------------------------------- | ------------------------------------- |
+| Every phase (`[]`) | Course correction matters at each boundary  | More approval interruptions           |
+| Specific phase IDs | Risk concentrates at known milestones       | Other phases continue without a pause |
+| Final phase only   | You trust the plan and intermediate reviews | Less mid-run steering                 |
+
+The preference is unset; interactive first execution asks with every phase
+suggested. Configured `every`/`final` supplies that first choice; specific
+phases need the prompt or project plan field. Resumed execution uses the
+stored plan choice, not later preference changes. Lite bypasses checkpoints.
+
+Autonomy preserves valid choices; absent first-run state becomes final-only,
+ignoring the preference and enabling checkpoint review. **Recommendation:**
+interactive every/specific for risk, final-only for trusted work. Required
+phase reviews still run.

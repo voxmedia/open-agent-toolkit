@@ -106,3 +106,19 @@ oat config set workflow.designMode draft --local
 Valid values are `collaborative`, `selective`, and `draft`.
 
 Runtime non-interactive signals still win over this preference. If `OAT_NON_INTERACTIVE=1` is set, design runs in draft-and-review mode so automation does not block on prompts.
+
+## Choosing an interaction mode
+
+| Mode          | Choose when                                         | Tradeoff                                                 |
+| ------------- | --------------------------------------------------- | -------------------------------------------------------- |
+| Collaborative | Uncertain design needs section-by-section agreement | More live interaction                                    |
+| Selective     | A grounded spec-driven design has routine sections  | Routine content is reviewed in the final recap, not live |
+| Draft         | You want the complete proposal before discussing it | Less opportunity to steer each section                   |
+
+The preference is unset by default, so interactive design asks and leans
+collaborative. The design skill resolves an explicit mode, then
+`OAT_DESIGN_MODE`, then non-interactive draft, then config/prompt. Quick-start
+offers collaborative/draft and treats configured selective as collaborative.
+**Recommendation:** collaborative when uncertain, selective for grounded
+spec-driven work. No historical reason for the unset default is established.
+Non-interactive draft avoids prompts; autonomous rules can add boundaries.

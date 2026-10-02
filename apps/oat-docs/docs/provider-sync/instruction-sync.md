@@ -469,3 +469,16 @@ oat instructions sync --force --strategy copy
 - [Provider Interop CLI Scope and Surface](scope-and-surface.md)
 - [Config and Local State](../reference/config-and-local-state.md)
 - [Troubleshooting](../reference/troubleshooting.md)
+
+## Which instruction strategy should I choose?
+
+| Strategy         | Choose when                                        | Tradeoff                                                |
+| ---------------- | -------------------------------------------------- | ------------------------------------------------------- |
+| `none` (default) | Contributors use Claude's native AGENTS.md support | Older/custom instruction-loading setups may need a shim |
+| `pointer`        | Contributors need CLAUDE.md compatibility          | One small import file per instruction site              |
+| `symlink`        | Compatibility is needed and links are portable     | Platform/link constraints                               |
+| `copy`           | A consumer specifically needs full copied text     | Later AGENTS.md edits require deliberate force/resync   |
+
+The default avoids partial shims hiding AGENTS.md. **Recommendation:** none for
+confirmed native support, pointer for mixed setups. Preserve sole content before
+removal. Use `oat instructions sync`; asset sync does not maintain shims.

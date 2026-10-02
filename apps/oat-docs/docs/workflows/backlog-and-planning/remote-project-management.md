@@ -107,6 +107,11 @@ configuration never bypasses hard approval floors or the requirement for
 current caller-owned authority evidence; missing, stale, or mismatched evidence
 fails closed. Autonomous configuration is not a background grant.
 
+Current CLI bindings have a fixed intake/source or publish/planning purpose
+and empty per-binding restrictions; no command exposes additional binding
+restriction or purpose-grant setters. These remain internal narrowing layers,
+not extra configurable user controls.
+
 ## Live host capability boundary
 
 At operation time, the host agent inspects currently granted MCP or connector
@@ -144,10 +149,13 @@ preview digest binds the target, normalized fields, remote revision,
 capability, safety result, and effective policy. If any load-bearing input
 changes, the approval is stale.
 
-Fresh approval is always required for complete description replacement,
+Fresh approval is required for complete description replacement on create,
 relink, detach, recreate, destructive operations, and promotion to shared
-operational storage. `user-approved` authority also requires applying the exact
-persisted preview. Higher configured authority cannot bypass those floors.
+operational storage. **Current limitation:** replace-mode updates follow
+configured `update-fields` authority without the create-time replacement
+floor; choose `user-approved` if each overwrite needs human review.
+`user-approved` authority requires applying the exact persisted preview.
+Higher configured authority cannot bypass floors that the operation enforces.
 
 The host submits a bounded observation with `oat pjm remote operation continue`.
 Only an OAT `ok` envelope after authoritative read-back means success. A
@@ -158,10 +166,10 @@ or reconcile without producing duplicates.
 
 ## Storage and worktrees
 
-Portable binding metadata follows its backlog or project owner. Shared backlog
-metadata lives under `.oat/repo/pjm/remote/bindings`; project metadata lives
-under that project's `remote/bindings` directory. Local projects keep their
-portable metadata in the local operational store.
+Current production binding metadata lives under
+`.oat/repo/pjm/remote/bindings`, including bindings for local projects. The
+owner-specific routing design is not wired into that store. This directory
+is not gitignored by OAT: review tracker metadata exposure before committing.
 
 Operational snapshots, journals, batches, and receipts default to a
 repository-fingerprinted directory under the Git common directory:
@@ -171,8 +179,11 @@ clone gets its own store.
 
 Shared operational storage is opt-in and may expose remote planning content to
 everyone with repository access. It requires a persisted preview and fresh
-approval, and it is rejected for local projects. Preview the exact proposed
-paths through `oat pjm remote storage shared --help` before applying them.
+approval. **Current limitation:** production does not enforce the intended
+local-project rejection; do not combine shared storage with private local
+project assumptions. Preview with `oat pjm remote storage shared` without
+`--apply`, then use the returned approval digest for the explicit apply. The
+help command describes flags; it does not preview proposed storage changes.
 
 ## Offline behavior
 
@@ -189,3 +200,33 @@ freshness or success.
 - [CLI Reference](../../reference/cli-reference.md)
 - [File Locations](../../reference/file-locations.md)
 - [Troubleshooting](../../reference/troubleshooting.md)
+
+## Choosing bindings and policy
+
+Default: no binding, preserving offline work. Choose intake for tracker-owned
+tickets (title/body/priority inbound only), publish for locally owned tracker
+work. Both need capability evidence; publication needs exact write authority.
+
+| Description policy | Choose when                     | Tradeoff                                                         |
+| ------------------ | ------------------------------- | ---------------------------------------------------------------- |
+| `none` (default)   | The local body must not be sent | No outbound body comparison; intake still reads the remote body  |
+| `managed-section`  | Humans also edit tracker prose  | OAT owns only its marked block; broken markers block writes      |
+| `replace`          | OAT is the sole body author     | Can overwrite tracker prose; updates follow configured authority |
+
+| Authority             | Choose when                                     | Tradeoff                                                       |
+| --------------------- | ----------------------------------------------- | -------------------------------------------------------------- |
+| `read-only` (default) | Intake/refresh before enabling writes           | No remote mutations                                            |
+| `user-approved`       | Every exact payload needs review                | Fresh digest-bound approval per write                          |
+| `user-authorized`     | A specific request supplies authority           | No mandatory per-payload preview approval                      |
+| `autonomous`          | A workflow supplies matching authority evidence | Reduced live oversight, not unrestricted background permission |
+
+**Recommendation (inference):** start read-only; enable create/update-fields
+as user-approved together. Approval needs a matching digest within five minutes.
+Replace updates lack the create-time floor: broader authority can overwrite
+without human approval. Unset provider policy inherits; overrides can broaden
+it, so restate needed operation restrictions after overriding provider defaults.
+
+Storage defaults local (linked worktrees share it, clones do not). Shared
+state exposes content/journals and does not migrate old records.
+**Recommendation:** local unless exposure/recovery needs justify approved shared
+storage. Local-project bindings remain in the repository, not inherently private.

@@ -44,14 +44,14 @@ oat config list
 oat config get projects.root
 oat config describe
 oat config describe archive.s3Uri
-oat config describe sync.providers.github.enabled
+oat config describe sync.providers.copilot.enabled
 ```
 
 What each command is for:
 
 - `oat config list` shows the currently resolved command-surface values for shared and repo-local keys.
 - `oat config get <key>` reads one supported key value.
-- `oat config set <key> <value>` updates supported shared or repo-local keys. Writes to the shared `.oat/config.json` keep the file's existing key order, and a write that would not change any value leaves the file byte-identical.
+- `oat config set <key> <value>` updates supported shared, repo-local, or user keys according to per-key restrictions. Writes to the shared `.oat/config.json` keep the file's existing key order, and a write that would not change any value leaves the file byte-identical.
 - `oat config unset <key>` removes a supported key from one surface, using the same `--shared`/`--local`/`--user` flags and per-key restrictions as `set`. The resolved value then falls back to the next surface down, or to the built-in default. A key the surface does not hold exits 0 as already-unset (`--json` adds a `removed` boolean to tell the two apart). Unknown keys, lifecycle state, `tools.*` pack intent, aggregate read views, read-only remote-policy structure, and environment-shadowed keys with nothing stored are refused with exit 1 — see [CLI Reference](cli-reference.md#oat-config-surface-flags).
 - `oat config describe` shows the supported config catalog across shared repo, repo-local, user, and sync/provider surfaces.
 - `oat config describe <key>` shows file, scope, default, mutability, owning command, and description for one key. A deprecated key also prints `Deprecated: prefer <successor>`, and `--json` carries the same fact as a `deprecated` object (`supersededBy`, plus `note` and `legacyValues` where they apply).
@@ -106,7 +106,8 @@ Common keys in `.oat/config.json`:
 - `archive.awsRegion` — optional AWS region forwarded as `AWS_REGION` to every `aws` invocation in archive flows
 - `tools.<pack>` — project-scope intent for a bundled tool pack (`true` or absent)
 - `pjm.remote.storage.state` — `local` by default; `shared` requires an
-  explicit preview and fresh approval and is unavailable to local projects
+  explicit preview and fresh approval. The current production store does not
+  enforce the intended local-project exclusion; see the remote storage warning
 - `pjm.remote.policy.description` — `none`, `managed-section`, or `replace`;
   the default is `none`
 - `pjm.remote.policy.authority.*` — repository defaults and operation-specific
@@ -125,6 +126,10 @@ that result. Binding defaults and operation restrictions then clamp authority,
 and purpose field grants intersect to narrow outbound fields. No configured
 layer bypasses hard approval floors or current caller-owned authority evidence;
 missing, stale, or mismatched evidence fails closed.
+
+Current CLI bindings use fixed intake/source or publish/planning purposes and
+empty per-binding restrictions. Those internal narrowing layers are not
+additional user-settable binding policy controls.
 
 The shared `pjm.remote` tree is closed. An unknown key, a non-object where an
 object is expected, or a wrong-typed leaf (for example `authority.default: 5`,
@@ -405,7 +410,7 @@ preference. For the full model, see
 | Key                                                    | Values                                                | Purpose                                                                              |
 | ------------------------------------------------------ | ----------------------------------------------------- | ------------------------------------------------------------------------------------ |
 | `workflow.dispatchPolicy.mode`                         | `managed`, `inherit`                                  | `managed` lets OAT select exact candidates; `inherit` leaves controls to the host    |
-| `workflow.dispatchPolicy.policy`                       | `economy`, `balanced`, `high`, `frontier`, `uncapped` | Default named maximum or explicit managed uncapped state                             |
+| `workflow.dispatchPolicy.policy`                       | `economy`, `balanced`, `high`, `frontier`, `uncapped` | Configured maximum overriding project state, or explicit managed uncapped state      |
 | `workflow.dispatchCeiling.providers.<provider>`        | tier map or legacy bare value                         | Reusable provider candidate column                                                   |
 | `workflow.dispatchCeiling.providers.<provider>.<tier>` | `candidates` cell, route, or legacy bare value        | One named tier in the provider ladder                                                |
 | `workflow.dispatchCeiling.recommendationVersion`       | string                                                | Bundle version last written by adoption; does not prove the effective ladder matches |
@@ -820,6 +825,12 @@ oat config set workflow.dispatchCeiling.providers.codex medium  # Advanced: per-
 oat config set workflow.autoArtifactReview.analysis false
 ```
 
+The legacy preset and bare-provider examples above remain readable compatibility
+syntax, not recommended complete-ladder setup. They can replace candidate
+columns with bare legacy ceilings. Prefer named policy plus explicit ladder
+adoption for new configurations. Configured policy overrides project state;
+leave policy keys unset when projects should choose independently.
+
 Default (no flag) targets `.oat/config.local.json` for workflow keys. Pass at most one of `--user`, `--shared`, or `--local`. Structural keys (`projects.root`, `worktrees.root`, `git.*`, `documentation.*`, `instructions.*`, `archive.*`, `tools.*`) are still shared-only regardless of flag.
 
 ### Choosing the right surface (personal vs per-repo)
@@ -914,3 +925,22 @@ When you are unsure where a setting lives:
 3. Use the owning command shown there.
 
 That keeps config discovery centralized without forcing you to remember which settings belong to workflow state versus provider sync.
+
+## Choosing a config layer
+
+| Layer      | Choose when                                                    | Tradeoff                                                   |
+| ---------- | -------------------------------------------------------------- | ---------------------------------------------------------- |
+| `--shared` | A repository's paths or policy must be consistent for the team | Overrides personal user defaults; changes belong in review |
+| `--local`  | One checkout needs a preference override                       | Other developers and checkouts do not inherit it           |
+| `--user`   | A personal workflow preference should follow you between repos | Shared/local values still win                              |
+
+Defaults: workflow/state and explainer defaults write local, update notifications
+user, structural keys shared. Restrictions remain: project state local-only,
+notifications user-only, remote policy shared-only. Pack installation records
+its selected scope, unlike shared-only `oat config set tools.*`.
+
+**Recommendation:** use shared for team policy, user for personal preferences.
+This is practical guidance, not undocumented historical intent. Resolution is
+local > shared > user > built-in; only `projects.root`,
+`projects.defaultScope`, and `worktrees.root` have CLI config environment
+aliases. Skill-specific environment controls are separate.

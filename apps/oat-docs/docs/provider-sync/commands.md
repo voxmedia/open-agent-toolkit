@@ -241,3 +241,10 @@ Key behavior:
 - Under `none`, warns about every `CLAUDE.md` that remains after sync, including inside excluded trees, because any one of them makes Claude Code ignore every `AGENTS.md`
 - Uses pointer content `@AGENTS.md\n`, file symlinks, or hard copies depending on the selected strategy
 - Detailed behavior and examples: [`Instruction Sync`](instruction-sync.md)
+
+## Safe scope for routine refresh
+
+**`oat sync` defaults to `all`, including home-directory writes.** For a
+repository-only refresh, preview `oat sync --scope project --dry-run`, then
+remove `--dry-run`. Personal refresh uses `--scope user`. Sync overwrites view
+edits/removes obsolete managed views; edit canonical sources.

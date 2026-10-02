@@ -313,3 +313,15 @@ reasoning effort, and OAT writes a role such as
 - `.oat/projects/<scope>/<project>/design.md`
 - `packages/cli/src/manifest/**`
 - `packages/cli/src/drift/**`
+
+## Choosing a stray disposition
+
+| Choice                 | Choose when                                              | Tradeoff                                                        |
+| ---------------------- | -------------------------------------------------------- | --------------------------------------------------------------- |
+| Adopt                  | The skill/agent should be canonical and portable         | Moves source ownership; leaves an original-path link            |
+| Keep tool-only         | An eligible Cursor/Copilot skill is intentionally native | No cross-provider distribution; exact path enters `knownStrays` |
+| Decide later (default) | Ownership is unclear                                     | It remains reported                                             |
+
+**Recommendation:** adopt reusable content, keep eligible native-only skills.
+Keep cannot hide canonical collisions. Reporting suppression proves neither
+correctness nor synchronization.

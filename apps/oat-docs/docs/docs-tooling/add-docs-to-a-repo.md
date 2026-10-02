@@ -289,3 +289,22 @@ Important:
 - [`commands.md`](commands.md)
 - [`workflows.md`](workflows.md)
 - [`../reference/docs-index-contract.md`](../reference/docs-index-contract.md)
+
+## Choosing Markdown or a site framework
+
+| Tooling  | Choose when                                  | Tradeoff                                                    |
+| -------- | -------------------------------------------- | ----------------------------------------------------------- |
+| Markdown | Repository-readable docs need no hosted site | No site runtime/search; maintain authored Contents directly |
+| Fumadocs | A Node-based team wants a rendered site      | App dependencies/build; strict committed sidebar metadata   |
+| MkDocs   | The team prefers Python/Material             | Python dependency setup; bootstrap offers a leaner path     |
+
+Non-interactive CLI defaults to Fumadocs; historical rationale is unestablished.
+**Recommendation:** the smallest sufficient surface; adopt Markdown rather
+than adding an unnecessary app.
+
+Markdown creates baseline authored files without dependencies or nav sync.
+Fumadocs scaffold hooks generate the app-root inventory, not sidebar metadata:
+run nav sync after map changes, commit `meta.json`, and add its `--check` to
+build/CI explicitly. MkDocs nav sync rewrites `mkdocs.yml`'s nav block;
+preview drift first. Adopt/configure or migrate existing frameworks instead of
+initializing populated content.

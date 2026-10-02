@@ -1173,3 +1173,37 @@ Related docs:
 - Bootstrap (`oat init`): `bootstrap.md`
 - Provider sync (`oat status`, `oat sync`, `oat providers ...`): `../provider-sync/index.md`
 - Diagnostics and local-state commands: [Config and Local State](../reference/config-and-local-state.md)
+
+## Choosing packs and their ownership
+
+| Need                                                       | Choose                                          |
+| ---------------------------------------------------------- | ----------------------------------------------- |
+| Setup diagnostics and bundled documentation                | `core`                                          |
+| Tracked projects and lifecycle execution                   | `workflows`                                     |
+| Documentation and instruction maintenance                  | `docs`                                          |
+| Reviews, orchestration, explainers, repository improvement | `utility`                                       |
+| Evidence gathering and analysis                            | `research` (includes its dispatch dependencies) |
+| Exploratory capture                                        | `ideas` and/or `brainstorm`                     |
+| File-backed backlog, roadmap, decisions, tracker bindings  | `project-management`, then explicitly adopt PJM |
+
+The interactive picker defaults to all except `project-management`;
+non-interactive selection includes all eight. Installation is not adoption.
+
+| Scope   | Choose when                              | Tradeoff                                                       |
+| ------- | ---------------------------------------- | -------------------------------------------------------------- |
+| User    | Personal reuse across repositories       | Teammates do not inherit your tooling                          |
+| Project | Team-owned reproducible canonical assets | Updates produce repository changes                             |
+| Both    | You deliberately need two installations  | Duplication; OAT does not decide which copy the provider loads |
+
+Fresh packs default to user scope to support reuse without routine repository
+copy churn; existing placement is retained. **`core` is user-only**, even when
+project scope is requested. `oat init --scope project --setup` does not select
+project pack ownership: customize each pack's scope or install it explicitly.
+Installing at another scope is additive; use `oat tools migrate` when moving
+ownership, not a second install. Project templates remain owner-owned seeds.
+
+**Recommendation:** user for personal reuse, project for teams; avoid duplicates.
+Check `oat pjm doctor --json` before adopting repository planning.
+**Current limitation:** rerunning `oat pjm init` or `oat pjm migrate --apply`
+can remove `pjm.remote`; inspect the config diff and restore intended settings
+through supported commands. Installation never authorizes tracker publication.

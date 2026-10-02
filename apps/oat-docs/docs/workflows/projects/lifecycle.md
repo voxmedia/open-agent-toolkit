@@ -264,7 +264,7 @@ registers. Non-interactive completion skips this offer, so autonomous
 generation occurs only through an explicitly configured post-approval `retro`
 step.
 
-When `workflow.autoReviewAtHillCheckpoints` is enabled or `plan.md` frontmatter sets `oat_auto_review_at_hill_checkpoints`, completing a HiLL checkpoint automatically runs the extra lifecycle review scoped to every implementation phase not already covered by a passed whole-phase code review, through the just-completed checkpoint. Mid-implementation multi-phase reviews use inclusive phase-range scopes such as `p02-p03`; the final implementation checkpoint uses `code final`. The review uses auto-disposition mode (low findings auto-converted to fix tasks, no user prompts). Disabled by default. Legacy `autoReviewAtCheckpoints` and `oat_auto_review_at_checkpoints` are still read as fallbacks. This does not control Tier 1 per-phase `oat-reviewer` gates.
+When `workflow.autoReviewAtHillCheckpoints` is enabled or `plan.md` frontmatter sets `oat_auto_review_at_hill_checkpoints`, completing a HiLL checkpoint automatically runs the extra lifecycle review scoped to every implementation phase not already covered by a passed whole-phase code review, through the just-completed checkpoint. Mid-implementation multi-phase reviews use inclusive phase-range scopes such as `p02-p03`; the final implementation checkpoint uses `code final`. The review uses auto-disposition mode (low findings auto-converted to fix tasks, no user prompts). The preference is unset by default; interactive implementation asks with "no" suggested, while autonomous non-lite implementation forces it on. Legacy `autoReviewAtCheckpoints` and `oat_auto_review_at_checkpoints` are still read as fallbacks. This does not control Tier 1 per-phase `oat-reviewer` gates.
 
 ### Phase-review setup during planning
 
@@ -513,7 +513,7 @@ Capture lane progression:
 
 The lifecycle has several interactive prompts that power users often answer the same way every time — HiLL checkpoint behavior, archive on complete, auto-create PR, post-implementation chaining, final review execution model, and re-review scope narrowing. These can be configured once via `workflow.*` preference keys and respected automatically by skills.
 
-See the [Workflow preferences section in the Configuration guide](../../reference/configuration.md#workflow-preferences-workflow) for the full list of keys and how to set them. Preferences resolve through a three-layer chain (`env > repo-local > repo-shared > user > default`), so you can set personal defaults at user scope once and override per-repo only when needed.
+See the [Workflow preferences section in the Configuration guide](../../reference/configuration.md#workflow-preferences-workflow) for the full list of keys and how to set them. Workflow preferences resolve through `repo-local > repo-shared > user > default`; there is no generic workflow environment layer. Individual skills may separately read environment controls such as `OAT_DESIGN_MODE`. Set personal defaults at user scope and override per-repo when needed.
 
 ## Active project resolution
 
@@ -566,3 +566,14 @@ The fold-back path is what makes "we got to plan and realized the design missed 
 - `.oat/projects/<scope>/<project>/design.md`
 - `.oat/projects/<scope>/<project>/plan.md`
 - `.oat/projects/<scope>/<project>/implementation.md`
+
+## Choosing lifecycle controls
+
+Planning checkpoints, implementation pauses, artifact loops, and external gates
+are distinct. Required phase/final reviews remain when extra review is disabled.
+
+**Recommendation:** choose the [workflow mode](../choose-workflow.md#which-mode-should-i-choose)
+first, then [design interaction](planning/design-modes.md#choosing-an-interaction-mode)
+and [checkpoint frequency](planning/hill-checkpoints.md#choosing-checkpoint-frequency).
+Keep artifact loops for downstream handoffs; use gates for measured diversity.
+Extra reviews add latency, not guaranteed independence.

@@ -67,3 +67,18 @@ Stay with direct CLI usage when:
 - [Skills](../skills/index.md) - Workflow-oriented skill discovery and use-case routing.
 - [Ideas](ideas/index.md) - Idea capture, refinement, and promotion flows.
 - [Workflow & Projects](projects/index.md) - Lifecycle, artifacts, reviews, PR flow, and repository analysis.
+
+## Which mode should I choose?
+
+| Mode        | Choose when                                                | Tradeoff                                                        |
+| ----------- | ---------------------------------------------------------- | --------------------------------------------------------------- |
+| No project  | Small ad-hoc work needs no lifecycle tracking              | No tracked resume/plan; ad-hoc review remains available         |
+| Lite        | Clear outcome fits one sitting                             | One plan/approval; no discovery/design documents or HiLL pauses |
+| Quick       | Bounded work has clear requirements                        | No formal spec; design is optional                              |
+| Spec-driven | Unclear requirements or cross-cutting risk needs agreement | More planning and approval time                                 |
+| Import      | A usable plan already exists                               | OAT discovery/design is bypassed                                |
+
+The selected entry skill determines the mode; bare `oat project new` defaults
+to spec-driven scaffolding. **Recommendation:** choose by requirements clarity
+and design risk, not task count. Start with the skill for its planning
+conversation; CLI scaffolding alone does not perform that conversation.

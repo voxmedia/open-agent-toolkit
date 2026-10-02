@@ -131,3 +131,15 @@ runtime mismatch, malformed output, and missing telemetry never authorize it.
 - `.oat/projects/<scope>/<project>/design.md`
 - `.oat/projects/<scope>/<project>/plan.md`
 - `.oat/projects/<scope>/<project>/implementation.md`
+
+## Choosing sync scope
+
+| Scope           | Choose when                          | Tradeoff                           |
+| --------------- | ------------------------------------ | ---------------------------------- |
+| `project`       | Team checkout or CI                  | Personal assets are not refreshed  |
+| `user`          | Personal skills/agents across repos  | Rules remain project-only          |
+| `all` (default) | Intentionally maintaining both trees | Writes include your home directory |
+
+**Recommendation:** project scope for scripts/CI; preview with `--dry-run`.
+Edit canonical sources, not views. Bare sync also writes user scope.
+Default rationale inference: maintaining both trees supports personal reuse.

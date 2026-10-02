@@ -134,7 +134,10 @@ This is separate from Tier 1 phase gate reviews. Tier 1 implementation always ru
 
 Auto-triggered reviews use `oat_review_invocation: auto` in the review artifact frontmatter. In auto mode, `oat-project-review-receive` auto-converts all findings to fix tasks without user prompts (Low findings that are clearly out of scope are deferred with a note).
 
-This feature is opt-in and disabled by default. When disabled, the manual `oat-project-review-provide` workflow applies.
+This preference is unset by default: interactive implementation asks with
+"no" suggested. Autonomous non-lite implementation forces it on; lite bypasses
+checkpoints. When disabled, the manual `oat-project-review-provide` workflow
+applies, while required per-phase and final reviews still run.
 
 ## Phase review gate
 
@@ -369,3 +372,20 @@ validation decisions, and output ownership.
 
 - [Review Flavors](review-flavors.md) - The four review flavors and who resolves each one's target.
 - [Reviewing OAT PRs](reviewing-oat-prs.md) - Read synced-project records and SHA-pinned reviewer links in a PR.
+
+## Choosing review controls
+
+| Control                | Default / choose when                                        | Tradeoff                                                                  |
+| ---------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------- |
+| Gate severity          | `high`; choose `medium` to block on more findings            | More fix rounds; lower findings are still received                        |
+| Phase external gate    | Off; opt in for early cross-model evidence                   | Additional run per selected phase, not a human pause                      |
+| Artifact loops         | Plan and analysis enabled; keep for downstream handoffs      | Bounded same-session review, not automatically independent                |
+| Checkpoint auto-review | Unset/prompt-no; enable for review at planned pauses         | Extra lifecycle reviews, separate from required phase review              |
+| Narrow re-review       | `true`; keep for changes since a verified matching review    | Unchanged code is not rechecked; invalid linkage falls back to full scope |
+| Final execution        | Unset/prompt; choose subagent for supported automatic review | Inline reduces separation; fresh-session requires manual handoff          |
+
+**Recommendation:** keep loops/narrowing normally; full scope for risky
+interactions. Disabled loops are skipped, not verified. Retry limit defaults
+two; zero permits the initial review. Autonomy forces non-lite checkpoint
+review; lite has no checkpoints. For independence, inspect external-gate
+diversity. Default rationale beyond these practical tradeoffs is not established.

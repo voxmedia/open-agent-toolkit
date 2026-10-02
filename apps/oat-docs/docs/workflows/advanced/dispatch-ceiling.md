@@ -585,7 +585,30 @@ The following remain readable during migration:
 - project `oat_dispatch_ceiling`
 - `--preferred` resolver selection
 
-Legacy preset names map to managed named tiers: `cost-conscious` to Economy,
-`balanced` to Balanced, and `maximum` to High. Legacy values are migration
-inputs, not evidence that a new project should persist exact provider-family
-pins.
+Legacy presets (`cost-conscious`, `balanced`, `maximum`) compile to bare legacy
+provider ceilings, not complete named candidate tiers. Their values can resemble
+tier caps without supplying a ladder. They remain migration inputs, not evidence
+that a new project should persist exact provider-family pins.
+
+## Choosing policy and ladder ownership
+
+**Config wins:** a configured dispatch policy or legacy provider ceiling
+overrides project state. Leave policy overrides unset to choose per project;
+adopting candidate cells is separate from setting a global policy.
+
+| Choice             | Choose when                                                | Tradeoff                                                      |
+| ------------------ | ---------------------------------------------------------- | ------------------------------------------------------------- |
+| Economy / Balanced | Routine / ordinary implementation within a bounded cap     | Higher configured tiers are unavailable                       |
+| High / Frontier    | Harder or consequential work justifies stronger candidates | Cap-tier reviews can increase cost; no fixed price is implied |
+| Uncapped           | The root may select any configured route                   | No tier cost ceiling; explicit choice required                |
+| Inherit            | Provider controls must remain untouched                    | OAT passes no model/effort pins                               |
+
+Defaults are unresolved, not uncapped: explicit intent is required.
+Implementers may use lower tiers; capped implementation reviews use the cap's
+final candidate. Artifact and external-gate selection are separate.
+
+**Recommendation:** Balanced per project initially; escalate for risk. Own team
+ladders in shared, experiments in local, personal defaults in user. Adoption
+defaults local; preview replacements or use `--keep-existing`. Local config
+can produce tracked roles. Codex/Claude enforce managed pins; Cursor records
+requests without runtime proof; advisory providers cannot enforce the ceiling.

@@ -18,8 +18,9 @@ gate that should inspect the produced review artifact.
 
 :::note Release note: default avoidance changed
 Gate dispatch now defaults to `--avoid same-family`, not `same-runtime`.
-For multi-family providers such as Cursor, this prevents a gate from reviewing
-with the same model family that produced the work. Use `--avoid none` only when
+For multi-family providers such as Cursor, this prefers a different model
+family, but falls back to the best available target with a recorded warning
+when diversity is unavailable. Inspect `diversity.achieved`; use `--avoid none` only when
 you intentionally allow same-family review.
 :::
 
@@ -1058,3 +1059,34 @@ starts and then fails, OAT does not try another target after dispatch. If no
 different-family target is available, OAT warns, records the degraded achieved
 level, and runs the best available target rather than pretending diversity was
 achieved.
+
+## Choosing gate posture
+
+Gates default off. **Recommendation:** planning gates check before code;
+implement gates check closeout. Both add latency/runtime requirements.
+Writes default user; choose shared for team policy.
+
+| Failure policy | Choose when                    | Tradeoff                                                   |
+| -------------- | ------------------------------ | ---------------------------------------------------------- |
+| `block`        | Findings must be addressed     | Bounded fix/rerun time; unresolved result stays incomplete |
+| `prompt`       | A person decides the exception | No answer means blocked; unsuitable unattended             |
+| `warn`         | Findings are advisory          | Failure is recorded without enforcement                    |
+
+`onFailure` must be explicit; `maxAttempts` defaults to two total runs.
+Operational failure is not an advisory finding. Some planning skill text is
+weaker here: inspect the outcome, never treating missing review as a pass.
+
+| Avoidance               | Choose when                       | Tradeoff                                                                 |
+| ----------------------- | --------------------------------- | ------------------------------------------------------------------------ |
+| `same-family` (default) | Prefer a different model family   | Best-available fallback can be same-family; inspect `diversity.achieved` |
+| `same-runtime`          | Require another detected host CLI | Unknown hosts exclude nothing; family is not checked                     |
+| `none`                  | Same-family review is intentional | No diversity protection                                                  |
+
+Built-ins omit dangerous approval-bypass flags; trusted targets need appropriate
+permissions. Stored lifecycle commands reject `--target`; manual runs can pin it.
+
+Code phase/range/final reviews default to 30 minutes; artifact/other reviews to 15.
+Explicit timeout wins over target, typed workflow budget, environment, then
+built-in default. **Recommendation:** increase only the slow target's budget.
+No-output timeout is not success; valid late recovery is disclosed. Historical
+reasons for gate/attempt/severity defaults are not established.
