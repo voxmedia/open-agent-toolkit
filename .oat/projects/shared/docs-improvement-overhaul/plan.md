@@ -39,7 +39,7 @@ Keep all phases sequential. p02 needs the compiler, p03 needs stable routes, p04
 
 Fable reviews design, plan and phase diffs. Built-in per-phase/final reviews remain required. Under the user's autonomous planning direction, optional additional cross-runtime phase gate remains unconfigured (documented non-interactive default); configured lifecycle gates remain enabled. These are separate from final visual QA. Artifact-review retry limit is two rewrites; configured quick-start gate retains two attempts. Exhaustion/operational failures are reported, never represented as passes.
 
-Recommend considering a post-p02 implementation HiLL when the new structure is visible, but do not prefill it as user-approved. All implementation tasks remain pending.
+Recommend considering implementation HiLL after p02 (visible IA) and p04-t02 (audited mapping before bulk prose; implementer uses a task-level pause if supported or splits the phase at that boundary), but do not prefill it as user-approved. All implementation tasks remain pending.
 
 ## Common Verification and Release Closeout
 
@@ -50,6 +50,27 @@ Each shipped phase closes with canonical bundle regeneration, applicable skill m
 At phase closeout run the eight AGENTS gates in order: `pnpm check`; `pnpm type-check`; `pnpm test`; `pnpm build`; `pnpm run check:skill-bumps`; fetch `origin/main` then `pnpm release:check-versions`; `pnpm release:validate`; `pnpm build:docs`. Record each actual exit code. Also run `pnpm lint` and `pnpm format` when `.agents/skills` or `tools/smoke` changes. Distinguish cached logs from executed tests, using the documented isolated-HOME forced path when necessary. Surface unrelated failures without expanding scope.
 
 Serve `apps/oat-docs/out` under `/open-agent-toolkit/`, with no SPA fallback masking missing routes. Run `pnpm docs:check-links --url <verified-local-base-url> --no-external --output <phase-report-path>`; URL/report values are discovered at execution, not fixed ports assumed now. Record built SHA, server command, execution/display host and actual URL. Never substitute an unverified deployed build.
+
+### Executable Tooling Home and Enrollment
+
+Repository-only scripts/tests live in `apps/oat-docs/scripts/` and `apps/oat-docs/tests/`, where Fumadocs dependencies resolve under pnpm. They are not published CLI functionality. Add app dev dependencies `tsx`, `oxlint` and Node types using the already installed workspace versions. Use Node's test runner via tsx, not undeclared Vitest. The public CLI tests remain in its existing Vitest suite.
+
+In p01-t02, add these exact script values:
+
+| Manifest | Key           | Value                                                                                                                                           |
+| -------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| root     | docs:validate | `pnpm --filter oat-docs docs:validate`                                                                                                          |
+| root     | docs:test     | `pnpm --filter oat-docs test`                                                                                                                   |
+| app      | docs:validate | `tsx --tsconfig tsconfig.docs-tools.json scripts/validate.ts`                                                                                   |
+| app      | test          | `tsx --tsconfig tsconfig.docs-tools.json --test tests/*.test.ts`                                                                                |
+| app      | type-check    | `tsc --noEmit -p tsconfig.docs-tools.json`                                                                                                      |
+| app      | check         | `oxlint scripts tests && oxfmt --check scripts tests && oxfmt --check 'docs/**/*.md' && markdownlint-cli2 'docs/**/*.md' && pnpm docs:validate` |
+
+The app's new `test`, `type-check` and extended `check` enroll automatically through existing root `turbo run test/type-check/check`; preserve those root strings and root `lint`/`lint:fix` verbatim. Turbo tests depend on each package's build, so document the added docs-build cost rather than claiming tests remain build-free.
+
+`tsconfig.docs-tools.json` explicitly includes scripts/tests, excludes generated Next output/node_modules, uses Node types and aliases for app-local helpers and the repository pack-manifest source. Add exact `@oat-repo/pack-manifest` and `@shared/types` source aliases for the manifest's type-only dependency, not a broad parent-relative/catch-all import. Exclude scripts/tests from the main Next tsconfig so the two programs do not apply incompatible aliases. Unit tests use package-local Fumadocs; CLI integration invokes the branch CLI through a subprocess. No Fumadocs dependency is added at root.
+
+In p04-t01, root `docs:skills:validate` forwards to `pnpm --filter oat-docs docs:skills:validate`; app value is `tsx --tsconfig tsconfig.docs-tools.json scripts/skill-mapping.ts`. In p04-t04, root generate/check wrappers forward to the same app names; app values are `tsx --tsconfig tsconfig.docs-tools.json scripts/skill-catalog.ts --write` and `tsx --tsconfig tsconfig.docs-tools.json scripts/skill-catalog.ts --check`. Final docs:validate invokes strict mapping validation (no pending flag) and catalog check. Prebuild order remains catalog check, nav generation, fumadocs-mdx, agent index. Tests cover Markdown escaping in generated catalog cells.
 
 ## Phase 1: Make the Current Sidebar Enforceable
 
@@ -67,13 +88,13 @@ Serve `apps/oat-docs/out` under `/open-agent-toolkit/`, with no SPA fallback mas
 
 ### Task p01-t02: Integrate the real loader and first build
 
-**Files:** `apps/oat-docs/package.json`, app/root ignore rules; `.oat/templates/docs-app-fuma/{package.json.template,.gitignore}`; `packages/cli/src/commands/docs/init/{scaffold.ts,scaffold.test.ts,integration.test.ts}`; `packages/cli/scripts/{bundle-inputs.mjs,bundle-assets.sh}`; root `package.json`; new `tools/docs/{validate.ts,navigation.test.ts}`.
+**Files:** `apps/oat-docs/package.json`, app/root ignore rules; `.oat/templates/docs-app-fuma/{package.json.template,.gitignore}`; `packages/cli/src/commands/docs/init/{scaffold.ts,scaffold.test.ts,integration.test.ts}`; `packages/cli/scripts/{bundle-inputs.mjs,bundle-assets.sh}`; root `package.json`; new `apps/oat-docs/scripts/validate.ts`, `apps/oat-docs/tests/navigation.test.ts`, `apps/oat-docs/tsconfig.docs-tools.json`; affected current Contents/title files.
 
-**Work:** Generate nav before fumadocs-mdx in app and scaffold. Ignore/exclude metadata and sidecar from Git and source bundles. Add CI-enrolled docs validation/tests. Exercise generated metadata through real installed Fumadocs/MDX consumers, not only invented expected objects. Verify order, titles, root/child landing once, native canonical ownership, breadcrumbs and previous/next even when Skills precedes Workflows. Unsafe synthetic cross-links stay in body navigation rather than prompting an unreviewed loader patch. First scaffold build must work without a second generation pass.
+**Work:** First repair all current Contents/title mismatches and missing physical-parent ownership entries, preserving route order, headings and substantive prose; do not assume the earlier four-item sample was exhaustive. Then generate nav before fumadocs-mdx in app and scaffold. Ignore/exclude metadata and sidecar from Git and source bundles. Add CI-enrolled docs validation/tests. Exercise generated metadata through real installed Fumadocs/MDX consumers, not only invented expected objects. Verify order, titles, root/child landing once, native canonical ownership, breadcrumbs and previous/next even when Skills precedes Workflows. Unsafe synthetic cross-links stay in body navigation rather than prompting an unreviewed loader patch. First scaffold build must work without a second generation pass.
 
 **Verify:** `pnpm docs:test`; `pnpm docs:validate`; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/docs/init/scaffold.test.ts src/commands/docs/init/integration.test.ts`; `pnpm build:docs`. Test invalid sources independently of output parity; use stale/missing output for meaningful check-mode tests. Verify bundled Markdown remains present and build-only metadata is absent.
 
-**Format:** `pnpm exec oxfmt --write apps/oat-docs/package.json package.json tools/docs packages/cli/src/commands/docs/init packages/cli/scripts/bundle-inputs.mjs`; format modified JSON templates using the supported formatter and use `git diff --check` for shell/ignore files.
+**Format:** `pnpm exec oxfmt --write apps/oat-docs/package.json package.json apps/oat-docs/scripts apps/oat-docs/tests apps/oat-docs/tsconfig.docs-tools.json apps/oat-docs/tsconfig.json apps/oat-docs/docs packages/cli/src/commands/docs/init packages/cli/scripts/bundle-inputs.mjs`; format modified JSON templates using the supported formatter and use `git diff --check` for shell/ignore files.
 
 **Commit:** `feat(p01-t02): enforce navigation at real consumer boundaries`.
 
@@ -81,7 +102,7 @@ Serve `apps/oat-docs/out` under `/open-agent-toolkit/`, with no SPA fallback mas
 
 **Files:** `apps/oat-docs/AGENTS.md`; docs `reference/docs-index-contract.md`, `docs-tooling/commands.md`, `contributing/documentation.md`, affected indexes/titles; nav guidance in `.agents/skills/oat-docs-{bootstrap,apply,analyze,authoring}/`; docs scaffold package/guidance templates where relevant; release closeout files.
 
-**Work:** Search and update all nav-command consumers, especially bootstrap/apply, docs-index contract, app instructions and Fumadocs/MkDocs scaffold distinctions. Fix observed title/Contents mismatches and any missing physical-parent ownership entries without moving pages. Keep current root Contents order (including temporary User Guide prominence) until p02. Document generation authority, explicit framework, refusal/recovery, unsupported syntax and checks. No substantive rewrite.
+**Work:** Search and update all nav-command consumers, especially bootstrap/apply, docs-index contract, app instructions and Fumadocs/MkDocs scaffold distinctions. Confirm the minimal source repairs from p01-t02; do not defer a prerequisite repair to this task. Keep current root Contents order (including temporary User Guide prominence) until p02. Document generation authority, explicit framework, refusal/recovery, unsupported syntax and checks. No substantive rewrite.
 
 **Verify:** `pnpm docs:validate`; `pnpm docs:test`; implementer computer-use smoke for current ordering/labels, landings, breadcrumb/previous-next, family links and basePath once. Save `reviews/p01-browser-smoke.md` with screenshots/actions. Shared release closeout and Fable phase-diff review. No full independent browser tour yet.
 
@@ -93,15 +114,15 @@ Serve `apps/oat-docs/out` under `/open-agent-toolkit/`, with no SPA fallback mas
 
 ### Task p02-t01: Review the complete migration map
 
-**Files:** project `references/route-migration.json`, `references/migration-review.md`; analysis artifact resolved by `oat-docs-analyze`; reusable path checks in `tools/docs/{validate.ts,migration.test.ts}`.
+**Files:** project `references/route-migration.json`, `references/migration-review.md`; analysis artifact resolved by `oat-docs-analyze`; reusable path checks in `apps/oat-docs/scripts/validate.ts` and `apps/oat-docs/tests/migration.test.ts`.
 
-**Work:** Run bounded docs analysis on the actual app and tie approved recommendations to this plan; do not claim earlier recon was a formal analyze run. At an exact baseline SHA, inventory every page, heading, asset, source/hosted link and live consumer. Account for the initial 70 pages or explain baseline drift. Declare exact destinations and section-level accounting for consolidated router indexes. Fable reviews the map before moves. Normalization permits only identified link/frontmatter/router changes, not arbitrary paragraph stripping.
+**Work:** Run bounded docs analysis on the actual app and tie approved recommendations to this plan; do not claim earlier recon was a formal analyze run. Use the repository-canonical `.agents/skills/oat-docs-analyze/SKILL.md` and later apply skill changed in p01, loaded explicitly; do not rely on a stale installed user-scope copy. At an exact baseline SHA, inventory every page, heading, asset, source/hosted link and live consumer. Account for the initial 70 pages or explain baseline drift. Declare exact destinations and section-level accounting for consolidated router indexes. Fable reviews the map before moves. Normalization permits only identified link/frontmatter/router changes, not arbitrary paragraph stripping.
 
-**Destination rules:** quickstart/bootstrap/tool-packs/concepts → Getting Started; existing Skills plus repository analysis → top-level Skills; configuration/local state and artifact/state contracts → Reference; backlog/remote planning → Workflows Backlog and planning; waves → Workflows Waves; Projects → lifecycle plus planning/execution/reviews/closeout; dispatch/autonomy/Cursor Cloud/programmatic execution/orchestration/evidence-layers/gates → Advanced. Preserve Provider Sync, Docs Tooling and Contributing owners. Per-page map resolves all filenames before moving.
+**Destination rules:** quickstart/bootstrap/tool-packs/concepts → Getting Started; existing Skills plus repository analysis → top-level Skills; configuration/local state and artifact/state contracts → Reference; project-log → Workflows Projects execution; backlog/remote planning → Workflows Backlog and planning; waves → Workflows Waves; Projects → lifecycle plus planning/execution/reviews/closeout; dispatch/autonomy/Cursor Cloud/programmatic execution/orchestration/evidence-layers/gates → Advanced. Preserve Provider Sync, Docs Tooling and Contributing owners. Per-page map resolves all filenames before moving. Confirm repo-analysis.md is repo-wide PR-comment analysis rather than a knowledge-index guide; place its actual capability deliberately, not by the ambiguous filename.
 
 **Verify:** Every baseline page has one destination or explicit router-consolidation accounting; every substantive section survives. Independent review checks normalization. Preservation checks are phase-local baseline comparisons, not permanent frozen-prose CI rules that would block p05 authoring. Reusable path checks remain in CI.
 
-**Format:** `pnpm exec oxfmt --write .oat/projects/shared/docs-improvement-overhaul/references/route-migration.json .oat/projects/shared/docs-improvement-overhaul/references/migration-review.md tools/docs` and the resolved analysis artifact.
+**Format:** `pnpm exec oxfmt --write .oat/projects/shared/docs-improvement-overhaul/references/route-migration.json .oat/projects/shared/docs-improvement-overhaul/references/migration-review.md apps/oat-docs/scripts apps/oat-docs/tests` and the resolved analysis artifact.
 
 **Commit:** `docs(p02-t01): inventory and approve the information migration`.
 
@@ -109,7 +130,7 @@ Serve `apps/oat-docs/out` under `/open-agent-toolkit/`, with no SPA fallback mas
 
 **Files:** `apps/oat-docs/docs/**` per approved map; `apps/oat-docs/app/not-found.tsx` if no useful existing not-found owner exists.
 
-**Work:** Apply approved analysis recommendations in the project-owned branch. If using oat-docs-apply, preserve this branch and authorization boundary rather than silently creating a second workflow. Add real section directories/indexes; preserve leaf headings and substantive prose except authorized normalization. Consolidate obsolete routers with recorded accounting. No aliases, redirects or transitional stubs. Add small Home/search recovery affordances for missing routes, not new search machinery.
+**Work:** Execute the required repository-canonical oat-docs-apply workflow for approved recommendations, exact evidence, tracking, nav regeneration and verification. Deliberate project integration adaptation: reuse the implementation-authorized project/phase branch instead of its generic create-branch step; record that adaptation before applying, and do not silently spawn another branch. This plan's approval at implementation entry must cover that adaptation; planning itself creates no branch. Add real section directories/indexes; preserve leaf headings and substantive prose except authorized normalization. Consolidate obsolete routers with recorded accounting. No aliases, redirects or transitional stubs. Add small Home/search recovery affordances for missing routes, not new search machinery.
 
 **Verify:** Compare actual baseline/new content and explicit index accounting. `pnpm docs:validate`; `pnpm build:docs`; exported routes match the map, moved old routes are absent, canonical destinations exist. Browser smoke checks new hierarchy and a moved leaf; search no longer indexes removed pages.
 
@@ -119,13 +140,13 @@ Serve `apps/oat-docs/out` under `/open-agent-toolkit/`, with no SPA fallback mas
 
 ### Task p02-t03: Repair consumers and verify migrated journeys
 
-**Files:** root/public package READMEs; `.agents/skills/oat-docs/SKILL.md`, `oat-doctor/SKILL.md`, `docs-completed-projects-gap-review/SKILL.md`, `subagent-orchestration/references/provider-cursor.md` under the skill root; other inventoried live consumers/templates; `tools/docs/validate.ts`; generated agent index, bundles and release files.
+**Files:** root/public package READMEs; `.agents/skills/oat-docs/SKILL.md`, `oat-doctor/SKILL.md`, `docs-completed-projects-gap-review/SKILL.md`, `subagent-orchestration/references/provider-cursor.md` under the skill root; other inventoried live consumers/templates; `apps/oat-docs/scripts/validate.ts`; generated agent index, bundles and release files.
 
-**Work:** Repair source/hosted consumers, including the already stale oat-docs topic map. Add executable topic-map target validation. Regenerate indexes/bundles from canonical sources. Do not rewrite archived historical evidence just because it mentions an old route. Clearly report intentional URL breakage.
+**Work:** Repair source/hosted consumers, including the already stale oat-docs topic map. Add executable topic-map target validation and a mechanical mapping of all hosted docs targets in the five READMEs to exported routes (baseline 17 targets; account for drift). Regenerate indexes/bundles from canonical sources. Do not rewrite archived historical evidence just because it mentions an old route. Clearly report intentional URL breakage, including links in already-published npm READMEs that remain stale until a new package release.
 
 **Verify:** `pnpm docs:validate`; `pnpm docs:test`; local export link crawl. Computer-use smoke: seven primary sections, choose-workflow, Skills canonical owner, an updated README link, and old-route Home/search recovery. Save `reviews/p02-browser-smoke.md`, preservation and link reports. Shared closeout plus Fable phase review.
 
-**Format:** `pnpm exec oxfmt --write README.md packages/cli/README.md packages/docs-config/README.md packages/docs-theme/README.md packages/docs-transforms/README.md apps/oat-docs/index.md tools/docs` and exact changed skill/template/release files.
+**Format:** `pnpm exec oxfmt --write README.md packages/cli/README.md packages/docs-config/README.md packages/docs-theme/README.md packages/docs-transforms/README.md apps/oat-docs/index.md apps/oat-docs/scripts apps/oat-docs/tests` and exact changed skill/template/release files.
 
 **Commit:** `docs(p02-t03): repair route consumers and verify migration`.
 
@@ -133,7 +154,7 @@ Serve `apps/oat-docs/out` under `/open-agent-toolkit/`, with no SPA fallback mas
 
 ### Task p03-t01: Write a concise adoption story and original visual
 
-**Files:** `README.md`; new `assets/readme/adoption.svg`; project `references/readme-source-check.md`.
+**Files:** `README.md`; new `.github/assets/readme/adoption.svg`; project `references/readme-source-check.md`.
 
 **Work:** Lead with value, three independent capability choices, one source-verified first success and canonical docs links; contributor setup last. Keep one diagram, replacing the existing layer diagram with an original theme-neutral accessible SVG and text equivalent. No inherited GitHub theme CSS, external resources, copied artwork, duplicate theme asset or mandatory dependency arrows. Do not recreate the catalog in README.
 
@@ -159,11 +180,11 @@ Serve `apps/oat-docs/out` under `/open-agent-toolkit/`, with no SPA fallback mas
 
 ### Task p04-t01: Define and review the guide mapping
 
-**Files:** new `apps/oat-docs/skill-docs.json`; project `references/skill-mapping-review.md`. Canonical pack manifest and skills are read-only inputs.
+**Files:** new `apps/oat-docs/skill-docs.json`, `apps/oat-docs/scripts/skill-mapping.ts`, `apps/oat-docs/tests/skill-mapping.test.ts`, app/root package scripts; project `references/skill-mapping-review.md`. Canonical pack manifest and skills are read-only inputs.
 
-**Work:** Import actual shipped membership; inventory all canonical directories. Map each eligible skill to family, page/anchor and applicability, accounting for excluded names with reasons. Recompute expected 71/83 split instead of hard-coding it. Required means existing active project mandatory; optional means supported project-aware behavior also works without one; none means no existing project needed, including creators. Conditional details stay explicit. Unknown-intent no-pack skills remain currently unshipped, not permanently internal. Review mapping before prose.
+**Work:** Import actual shipped membership; inventory all canonical directories. Map each eligible skill to family, page/anchor and applicability, accounting for excluded names with reasons. Recompute expected 71/83 split instead of hard-coding it. Required means existing active project mandatory; optional means supported project-aware behavior also works without one; none means no existing project needed, including creators. Conditional details stay explicit. Unknown-intent no-pack skills remain currently unshipped, not permanently internal. Add `docs:skills:validate` now: two-way inventory, exclusion/schema and anchor validation, with explicit `--allow-pending-anchors` for this task and the independent audit only. Missing/phantom names, malformed entries and duplicate ownership always fail; only not-yet-authored anchors may be pending. Review mapping before prose.
 
-**Verify:** No missing/duplicate/phantom names. Root/Fable review eight review variants together, brainstorm under Skills, worktree/Cursor Cloud under Advanced, docs and agent-instructions chains together. Future anchors are declared pending, not falsely verified present.
+**Verify:** No missing/duplicate/phantom names. Root/Fable review eight review variants together, brainstorm under Skills, worktree/Cursor Cloud under Advanced, docs and agent-instructions chains together. Run `pnpm docs:skills:validate --allow-pending-anchors` and `pnpm docs:test`. Future anchors are declared pending, not falsely verified present. Temporary missing/phantom mapping controls must fail even with that flag.
 
 **Format:** `pnpm exec oxfmt --write apps/oat-docs/skill-docs.json .oat/projects/shared/docs-improvement-overhaul/references/skill-mapping-review.md`.
 
@@ -175,7 +196,7 @@ Serve `apps/oat-docs/out` under `/open-agent-toolkit/`, with no SPA fallback mas
 
 **Work:** A non-author reviewer checks every included skill against actual prerequisites/invocation behavior. Record name, applicability, conditional explanation, file:line evidence, source SHA and disposition. No sampling or lifecycle-name inference. Resolve contradictions before prose; no guessed badges. Bounded audit batches are allowed, but each reviewer must not have authored that batch's mapping.
 
-**Verify:** Audit rows equal eligible mapping rows; citations exist; no unresolved claims. Explicit controls: entry skills creating projects, project-optional worktree bootstrap, ad-hoc review and docs chains.
+**Verify:** Run `pnpm docs:skills:validate --allow-pending-anchors` and reconcile audit rows mechanically with eligible mapping rows; citations exist; no unresolved claims. Explicit controls: entry skills creating projects, project-optional worktree bootstrap, ad-hoc review and docs chains.
 
 **Format:** `pnpm exec oxfmt --write apps/oat-docs/skill-docs.json .oat/projects/shared/docs-improvement-overhaul/references/skill-applicability-audit.md`.
 
@@ -187,7 +208,7 @@ Serve `apps/oat-docs/out` under `/open-agent-toolkit/`, with no SPA fallback mas
 
 **Work:** Give every eligible skill a meaningful stable anchor, invocation, verified prerequisite and outcome/next step. Shared when-to-use context belongs once per family. Link to generated source descriptions instead of copying them everywhere. No empty-anchor coverage or whole SKILL.md duplication. This is an explicit substantial authoring task; file-disjoint family batches may be delegated, root integrates indexes.
 
-**Verify:** All mapped anchors exist with minimum useful fields. Review every family against sources; examples promise no nonexistent flags. `pnpm docs:validate`; `pnpm build:docs`. Minimum guides remain subject to review even when p05 will deepen them.
+**Verify:** Run `pnpm docs:skills:validate` without the pending flag; all mapped anchors exist with minimum useful fields. Review every family against sources; examples promise no nonexistent flags. `pnpm docs:validate`; `pnpm build:docs`. Minimum guides remain subject to review even when p05 will deepen them.
 
 **Format:** `pnpm --filter oat-docs docs:format`.
 
@@ -195,13 +216,13 @@ Serve `apps/oat-docs/out` under `/open-agent-toolkit/`, with no SPA fallback mas
 
 ### Task p04-t04: Generate and enforce the committed catalog
 
-**Files:** new `tools/docs/{skill-catalog.ts,skill-catalog.test.ts}`; root/app package scripts; `apps/oat-docs/docs/skills/index.md`; mapping validation; authoring instructions; bundle/release files.
+**Files:** new `apps/oat-docs/scripts/skill-catalog.ts` and `apps/oat-docs/tests/skill-catalog.test.ts`; root/app package scripts; `apps/oat-docs/docs/skills/index.md`; mapping validation; authoring instructions; bundle/release files.
 
 **Work:** Add generate/check commands. Generate real name/description/visibility plus curated family/applicability/owner into a committed marked Skills-index block, included in CLI bundles. Validate both mapping directions, exclusions, real anchors and stale output. Run check before nav generation in predev/prebuild; builds never silently rewrite committed catalog. Universal discovery is page-body content, not 71 sidebar entries. No public catalog CLI or skill prerequisite schema change.
 
 **Verify:** `pnpm docs:skills:generate`; `pnpm docs:skills:check`; `pnpm docs:test`; `pnpm docs:validate`. Temporary source-description/mapping/anchor mutations must fail stale/missing/phantom checks without writes; restore and show valid pass. Offline bundle catalog matches source; nav metadata remains excluded. Shared closeout and Fable phase review.
 
-**Format:** `pnpm exec oxfmt --write tools/docs apps/oat-docs/skill-docs.json apps/oat-docs/docs/skills/index.md package.json apps/oat-docs/package.json` plus exact instruction/release files.
+**Format:** `pnpm exec oxfmt --write apps/oat-docs/scripts apps/oat-docs/tests apps/oat-docs/skill-docs.json apps/oat-docs/docs/skills/index.md package.json apps/oat-docs/package.json` plus exact instruction/release files.
 
 **Commit:** `feat(p04-t04): enforce generated bundled skill discovery`.
 
@@ -221,9 +242,9 @@ Serve `apps/oat-docs/out` under `/open-agent-toolkit/`, with no SPA fallback mas
 
 ### Task p05-t02: Add four purposeful docs visual treatments
 
-**Files:** migrated Getting Started quickstart, `provider-sync/manifest-and-drift.md`, `docs-tooling/workflows.md`, `workflows/ideas/lifecycle.md`, `contributing/markdown-features.md`; project `references/visual-source-check.md`.
+**Files:** migrated Getting Started concepts page (`getting-started/concepts.md`), `provider-sync/manifest-and-drift.md`, `docs-tooling/workflows.md`, `workflows/ideas/lifecycle.md`, `contributing/markdown-features.md`; project `references/visual-source-check.md`.
 
-**Work:** One treatment per question: first-success choice; canonical/provider ownership and drift; bootstrap/analyze/approval/apply; idea/backlog/project promotion. Use existing Mermaid support and replace competing illustrations rather than multiplying them. Add accessible labeling/text equivalents. Non-author verifies behavioral edges against source. Document source ownership and theme/narrow-layout expectations. No new renderer pipeline or unrelated lifecycle redraws.
+**Work:** One treatment per question: first-success choice; canonical/provider ownership and drift; bootstrap/analyze/approval/apply; idea/backlog/project promotion. Rework the existing adoption diagram from guide/concepts.md in its migrated concepts page; the other three named pages get new diagrams. Quickstart gets a clear link to concepts rather than a duplicate illustration. Use existing Mermaid support. Add accessible labeling/text equivalents. Non-author verifies behavioral edges against source. Document source ownership and theme/narrow-layout expectations. No new renderer pipeline or unrelated lifecycle redraws.
 
 **Verify:** Independent source citations for every behavioral edge, with optional/mandatory arrows distinguished. `pnpm build:docs`; local browser smoke waits for Mermaid hydration and checks readable diagrams, no clipping and useful text in both themes/narrow layouts. Scope remains four docs treatments plus the README illustration.
 

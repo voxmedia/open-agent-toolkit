@@ -25,7 +25,7 @@ section index.md Contents + page frontmatter
   -> ignored, owned meta.json output -> fumadocs-mdx -> real loader -> static site
 
 canonical SKILL.md + shipped pack manifest + site-owned guide mapping
-  -> repository tools/docs catalog script -> generated Skills catalog
+  -> repository-local docs-app script -> committed Skills catalog
   -> navigation generation -> static site
 
 source docs + source-path consumers + migration inventory
@@ -44,7 +44,7 @@ Generated framework metadata is ignored build output, not a second manually main
 
 The Fumadocs projection supports ordinary file-derived routes, a `/` loader base, section indexes, Markdown leaf pages, and relative cross-section links with optional fragments. Next's deployment basePath is not baked into metadata; the renderer applies it once. External links, query-bearing navigation entries, custom slug loaders, non-root loader bases, and a new separator DSL are out of scope and receive actionable diagnostics rather than accidental interpretation. Ignore code fences when reading the exact H2 Contents section; do not turn examples into navigation.
 
-For each physical directory, classify Contents entries as its own landing, immediate owned leaf, immediate child section, or cross-link. Emit native identifiers for owned pages/folders and explicit routed links for cross-links; a cross-link to an index never recursively imports its children. Root `index` appears once; child landing pages attach once through Fumadocs folder behavior. Every canonical leaf and non-root section must have exactly one physical-parent ownership entry. Cross-links do not count as ownership. Missing entries, duplicate ownership, unresolved files/fragments, and owned-leaf label/title mismatch fail validation. Phase 1 aligns the four observed mismatched labels/titles without renaming headings.
+For each physical directory, classify Contents entries as its own landing, immediate owned leaf, immediate child section, or cross-link. Emit native identifiers for owned pages/folders and explicit routed links for cross-links; a cross-link to an index never recursively imports its children. Root `index` appears once; child landing pages attach once through Fumadocs folder behavior. Every canonical leaf and non-root section must have exactly one physical-parent ownership entry. Cross-links do not count as ownership. Missing entries, duplicate ownership, unresolved files/fragments, and leaf or section label/title mismatch fail validation. Phase 1 audits and fixes all current mismatches before enabling strict build integration, without renaming headings; the earlier four-item report was a sample, not an exhaustive assertion.
 
 Use one ignored app-root `.oat-fumadocs-nav.json` sidecar with schema version, docs-root-relative generated paths and last-written content hashes. Do not add unknown fields to Fumadocs metadata. Before replacing or deleting existing metadata, require a manifest entry and matching last-generated hash; unowned or externally edited files fail closed, even outside Git. On initial generation, refuse existing metadata without manifest ownership. Validate the entire manifest/output/cleanup set before writes; reject traversal, duplicate paths and symlink escapes. Remove only positively owned stale output. Ignore metadata and sidecar in Git and exclude them from bundled source docs. Generation is deterministic and rerunnable. Write files atomically and sidecar last; a partial failure stops with recovery guidance rather than silently adopting unmatched files or claiming multi-file transactional guarantees.
 
@@ -62,7 +62,7 @@ Preserve the seven labels and the Workflows sequence: choose a mode, Projects, I
 
 ### 3. Supported-skill catalog and ownership
 
-Create a site-owned mapping under `apps/oat-docs/` consumed by a repository script under `tools/docs/`. Import the canonical pack manifest rather than copying its skill list. Default eligibility is a real canonical skill shipped in an installable pack, not retired, and not explicitly `user-invocable: false`. The current advisory expects 71 eligible skills out of 83 directories; recompute and explain discrepancies, never hard-code that count as permanent truth.
+Create a site-owned mapping under `apps/oat-docs/` consumed by repository-only scripts in that app's `scripts/` directory. Package-local tests resolve real Fumadocs dependencies; explicit Node/tsx runner, scoped TypeScript check and oxlint enrollment are specified in the plan. Import the canonical pack manifest through an explicit source alias rather than copying its list or adding public CLI exports. Default eligibility is a real canonical skill shipped in an installable pack, not retired, and not explicitly `user-invocable: false`. The current advisory expects 71 eligible skills out of 83 directories; recompute and explain discrepancies, never hard-code that count as permanent truth.
 
 Generate existing source facts only: name, description and declared visibility. Curate family, canonical guide/anchor and project applicability from actual prerequisites: `required` means an existing active project is mandatory at invocation; `optional` means supported behavior differs when a project exists but invocation works without it; `none` means invocation needs no existing active project, including entry skills that create one. Record conditional details rather than implying `none` forbids project creation. No new skill runtime metadata schema is introduced. The mapping is reviewed as a separate task before prose. A non-author independently verifies every included skill's applicability against SKILL.md with file:line evidence, not only a sample.
 
@@ -82,7 +82,7 @@ Named README deliverable: one original, accessible, theme-neutral SVG adoption o
 
 Named docs visuals, Mermaid by default:
 
-1. Getting Started quickstart: “Which first-success path should I take?” Rework the existing adoption visual instead of adding a second competing diagram.
+1. Getting Started concepts: “Which first-success path should I take?” Rework the existing adoption diagram from `guide/concepts.md` in `getting-started/concepts.md`; quickstart links to it rather than adding a duplicate.
 2. Provider Sync: “What is canonical, and which provider views are generated?” Show ownership and drift direction, not undocumented conflict resolution.
 3. Docs Tooling: “How do bootstrap, analyze, approval and apply relate?” Preserve the actual approval boundary.
 4. Ideas: “Where does a scratchpad, backlog item or project belong?” Show optional promotion, not an obligatory lifecycle.
