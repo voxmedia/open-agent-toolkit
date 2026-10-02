@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p05-t01
+oat_current_task_id: p04-t10
 oat_generated: false
 ---
 
@@ -29,12 +29,12 @@ oat_generated: false
 | Phase 1 | complete    | 8     | 8/8       |
 | Phase 2 | complete    | 3     | 3/3       |
 | Phase 3 | complete    | 5     | 5/5       |
-| Phase 4 | in_progress | 8     | 8/8       |
+| Phase 4 | in_progress | 9     | 8/9       |
 | Phase 5 | pending     | 4     | 0/4       |
 | Phase 6 | pending     | 3     | 0/3       |
 | Phase 7 | pending     | 3     | 0/3       |
 
-**Total:** 24/34 tasks completed
+**Total:** 24/35 tasks completed
 
 ---
 
@@ -179,6 +179,11 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** ac01c3144
+
+### Task p04-t10: (review) Address findings from the interrupted p04 gate run
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -500,6 +505,14 @@ oat_generated: false
   rule; absent-record and legacy-record wording. Validation and shared
   contracts 973; validate-skills, check:skill-bumps (9), format:root exit 0.
   Root spot-check: complexity, gate-record, and inventory pins pass.
+
+- Phase gate attempt (run `67e865c1`) at `fe2bd44b4` was interrupted by a
+  host restart: it wrote `reviews/archived/p04-review-2026-10-02T205659Z.md` (0 Critical,
+  0 High, 1 Medium, 1 Low) but returned no structured envelope, so it is not a
+  receivable gate result and does not consume a gate attempt. The root
+  verified both findings (M1: quick-start's project-disabled branch skips the
+  record write; L1: minute-precision complexity report timestamps break the
+  reuse rule) and added `p04-t10`; the p04 gate runs again afterward.
 
 <!-- orchestration-runs-end -->
 

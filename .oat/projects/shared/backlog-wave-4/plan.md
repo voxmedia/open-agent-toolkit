@@ -1076,6 +1076,44 @@ Expected: exit 0.
 
 ---
 
+### Task p04-t10: (review) Address findings from the interrupted p04 gate run
+
+The p04 gate run `67e865c1` was interrupted by a host restart after it wrote
+its artifact but before it returned a structured result, so it is not a
+receivable gate outcome. Its two findings were checked by the root and are
+addressed here; the p04 gate then runs normally.
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-quick-start/SKILL.md` (Gate Execution
+  step 1 around line 849; record write around 919-934)
+- Modify: `.agents/docs/complexity-review-fallback.md` (save path around line
+  222; reuse rule around lines 30-34)
+- Modify: `packages/cli/src/commands/init/tools/shared/gate-approval-record-contracts.test.ts`,
+  `packages/cli/src/commands/init/tools/shared/complexity-review-contracts.test.ts`
+
+**Step 1: Failing pins first**
+
+- M1: the `configured_disabled_by_project` branch writes the
+  `allowed/project_disabled` record before it jumps to Step 3.7 (a
+  branch-specific pin, not a whole-section text match).
+- L1: complexity reports are saved with a UTC seconds timestamp, the reuse
+  rule compares at seconds precision, and same-second collisions get a suffix.
+
+**Step 2: Implement** both.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation src/commands/init/tools/shared`,
+`pnpm oat:validate-skills`, `pnpm run check:skill-bumps`, `pnpm format:root`.
+Expected: exit 0.
+
+**Step 4: Commit**
+
+`fix(p04-t10): persist the disabled gate record and use seconds for report timestamps`
+
+---
+
 ## Phase 5: Completion
 
 ### Task p05-t01: Add the `workflow.autonomousComplete` opt-in
@@ -1575,12 +1613,12 @@ Quick-start plan gate attempt 2 of 2 (run `fe6bbe0a`): `blocked`, receive-eligib
 - Phase 1: 8 tasks - Build assets
 - Phase 2: 3 tasks - Gate timeouts
 - Phase 3: 5 tasks - Sync correctness
-- Phase 4: 8 tasks - Review-loop skills
+- Phase 4: 9 tasks - Review-loop skills
 - Phase 5: 4 tasks - Completion
 - Phase 6: 3 tasks - Small fixes
 - Phase 7: 3 tasks - Release fan-in
 
-**Total: 34 tasks**
+**Total: 35 tasks**
 
 Ready for code review and merge.
 
