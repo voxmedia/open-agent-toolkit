@@ -64,6 +64,10 @@ docs-overhaul-run1-p02-peer-map-resume: actual Fable map review received via use
 
 docs-main-merge-084053c: merge complete, original phase02 handle DONE/HOLD, main-only foundation and all moved main docs retained; focused integration review and new closure gates underway.
 
+### 2026-10-02 · structural · oat-project-implement · p02
+
+docs-p02-close-084053c: accepted, original native review fixes verified, Fable correction and main integration accepted, all eight gates0; recovery1/10, no publication.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p02-t03
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -13,14 +13,14 @@ The user invoked oat-project-implement after the reviewed plan handoff. Implemen
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | complete  | 3     | 3/3       |
-| Phase 2 | in_review | 3     | 3/3       |
-| Phase 3 | pending   | 2     | 0/2       |
-| Phase 4 | pending   | 4     | 0/4       |
-| Phase 5 | pending   | 3     | 0/3       |
-| Phase 6 | pending   | 5     | 0/5       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 3     | 3/3       |
+| Phase 2 | complete | 3     | 3/3       |
+| Phase 3 | pending  | 2     | 0/2       |
+| Phase 4 | pending  | 4     | 0/4       |
+| Phase 5 | pending  | 3     | 0/3       |
+| Phase 6 | pending  | 5     | 0/5       |
 
 **Total:** 6/20 tasks completed.
 
@@ -55,7 +55,7 @@ Main merged at 084053c3525344a0ab7c808a722715d574fae7bd, with parents a080dfbef6
 
 The original phase02 implementer returned DONE/HOLD. It reports 593 targeted tests, postcommit app13/13 and nav/Markdown34/34, CLI/app lint/types, skill validation and a forced six-task zero-cache docs build passing. Root verified commit parents, clean tracked tree and exact main nav equality. Public versions are0.3.14 above main0.3.13; four changed docs skills exceed main. Earlier check/types/test/build passes atad71d9cd are historical, not acceptance of this integration. New ordered closure gates run at the integrated SHA, with one focused read-only Fable integration review requested. Mapping/catalog family lanes were held during the merge as the user directed; separate README visual integration remained isolated. No push, PR, merge-to-main or release is authorized by this merge.
 
-**Status:** in_review; all three task commits accepted, ordered gates and independent reviews pending
+**Status:** complete; correction reviews, main integration review and ordered closure gates accepted
 **Started:** 2026-10-02
 
 ### Task p02-t01: Review the complete migration map
@@ -77,6 +77,14 @@ The original phase02 implementer returned DONE/HOLD. It reports 593 targeted tes
 **Verification:** Root verified clean exact parent2588944d and25 scoped files; hook changed zero bytes. All17 hosted README occurrences and14 topic paths resolve; three canonical skills bumped. Direct12 docs and386 CLI consumer tests execute/pass; postcommit controls, conservation, export, source checks and types exit0. Pristine source validation needs no project/generated inputs; isolated guards prove intended rejections can fail. Local crawl76 pages/867 links/zero broken; app build executed with five cached dependencies. Mini author smoke is in reviews/p02-browser-smoke.md, not final independent QA. No recovery events; root phase gates/reviews remain pending.
 
 ## Phase 3: Improve the Evaluator README
+
+### p02 integrated acceptance — 2026-10-02
+
+All eight ordered gates exit0 at084053c3525344a0ab7c808a722715d574fae7bd: check, type-check, isolated-HOME test, build, check:skill-bumps, release:check-versions after fetch0, release:validate and build:docs. Logs/explicit codes: /tmp/docs-overhaul-p02-integrated-gates/. Check executed11/11; types executed6/11, tests executed6/11 (8027 CLI tests and13 app tests), with five dependency-build cache replays. Root build5/5 and final docs6/6 are cache replay, not fresh execution; implementer separately forced six-task docs build with zero cache at the integrated SHA. Native phase review and bounded correction evidence remain unchanged; Fable correction review accepted. Fable's focused integration review msg_3aaae64005ad ACCEPTS after independently running nav --check, docs:validate,13 docs tests and checking all24 main-edited pages,17 committed metadata, retired-path absence and exact main compiler/template equality. Its Low stale authoring pointer was fixed at85df822da931a8b2ca3eeca5f4cccc1fbf304a2c with target existence and diff checks; no shipped code/docs content changes. No Critical/High finding remains. Recovery usage stays1/10, pending null.
+
+Root-inline phase: p02 Low pointer correction only, avoiding another child/review round for one line; root runtime model identity not reported. Speed policy retains targeted verification, not another full gate run for this authoring-only pointer. Root owns p03 SVG/prose integration in isolated Mini worktree docs-overhaul-readme-visual based4198712f; local PNGs actually viewed, GitHub/theme acceptance pending. p04 mapping/catalog continuations RELEASED only after the merge; same Sol/high handles and policy, bounded alias propagation permitted. Shared indexes, catalog enrollment, versions and core tracking stay root-owned.
+
+Phase2 is locally complete, not published. Root requested first-push authorization while local work continues. No PR, push, merge-to-main or release is claimed.
 
 ### Concurrent dispatch acceptance
 
