@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p02-t01
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 8     | 8/8       |
-| Phase 2 | pending  | 2     | 0/2       |
-| Phase 3 | pending  | 3     | 0/3       |
-| Phase 4 | pending  | 7     | 0/7       |
-| Phase 5 | pending  | 4     | 0/4       |
-| Phase 6 | pending  | 3     | 0/3       |
-| Phase 7 | pending  | 3     | 0/3       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 8     | 8/8       |
+| Phase 2 | in_progress | 2     | 2/2       |
+| Phase 3 | pending     | 3     | 0/3       |
+| Phase 4 | pending     | 7     | 0/7       |
+| Phase 5 | pending     | 4     | 0/4       |
+| Phase 6 | pending     | 3     | 0/3       |
+| Phase 7 | pending     | 3     | 0/3       |
 
-**Total:** 8/30 tasks completed
+**Total:** 10/30 tasks completed
 
 ---
 
@@ -86,17 +86,17 @@ oat_generated: false
 
 ## Phase 2: Gate timeouts
 
-**Status:** pending
+**Status:** in_progress
 
 ### Task p02-t01: Give full-surface artifact reviews a 30-minute default
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** e1b753e7a
 
 ### Task p02-t02: Reject a duplicate live gate for the same project and scope
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** cdd6d0eed
 
 ---
 
@@ -355,6 +355,19 @@ oat_generated: false
 - Phase p01 outcome: complete; 8/8 tasks (2 planned, 6 review-fix); root
   review rounds 4 (one operator-authorized past the cap), gate attempts 2,
   complexity review 1.
+
+### Phase p02 dispatch
+
+- Request `bw4-p02-impl-1`: accepted and returned `DONE`; target
+  `oat-phase-implementer-claude-claude-opus-5-5-high`; commits
+  `e1b753e7a..cdd6d0eed` (p02-t01..t02); phase verification pass (CLI check,
+  type-check, docs check, build, isolated-HOME CLI vitest 8070); recovery
+  0/10. Design notes: duplicate match on an absolute `projectRoot` added to
+  the marker; legacy markers never block; an unreadable marker directory
+  records `recursion: unchecked` (deviation, beyond `none`/`rejected`); pid
+  reuse after a SIGKILL can block falsely (message names the marker).
+  Root spot-check: gate-hardening integration 9/9.
+  `Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
 
 <!-- orchestration-runs-end -->
 
