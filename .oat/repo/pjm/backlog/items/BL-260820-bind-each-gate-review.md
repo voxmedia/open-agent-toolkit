@@ -12,7 +12,7 @@ labels:
   - reliability
 assignee: null
 created: 2026-08-20T00:51:29.893Z
-updated: 2026-10-02T00:21:26Z
+updated: 2026-10-02T03:10:18Z
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/194
@@ -57,7 +57,7 @@ row that never resolves. The broader single status authority is tracked in
 
 ## Markdown docs bootstrap retrospective evidence
 
-[RP-02: terminal receipts and passing sweeps](../../../../projects/shared/markdown-docs-bootstrap/references/project-retro.md#rp-02-add-terminal-receipt-and-passing-sweep-cases-to-exact-gate-binding)
+[RP-02: terminal receipts and passing sweeps](../../../reference/project-summaries/20261002-markdown-docs-bootstrap.md#rp-02-add-terminal-receipt-and-passing-sweep-cases-to-exact-gate-binding)
 adds controls for the existing exact-event binding. Gate run
 `74cf045f-60fb-4931-a434-8cc9eaa5df19` removed its live marker on completion;
 a failed marker check did not stop the shell group from persisting receive

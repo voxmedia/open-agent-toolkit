@@ -12,7 +12,7 @@ labels:
   - state
 assignee: null
 created: 2026-09-27T03:35:36.887Z
-updated: 2026-10-02T00:21:26Z
+updated: 2026-10-02T03:10:18Z
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/305
@@ -36,7 +36,7 @@ Review, phase, and routing status are duplicated across the `## Reviews` table, 
 
 ## Markdown docs bootstrap retrospective evidence
 
-[RP-01: structural preservation](../../../../projects/shared/markdown-docs-bootstrap/references/project-retro.md#rp-01-add-structural-preservation-cases-to-the-lifecycle-authority-work)
+[RP-01: structural preservation](../../../reference/project-summaries/20261002-markdown-docs-bootstrap.md#rp-01-add-structural-preservation-cases-to-the-lifecycle-authority-work)
 adds concrete cases for the existing lifecycle authority: joined YAML,
 fragmented review rows and stale task/status views required corrective commits.
 See the retrospective's tracking-repair incident and the implementation's

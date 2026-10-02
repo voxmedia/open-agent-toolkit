@@ -12,7 +12,7 @@ labels:
   - gates
 assignee: null
 created: 2026-08-20T00:51:34.444Z
-updated: 2026-10-02T00:21:26Z
+updated: 2026-10-02T03:10:18Z
 associated_issues: []
 external_plans: []
 ---
@@ -41,7 +41,7 @@ and fail closed when the evidence no longer matches the current PR head. Source:
 
 ## Markdown docs bootstrap retrospective evidence
 
-[RP-03: late documentation](../../../../projects/shared/markdown-docs-bootstrap/references/project-retro.md#rp-03-add-a-late-documentation-case-to-closeout-freshness-tracking)
+[RP-03: late documentation](../../../reference/project-summaries/20261002-markdown-docs-bootstrap.md#rp-03-add-a-late-documentation-case-to-closeout-freshness-tracking)
 provides a real post-review control: accepted gate
 `39b33a8d-8a63-41e5-af34-145a5d525935` was followed by public-docs commit
 `420bceded`. The shipped documentation changed the gate fingerprint after
