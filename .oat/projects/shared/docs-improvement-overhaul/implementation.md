@@ -152,6 +152,77 @@ Phase outcomes: p01 pending; p02 pending; p03 pending; p04 pending; p05 pending.
 
 <!-- orchestration-runs-end -->
 
+### p01 implementation dispatch
+
+Generic dispatch record (launcher-owned; runtime identity not reported):
+
+```json
+{
+  "request_id": "docs-overhaul-run1-p01-implementation",
+  "caller": "oat-project-implement",
+  "scope": "p01",
+  "objective": "Execute p01 three tasks, safe Fumadocs nav compiler, real consumer integration and authoring guidance",
+  "action": "implementation",
+  "role_name": "oat-phase-implementer",
+  "role_class": "worker",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "root-native-20261002",
+    "source": "agents.spawn_agent tool schema",
+    "observed_at": "2026-10-02"
+  },
+  "authority": "write p01 declared files; commit planned tasks; no publication/merge",
+  "role_selector": "oat-phase-implementer-gpt-6-1-sol-high",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "materialized-native-role",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": ".agents/skills/subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-10-01",
+  "guidance_verified_at": "2026-10-01",
+  "guidance_status": "fresh",
+  "selection_source": "policy-resolved",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "task_class": "hard-reasoning",
+  "model_class_floor": "hard-reasoning",
+  "classification_source": "caller",
+  "classification_reason": "Compiler ownership/write protection and Fumadocs loader semantics require architectural reasoning",
+  "floor_satisfaction": "satisfied",
+  "deadline_seconds": 14400,
+  "retry_limit": 2,
+  "launch_status": "accepted",
+  "child_outcome": null,
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [],
+  "payload": {
+    "task_name": "phase01",
+    "agent_type": "oat-phase-implementer-gpt-6-1-sol-high",
+    "fork_turns": "none",
+    "scope": "p01 phase packet in accepted native launch"
+  },
+  "configured_invocation_evidence": [
+    {
+      "source": "native launcher payload and spawn acceptance",
+      "agent_handle": "/root/phase01",
+      "role": "oat-phase-implementer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high"
+    }
+  ]
+}
+```
+
+Dispatch stamp: Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high
+
+Acceptance: /root/phase01 (Ptolemy); holding before work until root supplies clean committed base. No project log append while child owns worktree.
+
 ## Implementation Log
 
 No implementation performed. Planning-only artifact changes do not count toward the task completion total.
