@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p03-t04
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -28,13 +28,13 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 8     | 8/8       |
 | Phase 2 | complete    | 3     | 3/3       |
-| Phase 3 | in_progress | 4     | 3/4       |
+| Phase 3 | in_progress | 4     | 4/4       |
 | Phase 4 | pending     | 7     | 0/7       |
 | Phase 5 | pending     | 4     | 0/4       |
 | Phase 6 | pending     | 3     | 0/3       |
 | Phase 7 | pending     | 3     | 0/3       |
 
-**Total:** 14/32 tasks completed
+**Total:** 15/32 tasks completed
 
 ---
 
@@ -126,8 +126,8 @@ oat_generated: false
 
 ### Task p03-t04: (review) Close p03 review findings M1, L1, L2
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 5313d24ec
 
 ---
 
@@ -429,6 +429,13 @@ oat_generated: false
   entries and the partial-failure message drops the restamp count; L2 sync
   docs page.
   `Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
+
+- Continuation `cont-backlog-wave-4-p03-fix-1`: `5313d24ec` (p03-t04)
+  restamps only when the row tracks the checked provider path (planner and
+  execute), counts `error` entries in dry-run `summary.failed`, keeps the
+  restamp count on partial failure, and documents both in
+  `provider-sync/commands.md`; engine/drift/sync 398 pass; root spot-check
+  engine and sync pass.
 
 <!-- orchestration-runs-end -->
 
