@@ -13,7 +13,7 @@ oat_summary_includes_revisions: []
 
 ## Overview
 
-Plain Markdown is now an explicit documentation bootstrap option for repositories that need useful documentation without a site application. This quick project implements the Markdown portion of `BL-260911-make-docs-bootstrap-a-front`, including safe adoption of populated directories and the applicable OAT context, navigation, metadata, and authoring contracts. All fourteen planned and review-fix tasks and their dispositions are complete. Configured written-summary, documentation and PR steps are complete; final p04 HiLL approval remains pending.
+Plain Markdown is now an explicit documentation bootstrap option for repositories that need useful documentation without a site application. This quick project implements the Markdown portion of `BL-260911-make-docs-bootstrap-a-front`, including safe adoption of populated directories and the applicable OAT context, navigation, metadata, and authoring contracts. All fourteen planned and review-fix tasks and their dispositions are complete. Configured written-summary, documentation and PR steps are complete; requested completion follows renewed integration review and exit-gate evidence.
 
 ## What Was Implemented
 
@@ -21,7 +21,7 @@ Plain Markdown is now an explicit documentation bootstrap option for repositorie
 - Explicit `--adopt` adds missing baseline pages while preserving existing content, indexes, config fields, and local instructions. Missing root indexes map actual sibling pages and child indexes with encoded filename segments. Malformed or incomplete existing content remains available for analyze/apply repair. Repeated adoption converges to no-change; `--yes` alone does not authorize populated-directory adoption.
 - Command-local `--dry-run` previews files, config, and read-only managed-guidance classification without mutation. Manual-required or blocked guidance remains a partial result with exit 1; actual partial writes are reported without claiming transactionality.
 - Markdown content roots remain literal even with nested `docs` directories, and instruction sync/validate exclude the whole content tree. Manifest generation requires explicit external output and protects the full configured content root and authored index, including narrowed scans and symlink aliases. Fumadocs/MkDocs behavior remains supported.
-- Five canonical skills, their relevant resources, two bundled Markdown templates, pack distribution, and twelve documentation pages were updated. The five public packages and generated version inventory are lockstep `0.3.11`, above the verified integration base at `0.3.10`.
+- Five canonical skills, their relevant resources, two bundled Markdown templates, pack distribution, and twelve documentation pages were updated. The five public packages and generated version inventory are lockstep `0.3.13`, above integrated main `0.3.12`.
 - Public metadata handling defaults blank Markdown inputs to meaningful repository values. The final renderer fix inserts values once and literally, preserving dollar sequences and token-shaped user input.
 
 ## Key Decisions
@@ -49,6 +49,10 @@ No production scope deviation was accepted. Review added bounded filename encodi
 ## Tradeoffs Made
 
 Adoption preserves malformed authored content rather than rewriting it; repair remains an explicit analyze/apply action. Guidance preview is advisory because a later write can encounter different filesystem state. Framework conversion, dependency drift, approval policy, and other-repository work remain separate from this Markdown slice.
+
+## Latest Integration
+
+Main #338 was merged at `5a38d447c0843e6abc47468808924693fbf7930d`. Nineteen conflict resolutions preserve both Markdown ownership/adoption behavior and Fumadocs strict navigation/template resolution. All eight repository gates plus lint/format passed after disk-space recovery, with exact receipts and cache distinctions retained. The independent native final review returned zero findings and 575 actual focused tests. Renewed retained-gate evidence precedes requested completion; the existing closeout sequence and recap skip remain intact.
 
 ## Integration Notes
 

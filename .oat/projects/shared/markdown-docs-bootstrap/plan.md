@@ -294,6 +294,7 @@ Record full reviewed heads and invocation provenance for actual reviews. Preserv
 - Final cross-runtime gate: passed with 0 Critical, 0 High, 0 Medium, 2 Low. Root rejected both missing-scope claims with source-verified coverage rationale; no unresolved findings or waived requirements. Artifact received, dispositioned, and archived. See `reviews/plan-gate-final-handoff.md`.
 
 Source pointers retained for the already-planned consumer inventory: index generation's independent root default in `packages/cli/src/commands/docs/index-generate/index.ts:384-389`; resolver agreement test in `packages/cli/src/config/oat-config.test.ts:633`; template reference pages `apps/oat-docs/docs/reference/file-locations.md` and `reference/oat-directory-structure.md`.
+| final | code | passed | 2026-10-02 | reviews/archived/final-review-2026-10-02T025452Z.md | 5a38d447c0843e6abc47468808924693fbf7930d | auto | - |
 
 ## Implementation Complete
 

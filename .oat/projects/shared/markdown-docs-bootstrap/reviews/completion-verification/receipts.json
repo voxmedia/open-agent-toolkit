@@ -1,0 +1,100 @@
+[
+  {
+    "gate": "check",
+    "argv": ["pnpm", "check"],
+    "exit": 0,
+    "seconds": 7.83,
+    "cacheSummary": [
+      "Tasks:    11 successful, 11 total",
+      "Cached:    11 cached, 11 total"
+    ]
+  },
+  {
+    "gate": "type-check",
+    "argv": ["pnpm", "type-check"],
+    "exit": 0,
+    "seconds": 1.44,
+    "cacheSummary": [
+      "Tasks:    10 successful, 10 total",
+      "Cached:    10 cached, 10 total"
+    ]
+  },
+  {
+    "gate": "test",
+    "argv": ["pnpm", "test"],
+    "exit": 0,
+    "seconds": 62.59,
+    "cacheSummary": [
+      "Tasks:    10 successful, 10 total",
+      "Cached:    10 cached, 10 total"
+    ]
+  },
+  {
+    "gate": "build",
+    "argv": ["pnpm", "build"],
+    "exit": 0,
+    "seconds": 1.47,
+    "cacheSummary": [
+      "Tasks:    5 successful, 5 total",
+      "Cached:    5 cached, 5 total"
+    ]
+  },
+  {
+    "gate": "skill-bumps",
+    "argv": ["pnpm", "run", "check:skill-bumps"],
+    "exit": 0,
+    "seconds": 2.49,
+    "cacheSummary": []
+  },
+  {
+    "gate": "fetch-origin-main",
+    "argv": ["git", "fetch", "origin", "main"],
+    "exit": 0,
+    "seconds": 0.3,
+    "cacheSummary": []
+  },
+  {
+    "gate": "release-versions",
+    "argv": ["pnpm", "release:check-versions"],
+    "exit": 0,
+    "seconds": 0.82,
+    "cacheSummary": []
+  },
+  {
+    "gate": "release-validation",
+    "argv": ["pnpm", "release:validate"],
+    "exit": 0,
+    "seconds": 3.41,
+    "cacheSummary": []
+  },
+  {
+    "gate": "docs-build",
+    "argv": ["pnpm", "build:docs"],
+    "exit": 0,
+    "seconds": 1.77,
+    "cacheSummary": [
+      "Tasks:    6 successful, 6 total",
+      "Cached:    6 cached, 6 total"
+    ]
+  },
+  {
+    "gate": "lint",
+    "argv": ["pnpm", "lint"],
+    "exit": 0,
+    "seconds": 2.84,
+    "cacheSummary": [
+      "Tasks:    10 successful, 10 total",
+      "Cached:    5 cached, 10 total"
+    ]
+  },
+  {
+    "gate": "format",
+    "argv": ["pnpm", "format"],
+    "exit": 0,
+    "seconds": 4.64,
+    "cacheSummary": [
+      "Tasks:    10 successful, 10 total",
+      "Cached:    5 cached, 10 total"
+    ]
+  }
+]

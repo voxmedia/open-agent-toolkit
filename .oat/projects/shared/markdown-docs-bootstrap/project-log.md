@@ -104,6 +104,10 @@ markdown-bootstrap-main-remote-final-awaiting-hill-20261001: Main #334 integrate
 
 retro artifact=.oat/projects/shared/markdown-docs-bootstrap/references/project-retro.md evidence_used=archived-review-markdown,committed-controls,decisions-and-backlog,docs-validation-receipts,gate-receipts,git-history,lifecycle-artifacts,original-root-session,project-log evidence_unavailable=oat-execution-learnings promotions=3 upstream=0 apply=skipped filing=deferred
 
+### 2026-10-02 · structural · oat-project-implement · final
+
+Main #338 integrated at 5a38d447 with nineteen conflicts resolved; all eight gates plus lint/format pass after ENOSPC recovery. Independent native Sol high final review returned 0C/0H/0M/0L and 575 actual focused tests. Public packages 0.3.13 exceed main 0.3.12; docs skill bumps pass. Renew retained gate before requested completion; existing sequence and recap skip retained.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

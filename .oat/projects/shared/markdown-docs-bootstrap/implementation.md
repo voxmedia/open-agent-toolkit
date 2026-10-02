@@ -9,7 +9,7 @@ oat_generated: false
 
 # Implementation: markdown-docs-bootstrap
 
-All fourteen tasks are complete, including both remote adoption corrections and optional-directory permission preservation. Current-main integration, all eight local gates and independent final source review passed. The retained exit gate passed; all three final Low dispositions are settled, and final p04 HiLL approval is pending. Written summary, documentation and PR steps remain complete; current evidence is reflected in their outputs.
+All fourteen tasks are complete. Main #338 is integrated at merge 5a38d447, with nineteen resolved conflicts and lockstep public packages 0.3.13. All eight repository gates plus lint/format passed after disk-space recovery; independent native final review returned zero findings and 575 actual focused tests. The retained implementation gate is being renewed before recording the user's requested completion. Existing summary/document/PR sequence stays complete, recap stays skipped.
 
 ## Progress Overview
 
@@ -146,13 +146,13 @@ None recorded.
 
 ## Final Summary (for PR/docs)
 
-Markdown bootstrap supports `documentation.tooling: markdown`, literal content roots, authored context/index/Contents/metadata, explicit additive adoption, nonmutating dry-run, protected external manifests and file verification. Five canonical skills, two templates and twelve documentation pages accompany five public packages prepared at 0.3.11. General init detection, approval classes and broader package-drift work remain outside this slice.
+Markdown bootstrap supports `documentation.tooling: markdown`, literal content roots, authored context/index/Contents/metadata, explicit additive adoption, nonmutating dry-run, protected external manifests and file verification. Five canonical skills, two templates and twelve documentation pages accompany five public packages prepared at 0.3.13. General init detection, approval classes and broader package-drift work remain outside this slice.
 
-Main #334 at 98d1d524624e17f55ccfce33d18b3d5535dc91ca is integrated by normal merge. Seven conflicts preserve lockstep packages, canonical version inventory and main's genuine sync stamp. Independently verified composition and the prior actual 8,159 workspace tests are retained. Both Bugbot corrections are accepted: usable repository child indexes map; unusable optional indexes remain preserved with advice; instruction-only directories are exempt. Optional recursive permission failures now preserve unknown content with accurate advice; required root/target safety stays strict.
+Main #338 at 4f0be26d28c9c046b79d1829abd78bc7e839d0c6 is integrated by normal merge 5a38d447c0843e6abc47468808924693fbf7930d. Nineteen conflicts preserve Markdown ownership and main's Fumadocs navigation/template-resolver contracts. All five public package versions are above main 0.3.12; four changed docs skills are bumped above both sides. The release inventory intentionally lists CLI and three docs packages. Earlier main #334, Bugbot and optional-directory controls remain retained history.
 
-All 14 tasks complete, recovery 0/10, no deferred review debt. Latest eight local gates passed on 5237891573c59413e2b13e3f4090b8053aadfb90: actual CLI 7,970 tests across 398 files, root suites 163/660/1 and 73 docs pages. Check/types mixed actual/cache; unchanged consumer tests and subsequent build/docs cache replay are explicit. Focused 200 tests, exact old-failing/fixed-passing regressions and real CLI preservation/safety controls are retained in final-remote-controls and final-unreadable-controls. Sources remain unchanged after acceptance.
+All fourteen tasks complete; recovery 0/10, no deferred review debt. All eight repository gates plus lint and format passed after ENOSPC recovery, with exact exits and cache distinctions in reviews/completion-verification/receipts.json. Workspace verification replayed cache (CLI 8,020 tests in 402 files; consumer counts 153/10/31); root suites executed. Independent final native review returned 0C/0H/0M/0L and 575 actual focused tests, with older causal controls explicitly inherited.
 
-Current independent final review passed with zero findings. The retained Opus 5.5 High gate passed with three Low findings: one out-of-scope advice consistency suggestion rejected with rationale, two current artifact/prose issues addressed. Raw counts/provenance remain preserved; no deferred findings or source changes. Summary/document/PR steps remain complete in stored order; PR #335 is open. Final p04 HiLL approval remains pending; visual recap is skipped by explicit user choice and the written summary retained. No publication, GitHub PR merge or deployment performed.
+Configured Opus 5.5 High exit gate renewal precedes requested final approval. Summary/document/PR steps remain complete in stored order; PR #335 is open. The user explicitly requested completion after integration; that approval will be recorded only after fresh review/gate acceptance. Visual recap remains skipped. Publication, GitHub PR merge and deployment have not been performed.
 
 ## Orchestration Runs
 
@@ -3404,3 +3404,7 @@ Root consumed the sole not-attempted confirmation before the complete artifact r
 All findings dispositioned; event passed with original counts/provenance. Required root safety and source behavior remain those independently accepted. Full configured receipt correlation, archive/event and receive commit are reconciled before allowed state. Existing output snapshot/recap skip persist; final p04 approval and PR synchronization remain root-owned. No GitHub replies/thread resolutions performed.
 
 - Final gate receive receipt corroborated: run `39b33a8d-8a63-41e5-af34-145a5d525935`, archived `final-review-2026-10-01T193637Z.md`, exact final/code event passed, and receive commit `c3576f57ddd35961b2152988b022cd3167a45e3a` is a descendant of the persisted receive basis and owns exactly the four declared receive paths. All three Low dispositions are settled; the configured gate is allowed with receive completed. Source fingerprint remains unchanged.
+
+### Final main-completion review received
+
+Independent native `oat-reviewer-gpt-6-1-sol-high` accepted at 5a38d447c0843e6abc47468808924693fbf7930d; result returned with 0C/0H/0M/0L and 575 actual focused tests. Root received all findings (none), archived the artifact byte-for-byte, and appended the exact final/code event; prior review rows and raw counts remain intact. Invocation/model-effort controls are configured evidence, not independently observed runtime identity. Full gates are root-owned and currently rerunning after ENOSPC; completion prose will be refreshed before the retained gate.

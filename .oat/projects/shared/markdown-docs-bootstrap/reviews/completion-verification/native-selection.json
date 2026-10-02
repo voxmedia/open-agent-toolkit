@@ -1,0 +1,313 @@
+{
+  "status": "resolved",
+  "provider": "codex",
+  "value": "high",
+  "policyMode": "managed",
+  "policy": "high",
+  "source": "project-state",
+  "preset": "high",
+  "unresolved": false,
+  "projectPath": "/Users/tstang/.t3/worktrees/open-agent-toolkit/t3code-8fc8a181/.oat/projects/shared/markdown-docs-bootstrap",
+  "providerDefaultEffort": "high",
+  "matrix": {
+    "codex": {
+      "economy": {
+        "candidates": [
+          {
+            "harness": "codex",
+            "model": "gpt-6-luna",
+            "effort": "low"
+          },
+          {
+            "harness": "codex",
+            "model": "gpt-6-luna",
+            "effort": "medium"
+          },
+          {
+            "harness": "codex",
+            "model": "gpt-6-luna",
+            "effort": "high"
+          }
+        ]
+      },
+      "balanced": {
+        "candidates": [
+          {
+            "harness": "codex",
+            "model": "gpt-6-luna",
+            "effort": "xhigh"
+          },
+          {
+            "harness": "codex",
+            "model": "gpt-6-luna",
+            "effort": "max"
+          }
+        ]
+      },
+      "high": {
+        "candidates": [
+          {
+            "harness": "codex",
+            "model": "gpt-6.1-sol",
+            "effort": "low"
+          },
+          {
+            "harness": "codex",
+            "model": "gpt-6.1-sol",
+            "effort": "medium"
+          },
+          {
+            "harness": "codex",
+            "model": "gpt-6.1-sol",
+            "effort": "high"
+          }
+        ]
+      },
+      "frontier": {
+        "candidates": [
+          {
+            "harness": "codex",
+            "model": "gpt-6.1-sol",
+            "effort": "xhigh"
+          },
+          {
+            "harness": "codex",
+            "model": "gpt-6-astra",
+            "effort": "high"
+          },
+          {
+            "harness": "codex",
+            "model": "gpt-6-astra",
+            "effort": "xhigh"
+          }
+        ]
+      }
+    },
+    "claude": {
+      "economy": {
+        "candidates": [
+          "haiku",
+          {
+            "harness": "claude",
+            "model": "claude-sonnet-5",
+            "effort": "medium"
+          }
+        ]
+      },
+      "balanced": {
+        "candidates": [
+          {
+            "harness": "claude",
+            "model": "claude-opus-5-5",
+            "effort": "low"
+          }
+        ]
+      },
+      "high": {
+        "candidates": [
+          {
+            "harness": "claude",
+            "model": "claude-opus-5-5",
+            "effort": "low"
+          },
+          {
+            "harness": "claude",
+            "model": "claude-opus-5-5",
+            "effort": "medium"
+          },
+          {
+            "harness": "claude",
+            "model": "claude-opus-5-5",
+            "effort": "high"
+          }
+        ]
+      },
+      "frontier": {
+        "candidates": [
+          {
+            "harness": "claude",
+            "model": "claude-opus-5-5",
+            "effort": "xhigh"
+          },
+          {
+            "harness": "claude",
+            "model": "claude-opus-5-5",
+            "effort": "max"
+          },
+          {
+            "harness": "claude",
+            "model": "claude-fable-5-1",
+            "effort": "high"
+          }
+        ]
+      }
+    },
+    "cursor": {
+      "economy": {
+        "candidates": [
+          "composer-2.5",
+          "gpt-5.6-luna-high",
+          "gpt-5.6-luna-xhigh"
+        ]
+      },
+      "balanced": {
+        "candidates": [
+          "cursor-grok-4.6-medium",
+          "gpt-5.6-terra-high",
+          "claude-opus-5-5-low"
+        ]
+      },
+      "high": {
+        "candidates": [
+          "gpt-5.6-sol-medium",
+          "claude-opus-5-5-low",
+          "gpt-5.6-sol-high",
+          "claude-opus-5-5-medium",
+          "claude-opus-5-5-high"
+        ]
+      },
+      "frontier": {
+        "candidates": [
+          "gpt-5.6-sol-xhigh",
+          "gpt-5.6-sol-max",
+          "claude-opus-5-5-high",
+          "claude-opus-5-5-xhigh",
+          "claude-fable-5-1-thinking-high"
+        ]
+      }
+    }
+  },
+  "ladderCompleteness": {
+    "complete": true,
+    "missingCells": []
+  },
+  "providers": {
+    "codex": {
+      "value": "high",
+      "mode": "enforced",
+      "mechanism": "pinned-variant",
+      "dispatchArgs": {
+        "variant": "oat-reviewer-gpt-6-1-sol-high"
+      },
+      "modelAxis": "selected:gpt-6.1-sol",
+      "effortAxis": "selected:high",
+      "verifyOnDispatch": false,
+      "cellSource": "user-config",
+      "target": {
+        "harness": "codex",
+        "model": "gpt-6.1-sol",
+        "effort": "high",
+        "crossHarness": false,
+        "routeIndex": 0,
+        "routeLength": 1
+      },
+      "selection": {
+        "role": "reviewer",
+        "policyMode": "managed",
+        "policy": "high",
+        "cellSource": "user-config",
+        "target": {
+          "harness": "codex",
+          "model": "gpt-6.1-sol",
+          "effort": "high",
+          "crossHarness": false,
+          "routeIndex": 0,
+          "routeLength": 1
+        },
+        "requestedCandidate": null,
+        "candidateTier": null,
+        "candidateIndex": null,
+        "ceilingTier": "high",
+        "ceilingTarget": {
+          "harness": "codex",
+          "model": "gpt-6.1-sol",
+          "effort": "high",
+          "crossHarness": false,
+          "routeIndex": 0,
+          "routeLength": 1
+        },
+        "preferredValue": null,
+        "selectedValue": "high",
+        "capped": false,
+        "selectionMode": "review-target",
+        "selectionBranch": "matrix-pinned",
+        "family": "openai"
+      }
+    }
+  },
+  "dispatchReport": {
+    "schemaVersion": 1,
+    "route": {
+      "scope": "final",
+      "action": "review",
+      "role": "reviewer",
+      "target": "oat-reviewer-gpt-6-1-sol-high"
+    },
+    "policy": {
+      "status": "resolved",
+      "mode": "managed",
+      "name": "high",
+      "source": "project-state"
+    },
+    "selection": {
+      "requestedCandidate": null,
+      "preferredValue": null,
+      "candidateTier": null,
+      "candidateIndex": null,
+      "ceilingTier": "high",
+      "ceilingTarget": {
+        "harness": "codex",
+        "model": "gpt-6.1-sol",
+        "effort": "high",
+        "crossHarness": false,
+        "routeIndex": 0,
+        "routeLength": 1
+      },
+      "selectedValue": "high",
+      "exactSelectedTarget": {
+        "harness": "codex",
+        "model": "gpt-6.1-sol",
+        "effort": "high",
+        "crossHarness": false,
+        "routeIndex": 0,
+        "routeLength": 1
+      },
+      "selectionMode": "review-target",
+      "selectionBranch": "matrix-pinned",
+      "cellSource": "user-config"
+    },
+    "classification": {
+      "taskClass": null,
+      "preferredEffort": null,
+      "source": "not-reported"
+    },
+    "notices": [],
+    "requestedControls": {
+      "model": {
+        "value": "gpt-6.1-sol",
+        "mechanism": "materialized-role",
+        "reason": "Derived from the completed resolver model-axis result."
+      },
+      "effort": {
+        "value": "high",
+        "mechanism": "materialized-role",
+        "reason": "Derived from the completed resolver effort-axis result."
+      }
+    },
+    "configuredDefaults": {
+      "model": null,
+      "modelSource": null,
+      "effort": "high",
+      "effortSource": "codex-config"
+    },
+    "gateInvocation": null,
+    "runtimeIdentity": {
+      "producer": null,
+      "model": null,
+      "effort": null,
+      "provenance": "unknown",
+      "confidence": "not-reported"
+    }
+  },
+  "dispatchStamp": "Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high"
+}

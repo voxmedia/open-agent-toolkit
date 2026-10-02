@@ -157,13 +157,13 @@ oat_post_implement_sequence:
 
 # Project State: markdown-docs-bootstrap
 
-**Status:** All fourteen tasks, local gates, final reviews and retained exit gate pass; awaiting final p04 HiLL approval
+**Status:** Fourteen tasks and integrated verification complete; renewing exit gate before requested completion
 **Started:** 2026-09-30
 **Last Updated:** 2026-10-01
 
 ## Current Phase
 
-All fourteen tasks complete. Main #334 is integrated; both remote fixes have independent acceptance, and the optional-directory sweep plus all eight local gates pass. Current final source review and refreshed retained gate passed; all dispositions are settled, and final p04 HiLL approval is pending. Existing pre-approval steps remain complete; PR #335 remains open.
+All fourteen tasks complete. Main #338 is integrated at 5a38d447; all eight repository gates plus lint/format pass and the independent final review has zero findings. Renewing the retained exit gate before recording requested completion. Existing pre-approval sequence remains complete and recap remains skipped. PR #335 is open.
 
 ## Artifacts
 
@@ -201,6 +201,4 @@ None
 
 ## Next Milestone
 
-Request final p04 HiLL approval after pushing the integrated branch and refreshing PR evidence. The current final reviews and retained gate passed with all dispositions settled. Configured pre-approval steps stay complete; no post-approval steps are configured.
-
-PR #335 remains open for review: https://github.com/voxmedia/open-agent-toolkit/pull/335. Merge and release have not been performed.
+Renew the configured implementation exit gate, record the user's requested final approval, then complete and archive through oat-project-complete. PR #335 remains open; no GitHub PR merge or release has been performed.
