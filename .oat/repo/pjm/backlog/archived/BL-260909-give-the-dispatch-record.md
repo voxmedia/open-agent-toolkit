@@ -1,7 +1,7 @@
 ---
 id: BL-260909-give-the-dispatch-record
 title: Give the dispatch record a consumer or remove it
-status: open
+status: closed
 priority: high
 scope: task
 scope_estimate: S
@@ -12,7 +12,7 @@ labels:
   - simplification
 assignee: null
 created: 2026-09-09T18:58:52.177Z
-updated: 2026-09-27T03:40:00Z
+updated: '2026-10-01T19:47:55Z'
 associated_issues: []
 external_plans: []
 ---

@@ -4,9 +4,9 @@ description: Use when design.md is complete and executable implementation tasks 
 oat_gateable: true
 disable-model-invocation: true
 user-invocable: true
-allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion
+allowed-tools: Read, Write, Bash(git:*), Bash(oat template:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.4.15
+  version: 1.4.16
 ---
 
 # Planning Phase
@@ -232,12 +232,12 @@ Check whether a plan already exists at `"$PROJECT_PATH/plan.md"`.
 - Ask the user:
   - **Resume** (default): continue editing the existing plan in place
   - **View**: show the existing plan and stop
-  - **Overwrite**: replace with a fresh copy of the template (warn about losing draft edits). Restore the exact snapshot into the resulting `plan.md` frontmatter immediately after the template replacement and before any other plan write. Preserve the raw `oat_phase_review_gate` entry byte-for-byte; do not parse or normalize it.
+  - **Overwrite**: replace with a fresh copy of the template (`oat template resolve plan --output "$PROJECT_PATH/plan.md"`; warn about losing draft edits). Restore the exact snapshot into the resulting `plan.md` frontmatter immediately after the template replacement and before any other plan write. Preserve the raw `oat_phase_review_gate` entry byte-for-byte; do not parse or normalize it.
 - If resuming: ensure the document contains the required sections from the template (at minimum: `## Reviews`, `## Implementation Complete`, `## References`). If any are missing, add them using the template headings (do not delete existing content).
 
 **If `"$PROJECT_PATH/plan.md"` does not exist:**
 
-- Copy template: `.oat/templates/plan.md` → `"$PROJECT_PATH/plan.md"`
+- Copy template: `oat template resolve plan --output "$PROJECT_PATH/plan.md"`
 
 Update frontmatter:
 

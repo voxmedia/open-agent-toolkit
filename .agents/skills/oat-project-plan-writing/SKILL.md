@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: false
 allowed-tools: Read, Write, Glob, Grep
 metadata:
-  version: 1.2.34
+  version: 1.2.35
 ---
 
 # Plan Writing Contract
@@ -270,7 +270,7 @@ the `Dispatch:` stamp the reviewer already copies into its dispatch audit
 metadata; nothing is written to `implementation.md` (which may not exist yet
 during planning) and no request-id, launch-status, or outcome field is added to
 any artifact or ledger column. Construct and redact the complete generic record
-plus OAT role event before the native call. Writing a per-dispatch file with `oat project dispatch record` is optional and off by default: no lifecycle skill or command consumes those files, so do not write them unless the host has explicitly opted in. Only a rejection attesting
+plus OAT role event before the native call. Only a rejection attesting
 `provesNoChildStarted: true` permits one exact-target approximation with a
 fresh request ID. Preserve exact model, effort, route, authority, and provider
 controls. Timeout, `BLOCKED`, refusal after acceptance, runtime mismatch,

@@ -65,6 +65,12 @@ allowed and fresh disposition before pre-approval work starts. A
 not inferred from missing state, and a null, missing, or unrecognized resolver
 result fails closed as unresolved instead.
 
+A later substantive change makes an allowed result stale, test-only changes
+included. Only an operator can keep it fresh, by recording an append-only
+exit-gate waiver for the exact commits; agents never issue one. An autonomous
+run that finds a stale result persists `stale` and starts a new gate run; it
+refuses only an attempted waiver write. The summary and PR description list every waiver.
+
 After implementation closeout finishes:
 
 1. **Summary** (`oat-project-summary`) — generates `summary.md` as institutional memory from project artifacts; PR-final and completion will auto-refresh it if you have not already run it or if it is stale
@@ -75,7 +81,7 @@ After implementation closeout finishes:
    - GitHub PR feedback delegates to `oat-project-review-receive-remote`
    - Review artifacts delegate to `oat-project-review-receive`
    - After revision tasks complete, state returns to `pr_open`
-5. **Complete** (`oat-project-complete`) — accepts any phase status (`pr_open`, `complete`, `in_progress`), auto-refreshes `summary.md` before closeout when needed, and archives when selected by the workflow preference or completion prompt
+5. **Complete** (`oat-project-complete`) — accepts any phase status (`pr_open`, `complete`, `in_progress`), auto-refreshes `summary.md` before closeout when needed, and archives when selected by the workflow preference or completion prompt. Before any completion write it runs the read-only `oat project closeout-check`: a configured, autonomous, or lite closeout whose `oat_post_implement_sequence` snapshot is missing, malformed, or incomplete stops and routes back to `oat-project-implement`, and `oat project complete-state` refuses the same state. There is no override; see the [CLI reference](../../reference/cli-reference.md).
 
 ### Project-recap gate (non-lite)
 

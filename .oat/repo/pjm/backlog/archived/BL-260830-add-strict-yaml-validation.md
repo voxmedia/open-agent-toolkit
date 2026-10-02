@@ -1,7 +1,7 @@
 ---
 id: BL-260830-add-strict-yaml-validation
 title: Add strict YAML validation to oat skill validation
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: S
@@ -12,7 +12,7 @@ labels:
   - legacy-promoted
 assignee: null
 created: 2026-08-30T22:30:58.743Z
-updated: 2026-08-30T22:30:58.743Z
+updated: '2026-10-01T19:47:56Z'
 associated_issues: []
 external_plans: []
 ---

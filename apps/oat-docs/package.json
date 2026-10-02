@@ -5,7 +5,7 @@
   "scripts": {
     "predev": "fumadocs-mdx && pnpm -w run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md",
     "dev": "next dev",
-    "prebuild": "fumadocs-mdx && pnpm -w run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md",
+    "prebuild": "fumadocs-mdx && pnpm -w run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md && pnpm -w run cli:source -- docs nav sync --target-dir apps/oat-docs --check",
     "build": "next build",
     "start": "next start",
     "check": "oxfmt --check 'docs/**/*.md' && markdownlint-cli2 'docs/**/*.md'",

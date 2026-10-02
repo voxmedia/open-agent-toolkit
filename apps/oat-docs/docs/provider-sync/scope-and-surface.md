@@ -43,8 +43,8 @@ Rules are currently project-scoped canonical content. Unlike skills and agents, 
 - `oat providers inspect`
 - `oat providers set`
 - `oat providers codex materialize`
-- `oat project dispatch record` (project-aware dispatch evidence only; never a
-  provider launcher)
+- `oat project dispatch record` (validates project-aware dispatch evidence and
+  writes nothing; never a provider launcher)
 - `oat project dispatch canonical-role` (read-only; prints the
   canonical-role-resolution event that `oat project dispatch record` accepts)
 
@@ -112,8 +112,7 @@ role-selection rejection and do not permit fallback.
 
 Project workflows construct and redact the complete dispatch payload before
 the native call, then record its accepted or `blocked-before-start` result in
-the project's run record; persisting it under the project's `dispatch/`
-directory is optional and off by default. The generic
+the project's run record, which is the only launch record. The generic
 record remains provider-neutral. OAT-specific canonical role, rejection,
 fallback, and runtime facts live only under its `oat` namespace. A qualifying
 fallback is a fresh request that preserves exact target and controls and is

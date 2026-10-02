@@ -49,7 +49,7 @@ const optionalSelector = identifier().nullable();
 /**
  * Every generic container field is validated as a closed, bounded JSON
  * projection so prompt bodies, transcripts, and other free-form content cannot
- * ride into a durable journal through an unbounded `unknown` value. `payload`
+ * ride into a validated record through an unbounded `unknown` value. `payload`
  * carries configured sandbox/tool controls; `candidates_considered`,
  * `configured_invocation_evidence`, `continuation_events`, `diagnostics`, and
  * `escalate_when` carry short references and identifiers, not narrative text.
@@ -174,7 +174,7 @@ function projectionAggregateViolation(
 
 /**
  * Whole-record ceiling, applied at every parse entry point so no combination
- * of individually legal fields can produce an unbounded journal revision.
+ * of individually legal fields can produce an unbounded record.
  */
 export function assertBoundedDispatchRecordSize(value: unknown): void {
   const bytes = publishedByteLength(value);

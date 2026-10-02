@@ -8,7 +8,7 @@ allowed-tools: Read, Write, Glob, Grep, Bash, AskUserQuestion
 license: MIT
 metadata:
   author: shadcn
-  version: 2.1.5
+  version: 2.1.6
 ---
 
 # OAT Repo Improve
@@ -263,7 +263,7 @@ Plans are always the primary output. Tracking publication happens only after the
 
 When PJM is installed, offer backlog-item creation for plans from `repo-audit` or `maintainability-review`. `--backlog-items` records prior explicit acceptance; otherwise ask once after previewing the plan-to-item mapping.
 
-- Prefer the canonical `oat-pjm-add-backlog-item` workflow when installed. For a bulk fallback, use `.oat/templates/backlog-item.md`, `oat backlog generate-id`, and one final `oat backlog regenerate-index` without changing the field contract.
+- Prefer the canonical `oat-pjm-add-backlog-item` workflow when installed. For a bulk fallback, use the `backlog-item` template (`oat template resolve backlog-item --output <item path>` resolves the repository, user, then bundled tier), `oat backlog generate-id`, and one final `oat backlog regenerate-index` without changing the field contract.
 - Create one item per plan, with the plan's outcome as the title/description basis and its done criteria mapped to acceptance criteria.
 - Initialize `external_plans` with that plan path at creation time.
 - For `backlog-review`, `backlog-directory`, and `backlog-item`, never create duplicate items. Reuse source items and update only their reverse links.

@@ -111,7 +111,12 @@ it is not an unknown-value fallback.
 
 The other execution fields include `authority` as `provider-enforced` or
 `contract-enforced`; integer `maxConcurrency` and `deadlineSeconds` values of
-at least 1; and an integer `retryLimit` of at least 0. Each closed wave adds:
+at least 1; and an integer `retryLimit` of at least 0. `retryLimit` counts
+pre-acceptance admission retries per lane: relaunches after the provider
+rejects a launch before any child is accepted. The controller makes at most one
+such retry per lane, whatever the limit, and never reruns an accepted lane. The
+preview's worst-case lane attempts are lanes times (min(`retryLimit`, 1) + 1). Each closed
+wave adds:
 
 - `classFloor`, from the same durable task-class order and not above
   `taskClass`;
@@ -347,14 +352,29 @@ branch; source ineligibility never bypasses persistence safety.
   association, and an association cannot name evidence absent from that result
   or a claim without a disposition in that result.
 
-Every `unresolvedIssues` member is a string. Review results are closed objects:
-unknown fields and object-valued issue entries are invalid.
+`unresolvedIssues` members are a closed union. A string is a legacy entry read
+as a global issue. `{ "text": "...", "claimIds": ["claim-1"] }` scopes an issue
+to a non-empty list of unique claim IDs that the review covers (each has a
+disposition in that review, so each is projected by its immutable brief).
+`{ "text": "...", "scope": "global" }` is an explicit global issue. Any other
+entry, including an object with neither or both scope forms, an empty or
+non-string claim list, or a claim the review does not cover, is rejected at
+artifact acceptance with `INVALID_UNRESOLVED_ISSUE`; it is never read as no
+issue. Reconciliation and publication apply one rule: a claim-scoped issue keeps
+only the claims it names below `verified`, and a global issue keeps every claim
+the review covers below `verified`. Review results are closed objects: unknown
+fields are invalid.
 Reconciliation results replace the brief reference with prior-ledger/revision,
 additions/removals, exact transitions, and coverage-disposition bindings.
 Coverage findings are closed records bound to affected claims and exact
-manifest gaps. Accepted
-material gaps require a legal downgrade for every affected claim; a resolved
-finding instead names exact typed evidence. Non-material coverage gaps
+manifest gaps. One coverage rule applies at acceptance, reconciliation, and
+publication: an accepted material finding forces every claim it names below
+`verified`, and publication rejects a named claim that is still `verified`
+(`MATERIAL_COVERAGE_ASSURANCE_EXCEEDED`). The reviewer's per-statement
+disposition for a named claim may remain `covered`, because a missing question
+is not a defect in that statement; the material gap stays visible in
+`manifest.gaps` and forces `partial`. A resolved finding instead names exact
+typed evidence. Non-material coverage gaps
 downgrade verified claims and transition provisional claims to unresolved,
 while existing supported claims remain supported without verified promotion.
 Thorough redundant verification and contradiction resolution are
@@ -366,6 +386,16 @@ Create immutable mode-specific review projections with
 statements, display excerpts, typed locators, and required source descriptors.
 Adversarial briefs expose only scope, questions, and provisional statements.
 Coverage briefs expose only scope, questions, and claim ID/statement pairs.
+Publication checks a brief by rebuilding it: `validate-packet.mjs` calls the
+same generator with the brief's `id`, `mode`, and `createdAt`, the manifest,
+the prior ledger, and the claim IDs the brief lists, and requires identical
+canonical JSON. Any edited, injected, duplicated, or unprojected field differs
+(`REVIEW_BRIEF_MISMATCH`), so a brief cannot carry an injected claim, note, or
+source. Each review's dispositions must be unique and name claims its brief
+lists. The brief `id` is a lowercase slug of at most 64 characters and
+`createdAt` a UTC ISO-8601 instant. A reviewer may leave a briefed claim without
+a disposition; like an `uncertain` one, the claim stays `unresolved`, and
+`packet.md` lists it under Review Downgrades as not reviewed.
 All reject dossier paths, compiler reasoning, synthesis prose, provenance
 references, and prior review IDs.
 

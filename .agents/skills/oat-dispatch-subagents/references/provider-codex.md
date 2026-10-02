@@ -110,3 +110,54 @@ Add a service tier or reasoning mode only through controls shown by the current
 CLI/schema. Honor the caller's authorization boundary. Record every selector
 as configured invocation evidence; do not infer runtime identity from process
 success alone.
+
+## Agent-Limit Rejections and v2 Residency
+
+A native spawn rejected with `agent thread limit reached`
+(`AgentLimitReached`) before any child is accepted is a pre-start
+provider/dispatch outcome, not a worker failure, and not by itself evidence of
+cumulative or lifetime thread exhaustion. The v2 lifecycle facts below are
+cited from the openai/codex `rust-v0.159.2` tag; re-check them when the
+installed Codex version changes.
+
+- Before returning `AgentLimitReached`, v2 admission tries to unload an eligible
+  resident. A resident is eligible only when it is completed, errored, or
+  interrupted, has no active turn, has no pending mailbox items, and holds no
+  residency lock
+  ([`residency.rs` L99-L120](https://github.com/openai/codex/blob/rust-v0.159.2/codex-rs/core/src/agent/control/residency.rs#L99-L120),
+  [eligibility L266-L272](https://github.com/openai/codex/blob/rust-v0.159.2/codex-rs/core/src/agent/control/residency.rs#L266-L272)).
+  A visible completed status does not prove eligibility: status does not
+  expose mailbox state, active-turn cleanup, or residency locks.
+- The v2 toolset exposes `interrupt_agent`, which interrupts work but does not
+  unregister the agent. Older toolsets expose `close_agent`
+  ([`spec_plan.rs`](https://github.com/openai/codex/blob/rust-v0.159.2/codex-rs/core/src/tools/spec_plan.rs)).
+  Never present `interrupt_agent` as a close or release.
+- A queue-only message to a completed v2 agent can pin it by leaving a pending
+  mailbox item
+  ([openai/codex#32353](https://github.com/openai/codex/issues/32353)). Do not
+  message completed agents to clean them up.
+- Reports of completed residents blocking replacement are nondeterministic
+  ([openai/codex#44351](https://github.com/openai/codex/issues/44351)), and
+  older open-thread quota behavior
+  ([openai/codex#22779](https://github.com/openai/codex/issues/22779)) is a
+  different mechanism. Do not conflate either with v2 residency eviction.
+
+On a pre-acceptance agent-limit rejection:
+
+1. Keep every accepted artifact and record the exact rejection as a
+   provider/dispatch outcome.
+2. Inspect the available lifecycle tools and statuses. Release only completed
+   agents whose output is already retained, and only through a close or release
+   tool the live toolset supports; never close the root or an active required
+   lane.
+3. Do not archive or delete sessions to free capacity. Archive availability
+   does not prove that it releases a v2 residency slot.
+4. Make at most one admission retry, only when the caller's approved dispatch
+   envelope allows retries and after the eligibility check above. A wait result
+   or a completed status alone does not justify another attempt.
+5. If admission still fails, use an alternate route only when the caller
+   already approved it; otherwise stop and return the partial result for a
+   concrete continuation amendment.
+
+No retry or route changes model, effort, role behavior, data authority, output
+limits, or reviewer blindness. Never rerun an accepted lane to free capacity.

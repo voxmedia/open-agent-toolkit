@@ -7,7 +7,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.4.18
+  version: 1.4.19
 ---
 
 # Import External Plan
@@ -190,7 +190,7 @@ contract.
 
 ### Step 3: Normalize Into Canonical OAT plan.md
 
-Create/update `"$PROJECT_PATH/plan.md"` using `.oat/templates/plan.md` and map imported content into the canonical structure. Apply `oat-project-plan-writing` invariants after mapping — load the current `oat-project-plan-writing/SKILL.md` and follow its invariants as written:
+Create/update `"$PROJECT_PATH/plan.md"` using the plan template (when the file is missing, copy it first with `oat template resolve plan --output "$PROJECT_PATH/plan.md"`) and map imported content into the canonical structure. Apply `oat-project-plan-writing` invariants after mapping — load the current `oat-project-plan-writing/SKILL.md` and follow its invariants as written:
 
 Restore the exact snapshot into the resulting `plan.md` frontmatter as part of
 the first normalized plan write, before any later frontmatter rewrite and
@@ -490,7 +490,7 @@ If `activeProject` in local config already exists with a different path, treat t
 
 If missing, scaffold from template:
 
-- `.oat/templates/implementation.md` → `"$PROJECT_PATH/implementation.md"`
+- `oat template resolve implementation --output "$PROJECT_PATH/implementation.md"`
 
 Initialize pointer to first plan task ID.
 

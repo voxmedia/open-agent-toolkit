@@ -20,7 +20,7 @@ not an `oat-project-import-plan` target.
 - Selected: three self-contained outcomes. All three are execution-ready after
   revalidation against the merged gate-contract project and current main.
 - Deferred/rejected:
-  - [BL-260806-fail-closed-when-configured](../../pjm/backlog/items/BL-260806-fail-closed-when-configured.md)
+  - [BL-260806-fail-closed-when-configured](../../pjm/backlog/archived/BL-260806-fail-closed-when-configured.md)
     is materially implemented by the immutable closeout snapshot/terminal
     contract. Archive the original after a focused reproduction check; any
     transition-test residual belongs in `review-gate-integrity`.

@@ -2115,7 +2115,7 @@ describe('validateOatSkills', () => {
     } of [
       {
         skillName: 'oat-project-discover',
-        version: '2.2.7',
+        version: '2.2.8',
         finalizedHeading:
           '### Step 11: Human-in-the-Loop Lifecycle (HiLL) Gate (If Configured)',
         gateHeading: '### Step 12: Gate Execution',
@@ -2124,7 +2124,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-design',
-        version: '2.3.6',
+        version: '2.3.7',
         finalizedHeading:
           '### Step 6: User-Review Gate (commit-first ordering)',
         gateHeading: '### Step 7: Gate Execution',
@@ -2134,7 +2134,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-plan',
-        version: '1.4.15',
+        version: '1.4.16',
         finalizedHeading: '### Step 12.5: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading: '### Step 13: Mark Plan Complete',
@@ -2142,7 +2142,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-quick-start',
-        version: '2.3.16',
+        version: '2.3.17',
         finalizedHeading: '### Step 3.6: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading:
@@ -2159,7 +2159,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-implement',
-        version: '2.3.15',
+        version: '2.3.16',
         finalizedHeading: '### Step 13: Trigger Final Review',
         gateHeading: '### Step 14: Gate Execution',
         completionHeading: '### Step 16: Mark Implementation Complete',
@@ -2640,7 +2640,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(readDeclaredVersion(content)).toBe('2.3.15');
+    expect(readDeclaredVersion(content)).toBe('2.3.16');
   });
 
   it('requires classified resolver calls and effective terminal reviewer notices before launch', async () => {
@@ -2970,7 +2970,7 @@ describe('validateOatSkills', () => {
     );
     const combined = `${content}\n${dispatchReference}`;
 
-    expect(readDeclaredVersion(content)).toBe('2.3.15');
+    expect(readDeclaredVersion(content)).toBe('2.3.16');
     expect(dispatchReference).toContain(
       '${IMPLEMENTER_AGENT_PROVIDER_ROOT}/agents/oat-phase-implementer.md',
     );
@@ -3005,7 +3005,7 @@ describe('validateOatSkills', () => {
     expect(combined).toMatch(/launcher-selected\/config-declared/i);
   });
 
-  it('records each launch in the run record without a mandatory per-dispatch file', async () => {
+  it('records each launch in the run record and describes no dispatch-record persistence', async () => {
     const paths = [
       '.agents/skills/oat-dispatch-subagents/SKILL.md',
       '.agents/skills/oat-project-dispatch-subagents/SKILL.md',
@@ -3033,17 +3033,26 @@ describe('validateOatSkills', () => {
       /timeout[^]{0,100}`BLOCKED`[^]{0,100}refusal[^]{0,120}runtime mismatch[^]{0,160}(?:never|do not)[^]{0,100}(?:fallback|replacement)/i,
     );
 
-    // The persisted per-dispatch file is optional and off by default; every
-    // contract routes the required evidence to the run record instead, and
-    // none of them instructs the caller to run the recorder after every launch.
+    // `oat project dispatch record` is validate-only
+    // (DR-260927-dispatch-record-validates): every contract routes the required
+    // evidence to the run record, none describes a persisted per-dispatch file
+    // or a `--project` invocation, and none instructs the caller to run the
+    // recorder after every launch.
     for (const [index, contract] of contracts.entries()) {
       // Implement and the dispatch engines own implementation.md; the review
       // rails cannot persist it, so they record the launch in the review artifact.
       expect(contract, paths[index]).toMatch(
         index < 3 ? /run record/i : /writes? no launch record/i,
       );
-      expect(contract, paths[index]).toMatch(
-        /oat project dispatch record[^]{0,280}optional\s+and\s+off\s+by\s+default/i,
+      expect(contract, paths[index]).not.toMatch(/per-dispatch\s+file/i);
+      expect(contract, paths[index]).not.toMatch(
+        /optional\s+and\s+off\s+by\s+default/i,
+      );
+      expect(contract, paths[index]).not.toMatch(
+        /dispatch record[^\n]*\\\n\s*--project/,
+      );
+      expect(contract, paths[index]).not.toMatch(
+        /dispatch journal|<project>\/dispatch\//i,
       );
       expect(contract, paths[index]).not.toMatch(
         /immediately after[^]{0,200}run `oat project dispatch record/i,
@@ -3059,7 +3068,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(readDeclaredVersion(content)).toBe('2.3.15');
+    expect(readDeclaredVersion(content)).toBe('2.3.16');
     expect(content).toMatch(
       /accepted native reviewer[\s\S]{0,260}(?:poll|nudge|continue)[\s\S]{0,180}existing handle/i,
     );
@@ -3078,7 +3087,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-review-provide/SKILL.md',
     );
 
-    expect(readDeclaredVersion(content)).toBe('1.5.11');
+    expect(readDeclaredVersion(content)).toBe('1.5.12');
     expect(content).toMatch(
       /resolver-returned Codex variant[\s\S]{0,260}first[\s\S]{0,180}native[\s\S]{0,100}`agent_type`/i,
     );
@@ -3165,7 +3174,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-plan-writing/SKILL.md',
     );
 
-    expect(readDeclaredVersion(shared)).toBe('1.2.34');
+    expect(readDeclaredVersion(shared)).toBe('1.2.35');
     expect(shared).toContain(
       '${WORKFLOWS_AGENT_PROVIDER_ROOT}/agents/oat-reviewer.md',
     );
@@ -3210,7 +3219,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-plan-writing/SKILL.md',
     );
 
-    expect(readDeclaredVersion(shared)).toBe('1.2.34');
+    expect(readDeclaredVersion(shared)).toBe('1.2.35');
     expect(shared).toMatch(/Planning-Time Artifact Formatting Contract/);
     expect(shared).toMatch(
       /applicable[\s\S]{0,120}`AGENTS\.md`[\s\S]{0,40}`CLAUDE\.md`[\s\S]{0,160}relevant package\s+manifests/i,
@@ -3240,12 +3249,12 @@ describe('validateOatSkills', () => {
     const runtimeSurfaces = [
       ['.agents/agents/oat-phase-implementer.md', '1.1.6'],
       ['.agents/agents/oat-reviewer.md', '1.2.10'],
-      ['.agents/skills/oat-project-review-provide/SKILL.md', '1.5.11'],
+      ['.agents/skills/oat-project-review-provide/SKILL.md', '1.5.12'],
       ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.7'],
-      ['.agents/skills/oat-project-summary/SKILL.md', '1.5.6'],
+      ['.agents/skills/oat-project-summary/SKILL.md', '1.5.7'],
       ['.agents/skills/oat-project-document/SKILL.md', '1.8.6'],
-      ['.agents/skills/oat-project-pr-final/SKILL.md', '1.6.6'],
-      ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.16'],
+      ['.agents/skills/oat-project-pr-final/SKILL.md', '1.6.7'],
+      ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.17'],
     ] as const;
 
     for (const [path, expectedVersion] of runtimeSurfaces) {
@@ -3354,7 +3363,7 @@ describe('validateOatSkills', () => {
     expect(adoptionContract).toMatch(
       /when adoption is required[\s\S]{0,200}bundled recommendation/i,
     );
-    expect(readDeclaredVersion(shared)).toBe('1.2.34');
+    expect(readDeclaredVersion(shared)).toBe('1.2.35');
   });
 
   it('auto-selects an existing dispatch-ladder scope only under explicit autonomy', async () => {
@@ -3561,7 +3570,7 @@ describe('validateOatSkills', () => {
       /implements one plan phase end-to-end/i,
     );
     expect(agent.match(/^tools:\s*(.+)$/m)?.[1]).toContain('Task');
-    expect(readDeclaredVersion(implement)).toBe('2.3.15');
+    expect(readDeclaredVersion(implement)).toBe('2.3.16');
     expect(agent).toMatch(
       /directly execute(?:s)? every task in dependency order/i,
     );
@@ -4927,15 +4936,15 @@ describe('validateOatSkills', () => {
 
   it('defines append-ordered monotonic review events across lifecycle skills', async () => {
     const expectedVersions = [
-      ['oat-project-plan-writing', '1.2.34'],
-      ['oat-project-review-provide', '1.5.11'],
+      ['oat-project-plan-writing', '1.2.35'],
+      ['oat-project-review-provide', '1.5.12'],
       ['oat-project-review-receive', '1.6.7'],
       ['oat-project-review-receive-remote', '1.5.3'],
-      ['oat-project-implement', '2.3.15'],
-      ['oat-project-pr-final', '1.6.6'],
+      ['oat-project-implement', '2.3.16'],
+      ['oat-project-pr-final', '1.6.7'],
       ['oat-project-pr-progress', '1.3.2'],
-      ['oat-project-complete', '1.7.13'],
-      ['oat-project-next', '1.1.3'],
+      ['oat-project-complete', '1.7.14'],
+      ['oat-project-next', '1.1.4'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {
@@ -5817,7 +5826,7 @@ describe('validateOatSkills', () => {
         snapshotMarker:
           '### Step 2.9: Snapshot Explicit Phase-Review Setting Before Plan Rewrite',
         rewriteMarker:
-          'Create/update `"$PROJECT_PATH/plan.md"` from `.oat/templates/plan.md`.',
+          'Create/update `"$PROJECT_PATH/plan.md"` from the plan template.',
         setupMarker: '### Step 3.55: Configure Optional Phase Gate Review',
       },
       {
@@ -5828,7 +5837,7 @@ describe('validateOatSkills', () => {
         snapshotMarker:
           '### Step 2.5: Snapshot Explicit Phase-Review Setting Before Plan Normalization',
         rewriteMarker:
-          'Create/update `"$PROJECT_PATH/plan.md"` using `.oat/templates/plan.md`',
+          'Create/update `"$PROJECT_PATH/plan.md"` using the plan template',
         setupMarker: '### Step 4.25: Configure Optional Phase Gate Review',
       },
     ];
@@ -6049,7 +6058,7 @@ describe('validateOatSkills', () => {
     expect(planTier3Row(specTable)).toContain('`oat-project-plan`');
     expect(planTier3Row(importTable)).toContain('`oat-project-import-plan`');
     expect(planTier3Row(liteTable)).toContain('`oat-project-lite`');
-    expect(readDeclaredVersion(next)).toBe('1.1.3');
+    expect(readDeclaredVersion(next)).toBe('1.1.4');
   });
 
   it('supports project completion before or after PR merge in every mode', async () => {
@@ -6268,12 +6277,12 @@ describe('validateOatSkills', () => {
 
   it('tracks the p04 planning skill contract versions', async () => {
     const expectedVersions = [
-      ['oat-project-plan-writing', '1.2.34'],
-      ['oat-project-plan', '1.4.15'],
-      ['oat-project-quick-start', '2.3.16'],
-      ['oat-project-import-plan', '1.4.18'],
+      ['oat-project-plan-writing', '1.2.35'],
+      ['oat-project-plan', '1.4.16'],
+      ['oat-project-quick-start', '2.3.17'],
+      ['oat-project-import-plan', '1.4.19'],
       ['oat-project-lite', '1.1.6'],
-      ['oat-project-review-provide', '1.5.11'],
+      ['oat-project-review-provide', '1.5.12'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {
@@ -6342,9 +6351,9 @@ describe('validateOatSkills', () => {
 
   it('tracks Dispatch Report V1 workflow contract versions and provenance boundaries', async () => {
     const expectedVersions = [
-      ['oat-project-implement', '2.3.15'],
-      ['oat-project-review-provide', '1.5.11'],
-      ['oat-project-review-provide-remote', '1.1.8'],
+      ['oat-project-implement', '2.3.16'],
+      ['oat-project-review-provide', '1.5.12'],
+      ['oat-project-review-provide-remote', '1.1.9'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {
@@ -6419,10 +6428,10 @@ describe('validateOatSkills', () => {
     ];
 
     expect(engine).toMatch(/^name:\s*oat-dispatch-subagents$/m);
-    expect(readDeclaredVersion(engine)).toBe('1.2.11');
+    expect(readDeclaredVersion(engine)).toBe('1.2.12');
     expect(engine).toMatch(/^user-invocable:\s*false$/m);
     expect(adapter).toMatch(/^name:\s*oat-project-dispatch-subagents$/m);
-    expect(readDeclaredVersion(adapter)).toBe('1.1.6');
+    expect(readDeclaredVersion(adapter)).toBe('1.1.7');
     expect(adapter).toContain('oat-dispatch-subagents');
     expect(engine).toMatch(/resolved dispatch policy or named ceiling/i);
     expect(engine).toMatch(
@@ -6578,8 +6587,8 @@ describe('validateOatSkills', () => {
 
   it('pins portable utility-pack callers to installed-root sibling reads', async () => {
     const callers = [
-      ['.agents/skills/oat-dispatch-subagents/SKILL.md', '1.2.11'],
-      ['.agents/skills/oat-repo-improve/SKILL.md', '2.1.5'],
+      ['.agents/skills/oat-dispatch-subagents/SKILL.md', '1.2.12'],
+      ['.agents/skills/oat-repo-improve/SKILL.md', '2.1.6'],
       ['.agents/skills/oat-review-provide-remote/SKILL.md', '1.1.4'],
     ] as const;
 
@@ -7320,7 +7329,7 @@ describe('validateOatSkills', () => {
     );
     const content = await readFile(skillPath, 'utf8');
 
-    expect(readDeclaredVersion(content)).toBe('2.3.16');
+    expect(readDeclaredVersion(content)).toBe('2.3.17');
   });
 
   it('documents quick-start selective config fallback to collaborative', async () => {
@@ -7373,7 +7382,7 @@ describe('validateOatSkills', () => {
     expect(
       readDeclaredVersion(skillContent),
       'oat-project-design selective-mode contract version must stay explicit',
-    ).toBe('2.3.6');
+    ).toBe('2.3.7');
     expect(
       skillContent,
       'Step 4a heading must remain present for selective review-pass flow',
@@ -7832,6 +7841,46 @@ describe('validateOatSkills', () => {
     }
   });
 
+  it('grants oat template to curated-allowlist skills that copy templates', async () => {
+    const projectRetro = await readRepoFile(
+      '.agents/skills/oat-project-retro/SKILL.md',
+    );
+    const projectSummary = await readRepoFile(
+      '.agents/skills/oat-project-summary/SKILL.md',
+    );
+
+    const curatedCallers = await Promise.all(
+      ['design', 'spec', 'plan'].map((name) =>
+        readRepoFile(`.agents/skills/oat-project-${name}/SKILL.md`),
+      ),
+    );
+
+    for (const content of [projectRetro, projectSummary, ...curatedCallers]) {
+      expect(content).toContain('oat template resolve');
+      expect(getFrontmatterForTest(content)).toContain('Bash(oat template:*)');
+    }
+    // Retro creates `references/` before the copy; `--output` creates no
+    // directories.
+    expect(getFrontmatterForTest(projectRetro)).toContain('Bash(mkdir:*)');
+  });
+
+  it('grants oat-docs-analyze only the read-only nav sync check', async () => {
+    const docsAnalyze = await readRepoFile(
+      '.agents/skills/oat-docs-analyze/SKILL.md',
+    );
+    const frontmatter = getFrontmatterForTest(docsAnalyze);
+
+    // The grant is a prefix match, so `--check` comes first: a plain
+    // `oat docs nav sync`, which writes meta.json, stays ungranted.
+    expect(docsAnalyze).toContain(
+      'oat docs nav sync --check --target-dir <docs-app-dir>',
+    );
+    expect(frontmatter).toContain('Bash(oat docs nav sync --check:*)');
+    expect(frontmatter).not.toMatch(
+      /Bash\(oat(?: docs(?: nav(?: sync)?)?)?:\*\)|Bash\(\*\)|Bash,|Bash$/m,
+    );
+  });
+
   it('pins the brainstorm persistence invariant by project scope', async () => {
     const brainstorm = await readRepoFile(
       '.agents/skills/oat-brainstorm/SKILL.md',
@@ -7984,7 +8033,7 @@ describe('lite mode skill contracts', () => {
     expect(stateWrite).toContain('oat_workflow_origin: imported');
     expect(stateWrite).toMatch(/oat_import_reference|oat_import_\*/);
     expect(stateWrite).toContain('oat_plan_source: imported');
-    expect(readDeclaredVersion(content)).toBe('1.4.18');
+    expect(readDeclaredVersion(content)).toBe('1.4.19');
   });
 
   it('lite bypasses implementation checkpoints', async () => {
@@ -8243,7 +8292,7 @@ describe('lite mode skill contracts', () => {
     expect(liteSummarySources.replace('`Assumptions`', '')).not.toContain(
       '`Assumptions`',
     );
-    expect(readDeclaredVersion(summary)).toBe('1.5.6');
+    expect(readDeclaredVersion(summary)).toBe('1.5.7');
     expect(readDeclaredVersion(document)).toBe('1.8.6');
   });
 
@@ -8458,7 +8507,7 @@ describe('lite mode skill contracts', () => {
     expect(proofDisposition(true, false)).toBe('BLOCKED');
     expect(proofDisposition(false, false)).toBe('NEEDS_CONTEXT');
     expect(proofDisposition(true, true)).toBe('performed');
-    expect(readDeclaredVersion(implementWorkflow)).toBe('2.3.15');
+    expect(readDeclaredVersion(implementWorkflow)).toBe('2.3.16');
     expect(readDeclaredVersion(implementer)).toBe('1.1.6');
   });
 
@@ -8731,7 +8780,7 @@ describe('recon canonical contracts', () => {
     ]);
 
     expect(skill).toMatch(/^name:\s*recon$/m);
-    expect(readDeclaredVersion(skill)).toBe('1.1.5');
+    expect(readDeclaredVersion(skill)).toBe('1.1.7');
     expect(skill).toMatch(/provider-neutral/i);
     expect(skill).toMatch(/select each wave independently/i);
     expect(skill).toMatch(/schemaVersion: 2/i);
@@ -9446,6 +9495,107 @@ describe('authoring contract — executable backstops for standing claims', () =
   });
 });
 
+describe('strict skill frontmatter YAML', () => {
+  const tempDirs: string[] = [];
+
+  afterEach(async () => {
+    await Promise.all(
+      tempDirs.map((dir) => rm(dir, { recursive: true, force: true })),
+    );
+    tempDirs.length = 0;
+  });
+
+  async function validateOne(
+    skillName: string,
+    replace: (lines: string[]) => string[],
+  ): Promise<{ skillPath: string; findings: unknown[] }> {
+    const root = await mkdtemp(join(tmpdir(), 'oat-strict-yaml-'));
+    tempDirs.push(root);
+    const skillPath = await createSkillFile(
+      root,
+      skillName,
+      replace(validSkillContent(skillName).split('\n')).join('\n'),
+    );
+    const result = await validateOatSkills(root);
+    return { skillPath, findings: result.findings };
+  }
+
+  it('accepts the valid fixture with no findings', async () => {
+    const { findings } = await validateOne(
+      'oat-strict-valid',
+      (lines) => lines,
+    );
+    expect(findings).toEqual([]);
+  });
+
+  it('reports a bare colon in an unquoted scalar with its file line and column', async () => {
+    const { skillPath, findings } = await validateOne(
+      'oat-strict-bare-colon',
+      (lines) =>
+        lines.map((line) =>
+          line.startsWith('description:')
+            ? 'description: Use when testing key: value'
+            : line,
+        ),
+    );
+    expect(findings).toContainEqual({
+      file: skillPath,
+      code: 'skill-frontmatter-unreadable',
+      severity: 'error',
+      message:
+        'Frontmatter must be a valid YAML mapping with unique keys (version could not be read): line 3, column 14: Nested mappings are not allowed in compact mappings',
+    });
+  });
+
+  it('reports a non-string name with its location', async () => {
+    const { skillPath, findings } = await validateOne(
+      'oat-strict-name',
+      (lines) =>
+        lines.map((line) => (line.startsWith('name:') ? 'name: 123' : line)),
+    );
+    expect(findings).toContainEqual({
+      file: skillPath,
+      code: 'skill-frontmatter-type',
+      severity: 'error',
+      message: 'Frontmatter key name must be a string (line 2, column 7)',
+    });
+  });
+
+  it('reports a non-boolean user-invocable with its location', async () => {
+    const { skillPath, findings } = await validateOne(
+      'oat-strict-invocable',
+      (lines) =>
+        lines.map((line) =>
+          line.startsWith('user-invocable:') ? 'user-invocable: "true"' : line,
+        ),
+    );
+    expect(findings).toContainEqual({
+      file: skillPath,
+      code: 'skill-frontmatter-type',
+      severity: 'error',
+      message:
+        'Frontmatter key user-invocable must be a boolean (line 5, column 17)',
+    });
+  });
+
+  it('reports a non-object metadata with its location', async () => {
+    const { skillPath, findings } = await validateOne(
+      'oat-strict-metadata',
+      (lines) =>
+        lines
+          .filter((line) => line !== '  version: 1.0.0')
+          .map((line) => (line === 'metadata:' ? 'metadata: [1.0.0]' : line)),
+    );
+    expect(findings).toContainEqual({
+      file: skillPath,
+      code: 'skill-frontmatter-unreadable',
+      severity: 'error',
+      message:
+        'Frontmatter must be a valid YAML mapping with unique keys (version could not be read): line 7, column 11: metadata must be a mapping',
+    });
+  });
+});
+
 describe('skill version resolution across both validators', () => {
   const tempDirs: string[] = [];
 
@@ -9853,7 +10003,7 @@ describe('skill version resolution across both validators', () => {
       code: 'skill-frontmatter-unreadable',
       severity: 'error',
       message:
-        'Frontmatter must be a valid YAML mapping with unique keys (version could not be read)',
+        'Frontmatter must be a valid YAML mapping with unique keys (version could not be read): line 3, column 11: metadata must be a mapping',
     });
   });
 
@@ -9873,7 +10023,7 @@ describe('skill version resolution across both validators', () => {
         code: 'skill-frontmatter-unreadable',
         severity: 'error',
         message:
-          'Frontmatter must be a valid YAML mapping with unique keys (version could not be read)',
+          'Frontmatter must be a valid YAML mapping with unique keys (version could not be read): line 4, column 11: metadata must be a mapping',
       },
     ]);
   });
@@ -9905,7 +10055,7 @@ describe('skill version resolution across both validators', () => {
         code: 'skill-frontmatter-unreadable',
         severity: 'error',
         message:
-          'Frontmatter must be a valid YAML mapping with unique keys (version could not be read)',
+          'Frontmatter must be a valid YAML mapping with unique keys (version could not be read): line 4, column 11: metadata must be a mapping',
       },
     ]);
   });
@@ -9981,7 +10131,7 @@ describe('skill version resolution across both validators', () => {
         code: 'skill-frontmatter-unreadable',
         severity: 'error',
         message:
-          'Frontmatter must be a valid YAML mapping with unique keys (version could not be read)',
+          'Frontmatter must be a valid YAML mapping with unique keys (version could not be read): line 4, column 11: metadata must be a mapping',
       },
     ]);
   });
@@ -10442,7 +10592,7 @@ describe('skill version resolution across both validators', () => {
         code: 'skill-frontmatter-unreadable',
         severity: 'error',
         message:
-          'Frontmatter must be a valid YAML mapping with unique keys (version could not be read)',
+          'Frontmatter must be a valid YAML mapping with unique keys (version could not be read): line 3, column 1: Map keys must be unique',
       },
     ]);
   });

@@ -1,7 +1,13 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import YAML, { isMap, isScalar, type YAMLMap } from 'yaml';
+import YAML, {
+  isMap,
+  isScalar,
+  LineCounter,
+  type Node,
+  type YAMLMap,
+} from 'yaml';
 
 export const PROJECT_STATE_KINDS = ['implementation', 'coordination'] as const;
 
@@ -309,6 +315,39 @@ export interface ParsedSkillFrontmatter {
   metadata?: { version?: string };
   malformed: boolean;
   unusableVersionDeclaration: boolean;
+  /** Why a `malformed` block is malformed, located within the block. */
+  problem?: FrontmatterProblem;
+}
+
+/**
+ * One problem in a frontmatter block. `line` and `column` are 1-based and
+ * relative to the block, which starts on the line after the opening `---`;
+ * they are null when the parser reports no position.
+ */
+export interface FrontmatterProblem {
+  line: number | null;
+  column: number | null;
+  message: string;
+}
+
+/** The parser's message without its trailing position and code frame. */
+function yamlErrorMessage(message: string): string {
+  return (message.split('\n')[0] ?? message)
+    .replace(/\s+at line \d+, column \d+:?\s*$/, '')
+    .trim();
+}
+
+function problemAt(
+  node: unknown,
+  lineCounter: LineCounter,
+  message: string,
+): FrontmatterProblem {
+  const offset = (node as Node | null | undefined)?.range?.[0];
+  if (offset === undefined) {
+    return { line: null, column: null, message };
+  }
+  const position = lineCounter.linePos(offset);
+  return { line: position.line, column: position.col, message };
 }
 
 export interface SkillVersionConflict {
@@ -367,9 +406,20 @@ function uniqueMapValue(map: YAMLMap, key: string): unknown {
  * indentation-based reader cannot tell a nested key from a top-level one.
  */
 export function parseSkillFrontmatter(block: string): ParsedSkillFrontmatter {
-  const document = YAML.parseDocument(block, { uniqueKeys: true });
-  if (document.errors.length > 0) {
-    return { malformed: true, unusableVersionDeclaration: false };
+  const lineCounter = new LineCounter();
+  const document = YAML.parseDocument(block, { uniqueKeys: true, lineCounter });
+  const error = document.errors[0];
+  if (error !== undefined) {
+    const position = error.linePos?.[0];
+    return {
+      malformed: true,
+      unusableVersionDeclaration: false,
+      problem: {
+        line: position?.line ?? null,
+        column: position?.col ?? null,
+        message: yamlErrorMessage(error.message),
+      },
+    };
   }
   if (!isMap(document.contents)) {
     return { malformed: false, unusableVersionDeclaration: false };
@@ -393,6 +443,7 @@ export function parseSkillFrontmatter(block: string): ParsedSkillFrontmatter {
       return {
         malformed: true,
         unusableVersionDeclaration: parsed.unusableVersionDeclaration,
+        problem: problemAt(metadata, lineCounter, 'metadata must be a mapping'),
       };
     }
     const metadataVersion = scalarStringValue(
@@ -406,6 +457,51 @@ export function parseSkillFrontmatter(block: string): ParsedSkillFrontmatter {
   }
 
   return parsed;
+}
+
+/**
+ * The YAML type each top-level skill frontmatter key must have when present.
+ * `metadata` is not listed: a non-mapping `metadata` already makes the block
+ * malformed in `parseSkillFrontmatter`, which reports it with its location.
+ */
+const SKILL_FRONTMATTER_KEY_TYPES = [
+  ['name', 'string'],
+  ['description', 'string'],
+  ['disable-model-invocation', 'boolean'],
+  ['user-invocable', 'boolean'],
+  ['allowed-tools', 'string'],
+] as const;
+
+/**
+ * Keys whose parsed YAML value has the wrong type, such as `name: 123` or
+ * `user-invocable: "true"`, each located within the block. A block that does
+ * not parse as a mapping yields nothing here; `parseSkillFrontmatter` reports
+ * it.
+ */
+export function findSkillFrontmatterTypeProblems(
+  block: string,
+): (FrontmatterProblem & { key: string })[] {
+  const lineCounter = new LineCounter();
+  const document = YAML.parseDocument(block, { uniqueKeys: true, lineCounter });
+  if (document.errors.length > 0 || !isMap(document.contents)) {
+    return [];
+  }
+
+  const problems: (FrontmatterProblem & { key: string })[] = [];
+  for (const [key, expected] of SKILL_FRONTMATTER_KEY_TYPES) {
+    if (!hasKey(document.contents, key)) {
+      continue;
+    }
+    const value = uniqueMapValue(document.contents, key);
+    const actual = isScalar(value) ? typeof value.value : 'collection';
+    if (actual !== expected) {
+      problems.push({
+        key,
+        ...problemAt(value, lineCounter, `${key} must be a ${expected}`),
+      });
+    }
+  }
+  return problems;
 }
 
 /**

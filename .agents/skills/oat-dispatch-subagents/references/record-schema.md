@@ -212,7 +212,7 @@ selection source.
 
 Before every managed, effort-pinned Claude implementer or reviewer launch,
 `oat-project-implement` runs `oat project dispatch record --event-file <file>
---json` without `--project` and requires `status: validated-only`. That input
+--json` and requires `status: validated-only`. That input
 replaces `record` with three top-level keys:
 
 - `claudeLaunch`, an object with three keys of its own:
@@ -361,10 +361,10 @@ be traded against another:
   strings; and
 - at most 16 KiB serialized per field.
 
-The whole record is additionally capped at 64 KiB, measured as the **published**
-bytes — the pretty-printed JSON plus trailing newline that is actually written
-to the journal, not compact `JSON.stringify` output. The two differ by roughly a
-tenth on a nested record, so size against the published form. Per-field
+The whole record is additionally capped at 64 KiB, measured as the **serialized**
+document — the pretty-printed JSON plus trailing newline, not compact
+`JSON.stringify` output. The two differ by roughly a tenth on a nested record,
+so size against the serialized form. Per-field
 projection limits above remain compact measurements, because they bound the
 shape of a field rather than the size of a file. A realistically rich record
 measures a few kilobytes, so these limits bind prompt bodies, transcripts, and
@@ -376,8 +376,9 @@ cannot fully account for is treated as sensitive rather than classified on a
 partial token. Store references, identifiers, and digests; never role content, message bodies,
 or credentials.
 
-Absolute filesystem paths are handled by field class, because the journal is
-committed and a home path in it is permanent:
+Absolute filesystem paths are handled by field class, because the validated
+record is printed verbatim and a caller may copy it into a committed artifact,
+where a home path is permanent:
 
 - **Identity and control fields reject them.** `caller`, `scope`, every
   selector, `selected_route`, the `guidance_*` fields, `authority`,

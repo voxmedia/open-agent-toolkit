@@ -11,10 +11,7 @@ import {
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
-import {
-  applyTemplateReplacements,
-  resolveTemplateSource as defaultResolveTemplateSource,
-} from '@commands/project/new/scaffold';
+import { applyTemplateReplacements } from '@commands/project/new/scaffold';
 import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
 import {
   buildSyncTarget,
@@ -27,6 +24,8 @@ import { replaceFrontmatter } from '@commands/shared/frontmatter-write';
 import { resolveProjectsRoot as defaultResolveProjectsRoot } from '@commands/shared/oat-paths';
 import { resolveProjectScope } from '@commands/shared/project-scope';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
+import { resolveTemplate as defaultResolveTemplate } from '@commands/shared/template-source';
+import { resolveAssetsRoot } from '@fs/assets';
 import { fileExists as defaultFileExists } from '@fs/io';
 import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
@@ -92,7 +91,7 @@ export interface ProjectPromoteDependencies {
     repoRoot: string,
     env: NodeJS.ProcessEnv,
   ) => Promise<string>;
-  resolveTemplateSource: typeof defaultResolveTemplateSource;
+  resolveTemplate: typeof defaultResolveTemplate;
   readFile: typeof defaultReadFile;
   writeFile: typeof defaultWriteFile;
   mkdir: typeof defaultMkdir;
@@ -112,7 +111,7 @@ const DEFAULT_DEPENDENCIES: ProjectPromoteDependencies = {
   buildCommandContext,
   resolveProjectRoot,
   resolveProjectsRoot: defaultResolveProjectsRoot,
-  resolveTemplateSource: defaultResolveTemplateSource,
+  resolveTemplate: defaultResolveTemplate,
   readFile: defaultReadFile,
   writeFile: defaultWriteFile,
   mkdir: defaultMkdir,
@@ -389,15 +388,18 @@ async function promoteProject(
     };
   }
 
-  const userOatRoot = join(context.home, '.oat');
+  const resolveProjectTemplate = async (name: string): Promise<string> =>
+    (
+      await dependencies.resolveTemplate({
+        name,
+        templatesRoot: join(repoRoot, '.oat', 'templates'),
+        home: context.home,
+        assetsRoot: () => resolveAssetsRoot(),
+      })
+    ).content;
   let liteTemplateContent: string;
   try {
-    const liteTemplatePath = await dependencies.resolveTemplateSource(
-      userOatRoot,
-      repoRoot,
-      'plan-lite.md',
-    );
-    liteTemplateContent = await dependencies.readFile(liteTemplatePath, 'utf8');
+    liteTemplateContent = await resolveProjectTemplate('plan-lite.md');
   } catch {
     return { status: 'refused', reason: 'template-unreadable', files: [] };
   }
@@ -423,13 +425,9 @@ async function promoteProject(
   let quickPlanContent: string;
   let quickStateContent: string;
   try {
-    const [discoveryTemplatePath, quickPlanTemplatePath] = await Promise.all([
-      dependencies.resolveTemplateSource(userOatRoot, repoRoot, 'discovery.md'),
-      dependencies.resolveTemplateSource(userOatRoot, repoRoot, 'plan.md'),
-    ]);
     const [discoveryTemplate, quickPlanTemplate] = await Promise.all([
-      dependencies.readFile(discoveryTemplatePath, 'utf8'),
-      dependencies.readFile(quickPlanTemplatePath, 'utf8'),
+      resolveProjectTemplate('discovery.md'),
+      resolveProjectTemplate('plan.md'),
     ]);
     discoveryContent = renderDiscovery(
       discoveryTemplate,

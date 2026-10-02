@@ -22,6 +22,7 @@ import { createReviewCommand } from './review';
 import { createStateCommand } from './state';
 import { createStatusCommand } from './status';
 import { createSyncCommand } from './sync';
+import { createTemplateCommand } from './template';
 import { createToolsCommand } from './tools';
 
 export function registerCommands(program: Command): void {
@@ -45,6 +46,7 @@ export function registerCommands(program: Command): void {
   program.addCommand(createPjmCommand());
   program.addCommand(createProjectCommand());
   program.addCommand(createStateCommand());
+  program.addCommand(createTemplateCommand());
   program.addCommand(createToolsCommand());
   program.addCommand(createInternalCommand());
   // Commander's .addCommand() does not inherit help config from the parent.

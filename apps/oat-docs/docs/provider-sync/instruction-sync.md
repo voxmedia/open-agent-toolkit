@@ -408,6 +408,14 @@ oat instructions validate --strategy symlink
 
 This keeps validation, preview, and repair aligned to the same expected file shape.
 
+`--force` never overwrites a `CLAUDE.md` that an `AGENTS.md` resolves to,
+whether through a symlink, a symlink chain, or a hard link, because that
+`CLAUDE.md` holds the only copy of the instructions behind the link. Sync plans
+a `skip` for it instead, with a reason such as
+`AGENTS.md resolves to this CLAUDE.md, so it holds the instructions; kept`, and
+leaves the file unchanged under every shim strategy, including in
+`--dry-run` previews. Resolve that link by hand before repairing the pair.
+
 ## Manual-Repair Cases
 
 Some states are intentionally surfaced as drift but not auto-repaired.

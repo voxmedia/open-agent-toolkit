@@ -18,7 +18,7 @@ Install the workflow skills with `oat tools install docs` (preferred) or
 - `oat docs init` bootstraps/adopts Markdown files or scaffolds a docs app (Fumadocs or MkDocs)
 - `oat docs migrate` converts MkDocs admonitions to GFM callouts and injects frontmatter
 - `oat docs generate-index` generates a Fumadocs app-root docs index manifest from the Markdown file tree
-- `oat docs nav sync` regenerates MkDocs `mkdocs.yml` nav from `index.md` `## Contents` sections
+- `oat docs nav sync` regenerates MkDocs `mkdocs.yml` nav, or strict Fumadocs `meta.json` files, from `index.md` `## Contents` sections
 - `oat docs analyze` and `oat docs apply` expose the workflow surface in CLI help
 
 ### Skills
@@ -69,7 +69,7 @@ skills.
 6. Verify files/links and refresh declared derived artifacts:
    - **Markdown:** use the configured root literally, including nested `docs`; authored indexes are editable. No app install/site build/nav sync is required. Optional manifests need explicit external output and never replace the authored config index.
    - **MkDocs:** `oat docs nav sync`
-   - **Fumadocs:** `oat docs generate-index` (runs automatically via `predev`/`prebuild` hooks)
+   - **Fumadocs:** `oat docs nav sync` for the committed `meta.json` sidebar files (it reports pages no `## Contents` map lists), and `oat docs generate-index` for the root manifest (runs automatically via `predev`/`prebuild` hooks)
 7. Run `oat-docs-analyze`; by default it verifies the generated analysis artifact
    through `workflow.autoArtifactReview.analysis`
 8. Review the artifact and run `oat-docs-apply`

@@ -1,7 +1,7 @@
 ---
 id: BL-260903-verify-the-packs-inventory
 title: Verify the packs:inventory path-redaction claim in troubleshooting docs
-status: open
+status: closed
 priority: low
 scope: task
 scope_estimate: XS
@@ -11,7 +11,7 @@ labels:
   - verification
 assignee: null
 created: 2026-09-03T17:54:25.647Z
-updated: 2026-09-03T17:54:25.647Z
+updated: '2026-10-01T19:47:57Z'
 associated_issues: []
 external_plans: []
 ---
@@ -28,5 +28,5 @@ Closing it means tracing the `packs:inventory` diagnostic's actual path handling
 
 ## Acceptance Criteria
 
-- {Outcome 1}
-- {Outcome 2}
+- The `packs:inventory` entry in `apps/oat-docs/docs/reference/troubleshooting.md` states what the code redacts: the project root and the home root, each only when that scope is part of the run, by literal replacement of the exact root path.
+- The entry states that paths outside those roots, such as a global bundle path in an assets error, stay absolute, matching `status/index.ts` (`unavailablePackReport`), `tools/shared/format-pack-inventory.ts` (`redactPackText`), and `doctor/index.ts` (the `packs:inventory` check).

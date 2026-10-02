@@ -1,0 +1,13 @@
+{
+  "title": "CLI Utilities",
+  "pages": [
+    "bootstrap",
+    "tool-packs",
+    "configuration",
+    "remote-project-management",
+    "config-and-local-state",
+    "project-log",
+    "backlog-lifecycle",
+    "workflow-gates"
+  ]
+}

@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash(git:*), Bash(gh:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.4.0
+  version: 1.4.1
 ---
 
 # Docs Apply
@@ -34,7 +34,7 @@ Generate or update documentation files from a docs analysis artifact, with expli
 **ALLOWED Activities:**
 
 - Reading analysis artifacts and the current docs surface.
-- Creating or updating docs files and `mkdocs.yml` when approved.
+- Creating or updating docs files and `mkdocs.yml` when approved. Fumadocs `meta.json` files change only through `oat docs nav sync`.
 - Running `oat docs nav sync` after approved structural changes.
 - Creating branches, commits, and optional PRs.
 
@@ -210,7 +210,7 @@ For each approved recommendation:
 When approved actions involve docs app creation or nav updates:
 
 - Use `oat docs init` for scaffolding when appropriate.
-- Use `oat docs nav sync` instead of manually editing nav when the CLI helper can generate it.
+- Use `oat docs nav sync` instead of manually editing nav when the CLI helper can generate it. In Fumadocs apps it writes strict `meta.json` files and reports pages no `## Contents` map lists (`unlisted` in `--json`); resolve a reported page through an approved `## Contents` change, never by hand-editing `meta.json`.
 
 Negative rules:
 

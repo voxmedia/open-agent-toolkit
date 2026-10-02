@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Glob, Grep, Bash(git:*), Bash(oat:*), Skill
 metadata:
-  version: 1.1.3
+  version: 1.1.4
 ---
 
 # Project Next
@@ -400,8 +400,17 @@ not_started`, null `launch_attempt_id`, `launch_started_at`,
   lowercase hexadecimal implementation/freshness digests are mandatory.
   Missing or malformed inputs route as stale. When HEAD differs from
   `freshness_head`, use the full raw Git byte algorithm read from the current
-  `oat-project-implement/SKILL.md`, with only its literal state-carrier
-  exclusion, rather than a remembered version of that algorithm. Verify
+  `oat-project-implement/references/completion-and-closeout.md` Step 14,
+  rather than a remembered version of that algorithm, and recompute each
+  stored value with its own version prefix and exclusion set. For a stored
+  `sha256:effective-delta-v2:<digest>` value, prefix the input with
+  `effective-delta-v2\0` and use Git's literal exclusion pathspecs
+  `:(exclude,literal)$PROJECT_PATH/state.md`, `:(exclude,literal).oat/projects`,
+  and `:(exclude,literal).oat/repo`, not globs. A descendant whose changes all
+  fall inside that set leaves the effective delta unchanged and is never stale.
+  For a stored `sha256:effective-delta-v1:<digest>` value, prefix the input
+  with `effective-delta-v1\0` and use only the literal exclusion pathspec
+  `:(exclude,literal)$PROJECT_PATH/state.md`; never reinterpret it as v2. Verify
   and ignore state-only checkpoint commits before classification. An unchanged
   qualified fingerprint preserves freshness across a merge, rebase, or base
   update but routes to `oat-project-implement` to persist the advanced rolling
@@ -412,16 +421,50 @@ not_started`, null `launch_attempt_id`, `launch_started_at`,
   other unrecognized change after `reviewed_head` invalidates the implementation
   fingerprint and routes to `oat-project-implement`. Do not reinterpret or
   migrate legacy state while routing.
+- Operator waivers in `oat_implement_exit_gate.waivers` follow the
+  **Operator waivers** rules read from the current
+  `oat-project-implement/references/completion-and-closeout.md` Step 14
+  rather than a remembered version of those rules, for v1 and v2 generations
+  alike. A descendant inside a valid waiver's `from_commit..to_commit` range
+  is waived; a substantive or unknown descendant
+  after the covered range routes as stale. Validate every entry: all six
+  fields, an operator `waived_by`, range ancestry, and a `covered_fingerprint`
+  recomputed with the generation's own version prefix and exclusion set; a
+  malformed or unverifiable waiver routes as stale. This read-only router never
+  writes, infers, or self-issues a waiver, under `OAT_AUTONOMOUS=1` or
+  otherwise. When an `allowed` generation routes as stale only because of
+  descendants no valid waiver covers, follow the exact stale announcement
+  above with that commit range and a note that an interactive operator may
+  record a waiver for that range when resuming `oat-project-implement`, which
+  offers it before persisting `stale`; under `OAT_AUTONOMOUS=1` the
+  announcement offers no waiver.
 
 Routing is read-only: announce stale or malformed state, but leave transition
 repair, gate execution, receive, and persistence to `oat-project-implement`.
 
 **5.1: Incomplete approval-aware post-implementation sequence**
 
-Before every other post-implementation route, inspect `oat_post_implement_sequence`
-in project state. When the snapshot exists and is incomplete, route to
-`oat-project-implement`. This applies even when `oat_phase_status` is `pr_open`
-or a summary exists. A completed snapshot falls through to the normal router.
+Before every other post-implementation route, run the read-only closeout
+check. It reads `oat_post_implement_sequence` from project state and also
+covers a closeout that owes a snapshot but has none:
+
+```bash
+CLOSEOUT_CHECK_ARGS=("$PROJECT_PATH" --json)
+if [ "${OAT_AUTONOMOUS:-}" = "1" ]; then
+  CLOSEOUT_CHECK_ARGS+=(--autonomous)
+fi
+CLOSEOUT_CHECK_EXIT=0
+CLOSEOUT_CHECK_JSON=$(oat project closeout-check "${CLOSEOUT_CHECK_ARGS[@]}") || CLOSEOUT_CHECK_EXIT=$?
+```
+
+When it reports `status: incomplete`, route to
+`oat-project-implement` and announce the reported `invariant` and `nextOwner`,
+for example: "Closeout incomplete (`snapshot_missing`) — resume with
+`oat-project-implement`." This applies even when `oat_phase_status` is `pr_open` or a summary exists, and
+covers a configured, autonomous, or lite closeout whose snapshot is absent or
+malformed. A command error routes the same way. Only `complete` (a completed
+snapshot) or `not_required` (no snapshot owed) falls through to the normal
+router. The check is read-only, so running it keeps this router read-only.
 
 **5.2: Incomplete revision tasks**
 

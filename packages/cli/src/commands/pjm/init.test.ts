@@ -455,7 +455,7 @@ describe('initializeRepoReference', () => {
     await expect(
       initializeRepoReference({ assetsRoot, repoRoot, templatesRoot, home }),
     ).rejects.toThrow(
-      'Template reference-agents.md was not found in repository, user, or bundled PJM templates.',
+      'Template reference-agents.md was not found in repository, user, or bundled templates.',
     );
     await expect(readOatConfig(root)).resolves.not.toHaveProperty('pjm');
   });

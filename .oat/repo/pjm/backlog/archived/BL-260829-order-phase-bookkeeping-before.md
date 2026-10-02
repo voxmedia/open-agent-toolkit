@@ -1,7 +1,7 @@
 ---
 id: BL-260829-order-phase-bookkeeping-before
 title: Order phase bookkeeping before per-phase review dispatch
-status: open
+status: closed
 priority: high
 scope: task
 scope_estimate: M
@@ -12,7 +12,7 @@ labels:
   - efficiency
 assignee: null
 created: 2026-08-29T19:18:15.323Z
-updated: 2026-09-28T01:42:28Z
+updated: '2026-10-01T19:47:57Z'
 associated_issues: []
 external_plans: []
 ---

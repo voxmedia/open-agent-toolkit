@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(awk:*), Bash(gh:*), Bash(git:*), Bash(mktemp:*), Bash(oat:*), Bash(rm:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.6.6
+  version: 1.6.7
 ---
 
 # Project PR (Final)
@@ -360,6 +360,14 @@ esac
 REPO_WEB="${REPO_WEB%.git}"
 ```
 
+Exit-gate waivers:
+
+- List every exit-gate waiver in the Verification section, one bullet per
+  entry in `oat_implement_exit_gate.waivers` in stored order:
+  `from_commit..to_commit` (short IDs), the fingerprint version, `waived_by`,
+  `waived_at`, and the `reason` copied exactly. Never omit, merge, or infer a
+  waiver; a waived generation is fresh only within its recorded range.
+
 Recommended template:
 
 ```markdown
@@ -388,6 +396,8 @@ oat_project: { PROJECT_PATH }
 ## Verification
 
 {what was run / expected (tests, lint, types, build)}
+
+{one bullet per entry in state.md oat_implement_exit_gate.waivers, when any exist: range, fingerprint version, who waived, when, and the reason}
 
 ## Reviews
 

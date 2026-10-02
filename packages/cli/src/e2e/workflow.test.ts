@@ -1720,17 +1720,9 @@ describe('dispatch runtime observation', () => {
     };
   }
 
-  async function seedProject(root: string): Promise<string> {
-    const projectPath = join(root, '.oat', 'projects', 'shared', 'demo');
-    await mkdir(projectPath, { recursive: true });
-    await writeFile(join(projectPath, 'state.md'), '# state\n', 'utf8');
-    return projectPath;
-  }
-
-  it('appends a matching observation revision and preserves the first one', async () => {
+  it('validates canonical-role and matching observation events, writing nothing', async () => {
     const root = await createWorkspace();
     tempRoots.push(root);
-    const projectPath = await seedProject(root);
 
     const canonicalFile = join(root, 'canonical.json');
     await writeFile(
@@ -1821,45 +1813,25 @@ describe('dispatch runtime observation', () => {
       'utf8',
     );
 
-    const first = await runCli(root, [
-      'project',
-      'dispatch',
-      'record',
-      '--project',
-      '.oat/projects/shared/demo',
-      '--event-file',
-      canonicalFile,
-    ]);
-    expect(first.exitCode).toBe(0);
-    const firstRevision = await readFile(
-      join(projectPath, 'dispatch', 'dispatch-native-1.json'),
-      'utf8',
+    const first = await runCli(
+      root,
+      ['project', 'dispatch', 'record', '--event-file', canonicalFile],
+      ['--json'],
     );
+    expect(first.exitCode).toBe(0);
+    const firstPayload = JSON.parse(first.stdout);
+    expect(firstPayload.status).toBe('validated-only');
+    expect(firstPayload.record.oat.canonicalRole.status).toBe('resolved');
 
     const second = await runCli(
       root,
-      [
-        'project',
-        'dispatch',
-        'record',
-        '--project',
-        '.oat/projects/shared/demo',
-        '--event-file',
-        observationFile,
-      ],
+      ['project', 'dispatch', 'record', '--event-file', observationFile],
       ['--json'],
     );
     expect(second.exitCode).toBe(0);
 
-    // Append-only: revision 1 is untouched and the observation lands on a new
-    // revision alongside it.
-    expect((await readdir(join(projectPath, 'dispatch'))).sort()).toEqual([
-      'dispatch-native-1.json',
-      'dispatch-native-1@0002.json',
-    ]);
-    await expect(
-      readFile(join(projectPath, 'dispatch', 'dispatch-native-1.json'), 'utf8'),
-    ).resolves.toBe(firstRevision);
+    // Validate-only: each event is checked on its own and nothing is written.
+    expect(await readdir(root)).not.toContain('dispatch');
 
     const payload = JSON.parse(second.stdout);
     expect(payload.runtimeIdentity).toMatchObject({
@@ -1868,14 +1840,12 @@ describe('dispatch runtime observation', () => {
       observed: { childLineage: 'depth-1', model: 'gpt-5.6-sol' },
       configured: { model: 'gpt-5.6-sol', effort: 'high' },
     });
-    expect(payload.record.oat.canonicalRole.status).toBe('resolved');
     expect(payload.record.model_selector).toBe('gpt-5.6-sol');
   });
 
   it('keeps Cursor not-reported and never emits an absolute path', async () => {
     const root = await createWorkspace();
     tempRoots.push(root);
-    await seedProject(root);
 
     const eventFile = join(root, 'cursor.json');
     await writeFile(
@@ -1904,15 +1874,7 @@ describe('dispatch runtime observation', () => {
 
     const reported = await runCli(
       root,
-      [
-        'project',
-        'dispatch',
-        'record',
-        '--project',
-        '.oat/projects/shared/demo',
-        '--event-file',
-        eventFile,
-      ],
+      ['project', 'dispatch', 'record', '--event-file', eventFile],
       ['--json'],
     );
     expect(reported.exitCode).toBe(0);
@@ -1932,8 +1894,6 @@ describe('dispatch runtime observation', () => {
         'project',
         'dispatch',
         'record',
-        '--project',
-        '.oat/projects/shared/demo',
         '--event-file',
         join(root, 'missing.json'),
       ],

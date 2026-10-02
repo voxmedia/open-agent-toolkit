@@ -1,6 +1,6 @@
 ---
 title: Docs Index Contract
-description: 'Docs source contract: authored Markdown context/maps, optional external inventories, Fumadocs manifests, and MkDocs nav sync.'
+description: 'Docs source contract: authored Markdown context/maps, optional external inventories, Fumadocs manifests and meta.json navigation, and MkDocs nav sync.'
 ---
 
 # Docs Index Contract
@@ -16,7 +16,7 @@ OAT docs navigation starts from authored `docs/**/index.md` files. Each `## Cont
 - Every `## Contents` link should use a `.md`-suffixed relative target, including child directory links such as `subdir/index.md`.
 - Do not hand-edit generated navigation or generated root-index artifacts.
 - For Fumadocs, refresh or freshness-check the generated app-root manifest after adding, removing, or renaming Markdown files. Compare that manifest against authored `## Contents` maps for drift; reordering `## Contents` does not reorder the generated manifest's file-tree sort.
-- For MkDocs, run `oat docs nav sync` after adding, removing, renaming, or reordering pages. It regenerates `mkdocs.yml` from authored `## Contents` maps and preserves the order declared in each local map.
+- Run `oat docs nav sync` after adding, removing, renaming, or reordering pages. It regenerates the framework's navigation from authored `## Contents` maps and preserves the order declared in each local map: the `nav:` block in `mkdocs.yml` for MkDocs, and one `meta.json` per docs directory for Fumadocs.
 
 ## `## Contents` format
 
@@ -52,7 +52,7 @@ never repoints the configured authored index.
 
 ## Fumadocs Generation
 
-For this Fumadocs app, rendered page routing and sidebar data come from the Fumadocs file/source pipeline over `apps/oat-docs/docs`. The generated root manifest, `apps/oat-docs/index.md`, is an inventory for agents and tooling; it is not the rendered sidebar/page-tree source.
+For this Fumadocs app, rendered page routing comes from the Fumadocs file/source pipeline over `apps/oat-docs/docs`, and the sidebar order comes from the committed `meta.json` files that `oat docs nav sync` writes (see [Fumadocs Nav Sync](#fumadocs-nav-sync)). The generated root manifest, `apps/oat-docs/index.md`, is an inventory for agents and tooling; it is not the rendered sidebar/page-tree source.
 
 `oat docs generate-index` walks the Markdown file tree under `docs/` and writes the app-root generated manifest. The app scripts run:
 
@@ -61,13 +61,30 @@ fumadocs-mdx
 pnpm -w run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md
 ```
 
-`oat docs generate-index` rewrites the generated root manifest from the docs source tree. It is the command to use after adding, removing, or retiring pages in this Fumadocs app. Do not use `oat docs nav sync` as the Fumadocs regeneration step.
+`oat docs generate-index` rewrites the generated root manifest from the docs source tree. Run it after adding, removing, or retiring pages in this Fumadocs app, and run `oat docs nav sync` as well so the sidebar's `meta.json` files follow the same change. The two commands produce different artifacts: `generate-index` writes the agent-facing inventory and `nav sync` writes the sidebar navigation.
 
 Fumadocs generated behavior:
 
 - Generated entries are ordered by the file-tree generator: `index.md` first, directories before files, then lexical order.
 - Reordering a `## Contents` block does not reorder the generated manifest's file-tree sort.
 - Generated manifests should carry an autogen warning and are rewritten by `predev` / `prebuild`.
+
+## Fumadocs Nav Sync
+
+In a Fumadocs app (detected by its `source.config.ts`), `oat docs nav sync --target-dir <docs-app-dir>` writes one `meta.json` beside every docs directory `index.md`. The files are generated and committed; edit the `## Contents` map, not the `meta.json`.
+
+Fumadocs generated behavior:
+
+- `pages` follows the order of the directory's `## Contents` links. The root list starts with `index`; a child directory appears by its folder name, and its own `index.md` becomes that folder's landing page. A folder whose `meta.json` keeps `root: true` also lists `index` first, because Fumadocs gives a root folder no implicit landing page.
+- Navigation is strict: there is no `"..."` rest entry. A page or folder that no `## Contents` map lists stays out of the sidebar, and the command reports it by path in its human output and in `--json` (`unlisted`). Add the page to its directory's `## Contents` map to show it.
+- A `## Contents` link to a page in another directory is written as a Fumadocs link entry such as `[Writing Skills](/contributing/skills)`, so each page belongs to exactly one folder.
+- A page or folder whose name Fumadocs would read as a `pages` directive, such as `!hidden`, `z...a`, `...name`, or `---`, is written in the local-path form `./!hidden` so it stays a page entry.
+- The folder `title` comes from the `index.md` frontmatter `title`, falling back to its first `#` heading.
+- Keys nav sync does not own, such as `icon` or `defaultOpen`, are kept.
+- Existing files are compared by meaning, not bytes, so a second run with no docs changes writes nothing, even after a formatter rewrites the files.
+- `.md` and `.mdx` pages can both be listed; each appears in `pages` by its file name without the extension.
+
+`oat docs nav sync --check` computes the same result and writes nothing. It exits 1 when a `meta.json` file would change or a page or folder is unlisted, and names each one. In this app, `prebuild` runs it, so `pnpm build:docs` fails until the `## Contents` maps and the committed `meta.json` files agree.
 
 ## MkDocs Nav Sync
 
@@ -84,7 +101,7 @@ MkDocs generated behavior:
 
 - Edit authored files under the resolved content root (`docs/` inside framework apps, or the literal configured Markdown root), especially the nearest `index.md` and `## Contents`.
 - Do not hand-edit a Fumadocs app-root generated `index.md`; regenerate it from the docs source tree.
-- Do not hand-maintain MkDocs `nav:` entries when the local workflow uses `oat docs nav sync`.
+- Do not hand-maintain MkDocs `nav:` entries or Fumadocs `meta.json` `pages` lists when the local workflow uses `oat docs nav sync`.
 - If a Fumadocs generated manifest lists pages that are missing from authored `## Contents`, treat that as authored-source drift or intentional generator-inventory behavior to verify before relying on the generated file as navigation evidence.
 
 ## Authoring guidance
@@ -92,7 +109,7 @@ MkDocs generated behavior:
 - Use `index.md` as the local discovery surface for humans and agents.
 - Add a short topic description next to each link so agents can choose the right file without opening every page.
 - Update `## Contents` whenever you add, remove, rename, or reorder docs files in a directory.
-- Markdown checks authored files/links, regenerating optional external manifests only when declared. Frameworks regenerate their artifact after structural changes: `generate-index` for Fumadocs root manifests, `nav sync` for MkDocs `mkdocs.yml`.
+- Markdown checks authored files/links, regenerating optional external manifests only when declared. Frameworks regenerate their artifacts after structural changes: `nav sync` for MkDocs `mkdocs.yml` and Fumadocs `meta.json` navigation, plus `generate-index` for Fumadocs root manifests.
 - Refresh or freshness-check the generated artifact before committing structural docs changes.
 
 ## If You Are Trying To...

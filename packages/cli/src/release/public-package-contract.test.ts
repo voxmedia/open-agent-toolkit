@@ -428,6 +428,75 @@ describe('getPublicPackageContracts', () => {
     ).toBe(false);
   });
 
+  // DR-260927-test-only-paths-skip: a path counts toward the lockstep version
+  // policy only if it can reach a published artifact, so each package ignores
+  // exactly the test paths its tsconfig leaves out of `dist` -- never more.
+  it("keeps each package's version-policy ignore patterns equal to its tsconfig test exclusion", async () => {
+    const repoRoot = fileURLToPath(new URL('../../../../', import.meta.url));
+    for (const contract of getPublicPackageContracts()) {
+      const tsconfig = JSON.parse(
+        await readFile(
+          join(repoRoot, contract.workspaceDir, 'tsconfig.json'),
+          'utf8',
+        ),
+      ) as { exclude?: string[] };
+      const testExclusion = (tsconfig.exclude ?? []).filter(
+        (pattern) => pattern !== 'node_modules' && pattern !== 'dist',
+      );
+      const testIgnores = contract.versionPolicyIgnorePatterns.filter(
+        (pattern) =>
+          !(
+            contract.workspaceDir === 'packages/cli' && pattern === 'assets/**'
+          ),
+      );
+      expect([...testIgnores].sort(), contract.workspaceDir).toEqual(
+        [...testExclusion].sort(),
+      );
+    }
+  });
+
+  it('ignores test-only paths but never shipped source for version policy', () => {
+    const contracts = getPublicPackageContracts();
+    const contractFor = (workspaceDir: string) =>
+      contracts.find((contract) => contract.workspaceDir === workspaceDir)!;
+
+    for (const [workspaceDir, path, ignored] of [
+      ['packages/cli', 'packages/cli/src/release/release-utils.test.ts', true],
+      ['packages/cli', 'packages/cli/src/release-utils.test.ts', true],
+      ['packages/cli', 'packages/cli/src/commands/__tests__/helpers.ts', true],
+      [
+        'packages/cli',
+        'packages/cli/src/release/public-package-contract.ts',
+        false,
+      ],
+      ['packages/cli', 'packages/cli/src/index.ts', false],
+      ['packages/cli', 'packages/cli/package.json', false],
+      [
+        'packages/control-plane',
+        'packages/control-plane/src/recommender/router.test.ts',
+        true,
+      ],
+      [
+        'packages/control-plane',
+        'packages/control-plane/src/recommender/router.ts',
+        false,
+      ],
+      ['packages/docs-config', 'packages/docs-config/src/index.test.ts', true],
+      ['packages/docs-config', 'packages/docs-config/src/index.ts', false],
+      [
+        'packages/docs-transforms',
+        'packages/docs-transforms/src/index.test.ts',
+        true,
+      ],
+      ['packages/docs-theme', 'packages/docs-theme/src/index.test.ts', false],
+    ] as const) {
+      expect(
+        isVersionPolicyIgnoredPath(contractFor(workspaceDir), path),
+        path,
+      ).toBe(ignored);
+    }
+  });
+
   it('reports missing build artifacts before packing', async () => {
     const docsThemeContract = getPublicPackageContracts().find(
       (contract) => contract.publicName === '@open-agent-toolkit/docs-theme',

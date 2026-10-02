@@ -1,5 +1,3 @@
-import { createHash } from 'node:crypto';
-
 import { z } from 'zod';
 
 import { redactAbsolutePathsDeep } from './absolute-paths';
@@ -86,155 +84,6 @@ const preStartRejectionCodeSchema = z
           : `A ${prohibited} outcome is not a pre-start native-selection rejection and never authorizes fallback or replacement.`,
     });
   });
-
-/**
- * Immutable configured controls across a fallback link.
- *
- * The rule, so a newly added generic field has a default: a field is immutable
- * when it describes the configured selection, the authorization for that
- * selection, or the evidence that justified it. A field is mutable when it
- * describes this record's own identity, how the work is briefed to its own
- * child, its own launch lifecycle, or its own child's observed behaviour. When
- * a new field is ambiguous, treat it as immutable — a false "controls
- * preserved" claim is worse than a false mismatch.
- *
- * All 46 generic fields are accounted for. The 31 immutable ones are listed
- * below. The 15 mutable ones, each with its reason:
- * - `request_id`: the fallback is a distinct request and must have its own ID.
- * - `caller`: the adapter layer that launches the fallback may differ.
- * - `objective`: a canonical-instruction fallback necessarily rebriefs the work
- *   for a generic child rather than a resolved role.
- * - `role_name`, `role_selector`: the fallback deliberately targets a generic
- *   worker; substituting the role is the whole point of the approximation, and
- *   the resolved role identity is bound separately through `roleInstructions`.
- * - `candidates_considered`: the fallback evaluated a different candidate set.
- * - `selection_reason`: constrained separately — a fallback must declare
- *   `pre-start-rejection`, which by definition differs from the trigger's.
- * - `launch_status`, `child_outcome`: each record's own lifecycle state.
- * - `runtime_confirmation`: observation of that record's own child. The
- *   fallback is a different child, so equality would be a false assertion.
- * - `diagnostics`: per-record narration. A fallback legitimately explains why
- *   it exists.
- * - `continuation_events`: continuation linkage belongs to the record that
- *   owns the handle.
- * - `expected_output`, `verification_evidence`, `escalate_when`: the brief
- *   given to this record's own child, in the same class as `objective`.
- *
- * Included even though they are evidence rather than controls, because they
- * record why the preserved selection was allowed:
- * - `configured_invocation_evidence`: names the configuration that authorized
- *   the preserved route.
- * - `catalog_snapshot`: names the catalog the selection was made against.
- * - `guidance_reference`, `guidance_version`, `guidance_verified_at`,
- *   `guidance_status`: name the dated model guidance behind the selection and
- *   how fresh it was; a fallback restating `stale` as `fresh` would misstate
- *   provenance for a preserved target.
- * - `classification_reason`: the rationale for `task_class`, which is itself a
- *   compared authorization control.
- */
-export const IMMUTABLE_FALLBACK_CONTROL_FIELDS = [
-  'provider',
-  'selection_source',
-  'model_selector',
-  'model_selector_granularity',
-  'effort_selector',
-  'reasoning_mode_selector',
-  'service_tier_selector',
-  'selected_route',
-  'authority',
-  'authorization_scope',
-  'deadline_seconds',
-  'retry_limit',
-  'payload',
-  'fallback',
-  'catalog_snapshot',
-  'configured_invocation_evidence',
-  'guidance_reference',
-  'guidance_version',
-  'guidance_verified_at',
-  'guidance_status',
-  'dispatch_context',
-  'dispatch_policy',
-  'dispatch_ceiling',
-  'scope',
-  'action',
-  'role_class',
-  'task_class',
-  'model_class_floor',
-  'classification_source',
-  'classification_reason',
-  'floor_satisfaction',
-] as const satisfies readonly (keyof GenericDispatchRecord)[];
-
-/**
- * The mutable complement, kept executable rather than only described above so a
- * newly added generic field fails `covers every generic dispatch field` until
- * somebody records a decision for it.
- */
-export const MUTABLE_FALLBACK_CONTROL_FIELDS = [
-  'request_id',
-  'caller',
-  'objective',
-  'role_name',
-  'role_selector',
-  'candidates_considered',
-  'selection_reason',
-  'launch_status',
-  'child_outcome',
-  'runtime_confirmation',
-  'diagnostics',
-  'continuation_events',
-  'expected_output',
-  'verification_evidence',
-  'escalate_when',
-] as const satisfies readonly (keyof GenericDispatchRecord)[];
-
-export function canonicalEvidenceJson(value: unknown): string {
-  if (Array.isArray(value)) {
-    return `[${value.map(canonicalEvidenceJson).join(',')}]`;
-  }
-  if (value !== null && typeof value === 'object') {
-    return `{${Object.entries(value as Record<string, unknown>)
-      .filter(([, entry]) => entry !== undefined)
-      .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
-      .map(
-        ([key, entry]) =>
-          `${JSON.stringify(key)}:${canonicalEvidenceJson(entry)}`,
-      )
-      .join(',')}}`;
-  }
-  return JSON.stringify(value ?? null);
-}
-
-function controlProjection(
-  record: GenericDispatchRecord,
-): Record<string, unknown> {
-  return Object.fromEntries(
-    IMMUTABLE_FALLBACK_CONTROL_FIELDS.map((field) => [
-      field,
-      record[field] ?? null,
-    ]),
-  );
-}
-
-export function configuredControlDigest(record: GenericDispatchRecord): string {
-  return `sha256:${createHash('sha256')
-    .update(canonicalEvidenceJson(controlProjection(record)))
-    .digest('hex')}`;
-}
-
-function differingControlFields(
-  left: GenericDispatchRecord,
-  right: GenericDispatchRecord,
-): string[] {
-  const leftControls = controlProjection(left);
-  const rightControls = controlProjection(right);
-  return IMMUTABLE_FALLBACK_CONTROL_FIELDS.filter(
-    (field) =>
-      canonicalEvidenceJson(leftControls[field]) !==
-      canonicalEvidenceJson(rightControls[field]),
-  );
-}
 
 const redactedPathSchema = z
   .string()
@@ -578,9 +427,10 @@ export function buildRuntimeObservation(input: {
 }
 
 /**
- * The rejected trigger owns the single-fallback right. Publishing a fallback
- * record requires this durable claim on the trigger first, so two concurrent
- * callers cannot each observe "no fallback yet" and then create their own.
+ * Record shape only. The fallback claim and the fallback link were published
+ * through the removed dispatch journal; no event kind writes either now, so a
+ * validated record carries `fallbackClaim: null` and a `not-applicable`
+ * fallback. The fields stay so the validated output keeps its shape.
  */
 const fallbackClaimSchema = z
   .object({
@@ -642,22 +492,6 @@ const oatDispatchEvidenceEventSchema = z.discriminatedUnion('kind', [
     .strict(),
   z
     .object({
-      kind: z.literal('fallback-claim'),
-      requestId: z.string().min(1),
-      source: z.literal('provider-wrapper'),
-      claim: fallbackClaimSchema,
-    })
-    .strict(),
-  z
-    .object({
-      kind: z.literal('fallback-link'),
-      requestId: z.string().min(1),
-      source: z.literal('provider-wrapper'),
-      evidence: fallbackDispatchSchema,
-    })
-    .strict(),
-  z
-    .object({
       kind: z.literal('runtime-observation'),
       requestId: z.string().min(1),
       source: z.literal('runtime-observer'),
@@ -706,17 +540,6 @@ function oatPart(
     : initialOatRecord();
 }
 
-function targetFor(record: GenericDispatchRecord): ExactTargetRef {
-  return {
-    provider: record.provider,
-    modelSelector: record.model_selector,
-    effortSelector: record.effort_selector,
-    reasoningModeSelector: record.reasoning_mode_selector ?? null,
-    serviceTierSelector: record.service_tier_selector ?? null,
-    selectedRoute: record.selected_route,
-  };
-}
-
 function assertMatchingRequest(
   record: GenericDispatchRecord,
   requestId: string,
@@ -750,8 +573,6 @@ export function parsePersistedOatDispatchRecord(
 export function augmentDispatchRecord(input: {
   record: GenericDispatchRecord | PersistedOatDispatchRecordV1;
   event: OatDispatchEvidenceEvent;
-  triggerRecord?: PersistedOatDispatchRecordV1;
-  relatedRecords?: readonly PersistedOatDispatchRecordV1[];
 }): PersistedOatDispatchRecordV1 {
   assertNoSensitiveDispatchContent(input.event);
   const event = oatDispatchEvidenceEventSchema.parse(input.event);
@@ -789,123 +610,6 @@ export function augmentDispatchRecord(input: {
         );
       }
       oat.preStartRejection = rejectionSchema.parse(event.rejection);
-      break;
-    }
-    case 'fallback-claim': {
-      const claim = event.claim;
-      if (record.launch_status !== 'blocked-before-start') {
-        throw new Error(
-          'Only a request blocked before start can claim a fallback.',
-        );
-      }
-      if (oat.preStartRejection === null) {
-        throw new Error(
-          'A fallback claim requires proven pre-start rejection evidence.',
-        );
-      }
-      if (
-        oat.canonicalRole === null ||
-        oat.canonicalRole.status !== 'resolved'
-      ) {
-        throw new Error(
-          'A fallback claim requires resolved canonical role evidence.',
-        );
-      }
-      if (
-        oat.fallbackClaim !== null &&
-        oat.fallbackClaim.fallbackRequestId !== claim.fallbackRequestId
-      ) {
-        throw new Error('The rejected request already has a fallback.');
-      }
-      oat.fallbackClaim = claim;
-      break;
-    }
-    case 'fallback-link': {
-      const trigger = input.triggerRecord
-        ? parsePersistedOatDispatchRecord(input.triggerRecord)
-        : null;
-      if (!trigger) {
-        throw new Error('Fallback requires the rejected trigger record.');
-      }
-      const evidence = fallbackDispatchSchema.parse(event.evidence);
-      if (
-        evidence.triggerRequestId !== trigger.request_id ||
-        evidence.fallbackRequestId !== record.request_id ||
-        trigger.launch_status !== 'blocked-before-start' ||
-        trigger.oat.preStartRejection === null ||
-        evidence.rejection.source !== 'provider-wrapper' ||
-        evidence.rejection.code !== trigger.oat.preStartRejection.code ||
-        evidence.rejection.rejectedAt !==
-          trigger.oat.preStartRejection.rejectedAt ||
-        evidence.rejection.provesNoChildStarted !== true
-      ) {
-        throw new Error(
-          'Fallback lacks matching pre-start rejection evidence.',
-        );
-      }
-      if (record.selection_reason !== 'pre-start-rejection') {
-        throw new Error(
-          'A fallback record must state selection_reason pre-start-rejection.',
-        );
-      }
-      if (
-        canonicalEvidenceJson(evidence.preservedTarget) !==
-          canonicalEvidenceJson(targetFor(record)) ||
-        canonicalEvidenceJson(targetFor(trigger)) !==
-          canonicalEvidenceJson(targetFor(record))
-      ) {
-        throw new Error(
-          'Fallback must preserve the exact target and controls.',
-        );
-      }
-      const changedControls = differingControlFields(trigger, record);
-      if (changedControls.length > 0) {
-        throw new Error(
-          `Fallback must preserve the exact target and controls; ${changedControls.join(', ')} changed.`,
-        );
-      }
-      if (
-        configuredControlDigest(trigger) !== configuredControlDigest(record)
-      ) {
-        throw new Error(
-          'Fallback must preserve the exact target and controls; the configured control digest changed.',
-        );
-      }
-      if (
-        trigger.oat.fallbackClaim === null ||
-        trigger.oat.fallbackClaim.fallbackRequestId !== record.request_id
-      ) {
-        throw new Error(
-          'The rejected trigger must durably claim this fallback request before the fallback can publish.',
-        );
-      }
-      const triggerRole = trigger.oat.canonicalRole;
-      if (triggerRole === null || triggerRole.status !== 'resolved') {
-        throw new Error(
-          'Fallback requires resolved canonical role evidence on the rejected trigger.',
-        );
-      }
-      if (
-        canonicalEvidenceJson(evidence.roleInstructions) !==
-        canonicalEvidenceJson(triggerRole)
-      ) {
-        throw new Error(
-          "Fallback role evidence must equal the trigger's resolved canonical role evidence exactly.",
-        );
-      }
-      if (
-        (input.relatedRecords ?? [])
-          .map(parsePersistedOatDispatchRecord)
-          .some(
-            (related) =>
-              related.oat.fallback.status === 'fallback-dispatch' &&
-              related.oat.fallback.triggerRequestId === trigger.request_id,
-          ) ||
-        oat.fallback.status === 'fallback-dispatch'
-      ) {
-        throw new Error('The rejected request already has a fallback.');
-      }
-      oat.fallback = evidence;
       break;
     }
     case 'runtime-observation':

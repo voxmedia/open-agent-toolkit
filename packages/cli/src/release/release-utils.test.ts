@@ -44,6 +44,30 @@ describe('findChangedWorkspaceDirsFromPaths', () => {
     ).toEqual(new Set(['packages/cli', 'packages/docs-theme']));
   });
 
+  it('ignores a CLI change limited to excluded test files', () => {
+    expect(
+      findChangedWorkspaceDirsFromPaths(
+        [
+          'packages/cli/src/release/release-utils.test.ts',
+          'packages/cli/src/commands/__tests__/helpers.ts',
+        ],
+        getPublicPackageContracts(),
+      ),
+    ).toEqual(new Set());
+  });
+
+  it('still tracks a non-test source change beside a test change', () => {
+    expect(
+      findChangedWorkspaceDirsFromPaths(
+        [
+          'packages/cli/src/release/release-utils.test.ts',
+          'packages/cli/src/release/public-package-contract.ts',
+        ],
+        getPublicPackageContracts(),
+      ),
+    ).toEqual(new Set(['packages/cli']));
+  });
+
   it('tracks shared public package changes for dependents and the package itself', () => {
     expect(
       findChangedWorkspaceDirsFromPaths(
@@ -62,6 +86,40 @@ describe('findChangedWorkspaceDirsFromPaths', () => {
         new Map([['packages/docs-config', ['packages/docs-transforms']]]),
       ),
     ).toEqual(new Set(['packages/docs-config', 'packages/docs-transforms']));
+  });
+});
+
+describe('findChangedWorkspaceDirsFromPaths with the real dependency map', () => {
+  // A path under a dependency root is judged by the ignore patterns of the
+  // package that owns it, not by the dependent's (DR-260927-test-only-paths-skip).
+  async function changedDirs(paths: readonly string[]): Promise<string[]> {
+    const contracts = getPublicPackageContracts();
+    const dependencyRoots =
+      await findVersionPolicyDependencyRootsByWorkspaceDir(contracts);
+    return [
+      ...findChangedWorkspaceDirsFromPaths(paths, contracts, dependencyRoots),
+    ].sort();
+  }
+
+  it('marks nothing for a control-plane test-only change', async () => {
+    await expect(
+      changedDirs(['packages/control-plane/src/recommender/router.test.ts']),
+    ).resolves.toEqual([]);
+  });
+
+  it('marks nothing for a docs-transforms test-only change', async () => {
+    await expect(
+      changedDirs(['packages/docs-transforms/src/index.test.ts']),
+    ).resolves.toEqual([]);
+  });
+
+  it('still marks a dependency and its dependents for a non-test source change', async () => {
+    await expect(
+      changedDirs(['packages/control-plane/src/recommender/router.ts']),
+    ).resolves.toEqual(['packages/cli', 'packages/control-plane']);
+    await expect(
+      changedDirs(['packages/docs-transforms/src/index.ts']),
+    ).resolves.toEqual(['packages/docs-config', 'packages/docs-transforms']);
   });
 });
 

@@ -346,15 +346,25 @@ export async function runFakeRecon(options = {}) {
           : reviewKind === 'contradiction-resolution'
             ? 'contradiction-resolution'
             : mode;
-      const claimId =
-        reviewKind === 'contradiction-resolution' ? 'claim-2' : 'claim-1';
+      // Every required review disposes of every claim, so no claim is left
+      // unreviewed: claim-2 stays contested on its adversarial challenge.
+      const claimIds =
+        reviewKind === 'contradiction-resolution'
+          ? ['claim-2']
+          : ['semantic', 'adversarial', 'coverage'].includes(reviewKind)
+            ? ['claim-1', 'claim-2']
+            : ['claim-1'];
+      const dispositionFor = (claimId) =>
+        claimId === 'claim-2' && reviewKind === 'adversarial'
+          ? 'challenged'
+          : disposition;
       const brief = createReviewBrief({
         id: `brief-${briefName}`,
         mode,
         createdAt: '2026-08-31T00:03:00.000Z',
         manifest: fixture.manifest,
         ledger: priorLedger,
-        claimIds: [claimId],
+        claimIds,
       });
       const briefRelative = `reviews/briefs/${briefName}.json`;
       const briefPath = join(roots.packetRoot, briefRelative);
@@ -379,7 +389,10 @@ export async function runFakeRecon(options = {}) {
         brief: briefReference,
         permittedInputs: [briefReference],
         excludedInputs: ['prior_reasoning'],
-        dispositions: [{ claimId, disposition }],
+        dispositions: claimIds.map((claimId) => ({
+          claimId,
+          disposition: dispositionFor(claimId),
+        })),
         newEvidence: [],
         coverageFindings: [],
         unresolvedIssues: [],

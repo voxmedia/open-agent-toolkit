@@ -409,8 +409,8 @@ function computeNextStep(
       reason: 'Continue quick discovery phase',
     },
     'quick:discovery:complete': {
-      step: 'oat-project-plan',
-      reason: 'Generate plan directly for quick workflow',
+      step: 'oat-project-quick-start',
+      reason: 'Generate the plan with the quick workflow',
     },
     'import:plan:in_progress': {
       step: 'oat-project-import-plan',

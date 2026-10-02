@@ -26,7 +26,7 @@
 - Docs Tooling
   - [Docs Tooling](docs-tooling/index.md) — Standalone adoption lane for Markdown and docs app setup, docs commands, and docs maintenance workflows.
   - [Add or Adopt Docs in a Repo](docs-tooling/add-docs-to-a-repo.md) — Step-by-step guide for adding or adopting OAT-managed documentation to a repository.
-  - [Documentation Commands](docs-tooling/commands.md) — Markdown bootstrap/adoption, framework scaffolding, external manifests, and framework navigation helpers.
+  - [Documentation Commands](docs-tooling/commands.md) — Markdown bootstrap/adoption, framework scaffolding, external manifests, and navigation helpers for both frameworks.
   - [Docs Workflows](docs-tooling/workflows.md) — Docs CLI helpers and skills for analysis and controlled documentation updates.
 - Guide
   - [User Guide](guide/index.md) — User-facing guide for operating OAT across provider sync, docs tooling, workflow execution, skills, and ideas.
@@ -42,7 +42,7 @@
 - Reference
   - [Reference](reference/index.md) — Durable reference material for OAT file locations, docs contracts, directory structure, and troubleshooting.
   - [CLI Reference](reference/cli-reference.md) — Scannable reference for the current OAT CLI surface, with links to the deeper owning sections for each command family.
-  - [Docs Index Contract](reference/docs-index-contract.md) — Docs source contract: authored Markdown context/maps, optional external inventories, Fumadocs manifests, and MkDocs nav sync.
+  - [Docs Index Contract](reference/docs-index-contract.md) — Docs source contract: authored Markdown context/maps, optional external inventories, Fumadocs manifests and meta.json navigation, and MkDocs nav sync.
   - [File Locations](reference/file-locations.md) — Canonical locations for agent assets, OAT config, projects, ideas, and templates.
   - [`.oat` Directory Structure](reference/oat-directory-structure.md) — Canonical .oat/ tree reference: config, projects, sync state, templates, and per-file purpose.
   - [Troubleshooting](reference/troubleshooting.md) — Common issues and fixes for skills visibility, worktrees, sync, and manifest problems.
