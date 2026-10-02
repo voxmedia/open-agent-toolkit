@@ -1458,6 +1458,38 @@ Expected: exit 0.
 
 ---
 
+### Task p06-t04: (review) Close p06 review findings M1, L1 (dashboard quick-plan parity)
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/state/generate.ts` (around 406-409 and
+  482-484)
+- Modify: `packages/cli/src/commands/state/generate.test.ts`
+
+**Step 1: Failing tests first**
+
+- M1: a quick project at `plan:complete` with a not-ready plan routes to
+  `oat-project-quick-start` on the dashboard, matching `recommendSkill`; a
+  ready plan still routes to `oat-project-implement` (two parity cases).
+- L1: a quick project at `plan:in_progress` with a pending `plan` HiLL
+  checkpoint gets the same route from the dashboard as from the router.
+
+**Step 2: Implement** by applying the readiness gate to every quick plan-phase
+status and ordering the HiLL check as the router does.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/control-plane build`,
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/state/generate.test.ts`,
+and `pnpm --filter @open-agent-toolkit/control-plane exec vitest run src/recommender/router.test.ts`.
+Expected: exit 0.
+
+**Step 4: Commit**
+
+`fix(p06-t04): align dashboard quick-plan routing with the router`
+
+---
+
 ## Phase 7: Release fan-in
 
 ### Task p07-t01: Bump the lockstep public packages to 0.3.14
@@ -1653,7 +1685,7 @@ rewrites the four inventory rows last.
 | p03    | code     | fixes_completed | 2026-10-02 | reviews/archived/p03-review-2026-10-02T195441Z.md           | 2f98690d8461effb013ee934efda7c8aab9f56eb | auto       | -                 |
 | p04    | code     | fixes_completed | 2026-10-02 | reviews/archived/p04-review-2026-10-02T204339Z.md           | ca1e002ac341e2553bc716b9338ea65daa251a79 | auto       | -                 |
 | p05    | code     | fixes_completed | 2026-10-02 | reviews/archived/p05-review-2026-10-02T220250Z.md           | 31b6ce71ddea67274a508334395454e00cb2935a | auto       | -                 |
-| p06    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| p06    | code     | fixes_added     | 2026-10-02 | reviews/archived/p06-review-2026-10-02T223808Z.md           | 64f04c1b42b5b202acdca4a4a8019f92a845104a | auto       | -                 |
 | p07    | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | final  | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
@@ -1686,10 +1718,10 @@ Quick-start plan gate attempt 2 of 2 (run `fe6bbe0a`): `blocked`, receive-eligib
 - Phase 3: 5 tasks - Sync correctness
 - Phase 4: 9 tasks - Review-loop skills
 - Phase 5: 6 tasks - Completion
-- Phase 6: 3 tasks - Small fixes
+- Phase 6: 4 tasks - Small fixes
 - Phase 7: 3 tasks - Release fan-in
 
-**Total: 37 tasks**
+**Total: 38 tasks**
 
 Ready for code review and merge.
 

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p07-t01
+oat_current_task_id: p06-t04
 oat_generated: false
 ---
 
@@ -31,10 +31,10 @@ oat_generated: false
 | Phase 3 | complete    | 5     | 5/5       |
 | Phase 4 | complete    | 9     | 9/9       |
 | Phase 5 | complete    | 6     | 6/6       |
-| Phase 6 | in_progress | 3     | 3/3       |
+| Phase 6 | in_progress | 4     | 3/4       |
 | Phase 7 | pending     | 3     | 0/3       |
 
-**Total:** 34/37 tasks completed
+**Total:** 34/38 tasks completed
 
 ---
 
@@ -241,6 +241,11 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** fee4b4c73
+
+### Task p06-t04: (review) Close p06 review findings M1, L1 (dashboard quick-plan parity)
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -601,6 +606,14 @@ check`, lint, build, type-check, isolated-HOME `turbo run test --force` 10/10
   router (outside the item's `plan:in_progress` scope). Root spot-check: recon
   suite passes.
   `Dispatch: scope=p06 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
+
+- Step 7a ledger commit `64f04c1b4` before the review.
+- Request `bw4-p06-review-1`: accepted; reconnaissance not-attempted;
+  `reviews/archived/p06-review-2026-10-02T223808Z.md`: 0 Critical, 0 High, 1 Medium,
+  1 Low (passes). Converted to `p06-t04`: M1 dashboard `plan:complete` with a
+  not-ready quick plan differs from the router; L1 pending plan HiLL ordering
+  differs at `plan:in_progress`.
+  `Dispatch: scope=p06 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
 
 <!-- orchestration-runs-end -->
 
