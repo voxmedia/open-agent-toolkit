@@ -54,11 +54,11 @@ oat_implement_exit_gate:
   }
 oat_post_implement_sequence:
   {
-    'status': 'pre_approval',
+    'status': 'awaiting_approval',
     'source': 'configured',
     'final_phase': 'p06',
     'pre_approval': ['summary', 'document', 'pr'],
-    'pre_approval_completed': ['summary', 'document'],
+    'pre_approval_completed': ['summary', 'document', 'pr'],
     'approval': 'pending',
     'approval_source': null,
     'post_approval': [],
@@ -81,7 +81,7 @@ oat_dispatch_policy:
   policy: high
   source: project-state
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Final review corrections and approval remain pending; PR is still open.
+oat_phase_status: in_progress # Final p06 approval remains pending; PR is still open.
 oat_phase_recovery_policy:
   default_attempt_limit: 10
   phase_attempt_usage:
@@ -160,7 +160,7 @@ oat_generated: false
 
 # Project State: docs-improvement-overhaul
 
-**Status:** All task implementations and independent final review/QA complete locally; configured exit gate, closeout sequence and final p06 approval remain pending. Pull request #342 is open, not merged.
+**Status:** All 23 task implementations, independent final review/QA, configured exit gate and pre-approval closeout steps are complete. Awaiting final p06 human approval. Pull request #342 is refreshed and open, not merged.
 **Started:** 2026-10-01
 **Last Updated:** 2026-10-02
 
@@ -173,8 +173,8 @@ Implementation is complete. Codex paused for a usage reset during phases 3–6 a
 - **Discovery:** `discovery.md` (complete through CLI validation)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; independently reviewed)
-- **Plan:** `plan.md` (20 tasks across 6 phases; added scope requires amendment review before p06)
-- **Implementation:** `implementation.md` (20/20 tasks; p01 superseded by main; p03–p06 closed under the Fable takeover)
+- **Plan:** `plan.md` (23 tasks across 6 phases; reviewed amendment incorporated)
+- **Implementation:** `implementation.md` (23/23 task implementations accepted; p01 superseded by main; p03–p06 authored under Fable takeover, with historical reviewer omissions disclosed)
 - **Review receipt:** `reviews/archived/plan-review-round-03.md` (gate provenance, fixes, independent verification and Fable final confirmation)
 - **References:** [Evidence index](references/index.md), including initial evaluations, the proposed IA, Fable's skill inventory advisory, and orchestration observations.
 
@@ -192,4 +192,4 @@ None.
 
 ## Next Milestone
 
-Pull request #342 is open. Merge and release are the user's decisions.
+Final p06 HiLL approval is required. Summary, documentation sync and the existing PR #342 refresh are complete. Project recap preference is unanswered, not skipped or generated; resolve it before recording approval. Resume with `oat-project-implement`. Merge and release remain separate user decisions.

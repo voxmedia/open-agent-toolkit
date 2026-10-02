@@ -15,7 +15,7 @@ oat_summary_includes_revisions: []
 
 OAT's documentation buried supported skills, separated source navigation intent from the rendered sidebar, and made independent adoption choices hard to evaluate. This quick-workflow project reorganized discovery and improved examples, configuration guidance, the README and visuals without treating missing documentation as permission to remove capabilities.
 
-All **23 task implementations across six phases** are recorded in [implementation.md](implementation.md). The configured implementation exit gate is allowed/passed, but **final approval remains pending**: the configured pre-approval sequence is summary → document → PR, and PR [#342](https://github.com/voxmedia/open-agent-toolkit/pull/342) is open, not merged. This completed summary is not project approval, merge or release.
+All **23 task implementations across six phases** are recorded in [implementation.md](implementation.md). The configured implementation exit gate is allowed/passed and summary → document → PR pre-approval steps are complete, but **final approval remains pending**. PR [#342](https://github.com/voxmedia/open-agent-toolkit/pull/342) is refreshed and open, not merged. This completed summary is not project approval, merge or release.
 
 ## What Was Implemented
 
@@ -70,7 +70,7 @@ Current nav flags follow main: old `docs nav sync --framework` and `--validate-o
 - **Configuration completeness:** 39 scoped exact-key/pattern gaps remain (36 remote-policy operation/provider fields, legacy `workflow.dispatchCeiling.providers.claude`, and project/user `sync.providers.<name>.strategy`). Family policy guidance exists but is not a complete per-key reference.
 - **Reader limits:** ideas-lifecycle phone-width labels remain difficult; the adjacent text equivalent is the supported recovery. Tool Packs, Workflow Gates and Dispatch Ceiling have backlogged restructuring needs; stability/support/non-goals wording requires the owner's own statement.
 - **Product scope:** roughly 46 discovered product defects/gaps were grouped into 25 `BL-261002-*` items, documented in [product-defects-found.md](references/product-defects-found.md). This project did not fix that product backlog. Its validator correction is real tooling work, not proof those product defects were resolved.
-- **Closeout boundary:** summary and document steps are complete; PR refresh and final approval remain root-owned. Local README cache hashing is a separate follow-up. No merge, release, installation or live-provider acceptance is implied by this summary.
+- **Closeout boundary:** summary, document and PR refresh are complete; final p06 approval is pending. Recap preference remains unanswered; no run or skip was inferred. Local README cache hashing is a separate follow-up. No merge, release, installation or live-provider acceptance is implied by this summary.
 
 ## Workflow Observations
 
@@ -113,3 +113,7 @@ target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:1,l
 ### 2026-10-02 · structural · oat-project-implement · p06
 
 docs-final-p06-accepted-2026-10-02: 23/23 task implementations accepted, non-author native final QA and final source review complete; configured gate passed/received with dispositions in implementation.md#final-gate-closeout; stored summary and document steps complete, PR refresh and p06 human approval pending.
+
+### 2026-10-02 · structural · oat-project-implement · final-hill
+
+docs-final-hill-pending-2026-10-02: STOP at configured p06 human approval after stored summary/document/PR sequence; review/QA and exit gate accepted, PR342 refreshed not merged, recap intent unanswered; state.md preserves awaiting_approval and resume owner oat-project-implement.

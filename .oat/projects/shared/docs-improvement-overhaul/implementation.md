@@ -246,6 +246,8 @@ Root read the entire automatic final re-review `reviews/archived/final-review-20
 
 ### Resumed dispatch and validation outcomes
 
+PR continuation completed at db29257a72b95eef29da02efc37cc9635bd0b895. Root read the complete PR artifact and final-summary diff, verified unchanged sequence/gate fields, physically resolving 23 ledger rows and the qualified effective fingerprint, and accepted eleven eligibility-bound review archives without altering bytes. Twelve unbound QA/persona/supplement artifacts remain active. Scoped formatting/body Markdownlint/diff checks exited zero. Root pushed `amphipod` (exit zero, including pre-push check) and refreshed existing PR #342 with the YAML-free body (exit zero); no duplicate PR, merge or release. Pre-approval steps are complete; the final p06 checkpoint is awaiting explicit user approval and recap intent remains unanswered.
+
 Document continuation completed at 3c1fa029b83344c63311c5b8c06995c8f78b3a0d and docs-only state marker at 02307b74cb1090124505a1b0ec6008e09dce9e27. Root read both complete diffs, accepted exactly two canonical `.agents/README.md` pointers plus truthful adopted-PJM reference refresh, and verified immutable sequence preservation. Twenty existing-parser Markdown links, docs validation, scoped formatting, state preservation and diff checks exited zero directly (no Turbo). Historical PJM doctor backlog-pointer warning remains outside this task. Document step is complete; the docs diff is an owned sequence output, not new implementation.
 
 Named PR request `pr-final-2026-10-02-final` accepted on the same `final_coverage_reconciliation` Sol 6.1/high native handle, managed high/default-implementation. Notices empty, runtime identity not reported. Owns only eligibility-bound review archive/reference repairs, current final-summary prose and the PR description. Root retains git push, GitHub edit, sequence/freshness and final approval. Existing PR #342 will be refreshed, not duplicated; no merge or release authority.
@@ -1158,7 +1160,7 @@ Eight ordered gates passed through 64a48da1e with partial execution and build/do
 
 Final correction re-review returned zero findings. The configured fresh non-author Claude gate passed High with 0 Critical / 0 High / 1 Medium / 2 Low; its different-family report covers four p01/p02 OpenAI stamps, not every Fable-authored phase. Ordered dispositions: M1 pointers fixed at 5e3bed75b; L1 README pointers fixed at 3c1fa029b; L2 local README Turbo hashing deferred, with direct docs:validate available. Gate waivers are empty.
 
-Summary and document are complete; PR #342 refresh is prepared for root publication, not published by this worker. Final p06 approval remains pending. Sequence arrays, gate/source/freshness fields and existing OPEN/non-draft PR state remain unchanged. Merge, release and the unanswered recap request are separate decisions.
+Summary, document and the existing PR #342 refresh are complete. Final p06 approval remains pending; state retains the stored sequence and allowed exit-gate provenance. Merge, release and the unanswered recap request are separate decisions.
 
 ## References
 
