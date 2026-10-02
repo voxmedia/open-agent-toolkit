@@ -12,7 +12,7 @@ labels:
   - gates
 assignee: null
 created: 2026-08-20T00:51:34.444Z
-updated: 2026-08-20T00:51:34.444Z
+updated: 2026-10-02T00:21:26Z
 associated_issues: []
 external_plans: []
 ---
@@ -38,3 +38,18 @@ and fail closed when the evidence no longer matches the current PR head. Source:
   exemption.
 - Tests cover current evidence, stale evidence, mixed receipts, post-review
   commits, and recovery after rerun across configured closeout sequences.
+
+## Markdown docs bootstrap retrospective evidence
+
+[RP-03: late documentation](../../../../projects/shared/markdown-docs-bootstrap/references/project-retro.md#rp-03-add-a-late-documentation-case-to-closeout-freshness-tracking)
+provides a real post-review control: accepted gate
+`39b33a8d-8a63-41e5-af34-145a5d525935` was followed by public-docs commit
+`420bceded`. The shipped documentation changed the gate fingerprint after
+summary/document/PR closeout steps had already completed.
+
+Resume must classify changed completed-step outputs, identify stale exact
+receipts, and refresh affected evidence before approval while preserving the
+completed sequence instead of resetting or reordering it. Public bundled docs
+must not inherit the project/reference bookkeeping exemption. This strengthens
+the existing freshness contract; it does not establish that current resume
+incorrectly approves stale work.
