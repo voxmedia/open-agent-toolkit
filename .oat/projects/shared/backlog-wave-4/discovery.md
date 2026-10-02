@@ -118,10 +118,23 @@ phase grouping and the two partial-scope items, covered under Key Decisions.
    companion skill that hard-fails unless `workflow.autonomousComplete` is
    enabled, runs the existing closeout check in autonomous mode plus the
    recorded objective preconditions, and then the completion tail. Batch mode
-   is deferred. `oat-wave-execute` points at it.
+   (several wave-wrapper projects at program close, each preflighted
+   individually) is in scope because it is one of the item's criteria and is
+   skill prose only. `oat-wave-execute` and `oat-wave-program` point at it.
 7. **Design depth (QS-04):** Straight to plan. Every item has acceptance
    criteria or a recorded decision, reconnaissance mapped the code, and no
    open architecture or component-boundary question remains.
+8. **Planning calls (QS-03, from reconnaissance evidence):**
+   - The idle kill counts stdout and stderr plus project-directory transcript
+     activity, with a 10-minute default window below the hard budget, so a
+     reviewer that writes nothing to stdout while working is not killed.
+   - The quick-start approval record and the condensed complexity-review
+     guidance are each defined once in a shared doc that the consuming skills
+     vendor by symlink, following the existing autonomy-contract pattern.
+   - The opt-in early complexity trigger is a `workflow.*` boolean that
+     defaults to off.
+   - Sibling gate-capable skills outside the item's list (plan, import-plan,
+     design, discover, lite) are a follow-up, filed at the fan-in.
 
 ## Constraints
 
