@@ -29,16 +29,19 @@ backlog items with evidence (bundle and asset-root hardening, gate budgets,
 nested-gate rejection and idle kill, sync restamping, a complexity review at
 every review and gate budget exhaustion, persisted quick-start approvals,
 root judgment logging, an opt-in autonomous completion skill, and four small
-fixes) and bump the lockstep packages to 0.3.13.
+fixes) and bump the lockstep packages to 0.3.14 (`main` reached 0.3.13
+through #335 during planning; the branch merged `origin/main` at `e19389cd2`).
 
-**Architecture:** Six sequential phases grouped by write set: build assets
+**Architecture:** Six sequential phases plus a release fan-in (seven in
+total), grouped by write set: build assets
 (p01), gate timeouts (p02), sync correctness (p03), review-loop skills (p04),
 completion (p05), small fixes (p06), and a release fan-in (p07).
 
 **Tech Stack:** TypeScript ESM CLI (`packages/cli`, vitest), control-plane
 (`packages/control-plane`), Bash build scripts, bundled skills under
-`.agents/skills` (canonical; `packages/cli/assets` is a generated, gitignored
-copy that is never edited) with shared docs under `.agents/docs`, `node --test`
+`.agents/skills` (canonical; `packages/cli/assets` is a generated copy that is never edited
+by hand, except the tracked `public-package-versions.json`, which the lockstep
+bump changes) with shared docs under `.agents/docs`, `node --test`
 skill suites, Fumadocs docs app (`apps/oat-docs`), oxfmt and oxlint.
 
 **Commit Convention:** `{type}({task-id}): {description}`, for example
@@ -65,18 +68,24 @@ needs `pnpm build` first.
   commit body.
 - Tests that exercise template resolution or anything reading `~/.oat` inject
   an isolated `HOME` (`HOME=$(mktemp -d)`).
-- Version bumps: bump a skill's `metadata.version` (or an agent role's
-  `version:`) only if `git diff origin/main -- <skill dir>` does not already
-  show a bump on this branch. Update every pin of that version in
+- Version bumps: every task bumps each skill whose bundled files it changes
+  (including a vendored shared doc under `references/docs/`), and each agent
+  role it changes, unless the branch already bumped it: check with
+  `git fetch origin main && git diff origin/main...HEAD -- <skill dir>`
+  (three dots, so changes that landed on `main` are not mistaken for this
+  branch's bump). Update every pin of that version in
   `packages/cli/src/validation/skills.test.ts` or the skill's own contract test
   in the same commit. Run `pnpm run check:skill-bumps` before committing.
 - A changed shared doc under `.agents/docs/` counts as a change to every skill
-  that vendors it through `references/docs/`; let `check:skill-bumps` decide
-  which bumps it requires.
+  that vendors it through `references/docs/`. `autonomy-contract.md` is
+  vendored by `oat-project-document`, `oat-project-implement`,
+  `oat-project-lite`, `oat-project-pr-final`, and `oat-project-quick-start`,
+  so the first task that edits it bumps all five (unless already bumped).
 - New prompt-like prose in lifecycle skills can trip
   `packages/cli/src/validation/autonomy-gate-inventory.test.ts`; add the
   printed `sha12 -> GATE-ID|NG` key to the "HEAD prompt-site coverage" table in
-  `.agents/docs/autonomy-contract.md`. New sentences that name an
+  `.agents/docs/autonomy-contract.md` in the same task's commit (p04-t08 only
+  rewrites the four inventory rows). New sentences that name an
   `oat-project-*` skill with an execution verb need a row in
   `packages/cli/src/validation/named-skill-load-contract.test.ts`.
 - Never `rm -rf` a variable path; use `mktemp -d` scratch directories.
@@ -93,8 +102,8 @@ needs `pnpm build` first.
 **Files:**
 
 - Modify: `packages/cli/scripts/bundle-assets.sh` (lines 8-10 build
-  `"${REPO_ROOT}/$(node "${INVENTORY}" --get <key>)"`; the directory copy is
-  around lines 93-95)
+  `"${REPO_ROOT}/$(node "${INVENTORY}" --get <key>)"`; staging is created by
+  the `mkdir -p` at line 42; the directory copy is at line 107)
 - Modify: `packages/cli/scripts/bundle-inputs.mjs` (`printValue`, around line 182)
 - Modify: `packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts`
 
@@ -104,8 +113,11 @@ In `bundle-consistency.test.ts`, add a case that copies `bundle-assets.sh` and
 a stub `bundle-inputs.mjs` (its `--get` prints an empty line) into
 `<mktemp>/packages/cli/scripts/`, so the temporary directory is the script's
 `REPO_ROOT`, and runs it with `OAT_ASSETS_DIR` pointing at another temporary
-directory. Assert a non-zero exit, a stderr message naming the empty key, and
-that no `.staging.*` directory or copied tree was created. Add a second case
+directory. Assert a non-zero exit and a stderr message naming the empty key;
+that message is the discriminating assertion (the current script also exits
+non-zero on the stub, and its EXIT trap removes staging), so also assert the
+guard fires before the `mkdir -p` at line 42 (for example, no staging
+directory is ever created, checked with a trap-proof marker). Add a second case
 for a lookup that resolves to the repository root (for example `.`). Reuse the
 existing `getBundleScriptPath`, `execFileSync('bash', ...)`, and
 `BUNDLE_ASSETS_TEST_TIMEOUT_MS` patterns. Confirm both fail against the
@@ -272,19 +284,29 @@ existing pattern; no fake timers): a child that prints every 30 ms with
 `idleTimeoutMs` 100 and a longer hard cap is not killed by the idle mechanism
 and outlives the idle window; a silent child is killed within the idle window
 with `timeoutKind: 'idle'`; a chatty child is stopped by the hard cap with
-`timeoutKind: 'hard'`. Add a case where project-directory probe evidence
-(`changedSinceBaseline` from a `project-dir` source) resets the idle clock,
-and one where `ambient-runtime` evidence does not. In `index.test.ts`, assert
+`timeoutKind: 'hard'`. Add a case where `project-dir` probe evidence advances
+(`lastChangeAt` or `totalSizeBytes` changes between consecutive liveness
+observations) and resets the idle clock; a case where that evidence changes
+once and then stays static, and the child is still killed with
+`timeoutKind: 'idle'` (the probe's `changedSinceBaseline` flag is cumulative,
+`activity-probes.ts` around 193-197, so it must not be used); and a case
+where `ambient-runtime` evidence never resets the clock. In `index.test.ts`, assert
 the envelope distinguishes idle kill, hard-cap kill, and the existing
 recovered-after-timeout path (`lateCompletion`).
 
 **Step 2: Implement**
 
 Add `idleTimeoutMs` to the run options and an idle checker that reuses the
-hard-timer kill path. Stdout, stderr, and project-directory transcript changes
-count as activity; ambient runtime evidence does not. Resolve the idle window
-as 600_000 ms by default, disabled when it is not below the hard budget, and
-never applied to `stdio: 'inherit'` runs. Report `timeoutKind` (`idle` or
+hard-timer kill path and samples probe evidence on the existing liveness tick
+(`child-process.ts` around 155-191). Stdout, stderr, and `project-dir`
+evidence that advanced since the previous observation count as activity;
+`ambient-runtime` evidence does not. Resolve the idle window as 600_000 ms by
+default, disabled when it is not below the hard budget, never applied to
+`stdio: 'inherit'` runs, and disabled by default for runtimes whose transcript
+evidence is only `ambient-runtime` (Codex, `activity-probes.ts` around 169):
+an outer Codex process can stay silent on stdout while a nested reviewer
+works, which is the incident behind this item, so Codex runs keep the hard
+cap only. Document this in `workflow-gates.md` and the PR callout. Report `timeoutKind` (`idle` or
 `hard`) in the structured envelope and diagnostics. The early-template write
 (item criterion 4) and the provider preflight and unavailable-target envelope
 (criteria 8-9) stay out of scope.
@@ -312,9 +334,14 @@ restore.
   340-365)
 - Modify: `packages/cli/src/engine/execute-plan.ts` (`ensureSkipEntryManaged`
   379-395; `toManifestEntry` 173-196)
+- Modify: `packages/cli/src/engine/engine.types.ts` (`SyncPlanEntry`,
+  `SyncOperationType`) and the renderers in
+  `packages/cli/src/commands/sync/dry-run.ts` and `apply.ts`, so the restamp is
+  visible in dry-run and JSON output
 - Modify: `packages/cli/src/engine/compute-plan.test.ts`,
-  `packages/cli/src/engine/execute-plan.test.ts`, and an end-to-end case in
-  `packages/cli/src/engine/engine.integration.test.ts` (or `edge-cases.test.ts`)
+  `packages/cli/src/engine/execute-plan.test.ts`, an end-to-end case in
+  `packages/cli/src/engine/engine.integration.test.ts` (or `edge-cases.test.ts`),
+  and the `commands/sync` tests for the rendered restamp
 
 **Step 1: Failing tests first**
 
@@ -340,7 +367,7 @@ or the legacy encoder; their retirement stays open.
 
 **Step 3: Verify**
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/engine src/drift`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/engine src/drift src/commands/sync`
 Expected: exit 0, including the detector's fused-forgery controls.
 
 **Step 4: Commit**
@@ -384,8 +411,11 @@ Expected: exit 0 (every current directory has a `SKILL.md`).
 **Files:**
 
 - Modify: `packages/cli/src/engine/compute-plan.ts` (and, if needed,
-  `packages/cli/src/engine/execute-plan.ts` `applyCopyMarker` around 222-233)
-- Modify: the matching engine tests
+  `packages/cli/src/engine/execute-plan.ts` `applyCopyMarker` around 222-233),
+  `packages/cli/src/engine/engine.types.ts`, and the renderers in
+  `packages/cli/src/commands/sync/dry-run.ts` and `apply.ts` for the new
+  entry-level error
+- Modify: the matching engine and `commands/sync` tests
 
 **Step 1: Failing test first**
 
@@ -401,7 +431,7 @@ error instead of planning `update_copy` on every run.
 
 **Step 3: Verify**
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/engine`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/engine src/commands/sync`
 Expected: exit 0.
 
 **Step 4: Commit**
@@ -623,17 +653,24 @@ Expected: exit 0.
 
 **Step 1: Write the doc**
 
-Define the shared lifecycle-gate record carried in project `state.md`:
-`status` (`allowed` | `blocked`), `disposition` (`passed` | `warned` |
-`prompt_approved` | `project_disabled`, or `null` when blocked),
-`config_fingerprint`, `reviewed_head`, and `decided_at` (ISO 8601 UTC). An
+Define the shared lifecycle-gate record carried in project `state.md`. The
+common core, used by both carriers: `status` (`allowed` | `blocked`),
+`disposition` (`passed` | `warned` | `prompt_approved` | `project_disabled`,
+or `null` when blocked), `config_fingerprint`, `reviewed_head` (the commit the
+gate reviewed, recorded as provenance), and `decided_at` (ISO 8601 UTC). In
+the same doc, define implement's `oat_implement_exit_gate` as a documented
+superset of that core (its additional `status` values `pending` and `stale`,
+disposition `no_gate`, `resolution`, and its effective-delta fields), so the
+shape is written down once and both enums are pinned. An
 explicit operator continuation after a `prompt` failure writes
 `allowed/prompt_approved`; declining or deferring writes `blocked`, never
 anything that reads as approval. Name the two carriers:
 `oat_implement_exit_gate` (implement, which keeps its additional fields) and
-`oat_quick_start_gate` (quick-start). Describe how readers validate a record:
-the fingerprint matches the currently resolved gate declaration and the
-reviewed head matches the reviewed bundle.
+`oat_quick_start_gate` (quick-start). Describe how readers validate a quick-start record: its
+`config_fingerprint` matches the currently resolved quick-start gate
+declaration. `reviewed_head` is not compared with `HEAD`, because Step 3.7
+commits after the gate; implement's record keeps its own effective-delta
+freshness rule.
 
 **Step 2: Wire it**
 
@@ -677,7 +714,7 @@ before escalation.
 
 Add the record write to the gate steps and Step 3.7 (completion only after an
 `allowed` record), and the complexity-review pointer at `maxAttempts`
-exhaustion and at the `prompt` stop. Bump `oat-project-quick-start`.
+exhaustion only (a single `prompt` failure is not a budget exhaustion). Bump `oat-project-quick-start`.
 
 **Step 3: Verify**
 
@@ -701,11 +738,16 @@ Expected: exit 0. Remove the approval write, show the pin fails, restore.
 
 **Step 1: Failing pins first**
 
-Next and progress read `oat_quick_start_gate` and `oat_implement_exit_gate`
-through the shared doc's validation rule: next routes a quick project whose
-configured plan gate has no valid `allowed` record back to
-`oat-project-quick-start`, and progress reports both records' status and
-disposition.
+Next and progress read `oat_quick_start_gate` through the shared doc's
+validation rule, alongside the implement record they already handle. The
+quick plan readiness predicate stays the single routing rule for quick plans
+(it is defined once in quick-start and mirrored by the control-plane router
+and, after p06-t03, the dashboard), so the record adds no route: after
+readiness passes, next reports a missing, `blocked`, or fingerprint-stale
+quick-start record as a warning in its recommendation, and progress reports
+both records' status and disposition. A pin fails when quick-start's
+approval write (p04-t06) is removed, because the readers' documented record
+no longer has a writer.
 
 **Step 2: Implement** the read paths, and bump `oat-project-next` and
 `oat-project-progress`.
@@ -800,7 +842,11 @@ Expected: exit 0.
   (`WORKFLOW_SKILL_NAMES`, around 162), `apps/oat-docs/docs/workflows/skills/index.md`,
   `apps/oat-docs/docs/cli-utilities/tool-packs.md` (if it enumerates the pack)
 - Modify: `packages/cli/src/validation/named-skill-load-contract.test.ts` rows
-  for any new `oat-project-*` execution sentences
+  for any new `oat-project-*` execution sentences; the guard pins go in a new
+  `packages/cli/src/commands/init/tools/shared/complete-auto-contracts.test.ts`
+- Modify (only if the skill has fenced project-artifact `git add` or
+  `git commit` lines): `packages/cli/src/validation/synced-bookkeeping-sites.json`
+  (`validateOatSkills` requires entries, `skills.ts` around 490-500)
 - Generated: `.claude/skills/oat-project-complete-auto` symlink and
   `.oat/sync/manifest.json` entry via `oat sync --scope project` (branch CLI)
 
@@ -828,7 +874,9 @@ the interactive skill's steps instead of copying them; `oat-project-complete`
 is unchanged. Register the skill in the bundle, the workflows pack, and the
 skill catalog; regenerate provider views with the branch CLI
 (`node packages/cli/dist/index.js sync --scope project`) and confirm a clean
-status afterward.
+status afterward. After p03-t01 the branch CLI may restamp unrelated stale
+manifest entries; commit that churn with the skill and say so in the commit
+body.
 
 **Step 3: Verify**
 
@@ -851,7 +899,8 @@ Expected: exit 0.
 - Modify: `.agents/skills/oat-wave-program/SKILL.md` (around 128-129)
 - Modify: a contract pin for the repointed step
 
-**Step 1: Failing pin first** that wave-execute's autonomous closeout step 8
+**Step 1: Failing pin first** (in `complete-auto-contracts.test.ts` from
+p05-t02) that wave-execute's autonomous closeout step 8
 invokes `oat-project-complete-auto` and no longer offers the as-document path.
 
 **Step 2: Implement** the repoint; bump `oat-wave-execute` and
@@ -1004,13 +1053,13 @@ Expected: exit 0.
 
 ## Phase 7: Release fan-in
 
-### Task p07-t01: Bump the lockstep public packages to 0.3.13
+### Task p07-t01: Bump the lockstep public packages to 0.3.14
 
 **Files:**
 
 - Modify: `packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`
-  and `packages/cli/assets/public-package-versions.json` if tracked, following
-  the file set of the 0.3.12 bump on `main`
+  and `packages/cli/assets/public-package-versions.json`, following the file
+  set of the 0.3.12 bump
   (`git show --stat 202dd1465` filtered to version files)
 
 **Step 1: Verify**
@@ -1021,7 +1070,7 @@ Expected: exit 0.
 
 **Step 2: Commit**
 
-`chore(p07-t01): bump lockstep public packages to 0.3.13`
+`chore(p07-t01): bump lockstep public packages to 0.3.14`
 
 ---
 
@@ -1029,7 +1078,8 @@ Expected: exit 0.
 
 **Step 1: Archive completed items with the branch CLI**
 
-After `pnpm build`, run `node packages/cli/dist/index.js backlog archive <id>
+Run `oat pjm doctor --json` and confirm `adoption.state` is `declared` before
+any PJM write. After `pnpm build`, run `node packages/cli/dist/index.js backlog archive <id>
 --summary "<outcome>"` for each item whose in-scope criteria all pass:
 `BL-261001-fail-closed-when-bundle-assets`,
 `BL-260906-report-errno-for-asset-root`, `BL-260718-harden-full-surface-gate`,
@@ -1039,14 +1089,15 @@ After `pnpm build`, run `node packages/cli/dist/index.js backlog archive <id>
 `BL-261001-downgrade-claims-that-thorough`,
 `BL-261001-resolve-the-summary-template`, `BL-261001-route-quick-mode-plan`
 (narrow its criteria to the dashboard first, citing the router and skill
-tables that already agree). Archive `BL-260908-retire-the-top-level-skill` as
-superseded by `BL-260908-remove-the-top-level-skill`.
+tables that already agree). Archive `BL-260908-retire-the-top-level-skill` with `--wont-do` and a
+summary saying it is superseded by `BL-260908-remove-the-top-level-skill`.
 
 **Step 2: Rewrite partial items in place**
 
 - `BL-260711-add-activity-aware-gate`: record the shipped idle kill and
   distinct outcomes; keep criteria 4 (early template write, after
-  `BL-260729-implement-reviewplan-first`), 8, and 9 open.
+  `BL-260729-implement-reviewplan-first`), 8, and 9 open, plus criterion 7's
+  live smoke-fixture verification.
 - `BL-260909-restamp-a-stale-copy-strategy`: record the shipped parts; keep
   only the bridge and legacy-encoder retirement open.
 - Add the Wave 4 complexity-review slice to
@@ -1055,7 +1106,8 @@ superseded by `BL-260908-remove-the-top-level-skill`.
 
 **Step 3: File the follow-up**
 
-Create a backlog item to wire the complexity review into the sibling
+With `node packages/cli/dist/index.js backlog new`, create a backlog item to
+wire the complexity review into the sibling
 gate-capable skills (`oat-project-plan`, `oat-project-import-plan`,
 `oat-project-design`, `oat-project-discover`, `oat-project-lite`), then run
 `backlog regenerate-index`.
@@ -1141,7 +1193,7 @@ quick-start in t05 and t06, the autonomy contract last in t08).
 |                                            | Version bumps and docs                                                       | p04-t03-t08               |
 | `BL-260927-persist-quick-start-prompt`     | Continuation persists `allowed/prompt_approved` in state                     | p04-t05, p04-t06          |
 |                                            | Decline or deferral persists nothing that reads as approval                  | p04-t05, p04-t06          |
-|                                            | Next and progress read it like implement's; removal test fails               | p04-t06, p04-t07          |
+|                                            | Next and progress read and report it; readiness predicate unchanged; pin     | p04-t06, p04-t07          |
 |                                            | Version bump; shape defined once                                             | p04-t05, p04-t06          |
 | `BL-260713-root-agent-judgment-logging`    | Root guidance logs judgment entries, including relayed observations          | p04-t03                   |
 |                                            | Subagents have no logging duties                                             | p04-t03                   |
@@ -1162,7 +1214,7 @@ quick-start in t05 and t06, the autonomy contract last in t08).
 
 ## PR Requirements
 
-- Title: `feat: gate budgets and idle kill, complexity review at review caps, autonomous completion skill (wave 4, lockstep 0.3.13)`.
+- Title: `feat: gate budgets and idle kill, complexity review at review caps, autonomous completion skill (wave 4, lockstep 0.3.14)`.
 - The body opens with a **Behavior changes** callout:
   - artifact gate reviews default to 30 minutes (was 15);
   - a second gate for the same project, review type, and scope is rejected
@@ -1180,7 +1232,9 @@ quick-start in t05 and t06, the autonomy contract last in t08).
   - new `workflow.autonomousComplete` and
     `workflow.complexityReviewEarlyTrigger` config keys (both default off) and
     the `oat-project-complete-auto` skill;
-  - the updated skills need `oat` 0.3.13 or later for the new config keys.
+  - Codex gate runs keep the hard cap only (no idle kill), because Codex
+    activity evidence cannot be attributed to the gate child;
+  - the updated skills need `oat` 0.3.14 or later for the new config keys.
 - After the behavior callout, a shipped summary: one plain-language problem
   statement per closed backlog item, plus the two partial items and what
   stays open.

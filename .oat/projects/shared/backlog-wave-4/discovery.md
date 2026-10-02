@@ -50,6 +50,8 @@ Housekeeping: close `BL-260908-retire-the-top-level-skill` as superseded by
 **Q:** Approve the 13-item batch as phases p01–p07, one PR, lockstep 0.3.13?
 **A:** Approve as proposed.
 **Decision:** One branch (`wave/2026-10-02-backlog-wave-4`), one PR, no merge.
+PR #335 merged to `main` at 0.3.13 during planning, so the branch merged
+`origin/main` and the lockstep target moved to 0.3.14.
 
 ### Question 2: complexity-review dependency
 
@@ -96,7 +98,7 @@ phase grouping and the two partial-scope items, covered under Key Decisions.
    help snapshots, and docs pages, so none run in parallel.
 2. **Versions:** Each skill gets one `metadata.version` bump in the final PR
    diff, made by the first phase that changes it. The fan-in owns the
-   five-package lockstep bump from 0.3.12 to 0.3.13.
+   five-package lockstep bump from 0.3.13 to 0.3.14.
 3. **Partial-scope items:** `BL-260711-add-activity-aware-gate` ships only the
    idle kill and distinct outcomes; the early-artifact-template step conflicts
    with ReviewPlan's incomplete-artifact rule (`BL-260729-implement-reviewplan-first`)
@@ -125,9 +127,12 @@ phase grouping and the two partial-scope items, covered under Key Decisions.
    criteria or a recorded decision, reconnaissance mapped the code, and no
    open architecture or component-boundary question remains.
 8. **Planning calls (QS-03, from reconnaissance evidence):**
-   - The idle kill counts stdout and stderr plus project-directory transcript
-     activity, with a 10-minute default window below the hard budget, so a
-     reviewer that writes nothing to stdout while working is not killed.
+   - The idle kill counts stdout, stderr, and project-directory transcript
+     activity that advanced since the previous observation, with a 10-minute
+     default window below the hard budget. Codex transcript evidence is
+     ambient and cannot be attributed to the gate child, and a silent outer
+     Codex process with a working nested reviewer is the incident behind the
+     item, so Codex runs keep the hard cap only.
    - The quick-start approval record and the condensed complexity-review
      guidance are each defined once in a shared doc that the consuming skills
      vendor by symlink, following the existing autonomy-contract pattern.
@@ -163,7 +168,7 @@ phase grouping and the two partial-scope items, covered under Key Decisions.
 - Every exhaustion point dispatches the complexity review before the decision
   message, with a contract pin per point.
 - `oat-project-complete-auto` refuses to run unless opted in.
-- The full Definition of Done passes, and the PR opens at lockstep 0.3.13 with
+- The full Definition of Done passes, and the PR opens at lockstep 0.3.14 with
   completed items archived and partial items rewritten.
 
 ## Out of Scope
