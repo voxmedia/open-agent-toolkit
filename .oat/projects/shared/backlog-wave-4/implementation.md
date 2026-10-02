@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p07-t05
+oat_current_task_id: p07-t06
 oat_generated: false
 ---
 
@@ -32,9 +32,9 @@ oat_generated: false
 | Phase 4 | complete    | 9     | 9/9       |
 | Phase 5 | complete    | 6     | 6/6       |
 | Phase 6 | complete    | 4     | 4/4       |
-| Phase 7 | in_progress | 5     | 4/5       |
+| Phase 7 | in_progress | 6     | 5/6       |
 
-**Total:** 39/40 tasks completed
+**Total:** 40/41 tasks completed
 
 ---
 
@@ -273,7 +273,12 @@ oat_generated: false
 **Status:** completed
 **Commit:** c44417bb4
 
-### Task p07-t05: Port wave 4 docs into the #342 docs restructure and bump to 0.3.15
+### Task p07-t05: Port wave 4 docs into the #342 docs restructure and bump to 0.3.16
+
+**Status:** completed
+**Commit:** 596e1dba0
+
+### Task p07-t06: (review) Close final review round 3 docs findings L1, L2
 
 **Status:** pending
 **Commit:** -
@@ -707,6 +712,28 @@ check`, lint, build, type-check, isolated-HOME `turbo run test --force` 10/10
   `workflows/skills/index.md`. Wave 4's edits to renamed pages merged
   automatically. Porting the two deleted pages' content and the 0.3.15 bump
   is `p07-t05`; the final review then re-reviews the merge and port.
+
+- Continuation `cont-backlog-wave-4-p07-fix-2`: `4221e5a6a` (p07-t05) ported
+  the autonomy paragraph, added the `oat-project-complete-auto` guide section
+  (excluded in `skill-docs.json` because it is not user-invocable), updated
+  the wave docs and repointed links and tests; it stopped `BLOCKED` when
+  `main` merged #350 (0.3.15) during its Definition of Done. The root merged
+  `origin/main` again at `1e6372906` (clean) and bumped the lockstep to 0.3.16
+  (`596e1dba0`, pushed).
+- Definition of Done at `596e1dba0`: every gate exit 0 (the forced test run
+  first failed only because #350's new `docs-theme` vitest dependency was not
+  installed; after `pnpm install --frozen-lockfile` the forced run passed
+  12/12 tasks, 0 cached).
+- Request `bw4-final-review-3` (narrowed `5bdf154cc..596e1dba0`, merges and
+  port): accepted; reconnaissance not-attempted;
+  `reviews/archived/final-review-2026-10-02T235758Z.md`: 0 Critical, 0 High, 1 Medium,
+  3 Low; no wave 4 behavior or docs lost in either merge. M1 (plan PR lines
+  said 0.3.15) and L3 (stale p07-t05 plan text) fixed by the root in plan.md;
+  L1 and L2 (two docs wording fixes) converted to `p07-t06`. This is the third
+  final-review round (the cycle cap): with 0 Critical/High and only wording
+  findings, the root records the final review as passed once `p07-t06` lands
+  and its docs checks pass; the configured Codex exit gate independently
+  reviews the final head.
 
 <!-- orchestration-runs-end -->
 

@@ -31,8 +31,9 @@ backlog items with evidence (bundle and asset-root hardening, gate budgets,
 nested-gate rejection, sync restamping, a complexity review at
 every review and gate budget exhaustion, persisted quick-start approvals,
 root judgment logging, an opt-in autonomous completion skill, and four small
-fixes) and bump the lockstep packages to 0.3.14 (`main` reached 0.3.13
-through #335 during planning; the branch merged `origin/main` at `e19389cd2`).
+fixes) and bump the lockstep packages to 0.3.16 (`main` reached 0.3.13
+through #335 during planning, 0.3.14 through #342 and 0.3.15 through #350
+during closeout; the branch merged `origin/main` each time).
 
 **Architecture:** Six sequential phases plus a release fan-in (seven in
 total), grouped by write set: build assets
@@ -1627,7 +1628,7 @@ Expected: exit 0.
 
 ---
 
-### Task p07-t05: Port wave 4 docs into the #342 docs restructure and bump to 0.3.15
+### Task p07-t05: Port wave 4 docs into the #342 docs restructure and bump to 0.3.16
 
 `main` merged #342 (reader-first docs site, lockstep 0.3.14) after p07-t01;
 the branch merged `origin/main` at `30526fef9`, accepting #342's deletion of
@@ -1638,12 +1639,13 @@ the branch merged `origin/main` at `30526fef9`, accepting #342's deletion of
 - Modify: `apps/oat-docs/docs/workflows/advanced/autonomy.md` (port the wave 4
   paragraph on the complexity review at budget exhaustion and the persisted
   quick-start gate outcome, with links to the moved pages)
-- Modify: the skill guide mapping read by `apps/oat-docs/scripts/skill-catalog.ts`
-  (add `oat-project-complete-auto`), `apps/oat-docs/docs/workflows/projects/closeout/closeout-skills.md`
-  (an `## oat-project-complete-auto` guide section), and the generated catalog
-  in `apps/oat-docs/docs/skills/index.md` (`pnpm docs:skills:generate`)
+- Modify: `apps/oat-docs/skill-docs.json` (exclude `oat-project-complete-auto`:
+  the mapping validator rejects a guide entry for a skill that is not
+  user-invocable), `apps/oat-docs/docs/workflows/projects/closeout/closeout-skills.md`
+  (an `## oat-project-complete-auto` guide section), and the hand-written Full
+  Catalog in `apps/oat-docs/docs/skills/index.md`
 - Modify: the five lockstep `package.json` files and
-  `packages/cli/assets/public-package-versions.json` (0.3.15)
+  `packages/cli/assets/public-package-versions.json` (0.3.16 after `main` reached 0.3.15 through #350)
 - Modify: any skill version that `check:skill-bumps` reports as not above
   `origin/main` after the merge, with its pins
 
@@ -1651,7 +1653,7 @@ the branch merged `origin/main` at `30526fef9`, accepting #342's deletion of
 locations, fix every link this wave added that points at a moved page, and add
 the new skill to the mapping, guide, and catalog.
 
-**Step 2: Bump** the lockstep packages to 0.3.15.
+**Step 2: Bump** the lockstep packages to 0.3.16.
 
 **Step 3: Verify**
 
@@ -1661,7 +1663,33 @@ p07-t03), including `pnpm docs:skills:check` and `pnpm build:docs`, and update
 
 **Step 4: Commit**
 
-`chore(p07-t05): port wave 4 docs into the restructured site and bump to 0.3.15`
+`chore(p07-t05): port wave 4 docs into the restructured site and bump to 0.3.15` (version commit: `chore(p07-t05): bump lockstep public packages to 0.3.16 after merging main`)
+
+---
+
+### Task p07-t06: (review) Close final review round 3 docs findings L1, L2
+
+**Files:**
+
+- Modify: `apps/oat-docs/docs/reference/configuration.md` (around line 893)
+- Modify: `apps/oat-docs/docs/workflows/approvals-and-automation.md` (cost
+  table around lines 77-92)
+
+**Step 1: Implement**
+
+- L1: the `workflow.autonomousComplete` text no longer says the companion
+  takes PR choices from `workflow.createPrOnComplete`; it never creates a PR.
+- L2: the cost table counts the read-only complexity-review run that happens
+  when a review or gate budget runs out.
+
+**Step 2: Verify**
+
+Run: `pnpm --filter oat-docs check` and `pnpm build:docs`.
+Expected: exit 0.
+
+**Step 3: Commit**
+
+`docs(p07-t06): correct the autonomous completion PR note and review costs`
 
 ---
 
@@ -1736,7 +1764,7 @@ rewrites the four inventory rows last.
 
 ## PR Requirements
 
-- Title: `feat: gate budgets and duplicate-gate rejection, complexity review at review caps, autonomous completion skill (wave 4, lockstep 0.3.15)`.
+- Title: `feat: gate budgets and duplicate-gate rejection, complexity review at review caps, autonomous completion skill (wave 4, lockstep 0.3.16)`.
 - The body opens with a **Behavior changes** callout:
   - artifact gate reviews default to 30 minutes (was 15);
   - a second gate for the same project, review type, and scope is rejected
@@ -1751,7 +1779,7 @@ rewrites the four inventory rows last.
     `oat_quick_start_gate`;
   - a new `workflow.autonomousComplete` config key (default off) and the
     `oat-project-complete-auto` skill;
-  - the updated skills need `oat` 0.3.15 or later for the new config keys.
+  - the updated skills need `oat` 0.3.16 or later for the new config keys.
 - After the behavior callout, a shipped summary: one plain-language problem
   statement per closed backlog item, plus the two items that stay open
   (`BL-260909-restamp-a-stale-copy-strategy` partially shipped;
@@ -1777,6 +1805,7 @@ rewrites the four inventory rows last.
 | p06    | code     | fixes_completed | 2026-10-02 | reviews/archived/p06-review-2026-10-02T223808Z.md           | 64f04c1b42b5b202acdca4a4a8019f92a845104a | auto       | -                 |
 | p07    | code     | passed          | 2026-10-02 | reviews/archived/p07-review-2026-10-02T230322Z.md           | 7d2b28957080760af8843b477654f759734bfc07 | auto       | -                 |
 | final  | code     | fixes_completed | 2026-10-02 | reviews/archived/final-review-2026-10-02T232314Z.md         | 44efc62242f5189fe466ec18967abeb64c8b5d94 | auto       | -                 |
+| final  | code     | fixes_added     | 2026-10-02 | reviews/archived/final-review-2026-10-02T235758Z.md         | 596e1dba070472918ed701de3437024fc17b563f | auto       | -                 |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
 | design | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
 | plan   | artifact | passed          | 2026-10-02 | -                                                           | -                                        | auto       | -                 |
@@ -1810,9 +1839,9 @@ Quick-start plan gate attempt 2 of 2 (run `fe6bbe0a`): `blocked`, receive-eligib
 - Phase 4: 9 tasks - Review-loop skills
 - Phase 5: 6 tasks - Completion
 - Phase 6: 4 tasks - Small fixes
-- Phase 7: 5 tasks - Release fan-in
+- Phase 7: 6 tasks - Release fan-in
 
-**Total: 40 tasks**
+**Total: 41 tasks**
 
 Ready for code review and merge.
 
