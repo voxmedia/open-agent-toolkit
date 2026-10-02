@@ -1,5 +1,5 @@
 import { mkdir, rm, writeFile } from 'node:fs/promises';
-import { dirname, join, relative, resolve } from 'node:path';
+import { dirname, join, normalize, relative, resolve } from 'node:path';
 
 import {
   copyDirectory,
@@ -382,6 +382,20 @@ function removeManifestEntry(
     : { ...manifest, entries, lastUpdated: new Date().toISOString() };
 }
 
+/**
+ * Whether two scope-relative manifest paths name the same location. A stored
+ * row may spell its path differently (`./.claude/skills/x`) from the form
+ * `resolveManifestPaths` produces; the planner compares normalized paths, so
+ * the restamp guard must too, or a planned restamp is silently dropped. The
+ * stored spelling itself is left unchanged.
+ */
+function sameManifestPath(left: string, right: string): boolean {
+  return (
+    normalize(left).replaceAll('\\', '/') ===
+    normalize(right).replaceAll('\\', '/')
+  );
+}
+
 async function ensureSkipEntryManaged(
   planEntry: SyncPlanEntry,
   manifest: ManifestV2,
@@ -402,7 +416,7 @@ async function ensureSkipEntryManaged(
     if (
       restampContentHash === undefined ||
       existing.strategy === 'collection' ||
-      existing.providerPath !== providerPath ||
+      !sameManifestPath(existing.providerPath, providerPath) ||
       existing.contentHash === restampContentHash
     ) {
       return manifest;

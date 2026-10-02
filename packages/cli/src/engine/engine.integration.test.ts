@@ -1466,6 +1466,76 @@ describe('sync engine integration', () => {
     },
   );
 
+  it('copy mode: restamps a row that spells the checked provider path differently', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
+    tempDirs.push(root);
+    const adapter = createTestAdapter({ defaultStrategy: 'copy' });
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    await seedCanonical(root);
+    const canonicalSkill = join(root, '.agents', 'skills', 'skill-one');
+
+    async function sync() {
+      const manifest = await loadManifest(manifestPath);
+      const plan = await computeSyncPlan({
+        canonical: await scanCanonical(root, 'project'),
+        adapters: [adapter],
+        manifest,
+        scope: 'project',
+        config: COPY_SYNC_CONFIG,
+        scopeRoot: root,
+      });
+      await executeSyncPlan(plan, manifest, manifestPath);
+      return plan;
+    }
+
+    await sync();
+    // Written as raw JSON and read back through `loadManifest`, so the
+    // equivalent `./` spelling passes the real manifest schema.
+    const synced = JSON.parse(
+      await readFile(manifestPath, 'utf8'),
+    ) as ManifestV2;
+    await writeFile(
+      manifestPath,
+      `${JSON.stringify(
+        {
+          ...synced,
+          entries: synced.entries.map((entry) =>
+            entry.canonicalPath === '.agents/skills/skill-one'
+              ? {
+                  ...entry,
+                  providerPath: './.claude/skills/skill-one',
+                  contentHash: 'c'.repeat(64),
+                }
+              : entry,
+          ),
+        },
+        null,
+        2,
+      )}\n`,
+      'utf8',
+    );
+    const { framed } = await computeDirectoryDigests(canonicalSkill);
+
+    const restampPlan = await sync();
+    expect(
+      restampPlan.entries.find((entry) => entry.canonical.name === 'skill-one'),
+    ).toMatchObject({ operation: 'skip', restampContentHash: framed });
+    const restamped = (await loadManifest(manifestPath)).entries.find(
+      (entry) => entry.canonicalPath === '.agents/skills/skill-one',
+    );
+    expect(restamped).toMatchObject({
+      providerPath: './.claude/skills/skill-one',
+      contentHash: framed,
+    });
+
+    const settledPlan = await sync();
+    expect(
+      settledPlan.entries.some(
+        (entry) => entry.restampContentHash !== undefined,
+      ),
+    ).toBe(false);
+  });
+
   it('copy mode: never restamps a row whose provider path differs from the checked path', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
     tempDirs.push(root);
