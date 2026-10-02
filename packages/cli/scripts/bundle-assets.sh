@@ -98,6 +98,17 @@ DISPATCH_MATRIX_RECOMMENDATION_SOURCE="$(require_inventory_path dispatchMatrix)"
 STAGING="${ASSETS}.staging.$$"
 PREVIOUS="${ASSETS}.previous.$$"
 
+# physical_path resolves directories, not files, so a symlinked source file
+# copied on its own would leave its target outside the containment check below,
+# and publishing onto the target's directory would delete the real file. The
+# repository's NOTICES.md is a regular file, so a link there is refused.
+INDIVIDUALLY_COPIED_SOURCE_FILES=("notices file|${REPO_ROOT}/NOTICES.md")
+for linked_source_entry in "${INDIVIDUALLY_COPIED_SOURCE_FILES[@]}"; do
+  if [ -L "${linked_source_entry#*|}" ]; then
+    fail_bundle "refusing to build: the ${linked_source_entry%%|*} (${linked_source_entry#*|}) is a symlink; an individually copied bundle source must be a regular file."
+  fi
+done
+
 # Publishing renames whatever sits at ASSETS to PREVIOUS and deletes it. This
 # check only requires an existing destination to be a directory, since a file
 # there is never a bundle and may be a canonical source; the containment check

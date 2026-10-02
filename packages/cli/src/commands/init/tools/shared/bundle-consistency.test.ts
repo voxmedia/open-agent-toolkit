@@ -6,6 +6,7 @@ import {
   mkdtempSync,
   readFileSync,
   readdirSync,
+  readlinkSync,
   realpathSync,
   rmSync,
   symlinkSync,
@@ -1135,6 +1136,41 @@ describe('bundle-assets fail-closed guards', () => {
         expect(readFileSync(join(tree.scratch, 'plain-file'), 'utf8')).toBe(
           'keep me\n',
         );
+      } finally {
+        rmSync(tree.scratch, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
+
+  // physical_path resolves directories, not files, so a linked NOTICES.md
+  // would leave its target unprotected: publishing onto the target's parent
+  // would delete the real file. A linked individually copied source is refused.
+  it(
+    'rejects a NOTICES.md symlink before any mutation, leaving link and target intact',
+    () => {
+      const tree = createStubBundleTree(VALID_STUB_INVENTORY);
+      try {
+        const targetDir = join(tree.scratch, 'elsewhere');
+        const target = join(targetDir, 'original.md');
+        const notices = join(tree.repoRoot, 'NOTICES.md');
+        mkdirSync(targetDir);
+        writeFileSync(target, '# Original notices\n');
+        rmSync(notices);
+        symlinkSync(target, notices);
+
+        const run = runStubBundle(tree, {
+          assetsDir: targetDir,
+          mode: 'refuse',
+        });
+
+        expectRejectedBeforeAnyCopy(
+          tree,
+          run,
+          /the notices file \(.*NOTICES\.md\) is a symlink/,
+        );
+        expect(readlinkSync(notices)).toBe(target);
+        expect(readFileSync(target, 'utf8')).toBe('# Original notices\n');
       } finally {
         rmSync(tree.scratch, { recursive: true, force: true });
       }
