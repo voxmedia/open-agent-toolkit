@@ -261,6 +261,144 @@ Acceptance: /root/phase01 (Ptolemy); holding before work until root supplies cle
 
 Phase implementation return: DONE_WITH_CONCERNS, three planned task commits in order, final source head52190849b5dfbb023e8c0dc93cb10e27d62ad3b4, original request/target/stamp unchanged, zero recovery attempts and no nested agents. The source-free output stop was resolved by root and remains disclosed. Full CI closure and independent review are not claimed passed. Same handle is retained for bounded findings.
 
+### p01 review dispatch
+
+```json
+{
+  "request_id": "docs-overhaul-run1-p01-review01",
+  "caller": "oat-project-implement",
+  "scope": "p01",
+  "objective": "Independent review of p01 source and current task ledger",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "reviewer",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "root-native-20261002",
+    "source": "agents.spawn_agent live schema",
+    "observed_at": "2026-10-02"
+  },
+  "authority": "Read reviewed source/artifacts; write only named review artifact; no source edits/publication/UI/nested agents",
+  "role_selector": "oat-reviewer-gpt-6-1-sol-high",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "materialized-native-role",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": ".agents/skills/subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-10-01",
+  "guidance_verified_at": "2026-10-01",
+  "guidance_status": "fresh",
+  "selection_source": "policy-resolved",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selection_reason": "configured-review-ceiling",
+  "selected_route": "native",
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Independent assurance of shipped source or expanded conservation/reader-evidence contracts",
+  "floor_satisfaction": "satisfied",
+  "deadline_seconds": 3600,
+  "retry_limit": 2,
+  "launch_status": "accepted",
+  "child_outcome": null,
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [],
+  "payload": {
+    "task_name": "phase01_review",
+    "agent_type": "oat-reviewer-gpt-6-1-sol-high",
+    "fork_turns": "none",
+    "reviewed_head": "6145054067bef937d74cf7e952a0c56da67f4264",
+    "scope": "p01",
+    "output": "reviews/p01-code-review-<UTC>.md",
+    "message_evidence": "Full Review Scope in accepted native tool invocation"
+  },
+  "configured_invocation_evidence": [
+    {
+      "source": "native payload and acceptance",
+      "agent_handle": "/root/phase01_review",
+      "role": "oat-reviewer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high"
+    }
+  ],
+  "dispatch_stamp": "Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high"
+}
+```
+
+### plan-amendment review dispatch
+
+```json
+{
+  "request_id": "docs-overhaul-phase06-amendment-review01",
+  "caller": "oat-project-implement",
+  "scope": "plan-amendment",
+  "objective": "Review whole-site conservation, persona, scenario and configuration scope amendment",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "reviewer",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "root-native-20261002",
+    "source": "agents.spawn_agent live schema",
+    "observed_at": "2026-10-02"
+  },
+  "authority": "Read reviewed source/artifacts; write only named review artifact; no source edits/publication/UI/nested agents",
+  "role_selector": "oat-reviewer-gpt-6-1-sol-high",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "materialized-native-role",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": ".agents/skills/subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-10-01",
+  "guidance_verified_at": "2026-10-01",
+  "guidance_status": "fresh",
+  "selection_source": "policy-resolved",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selection_reason": "configured-review-ceiling",
+  "selected_route": "native",
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Independent assurance of shipped source or expanded conservation/reader-evidence contracts",
+  "floor_satisfaction": "satisfied",
+  "deadline_seconds": 3600,
+  "retry_limit": 2,
+  "launch_status": "accepted",
+  "child_outcome": "completed: 0 critical, 0 high, 1 medium, 1 low",
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [],
+  "payload": {
+    "task_name": "phase06_amendment_review",
+    "agent_type": "oat-reviewer-gpt-6-1-sol-high",
+    "fork_turns": "none",
+    "reviewed_head": "6145054067bef937d74cf7e952a0c56da67f4264",
+    "scope": "plan-amendment",
+    "output": "reviews/phase06-plan-amendment-2026-10-02T045216Z.md",
+    "message_evidence": "Full Review Scope in accepted native tool invocation"
+  },
+  "configured_invocation_evidence": [
+    {
+      "source": "native payload and acceptance",
+      "agent_handle": "/root/phase06_amendment_review",
+      "role": "oat-reviewer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high"
+    }
+  ],
+  "dispatch_stamp": "Dispatch: scope=plan-amendment action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high"
+}
+```
+
 ## Implementation Log
 
 Task p01-t01 implemented and independently reconciled against HEAD; root task bookkeeping committed before the same phase handle continues. Phase review and release closure remain pending.
@@ -297,6 +435,12 @@ The p01-t02 formatter command recursively touched ignored metadata. Root narrowe
 ## Test Results
 
 Planning-only checks remain historical evidence. p01 focused tests, real-loader/pristine/installed-consumer/cache controls and Mini browser smoke are recorded per task above. Root full CI gate results will be recorded separately with actual exits/cache evidence before phase acceptance.
+
+Root first phase-gate sequence at committed head6145054067bef937d74cf7e952a0c56da67f4264: check0 (six executed/five cached), type-check0 (six executed/five cached), isolated-HOME test0, build0 (five cached), check:skill-bumps1. Remaining release gates were not run after this failure. Four changed skill versions need to exceed current origin/main, which advanced independently; source fixes/review and version alignment are pending. Receipts/logs: /tmp/docs-p01-gates/. Cached build is not new execution proof; prior six-task forced docs builds were actual execution.
+
+### Phase 6 amendment review disposition
+
+Artifact reviews/phase06-plan-amendment-2026-10-02T045216Z.md returned exactly `**Reconnaissance:** not-attempted`, with no Review Orchestration, and reviewed the exact authored614505406 head. Zero critical/high, one medium and one low. Root accepted M1: p04-t03 now explicitly owns existing validator/test files, durable skill-scenario-audit.md and scoped tooling/audit formatting with docs:test. Root accepted L1: current design/plan summaries now reflect six phases and separate implementation authorization, with implementation.md as progress authority. Artifact fixes were formatted and diff-checked; Fable amendment review remains pending. No automatic review-receive workflow was invoked and no implementation fix tasks created for artifact-only findings.
 
 ## Final Summary (for PR/docs)
 

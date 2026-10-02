@@ -232,13 +232,13 @@ Paths named in p04/p05 express the agreed destination intent. Resolve and rechec
 
 ### Task p04-t03: Author minimum useful family coverage
 
-**Files:** owner pages from reviewed mapping under docs `skills/`, `workflows/`, `docs-tooling/`, `contributing/`; affected index Contents.
+**Files:** owner pages from reviewed mapping under docs `skills/`, `workflows/`, `docs-tooling/`, `contributing/`; affected index Contents; existing `apps/oat-docs/scripts/skill-mapping.ts` and `apps/oat-docs/tests/skill-mapping.test.ts`; project `references/skill-scenario-audit.md`.
 
 **Work:** Give every eligible skill a meaningful stable anchor, invocation, verified prerequisite, concrete example scenario/use case and outcome/next step. A scenario states a realistic situation and what this skill does for it, not just a command or paraphrased description. Use the consistent `**Example scenario:**` marker inside every mapped anchor section. A shared family scenario must name which variant applies and why, with each anchor's scenario marker linking to that explanation. Add example invocations for arguments, modes or non-obvious phrasing; near-identical variants may share an example only with explicit variant selection. Shared when-to-use context belongs once per family. Link to generated source descriptions instead of copying them everywhere. No empty-anchor coverage or whole SKILL.md duplication. This is an explicit substantial authoring task; file-disjoint family batches may be delegated, root integrates indexes.
 
-**Verify:** Run `pnpm docs:skills:validate` without the pending flag; all mapped anchors exist with minimum useful fields and a scenario marker inside the correct section, not elsewhere on the page. Add this marker check and self-contained missing/wrong-section controls to the p04 validator/tests. A non-author verifies every scenario/example invocation against SKILL.md and records file:line evidence; markers alone cannot prove usefulness or accuracy. Examples promise no nonexistent flags/behaviors. `pnpm docs:validate`; `pnpm build:docs`. Minimum guides remain subject to review even when p05 will deepen them.
+**Verify:** Run `pnpm docs:skills:validate` without the pending flag; all mapped anchors exist with minimum useful fields and a scenario marker inside the correct section, not elsewhere on the page. Add this marker check and self-contained missing/wrong-section controls to the p04 validator/tests, executed through `pnpm docs:test`. A non-author verifies every scenario/example invocation against SKILL.md and records file:line evidence in `references/skill-scenario-audit.md`; markers alone cannot prove usefulness or accuracy. Examples promise no nonexistent flags/behaviors. `pnpm docs:validate`; `pnpm build:docs`. Minimum guides remain subject to review even when p05 will deepen them.
 
-**Format:** `pnpm --filter oat-docs docs:format`.
+**Format:** `pnpm --filter oat-docs docs:format`; `pnpm exec oxfmt --write apps/oat-docs/scripts/skill-mapping.ts apps/oat-docs/tests/skill-mapping.test.ts .oat/projects/shared/docs-improvement-overhaul/references/skill-scenario-audit.md`.
 
 **Commit:** `docs(p04-t03): cover every supported skill at a canonical owner`.
 
@@ -361,7 +361,7 @@ Complete seven journeys using sidebar/search/links/anchors: provider-sync-only i
 | p04            | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
 | p05            | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
 | p06            | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
-| plan-amendment | artifact | pending         | 2026-10-02 | reviews/phase06-plan-amendment.md                           | -                                        | manual     | -                    |
+| plan-amendment | artifact | fixes_completed | 2026-10-02 | reviews/phase06-plan-amendment-2026-10-02T045216Z.md        | 6145054067bef937d74cf7e952a0c56da67f4264 | auto       | -                    |
 | plan           | artifact | fixes_completed | 2026-10-01 | reviews/plan-review-round-01.md                             | 86aa78523952ec8e324d44dc4b61dfa961414e5e | auto       | -                    |
 | plan           | artifact | passed          | 2026-10-01 | reviews/plan-review-round-02.md                             | 884b56d80769cb4d94fa289f34e027973137e410 | auto       | -                    |
 | design         | artifact | passed          | 2026-10-01 | reviews/plan-review-round-02.md                             | 884b56d80769cb4d94fa289f34e027973137e410 | manual     | -                    |
@@ -376,7 +376,7 @@ Attempt 1 was artifact_validation_failed and ineligible for receipt; fixes_compl
 
 ## Implementation Complete
 
-Planned scope only: zero implementation tasks complete.
+Planned scope summary; implementation.md is the authoritative live task-progress ledger. Completion is not claimed by this heading.
 
 - Phase 1: 3 tasks — enforce navigation and authoring contracts.
 - Phase 2: 3 tasks — preserve information, migrate and repair consumers.
