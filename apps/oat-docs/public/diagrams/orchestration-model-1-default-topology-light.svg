@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 712" width="760" height="712" role="img" aria-labelledby="om1-title om1-desc">
+  <title id="om1-title">Default orchestration topology</title>
+  <desc id="om1-desc">Default orchestration topology. Solid implementation lane: Project root (lifecycle owner) to Project dispatch adapter to Provider-neutral dispatch engine to Phase implementer (one per phase), which produces two planned task commits. Dashed optional edge from the phase implementer to recon, specialist, or isolated fanout. Dashed independent review lane from the project root to the adapter; dashed exact reviewer route from the engine to the phase reviewer. The phase reviewer sends blocking findings to the project root, and the root resumes a bounded fix with the phase implementer. Dashed external gate lane from the project root to a configured cross-runtime gate.</desc>
+  <style>
+    svg {
+      --bg: #ffffff;
+      --node: #f4f6f9;
+      --node-em: #e8eef7;
+      --border: #c9d1dc;
+      --text: #16202e;
+      --text-2: #4b5563;
+      --accent: #1b4f8a;
+      --optional: #5d6a7c;
+    }
+    .canvas { fill: var(--bg); }
+    .node { fill: var(--node); stroke: var(--border); stroke-width: 1.5; }
+    .node-em { fill: var(--node-em); stroke: var(--accent); stroke-width: 1.5; }
+    .edge { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .edge-opt { fill: none; stroke: var(--optional); stroke-width: 1.5; stroke-dasharray: 5 4; }
+    .lifeline { fill: none; stroke: var(--border); stroke-width: 1.5; }
+    .head { fill: var(--accent); }
+    .head-opt { fill: var(--optional); }
+    .label-bg { fill: var(--bg); }
+    .sans { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; }
+    .mono { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; }
+    .t { fill: var(--text); font-size: 15px; font-weight: 600; }
+    .s { fill: var(--text-2); font-size: 13px; }
+    .lbl { fill: var(--text); font-size: 13px; }
+    .lbl-opt { fill: var(--text-2); font-size: 13px; font-style: italic; }
+  </style>
+  <defs>
+    <marker id="om1-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
+      <path class="head" d="M0 0 L10 5 L0 10 Z"/>
+    </marker>
+    <marker id="om1-arrow-opt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
+      <path class="head-opt" d="M0 0 L10 5 L0 10 Z"/>
+    </marker>
+  </defs>
+
+  <rect class="canvas" x="0" y="0" width="760" height="712" rx="12" ry="12"/>
+
+  <!-- Edges (drawn first so nodes sit on top) -->
+  <!-- Root  to  Adapter (implementation lane) -->
+  <path class="edge" d="M180 104 V183" marker-end="url(#om1-arrow)"/>
+  <!-- Root  dashed  independent review lane  to  Adapter -->
+  <path class="edge-opt" d="M300 104 V183" marker-end="url(#om1-arrow-opt)"/>
+  <!-- Adapter  to  Engine -->
+  <path class="edge" d="M240 240 V315" marker-end="url(#om1-arrow)"/>
+  <!-- Engine  to  P -->
+  <path class="edge" d="M240 384 V455" marker-end="url(#om1-arrow)"/>
+  <!-- P  to  T1, P  to  T2 -->
+  <path class="edge" d="M160 524 V619" marker-end="url(#om1-arrow)"/>
+  <path class="edge" d="M320 524 V619" marker-end="url(#om1-arrow)"/>
+  <!-- P  dashed  optional  to  Recon -->
+  <path class="edge-opt" d="M360 524 V560 Q360 568 368 568 H592 Q600 568 600 576 V619" marker-end="url(#om1-arrow-opt)"/>
+  <!-- Root  dashed  external gate lane  to  G -->
+  <path class="edge-opt" d="M370 58 H569" marker-end="url(#om1-arrow-opt)"/>
+  <!-- Root  to |resume bounded fix| P -->
+  <path class="edge" d="M110 70 H64 Q56 70 56 78 V482 Q56 490 64 490 H109" marker-end="url(#om1-arrow)"/>
+  <!-- Engine  dashed  exact reviewer route  to  R -->
+  <path class="edge-opt" d="M370 350 H442 Q450 350 450 358 V461" marker-end="url(#om1-arrow-opt)"/>
+  <!-- R  to |blocking findings| Root -->
+  <path class="edge" d="M540 462 V100 Q540 92 532 92 H371" marker-end="url(#om1-arrow)"/>
+
+  <!-- Edge labels -->
+  <rect class="label-bg" x="210" y="134" width="179" height="20" rx="4" ry="4"/>
+  <text class="sans lbl-opt" x="300" y="148" text-anchor="middle">independent review lane</text>
+  <rect class="label-bg" x="398" y="48" width="143" height="20" rx="4" ry="4"/>
+  <text class="sans lbl-opt" x="470" y="62" text-anchor="middle">external gate lane</text>
+  <rect class="label-bg" x="10" y="254" width="92" height="36" rx="4" ry="4"/>
+  <text class="sans lbl" x="56" y="268" text-anchor="middle">resume</text>
+  <text class="sans lbl" x="56" y="284" text-anchor="middle">bounded fix</text>
+  <rect class="label-bg" x="472" y="240" width="136" height="20" rx="4" ry="4"/>
+  <text class="sans lbl" x="540" y="254" text-anchor="middle">blocking findings</text>
+  <rect class="label-bg" x="371" y="410" width="158" height="20" rx="4" ry="4"/>
+  <text class="sans lbl-opt" x="450" y="424" text-anchor="middle">exact reviewer route</text>
+  <rect class="label-bg" x="445" y="558" width="70" height="20" rx="4" ry="4"/>
+  <text class="sans lbl-opt" x="480" y="572" text-anchor="middle">optional</text>
+
+  <!-- Root: Project root / lifecycle owner -->
+  <rect class="node-em" x="110" y="36" width="260" height="68" rx="8" ry="8"/>
+  <text class="sans t" x="240" y="65" text-anchor="middle">Project root</text>
+  <text class="sans s" x="240" y="87" text-anchor="middle">lifecycle owner</text>
+
+  <!-- G: Configured cross-runtime gate -->
+  <rect class="node" x="570" y="36" width="170" height="68" rx="8" ry="8"/>
+  <text class="sans t" x="655" y="66" text-anchor="middle">Configured</text>
+  <text class="sans t" x="655" y="86" text-anchor="middle">cross-runtime gate</text>
+
+  <!-- Adapter: Project dispatch adapter -->
+  <rect class="node" x="110" y="184" width="260" height="56" rx="8" ry="8"/>
+  <text class="sans t" x="240" y="217" text-anchor="middle">Project dispatch adapter</text>
+
+  <!-- Engine: Provider-neutral dispatch engine -->
+  <rect class="node" x="110" y="316" width="260" height="68" rx="8" ry="8"/>
+  <text class="sans t" x="240" y="346" text-anchor="middle">Provider-neutral</text>
+  <text class="sans t" x="240" y="366" text-anchor="middle">dispatch engine</text>
+
+  <!-- P: Phase implementer / one per phase -->
+  <rect class="node-em" x="110" y="456" width="260" height="68" rx="8" ry="8"/>
+  <text class="sans t" x="240" y="485" text-anchor="middle">Phase implementer</text>
+  <text class="sans s" x="240" y="507" text-anchor="middle">one per phase</text>
+
+  <!-- R: Phase reviewer -->
+  <rect class="node" x="420" y="462" width="160" height="56" rx="8" ry="8"/>
+  <text class="sans t" x="500" y="495" text-anchor="middle">Phase reviewer</text>
+
+  <!-- T1: Planned task commit -->
+  <rect class="node" x="90" y="620" width="140" height="64" rx="8" ry="8"/>
+  <text class="sans t" x="160" y="648" text-anchor="middle">Planned task</text>
+  <text class="sans t" x="160" y="668" text-anchor="middle">commit</text>
+
+  <!-- T2: Planned task commit -->
+  <rect class="node" x="250" y="620" width="140" height="64" rx="8" ry="8"/>
+  <text class="sans t" x="320" y="648" text-anchor="middle">Planned task</text>
+  <text class="sans t" x="320" y="668" text-anchor="middle">commit</text>
+
+  <!-- Recon: Recon / specialist / isolated fanout -->
+  <rect class="node" x="480" y="620" width="240" height="64" rx="8" ry="8"/>
+  <text class="sans t" x="600" y="648" text-anchor="middle">Recon / specialist /</text>
+  <text class="sans t" x="600" y="668" text-anchor="middle">isolated fanout</text>
+</svg>

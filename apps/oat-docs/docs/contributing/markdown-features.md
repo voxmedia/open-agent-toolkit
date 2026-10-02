@@ -62,12 +62,14 @@ Fenced code blocks with `mermaid` are rendered as diagrams.
       A[Read docs tree] --> B[Generate index]
     ```
 
-Click or tap a rendered Mermaid diagram to open it full screen. Press Escape
-or click again to close it.
+Rendered Mermaid diagrams use the site palette. Click or tap one to open it
+full screen at a legible size; on a phone, pan to see the rest. Press Escape,
+the close button, or click again to close it.
 
 ## Images and Diagram SVGs
 
-Every Markdown image opens in a zoom view when clicked. Put images under
+Every Markdown image opens in a zoom view when clicked. SVG images open full
+screen at a legible size, like Mermaid diagrams. Put images under
 `public/` and link them with a root-relative path such as
 `/diagrams/name.svg`; the site adds its base path.
 

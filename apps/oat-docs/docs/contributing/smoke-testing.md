@@ -22,19 +22,26 @@ outcome of any particular run.
 
 ## Data flow
 
-```mermaid
-flowchart TD
-  F["Fixture template\ntools/smoke/fixture/"] --> PRE["Preflight\ninstall + auth + fixture + local oat"]
-  PRE -->|blocked| STOP["Exit before provisioning"]
-  PRE -->|ready| PREP["Prepare / provision\ndisposable worktree + isolated config + manifest"]
-  PREP --> DRIVE["Drive\nper-harness protocol"]
-  DRIVE --> AUTO["Automated: runner launches provider"]
-  DRIVE --> OP["Operator: printed command + prompt"]
-  AUTO --> COLLECT["Collect\nevidence bundle + report"]
-  OP --> COLLECT
-  COLLECT --> CLEAN["Cleanup\nmanifest-scoped"]
-  COLLECT -.->|--keep| SKIP["Cleanup skipped"]
-```
+=== "Diagram"
+
+    ![Smoke-test flow: fixture template, preflight (exit before provisioning if blocked), prepare and provision, drive automatically or by an operator, collect evidence, then manifest-scoped cleanup, skipped with --keep](/diagrams/smoke-testing-light.svg)
+    ![Smoke-test flow: fixture template, preflight (exit before provisioning if blocked), prepare and provision, drive automatically or by an operator, collect evidence, then manifest-scoped cleanup, skipped with --keep](/diagrams/smoke-testing-dark.svg)
+
+=== "Mermaid source"
+
+    ```mermaid
+    flowchart TD
+      F["Fixture template\ntools/smoke/fixture/"] --> PRE["Preflight\ninstall + auth + fixture + local oat"]
+      PRE -->|blocked| STOP["Exit before provisioning"]
+      PRE -->|ready| PREP["Prepare / provision\ndisposable worktree + isolated config + manifest"]
+      PREP --> DRIVE["Drive\nper-harness protocol"]
+      DRIVE --> AUTO["Automated: runner launches provider"]
+      DRIVE --> OP["Operator: printed command + prompt"]
+      AUTO --> COLLECT["Collect\nevidence bundle + report"]
+      OP --> COLLECT
+      COLLECT --> CLEAN["Cleanup\nmanifest-scoped"]
+      COLLECT -.->|--keep| SKIP["Cleanup skipped"]
+    ```
 
 Collection runs even when the drive stage fails, so a broken run still produces
 an evidence bundle before cleanup reclaims its resources.

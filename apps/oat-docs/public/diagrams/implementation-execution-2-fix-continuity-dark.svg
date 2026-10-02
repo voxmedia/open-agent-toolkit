@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 612" width="720" height="612" role="img" aria-labelledby="ie2-title ie2-desc">
+  <title id="ie2-title">Fix continuity sequence</title>
+  <desc id="ie2-desc">Sequence between Root, the phase implementer and the phase reviewer. 1. Root sends the phase implementer the Phase Scope (request_id=A). 2. The phase implementer replies DONE plus task commits. 3. Root asks the phase reviewer to review the phase commit range. 4. The reviewer replies with Critical / High findings. 5. Root resumes A in fix mode. 6. The phase implementer replies with a fix commit plus verification. 7. Root starts a new independent review round with the phase reviewer. 8. The reviewer replies Pass.</desc>
+  <style>
+    svg {
+      --bg: #161d27;
+      --node: #1d2633;
+      --node-em: #1f2d42;
+      --border: #2b3646;
+      --text: #dde4ee;
+      --text-2: #9ba7b8;
+      --accent: #8fb6ee;
+      --optional: #8693a5;
+      --warn: #f0a868;
+    }
+    .canvas { fill: var(--bg); }
+    .node { fill: var(--node); stroke: var(--border); stroke-width: 1.5; }
+    .node-em { fill: var(--node-em); stroke: var(--accent); stroke-width: 1.5; }
+    .lifeline { fill: none; stroke: var(--border); stroke-width: 1.5; }
+    .msg { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linecap: round; }
+    .reply { fill: none; stroke: var(--optional); stroke-width: 1.5; stroke-dasharray: 5 4; }
+    .arrow { fill: var(--accent); }
+    .arrow-reply { fill: var(--optional); }
+    .label-bg { fill: var(--bg); }
+    .sans { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; }
+    .mono { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; }
+    .t { fill: var(--text); font-size: 15px; font-weight: 600; }
+    .el { fill: var(--text); font-size: 13px; }
+  </style>
+  <defs>
+    <marker id="ie2-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+      <path class="arrow" d="M 0 0 L 10 5 L 0 10 z"/>
+    </marker>
+    <marker id="ie2-arrow-reply" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+      <path class="arrow-reply" d="M 0 0 L 10 5 L 0 10 z"/>
+    </marker>
+  </defs>
+
+  <rect class="canvas" x="0" y="0" width="720" height="612" rx="12" ry="12"/>
+
+  <!-- Lifelines -->
+  <path class="lifeline" d="M 130 88 L 130 580"/>
+  <path class="lifeline" d="M 360 88 L 360 580"/>
+  <path class="lifeline" d="M 590 88 L 590 580"/>
+
+  <!-- Participant headers -->
+  <rect class="node-em" x="50" y="32" width="160" height="56" rx="8" ry="8"/>
+  <text class="sans t" x="130" y="65" text-anchor="middle">Root</text>
+  <rect class="node" x="265" y="32" width="190" height="56" rx="8" ry="8"/>
+  <text class="sans t" x="360" y="65" text-anchor="middle">Phase implementer</text>
+  <rect class="node" x="495" y="32" width="190" height="56" rx="8" ry="8"/>
+  <text class="sans t" x="590" y="65" text-anchor="middle">Phase reviewer</text>
+
+  <!-- 1. Root ->> Phase: Phase Scope (request_id=A) -->
+  <path class="msg" d="M 131 152 L 359 152" marker-end="url(#ie2-arrow)"/>
+  <rect class="label-bg" x="149" y="124" width="192" height="20" rx="4" ry="4"/>
+  <text class="sans el" x="245" y="138.5" text-anchor="middle">Phase Scope (<tspan class="mono">request_id=A</tspan>)</text>
+
+  <!-- 2. Phase -->> Root: DONE + task commits -->
+  <path class="reply" d="M 359 208 L 131 208" marker-end="url(#ie2-arrow-reply)"/>
+  <rect class="label-bg" x="175" y="180" width="140" height="20" rx="4" ry="4"/>
+  <text class="sans el" x="245" y="194.5" text-anchor="middle"><tspan class="mono">DONE</tspan> + task commits</text>
+
+  <!-- 3. Root ->> Review: Review phase commit range -->
+  <path class="msg" d="M 131 264 L 589 264" marker-end="url(#ie2-arrow)"/>
+  <rect class="label-bg" x="282" y="236" width="176" height="20" rx="4" ry="4"/>
+  <text class="sans el" x="370" y="250.5" text-anchor="middle">Review phase commit range</text>
+
+  <!-- 4. Review -->> Root: Critical / High findings -->
+  <path class="reply" d="M 589 320 L 131 320" marker-end="url(#ie2-arrow-reply)"/>
+  <rect class="label-bg" x="295" y="292" width="150" height="20" rx="4" ry="4"/>
+  <text class="sans el" x="370" y="306.5" text-anchor="middle">Critical / High findings</text>
+
+  <!-- 5. Root ->> Phase: Resume A in fix mode -->
+  <path class="msg" d="M 131 376 L 359 376" marker-end="url(#ie2-arrow)"/>
+  <rect class="label-bg" x="180" y="348" width="130" height="20" rx="4" ry="4"/>
+  <text class="sans el" x="245" y="362.5" text-anchor="middle">Resume A in fix mode</text>
+
+  <!-- 6. Phase -->> Root: Fix commit + verification -->
+  <path class="reply" d="M 359 432 L 131 432" marker-end="url(#ie2-arrow-reply)"/>
+  <rect class="label-bg" x="168" y="404" width="154" height="20" rx="4" ry="4"/>
+  <text class="sans el" x="245" y="418.5" text-anchor="middle">Fix commit + verification</text>
+
+  <!-- 7. Root ->> Review: New independent review round -->
+  <path class="msg" d="M 131 488 L 589 488" marker-end="url(#ie2-arrow)"/>
+  <rect class="label-bg" x="270" y="460" width="200" height="20" rx="4" ry="4"/>
+  <text class="sans el" x="370" y="474.5" text-anchor="middle">New independent review round</text>
+
+  <!-- 8. Review -->> Root: Pass -->
+  <path class="reply" d="M 589 544 L 131 544" marker-end="url(#ie2-arrow-reply)"/>
+  <rect class="label-bg" x="345" y="516" width="50" height="20" rx="4" ry="4"/>
+  <text class="sans el" x="370" y="530.5" text-anchor="middle">Pass</text>
+</svg>

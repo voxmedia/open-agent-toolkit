@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 516" width="880" height="516" role="img" aria-labelledby="om2-title om2-desc">
+  <title id="om2-title">Phase dispatch sequence</title>
+  <desc id="om2-desc">Sequence diagram of one phase dispatch with five participants: Project root, Project adapter, Dispatch engine, Run record in implementation.md, and Phase implementer. In order: the root sends the phase plus lifecycle authority to the adapter; the adapter sends a provider-neutral dispatch request to the engine; the engine replies to the root with the exact route and request ID; the root sends the Phase Scope to the phase implementer; the root writes the accepted or blocked-before-start result to the run record; the phase implementer replies to the root with its phase report and commits.</desc>
+  <style>
+    svg {
+      --bg: #161d27;
+      --node: #1d2633;
+      --node-em: #1f2d42;
+      --border: #2b3646;
+      --text: #dde4ee;
+      --text-2: #9ba7b8;
+      --accent: #8fb6ee;
+      --optional: #8693a5;
+    }
+    .canvas { fill: var(--bg); }
+    .node { fill: var(--node); stroke: var(--border); stroke-width: 1.5; }
+    .node-em { fill: var(--node-em); stroke: var(--accent); stroke-width: 1.5; }
+    .edge { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .edge-opt { fill: none; stroke: var(--optional); stroke-width: 1.5; stroke-dasharray: 5 4; }
+    .lifeline { fill: none; stroke: var(--border); stroke-width: 1.5; }
+    .head { fill: var(--accent); }
+    .head-opt { fill: var(--optional); }
+    .label-bg { fill: var(--bg); }
+    .sans { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; }
+    .mono { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; }
+    .t { fill: var(--text); font-size: 15px; font-weight: 600; }
+    .s { fill: var(--text-2); font-size: 13px; }
+    .lbl { fill: var(--text); font-size: 13px; }
+    .lbl-opt { fill: var(--text-2); font-size: 13px; font-style: italic; }
+  </style>
+  <defs>
+    <marker id="om2-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
+      <path class="head" d="M0 0 L10 5 L0 10 Z"/>
+    </marker>
+    <marker id="om2-arrow-opt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
+      <path class="head-opt" d="M0 0 L10 5 L0 10 Z"/>
+    </marker>
+  </defs>
+
+  <rect class="canvas" x="0" y="0" width="880" height="516" rx="12" ry="12"/>
+
+  <!-- Lifelines -->
+  <path class="lifeline" d="M100 88 V492"/>
+  <path class="lifeline" d="M270 88 V492"/>
+  <path class="lifeline" d="M440 88 V492"/>
+  <path class="lifeline" d="M610 88 V492"/>
+  <path class="lifeline" d="M780 88 V492"/>
+
+  <!-- Participants -->
+  <rect class="node-em" x="22" y="28" width="156" height="60" rx="8" ry="8"/>
+  <text class="sans t" x="100" y="63" text-anchor="middle">Project root</text>
+  <rect class="node" x="192" y="28" width="156" height="60" rx="8" ry="8"/>
+  <text class="sans t" x="270" y="63" text-anchor="middle">Project adapter</text>
+  <rect class="node" x="362" y="28" width="156" height="60" rx="8" ry="8"/>
+  <text class="sans t" x="440" y="63" text-anchor="middle">Dispatch engine</text>
+  <rect class="node" x="532" y="28" width="156" height="60" rx="8" ry="8"/>
+  <text class="sans t" x="610" y="54" text-anchor="middle">Run record in</text>
+  <text class="mono s" x="610" y="75" text-anchor="middle">implementation.md</text>
+  <rect class="node" x="698" y="28" width="164" height="60" rx="8" ry="8"/>
+  <text class="sans t" x="780" y="63" text-anchor="middle">Phase implementer</text>
+
+  <!-- Messages, top to bottom -->
+  <!-- 1. Root  to  Adapter -->
+  <path class="edge" d="M100 160 H269" marker-end="url(#om2-arrow)"/>
+  <rect class="label-bg" x="117" y="118" width="136" height="36" rx="4" ry="4"/>
+  <text class="sans lbl" x="185" y="132" text-anchor="middle">Phase + lifecycle</text>
+  <text class="sans lbl" x="185" y="148" text-anchor="middle">authority</text>
+  <!-- 2. Adapter  to  Engine -->
+  <path class="edge" d="M270 230 H439" marker-end="url(#om2-arrow)"/>
+  <rect class="label-bg" x="291" y="188" width="128" height="36" rx="4" ry="4"/>
+  <text class="sans lbl" x="355" y="202" text-anchor="middle">Provider-neutral</text>
+  <text class="sans lbl" x="355" y="218" text-anchor="middle">dispatch request</text>
+  <!-- 3. Engine  replies to  Root -->
+  <path class="edge-opt" d="M440 290 H101" marker-end="url(#om2-arrow-opt)"/>
+  <rect class="label-bg" x="177" y="264" width="187" height="20" rx="4" ry="4"/>
+  <text class="sans lbl" x="270" y="278" text-anchor="middle">Exact route + request ID</text>
+  <!-- 4. Root  to  Phase -->
+  <path class="edge" d="M100 346 H779" marker-end="url(#om2-arrow)"/>
+  <rect class="label-bg" x="394" y="320" width="92" height="20" rx="4" ry="4"/>
+  <text class="sans lbl" x="440" y="334" text-anchor="middle">Phase Scope</text>
+  <!-- 5. Root  to  Record -->
+  <path class="edge" d="M100 402 H609" marker-end="url(#om2-arrow)"/>
+  <rect class="label-bg" x="207" y="376" width="296" height="20" rx="4" ry="4"/>
+  <text class="sans lbl" x="355" y="390" text-anchor="middle">Accepted or blocked-before-start result</text>
+  <!-- 6. Phase  replies to  Root -->
+  <path class="edge-opt" d="M780 458 H101" marker-end="url(#om2-arrow-opt)"/>
+  <rect class="label-bg" x="354" y="432" width="172" height="20" rx="4" ry="4"/>
+  <text class="sans lbl" x="440" y="446" text-anchor="middle">Phase report + commits</text>
+</svg>
