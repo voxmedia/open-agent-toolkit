@@ -569,6 +569,53 @@ Phase implementation return: DONE_WITH_CONCERNS, three planned task commits in o
 
 ### p02 implementation dispatch
 
+### p02 independent code review dispatch
+
+```json
+{
+  "request_id": "docs-overhaul-run1-p02-code-review01",
+  "caller": "oat-project-implement",
+  "scope": "p02",
+  "objective": "Independent preservation and real-consumer review of committed phase two",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "reviewer",
+  "provider": "codex",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "authority": "read-only except one declared timestamped review artifact; no workers or source/core writes",
+  "role_selector": "oat-reviewer-gpt-6-1-sol-high",
+  "model_selector": "gpt-6.1-sol",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "selection_source": "policy-resolved",
+  "selection_reason": "matrix-pinned",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selected_route": "native",
+  "task_class": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Load-bearing preservation and real-consumer review",
+  "floor_satisfaction": "satisfied",
+  "guidance_version": "2026-10-01",
+  "guidance_status": "fresh",
+  "catalog_source": "live agents.spawn_agent schema materialized role",
+  "deadline_seconds": 3600,
+  "retry_limit": 2,
+  "launch_status": "accepted",
+  "agent_handle": "/root/p02_code_review",
+  "reviewed_head": "2173d81d1659bf2124826244a869ca54b14b49ad",
+  "reviewed_base": "8b78d9a935b31ef50e65713b03a022a5d022aa59",
+  "payload": {
+    "agent_type": "oat-reviewer-gpt-6-1-sol-high",
+    "fork_turns": "none"
+  },
+  "runtime_confirmation": "not-reported",
+  "dispatch_stamp": "Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high",
+  "child_outcome": null
+}
+```
+
 ```json
 {
   "request_id": "docs-overhaul-run1-p02-implementation",
