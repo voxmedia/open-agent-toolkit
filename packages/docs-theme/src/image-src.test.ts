@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { themeVariantOf, withBasePath } from './image-src.js';
+import { isSvgSource, themeVariantOf, withBasePath } from './image-src.js';
 
 describe('themeVariantOf', () => {
   it.each([
@@ -50,5 +50,17 @@ describe('withBasePath', () => {
 
   it('is a no-op without a base path', () => {
     expect(withBasePath('/diagrams/a.svg', '')).toBe('/diagrams/a.svg');
+  });
+});
+
+describe('isSvgSource', () => {
+  it.each([
+    ['/diagrams/a-dark.svg', true],
+    ['/_next/static/media/a-dark.4f3a2b1c.svg?v=1', true],
+    ['/img/screenshot.png', false],
+    ['/diagrams/a.svg.png', false],
+    [undefined, false],
+  ] as const)('%s → %s', (src, expected) => {
+    expect(isSvgSource(src)).toBe(expected);
   });
 });

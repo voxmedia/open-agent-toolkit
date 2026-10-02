@@ -22,3 +22,8 @@ export function withBasePath(src: string, basePath: string): string {
   if (src === basePath || src.startsWith(`${basePath}/`)) return src;
   return `${basePath}${src}`;
 }
+
+/** Whether an image file is an SVG (diagrams are authored as SVG). */
+export function isSvgSource(src: string | undefined): boolean {
+  return !!src && /\.svg(?:[?#].*)?$/i.test(src);
+}

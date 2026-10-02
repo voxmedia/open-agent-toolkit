@@ -50,14 +50,21 @@ export function Page({ toc, chart }) {
 - `Tab`
 - `Tabs`
 - `ZoomImage`: Markdown image renderer. Map it as `img` in your MDX
-  components. Every image opens in a zoom view on click, root-relative paths
-  get the site base path (`NEXT_PUBLIC_BASE_PATH`, which
-  `@open-agent-toolkit/docs-config` sets from `basePath`), and files named
-  `<name>-light.<ext>` / `<name>-dark.<ext>` show only in the matching theme.
-  Add `@source '../node_modules/@open-agent-toolkit/docs-theme/dist/**/*.js';`
-  to your Tailwind CSS so the theme classes are generated.
+  components.
+  - SVG images open in a full-screen view that renders them at least 900px
+    wide, so diagram text stays legible on a phone; the reader pans to see the
+    rest. Other images open in Fumadocs `ImageZoom`.
+  - Root-relative paths such as `/diagrams/x.svg` get the site base path
+    (`NEXT_PUBLIC_BASE_PATH`, which `@open-agent-toolkit/docs-config` sets
+    from `basePath`).
+  - Files named `<name>-light.<ext>` / `<name>-dark.<ext>` show only in the
+    matching theme. Add
+    `@source '../node_modules/@open-agent-toolkit/docs-theme/dist/**/*.js';`
+    to your Tailwind CSS so those theme classes are generated.
 
-`Mermaid` diagrams open full screen when clicked.
+`Mermaid` diagrams take their colors from the site's Fumadocs color tokens
+(`--color-fd-*`) in light and dark mode, and open in the same full-screen view
+when clicked.
 
 ## Docs
 
