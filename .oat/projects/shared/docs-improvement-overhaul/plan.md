@@ -455,7 +455,7 @@ Planned scope summary; implementation.md is the authoritative live task-progress
 - Phase 5: 3 tasks — named gaps, four docs visuals and focused phase verification.
 - Phase 6: 8 tasks — conservation, fresh personas, consensus, editorial improvements, final independent acceptance and three bounded final-review corrections.
 
-**Total: 23 tasks, 6 sequential phases.** All task implementations and final corrections are accepted; the p06 HiLL checkpoint awaits user approval. Earlier native phase-review omissions remain disclosed, not retroactively passed.
+**Total: 23 tasks, 6 sequential phases.** All task implementations and final corrections are accepted; the user approved the p06 HiLL checkpoint and the stored closeout sequence is complete. Earlier native phase-review omissions remain disclosed, not retroactively passed.
 
 ## References
 

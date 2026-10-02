@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
@@ -20,9 +20,9 @@ The user invoked oat-project-implement after the reviewed plan handoff. Implemen
 | Phase 3 | complete                       | 2     | 2/2       |
 | Phase 4 | complete                       | 4     | 4/4       |
 | Phase 5 | complete                       | 3     | 3/3       |
-| Phase 6 | final review and exit gate     | 8     | 8/8       |
+| Phase 6 | complete; user approved        | 8     | 8/8       |
 
-**Total:** 23/23 task implementations recorded. Earlier phase 6 closure was premature; resumed accounting, three corrected findings and fully non-author native acceptance are now verified. The final lifecycle re-review passed with zero findings. Configured exit gate and final p06 HiLL approval remain pending; no approval waiver is inferred.
+**Total:** 23/23 task implementations recorded. Earlier phase 6 closure was premature; resumed accounting, three corrected findings and fully non-author native acceptance are now verified. The final lifecycle re-review passed with zero findings, the configured gate passed and was received, and the user approved final p06 closeout. Stored sequencing is complete. Recap explicitly skipped; merge and release remain unauthorized.
 
 ## Phase 1: Make the Current Sidebar Enforceable
 
@@ -1162,7 +1162,7 @@ Eight ordered gates passed through 64a48da1e with partial execution and build/do
 
 Final correction re-review returned zero findings. The configured fresh non-author Claude gate passed High with 0 Critical / 0 High / 1 Medium / 2 Low; its different-family report covers four p01/p02 OpenAI stamps, not every Fable-authored phase. Ordered dispositions: M1 pointers fixed at 5e3bed75b; L1 README pointers fixed at 3c1fa029b; L2 local README Turbo hashing deferred, with direct docs:validate available. Gate waivers are empty.
 
-Summary, document and the existing PR #342 refresh are complete. Final p06 approval remains pending; state retains the stored sequence and allowed exit-gate provenance. Merge, release and the unanswered recap request are separate decisions.
+Summary, document and the existing PR #342 refresh are complete. Final p06 approval was explicitly given by the user; state retains the completed stored sequence and allowed exit-gate provenance. Recap was explicitly skipped (`interactive`, no run). Implementation is complete; project archival, merge and release remain separate decisions.
 
 ## References
 

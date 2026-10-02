@@ -69,7 +69,7 @@ oat_project_recap:
   decision: skip
   source: interactive
   decided_at: '2026-10-02T23:06:08Z'
-oat_last_commit: c916af45c9860c000027d7e0467f6a77149861b8
+oat_last_commit: 25e4bdf6eed54dd0adae7a5fb01be5e9ecc05338
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -85,7 +85,7 @@ oat_dispatch_policy:
   policy: high
   source: project-state
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Final p06 approval remains pending; PR is still open.
+oat_phase_status: complete # Implementation approved; PR remains open, not merged.
 oat_phase_recovery_policy:
   default_attempt_limit: 10
   phase_attempt_usage:
@@ -158,13 +158,13 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/342 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-01T22:42:17.072Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-02T14:40:15Z'
+oat_project_state_updated: '2026-10-02T23:07:20Z'
 oat_generated: false
 ---
 
 # Project State: docs-improvement-overhaul
 
-**Status:** All 23 task implementations, independent final review/QA, configured exit gate and pre-approval closeout steps are complete. Awaiting final p06 human approval. Pull request #342 is refreshed and open, not merged.
+**Status:** Implementation complete and final p06 closeout approved by the user. All 23 tasks, independent final review/QA, configured exit gate and stored closeout steps are complete. Recap skipped by request. Pull request #342 is refreshed and open, not merged.
 **Started:** 2026-10-01
 **Last Updated:** 2026-10-02
 
@@ -189,6 +189,7 @@ Implementation is complete. Codex paused for a usage reset during phases 3–6 a
 - Codex and Fable agree on the IA; the user authorized drafting design and plan against it.
 - Plan is no longer a template and routes to implementation entry after separate authorization.
 - High dispatch resolved. Optional additional phase gate remains unconfigured; configured lifecycle gates remain enabled. Final implementation checkpoint is p06 with auto-review; persona triage does not wait on the user.
+- Final p06 human approval received; configured summary/document/PR sequence complete. Explainer recap explicitly skipped with an interactive decision and passing terminal-outcome guard.
 
 ## Blockers
 
@@ -196,4 +197,4 @@ None.
 
 ## Next Milestone
 
-Final p06 HiLL approval is required. Summary, documentation sync and the existing PR #342 refresh are complete. Project recap preference is unanswered, not skipped or generated; resolve it before recording approval. Resume with `oat-project-implement`. Merge and release remain separate user decisions.
+Implementation closeout is complete. PR #342 is open for review. Project archival (`oat-project-complete`), merge and release are separate steps, not performed or authorized by this implementation approval. Use `oat-project-revise` for subsequent PR feedback.

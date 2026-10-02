@@ -84,6 +84,10 @@ docs-final-p06-accepted-2026-10-02: 23/23 task implementations accepted, non-aut
 
 docs-final-hill-pending-2026-10-02: STOP at configured p06 human approval after stored summary/document/PR sequence; review/QA and exit gate accepted, PR342 refreshed not merged, recap intent unanswered; state.md preserves awaiting_approval and resume owner oat-project-implement.
 
+### 2026-10-02 · structural · oat-project-implement · p06-hill-approved
+
+docs-final-approved-2026-10-02: user approved final p06 closeout and explicitly skipped recap; persisted skip/interactive passed terminal guard, stored closeout-check is complete; implementation complete, PR342 open, no project archival/merge/release.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
