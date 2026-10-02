@@ -48,8 +48,8 @@ copying their content here. -->
   current independent final review passed, including both Bugbot fixes and
   unreadable optional-directory preservation. Main #338 is integrated; independent final review and the renewed exit gate
   passed. Both Low artifact-alignment findings are addressed. Existing closeout
-  steps stay complete; requested lifecycle completion follows. See the
-  [project summary](../../projects/shared/markdown-docs-bootstrap/summary.md).
+  steps and final approval are complete; lifecycle is complete and the project is archived. See the
+  [project record](../reference/project-summaries/20261002-markdown-docs-bootstrap.md).
   **BL-260911-make-docs-bootstrap-a-front: Make docs bootstrap a front door
   for existing docs and support the docs-directory convention** remains open
   for package drift, approval classes, pntr automation and external-repository

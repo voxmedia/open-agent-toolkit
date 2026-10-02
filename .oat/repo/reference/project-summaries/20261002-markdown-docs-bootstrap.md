@@ -148,3 +148,19 @@ target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:0,l
 ### 2026-10-01 · structural · oat-project-implement · final
 
 markdown-bootstrap-main-remote-final-awaiting-hill-20261001: Main #334 integrated; all 14 tasks, both Bugbot corrections, optional-directory permission preservation and all eight local gates pass. Current independent final review has zero findings; retained gate 39b33a8d-8a63-41e5-af34-145a5d525935 passed with 0C/0H/0M/3L, one scoped rejection and two documentation corrections settled. Gate receive is allowed/fresh; existing summary/document/pr outputs are refreshed without resetting their completed sequence. Await final p04 HiLL approval; see implementation.md and reviews/final-unreadable-controls.md.
+
+### 2026-10-02 · structural · oat-project-retro · project-retro
+
+retro artifact=.oat/projects/shared/markdown-docs-bootstrap/references/project-retro.md evidence_used=archived-review-markdown,committed-controls,decisions-and-backlog,docs-validation-receipts,gate-receipts,git-history,lifecycle-artifacts,original-root-session,project-log evidence_unavailable=oat-execution-learnings promotions=3 upstream=0 apply=skipped filing=deferred
+
+### 2026-10-02 · structural · oat-project-implement · final
+
+Main #338 integrated at 5a38d447 with nineteen conflicts resolved; all eight gates plus lint/format pass after ENOSPC recovery. Independent native Sol high final review returned 0C/0H/0M/0L and 575 actual focused tests. Public packages 0.3.13 exceed main 0.3.12; docs skill bumps pass. Renew retained gate before requested completion; existing sequence and recap skip retained.
+
+### 2026-10-02 · structural · oat gate review · final
+
+target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:0,low:2 exit=0 status=ok artifact=.oat/projects/shared/markdown-docs-bootstrap/reviews/final-review-2026-10-02T030210Z.md run=ef3220d1-1ba8-4d1a-9f96-82bdacd8ea5c
+
+### 2026-10-02 · structural · oat-project-complete · retirement-sweep
+
+Retirement sweep: no absorbed projects or backlog IDs recorded. Markdown slice is complete; the broader docs-bootstrap backlog stays open for approval classes, package drift, pntr automation and external acceptance. Three retro evidence links now target the durable summary; their exact-path receipts are updated.

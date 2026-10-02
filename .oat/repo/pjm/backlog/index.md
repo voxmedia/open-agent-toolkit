@@ -6,10 +6,10 @@
 
 - 2026-10-01: **BL-260911-make-docs-bootstrap-a-front: Make docs bootstrap a
   front door for existing docs and support the docs-directory convention**
-  remains open. Its [Markdown slice](../../../projects/shared/markdown-docs-bootstrap/summary.md)
+  remains open. Its [Markdown slice](../../reference/project-summaries/20261002-markdown-docs-bootstrap.md)
   passed fourteen tasks and current independent final review; closeout outputs
   are complete. Main #338 is integrated and renewed review/gate evidence passed; both Low
-  artifact-alignment findings are addressed before requested lifecycle completion. Package drift, approval classes,
+  artifact-alignment findings are addressed. Final approval and lifecycle are complete. Package drift, approval classes,
   pntr automation and external-repository acceptance remain outside the slice.
 
 - 2026-10-01: the `backlog-wave-3` project (lockstep 0.3.11) closed thirteen
