@@ -22,7 +22,7 @@ The user invoked oat-project-implement after the reviewed plan handoff. Implemen
 | Phase 5 | complete                       | 3     | 3/3       |
 | Phase 6 | final review and exit gate     | 8     | 8/8       |
 
-**Total:** 23/23 task implementations recorded. Earlier phase 6 closure was premature for reconciliation and independent acceptance; resumed corrections and current accounting are now committed. The root native supplement covers seven journeys and actual GitHub light/dark README rendering. The fully non-author reviewer is finishing independent native acceptance and narrow correction re-review. Configured exit gate and final p06 HiLL approval remain pending; no approval waiver is inferred.
+**Total:** 23/23 task implementations recorded. Earlier phase 6 closure was premature; resumed accounting, three corrected findings and fully non-author native acceptance are now verified. The final lifecycle re-review passed with zero findings. Configured exit gate and final p06 HiLL approval remain pending; no approval waiver is inferred.
 
 ## Phase 1: Make the Current Sidebar Enforceable
 
@@ -238,7 +238,11 @@ Root read the entire automatic final review at `c0f10a8f8d3a05cd9ac4d1f2265e8bb0
 
 No newly deferred Medium or Low findings. Prior concerns are dispositioned in the final review's deferred ledger: resolved guidance, explicitly scoped product/backlog work and bounded editorial residuals; they are not quietly reclassified as successful fixes. The original review is now `fixes_completed`, awaiting its narrow same-reviewer re-review. The configured cross-family implement gate and final p06 approval remain pending. The user's speed amendment forbids another full Medium-only review sweep; the same accepted non-author reviewer checks only these three corrections alongside its native QA.
 
-Independent native evidence: `reviews/final-native-visual-qa-2026-10-02.md`. It supplements the author tour rather than relabelling it as independent.
+Independent native evidence: `reviews/final-native-visual-qa-2026-10-02.md` and `reviews/final-independent-native-qa-2026-10-02.md`. The latter is a fully non-author native Mini tour, not the Fable author-run Playwright evidence. Seven journeys, all four diagrams, both themes and simulated narrow views pass within the disclosed phone-label limitation; GitHub rendering was artifact-reviewed from root's actual published light/dark captures.
+
+### Narrow final review received — 2026-10-02
+
+Root read the entire automatic final re-review `reviews/archived/final-review-2026-10-02T221307Z.md`, reviewed HEAD `75c4467aba032f6dd3b9857351a064cd18ab067c`: zero Critical, High, Medium or Low findings. It inherits the original full-project review and independently checks only M1–M3. The same accepted reviewer authored no shipped source, returned exactly one `not-attempted` reconnaissance signal and no orchestration section, ran 13 reference controls and reproduced compact accounting without writing it. Root accepts all three closures, differentiated conservation proof and named reference gaps; no new task or deferred finding. Original deferred ledger was resurfaced and retains its concrete out-of-scope/duplicate/resolved dispositions. Final review is passed; historical missing per-phase reviewers remain disclosed deviations. Current source equals the reviewed basis apart from excluded project evidence/bookkeeping. Next is the configured independent exit gate, not completion or merge.
 
 ### Resumed dispatch and validation outcomes
 

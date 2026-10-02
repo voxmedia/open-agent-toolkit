@@ -1,6 +1,6 @@
 ---
-oat_current_task: p06-t06
-oat_last_commit: e1c6b7d94020ffe087c290483867ae5ce5ea4349
+oat_current_task: null
+oat_last_commit: c916af45c9860c000027d7e0467f6a77149861b8
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -95,7 +95,7 @@ oat_generated: false
 
 # Project State: docs-improvement-overhaul
 
-**Status:** All six phases complete locally; pull request #342 open
+**Status:** All task implementations and independent final review/QA complete locally; configured exit gate, closeout sequence and final p06 approval remain pending. Pull request #342 is open, not merged.
 **Started:** 2026-10-01
 **Last Updated:** 2026-10-02
 
