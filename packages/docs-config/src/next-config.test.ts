@@ -35,6 +35,7 @@ describe('createDocsConfig', () => {
       reactStrictMode: true,
     });
     expect(config).not.toHaveProperty('basePath');
+    expect(config).not.toHaveProperty('env');
     expect(config).toHaveProperty('mdxWrapped', true);
 
     expect(mdxMocks.createMDX).toHaveBeenCalledTimes(1);
@@ -55,6 +56,7 @@ describe('createDocsConfig', () => {
       images: { unoptimized: true },
       reactStrictMode: true,
       basePath: '/my-project',
+      env: { NEXT_PUBLIC_BASE_PATH: '/my-project' },
     });
     expect(config).toHaveProperty('mdxWrapped', true);
     expect(mdxMocks.withMDX).toHaveBeenCalledWith({
@@ -63,6 +65,7 @@ describe('createDocsConfig', () => {
       images: { unoptimized: true },
       reactStrictMode: true,
       basePath: '/my-project',
+      env: { NEXT_PUBLIC_BASE_PATH: '/my-project' },
     });
   });
 });

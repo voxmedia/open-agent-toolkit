@@ -49,6 +49,15 @@ export function Page({ toc, chart }) {
 - `Mermaid`
 - `Tab`
 - `Tabs`
+- `ZoomImage`: Markdown image renderer. Map it as `img` in your MDX
+  components. Every image opens in a zoom view on click, root-relative paths
+  get the site base path (`NEXT_PUBLIC_BASE_PATH`, which
+  `@open-agent-toolkit/docs-config` sets from `basePath`), and files named
+  `<name>-light.<ext>` / `<name>-dark.<ext>` show only in the matching theme.
+  Add `@source '../node_modules/@open-agent-toolkit/docs-theme/dist/**/*.js';`
+  to your Tailwind CSS so the theme classes are generated.
+
+`Mermaid` diagrams open full screen when clicked.
 
 ## Docs
 

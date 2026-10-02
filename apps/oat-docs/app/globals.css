@@ -3,6 +3,7 @@
 @import 'fumadocs-ui/css/preset.css';
 
 @source '../node_modules/fumadocs-ui/dist/**/*.js';
+@source '../node_modules/@open-agent-toolkit/docs-theme/dist/**/*.js';
 
 /* remark-github-blockquote-alert callout styling (fd-* design tokens) */
 @layer base {

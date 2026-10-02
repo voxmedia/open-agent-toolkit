@@ -171,7 +171,7 @@ const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
     requiredPackedTextFiles: [],
     forbiddenPathPatterns: [...COMMON_FORBIDDEN_PATH_PATTERNS],
     versionPolicyAdditionalRoots: [],
-    versionPolicyIgnorePatterns: [],
+    versionPolicyIgnorePatterns: ['src/**/*.test.ts'],
   },
   {
     workspaceDir: 'packages/docs-transforms',
