@@ -27,17 +27,30 @@ oat_implement_exit_gate:
     'envelope_status': 'ok',
     'artifact': '.oat/projects/shared/docs-improvement-overhaul/reviews/final-review-2026-10-02T222323Z.md',
     'handoff': 'Gate passed at the high threshold, but the final review still contains non-blocking findings (medium=1, low=2). Run oat-project-review-receive for .oat/projects/shared/docs-improvement-overhaul/reviews/final-review-2026-10-02T222323Z.md to disposition them before marking the final review row passed.',
-    'receive_state': 'not_started',
-    'receive_correlation': null,
-    'receive_source_artifact': null,
-    'receive_archived_artifact': null,
-    'receive_event_identity': null,
-    'receive_pre_head': null,
+    'receive_state': 'intent_persisted',
+    'receive_correlation':
+      {
+        'run_id': '45d2802b-263d-447c-904b-5a36d35b1dd9',
+        'handoff': 'Gate passed at the high threshold, but the final review still contains non-blocking findings (medium=1, low=2). Run oat-project-review-receive for .oat/projects/shared/docs-improvement-overhaul/reviews/final-review-2026-10-02T222323Z.md to disposition them before marking the final review row passed.',
+        'source_artifact': '.oat/projects/shared/docs-improvement-overhaul/reviews/final-review-2026-10-02T222323Z.md',
+        'scope': 'final',
+        'type': 'code',
+        'source_filename': 'final-review-2026-10-02T222323Z.md',
+      },
+    'receive_source_artifact': '.oat/projects/shared/docs-improvement-overhaul/reviews/final-review-2026-10-02T222323Z.md',
+    'receive_archived_artifact': '.oat/projects/shared/docs-improvement-overhaul/reviews/archived/final-review-2026-10-02T222323Z.md',
+    'receive_event_identity':
+      {
+        'scope': 'final',
+        'type': 'code',
+        'source_filename': 'final-review-2026-10-02T222323Z.md',
+      },
+    'receive_pre_head': '6988f430ff84e0fb3d59ff9ee40da95cebcac2f6',
     'receive_commit': null,
     'receive_eligible': true,
     'receive_completed': false,
     'failure': null,
-    'updated_at': '2026-10-02T22:28:51.474Z',
+    'updated_at': '2026-10-02T22:29:16.873Z',
   }
 oat_last_commit: c916af45c9860c000027d7e0467f6a77149861b8
 oat_blockers: []
