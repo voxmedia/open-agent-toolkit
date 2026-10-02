@@ -620,6 +620,13 @@ Phase implementation return: DONE_WITH_CONCERNS, three planned task commits in o
       "status": "completed-draft-correction",
       "authority": "pre-commit M1/M2 baseline correction only; no moves, commit, tracking or analysis edits",
       "child_outcome": "stable-corrected-draft-no-moves"
+    },
+    {
+      "request_id": "cont-docs-overhaul-p02-fable-map-corrections",
+      "agent_handle": "/root/phase02",
+      "status": "accepted-holding",
+      "authority": "R1 CLI router consolidation/new onboarding landing; R2 exact H1/anchor accounting; O3 body discovery; no moves/commit before non-author recheck",
+      "child_outcome": null
     }
   ],
   "payload": {
@@ -646,6 +653,8 @@ Dispatch: scope=p02 action=implementation role=implementer producer=unknown prov
 Accepted native /root/phase02 (Hilbert), holding before commands until clean bookkeeping SHA. Ownership initially t01 draft/evidence only; Fable map and non-author normalization review required before moves. No project-log append while child owns the worktree.
 
 Correction report accepted: all 477 destination spans, 17 real collisions, 70 raw page hashes, 840 section hashes and eight literal controls pass; copied-helper pre-fix control fails its intended assertion. Direct nine app tests pass. Exactly 69 retained router entries plus one root compatibility item and two Guide sentences are individually accounted. Receipts: references/draft-correction-receipts.json (SHA256 c4769cda4624a80393d6f24640b99593410dd674198a93b9078c731cd080210a). Same non-author reviewer recheck and Fable approval remain required.
+
+RESUME 2026-10-02: actual Fable review arrived via user, not inferred from queue. Destinations/route-only supersessions approved conditional on R1/R2; source-only advisory, nothing executed. Root accepts required corrections and O3 discovery additions, carries mandatory O4 residues to phase6, defers O1/O2. Same phase handle receives bounded correction and holds for bookkeeping release. User explicitly authorizes direct peer sends despite draft signals; correction is appended to orchestration-log.md, not a claim that historical draft fields prove human input. Direct request66d8973c-6ee0-410e-8e65-c0f641e78bd7 proves input_accepted only. Peer actual response supplies review completion evidence. Prior STOP remains historical; no current external blocker. Receipt references/fable-p02-map-review.md.
 
 ### docs-analysis draft review dispatch
 

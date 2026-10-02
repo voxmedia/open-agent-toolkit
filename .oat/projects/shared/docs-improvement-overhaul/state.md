@@ -1,8 +1,7 @@
 ---
 oat_current_task: p02-t01
 oat_last_commit: 727c40abb5be32885d37d28b21887ac7c986ea42
-oat_blockers:
-  - Required Fable migration-map review unavailable; peer pane has an unsent draft, queued request consumption unverified
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -84,13 +83,13 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-01T22:42:17.072Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-02T07:53:40Z'
+oat_project_state_updated: '2026-10-02T11:51:01Z'
 oat_generated: false
 ---
 
 # Project State: docs-improvement-overhaul
 
-**Status:** Phase 1 accepted; phase 2 draft independently verified, blocked on required Fable map review before moves
+**Status:** Phase 1 accepted; Fable map review received, phase 2 R1/R2 corrections in progress before moves
 **Started:** 2026-10-01
 **Last Updated:** 2026-10-02
 
@@ -118,8 +117,8 @@ The user invoked oat-project-implement after the reviewed handoff. Execute six s
 
 ## Blockers
 
-Required Fable map review has not arrived. The owning laptop relay reaches the correct Mini worktree, but the peer pane contains an unsent draft; do not overwrite, clear or submit it. Corrected map review is queued as msg_abd20b8047be, with consumption and response unverified. Independent map review passed; no pages moved. Required later browser proof remains mandatory.
+None currently. Fable's actual map review arrived via the user, approves destinations and route-only supersessions conditional on R1/R2. User explicitly directs root to send authorized peer prompts despite future draft signals rather than stopping. Receipt and override are durable; R1/R2 non-author conservation verification and later browser proof remain mandatory.
 
 ## Next Milestone
 
-Obtain actual Fable map review, record its disposition, then resume the existing phase02 handle to finish p02-t01 and apply the preservation-only migration. The exact baseline, corrected evidence and independent review are durable; source validation/test drafts remain intentionally uncommitted. Continue through p06 final QA and the configured implementation gate after the peer-review blocker clears.
+Complete bounded R1/R2 corrections on the existing phase02 handle, independently verify conservation, finish p02-t01, then apply the preservation-only migration. Fable does not require another map review unless R1 changes other destinations. Continue through p06 final QA and the configured implementation gate without another routine user checkpoint.

@@ -56,6 +56,10 @@ docs-overhaul-run1-p01-pass: p01 accepted after two bounded fix rounds; original
 
 docs-overhaul-run1-p02-peer-map-blocked: STOP at required Fable migration-map review; independent M1/M2 recheck passed with zero findings, but peer pane has an unsent draft and queued request consumption is unverified. No pages moved and p02-t01 remains incomplete; evidence in reviews/p02-migration-draft-review-round02.md and references/draft-correction-receipts.json.
 
+### 2026-10-02 · structural · oat-project-implement · p02-t01
+
+docs-overhaul-run1-p02-peer-map-resume: actual Fable map review received via user, destinations and route-only supersessions approved conditional on R1/R2; resume same phase handle for bounded corrections and independent conservation recheck. User explicitly authorizes direct peer sends despite draft signals; see references/orchestration-log.md and references/fable-p02-map-review.md.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
