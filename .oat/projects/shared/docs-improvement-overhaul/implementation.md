@@ -429,6 +429,75 @@ Phase implementation return: DONE_WITH_CONCERNS, three planned task commits in o
 }
 ```
 
+### p01 terminal review dispatch
+
+```json
+{
+  "request_id": "docs-overhaul-run1-p01-review03",
+  "caller": "oat-project-implement",
+  "scope": "p01",
+  "objective": "Terminal bounded p01 separator-diagnostic review and prior-fix regression assurance",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "reviewer",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "root-native-20261002",
+    "source": "agents.spawn_agent live schema",
+    "observed_at": "2026-10-02"
+  },
+  "authority": "Read reviewed source/artifacts; write only named review artifact; no source edits/publication/UI/nested agents",
+  "role_selector": "oat-reviewer-gpt-6-1-sol-high",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "materialized-native-role",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": ".agents/skills/subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-10-01",
+  "guidance_verified_at": "2026-10-01",
+  "guidance_status": "fresh",
+  "selection_source": "policy-resolved",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selection_reason": "configured-review-ceiling",
+  "selected_route": "native",
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Independent assurance of shipped source or expanded conservation/reader-evidence contracts",
+  "floor_satisfaction": "satisfied",
+  "deadline_seconds": 3600,
+  "retry_limit": 2,
+  "launch_status": "accepted",
+  "child_outcome": null,
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [],
+  "payload": {
+    "task_name": "phase01_review03",
+    "agent_type": "oat-reviewer-gpt-6-1-sol-high",
+    "fork_turns": "none",
+    "reviewed_head": "24d1bddfbf1ea4467125c2b8ca88c65ce57fc06a",
+    "scope": "p01",
+    "output": "reviews/p01-code-review-round03-<UTC>.md",
+    "message_evidence": "Bounded review scope in accepted native invocation"
+  },
+  "configured_invocation_evidence": [
+    {
+      "source": "native payload and acceptance",
+      "agent_handle": "/root/phase01_review03",
+      "role": "oat-reviewer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high"
+    }
+  ],
+  "dispatch_stamp": "Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high"
+}
+```
+
 ### plan-amendment review dispatch
 
 ```json
