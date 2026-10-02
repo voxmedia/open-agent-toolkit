@@ -13,6 +13,48 @@ This page explains how OAT remembers what it manages and how it distinguishes cl
 - When to use it: when `oat status` shows drift or strays and you need to understand why OAT thinks a file is managed, missing, or adoptable.
 - Primary commands: `oat status`, `oat init`, `oat sync`
 
+Diagram: canonical assets produce provider views and a manifest; status reports what changed and how to resolve it.
+
+```mermaid
+flowchart TD
+  CANON["Canonical assets\nEdit .agents/"]
+  SYNC["oat sync\nGenerate views"]
+  VIEWS["Provider views"]
+  MANIFEST["Sync manifest"]
+  STATUS["oat status\nInspect before resolving"]
+  TRACKED["Tracked views\nin_sync / drifted / missing"]
+  STRAY["Unmanaged files\nstray"]
+  CANON --> SYNC
+  SYNC --> VIEWS
+  SYNC --> MANIFEST
+  MANIFEST --> STATUS
+  VIEWS --> STATUS
+  STATUS --> TRACKED
+  STATUS --> STRAY
+```
+
+- **What you edit.** Only the canonical files under `.agents/` (skills, agents,
+  rules). `oat sync` reads them and writes provider views as symlinks or copies
+  under `.claude/`, `.cursor/`, `.github/` and `.codex/`. It records each
+  per-entry view in `.oat/sync/manifest.json`, one entry per canonical path and
+  provider. Codex roles and config are generated too, but are tracked by the
+  Codex extension, not as manifest entries.
+- **What `oat status` reports.** A view is `in_sync` when it still matches what
+  the last sync recorded, `drifted` (`modified`, `broken` or `replaced`) when
+  its content or link changed or its target is gone, and `missing` when no view
+  exists or it was never tracked. A provider file OAT does not manage is a
+  `stray`.
+- **What re-running `oat sync` does.** It writes unless you pass `--dry-run`.
+  It recreates missing views and rewrites drifted ones from canonical, so an
+  edit made in a provider copy is lost, not merged. A file you placed at a
+  view's path without OAT is replaced too, and a view whose canonical source
+  was deleted is removed.
+- **What to do with a stray.** In an interactive `oat status` or `oat init` you
+  can adopt it, which moves or converts it into `.agents/`. For a Cursor or
+  Copilot skill you can keep it in place; OAT records the path under
+  `knownStrays` in `.oat/sync/config.json` and leaves it out of later reports.
+  You can also list a path there by hand.
+
 ## Manifest locations
 
 - Project: `.oat/sync/manifest.json`

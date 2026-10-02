@@ -61,6 +61,44 @@ skills.
 
 ## Typical flow
 
+Diagram: bootstrap once, then analyze, approve and apply only agreed improvements.
+
+```mermaid
+flowchart TD
+  SETUP["Bootstrap once\nConfirm inputs, then oat docs init"]
+  MD["Markdown\nValidate files and config"]
+  APP["Docs app\nInstall and verify build"]
+  AN["Analyze\nRead docs, write findings"]
+  PLAN["Plan from findings\nNo docs writes yet"]
+  Q{"Approve changes?"}
+  APPLY["Apply approved items\nNew branch, verify, offer PR"]
+  STOP["Skip all\nNo docs changed"]
+  SETUP --> MD
+  SETUP --> APP
+  MD -.-> AN
+  APP -.-> AN
+  AN --> PLAN
+  PLAN --> Q
+  Q -->|"approved"| APPLY
+  Q -->|"all skipped"| STOP
+```
+
+- **Setup, once.** `oat-docs-bootstrap` checks the repo without writing, asks
+  you to confirm its inputs, then runs `oat docs init`. Plain Markdown setup validates authored files,
+  configuration and guidance without installing app dependencies or building a
+  site. Fumadocs and MkDocs setup adds the relevant post-patches, installation,
+  build verification and walkthrough.
+- **Analyze.** `oat-docs-analyze` never edits docs. It writes an analysis
+  artifact under `.oat/repo/analysis/` (and updates OAT tracking).
+- **Approve.** `oat-docs-apply` builds a plan from the newest artifact and
+  stops for your decision: apply all, review item by item, or discuss and
+  revise. If the artifact is missing or stale it sends you back to analyze. If
+  you skip every item, nothing changes.
+- **Apply.** Only after approval does apply create a branch, edit the approved
+  docs, regenerate navigation, verify, commit and offer a pull request. Items
+  marked as needing confirmation are confirmed again before they are written.
+- **Repeat.** Re-run analyze afterwards to confirm the result.
+
 1. Bootstrap or explicitly adopt a documentation surface with `oat-docs-bootstrap` (preferred — guided, includes post-scaffold patches and walkthrough) or `oat docs init` directly (CLI-only / non-interactive workflows)
 2. (Optional) If migrating from MkDocs, handle that as a separate migration workstream; `oat docs migrate --docs-dir docs --config mkdocs.yml --apply` is only the syntax/frontmatter helper
 3. Use `oat-docs-authoring` for targeted OAT Markdown/Fumadocs authoring work, with `authoring-docs` as the universal documentation-quality baseline

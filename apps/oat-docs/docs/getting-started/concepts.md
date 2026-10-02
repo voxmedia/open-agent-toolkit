@@ -7,13 +7,30 @@ description: Mental model for canonical assets, provider views, scopes, skills, 
 
 OAT combines a provider-sync layer, reusable skills and CLI tooling, and an optional workflow system. This page gives the high-level mental model so the detailed docs are easier to navigate.
 
-## Capability Stack
+## Choose What to Adopt
 
 ```mermaid
 flowchart TD
-  BASE["Provider sync + CLI\ncanonical assets, status, sync, docs commands"] --> MIDDLE["Reusable skills + tooling\nideas, docs workflows, repo helpers"]
-  MIDDLE --> TOP["Optional workflow layer\ntracked projects, reviews, PR flow, HiLL"]
+  GOAL["What do you need first?"] --> SYNC["Align coding tools\nProvider Sync"]
+  GOAL --> SKILLS["Help with one task\nReusable Skills"]
+  GOAL --> WORK["Resume longer work\nTracked Workflows"]
+  GOAL --> DOCS["Maintain documentation\nMarkdown or a docs site"]
+  SYNC -.-> LATER["Add another path whenever useful"]
+  SKILLS -.-> LATER
+  WORK -.-> LATER
+  DOCS -.-> LATER
 ```
+
+- **Provider Sync:** `oat init --scope project`, choose providers, then `oat sync --scope project`.
+- **Reusable skills:** `oat tools install --scope user`; no repository initialization is needed.
+- **Tracked workflows:** `oat init --scope project`, `oat tools install workflows --scope project`, then `/oat-project-quick-start`.
+- **Documentation:** `oat init --scope project`, `oat tools install docs --scope project`, then `/oat-docs-bootstrap` for plain Markdown or a docs site.
+
+Choose a starting point, not a required sequence. Use provider sync to align coding tools, install reusable skills for individual tasks, add tracked workflows for longer work, or maintain plain Markdown or a docs site with Docs Tooling. You can combine these paths later.
+
+Commands below the diagram run in a terminal; `/name` denotes an agent skill (`$name` in Codex). Pack installation has its own scope: project scope targets repository assets, but the core pack is user-only when installed. Skip guided pack setup if you only want provider sync. New tracked projects default to synced storage and need an `origin` remote; choose local project storage for origin-free work.
+
+Continue with [Provider Sync](../provider-sync/index.md), [Tool Packs](tool-packs.md), [Choose a Workflow](../workflows/choose-workflow.md), or [Docs Tooling](../docs-tooling/index.md).
 
 ## Canonical Assets and Provider Views
 
@@ -27,9 +44,10 @@ flowchart LR
   OAT --> CLAUDE[".claude/"]
   OAT --> CURSOR[".cursor/"]
   OAT --> COPILOT[".github/"]
-  OAT --> GEMINI[".gemini/"]
   OAT --> CODEX[".codex/"]
 ```
+
+Gemini CLI is a native read-only consumer; OAT does not generate a `.gemini/` view through sync.
 
 Use these docs next:
 
@@ -65,13 +83,13 @@ Use these docs next:
 
 ## The Three Usage Modes
 
-OAT can be adopted in three layers:
+OAT offers three capabilities you can use independently:
 
 1. Provider sync and CLI interop only
 2. Provider-agnostic tooling and reusable skills
 3. Optional workflow/project lifecycle
 
-These layers stack. You can stay at the interop layer, use only the tooling layer, or adopt the full lifecycle when you need tracked discovery, planning, implementation, review, and PR flow.
+These are choices, not required adoption stages. Use only interoperability, install task-oriented skills, or adopt the lifecycle when you need tracked discovery, planning, implementation, review, and PR flow.
 
 Use these docs next:
 

@@ -20,6 +20,69 @@ Each level has its own independent backlog, scratchpad, and active-idea config v
 
 ## Flow
 
+Start in the home that matches how formed the thought is. Every home is a fine place to stop. Dashed arrows are optional moves.
+
+```mermaid
+flowchart TD
+  Q{"How formed is\nthe thought?"}
+  BS["oat-brainstorm\n(may end inline\nor as a doc)"]
+  SP["Scratchpad seed\n.oat/ideas/\nscratchpad.md"]
+  ID["Idea\n.oat/ideas/{idea}/\ndiscovery.md"]
+  SUM["Summarized idea\n.oat/ideas/{idea}/\nsummary.md"]
+  BL["Backlog item\n.oat/repo/pjm/\nbacklog/items/"]
+  PR["Project\n.oat/projects/\n{scope}/{slug}/"]
+  SPLIT["Parent +\nchild projects"]
+
+  Q -->|unsure| BS
+  Q -->|seed| SP
+  Q -->|explore| ID
+  Q -->|scoped| BL
+  Q -->|ready| PR
+  BS -.-> ID
+  BS -.-> BL
+  BS -.->|"project(s)"| PR
+  SP -.->|optional| ID
+  ID -.->|optional| SUM
+  SUM -.->|optional| PR
+  BL -.->|optional| PR
+  PR -.->|"optional\n(spec-driven)"| SPLIT
+```
+
+Where to start:
+
+- **Unsure:** `oat-brainstorm`. It can end as an inline answer or a document,
+  or hand off to an idea, a backlog item, or one or more projects.
+- **A one-line seed:** `oat-idea-scratchpad`.
+- **Worth exploring:** `oat-idea-new`. `oat-idea-ideate` resumes an idea, can
+  start one from a scratchpad seed, and can reopen a summarized idea.
+- **Scoped work for later:** `oat-pjm-add-backlog-item` (needs `oat pjm init`).
+- **Ready to build:** `oat-project-lite`, `oat-project-quick-start`,
+  `oat-project-new`, or `oat-project-import-plan` for a plan written elsewhere.
+
+Optional moves:
+
+- Seed to idea: `oat-idea-new`.
+- Idea to summarized idea: `oat-idea-summarize`.
+- Summarized idea to project: the documented route is `oat-project-new` and
+  then `oat-project-discover`, with `summary.md` as the request. That is a
+  spec-driven project.
+- Backlog item to project: start any project skill and give it the item (or
+  its kickoff handoff) as context. Archive the item with `oat backlog archive`
+  when the work ships.
+- Split into parent and child projects: from spec-driven discovery
+  (`oat-project-discover`), or directly from `oat-brainstorm`.
+
+Good to know:
+
+- Moving on leaves the earlier record in place. It is archived, not moved.
+- The paths shown are project-level defaults. With `--global`, ideas live in
+  `~/.oat/ideas/`. Ideas are local and usually gitignored.
+- The ideas backlog (`backlog.md` inside the ideas folder) is an index of
+  ideas. It is not the repository backlog under `.oat/repo/pjm/backlog/`.
+- Backlog items are committed to the repository. Projects are committed
+  (shared scope), pushed to a project ref (synced scope, the default on a
+  fresh install), or kept on your machine (local scope).
+
 1. Quick capture: `oat-idea-scratchpad` to review or capture idea seeds
 2. Start brainstorming: `oat-idea-new` (scaffolds directory, then invokes `oat-idea-ideate`)
 3. Resume brainstorming: `oat-idea-ideate` (multiple sessions over time)
