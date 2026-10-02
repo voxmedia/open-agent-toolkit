@@ -336,7 +336,7 @@ cat "$PROJECT_PATH/implementation.md" 2>/dev/null | head -20
 
 ### Step 4: Initialize Implementation Document
 
-Copy template: `.oat/templates/implementation.md` → `"$PROJECT_PATH/implementation.md"`
+Copy template: `oat template resolve implementation --output "$PROJECT_PATH/implementation.md"`
 
 Update frontmatter:
 

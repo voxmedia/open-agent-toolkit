@@ -14,9 +14,9 @@
   - [Updating Model Guidance](contributing/updating-model-guidance.md) — How to verify provider model IDs, update supported dispatch targets and preferred ladders, sync agent views, and validate a model refresh.
   - [Verifying Cursor Pins](contributing/verifying-cursor-pins.md) — Runbook for probe-verifying a Cursor model pin before shipping it: evidence channel, hook capture, subjects and controls, interpretation, and cleanup.
 - Docs Tooling
-  - [Docs Tooling](docs-tooling/index.md) — Standalone adoption lane for docs app setup, docs commands, and docs maintenance workflows.
-  - [Add Docs to a New Repo](docs-tooling/add-docs-to-a-repo.md) — Step-by-step guide for adding an OAT-managed docs app to a repository.
-  - [Docs App Commands](docs-tooling/commands.md) — Docs scaffolding, migration, framework-specific navigation compilation, and agent-index generation.
+  - [Docs Tooling](docs-tooling/index.md) — Standalone adoption lane for Markdown and docs app setup, docs commands, and docs maintenance workflows.
+  - [Add or Adopt Docs in a Repo](docs-tooling/add-docs-to-a-repo.md) — Step-by-step guide for adding or adopting OAT-managed documentation to a repository.
+  - [Documentation Commands](docs-tooling/commands.md) — Markdown bootstrap/adoption, framework scaffolding, external manifests, and navigation helpers for both frameworks.
   - [Docs Workflows](docs-tooling/workflows.md) — Docs CLI helpers and skills for analysis and controlled documentation updates.
 - Getting Started
   - [Getting Started](getting-started/index.md) — Choose an adoption path and follow the setup guides for OAT.
@@ -37,7 +37,7 @@
   - [CLI Reference](reference/cli-reference.md) — Scannable reference for the current OAT CLI surface, with links to the deeper owning sections for each command family.
   - [Config and Local State](reference/config-and-local-state.md) — Utility command groups for config discovery, backlog helpers, local paths, instruction integrity, and diagnostics.
   - [Configuration](reference/configuration.md) — How OAT configuration is split across shared repo, repo-local, user, and provider-sync surfaces.
-  - [Docs Index Contract](reference/docs-index-contract.md) — Authored Contents, owned Fumadocs sidebar metadata, separate agent inventories, and MkDocs navigation.
+  - [Docs Index Contract](reference/docs-index-contract.md) — Docs source contract: authored Markdown context/maps, optional external inventories, Fumadocs manifests and meta.json navigation, and MkDocs nav sync.
   - [File Locations](reference/file-locations.md) — Canonical locations for agent assets, OAT config, projects, ideas, and templates.
   - [`.oat` Directory Structure](reference/oat-directory-structure.md) — Canonical .oat/ tree reference: config, projects, sync state, templates, and per-file purpose.
   - [Project Artifacts](reference/project-artifacts.md) — Project artifact contracts: state.md, spec.md, design.md, plan.md, and implementation.md.

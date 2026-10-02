@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Glob, Grep, Write, Edit, Bash(git:*), Bash(oat:*), Bash(pnpm:*), Bash(mkdir:*), Bash(date:*), Bash(realpath:*), Bash(awk:*), AskUserQuestion
 metadata:
-  version: 1.5.11
+  version: 1.5.12
 ---
 
 # Request Review
@@ -759,7 +759,7 @@ stamp it already copies into the review artifact's dispatch audit metadata
 (Step 6.0); it never writes `implementation.md` (this rail requires that file
 clean and never commits it) and adds no request-id, launch-status, or outcome
 field to any artifact or ledger column. Construct and redact the complete
-generic record plus OAT role event before the native call. Writing a per-dispatch file with `oat project dispatch record` is optional and off by default: no lifecycle skill or command consumes those files, so do not write them unless the host has explicitly opted in. A rejected launch must
+generic record plus OAT role event before the native call. A rejected launch must
 attest `provesNoChildStarted: true`; only it permits one exact-target
 approximation with a fresh request ID. Preserve the exact model, effort, route,
 authority, and provider controls. Timeout, `BLOCKED`, refusal after acceptance,

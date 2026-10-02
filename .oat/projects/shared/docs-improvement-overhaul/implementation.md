@@ -49,6 +49,10 @@ The user invoked oat-project-implement after the reviewed plan handoff. Implemen
 
 ## Phase 2: Migrate Information Without Rewriting It
 
+### Integration correction authority — main-only nav foundation
+
+Current main1fd10d9ce already shipped nav compilation (#336/#338) and Markdown bootstrap (#335) after project base98d1d5246. Root/Fable agree to retain main's single nav implementation, not hybridize or advertise duplicate p01 delivery. Root initiated a merge, currently unresolved, and hands source integration to the original phase02 implementer: preserve p02 routes/reader fixes, retain current main capabilities, remove the duplicate sidecar/compiler flags and align app/tooling checks. Main implementation is source truth. Existing pre-integration gates check/types/test/build passed atad71d9cd, skill-version gate failed; those results do not accept the changed integration. Final gates must judge the integrated commit. Independent blind applicability/visual work and isolated README/mapping lanes continue. No publication/merge-to-main authority implied.
+
 **Status:** in_review; all three task commits accepted, ordered gates and independent reviews pending
 **Started:** 2026-10-02
 

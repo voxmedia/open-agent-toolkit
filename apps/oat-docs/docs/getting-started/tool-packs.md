@@ -528,13 +528,19 @@ repository that adopted PJM with a user-scope pack is diagnosed correctly.
 
 ### Template precedence
 
-PJM templates resolve through three tiers, first match wins:
+Project lifecycle and PJM templates resolve through three tiers, first match
+wins (idea templates instead follow the ideas scope the ideas skills select):
 
 1. **Repository** — `.oat/templates/<name>` in this repo. An existing repository
    template is an owner override and is never rewritten by pack updates.
 2. **User** — `~/.oat/templates/<name>`, the managed default that
-   `oat tools update --pack project-management --scope user` keeps current.
+   `oat tools update --pack <pack> --scope user` keeps current (`workflows`
+   for project lifecycle templates, `project-management` for PJM templates).
 3. **Bundle** — the templates shipped inside the installed CLI.
+
+`oat template resolve <name>` reports which tier wins, and lifecycle skills
+copy their templates with `oat template resolve <name> --output <path>`, so a
+user-scope-only install needs no repository `.oat/templates/` directory.
 
 Delete a repository template to fall back to the managed user default. If a
 template is missing from all three tiers, the command errors rather than
@@ -922,7 +928,7 @@ Key behavior:
 The `docs` pack contains active documentation and instruction-governance
 workflows:
 
-- **oat-docs-bootstrap** — Guide users through bootstrapping a docs app
+- **oat-docs-bootstrap** — Guide users through Markdown setup/adoption or a docs app
   end-to-end: preflight detection, input gathering, scaffold (via `oat docs
 init`) with capability-gated post-patches, build verification, config
   inspection, and an educational walkthrough.
@@ -937,6 +943,9 @@ init`) with capability-gated post-patches, build verification, config
 
 Key behavior:
 
+- The docs pack includes `docs-markdown/index.md` and `docs-markdown/contributing.md`
+  baseline templates alongside framework scaffolds. Repository templates override
+  user templates, which override bundled defaults.
 - Docs pack installs at the selected scope and defaults to user scope on a
   fresh install.
 - It complements the `core` pack: `oat-docs` answers questions from bundled

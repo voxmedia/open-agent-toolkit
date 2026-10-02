@@ -41,10 +41,10 @@ describe('published managed Claude dispatch-record example', () => {
       'recordBase',
     ]);
 
-    const result = await recordProjectDispatch({ projectPath: null, input });
+    const result = await recordProjectDispatch({ input });
 
     expect(result.status).toBe('validated-only');
-    expect(result.path).toBeNull();
+    expect(result).not.toHaveProperty('path');
     expect(result.record).toMatchObject({
       provider: 'claude',
       role_name: roleName,

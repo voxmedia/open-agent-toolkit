@@ -265,7 +265,7 @@ describe('oat project split run', () => {
         phase: 'discovery',
         workflowMode: 'quick',
         recommendation: {
-          skill: 'oat-project-plan',
+          skill: 'oat-project-quick-start',
         },
       },
     });

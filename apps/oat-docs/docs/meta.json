@@ -1,0 +1,13 @@
+{
+  "title": "Home",
+  "pages": [
+    "index",
+    "getting-started",
+    "skills",
+    "workflows",
+    "provider-sync",
+    "docs-tooling",
+    "reference",
+    "contributing"
+  ]
+}

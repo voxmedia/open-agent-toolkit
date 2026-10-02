@@ -9,6 +9,7 @@ import {
   type UpsertSectionResult,
   formatAgentsMdGuidanceResult,
   formatAgentsMdMutationFailure,
+  previewAgentsMdSection,
   upsertAgentsMdSection,
 } from '@commands/shared/agents-md';
 import {
@@ -28,6 +29,13 @@ import { resolveAssetsRoot } from '@fs/assets';
 import { Command, Option } from 'commander';
 
 import { buildDocsCommands } from './docs-commands';
+import {
+  applyMarkdownDocsPlan,
+  MarkdownDocsWriteError,
+  planMarkdownDocs,
+  validateMarkdownConfig,
+  validateMarkdownTarget,
+} from './markdown';
 import {
   DEFAULT_DOCS_REPO_SHAPE_DEPENDENCIES,
   type DocsFormatMode,
@@ -54,12 +62,26 @@ interface DocsInitCommandOptions {
   format?: DocsFormatMode;
   rootPatch?: boolean;
   yes?: boolean;
+  adopt?: boolean;
 }
 
 interface DocsInitExecutionResult {
   createdFiles: string[];
   appRoot: string;
-  rootPackagePatch: RootPackagePatchResult;
+  rootPackagePatch?: RootPackagePatchResult;
+  dryRun?: boolean;
+  plannedFiles?: string[];
+  preservedFiles?: string[];
+  incompleteFiles?: string[];
+  auditAdvice?: string[];
+  changes?: { files: string[]; config: boolean };
+  configStatus?:
+    | 'planned'
+    | 'updated'
+    | 'no-change'
+    | 'failed'
+    | 'not-attempted';
+  failure?: { stage: 'scaffold' | 'config'; message: string };
 }
 
 interface DocsInitDependencies {
@@ -86,6 +108,7 @@ interface DocsInitDependencies {
     key: string,
     body: string,
   ) => Promise<UpsertSectionResult>;
+  previewAgentsMdSection: typeof previewAgentsMdSection;
   readOatConfig: (repoRoot: string) => Promise<OatConfig>;
   confirmAction: (message: string, ctx: PromptContext) => Promise<boolean>;
 }
@@ -146,6 +169,86 @@ const DEFAULT_DEPENDENCIES: DocsInitDependencies = {
   inputWithDefault,
   selectWithAbort,
   runDocsInit: async (context, options, assetsRoot) => {
+    if (options.framework === 'markdown') {
+      const config = await readOatConfig(context.cwd);
+      const plan = await planMarkdownDocs({
+        ...options,
+        assetsRoot,
+        documentation: config.documentation,
+      });
+      const report: DocsInitExecutionResult = {
+        appRoot: plan.appRoot,
+        createdFiles: [],
+        preservedFiles: plan.preservedFiles,
+        auditAdvice: plan.auditAdvice,
+        changes: {
+          files: plan.files.map(({ name }) => name),
+          config: plan.configChanged,
+        },
+        configStatus: plan.configChanged ? 'planned' : 'no-change',
+      };
+      if (context.dryRun) {
+        return {
+          ...report,
+          dryRun: true,
+          plannedFiles: plan.files.map(({ name }) => name),
+        };
+      }
+      try {
+        const result = await applyMarkdownDocsPlan(plan);
+        report.createdFiles = result.createdFiles;
+        report.preservedFiles = result.preservedFiles;
+      } catch (error) {
+        if (!(error instanceof MarkdownDocsWriteError)) throw error;
+        return {
+          ...report,
+          ...error.result,
+          configStatus: 'not-attempted',
+          changes: { files: error.result.createdFiles, config: false },
+          failure: { stage: 'scaffold', message: error.message },
+        };
+      }
+      if (plan.configChanged) {
+        try {
+          // Re-read after scaffolding so unrelated concurrent config edits survive.
+          const latest = await readOatConfig(context.cwd);
+          validateMarkdownConfig(
+            context.cwd,
+            plan.targetDir,
+            latest.documentation,
+          );
+          latest.documentation = {
+            ...latest.documentation,
+            root: plan.targetDir,
+            tooling: 'markdown',
+            index: `${plan.targetDir}/index.md`,
+          };
+          await writeOatConfig(context.cwd, latest);
+          report.configStatus = 'updated';
+        } catch (error) {
+          return {
+            ...report,
+            configStatus: 'failed',
+            changes: { files: report.createdFiles, config: false },
+            failure: {
+              stage: 'config',
+              message: error instanceof Error ? error.message : String(error),
+            },
+          };
+        }
+      }
+      report.changes = {
+        files: report.createdFiles,
+        config: report.configStatus === 'updated',
+      };
+      if (!context.json) {
+        context.logger.info(
+          `Markdown docs at ${plan.targetDir}: ${report.createdFiles.length} baseline file(s) created, ${report.preservedFiles?.length ?? 0} preserved.`,
+        );
+        for (const advice of plan.auditAdvice) context.logger.info(advice);
+      }
+      return report;
+    }
     const result = await scaffoldDocsApp({
       assetsRoot,
       ...options,
@@ -171,7 +274,7 @@ const DEFAULT_DEPENDENCIES: DocsInitDependencies = {
       context.logger.info(`  App name: ${options.appName}`);
       context.logger.info(`  Lint: ${options.lint}`);
       context.logger.info(`  Format: ${options.format}`);
-      logRootPackagePatch(context, rootPackagePatch);
+      if (rootPackagePatch) logRootPackagePatch(context, rootPackagePatch);
     }
     return {
       createdFiles: result.createdFiles,
@@ -180,6 +283,7 @@ const DEFAULT_DEPENDENCIES: DocsInitDependencies = {
     };
   },
   upsertAgentsMdSection,
+  previewAgentsMdSection,
   readOatConfig,
   confirmAction,
 };
@@ -187,6 +291,7 @@ const DEFAULT_DEPENDENCIES: DocsInitDependencies = {
 const FRAMEWORK_LABELS: Record<DocsFramework, string> = {
   fumadocs: 'Fumadocs (Next.js + MDX)',
   mkdocs: 'MkDocs (Python)',
+  markdown: 'Markdown',
 };
 
 /**
@@ -201,6 +306,19 @@ const FRAMEWORK_LABELS: Record<DocsFramework, string> = {
  * `documentation.index` is the nav YAML the Config bullet already names.
  */
 export function buildDocsSectionBody(options: DocsInitResolvedOptions): string {
+  if (options.framework === 'markdown') {
+    return [
+      '## Documentation',
+      '',
+      `- **Docs root:** \`${options.targetDir}\``,
+      '- **Tooling:** Markdown',
+      `- **Authored index:** \`${options.targetDir}/index.md\``,
+      `- **Contributing:** \`${options.targetDir}/contributing.md\``,
+      '',
+      'Keep authored context, title/description metadata, and Contents maps with relative Markdown links current. Preserve local instructions; asset-only directories are exempt from indexes.',
+      'Use `oat-docs-analyze` to audit gaps and `oat-docs-apply` for approved repairs. Optional generated inventories belong outside the content tree and do not replace the authored index.',
+    ].join('\n');
+  }
   const lines = [
     '## Documentation',
     '',
@@ -238,6 +356,7 @@ async function runDocsInitCommand(
       interactive: context.interactive,
       acceptDefaults: options.yes ?? false,
       providedFramework: options.framework,
+      providedAdopt: options.adopt,
       providedAppName: options.appName,
       providedSiteName: options.siteName,
       providedTargetDir: options.targetDir,
@@ -257,8 +376,32 @@ async function runDocsInitCommand(
       return;
     }
 
+    if (context.dryRun && resolved.framework !== 'markdown') {
+      throw new Error('--dry-run applies only to --framework markdown.');
+    }
+    if (options.adopt && resolved.framework !== 'markdown') {
+      throw new Error('--adopt applies only to --framework markdown.');
+    }
+    const inapplicableOptions: string[] = [];
     const existingConfig = await dependencies.readOatConfig(context.cwd);
-    if (existingConfig.documentation?.root) {
+    if (resolved.framework === 'markdown') {
+      resolved.targetDir = await validateMarkdownTarget(
+        context.cwd,
+        resolved.targetDir,
+      );
+      validateMarkdownConfig(
+        context.cwd,
+        resolved.targetDir,
+        existingConfig.documentation,
+      );
+      if (options.appName !== undefined) inapplicableOptions.push('--app-name');
+      if (options.rootPatch === false)
+        inapplicableOptions.push('--no-root-patch');
+      if (!context.json && inapplicableOptions.length)
+        context.logger.warn(
+          `Inapplicable to Markdown: ${inapplicableOptions.join(', ')}. No app or package changes will be made.`,
+        );
+    } else if (existingConfig.documentation?.root) {
       const configDesc = `root: ${existingConfig.documentation.root}, tooling: ${existingConfig.documentation.tooling ?? 'unknown'}`;
       if (context.json) {
         // JSON mode: include warning in output, proceed only with --yes
@@ -295,16 +438,83 @@ async function runDocsInitCommand(
       assetsRoot,
     );
 
+    if (scaffold?.failure) {
+      if (context.json) {
+        context.logger.json({
+          status: 'partial',
+          ...resolved,
+          ...scaffold,
+          scaffold: {
+            status:
+              scaffold.failure.stage === 'scaffold' ? 'partial' : 'complete',
+            targetDir: resolved.targetDir,
+            createdFiles: scaffold.createdFiles,
+          },
+          guidance: { action: 'not-attempted' },
+        });
+      } else {
+        context.logger.warn(
+          `Markdown setup is partial: ${scaffold.failure.stage} failed: ${scaffold.failure.message}`,
+        );
+        context.logger.info(
+          `Created baseline files: ${scaffold.createdFiles.join(', ') || 'none'}. Configuration: ${scaffold.configStatus}. Guidance was not attempted; preserve created content when retrying with --adopt.`,
+        );
+        if (scaffold.incompleteFiles?.length) {
+          context.logger.warn(
+            `Baseline files requiring inspection: ${scaffold.incompleteFiles.join(', ')}. Automatic cleanup could not be completed; inspect or repair these paths before retrying. Adoption preserves existing files.`,
+          );
+        }
+      }
+      process.exitCode = 1;
+      return;
+    }
     const sectionBody = buildDocsSectionBody(resolved);
     let sectionResult: UpsertSectionResult;
     try {
-      sectionResult = await dependencies.upsertAgentsMdSection(
-        context.cwd,
-        'docs',
-        sectionBody,
-      );
+      sectionResult =
+        resolved.framework === 'markdown' && context.dryRun
+          ? await dependencies.previewAgentsMdSection(
+              context.cwd,
+              'docs',
+              sectionBody,
+            )
+          : await dependencies.upsertAgentsMdSection(
+              context.cwd,
+              'docs',
+              sectionBody,
+            );
     } catch (error) {
-      throw new Error(formatAgentsMdMutationFailure(error), { cause: error });
+      if (resolved.framework !== 'markdown')
+        throw new Error(formatAgentsMdMutationFailure(error), { cause: error });
+      sectionResult = {
+        action: 'blocked',
+        blocked: {
+          code: 'blocked',
+          target: 'AGENTS.md',
+          reason: formatAgentsMdMutationFailure(error),
+          action: 'Review root guidance and retry.',
+        },
+      };
+    }
+    const markdownDetails =
+      resolved.framework === 'markdown'
+        ? {
+            ...resolved,
+            ...scaffold,
+            dryRun: context.dryRun,
+            inapplicableOptions,
+            changes: {
+              ...scaffold?.changes,
+              guidance: sectionResult.action !== 'no-change',
+            },
+          }
+        : {};
+    if (resolved.framework === 'markdown' && context.dryRun && !context.json) {
+      context.logger.info(
+        `Dry run: ${scaffold?.plannedFiles?.length ?? 0} planned baseline file(s); configuration ${scaffold?.configStatus}; guidance ${sectionResult.action}. No changes were written.`,
+      );
+      for (const advice of scaffold?.auditAdvice ?? [])
+        context.logger.info(advice);
     }
     if (
       sectionResult.action === 'manual-required' ||
@@ -313,8 +523,12 @@ async function runDocsInitCommand(
       if (context.json) {
         context.logger.json({
           status: 'partial',
+          ...markdownDetails,
           scaffold: {
-            status: 'complete',
+            status:
+              resolved.framework === 'markdown' && context.dryRun
+                ? 'planned'
+                : 'complete',
             targetDir: resolved.targetDir,
             framework: resolved.framework,
           },
@@ -322,7 +536,7 @@ async function runDocsInitCommand(
         });
       } else {
         context.logger.warn(
-          `Docs scaffold completed; AGENTS.md guidance is ${sectionResult.action}.`,
+          `${resolved.framework === 'markdown' && context.dryRun ? 'Docs scaffold planned' : 'Docs scaffold completed'}; AGENTS.md guidance is ${sectionResult.action}.`,
         );
         for (const line of formatAgentsMdGuidanceResult(sectionResult)) {
           context.logger.info(line);
@@ -337,14 +551,27 @@ async function runDocsInitCommand(
         ...resolved,
         ...scaffold,
         guidance: sectionResult,
+        ...markdownDetails,
       });
     } else if (sectionResult.action !== 'no-change') {
-      context.logger.info(`AGENTS.md docs section ${sectionResult.action}.`);
+      context.logger.info(
+        `AGENTS.md docs section ${resolved.framework === 'markdown' && context.dryRun ? 'planned: ' : ''}${sectionResult.action}.`,
+      );
     }
 
     if (!context.json) {
       context.logger.info('');
       context.logger.info('Next steps:');
+      if (resolved.framework === 'markdown') {
+        context.logger.info(
+          `  Read ${resolved.targetDir}/index.md and ${resolved.targetDir}/contributing.md.`,
+        );
+        context.logger.info(
+          '  Use oat-docs-analyze to audit documentation and oat-docs-apply for approved repairs.',
+        );
+        process.exitCode = 0;
+        return;
+      }
       const commands = buildDocsCommands(
         resolved.repoShape,
         resolved.targetDir,
@@ -389,24 +616,33 @@ export function createDocsInitCommand(
   };
 
   return new Command('init')
-    .description('Scaffold an OAT docs app')
+    .description('Bootstrap an OAT docs app or authored Markdown documentation')
     .addOption(
       new Option('--framework <framework>', 'Documentation framework').choices([
         'fumadocs',
         'mkdocs',
+        'markdown',
       ]),
     )
-    .addOption(new Option('--app-name <name>', 'Docs app name'))
     .addOption(
       new Option(
-        '--site-name <name>',
-        'Display title (distinct from --app-name)',
+        '--app-name <name>',
+        'Docs app name (inapplicable to Markdown)',
       ),
     )
     .addOption(
-      new Option('--target-dir <path>', 'Target directory for the docs app'),
+      new Option(
+        '--site-name <name>',
+        'Site display title or Markdown documentation title',
+      ),
     )
-    .addOption(new Option('--description <text>', 'Site description'))
+    .addOption(
+      new Option(
+        '--target-dir <path>',
+        'Docs directory (Markdown defaults to docs; requires a dedicated directory)',
+      ),
+    )
+    .addOption(new Option('--description <text>', 'Documentation description'))
     .addOption(
       new Option('--lint <mode>', 'Markdown lint mode').choices([
         'none',
@@ -419,7 +655,18 @@ export function createDocsInitCommand(
         'none',
       ]),
     )
-    .option('--no-root-patch', 'Skip patching the consumer root package.json')
+    .option(
+      '--no-root-patch',
+      'Skip root package.json patch (inapplicable to Markdown)',
+    )
+    .option(
+      '--adopt',
+      'Add missing baseline files to existing Markdown docs; preserve authored content (Markdown only)',
+    )
+    .option(
+      '--dry-run',
+      'Preview Markdown files, config, and guidance without writes (Markdown only)',
+    )
     .option('--yes', 'Accept defaults without prompting')
     .action(async (options: DocsInitCommandOptions, command: Command) => {
       const context = dependencies.buildCommandContext(

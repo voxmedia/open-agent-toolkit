@@ -6,7 +6,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash(git:*), Bash(jq:*), Bash(oat pjm:*), Bash(oat project push:*), Bash(oat project scope:*), Bash(oat tools:*), Glob, Grep, AskUserQuestion, Skill
 metadata:
-  version: 1.8.5
+  version: 1.8.6
 ---
 
 # Project Documentation Sync
@@ -140,6 +140,14 @@ DOCS_ROOT=$(oat config get documentation.root 2>/dev/null || true)
 DOCS_TOOLING=$(oat config get documentation.tooling 2>/dev/null || true)
 DOCS_CONFIG=$(oat config get documentation.config 2>/dev/null || true)
 ```
+
+For `DOCS_TOOLING=markdown`, `$DOCS_ROOT` is the literal configured authored
+content root, even when a child directory is named `docs`; `documentation.index`
+is authored. Preserve context, metadata, Contents, relative `.md` links, excludes
+and existing local instructions. No app package, framework config, nav generation
+or site build is required. Optional external manifests never replace the authored
+index. For framework tooling, resolve the authored source root from config/scripts
+and local guidance before scanning; the configured root can be an app root.
 
 If `$DOCS_ROOT` is empty, attempt auto-detection:
 
@@ -503,7 +511,18 @@ Execute the approved documentation updates.
    - Add a cross-reference in the original file pointing to the new location
    - If the original had sections that logically separate, use section headings as split boundaries
 
-**Nav structure updates:**
+**Authored maps and derived navigation:**
+
+Update the nearest authored `index.md` Contents for added/moved pages and preserve
+useful context. Validate actual relative `.md` destinations and title/description
+metadata, honoring excludes and local guidance. Markdown uses file/link checks
+and existing documented lint/format tools; it does not require site nav/build.
+Regenerate optional external manifests only when locally declared, with explicit
+output outside the full configured Markdown content tree; leave the configured
+authored index intact. For framework apps, regenerate declared navigation/index
+artifacts through local tooling rather than hand-editing generated output.
+
+**Framework config updates:**
 
 If `$DOCS_CONFIG` exists and new files were created in the docs directory:
 

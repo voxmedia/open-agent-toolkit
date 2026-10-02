@@ -9,6 +9,8 @@ oat_template: false
 
 # Design: docs-improvement-overhaul
 
+> Execution amendment, 2026-10-02: current main already shipped a Fumadocs nav compiler after this project's base. Codex/Fable select that single implementation, not the duplicate p01 compiler. Committed metadata, framework detection, main check-mode and real-loader tests supersede this design's ignored metadata, sidecar and branch-only nav flags. Preserve the agreed IA, canonical family discovery and app route/anchor checks; regenerate main metadata for the moved tree. See plan.md's Main-foundation consolidation override. p01's duplicate work is retired rather than advertised as a delivered feature.
+
 ## Overview
 
 Make the documentation useful to a person choosing one capability, completing a task, or looking up a named skill. Home remains an overview; the seven primary sections are Getting Started, Skills, Workflows, Provider Sync, Docs Tooling, Reference, and Contributing. Skills is universal discovery, not a standalone-only bucket. Canonical family guides own usage prose; the catalog links to per-skill anchors without copying complete skill instructions.

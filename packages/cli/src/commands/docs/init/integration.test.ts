@@ -1,11 +1,27 @@
-import { mkdir, mkdtemp, readdir, readFile, writeFile } from 'node:fs/promises';
+import {
+  chmod,
+  mkdir,
+  mkdtemp,
+  readdir,
+  readFile,
+  readlink,
+  rm,
+  symlink,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import type { CommandContext, GlobalOptions } from '@app/command-context';
+import { createLoggerCapture } from '@commands/__tests__/helpers';
+import { resolveAssetsRoot } from '@fs/assets';
 import { OAT_VERSION } from '@shared/oat-version';
+import { Command } from 'commander';
 import { afterEach, describe, expect, it } from 'vitest';
+import { parse as parseYaml } from 'yaml';
 
+import { createDocsInitCommand } from './index';
 import { scaffoldDocsApp } from './scaffold';
 
 const THIS_DIR = dirname(fileURLToPath(import.meta.url));
@@ -41,7 +57,6 @@ describe('scaffold integration', () => {
   let assetsRoot: string;
 
   afterEach(async () => {
-    const { rm } = await import('node:fs/promises');
     const toClean = [...createdRoots];
     if (assetsRoot) toClean.push(assetsRoot);
     await Promise.all(
@@ -55,15 +70,6 @@ describe('scaffold integration', () => {
     { timeout: 30_000 },
     async () => {
       assetsRoot = await bundleAssets();
-      const bundledDocs = await collectFiles(join(assetsRoot, 'docs'));
-      expect(bundledDocs).toContain(join(assetsRoot, 'docs', 'index.md'));
-      expect(
-        bundledDocs.some(
-          (path) =>
-            path.endsWith('/meta.json') ||
-            path.endsWith('/.oat-fumadocs-nav.json'),
-        ),
-      ).toBe(false);
       const root = await mkdtemp(join(tmpdir(), 'oat-integration-fuma-'));
       createdRoots.push(root);
       await mkdir(join(root, 'apps'), { recursive: true });
@@ -330,10 +336,10 @@ describe('scaffold integration', () => {
 
       // Verify oat CLI with app-relative paths — no || true suppression
       expect(packageJson.scripts['predev']).toBe(
-        'oat docs nav sync --framework fumadocs --target-dir . && fumadocs-mdx && oat docs generate-index --docs-dir docs --output index.md',
+        'fumadocs-mdx && oat docs generate-index --docs-dir docs --output index.md',
       );
       expect(packageJson.scripts['prebuild']).toBe(
-        'oat docs nav sync --framework fumadocs --target-dir . && fumadocs-mdx && oat docs generate-index --docs-dir docs --output index.md',
+        'fumadocs-mdx && oat docs generate-index --docs-dir docs --output index.md',
       );
     },
   );
@@ -421,6 +427,1049 @@ describe('scaffold integration', () => {
       expect(contributing).toContain(
         'Run Markdown formatting and linting as configured for this docs app.',
       );
+    },
+  );
+});
+
+// These cases exercise the command with real config, scaffold and guidance writers.
+describe('Markdown docs init public boundary', () => {
+  const roots: string[] = [];
+  const originalExit = process.exitCode;
+  afterEach(async () => {
+    await Promise.all(
+      roots.splice(0).map((root) => rm(root, { recursive: true, force: true })),
+    );
+    process.exitCode = originalExit;
+  });
+
+  async function temporaryRepo(): Promise<string> {
+    const root = await mkdtemp(join(tmpdir(), 'oat-markdown-init-'));
+    roots.push(root);
+    return root;
+  }
+
+  async function runMarkdown(
+    root: string,
+    args: string[] = [],
+    dryRun = false,
+    json = true,
+  ) {
+    const capture = createLoggerCapture();
+    const command = createDocsInitCommand({
+      buildCommandContext: (options: GlobalOptions): CommandContext => ({
+        scope: 'project',
+        cwd: root,
+        home: root,
+        interactive: false,
+        dryRun: options.dryRun ?? false,
+        json: options.json ?? false,
+        verbose: false,
+        logger: capture.logger,
+      }),
+      resolveAssetsRoot,
+    });
+    const program = new Command()
+      .option('--json')
+      .addCommand(new Command('docs').addCommand(command));
+    process.exitCode = undefined;
+    await program.parseAsync(
+      [
+        ...(json ? ['--json'] : []),
+        'docs',
+        'init',
+        '--framework',
+        'markdown',
+        '--yes',
+        ...(dryRun ? ['--dry-run'] : []),
+        ...args,
+      ],
+      { from: 'user' },
+    );
+    return { ...capture, exit: process.exitCode };
+  }
+
+  // Protects complete dry-run/refusal nonmutation, including empty directories and
+  // symlink identity; earlier framework cases do not inspect that whole boundary.
+  async function snapshotTree(root: string): Promise<Record<string, string>> {
+    const snapshot: Record<string, string> = {};
+    async function scan(directory: string, prefix = ''): Promise<void> {
+      for (const entry of await readdir(directory, { withFileTypes: true })) {
+        const path = prefix ? `${prefix}/${entry.name}` : entry.name;
+        if (entry.isDirectory()) {
+          snapshot[`${path}/`] = 'directory';
+          await scan(join(directory, entry.name), path);
+        } else if (entry.isSymbolicLink())
+          snapshot[path] =
+            `symlink:${await readlink(join(directory, entry.name))}`;
+        else
+          snapshot[path] = (
+            await readFile(join(directory, entry.name))
+          ).toString('base64');
+      }
+    }
+    await scan(root);
+    return snapshot;
+  }
+
+  it('defaults blank Markdown metadata before writing authored pages', async () => {
+    const cases = [
+      { args: ['--site-name', ''], title: 'Operator Handbook' },
+      { args: ['--site-name', ' \t '], title: 'Operator Handbook' },
+      {
+        args: ['--site-name', 'Operations Guide', '--description', ' \t '],
+        title: 'Operations Guide',
+      },
+      {
+        args: [
+          '--site-name',
+          ' Operators: "Service" ',
+          '--description',
+          ' Runtime ownership and escalation ',
+        ],
+        title: ' Operators: "Service" ',
+        description: ' Runtime ownership and escalation ',
+      },
+      { args: [], title: 'Operator Handbook' },
+      {
+        args: ['--site-name', 'Operations Guide', '--description', ''],
+        title: 'Operations Guide',
+      },
+      { args: [], title: 'Documentation', repoName: '___' },
+    ];
+    for (const fixture of cases) {
+      const parent = await temporaryRepo();
+      const root = join(parent, fixture.repoName ?? 'operator-handbook');
+      await mkdir(join(root, '.oat'), { recursive: true });
+      await writeFile(
+        join(root, 'package.json'),
+        '{"name":"service","scripts":{"build":"existing-build"}}\n',
+      );
+      await writeFile(
+        join(root, '.oat/config.json'),
+        '{"version":1,"documentation":{"excludes":["drafts/**"]},"worktrees":{"root":"custom-worktrees"}}\n',
+      );
+      const before = await snapshotTree(root);
+      const preview = await runMarkdown(root, fixture.args, true);
+      expect(preview.exit ?? 0).toBe(0);
+      expect(await snapshotTree(root)).toEqual(before);
+      const result = await runMarkdown(root, fixture.args);
+      expect(result.exit ?? 0).toBe(0);
+      expect(result.jsonPayloads[0]).toMatchObject({ status: 'ok' });
+      const index = await readFile(join(root, 'docs/index.md'), 'utf8');
+      const frontmatter = index.match(/^---\n([\s\S]*?)\n---/)?.[1];
+      expect(frontmatter).toBeDefined();
+      const metadata = parseYaml(frontmatter!) as {
+        title: string;
+        description: string;
+      };
+      expect(metadata.title).toBe(fixture.title);
+      expect(metadata.description).toBe(
+        fixture.description ??
+          (fixture.repoName === '___'
+            ? 'Documentation for ___.'
+            : 'Documentation for operator-handbook.'),
+      );
+      expect((await snapshotTree(root))['package.json']).toBe(
+        before['package.json'],
+      );
+      expect(
+        JSON.parse(await readFile(join(root, '.oat/config.json'), 'utf8')),
+      ).toMatchObject({
+        documentation: {
+          tooling: 'markdown',
+          root: 'docs',
+          index: 'docs/index.md',
+          excludes: ['drafts/**'],
+        },
+        worktrees: { root: 'custom-worktrees' },
+      });
+    }
+  });
+
+  it.each(['docs', 'handbook/team'])(
+    'creates authored docs at %s without changing app/package files',
+    async (target) => {
+      const root = await temporaryRepo();
+      const packageBytes =
+        '{"name":"service","scripts":{"build":"turbo run build"}}\n';
+      const turboBytes = '{"tasks":{"build":{"dependsOn":["^build"]}}}\n';
+      await writeFile(join(root, 'package.json'), packageBytes);
+      await writeFile(join(root, 'turbo.json'), turboBytes);
+      await writeFile(
+        join(root, 'pnpm-workspace.yaml'),
+        'packages:\n  - packages/*\n',
+      );
+      await mkdir(join(root, '.oat'));
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        '{"version":1,"documentation":{"excludes":["drafts/**"],"requireForProjectCompletion":true}}\n',
+      );
+      const result = await runMarkdown(root, [
+        '--target-dir',
+        target,
+        '--site-name',
+        'Operators\' Handbook: "Service"',
+        '--description',
+        'Runtime: operations and ownership',
+        '--app-name',
+        'ignored-app',
+        '--no-root-patch',
+        '--lint',
+        'markdownlint-cli2',
+        '--format',
+        'oxfmt',
+      ]);
+      expect(result.exit).toBe(0);
+      expect(result.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        targetDir: target,
+        createdFiles: ['index.md', 'contributing.md'],
+        inapplicableOptions: ['--app-name', '--no-root-patch'],
+      });
+      expect(await readdir(join(root, target))).toEqual([
+        'contributing.md',
+        'index.md',
+      ]);
+      const index = await readFile(join(root, target, 'index.md'), 'utf8');
+      expect(parseYaml(index.split('---')[1]!)).toMatchObject({
+        title: 'Operators\' Handbook: "Service"',
+        description: 'Runtime: operations and ownership',
+      });
+      expect(index).toContain('[Contributing](contributing.md)');
+      const guidance = await readFile(join(root, 'AGENTS.md'), 'utf8');
+      expect(guidance).toContain(`**Authored index:** \`${target}/index.md\``);
+      expect(guidance).toContain(
+        `**Contributing:** \`${target}/contributing.md\``,
+      );
+      expect(guidance).not.toContain(`${target}/docs/index.md`);
+      const config = JSON.parse(
+        await readFile(join(root, '.oat', 'config.json'), 'utf8'),
+      );
+      expect(config.documentation).toEqual({
+        root: target,
+        tooling: 'markdown',
+        index: `${target}/index.md`,
+        excludes: ['drafts/**'],
+        requireForProjectCompletion: true,
+      });
+      expect(await readFile(join(root, 'package.json'), 'utf8')).toBe(
+        packageBytes,
+      );
+      expect(await readFile(join(root, 'turbo.json'), 'utf8')).toBe(turboBytes);
+    },
+  );
+
+  it('defaults to literal docs even in a monorepo and emits file-level next steps', async () => {
+    const root = await temporaryRepo();
+    await writeFile(
+      join(root, 'pnpm-workspace.yaml'),
+      'packages:\n  - packages/*\n',
+    );
+    const result = await runMarkdown(root, [], false, false);
+    expect(result.exit).toBe(0);
+    expect(await readdir(join(root, 'docs'))).toEqual([
+      'contributing.md',
+      'index.md',
+    ]);
+    expect(result.info.join('\n')).toContain('Read docs/index.md');
+    expect(result.info.join('\n')).not.toContain('pnpm install');
+    expect(result.info.join('\n')).not.toContain('pnpm build');
+  });
+
+  it.each(['.', '../escaped'])(
+    'refuses unsafe target %s before writes',
+    async (target) => {
+      const root = await temporaryRepo();
+      await writeFile(join(root, 'README.md'), '# Existing service\n');
+      const result = await runMarkdown(root, ['--target-dir', target]);
+      expect(result.exit).toBe(1);
+      expect(result.jsonPayloads[0]).toMatchObject({ status: 'error' });
+      expect(await readdir(root)).toEqual(['README.md']);
+    },
+  );
+
+  it('refuses an escaping symlink ancestor before creating a child', async () => {
+    const root = await temporaryRepo();
+    const outside = await temporaryRepo();
+    await symlink(outside, join(root, 'alias'));
+    const result = await runMarkdown(root, ['--target-dir', 'alias/docs']);
+    expect(result.exit).toBe(1);
+    expect(await readdir(root)).toEqual(['alias']);
+    expect(await readdir(outside)).toEqual([]);
+  });
+
+  it('refuses populated content with --yes and preserves meaningful docs and instructions', async () => {
+    const root = await temporaryRepo();
+    await mkdir(join(root, 'docs'));
+    const index = '# Operator handbook\n\nKeep escalation ownership here.\n';
+    const agents =
+      '# Local guidance\n\nConsult the team before changing runbooks.\n';
+    await writeFile(join(root, 'docs', 'index.md'), index);
+    await writeFile(join(root, 'AGENTS.md'), agents);
+    const result = await runMarkdown(root);
+    expect(result.exit).toBe(1);
+    expect(result.jsonPayloads[0]).toMatchObject({
+      status: 'error',
+      message: expect.stringContaining('Use --adopt'),
+    });
+    expect(await readFile(join(root, 'docs', 'index.md'), 'utf8')).toBe(index);
+    expect(await readFile(join(root, 'AGENTS.md'), 'utf8')).toBe(agents);
+    expect(await readdir(root)).toEqual(['AGENTS.md', 'docs']);
+    expect(await readdir(join(root, 'docs'))).toEqual(['index.md']);
+  });
+
+  it('keeps explicitly authorized framework initialization over configured Markdown', async () => {
+    const root = await temporaryRepo();
+    await mkdir(join(root, '.oat'));
+    await mkdir(join(root, 'docs'));
+    const index =
+      '# Existing handbook\n\nRetain the incident response context.\n';
+    await writeFile(join(root, 'docs', 'index.md'), index);
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      '{"version":1,"documentation":{"tooling":"markdown","root":"docs","index":"docs/index.md"}}',
+    );
+    const result = await runMarkdown(root, [
+      '--framework',
+      'fumadocs',
+      '--target-dir',
+      'site',
+    ]);
+    expect(result.exit).toBe(0);
+    expect(result.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      framework: 'fumadocs',
+    });
+    const config = JSON.parse(
+      await readFile(join(root, '.oat', 'config.json'), 'utf8'),
+    );
+    expect(config.documentation).toMatchObject({
+      tooling: 'fumadocs',
+      root: 'site',
+      index: 'site/index.md',
+    });
+    expect(await readFile(join(root, 'docs', 'index.md'), 'utf8')).toBe(index);
+    expect(
+      await readFile(join(root, 'site', 'next.config.js'), 'utf8'),
+    ).toContain('createDocsConfig');
+  });
+
+  it('rejects --adopt for app frameworks before writes', async () => {
+    const root = await temporaryRepo();
+    const result = await runMarkdown(root, [
+      '--framework',
+      'mkdocs',
+      '--adopt',
+    ]);
+    expect(result.exit).toBe(1);
+    expect(result.jsonPayloads[0]).toMatchObject({
+      status: 'error',
+      message: '--adopt applies only to --framework markdown.',
+    });
+    expect(await readdir(root)).toEqual([]);
+  });
+
+  it.each([
+    { tooling: 'fumadocs', root: 'apps/docs', index: 'apps/docs/index.md' },
+    { tooling: 'custom-engine', root: 'docs' },
+    { tooling: 'markdown', root: 'handbook', index: 'handbook/index.md' },
+    { tooling: 'markdown', root: 'docs', index: 'docs/other.md' },
+  ])(
+    'refuses incompatible declared config %j before writes',
+    async (documentation) => {
+      const root = await temporaryRepo();
+      await mkdir(join(root, '.oat'));
+      const bytes = JSON.stringify({ version: 1, documentation });
+      await writeFile(join(root, '.oat', 'config.json'), bytes);
+      const result = await runMarkdown(root);
+      expect(result.exit).toBe(1);
+      expect(result.jsonPayloads[0]).toMatchObject({
+        status: 'error',
+        message: expect.stringContaining('incompatible'),
+      });
+      expect(await readFile(join(root, '.oat', 'config.json'), 'utf8')).toBe(
+        bytes,
+      );
+      expect(await readdir(root)).toEqual(['.oat']);
+    },
+  );
+  it('adopts populated docs additively, preserves authored/local bytes, and converges without duplicated guidance', async () => {
+    const root = await temporaryRepo();
+    await mkdir(join(root, 'docs'));
+    const index =
+      '---\ntitle: Operator handbook\ndescription: Escalation and deployment context.\n---\n\n# Operator handbook\n\nThe runtime team owns these runbooks.\n\n## Contents\n\n- [Deployment](deploy.md)\n';
+    const page =
+      '# Deployment\n\nOnly deploy reviewed releases; consult the on-call operator.\n';
+    const local =
+      '# Docs owners\n\nRetain our incident escalation audience and examples.\n';
+    const guidance =
+      '# Repository instructions\n\nKeep local team ownership.\n';
+    await writeFile(join(root, 'docs', 'index.md'), index);
+    await writeFile(join(root, 'docs', 'deploy.md'), page);
+    await writeFile(join(root, 'docs', 'AGENTS.md'), local);
+    await writeFile(join(root, 'AGENTS.md'), guidance);
+    const initial = await snapshotTree(root);
+    const preview = await runMarkdown(root, ['--adopt'], true);
+    expect(preview.exit).toBe(0);
+    expect(preview.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      dryRun: true,
+      createdFiles: [],
+      plannedFiles: ['contributing.md'],
+      changes: { files: ['contributing.md'], config: true, guidance: true },
+      guidance: { action: 'appended' },
+    });
+    expect(await snapshotTree(root)).toEqual(initial);
+    const adopted = await runMarkdown(root, ['--adopt']);
+    expect(adopted.exit).toBe(0);
+    expect(await readFile(join(root, 'docs', 'index.md'), 'utf8')).toBe(index);
+    expect(adopted.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      createdFiles: ['contributing.md'],
+      preservedFiles: ['index.md'],
+      configStatus: 'updated',
+      auditAdvice: [expect.stringContaining('audit context')],
+    });
+    expect(await readFile(join(root, 'docs', 'deploy.md'), 'utf8')).toBe(page);
+    expect(await readFile(join(root, 'docs', 'AGENTS.md'), 'utf8')).toBe(local);
+    expect(
+      (await readFile(join(root, 'AGENTS.md'), 'utf8')).startsWith(guidance),
+    ).toBe(true);
+    const after = await snapshotTree(root);
+    const repeated = await runMarkdown(root, ['--adopt']);
+    expect(repeated.exit).toBe(0);
+    expect(repeated.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      createdFiles: [],
+      configStatus: 'no-change',
+      changes: { files: [], config: false, guidance: false },
+      guidance: { action: 'no-change' },
+    });
+    expect(await snapshotTree(root)).toEqual(after);
+    const converged = await runMarkdown(root, ['--adopt'], true);
+    expect(converged.exit).toBe(0);
+    expect(converged.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      dryRun: true,
+      plannedFiles: [],
+      changes: { files: [], config: false, guidance: false },
+      guidance: { action: 'no-change' },
+    });
+    expect(await snapshotTree(root)).toEqual(after);
+  });
+
+  it('maps actual sibling pages and child indexes with excludes, leaves missing child indexes for audit', async () => {
+    const root = await temporaryRepo();
+    await mkdir(join(root, 'handbook', 'operations'), { recursive: true });
+    await mkdir(join(root, 'handbook', 'no-index'));
+    await mkdir(join(root, 'handbook', 'assets'));
+    await mkdir(join(root, 'handbook', 'drafts'));
+    await mkdir(join(root, '.oat'));
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      '{"version":1,"worktrees":{"root":"custom-worktrees"},"documentation":{"excludes":["secret.md","drafts/"],"requireForProjectCompletion":true}}',
+    );
+    await writeFile(
+      join(root, 'handbook', 'deploy.md'),
+      '# Deployment\n\nReviewed deployment steps.\n',
+    );
+    await writeFile(join(root, 'handbook', 'secret.md'), '# Private draft\n');
+    await writeFile(
+      join(root, 'handbook', 'operations', 'index.md'),
+      '# Operations\n\nOn-call ownership.\n',
+    );
+    await writeFile(
+      join(root, 'handbook', 'no-index', 'incident.md'),
+      '# Incident response\n',
+    );
+    await writeFile(join(root, 'handbook', 'assets', 'diagram.svg'), '<svg/>');
+    await writeFile(
+      join(root, 'handbook', 'drafts', 'index.md'),
+      '# Unreviewed drafts\n',
+    );
+    const before = await snapshotTree(root);
+    const preview = await runMarkdown(
+      root,
+      ['--adopt', '--target-dir', 'handbook'],
+      true,
+    );
+    expect(preview.exit).toBe(0);
+    expect(await snapshotTree(root)).toEqual(before);
+    const result = await runMarkdown(root, [
+      '--adopt',
+      '--target-dir',
+      'handbook',
+    ]);
+    expect(result.exit).toBe(0);
+    const index = await readFile(join(root, 'handbook', 'index.md'), 'utf8');
+    expect(index).toContain('[Deploy](deploy.md)');
+    expect(index).toContain('[Operations](operations/index.md)');
+    expect(index).toContain('[Contributing](contributing.md)');
+    expect(index).not.toContain('secret.md');
+    expect(index).not.toContain('drafts/index.md');
+    expect(index).not.toContain('no-index/index.md');
+    expect(index).not.toContain('assets/index.md');
+    expect(result.jsonPayloads[0]).toMatchObject({
+      auditAdvice: expect.arrayContaining([
+        expect.stringContaining('no-index/'),
+      ]),
+    });
+    expect(await readdir(join(root, 'handbook', 'no-index'))).toEqual([
+      'incident.md',
+    ]);
+    const config = JSON.parse(
+      await readFile(join(root, '.oat', 'config.json'), 'utf8'),
+    );
+    expect(config.worktrees.root).toBe('custom-worktrees');
+    expect(config.documentation.excludes).toEqual(['secret.md', 'drafts/']);
+    expect(config.documentation.requireForProjectCompletion).toBe(true);
+  });
+
+  it('preserves inaccessible optional directories while adopting readable siblings', async (context) => {
+    const root = await temporaryRepo();
+    const blocked = join(root, 'docs', 'optional', 'blocked');
+    const files = new Map([
+      ['optional/blocked/keep.md', '# Uninspected authored bytes\n'],
+      ['ordinary/index.md', '# Readable sibling index\n'],
+      ['guide.md', '# Readable root guide\n'],
+    ]);
+    for (const [path, content] of files) {
+      await mkdir(dirname(join(root, 'docs', path)), { recursive: true });
+      await writeFile(join(root, 'docs', path), content);
+    }
+    const before = await snapshotTree(root);
+    await chmod(blocked, 0);
+    try {
+      let permissionsEnforced = false;
+      try {
+        await readdir(blocked);
+      } catch (error) {
+        if (
+          error instanceof Error &&
+          'code' in error &&
+          error.code === 'EACCES'
+        )
+          permissionsEnforced = true;
+        else throw error;
+      }
+      if (!permissionsEnforced)
+        context.skip(
+          true,
+          'This runtime cannot enforce directory EACCES with chmod.',
+        );
+      const preview = await runMarkdown(root, ['--adopt'], true);
+      expect(preview.exit).toBe(0);
+      const expectedAdvice =
+        'optional/blocked/ could not be inspected due to permissions; it was preserved. Run oat-docs-analyze for repair recommendations.';
+      const advice = (preview.jsonPayloads[0] as { auditAdvice: string[] })
+        .auditAdvice;
+      expect(advice).toContain(expectedAdvice);
+      expect(advice.some((entry) => entry.includes('has Markdown'))).toBe(
+        false,
+      );
+      await chmod(blocked, 0o755);
+      expect(await snapshotTree(root)).toEqual(before);
+      await chmod(blocked, 0);
+      const adopted = await runMarkdown(root, ['--adopt']);
+      expect(adopted.exit).toBe(0);
+      expect(
+        (adopted.jsonPayloads[0] as { auditAdvice: string[] }).auditAdvice,
+      ).toContain(expectedAdvice);
+      const indexPath = join(root, 'docs', 'index.md');
+      const index = await readFile(indexPath, 'utf8');
+      const destinations = [...index.matchAll(/^- \[.*\]\(([^)]*)\)$/gm)].map(
+        (match) => match[1]!,
+      );
+      expect(destinations.sort()).toEqual([
+        'contributing.md',
+        'guide.md',
+        'ordinary/index.md',
+      ]);
+      for (const destination of destinations)
+        await readFile(
+          fileURLToPath(new URL(destination, pathToFileURL(indexPath))),
+        );
+      await chmod(blocked, 0o755);
+      const after = await snapshotTree(root);
+      for (const [path, bytes] of Object.entries(before))
+        expect(after[path], path).toBe(bytes);
+      await chmod(blocked, 0);
+      expect((await runMarkdown(root, ['--adopt'])).exit).toBe(0);
+      await chmod(blocked, 0o755);
+      expect(await snapshotTree(root)).toEqual(after);
+      for (const [path, content] of files)
+        expect(await readFile(join(root, 'docs', path), 'utf8')).toBe(content);
+    } finally {
+      await chmod(blocked, 0o755);
+    }
+  });
+
+  it('audits authored Markdown while exempting recursive instruction-only content', async () => {
+    const root = await temporaryRepo();
+    const files = new Map([
+      ['AGENTS.md', '# Docs local ownership\n'],
+      ['CLAUDE.md', '# Docs provider instructions\n'],
+      ['guide.md', '# Direct authored guide\n'],
+      ['instructions/AGENTS.md', '# Child ownership\n'],
+      ['instructions/deep/CLAUDE.md', '# Nested provider instructions\n'],
+      ['instructions/deep/diagram.svg', '<svg/>'],
+      ['direct/guide.md', '# Direct child authored guide\n'],
+      ['nested/deep/guide.md', '# Nested child authored guide\n'],
+      ['excluded/guide.md', '# Excluded authored draft\n'],
+    ]);
+    for (const [path, content] of files) {
+      await mkdir(dirname(join(root, 'docs', path)), { recursive: true });
+      await writeFile(join(root, 'docs', path), content);
+    }
+    await mkdir(join(root, '.oat'));
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      JSON.stringify({
+        version: 1,
+        documentation: { excludes: ['excluded/guide.md'] },
+      }),
+    );
+    const before = await snapshotTree(root);
+    const expectedAdvice = ['direct', 'nested'].map(
+      (child) =>
+        `${child}/ has Markdown but no authored index.md; run oat-docs-analyze for repair recommendations.`,
+    );
+    const preview = await runMarkdown(root, ['--adopt'], true);
+    expect(preview.exit).toBe(0);
+    expect(
+      (preview.jsonPayloads[0] as { auditAdvice: string[] }).auditAdvice.filter(
+        (advice) => advice.includes('has Markdown'),
+      ),
+    ).toEqual(expectedAdvice);
+    expect(await snapshotTree(root)).toEqual(before);
+    const adopted = await runMarkdown(root, ['--adopt']);
+    expect(adopted.exit).toBe(0);
+    expect(
+      (adopted.jsonPayloads[0] as { auditAdvice: string[] }).auditAdvice.filter(
+        (advice) => advice.includes('has Markdown'),
+      ),
+    ).toEqual(expectedAdvice);
+    const indexPath = join(root, 'docs', 'index.md');
+    const index = await readFile(indexPath, 'utf8');
+    const destinations = [...index.matchAll(/^- \[.*\]\(([^)]*)\)$/gm)].map(
+      (match) => match[1]!,
+    );
+    expect(destinations.sort()).toEqual(['contributing.md', 'guide.md']);
+    for (const destination of destinations)
+      await readFile(
+        fileURLToPath(new URL(destination, pathToFileURL(indexPath))),
+      );
+    for (const [path, content] of files)
+      expect(await readFile(join(root, 'docs', path), 'utf8')).toBe(content);
+    const config = JSON.parse(
+      await readFile(join(root, '.oat', 'config.json'), 'utf8'),
+    );
+    expect(config.documentation.excludes).toEqual(['excluded/guide.md']);
+    const after = await snapshotTree(root);
+    expect((await runMarkdown(root, ['--adopt'])).exit).toBe(0);
+    expect(await snapshotTree(root)).toEqual(after);
+  });
+
+  it('renders external Markdown template values literally during adoption', async () => {
+    const cases = [
+      { value: '$&', href: 'guide-%24%26.md' },
+      { value: "$'", href: "guide-%24'.md" },
+      { value: '$`', href: 'guide-%24%60.md' },
+      { value: '$$', href: 'guide-%24%24.md' },
+      {
+        value: '{{CONTENTS}}-{{REPO_NAME}}',
+        href: 'guide-%7B%7BCONTENTS%7D%7D-%7B%7BREPO_NAME%7D%7D.md',
+        label: 'Guide {{CONTENTS}} {{REPO NAME}}',
+      },
+      { value: 'ordinary', href: 'guide-ordinary.md', label: 'Guide Ordinary' },
+    ];
+    for (const fixture of cases) {
+      const parent = await temporaryRepo();
+      const repoName = `repo-${fixture.value}`;
+      const root = join(parent, repoName);
+      await mkdir(join(root, 'docs'), { recursive: true });
+      const filename = `guide-${fixture.value}.md`;
+      const page = '# Preserved guidance\n';
+      await writeFile(join(root, 'docs', filename), page);
+      const title = `Operators ${fixture.value}`;
+      const description = `Ownership ${fixture.value}`;
+      const args = [
+        '--adopt',
+        '--site-name',
+        title,
+        '--description',
+        description,
+      ];
+      const before = await snapshotTree(root);
+      const preview = await runMarkdown(root, args, true);
+      expect(preview.exit ?? 0).toBe(0);
+      expect(await snapshotTree(root)).toEqual(before);
+      const result = await runMarkdown(root, args);
+      expect(result.exit ?? 0).toBe(0);
+      expect(result.jsonPayloads[0]).toMatchObject({ status: 'ok' });
+      const indexPath = join(root, 'docs', 'index.md');
+      const index = await readFile(indexPath, 'utf8');
+      const metadata = parseYaml(index.match(/^---\n([\s\S]*?)\n---/)![1]!);
+      expect(metadata).toMatchObject({ title, description });
+      expect(index).toContain(`**${repoName}**`);
+      expect(index.match(/^## Contents$/gm)).toHaveLength(1);
+      const contents = index.split('\n## Contents\n\n')[1]!.trim();
+      expect(contents).toBe(
+        `- [${fixture.label ?? `Guide ${fixture.value}`}](${fixture.href})\n- [Contributing](contributing.md)`,
+      );
+      const destinations = [
+        ...contents.matchAll(/^- \[.*\]\(([^)]*)\)$/gm),
+      ].map((match) => match[1]!);
+      expect(destinations).toEqual([fixture.href, 'contributing.md']);
+      for (const destination of destinations) {
+        const uri = new URL(destination, pathToFileURL(indexPath));
+        await readFile(fileURLToPath(uri), 'utf8');
+      }
+      expect(await readFile(join(root, 'docs', filename), 'utf8')).toBe(page);
+      expect(
+        await readFile(join(root, 'docs', 'contributing.md'), 'utf8'),
+      ).toContain(`**${repoName}**`);
+    }
+  });
+
+  it('adoption links resolve to authored filenames containing URI delimiters and parentheses', async () => {
+    const root = await temporaryRepo();
+    const originalFiles = new Map([
+      [
+        'release#owner.md',
+        '# Release ownership\n\nThe runtime team approves each release.\n',
+      ],
+      [
+        'faq?audience.md',
+        '# Audience FAQ\n\nOperators and reviewers share these answers.\n',
+      ],
+      [
+        'deploy(operator).md',
+        '# Operator deployment\n\nUse the reviewed deployment checklist.\n',
+      ],
+      [
+        'operations#on-call?(primary)/index.md',
+        '# Primary on-call operations\n\nEscalation ownership and handoff context.\n',
+      ],
+      [
+        'ordinary.md',
+        '# Ordinary page\n\nThis normal relative link must remain usable.\n',
+      ],
+    ]);
+    for (const [path, content] of originalFiles) {
+      await mkdir(dirname(join(root, 'docs', path)), { recursive: true });
+      await writeFile(join(root, 'docs', path), content);
+    }
+    const result = await runMarkdown(root, ['--adopt']);
+    expect(result.exit).toBe(0);
+    const indexPath = join(root, 'docs', 'index.md');
+    const index = await readFile(indexPath, 'utf8');
+    const destinations = [...index.matchAll(/^- \[.*\]\(([^)]*)\)$/gm)].map(
+      (match) => match[1]!,
+    );
+    const actualPaths: string[] = [];
+    for (const destination of destinations) {
+      const uri = new URL(destination, pathToFileURL(indexPath));
+      expect(uri.search, destination).toBe('');
+      expect(uri.hash, destination).toBe('');
+      const actualPath = fileURLToPath(uri);
+      await readFile(actualPath);
+      actualPaths.push(actualPath);
+    }
+    expect(actualPaths.sort()).toEqual(
+      [...originalFiles.keys(), 'contributing.md']
+        .map((path) => join(root, 'docs', path))
+        .sort(),
+    );
+    expect(destinations).toContain('ordinary.md');
+    expect(destinations).toContain(
+      'operations%23on-call%3F%28primary%29/index.md',
+    );
+    for (const [path, content] of originalFiles)
+      expect(await readFile(join(root, 'docs', path), 'utf8')).toBe(content);
+  });
+
+  it('adopts usable repository child aliases and preserves unusable optional indexes', async () => {
+    const root = await temporaryRepo();
+    const outside = await temporaryRepo();
+    await writeFile(join(root, 'shared.md'), '# Shared authored index\n');
+    await writeFile(
+      join(outside, 'external.md'),
+      '# External private content\n',
+    );
+    for (const child of [
+      'alias',
+      'ordinary',
+      'dangling',
+      'external',
+      'nonfile',
+    ])
+      await mkdir(join(root, 'docs', child), { recursive: true });
+    await symlink('../../shared.md', join(root, 'docs', 'alias', 'index.md'));
+    await writeFile(
+      join(root, 'docs', 'ordinary', 'index.md'),
+      '# Ordinary index\n',
+    );
+    await symlink('missing.md', join(root, 'docs', 'dangling', 'index.md'));
+    await symlink(
+      join(outside, 'external.md'),
+      join(root, 'docs', 'external', 'index.md'),
+    );
+    await mkdir(join(root, 'docs', 'nonfile', 'index.md'));
+    await writeFile(
+      join(root, 'docs', 'nonfile', 'index.md', 'keep.md'),
+      '# Preserve directory content\n',
+    );
+    const before = await snapshotTree(root);
+    const externalBefore = await snapshotTree(outside);
+    const preview = await runMarkdown(root, ['--adopt'], true);
+    expect(preview.exit).toBe(0);
+    expect(preview.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      auditAdvice: expect.arrayContaining(
+        ['dangling', 'external', 'nonfile'].map((child) =>
+          expect.stringContaining(
+            `${child}/index.md is not a usable in-repository file`,
+          ),
+        ),
+      ),
+    });
+    expect(await snapshotTree(root)).toEqual(before);
+    const adopted = await runMarkdown(root, ['--adopt']);
+    expect(adopted.exit).toBe(0);
+    const indexPath = join(root, 'docs', 'index.md');
+    const index = await readFile(indexPath, 'utf8');
+    const destinations = [...index.matchAll(/^- \[.*\]\(([^)]*)\)$/gm)].map(
+      (match) => match[1]!,
+    );
+    expect(destinations.sort()).toEqual([
+      'alias/index.md',
+      'contributing.md',
+      'ordinary/index.md',
+    ]);
+    expect(
+      await readFile(
+        fileURLToPath(new URL('alias/index.md', pathToFileURL(indexPath))),
+        'utf8',
+      ),
+    ).toBe('# Shared authored index\n');
+    const after = await snapshotTree(root);
+    for (const [path, bytes] of Object.entries(before))
+      expect(after[path], path).toBe(bytes);
+    expect(await snapshotTree(outside)).toEqual(externalBefore);
+    expect((await runMarkdown(root, ['--adopt'])).exit).toBe(0);
+    expect(await snapshotTree(root)).toEqual(after);
+  });
+
+  it('adopts an existing empty directory and refuses unusable baseline entrypoints before writes', async () => {
+    const root = await temporaryRepo();
+    await mkdir(join(root, 'docs'));
+    const adopted = await runMarkdown(root, ['--adopt']);
+    expect(adopted.exit).toBe(0);
+    expect(adopted.jsonPayloads[0]).toMatchObject({
+      createdFiles: ['index.md', 'contributing.md'],
+    });
+    const invalid = await temporaryRepo();
+    await mkdir(join(invalid, 'docs', 'index.md'), { recursive: true });
+    await writeFile(
+      join(invalid, 'docs', 'index.md', 'keep.md'),
+      '# Existing entrypoint directory\n',
+    );
+    const before = await snapshotTree(invalid);
+    const refusal = await runMarkdown(invalid, ['--adopt']);
+    expect(refusal.exit).toBe(1);
+    expect(refusal.jsonPayloads[0]).toMatchObject({
+      status: 'error',
+      message: expect.stringContaining('readable file'),
+    });
+    expect(await snapshotTree(invalid)).toEqual(before);
+  });
+
+  it.each(['', '---\ntitle: [broken\n---\n\n# Existing context\n'])(
+    'preserves empty/malformed indexes and reports audit advice',
+    async (index) => {
+      const root = await temporaryRepo();
+      await mkdir(join(root, 'docs'));
+      await writeFile(join(root, 'docs', 'index.md'), index);
+      const result = await runMarkdown(root, ['--adopt']);
+      expect(result.exit).toBe(0);
+      expect(await readFile(join(root, 'docs', 'index.md'), 'utf8')).toBe(
+        index,
+      );
+      expect(result.jsonPayloads[0]).toMatchObject({
+        createdFiles: ['contributing.md'],
+        auditAdvice: expect.arrayContaining([
+          expect.stringContaining('index.md'),
+        ]),
+      });
+    },
+  );
+
+  it.each([false, true])(
+    'dry-run plans empty target with adopt=%s and writes no directory/config/instructions',
+    async (adopt) => {
+      const root = await temporaryRepo();
+      const before = await snapshotTree(root);
+      const result = await runMarkdown(root, adopt ? ['--adopt'] : [], true);
+      expect(result.exit).toBe(0);
+      expect(await snapshotTree(root)).toEqual(before);
+      expect(result.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        dryRun: true,
+        createdFiles: [],
+        plannedFiles: ['index.md', 'contributing.md'],
+        guidance: { action: 'created' },
+        changes: {
+          files: ['index.md', 'contributing.md'],
+          config: true,
+          guidance: true,
+        },
+      });
+    },
+  );
+
+  it.each(['manual-required', 'blocked'] as const)(
+    'dry-run reports %s root guidance as partial/planned and preserves complete state',
+    async (action) => {
+      const root = await temporaryRepo();
+      await mkdir(join(root, 'docs'));
+      await writeFile(
+        join(root, 'docs', 'runbook.md'),
+        '# Runbook\n\nOperator escalation guidance.\n',
+      );
+      if (action === 'blocked') {
+        await mkdir(join(root, 'AGENTS.md'));
+        await writeFile(
+          join(root, 'AGENTS.md', 'ownership.md'),
+          'Keep this directory.\n',
+        );
+      } else
+        await writeFile(
+          join(root, 'AGENTS.md'),
+          '# Local root guidance\n\n<!-- OAT docs -->\n## Documentation\n\nPreserve custom team docs routing.\n<!-- END OAT docs -->\n',
+        );
+      const before = await snapshotTree(root);
+      const result = await runMarkdown(root, ['--adopt'], true);
+      expect(result.exit).toBe(1);
+      expect(result.jsonPayloads[0]).toMatchObject({
+        status: 'partial',
+        dryRun: true,
+        createdFiles: [],
+        plannedFiles: ['index.md', 'contributing.md'],
+        scaffold: { status: 'planned' },
+        guidance: { action },
+      });
+      expect(await snapshotTree(root)).toEqual(before);
+      const human = await runMarkdown(root, ['--adopt'], true, false);
+      expect(human.exit).toBe(1);
+      expect(human.warn.join('\n')).toContain('Docs scaffold planned');
+      expect(await snapshotTree(root)).toEqual(before);
+    },
+  );
+
+  it('real adoption reports created scaffold separately from manual-required guidance', async () => {
+    const root = await temporaryRepo();
+    const guidance =
+      '<!-- OAT docs -->\n## Documentation\n\nUse the private handbook.\n<!-- END OAT docs -->\n';
+    await writeFile(join(root, 'AGENTS.md'), guidance);
+    const result = await runMarkdown(root, ['--adopt']);
+    expect(result.exit).toBe(1);
+    expect(result.jsonPayloads[0]).toMatchObject({
+      status: 'partial',
+      dryRun: false,
+      createdFiles: ['index.md', 'contributing.md'],
+      configStatus: 'updated',
+      scaffold: { status: 'complete' },
+      guidance: { action: 'manual-required' },
+    });
+    expect(await readFile(join(root, 'AGENTS.md'), 'utf8')).toBe(guidance);
+    expect(await readdir(join(root, 'docs'))).toEqual([
+      'contributing.md',
+      'index.md',
+    ]);
+  });
+
+  it.each([false, true])(
+    'refuses incompatible config during adoption dryRun=%s without mutation',
+    async (dryRun) => {
+      const root = await temporaryRepo();
+      await mkdir(join(root, 'docs'));
+      await mkdir(join(root, '.oat'));
+      await writeFile(
+        join(root, 'docs', 'deploy.md'),
+        '# Deployment ownership\n',
+      );
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        '{"version":1,"documentation":{"tooling":"mkdocs","root":"docs","index":"docs/mkdocs.yml"}}',
+      );
+      const before = await snapshotTree(root);
+      const result = await runMarkdown(root, ['--adopt'], dryRun);
+      expect(result.exit).toBe(1);
+      expect(result.jsonPayloads[0]).toMatchObject({
+        status: 'error',
+        message: expect.stringContaining('incompatible'),
+      });
+      expect(await snapshotTree(root)).toEqual(before);
+    },
+  );
+
+  it('refuses escaping baseline symlinks before adopting or persisting config', async () => {
+    const root = await temporaryRepo();
+    const outside = await temporaryRepo();
+    await mkdir(join(root, 'docs'));
+    await writeFile(join(outside, 'index.md'), '# External owner\n');
+    await symlink(join(outside, 'index.md'), join(root, 'docs', 'index.md'));
+    const before = await snapshotTree(root);
+    const result = await runMarkdown(root, ['--adopt']);
+    expect(result.exit).toBe(1);
+    expect(result.jsonPayloads[0]).toMatchObject({
+      status: 'error',
+      message: expect.stringContaining('outside scope root'),
+    });
+    expect(await snapshotTree(root)).toEqual(before);
+    expect(await readFile(join(outside, 'index.md'), 'utf8')).toBe(
+      '# External owner\n',
+    );
+  });
+
+  it.skipIf(process.getuid?.() === 0)(
+    'reports actual partial state when config persistence fails after scaffold',
+    async () => {
+      const root = await temporaryRepo();
+      await mkdir(join(root, '.oat'));
+      const config = '{"version":1,"documentation":{"excludes":["drafts/"]}}\n';
+      await writeFile(join(root, '.oat', 'config.json'), config);
+      await chmod(join(root, '.oat'), 0o555);
+      try {
+        const result = await runMarkdown(root);
+        expect(result.exit).toBe(1);
+        expect(result.jsonPayloads[0]).toMatchObject({
+          status: 'partial',
+          createdFiles: ['index.md', 'contributing.md'],
+          configStatus: 'failed',
+          failure: { stage: 'config' },
+          scaffold: { status: 'complete' },
+          guidance: { action: 'not-attempted' },
+        });
+        expect(await readFile(join(root, '.oat', 'config.json'), 'utf8')).toBe(
+          config,
+        );
+        expect(await readdir(join(root, 'docs'))).toEqual([
+          'contributing.md',
+          'index.md',
+        ]);
+        expect(await readdir(root)).toEqual(['.oat', 'docs']);
+      } finally {
+        await chmod(join(root, '.oat'), 0o755);
+      }
+      const retry = await runMarkdown(root, ['--adopt']);
+      expect(retry.exit).toBe(0);
+      expect(retry.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        createdFiles: [],
+        configStatus: 'updated',
+      });
     },
   );
 });

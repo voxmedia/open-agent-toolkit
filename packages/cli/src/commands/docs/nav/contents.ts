@@ -8,36 +8,11 @@ export interface DocsContentsEntry {
   href: string;
 }
 
-export function withoutFencedExamples(markdown: string): string {
-  let fence: { character: string; length: number } | undefined;
-  return markdown
-    .split(/\r?\n/)
-    .map((line) => {
-      const marker = /^ {0,3}(`{3,}|~{3,})(.*)$/.exec(line);
-      if (fence) {
-        if (
-          marker &&
-          marker[1]![0] === fence.character &&
-          marker[1]!.length >= fence.length &&
-          !marker[2]!.trim()
-        )
-          fence = undefined;
-        return '';
-      }
-      if (marker) {
-        fence = { character: marker[1]![0]!, length: marker[1]!.length };
-        return '';
-      }
-      return line;
-    })
-    .join('\n');
-}
-
 export function parseIndexContents(
   markdown: string,
   sourcePath = 'index.md',
 ): DocsContentsEntry[] {
-  const lines = withoutFencedExamples(markdown).split(/\r?\n/);
+  const lines = markdown.split(/\r?\n/);
   const contentsHeadingIndex = lines.findIndex((line) =>
     /^##\s+Contents\s*$/.test(line.trim()),
   );
@@ -87,11 +62,16 @@ function toPosixPath(path: string): string {
   return path.replaceAll('\\', '/');
 }
 
-async function resolveEntryTarget(
+export async function resolveEntryTarget(
   docsRoot: string,
   directoryPath: string,
   dirRelativePath: string,
   entry: DocsContentsEntry,
+  /**
+   * Page extensions a Contents link may target. MkDocs renders only `.md`;
+   * Fumadocs also renders `.mdx` pages.
+   */
+  pageExtensions: readonly string[] = ['.md'],
 ): Promise<{ kind: 'page' | 'section'; path: string }> {
   const href = entry.href.split('#', 1)[0]?.trim() ?? '';
   if (!href) {
@@ -138,7 +118,7 @@ async function resolveEntryTarget(
     );
   }
 
-  if (extname(targetPath) !== '.md') {
+  if (!pageExtensions.includes(extname(targetPath))) {
     throw new Error(
       `Contents link "${entry.href}" in ${join(
         docsRoot,

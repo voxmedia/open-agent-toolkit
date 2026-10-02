@@ -1,5 +1,5 @@
 {
-  "description": "Managed Claude validation-only inputs for `oat project dispatch record --event-file <file> --json` (no --project). Each role key is one complete input. claudeLaunch.resolution is `oat project dispatch-ceiling resolve --provider claude --role <role> --json` output verbatim; claudeLaunch.definition is the generated Claude agent file content; claudeLaunch.payload is the exact launch payload; event is `oat project dispatch canonical-role --json` output. Built from fixture agents, so the definition body, role version, and content digest are illustrative. See record-schema.md, Managed Claude Validation Input.",
+  "description": "Managed Claude validation-only inputs for `oat project dispatch record --event-file <file> --json`. Each role key is one complete input. claudeLaunch.resolution is `oat project dispatch-ceiling resolve --provider claude --role <role> --json` output verbatim; claudeLaunch.definition is the generated Claude agent file content; claudeLaunch.payload is the exact launch payload; event is `oat project dispatch canonical-role --json` output. Built from fixture agents, so the definition body, role version, and content digest are illustrative. See record-schema.md, Managed Claude Validation Input.",
   "implementer": {
     "claudeLaunch": {
       "resolution": {

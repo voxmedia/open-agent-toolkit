@@ -6,7 +6,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.2.3
+  version: 1.2.4
 ---
 
 # Promote Project To Spec-Driven Lifecycle
@@ -105,7 +105,7 @@ Classify each as:
 
 For each missing artifact:
 
-- copy from `.oat/templates/{artifact}.md`
+- copy the template with `oat template resolve {artifact} --output "$PROJECT_PATH/{artifact}.md"`
 - set frontmatter for in-progress draft
 - derive initial content from existing `plan.md`, `implementation.md`, and (when available) `references/imported-plan.md`
 

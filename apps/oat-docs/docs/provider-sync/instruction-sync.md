@@ -41,21 +41,28 @@ to fix.
 
 The content root is derived from `documentation.root` in `.oat/config.json`:
 
-- `<documentation.root>/docs` when that path is a directory;
-- otherwise `documentation.root` itself.
+- for tooling `markdown`, the literal configured `documentation.root`, even
+  when it contains a child directory named `docs`;
+- for other or undeclared tooling, `<documentation.root>/docs` when that path is
+  a directory, otherwise `documentation.root` itself.
 
 This is the same derivation `oat docs generate-index` uses to pick its default
 docs directory, so the excluded tree and the indexed tree agree by
 construction. (`oat docs generate-index --docs-dir` overrides the index side
 only; it does not change what instruction sync excludes.)
 
-**App-level instruction files are still synced.** `documentation.root`
-canonically names the docs _app_ root, and a file like
+**Framework app-level instruction files are still synced.** For framework tooling, `documentation.root`
+names the docs _app_ root, and a file like
 `apps/oat-docs/AGENTS.md` is instructions for working on the docs app rather
 than a documentation page. When the app root has a `docs` child, only that
 child is skipped, and the app root is still synced (under a shim strategy it
 keeps receiving its `CLAUDE.md` pointer). Opt the app root out explicitly if
 you do not want it synced.
+
+For configured Markdown, the entire content root remains excluded, including
+existing local AGENTS files and parent pages outside a nested `docs` subsection.
+Bootstrap preserves local guidance and creates no docs-root AGENTS. Pointer sync
+never replaces authored content or those local instruction files.
 
 Add further paths with `instructions.claude.excludes`, a list of
 repository-relative directories. Set it with
@@ -400,6 +407,14 @@ oat instructions validate --strategy symlink
 ```
 
 This keeps validation, preview, and repair aligned to the same expected file shape.
+
+`--force` never overwrites a `CLAUDE.md` that an `AGENTS.md` resolves to,
+whether through a symlink, a symlink chain, or a hard link, because that
+`CLAUDE.md` holds the only copy of the instructions behind the link. Sync plans
+a `skip` for it instead, with a reason such as
+`AGENTS.md resolves to this CLAUDE.md, so it holds the instructions; kept`, and
+leaves the file unchanged under every shim strategy, including in
+`--dry-run` previews. Resolve that link by hand before repairing the pair.
 
 ## Manual-Repair Cases
 

@@ -17,9 +17,8 @@ import {
   upsertAgentsMdSections,
 } from '@commands/shared/agents-md';
 import { stripTemplateFrontmatter } from '@commands/shared/strip-template-frontmatter';
+import { resolveTemplate } from '@commands/shared/template-source';
 import { readOatConfig, writeOatConfig } from '@config/oat-config';
-
-import { resolvePjmTemplate } from './template-source';
 
 export interface InitializeRepoReferenceOptions {
   repoRoot: string;
@@ -152,7 +151,7 @@ export async function initializeRepoReference(
       continue;
     }
 
-    const template = await resolvePjmTemplate({
+    const template = await resolveTemplate({
       name: target.template,
       assetsRoot: options.assetsRoot,
       templatesRoot: options.templatesRoot,

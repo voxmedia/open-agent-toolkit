@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: false
 allowed-tools: Read, Bash
 metadata:
-  version: 1.1.6
+  version: 1.1.7
 ---
 
 # Dispatching OAT Project Subagents
@@ -158,15 +158,8 @@ For project-aware launches, construct and redact the complete generic record
 plus OAT event before the native host call. When the call returns accepted or
 `blocked-before-start`, the calling workflow writes the request ID, the
 `Dispatch:` stamp, the launch status, and later the terminal outcome into its
-run record in `implementation.md`. Writing a per-dispatch file with `oat project dispatch record` is optional and off by default: no lifecycle skill or command consumes those files, so do not write them unless the host has explicitly opted in. A host that has opted in persists the
-validated record with:
-
-```bash
-oat project dispatch record \
-  --project "$PROJECT_PATH" \
-  --event-file - \
-  --json
-```
+run record in `implementation.md`; that run record is the only launch record.
+`oat project dispatch record` validates a record and writes nothing.
 
 An accepted launch closes replacement. A rejected record must include
 `provesNoChildStarted: true` before one target-preserving canonical-instruction

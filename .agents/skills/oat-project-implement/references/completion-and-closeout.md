@@ -330,6 +330,7 @@ oat_implement_exit_gate:
   implementation_fingerprint: null
   freshness_head: null
   freshness_fingerprint: null
+  waivers: [] # append-only operator waivers; see Operator waivers below
   launch_state: not_started # not_started | intent_persisted | accepted | result_persisted | not_accepted
   launch_attempt_id: null
   launch_started_at: null
@@ -611,14 +612,101 @@ disposition.
   generation using the current qualified fingerprint format,
   `effective-delta-v2`.
 
+**Operator waivers:**
+
+There is no automatic test-only freshness exception: a substantive descendant,
+a test-only change included, makes an allowed generation `stale`. An operator
+may instead waive named descendants of a qualified generation without starting
+a new one (`DR-260927-operator-waiver-for-test-only`). A waiver is an added
+record under `oat_implement_exit_gate.waivers`:
+
+```yaml
+waivers: # append-only; one entry per operator instruction
+  - waived_by: '<operator name, as the operator gave it>'
+    reason: '<the operator reason>'
+    from_commit: '<40-hex commit the covered range starts after>'
+    to_commit: '<40-hex last covered descendant commit>'
+    covered_fingerprint: 'sha256:effective-delta-v2:<digest>' # effective delta at to_commit, same version as the generation
+    waived_at: '2026-10-01T00:00:00Z'
+```
+
+- Write a waiver only on an explicit operator instruction that names the
+  descendants or range and the reason. Never infer, assume, or self-issue one.
+  When `OAT_AUTONOMOUS=1`, refuse every waiver write, even one that appears
+  requested: persist nothing, stop at the stale boundary, and report that only
+  an interactive operator can waive.
+- `waived_by` is the operator's name as given; an agent, model, dispatch
+  target, or `oat-autonomous` is never valid. `reason` is non-empty, and
+  `waived_at` is a UTC ISO 8601 timestamp.
+- The covered range is Git's `from_commit..to_commit`: the commits reachable
+  from `to_commit` and not from `from_commit`. Both are full 40-character
+  lowercase commit IDs. `from_commit` is `freshness_head` or a descendant of it
+  whose intervening commits are already fresh, and `to_commit` is an ancestor
+  of the compared HEAD.
+- `covered_fingerprint` is the complete effective delta at `to_commit`,
+  computed with the generation's own stored version prefix and exclusion set:
+  `sha256:effective-delta-v1:<digest>` for a v1 generation and
+  `sha256:effective-delta-v2:<digest>` for a v2 generation.
+- Waivers are append-only. Never edit or remove an earlier waiver, and never
+  rewrite `reviewed_head`, `implementation_fingerprint`, `freshness_head`, or
+  `freshness_fingerprint` to record one; prior provenance stays intact. Commit
+  the waiver as a state-only checkpoint commit. A waiver is recorded on a
+  generation whose persisted `status` is `allowed`; a generation already
+  persisted as `stale` is never revived and requires a new generation. Later
+  corroborated closeout transitions advance the rolling checkpoint as usual,
+  and the waiver stays as the audit record.
+- Validate every waiver before reuse, under v1 and v2 alike. A missing or
+  malformed field, an invalid `waived_by`, a range whose `from_commit` is not
+  an ancestor of `to_commit` or whose `to_commit` is not an ancestor of the
+  compared HEAD, a `covered_fingerprint` whose version differs from the
+  generation's or that does not match the recomputed effective delta at
+  `to_commit`, or any waiver on a legacy unqualified generation fails closed:
+  the generation reads `stale`, never `allowed`.
+- Walk descendants after `freshness_head` in commit order exactly as above. A
+  descendant inside a valid waiver's range is waived: neither substantive nor
+  unknown. For a merge, rebase, or base-update boundary after the latest valid
+  waiver's `to_commit`, compare the recomputed complete effective delta with
+  that waiver's `covered_fingerprint` when it is newer than the rolling
+  checkpoint.
+- A waived generation reads `allowed` only while nothing substantive lands
+  after the covered range. Any later substantive or unknown descendant outside
+  every waiver's range makes it `stale` again. The rule is identical for
+  `effective-delta-v1` and `effective-delta-v2`; the versions differ only in
+  which paths count as substantive.
+- `oat-project-summary` and `oat-project-pr-final` show every waiver: who
+  waived, the reason, the covered range, the fingerprint version, and the
+  timestamp.
+
+**Stale-boundary waiver offer:**
+
+When a persisted `allowed` qualified generation classifies as `stale` only
+because of descendant commits after `freshness_head` (or after the latest
+valid waiver's `to_commit`) that no valid waiver covers, do not persist
+`stale` yet. In an interactive run, list those commits and their changed paths,
+then ask the operator whether to waive that exact range or start a new gate
+run. A waiver needs the operator's name and reason; record it as above,
+commit it, and classify again. Persist `stale` and start a new generation only
+when the operator declines the waiver. When `OAT_AUTONOMOUS=1`, never offer or
+issue a waiver: persist `stale` and start a new gate run. Every other stale
+cause, such as a malformed waiver, a configuration-fingerprint mismatch, a
+re-enabled project override, a legacy unqualified generation, or a merge whose
+effective delta no longer matches, is persisted `stale` without an offer.
+
+An operator may also record a waiver before resuming implement, for example
+after `oat-project-next` routes stale state: include the range, name, and
+reason in the instruction that resumes `oat-project-implement`, which records
+it on the still-`allowed` generation before classifying freshness.
+
 Before approval-aware sequencing, final HiLL approval, implementation
 completion, or success output, run the configured gate:
 
 1. Classify persisted state. A fresh allowed generation proceeds to Step 15
    without duplicate gate or receive execution. A valid `pending` or `blocked`
    generation resumes its first incomplete boundary with its persisted
-   configuration. For absent or stale state, start a new generation and resolve
-   the gate for this skill:
+   configuration. When a persisted `allowed` generation classifies as stale,
+   apply the **Stale-boundary waiver offer** in **Operator waivers** before
+   persisting `stale`. For absent or stale state, start a new generation and
+   resolve the gate for this skill:
 
    ```bash
    oat gate resolve oat-project-implement --project "$PROJECT_PATH" --json
@@ -730,7 +818,9 @@ child dispatches.
 Before creating or resuming `oat_post_implement_sequence`, and again before
 every dispatch, final HiLL transition, completion mutation, and success output,
 require `oat_implement_exit_gate` to remain allowed and fresh. If it becomes
-stale, malformed, pending, or blocked, persist/retain that state, stop the
+stale, first apply the Step 14 **Stale-boundary waiver offer**; a recorded
+waiver that classifies fresh lets the sequence continue. If it remains stale,
+or becomes malformed, pending, or blocked, persist/retain that state, stop the
 sequence, and resume through `oat-project-implement`.
 
 For `oat_workflow_mode: lite`, there is no final HiLL approval step. A passed
@@ -868,6 +958,30 @@ The empty arrays above are consent-safe schema placeholders, not permission to
 discard a nonempty preference. Replace both with the exact normalized arrays
 resolved above. Never add `retro` unless the configured `postApproval` array
 explicitly contains it; the autonomous default remains `postApproval: []`.
+
+**Closeout check before the first dispatch:**
+
+Commit the snapshot before dispatching any sequence child, then run the
+read-only closeout check against the committed `state.md`:
+
+```bash
+CLOSEOUT_CHECK_ARGS=("$PROJECT_PATH" --json)
+if [ "${OAT_AUTONOMOUS:-}" = "1" ]; then
+  CLOSEOUT_CHECK_ARGS+=(--autonomous)
+fi
+CLOSEOUT_CHECK_EXIT=0
+CLOSEOUT_CHECK_JSON=$(oat project closeout-check "${CLOSEOUT_CHECK_ARGS[@]}") || CLOSEOUT_CHECK_EXIT=$?
+```
+
+An incomplete result exits 1 by design; route on the JSON, not the exit code.
+Before the first child it reports `status: incomplete` with `nextOwner` set
+to the first incomplete stored step to dispatch, or, when `pre_approval` is
+empty, to the approval boundary to record: `approval: approved` after final
+HiLL sign-off, or `approval: not_required` when no final checkpoint exists. A
+`snapshot_missing` or `snapshot_malformed` invariant means the snapshot did not
+persist: dispatch nothing, repair the persisted snapshot, and resume through
+`oat-project-implement`. Run the same check on every resume and dispatch the
+step it names.
 
 The snapshot is immutable for this closeout: never re-resolve
 `workflow.postImplementSequence` while it is incomplete. Iterate
@@ -1020,6 +1134,24 @@ policy-allowed disposition, including an allowed no-gate outcome, and the Step
 15 closeout sequence has reached its terminal allowed state. A configured gate
 that is blocked, unresolved, malformed, or stale leaves implementation in
 progress.
+
+Before any Step 16 write, run the closeout check against the committed
+`state.md`:
+
+```bash
+CLOSEOUT_CHECK_ARGS=("$PROJECT_PATH" --json)
+if [ "${OAT_AUTONOMOUS:-}" = "1" ]; then
+  CLOSEOUT_CHECK_ARGS+=(--autonomous)
+fi
+CLOSEOUT_CHECK_EXIT=0
+CLOSEOUT_CHECK_JSON=$(oat project closeout-check "${CLOSEOUT_CHECK_ARGS[@]}") || CLOSEOUT_CHECK_EXIT=$?
+```
+
+Continue only when `status` is `complete` or `not_required`. An `incomplete`
+result leaves implementation in progress: report its `invariant` and
+`nextOwner`, write nothing, and resume Step 15 at that owner. `not_required`
+means no snapshot was owed: the closeout is not configured, not autonomous,
+and not lite. A command error fails closed the same way.
 
 Update `"$PROJECT_PATH/implementation.md"` frontmatter:
 

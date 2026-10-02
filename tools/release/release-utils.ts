@@ -214,6 +214,15 @@ export function findChangedWorkspaceDirsFromPaths(
   const changedDirs = new Set<string>();
 
   for (const path of changedPaths) {
+    // A path inside a public package is judged by that package's own ignore
+    // patterns, including when it reaches a dependent through a dependency
+    // root: a control-plane test file never ships in the CLI either.
+    const owner = contracts.find(
+      (contract) =>
+        path === contract.workspaceDir ||
+        path.startsWith(`${contract.workspaceDir}/`),
+    );
+
     for (const contract of contracts) {
       const roots = [
         contract.workspaceDir,
@@ -223,7 +232,7 @@ export function findChangedWorkspaceDirsFromPaths(
 
       if (
         roots.some((root) => path === root || path.startsWith(`${root}/`)) &&
-        !isVersionPolicyIgnoredPath(contract, path)
+        !isVersionPolicyIgnoredPath(owner ?? contract, path)
       ) {
         changedDirs.add(contract.workspaceDir);
       }

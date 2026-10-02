@@ -1,61 +1,96 @@
 ---
-title: Docs App Commands
-description: 'Docs scaffolding, migration, framework-specific navigation compilation, and agent-index generation.'
+title: Documentation Commands
+description: 'Markdown bootstrap/adoption, framework scaffolding, external manifests, and navigation helpers for both frameworks.'
 ---
 
-# Docs App Commands
+# Documentation Commands
 
 OAT includes a dedicated docs command family for bootstrapping and maintaining
-documentation apps. Two frameworks are supported: **Fumadocs** (Next.js-based)
-and **MkDocs Material**.
+plain Markdown documentation and apps using **Fumadocs** (Next.js-based)
+or **MkDocs Material**.
 
 ## Quick Look
 
-- What it does: documents scaffolding, Markdown migration, agent-index generation and framework-specific navigation compilation.
+- What it does: documents the docs-specific CLI surface for scaffolding apps, migrating markdown, generating Fumadocs app-root index manifests, and syncing MkDocs or Fumadocs navigation.
 - When to use it: when you already know you are working on a docs surface and need the exact command-level behavior.
 - Primary commands: `oat docs init`, `oat docs migrate`, `oat docs generate-index`, `oat docs nav sync`
 
 ## Command surface
 
-| Command                   | Purpose                                                                       |
-| ------------------------- | ----------------------------------------------------------------------------- |
-| `oat docs init`           | Scaffold a new docs app (Fumadocs or MkDocs).                                 |
-| `oat docs migrate`        | Convert MkDocs admonitions to GFM callouts and inject frontmatter.            |
-| `oat docs generate-index` | Generate a Fumadocs app-root docs index manifest from the Markdown file tree. |
-| `oat docs nav sync`       | Compile Contents into MkDocs YAML (default) or owned Fumadocs metadata.       |
-| `oat docs analyze`        | CLI entrypoint that points users to the `oat-docs-analyze` skill.             |
-| `oat docs apply`          | CLI entrypoint that points users to the `oat-docs-apply` skill.               |
+| Command                   | Purpose                                                                   |
+| ------------------------- | ------------------------------------------------------------------------- |
+| `oat docs init`           | Set up Markdown files or a docs app; additively adopt Markdown.           |
+| `oat docs migrate`        | Convert MkDocs admonitions to GFM callouts and inject frontmatter.        |
+| `oat docs generate-index` | Generate a manifest from Markdown files, outside authored content.        |
+| `oat docs nav sync`       | Regenerate `mkdocs.yml` nav or Fumadocs `meta.json` from `index.md` maps. |
+| `oat docs analyze`        | CLI entrypoint that points users to the `oat-docs-analyze` skill.         |
+| `oat docs apply`          | CLI entrypoint that points users to the `oat-docs-apply` skill.           |
 
 ## Which Generation Command To Run
 
 Use the framework-specific generated-artifact command:
 
-- Fumadocs apps run `oat docs nav sync --framework fumadocs` before `fumadocs-mdx`, then `oat docs generate-index` for the separate agent inventory. This repo invokes the branch `cli:source` entry; consumer scaffolds invoke installed `oat` from the app directory.
+- Fumadocs apps run `fumadocs-mdx` and `oat docs generate-index`. In this repo, `predev` and `prebuild` regenerate `apps/oat-docs/index.md` from `apps/oat-docs/docs`. Run `oat docs nav sync` yourself after structural changes to rewrite the committed `meta.json` sidebar files from authored directory `index.md` `## Contents` sections; the hooks never write them. `prebuild` runs `oat docs nav sync --check`, so a build fails when those files are stale or a page is unlisted.
 - MkDocs apps use `oat docs nav sync` to regenerate the `nav:` block in `mkdocs.yml` from authored directory `index.md` `## Contents` sections.
 
-Both frameworks keep authored `## Contents` sections as the source of local discovery. The generated artifact differs by framework.
+Markdown needs no generation command or site build; optional inventories require
+explicit external output and retain the authored config index. Both frameworks keep authored `## Contents` sections as the source of local discovery. The generated artifact differs by framework.
 
 ## `oat docs init`
 
-Use `oat docs init` to scaffold a docs app that follows the OAT docs contract.
+Use `oat docs init` to bootstrap Markdown documentation or scaffold a framework app.
 
 > **Consider the `oat-docs-bootstrap` skill instead.** The skill wraps `oat docs init` with preflight detection, richer input gathering (site name distinct from package name), capability-gated post-patches that close open CLI gaps (site-title metadata, Turbopack root, template-content fixes, docs-app `AGENTS.md` bridge, `## Contents` link extensions, `contributing.md` three-surfaces cleanup), build verification, config inspection, and a seven-section educational walkthrough. See [Add Docs to a Repo §3a](add-docs-to-a-repo.md#3a-preferred-the-oat-docs-bootstrap-skill-guided) for the full flow. The CLI documented here remains the authoritative surface for flags and is the right choice when you need a deterministic, non-interactive scaffold (CI, automation).
 
 Key behavior:
 
-- prompts for framework choice (Fumadocs or MkDocs) in interactive mode
+- prompts for Markdown, Fumadocs, or MkDocs in interactive mode
 - detects monorepo vs single-package repo shape
-- defaults to `apps/<app-name>` for monorepos
-- defaults to `<app-name>/` at repo root for single-package repos
+- Markdown defaults to literal `docs` in every repo shape; framework apps default
+  to `apps/<app-name>` for monorepos
+- framework apps default to `<app-name>/` at repo root for single-package repos
 - sets `documentation.tooling`, `documentation.root`, and `documentation.index` in `.oat/config.json`
-- when the repo root exposes a compatible Turbo `scripts.build`, patches it to exclude the new docs app from the default root build and adds a root-level `build:docs` script
+- for framework apps, when the repo root exposes a compatible Turbo `scripts.build`, patches it to exclude the new docs app from the default root build and adds a root-level `build:docs` script
 - prints a unified diff before writing the root `package.json` change and returns a manual snippet when the patch is skipped because the build script is missing, non-Turbo, or ambiguous
+
+Markdown setup:
+
+- Creates only authored root `index.md` and `contributing.md` baseline pages,
+  with metadata, context and real relative `.md` Contents links.
+- Records literal root/tooling/authored index and managed root guidance; no
+  docs-root AGENTS, app package, dependencies, package/Turbo patch or site build.
+- Populated targets require `--adopt` even with `--yes`. Adoption only adds missing
+  baseline files; existing malformed indexes and local instructions are preserved
+  with audit advice. It does not claim full OAT conformity.
+- When the root `index.md` is missing, its initial Contents map includes existing
+  sibling pages and usable immediate child indexes. Readable child-index symlinks
+  resolving inside the repository are supported. Unusable child indexes are
+  preserved and omitted from the map with audit advice. An existing root index
+  is preserved rather than rebuilt.
+- During this discovery, directories containing only `AGENTS.md` or `CLAUDE.md`
+  do not trigger missing-index advice. If permissions prevent inspection of a
+  nested directory, bootstrap preserves it, reports that it was not inspected,
+  and continues checking readable siblings. Required root-baseline and target
+  safety checks remain strict; use analyze/apply for approved content repairs.
+- Unsafe roots and incompatible documentation config fail before writes.
+  Explicit framework selection retains its existing replacement behavior over
+  Markdown config, without migrating or deleting old Markdown content.
+- `--dry-run` reports planned changes without writes. Manual-required/blocked
+  guidance yields `partial`/exit `1`; a real partial may already have written
+  files/config. Converged adoption is `ok`/exit `0` with no changes.
+- Lint/format defaults are `none`; selecting existing tools never installs them.
+
+```bash
+oat docs init --framework markdown --site-name "Project Docs" --yes
+oat docs init --framework markdown --target-dir handbook --adopt --dry-run --yes
+oat docs init --framework markdown --target-dir handbook --adopt --yes
+```
 
 Fumadocs scaffold:
 
 - thin Next.js app importing from `@open-agent-toolkit/docs-config`, `@open-agent-toolkit/docs-theme`, `@open-agent-toolkit/docs-transforms`
 - static export (`output: 'export'`) with FlexSearch, Mermaid diagrams, dark/light mode
-- `predev`/`prebuild` hooks run navigation generation, `fumadocs-mdx`, then agent-index generation, in that order
+- `predev`/`prebuild` hooks run `oat docs generate-index` automatically
 - starter docs: `docs/index.md`, `docs/getting-started.md`, `docs/contributing.md`
 
 MkDocs scaffold:
@@ -67,11 +102,14 @@ Supported flags:
 
 - `--app-name <name>`
 - `--target-dir <path>`
-- `--framework <fumadocs|mkdocs>` (default: `fumadocs` in non-interactive mode)
-- `--description <text>` (site description, optional)
+- `--framework <markdown|fumadocs|mkdocs>` (default: `fumadocs` in non-interactive mode)
+- `--site-name <name>` (site display title or Markdown documentation title)
+- `--description <text>` (documentation description, optional)
 - `--lint <none|markdownlint-cli2>`
 - `--format <oxfmt|none>`
-- `--no-root-patch`
+- `--adopt` (Markdown only; add missing baseline files, preserve existing bytes)
+- `--dry-run` (Markdown only; nonmutating files/config/guidance preview)
+- `--no-root-patch` (inapplicable to Markdown, as is `--app-name`)
 - `--yes`
 
 Examples:
@@ -128,12 +166,12 @@ Key behavior:
 - recursively walks the docs directory
 - extracts page titles from frontmatter (falls back to first `# heading`, then filename title-case)
 - includes descriptions from frontmatter when present
-- resolves omitted paths from `.oat/config.json` rather than the current directory: `--docs-dir` defaults to `<documentation.root>/docs` when that directory exists and to `<documentation.root>` otherwise, and `--output` defaults to the app-root manifest `<documentation.root>/index.md`
+- resolves omitted paths from `.oat/config.json` rather than the current directory: configured Markdown uses the literal `documentation.root` for `--docs-dir` and requires explicit `--output`; other tooling defaults to `<documentation.root>/docs` when present or `<documentation.root>` otherwise, with app-root manifest output `<documentation.root>/index.md`
 - treats explicitly supplied `--docs-dir` / `--output` paths as overrides resolved from the current directory
 - fails with exit code `2` before generating or writing anything when an omitted path has no non-empty `documentation.root` to resolve against, or when the configured root is not a directory
-- refuses unsafe output targets with exit code `1` before generation, for derived and explicit paths alike, comparing symlink-resolved paths: inside the docs directory it indexes, equal to `documentation.config`, or ending in `.yml` / `.yaml` in any case. A derived output whose existing file lacks the `AUTOGENERATED` header is refused too; naming that path with `--output` overwrites it explicitly. A refused target is an actionable flag error (`1`); unusable path configuration is a separate condition and exits `2`, so scripts can branch on the two
+- refuses unsafe output targets with exit code `1` before generation, for derived and explicit paths alike, comparing symlink-resolved paths: inside the docs directory it indexes, equal to `documentation.config`, or ending in `.yml` / `.yaml` in any case. A derived output whose existing file lacks the `AUTOGENERATED` header is refused too; naming that path with `--output` overwrites it explicitly only when no other output guard applies. Configured Markdown additionally protects its full canonical content root and authored `documentation.index`, independently of selected source; narrowed sources and symlink aliases cannot bypass that guard. A refused target is an actionable flag error (`1`); unusable path configuration is a separate condition and exits `2`, so scripts can branch on the two
 - refuses a symlink chain that exceeds its own 32-hop cap, naming the path you supplied or the CLI derived rather than an intermediate link, and addressing the flag that owns it: an unusable **output** chain names `--output` and exits `1`; an unusable **docs directory** chain names `--docs-dir` and, when the directory was derived from `documentation.root` rather than passed explicitly, also names the `oat config set documentation.root <path>` repair and exits `2` as unusable path configuration. That cap governs the dangling links the command walks itself; a chain the operating system refuses first surfaces as its own `ELOOP` error with exit `1`, which is what a too-deep chain reports on a platform whose own limit is 32 or lower
-- writes configuration only for the Fumadocs manifest transition — recording the manifest it just wrote inside `documentation.root` in `documentation.index`, when `documentation.tooling` is `fumadocs` or the config declares neither `tooling` nor `config`. MkDocs configurations are never written, and `documentation.root` and `documentation.config` are never modified
+- writes configuration only for the Fumadocs manifest transition — recording the manifest it just wrote inside `documentation.root` in `documentation.index`, when `documentation.tooling` is `fumadocs` or the config declares neither `tooling` nor `config`. Markdown and MkDocs configurations are never written, and `documentation.root` and `documentation.config` are never modified
 - prepends an `AUTOGENERATED` warning comment to the output and rewrites the file on every run; do not hand-edit the generated `index.md`
 - should be freshness-checked against authored `docs/**/index.md` `## Contents` maps before treating it as navigation evidence
 - sorting: `index.md` first, then directories before files, then lexical
@@ -143,8 +181,8 @@ Key behavior:
 
 Supported flags:
 
-- `--docs-dir <path>` (default: `<documentation.root>/docs`, falling back to `<documentation.root>`)
-- `--output <path>` (default: `<documentation.root>/index.md`)
+- `--docs-dir <path>` (Markdown: literal configured root; others: `<root>/docs`, falling back to `<root>`)
+- `--output <path>` (required external output for configured Markdown; otherwise defaults to `<root>/index.md`)
 - `--exclude <glob>` (repeatable; additive to `documentation.excludes`)
 
 ### Exclusion patterns
@@ -165,10 +203,13 @@ A trailing `/` restricts a pattern to directories and never matches a file; with
 Example:
 
 ```bash
-# Resolve both paths from .oat/config.json
+# Framework defaults from .oat/config.json
 oat docs generate-index
 
-# Portable explicit form, resolved from the current directory
+# Optional Markdown manifest: output outside the entire configured content root
+oat docs generate-index --docs-dir handbook --output .oat/docs-manifest.md
+
+# Portable explicit framework form, resolved from the current directory
 oat docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md
 
 # Persist the repository's own exclusions, then add a one-off
@@ -176,36 +217,46 @@ oat config set documentation.excludes "**/CLAUDE.md,**/AGENTS.md"
 oat docs generate-index --exclude 'drafts/'
 ```
 
-See [Documentation path resolution](../reference/oat-directory-structure.md#documentation-path-resolution) for the app-root meaning of `documentation.root` and the legacy source-root compatibility rule.
+See [Documentation path resolution](../reference/oat-directory-structure.md#documentation-path-resolution) for Markdown literal roots, framework app roots, and legacy source-root compatibility.
 
 The Fumadocs scaffold runs this automatically via `predev`/`prebuild` npm
 script hooks.
 
 ## `oat docs nav sync`
 
-Use nav sync after adding, removing, renaming or reordering docs pages. Omitting `--framework` preserves MkDocs YAML behavior.
+Use nav sync after adding, removing, renaming, or reordering docs pages.
 
-The compiler reads each directory index's exact H2 Contents, excluding fenced examples. For Fumadocs, local leaves and child sections have native ownership; frontmatter titles own their labels. Missing/double ownership, label mismatches, missing files and unresolved fragments fail before writes. Cross-links stay in page bodies rather than altering canonical sidebar traversal.
+The command reads only the reserved `## Contents` section from each directory
+`index.md`. It detects the framework from the app directory:
 
-Fumadocs supports ordinary `.md` file-derived routes and a root loader base. External/query-bearing navigation entries, MDX/custom slugs and separator syntax are unsupported. Next deployment basePath is applied by the renderer once, not encoded into metadata.
+Plain Markdown needs file/link checks and authored Contents maintenance, without
+site nav generation. Framework apps generate navigation as follows:
+
+- **MkDocs** (`mkdocs.yml`): regenerates the `nav:` block in `mkdocs.yml`.
+- **Fumadocs** (`source.config.ts`): writes one `meta.json` per docs directory
+  that has an `index.md`. `pages` follows the `## Contents` order with no
+  `"..."` rest entry, so a page no map lists stays out of the sidebar and is
+  reported by path (`unlisted` in `--json`). A link to a page in another
+  directory becomes a Fumadocs link entry, and the folder `title` comes from
+  the `index.md` frontmatter `title` or first heading. Files are compared by
+  meaning, so a rerun with no docs changes writes nothing. Commit the
+  generated `meta.json` files.
+
+Use `--check` in builds and CI. It computes the same navigation, writes
+nothing, and exits 1 when any generated file would change or, for Fumadocs,
+any page or folder is unlisted, naming each one (`stale` and `unlisted` in
+`--json`). This repository's `apps/oat-docs` `prebuild` runs it, so
+`pnpm build:docs` fails on stale navigation.
+
+Fumadocs apps also regenerate the root markdown manifest with
+`oat docs generate-index`; the two commands write different artifacts.
 
 Example:
 
 ```bash
 oat docs nav sync --target-dir apps/oat-docs
-# Fumadocs generation, from a consumer app directory
-oat docs nav sync --framework fumadocs --target-dir .
-# Source-only validation: no metadata, sidecar, .source or out required
-oat docs nav sync --framework fumadocs --validate-only --target-dir .
-# Output comparison after generation, without writes
-oat docs nav sync --framework fumadocs --check --target-dir .
+oat docs nav sync --target-dir apps/oat-docs --check
 ```
-
-`--check` and `--validate-only` are mutually exclusive; validate-only is Fumadocs-only. This repository's `pnpm docs:validate` additionally checks source routes/anchors, and `pnpm docs:test` runs real consumers in temporary fixtures without a prior app build.
-
-Generated `docs/**/meta.json` and `.oat-fumadocs-nav.json` are ignored build output, excluded from source bundles. The sidecar owns exact paths and last-generated hashes. Existing bytes exactly equal to current computed output for the same path may be acknowledged without rewriting them to heal partial generation/lost sidecars; semantic JSON equivalence is insufficient. Different unowned/edited bytes, malformed sidecars, traversal or symlink paths are refused before writes or stale cleanup. Check remains read-only and requires sidecar parity. Preserve authored bytes; never adopt files by editing hashes. Back up proven disposable output with its sidecar before removing only those files and regenerating. Partial write failures require inspection; sidecar-last atomic file writes are not a multi-file transaction. Format only authored Markdown, not generated JSON.
-
-If Contents changes while a dev server is running, rerun navigation generation and restart the server. `predev`/`prebuild` hooks do not watch Contents.
 
 Related reference:
 

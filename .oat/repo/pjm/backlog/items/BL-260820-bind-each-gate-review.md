@@ -12,7 +12,7 @@ labels:
   - reliability
 assignee: null
 created: 2026-08-20T00:51:29.893Z
-updated: 2026-09-27T03:40:00Z
+updated: 2026-10-02T03:10:18Z
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/194
@@ -54,3 +54,19 @@ row that never resolves. The broader single status authority is tracked in
 - Each gate event maps to one `## Reviews` row upserted by (scope, type, artifact); lifecycle skills update that row instead of appending another, and Reviewed Head is preserved across status transitions.
 - The plan template carries a `plan` placeholder row, and artifact-gate rows record the gate target.
 - Quick-mode scaffolds omit review scopes the mode never uses.
+
+## Markdown docs bootstrap retrospective evidence
+
+[RP-02: terminal receipts and passing sweeps](../../../reference/project-summaries/20261002-markdown-docs-bootstrap.md#rp-02-add-terminal-receipt-and-passing-sweep-cases-to-exact-gate-binding)
+adds controls for the existing exact-event binding. Gate run
+`74cf045f-60fb-4931-a434-8cc9eaa5df19` removed its live marker on completion;
+a failed marker check did not stop the shell group from persisting receive
+intent. No receive ran before receipt reconciliation. The implementation's
+**Root receipt-check correction** records the incident and correction.
+
+Terminal receive must consume retained acceptance proof without requiring a
+live marker; mismatched or incomplete proof and failed prerequisites must refuse
+mutation. A passing threshold with address-now findings preserves raw counts
+and consumes no failed remediation attempt. Later source changes retire routing
+freshness without rewriting the received event's identity or reviewed head.
+These controls strengthen exact consumption and immutable review provenance.

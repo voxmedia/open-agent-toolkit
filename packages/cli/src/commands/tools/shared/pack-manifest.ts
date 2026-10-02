@@ -220,6 +220,7 @@ export const PACK_MANIFEST: readonly PackDefinition[] = [
       ].map((name) => skill(name)),
       template('docs-app-mkdocs', 'directory'),
       template('docs-app-fuma', 'directory'),
+      template('docs-markdown', 'directory'),
       script('resolve-tracking.sh', 'resolve-tracking'),
     ],
   },

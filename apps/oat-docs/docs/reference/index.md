@@ -15,7 +15,7 @@ Contributor how-to material now lives under `contributing/`, and user-facing rou
 - [Config and Local State](config-and-local-state.md) - Utility command groups for config, local state, diagnostics, and related inspection flows.
 - [CLI Reference](cli-reference.md) - Shallow map of the OAT command surface with links to owning sections.
 - [File Locations](file-locations.md) - Where core OAT files, assets, and artifacts live.
-- [Docs Index Contract](docs-index-contract.md) - Authored `index.md` maps, `.md` links, generated Fumadocs manifests, and MkDocs nav sync boundaries.
+- [Docs Index Contract](docs-index-contract.md) - Authored `index.md` maps, `.md` links, generated Fumadocs manifests, and MkDocs and Fumadocs nav sync boundaries.
 - [`.oat` Directory Structure](oat-directory-structure.md) - Canonical `.oat/` tree map and the role of each major directory.
 - [Troubleshooting](troubleshooting.md) - Common issues, diagnostics, and remediation guidance.
 - [Project Artifacts](project-artifacts.md) - What lives in `state.md`, `discovery.md`, `plan.md`, `implementation.md`, and related files.

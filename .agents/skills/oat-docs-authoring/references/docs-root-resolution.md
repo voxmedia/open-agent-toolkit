@@ -1,6 +1,6 @@
 ---
 title: OAT docs root resolution
-description: How to resolve OAT/Fumadocs app roots, authored docs roots, generated index outputs, and local instruction surfaces before editing.
+description: How to resolve Markdown content roots and OAT/Fumadocs app roots, authored docs roots, generated index outputs, and local instruction surfaces before editing.
 ---
 
 # OAT Docs Root Resolution
@@ -15,14 +15,19 @@ roots before editing.
      index file.
    - A docs-app `AGENTS.md` may override or narrow the repo-level guidance.
 2. Inspect `.oat/config.json`.
-   - Prefer documented `documentation.root` values for the docs app root.
-   - Treat `documentation.index` as the generated root index when present; it
-     may not be the same as the authored docs root.
+   - Declared tooling is authoritative. For `markdown`, `documentation.root`
+     is the literal authored content root, even with a child named `docs`, and
+     `documentation.index` is authored (normally `<root>/index.md`). Honor excludes.
+   - For framework tooling, prefer `documentation.root` as the docs app root.
+     Resolve authored source and generated ownership from app/local evidence;
+     a configured index alone is not proof that it is generated.
+   - Markdown requires no app package, framework config, site build, or manifest;
+     skip app-only discovery. An optional manifest must be external to the full
+     configured content tree and never replace the authored config index.
    - If config is incomplete, keep resolving from local files instead of
      guessing.
 3. Inspect package scripts in likely docs app directories.
-   - Look for `predev`, `prebuild`, `oat docs nav sync --framework fumadocs`,
-     `fumadocs-mdx`, `oat docs generate-index`,
+   - Look for `predev`, `prebuild`, `fumadocs-mdx`, `oat docs generate-index`,
      docs lint/format scripts, and local build commands.
    - Use the scripts as evidence for generated-artifact ownership and
      validation, not as a substitute for reading docs instructions.
@@ -35,7 +40,8 @@ roots before editing.
      paths can be wired separately. Preserve local customizations unless the
      user explicitly asked for app-shell work.
 5. Resolve the authored docs root.
-   - The common root is `<docs-app>/docs`, but local guidance is authoritative.
+   - Markdown uses the configured root itself. Framework apps commonly use
+     `<docs-app>/docs`, but local guidance is authoritative.
    - Find the top-level authored `index.md`, then follow `## Contents` maps to
      the target area.
 

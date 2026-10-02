@@ -167,6 +167,7 @@ describe('help output snapshots', () => {
         pjm               Manage project-management repo reference docs
         project           Manage OAT project workflows
         state             OAT repo state commands
+        template          Resolve OAT templates (repository, user, bundle)
         tools             Manage OAT tool packs (install, update, migrate, remove,
                           list)
         internal          Internal OAT maintenance commands
@@ -271,6 +272,58 @@ describe('help output snapshots', () => {
         archive [options] <id>                 Close out a backlog item: set a terminal status, record it in completed.md, move it to archived/, rewrite inbound .oat/repo references to it, and regenerate the index
         generate-id [options] <title-or-slug>  Generate a backlog item identifier (\`BL-YYMMDD-slug\`) from a title or slug
         help [command]                         display help for command
+      "
+    `);
+  });
+
+  it('template --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, ['template']).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat template [options] [command]
+
+      Resolve OAT templates (repository, user, bundle)
+
+      Options:
+        -h, --help                display help for command
+
+      Global Options:
+        -V, --version             output the version number
+        --json                    Output a single JSON document
+        --verbose                 Enable verbose debug output
+        --cwd <path>              Override working directory
+
+      Commands:
+        resolve [options] <name>  Report which tier supplies a template and
+                                  optionally copy it
+        help [command]            display help for command
+      "
+    `);
+  });
+
+  it('template resolve --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'template',
+      'resolve',
+    ]).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat template resolve [options] <name>
+
+      Report which tier supplies a template and optionally copy it
+
+      Arguments:
+        name             Template name, such as plan or plan.md
+
+      Options:
+        --output <path>  Copy the resolved template to this file, replacing it
+        -h, --help       display help for command
+
+      Global Options:
+        -V, --version    output the version number
+        --json           Output a single JSON document
+        --verbose        Enable verbose debug output
+        --cwd <path>     Override working directory
       "
     `);
   });
@@ -906,7 +959,8 @@ describe('help output snapshots', () => {
         analyze                   Run the docs analysis workflow
         apply                     Run the docs apply workflow
         generate-index [options]  Generate a docs index from markdown files
-        init [options]            Scaffold an OAT docs app
+        init [options]            Bootstrap an OAT docs app or authored Markdown
+                                  documentation
         migrate [options]         Migrate MkDocs markdown to Fumadocs format
                                   (admonitions, frontmatter)
         nav                       Docs navigation commands
@@ -964,19 +1018,25 @@ describe('help output snapshots', () => {
     expect(help).toMatchInlineSnapshot(`
       "Usage: oat docs init [options]
 
-      Scaffold an OAT docs app
+      Bootstrap an OAT docs app or authored Markdown documentation
 
       Options:
         --framework <framework>  Documentation framework (choices: "fumadocs",
-                                 "mkdocs")
-        --app-name <name>        Docs app name
-        --site-name <name>       Display title (distinct from --app-name)
-        --target-dir <path>      Target directory for the docs app
-        --description <text>     Site description
+                                 "mkdocs", "markdown")
+        --app-name <name>        Docs app name (inapplicable to Markdown)
+        --site-name <name>       Site display title or Markdown documentation title
+        --target-dir <path>      Docs directory (Markdown defaults to docs; requires
+                                 a dedicated directory)
+        --description <text>     Documentation description
         --lint <mode>            Markdown lint mode (choices: "none",
                                  "markdownlint-cli2")
         --format <mode>          Markdown format mode (choices: "oxfmt", "none")
-        --no-root-patch          Skip patching the consumer root package.json
+        --no-root-patch          Skip root package.json patch (inapplicable to
+                                 Markdown)
+        --adopt                  Add missing baseline files to existing Markdown
+                                 docs; preserve authored content (Markdown only)
+        --dry-run                Preview Markdown files, config, and guidance without
+                                 writes (Markdown only)
         --yes                    Accept defaults without prompting
         -h, --help               display help for command
 
@@ -999,15 +1059,14 @@ describe('help output snapshots', () => {
     expect(help).toMatchInlineSnapshot(`
       "Usage: oat docs nav sync [options]
 
-      Regenerate docs navigation from index.md contents
+      Regenerate docs navigation from index.md contents: mkdocs.yml nav (MkDocs) or
+      strict meta.json files (Fumadocs)
 
       Options:
-        --target-dir <path>  Docs app directory containing docs/
-        --framework <name>   Navigation framework (choices: "mkdocs", "fumadocs",
-                             default: "mkdocs")
-        --check              Compare generated navigation without writing
-        --validate-only      Validate Fumadocs sources without reading or writing
-                             output
+        --target-dir <path>  Docs app directory containing mkdocs.yml or
+                             source.config.ts
+        --check              Write nothing; exit 1 if any navigation file is stale or
+                             any page is unlisted
         -h, --help           display help for command
 
       Global Options:
@@ -1114,9 +1173,10 @@ describe('help output snapshots', () => {
 
       Commands:
         archive [options] [project-path]             Manage archived project data
+        closeout-check [options] <project-path>      Report whether a project closeout snapshot permits terminal completion (read-only)
         complete-discovery [options] <project-path>  Validate and mark a project discovery.md complete
         complete-state [options] <project-path>      Update a project state.md to the completed lifecycle shape
-        dispatch                                     Validate and persist project dispatch provenance
+        dispatch                                     Validate project dispatch provenance
         dispatch-ceiling                             Resolve OAT project dispatch ceiling metadata
         list [options]                               List tracked OAT projects
         links [options] [project-path|slug]          Render pinned reviewer links for a synced OAT project
@@ -1139,7 +1199,7 @@ describe('help output snapshots', () => {
     `);
   });
 
-  it('project dispatch record --help documents project and stdin recording', () => {
+  it('project dispatch record --help documents validate-only stdin input', () => {
     const program = createRegisteredProgram();
     const help = getCommandByPath(program, [
       'project',
@@ -1147,7 +1207,8 @@ describe('help output snapshots', () => {
       'record',
     ]).helpInformation();
 
-    expect(help).toContain('--project <project-path>');
+    expect(help).not.toContain('--project');
+    expect(help).toContain('writes nothing');
     expect(help).toContain('--event-file <json-file-or-dash>');
     expect(help).toMatch(/or -\s+for standard input/);
     expect(help).not.toMatch(/launch/i);
@@ -1216,6 +1277,35 @@ describe('help output snapshots', () => {
     `);
   });
 
+  it('project closeout-check --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'project',
+      'closeout-check',
+    ]).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat project closeout-check [options] <project-path>
+
+      Report whether a project closeout snapshot permits terminal completion
+      (read-only)
+
+      Arguments:
+        project-path   Project path to check
+
+      Options:
+        --autonomous   Treat the closeout as autonomous (also implied by
+                       OAT_AUTONOMOUS=1)
+        -h, --help     display help for command
+
+      Global Options:
+        -V, --version  output the version number
+        --json         Output a single JSON document
+        --verbose      Enable verbose debug output
+        --cwd <path>   Override working directory
+      "
+    `);
+  });
+
   it('project complete-state --help matches snapshot', () => {
     const program = createRegisteredProgram();
     const help = getCommandByPath(program, [
@@ -1232,6 +1322,8 @@ describe('help output snapshots', () => {
 
       Options:
         --archived     Mark the completed project as archived locally
+        --autonomous   Treat the closeout as autonomous (also implied by
+                       OAT_AUTONOMOUS=1)
         -h, --help     display help for command
 
       Global Options:

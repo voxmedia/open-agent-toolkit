@@ -1,3 +1,8 @@
+import {
+  commonReviewSourceFields,
+  reviewSourceKindFields,
+} from './review-binding.mjs';
+
 export const SCHEMA_VERSION = 1;
 export const MANIFEST_SCHEMA_VERSION = 2;
 
@@ -1807,36 +1812,6 @@ function validateDossier(value, errors) {
   }
 }
 
-const reviewSourceKindFields = {
-  repository: ['root', 'revision', 'dirty', 'contentHashes'],
-  file: ['path', 'contentHash'],
-  url: ['url', 'capturePath', 'captureDigest', 'validatorState'],
-  'command-output': [
-    'argv',
-    'cwd',
-    'exitStatus',
-    'outputPath',
-    'outputDigest',
-    'environmentNames',
-  ],
-  'connected-resource': [
-    'system',
-    'resourceId',
-    'resourceVersion',
-    'retrievalToken',
-    'capturePath',
-    'captureDigest',
-  ],
-};
-const commonReviewSourceFields = [
-  'id',
-  'kind',
-  'available',
-  'authority',
-  'observedAt',
-  'validationState',
-];
-
 function validateReviewBriefSource(source, index, errors) {
   const path = `$.sources[${index}]`;
   if (!isObject(source)) {
@@ -2073,9 +2048,43 @@ function validateReviewBriefSource(source, index, errors) {
   }
 }
 
+const reviewBriefIdPattern = /^[a-z0-9]+(?:[-_.][a-z0-9]+)*$/;
+const reviewBriefTimestampPattern =
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/;
+
 function validateReviewBriefArtifact(value, errors) {
   for (const key of ['id', 'runId', 'mode', 'createdAt']) {
     requiredString(value, key, errors);
+  }
+  // A brief's identifier and timestamp are shown to a blind reviewer, so
+  // both are structurally fixed: a short lowercase slug and a UTC ISO-8601
+  // instant. Neither can carry free text.
+  if (
+    typeof value.id === 'string' &&
+    (value.id.length > 64 || !reviewBriefIdPattern.test(value.id))
+  ) {
+    errors.push(
+      issue(
+        'INVALID_REVIEW_BRIEF',
+        'Brief id must be a lowercase slug of at most 64 characters',
+        '$.id',
+      ),
+    );
+  }
+  if (
+    typeof value.createdAt === 'string' &&
+    !(
+      reviewBriefTimestampPattern.test(value.createdAt) &&
+      Number.isFinite(Date.parse(value.createdAt))
+    )
+  ) {
+    errors.push(
+      issue(
+        'INVALID_REVIEW_BRIEF',
+        'Brief createdAt must be a UTC ISO-8601 timestamp',
+        '$.createdAt',
+      ),
+    );
   }
   requiredArray(value, 'excludedInputs', errors);
   if (value.mode === 'verify') {
@@ -2271,6 +2280,124 @@ function validateReviewBriefArtifact(value, errors) {
   }
 }
 
+// The affirming disposition each review kind gives a claim it supports. The
+// first three are the required reviews for `verified`. The reconciler, the
+// validator, and the renderer all read this one table.
+export const affirmingDispositionByReviewKind = Object.freeze({
+  semantic: 'affirmed',
+  adversarial: 'unchallenged',
+  coverage: 'covered',
+  'redundant-verification': 'affirmed',
+  'contradiction-resolution': 'resolved',
+});
+
+export const requiredReviewKinds = Object.freeze([
+  'semantic',
+  'adversarial',
+  'coverage',
+]);
+
+// `unresolvedIssues` entries are a closed union:
+// - a string (legacy), read as a global issue;
+// - `{ text, claimIds }`, scoped to a non-empty list of unique claims the
+//   review covers; or
+// - `{ text, scope: 'global' }`.
+// Returns `{ scope: 'global' }`, `{ scope: 'claims', claimIds }`, or
+// `{ error }`. `coveredClaimIds`, when given, also rejects a scoped claim the
+// review does not cover. An error is rejected at artifact acceptance and is
+// never read as "no issue": `unresolvedIssuesBlockClaim` treats it as global.
+export function classifyUnresolvedIssue(entry, coveredClaimIds = null) {
+  if (typeof entry === 'string') return { scope: 'global' };
+  if (!isObject(entry)) {
+    return {
+      error: 'unresolvedIssues members must be strings or scoped issue objects',
+    };
+  }
+  if (typeof entry.text !== 'string' || entry.text.trim().length === 0) {
+    return { error: 'Scoped unresolved issues require non-empty text' };
+  }
+  const hasClaimIds = Object.hasOwn(entry, 'claimIds');
+  const hasScope = Object.hasOwn(entry, 'scope');
+  if (hasClaimIds && hasScope) {
+    return {
+      error: 'An unresolved issue names claimIds or a global scope, not both',
+    };
+  }
+  if (!hasClaimIds && !hasScope) {
+    return {
+      error: 'An unresolved issue object requires claimIds or scope: global',
+    };
+  }
+  const unknown = Object.keys(entry).filter(
+    (key) => !['text', hasClaimIds ? 'claimIds' : 'scope'].includes(key),
+  );
+  if (unknown.length > 0) {
+    return {
+      error: `Unresolved issue has unknown fields: ${unknown.join(', ')}`,
+    };
+  }
+  if (hasScope) {
+    return entry.scope === 'global'
+      ? { scope: 'global' }
+      : { error: 'An unresolved issue scope must be global' };
+  }
+  if (!Array.isArray(entry.claimIds) || entry.claimIds.length === 0) {
+    return {
+      error: 'Scoped unresolved issues require a non-empty claimIds array',
+    };
+  }
+  if (!entry.claimIds.every((id) => typeof id === 'string' && id.length > 0)) {
+    return {
+      error: 'Scoped unresolved issue claim IDs must be non-empty strings',
+    };
+  }
+  if (new Set(entry.claimIds).size !== entry.claimIds.length) {
+    return { error: 'Scoped unresolved issue claim IDs must be unique' };
+  }
+  const uncovered = coveredClaimIds
+    ? entry.claimIds.filter((id) => !coveredClaimIds.has(id))
+    : [];
+  if (uncovered.length > 0) {
+    return {
+      error: `Scoped unresolved issue names claims the review does not cover: ${uncovered.join(', ')}`,
+    };
+  }
+  return { scope: 'claims', claimIds: [...entry.claimIds] };
+}
+
+// True when any of the review's unresolved issues applies to `claimId`. Call
+// it only for a claim the review covers: a global issue applies to every
+// covered claim, a scoped issue only to the claims it names.
+export function unresolvedIssuesBlockClaim(review, claimId) {
+  return (
+    Array.isArray(review?.unresolvedIssues) ? review.unresolvedIssues : []
+  ).some((entry) => {
+    const classification = classifyUnresolvedIssue(entry);
+    if (classification.scope !== 'claims') return true;
+    return classification.claimIds.includes(claimId);
+  });
+}
+
+function validateUnresolvedIssues(value, errors) {
+  const coveredClaimIds = new Set(
+    (Array.isArray(value.dispositions) ? value.dispositions : [])
+      .map((disposition) => disposition?.claimId)
+      .filter((id) => typeof id === 'string'),
+  );
+  for (const [index, entry] of value.unresolvedIssues.entries()) {
+    const { error } = classifyUnresolvedIssue(entry, coveredClaimIds);
+    if (error) {
+      errors.push(
+        issue(
+          'INVALID_UNRESOLVED_ISSUE',
+          error,
+          `$.unresolvedIssues[${index}]`,
+        ),
+      );
+    }
+  }
+}
+
 function validateReviewResult(value, errors) {
   for (const key of ['id', 'runId', 'reviewKind', 'reviewerLane', 'status']) {
     requiredString(value, key, errors);
@@ -2286,17 +2413,7 @@ function validateReviewResult(value, errors) {
     requiredArray(value, key, errors);
   }
   if (Array.isArray(value.unresolvedIssues)) {
-    for (const [index, unresolvedIssue] of value.unresolvedIssues.entries()) {
-      if (typeof unresolvedIssue !== 'string') {
-        errors.push(
-          issue(
-            'INVALID_UNRESOLVED_ISSUE',
-            'unresolvedIssues members must be strings',
-            `$.unresolvedIssues[${index}]`,
-          ),
-        );
-      }
-    }
+    validateUnresolvedIssues(value, errors);
   }
   if (
     ![

@@ -175,6 +175,7 @@ does not turn it red). That is why the root pass stays ungated.
 - Publishable packages under `packages/` are released from npm and participate in PR release dry-runs.
 - Publishable package guardrail: the lockstep public package set is `packages/cli`, `packages/control-plane`, `packages/docs-config`, `packages/docs-theme`, and `packages/docs-transforms`. If a PR changes shipped functionality for any of them, bump all five public package versions together in the same PR.
 - For release policy, bundled assets count as shipped CLI functionality. Changes under `.agents/skills`, `.agents/agents`, `.oat/templates`, `.oat/scripts`, or `apps/oat-docs/docs` require the same lockstep public package version bump even if no file under `packages/cli/src` changed.
+- Test-only package changes skip the lockstep bump (`DR-260927-test-only-paths-skip`). A path counts toward the version policy only if it can reach a published artifact, so each public package's `versionPolicyIgnorePatterns` lists exactly the test paths its `tsconfig.json` excludes from `dist` (for example `src/**/*.test.ts` and `src/**/__tests__/**` in `packages/cli`), and a contract test fails if the two diverge. Test helpers or fixtures that compile into `dist` still count.
 - Definition of done for publishable package changes: run `pnpm release:validate` before finishing. A publishable-package PR is not done until that command passes.
 
 ## Architecture Overview
