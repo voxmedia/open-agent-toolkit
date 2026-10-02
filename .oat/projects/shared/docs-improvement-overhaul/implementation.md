@@ -1,5 +1,5 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
@@ -20,9 +20,9 @@ The user invoked oat-project-implement after the reviewed plan handoff. Implemen
 | Phase 3 | complete                       | 2     | 2/2       |
 | Phase 4 | complete                       | 4     | 4/4       |
 | Phase 5 | complete                       | 3     | 3/3       |
-| Phase 6 | complete                       | 5     | 5/5       |
+| Phase 6 | final-review corrections       | 8     | 5/8       |
 
-**Total:** 20/20 tasks completed. Phases 3–6 were closed under the Fable takeover; see "Takeover closeout" below for what was done, by whom, and where it deviated from the plan.
+**Total:** 20/23 task implementations recorded; three final-review corrections remain. Earlier phase 6 closure was premature for reconciliation and independent acceptance. The native supplement now covers seven journeys, with GitHub light rendering still unverified. See "Takeover closeout" for historical execution and deviations; no approval waiver is inferred.
 
 ## Phase 1: Make the Current Sidebar Enforceable
 
@@ -207,6 +207,32 @@ Dispatch p03 prose and p04-t01 mapping independently now. Fable exclusively supp
 **Status:** complete
 **Commit:** a554e9e46, 7f508e58a, e1c6b7d94
 **Verification:** See Takeover closeout.
+
+### Task p06-t06: (review) Validate reference-style Markdown routes
+
+**Status:** pending
+
+### Task p06-t07: (review) Correct native-read adoption guidance
+
+**Status:** pending
+
+### Task p06-t08: (review) Close final whole-site reconciliation
+
+**Status:** pending
+
+## Final review receive — 2026-10-02
+
+Root read the entire automatic final review at `c0f10a8f8d3a05cd9ac4d1f2265e8bb0f7e7c697`: 0 Critical, 0 High, 3 Medium, 0 Low. Auto-disposition applies; no user prompt or severity waiver is required. Artifact: `reviews/archived/final-review-2026-10-02T213720Z.md`.
+
+| ID  | Analysis / disposition                                                                                                                                                | Scope    | Task    |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------- |
+| M1  | Agree: inline regex misses normal reference syntax. Fix with existing Markdown parser and focused regression controls; no current broken reference claimed.           | Minor    | p06-t06 |
+| M2  | Agree: native-read adoption returns before creating provider links. Correct reader guidance, not product behavior.                                                    | Minor    | p06-t07 |
+| M3  | Agree: evidence exists but aggregate current-tree accounting is absent. Close using existing records and explicitly report gaps; do not invent semantic conservation. | Moderate | p06-t08 |
+
+No newly deferred Medium or Low findings. Prior concerns are dispositioned in the final review's deferred ledger: resolved guidance, explicitly scoped product/backlog work and bounded editorial residuals; they are not quietly reclassified as successful fixes. Final lifecycle status is `fixes_added`, not passed. The configured cross-family implement gate and final p06 approval remain pending. The user's speed amendment forbids another full Medium-only review sweep; use targeted non-author checks and the independently configured final gate.
+
+Independent native evidence: `reviews/final-native-visual-qa-2026-10-02.md`. It supplements the author tour rather than relabelling it as independent.
 
 ## Takeover closeout
 

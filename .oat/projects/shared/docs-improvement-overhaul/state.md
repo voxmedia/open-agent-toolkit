@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p06-t06
 oat_last_commit: e1c6b7d94020ffe087c290483867ae5ce5ea4349
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -16,7 +16,7 @@ oat_dispatch_policy:
   policy: high
   source: project-state
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: pr_open # Status: in_progress | complete | pr_open
+oat_phase_status: in_progress # Final review corrections and approval remain pending; PR is still open.
 oat_phase_recovery_policy:
   default_attempt_limit: 10
   phase_attempt_usage:

@@ -388,6 +388,30 @@ Complete seven journeys using sidebar/search/links/anchors: provider-sync-only i
 
 **Commit:** `docs(p06-t05): record reader outcomes and independent final acceptance`.
 
+### Task p06-t06: (review) Validate reference-style Markdown routes
+
+**Files:** `apps/oat-docs/scripts/validate.ts`, existing Markdown utilities and adjacent app tests only.
+
+**Work:** Resolve Markdown link/image references through the existing parser and definitions, preserving code-example exclusions. Public test boundary: `validateSourceRoutes`. Missing reference targets/fragments reject; valid references pass. Existing inline-only coverage missed this syntax; Markdown definitions supply independent expected destinations. Follow deliberate-testing and prove the regression control fails before fixing.
+
+**Verify:** `pnpm docs:test`, `pnpm docs:validate`, `pnpm --filter oat-docs type-check`; format owned files only. **Commit:** `fix(p06-t06): validate reference-style documentation links`.
+
+### Task p06-t07: (review) Correct native-read adoption guidance
+
+**Files:** `apps/oat-docs/docs/provider-sync/manifest-and-drift.md` and regenerated bundled docs only.
+
+**Work:** Qualify Adopt: generated provider views receive a link, while Cursor/Copilot skills are read canonically without recreating the provider-local path or adding a managed-view manifest row. Verify against `adopt-stray.ts` and its existing native-read control. No product behavior change.
+
+**Verify:** docs validation, existing adoption test and affected-page rendered smoke after rebuilding. **Commit:** `docs(p06-t07): clarify native-read adoption effects`.
+
+### Task p06-t08: (review) Close final whole-site reconciliation
+
+**Files:** project `references/conservation-closeout.md`, bounded supporting inventory and implementation tracking only.
+
+**Work:** Re-derive current command/flag, supported-config and skill surfaces without operational actions. Account for baseline/current entries, migration sections, changed-page facts and config choices using existing evidence and canonical destinations. State named gaps and uncertain semantic mappings explicitly; names alone do not prove conservation. Do not repeat family verification or create project-dependent permanent CI. Attach the native visual supplement with residuals/limits.
+
+**Verify:** Root independently checks extraction, provenance and aggregate accounting. **Commit:** `docs(p06-t08): reconcile final coverage and conservation`.
+
 ## Reviews
 
 | Scope          | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target          |
@@ -398,7 +422,7 @@ Complete seven journeys using sidebar/search/links/anchors: provider-sync-only i
 | p02            | code     | passed          | 2026-10-02 | reviews/p02-review-2026-10-02T145912Z.md                    | 2173d81d1659bf2124826244a869ca54b14b49ad | auto       | -                    |
 | p02-map        | artifact | fixes_completed | 2026-10-02 | reviews/p02-migration-draft-review.md                       | -                                        | auto       | -                    |
 | p02-map        | artifact | passed          | 2026-10-02 | reviews/p02-migration-draft-review-round02.md               | -                                        | auto       | -                    |
-| final          | code     | received        | 2026-10-02 | reviews/final-review-2026-10-02T213720Z.md                  | c0f10a8f8d3a05cd9ac4d1f2265e8bb0f7e7c697 | auto       | -                    |
+| final          | code     | fixes_added     | 2026-10-02 | reviews/archived/final-review-2026-10-02T213720Z.md         | c0f10a8f8d3a05cd9ac4d1f2265e8bb0f7e7c697 | auto       | -                    |
 | spec           | artifact | pending         | -          | -                                                           | -                                        | -          | -                    |
 | design         | artifact | fixes_completed | 2026-10-01 | reviews/fable-design-01.md                                  | -                                        | manual     | -                    |
 | p03            | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
@@ -427,9 +451,9 @@ Planned scope summary; implementation.md is the authoritative live task-progress
 - Phase 3: 2 tasks — evaluator README and render review.
 - Phase 4: 4 tasks — mapping, independent applicability audit, coverage and catalog.
 - Phase 5: 3 tasks — named gaps, four docs visuals and focused phase verification.
-- Phase 6: 5 tasks — conservation, fresh personas, consensus, editorial improvements and final independent acceptance.
+- Phase 6: 8 tasks — conservation, fresh personas, consensus, editorial improvements, final independent acceptance and three bounded final-review corrections.
 
-**Total: 20 tasks, 6 sequential phases.** Implementation is authorized and underway; p01 completion/review is tracked in implementation.md. Phase 6 amendment review remains separate from the earlier plan gate and must finish before p06 execution.
+**Total: 23 tasks, 6 sequential phases.** Implementation remains authorized; final corrections and the p06 HiLL checkpoint are pending. Earlier native phase-review omissions remain disclosed, not retroactively passed.
 
 ## References
 
