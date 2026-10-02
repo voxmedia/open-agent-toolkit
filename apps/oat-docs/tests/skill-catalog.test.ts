@@ -73,7 +73,7 @@ async function fixture() {
   await mkdir(join(docsRoot, 'workflows'), { recursive: true });
   await writeFile(
     join(docsRoot, 'workflows/guide.md'),
-    '# Guide\n\n## Zeta skill\n\n## Alpha skill\n',
+    '# Guide\n\n## Zeta skill\n\n**Example scenario:** Use the zeta workflow.\n\n## Alpha skill\n\n**Example scenario:** Use the alpha workflow.\n',
   );
   const original =
     '---\ntitle: Skills\ndescription: Authored source\n---\n\n## Contents\n\nAuthored intro.\n\n## Full Catalog\n\n<!-- oat:skill-catalog:start -->\nold catalog\n<!-- oat:skill-catalog:end -->\n\n## Related\n\nAuthored tail.\n';

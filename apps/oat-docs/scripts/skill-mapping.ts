@@ -2,8 +2,11 @@ import { lstat, readdir, readFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { markdownAnchors } from '@oat-repo/nav-markdown';
 import { PACK_MANIFEST, type PackDefinition } from '@oat-repo/pack-manifest';
+import Slugger from 'github-slugger';
+import remarkGfm from 'remark-gfm';
+import remarkParse from 'remark-parse';
+import { unified } from 'unified';
 import YAML from 'yaml';
 
 export type ProjectApplicability = 'required' | 'optional' | 'none';
@@ -43,6 +46,59 @@ export interface SkillMappingValidation {
   mapping: SkillMapping;
   inventory: CanonicalSkill[];
   pendingAnchors: string[];
+}
+
+interface GuideNode {
+  type: string;
+  value?: string;
+  depth?: number;
+  children?: GuideNode[];
+  position?: { start: { offset?: number }; end: { offset?: number } };
+}
+
+function guideText(node: GuideNode): string {
+  return node.children
+    ? node.children.map(guideText).join('')
+    : (node.value ?? '');
+}
+
+function guideScenarios(
+  markdown: string,
+  mappedAnchors: ReadonlySet<string>,
+): Map<string, boolean> {
+  const source = markdown.replace(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/, '');
+  const tree = unified().use(remarkParse).use(remarkGfm).parse(source);
+  const slugger = new Slugger();
+  const scenarios = new Map<string, boolean>();
+  const headings: { anchor: string; depth: number }[] = [];
+  const visit = (node: GuideNode): void => {
+    if (node.type === 'heading') {
+      const depth = node.depth!;
+      while (headings.length && headings.at(-1)!.depth >= depth) headings.pop();
+      const last = node.children?.at(-1);
+      const custom =
+        last?.type === 'text' && last.value
+          ? /\s*\[#([^]+?)]\s*$/.exec(last.value)
+          : null;
+      const anchor = custom?.[1] ?? slugger.slug(guideText(node));
+      scenarios.set(anchor, false);
+      headings.push({ anchor, depth });
+      return;
+    }
+    if (
+      node.type === 'strong' &&
+      source.slice(node.position?.start.offset, node.position?.end.offset) ===
+        '**Example scenario:**'
+    ) {
+      const owner = [...headings]
+        .reverse()
+        .find((heading) => mappedAnchors.has(heading.anchor));
+      if (owner) scenarios.set(owner.anchor, true);
+    }
+    node.children?.forEach(visit);
+  };
+  visit(tree);
+  return scenarios;
 }
 
 function object(value: unknown, label: string): Record<string, unknown> {
@@ -287,16 +343,26 @@ export async function validateSkillMapping({
   }
   if (errors.length) throw new Error(errors.join('\n'));
   const pendingAnchors: string[] = [];
-  const pages = new Map<string, Set<string> | null>();
+  const pages = new Map<string, Map<string, boolean> | null>();
   for (const entry of mapping.skills) {
     if (!pages.has(entry.page)) {
       const content = await readOwnerPage(docsRoot, entry.page);
-      pages.set(entry.page, content === null ? null : markdownAnchors(content));
+      const mappedAnchors = new Set(
+        mapping.skills
+          .filter((skill) => skill.page === entry.page)
+          .map((skill) => skill.anchor),
+      );
+      pages.set(
+        entry.page,
+        content === null ? null : guideScenarios(content, mappedAnchors),
+      );
     }
     if (!pages.get(entry.page)?.has(entry.anchor)) {
       const target = `${entry.page}#${entry.anchor}`;
       if (allowPendingAnchors) pendingAnchors.push(target);
       else errors.push(`Missing guide anchor ${target}`);
+    } else if (!pages.get(entry.page)!.get(entry.anchor)) {
+      errors.push(`Missing example scenario ${entry.page}#${entry.anchor}`);
     }
   }
   if (errors.length) throw new Error(errors.join('\n'));

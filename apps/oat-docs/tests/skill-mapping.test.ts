@@ -21,6 +21,11 @@ import {
 import type { PackDefinition } from '@oat-repo/pack-manifest';
 
 const roots: string[] = [];
+// Captured from picking-up-projects.md#oat-project-clear-active at 9a2205f.
+const scenario = `**Example scenario:** Checkout-hardening is still unfinished, but you want to
+work on an untracked investigation without accidentally routing its changes
+into that project. Clear the active project: OAT pauses checkout-hardening and
+clears the pointer.`;
 after(async () => {
   await Promise.all(
     roots.map((root) => rm(root, { recursive: true, force: true })),
@@ -66,7 +71,10 @@ async function fixture() {
       `---\nname: ${name}\n${fields}\n---\n\n# Skill\n`,
     );
   }
-  await writeFile(join(docsRoot, 'guide.md'), '# Guide\n\n## Sample skill\n');
+  await writeFile(
+    join(docsRoot, 'guide.md'),
+    `# Guide\n\n## Sample skill\n\n${scenario}\n`,
+  );
   const mapping: SkillMapping = {
     version: 1,
     skills: [
@@ -145,6 +153,95 @@ test('pending mode relaxes only missing future pages or anchors', async () => {
     ['future/guide.md#not-authored'],
   );
   await assert.rejects(validateSkillMapping(context), /Missing guide anchor/);
+});
+
+test('rejects an existing skill section without its own scenario even in pending mode', async () => {
+  const context = await fixture();
+  await writeFile(
+    join(context.docsRoot, 'guide.md'),
+    '# Guide\n\n## Sample skill\n',
+  );
+  for (const allowPendingAnchors of [false, true]) {
+    await assert.rejects(
+      validateSkillMapping({ ...context, allowPendingAnchors }),
+      /Missing example scenario guide\.md#sample-skill/,
+    );
+  }
+});
+
+for (const [label, body] of [
+  ['fenced code', `\`\`\`markdown\n${scenario}\n\`\`\``],
+  ['inline code', '`**Example scenario:**`'],
+  ['HTML comment', `<!-- ${scenario} -->`],
+  ['escaped text', '\\*\\*Example scenario:\\*\\*'],
+  ['another skill section', `## Another skill\n\n${scenario}`],
+] as const) {
+  test(`does not accept a scenario marker in ${label}`, async () => {
+    const context = await fixture();
+    await writeFile(
+      join(context.docsRoot, 'guide.md'),
+      `# Guide\n\n## Sample skill\n\n${body}\n`,
+    );
+    await assert.rejects(
+      validateSkillMapping({ ...context, allowPendingAnchors: true }),
+      /Missing example scenario guide\.md#sample-skill/,
+    );
+  });
+}
+
+test('accepts the captured scenario within a non-skill subsection and a custom anchor', async () => {
+  const context = await fixture();
+  await writeFile(
+    join(context.docsRoot, 'guide.md'),
+    `---\ntitle: Guide\n---\n\n# Guide\n\n## Clear active project [#sample-skill]\n\n### Usage\n\n${scenario}\n`,
+  );
+  assert.deepEqual((await validateSkillMapping(context)).pendingAnchors, []);
+});
+
+test('does not borrow a scenario from a duplicate heading with a different slug', async () => {
+  const context = await fixture();
+  context.mapping.skills[0]!.anchor = 'sample-skill-1';
+  await writeFile(
+    join(context.docsRoot, 'guide.md'),
+    `# Guide\n\n## Sample skill\n\n${scenario}\n\n## Sample skill\n`,
+  );
+  await assert.rejects(
+    validateSkillMapping(context),
+    /Missing example scenario guide\.md#sample-skill-1/,
+  );
+});
+
+test('a nested mapped skill owns its scenario instead of satisfying its parent skill', async () => {
+  const context = await fixture();
+  await writeFile(
+    join(context.repoRoot, '.agents/skills/hidden-skill/SKILL.md'),
+    '---\nname: hidden-skill\ndescription: A now-invocable skill\nuser-invocable: true\n---\n',
+  );
+  context.mapping.excluded = context.mapping.excluded.filter(
+    (entry) => entry.name !== 'hidden-skill',
+  );
+  context.mapping.skills.push({
+    ...context.mapping.skills[0]!,
+    name: 'hidden-skill',
+    anchor: 'hidden-skill',
+  });
+  await writeFile(
+    join(context.docsRoot, 'guide.md'),
+    `# Guide\n\n## Sample skill\n\n### Hidden skill\n\n${scenario}\n`,
+  );
+  await assert.rejects(validateSkillMapping(context), (error: unknown) => {
+    assert.ok(error instanceof Error);
+    assert.equal(
+      error.message,
+      'Missing example scenario guide.md#sample-skill',
+    );
+    return true;
+  });
+  await writeFile(
+    join(context.docsRoot, 'guide.md'),
+    `# Guide\n\n## Sample skill\n\n${scenario}\n\n### Hidden skill\n\n${scenario}\n`,
+  );
+  assert.deepEqual((await validateSkillMapping(context)).pendingAnchors, []);
 });
 
 for (const [label, mutate, diagnostic] of [
