@@ -30,7 +30,7 @@ The user also explicitly expanded the overhaul to substantially improve the root
 
 **User direction:** We are currently in discovery and brainstorming; scaffold a quick project to retain the evidence.
 
-**Later confirmation:** The user authorized lightweight design and plan readiness, chose draft-and-review with Fable, and added README/visual improvements. Discovery remains in progress until the reviewed design resolves the remaining route-compatibility choice. Implementation is still unauthorized.
+**Later confirmation:** The user authorized lightweight design and plan readiness, chose draft-and-review with Fable, and added README/visual improvements. The user also explicitly allowed moved URLs to break. Discovery remains in progress until design review is complete. Implementation is still unauthorized.
 
 ### Orchestration feedback
 
@@ -88,10 +88,11 @@ Adopt the skills repo's manually authored Fumadocs metadata pattern, updating th
 4. **Agreed design direction:** Overview Home separate from Getting Started, Skills, Workflows, Provider Sync, Docs Tooling, Reference, and Contributing. See [IA proposal](references/ia-consensus.md) for the original consensus and [design](design.md) for current decisions.
 5. **User-approved scope expansion:** Improve the root README and purposeful docs visuals; use Gizmo patterns as inspiration, not copied assets.
 6. **Visual QA cadence:** Full independent reviewer computer-use tour after the final implementation phase. Focused implementer browser smoke checks follow navigation and migration. This does not change automated or source-review gates.
+7. **User-approved compatibility boundary:** Allow moved URLs to break. No aliases, redirects or compatibility stubs; update repository links and verify canonical destinations.
 
 ## Constraints
 
-- Preserve existing information during moves; do not quietly delete content under a readability claim. Old-route compatibility is a separate user decision, not implicit authorization to build aliases.
+- Preserve existing information during moves; do not quietly delete content under a readability claim. Moved old URLs may break by explicit user decision; do not build aliases.
 - Keep one canonical owner per guide, with multiple discovery paths rather than duplicated prose.
 - Do not infer prerequisites or public support from lifecycle names or pack membership. Current prerequisites are prose, not structured frontmatter.
 - Use approved analyze/apply recommendations for the eventual broad docs pass. A navigation capability change is not a docs-only apply action.
@@ -124,7 +125,6 @@ Criteria for the reviewed design and plan:
 
 ## Open Questions
 
-- Preserve old routes with static compatibility pages, or explicitly allow moved routes to break?
 - Planning setup still needs the project dispatch policy and the independent configured-gate choices; these are not new product-scope questions.
 - The five unshipped skills with unknown intent remain excluded as currently unshipped, not labeled permanently internal. Any promotion is outside this pass.
 
