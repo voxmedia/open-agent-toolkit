@@ -96,6 +96,10 @@ target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:2,low:
 
 Phase p05 complete (6/6 tasks): workflow.autonomousComplete opt-in, oat-project-complete-auto companion skill with three-layer guard and batch mode, wave closeout repoint, pr-final ledger prose. One root review round (2 Medium, 2 Low fixed), Codex gate passed (1 Medium addressed now, 1 Medium deferred to final, stale DR-260720 held for the operator).
 
+### 2026-10-02 · structural · oat-project-review-provide · p06
+
+Review reconnaissance completed: one intelligent-recon scout (gpt-6.1-sol medium), root verified evidence and retained 1 Medium; artifact=.oat/projects/shared/backlog-wave-4/reviews/p06-review-2026-10-02T224700Z.md; b55e726f-ec7f-49f1-ae85-67ac7b5ac0dd-recon
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

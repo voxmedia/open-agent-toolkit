@@ -1702,6 +1702,7 @@ rewrites the four inventory rows last.
 | p03    | code     | passed          | 2026-10-02 | reviews/archived/p03-review-2026-10-02T200622Z.md           | 2fae69e039f3516a326ad77bd6a325cd5d8fafb4 | gate       | codex-6-sol-xhigh |
 | p04    | code     | passed          | 2026-10-02 | reviews/archived/p04-review-2026-10-02T213839Z.md           | f5e4289f5cb2eeb1cff025d9d55bed18ac48cfcc | gate       | codex-6-sol-xhigh |
 | p05    | code     | passed          | 2026-10-02 | reviews/archived/p05-review-2026-10-02T221406Z.md           | fad16c3018699bb9e623fea611fe05d97fe97d2e | gate       | codex-6-sol-xhigh |
+| p06    | code     | received        | 2026-10-02 | reviews/p06-review-2026-10-02T224700Z.md                    | 420660c213f8b120c5e362b46eec04e0204ab760 | gate       | codex-6-sol-xhigh |
 
 ## Plan artifact review (`QS-11`): structured review by `oat-reviewer-claude-claude-opus-5-5-high` (exact reviewer ceiling; planning-parent effort unknown), three attempts within `oat_orchestration_retry_limit` 2: attempt 1 returned 3 High, 4 Medium, 5 Low; attempt 2 returned 2 Medium, 2 Low; attempt 3 clean. All findings were applied in plan.md and discovery.md (commits 6bae4002b, ff8d23485); no residual findings.
 
