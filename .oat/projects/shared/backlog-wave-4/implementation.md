@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p01-t04
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -26,7 +26,7 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 4     | 3/4       |
+| Phase 1 | in_progress | 4     | 4/4       |
 | Phase 2 | pending     | 2     | 0/2       |
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 7     | 0/7       |
@@ -34,7 +34,7 @@ oat_generated: false
 | Phase 6 | pending     | 3     | 0/3       |
 | Phase 7 | pending     | 3     | 0/3       |
 
-**Total:** 3/26 tasks completed
+**Total:** 4/26 tasks completed
 
 ---
 
@@ -59,8 +59,8 @@ oat_generated: false
 
 ### Task p01-t04: (review) Close p01 gate finding H1
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 8ef15f758
 
 ---
 
@@ -261,6 +261,12 @@ oat_generated: false
   passes containment and publication replaces the file). Converted to
   `p01-t04`; routed to the original phase handle, then root review and the gate
   re-run (gate retry 1 of 2).
+
+- Continuation `cont-backlog-wave-4-p01-fix-2` (same handle, fix mode):
+  `8ef15f758` closed gate H1 (non-directory destination refused;
+  `NOTICES.md` protected by physical path); three bounded cases with
+  per-guard neutralization; uncached CLI tests 8060 pass. Root spot-check:
+  `bundle-consistency.test.ts` passes.
 
 <!-- orchestration-runs-end -->
 
