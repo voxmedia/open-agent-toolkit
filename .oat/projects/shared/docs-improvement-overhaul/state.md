@@ -11,7 +11,7 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: discovery # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase: design # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
@@ -85,19 +85,19 @@ oat_generated: false
 
 # Project State: docs-improvement-overhaul
 
-**Status:** Discovery
+**Status:** Lightweight design, draft-and-review
 **Started:** 2026-10-01
 **Last Updated:** 2026-10-01
 
 ## Current Phase
 
-Discovery and brainstorming. Initial evaluations and Codex/Fable IA consensus are captured for user review; navigation scope and content coverage remain open. No docs implementation is authorized by this checkpoint.
+The user authorized continuation through lightweight design and plan readiness with Fable reviewing throughout. The draft incorporates README/visual scope and final-phase reviewer computer-use QA. Route compatibility and planning dispatch/gate setup remain to resolve. No implementation is authorized.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (in_progress)
 - **Spec:** N/A (quick mode)
-- **Design:** N/A (quick mode unless lightweight design is needed)
+- **Design:** `design.md` (draft for Fable review)
 - **Plan:** `plan.md` (scaffolded template — not started)
 - **Implementation:** `implementation.md` (scaffolded template — not started)
 - **References:** [Evidence index](references/index.md), including initial evaluations, the proposed IA, Fable's skill inventory advisory, and orchestration observations.
@@ -106,7 +106,7 @@ Discovery and brainstorming. Initial evaluations and Codex/Fable IA consensus ar
 
 - Discovery started in quick mode at the user's request.
 - Archived readability project, skills-repo comparison, and rendered-site observations retained.
-- Codex and Fable agree on a proposed IA; user approval remains pending.
+- Codex and Fable agree on the IA; the user authorized drafting design and plan against it.
 - Plan and implementation are templates only, not ready for execution.
 
 ## Blockers
@@ -115,4 +115,4 @@ None
 
 ## Next Milestone
 
-Review the proposed IA with the user and continue discovery. Decide navigation authority, supported-skill coverage, and scope before selecting design depth or generating a plan.
+Resolve route compatibility, receive Fable design review, complete discovery, and produce the reviewed execution plan. Stop before implementation.

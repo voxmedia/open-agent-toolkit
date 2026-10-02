@@ -30,7 +30,7 @@ The user also explicitly expanded the overhaul to substantially improve the root
 
 **User direction:** We are currently in discovery and brainstorming; scaffold a quick project to retain the evidence.
 
-**Implication:** Discovery remains `in_progress`. The generated plan and implementation files are placeholders, not a runnable plan or an implementation handoff.
+**Later confirmation:** The user authorized lightweight design and plan readiness, chose draft-and-review with Fable, and added README/visual improvements. Discovery remains in progress until the reviewed design resolves the remaining route-compatibility choice. Implementation is still unauthorized.
 
 ### Orchestration feedback
 
@@ -72,24 +72,26 @@ Adopt the skills repo's manually authored Fumadocs metadata pattern, updating th
 
 **Rationale:** The prior reorganization's adoption lanes remain useful, but independent skill discovery is buried and authored Contents do not drive the rendered sidebar. Repeating a source-only reorganization would not resolve both problems.
 
-**User validated:** Not yet. The user approved starting this quick project and retaining discovery, not the proposed IA or its implementation.
+**User validated:** The user accepted proceeding with the agreed IA through lightweight design and planning, confirmed draft-and-review with Fable, and explicitly stopped authorization before implementation.
 
 ## Options Considered
 
-- **Navigation authority:** Derive Fumadocs metadata from Contents (agent recommendation) versus explicitly author framework metadata under a revised contract. No implementation choice approved yet.
+- **Navigation authority:** Derive Fumadocs metadata from Contents under the agreed design direction, rather than hand-maintain two maps. Implementation remains a later approval.
 - **Skill coverage:** One page per skill versus canonical family guides with per-skill anchors. Agents recommend family guides with enough per-skill detail to distinguish invocation, prerequisites, and outcomes; avoid dozens of duplicated skill specifications.
 - **Discovery taxonomy:** Standalone-only versus all supported user-facing skills. Agents recommend universal discovery, organized by task rather than install pack or lifecycle membership.
 
 ## Key Decisions
 
-1. **User-approved workflow:** Quick mode; discovery and brainstorming only for now.
+1. **User-approved workflow:** Quick mode through lightweight design and plan readiness; no implementation. Draft-and-review with Fable supersedes the saved collaborative design preference.
 2. **User-approved collaboration:** Codex leads, Fable 5.1 advises, and direct peer communication is authorized.
 3. **User-approved evidence retention:** Store initial evaluations and proposed IA under project references.
-4. **Agent consensus, pending user approval:** Overview Home separate from Getting Started, Skills, Workflows, Provider Sync, Docs Tooling, Reference, and Contributing. See [IA proposal](references/ia-consensus.md).
+4. **Agreed design direction:** Overview Home separate from Getting Started, Skills, Workflows, Provider Sync, Docs Tooling, Reference, and Contributing. See [IA proposal](references/ia-consensus.md) for the original consensus and [design](design.md) for current decisions.
+5. **User-approved scope expansion:** Improve the root README and purposeful docs visuals; use Gizmo patterns as inspiration, not copied assets.
+6. **Visual QA cadence:** Full independent reviewer computer-use tour after the final implementation phase. Focused implementer browser smoke checks follow navigation and migration. This does not change automated or source-review gates.
 
 ## Constraints
 
-- Preserve existing information and compatibility routes during moves; do not quietly delete content under a readability claim.
+- Preserve existing information during moves; do not quietly delete content under a readability claim. Old-route compatibility is a separate user decision, not implicit authorization to build aliases.
 - Keep one canonical owner per guide, with multiple discovery paths rather than duplicated prose.
 - Do not infer prerequisites or public support from lifecycle names or pack membership. Current prerequisites are prose, not structured frontmatter.
 - Use approved analyze/apply recommendations for the eventual broad docs pass. A navigation capability change is not a docs-only apply action.
@@ -98,36 +100,33 @@ Adopt the skills repo's manually authored Fumadocs metadata pattern, updating th
 
 ## Success Criteria
 
-Proposed criteria to confirm before planning:
+Criteria for the reviewed design and plan:
 
 - A newcomer can find installation and first success without learning OAT's internal architecture first.
 - Readers can discover a supported named skill or choose a skill for a task without assuming they need an active project.
 - Each supported skill resolves to useful canonical guidance, with prerequisites and related variants distinguished.
 - Authored order, labels, groups, and cross-section discovery links appear as intended in the rendered site.
 - Workflow entrypoints distinguish choosing a mode, executing a project, capturing ideas, planning a backlog, and operating waves.
-- Compatibility links continue to resolve, with obsolete migration language removed from primary reader paths.
+- All repository links resolve to canonical destinations; remove obsolete migration language from primary reader paths. External old-route behavior follows the explicit compatibility decision.
 - Coverage and navigation validation make future drift detectable rather than relying on another periodic reorganization.
 - The README explains OAT's value, independent adoption choices, and a first success before contributor-oriented setup. It routes readers into the new docs IA without duplicating the docs site.
 - Purposeful SVG/Mermaid visuals clarify adoption paths, skill/workflow relationships, and selected system flows. They remain readable in the actual GitHub and Fumadocs renderers, in light/dark themes and narrow layouts, with textual equivalents and accessible descriptions.
 
 ## Out of Scope
 
-- Implementing the proposed navigation or rewriting docs during this discovery checkpoint.
+- Implementing the proposed navigation or rewriting product docs during this design/planning session.
 - Changing skill runtime behavior or project lifecycle semantics as an incidental docs fix.
 - Merging, deploying, or treating the separate Orc skill PR as OAT project completion.
 
 ## Deferred Ideas
 
-- Generated skill catalog and navigation metadata: candidate design work after IA approval, not existing capabilities.
-- Lightweight design: likely useful for navigation ownership and content coverage contracts; no depth decision requested yet because discovery is still open.
+- Distribution changes for currently unshipped skills and a machine-readable prerequisites field are separate future decisions.
 
 ## Open Questions
 
-- Does the user approve the seven-section IA and canonical family-guide approach?
-- Should Contents remain the single authored navigation authority through generated Fumadocs metadata, or should the contract change to framework-native metadata?
-- Which unshipped/repo-only skills are intentionally internal, and what defines the supported catalog?
-- How much new skill-guide authoring belongs in this overhaul versus a separately tracked follow-up?
-- What evidence and enforcement should prevent recurrence: catalog coverage, navigation parity, link compatibility, and rendered journey checks?
+- Preserve old routes with static compatibility pages, or explicitly allow moved routes to break?
+- Planning setup still needs the project dispatch policy and the independent configured-gate choices; these are not new product-scope questions.
+- The five unshipped skills with unknown intent remain excluded as currently unshipped, not labeled permanently internal. Any promotion is outside this pass.
 
 ## Assumptions
 
@@ -144,4 +143,4 @@ Proposed criteria to confirm before planning:
 
 ## Next Steps
 
-Review the [proposed navigation](references/ia-consensus.md) with the user, then continue discovery on the open choices. Keep [initial evaluations](references/initial-evaluations.md), [skill findings](references/skill-inventory-advisory.md), and the [orchestration log](references/orchestration-log.md) as evidence. Do not mark discovery complete or generate execution tasks until the user is ready to converge.
+Review `design.md` with Fable, resolve the route choice, then complete discovery through the CLI and author/review `plan.md`. Keep initial evaluations and the orchestration log as evidence. Stop at plan readiness; do not enter implementation.
