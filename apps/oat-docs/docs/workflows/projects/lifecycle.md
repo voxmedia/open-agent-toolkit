@@ -569,11 +569,34 @@ The fold-back path is what makes "we got to plan and realized the design missed 
 
 ## Choosing lifecycle controls
 
-Planning checkpoints, implementation pauses, artifact loops, and external gates
-are distinct. Required phase/final reviews remain when extra review is disabled.
+OAT has four separate controls that are easy to confuse. Each one adds a
+different kind of check:
 
-**Recommendation:** choose the [workflow mode](../choose-workflow.md#which-mode-should-i-choose)
-first, then [design interaction](planning/design-modes.md#choosing-an-interaction-mode)
-and [checkpoint frequency](planning/hill-checkpoints.md#choosing-checkpoint-frequency).
-Keep artifact loops for downstream handoffs; use gates for measured diversity.
-Extra reviews add latency, not guaranteed independence.
+- **Planning checkpoints** hold a spec-driven project after discovery and after
+  design until a person approves.
+- **Implementation checkpoints** (HiLL checkpoints) pause implementation after
+  chosen phases until a person approves.
+- **Artifact review loops** have the same agent session check a generated plan
+  or analysis and fix clear problems before handing it on.
+- **Gates** send the work to a second agent CLI, preferably running a different
+  family of models, and turn its findings into a pass or a fail.
+
+None of these replaces the code reviews that run after every implementation
+phase and before closeout; those run whatever you choose here.
+
+Decide in this order: first the
+[workflow mode](../choose-workflow.md#which-mode-should-i-choose), then the
+[design interaction mode](planning/design-modes.md#choosing-an-interaction-mode),
+then the [checkpoint frequency](planning/hill-checkpoints.md#choosing-checkpoint-frequency).
+
+- If your team needs to approve the architecture before any code is written,
+  choose a spec-driven project for its planning checkpoints, or add a gate to a
+  planning skill.
+- If you want to steer implementation after risky phases, choose
+  implementation checkpoints for those phases.
+- If a plan or analysis will be handed to another workflow, keep its artifact
+  review loop on.
+- If a high-risk change needs a reviewer from a different model family, add a
+  [gate](../advanced/workflow-gates.md#choosing-gate-posture) and check which
+  reviewer it actually used. Adding more reviews makes a run slower; it does not
+  by itself make them independent.

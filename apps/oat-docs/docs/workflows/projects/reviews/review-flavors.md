@@ -5,6 +5,11 @@ description: 'The four OAT project review flavors, when each fires in the lifecy
 
 # Review Flavors
 
+Looking for which review skill to run? Skip to
+[Choosing a Review Skill](#choosing-a-review-skill), which compares the eight
+review skills and then describes each one. The sections before it explain how
+OAT picks and isolates the reviewer model.
+
 OAT projects run reviews at several different lifecycle points, and those points
 have different independence requirements. A self-review that checks a freshly
 written plan does not need the same producer isolation as a lifecycle gate that
@@ -152,6 +157,41 @@ and where should its findings go?**
   PR reviews and comments. “Remote” describes the exchange, not a requirement
   to own a second physical machine.
 
+Put together, pick a skill by answering three questions:
+
+1. **Is this work tracked as an OAT project?** Yes: use an `oat-project-review-*`
+   skill. No, or you want findings kept out of the project: use an
+   `oat-review-*` (ad-hoc) skill.
+2. **Are you producing findings or acting on them?** Producing: a `provide`
+   skill. Acting on findings someone already produced: a `receive` skill.
+3. **Where do the findings live?** In a Markdown file in this checkout: the
+   local skill. On a GitHub pull request: the `-remote` skill.
+
+The two project remote skills are normally used as a pair, often on different
+machines or by different people: the reviewer runs
+`oat-project-review-provide-remote` and posts findings to the PR, then the
+author runs `oat-project-review-receive-remote` in the checkout that owns the
+project, which turns those findings into project tasks. The ad-hoc remote
+skills pair the same way without project tracking.
+
+**Terms used in these skill guides:**
+
+- **Active project:** the project OAT works on in this checkout when you do
+  not name one, stored as `activeProject` in the local, uncommitted
+  `.oat/config.local.json`.
+- **Synced project:** a project whose artifacts travel on their own Git ref on
+  `origin` instead of on your branch. OAT saves its tracking changes by
+  pushing that ref (`oat project push`) instead of committing on your branch.
+- **Review artifact:** the Markdown file a local review writes. Project
+  reviews go in the project's `reviews/` directory; once received, the file is
+  moved to `reviews/archived/`.
+- **Dispatch policy:** the project's rule for which models and effort levels
+  OAT may use when it launches subagents such as the reviewer. See
+  [Dispatch Policy](../../advanced/dispatch-ceiling.md).
+- **Gate:** a configured check, usually an independent review run by another
+  model, that must pass before the workflow continues. See
+  [Workflow gates](../../advanced/workflow-gates.md).
+
 | You want to                             | Ad-hoc                      | Project-scoped                      |
 | --------------------------------------- | --------------------------- | ----------------------------------- |
 | Review local work                       | `oat-review-provide`        | `oat-project-review-provide`        |
@@ -185,10 +225,18 @@ or a commit range.
 If you omit scope, the skill asks what to review and recommends unstaged work
 for an in-progress review. It shows the resolved scope for confirmation.
 
+**Needs an active OAT project:** no.
+
 **Prerequisites:** The selected files or changes must be available locally.
 No existing project or active pointer is required. Agree whether findings
 should be local-only, tracked or inline; these are output policies, not
 different code-review scopes.
+
+**What it does without asking:** After you confirm the scope, it writes the
+review artifact: by default to the untracked
+`.oat/projects/local/orphan-reviews/`, or to `.oat/repo/reviews/` when that
+directory exists and is tracked. It commits a tracked artifact only after
+asking you; local and inline output is never committed unless you request it.
 
 **Example scenario:** You staged a small callback fix that does not warrant a
 tracked project. Use the ad-hoc local provide variant to review precisely that
@@ -222,9 +270,16 @@ discovers active artifacts under repository-review and local orphan-review
 storage, orders candidates by their recorded generation time and reports which
 it selected. Archived artifacts are history, not default triage inputs.
 
+**Needs an active OAT project:** no.
+
 **Prerequisites:** A readable, nonempty Markdown review artifact exists. No
 project is required, and this rail does not mutate `plan.md`, `state.md` or
 `implementation.md`.
+
+**What it does without asking:** After triage, it moves the consumed artifact
+into the sibling `archived/` directory, adding a timestamp suffix if a file
+with that name is already there. It makes no commits: if the review came from
+the tracked `.oat/repo/reviews/`, commit the move yourself.
 
 **Example scenario:** The callback review has one High finding and a Low
 cleanup note. Receive shows both before asking for dispositions. You convert
@@ -254,15 +309,26 @@ reviewing machine, is the handoff to the author.
 /oat-review-provide-remote --pr 84
 ```
 
+**Needs an active OAT project:** no.
+
 **Prerequisites:** The PR is reachable through the current repository remote,
-and `gh` is installed and authenticated. No OAT project is required. Confirm
+and `gh` is installed and authenticated. No OAT project is required. The
+`oat-review-provide` skill (utility pack) must also be installed, because its
+review template supplies the checklist; without it the skill stops. Confirm
 the selected PR, and separately approve the review body before posting it.
+
+**What it does without asking:** After you confirm the PR number, it creates a
+temporary worktree, runs `gh pr checkout` inside it and removes it when
+finished; if the checkout fails, it switches to diff-only review with a
+warning. It posts nothing to GitHub until you approve the review body, and it
+writes no local artifact, commits nothing and pushes nothing.
 
 **Example scenario:** A teammate opened PR 84 for the standalone callback fix.
 Use remote ad-hoc provide so the findings arrive on that PR, even though the
 reviewer has no active project. The skill normally acquires a temporary
 worktree for context rather than changing the caller's checkout. Diff-only
-mode is available with `--no-checkout`, with a degraded-context warning.
+mode is available with `--no-checkout`, with a degraded-context warning, and
+is used automatically when the checkout fails.
 
 **Expected output:** A single approved GitHub review containing severity
 counts, inline findings where the diff supports them and body findings for
@@ -288,9 +354,17 @@ This is the receiving half of the remote ad-hoc flow.
 /oat-review-receive-remote --pr 84
 ```
 
+**Needs an active OAT project:** no.
+
 **Prerequisites:** `npx agent-reviews` is available and GitHub authentication
 is configured. No project is required. The selected PR is confirmed before
 comment ingestion.
+
+**What it does without asking:** After you confirm the PR, it fetches the
+unresolved comments and builds the task list. Every action beyond that needs
+your explicit yes: applying fixes, committing them and running `git push`
+happen only after you accept the offer, and replies are posted to GitHub only
+after you approve them.
 
 **Example scenario:** PR 84 now has the callback finding from remote provide
 and a separate reviewer comment about an edge case. Use remote ad-hoc receive
@@ -327,11 +401,30 @@ Artifact review selects an artifact instead, for example
 `/oat-project-review-provide artifact plan`. Without arguments, the skill
 proposes or asks for type and scope, then confirms a manual review.
 
+**Needs an active OAT project:** yes, or a project you name explicitly in the
+request.
+
 **Prerequisites:** An initialized project must resolve from the active pointer
 or an explicitly supplied project/review target. Its core artifacts must be
 committed before review. Code review needs completed implementation work and
 the mode-appropriate requirements sources; lite review does not require absent
-discovery, spec or design artifacts.
+discovery, spec or design artifacts. Code reviews and plan artifact reviews
+also need a resolved dispatch policy (`oat_dispatch_policy` in `state.md` or
+`workflow.dispatchPolicy.*` in config); without one the review stops before
+launching a reviewer. Discovery, spec and design artifact reviews run without
+a policy by using the current session's model.
+
+**What it does without asking:** After you confirm the review type and scope,
+it dispatches an `oat-reviewer` subagent when the host supports one (on Codex
+it may first ask you to authorize that). It writes the review artifact to
+`reviews/`, adds a `received` row to the Reviews table in `plan.md`, and
+commits both as `chore(oat): record {scope} review artifact`; a synced project
+pushes its project ref instead. It skips that commit only if you explicitly
+ask to defer it and confirm. If the project's branch is checked out in another
+worktree, the artifact and commit land there; if the branch differs from
+yours and has no worktree, the skill stops and offers to `git checkout` that
+branch, review inline only, or cancel. A review started by a gate runs with no
+confirmation prompts.
 
 **Example scenario:** Checkout-hardening has finished phase p02, including
 caller updates. Request a local project code review of p02 to check those
@@ -341,9 +434,9 @@ when asking for the review rather than switching to the ad-hoc rail by accident.
 
 **Expected output:** A scoped review artifact in the project's active
 `reviews/` directory, with requirements alignment, findings, verification
-guidance and a next-step recommendation. The workflow records the review
-event and persists its bookkeeping. An explicitly selected inline-only flow
-does not create the ordinary artifact. A blocked reviewer is not a passed
+guidance and a next-step recommendation, plus a `received` row in `plan.md`
+and the bookkeeping commit described above. An explicitly selected
+inline-only flow does not create the ordinary artifact or commit. A blocked reviewer is not a passed
 review with zero findings.
 
 **Next step:** Use project review-receive for the active artifact. If findings
@@ -362,11 +455,29 @@ project's execution or artifact-editing flow.
 /oat-project-review-receive
 ```
 
+**Needs an active OAT project:** yes, or a project you name. Without one, the
+skill can only offer to hand an ad-hoc review to `oat-review-receive`.
+
 **Prerequisites:** A valid project and an active project review must resolve.
 The normal input is an actionable artifact in the top level of its `reviews/`
 directory. A named project can supply the target even without an active
 pointer. Historical archived reviews are not automatically received again;
 discovery of an ad-hoc review routes to the ad-hoc receive skill instead.
+
+**What it does without asking:** For a manual code review it asks you to
+decide each finding, then applies your decisions without further prompts: it
+adds
+fix tasks to `plan.md`, updates `implementation.md` and `state.md`, moves the
+review artifact to `reviews/archived/`, and commits all of that together as
+`chore(oat): record review findings and add fix tasks ({scope})`. A synced
+project pushes its project ref instead. The commit is required; it is
+deferred only if you explicitly approve. Reviews started by checkpoint
+auto-review or by a gate are dispositioned with no prompts at all, and after a
+passing gate it may apply small, contained fixes directly and commit them with
+the bookkeeping. When the same scope has had 3 review cycles (not counting
+gate reviews), further automated cycles are blocked and the skill asks
+whether to review the findings manually, proceed to the PR, or explicitly
+override the limit.
 
 **Example scenario:** The p02 reviewer found a missed caller and a stale plan
 statement. Project receive explains the findings before disposition. For a
@@ -377,13 +488,19 @@ local variant because the input is a local project review event and its
 dispositions belong in the project ledger.
 
 **Expected output:** Finding analysis and dispositions, updated project
-tracking and an archived consumed review artifact with collision-safe identity.
-The outcome reports added tasks or artifact dispositions and the next route.
-Automatic and gate-originated reviews have their own disposition rules; a
-passing gate's sub-threshold findings are still recorded, not silently erased.
+tracking and the review artifact moved to `reviews/archived/` under a name that
+does not overwrite earlier reviews. For a code review, the skill then commits
+`plan.md`,
+`implementation.md`, `state.md` and the archive move together (synced projects
+push the project ref instead). The outcome reports added tasks or artifact
+dispositions, the review cycle count out of 3, and the next route. Reviews
+started automatically or by a gate have their own disposition rules; findings
+below a passing gate's threshold are still recorded, not silently erased, and
+small contained fixes may be applied directly during that sweep.
 
 **Next step:** Review any added tasks, then run implementation when ready, or
-choose its offered execution handoff. For artifact-review changes, request a
+choose its offered execution handoff: execute the fix tasks now (which can
+invoke `oat-project-implement` directly), review the plan first, or exit. For artifact-review changes, request a
 new artifact review or follow the phase's approval flow. Final review also
 resurfaces deferred Medium findings; receiving one phase review does not
 automatically close the project.
@@ -399,11 +516,21 @@ back without writing project tracking on the reviewing machine.
 /oat-project-review-provide-remote code p02 --pr 84 --project .oat/projects/shared/checkout-hardening
 ```
 
+**Needs an active OAT project:** no. The project is found from the PR diff or
+from `--project`, not from the active pointer.
+
 **Prerequisites:** The PR is reachable and `gh` is installed and authenticated.
 An existing project must resolve from exactly one project's `state.md` in the
 PR diff or from the explicit `--project` path. The override is needed when the
 diff identifies zero or multiple projects. Its artifacts must be available
 for mode-aware review. A local active-project pointer is not required.
+
+**What it does without asking:** After you confirm the PR number, it creates a
+temporary worktree, runs `gh pr checkout` inside it (falling back to
+diff-only review if that fails) and removes the worktree when finished. It
+dispatches an `oat-reviewer` subagent to perform the review when the host
+supports one. It posts to GitHub only after you approve the review body, and
+it never writes project files, commits or pushes on the reviewing machine.
 
 **Example scenario:** The checkout-hardening author asks another workstation
 to review phase p02 on PR 84. That reviewer has no active project, and the PR
@@ -438,11 +565,27 @@ implement code fixes.
 /oat-project-review-receive-remote --pr 84
 ```
 
+**Needs an active OAT project:** yes. Open the project first; the reviewing
+machine's ability to infer a project from the PR does not apply here.
+
 **Prerequisites:** The active project is valid and has `plan.md`,
 `implementation.md` and `state.md`. `npx agent-reviews` is available and GitHub
 authentication is configured. Confirm the selected PR; the reviewing machine's
 ability to infer a project does not remove this receiving variant's active
 project requirement.
+
+**What it does without asking:** After you confirm the PR, it fetches the
+unresolved comments and asks you to decide each finding. It then writes a new
+review artifact for this receive, adds fix tasks for the findings you
+converted to `plan.md`, updates `implementation.md` and `state.md`, and commits
+them in one commit, `chore(oat): record remote review findings and add fix
+tasks (pr-#<N>)`. A synced project pushes its project ref instead. The commit
+is required; it is deferred only if you explicitly approve. If the PR has no
+unresolved comments, it still records a `passed` review in `plan.md` and
+commits it as `chore(oat): record clean remote review (pr-#<N>)`. After 3
+receive cycles on the same scope, it stops and asks whether to escalate the
+scope or resolve the findings manually. Replies are posted to GitHub only after
+you approve them, and it never implements code fixes itself.
 
 **Example scenario:** The remote p02 review on PR 84 identified a missing
 caller check. Back in the authoring checkout, open checkout-hardening and
@@ -451,10 +594,13 @@ creates a stable review-fix task in the correct project, keeping later
 implementation and re-review connected to the same event.
 
 **Expected output:** Findings and dispositions, created `pNN-tNN` task IDs when
-needed, an event-distinct review artifact and consistent plan, implementation
-and state bookkeeping. Review cycles are bounded; reaching the receive-cycle
-limit requests direction rather than silently repeating ingestion. Optional
-GitHub replies require explicit approval and describe the actual disposition.
+needed, a review artifact for this receive (each receive gets its own
+timestamped file), and `plan.md`, `implementation.md` and `state.md` updated
+and committed together with that artifact (synced projects push the project
+ref). A PR with no unresolved comments is still recorded and committed as a
+passed review. After 3 receive cycles on the same scope, the skill stops and
+asks how to proceed rather than silently repeating ingestion. Optional GitHub
+replies require explicit approval and describe the actual disposition.
 
 **Next step:** Run implementation for added fix tasks, then request re-review
 of the relevant scope. If no tasks were needed and the review passed, follow

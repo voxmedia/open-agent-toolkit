@@ -70,15 +70,31 @@ Stay with direct CLI usage when:
 
 ## Which mode should I choose?
 
-| Mode        | Choose when                                                | Tradeoff                                                        |
-| ----------- | ---------------------------------------------------------- | --------------------------------------------------------------- |
-| No project  | Small ad-hoc work needs no lifecycle tracking              | No tracked resume/plan; ad-hoc review remains available         |
-| Lite        | Clear outcome fits one sitting                             | One plan/approval; no discovery/design documents or HiLL pauses |
-| Quick       | Bounded work has clear requirements                        | No formal spec; design is optional                              |
-| Spec-driven | Unclear requirements or cross-cutting risk needs agreement | More planning and approval time                                 |
-| Import      | A usable plan already exists                               | OAT discovery/design is bypassed                                |
+A mode decides how much planning happens before any code is written. You pick
+it by running that mode's entry skill, and the skill creates the project for
+you. An OAT project is a folder of tracked files (plan, state, reviews) that lets
+an agent pick the work up again in a later session.
 
-The selected entry skill determines the mode; bare `oat project new` defaults
-to spec-driven scaffolding. **Recommendation:** choose by requirements clarity
-and design risk, not task count. Start with the skill for its planning
-conversation; CLI scaffolding alone does not perform that conversation.
+| Mode        | Choose it when                                                                 | What you give up                                                                                                |
+| ----------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| No project  | The work is small, or is just provider sync or a single CLI command            | Resuming later, a tracked plan, and lifecycle reviews. Ad-hoc reviews still work                                |
+| Lite        | The change fits in one sitting and the outcome is clear                        | Discovery and design documents, multiple phases, and approval pauses between phases. You approve one plan, once |
+| Quick       | The work is bounded and the requirements are clear                             | A formal requirements document (`spec.md`). Design is optional                                                  |
+| Spec-driven | The requirements are unclear, or the change cuts across many parts of the code | Speed: you approve discovery and design before any planning or code                                             |
+| Import      | A plan already exists in another tool or document                              | OAT's own discovery and design steps                                                                            |
+
+Decide by how clear the requirements are and how risky the design is, not by
+how many tasks the work has. A large but well-understood change can still be a
+quick project. If you run `oat project new` yourself without `--mode`, it
+creates a spec-driven project, but it only creates the files; the entry skill
+is what holds the planning conversation, so start with the skill.
+
+- If you are a solo developer fixing one well-understood bug, choose lite, or
+  skip the project entirely if you will not need to resume or review it later.
+- If your team is building a feature with agreed, bounded requirements, choose
+  quick. A long task list alone does not call for a formal spec.
+- If the change is high-risk or regulated, or its requirements are still being
+  debated, choose spec-driven so discovery and design are agreed before
+  implementation starts.
+- If you already have an approved plan from another tool, import it rather than
+  repeating discovery and design.

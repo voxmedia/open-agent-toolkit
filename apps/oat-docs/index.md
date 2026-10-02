@@ -16,6 +16,7 @@
 - Docs Tooling
   - [Docs Tooling](docs-tooling/index.md) — Standalone adoption lane for Markdown and docs app setup, docs commands, and docs maintenance workflows.
   - [Add or Adopt Docs in a Repo](docs-tooling/add-docs-to-a-repo.md) — Step-by-step guide for adding or adopting OAT-managed documentation to a repository.
+  - [Improve Agent Instructions](docs-tooling/agent-instructions.md) — Audit instruction coverage and accuracy, then apply approved recommendations without inventing repository conventions.
   - [Documentation Commands](docs-tooling/commands.md) — Markdown bootstrap/adoption, framework scaffolding, external manifests, and navigation helpers for both frameworks.
   - [Docs Workflows](docs-tooling/workflows.md) — Docs CLI helpers and skills for analysis and controlled documentation updates.
 - Getting Started
@@ -46,9 +47,13 @@
   - [Troubleshooting](reference/troubleshooting.md) — Common issues and fixes for skills visibility, worktrees, sync, and manifest problems.
 - Skills
   - [Skills](skills/index.md) — User-facing guide to OAT skill families, recommended entry points, and where contributor-facing skill authoring docs live.
+  - [Brainstorm Before Choosing a Workflow](skills/brainstorm.md) — Explore a problem conversationally, compare approaches, and choose an explicit destination without starting implementation.
+  - [Diagnose Your OAT Setup](skills/diagnostics.md) — Inspect OAT configuration, repository adoption, instructions, documentation, and installed tools before choosing a repair.
   - [Explainer Kit](skills/explainer-kit.md) — Generate one source-grounded visual explainer directly or from OAT lifecycle artifacts.
   - [Recon Evidence Packets](skills/recon.md) — Use recon to gather and validate bounded evidence through approved worker waves, then hand off one durable packet directory.
   - [Repo Improve](skills/repo-improve.md) — Turn repository audits, maintainability reviews, and backlog sources into standalone external implementation plans.
+  - [Research and Evaluate a Decision](skills/research.md) — Choose a research skill, challenge its conclusions, and combine evidence without confusing research with implementation.
+  - [Summarize What Shipped](skills/session-closeout.md) — Produce an evidence-backed shipping digest across projects and merged pull requests for a chosen reporting window.
 - Workflows
   - [Workflows](workflows/index.md) — Choose a workflow and find its planning, execution and closeout guides.
   - Advanced
@@ -60,6 +65,7 @@
     - [Orchestration Model](workflows/advanced/orchestration-model.md) — Root-owned phase execution, optional nested work, independent reviews, and provider-neutral dispatch in OAT projects.
     - [Programmatic Execution](workflows/advanced/programmatic-execution.md) — How OAT launches agents through provider CLI/headless surfaces — per-harness execution shapes, cross-runtime gate exec targets, credential isolation, and the launcher-owned evidence they share.
     - [Workflow Gates](workflows/advanced/workflow-gates.md) — Configure per-skill final commands and family-aware review dispatch with oat gate.
+    - [Worktree bootstrap](workflows/advanced/worktree-bootstrap.md) — Create or validate an isolated Git worktree and run the repository-specific readiness checks before implementation.
   - Backlog And Planning
     - [Backlog and planning](workflows/backlog-and-planning/index.md) — Backlog lifecycle and provider-neutral remote project planning.
     - [Backlog Lifecycle](workflows/backlog-and-planning/backlog-lifecycle.md) — The states a file-backed backlog item moves through, how oat backlog archive closes it out atomically, and how oat pjm doctor catches lifecycle drift.
@@ -71,10 +77,12 @@
     - [Projects](workflows/projects/index.md) — Lifecycle, project artifacts, reviews, PR flow, and repository analysis for tracked OAT projects.
     - Closeout
       - [Closeout](workflows/projects/closeout/index.md) — Project retrospectives and progress or final PR flow.
+      - [Project closeout skills](workflows/projects/closeout/closeout-skills.md) — Prepare progress or final PRs, record outcomes, update documentation, handle feedback, and complete a tracked project.
       - [PR Flow](workflows/projects/closeout/pr-flow.md) — PR generation inputs, outputs, artifact expectations, and frontmatter handling.
       - [Project Retrospectives](workflows/projects/closeout/retro.md) — Generate evidence-grounded project retrospectives, apply repo improvements, and file tracker feedback.
     - Execution
       - [Execution](workflows/projects/execution/index.md) — Implementation execution, project observations and continuing shared work.
+      - [Execution and Reconciliation Skills](workflows/projects/execution/execution-skills.md) — Execute an approved OAT plan or reconnect manually committed work to its task ledger without repeating implementation.
       - [Implementation Execution](workflows/projects/execution/implementation-execution.md) — How OAT executes plans with root-owned phase agents, independent phase review, bounded fixes, and worktree fan-out.
       - [Picking Up Projects](workflows/projects/execution/picking-up-projects.md) — Continue a synced OAT project on another machine or from another user through its dedicated Git ref.
       - [Project Log](workflows/projects/execution/project-log.md) — Capture append-only project observations and roll them into durable summary and ledger surfaces.
@@ -82,7 +90,9 @@
       - [Planning](workflows/projects/planning/index.md) — Design modes, lifecycle checkpoints and project splitting.
       - [Design Modes](workflows/projects/planning/design-modes.md) — How oat-project-design balances section-by-section collaboration, selective review, and draft-and-review.
       - [Human-in-the-Loop Lifecycle (HiLL) Checkpoints](workflows/projects/planning/hill-checkpoints.md) — Checkpoint configuration and behavior for pauseable, human-in-the-loop lifecycle execution.
+      - [Planning skills](workflows/projects/planning/planning-skills.md) — Continue discovery, formalize requirements, design a solution, write executable tasks, or promote an existing project.
       - [Project Splitting](workflows/projects/planning/splitting.md) — How OAT splits broad discoveries or brainstorms into a coordination parent and focused child projects.
+      - [Starting projects](workflows/projects/planning/starting-projects.md) — Choose a project entry skill, import an existing plan, capture completed work, or split a confirmed broad scope.
     - Reviews
       - [Reviews](workflows/projects/reviews/index.md) — Review request/receive loop, status progression, severity policy, and quality gates.
       - [Review Flavors](workflows/projects/reviews/review-flavors.md) — The four OAT project review flavors, when each fires in the lifecycle, and who resolves its reviewer target.

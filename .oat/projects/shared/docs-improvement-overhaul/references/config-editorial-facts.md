@@ -115,3 +115,43 @@ removal is proposed.
   ledgered correction blocks. Net public reader-text addition: 2,345 words.
 - `git diff --check` passed; exit 0. No tests, live provider/gate execution,
   or fresh framework bootstrap were performed for this prose-only slice.
+
+## Editorial correction pass (2026-10-02)
+
+This pass rewrote the added guidance sections on the seventeen pages above
+(`workflows/advanced/autonomy.md` was handled separately) for plain language,
+concrete "If you ..., choose ..." guidance, and visible safety callouts. It
+supersedes the baseline note that recommendations and unsupported default
+rationale are labelled in reader text: reader pages now state a documented
+reason plainly or say nothing about why, and the provenance lives here.
+
+Provenance notes removed from reader text:
+
+| Page                                                          | Removed note                                                                   | Provenance                                                                                                     |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
+| `docs-tooling/add-docs-to-a-repo.md`                          | "historical rationale is unestablished" (Fumadocs non-interactive default)     | Final F §4: no decision record explains the Fumadocs default; the bootstrap skill's "full"/"lean" wording only |
+| `reference/configuration.md`                                  | "This is practical guidance, not undocumented historical intent."              | Final F §1: layer reasons come from DR-260410 and DR-260222; structural shared-only reason is inferred         |
+| `provider-sync/scope-and-surface.md`                          | "Default rationale inference: maintaining both trees supports personal reuse." | Final C: no recorded rationale for the `all` default                                                           |
+| `provider-sync/config.md`                                     | "Recommendation (inference)" on keeping `auto`                                 | Final C: no recorded rationale for the `auto` default                                                          |
+| `workflows/advanced/workflow-gates.md`                        | "Historical reasons for gate/attempt/severity defaults are not established."   | Final D: no stated rationale for no default gate, `maxAttempts` 2, or the `high` threshold                     |
+| `workflows/projects/reviews/index.md`                         | "Default rationale beyond these practical tradeoffs is not established."       | Final D: no stated rationale for retry limit 2, opt-in phase gate, or the HiLL auto-review prompt default      |
+| `workflows/projects/planning/design-modes.md`                 | "No historical reason for the unset default is established."                   | Final A §2: why the picker leans collaborative is not stated                                                   |
+| `workflows/projects/planning/hill-checkpoints.md`             | Bare "**Recommendation:**" sentence                                            | Final A §3: why the prompt defaults to every phase is not stated                                               |
+| `workflows/backlog-and-planning/remote-project-management.md` | "**Recommendation (inference):**"                                              | Final E §3–§4: `none` and `read-only` defaults have no decision record; docs call read-only a "safe default"   |
+
+Documented reasons kept in reader text: `instructions.claude.shims` defaults to
+`none` because partial shims hide `AGENTS.md` (DR-260927); fresh packs default
+to user scope to avoid repository copy churn (DR-260827); design runs as draft
+when non-interactive so automation does not block on prompts (design-modes
+page).
+
+Rules at user scope (S4) were re-verified against code before keeping the
+statement: `packages/cli/src/shared/types.ts:18-19` scans `skill`, `agent`, and
+`rule` at project scope but only `skill` at user scope, and no provider's
+`*_USER_MAPPINGS` in `packages/cli/src/providers/*/paths.ts` contains a `rule`
+mapping (Claude, Cursor, and Copilot define rule mappings only in their project
+mappings).
+
+Reader text dropped as non-informative: design-modes "autonomous rules can add
+stop boundaries" (no concrete boundary was named; the autonomy page owns stop
+boundaries).

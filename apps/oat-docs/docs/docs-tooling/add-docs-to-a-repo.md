@@ -292,19 +292,32 @@ Important:
 
 ## Choosing Markdown or a site framework
 
-| Tooling  | Choose when                                  | Tradeoff                                                    |
-| -------- | -------------------------------------------- | ----------------------------------------------------------- |
-| Markdown | Repository-readable docs need no hosted site | No site runtime/search; maintain authored Contents directly |
-| Fumadocs | A Node-based team wants a rendered site      | App dependencies/build; strict committed sidebar metadata   |
-| MkDocs   | The team prefers Python/Material             | Python dependency setup; bootstrap offers a leaner path     |
+`oat docs init --framework` (and the `oat-docs-bootstrap` skill) sets up one of
+three kinds of documentation. In all three, each folder's `index.md` has a
+`## Contents` list of its pages.
 
-Non-interactive CLI defaults to Fumadocs; historical rationale is unestablished.
-**Recommendation:** the smallest sufficient surface; adopt Markdown rather
-than adding an unnecessary app.
+| Framework      | Choose it when                                                       | What you give up                                                                                                       |
+| -------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Plain Markdown | People and agents read the docs in the repository; no site is needed | A rendered site and search. You keep each `## Contents` list up to date by hand                                        |
+| Fumadocs       | A Node/pnpm repository wants a hosted docs site                      | An app with dependencies and a build. A page missing from its folder's `## Contents` list is hidden from the sidebar   |
+| MkDocs         | The team already uses Python and MkDocs Material                     | Python setup (`setup-docs.sh` runs `pip install`). `oat docs nav sync` rewrites the whole `nav:` block of `mkdocs.yml` |
 
-Markdown creates baseline authored files without dependencies or nav sync.
-Fumadocs scaffold hooks generate the app-root inventory, not sidebar metadata:
-run nav sync after map changes, commit `meta.json`, and add its `--check` to
-build/CI explicitly. MkDocs nav sync rewrites `mkdocs.yml`'s nav block;
-preview drift first. Adopt/configure or migrate existing frameworks instead of
-initializing populated content.
+When nothing chooses for it (a non-interactive run or `--yes`), `oat docs init`
+uses Fumadocs. That is only a default; pick the smallest option your readers
+need.
+
+- If you are a solo developer or a team that only needs guides readable in the
+  repository, choose plain Markdown. It adds no app, dependencies, or build.
+- If a Node/pnpm team wants a hosted site, choose Fumadocs. Its build hooks
+  regenerate the app-root `index.md` inventory but not the sidebar files, so run
+  `oat docs nav sync` after adding, moving, or renaming pages, commit the
+  `meta.json` files it writes, and add `oat docs nav sync --check` to your build
+  or CI yourself, because the scaffold does not.
+- If your team uses Python and MkDocs Material, choose MkDocs. Run
+  `oat docs nav sync --check` to see what would change before letting nav sync
+  rewrite `nav:`.
+- If the repository already has docs, do not initialize over them. Adopt
+  existing plain Markdown with `--adopt` (try `--dry-run` first), and record an
+  existing MkDocs site with `oat init --setup` instead of `oat docs init`. When
+  moving an MkDocs site to Fumadocs, `oat docs migrate` converts MkDocs syntax
+  and frontmatter; it only previews changes until you pass `--apply`.

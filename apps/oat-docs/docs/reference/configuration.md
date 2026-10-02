@@ -828,8 +828,12 @@ oat config set workflow.autoArtifactReview.analysis false
 The legacy preset and bare-provider examples above remain readable compatibility
 syntax, not recommended complete-ladder setup. They can replace candidate
 columns with bare legacy ceilings. Prefer named policy plus explicit ladder
-adoption for new configurations. Configured policy overrides project state;
-leave policy keys unset when projects should choose independently.
+adoption for new configurations.
+
+> [!WARNING]
+> A dispatch policy set in any config file overrides the policy that every
+> project chose for itself in its `state.md`. Leave the policy keys unset when
+> each project should choose its own policy.
 
 Default (no flag) targets `.oat/config.local.json` for workflow keys. Pass at most one of `--user`, `--shared`, or `--local`. Structural keys (`projects.root`, `worktrees.root`, `git.*`, `documentation.*`, `instructions.*`, `archive.*`, `tools.*`) are still shared-only regardless of flag.
 
@@ -928,19 +932,45 @@ That keeps config discovery centralized without forcing you to remember which se
 
 ## Choosing a config layer
 
-| Layer      | Choose when                                                    | Tradeoff                                                   |
-| ---------- | -------------------------------------------------------------- | ---------------------------------------------------------- |
-| `--shared` | A repository's paths or policy must be consistent for the team | Overrides personal user defaults; changes belong in review |
-| `--local`  | One checkout needs a preference override                       | Other developers and checkouts do not inherit it           |
-| `--user`   | A personal workflow preference should follow you between repos | Shared/local values still win                              |
+`oat config set` can write a setting to one of three files, called layers:
 
-Defaults: workflow/state and explainer defaults write local, update notifications
-user, structural keys shared. Restrictions remain: project state local-only,
-notifications user-only, remote policy shared-only. Pack installation records
-its selected scope, unlike shared-only `oat config set tools.*`.
+- **shared** (`--shared`): `.oat/config.json`, committed with the repository so
+  it applies to the whole team;
+- **local** (`--local`): `.oat/config.local.json`, which applies only to this
+  checkout and is not committed;
+- **user** (`--user`): `~/.oat/config.json` in your home directory, which
+  applies to you in every repository.
 
-**Recommendation:** use shared for team policy, user for personal preferences.
-This is practical guidance, not undocumented historical intent. Resolution is
-local > shared > user > built-in; only `projects.root`,
-`projects.defaultScope`, and `worktrees.root` have CLI config environment
-aliases. Skill-specific environment controls are separate.
+When the same key is set in more than one layer, local wins over shared, and
+shared wins over user. A team's shared value therefore overrides your personal
+user value unless you also set it locally.
+
+| Layer      | Choose it when                                              | What you give up                                                      |
+| ---------- | ----------------------------------------------------------- | --------------------------------------------------------------------- |
+| `--shared` | The team should behave the same way in this repository      | Personal flexibility: changes go through code review like other files |
+| `--local`  | You want to override something for yourself in one checkout | Nobody else, and none of your other checkouts, sees the value         |
+| `--user`   | The value is about how you work, whatever the repository    | Any repository that sets the key in shared or local config wins       |
+
+With no flag, workflow preferences, project state, and explainer defaults are
+written to local config, update notifications to user config, and structural
+settings (repository paths and policy, such as `projects.root` or
+`documentation.*`) to shared config. Some keys can live in only one layer:
+project state is local-only, update notifications are user-only, and remote
+project-management policy is shared-only. `oat tools install` records each pack
+in the scope you installed it to, but `oat config set tools.*` writes only to
+shared config.
+
+- If you are trying OAT on your own, set values with no flag and accept the
+  defaults.
+- If you are rolling OAT out to a team, set policy keys with `--shared` and
+  commit the change so it is reviewed.
+- If you want a preference to follow you into every repository, use `--user`,
+  but only for keys listed as personal in
+  [Choosing the right surface](#choosing-the-right-surface-personal-vs-per-repo).
+- If you need to differ from the team's setting in one checkout, use `--local`
+  rather than changing the policy for everyone.
+
+Environment variables override all three layers, but only for three keys:
+`projects.root`, `projects.defaultScope`, and `worktrees.root`. Some skills read
+their own environment variables, such as `OAT_DESIGN_MODE`; those are separate
+from config resolution.

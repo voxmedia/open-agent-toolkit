@@ -1062,31 +1062,92 @@ achieved.
 
 ## Choosing gate posture
 
-Gates default off. **Recommendation:** planning gates check before code;
-implement gates check closeout. Both add latency/runtime requirements.
-Writes default user; choose shared for team policy.
+A gate is an extra review that a lifecycle skill runs as its last step: the
+skill hands the work to a second agent CLI (the reviewer) and turns its findings
+into a pass or a fail. No gate is configured by default. A gate on a planning
+skill reviews the plan before any code is written; a gate on
+`oat-project-implement` reviews the finished code before closeout. Either one
+needs a working reviewer CLI on the machine and adds time to every run.
 
-| Failure policy | Choose when                    | Tradeoff                                                   |
-| -------------- | ------------------------------ | ---------------------------------------------------------- |
-| `block`        | Findings must be addressed     | Bounded fix/rerun time; unresolved result stays incomplete |
-| `prompt`       | A person decides the exception | No answer means blocked; unsuitable unattended             |
-| `warn`         | Findings are advisory          | Failure is recorded without enforcement                    |
+`oat gate set` writes to your user config unless you pass `--layer`. A gate set
+with `--layer shared` is committed with the repository, applies to everyone,
+and wins over a user-level gate for the same skill.
 
-`onFailure` must be explicit; `maxAttempts` defaults to two total runs.
-Operational failure is not an advisory finding. Some planning skill text is
-weaker here: inspect the outcome, never treating missing review as a pass.
+- If you are a solo developer and want speed, or you have only one agent CLI
+  installed, skip gates.
+- If you want a second model to check every plan before coding, gate the
+  planning skills.
+- If your team is rolling out a review policy, set the gate with
+  `--layer shared` and commit it.
 
-| Avoidance               | Choose when                       | Tradeoff                                                                 |
-| ----------------------- | --------------------------------- | ------------------------------------------------------------------------ |
-| `same-family` (default) | Prefer a different model family   | Best-available fallback can be same-family; inspect `diversity.achieved` |
-| `same-runtime`          | Require another detected host CLI | Unknown hosts exclude nothing; family is not checked                     |
-| `none`                  | Same-family review is intentional | No diversity protection                                                  |
+### When the gate finds blocking problems
 
-Built-ins omit dangerous approval-bypass flags; trusted targets need appropriate
-permissions. Stored lifecycle commands reject `--target`; manual runs can pin it.
+| `onFailure` | Choose it when                   | What you give up                                                                                               |
+| ----------- | -------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `block`     | Findings must be fixed           | Time: the agent fixes and reruns, then hands over to a person and leaves the skill incomplete if still failing |
+| `prompt`    | A person should decide each case | Unattended runs: with no answer, the gate stays blocked                                                        |
+| `warn`      | The review is advisory only      | Enforcement: the failure is recorded and the skill continues                                                   |
 
-Code phase/range/final reviews default to 30 minutes; artifact/other reviews to 15.
-Explicit timeout wins over target, typed workflow budget, environment, then
-built-in default. **Recommendation:** increase only the slow target's budget.
-No-output timeout is not success; valid late recovery is disclosed. Historical
-reasons for gate/attempt/severity defaults are not established.
+Every gate needs an explicit `onFailure`; there is no default.
+`maxAttempts` defaults to two runs in total: the first run plus one
+fix-and-rerun. A reviewer that fails to start, times out without producing a
+review, or produces an invalid result has not reviewed anything, so treat that
+as a failed gate, never as a pass. The implement and lite skills keep such
+failures blocked, but the wording in some planning skills is weaker, so check
+the gate outcome yourself.
+
+- If the work is high-risk (production, security, or data-migration code),
+  choose `block`.
+- If a maintainer is available and should decide whether to accept findings,
+  choose `prompt`.
+- If the gate runs in CI or a script, choose `block` to enforce it or `warn` to
+  keep it advisory. Never choose `prompt`, because nobody can answer it.
+
+### How independent the reviewer must be
+
+The `--avoid` option in the gate command controls which reviewers are excluded.
+A model family is the maker or line of model, such as Claude versus GPT; a
+runtime is the agent CLI, such as Claude Code, Codex, or Cursor.
+
+> [!WARNING]
+> The default, `same-family`, falls back to the best available reviewer when no
+> reviewer from a different model family is available, and only records a
+> warning in the result. Before relying on a gate for an independent review,
+> check `diversity.achieved` in the gate result: `different-family` means the
+> reviewer really was from another family.
+
+| `--avoid`               | Choose it when                                     | What you give up                                                                                                                        |
+| ----------------------- | -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `same-family` (default) | You want a different model family when one exists  | A guarantee, because of the fallback above                                                                                              |
+| `same-runtime`          | You need the reviewer to use a different agent CLI | Runs on machines with only one CLI. On a host OAT does not recognize, such as CI, it excludes nothing. It never checks the model family |
+| `none`                  | You knowingly accept a review from the same family | Independence                                                                                                                            |
+
+- For most teams, including mixed Claude Code, Cursor, and Codex teams, keep
+  `same-family`.
+- For a high-risk change, keep `same-family` and check `diversity.achieved` in
+  every gate result. For a hard guarantee in a manual run, pin a known
+  independent reviewer with `--target`. Stored lifecycle gate commands refuse
+  `--target`.
+- Choose `none` only when you deliberately want a same-family review, and do not
+  present it as independent evidence.
+
+### Reviewer setup and time budget
+
+An exec target is a saved command that starts a reviewer CLI, such as
+`claude -p`. The built-in targets deliberately leave out the provider flags that
+skip tool-approval prompts, so an unattended reviewer can stall on such a
+prompt. On a trusted machine that runs gates unattended, add your own target
+with the permissions it needs, for example with `--layer user`.
+
+A code review of a whole phase, a phase range, or the final result may run for
+30 minutes by default; other reviews get 15 minutes. OAT uses the first timeout
+it finds: the command's `--timeout-ms`, then the target's `timeoutMs`, then
+`workflow.gateTimeouts`, then the `OAT_GATE_EXEC_TIMEOUT_MS` environment
+variable, then the built-in default.
+
+- If one reviewer keeps timing out on large final reviews, raise that target's
+  `timeoutMs` rather than slowing every review.
+
+A timeout that leaves no valid review artifact is a failed review, never a pass.
+If the reviewer did write a valid artifact after the timeout, OAT uses it and
+reports it as a late completion.

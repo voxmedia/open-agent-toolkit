@@ -15,6 +15,20 @@ deliberately with a goal, project slug, ticket reference, or active project. A
 restart does not silently resume autonomy; invoke the skill again and it resumes
 from the persisted project state.
 
+Terms used on this page:
+
+- **Active project:** the project your checkout currently points to. The
+  pointer is the `activeProject` value in `.oat/config.local.json`.
+- **Synced project:** a project whose artifacts live on a separate Git ref
+  (`refs/oat/projects/<project>`) instead of on your feature branch. Skills
+  publish its artifact changes with `oat project push`.
+- **HiLL checkpoint:** a human-in-the-loop stop after a plan phase. In an
+  interactive run, the agent waits there for your approval.
+- **Dispatch policy:** the project's rule for which models its worker and
+  reviewer subagents may use. See [Dispatch Policy](dispatch-ceiling.md).
+- **Boundary:** a point where an autonomous run stops on purpose and reports
+  what a person must decide or provide before it can continue.
+
 ## Activation contract
 
 An autonomous session uses both signals:
@@ -120,18 +134,28 @@ Layers](evidence-layers.md) and [Reviews](../projects/reviews/index.md).
 
 ## HiLL and lifecycle closeout
 
-If checkpoint selection is unconfirmed when autonomy starts implementation,
-OAT uses an explicit autonomous checkpoint branch, ignoring the configured
-`workflow.hillCheckpointDefault` while preserving valid existing plan choices:
+Autonomous runs ignore the configured `workflow.hillCheckpointDefault` and
+`workflow.autoReviewAtHillCheckpoints` settings. When an autonomous run starts
+implementation, it chooses checkpoints this way:
+
+- If the plan already stores a valid checkpoint list in
+  `oat_plan_hill_phases`, the run keeps it unchanged. A stored `[]` means every
+  phase, never no phases.
+- If the plan stores no list yet on the first implementation run, the run sets
+  a checkpoint at the final phase only.
+- In both cases, the run turns on review at checkpoints, even if an earlier
+  interactive setup turned it off.
+
+For a plan with no stored list, the run writes:
 
 ```yaml
 oat_plan_hill_phases: ['<final-phase-id>']
 oat_auto_review_at_hill_checkpoints: true
 ```
 
-An existing valid explicit list is preserved. An existing `[]` is also
-preserved and means every phase, never no phases. At each configured checkpoint,
-autonomy runs and receives the review without waiting.
+At each checkpoint, the run reviews the phase and processes that review
+instead of waiting for you. An invalid stored value is not replaced; the run
+stops at a boundary instead.
 
 At final closeout, autonomy follows the same authoritative order as an
 interactive run: final verification, mandatory final lifecycle review,
@@ -202,6 +226,35 @@ Use this entry only after an explicit request for end-to-end autonomous project
 execution. It chains the existing lifecycle owners rather than replacing their
 gates or creating another implementation coordinator.
 
+> [!WARNING]
+> **What it does without asking:** after every lifecycle phase, an autonomous
+> run commits its work and pushes the current branch to its remote (never with
+> force). It also commits its own state and learnings-log updates, dispatches
+> worker and reviewer subagents under one authorization for the whole run,
+> generates a project recap, and opens the final pull request. None of these
+> steps asks for confirmation. It never merges the pull request.
+>
+> - **Start it on a feature branch, never on `main`.** It pushes whichever
+>   branch you are on.
+> - **Set a dispatch policy first.** The run never chooses a dispatch policy
+>   for you. If the project has none, the run stops at a repository-policy
+>   boundary.
+> - **Clear the active project if you want a new one.** If a valid active
+>   project is set, the run resumes that project even when you pass a new goal.
+>   Run `oat-project-clear-active` before you pass a new goal.
+>
+> The run stops and reports instead of guessing when it reaches any of these
+> boundaries: a product decision the repository evidence cannot settle
+> (`product-judgment`); an action that could delete data, overwrite work, or
+> rewrite history (`destructive-change-risk`); an unresolved Critical review
+> finding or a blocking review that cannot pass
+> (`unresolved-critical-findings`); a protected branch, required approval, or
+> unresolved dispatch policy (`repository-policy-approval`); a missing
+> credential (`missing-credentials`); or a prompt that has no autonomous rule
+> in the gate inventory (`inventory-gap`). A configured gate that fails with
+> `onFailure: prompt`, or that cannot run or return a valid result, also stops
+> the run.
+
 **Invocation:** Provide a substantive goal for new work, or an existing project
 slug or path to resume. These are agent requests, not terminal commands.
 Providers with `$` syntax use `$oat-project-autonomous`.
@@ -214,16 +267,25 @@ Providers with `$` syntax use `$oat-project-autonomous`.
 /oat-project-autonomous export-filter
 ```
 
-**Prerequisites:** Project applicability is `none`. A new goal can create a
-project through the selected entry skill. An explicit existing project or a
-valid active pointer supports resume. Empty input requires a valid active
-project. An explicit project resolves first, then a valid active pointer, then
-a new goal. Use the first example when no existing project resolves.
-`oat` must be on `PATH`, repository policy must permit the work, and
-required worker and review capabilities must resolve before side effects.
+**Prerequisites:** Needs an active OAT project: no. A new goal can create a
+project through the entry skill the run selects. An explicit existing project
+or a valid active project supports resume, and empty input requires a valid
+active project. The skill resolves an explicit project first, then a valid
+active project, then a new goal. Because of that order, a goal you pass while
+a valid active project is set resumes the active project instead of creating a
+new one. Use the first example only when no project is active, or clear the
+active project with `oat-project-clear-active` first.
 
-**Example scenario:** You authorize the bounded resumable-export goal through a
-final PR without ordinary mid-run approval pauses. Autonomous entry chooses
+`oat` must be on `PATH`, and repository policy must permit the work on the
+current branch. A dispatch policy must already be configured or recorded in
+the project: autonomy never picks one, and an unresolved policy stops the run
+at a repository-policy boundary. Required worker and reviewer capabilities
+must resolve before the run makes any change.
+
+**Example scenario:** You are on a new feature branch, no project is active,
+and a dispatch policy is already configured. You authorize the bounded
+resumable-export goal through a final PR without ordinary mid-run approval
+pauses. Autonomous entry chooses
 lite, quick, or spec-driven review density from the actual uncertainty and
 invokes its owning creation skill. If an export-filter project is already
 active, the second example explicitly resumes its earliest incomplete step
@@ -235,10 +297,13 @@ projects retain their mode. A successful run reports the actual final PR and
 review evidence. A blocked run names the boundary, durable completed work,
 operator action, and resumable project.
 
-The default topology is one working branch and one final PR. The skill does not
-merge or force-push. Missing credentials, protected operations, destructive work,
-unresolved blocking review, and material product ambiguity are boundaries.
-Autonomy does not let an ordinary review impersonate a configured exit gate.
+The default topology is one working branch and one final PR. The skill pushes
+that branch after every phase, but it does not merge or force-push. Missing
+credentials, protected operations, destructive work, unresolved blocking
+review, and material product ambiguity are boundaries, as are an unresolved
+dispatch policy and any prompt the gate inventory does not cover
+(`inventory-gap`). Autonomy does not let an ordinary review impersonate a
+configured exit gate.
 
 **Next step:** Inspect the final report and PR, or resolve the named boundary.
 After a restart, deliberately invoke the skill again. Persisted project state
@@ -252,9 +317,28 @@ supports resume, but does not silently reactivate autonomy.
 | Non-interactive       | A scripted step needs documented defaults       | Unresolved choices stop; no continuous autonomous consent       |
 | Explicit autonomous   | A clear goal can run within declared boundaries | Less live steering; review outputs and publication consequences |
 
-Autonomy needs reactivation after restart; it neither chooses unresolved policy
-nor merges. Product decisions, destructive/protected actions, credentials,
-unresolved blocking reviews, and
-unperformable required proof remain stop boundaries.
-**Recommendation:** try interactive first; establish policy, ladder ownership,
-and gate failure behavior before unattended work. Missing prompts are not consent.
+A restarted session is interactive. If you want autonomy to continue after a
+restart, invoke `oat-project-autonomous` again. Autonomy never chooses a
+dispatch policy for you, and it never merges a pull request. An autonomous run
+stops when it reaches a product decision, a destructive or protected action, a
+missing credential, an unresolved blocking review, or a required check it
+cannot perform.
+
+- If this is your first trial of OAT, choose interactive, because you see
+  every approval and can steer the work as you learn the lifecycle.
+- If you need one scripted or CI step, choose non-interactive
+  (`OAT_NON_INTERACTIVE=1`), because each skill takes its documented default
+  and stops on any choice without one. It does not chain skills or approve
+  anything on your behalf.
+- If you have a well-specified change you trust to run unattended, choose
+  autonomous, because it carries the work through to a final pull request. Set
+  the dispatch policy, the candidate-ladder config, and each gate's
+  `onFailure` behavior first, start on a feature branch, and review the pull
+  request yourself.
+- If the change is high-risk, choose interactive, because a person then
+  approves each checkpoint. If you still run it autonomously, set
+  `oat_plan_hill_phases: []` in the plan first, because that adds a checkpoint
+  review after every phase.
+
+Running without prompts does not authorize any action outside these
+boundaries.

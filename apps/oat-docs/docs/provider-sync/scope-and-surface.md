@@ -134,12 +134,32 @@ runtime mismatch, malformed output, and missing telemetry never authorize it.
 
 ## Choosing sync scope
 
-| Scope           | Choose when                          | Tradeoff                           |
-| --------------- | ------------------------------------ | ---------------------------------- |
-| `project`       | Team checkout or CI                  | Personal assets are not refreshed  |
-| `user`          | Personal skills/agents across repos  | Rules remain project-only          |
-| `all` (default) | Intentionally maintaining both trees | Writes include your home directory |
+`oat sync` and `oat status` take `--scope project`, `--scope user`, or
+`--scope all`. Project scope works on this repository's canonical assets (the
+files under `.agents/`) and its provider views (the per-tool copies or links
+such as `.claude/skills/<name>`). User scope does the same for `~/.agents/` and
+the tool folders in your home directory. All runs project scope, then user scope.
 
-**Recommendation:** project scope for scripts/CI; preview with `--dry-run`.
-Edit canonical sources, not views. Bare sync also writes user scope.
-Default rationale inference: maintaining both trees supports personal reuse.
+| Scope           | Choose it when                                      | What you give up                                  |
+| --------------- | --------------------------------------------------- | ------------------------------------------------- |
+| `project`       | CI, scripts, or a team checkout                     | Your personal skills are not refreshed            |
+| `user`          | You keep personal skills that you use in every repo | Rules are not synced; they exist only per project |
+| `all` (default) | You maintain both trees on your own machine         | Every run also writes into your home directory    |
+
+User scope never syncs rules: only project scope distributes the rules in
+`.agents/rules` to provider folders. Edit the files under `.agents/` rather than
+the provider views, because sync overwrites changes made in the views.
+
+> [!WARNING]
+> A bare `oat sync` uses scope `all`, so it also writes under your home
+> directory. Every sync also overwrites edits made directly in provider folders,
+> replaces an untracked file sitting at a view path, and removes a view whose
+> canonical source was deleted. Pass `--scope` explicitly, and preview with
+> `--dry-run` when you are unsure.
+
+- If the run is in CI or a script, always pass `--scope project`, and preview
+  with `--dry-run` when you change what is synced.
+- If you want personal skills in every repository, put them in
+  `~/.agents/skills` and run `oat sync --scope user`.
+- If you deliberately maintain both trees on your own machine, `--scope all` (or
+  a bare `oat sync`) is fine.

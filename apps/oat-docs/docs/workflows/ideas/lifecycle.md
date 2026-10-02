@@ -83,6 +83,14 @@ Good to know:
   (shared scope), pushed to a project ref (synced scope, the default on a
   fresh install), or kept on your machine (local scope).
 
+> [!WARNING]
+> Backlog items need project management (PJM, OAT's file-backed backlog,
+> roadmap, and decision records) adopted with `oat pjm init`. Run it once.
+> Running `oat pjm init` again, or running `oat pjm migrate --apply`,
+> currently deletes any `pjm.remote` settings from `.oat/config.json`. If
+> you rerun either command, check `git diff .oat/config.json` afterwards and
+> restore `pjm.remote` if it was removed.
+
 1. Quick capture: `oat-idea-scratchpad` to review or capture idea seeds
 2. Start brainstorming: `oat-idea-new` (scaffolds directory, then invokes `oat-idea-ideate`)
 3. Resume brainstorming: `oat-idea-ideate` (multiple sessions over time)
@@ -188,8 +196,9 @@ These are agent instructions, not shell commands. Codex uses
 `$oat-idea-scratchpad`, or you can ask for the skill by name; the same
 convention applies to the other idea skills below.
 
-**Prerequisites:** Installed idea templates and a chosen ideas level. Neither
-an active idea nor an OAT lifecycle project is required. Without `--global`,
+**Prerequisites:** A chosen ideas level. Capture needs the idea templates
+the first time it creates the scratchpad; review does not. Neither an active
+idea nor an OAT project is required. Without `--global`,
 the skill resolves existing idea pointers/directories and asks when the
 destination is ambiguous; repository-level ideas do not mean an active
 project is required.
@@ -206,9 +215,15 @@ required one-line summary and any supplied notes to
 templates on first use. Review reads the existing seeds instead. A captured
 seed is not a project, formal requirement, or implementation commitment.
 
-**Next step:** Explicitly select a seed for [oat-idea-ideate](#oat-idea-ideate)
-or start a named idea with [oat-idea-new](#oat-idea-new). Capture offers these
-actions but does not automatically launch brainstorming.
+**What it does without asking:** Capture creates the ideas directory if it
+is missing, copies the scratchpad and ideas-backlog templates when those
+files do not exist yet, and appends your entry to `scratchpad.md`. Review
+only reads. Neither mode commits anything or starts another skill.
+
+**Next step:** Capture and review suggest starting a seed with
+[oat-idea-new](#oat-idea-new); they do not launch brainstorming themselves.
+You can also pick an unchecked seed later when
+[oat-idea-ideate](#oat-idea-ideate) runs without an active idea.
 
 ## oat-idea-new
 
@@ -229,12 +244,22 @@ committing to scope or implementation.
 **Expected output:** `{IDEAS_ROOT}/upload-recovery/discovery.md`, an Active
 Brainstorming backlog entry, and an `activeIdea` pointer to the new record.
 The workflow initializes missing idea indexes, checks for a matching
-scratchpad seed, verifies setup, and hands off to ideation. The idea pointer
-is separate from the active-project pointer.
+scratchpad seed, verifies setup, then immediately starts the first
+`oat-idea-ideate` session in the same conversation. The idea pointer is
+separate from the active-project pointer.
 
-**Next step:** Continue the conversational exploration with
-[oat-idea-ideate](#oat-idea-ideate). Keep uncertainty as questions rather than
-turning a freshly created template into an approved design.
+**What it does without asking:** It creates the idea directory and
+`discovery.md`, adds the Active Brainstorming entry to the ideas
+`backlog.md`, creates the ideas backlog and scratchpad from templates if
+they are missing, checks off a matching scratchpad seed, and sets
+`activeIdea` (in `.oat/config.local.json`, or `~/.oat/config.json` with
+`--global`). It then starts the first ideate session itself, so you do not
+need to invoke ideate to begin. It does not overwrite an existing idea or
+commit anything.
+
+**Next step:** Use [oat-idea-ideate](#oat-idea-ideate) later to resume the
+idea in a new session. Keep uncertainty as questions rather than turning a
+freshly created template into an approved design.
 
 ## oat-idea-ideate
 
@@ -245,7 +270,7 @@ instead of inventing a scratchpad entry as the starting point.
 
 **Prerequisites:** An existing tracked idea or an explicitly selected
 unchecked scratchpad seed. Selecting a seed uses the new-idea scaffolding
-steps before continuing. No active lifecycle project is required. If there
+steps before continuing. No active OAT project is required. If there
 are no ideas or seeds, the skill stops with capture/new-idea guidance.
 
 **Example scenario:** After speaking with support, you have new questions
@@ -259,6 +284,15 @@ summarized, choose explicitly whether to reopen brainstorming, view its
 summary, or select a different idea. The exploratory mode does not write
 code, a specification, or an implementation plan.
 
+**What it does without asking:** It adds a dated session heading to
+`discovery.md`, writes the conversation into that document as you talk, and
+updates its last-updated date. When you pick an idea from the list, it sets
+`activeIdea` to that idea. When you pick a scratchpad seed, it first creates
+the idea the way `oat-idea-new` does (directory, `discovery.md`, backlog
+entry, checked-off seed, and `activeIdea`). Reopening a summarized idea sets
+its state back to `brainstorming`, but only after you choose that option. It
+suggests summarizing at the end but does not start another skill.
+
 **Next step:** Resume another session if the idea is still unclear, or use
 [oat-idea-summarize](#oat-idea-summarize) when the discovery content is mature
 enough for a stable handoff.
@@ -268,11 +302,12 @@ enough for a stable handoff.
 **Invocation:** `/oat-idea-summarize`, optionally with `--global`, for the
 resolved idea. Review the generated summary before accepting it.
 
-**Prerequisites:** An active idea with meaningful `discovery.md` content,
-the summary template, and the chained ideation skill for a return to
-brainstorming. This is an idea requirement, not an active-project
-requirement; an empty scaffold is insufficient evidence for a useful
-summary.
+**Prerequisites:** An idea with some explored `discovery.md` content, the
+summary template, and the ideation skill for a return to brainstorming.
+This skill needs an active idea, not an active OAT project. If no idea is
+active, the skill lists your ideas and asks you to choose one. A nearly
+empty discovery document gets a warning and an offer to brainstorm first,
+not a refusal.
 
 **Example scenario:** Several sessions established the recovery-token idea's
 audience, potential value, and main unknowns. Summarize those findings so the
@@ -287,6 +322,14 @@ backlog entry to Captured Ideas. Refinement requires another review; choosing
 continued brainstorming discards the proposed summary and does not finalize
 state or backlog.
 
+**What it does without asking:** If no idea was active, it sets `activeIdea`
+to the one you choose. It writes the proposed `summary.md` into the idea's
+folder before showing it to you for review. Only after you accept does it
+set the discovery state to `summarized` and move the backlog entry. It
+continues into an ideate session only when you choose to brainstorm more.
+Otherwise it suggests next steps but does not create a project or start
+another skill.
+
 **Next step:** Keep the summarized idea for future prioritization or explicitly
 start a project using its summary as input. Summarization itself neither
-creates a lifecycle project nor authorizes implementation.
+creates an OAT project nor authorizes implementation.

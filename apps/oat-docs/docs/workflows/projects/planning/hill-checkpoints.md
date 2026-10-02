@@ -94,18 +94,46 @@ See [Workflow preferences in the Configuration guide](../../../reference/configu
 
 ## Choosing checkpoint frequency
 
-| Choice             | Choose when                                 | Tradeoff                              |
-| ------------------ | ------------------------------------------- | ------------------------------------- |
-| Every phase (`[]`) | Course correction matters at each boundary  | More approval interruptions           |
-| Specific phase IDs | Risk concentrates at known milestones       | Other phases continue without a pause |
-| Final phase only   | You trust the plan and intermediate reviews | Less mid-run steering                 |
+A HiLL (human-in-the-loop lifecycle) checkpoint is a point where the
+implementing agent stops and waits for a person to approve before it continues.
+This choice decides how often that happens during implementation. Lite projects
+have no checkpoints, so it does not apply to them.
 
-The preference is unset; interactive first execution asks with every phase
-suggested. Configured `every`/`final` supplies that first choice; specific
-phases need the prompt or project plan field. Resumed execution uses the
-stored plan choice, not later preference changes. Lite bypasses checkpoints.
+| Choice             | Choose it when                                    | What you give up                             |
+| ------------------ | ------------------------------------------------- | -------------------------------------------- |
+| Every phase (`[]`) | The work is high-risk and you want to steer often | Speed: you approve after every phase         |
+| Specific phases    | Only some phases are risky                        | Pauses after the other phases                |
+| Final phase only   | You trust the plan and the automatic reviews      | The chance to correct course partway through |
 
-Autonomy preserves valid choices; absent first-run state becomes final-only,
-ignoring the preference and enabling checkpoint review. **Recommendation:**
-interactive every/specific for risk, final-only for trusted work. Required
-phase reviews still run.
+You can pick any of the three at the first-run prompt. The
+`workflow.hillCheckpointDefault` setting can express only `every` or `final`, so
+choosing specific phases needs the prompt or a hand edit of
+`oat_plan_hill_phases` in `plan.md`. The setting is unset by default, and the
+prompt suggests stopping after every phase.
+
+> [!WARNING]
+> On a project's first implementation run (unless the run is autonomous), a
+> configured `workflow.hillCheckpointDefault` is used without asking, and it
+> replaces any checkpoint value already written in that project's `plan.md`. After the first
+> run, the value stored in `plan.md` is what applies; changing the config later
+> does not change that project. To choose specific phases, remove the setting
+> before the first run from the layer that sets it (for example
+> `oat config unset workflow.hillCheckpointDefault --user` if you set it with
+> `--user`), or edit `oat_plan_hill_phases` in `plan.md` afterwards.
+
+- If you are a solo developer working from a plan you trust, choose final only,
+  for example with `oat config set workflow.hillCheckpointDefault final --user`.
+- If the change is high-risk or regulated, such as a data migration, run
+  implementation interactively and choose every phase. Check that no
+  `workflow.hillCheckpointDefault` is configured first, because it would skip
+  the prompt.
+- If only a few phases need sign-off, such as a migration phase and a
+  deployment phase, list those phases at the first-run prompt.
+
+Autonomous runs (started with `OAT_AUTONOMOUS=1`) ignore
+`workflow.hillCheckpointDefault`. If `plan.md` has no checkpoint value, they
+write the final phase only; a valid value already in `plan.md` is kept as
+written. Autonomous runs also turn on the automatic review at checkpoints: at
+each checkpoint the agent runs that review, handles its findings, and continues
+instead of waiting for a person. The per-phase and final code reviews run in
+every mode.

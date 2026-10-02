@@ -472,13 +472,31 @@ oat instructions sync --force --strategy copy
 
 ## Which instruction strategy should I choose?
 
-| Strategy         | Choose when                                        | Tradeoff                                                |
-| ---------------- | -------------------------------------------------- | ------------------------------------------------------- |
-| `none` (default) | Contributors use Claude's native AGENTS.md support | Older/custom instruction-loading setups may need a shim |
-| `pointer`        | Contributors need CLAUDE.md compatibility          | One small import file per instruction site              |
-| `symlink`        | Compatibility is needed and links are portable     | Platform/link constraints                               |
-| `copy`           | A consumer specifically needs full copied text     | Later AGENTS.md edits require deliberate force/resync   |
+A shim is a `CLAUDE.md` that OAT keeps next to an `AGENTS.md` so that Claude
+Code setups which read only `CLAUDE.md` still see the instructions. The
+strategy decides whether OAT keeps shims and what form they take.
 
-The default avoids partial shims hiding AGENTS.md. **Recommendation:** none for
-confirmed native support, pointer for mixed setups. Preserve sole content before
-removal. Use `oat instructions sync`; asset sync does not maintain shims.
+| Strategy         | Choose it when                                                                | What you give up                                                                         |
+| ---------------- | ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `none` (default) | Every contributor's Claude Code reads `AGENTS.md` itself, at default settings | Older releases, or a setting that loads only `CLAUDE.md`, see no instructions            |
+| `pointer`        | Some contributors need a `CLAUDE.md`                                          | One small file per directory, containing only `@AGENTS.md`; it never goes stale          |
+| `symlink`        | Contributors need a `CLAUDE.md` and links work on every machine               | Portability on machines where links are a problem                                        |
+| `copy`           | A tool needs the full instruction text in `CLAUDE.md`                         | After each `AGENTS.md` edit, sync skips the changed copy until you run it with `--force` |
+
+The default is `none` because Claude Code stops reading every `AGENTS.md` in the
+project as soon as any `CLAUDE.md` exists (see
+[Claude Code and AGENTS.md](#claude-code-and-agentsmd)), so shims in some
+directories but not others hide the instructions in the rest. Shims are
+maintained only by `oat instructions sync`; `oat sync` never touches them. If a
+`CLAUDE.md` holds text that is not in its `AGENTS.md`, move that text into
+`AGENTS.md` before removing the shim.
+
+- If you can confirm that everyone uses a current Claude Code at default
+  settings, keep `none`.
+- If you cannot confirm every contributor's setup, for example on a mixed team
+  or an open-source project, choose `pointer`. It works everywhere and never
+  duplicates the instruction text.
+- If you are sure links work on every contributor's machine, `symlink` is an
+  alternative to `pointer`.
+- Choose `copy` only when a consumer needs the full text, and plan to run
+  `oat instructions sync --force` after editing `AGENTS.md`.

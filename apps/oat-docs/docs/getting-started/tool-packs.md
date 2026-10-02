@@ -1176,6 +1176,12 @@ Related docs:
 
 ## Choosing packs and their ownership
 
+A tool pack is a bundle of OAT skills, agents, templates, and scripts that
+installs as one unit. You choose which packs to install and, for each one, its
+scope: user scope puts it in your home directory (`~/.agents/`, `~/.oat/`) so
+it works in every repository you open, and project scope puts it in this
+repository so every clone gets it.
+
 | Need                                                       | Choose                                          |
 | ---------------------------------------------------------- | ----------------------------------------------- |
 | Setup diagnostics and bundled documentation                | `core`                                          |
@@ -1186,24 +1192,49 @@ Related docs:
 | Exploratory capture                                        | `ideas` and/or `brainstorm`                     |
 | File-backed backlog, roadmap, decisions, tracker bindings  | `project-management`, then explicitly adopt PJM |
 
-The interactive picker defaults to all except `project-management`;
-non-interactive selection includes all eight. Installation is not adoption.
+The interactive picker selects every pack except `project-management`; a
+non-interactive install includes all eight. Installing `project-management`
+only makes its commands available. The repository's planning files are not
+created until someone runs `oat pjm init` (see [Install vs. initialize](#install-vs-initialize)).
 
-| Scope   | Choose when                              | Tradeoff                                                       |
-| ------- | ---------------------------------------- | -------------------------------------------------------------- |
-| User    | Personal reuse across repositories       | Teammates do not inherit your tooling                          |
-| Project | Team-owned reproducible canonical assets | Updates produce repository changes                             |
-| Both    | You deliberately need two installations  | Duplication; OAT does not decide which copy the provider loads |
+- If you are trying OAT on your own, accept the picker's selection and add packs
+  later when you need their workflows.
+- If your team will keep its backlog and decisions in the repository, also
+  select `project-management`, then run `oat pjm doctor --json` and
+  `oat pjm init` once.
+- If you mainly need evidence gathering, choose `research`; it installs the two
+  dispatch skills it needs from `utility` for you.
 
-Fresh packs default to user scope to support reuse without routine repository
-copy churn; existing placement is retained. **`core` is user-only**, even when
-project scope is requested. `oat init --scope project --setup` does not select
-project pack ownership: customize each pack's scope or install it explicitly.
-Installing at another scope is additive; use `oat tools migrate` when moving
-ownership, not a second install. Project templates remain owner-owned seeds.
+| Scope   | Choose it when                                  | What you give up                                                           |
+| ------- | ----------------------------------------------- | -------------------------------------------------------------------------- |
+| User    | You want the skills in every repository you use | Teammates do not get them from the repository                              |
+| Project | The team needs identical tooling in every clone | Pack updates show up as repository changes                                 |
+| Both    | Rarely, and only deliberately                   | Duplicate copies, and OAT does not decide which copy your agent tool loads |
 
-**Recommendation:** user for personal reuse, project for teams; avoid duplicates.
-Check `oat pjm doctor --json` before adopting repository planning.
-**Current limitation:** rerunning `oat pjm init` or `oat pjm migrate --apply`
-can remove `pjm.remote`; inspect the config diff and restore intended settings
-through supported commands. Installation never authorizes tracker publication.
+A fresh install goes to user scope, which lets you reuse packs across
+repositories without update churn in each one; a pack that is already installed
+keeps its scope. **`core` is user-only**: requesting project scope still installs
+it in your home directory. `oat init --scope project --setup` does not choose
+project scope for packs; customize each pack's scope at the prompt, or install
+packs explicitly. Installing a pack at a second scope adds a second copy rather
+than moving it, so use `oat tools migrate` to move a pack between scopes.
+Templates that a project-scope install writes belong to the repository after
+that: later pack updates and `oat tools remove` leave them alone.
+
+- If you are trying OAT alone, or want your skills in all your repositories,
+  use user scope.
+- If you are rolling OAT out to a team, install with `--scope project` and
+  commit the result. If you already have user-scope copies, move them with
+  `oat tools migrate --pack <pack> --from user --to project` instead of
+  installing a second time.
+- If you do end up with both copies, check which one your agent tool actually
+  loads; OAT does not resolve that for you.
+
+Installing any pack never gives OAT permission to publish to an issue tracker.
+
+> [!WARNING]
+> Rerunning `oat pjm init` or `oat pjm migrate --apply` deletes the `pjm.remote`
+> settings from `.oat/config.json`, so every remote setting silently returns to
+> its default. Afterwards, check `git diff .oat/config.json` and restore the
+> settings you need with `oat config set` (shared remote storage is restored
+> with `oat pjm remote storage shared`) before doing more remote work.

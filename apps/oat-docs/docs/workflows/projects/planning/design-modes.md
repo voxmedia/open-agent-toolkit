@@ -109,16 +109,29 @@ Runtime non-interactive signals still win over this preference. If `OAT_NON_INTE
 
 ## Choosing an interaction mode
 
-| Mode          | Choose when                                         | Tradeoff                                                 |
-| ------------- | --------------------------------------------------- | -------------------------------------------------------- |
-| Collaborative | Uncertain design needs section-by-section agreement | More live interaction                                    |
-| Selective     | A grounded spec-driven design has routine sections  | Routine content is reviewed in the final recap, not live |
-| Draft         | You want the complete proposal before discussing it | Less opportunity to steer each section                   |
+The design mode decides how the agent reviews the design with you while it
+writes `design.md`.
 
-The preference is unset by default, so interactive design asks and leans
-collaborative. The design skill resolves an explicit mode, then
-`OAT_DESIGN_MODE`, then non-interactive draft, then config/prompt. Quick-start
-offers collaborative/draft and treats configured selective as collaborative.
-**Recommendation:** collaborative when uncertain, selective for grounded
-spec-driven work. No historical reason for the unset default is established.
-Non-interactive draft avoids prompts; autonomous rules can add boundaries.
+| Mode          | Choose it when                                                                  | What you give up                                                               |
+| ------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Collaborative | The design is uncertain, or the repository has little documentation to build on | Time: you confirm every section before the file is written                     |
+| Selective     | A spec-driven project in a repository whose architecture is well documented     | Seeing routine sections live; you review them only in the final recap          |
+| Draft         | You want a complete proposal first, or nobody is available to answer prompts    | Live input: the final review of the whole file is your only chance to steer it |
+
+If you have not set `workflow.designMode`, the design skill asks you each time
+and suggests collaborative. When more than one source sets a mode, the skill
+uses the first of these it finds: the `--mode` argument, the `OAT_DESIGN_MODE`
+environment variable, draft for a non-interactive run (so automation never
+waits on a prompt), and finally your configured preference or the prompt. Quick
+projects offer only collaborative and draft; a configured `selective` behaves
+as collaborative there.
+
+- If you are trying OAT on your own and are unsure, leave the preference unset
+  and pick collaborative when asked.
+- If your team is still debating the architecture, choose collaborative so
+  people can steer each section before the design is written.
+- If a spec-driven project follows well-documented repository patterns, choose
+  selective: risky sections such as security and migration are still shown to
+  you live, and routine ones appear in the final recap.
+- If you need a complete proposal before a scheduled review meeting, or the run
+  is scripted, choose draft and set aside time to read the whole result.

@@ -592,23 +592,61 @@ that a new project should persist exact provider-family pins.
 
 ## Choosing policy and ladder ownership
 
-**Config wins:** a configured dispatch policy or legacy provider ceiling
-overrides project state. Leave policy overrides unset to choose per project;
-adopting candidate cells is separate from setting a global policy.
+The dispatch policy decides how strong (and how expensive) the models that OAT
+starts for each phase and review may be. A **ladder** is the configured list of
+model and effort candidates for each provider, grouped into four tiers from
+Economy to Frontier. The policy sets the highest tier a project may use.
+Planning asks you for the policy and saves it in the project's `state.md`.
 
-| Choice             | Choose when                                                | Tradeoff                                                      |
-| ------------------ | ---------------------------------------------------------- | ------------------------------------------------------------- |
-| Economy / Balanced | Routine / ordinary implementation within a bounded cap     | Higher configured tiers are unavailable                       |
-| High / Frontier    | Harder or consequential work justifies stronger candidates | Cap-tier reviews can increase cost; no fixed price is implied |
-| Uncapped           | The root may select any configured route                   | No tier cost ceiling; explicit choice required                |
-| Inherit            | Provider controls must remain untouched                    | OAT passes no model/effort pins                               |
+> [!WARNING]
+> A dispatch policy set in any config file (`workflow.dispatchPolicy.*`, or a
+> legacy plain value in `workflow.dispatchCeiling.providers.<provider>`)
+> overrides the policy every project chose for itself in `state.md`. To let each
+> project choose its own policy, leave those keys unset. Adopting a ladder is a
+> separate step from setting a policy.
 
-Defaults are unresolved, not uncapped: explicit intent is required.
-Implementers may use lower tiers; capped implementation reviews use the cap's
-final candidate. Artifact and external-gate selection are separate.
+| Policy             | Choose it when                                         | What you give up                                                           |
+| ------------------ | ------------------------------------------------------ | -------------------------------------------------------------------------- |
+| Economy / Balanced | Routine or normal work where cost matters              | The higher tiers                                                           |
+| High / Frontier    | Broad, security-sensitive, or consequential changes    | Cost: implementation code reviews run on the cap tier, which can cost more |
+| Uncapped           | You trust the main session to choose a model per phase | Any tier ceiling on cost. You must choose it explicitly                    |
+| Inherit            | The provider's own model settings must stay untouched  | All OAT model control: OAT passes no model or effort setting               |
 
-**Recommendation:** Balanced per project initially; escalate for risk. Own team
-ladders in shared, experiments in local, personal defaults in user. Adoption
-defaults local; preview replacements or use `--keep-existing`. Local config
-can produce tracked roles. Codex/Claude enforce managed pins; Cursor records
-requests without runtime proof; advisory providers cannot enforce the ceiling.
+There is no default policy, and a missing policy never means Uncapped. If a
+project has none when implementation starts, an interactive run asks you and a
+non-interactive run stops. The agents that implement a phase may use a lower
+tier than the cap, but when a cap is set, the per-phase and final code reviews
+always use the last candidate listed in the cap tier. Planning-artifact reviews
+and gates choose their reviewers separately.
+
+- If you are trying OAT for the first time, choose Balanced for the project.
+- If cost matters most, choose Economy for routine work or Balanced for normal
+  work.
+- If the change is high-risk, choose High. Choose Frontier only if you want
+  every implementation code review to run on Frontier's last candidate. For a
+  reviewer from a different model family, add a
+  [gate](workflow-gates.md#choosing-gate-posture) instead.
+- If the provider's own settings must stay untouched, choose Inherit.
+
+### Where the ladder lives
+
+`oat config adopt dispatch-matrix` writes the bundled ladder to the config scope
+you choose, and to repo-local config if you pass no flag. Without
+`--keep-existing` it replaces cells you already set, so preview with `--dry-run`
+first.
+
+- If you are rolling OAT out to a team, adopt the ladder with `--shared` so
+  everyone uses the same candidates and the change is reviewed in Git.
+- If you are trying OAT alone, run `oat config adopt dispatch-matrix --user
+--dry-run`, then rerun it without `--dry-run`. A shared or repo-local ladder
+  in a repository still overrides your user ladder there.
+- If you are testing candidates in one checkout, use `--local`. After
+  `oat sync`, the agent roles generated from it still appear in the tracked
+  `.codex`, `.claude`, and `.cursor` folders, so check `git status` before
+  committing.
+
+How firmly the cap holds depends on the provider. Codex and Claude enforce the
+model and effort that OAT selects. Cursor pins mapped candidates, but OAT
+cannot confirm at run time which model actually ran, so it records what it
+requested. Other providers treat the cap as a suggestion only. See
+[Provider Enforcement](#provider-enforcement).

@@ -37,7 +37,9 @@ Install the workflow skills with `oat tools install docs` (preferred) or
 - `oat-docs-analyze` evaluates a docs surface for structure, drift, coverage,
   contributor guidance, and docs-app contract issues, then runs the shared
   auto artifact-review loop to verify the generated analysis artifact's
-  evidence, severities, and recommendations
+  evidence, severities, and recommendations (an analysis artifact is the
+  timestamped Markdown findings report that analyze writes under
+  `.oat/repo/analysis/` and that apply later reads)
 - `oat-docs-apply` consumes the analysis artifact and applies only approved,
   evidence-backed recommendations
 - `oat-project-document` performs post-implementation docs sync for a tracked project,
@@ -48,7 +50,8 @@ Install the workflow skills with `oat tools install docs` (preferred) or
 
 ## Contract model
 
-The docs workflow mirrors the agent-instructions analyze/apply split:
+The docs workflow mirrors the
+[agent-instructions analyze/apply split](agent-instructions.md):
 
 - Analyze owns discovery, evidence gathering, confidence, and disclosure decisions
 - Analyze also owns accuracy verification of the generated analysis artifact
@@ -136,13 +139,6 @@ to open every page.
 - link to deeper setup/config/reference material when full detail is not needed inline
 - let the analysis artifact decide what should be inline, link-only, omitted, or escalated to the user
 
-## Related docs
-
-- [`commands.md`](commands.md)
-- [`add-docs-to-a-repo.md`](add-docs-to-a-repo.md)
-- [`../reference/docs-index-contract.md`](../reference/docs-index-contract.md)
-- [`../contributing/skills.md`](../contributing/skills.md)
-
 ## authoring-docs
 
 **Invocation:** Ask, “Use authoring-docs to improve the recovery instructions
@@ -176,6 +172,10 @@ ownership, commands, endpoints, or compatibility guarantees remain explicit
 questions rather than invented facts. The handoff identifies changed files,
 sources inspected, checks run, and remaining uncertainty.
 
+**What it does without asking:** It edits the documentation files your
+request covers and can run the repository's documented docs checks. Its
+workflow has no commit, push, or pull-request step.
+
 **Next step:** Run the target repository's documented checks and resolve
 owner-review gaps before sharing. Use [oat-docs-authoring](#oat-docs-authoring)
 when the target also needs OAT placement and navigation conventions.
@@ -185,8 +185,8 @@ when the target also needs OAT placement and navigation conventions.
 **Invocation:** `/oat-docs "How do I choose between a quick and lite project?"`.
 If you provide no question, the skill asks what you want to understand.
 
-**Prerequisites:** Installed bundled OAT documentation under `~/.oat/docs/`.
-No active project is required. If that documentation is missing, the skill
+**Prerequisites:** Installed bundled OAT documentation under `~/.oat/docs/`
+(install it with `oat init tools core`). No active project is required. If that documentation is missing, the skill
 stops with installation guidance rather than substituting a repository
 checkout that may describe a different release.
 
@@ -201,6 +201,10 @@ actual documentation rather than answering only from remembered behavior.
 It can offer a related setup action or skill, but does not execute that offer
 without confirmation.
 
+**What it does without asking:** Nothing beyond reading. It is a read-only
+question-and-answer skill: it creates or changes no files and runs no
+commands that change state.
+
 **Next step:** Choose the workflow or command that matches your task. If the
 answer suggests setup changes, confirm the exact action separately from the
 question-and-answer conversation.
@@ -213,7 +217,7 @@ The skill can also be invoked as `/oat-docs-authoring` with your task.
 
 **Prerequisites:** An existing OAT Markdown surface, OAT/Fumadocs app, or
 clearly identified target following OAT conventions, plus the installed
-`authoring-docs` baseline. No active lifecycle project is required. This is
+`authoring-docs` baseline. No active OAT project is required. This is
 a targeted authoring or repair workflow, not bootstrap, a broad audit, or
 bulk application of an analysis report.
 
@@ -234,6 +238,13 @@ check. The handoff distinguishes checks actually run from checks unavailable
 or intentionally not applicable. Project-derived release documentation
 belongs in the project-document workflow, not this wrapper.
 
+**What it does without asking:** It edits the authored pages your task
+covers together with the nearest local `index.md` Contents map. When
+navigation changes, it regenerates or freshness-checks derived navigation
+files with the docs app's own scripts, and it runs local validation
+commands when they exist. Its workflow has no commit, push, or
+pull-request step.
+
 **Next step:** Review and validate the focused diff. For broader uncertainty
 about the surface, use [oat-docs-analyze](#oat-docs-analyze); for a new surface,
 use [oat-docs-bootstrap](#oat-docs-bootstrap).
@@ -242,8 +253,9 @@ use [oat-docs-bootstrap](#oat-docs-bootstrap).
 
 **Invocation:** `/oat-docs-bootstrap`, optionally with a target directory.
 The conversation chooses Markdown, Fumadocs, or MkDocs and confirms the
-destination before scaffolding or adoption. Selecting a framework here is
-not an instruction to add framework flags to unrelated navigation commands.
+destination before scaffolding or adoption. You do not need to remember the
+framework later: `oat docs nav sync` has no framework flag and detects MkDocs
+or Fumadocs on its own.
 
 **Prerequisites:** An initialized OAT repository with readable
 `.oat/config.json`, `.agents/`, and a runnable OAT CLI. An active project is
@@ -256,23 +268,48 @@ without a site runtime. Choose additive Markdown adoption, retain those
 guides, and then audit their metadata and local maps. Do not replace the tree
 with a docs app simply because one can be scaffolded.
 
-Preflight reads declared documentation configuration before discovery and
-checks framework evidence before assuming a populated directory is plain
-Markdown. An existing plain tree needs an explicit adopt, audit-only, or
-abort choice. A non-interactive confirmation alone is not adoption authority.
-Markdown setup collects a title, dedicated repository-relative root, and
-optional description; it does not require an app name, dependency install,
-preview server, or site build. Existing content and instructions are
-preserved, and missing content conformity becomes audit work rather than
-silent repair.
+Preflight only reads. It checks declared documentation configuration before
+discovery and checks framework evidence before assuming a populated
+directory is plain Markdown. The skill then summarizes your choices and asks
+you to confirm them before it runs `oat docs init`. The two setup paths
+differ from that point on.
 
-For Fumadocs or MkDocs, the skill gathers the appropriate app inputs, probes
-CLI capabilities, invokes the scaffold, and applies only relevant,
-capability-gated post-patches. The visible site title and package name are
-different inputs. Verification follows the selected surface: file/config/link
-checks for Markdown, framework-specific checks and build verification for an
-app. Optional completion enforcement is an explicit choice, not a hidden
-side effect of initialization.
+**Plain Markdown path:** Use this when you want plain Markdown files and no
+site runtime. The skill collects a title, a dedicated repository-relative
+root, and an optional description. It asks no app or package questions and
+never installs dependencies, patches packages, starts a preview server, or
+builds a site. An existing plain tree needs an explicit choice: adopt and
+audit, audit only, or abort. A non-interactive `--yes` alone is not
+permission to adopt. Adoption keeps existing files byte for byte and adds
+only missing baseline files; a fresh setup creates an authored `index.md`
+and `contributing.md` in the root you chose. Missing content conformity
+becomes audit work rather than silent repair. Verification checks files,
+configuration, and links.
+
+**Fumadocs or MkDocs path:** Use this when you want a built documentation
+site. The skill gathers app inputs (the visible site title and the package
+name are different inputs), probes which capabilities the installed CLI
+supports, runs the scaffold, and applies only the relevant post-patches (the
+skill's labeled fixes for known gaps in the CLI's scaffold output).
+Verification installs dependencies and runs a build. If a docs app already
+exists, you choose how to resolve the conflict, and one of the choices,
+`replace`, deletes the existing app.
+
+**What it does without asking:** After you confirm your inputs, bootstrap
+runs `oat docs init`, which writes the `documentation` section of
+`.oat/config.json` and adds or updates a managed `## Documentation` section
+in the root `AGENTS.md`. This happens on both paths. On the Fumadocs or
+MkDocs path it also scaffolds the app, applies post-patches, installs
+dependencies, runs a build, and may patch the root `package.json` so the
+default build leaves the docs app out. It may also write an `AGENTS.md`
+inside the new app when the CLI did not create one. Only after you confirm:
+the `replace` choice deletes the existing docs app directory and clears its
+`documentation` config and root `AGENTS.md` section (it refuses only when
+that directory has uncommitted changes); answering yes to the
+project-completion prompt writes `documentation.requireForProjectCompletion`
+to `.oat/config.json`; and accepting the optional content kickoff at the end
+runs analyze and then apply, which creates a branch and a commit and can
+open a pull request.
 
 **Expected output:** A verified fresh setup or additive adoption, followed
 by a walkthrough of actual configuration, authored indexes, page metadata,
@@ -281,18 +318,23 @@ an optional generated inventory needs an explicit destination outside the
 configured content tree and never replaces it. A dry-run is only a preview.
 A partial result can have created files while still requiring manual
 guidance work; report that state rather than claiming complete bootstrap.
+Optional completion enforcement is an explicit choice, not a hidden side
+effect of initialization.
 
-**Next step:** For an adopted tree, run [oat-docs-analyze](#oat-docs-analyze)
-and approve any repairs through apply. For a fresh surface, add the first
-reader task using [oat-docs-authoring](#oat-docs-authoring) and its walkthrough
-conventions.
+**Next step:** Bootstrap ends by offering
+[oat-docs-analyze](#oat-docs-analyze) against the configured root, followed
+by [oat-docs-apply](#oat-docs-apply) for repairs you approve. An adopted tree
+needs this audit. Use `oat-project-document` for updates derived from an OAT
+project. For later one-off pages, use
+[oat-docs-authoring](#oat-docs-authoring).
 
 ## oat-docs-analyze
 
-**Invocation:** `/oat-docs-analyze`, with a request identifying the docs
-surface you want evaluated. The skill resolves declared configuration and
-framework evidence before generic directory fallbacks; it does not rely on
-a guessed root when the repository already declares one.
+**Invocation:** `/oat-docs-analyze` (no arguments). The skill resolves the
+docs surface itself: the configured `documentation.root` and `tooling` in
+`.oat/config.json` first, then framework evidence, then a generic `docs/`
+tree or root Markdown files. It does not rely on a guessed root when the
+repository already declares one.
 
 **Prerequisites:** A Git repository with a docs app, Markdown tree, or
 root-level documentation, and `jq` for tracking updates. No active project
@@ -324,6 +366,13 @@ loop checks the report before tracking and handoff. A disabled loop or
 residual findings must remain disclosed; a report's existence alone does
 not mean every recommendation is verified or approved.
 
+**What it does without asking:** It writes the analysis artifact
+`.oat/repo/analysis/docs-<timestamp>.md`, lets its review loop correct that
+report, and then updates its tracking record in `.oat/tracking.json` (used
+to choose a full or delta analysis next time). It does not edit
+documentation pages, navigation files, or `mkdocs.yml`, and it creates no
+branch or commit.
+
 **Next step:** Review the findings and run [oat-docs-apply](#oat-docs-apply)
 for selected recommendations. If evidence or target information is missing,
 repair the analysis contract rather than asking apply to fill it in.
@@ -331,27 +380,56 @@ repair the analysis contract rather than asking apply to fill it in.
 ## oat-docs-apply
 
 **Invocation:** `/oat-docs-apply` after reviewing a docs analysis report.
-The skill locates the recent report, builds a recommendation plan, and asks
-which actions you approve before changing documentation.
+The skill loads the newest `.oat/repo/analysis/docs-*.md` report. You cannot
+select an older one, so rerun analysis if the newest report is not the one
+you reviewed. It then builds a recommendation plan and asks you to choose
+`apply all`, `apply interactively` (approve, modify, or skip each item), or
+`discuss` before changing anything.
 
 **Prerequisites:** A recent, complete docs analysis artifact and an unchanged
 compatible target. Recommendations need evidence, confidence, disclosure,
-and concrete link targets where applicable. No active lifecycle project is
-required. Missing analysis or a changed target requires a fresh analysis,
+and concrete link targets where applicable. Apply also needs `jq` for
+tracking updates, and `gh` only if you want it to open the pull request. No
+active OAT project is required. Missing analysis or a changed target requires a fresh analysis,
 not conventions invented during apply.
 
-**Example scenario:** The audit found three hidden CLI pages, an inaccurate
+**Example scenario:** The audit found three CLI pages missing from their
+`## Contents` maps, an inaccurate
 example, and a proposed reorganization. Approve only the page listings and
 example correction, leaving the reorganization for discussion. Apply should
 execute those selected actions without broadening the work to every finding.
 
-**Expected output:** Approved changes on the workflow's branch, relevant
-source/link checks, and declared navigation or generated-artifact refreshes.
-Markdown retains its authored index and needs no framework build or nav
-sync; Fumadocs sidebar metadata is regenerated from approved Contents
-changes, never hand-edited. The summary reports the applied plan and checks.
-Commit and optional PR steps remain explicit; pushing requires confirmation.
+**Expected output:** Approved changes committed on a new
+`oat/docs-<timestamp>` branch, relevant source/link checks, and declared
+navigation or generated-artifact refreshes. Markdown retains its authored
+index and needs no framework build or nav sync; Fumadocs sidebar metadata is
+regenerated from approved Contents changes, never hand-edited. The summary
+reports the applied plan and checks.
 
-**Next step:** Review the diff and approve publication separately. Rerun
-analysis if you need a post-apply assessment, and treat unapproved
-recommendations as remaining decisions rather than completed work.
+**What it does without asking:** Nothing changes until you approve the plan.
+After you approve it, apply continues without asking again. It creates
+branch `oat/docs-<timestamp>` from your current HEAD and edits only the
+approved files. Items whose disclosure is `ask_user` are confirmed with you
+once more before they are written. For a Fumadocs or MkDocs app it runs
+the verification that fits what changed, such as `oat docs nav sync` and
+the app's existing docs lint, format-check, and build scripts. It then
+commits the changes as `docs: apply approved docs recommendations`. If the
+branch cannot be created (for example because of local changes), it stops
+and asks you to resolve that first. After committing, it asks whether to
+push the branch and open a pull request; only a yes pushes. The PR targets
+`main`, and its body includes the applied plan and the full analysis
+report, so check the report for anything you would not publish. Finally it
+updates `.oat/tracking.json`.
+
+**Next step:** Review the committed diff before you agree to push or open a
+pull request. Rerun analysis if you need a post-apply assessment, and treat
+unapproved recommendations as remaining decisions rather than completed
+work.
+
+## Related docs
+
+- [`commands.md`](commands.md)
+- [`add-docs-to-a-repo.md`](add-docs-to-a-repo.md)
+- [Improve Agent Instructions](agent-instructions.md)
+- [`../reference/docs-index-contract.md`](../reference/docs-index-contract.md)
+- [`../contributing/skills.md`](../contributing/skills.md)

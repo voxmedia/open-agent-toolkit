@@ -316,12 +316,24 @@ reasoning effort, and OAT writes a role such as
 
 ## Choosing a stray disposition
 
-| Choice                 | Choose when                                              | Tradeoff                                                        |
-| ---------------------- | -------------------------------------------------------- | --------------------------------------------------------------- |
-| Adopt                  | The skill/agent should be canonical and portable         | Moves source ownership; leaves an original-path link            |
-| Keep tool-only         | An eligible Cursor/Copilot skill is intentionally native | No cross-provider distribution; exact path enters `knownStrays` |
-| Decide later (default) | Ownership is unclear                                     | It remains reported                                             |
+A stray is a file in a provider folder (such as `.cursor/skills/`) that OAT
+does not manage. Interactive `oat init` and `oat status` ask what to do with
+each one.
 
-**Recommendation:** adopt reusable content, keep eligible native-only skills.
-Keep cannot hide canonical collisions. Reporting suppression proves neither
-correctness nor synchronization.
+| Choice                 | Choose it when                                        | What you give up                                                                                 |
+| ---------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Adopt                  | Every agent tool should get it                        | Keeping it in one tool only: OAT moves it into `.agents/` and leaves a link at the original path |
+| Keep tool-only         | A Cursor or Copilot skill is meant for that tool only | Other tools never see it. Its exact path is saved in `knownStrays` and no longer reported        |
+| Decide later (default) | You are not sure who should own it yet                | It is reported again on every run                                                                |
+
+Keep is offered only for Cursor and Copilot skills, and OAT refuses it when a
+canonical skill with the same name exists; resolve that clash instead. Keeping a
+skill only stops OAT from reporting that path. It does not check that the
+skill is correct or up to date with anything else.
+
+- If a skill should work in every agent tool, adopt it.
+- If a Cursor- or Copilot-only skill is personal, keep it at user scope; if the
+  team needs it, keep it at project scope.
+- For any other stray you want to keep, add its exact path to `knownStrays` by
+  hand, or gitignore it.
+- If you are not sure yet, choose Decide later so it stays visible.

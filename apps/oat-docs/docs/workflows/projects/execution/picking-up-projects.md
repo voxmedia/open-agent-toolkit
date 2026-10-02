@@ -133,11 +133,31 @@ project pauses the current context; it does not delete or complete the project.
 The examples below are agent skill invocations, not terminal `oat`
 subcommands. Use your host's supported skill-invocation syntax.
 
+**Terms used in this section:**
+
+- **Active project:** the project OAT works on in this checkout when you do
+  not name one. Its path is stored as `activeProject` in
+  `.oat/config.local.json`, a local file that is not committed.
+- **Synced project:** a project whose artifacts travel on their own Git ref on
+  `origin`, as described at the top of this page. OAT saves its tracking
+  changes by pushing that ref.
+- **HiLL checkpoint** (human-in-the-loop): a lifecycle point or plan phase
+  where the workflow stops and waits for your approval. See
+  [HiLL Checkpoints](../planning/hill-checkpoints.md).
+- **Review artifact:** the Markdown file a project review writes into the
+  project's `reviews/` directory. It counts as unprocessed until project
+  review-receive has recorded what to do about its findings.
+- **Gate:** a configured check, usually an independent review, that must pass
+  before the workflow continues. The _implementation exit gate_ runs after the
+  final code review. See [Workflow gates](../../advanced/workflow-gates.md).
+
 ## oat-project-open
 
 Choose an existing project before continuing its lifecycle. This is useful
 both when returning to a paused project and when switching from one project to
 another. It activates the selected project; it does not start implementation.
+
+**Needs an active OAT project:** no. Open is how you set one.
 
 **Invocation:**
 
@@ -145,24 +165,37 @@ another. It activates the selected project; it does not start implementation.
 /oat-project-open checkout-hardening
 ```
 
-With no project name, the skill asks which project to open. It delegates
-selection validation and activation to `oat project open` rather than manually
-editing the active pointer.
+With no project name, the skill asks which project to open. It runs
+`oat project open` rather than editing the active pointer by hand.
 
-**Prerequisites:** No previously active project is required. The selected
-existing project must resolve and have valid project state. For a synced
-project, the CLI handles the project checkout and sync-related validation;
-remote access may be needed. A completed project is not reopened as active work.
+**Prerequisites:** No previously active project is required. The CLI checks
+that the selected project resolves and that its `state.md` exists; it checks
+the state content only when it resumes a paused project. For a synced project,
+remote access may be needed. A completed synced project is refused with a
+terminal diagnosis, and an archived project is not found. For shared and local
+projects, open does not check lifecycle state, so do not open a project that
+is already complete.
+
+**What it does without asking:** It sets `activeProject` in
+`.oat/config.local.json` and refreshes the generated `.oat/state.md`
+dashboard. If the project is paused, it rewrites the project's `state.md` to
+active and removes the pause fields; for a shared or local project that edit
+is left uncommitted. For a synced project, open may fetch the project ref,
+commit an adoption record (`chore(oat): adopt synced project <name>`) on your
+current branch when this checkout has no record yet, and push a resume commit
+to `origin` if the project was paused. If that push fails, the active pointer
+is left unchanged.
 
 **Example scenario:** You paused checkout-hardening yesterday to investigate
-an unrelated issue. Today, open checkout-hardening by name. The CLI validates
-the project, resumes it if paused and makes it active in this checkout without
-re-scaffolding the plan or marking any task finished.
+an unrelated issue. Today, open checkout-hardening by name. The CLI checks
+that the project and its `state.md` exist, resumes it because it was paused and
+makes it active in this checkout without re-scaffolding the plan or marking any
+task finished.
 
 **Expected output:** Confirmation of the active project and a refreshed state
 dashboard. A paused project's pause metadata is cleared when it is resumed.
-If validation fails, address the diagnosis instead of manually pointing at an
-invalid or completed project.
+If the CLI reports an error, address the diagnosis instead of manually pointing
+at an invalid or completed project.
 
 **Next step:** Use progress if you want to inspect the current state before
 acting, or next if you want to continue. Opening does not prove that a plan is
@@ -174,42 +207,58 @@ Invoke the next appropriate lifecycle skill using current project state. This
 is the action-oriented counterpart to progress, not merely another status
 report.
 
+**Needs an active OAT project:** yes, in practice. With no valid active
+pointer, the router lists projects across supported scopes, hands off to open
+so you can select one, then stops; invoke next again after selection. With no
+projects at all, it reports that condition and suggests a project-creation
+workflow instead of inventing a resume target.
+
 **Invocation:**
 
 ```text
 /oat-project-next
 ```
 
-**Prerequisites:** An existing project must be available. With no valid active
-pointer, the router lists projects across supported scopes and routes to open
-for selection, then stops; invoke next again after selection. With no projects
-at all, it reports that condition and suggests a project-creation workflow
-instead of inventing a resume target.
+**Prerequisites:** An existing project must be available.
 
-**Example scenario:** Checkout-hardening has a completed implementation phase,
-but a new review artifact is still waiting in its active `reviews/` directory.
-You invoke next expecting to move forward. The router detects the unprocessed
-review and selects project review-receive first rather than advancing past the
-feedback. When that workflow finishes, invoke next again to continue from the
-updated state.
+**What it does without asking:** Next invokes the skill it selects
+immediately, without asking you to confirm, and reported blockers do not stop
+it. Depending on state, it can start `oat-project-implement` (which dispatches
+subagents and commits), run `oat-project-pr-final` (which pushes your branch
+and opens a GitHub pull request with `gh pr create`; a lite project goes there
+directly after a passed final review), or run `oat-project-complete`. For a
+synced project, it first runs `oat project pull`, which updates the project's
+checkout. The router itself does not edit project artifacts. Use progress when
+you want to approve the route first.
+
+**Example scenario:** Checkout-hardening is mid-implementation: phase p02 just
+finished, and the review artifact from a p02 project review is still waiting
+in the project's `reviews/` directory. You invoke next expecting it to continue
+with p03. The router sees the unprocessed review and invokes project
+review-receive first rather than advancing past the feedback. When that
+workflow finishes, invoke next again to continue from the updated state.
 
 **Expected output:** The selected project, current phase, target skill and
-routing reason, followed by invocation of that skill. Pending human
+routing reason, followed by invocation of that skill. Pending HiLL
 checkpoints, quick-plan readiness and unprocessed reviews affect the route.
-An unresolved or stale implementation exit gate routes back to implementation
-before post-implementation closeout.
+Once implementation is marked complete, the router checks in this order: an
+unresolved or stale implementation exit gate, an unfinished closeout sequence,
+or pending revision tasks all route back to `oat-project-implement`; only then
+does it look for unprocessed reviews, a final code review that has not passed,
+a missing summary, a missing PR and finally project completion.
 
-**Next step:** Follow the invoked workflow. The router itself does not
-implement tasks or write lifecycle artifacts, but its selected skill can do
-so. If you only wanted a recommendation, use progress instead. Read reported
-blocker warnings: they are not, by themselves, a promise that the router will
-refuse to invoke another skill.
+**Next step:** Follow the invoked workflow. If you only wanted a
+recommendation, use progress instead. Blockers shown in the routing
+announcement are warnings only; the router invokes the selected skill anyway.
 
 ## oat-project-progress
 
 Inspect repository knowledge and project status before deciding what to do.
 Unlike next, progress offers the recommended route rather than automatically
 starting it.
+
+**Needs an active OAT project:** no. Progress can report that none is active
+and list the available projects.
 
 **Invocation:**
 
@@ -226,6 +275,11 @@ knowledge base first; if that is missing, it asks you to run the knowledge-index
 skill and stops before the later project report. Synced-project arrival may
 pull current artifacts, and the skill refreshes the generated dashboard; a
 diagnostic invocation is not a guarantee of zero filesystem or network activity.
+
+**What it does without asking:** For a synced active project it runs
+`oat project pull`, and it regenerates the `.oat/state.md` dashboard. It does
+not commit, push or invoke another skill; it offers the recommended skill and
+waits for you.
 
 **Example scenario:** You return after several days away and do not remember
 whether checkout-hardening needs more implementation or a review. Progress
@@ -250,6 +304,9 @@ because next also inspects execution boundaries and outstanding review events.
 Pause the current project and leave the checkout without an active OAT project.
 This is a context switch, not an archive, deletion or completion action.
 
+**Needs an active OAT project:** no. With nothing active, the skill says so
+and exits successfully.
+
 **Invocation:**
 
 ```text
@@ -258,8 +315,17 @@ This is a context switch, not an archive, deletion or completion action.
 
 **Prerequisites:** An active project is optional. With an active pointer, the
 skill delegates to `oat project pause`, which must be able to read the project
-state. With no pointer, the skill reports that no project is active and exits
-successfully without trying to pause a nonexistent target.
+state. A pointer to a project directory that no longer exists fails with
+“Project not found”, and the pointer is kept. With no pointer, the skill
+reports that no project is active and exits successfully without trying to
+pause a nonexistent target.
+
+**What it does without asking:** `oat project pause` writes
+`oat_lifecycle: paused` and a pause timestamp into the project's `state.md`,
+then clears the active pointer. In a shared or local project that `state.md`
+change is left uncommitted: commit it yourself, or it shows up as uncommitted
+project bookkeeping. A synced project commits the pause and pushes it to
+`origin`.
 
 **Example scenario:** Checkout-hardening is still unfinished, but you want to
 work on an untracked investigation without accidentally routing its changes

@@ -294,7 +294,16 @@ The `/oat-doctor` skill (installed via the core pack) goes further: it sweeps co
 
 ## Choose before writing configuration
 
-Use [config-layer guidance](configuration.md#choosing-a-config-layer) before
-setting a team default or personal override. Inspect `oat config describe
-<key>` for ownership and `oat config dump --json` for the effective source.
-Changing a resolved value is not necessarily changing the file you expected.
+Before you set a team default or a personal override, decide which config layer
+should hold it: shared (committed for the team), local (this checkout only), or
+user (you, in every repository). [Choosing a config layer](configuration.md#choosing-a-config-layer)
+explains the tradeoffs. Run `oat config describe <key>` to see where a key lives
+and which command sets it, and `oat config dump --json` to see which file the
+current value actually comes from. The value you see may come from a different
+file than the one you would edit.
+
+- If a personal preference seems to be ignored, check where the effective value
+  comes from before changing it again: a shared value overrides your user value.
+- If you are rolling out a team policy, set a key that shared config supports
+  and review the resulting diff, rather than relying on a value that exists only
+  in your own checkout or home directory.

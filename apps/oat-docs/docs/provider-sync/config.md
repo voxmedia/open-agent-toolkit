@@ -148,25 +148,57 @@ safe, including after interruption.
 
 ## Choosing providers and strategy
 
-| Enablement      | Choose when                               | Tradeoff                                                 |
-| --------------- | ----------------------------------------- | -------------------------------------------------------- |
-| `true`          | A provider should work in fresh checkouts | Generated views appear even without pre-existing folders |
-| `false`         | Nobody needs that provider                | Existing views remain; disabling is not deletion         |
-| Unset (default) | Folder-based detection is sufficient      | Less predictable in fresh worktrees                      |
+### Which providers to enable
 
-**Recommendation:** enable used tools, disable others. Init records choices;
-existing disabled folders can trigger a re-enable offer. Inspect the selection.
+Enabling a provider tells OAT to maintain that agent tool's provider views (the
+per-tool files it generates from your `.agents/` canonical assets). Set it with
+`oat providers set --enabled <list> --disabled <list>`.
 
-| Strategy         | Choose when                      | Tradeoff                                                                  |
-| ---------------- | -------------------------------- | ------------------------------------------------------------------------- |
-| `auto` (default) | Normal canonical-source workflow | Existing exact folder aliases need explicit recovery before transition    |
-| `symlink`        | Per-entry links are wanted       | Link portability; refuses whole-folder aliases                            |
-| `copy`           | Links cannot be used             | Requires resync; markers contain the originating checkout's absolute path |
+| `enabled`       | Choose it when                     | What you give up                                                                  |
+| --------------- | ---------------------------------- | --------------------------------------------------------------------------------- |
+| `true`          | Someone on the team uses that tool | Generated files appear in your diffs, even in checkouts without the tool's folder |
+| `false`         | Nobody uses that tool              | OAT stops creating, updating, or removing its files; existing views stay on disk  |
+| Unset (default) | You have not chosen yet            | Predictability: the provider is active only if its folder already exists          |
 
-Rules are copies regardless of strategy. OS symlink failure can fall back to
-copy, so requested strategy is not proof of the realized shape. Copied views
-can churn across clones/worktrees because of their source marker; status may
-still report a stale copy as in sync with its last generated content.
-**Recommendation (inference):** keep auto unless a concrete constraint needs
-copy. Edit strategy in sync config, retaining `version`/`defaultStrategy`.
-Adapter inspection defaults do not replace effective config.
+Interactive `oat init` writes an explicit choice for each provider. While a
+disabled provider's folder still exists, a non-interactive `oat sync` warns
+about it on every run, and an interactive `oat sync --scope project` offers to
+re-enable it with that option already ticked. Untick it, or delete the folder.
+
+- If your team uses only Claude Code, enable `claude` and disable the others.
+- If your team mixes Claude Code, Cursor, and Codex, enable those three and
+  disable `copilot` and `gemini`, so fresh checkouts and worktrees get the same
+  views without depending on which folders happen to exist.
+- If you stop using a tool, disable it, then delete its old views yourself.
+
+### Links or copies
+
+The strategy decides whether provider views are links to the canonical files or
+copies of them. No command sets it: edit `defaultStrategy` or
+`providers.<name>.strategy` in this file by hand, and keep `"version": 1` and
+`"defaultStrategy"`, or sync and status stop with a validation error. The
+"default strategy" that `oat providers inspect` prints for an adapter is not
+used by sync; this file's setting always wins.
+
+| Strategy         | Choose it when                       | What you give up                                                                                          |
+| ---------------- | ------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| `auto` (default) | Almost always                        | Once `auto` has adopted a whole-folder link, switching strategy needs the manual recovery described above |
+| `symlink`        | You want one link per skill or agent | It refuses to sync through an existing whole-folder link                                                  |
+| `copy`           | Links really cannot work for you     | Canonical edits reach the tools only after you run `oat sync` again                                       |
+
+Rules are always copied, whatever the strategy. If the operating system refuses
+to create a link, `auto` and `symlink` quietly copy that entry instead, so check
+the views sync actually produced. With `copy`, `oat status` can still report a
+stale copy as in sync, because it compares the copy with what OAT last wrote.
+
+> [!WARNING]
+> The `copy` strategy stamps the absolute path of the checkout that ran sync
+> into each copied skill. Committed copies therefore show as drifted in every
+> other checkout (teammates, worktrees, CI), and each `oat sync` there rewrites
+> them, so expect constant churn in Git if you commit copied views.
+
+- If you are unsure, keep `auto`.
+- If you want one link per entry, choose `symlink`, but remove any whole-folder
+  link first.
+- If links truly cannot work, choose `copy`, rerun `oat sync` after every
+  canonical edit, and expect the churn described above.

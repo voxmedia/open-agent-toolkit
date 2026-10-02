@@ -244,7 +244,23 @@ Key behavior:
 
 ## Safe scope for routine refresh
 
-**`oat sync` defaults to `all`, including home-directory writes.** For a
-repository-only refresh, preview `oat sync --scope project --dry-run`, then
-remove `--dry-run`. Personal refresh uses `--scope user`. Sync overwrites view
-edits/removes obsolete managed views; edit canonical sources.
+`oat sync` copies or links your canonical assets (the skills, agents, and rules
+you edit under `.agents/`) into provider views, the per-tool files such as
+`.claude/skills/<name>` that each agent tool reads. The scope decides which
+trees it touches: `project` is this repository, `user` is your home directory,
+and `all` is both.
+
+> [!WARNING]
+> A bare `oat sync` uses scope `all`, so it also writes under your home
+> directory. Every sync also overwrites edits made directly in provider folders,
+> replaces an untracked file sitting at a view path, and removes a view whose
+> canonical source was deleted. Edit files under `.agents/` rather than in
+> provider folders, and pass `--scope` explicitly.
+
+- For a repository-only refresh, run `oat sync --scope project --dry-run` to
+  preview, then run it again without `--dry-run`.
+- In CI or scripts, always pass `--scope project` so the run cannot touch
+  anything in a home directory.
+- To refresh your personal skills across repositories, run
+  `oat sync --scope user`.
+- If you do mean to refresh both, preview `oat sync --scope all --dry-run` first.

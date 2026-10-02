@@ -16,6 +16,19 @@ environment, and it can also be invoked explicitly. Use
 end-to-end autonomous run; being in Cursor Cloud does not activate autonomy by
 itself.
 
+Terms used on this page:
+
+- **Active project:** the OAT project a checkout currently points to, stored
+  as `activeProject` in that repository's `.oat/config.local.json`.
+- **Synced project:** a project whose artifacts live on a separate Git ref
+  instead of on the feature branch. `oat project pull` brings them into a
+  checkout, and `oat project push` publishes changes.
+- **Dispatch:** launching a worker or reviewer subagent on a chosen model and
+  route. The **dispatch policy** is the project's rule for which models those
+  subagents may use; see [Dispatch Policy](dispatch-ceiling.md).
+- **User scope:** OAT skills, scripts, and config installed in your home
+  directory (for example `~/.oat/config.json`) rather than in the repository.
+
 ## Resolve the project home first
 
 All tracked project artifacts belong to a repository, not to the workspace
@@ -161,8 +174,9 @@ Use this skill for cloud orientation before choosing a lifecycle action. It
 checks the environment, repository ownership, CLI, and assets. It does not run
 the project or activate autonomy on its own.
 
-**Invocation:** Request orientation explicitly, or ask the agent how this cloud
-workspace should resolve OAT context. The slash form is an agent request, not a
+**Invocation:** In Cursor Cloud, the agent loads this skill on its own when a
+request involves OAT. You can also request orientation explicitly, or ask the
+agent how this cloud workspace should resolve OAT context. The slash form is an agent request, not a
 terminal command. Providers with `$` syntax use `$oat-cursor-cloud-projects`.
 
 ```text
@@ -170,11 +184,22 @@ terminal command. Providers with `$` syntax use `$oat-cursor-cloud-projects`.
 Identify the repository that owns this change and verify the OAT assets before continuing.
 ```
 
-**Prerequisites:** Project applicability is `optional`. A shell and Node/npm
-must be available. No active project is needed to detect cloud context or choose
-the target repository. When an active project exists, orientation resolves its
-scope and pulls synced context before reading artifacts. Missing CLI capability
-must be restored before project artifact work proceeds.
+**Prerequisites:** Needs an active OAT project: no, but the skill uses one if
+it is set. A shell and Node/npm must be available. No active project is needed
+to detect cloud context or choose the target repository. When an active
+project exists, orientation resolves its scope and pulls synced context before
+reading artifacts. If the `oat` CLI cannot be installed, project artifact work
+stops.
+
+**What it does without asking:** if `oat` is not on `PATH`, the skill runs
+`npm install -g @open-agent-toolkit/cli@latest` to install the latest CLI
+globally, and stops only if that install fails. If the active project is a
+synced project, it runs `oat project pull` to bring its artifacts into the
+checkout. When a repository skill is newer than the user-scope copy, or an
+expected skill, MCP server, CLI, or credential is missing, it appends an entry
+to the active project's `oat-execution-learnings.md`. It activates autonomy
+only by loading `oat-project-autonomous` when you explicitly asked for an
+autonomous end-to-end run.
 
 **Example scenario:** A cloud workspace contains both an application and a
 shared-library checkout. You want to resume application work without putting

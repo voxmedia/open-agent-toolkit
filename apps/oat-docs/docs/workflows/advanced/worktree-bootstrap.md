@@ -14,10 +14,22 @@ syntax use `$oat-worktree-bootstrap` instead. These are not terminal commands.
 For host-managed worktrees, follow the host's conventions and validate the
 existing checkout rather than creating a duplicate to normalize its path.
 
+Terms used on this page:
+
+- **Worktree:** a separate Git checkout of the same repository, with its own
+  folder and branch, created with `git worktree add`.
+- **Active project:** the OAT project your checkout currently points to,
+  stored as `activeProject` in `.oat/config.local.json`.
+- **Synced project:** a project whose artifacts live on a separate Git ref
+  instead of on your feature branch; `oat project pull` brings them into a
+  checkout.
+
 ## oat-worktree-bootstrap
 
 **Invocation:** Name the branch for a new worktree and optionally choose its base.
-`--path` overrides the worktree root, not the final branch-specific directory.
+Without `--base`, a new branch starts from `origin/main`. `--path` overrides the
+worktree root, not the final branch-specific directory. The skill runs only
+when you invoke it by name.
 
 ```text
 /oat-worktree-bootstrap export-filter --base origin/main
@@ -29,11 +41,24 @@ To prepare the current already-registered worktree instead:
 /oat-worktree-bootstrap --existing
 ```
 
-**Prerequisites:** Project applicability is `optional`. You need a Git
-repository, its required toolchain, and OAT files in `.oat/` and `.agents/`.
-Creation requires a branch name and a repository clean enough for the operation.
-An active project is not required. If the pointer exists but is invalid, the
-skill asks you to clear or open the intended project rather than rewrite it.
+**Prerequisites:** Needs an active OAT project: no, but the skill uses one if
+it is set. You need a Git repository, its required toolchain, and OAT files in
+`.oat/` and `.agents/`. Creation requires a branch name and a repository clean
+enough for the operation. If the active-project pointer exists but is invalid,
+the skill asks you to clear or open the intended project rather than rewrite
+it.
+
+**What it does without asking:** the skill creates the worktree with
+`git worktree add`, which also creates the branch when it does not exist yet.
+It copies `.oat/config.local.json` into the new worktree when the worktree has
+none, copies configured local-only paths with `oat local sync`, and pulls an
+active synced project with `oat project pull`. It then runs the repository's
+setup command (for example, dependency installation) and its readiness and
+baseline checks, stating each selected command before running it. Apart from
+the invalid-pointer question above, it asks before continuing only when the
+baseline check fails;
+if you choose to proceed anyway and an active project has `implementation.md`,
+it appends a timestamped baseline-failure note there.
 
 **Example scenario:** You need to implement an export filter without mixing its
 changes into a reporting branch. Bootstrap creates the feature worktree at the
