@@ -268,9 +268,8 @@ packaged `assets/` directory next to the installed CLI. Setting a non-empty
   `validateBundleStructure`. That is a narrower promise than the exit-2 list
   above: release validation does not check bundle metadata beyond its presence,
   so a malformed or version-mismatched `bundle-metadata.json` is not covered.
-  The regression evidence is the negative pack control in
-  `packages/cli/src/release/public-package-contract.test.ts`:
-  `fails release validation when a required bundle directory is empty in the tarball`.
+  OAT's own release tests include a check that release validation fails when a
+  required bundle directory is empty in the packed tarball.
 - Produce a matching bundle with `bash packages/cli/scripts/bundle-assets.sh`
   while `OAT_ASSETS_DIR` points at the target directory (the script already
   honors the variable as its destination).
@@ -710,7 +709,7 @@ Workflow preferences let power users answer repetitive confirmation prompts once
 Workflow preference keys live under the `workflow.*` namespace:
 
 - `workflow.designMode` — `collaborative`, `selective`, or `draft`. Default design interaction mode. `selective` applies only to full `oat-project-design`; quick-start lightweight design treats it as collaborative because quick-start keeps the smaller collaborative/draft choice.
-- `workflow.hillCheckpointDefault` — `every` or `final`. Default HiLL checkpoint behavior in `oat-project-implement`: pause after every phase or only after the last phase. When unset, the skill prompts.
+- `workflow.hillCheckpointDefault` — `every` or `final`. Default HiLL checkpoint behavior in `oat-project-implement` (a HiLL, or human-in-the-loop, checkpoint is a stop for your review): pause after every phase or only after the last phase. When unset, the skill prompts. See [Choosing a checkpoint default](#choosing-a-checkpoint-default).
 - `workflow.archiveOnComplete` — boolean. Skip the "Archive after completion?" prompt in `oat-project-complete`. When unset, the skill prompts.
 - `workflow.createPrOnComplete` — boolean. Skip the "Open a PR?" prompt in `oat-project-complete`; when true, completion auto-triggers PR creation. When unset, the skill prompts.
 - `workflow.postImplementSequence` — legacy `wait`, `summary`, `pr`, or `docs-pr`, or `{ "preApproval": [...], "postApproval": [...] }`. Legacy values remain strings and keep their existing mappings. Structured arrays contain ordered, globally unique `summary`, `document`, `pr`, and `retro` steps. `retro` is post-approval only: a structured value containing it in `preApproval` is rejected. Pre-approval steps run after final review and before final HiLL approval; post-approval steps run only after that approval. Plain retrieval keeps legacy strings and prints structured values as compact JSON; `--json` returns the raw value.
@@ -813,6 +812,7 @@ Workflow preferences resolve through three config surfaces, with `local > shared
 
 ```bash
 # User-level: applies to all repos on this machine
+# Checkpoint default: choose every (pause after each phase) or final (pause once at the end)
 oat config set workflow.hillCheckpointDefault final --user
 oat config set workflow.reviewExecutionModel subagent --user
 oat config set workflow.autoReviewAtHillCheckpoints true --user
@@ -877,7 +877,7 @@ Not every workflow preference belongs at user level, even though "set once, appl
 
 Some preferences are **genuinely personal** — their correct value is the same for you regardless of which repo you're in. These are safe to set at `--user`:
 
-- `workflow.hillCheckpointDefault` — your personal tolerance for mid-implementation interruption
+- `workflow.hillCheckpointDefault` — how often you want implementation to pause for your review. It is a personal preference by default; see [Choosing a checkpoint default](#choosing-a-checkpoint-default) below for when a team should set it instead.
 - `workflow.designMode` — your preferred full-design interaction style. Set `selective` when you usually want low-risk sections drafted silently but high-risk sections reviewed live.
 - `workflow.reviewExecutionModel` — depends on your provider environment (Claude Code, Cursor, Codex), not the repo
 - `workflow.autoReviewAtHillCheckpoints` — your preference for automatic lifecycle review at HiLL checkpoints. Shared/local config can still override this when a repo should behave differently.
@@ -892,10 +892,12 @@ Other preferences **depend on per-repo configuration** to be safe. These should 
 
 **Cross-repo foot-gun example:** If you set `workflow.createPrOnComplete: true --user`, it applies to every repo you work on. In a repo with `documentation.requireForProjectCompletion: true` and `postImplementSequence: pr` (no docs step), running `oat-project-complete` would try to auto-create a PR, then immediately hit the docs gate and block you — leaving you with an open PR and a stuck completion. Your user-level preference silently asserted something that only holds in a specific shared-config shape.
 
-**Recommended split for most users:**
+**Example split between personal and team settings:**
 
 ```bash
 # Personal preferences that differ from built-in defaults (apply everywhere)
+# Optional checkpoint default: every for more control, final for fewer interruptions;
+# leave unset to be asked on each project's first implementation run
 oat config set workflow.hillCheckpointDefault final --user
 oat config set workflow.reviewExecutionModel subagent --user
 oat config set workflow.autoReviewAtHillCheckpoints true --user
@@ -910,6 +912,29 @@ If you want to override a shared team decision for this specific checkout, use `
 ```bash
 oat config set workflow.archiveOnComplete false --local  # "I don't want to archive on this specific branch checkout"
 ```
+
+### Choosing a checkpoint default
+
+`workflow.hillCheckpointDefault` decides where `oat-project-implement` stops
+for your review. These stops are called HiLL checkpoints (HiLL stands for
+"human in the loop"). Neither value is right for everyone:
+
+- `every` pauses after each phase. You get more control over the work, at the
+  cost of more interruptions.
+- `final` pauses once, after the last phase. You are interrupted less, but you
+  see the work only at the end.
+
+When the key is unset, the first implementation run of each project asks you
+which to use. When it is set, that first run uses the configured value without
+asking, and the value replaces any checkpoint value already written in the
+project's `plan.md`. Later runs of the same project keep the value stored in
+`plan.md`.
+
+Treat the key as a personal preference by default, and set it at user level
+(`--user`) or for one checkout (`--local`). Set it at shared level (`--shared`)
+only when your team has agreed on a rule for where agents must pause. A shared
+value overrides each person's user-level value, but anyone can still override
+it for their own checkout with `--local`.
 
 ### Relationship to `autoReviewAtCheckpoints`
 

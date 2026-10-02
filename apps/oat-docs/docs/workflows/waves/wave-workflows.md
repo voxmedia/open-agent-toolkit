@@ -74,7 +74,7 @@ The current format contains:
 - **Wave sections:** the theme, lane list, intra-wave ordering, and cross-wave prerequisites for each wave.
 - **Status ledger:** each wave advances from composed to in-progress to merged, with the wrapper-project link, PR, merge SHA, and completion-record link recorded as they become available.
 
-> **Important:** This format is documented as a description, not a stable contract. Contract work is deferred in **BL-260718-document-execution-program — Document execution-program artifact as stable OAT contract**, grouped with **BL-260718-add-oat-wave-lifecycle-cli — Add oat wave lifecycle CLI command family**.
+> **Important:** This format is documented as a description, not a stable contract. Two related pieces of work are planned but not yet done: documenting the execution-program artifact as a stable OAT contract, and adding an `oat wave` family of lifecycle CLI commands.
 
 Until that grouped work ships, consumers should follow the bundled skill and template rather than depending on an independently versioned schema.
 

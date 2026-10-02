@@ -15,14 +15,14 @@ to the detail.
 A HiLL (human-in-the-loop lifecycle) checkpoint is a point where the agent
 stops and waits for a person to approve before it continues.
 
-| Mode           | A person approves before code is written                                   | Pauses during implementation                                                    | Reviews that run automatically                        | At the end                                                                   | Never                  |
-| -------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------- | ---------------------- |
-| No project     | You direct each step yourself                                              | None                                                                            | None; run `oat-review-provide` when you want a review | OAT opens no pull request                                                    | Not applicable         |
-| Lite           | Once: the requirements and the single-phase plan                           | None                                                                            | Plan review, phase review, final review               | Opens a pull request by itself; no setting removes this step                 | Merges a pull request  |
-| Quick          | You confirm the requirements (or the lightweight design); no plan approval | First run lists the phases and asks where to stop; suggested: after every phase | Plan review, a review after every phase, final review | Opens a pull request by itself only if `workflow.postImplementSequence` asks | Merges a pull request  |
-| Spec-driven    | Discovery, then the requirements and design; no plan approval              | Same as quick                                                                   | Same as quick                                         | Same as quick                                                                | Merges a pull request  |
-| Imported plan  | No approval step; OAT normalizes your plan and reviews it automatically    | Same as quick                                                                   | Same as quick                                         | Same as quick                                                                | Merges a pull request  |
-| Autonomous run | None; it answers its own questions and stops only at defined boundaries    | None; it approves the final checkpoint itself after a passing final review      | All of the above, plus a review at every checkpoint   | Opens a pull request by default                                              | Merges or force-pushes |
+| Mode           | A person approves before code is written                                                                                                                                                   | Pauses during implementation                                                    | Reviews that run automatically                        | At the end                                                                   | Never                  |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------- | ---------------------- |
+| No project     | You direct each step yourself                                                                                                                                                              | None                                                                            | None; run `oat-review-provide` when you want a review | OAT opens no pull request                                                    | Not applicable         |
+| Lite           | Once: the requirements and the single-phase plan                                                                                                                                           | None                                                                            | Plan review, phase review, final review               | Opens a pull request by itself; no setting removes this step                 | Merges a pull request  |
+| Quick          | You confirm the requirements (or the lightweight design). No plan-approval prompt: the plan is marked ready after an automatic review                                                      | First run lists the phases and asks where to stop; suggested: after every phase | Plan review, a review after every phase, final review | Opens a pull request by itself only if `workflow.postImplementSequence` asks | Merges a pull request  |
+| Spec-driven    | Discovery, then the requirements and design. Planning asks you in chat to confirm the task breakdown, but no plan approval is recorded; the plan is marked ready after an automatic review | Same as quick                                                                   | Same as quick                                         | Same as quick                                                                | Merges a pull request  |
+| Imported plan  | No approval step; OAT normalizes your plan and reviews it automatically                                                                                                                    | Same as quick                                                                   | Same as quick                                         | Same as quick                                                                | Merges a pull request  |
+| Autonomous run | None; it answers its own questions and stops only at defined boundaries                                                                                                                    | None; it approves the final checkpoint itself after a passing final review      | All of the above, plus a review at every checkpoint   | Opens a pull request by default                                              | Merges or force-pushes |
 
 Phase reviews need no person. The final review always runs, but an interactive
 run first asks how to run it unless `workflow.reviewExecutionModel` is set. If
@@ -30,12 +30,38 @@ the final phase is a checkpoint, you approve the finished work after the final
 review; with `workflow.postImplementSequence` set to `pr` or `docs-pr`, the pull
 request opens before that approval.
 
-Without a plan-approval prompt, read `plan.md` before you start implementation.
-Re-running `/oat-project-quick-start` on a ready plan starts implementation
-straight away. On its first run, `oat-project-implement` lists every phase and
-asks where to pause before any task runs, unless
-`workflow.hillCheckpointDefault` answers for you. See
-[HiLL Checkpoints](projects/planning/hill-checkpoints.md).
+**Quick, spec-driven, and imported projects have no plan-approval prompt.**
+Planning ends with an automatic plan review. That review applies Critical and
+High fixes itself and offers you the Medium and Low ones, and then the skill
+marks `plan.md` ready for implementation. The planning skill
+(`/oat-project-quick-start`, `/oat-project-plan`, or `/oat-project-import-plan`)
+then stops: it reports the phases and names `/oat-project-implement` as the
+next step, and no code is written until you run that skill (or
+`/oat-project-next`, which starts it without asking). That stop is your chance
+to review the plan, so read `plan.md` when planning finishes and before you run
+`/oat-project-implement`. Do not re-run `/oat-project-quick-start` to continue:
+on a quick project whose plan is ready, it starts implementation straight away.
+
+What does and does not give a person a say on the plan:
+
+- **Lite:** its single approval covers the requirements and the plan, and the
+  decision is written into `plan.md`.
+- **Spec-driven:** `/oat-project-plan` asks "Does this breakdown make sense? Any
+  tasks missing?" in the chat and revises until you confirm. That confirmation
+  is not recorded as an approval, and the automatic review that follows can
+  still change the plan.
+- **Quick and imported:** nothing asks you to approve or confirm the plan.
+  Planning may still ask setup questions, such as which dispatch policy to use
+  or whether to add gates.
+- **A `plan` checkpoint does not add a pause.** Listing `plan` in a project's
+  `oat_hill_checkpoints` in `state.md` does not stop the agent: the planning
+  skill marks that checkpoint complete itself when it finishes.
+- **First implementation run:** `oat-project-implement` lists every phase and
+  asks where to pause before any task runs. That is a checkpoint question, not
+  a plan approval, but it is the last point to stop before code is written. It
+  is skipped when `workflow.hillCheckpointDefault` is set and in autonomous
+  runs. See [HiLL Checkpoints](projects/planning/hill-checkpoints.md).
+- **Autonomous runs:** no person sees the plan before implementation.
 
 ## How many agent runs does a project start?
 
@@ -103,11 +129,19 @@ implementation gate also reruns the final review before the gate runs again.
 
 1. Run `/oat-project-quick-start` and confirm the requirements when asked, or
    `/oat-project-new` to also approve discovery and design.
-2. Read `plan.md` before you run `/oat-project-implement`; that reading is your
-   plan approval.
+2. When planning finishes, the skill stops and names `/oat-project-implement`
+   as the next step. There is no plan-approval prompt, so read `plan.md` now
+   and ask the agent for any changes before you start implementation; that
+   reading is your plan approval, and nothing records it. Do not re-run
+   `/oat-project-quick-start` to continue, because on a ready plan it starts
+   implementation straight away.
 3. At the first implementation prompt, choose "Stop only after the final
-   phase", or for the team run
-   `oat config set workflow.hillCheckpointDefault final --shared`.
+   phase". To make that your own default, run
+   `oat config set workflow.hillCheckpointDefault final --user`. Use `--shared`
+   instead only if your team has agreed that every project pauses only at the
+   end. Either way, a configured value is used on each project's first
+   implementation run without asking and replaces any checkpoint value already
+   in `plan.md`.
 4. Keep the pull request until you approve:
    `oat config set workflow.postImplementSequence wait --shared` (a legacy
    value that is still supported), then run `/oat-project-pr-final` yourself.
@@ -148,7 +182,12 @@ implementation gate also reruns the final review before the gate runs again.
 3. Run `/oat-project-new my-change` (spec-driven; add `--scope local` for a
    local project) and choose the collaborative design mode, so you approve
    discovery and each design section.
-4. At the first implementation prompt, keep "Stop after each phase".
+4. At the first implementation prompt, keep "Stop after each phase". Check
+   first with `oat config get workflow.hillCheckpointDefault`: if it prints
+   `final`, the prompt will not appear and the project pauses only at the end.
+   Unset it in the layer that sets it, or set `every` for yourself with
+   `oat config set workflow.hillCheckpointDefault every --user` (a shared or
+   local value still wins over a user value).
 5. Avoid automatic pull requests: do not use lite, run
    `oat config set workflow.postImplementSequence wait --shared` (a legacy
    value that is still supported), and leave `workflow.createPrOnComplete`

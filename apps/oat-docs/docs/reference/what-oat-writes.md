@@ -8,7 +8,10 @@ description: 'Every file, link and Git ref that OAT commands create in your repo
 This page lists what each OAT command writes in your repository, under your
 home directory and on your shared `origin` remote, which of those files belong
 in Git, and how to back out of OAT completely. Everything here was observed by
-running OAT CLI version 0.3.14 on macOS.
+running OAT CLI version 0.3.14 on macOS. The removal procedure in
+[Remove everything](#remove-everything) was run end to end twice, once
+originally and once in an independent re-run, and both times it returned the
+repository and the home directory to their pre-OAT state.
 
 A few terms used below. **Canonical assets** are the skills and agent
 definitions OAT keeps under `.agents/`; they are the source you edit. A
@@ -25,8 +28,9 @@ agents, templates and scripts that `oat tools install` adds.
   `oat tools install --scope project` without a pack name also installs the
   `core` pack under your home directory, and `oat init --scope project --setup`
   installs every pack there.
-- Without `--scope`, `oat init`, `oat sync` and `oat tools install` default to
-  scope `all`, so they can also write under your home directory.
+- Without `--scope`, `oat init` and `oat sync` use scope `all`, so they can
+  also write under your home directory, and `oat tools install <pack>` installs
+  a pack that is not yet installed under your home directory (user scope).
 - The `core` pack is user-only: it installs under your home directory or not at
   all.
 - Tracked projects default to **synced** scope, which keeps a project's files on
@@ -42,7 +46,9 @@ agents, templates and scripts that `oat tools install` adds.
 
 Where a file already existed, OAT appended its own marked block instead of
 replacing it. This held for `.gitignore`, `.gitattributes`, an existing
-`pre-commit` hook and an existing `.codex/config.toml`. A pre-existing
+`pre-commit` hook and the other settings in an existing `.codex/config.toml`
+(OAT does change `multi_agent` and `max_depth` there; see the
+[provider table](#syncing-provider-views)). A pre-existing
 `~/.claude/settings.json` was left untouched.
 
 ### Setting up
@@ -76,13 +82,13 @@ views OAT manages. A provider does not have to be enabled: an existing
 `.claude/` directory in the repository, or `~/.claude/` in your home directory,
 is enough for `oat sync` to create Claude views.
 
-| Provider | Repository views created by `oat sync --scope project`                                                                                        |
-| -------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| Claude   | `.claude/skills/<name>` and `.claude/agents/<name>.md`, relative symlinks into `.agents/`                                                     |
-| Cursor   | `.cursor/agents/`: relative symlinks for agents, plus generated model-variant files marked `# oat-managed: true`                              |
-| Copilot  | `.github/agents/`, relative symlinks                                                                                                          |
-| Codex    | `.codex/agents/*.toml` and `.codex/config.toml`, generated files. OAT's tables are appended to an existing `config.toml`; your settings stay. |
-| Gemini   | Nothing                                                                                                                                       |
+| Provider | Repository views created by `oat sync --scope project`                                                                                                                                                                                                                                                |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Claude   | `.claude/skills/<name>` and `.claude/agents/<name>.md`, relative symlinks into `.agents/`                                                                                                                                                                                                             |
+| Cursor   | `.cursor/agents/`: relative symlinks for agents, plus generated model-variant files marked `# oat-managed: true`                                                                                                                                                                                      |
+| Copilot  | `.github/agents/`, relative symlinks                                                                                                                                                                                                                                                                  |
+| Codex    | `.codex/agents/*.toml` and `.codex/config.toml`, generated files. In an existing `config.toml`, OAT adds its `[agents.<name>]` tables and sets `[features] multi_agent = true` and `[agents] max_depth` to at least 2, changing those two values if you had set them lower; your other settings stay. |
+| Gemini   | Nothing                                                                                                                                                                                                                                                                                               |
 
 OAT creates skill views only for Claude. It reports the other providers' skill
 support as `native-read` and creates no skill views for them. No generated
@@ -98,7 +104,7 @@ file contained an absolute path.
 | Command                                    | In the repository                                                                                                                                                                                                                                           | Under your home directory                                                                                                                                                               |
 | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `oat tools install <pack> --scope project` | The pack's skills in `.agents/skills/`, plus any agents in `.agents/agents/`, templates in `.oat/templates/` and scripts in `.oat/scripts/` it ships; `tools.<pack>: true` in `.oat/config.json`. Views for enabled providers, unless you pass `--no-sync`. | Nothing                                                                                                                                                                                 |
-| `oat tools install --scope user`           | Nothing, unless the workflows pack is already installed at project scope (see [surprises](#things-that-surprised-us))                                                                                                                                       | `~/.agents/skills/`, `~/.agents/agents/`, `~/.oat/config.json`, `~/.oat/docs/`, `~/.oat/ideas/`, `~/.oat/scripts/`, `~/.oat/templates/`. Provider links only if a provider is detected. |
+| `oat tools install --scope user`           | Nothing, unless the workflows pack is already installed at project scope (see [surprises](#known-surprises-in-0314))                                                                                                                                        | `~/.agents/skills/`, `~/.agents/agents/`, `~/.oat/config.json`, `~/.oat/docs/`, `~/.oat/ideas/`, `~/.oat/scripts/`, `~/.oat/templates/`. Provider links only if a provider is detected. |
 | `oat tools install core`                   | Nothing                                                                                                                                                                                                                                                     | `~/.oat/config.json`, `~/.agents/skills/oat-docs`, `~/.agents/skills/oat-doctor`, and `~/.oat/docs/` (a bundled copy of these docs)                                                     |
 
 Some packs write more at project scope. The ideas pack adds
@@ -180,8 +186,10 @@ is anything that differs between machines.
 
 **Where "Team choice" applies:**
 
-- **`.oat/sync/manifest.json`.** `oat sync` rewrites it with new timestamps, so
-  committing it adds diffs to sync commits. Leaving it out means a fresh clone
+- **`.oat/sync/manifest.json`.** A sync that changes a view, or that runs with
+  a different CLI version than the last one, rewrites it with new timestamps
+  and its own version, so committing it adds diffs to sync commits and to
+  mixed-version teams. Leaving it out means a fresh clone
   has no record of which views OAT manages. How OAT behaves in a clone without
   it is not covered here.
 - **Generated provider files** (Cursor model variants, Codex agents and
@@ -200,7 +208,7 @@ is anything that differs between machines.
 - **`pr/` and `reviews/archived/` folders.** Whether PR material and archived
   reviews are shared through Git or stay on each machine. Whether OAT ignores
   them depends on which install command you ran; see
-  [surprises](#things-that-surprised-us).
+  [surprises](#known-surprises-in-0314).
 
 ## A new teammate after cloning
 
@@ -222,7 +230,7 @@ is anything that differs between machines.
    repository. A teammate who wants them runs `oat tools install --scope user`,
    which installs all eight packs. Run inside a repository where the workflows
    pack is installed at project scope, it also edits that repository; see
-   [surprises](#things-that-surprised-us).
+   [surprises](#known-surprises-in-0314).
 5. **Fetch synced projects explicitly.** A fresh clone does not receive
    `refs/oat/*`, so synced projects are not in it. See
    [Picking Up Projects](../workflows/projects/execution/picking-up-projects.md)
@@ -278,7 +286,8 @@ if yours differ.
 > what OAT created. The same applies to a `.claude/` folder that existed in the
 > repository before OAT.
 
-1. Remove the hook: `oat init --scope project --no-hook`.
+1. Remove the hook: `oat init --scope project --no-hook`. In a terminal,
+   `oat init` first shows the provider selection; keep the current choices.
 2. Delete each synced project, including its ref on `origin`:
    `oat project prune <name>`. Without the command, run
    `git worktree remove .oat/projects/synced/<name>`,
@@ -287,8 +296,11 @@ if yours differ.
    `git rm .oat/projects/synced/<name>.json`.
 3. Remove user-scope packs and their links in `~/.claude`:
    `oat tools remove --all --scope user`.
-4. Remove each project-scope pack:
-   `oat tools remove --pack <pack> --scope project`.
+4. Remove each pack you installed at project scope, one command per pack:
+   `oat tools remove --pack <pack> --scope project`, where `<pack>` is any of
+   `ideas`, `docs`, `workflows`, `utility`, `research`, `brainstorm` and
+   `project-management` that you installed. The PACK column of
+   `oat tools list --scope project` shows them.
 5. Untrack and delete OAT's repository files:
 
    ```sh
@@ -296,15 +308,21 @@ if yours differ.
    rm -r .agents .claude .oat .gitattributes
    ```
 
-   Leave out any path that does not exist. If `.gitattributes` existed before
+   Leave out any path that does not exist or that Git does not track;
+   otherwise `git rm` stops without removing anything. If `.gitattributes`
+   existed before
    OAT, leave it out too and delete only its `# OAT core` block.
 
 6. In `.gitignore`, delete the `# OAT core` … `# END OAT core` block, the
    `# OAT local paths` … `# END OAT local paths` block if present, and the
    blank line OAT added before each.
 7. Commit: `git add .gitignore && git commit -m "remove oat"`.
-8. Clean the home directory: `rm -r ~/.oat ~/.agents`, then
-   `rmdir ~/.claude/skills`.
+8. Clean the home directory. If `~/.oat` and `~/.agents` did not exist before
+   OAT, run `rm -r ~/.oat ~/.agents`. Otherwise delete only `~/.oat` and the
+   skills and agents OAT installed under `~/.agents`; other tools also read
+   `~/.agents/skills` directly, so it may hold your own skills. Then run
+   `rmdir ~/.claude/skills`, which fails safely if the folder still holds
+   anything.
 
 If you had enabled Cursor, Copilot or Codex, OAT also created the paths in the
 [provider table](#syncing-provider-views). Removing those was not part of this
@@ -312,9 +330,12 @@ run.
 
 Git history still contains the OAT commits: your commit that added OAT's files,
 the project scaffold commits and the prune commit stay on your branch, and
-anything you pushed stays on `origin`. Rewriting history is not covered here.
+anything you pushed stays on `origin`. Deleting `refs/oat/projects/<name>`
+removes the ref, not the data: the project files it pointed to stay in
+`origin`'s storage until the host garbage-collects them, so do not rely on
+prune to erase sensitive content. Rewriting history is not covered here.
 
-## Things that surprised us
+## Known surprises in 0.3.14
 
 These are current behaviors as of version 0.3.14.
 

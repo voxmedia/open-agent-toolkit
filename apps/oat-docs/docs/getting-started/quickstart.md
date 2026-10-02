@@ -15,8 +15,8 @@ repository you already have, and choose what to add.
 - An existing Git repository
 
 OAT does not run an up-front Git version check. Git compatibility is evaluated
-best-effort by each command, and a missing or unsupported Git operation exits as
-a system error.
+best-effort by each command, and a missing or unsupported Git operation makes
+that command fail with an error.
 
 ## Install the CLI
 
@@ -37,6 +37,11 @@ oat status --scope project
 `--scope project` targets the current repository. OAT calls this choice a
 scope; `user` scope targets your home directory instead.
 
+In a terminal, `oat init` asks which providers to enable (saved in
+`.oat/sync/config.json`), whether to add an optional pre-commit hook that
+warns, without blocking, when provider views are out of date, and whether to
+run guided setup. For this first run, answer no to guided setup: it installs
+tool packs in your home directory. Apart from your answers,
 `oat init --scope project` writes only these files:
 
 - empty folders `.agents/skills/`, `.agents/agents/` and `.agents/rules/`,
@@ -54,12 +59,7 @@ each provider (a coding agent tool such as Claude Code, Cursor or Codex) reads.
 A new repository has none yet, so it prints `No managed entries found.`
 
 Leaving out `--scope project` also writes under your home directory
-(`~/.oat/sync/manifest.json` and an empty `~/.agents/skills/`). The first time
-you run init in an interactive terminal, it offers guided setup, which
-installs tool packs and can put them in your home directory; you can decline
-it. It may also ask which providers to enable (saved in
-`.oat/sync/config.json`) and whether to add an optional pre-commit hook that
-warns, without blocking, when provider views are out of date.
+(`~/.oat/sync/manifest.json` and an empty `~/.agents/skills/`).
 
 ## Then choose what to add
 
@@ -73,6 +73,10 @@ together.
 
 You edit each skill, agent and rule once in `.agents/`, and OAT creates the
 files each coding tool reads and reports drift. It needs no tracked projects.
+
+Add a skill first: a folder in `.agents/skills/` with a `SKILL.md` file (see
+step 4 of [Pilot Provider Sync with One Team](../provider-sync/pilot-with-a-team.md)).
+With no skills, sync reports `No changes required.`
 
 ```bash
 oat providers set --scope project --enabled claude
@@ -116,6 +120,12 @@ files such as `plan.md`, `implementation.md` and `state.md`.
 oat tools install workflows --scope project
 ```
 
+Claude Code reads skills only from `.claude/skills/`, while Cursor, Codex,
+Copilot and Gemini read `.agents/skills/` directly. If you use Claude Code and
+have not enabled it, run `oat providers set --scope project --enabled claude`
+and then `oat sync --scope project` after installing, or the `/oat-...` skills
+will not appear in it.
+
 Then type `/oat-project-quick-start` in your coding agent.
 
 This adds workflow skills and agents under `.agents/`, templates, scripts and
@@ -133,6 +143,10 @@ apply the changes you approve.
 ```bash
 oat tools install docs --scope project
 ```
+
+As with Workflows, if you use Claude Code and have not enabled it, run
+`oat providers set --scope project --enabled claude` and
+`oat sync --scope project` after installing.
 
 Then type `/oat-docs-bootstrap` in your coding agent.
 

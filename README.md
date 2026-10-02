@@ -30,7 +30,7 @@ oat status --scope project
 
 Initialization creates canonical directories and sync state; status reports provider assets and drift. Follow the provider prompts and skip optional guided setup if you only want sync. This does not create a tracked OAT project.
 
-Once you have canonical assets, preview changes with `oat sync --scope project --dry-run` before applying them. Pack installation has its own scope: use `oat tools install --scope project` for repository-scoped packs, or `--scope user` to reuse them across repositories. See [CLI Bootstrap](https://voxmedia.github.io/open-agent-toolkit/getting-started/bootstrap) for setup details and [Tool Packs](https://voxmedia.github.io/open-agent-toolkit/getting-started/tool-packs) for the user-only core pack and other installation choices.
+Once you have canonical assets, preview changes with `oat sync --scope project --dry-run` before applying them. Pack installation has its own scope: `oat tools install <pack> --scope project` installs that pack in the repository only, and `--scope user` installs it under your home directory so you can reuse it across repositories. Without a pack name, `oat tools install --scope project` installs every pack in the repository and also installs the core pack under your home directory. See [CLI Bootstrap](https://voxmedia.github.io/open-agent-toolkit/getting-started/bootstrap) for setup details and [Tool Packs](https://voxmedia.github.io/open-agent-toolkit/getting-started/tool-packs) for the user-only core pack and other installation choices.
 
 ## Go Deeper
 
@@ -39,6 +39,7 @@ The [documentation](https://voxmedia.github.io/open-agent-toolkit/) owns the ful
 - [Quickstart](https://voxmedia.github.io/open-agent-toolkit/getting-started/quickstart) — choose an adoption path.
 - [Instruction Sync](https://voxmedia.github.io/open-agent-toolkit/provider-sync/instruction-sync) — validate nested `AGENTS.md` files and configure optional `CLAUDE.md` shims; no shims are created by default.
 - [CLI Reference](https://voxmedia.github.io/open-agent-toolkit/reference/cli-reference) and [Configuration](https://voxmedia.github.io/open-agent-toolkit/reference/config-and-local-state) — find commands, options, and local-state behavior.
+- [Project status and known limits](https://voxmedia.github.io/open-agent-toolkit/getting-started#project-status) — OAT is versioned 0.x; read what is not yet supported before you adopt it.
 
 ## Contributing
 

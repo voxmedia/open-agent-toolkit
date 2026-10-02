@@ -64,7 +64,8 @@ nothing is written outside the repository.
    If `oat init` asks whether to run guided setup, answer no: guided setup
    installs every tool pack into your home directory, which this pilot does not
    need. Then look at `git status`: you should see `.gitignore`,
-   `.gitattributes`, and `.oat/sync/manifest.json`. The empty `.agents/skills`,
+   `.gitattributes`, and `.oat/` (which holds `.oat/sync/manifest.json`). The
+   empty `.agents/skills`,
    `.agents/agents`, and `.agents/rules` folders are also created, but Git
    shows them only once they contain files. Nothing is written in your home
    directory.
@@ -138,25 +139,34 @@ views are relative links into `.agents/` and generated files that contain no
 machine-specific paths, and Cursor and Codex read skills from `.agents/skills`
 directly. To confirm, run `oat status --scope project`; a `missing` row means a
 view was not committed, and `oat sync --scope project` creates it. The links and
-generated files were checked on macOS; a fresh clone, and how Windows checkouts
-handle committed links, were not tested.
+generated files were checked on macOS, including in a fresh clone; how Windows
+checkouts handle committed links was not tested.
 
 Run `oat sync --scope project`, and commit its output in the same change, when
 you add, rename, or delete a skill, agent, or rule, or change an agent or rule.
-Rules and the Codex and Cursor agent files are generated copies, so they only
-change when sync runs. An edit inside an existing linked skill reaches Claude
-Code at once, because the view is a link.
+Deleting or renaming an agent also needs the manual cleanup described below.
+Rules, Codex agent files and Cursor's per-model agent variants are generated
+copies, so they only change when sync runs. An edit inside an existing linked
+skill reaches Claude Code at once, because the view is a link.
 
 Make every change in `.agents/`, never in the provider folders. Re-running sync
 overwrites edits made to generated copies, replaces an untracked file sitting
-at a view path, and removes a view whose canonical file was deleted. Editing
+at a view path, and removes the view of a deleted skill or rule. Editing
 through a link changes the canonical file itself, which is easy to miss in
 review.
 
-Before committing, run `oat status --scope project`. Its plain output exits 0
-even when views are missing, so for a check that can fail, run
-`oat status --scope project --hook`: it prints a warning and exits 1 when a view
-is missing or drifted.
+Agents are the exception. After you delete or rename an agent, delete its old
+links in `.cursor/agents/` and `.claude/agents/` yourself: with Cursor enabled,
+`oat sync` and `oat status` stop with an error saying the link's target
+`escapes the sync scope` until both links are gone. Also delete its
+`.codex/agents/<name>.toml` file and the `[agents.<name>]` table in
+`.codex/config.toml`, which sync leaves behind.
+
+Before committing, run `oat status --scope project`. It exits 1 when any view
+is missing or drifted, or when a stray file sits in a provider folder. For a
+check that ignores strays, such as a CI step, run
+`oat status --scope project --hook`: it prints one warning line and exits 1
+only when a view is missing or drifted.
 
 For an automatic reminder, a teammate can add OAT's optional pre-commit hook
 with `oat init --scope project --hook`. Git does not copy hooks when you clone,
@@ -167,25 +177,24 @@ inside the working tree. Remove it with `oat init --scope project --no-hook`.
 
 ## Mixed tools
 
-| Provider    | What OAT generates in the repository                                                                                             | What the team should know                                                                           |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| Claude Code | A relative link per skill in `.claude/skills/` and per agent in `.claude/agents/`; rules as generated copies in `.claude/rules/` | The only provider with skill views, so a new skill reaches Claude Code only after sync              |
-| Cursor      | No skill files: it reads `.agents/skills`. A link per agent in `.cursor/agents/`; rules as `.cursor/rules/*.mdc` files           | Its `.cursor/skills/` folder is not managed; skills found there are reported as strays              |
-| Codex       | No skill files: it reads `.agents/skills`. A generated `.codex/agents/<name>.toml` per agent, registered in `.codex/config.toml` | Sync merges into an existing `.codex/config.toml`: it adds OAT's tables and keeps your own settings |
-| Gemini      | Nothing; it reads skills and agents from `.agents/` directly                                                                     | Nothing to commit                                                                                   |
+| Provider    | What OAT generates in the repository                                                                                             | What the team should know                                                                                                                                           |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Claude Code | A relative link per skill in `.claude/skills/` and per agent in `.claude/agents/`; rules as generated copies in `.claude/rules/` | The only provider with skill views, so a new skill reaches Claude Code only after sync                                                                              |
+| Cursor      | No skill files: it reads `.agents/skills`. A link per agent in `.cursor/agents/`; rules as `.cursor/rules/*.mdc` files           | Its `.cursor/skills/` folder is not managed; skills found there are reported as strays                                                                              |
+| Codex       | No skill files: it reads `.agents/skills`. A generated `.codex/agents/<name>.toml` per agent, registered in `.codex/config.toml` | Sync merges into an existing `.codex/config.toml`: it adds OAT's tables, turns on `multi_agent` and raises `max_depth` to at least 2, and keeps your other settings |
+| Gemini      | Nothing; it reads skills and agents from `.agents/` directly                                                                     | Nothing to commit                                                                                                                                                   |
 
 If OAT's own implementer and reviewer agents are installed in the repository,
 sync also generates one file per supported model for each of them, in
 `.cursor/agents/` and `.codex/agents/`, which can add dozens of files to the
-first diff. The skill links, agent links, generated agent files, and
-`.codex/config.toml` merge were observed by running the CLI in a test
-repository. The rule outputs come from [Providers](providers.md), which also
-covers Copilot and the user scope.
+first diff. The skill links, agent links, rule copies, generated agent files
+and `.codex/config.toml` merge were observed by running the CLI in a test
+repository. [Providers](providers.md) also covers Copilot and the user scope.
 
 ## What to watch for in week one
 
-- **A bare `oat sync` or `oat init` also writes in your home directory.** Both
-  default to scope `all`. Use `--scope project` in shared instructions,
+- **A bare `oat sync` or `oat init` can also write in your home directory.**
+  Both default to scope `all`. Use `--scope project` in shared instructions,
   scripts, and CI.
 - **Edits in provider folders are not safe.** Sync overwrites edits to
   generated copies from `.agents/`, and an edit made through a link silently

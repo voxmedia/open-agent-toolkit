@@ -321,7 +321,7 @@ fail-closed descendant-path behavior and are not migrated in place.
 
 There is no automatic test-only freshness exception. An operator can instead
 waive named stale-making descendants of an `effective-delta-v1` or
-`effective-delta-v2` generation (`DR-260927-operator-waiver-for-test-only`).
+`effective-delta-v2` generation.
 Each waiver is appended to `oat_implement_exit_gate.waivers` with who waived,
 the reason, the covered `from_commit..to_commit` range, the effective-delta
 fingerprint at the range end (in the generation's own version), and a UTC

@@ -168,6 +168,9 @@ Archive sync surfaces:
 
 ## CLI code
 
+These paths are in the OAT source repository, not in a repository that uses
+OAT. They matter only if you are working on OAT itself.
+
 - `packages/control-plane/` - read-only control-plane library for project-state parsing and recommendation
 - `packages/cli/src/commands/`
 - `packages/cli/src/commands/cleanup/`

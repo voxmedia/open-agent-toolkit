@@ -15,6 +15,26 @@ constraints:
 - A **phase target** is one exact configured candidate selected at invocation
   time at or below the named maximum. Optional nested work resolves separately.
 
+**In short:**
+
+- **What this page is for:** choosing the _dispatch policy_, the highest model
+  tier (Economy, Balanced, High, or Frontier) that OAT may use when it starts
+  agents to implement and review each phase, or no cap, or leaving model choice
+  to the provider; and deciding where the list of candidate models (the
+  _ladder_) is stored.
+- **Who needs it:** anyone starting a quick, spec-driven, lite, or imported
+  project, because planning asks you to choose a policy; and team leads who
+  manage model cost.
+- **Know first:** there is no default policy, and a policy set in any config
+  file overrides the one each project chose. A tier is a cap: phase agents may
+  run below it, but per-phase and final code reviews run on the last model
+  listed in the capped tier. Codex and Claude enforce the cap; Cursor pins the model
+  but cannot confirm which one ran; other providers treat it as a suggestion.
+- **Decide:** [Which tier for which work](#which-tier-for-which-work),
+  [How each provider applies the cap](#how-each-provider-applies-the-cap), and
+  [Where the ladder lives](#where-the-ladder-lives). Most other sections are
+  the detailed resolution contract.
+
 The CLI command remains `oat project dispatch-ceiling resolve` for compatibility.
 Legacy `workflow.dispatchCeiling.*` and `oat_dispatch_ceiling` values remain
 readable, but new projects use ordered candidates plus `oat_dispatch_policy`.
@@ -62,8 +82,11 @@ The full rules are in [Provider Enforcement](#provider-enforcement) and
 
 A named `High` ceiling therefore keeps configured Economy, Balanced, and High
 candidates eligible and available. It does not pin Sol, `opus`, one Cursor
-string, or one effort value. The project root chooses one exact candidate it
-judges sufficient for the phase.
+string, or one effort value. (Model names on this page, such as Sol, Luna,
+Astra, Opus, Sonnet, and Fable, are provider models listed in the ladder that
+ships with OAT; they are examples, and your own ladder may list different
+models.) The project root, meaning the main agent session running the project,
+chooses one exact candidate it judges sufficient for the phase.
 
 `Uncapped` is explicit managed state. It is not represented by omitted policy
 state. `Unresolved` is a planning or preflight deferral and cannot begin
@@ -498,9 +521,8 @@ defaults to `xhigh`. A typo in a pinned selector therefore ships a
 working-but-wrong model that silently tracks a vendor-controlled default, so
 capability can change with no corresponding change in the repository.
 
-OAT does not currently validate effort rungs at sync time; that is tracked as
-`BL-260726-validate-cursor-pin-effort`. Until it lands, the probe runbook is
-the only guard.
+OAT does not currently validate effort rungs at sync time; that check is
+planned but not yet built. Until it is, the probe runbook is the only guard.
 
 ## Phase and Optional-Worker Layers
 

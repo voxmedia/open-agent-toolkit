@@ -1,6 +1,6 @@
 ---
 title: Choose a Workflow
-description: Standalone adoption lane for tracked OAT projects, workflow lifecycle execution, ideas, and workflow-oriented skills.
+description: Choose how to run tracked, resumable work in OAT, from no project to lite, quick, spec-driven, or imported projects, and what each mode does at the end.
 ---
 
 # Choose a Workflow
@@ -11,7 +11,7 @@ Before you choose, read [Approvals and Automation](approvals-and-automation.md):
 
 Use this section when you want explicit project artifacts, stable task IDs, review loops, and resumable execution across longer-running work. The workflow layer is optional; stay with direct CLI usage when the task is straightforward and the overhead of project artifacts would outweigh the value.
 
-## Contents
+## Where to go from here
 
 - [Ideas Workflow](ideas/index.md) - Lightweight idea capture, brainstorming, and promotion into tracked projects when the work becomes concrete.
 - [Projects](projects/index.md) - Lifecycle, artifacts, reviews, PR flow, and repository analysis.
@@ -77,13 +77,20 @@ it by running that mode's entry skill, and the skill creates the project for
 you. An OAT project is a folder of tracked files (plan, state, reviews) that lets
 an agent pick the work up again in a later session.
 
-| Mode        | Choose it when                                                                 | What you give up                                                                                                |
-| ----------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
-| No project  | The work is small, or is just provider sync or a single CLI command            | Resuming later, a tracked plan, and lifecycle reviews. Ad-hoc reviews still work                                |
-| Lite        | The change fits in one sitting and the outcome is clear                        | Discovery and design documents, multiple phases, and approval pauses between phases. You approve one plan, once |
-| Quick       | The work is bounded and the requirements are clear                             | A formal requirements document (`spec.md`). Design is optional                                                  |
-| Spec-driven | The requirements are unclear, or the change cuts across many parts of the code | Speed: you approve discovery and design before any planning or code                                             |
-| Import      | A plan already exists in another tool or document                              | OAT's own discovery and design steps                                                                            |
+| Mode        | Start it with                                   | Choose it when                                                                 | What you give up                                                                                                | At the end                                                                                                                  |
+| ----------- | ----------------------------------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| No project  | No skill; ask your agent or run CLI commands    | The work is small, or is just provider sync or a single CLI command            | Resuming later, a tracked plan, and lifecycle reviews. Ad-hoc reviews still work                                | OAT pushes nothing and opens no pull request                                                                                |
+| Lite        | `/oat-project-lite`                             | The change fits in one sitting and the outcome is clear                        | Discovery and design documents, multiple phases, and approval pauses between phases. You approve one plan, once | Always pushes your current branch and opens a pull request by itself; no setting removes this step                          |
+| Quick       | `/oat-project-quick-start`                      | The work is bounded and the requirements are clear                             | A formal requirements document (`spec.md`). Design is optional                                                  | Pushes your branch and opens a pull request only when `workflow.postImplementSequence` asks for it, or in an autonomous run |
+| Spec-driven | `/oat-project-new`                              | The requirements are unclear, or the change cuts across many parts of the code | Speed: you approve discovery and design before any planning or code                                             | Same as quick                                                                                                               |
+| Import      | `/oat-project-import-plan` with the plan's path | A plan already exists in another tool or document                              | OAT's own discovery and design steps                                                                            | Same as quick                                                                                                               |
+
+Type the skill names in your coding agent's chat, not a terminal; Codex uses
+`$` instead of `/`. No mode ever merges a pull request. Separately,
+`oat-project-complete` opens a pull request without asking when
+`workflow.createPrOnComplete` is `true`. Project files of a project in the
+default _synced_ scope are also pushed to `origin` whenever a skill saves
+them; see [Approvals and Automation](approvals-and-automation.md#what-oat-does-without-asking).
 
 Decide by how clear the requirements are and how risky the design is, not by
 how many tasks the work has. A large but well-understood change can still be a
@@ -93,6 +100,10 @@ is what holds the planning conversation, so start with the skill.
 
 - If you are a solo developer fixing one well-understood bug, choose lite, or
   skip the project entirely if you will not need to resume or review it later.
+  Lite ends by pushing your current branch and opening a pull request without
+  asking, so start it on a feature branch; if you do not want that, choose
+  quick instead, which opens a pull request only when
+  `workflow.postImplementSequence` asks for one or the run is autonomous.
 - If your team is building a feature with agreed, bounded requirements, choose
   quick. A long task list alone does not call for a formal spec.
 - If the change is high-risk or regulated, or its requirements are still being

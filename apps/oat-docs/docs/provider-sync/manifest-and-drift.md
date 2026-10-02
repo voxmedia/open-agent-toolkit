@@ -47,13 +47,32 @@ flowchart TD
 - **What re-running `oat sync` does.** It writes unless you pass `--dry-run`.
   It recreates missing views and rewrites drifted ones from canonical, so an
   edit made in a provider copy is lost, not merged. A file you placed at a
-  view's path without OAT is replaced too, and a view whose canonical source
-  was deleted is removed.
+  view's path without OAT is replaced too. When a skill or rule is deleted
+  from `.agents/`, sync removes its views. When an agent is deleted or
+  renamed, it does not; see the warning below.
 - **What to do with a stray.** In an interactive `oat status` or `oat init` you
   can adopt it, which moves or converts it into `.agents/`. For a Cursor or
   Copilot skill you can keep it in place; OAT records the path under
   `knownStrays` in `.oat/sync/config.json` and leaves it out of later reports.
   You can also list a path there by hand.
+
+> [!WARNING]
+> Sync does not clean up after a deleted or renamed agent. With Cursor enabled,
+> once `.agents/agents/<name>.md` is gone, `oat sync`, `oat sync --dry-run` and
+> `oat status` exit 1 with
+> `Cursor agent definition is a symbolic link at .cursor/agents/<name>.md whose target escapes the sync scope.`
+> With Codex enabled, the agent's generated files stay behind. After deleting
+> or renaming an agent, clean up by hand:
+>
+> 1. Delete the link `.cursor/agents/<name>.md`.
+> 2. Delete the link `.claude/agents/<name>.md`; until it is gone, the same
+>    error names that path instead.
+> 3. Delete `.codex/agents/<name>.toml`.
+> 4. In `.codex/config.toml`, delete the `[agents.<name>]` table.
+> 5. Run `oat sync --scope project`; it should now succeed.
+>
+> Skills and rules are not affected: sync removes their views when the
+> canonical file is deleted.
 
 ## Manifest locations
 

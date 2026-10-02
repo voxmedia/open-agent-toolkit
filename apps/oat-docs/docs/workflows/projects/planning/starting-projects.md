@@ -35,13 +35,15 @@ implementation. An _artifact_ is a project file such as `discovery.md`,
 Check these before you start. Each one can stop or misdirect a first project
 in a fresh repository.
 
-1. **Initialize the repository and install the workflows pack.** Run `oat init`,
-   then install the pack that contains the project skills. Without
-   `--scope project`, the pack installs to your user scope; add it to keep the
-   skills in the repository:
+1. **Initialize the repository and install the workflows pack.** Run
+   `oat init --scope project`, then install the pack that contains the project
+   skills, also with `--scope project`. If you leave out `--scope project`,
+   `oat init` uses its default scope, `all`, and also writes under your home
+   directory, and the pack installs to your user scope instead of the
+   repository:
 
    ```bash
-   oat init
+   oat init --scope project
    oat tools install workflows --scope project
    ```
 

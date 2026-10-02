@@ -26,6 +26,17 @@ instead of `/`):
    not commit, push or start that skill. It only refreshes the generated
    `.oat/state.md` dashboard and, for a synced project (one whose artifacts
    travel on a Git ref, as described above), pulls the latest artifacts. See [oat-project-progress](#oat-project-progress).
+   Progress first checks for the repository knowledge index, the codebase
+   summary that `/oat-repo-knowledge-index` writes under
+   `.oat/repo/knowledge/`. If that folder has no Markdown file, progress tells
+   you to run `/oat-repo-knowledge-index` and stops without a project report,
+   whatever the project's mode; quick, lite and imported projects never
+   needed the index before, so this can be the first time you see it. Run
+   `/oat-repo-knowledge-index` once and then run progress again, or skip to
+   step 3: `/oat-project-next` itself does not check for the index (spec-driven
+   discovery, which it may start, does). If the index
+   exists but is more than 7 days old or more than 20 files have changed
+   since it was built, progress only warns and continues.
 3. **Continue.** `/oat-project-next` starts the next lifecycle skill without
    asking you first, and that skill can commit, push your branch or open a
    pull request. See [oat-project-next](#oat-project-next).
@@ -291,8 +302,9 @@ another workflow step does not automatically authorize this check.
 
 **Prerequisites:** An active project is optional. The skill can report that
 none is active and inspect available projects. It checks the repository
-knowledge base first; if that is missing, it asks you to run the knowledge-index
-skill and stops before the later project report. Synced-project arrival may
+knowledge base first; if `.oat/repo/knowledge/` holds no Markdown file, it asks
+you to run `/oat-repo-knowledge-index` and stops before the later project
+report, in every project mode. A stale knowledge base only produces a warning. Synced-project arrival may
 pull current artifacts, and the skill refreshes the generated dashboard; a
 diagnostic invocation is not a guarantee of zero filesystem or network activity.
 

@@ -33,8 +33,8 @@ for the deep review request/receive mechanics.
 - When to use it: when you need to know which review fires at a lifecycle point
   and whether it inherits, pins the ceiling, or requires an independent gate.
 - Primary sources: `oat-project-implement` phase-execution mechanics, the
-  `oat-project-dispatch-subagents` lifecycle-role table, and project design
-  Decision #11.
+  `oat-project-dispatch-subagents` lifecycle-role table, and the OAT design
+  decision that defined these four flavors.
 
 ## Flow map
 
@@ -53,11 +53,11 @@ flowchart TD
   end
 
   subgraph Gates
-    PG["Phase review gate\n(external)"] --> PGR["Configured cross-family\nexec target (gates.execTargets)"]
-    PGR --> PGT["Independent CLI/exec target\n(host-avoidance; fail closed)"]
+    PG["Phase review gate\n(external)"] --> PGR["Configured exec target\n(gates.execTargets)"]
+    PGR --> PGT["Separate reviewer CLI\n(prefers another model family;\nfalls back with a warning)"]
 
-    LG["Lifecycle / final gate"] --> LGR["Cross-runtime CLI\nexec target"]
-    LGR --> LGT["Producer-independent target\n(fail closed, no self-review substitute)"]
+    LG["Lifecycle / final gate"] --> LGR["Configured exec target\n(gates.execTargets)"]
+    LGR --> LGT["Separate reviewer CLI\n(never replaced by self-review;\nfalls back with a warning)"]
     LGT -. may spawn .-> LGN["Nested managed\nreviewer child inside gate"]
   end
 ```
@@ -71,8 +71,8 @@ reviewer child** inside the gate exec target: the lifecycle/final gate.
 | ----------------------------------- | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Planning-phase artifact self-review | Auto artifact-review loop for plan/spec/design                     | Inherit the planning parent by default (root is already at/above ceiling)                                                                                                                                      |
 | Implementation-phase self-review    | Phase and final code reviews dispatched by `oat-project-implement` | Resolve the dispatch ceiling; pin the ceiling's final candidate (at-ceiling pin); inherit only when the review-owning dispatcher is known to be at/above ceiling; else select an exact CLI reviewer pre-launch |
-| Phase review gate (external)        | Optional non-pausing gate after a phase passes its self-review     | Independent configured cross-family CLI/exec target (`gates.execTargets`), host-avoidance, unconstrained by native catalog; fail closed if unavailable                                                         |
-| Lifecycle / final gate              | End-of-lifecycle sign-off                                          | Cross-runtime CLI exec target, independent of producer context; fails closed rather than substituting same-context self-review; may spawn a nested managed reviewer child inside the gate exec target          |
+| Phase review gate (external)        | Optional non-pausing gate after a phase passes its self-review     | Separate reviewer CLI chosen from the configured exec targets (`gates.execTargets`), unconstrained by native catalog; prefers another model family but falls back with a warning; fails if no target can start |
+| Lifecycle / final gate              | End-of-lifecycle sign-off                                          | Separate reviewer CLI chosen the same way; never replaced by a same-context self-review; fails if no target can start; may spawn a nested managed reviewer child inside the gate exec target                   |
 
 The first two flavors are **self-reviews**. Planning review inherits its
 producing parent by default; implementation phase review is dispatched by the
@@ -90,12 +90,40 @@ policy is still honored at those scopes. Missing or incomplete ladders
 reviews and every code review without a resolved policy. Gate exec-target
 selection is separate and unaffected.
 
-## Independence and fail-closed semantics
+## Independence: what blocks and what falls back
 
 The invariant across all four flavors is that the reviewer runs **at or above
 the ceiling**. What changes between flavors is the required _independence from
-the producer_, and that independence is enforced by failing closed rather than
-silently downgrading:
+the producer_ (the agent that wrote the work). For the two gate flavors, three
+different things can happen, and only two of them stop the workflow:
+
+- **Findings that block.** The reviewer ran and reported findings at or above
+  the gate's threshold. The gate's `onFailure` setting decides what happens
+  next: `block` fixes and reruns, `prompt` asks a person, and `warn` records
+  the failure and continues.
+- **Operational failures stay blocked.** The reviewer could not start, timed
+  out without writing a review, or wrote a review OAT could not validate or
+  match to this run. Nothing was reviewed. `oat-project-implement` and
+  `oat-project-lite` keep these failures blocked whatever `onFailure` says.
+  The planning skills handle them differently; see
+  [When the gate finds blocking problems](../../advanced/workflow-gates.md#when-the-gate-finds-blocking-problems).
+- **Reviewer selection falls back.** By default (`--avoid same-family`) the gate
+  prefers a reviewer from a different model family than the producer. If none
+  is available, it runs the best available reviewer instead, which can be the
+  same model family or even the same agent CLI, and records a warning. It does
+  not block. The gate result's `diversity.achieved` field shows what happened:
+  only `different-family` means the reviewer came from another family. With
+  `--avoid same-runtime`, the gate does not fall back: it fails if no other
+  agent CLI is available, but it excludes the current CLI only when OAT
+  recognizes it, and it never checks the model family. See
+  [How independent the reviewer must be](../../advanced/workflow-gates.md#how-independent-the-reviewer-must-be).
+
+So a gate never quietly replaces itself with a self-review in the producer's
+own session, and it never reports a pass when no review ran. It does not
+guarantee a reviewer from a different model family; check `diversity.achieved`
+before you present a gate review as independent evidence.
+
+Per flavor:
 
 - **Planning self-review** needs the least independence. The planning root
   already runs at or above the review ceiling, so inheriting the parent model
@@ -107,22 +135,26 @@ silently downgrading:
   when the root dispatcher is _known_ to be at or above the ceiling; otherwise
   an exact provider CLI reviewer is selected before launch. Reviewer selection
   is never delegated to the phase implementer.
-- **Phase review gate** adds cross-family independence. It uses a configured
-  independent exec target from `gates.execTargets` with host-avoidance,
-  unconstrained by the harness's native subagent catalog. If the required
-  independent target cannot be enforced, the gate **fails closed** — it does
-  not downgrade to producer-context review.
-- **Lifecycle / final gate** requires the strongest independence: a
-  cross-runtime CLI exec target chosen independently of the producer context.
-  It fails closed rather than substituting a same-context self-review, and it is
-  the one flavor permitted to spawn a nested managed reviewer child _inside_ the
-  gate exec target when the gate's own contract calls for it.
+- **Phase review gate** aims for cross-family independence. It runs a separate
+  reviewer CLI chosen from the exec targets in `gates.execTargets`,
+  unconstrained by the harness's native subagent catalog, and prefers a
+  different model family as described above. If no target can start at all,
+  the gate fails and stays blocked; it does not downgrade to a review in the
+  producer's context. If only a same-family target is available, it runs that
+  target and records a warning.
+- **Lifecycle / final gate** also runs a separate reviewer CLI, chosen the same
+  way, outside the producer's session. It never substitutes a same-context
+  self-review, and it is the one flavor permitted to spawn a nested managed
+  reviewer child _inside_ the gate exec target when the gate's own contract
+  calls for it. Its reviewer can still fall back to the same model family, with
+  a warning.
 
 Gate independence is not a property of the generic reviewer class; it is project
 policy layered on top of it. The dispatch adapter resolves the configured gate
-target before launch and passes it as exact selection input. Fail-closed
-behavior for both gate flavors is deliberate: an unavailable independent target
-blocks the gate instead of quietly reusing whatever produced the work. For the
+target before launch and passes it as exact selection input. What fails closed
+is the review itself: a gate whose reviewer cannot start, or whose review
+cannot be validated, blocks instead of quietly reusing whatever produced the
+work. Reviewer selection is best effort, as described above. For the
 gate configuration keys and non-pausing behavior, see
 [Workflow gates](../../advanced/workflow-gates.md) and the
 [phase review gate](index.md#phase-review-gate) section of the review doc.

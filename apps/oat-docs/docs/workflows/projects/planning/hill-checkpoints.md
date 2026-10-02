@@ -82,11 +82,35 @@ The first-run checkpoint prompt can be skipped entirely by setting the `workflow
 
 When set, `oat-project-implement` reads the preference before the prompt and prints `HiLL checkpoints: <every|final> (from workflow.hillCheckpointDefault)`, skipping the interactive choice. When unset (default), the skill prompts as before.
 
-This is a personal preference — typically set at user scope so it applies to every repo:
+Treat this setting as a personal preference by default and set it at user
+level (`--user`, stored in `~/.oat/config.json`), so it applies to every
+repository you work in. Set it at shared level (`--shared`, stored in the
+committed `.oat/config.json`) only when your team has agreed on a rule for
+where agents must pause. Configuration resolves local first, then shared, then
+user, so a shared value overrides each person's user-level value, and anyone
+can still override it for their own checkout with `--local`.
 
-```bash
-oat config set workflow.hillCheckpointDefault final --user
-```
+A configured value is used on each project's first implementation run without
+asking, and it replaces any checkpoint value already written in that project's
+`plan.md` (see the warning under
+[Choosing checkpoint frequency](#choosing-checkpoint-frequency)).
+
+- If you want more control and the chance to steer between phases, use
+  `every`:
+
+  ```bash
+  oat config set workflow.hillCheckpointDefault every --user
+  ```
+
+- If you want fewer interruptions and you trust the plan and the automatic
+  reviews, use `final`:
+
+  ```bash
+  oat config set workflow.hillCheckpointDefault final --user
+  ```
+
+- If you want to decide per project, or to pause after specific phases, leave
+  the setting unset and answer the prompt on the first implementation run.
 
 See [Workflow preferences in the Configuration guide](../../../reference/configuration.md#workflow-preferences-workflow) for the full list of preference keys and surface guidance.
 

@@ -11,6 +11,40 @@ the work, then `oat gate review` dispatches a normal OAT review to another
 runtime such as Codex or Claude and maps blocking review findings to the gate
 exit status.
 
+**In short:**
+
+- **What this page is for:** setting up a _gate_, an extra review (or other
+  command) that a lifecycle skill runs as its last step, usually by a second
+  agent CLI such as Codex, Claude Code, or Cursor. No gate is configured by
+  default.
+- **Who needs it:** a team lead setting a review policy, or anyone who wants a
+  second model to check plans or code. If you have only one agent CLI
+  installed, you can skip gates.
+- **Know first:** every gate needs an explicit `--on-failure` (`block`,
+  `prompt`, or `warn`). The reviewer prefers a different model family but falls
+  back to the best available reviewer with only a warning, so check
+  `diversity.achieved` in the gate result. A shared gate guides agents; a
+  teammate can still turn it off on their own machine.
+- **Decide:** [Choosing gate posture](#choosing-gate-posture),
+  [When the gate finds blocking problems](#when-the-gate-finds-blocking-problems),
+  and [How independent the reviewer must be](#how-independent-the-reviewer-must-be).
+  The sections between here and there are the detailed contract.
+
+The shortest way to add an independent review to the implement step, shared
+with your team through the committed `.oat/config.json`, is the same command as
+in
+[Approvals and Automation](../approvals-and-automation.md#a-person-approves-the-plan-and-the-final-result-and-an-independent-model-reviews-the-code):
+
+```bash
+oat gate set oat-project-implement \
+  --command 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final "Use oat-project-review-provide code final for the declared project"' \
+  --on-failure block \
+  --layer shared
+```
+
+Type it exactly as shown; `$PROJECT_PATH` stays literal, because the skill sets
+it when the gate runs. Commit `.oat/config.json` afterwards.
+
 `oat gate cross-provider-exec` remains the generic child-status executor. It
 selects an exec target, runs the prompt, and exits with the child process
 status. Use `oat gate review` when the command is specifically an OAT review
@@ -1098,9 +1132,27 @@ Every gate needs an explicit `onFailure`; there is no default.
 `maxAttempts` defaults to two runs in total: the first run plus one
 fix-and-rerun. A reviewer that fails to start, times out without producing a
 review, or produces an invalid result has not reviewed anything, so treat that
-as a failed gate, never as a pass. The implement and lite skills keep such
-failures blocked, but the wording in some planning skills is weaker, so check
-the gate outcome yourself.
+as a failed gate, never as a pass.
+
+How the skills handle that case differs:
+
+- `oat-project-implement` and `oat-project-lite` keep it blocked whatever
+  `onFailure` says, so even a `warn` gate does not let them continue.
+- `oat-project-plan`, `oat-project-quick-start`, and `oat-project-import-plan`
+  apply your `onFailure` setting to any failed gate run, including one where no
+  review happened. With `block`, they retry and then hand the problem to you,
+  as for findings. With `prompt`, they ask you. With `warn`, they record the
+  failure and finish planning, so the plan can be marked ready although no
+  reviewer looked at it.
+
+So if you put a `warn` gate on a planning skill, check the outcome before you
+run `/oat-project-implement`. The gate's JSON result has a `status` field, and
+each `oat gate review` run that starts a reviewer also adds a line to the
+project's `project-log.md` ending in `status=…` and `run=…` (it skips this only when `workflow.projectLog` is `false` and the
+project has no `project-log.md` yet): `status=ok` means the review ran and passed; `status=review_failed`,
+`artifact_validation_failed`, or `targeting_correlation_failed` means no usable
+review was produced. If you need a planning gate that cannot be skipped this
+way, use `block`.
 
 - If the work is high-risk (production, security, or data-migration code),
   choose `block`.
@@ -1118,9 +1170,12 @@ runtime is the agent CLI, such as Claude Code, Codex, or Cursor.
 > [!WARNING]
 > The default, `same-family`, falls back to the best available reviewer when no
 > reviewer from a different model family is available, and only records a
-> warning in the result. Before relying on a gate for an independent review,
-> check `diversity.achieved` in the gate result: `different-family` means the
-> reviewer really was from another family.
+> warning in the result. That fallback can pick the same agent CLI that did
+> the work. Before relying on a gate for an independent review, check
+> `diversity.achieved` in the gate result: `different-family` means the
+> reviewer really was from another family. A reviewer that cannot start, or a
+> review that cannot be validated, is different: that blocks the gate. See
+> [Independence: what blocks and what falls back](../projects/reviews/review-flavors.md#independence-what-blocks-and-what-falls-back).
 
 | `--avoid`               | Choose it when                                     | What you give up                                                                                                                        |
 | ----------------------- | -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
