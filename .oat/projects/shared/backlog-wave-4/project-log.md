@@ -100,6 +100,10 @@ Phase p05 complete (6/6 tasks): workflow.autonomousComplete opt-in, oat-project-
 
 Review reconnaissance completed: one intelligent-recon scout (gpt-6.1-sol medium), root verified evidence and retained 1 Medium; artifact=.oat/projects/shared/backlog-wave-4/reviews/p06-review-2026-10-02T224700Z.md; b55e726f-ec7f-49f1-ae85-67ac7b5ac0dd-recon
 
+### 2026-10-02 · structural · oat gate review · p06
+
+target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:1,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-4/reviews/p06-review-2026-10-02T224700Z.md run=b55e726f-ec7f-49f1-ae85-67ac7b5ac0dd
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
