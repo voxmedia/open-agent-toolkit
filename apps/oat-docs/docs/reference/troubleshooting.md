@@ -5,16 +5,44 @@ description: 'Common issues and fixes for skills visibility, worktrees, sync, an
 
 # Troubleshooting
 
+The commands on this page use the installed `oat` command. A few entries also
+give a `pnpm run ...` form; those work only inside a checkout of the OAT source
+repository and are labelled that way.
+
 ## Skills not visible in host UI
 
-- Run: `pnpm run cli -- sync --scope all`
+- For skills in this repository (`.agents/skills`), preview and then
+  regenerate the provider views (the copies or links each agent tool reads,
+  such as `.claude/skills`):
+
+  ```bash
+  oat sync --scope project --dry-run
+  oat sync --scope project
+  ```
+
+- For skills installed at user scope (`~/.agents/skills`, the default scope
+  for tool packs), run `oat sync --scope user`. This writes provider views in
+  your home directory, such as `~/.claude/skills`.
 - Reload/restart host app session
 - Verify `AGENTS.md` skills table matches `.agents/skills/*/SKILL.md`
+- If you are working in the OAT source repository: run
+  `pnpm run cli -- sync --scope all`, which runs the CLI from source and syncs
+  both project and user scope.
 
 ## Worktree checkout missing provider links
 
-- Run: `pnpm run worktree:init`
-- This command installs dependencies, builds the workspace, and runs `oat sync --scope project`.
+- In the new worktree, run `oat sync --scope project` to recreate the
+  project's provider views. Add `--dry-run` first to preview.
+- To prepare the whole worktree, including local-only files and the
+  repository's setup and readiness checks, invoke
+  `/oat-worktree-bootstrap --existing` in your coding agent. See
+  [Worktree bootstrap](../workflows/advanced/worktree-bootstrap.md).
+- If you are working in the OAT source repository: run
+  `pnpm run worktree:init`. This command copies local-only files from the main
+  worktree, installs dependencies, configures Git hooks, builds the workspace,
+  and runs `oat sync` with no scope flag. A bare `oat sync` uses
+  `--scope all`, so it refreshes user-scope provider views in your home
+  directory as well as the project's.
 
 ## Codex appears detected but no skill sync actions are listed
 
@@ -85,7 +113,10 @@ Use [Instruction Sync](../provider-sync/instruction-sync.md) for the full strate
 
 ## `doctor` warns about canonical directories
 
-- Run `oat init` for the relevant scope.
+- Run `oat init` for the relevant scope. The check's name says which scope is
+  missing directories: for `project:canonical_directories` run
+  `oat init --scope project`, and for `user:canonical_directories` run
+  `oat init --scope user`. A bare `oat init` initializes both.
 - Re-run `oat doctor` after initialization.
 
 ## `doctor` warns about outdated installed OAT skills
@@ -229,7 +260,21 @@ and the home root becomes `~` when user scope is checked. Redaction is a literal
 replacement of those exact root paths, so a path outside them, such as a global
 bundle path in an assets error, stays absolute in the message.
 
-Rebuild the CLI workspace, then rerun the command named in the diagnostic:
+With an installed CLI, reinstall it so its bundled assets are complete and
+match the CLI version, then rerun the command named in the diagnostic. If you
+set `OAT_ASSETS_DIR`, point it at a complete asset bundle built for this CLI
+version, or unset it to use the bundled copy.
+
+```bash
+npm install --global @open-agent-toolkit/cli
+oat status # or: oat doctor
+```
+
+The diagnostic's own recovery line says to run `pnpm build`. That applies only
+when you run the CLI from a checkout of the OAT source repository.
+
+If you are working in the OAT source repository: rebuild the CLI workspace,
+then rerun the command named in the diagnostic:
 
 ```bash
 pnpm build
@@ -373,7 +418,11 @@ failure, which is intentional — you asked for a scope that does not exist here
 
 ## Manifest not found or invalid
 
-- Missing manifest: run `sync` or `init`
+- Missing manifest: run `sync` or `init`. For the repository's manifest
+  (`.oat/sync/manifest.json`), use `oat sync --scope project` or
+  `oat init --scope project`; without `--scope`, both commands also write to
+  your home directory. For the user manifest (`~/.oat/sync/manifest.json`),
+  use `--scope user`.
 - Invalid manifest: repair/remove file and rerun
 
 ## Status/output mismatches with lifecycle expectations

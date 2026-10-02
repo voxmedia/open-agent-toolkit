@@ -13,7 +13,7 @@ OAT combines a provider-sync layer, reusable skills and CLI tooling, and an opti
 flowchart TD
   GOAL["What do you need first?"] --> SYNC["Align coding tools\nProvider Sync"]
   GOAL --> SKILLS["Help with one task\nReusable Skills"]
-  GOAL --> WORK["Resume longer work\nTracked Workflows"]
+  GOAL --> WORK["Resume longer work\nWorkflows"]
   GOAL --> DOCS["Maintain documentation\nMarkdown or a docs site"]
   SYNC -.-> LATER["Add another path whenever useful"]
   SKILLS -.-> LATER

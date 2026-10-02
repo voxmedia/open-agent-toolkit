@@ -5,7 +5,9 @@ description: Standalone adoption lane for tracked OAT projects, workflow lifecyc
 
 # Choose a Workflow
 
-Agentic Workflows is the OAT lane for tracked, resumable work on top of the base CLI and provider-sync layers.
+Workflows are the part of OAT for tracked, resumable work. They are optional and sit on top of the CLI and provider sync.
+
+Before you choose, read [Approvals and Automation](approvals-and-automation.md): it shows, for each mode, where a person approves, what an agent does without asking, and when OAT pushes or opens a pull request.
 
 Use this section when you want explicit project artifacts, stable task IDs, review loops, and resumable execution across longer-running work. The workflow layer is optional; stay with direct CLI usage when the task is straightforward and the overhead of project artifacts would outweigh the value.
 

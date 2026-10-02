@@ -49,7 +49,7 @@ export async function renderSkillCatalog(
     '',
     'Generated from canonical skill metadata and the reviewed guide mapping. Do not edit this block; run `pnpm docs:skills:generate` after changing those sources.',
     '',
-    'Follow a skill name for its invocation, prerequisites, scenario and output. Project applicability describes existing-project prerequisites; conditional details are in each guide.',
+    'Follow a skill name for its invocation, prerequisites, scenario and output. “Needs an active project?” says whether the skill needs an OAT project (a tracked unit of work under `.oat/projects/`) to be already open in this checkout: “Yes” means it does, “Optional” means it works with or without one, and “No” means it does not need one. Conditional details are in each guide.',
     '',
     'Visibility reports source metadata: “user” is `user-invocable` and “model disabled” is `disable-model-invocation`. “Not declared” is not an explicit visibility setting.',
   ];
@@ -58,7 +58,7 @@ export async function renderSkillCatalog(
       '',
       `### ${markdownText(family)}`,
       '',
-      '| Skill | Description | Visibility | Project applicability |',
+      '| Skill | Description | Visibility | Needs an active project? |',
       '| --- | --- | --- | --- |',
     );
     const guides = validation.mapping.skills
@@ -72,9 +72,9 @@ export async function renderSkillCatalog(
         );
       const page = posix.relative(posix.dirname(catalogPage), guide.page);
       const applicability = {
-        required: 'Requires project',
-        optional: 'Project optional',
-        none: 'No existing project required',
+        required: 'Yes',
+        optional: 'Optional',
+        none: 'No',
       }[guide.applicability];
       const visibility = `user: ${declared(skill.userInvocable)}; model disabled: ${declared(skill.disableModelInvocation)}`;
       lines.push(

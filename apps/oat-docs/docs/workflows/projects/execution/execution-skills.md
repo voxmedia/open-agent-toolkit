@@ -102,12 +102,13 @@ is set. Both answers are written to `plan.md` and are not asked again when you
 resume. A lite project has no checkpoints and skips both questions.
 
 **What it does without asking:** After those questions, the run continues
-until a checkpoint, a blocker or the end of the plan without asking again. It:
+until a checkpoint, a blocker or the end of the plan without asking again,
+except for how to run the final code review (described after this list). It:
 
 - dispatches a phase implementer subagent (`oat-phase-implementer`) for each
-  phase and an `oat-reviewer` subagent to review each phase and the finished
-  work, without a prompt per launch (when the host cannot run those subagents,
-  it does the same work inline);
+  phase and an `oat-reviewer` subagent to review each phase, without a prompt
+  per launch (when the host cannot run those subagents, it does the same work
+  inline);
 - has the implementer commit once per task, and adds a bookkeeping commit
   after task commits and at every phase and review boundary;
 - sends a phase with blocking review findings back to its implementer for
@@ -117,9 +118,23 @@ until a checkpoint, a blocker or the end of the plan without asking again. It:
   branch with `git merge --no-ff`;
 - for a synced project, pushes each bookkeeping update to the project's ref on
   `origin` instead of committing it on your branch;
-- runs final verification, the final code review and, if one is configured,
-  the implementation exit gate;
+- runs final verification and, once the final code review has passed, the
+  implementation exit gate if one is configured;
 - can push your branch and open a pull request at the end, as described next.
+
+**The final code review may ask first:** the final review is always required.
+In an interactive run with `workflow.reviewExecutionModel` unset, the skill
+asks how to run it: through a subagent in this session, in a fresh session
+where you run `oat-project-review-provide code final` yourself and then return,
+or inline when the current host's controls are verified equivalent. You then
+run `oat-project-review-receive` to process the findings. Critical or High
+findings become fix tasks, and the review repeats for at most three cycles.
+When the setting is `subagent`, the skill dispatches the reviewer without
+asking; `inline` runs the review in the current session only when that route
+passes the skill's check; `fresh-session` prints instructions and waits, while
+offering to run the review here instead. An autonomous run
+(`OAT_AUTONOMOUS=1`) asks nothing: it runs the final review and processes its
+findings immediately.
 
 **Finishing can open a pull request:** In a lite project, once the final
 review and the implementation exit gate pass, implementation runs

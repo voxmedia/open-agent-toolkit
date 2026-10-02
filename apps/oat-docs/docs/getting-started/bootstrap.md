@@ -59,6 +59,26 @@ Hook install note:
 - The optional OAT pre-commit hook installs into Git's active hook directory.
 - If a repo uses a managed hook folder such as `.githooks/`, that path must already be configured in Git, or OAT must configure it during the prompt flow before hook install.
 
+What the hook does: before each commit it runs
+`oat status --scope project --hook`, which checks whether the provider views in
+this repository match their canonical sources. If views are out of date or
+missing, it prints `oat: managed provider views are out of sync - run 'oat sync --scope project'`.
+If it finds provider files that OAT does not manage, it prints a note to run
+`oat status --scope project`. The hook only warns: it never blocks a commit,
+because the hook line ends in `|| true`, and it does nothing when `oat` is not
+on your `PATH`. OAT adds its lines between `# >>> oat pre-commit hook >>>` and
+`# <<< oat pre-commit hook <<<` markers, appending them to an existing
+`pre-commit` file rather than replacing it. In Git's default hook directory
+(`.git/hooks/`) the hook belongs to your clone only and is not committed.
+
+To remove the hook, run `oat init --no-hook` in the repository. Although its
+help text reads "Skip optional pre-commit hook install", the flag also removes
+an OAT hook that is already installed. It deletes only the marked OAT block
+and keeps any other hook content; if the file contained nothing but the OAT
+block, the file is deleted (or emptied, when it is a symlink). You can also
+delete the lines between the two markers by hand. To install the hook later
+without prompts, run `oat init --hook`.
+
 **Non-interactive mode:** Fresh-init guided setup offers are interactive-only. If `--setup` is passed in non-interactive mode (`--json`, piped input, non-TTY, or `OAT_NON_INTERACTIVE=1`), guided setup does not prompt: tool packs use additive defaults, local-path and documentation prompts are skipped unless already configured, and provider sync is skipped unless separately requested. Repository guidance also defaults to no write; pass `--project-guidance` to opt in explicitly or `--no-project-guidance` to record an explicit decline.
 
 ```bash

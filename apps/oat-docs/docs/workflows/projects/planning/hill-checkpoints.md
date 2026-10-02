@@ -22,9 +22,13 @@ Frontmatter keys:
 Example:
 
 ```yaml
-oat_hill_checkpoints: ['discovery', 'spec', 'design']
+oat_hill_checkpoints: ['discovery', 'design']
 oat_hill_completed: ['discovery']
 ```
+
+An older project may still list `spec`, and the design skill honors it by
+asking for your review at the design step unless the standalone
+`oat-project-spec` skill already completed that checkpoint.
 
 ## Plan phase checkpoints (`plan.md`)
 

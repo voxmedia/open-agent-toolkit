@@ -10,6 +10,26 @@ history is independent from the implementation branch, so a teammate or a
 second machine can continue the project even before the branch carrying its
 record file merges.
 
+## Resume work on this machine
+
+If the project already exists in this checkout, you do not need the
+cross-machine steps on the rest of this page. Run these three agent skills in
+order (type them in your coding agent's chat, not a terminal; Codex uses `$`
+instead of `/`):
+
+1. **Open the project.** `/oat-project-open <project>` makes it the active
+   project in this checkout (the one OAT works on when you do not name one)
+   and resumes it if it was paused. See
+   [oat-project-open](#oat-project-open).
+2. **See where it stands.** `/oat-project-progress` is a read-only status
+   check: it reports the phase, blockers and recommended next skill, and does
+   not commit, push or start that skill. It only refreshes the generated
+   `.oat/state.md` dashboard and, for a synced project (one whose artifacts
+   travel on a Git ref, as described above), pulls the latest artifacts. See [oat-project-progress](#oat-project-progress).
+3. **Continue.** `/oat-project-next` starts the next lifecycle skill without
+   asking you first, and that skill can commit, push your branch or open a
+   pull request. See [oat-project-next](#oat-project-next).
+
 ## Discover and adopt
 
 From any checkout with access to `origin`:

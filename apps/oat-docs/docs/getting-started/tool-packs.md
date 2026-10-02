@@ -449,12 +449,17 @@ adoption**, and the two are tracked independently:
   fresh install, so `~/.agents/skills/` and `~/.oat/templates/` receive the
   managed assets and no repository file is touched.
 - **Initialize (adoption)**: `oat pjm init` instantiates the two-layer working
-  repo-reference surface under `.oat/repo/`, creates repository guidance only
-  when the root `AGENTS.md` is absent, and records explicit adoption in
-  `.oat/config.json` as `pjm.initialized: true` with a `pjm.schemaVersion`.
-  When the root file or a contained symlink already exists, adoption completes
-  independently and OAT prints a manual project-management/decision patch
-  without changing that file.
+  repo-reference surface under `.oat/repo/` and records explicit adoption in
+  `.oat/config.json` as `pjm.initialized: true` with a `pjm.schemaVersion`. It
+  also writes the `OAT project-management` and `OAT decisions` guidance
+  sections to the root `AGENTS.md`. When no root `AGENTS.md` exists, it
+  creates the file with both sections. When the file (or a contained symlink
+  to one) exists, it appends whichever of the two sections is absent and
+  leaves the rest of the file unchanged. It does not rewrite a section that is
+  already there but differs from the managed version, and it does not write to
+  a file with more than one hard link or that it cannot write. In those cases
+  adoption still completes, the existing file is left unchanged, OAT prints a
+  manual patch for you to apply, and the command exits with status 1.
 
 Having the pack installed does **not** mean this repository uses PJM. Adoption
 is a per-repository decision recorded by `oat pjm init`:
@@ -1042,6 +1047,13 @@ grandfathered as `inferred-legacy`, and existing installs remain additive. One
 inert per-pack install flag was removed, and several commands you already run
 behave differently.
 
+OAT is versioned 0.x, and as this section shows, defaults and exit codes can
+change between 0.x releases. Release notes for each version, including the
+list of merged changes, are published on the repository's
+[GitHub Releases page](https://github.com/voxmedia/open-agent-toolkit/releases).
+The repository does not keep a separate `CHANGELOG` file. Read the notes for
+each version you skip before you update a team's installation.
+
 ### Install scope defaults flipped to user
 
 Every pack's fresh-install default is now **user** scope; it used to be project
@@ -1193,7 +1205,14 @@ repository so every clone gets it.
 | File-backed backlog, roadmap, decisions, tracker bindings  | `project-management`, then explicitly adopt PJM |
 
 The interactive picker selects every pack except `project-management`; a
-non-interactive install includes all eight. Installing `project-management`
+non-interactive install includes all eight. To install only one pack, name it:
+for example, `oat tools install research --scope user` installs just the
+`research` pack (plus the two `utility` dispatch skills it depends on). The
+`brainstorm` pack is labeled "always-on" because, at its default user scope,
+its skill is available in every repository you open. It does not start on its
+own: it enters brainstorm mode only when you run `/oat-brainstorm` or
+explicitly ask to brainstorm, and it does not activate for review, debugging,
+PR, status, or implementation questions. Installing `project-management`
 only makes its commands available. The repository's planning files are not
 created until someone runs `oat pjm init` (see [Install vs. initialize](#install-vs-initialize)).
 

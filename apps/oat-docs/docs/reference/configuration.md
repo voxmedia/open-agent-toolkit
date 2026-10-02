@@ -72,9 +72,9 @@ For a guided pass instead of individual commands, run the `/oat-doctor` skill (c
 
 These labels match what `oat config dump` emits, so tooling that consumes either command can rely on the same vocabulary.
 
-:::note Upgrade note
-Earlier CLI versions returned `config.json` / `config.local.json` / `env` / `default` as the `source` strings. External scripts that previously matched on `"source":"config.json"` or `"source":"config.local.json"` should update to match the new `shared` / `local` labels. This change was made to align the `oat config get` / `oat config list` output with `oat config dump` and to avoid confusing users about which file was consulted.
-:::
+> [!NOTE]
+> **Upgrade note.**
+> Earlier CLI versions returned `config.json` / `config.local.json` / `env` / `default` as the `source` strings. External scripts that previously matched on `"source":"config.json"` or `"source":"config.local.json"` should update to match the new `shared` / `local` labels. This change was made to align the `oat config get` / `oat config list` output with `oat config dump` and to avoid confusing users about which file was consulted.
 
 ## Shared repo config you will touch most often
 
@@ -740,6 +740,22 @@ Without those settings, non-interactive retro generation records proposals but
 does not apply or file them. Interactive runs still present the applicable
 promotion and filing choices before side effects.
 
+What leaves your repository through retro filing: `oat-project-retro-file`
+files the retro's "OAT Upstream Feedback" items (`UP-01`, `UP-02`, and so on;
+each is a title plus a problem, evidence summary, and suggested direction) as
+GitHub issues in the upstream repository. That repository is
+`workflow.retro.upstreamRepo` when set and `voxmedia/open-agent-toolkit` when
+it is not. Nothing is filed by default: the skill runs only when you ask for
+it, an interactive run asks you to confirm each destination and each item, and
+a non-interactive run files nothing for a lane whose filing key is unset or
+`none`. When the source repository is private and the destination is public,
+the skill removes private log excerpts, internal URLs, credential-shaped
+strings, and private identifiers before posting, and does not post an item it
+cannot sanitize safely. To stop non-interactive upstream filing, run
+`oat config set workflow.retro.filing.upstream none`; to send upstream items to
+a different repository, run
+`oat config set workflow.retro.upstreamRepo <owner/name>`.
+
 The two project-log keys use the standard workflow precedence:
 `local > shared > user > default`.
 
@@ -798,22 +814,18 @@ Workflow preferences resolve through three config surfaces, with `local > shared
 ```bash
 # User-level: applies to all repos on this machine
 oat config set workflow.hillCheckpointDefault final --user
-oat config set workflow.archiveOnComplete true --user
-oat config set workflow.createPrOnComplete true --user
-oat config set workflow.postImplementSequence pr --user
 oat config set workflow.reviewExecutionModel subagent --user
 oat config set workflow.autoReviewAtHillCheckpoints true --user
 oat config set workflow.designMode selective --user
-oat config set workflow.dispatchCeiling.preset balanced --user
-oat config adopt dispatch-matrix --user
-oat config set workflow.autoArtifactReview.plan true --user
-oat config set workflow.autoArtifactReview.analysis true --user
+oat config set workflow.autoNarrowReReviewScope true --user
+oat config adopt dispatch-matrix --user  # your own model ladder; sets no policy
 
 # Shared repo: team decision for this repo
+oat config set workflow.archiveOnComplete true --shared
+oat config set workflow.postImplementSequence docs-pr --shared
 oat config set workflow.createPrOnComplete false --shared
 oat config set workflow.designMode collaborative --shared
-oat config set workflow.dispatchCeiling.preset balanced --shared
-oat config set workflow.dispatchCeiling.providers.cursor.high composer-2.5 --shared
+oat config set workflow.dispatchCeiling.providers.cursor.high composer-2.5 --shared  # one ladder cell
 oat config set workflow.autoArtifactReview.plan false --shared
 oat config set workflow.projectLog auto --shared
 oat config set workflow.projectLogLedgerPath .oat/repo/reference/project-observations.md --shared
@@ -821,9 +833,29 @@ oat config set workflow.projectLogLedgerPath .oat/repo/reference/project-observa
 # Repo-local: personal override for this repo (default when no flag)
 oat config set workflow.hillCheckpointDefault every
 oat config set workflow.designMode draft
-oat config set workflow.dispatchCeiling.providers.codex medium  # Advanced: per-provider override
 oat config set workflow.autoArtifactReview.analysis false
 ```
+
+The user-level workflow preference lines use only keys that this page lists as
+safe personal defaults in [Choosing the right surface](#choosing-the-right-surface-personal-vs-per-repo).
+The dispatch lines adopt a model ladder and set one ladder cell; neither sets
+a dispatch policy. The examples deliberately leave out the legacy
+`workflow.dispatchCeiling.preset` key and bare per-provider values such as
+`workflow.dispatchCeiling.providers.codex medium`: both still work, but they
+replace that scope's ladder columns with a single legacy ceiling, and a
+dispatch policy set in any config file overrides every project's own choice.
+Read the warning below and [Dispatch Policy](../workflows/advanced/dispatch-ceiling.md)
+before setting either.
+The completion and PR keys (`workflow.archiveOnComplete`,
+`workflow.createPrOnComplete`, and `workflow.postImplementSequence`) appear in
+the shared block instead. A value in `~/.oat/config.json` applies in every
+repository on your machine that does not set the same key in its own
+`.oat/config.json` or `.oat/config.local.json`, because OAT resolves each key
+as local, then shared, then user, then the built-in default. Whether those
+completion keys are safe depends on each repository's archive and
+documentation settings, so set them per repository. The
+`workflow.autoArtifactReview.*` keys already default to `true`; set them only
+in a repository that opts out, as the shared and repo-local examples show.
 
 The legacy preset and bare-provider examples above remain readable compatibility
 syntax, not recommended complete-ladder setup. They can replace candidate

@@ -25,6 +25,8 @@ OAT lifecycle order:
 
 Full spec-driven design supports three interaction modes: collaborative, selective collaborative, and draft-and-review. Selective collaborative drafts routine sections silently and presents high-risk or uncertain sections for live review. Quick-start lightweight design stays simpler and offers only collaborative or draft-and-review. See [Design Modes](planning/design-modes.md) for details.
 
+For a one-page view of where people approve and what runs automatically in each mode, see [Approvals and Automation](../approvals-and-automation.md).
+
 ## Quick Look
 
 - What it does: explains the end-to-end lifecycle for tracked OAT projects, including alternate quick, lite, and import lanes.
@@ -225,6 +227,8 @@ This distinction matters during completion: `oat-project-complete` can skip the 
 
 ### Auto-review at HiLL checkpoints
 
+When `workflow.autoReviewAtHillCheckpoints` is enabled or `plan.md` frontmatter sets `oat_auto_review_at_hill_checkpoints`, completing a HiLL checkpoint automatically runs the extra lifecycle review scoped to every implementation phase not already covered by a passed whole-phase code review, through the just-completed checkpoint. Mid-implementation multi-phase reviews use inclusive phase-range scopes such as `p02-p03`; the final implementation checkpoint uses `code final`. The review uses auto-disposition mode (low findings auto-converted to fix tasks, no user prompts). The preference is unset by default; interactive implementation asks with "no" suggested, while autonomous non-lite implementation forces it on. Legacy `autoReviewAtCheckpoints` and `oat_auto_review_at_checkpoints` are still read as fallbacks. This does not control Tier 1 per-phase `oat-reviewer` gates.
+
 ### Approval-aware post-implementation sequencing
 
 `workflow.postImplementSequence` can use the legacy string values or a structured
@@ -263,8 +267,6 @@ does not offer another retro; it may note unsettled promotion or filing
 registers. Non-interactive completion skips this offer, so autonomous
 generation occurs only through an explicitly configured post-approval `retro`
 step.
-
-When `workflow.autoReviewAtHillCheckpoints` is enabled or `plan.md` frontmatter sets `oat_auto_review_at_hill_checkpoints`, completing a HiLL checkpoint automatically runs the extra lifecycle review scoped to every implementation phase not already covered by a passed whole-phase code review, through the just-completed checkpoint. Mid-implementation multi-phase reviews use inclusive phase-range scopes such as `p02-p03`; the final implementation checkpoint uses `code final`. The review uses auto-disposition mode (low findings auto-converted to fix tasks, no user prompts). The preference is unset by default; interactive implementation asks with "no" suggested, while autonomous non-lite implementation forces it on. Legacy `autoReviewAtCheckpoints` and `oat_auto_review_at_checkpoints` are still read as fallbacks. This does not control Tier 1 per-phase `oat-reviewer` gates.
 
 ### Phase-review setup during planning
 
@@ -312,7 +314,7 @@ See [Implementation Execution](execution/implementation-execution.md) for the fu
 
 ## Alternate lifecycle lanes
 
-### Quick lane diagram
+### Quick lane steps
 
 1. `oat-project-quick-start` (adaptive discovery — provide a project name and optional description; if only the name is provided, quick-start asks for the missing description before discovery. Well-understood requests synthesize quickly, exploratory requests invest in solution space exploration. Before scaffolding, the skill checks inherited git state and asks whether to commit, proceed, or abort when the worktree is already dirty.)
 2. Decision point: straight to plan, optional lightweight `design.md`, or promote to spec-driven
@@ -320,14 +322,14 @@ See [Implementation Execution](execution/implementation-execution.md) for the fu
 4. `oat-project-review-provide` / `oat-project-pr-final`
 5. Optional `oat-project-promote-spec-driven` to backfill spec-driven lifecycle artifacts in-place
 
-### Lite lane diagram
+### Lite lane steps
 
 1. `oat-project-lite` runs one batched interview, authors a single-phase `plan.md` with validation criteria, and pauses once for approval
 2. Implement: `oat-project-implement` runs the single phase without HiLL checkpoint prompts
 3. Pass the mandatory final review, then route directly to `oat-project-pr-final`
 4. Optional `oat project promote <project-path> --to quick` when the work no longer fits one sitting
 
-### Import lane diagram
+### Import lane steps
 
 1. `oat-project-import-plan` (checks inherited git state before import scaffolding so sync-generated or unrelated dirty files do not silently roll into project bookkeeping)
 2. Implement: `oat-project-implement` (sequential by default; parallel when `oat_plan_parallel_groups` is declared)

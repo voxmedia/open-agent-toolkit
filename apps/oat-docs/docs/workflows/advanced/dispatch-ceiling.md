@@ -23,6 +23,32 @@ For raw config keys, see [Configuration](../../reference/configuration.md).
 For the root-owned phase-agent loop, see
 [Implementation Execution](../projects/execution/implementation-execution.md).
 
+To pick a tier for a project, start with
+[Which tier for which work](#which-tier-for-which-work) and the rest of
+[Choosing policy and ladder ownership](#choosing-policy-and-ladder-ownership)
+near the end of this page.
+
+## How each provider applies the cap
+
+The cap is the named ceiling: the highest tier a project or phase may use. A
+provider is the agent tool running OAT. How firmly the cap holds depends on
+the provider:
+
+- **Codex: enforced.** OAT launches each phase on an agent role that
+  `oat sync` generated, pinned to one model and effort.
+- **Claude: enforced.** OAT launches a generated role pinned to one model and
+  effort, or passes the exact model on each call.
+- **Cursor: pinned, not verified.** OAT launches a generated role pinned to
+  the mapped model, but Cursor can substitute a different model without an
+  error, for example when your plan or account cannot use the pinned one or
+  the pin has a typo. OAT records the model it requested, not the model that
+  ran.
+- **Other providers: advisory.** OAT has no way to pin a model there, so the
+  cap is only a suggestion.
+
+The full rules are in [Provider Enforcement](#provider-enforcement) and
+[Cursor evidence authority](#cursor-evidence-authority).
+
 ## Named Policy Choices
 
 | Choice                  | Mode    | Named maximum | Eligible configured tiers                |
@@ -45,6 +71,18 @@ implementation.
 
 ## Ownership and Adoption
 
+**Who chose the bundled ladder.** OAT ships a recommended ladder, the bundled
+recommendation. OAT's maintainers choose which models go in each tier and in
+what order, using provider documentation, vendor benchmarks and their own
+model-selection guidance, and they refresh it as providers release new models
+(see [Updating Model Guidance](../../contributing/updating-model-guidance.md)).
+OAT has not compared these models on its own workloads, so treat the ladder as
+the maintainers' recommended starting point, not a measured ranking. Your team
+does not have to use it as shipped. You can adopt it and then edit any cell in
+the config file that owns it (see [Config Shapes](#config-shapes)), or write
+your own cells without adopting. Rerunning adoption later replaces edited cells
+unless you pass `--keep-existing`.
+
 Adopt the complete bundled recommendation into one explicit owning scope:
 
 ```bash
@@ -57,6 +95,10 @@ oat config adopt dispatch-matrix --local
 # Personal defaults across repositories
 oat config adopt dispatch-matrix --user
 ```
+
+With no scope flag, `oat config adopt dispatch-matrix` writes repo-local config
+(`.oat/config.local.json`), the same as `--local`. The examples on this page
+pass a flag so the owning scope is always explicit.
 
 Adoption replaces populated cells from the bundled recommendation in the
 chosen scope, fills missing cells, and retains extra custom tiers when the
@@ -87,9 +129,10 @@ Run the same command without `--dry-run` to replace bundled cells. Use
 
 Version `2026-10-01.1` is the current bundled recommendation. It prefers
 GPT-6 Luna and GPT-6.1 Sol in Codex, then Sol 6.1 xhigh, Astra high, and Astra xhigh in
-Codex Frontier. Astra's task advantage has not been measured locally; this is
-an explicit user-directed preference, not acceptance by the separately
-maintained model-selection policy. Sonnet 5.5 medium replaces Sonnet 5 medium
+Codex Frontier. OAT's maintainers added the Astra entries as a preference:
+public benchmarks show task-dependent gains for Astra over GPT-6 Sol, but OAT
+has not tested Astra on its own workloads, and the maintainers' separate
+model-selection review has not yet confirmed the choice. Sonnet 5.5 medium replaces Sonnet 5 medium
 in Claude Economy; the older generation stays supported for explicit cells.
 Opus 5.5 low/medium/high remains in Claude High.
 The Claude low option suits bounded intelligent recon in Balanced or High;
@@ -100,9 +143,9 @@ Opus 5.5 low above Terra high, High orders Sol medium, Opus low, Sol high,
 Opus medium, then Opus high, and Frontier places Opus high and xhigh between
 Sol max and Fable 5.1. Grok 4.6 medium replaces Grok 4.5 high at the bottom of
 Balanced, and Fable 5.1 thinking high replaces Fable 5 as Frontier's terminal
-target. The ordering is an explicit user-directed preference informed by
-vendor benchmarks and the model-selection matrix, not a local workload
-comparison. Grok 4.5 and Fable 5 stay supported for explicit configurations.
+target. OAT's maintainers chose this ordering using vendor benchmarks and their
+model-selection guidance; it is not the result of comparing models on OAT's own
+workloads. Grok 4.5 and Fable 5 stay supported for explicit configurations.
 Rerunning adoption replaces the bundled cells in the chosen scope; use
 `--keep-existing` to preserve explicit older cells. For the complete
 maintenance procedure, see
@@ -627,6 +670,25 @@ and gates choose their reviewers separately.
   reviewer from a different model family, add a
   [gate](workflow-gates.md#choosing-gate-posture) instead.
 - If the provider's own settings must stay untouched, choose Inherit.
+
+### Which tier for which work
+
+The tier is a cap, not a target: for each phase the main session still picks
+one candidate at or below it. A Dispatch Profile row is an optional per-phase
+limit in `plan.md` that can lower the cap for one phase.
+
+| Work                                                                                              | Tier to start with                                                                                     | What the tier limits                                                                                                                                                                                          | Cost and speed direction                                      |
+| ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Routine, bounded work: one component and a clear outcome, such as a bug fix                       | Balanced, or Economy if cost matters most                                                              | Phase agents use only Economy and Balanced candidates. Per-phase and final code reviews run on the last Balanced candidate                                                                                    | Lower cost; usually faster                                    |
+| Ambiguous or cross-cutting work: a broad change across several components                         | High                                                                                                   | Economy through High candidates are eligible. Code reviews run on the last High candidate                                                                                                                     | Higher, because every implementation code review runs at High |
+| Consequential or high-risk change: security-sensitive, or a missed defect costs more than the run | High. Choose Frontier only if every implementation code review should run on Frontier's last candidate | At Frontier all four tiers are eligible, and its last candidate may need model access your account lacks. For a reviewer from a different model family, add a [gate](workflow-gates.md#choosing-gate-posture) | Higher at High; highest and usually slowest at Frontier       |
+| Cost-sensitive team                                                                               | Economy for routine work and Balanced for normal work, set per project                                 | Economy allows only Economy candidates. A Dispatch Profile row can lower one phase, but code reviews still run at the project cap                                                                             | Lowest of the managed tiers                                   |
+
+OAT sets no prices and does not measure cost or speed. What a run costs depends
+on your provider plan and on the models in your ladder. The directions above
+assume a ladder ordered like the bundled one, where higher tiers hold larger
+models or higher effort settings, which usually cost more per run and take
+longer.
 
 ### Where the ladder lives
 

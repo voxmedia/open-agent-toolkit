@@ -45,6 +45,17 @@ const manifest: readonly PackDefinition[] = [
   },
 ];
 
+function rowCells(block: string, marker: string): string[] {
+  const row = block
+    .split('\n')
+    .find((line) => line.startsWith('|') && line.includes(marker));
+  assert.ok(row, `No table row containing ${marker}`);
+  return row
+    .split(/(?<!\\)\|/)
+    .slice(1, -1)
+    .map((cell) => cell.trim());
+}
+
 async function fixture() {
   const repoRoot = await mkdtemp(join(tmpdir(), 'oat-skill-catalog-'));
   roots.push(repoRoot);
@@ -130,8 +141,17 @@ test('renders canonical facts, escaped Markdown, declared visibility and relativ
   );
   assert.ok(block.includes('user: not declared; model disabled: not declared'));
   assert.ok(block.includes('user: true; model disabled: false'));
-  assert.ok(block.includes('Requires project'));
-  assert.ok(block.includes('Project optional'));
+  assert.deepEqual(rowCells(block, '| Skill '), [
+    'Skill',
+    'Description',
+    'Visibility',
+    'Needs an active project?',
+  ]);
+  assert.ok(!block.includes('Project applicability'));
+  // Mapping values stay required/optional/none; only the rendered words change.
+  assert.equal(rowCells(block, '`zeta-skill`').at(-1), 'Yes');
+  assert.equal(rowCells(block, '`alpha-skill`').at(-1), 'Optional');
+  assert.ok(block.includes('“Needs an active project?” says whether'));
   assert.ok(
     block.includes('[`alpha-skill`](../workflows/guide.md#alpha-skill)'),
   );
@@ -152,7 +172,7 @@ test('renders canonical facts, escaped Markdown, declared visibility and relativ
   validation.mapping.skills[1]!.applicability = 'none';
   const grouped = await renderSkillCatalog(validation);
   assert.ok(grouped.indexOf('### Advanced') < grouped.indexOf('### Research'));
-  assert.ok(grouped.includes('No existing project required'));
+  assert.equal(rowCells(grouped, '`alpha-skill`').at(-1), 'No');
   assert.equal(
     (
       await format('skills/index.md', block, {

@@ -16,13 +16,13 @@ selects an exec target, runs the prompt, and exits with the child process
 status. Use `oat gate review` when the command is specifically an OAT review
 gate that should inspect the produced review artifact.
 
-:::note Release note: default avoidance changed
-Gate dispatch now defaults to `--avoid same-family`, not `same-runtime`.
-For multi-family providers such as Cursor, this prefers a different model
-family, but falls back to the best available target with a recorded warning
-when diversity is unavailable. Inspect `diversity.achieved`; use `--avoid none` only when
-you intentionally allow same-family review.
-:::
+> [!NOTE]
+> **Release note: default avoidance changed.**
+> Gate dispatch now defaults to `--avoid same-family`, not `same-runtime`.
+> For multi-family providers such as Cursor, this prefers a different model
+> family, but falls back to the best available target with a recorded warning
+> when diversity is unavailable. Inspect `diversity.achieved`; use `--avoid none` only when
+> you intentionally allow same-family review.
 
 ## Gate config
 
@@ -1070,8 +1070,14 @@ skill reviews the plan before any code is written; a gate on
 needs a working reviewer CLI on the machine and adds time to every run.
 
 `oat gate set` writes to your user config unless you pass `--layer`. A gate set
-with `--layer shared` is committed with the repository, applies to everyone,
-and wins over a user-level gate for the same skill.
+with `--layer shared` is committed with the repository and wins over a
+user-level gate for the same skill. It does not bind every machine: a
+repo-local setting, stored in the gitignored `.oat/config.local.json`,
+overrides the shared gate on that machine (for example
+`oat gate set <skill> --disable --layer local`), and a project can disable a
+configured gate in its own `state.md` (see
+[Per-project gate overrides](#per-project-gate-overrides)). See
+[Can a teammate weaken a team rule?](../approvals-and-automation.md#can-a-teammate-weaken-a-team-rule).
 
 - If you are a solo developer and want speed, or you have only one agent CLI
   installed, skip gates.

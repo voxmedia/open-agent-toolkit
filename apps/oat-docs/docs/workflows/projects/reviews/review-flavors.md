@@ -214,7 +214,10 @@ Examples below are agent skill invocations, not terminal `oat` subcommands.
 
 Review a bounded set of local changes without creating or resuming an OAT
 project. Scope can be unstaged changes, staged changes, an explicit file list
-or a commit range.
+or a commit range. Neither this skill nor `oat-review-provide-remote` can send
+the review to a different model or runtime: each runs the review inline in the
+agent session where you invoke it, so to get a review from another model,
+invoke the skill in that model's agent tool.
 
 **Invocation:**
 

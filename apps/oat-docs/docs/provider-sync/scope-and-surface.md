@@ -25,7 +25,7 @@ Rules are currently project-scoped canonical content. Unlike skills and agents, 
 
 - Mutate by default; `--dry-run` to preview
 - Explicit `--dry-run` for safe preview of mutations
-- Scoped destructive actions only for manifest-tracked entries
+- Deletions are limited to manifest-tracked entries: sync removes a view only when the manifest records it and its canonical source is gone. A provider file with no canonical source and no manifest entry is reported as a stray by `oat status`, not deleted. Writing a view is not limited this way: sync replaces whatever sits at a view's expected path, including an untracked file (see the warning under [Choosing sync scope](#choosing-sync-scope))
 - Cross-provider compatibility via adapters
 - Native-read assets stay canonical while provider-local adoption sources remain discoverable independently
 - Obsolete managed mappings are deleted only when their provider paths are verified clean; changed or unverified paths are preserved and detached from manifest ownership
