@@ -730,3 +730,103 @@ describe('wave closeout invokes the companion', () => {
     ).toEqual({ kind: 'completed', exception: false });
   });
 });
+
+describe('the companion never creates a PR', () => {
+  function interactivePrRules(): {
+    configOpens: boolean;
+    trackedOpenSkips: boolean;
+    createGatedOnShouldOpen: boolean;
+    syncRunsForOpenPr: boolean;
+  } {
+    const interactive = readRepoFile(INTERACTIVE_PATH);
+    const flat = normalize(interactive);
+    const stepEleven = sliceBetween(
+      interactive,
+      '### Step 11: Open PR in GitHub (Conditional)',
+      '### Step 11.5:',
+    );
+    return {
+      configOpens: flat.includes(
+        '**If `PR_ON_COMPLETE` is `true` AND no tracked open PR exists:** Set `SHOULD_OPEN_PR="true"`. Skip the Open PR question.',
+      ),
+      trackedOpenSkips: flat.includes(
+        'If `oat_pr_status` is `open`, do not ask the Open PR question. Set `SHOULD_OPEN_PR="false"`',
+      ),
+      createGatedOnShouldOpen:
+        stepEleven.includes('**Skip if `SHOULD_OPEN_PR` is false.**') &&
+        stepEleven.includes('gh pr create'),
+      syncRunsForOpenPr: flat.includes(
+        '**Run only when `WAS_PR_OPEN_AT_START="true"`',
+      ),
+    };
+  }
+
+  function companionForcesNoPr(): boolean {
+    const stepFive = normalize(
+      sliceBetween(
+        readRepoFile(SKILL_PATH),
+        '### Step 5: Complete the Project',
+        '### Batch Mode',
+      ),
+    );
+    return (
+      stepFive.includes(
+        'set `SHOULD_OPEN_PR="false"`, whatever `workflow.createPrOnComplete` or `oat_pr_status` says',
+      ) && stepFive.includes('This skill never runs `gh pr create`')
+    );
+  }
+
+  /**
+   * Walk the interactive PR decisions (Step 2 config and tracked-PR rules,
+   * the Step 11 create gate, the Step 11.5 sync gate) with or without the
+   * companion's Step 5 override.
+   */
+  function simulatePr(
+    prStatus: string | null,
+    createPrOnComplete: boolean,
+    companion: boolean,
+  ): { prCreate: boolean; prSync: boolean } {
+    const rules = interactivePrRules();
+    expect(rules.createGatedOnShouldOpen).toBe(true);
+    let shouldOpen = false;
+    if (rules.configOpens && createPrOnComplete && prStatus !== 'open') {
+      shouldOpen = true;
+    }
+    if (rules.trackedOpenSkips && prStatus === 'open') {
+      shouldOpen = false;
+    }
+    if (companion && companionForcesNoPr()) {
+      shouldOpen = false;
+    }
+    return {
+      prCreate: shouldOpen,
+      prSync: rules.syncRunsForOpenPr && prStatus === 'open',
+    };
+  }
+
+  it('the interactive flow alone would create a PR for a merged project with createPrOnComplete', () => {
+    expect(simulatePr('merged', true, false).prCreate).toBe(true);
+  });
+
+  it('a merged project with createPrOnComplete true completes without a PR-create attempt', () => {
+    expect(decide({ ...MERGED_BATCH_MEMBER, prStatus: 'merged' })).toEqual({
+      kind: 'completed',
+      exception: false,
+    });
+    expect(simulatePr('merged', true, true)).toEqual({
+      prCreate: false,
+      prSync: false,
+    });
+  });
+
+  it('the tracked open path still updates the existing PR and creates none', () => {
+    expect(decide(REVIEWED_WAVE_OPEN_PR)).toEqual({
+      kind: 'completed',
+      exception: true,
+    });
+    expect(simulatePr('open', true, true)).toEqual({
+      prCreate: false,
+      prSync: true,
+    });
+  });
+});

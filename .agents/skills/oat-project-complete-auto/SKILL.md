@@ -222,20 +222,20 @@ Every question or confirmation in `oat-project-complete` resolves as follows.
 A row marked "refuse" is checked during this preflight, so the completion
 steps never reach it.
 
-| `oat-project-complete` question or gate  | Resolution                                                                                                                               |
-| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Confirm completion (Step 2)              | Yes, from the opt-in plus the recognized requesting step (and the program checkpoint in batch mode).                                     |
-| Archive (Step 2)                         | `workflow.archiveOnComplete` when set; local projects never archive; unset on a durable project: refuse.                                 |
-| Generate or refresh summary (Step 2)     | Yes when `summary.md` is missing or stale.                                                                                               |
-| Generate project retro (Step 2)          | Never offered: this run is non-interactive.                                                                                              |
-| Final project recap (Step 2)             | The persisted decision, else the lifecycle intent resolver in autonomous mode; a result that still needs a prompt: refuse.               |
-| Open PR (Step 2)                         | No. The precondition requires an existing merged or tracked open PR; `workflow.createPrOnComplete` is read and reported, never acted on. |
-| Final review not passed (Step 3.1)       | Refuse (preflight check 3).                                                                                                              |
-| Deferred Medium findings (Step 3.2)      | Unresolved items: refuse.                                                                                                                |
-| Documentation sync (Step 3.3)            | Blocking gate: refuse. Soft suggestion: continue without writing `oat_docs_updated`.                                                     |
-| Recap generation failure (Step 3.6)      | The interactive autonomy rule: retry once, then persist `skip/failed_attempt`.                                                           |
-| Retirement sweep findings (Step 3.7)     | The interactive autonomy rule: record `deferred advisory`.                                                                               |
-| Project-log synthesis pending (Step 3.7) | Warn and continue, as the interactive step does.                                                                                         |
+| `oat-project-complete` question or gate  | Resolution                                                                                                                                                                                                 |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Confirm completion (Step 2)              | Yes, from the opt-in plus the recognized requesting step (and the program checkpoint in batch mode).                                                                                                       |
+| Archive (Step 2)                         | `workflow.archiveOnComplete` when set; local projects never archive; unset on a durable project: refuse.                                                                                                   |
+| Generate or refresh summary (Step 2)     | Yes when `summary.md` is missing or stale.                                                                                                                                                                 |
+| Generate project retro (Step 2)          | Never offered: this run is non-interactive.                                                                                                                                                                |
+| Final project recap (Step 2)             | The persisted decision, else the lifecycle intent resolver in autonomous mode; a result that still needs a prompt: refuse.                                                                                 |
+| Open PR (Step 2)                         | No, forced by Step 5 even where the interactive Step 2 would not ask. The precondition requires an existing merged or tracked open PR; `workflow.createPrOnComplete` is read and reported, never acted on. |
+| Final review not passed (Step 3.1)       | Refuse (preflight check 3).                                                                                                                                                                                |
+| Deferred Medium findings (Step 3.2)      | Unresolved items: refuse.                                                                                                                                                                                  |
+| Documentation sync (Step 3.3)            | Blocking gate: refuse. Soft suggestion: continue without writing `oat_docs_updated`.                                                                                                                       |
+| Recap generation failure (Step 3.6)      | The interactive autonomy rule: retry once, then persist `skip/failed_attempt`.                                                                                                                             |
+| Retirement sweep findings (Step 3.7)     | The interactive autonomy rule: record `deferred advisory`.                                                                                                                                                 |
+| Project-log synthesis pending (Step 3.7) | Warn and continue, as the interactive step does.                                                                                                                                                           |
 
 ### Step 4: Record a Completion-Before-Merge Exception
 
@@ -272,7 +272,16 @@ For each project that passed Steps 3 and 4, in the order given:
    through 12, supplying the answer table above wherever it would ask. Never
    complete from a remembered version of that skill. Its own guards still run,
    including the Step 1.5 closeout gate and the Step 5 closeout re-check.
-5. Add the provenance to the completion bookkeeping commit body that Step 10
+5. Override the PR decision. Supplying answers only where the interactive
+   flow asks is not enough: its Step 2 sets `SHOULD_OPEN_PR="true"` without
+   asking when `workflow.createPrOnComplete` is `true` and no tracked PR is
+   open, which includes a merged PR. Once its Step 2 has resolved its answers,
+   and again before its Step 11, set `SHOULD_OPEN_PR="false"`, whatever
+   `workflow.createPrOnComplete` or `oat_pr_status` says. This skill never runs
+   `gh pr create`. Updates to an existing tracked PR proceed as the interactive
+   steps require, including the Step 11.5 description sync when
+   `WAS_PR_OPEN_AT_START="true"`.
+6. Add the provenance to the completion bookkeeping commit body that Step 10
    creates: a `Requested-by: {--requested-by value}` line and, when an exception
    was recorded, a `Completion-before-merge exception: {oat_pr_url}` line. When
    the archive owns the lifecycle commit (a synced archive), the run report
