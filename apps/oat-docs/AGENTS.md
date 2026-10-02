@@ -56,7 +56,7 @@ Use real Markdown links for reader-facing guide pointers. The app checker valida
 
 ## Reference
 
-- `docs/quickstart.md` — first-run setup instructions for contributors joining this docs app.
+- `docs/getting-started/quickstart.md` — first-run setup instructions for contributors joining this docs app.
 - `docs/contributing/` — authoring conventions, Markdown features (code blocks, mermaid, GFM alerts), skill conventions. The `index.md` in this directory is the entry point; its `## Contents` lists the per-topic pages.
 - Root `AGENTS.md` in `open-agent-toolkit` — repo-wide pointer and shared conventions. For scaffolded docs apps, this file typically includes a `## Documentation` section listing docs root, framework, and index file; add one if it's missing.
 - `oat-docs-analyze` — read-only audit command.
