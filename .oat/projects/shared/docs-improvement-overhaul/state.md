@@ -54,13 +54,13 @@ oat_implement_exit_gate:
   }
 oat_post_implement_sequence:
   {
-    'status': 'awaiting_approval',
+    'status': 'post_approval',
     'source': 'configured',
     'final_phase': 'p06',
     'pre_approval': ['summary', 'document', 'pr'],
     'pre_approval_completed': ['summary', 'document', 'pr'],
-    'approval': 'pending',
-    'approval_source': null,
+    'approval': 'approved',
+    'approval_source': 'user',
     'post_approval': [],
     'post_approval_completed': [],
     'failure': null,
