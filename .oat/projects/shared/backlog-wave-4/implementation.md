@@ -694,7 +694,30 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 ## Test Results
 
-Pending (p07-t03).
+Full Definition of Done (p07-t03), 2026-10-02, at head
+`59390951b9237d52c635cab2f34db28cf7bb7480` (after p07-t02; the p07-t03 commit
+changes only this section). Each gate ran as `<gate> > <log> 2>&1` with its
+exit code captured explicitly; logs are under
+`.oat/repo/analysis/backlog-wave-4/dod/` (gitignored, machine-local).
+`release:check-versions` ran after `git fetch origin main` (exit 0; `origin/main`
+at 0.3.13).
+
+| Order | Gate                                                 | Exit | Notes                                                                                                                  |
+| ----- | ---------------------------------------------------- | ---- | ---------------------------------------------------------------------------------------------------------------------- |
+| 0     | `pnpm build` (real `HOME`)                           | 0    | 0 cached, 5 total                                                                                                      |
+| 1     | `pnpm check`                                         | 0    | 0 cached, 11 total                                                                                                     |
+| 2     | `pnpm type-check`                                    | 0    | 0 cached, 10 total                                                                                                     |
+| 3     | `HOME=$(mktemp -d) pnpm exec turbo run test --force` | 0    | 0 cached, 10 total; no cache replay; CLI 8172 tests / 406 files, control-plane 153, docs-config 10, docs-transforms 31 |
+| 4     | `pnpm build`                                         | 0    | 0 cached, 5 total                                                                                                      |
+| 5     | `pnpm run check:skill-bumps`                         | 0    | 14 changed skill and agent role bump checks against `origin/main`                                                      |
+| 6     | `pnpm release:check-versions`                        | 0    | lockstep 0.3.14 above `origin/main` 0.3.13                                                                             |
+| 7     | `pnpm release:validate`                              | 0    | five 0.3.14 tarballs validated                                                                                         |
+| 8     | `pnpm build:docs`                                    | 0    | 0 cached, 6 total                                                                                                      |
+| -     | `pnpm test:smoke`                                    | 0    | 163 pass, 0 fail                                                                                                       |
+| -     | `pnpm test:skills`                                   | 0    | 693 pass, 0 fail                                                                                                       |
+| -     | `pnpm test:scripts`                                  | 0    | 1 pass, 0 fail                                                                                                         |
+| -     | `pnpm lint`                                          | 0    | includes root `oxlint tools/smoke .agents/skills`                                                                      |
+| -     | `pnpm format`                                        | 0    |                                                                                                                        |
 
 ## Final Summary (for PR/docs)
 
