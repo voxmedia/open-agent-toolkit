@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p02-t01
+oat_current_task_id: p01-t03
 oat_generated: false
 ---
 
@@ -26,7 +26,7 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 2     | 2/2       |
+| Phase 1 | in_progress | 3     | 2/3       |
 | Phase 2 | pending     | 2     | 0/2       |
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 7     | 0/7       |
@@ -34,7 +34,7 @@ oat_generated: false
 | Phase 6 | pending     | 3     | 0/3       |
 | Phase 7 | pending     | 3     | 0/3       |
 
-**Total:** 2/24 tasks completed
+**Total:** 2/25 tasks completed
 
 ---
 
@@ -51,6 +51,11 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** 0cf8c6492
+
+### Task p01-t03: (review) Close p01 review findings M1, L1, L2
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -226,6 +231,15 @@ oat_generated: false
 - Implementer concern (non-blocking, outside the item): an `OAT_ASSETS_DIR`
   inside a directory copied file by file (`.agents/agents`, `.oat/scripts`) is
   not rejected; candidate follow-up at the fan-in.
+
+- Request `bw4-p01-review-1`: accepted; target
+  `oat-reviewer-claude-claude-opus-5-5-high`; reconnaissance not-attempted;
+  reviewed head `0b6b62319` (Step 7a ledger commit; ledger confirmed current);
+  `reviews/archived/p01-review-2026-10-02T172532Z.md`: 0 Critical, 0 High,
+  1 Medium, 2 Low (passes). Auto-review receive converted M1, L1, L2 to
+  `p01-t03` (symlink-plus-`..` containment bypass; untested physical
+  repository-root branch; destination equal to a file-copied source directory).
+  `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
 
 <!-- orchestration-runs-end -->
 
