@@ -16,7 +16,7 @@ repository you already have, and choose what to add.
 
 OAT does not run an up-front Git version check. Git compatibility is evaluated
 best-effort by each command, and a missing or unsupported Git operation makes
-that command fail with an error.
+that command fail with a system error.
 
 ## Install the CLI
 
