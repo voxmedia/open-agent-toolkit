@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p05-t01
+oat_current_task_id: p06-t01
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 8     | 8/8       |
-| Phase 2 | complete | 3     | 3/3       |
-| Phase 3 | complete | 5     | 5/5       |
-| Phase 4 | complete | 9     | 9/9       |
-| Phase 5 | pending  | 4     | 0/4       |
-| Phase 6 | pending  | 3     | 0/3       |
-| Phase 7 | pending  | 3     | 0/3       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 8     | 8/8       |
+| Phase 2 | complete    | 3     | 3/3       |
+| Phase 3 | complete    | 5     | 5/5       |
+| Phase 4 | complete    | 9     | 9/9       |
+| Phase 5 | in_progress | 4     | 4/4       |
+| Phase 6 | pending     | 3     | 0/3       |
+| Phase 7 | pending     | 3     | 0/3       |
 
-**Total:** 25/35 tasks completed
+**Total:** 29/35 tasks completed
 
 ---
 
@@ -189,27 +189,27 @@ oat_generated: false
 
 ## Phase 5: Completion
 
-**Status:** pending
+**Status:** in_progress
 
 ### Task p05-t01: Add the `workflow.autonomousComplete` opt-in
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 026f57881
 
 ### Task p05-t02: Add the `oat-project-complete-auto` companion skill
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** ba58a81c2
 
 ### Task p05-t03: Point wave closeout at the companion skill
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 1c1e38b09
 
 ### Task p05-t04: Tighten the pr-final ledger scan boundary prose
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 6edfc11b9
 
 ---
 
@@ -524,6 +524,20 @@ oat_generated: false
   `reviews/archived/p04-review-2026-10-02T213839Z.md` status `ok`, 0 findings.
 - Phase p04 outcome: complete; 9/9 tasks (7 planned, 2 review-fix); one root
   review round, one interrupted gate run (findings addressed), one clean gate.
+
+### Phase p05 dispatch
+
+- Request `bw4-p05-impl-1`: accepted and returned `DONE`; target
+  `oat-phase-implementer-claude-claude-opus-5-5-high`; commits
+  `026f57881..6edfc11b9` (p05-t01..t04); phase verification pass (build;
+  config 623; isolated-HOME validation, shared contracts, tools 1531;
+  validate-skills 66 skills; check:skill-bumps; format:root; docs check;
+  type-check; check; root oxlint); recovery 0/10. New skill
+  `oat-project-complete-auto` 1.0.0; wave-execute 1.9.6; wave-program 1.5.4;
+  pr-final not re-bumped. Branch-CLI `sync --scope project` restamped the
+  manifest `oatVersion` (committed with p05-t02). Root spot-check:
+  complete-auto contracts pass.
+  `Dispatch: scope=p05 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
 
 <!-- orchestration-runs-end -->
 
