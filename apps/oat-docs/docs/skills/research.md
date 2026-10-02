@@ -3,6 +3,8 @@ title: Research and Evaluate a Decision
 description: Choose a research skill, challenge its conclusions, and combine evidence without confusing research with implementation.
 ---
 
+# Research and Evaluate a Decision
+
 Use this family when you need evidence before committing to a direction. Start
 with `analyze` for something you already have, `deep-research` for a topic you
 need to investigate, or `compare` for named alternatives. Use `skeptic` to test

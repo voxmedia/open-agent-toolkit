@@ -3,6 +3,8 @@ title: Brainstorm Before Choosing a Workflow
 description: Explore a problem conversationally, compare approaches, and choose an explicit destination without starting implementation.
 ---
 
+# Brainstorm Before Choosing a Workflow
+
 ## oat-brainstorm
 
 **Invocation:** `/oat-brainstorm` is the reliable way to start it, or ask,

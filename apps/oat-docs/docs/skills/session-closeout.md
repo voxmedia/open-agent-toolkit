@@ -3,6 +3,8 @@ title: Summarize What Shipped
 description: Produce an evidence-backed shipping digest across projects and merged pull requests for a chosen reporting window.
 ---
 
+# Summarize What Shipped
+
 Use a shipping digest for a team update or periodic recap. It answers what
 shipped across a time window, not which task an active project should do next.
 

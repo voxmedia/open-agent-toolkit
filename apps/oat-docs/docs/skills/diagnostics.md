@@ -3,6 +3,8 @@ title: Diagnose Your OAT Setup
 description: Inspect OAT configuration, repository adoption, instructions, documentation, and installed tools before choosing a repair.
 ---
 
+# Diagnose Your OAT Setup
+
 ## oat-doctor
 
 **Invocation:** `/oat-doctor` for the diagnostic sweep, or
