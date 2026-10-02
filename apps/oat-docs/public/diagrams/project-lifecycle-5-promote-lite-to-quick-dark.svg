@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 804" width="680" height="804" role="img" aria-labelledby="title desc">
+  <title id="title">Promoting a lite project to quick</title>
+  <desc id="desc">Before: plan.md (five core sections plus adaptive Product Behavior / Technical Design) and state.md (oat_workflow_mode: lite) both feed oat project promote --to quick. The command derives discovery.md (derived from the lite plan, oat_ready_for: oat-project-quick-start), moves references/lite-plan.md (original lite plan, preserved), scaffolds plan.md (fresh quick-start template), and rewrites state.md (oat_workflow_mode: quick, oat_phase: discovery (complete), oat_ready_for: oat-project-quick-start).</desc>
+  <style>
+    svg {
+      --bg: #161d27;
+      --node: #1d2633;
+      --node-em: #1f2d42;
+      --border: #2b3646;
+      --text: #dde4ee;
+      --text-2: #9ba7b8;
+      --accent: #8fb6ee;
+      --muted: #8693a5;
+      --warn: #f0a868;
+    }
+    .bg { fill: var(--bg); }
+    .node { fill: var(--node); stroke: var(--border); stroke-width: 1.5; }
+    .node-em { fill: var(--node-em); stroke: var(--border); stroke-width: 1.5; }
+    .decision { fill: var(--node-em); stroke: var(--accent); stroke-width: 1.5; }
+    .group { fill: none; stroke: var(--border); stroke-width: 1.5; }
+    .edge { fill: none; stroke: var(--accent); stroke-width: 1.5; }
+    .arrowhead { fill: var(--accent); }
+    .label-bg { fill: var(--bg); }
+    .t { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; font-size: 15px; font-weight: 500; fill: var(--text); }
+    .t2 { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; font-size: 13px; fill: var(--text-2); }
+    .m { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; font-size: 15px; font-weight: 500; fill: var(--text); }
+    .m2 { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; font-size: 13px; fill: var(--text-2); }
+    .el { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; font-size: 13px; fill: var(--text-2); }
+    .gl { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.04em; fill: var(--text-2); }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
+      <path class="arrowhead" d="M0,0 L10,5 L0,10 z"/>
+    </marker>
+  </defs>
+  <rect class="bg" x="0" y="0" width="680" height="804" rx="12"/>
+  <path class="edge" d="M205,156 L205,194 Q205,202 213,202 L292,202 Q300,202 300,210 L300,227" marker-end="url(#arrow)"/>
+  <path class="edge" d="M505,138 L505,194 Q505,202 497,202 L388,202 Q380,202 380,210 L380,227" marker-end="url(#arrow)"/>
+  <path class="edge" d="M200,261 L128,261 Q120,261 120,269 L120,408 Q120,416 128,416 L213,416" marker-end="url(#arrow)"/>
+  <path class="edge" d="M200,261 L128,261 Q120,261 120,269 L120,503 Q120,511 128,511 L213,511" marker-end="url(#arrow)"/>
+  <path class="edge" d="M200,261 L128,261 Q120,261 120,269 L120,589 Q120,597 128,597 L213,597" marker-end="url(#arrow)"/>
+  <path class="edge" d="M200,261 L128,261 Q120,261 120,269 L120,693 Q120,701 128,701 L213,701" marker-end="url(#arrow)"/>
+  <rect class="label-bg" x="140.5" y="406" width="57" height="20" rx="4"/>
+  <text class="el" x="169" y="420.5" text-anchor="middle">derive</text>
+  <rect class="label-bg" x="147.5" y="501" width="43" height="20" rx="4"/>
+  <text class="el" x="169" y="515.5" text-anchor="middle">move</text>
+  <rect class="label-bg" x="133" y="587" width="72" height="20" rx="4"/>
+  <text class="el" x="169" y="601.5" text-anchor="middle">scaffold</text>
+  <rect class="label-bg" x="137" y="691" width="64" height="20" rx="4"/>
+  <text class="el" x="169" y="705.5" text-anchor="middle">rewrite</text>
+  <rect class="group" x="40" y="334" width="600" height="438" rx="12"/>
+  <text class="gl" x="56" y="356">After</text>
+  <rect class="group" x="40" y="32" width="600" height="144" rx="12"/>
+  <text class="gl" x="56" y="54">Before</text>
+  <rect class="node" x="60" y="72" width="290" height="84" rx="8"/>
+  <text class="m" x="205" y="101" text-anchor="middle">plan.md</text>
+  <text class="t2" x="205" y="119" text-anchor="middle">five core sections plus adaptive</text>
+  <text class="t2" x="205" y="137" text-anchor="middle">Product Behavior / Technical Design</text>
+  <rect class="node" x="390" y="72" width="230" height="66" rx="8"/>
+  <text class="m" x="505" y="101" text-anchor="middle">state.md</text>
+  <text class="m2" x="505" y="119" text-anchor="middle">oat_workflow_mode: lite</text>
+  <rect class="node-em" x="200" y="228" width="280" height="66" rx="8"/>
+  <text class="m" x="340" y="257" text-anchor="middle">oat project promote</text>
+  <text class="m" x="340" y="275" text-anchor="middle">--to quick</text>
+  <rect class="node" x="214" y="374" width="406" height="84" rx="8"/>
+  <text class="m" x="417" y="403" text-anchor="middle">discovery.md</text>
+  <text class="t2" x="417" y="421" text-anchor="middle">derived from the lite plan</text>
+  <text class="m2" x="417" y="439" text-anchor="middle">oat_ready_for: oat-project-quick-start</text>
+  <rect class="node" x="214" y="478" width="406" height="66" rx="8"/>
+  <text class="m" x="417" y="507" text-anchor="middle">references/lite-plan.md</text>
+  <text class="t2" x="417" y="525" text-anchor="middle">original lite plan, preserved</text>
+  <rect class="node" x="214" y="564" width="406" height="66" rx="8"/>
+  <text class="m" x="417" y="593" text-anchor="middle">plan.md</text>
+  <text class="t2" x="417" y="611" text-anchor="middle">fresh quick-start template</text>
+  <rect class="node" x="214" y="650" width="406" height="102" rx="8"/>
+  <text class="m" x="417" y="679" text-anchor="middle">state.md</text>
+  <text class="m2" x="417" y="697" text-anchor="middle">oat_workflow_mode: quick</text>
+  <text class="m2" x="417" y="715" text-anchor="middle">oat_phase: discovery (complete)</text>
+  <text class="m2" x="417" y="733" text-anchor="middle">oat_ready_for: oat-project-quick-start</text>
+</svg>

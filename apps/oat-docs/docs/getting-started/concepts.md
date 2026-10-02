@@ -9,17 +9,24 @@ OAT combines a provider-sync layer, reusable skills and CLI tooling, and an opti
 
 ## Choose What to Adopt
 
-```mermaid
-flowchart LR
-  GOAL["What do you\nneed first?"] --> SYNC["Align coding tools\nProvider Sync"]
-  GOAL --> SKILLS["Help with one task\nReusable Skills"]
-  GOAL --> WORK["Resume longer work\nWorkflows"]
-  GOAL --> DOCS["Maintain documentation\nMarkdown or a docs site"]
-  SYNC -.-> LATER["Add another path\nwhenever useful"]
-  SKILLS -.-> LATER
-  WORK -.-> LATER
-  DOCS -.-> LATER
-```
+=== "Diagram"
+
+    ![Four independent starting points: align coding tools with Provider Sync, help with one task with reusable skills, resume longer work with workflows, or maintain documentation; add another path whenever useful](/diagrams/adoption-paths-light.svg)
+    ![Four independent starting points: align coding tools with Provider Sync, help with one task with reusable skills, resume longer work with workflows, or maintain documentation; add another path whenever useful](/diagrams/adoption-paths-dark.svg)
+
+=== "Mermaid source"
+
+    ```mermaid
+    flowchart LR
+      GOAL["What do you\nneed first?"] --> SYNC["Align coding tools\nProvider Sync"]
+      GOAL --> SKILLS["Help with one task\nReusable Skills"]
+      GOAL --> WORK["Resume longer work\nWorkflows"]
+      GOAL --> DOCS["Maintain documentation\nMarkdown or a docs site"]
+      SYNC -.-> LATER["Add another path\nwhenever useful"]
+      SKILLS -.-> LATER
+      WORK -.-> LATER
+      DOCS -.-> LATER
+    ```
 
 - **Provider Sync:** `oat init --scope project`, choose providers, then `oat sync --scope project`.
 - **Reusable skills:** `oat tools install --scope user`; no repository initialization is needed.
@@ -36,16 +43,23 @@ Continue with [Provider Sync](../provider-sync/index.md), [Tool Packs](tool-pack
 
 OAT keeps canonical assets in repo-controlled locations and projects provider-specific views from that source of truth. The canonical form is what you edit and review directly; provider views are synchronized outputs that let Claude Code, Cursor, Copilot, Gemini, and Codex consume the same intent in their native layouts.
 
-```mermaid
-flowchart LR
-  SKILLS[".agents/skills/"] --> OAT["oat sync"]
-  AGENTS[".agents/agents/"] --> OAT
-  RULES[".agents/rules/"] --> OAT
-  OAT --> CLAUDE[".claude/"]
-  OAT --> CURSOR[".cursor/"]
-  OAT --> COPILOT[".github/"]
-  OAT --> CODEX[".codex/"]
-```
+=== "Diagram"
+
+    ![Canonical skills, agents and rules in .agents/ flow through oat sync into provider views under .claude/, .cursor/, .github/ and .codex/](/diagrams/provider-views-light.svg)
+    ![Canonical skills, agents and rules in .agents/ flow through oat sync into provider views under .claude/, .cursor/, .github/ and .codex/](/diagrams/provider-views-dark.svg)
+
+=== "Mermaid source"
+
+    ```mermaid
+    flowchart LR
+      SKILLS[".agents/skills/"] --> OAT["oat sync"]
+      AGENTS[".agents/agents/"] --> OAT
+      RULES[".agents/rules/"] --> OAT
+      OAT --> CLAUDE[".claude/"]
+      OAT --> CURSOR[".cursor/"]
+      OAT --> COPILOT[".github/"]
+      OAT --> CODEX[".codex/"]
+    ```
 
 Gemini CLI is a native read-only consumer; OAT does not generate a `.gemini/` view through sync.
 

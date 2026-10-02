@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 776" width="920" height="776" role="img" aria-labelledby="oat-adopt-title oat-adopt-desc">
+  <title id="oat-adopt-title">Adopt any part of OAT on its own</title>
+  <desc id="oat-adopt-desc">Four equal cards in a two-by-two grid, with no arrows between them, under the heading: Start with any one. Each works on its own. Plain monospace code blocks hold terminal commands for the installed oat CLI; highlighted boxes with an accent border and a small skill tag hold agent skills, which you invoke in your coding agent with a leading slash, not in a shell. Provider Sync: define skills and rules once and sync them across providers; run oat init --scope project, pick providers, then oat sync --scope project. Reusable Skills: research, review and idea skills for all your repos; run oat tools install --scope user. Workflows: tracked, resumable projects with plans, reviews and PRs; run oat init --scope project, then oat tools install workflows --scope project, then the skill /oat-project-quick-start. Docs Tooling: bootstrap and maintain a docs site for your repo; run oat init --scope project, then oat tools install docs --scope project, then the skill /oat-docs-bootstrap. A plus sign between the cards and a footer note say you can use one alone or add others any time.</desc>
+  <style>
+    svg {
+      --bg: #161d27;
+      --card: #1d2633;
+      --node-em: #1f2d42;
+      --border: #2b3646;
+      --code: #11171f;
+      --code-border: #2b3646;
+      --text: #dde4ee;
+      --text-2: #9ba7b8;
+      --accent: #8fb6ee;
+      --on-accent: #161d27;
+    }
+    .canvas { fill: var(--bg); stroke: var(--border); stroke-width: 1.5; }
+    .card { fill: var(--card); stroke: var(--border); stroke-width: 1.5; }
+    .rule { fill: var(--accent); }
+    .code { fill: var(--code); stroke: var(--code-border); stroke-width: 1.5; }
+    .chip { fill: var(--node-em); stroke: var(--accent); stroke-width: 1.5; }
+    .tag { fill: var(--accent); }
+    .plus-bg { fill: var(--bg); stroke: var(--border); stroke-width: 1.5; }
+    .plus { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linecap: round; }
+    .sans { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; }
+    .mono { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; }
+    .h { fill: var(--text); font-size: 28px; font-weight: 700; }
+    .title { fill: var(--text); font-size: 26px; font-weight: 700; }
+    .desc { fill: var(--text-2); font-size: 20px; }
+    .cmd { fill: var(--text); font-size: 19px; }
+    .comment { fill: var(--text-2); font-size: 19px; }
+    .tag-t { fill: var(--on-accent); font-size: 14px; font-weight: 600; letter-spacing: 0.02em; }
+    .foot { fill: var(--text-2); font-size: 20px; }
+  </style>
+
+  <rect class="canvas" x="0.75" y="0.75" width="918.5" height="774.5" rx="12" ry="12"/>
+
+  <text class="sans h" x="26" y="56">Start with any one. Each works on its own.</text>
+
+  <!-- Provider Sync -->
+  <g>
+    <rect class="card" x="24" y="88" width="426" height="302" rx="8" ry="8"/>
+    <rect class="rule" x="48" y="110" width="36" height="4" rx="2" ry="2"/>
+    <text class="sans title" x="48" y="148">Provider Sync</text>
+    <text class="sans desc" x="48" y="182">Define skills and rules once,</text>
+    <text class="sans desc" x="48" y="208">sync them across providers</text>
+    <rect class="code" x="40" y="226" width="394" height="96" rx="6" ry="6"/>
+    <text class="mono cmd" x="56" y="256">oat init --scope project</text>
+    <text class="mono comment" x="56" y="282"># pick providers</text>
+    <text class="mono cmd" x="56" y="308">oat sync --scope project</text>
+  </g>
+
+  <!-- Reusable Skills -->
+  <g>
+    <rect class="card" x="470" y="88" width="426" height="302" rx="8" ry="8"/>
+    <rect class="rule" x="494" y="110" width="36" height="4" rx="2" ry="2"/>
+    <text class="sans title" x="494" y="148">Reusable Skills</text>
+    <text class="sans desc" x="494" y="182">Research, review and idea</text>
+    <text class="sans desc" x="494" y="208">skills for all your repos</text>
+    <rect class="code" x="486" y="226" width="394" height="46" rx="6" ry="6"/>
+    <text class="mono cmd" x="502" y="256">oat tools install --scope user</text>
+  </g>
+
+  <!-- Workflows -->
+  <g>
+    <rect class="card" x="24" y="410" width="426" height="302" rx="8" ry="8"/>
+    <rect class="rule" x="48" y="432" width="36" height="4" rx="2" ry="2"/>
+    <text class="sans title" x="48" y="470">Workflows</text>
+    <text class="sans desc" x="48" y="504">Tracked, resumable projects</text>
+    <text class="sans desc" x="48" y="530">with plans, reviews and PRs</text>
+    <rect class="code" x="40" y="548" width="394" height="96" rx="6" ry="6"/>
+    <text class="mono cmd" x="56" y="578">oat init --scope project</text>
+    <text class="mono cmd" x="56" y="604">oat tools install workflows \</text>
+    <text class="mono cmd" x="56" y="630" xml:space="preserve">  --scope project</text>
+    <rect class="chip" x="40" y="656" width="394" height="40" rx="6" ry="6"/>
+    <text class="mono cmd" x="56" y="682">/oat-project-quick-start</text>
+    <rect class="tag" x="366" y="665" width="56" height="22" rx="11" ry="11"/>
+    <text class="sans tag-t" x="394" y="681" text-anchor="middle">skill</text>
+  </g>
+
+  <!-- Docs Tooling -->
+  <g>
+    <rect class="card" x="470" y="410" width="426" height="302" rx="8" ry="8"/>
+    <rect class="rule" x="494" y="432" width="36" height="4" rx="2" ry="2"/>
+    <text class="sans title" x="494" y="470">Docs Tooling</text>
+    <text class="sans desc" x="494" y="504">Bootstrap and maintain</text>
+    <text class="sans desc" x="494" y="530">a docs site for your repo</text>
+    <rect class="code" x="486" y="548" width="394" height="96" rx="6" ry="6"/>
+    <text class="mono cmd" x="502" y="578">oat init --scope project</text>
+    <text class="mono cmd" x="502" y="604">oat tools install docs \</text>
+    <text class="mono cmd" x="502" y="630" xml:space="preserve">  --scope project</text>
+    <rect class="chip" x="486" y="656" width="394" height="40" rx="6" ry="6"/>
+    <text class="mono cmd" x="502" y="682">/oat-docs-bootstrap</text>
+    <rect class="tag" x="812" y="665" width="56" height="22" rx="11" ry="11"/>
+    <text class="sans tag-t" x="840" y="681" text-anchor="middle">skill</text>
+  </g>
+
+  <!-- Plus sign between the cards -->
+  <circle class="plus-bg" cx="460" cy="400" r="18"/>
+  <path class="plus" d="M 460 391 V 409 M 451 400 H 469"/>
+
+  <text class="sans foot" x="460" y="748" text-anchor="middle">Use one alone, or add others any time.</text>
+</svg>

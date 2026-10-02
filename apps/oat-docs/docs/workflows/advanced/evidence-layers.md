@@ -19,21 +19,28 @@ never gates a conclusion on its own.
 
 ## Layer map
 
-```mermaid
-flowchart TD
-  L1["Layer 1 — Policy resolution\nnamed ceiling · candidates · capped/uncapped mode"]
-  L2["Layer 2 — Launcher-owned configured invocation\nroute · target/model/effort axes · selection reason ·\ncandidates considered · launch acceptance"]
-  L3["Layer 3 — Runtime-observed identity (optional)\nproducer + model, only under trusted provenance"]
+=== "Diagram"
 
-  L1 --> L2 --> L3
+    ![Three evidence layers: policy resolution, launcher-owned configured invocation, and optional runtime-observed identity; assertions check layers 1 and 2 and only record layer 3, which resolves to reported or not-reported](/diagrams/evidence-layers-light.svg)
+    ![Three evidence layers: policy resolution, launcher-owned configured invocation, and optional runtime-observed identity; assertions check layers 1 and 2 and only record layer 3, which resolves to reported or not-reported](/diagrams/evidence-layers-dark.svg)
 
-  A["Assertions"] -->|assert on| L1
-  A -->|assert on| L2
-  A -.->|record only| L3
+=== "Mermaid source"
 
-  L3 --> R["reported\n(both present + trusted provenance)"]
-  L3 --> NR["not-reported\n(anything else normalizes here)"]
-```
+    ```mermaid
+    flowchart TD
+      L1["Layer 1 — Policy resolution\nnamed ceiling · candidates · capped/uncapped mode"]
+      L2["Layer 2 — Launcher-owned configured invocation\nroute · target/model/effort axes · selection reason ·\ncandidates considered · launch acceptance"]
+      L3["Layer 3 — Runtime-observed identity (optional)\nproducer + model, only under trusted provenance"]
+
+      L1 --> L2 --> L3
+
+      A["Assertions"] -->|assert on| L1
+      A -->|assert on| L2
+      A -.->|record only| L3
+
+      L3 --> R["reported\n(both present + trusted provenance)"]
+      L3 --> NR["not-reported\n(anything else normalizes here)"]
+    ```
 
 Assertions bind to Layers 1 and 2. Layer 3 is recorded as `reported` or
 `not-reported`; its absence never invalidates Layer 2.

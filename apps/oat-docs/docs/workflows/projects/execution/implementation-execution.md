@@ -38,21 +38,28 @@ and updates project state.
 
 Tasks execute serially in one worktree for the phase.
 
-```mermaid
-flowchart LR
-  Root["Project root\nlifecycle owner"] --> P["Phase implementer\none per phase"]
-  P --> T1["Task 1\nbounded commit"]
-  P --> T2["Task 2\nbounded commit"]
-  P -. optional benefit-driven .-> N["Recon / specialist child"]
+=== "Diagram"
 
-  P --> Report["Phase report\nverification + commits"]
-  Report --> Root
-  Root --> Ledger["Commit task ledger\npre-review bookkeeping"]
-  Ledger --> R["Independent phase reviewer"]
-  R -->|pass| Book["Review-outcome bookkeeping\n+ next phase"]
-  R -->|blocking findings| Fix["Resume phase implementer\nbounded fix scope"]
-  Fix --> R2["Fresh root-owned review round"]
-```
+    ![Phase execution: the project root dispatches one phase implementer, which makes bounded task commits and optionally a recon or specialist child, then reports back; the root commits the task ledger, an independent reviewer passes the phase or sends blocking findings to a resumed implementer for a bounded fix and a fresh review round](/diagrams/implementation-execution-1-quick-look-light.svg)
+    ![Phase execution: the project root dispatches one phase implementer, which makes bounded task commits and optionally a recon or specialist child, then reports back; the root commits the task ledger, an independent reviewer passes the phase or sends blocking findings to a resumed implementer for a bounded fix and a fresh review round](/diagrams/implementation-execution-1-quick-look-dark.svg)
+
+=== "Mermaid source"
+
+    ```mermaid
+    flowchart LR
+      Root["Project root\nlifecycle owner"] --> P["Phase implementer\none per phase"]
+      P --> T1["Task 1\nbounded commit"]
+      P --> T2["Task 2\nbounded commit"]
+      P -. optional benefit-driven .-> N["Recon / specialist child"]
+
+      P --> Report["Phase report\nverification + commits"]
+      Report --> Root
+      Root --> Ledger["Commit task ledger\npre-review bookkeeping"]
+      Ledger --> R["Independent phase reviewer"]
+      R -->|pass| Book["Review-outcome bookkeeping\n+ next phase"]
+      R -->|blocking findings| Fix["Resume phase implementer\nbounded fix scope"]
+      Fix --> R2["Fresh root-owned review round"]
+    ```
 
 ## Ownership
 
@@ -443,21 +450,28 @@ The new dispatch record links to the original `request_id` through the existing
 `continuation_events` field. This is a new fix scope, not replacement of an
 accepted failed launch and not a new schema version.
 
-```mermaid
-sequenceDiagram
-  participant Root
-  participant Phase as Phase implementer
-  participant Review as Phase reviewer
+=== "Diagram"
 
-  Root->>Phase: Phase Scope (request_id=A)
-  Phase-->>Root: DONE + task commits
-  Root->>Review: Review phase commit range
-  Review-->>Root: Critical / High findings
-  Root->>Phase: Resume A in fix mode
-  Phase-->>Root: Fix commit + verification
-  Root->>Review: New independent review round
-  Review-->>Root: Pass
-```
+    ![Fix continuity sequence: root sends the phase scope with request_id A, the implementer returns DONE with task commits, the reviewer returns Critical or High findings, root resumes request A in fix mode, the implementer returns a fix commit, and a new independent review round passes](/diagrams/implementation-execution-2-fix-continuity-light.svg)
+    ![Fix continuity sequence: root sends the phase scope with request_id A, the implementer returns DONE with task commits, the reviewer returns Critical or High findings, root resumes request A in fix mode, the implementer returns a fix commit, and a new independent review round passes](/diagrams/implementation-execution-2-fix-continuity-dark.svg)
+
+=== "Mermaid source"
+
+    ```mermaid
+    sequenceDiagram
+      participant Root
+      participant Phase as Phase implementer
+      participant Review as Phase reviewer
+
+      Root->>Phase: Phase Scope (request_id=A)
+      Phase-->>Root: DONE + task commits
+      Root->>Review: Review phase commit range
+      Review-->>Root: Critical / High findings
+      Root->>Phase: Resume A in fix mode
+      Phase-->>Root: Fix commit + verification
+      Root->>Review: New independent review round
+      Review-->>Root: Pass
+    ```
 
 ## Parallel Phase Groups
 

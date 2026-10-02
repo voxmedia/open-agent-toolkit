@@ -62,6 +62,44 @@ Fenced code blocks with `mermaid` are rendered as diagrams.
       A[Read docs tree] --> B[Generate index]
     ```
 
+Rendered Mermaid diagrams use the site palette. Click or tap one to open it
+full screen at a legible size; on a phone, pan to see the rest. Press Escape,
+the close button, or click again to close it.
+
+## Images and Diagram SVGs
+
+Every Markdown image opens in a zoom view when clicked. SVG images open full
+screen at a legible size, like Mermaid diagrams. Put images under
+`public/` and link them with a root-relative path such as
+`/diagrams/name.svg`; the site adds its base path.
+
+Name a pair of files `<name>-light.<ext>` and `<name>-dark.<ext>` to show one
+image per site theme. Place both images together; each is shown only in its
+theme.
+
+A diagram that needs to read well, especially on a phone, gets a hand-drawn SVG
+pair next to its Mermaid source. Mermaid stays the source of truth: when you
+change the Mermaid, update both SVGs in the same change.
+
+=== "Syntax"
+
+    ````text
+    === "Diagram"
+
+        ![What the diagram shows](/diagrams/name-light.svg)
+        ![What the diagram shows](/diagrams/name-dark.svg)
+
+    === "Mermaid source"
+
+        ```mermaid
+        flowchart LR
+          A[Read docs tree] --> B[Generate index]
+        ```
+    ````
+
+The alt text describes what the diagram shows and claims nothing the Mermaid
+does not.
+
 ## Tabs
 
 Tab groups use the existing tab transform syntax:

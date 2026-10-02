@@ -1,11 +1,23 @@
-import { DocsPage, Mermaid, Tab, Tabs } from '@open-agent-toolkit/docs-theme';
+import {
+  DocsPage,
+  Mermaid,
+  Tab,
+  Tabs,
+  ZoomImage,
+} from '@open-agent-toolkit/docs-theme';
 import defaultComponents from 'fumadocs-ui/mdx';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 import { source } from '@/lib/source';
 
-const mdxComponents = { ...defaultComponents, Mermaid, Tab, Tabs };
+const mdxComponents = {
+  ...defaultComponents,
+  Mermaid,
+  Tab,
+  Tabs,
+  img: ZoomImage,
+};
 
 type PageProps = {
   params: Promise<{ slug?: string[] }>;

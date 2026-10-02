@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 940" width="760" height="940" role="img" aria-labelledby="project-state-machine-title project-state-machine-desc">
+  <title id="project-state-machine-title">Project state machine</title>
+  <desc id="project-state-machine-desc">Spec-driven chain from top to bottom: Discovery in progress, Ready for spec, Spec in progress, Ready for design, Design in progress, Ready for plan, Plan in progress, Ready for implement, Implement in progress, Implement complete, PR open (pr_open), then Complete. PR open (pr_open) leads to Revise (in_progress), which leads back to PR open. Implement in progress also leads to a review loop: Review received, Fixes added, Fixes completed, Review passed, and back to Implement in progress. A dashed edge labeled entry point runs from Lite: batched interview (no discovery/spec/design) to Plan in progress.</desc>
+  <style>
+    svg {
+      --bg: #161d27;
+      --node: #1d2633;
+      --node-em: #1f2d42;
+      --border: #2b3646;
+      --text: #dde4ee;
+      --text-2: #9ba7b8;
+      --accent: #8fb6ee;
+      --optional: #8693a5;
+    }
+    .canvas { fill: var(--bg); }
+    .node { fill: var(--node); stroke: var(--border); stroke-width: 1.5; }
+    .node-em { fill: var(--node-em); stroke: var(--accent); stroke-width: 1.5; }
+    .edge { fill: none; stroke: var(--accent); stroke-width: 1.5; }
+    .edge-loop { fill: none; stroke: var(--text-2); stroke-width: 1.5; }
+    .edge-opt { fill: none; stroke: var(--optional); stroke-width: 1.5; stroke-dasharray: 5 4; }
+    .head { fill: var(--accent); }
+    .head-loop { fill: var(--text-2); }
+    .head-opt { fill: var(--optional); }
+    .label-bg { fill: var(--bg); }
+    .t { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; font-size: 15px; fill: var(--text); }
+    .t-strong { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; font-size: 15px; font-weight: 600; fill: var(--text); }
+    .t-2 { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; font-size: 13px; fill: var(--text-2); }
+    .t-edge { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; font-size: 13px; fill: var(--text-2); }
+    .mono { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; font-size: 15px; fill: var(--text); }
+  </style>
+  <defs>
+    <marker id="psm-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
+      <path class="head" d="M0 0 L10 5 L0 10 Z"/>
+    </marker>
+    <marker id="psm-arrow-loop" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
+      <path class="head-loop" d="M0 0 L10 5 L0 10 Z"/>
+    </marker>
+    <marker id="psm-arrow-opt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
+      <path class="head-opt" d="M0 0 L10 5 L0 10 Z"/>
+    </marker>
+  </defs>
+  <rect class="canvas" x="0" y="0" width="760" height="940" rx="12" ry="12"/>
+
+  <!-- Main chain edges (spec-driven progression) -->
+  <path class="edge" d="M380 74 L380 106" marker-end="url(#psm-arrow)"/>
+  <path class="edge" d="M380 150 L380 182" marker-end="url(#psm-arrow)"/>
+  <path class="edge" d="M380 226 L380 258" marker-end="url(#psm-arrow)"/>
+  <path class="edge" d="M380 302 L380 334" marker-end="url(#psm-arrow)"/>
+  <path class="edge" d="M380 378 L380 410" marker-end="url(#psm-arrow)"/>
+  <path class="edge" d="M380 454 L380 486" marker-end="url(#psm-arrow)"/>
+  <path class="edge" d="M380 530 L380 562" marker-end="url(#psm-arrow)"/>
+  <path class="edge" d="M380 606 L380 638" marker-end="url(#psm-arrow)"/>
+  <path class="edge" d="M380 682 L380 714" marker-end="url(#psm-arrow)"/>
+  <path class="edge" d="M380 758 L380 790" marker-end="url(#psm-arrow)"/>
+  <path class="edge" d="M380 834 L380 866" marker-end="url(#psm-arrow)"/>
+
+  <!-- Revise loop: PRO -> REV, REV -> PRO -->
+  <path class="edge-loop" d="M280 803 L220 803" marker-end="url(#psm-arrow-loop)"/>
+  <path class="edge-loop" d="M220 821 L280 821" marker-end="url(#psm-arrow-loop)"/>
+
+  <!-- Review loop: I -> RV -> FA -> FC -> PASSED -> I -->
+  <path class="edge-loop" d="M480 660 L550 660" marker-end="url(#psm-arrow-loop)"/>
+  <path class="edge-loop" d="M645 682 L645 714" marker-end="url(#psm-arrow-loop)"/>
+  <path class="edge-loop" d="M645 758 L645 790" marker-end="url(#psm-arrow-loop)"/>
+  <path class="edge-loop" d="M645 834 L645 866" marker-end="url(#psm-arrow-loop)"/>
+  <path class="edge-loop" d="M550 888 L525 888 Q515 888 515 878 L515 684 Q515 674 505 674 L480 674" marker-end="url(#psm-arrow-loop)"/>
+
+  <!-- Lite entry point (dashed) -->
+  <path class="edge-opt" d="M120 386 L120 498 Q120 508 130 508 L280 508" marker-end="url(#psm-arrow-opt)"/>
+  <rect class="label-bg" x="78" y="432" width="84" height="22" rx="4" ry="4"/>
+  <text class="t-edge" x="120" y="447.5" text-anchor="middle">entry point</text>
+
+  <!-- Main chain nodes -->
+  <rect class="node" x="280" y="30" width="200" height="44" rx="8" ry="8"/>
+  <text class="t" x="380" y="57" text-anchor="middle">Discovery in progress</text>
+
+  <rect class="node" x="280" y="106" width="200" height="44" rx="8" ry="8"/>
+  <text class="t" x="380" y="133" text-anchor="middle">Ready for spec</text>
+
+  <rect class="node" x="280" y="182" width="200" height="44" rx="8" ry="8"/>
+  <text class="t" x="380" y="209" text-anchor="middle">Spec in progress</text>
+
+  <rect class="node" x="280" y="258" width="200" height="44" rx="8" ry="8"/>
+  <text class="t" x="380" y="285" text-anchor="middle">Ready for design</text>
+
+  <rect class="node" x="280" y="334" width="200" height="44" rx="8" ry="8"/>
+  <text class="t" x="380" y="361" text-anchor="middle">Design in progress</text>
+
+  <rect class="node" x="280" y="410" width="200" height="44" rx="8" ry="8"/>
+  <text class="t" x="380" y="437" text-anchor="middle">Ready for plan</text>
+
+  <rect class="node" x="280" y="486" width="200" height="44" rx="8" ry="8"/>
+  <text class="t" x="380" y="513" text-anchor="middle">Plan in progress</text>
+
+  <rect class="node" x="280" y="562" width="200" height="44" rx="8" ry="8"/>
+  <text class="t" x="380" y="589" text-anchor="middle">Ready for implement</text>
+
+  <rect class="node" x="280" y="638" width="200" height="44" rx="8" ry="8"/>
+  <text class="t" x="380" y="665" text-anchor="middle">Implement in progress</text>
+
+  <rect class="node" x="280" y="714" width="200" height="44" rx="8" ry="8"/>
+  <text class="t" x="380" y="741" text-anchor="middle">Implement complete</text>
+
+  <rect class="node" x="280" y="790" width="200" height="44" rx="8" ry="8"/>
+  <text class="t" x="380" y="817" text-anchor="middle">PR open (<tspan class="mono">pr_open</tspan>)</text>
+
+  <rect class="node-em" x="280" y="866" width="200" height="44" rx="8" ry="8"/>
+  <text class="t-strong" x="380" y="893" text-anchor="middle">Complete</text>
+
+  <!-- Revise -->
+  <rect class="node" x="20" y="790" width="200" height="44" rx="8" ry="8"/>
+  <text class="t" x="120" y="817" text-anchor="middle">Revise (<tspan class="mono">in_progress</tspan>)</text>
+
+  <!-- Review loop nodes -->
+  <rect class="node" x="550" y="638" width="190" height="44" rx="8" ry="8"/>
+  <text class="t" x="645" y="665" text-anchor="middle">Review received</text>
+
+  <rect class="node" x="550" y="714" width="190" height="44" rx="8" ry="8"/>
+  <text class="t" x="645" y="741" text-anchor="middle">Fixes added</text>
+
+  <rect class="node" x="550" y="790" width="190" height="44" rx="8" ry="8"/>
+  <text class="t" x="645" y="817" text-anchor="middle">Fixes completed</text>
+
+  <rect class="node" x="550" y="866" width="190" height="44" rx="8" ry="8"/>
+  <text class="t" x="645" y="893" text-anchor="middle">Review passed</text>
+
+  <!-- Lite -->
+  <rect class="node" x="20" y="326" width="200" height="60" rx="8" ry="8"/>
+  <text class="t" x="120" y="351" text-anchor="middle">Lite: batched interview</text>
+  <text class="t-2" x="120" y="371" text-anchor="middle">(no discovery/spec/design)</text>
+</svg>
