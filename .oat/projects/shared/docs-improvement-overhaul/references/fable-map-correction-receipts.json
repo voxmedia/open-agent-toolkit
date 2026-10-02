@@ -1,0 +1,163 @@
+{
+  "originalRequest": "docs-overhaul-run1-p02-implementation",
+  "continuation": "cont-docs-overhaul-p02-fable-map-corrections",
+  "releaseHead": "25570f11552563611f4466b3f227dedcd38f4546",
+  "sourceBaseline": "8b78d9a935b31ef50e65713b03a022a5d022aa59",
+  "counts": {
+    "pages": 70,
+    "retained": 33,
+    "moves": 35,
+    "consolidations": 2,
+    "newIndexes": 8,
+    "projectedPages": 76,
+    "sectionUnits": 840,
+    "protectedUnits": 816,
+    "routerUnits": 24,
+    "cliGuidanceUnits": 42,
+    "cliBytePartitionRows": 101,
+    "routerHeadings": 13,
+    "h1Exceptions": 3
+  },
+  "sourcePageDestinationsUnchangedFromFableReviewedMap": true,
+  "artifactHashes": {
+    ".oat/projects/shared/docs-improvement-overhaul/references/route-migration.json": "a277764b339bea9d4f7f7884aa6f250dfde23c730ad3c82b373cab70bad08417",
+    ".oat/projects/shared/docs-improvement-overhaul/references/capability-baseline.json": "43b030dfe1e4efe7aa306c38c4c14006e4df0ff0ef5e151754988921c8f1f060",
+    ".oat/projects/shared/docs-improvement-overhaul/references/capture-migration-baseline.mjs": "6bd414dbf34fd1ef38a8befeb2174a4ece602ddf1ccf488b7124751d2b8b0643",
+    ".oat/projects/shared/docs-improvement-overhaul/references/destination-spans.mjs": "35e929c46c9a8e2f686e3795245aeba57599e0aebfd783b6e7cb6a9eac94addf",
+    ".oat/projects/shared/docs-improvement-overhaul/references/normalization-controls.mjs": "37c9fe51940d06acba26e6167bbc8cff14546b7bc2f5d49bda0e261c2ac303a2",
+    ".oat/projects/shared/docs-improvement-overhaul/references/cli-router-accounting.mjs": "da971af848142f8f3ef7bcf0ea7893c9a6e68e9b5edbc95325897fc436bcae29",
+    ".oat/projects/shared/docs-improvement-overhaul/references/heading-normalization.mjs": "e3a56d21d5fb275b6d42fc908a0d273ad393397ee0949e481c28715cf921825c",
+    ".oat/projects/shared/docs-improvement-overhaul/references/content-baseline.md": "20b15e1a50bfe7ecbac241a2a762826e647d58d55394a1582c9b29f0d025f860",
+    ".oat/projects/shared/docs-improvement-overhaul/references/migration-review.md": "4b6860a98cc67efe9e8663a3f10eaddf1218e4309e3c2f879b47fa055c6efffc",
+    ".oat/projects/shared/docs-improvement-overhaul/references/fable-map-controls-receipt.json": "c22855c1e643e9372e0c910dee718924fd6946a28436c812d9ff6830de2ae79a",
+    ".oat/projects/shared/docs-improvement-overhaul/references/fable-map-span-negative-receipt.json": "218e40d3f23d0c96db64c287c6b684acdb0004af5fe499405c2e75e112e3f015",
+    ".oat/projects/shared/docs-improvement-overhaul/references/fable-map-h1-negative-receipt.json": "d9a6384823fa20ef058f6fc491170c31c0cadcac2eb3efb79285695b0ed704f4",
+    "apps/oat-docs/scripts/validate.ts": "07bd5aa9c3d95273aff5ed2c43b4fc206b41083aac165e7c7feba08777def3e1",
+    "apps/oat-docs/tests/migration.test.ts": "e9c22e4d37f4424cfe7c3884d28d1649ae38309f9188a2684677d056b8a74a71",
+    ".oat/repo/analysis/docs-2026-10-02-0644.md": "d8603c7f8b8ce03809a1b6c7e1c460052e97f321a9c4b0d8d68ff522d705fa33",
+    ".oat/projects/shared/docs-improvement-overhaul/references/fable-p02-map-review.md": "53e349a6900a175651b9437c5353ab2501a64e5b4f2bf904a8bf946ac1ee612e"
+  },
+  "verification": [
+    {
+      "command": "TSX_TSCONFIG_PATH=packages/cli/tsconfig.json node --import tsx .oat/projects/shared/docs-improvement-overhaul/references/capture-migration-baseline.mjs",
+      "exit": 0,
+      "log": "/tmp/docs-p02-fable-capture-final.log"
+    },
+    {
+      "command": "node .oat/projects/shared/docs-improvement-overhaul/references/normalization-controls.mjs",
+      "exit": 0,
+      "receipt": ".oat/projects/shared/docs-improvement-overhaul/references/fable-map-controls-receipt.json"
+    },
+    {
+      "command": "node .oat/projects/shared/docs-improvement-overhaul/references/normalization-controls.mjs --legacy-negative-control",
+      "exit": 0,
+      "childExit": 1,
+      "expected": "literal repeated-label assertion fails when neutralized to pre-fix first-substring spans",
+      "receipt": ".oat/projects/shared/docs-improvement-overhaul/references/fable-map-span-negative-receipt.json"
+    },
+    {
+      "command": "node .oat/projects/shared/docs-improvement-overhaul/references/normalization-controls.mjs --h1-negative-control",
+      "exit": 0,
+      "childExit": 1,
+      "expected": "Missing expected exception when exact H1 guard neutralized",
+      "receipt": ".oat/projects/shared/docs-improvement-overhaul/references/fable-map-h1-negative-receipt.json"
+    },
+    {
+      "command": "pnpm docs:test",
+      "exit": 0,
+      "executed": 9,
+      "passed": 9,
+      "turboReplay": false,
+      "log": "/tmp/docs-p02-fable-source-tests.log"
+    },
+    {
+      "command": "pnpm exec oxlint .oat/projects/shared/docs-improvement-overhaul/references/{capture-migration-baseline,cli-router-accounting,heading-normalization,normalization-controls,destination-spans}.mjs",
+      "exit": 0,
+      "log": "/tmp/docs-p02-fable-lint-final.log"
+    },
+    {
+      "command": "git diff --check",
+      "exit": 0
+    },
+    {
+      "command": "git diff --exit-code 8b78d9a935b31ef50e65713b03a022a5d022aa59 -- apps/oat-docs/docs",
+      "exit": 0
+    },
+    {
+      "command": "pnpm exec oxfmt --check .oat/projects/shared/docs-improvement-overhaul/references/route-migration.json .oat/projects/shared/docs-improvement-overhaul/references/capability-baseline.json .oat/projects/shared/docs-improvement-overhaul/references/capture-migration-baseline.mjs .oat/projects/shared/docs-improvement-overhaul/references/destination-spans.mjs .oat/projects/shared/docs-improvement-overhaul/references/normalization-controls.mjs .oat/projects/shared/docs-improvement-overhaul/references/cli-router-accounting.mjs .oat/projects/shared/docs-improvement-overhaul/references/heading-normalization.mjs .oat/projects/shared/docs-improvement-overhaul/references/content-baseline.md .oat/projects/shared/docs-improvement-overhaul/references/migration-review.md .oat/projects/shared/docs-improvement-overhaul/references/fable-map-controls-receipt.json .oat/projects/shared/docs-improvement-overhaul/references/fable-map-span-negative-receipt.json .oat/projects/shared/docs-improvement-overhaul/references/fable-map-h1-negative-receipt.json apps/oat-docs/scripts/validate.ts apps/oat-docs/tests/migration.test.ts .oat/projects/shared/docs-improvement-overhaul/references/fable-map-correction-receipts.json",
+      "log": "/tmp/docs-p02-fable-format-check.log",
+      "exit": 0,
+      "matchedFiles": 15
+    },
+    {
+      "command": "git show fce36cc61f083e1db524354d218f576c4c9aa804:.oat/projects/shared/docs-improvement-overhaul/references/route-migration.json > /tmp/docs-p02-fable-reviewed-map.json; compare its verified e58c… SHA-256 and all70 source/destination pairs with corrected map",
+      "exit": 0
+    }
+  ],
+  "setupFailures": [
+    {
+      "operation": "initial historical-map probe using Node execFileSync default buffer",
+      "error": "ENOBUFS before receipt write; source JSON exceeds default output buffer",
+      "disposition": "No source edit; reran via file redirection and hash-verified read"
+    },
+    {
+      "operation": "formatter invoked before missing receipt existed",
+      "exit": 2,
+      "disposition": "Not a formatting pass; final15-file check occurs after receipt creation"
+    },
+    {
+      "operation": "check matched14 existing files while receipt absent",
+      "exit": 0,
+      "disposition": "Did not prove absent receipt formatting; final15-file check replaces this as current proof"
+    }
+  ],
+  "analysisDisposition": "Canonical analysis bytes unchanged d860…; original reviewed snapshot/receipt immutable; root owns artifact-only refresh/review/tracking. Offered Low remains40 scoped entries/39 distinct keys, never clean pass.",
+  "analysisStalePointers": [
+    {
+      "line": 12,
+      "topic": "review/approval status"
+    },
+    {
+      "line": 26,
+      "topic": "816/24 counts"
+    },
+    {
+      "line": 34,
+      "topic": "CLI byte/metadata/heading/general-description-owner ledgers"
+    },
+    {
+      "line": 39,
+      "topic": "full CLI router consolidation/new independent introduction"
+    },
+    {
+      "line": 81,
+      "topic": "actual Reference-placement approval"
+    },
+    {
+      "line": 104,
+      "topic": "exact3 H1/anchor and source-owner URL accounting"
+    },
+    {
+      "line": 118,
+      "topic": "two Guide sentences plus separate Home compatibility entry"
+    },
+    {
+      "line": 138,
+      "topic": "Fable actual conditional approval versus pending non-author readiness"
+    }
+  ],
+  "pending": [
+    "root non-author conservation recheck",
+    "root artifact-only analysis refresh/review disposition",
+    "root task approval/release before moves/commit"
+  ],
+  "newMechanicalEvidenceFiles": [
+    "cli-router-accounting.mjs",
+    "heading-normalization.mjs",
+    "fable-map-controls-receipt.json",
+    "fable-map-span-negative-receipt.json",
+    "fable-map-h1-negative-receipt.json",
+    "fable-map-correction-receipts.json"
+  ],
+  "noMovesCommitsCoreAnalysisTrackingVersionsPublication": true
+}

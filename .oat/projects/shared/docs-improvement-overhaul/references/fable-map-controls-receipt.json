@@ -1,0 +1,182 @@
+{
+  "baseline": "8b78d9a935b31ef50e65713b03a022a5d022aa59",
+  "literalControls": 8,
+  "h1LiteralControls": 3,
+  "unapprovedH1Rejected": true,
+  "h1OnlyMutationAccepted": true,
+  "surroundingParagraphMutationRejected": true,
+  "cliRouterGuidanceUnits": 42,
+  "cliRouterBytePartitionRows": 101,
+  "cliRouterGuidedDoctorRemovalRejected": true,
+  "generalCliDescriptionsRetainedAtActualReferenceOwner": true,
+  "otherNativeHeadingAnchorsUnchanged": true,
+  "exactH1AnchorTransitions": [
+    {
+      "sourcePage": "index.md",
+      "sourceAnchor": "oat-documentation",
+      "destinationAnchor": "home",
+      "authoredIncomingConsumers": 0,
+      "trackedAnchorMentions": 0
+    },
+    {
+      "sourcePage": "workflows/projects/index.md",
+      "sourceAnchor": "workflow--projects",
+      "destinationAnchor": "projects",
+      "authoredIncomingConsumers": 0,
+      "trackedAnchorMentions": 0
+    },
+    {
+      "sourcePage": "workflows/index.md",
+      "sourceAnchor": "agentic-workflows",
+      "destinationAnchor": "choose-a-workflow",
+      "authoredIncomingConsumers": 0,
+      "trackedAnchorMentions": 0
+    }
+  ],
+  "legacyWrongSpanRejected": true,
+  "destinationOnlyMutationAccepted": true,
+  "labelMutationRejected": true,
+  "mismatchedUrlsRejected": true,
+  "parsedLinksChecked": 477,
+  "sourcePagesChecked": 70,
+  "sectionHashesChecked": 840,
+  "repeatedLabelCollisions": [
+    {
+      "page": "contributing/design-principles.md",
+      "line": 122,
+      "href": "../reference/cli-reference.md",
+      "snippet": "[`../reference/cli-reference.md`](../reference/cli-reference.md)",
+      "destinationStart": 5360
+    },
+    {
+      "page": "contributing/design-principles.md",
+      "line": 123,
+      "href": "../provider-sync/commands.md",
+      "snippet": "[`../provider-sync/commands.md`](../provider-sync/commands.md)",
+      "destinationStart": 5450
+    },
+    {
+      "page": "contributing/design-principles.md",
+      "line": 124,
+      "href": "../provider-sync/manifest-and-drift.md",
+      "snippet": "[`../provider-sync/manifest-and-drift.md`](../provider-sync/manifest-and-drift.md)",
+      "destinationStart": 5559
+    },
+    {
+      "page": "docs-tooling/add-docs-to-a-repo.md",
+      "line": 214,
+      "href": "commands.md",
+      "snippet": "[`commands.md`](commands.md)",
+      "destinationStart": 9497
+    },
+    {
+      "page": "docs-tooling/add-docs-to-a-repo.md",
+      "line": 215,
+      "href": "workflows.md",
+      "snippet": "[`workflows.md`](workflows.md)",
+      "destinationStart": 9529
+    },
+    {
+      "page": "docs-tooling/add-docs-to-a-repo.md",
+      "line": 216,
+      "href": "../reference/docs-index-contract.md",
+      "snippet": "[`../reference/docs-index-contract.md`](../reference/docs-index-contract.md)",
+      "destinationStart": 9585
+    },
+    {
+      "page": "docs-tooling/commands.md",
+      "line": 212,
+      "href": "../reference/docs-index-contract.md",
+      "snippet": "[`../reference/docs-index-contract.md`](../reference/docs-index-contract.md)",
+      "destinationStart": 15019
+    },
+    {
+      "page": "docs-tooling/commands.md",
+      "line": 227,
+      "href": "workflows.md",
+      "snippet": "[`workflows.md`](workflows.md)",
+      "destinationStart": 15539
+    },
+    {
+      "page": "docs-tooling/workflows.md",
+      "line": 86,
+      "href": "commands.md",
+      "snippet": "[`commands.md`](commands.md)",
+      "destinationStart": 4326
+    },
+    {
+      "page": "docs-tooling/workflows.md",
+      "line": 87,
+      "href": "add-docs-to-a-repo.md",
+      "snippet": "[`add-docs-to-a-repo.md`](add-docs-to-a-repo.md)",
+      "destinationStart": 4367
+    },
+    {
+      "page": "docs-tooling/workflows.md",
+      "line": 88,
+      "href": "../reference/docs-index-contract.md",
+      "snippet": "[`../reference/docs-index-contract.md`](../reference/docs-index-contract.md)",
+      "destinationStart": 4432
+    },
+    {
+      "page": "docs-tooling/workflows.md",
+      "line": 89,
+      "href": "../contributing/skills.md",
+      "snippet": "[`../contributing/skills.md`](../contributing/skills.md)",
+      "destinationStart": 4501
+    },
+    {
+      "page": "provider-sync/commands.md",
+      "line": 12,
+      "href": "../contributing/design-principles.md",
+      "snippet": "[`../contributing/design-principles.md`](../contributing/design-principles.md)",
+      "destinationStart": 169
+    },
+    {
+      "page": "provider-sync/config.md",
+      "line": 143,
+      "href": "commands.md",
+      "snippet": "[`commands.md`](commands.md)",
+      "destinationStart": 6125
+    },
+    {
+      "page": "provider-sync/config.md",
+      "line": 144,
+      "href": "manifest-and-drift.md",
+      "snippet": "[`manifest-and-drift.md`](manifest-and-drift.md)",
+      "destinationStart": 6166
+    },
+    {
+      "page": "provider-sync/config.md",
+      "line": 145,
+      "href": "../reference/oat-directory-structure.md",
+      "snippet": "[`../reference/oat-directory-structure.md`](../reference/oat-directory-structure.md)",
+      "destinationStart": 6235
+    },
+    {
+      "page": "reference/file-locations.md",
+      "line": 10,
+      "href": "oat-directory-structure.md",
+      "snippet": "[`oat-directory-structure.md`](oat-directory-structure.md)",
+      "destinationStart": 95
+    }
+  ],
+  "routerItems": 70,
+  "routeOnlySupersessions": [
+    {
+      "sourcePage": "guide/index.md",
+      "sourceLine": 8,
+      "source": "This page is now a compatibility router."
+    },
+    {
+      "sourcePage": "guide/index.md",
+      "sourceLine": 18,
+      "source": "This guide bucket remains visible so older links have a stable landing page."
+    },
+    {
+      "sourcePage": "index.md",
+      "sourceLine": 19,
+      "source": "- [User Guide](guide/index.md) - Legacy compatibility router for old guide links while content continues moving into the canonical sections below."
+    }
+  ]
+}

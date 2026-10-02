@@ -5,7 +5,12 @@ import { createRequire } from 'node:module';
 import { dirname, posix, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { cliRouterAccounting } from './cli-router-accounting.mjs';
 import { destinationSpan, destinationSpans } from './destination-spans.mjs';
+import {
+  approvedH1Changes,
+  normalizeApprovedH1,
+} from './heading-normalization.mjs';
 
 const evidenceRoot = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(evidenceRoot, '../../../../..');
@@ -246,9 +251,17 @@ for (const [path, markdown] of textPages) {
         normalized.slice(0, change.start - heading.offset) +
         change.stable +
         normalized.slice(change.end - heading.offset);
+    const h1Change = approvedH1Changes.find(
+      (change) =>
+        change.sourcePage === path &&
+        heading.depth === 1 &&
+        heading.title === change.sourceHeading,
+    );
+    if (h1Change) normalized = normalizeApprovedH1(path, normalized);
     const router =
       path.endsWith('index.md') &&
-      (heading.title === 'Contents' || path === 'guide/index.md');
+      (heading.title === 'Contents' ||
+        ['guide/index.md', 'cli-utilities/index.md'].includes(path));
     sections.push({
       key,
       sourcePage: path,
@@ -259,8 +272,13 @@ for (const [path, markdown] of textPages) {
       startLine: heading.line,
       bodyStartOffset: heading.offset,
       bodyEndOffset: end,
-      destinationPage: destination,
-      destinationHeading: heading.title,
+      destinationPage: path === 'cli-utilities/index.md' ? null : destination,
+      destinationHeading:
+        path === 'cli-utilities/index.md'
+          ? null
+          : (h1Change?.destinationHeading ?? heading.title),
+      destinationAnchor: h1Change?.destinationAnchor ?? heading.anchor,
+      permittedHeadingChange: h1Change,
       disposition: router
         ? 'explicit-router-accounting-pending-review'
         : 'equal-normalized-hash-required',
@@ -277,24 +295,21 @@ for (const [path, markdown] of textPages) {
     sourceRoute: route(path),
     destinationRoute: route(destination),
     kind: path.endsWith('index.md') ? 'router' : 'leaf',
-    action:
-      path === 'guide/index.md'
-        ? 'router-consolidation'
-        : path === destination
-          ? 'retain'
-          : 'move',
+    action: ['guide/index.md', 'cli-utilities/index.md'].includes(path)
+      ? 'router-consolidation'
+      : path === destination
+        ? 'retain'
+        : 'move',
     sourceHash: hash(markdown),
     sourceFrontmatter: frontmatter(markdown),
     frontmatterChanges:
       path === 'index.md'
         ? { title: 'Home' }
-        : path === 'cli-utilities/index.md'
-          ? { title: 'Getting Started' }
-          : path === 'workflows/projects/index.md'
-            ? { title: 'Projects' }
-            : path === 'workflows/index.md'
-              ? { title: 'Choose a Workflow' }
-              : {},
+        : path === 'workflows/projects/index.md'
+          ? { title: 'Projects' }
+          : path === 'workflows/index.md'
+            ? { title: 'Choose a Workflow' }
+            : {},
     headings,
     sections: sectionKeys,
   });
@@ -348,6 +363,7 @@ for (const path of tracked.filter(
     });
 }
 const newIndexes = [
+  'getting-started/index.md',
   'workflows/index.md',
   'workflows/projects/planning/index.md',
   'workflows/projects/execution/index.md',
@@ -359,7 +375,12 @@ const newIndexes = [
 const noAliasDecision =
   'design.md: Information migration and consumers — User decision: allow moved URLs to break; no aliases, redirects, compatibility pages or permanent transitional stubs.';
 const routerItems = (section) => {
-  if (section.sourcePage === 'guide/index.md') return [];
+  if (
+    section.sourcePage === 'guide/index.md' ||
+    (section.sourcePage === 'cli-utilities/index.md' &&
+      section.heading !== 'Contents')
+  )
+    return [];
   const items = [];
   visit(parse(section.routerText), (node) => {
     if (node.type !== 'listItem') return;
@@ -404,7 +425,7 @@ const routerItems = (section) => {
         decisionProvenance: noAliasDecision,
         rationale:
           'This compatibility-router entry alone is obsolete under the explicit no-alias decision; the retained adoption/capability guidance has separate Guide destinations. No product capability is removed.',
-        approval: 'pending-independent-recheck-and-Fable-review',
+        approval: 'Fable-approved; pending-independent-recheck',
       });
       return;
     }
@@ -430,12 +451,20 @@ const routerItems = (section) => {
         : posix.dirname(entryTarget);
       destination = `${parent === '.' ? '' : `${parent}/`}index.md#contents`;
     }
-    const entryLabel =
+    let entryLabel =
       {
         'cli-utilities/index.md': 'Getting Started',
         'workflows/index.md': 'Workflows',
         'workflows/projects/index.md': 'Projects',
       }[link.target] ?? link.label;
+    const generalCliDescription =
+      section.sourcePage === 'index.md' &&
+      link.target === 'cli-utilities/index.md';
+    if (generalCliDescription) {
+      destination = 'reference/index.md#general-cli-adoption-guidance';
+      entryTarget = destination;
+      entryLabel = 'General CLI Adoption Guidance';
+    }
     items.push({
       sourcePage: section.sourcePage,
       sourceLine,
@@ -445,9 +474,19 @@ const routerItems = (section) => {
       destination,
       destinationEntryTarget: entryTarget,
       destinationEntryLabel: entryLabel,
-      permittedChanges:
-        'Only the inventoried href and explicitly named router-entry label; sourceDescription remains exact.',
-      approval: 'pending-independent-recheck-and-Fable-review',
+      destinationRole: generalCliDescription
+        ? 'body-discovery-description'
+        : 'contents-entry-or-inventoried-body-link',
+      destinationBodyText: generalCliDescription
+        ? 'Canonical section for general OAT CLI surfaces outside provider sync, docs tooling, and tracked workflows.'
+        : undefined,
+      structuralChanges: generalCliDescription
+        ? 'Consolidate this specific old CLI router label/link/list marker; retain its exact descriptive sentence at Reference body owner. New Home Getting Started Contents entry is separately additive.'
+        : undefined,
+      permittedChanges: generalCliDescription
+        ? 'Consolidate only this specific old router label/link/list markup; destinationBodyText retains its exact descriptive sentence at Reference. New Home onboarding entry is a separate addition.'
+        : 'Only the inventoried href and explicitly named router-entry label; sourceDescription remains exact.',
+      approval: 'Fable-approved-destinations; pending-independent-recheck',
     });
   });
   return items;
@@ -462,9 +501,11 @@ const routerAccounting = sections
     sourceTextHash: section.rawHash,
     sourceText: section.routerText,
     contentDestination:
-      section.sourcePage === 'guide/index.md'
-        ? 'See individually enumerated guideConsolidation rows; approval remains pending.'
-        : 'See items: each exact source list item has a concrete destination anchor and entry target/label, or the single independently identified Home compatibility-entry disposition. No blanket exclusion.',
+      section.sourcePage === 'cli-utilities/index.md'
+        ? 'See cliConsolidation rows for every exact paragraph/list item/heading/separator and metadata destination; no CLI-lane body is moved under the new Getting Started introduction.'
+        : section.sourcePage === 'guide/index.md'
+          ? 'See individually enumerated guideConsolidation rows; approval remains pending.'
+          : 'See items: each exact source list item has a concrete destination anchor and entry target/label, or the single independently identified Home compatibility-entry disposition. No blanket exclusion.',
     items: routerItems(section),
     links: links.filter(
       (link) =>
@@ -479,7 +520,7 @@ const guideConsolidation = [
   {
     section: 'User Guide',
     source: '# User Guide',
-    destination: 'index.md#oat-documentation',
+    destination: 'index.md#home',
     disposition:
       'obsolete-router-label-consolidated-into-existing-home-heading',
     rationale: 'Router headings may consolidate; no leaf heading changes.',
@@ -552,10 +593,13 @@ const guideConsolidation = [
     section: 'Canonical Sections',
     source:
       '- [CLI Utilities](../cli-utilities/index.md) - Bootstrap, tool packs, configuration, and general CLI surfaces.',
-    destination: 'index.md#canonical-sections',
-    disposition: 'retain-description',
+    destination: 'reference/index.md#general-cli-adoption-guidance',
+    disposition: 'retain-description-at-actual-general-cli-body-owner',
+    destinationBodyText:
+      'Bootstrap, tool packs, configuration, and general CLI surfaces.',
+    destinationBodyTarget: 'reference/index.md#general-cli-adoption-guidance',
     allowedChange:
-      'href -> getting-started/index.md; router label -> Getting Started; configuration still has explicit Reference discovery and its own protected owner page.',
+      'Consolidate this specific old CLI canonical-list label/href/list marker; retain the exact descriptive sentence at Reference general CLI body guidance, not under a Getting Started label. New context/discovery text is separately additive.',
   },
   {
     section: 'Canonical Sections',
@@ -593,13 +637,243 @@ for (const row of guideConsolidation) {
       `Guide accounting does not identify source text: ${row.source}`,
     );
   row.sourceLine = section.startLine + relativeLine;
-  row.approval = 'pending-independent-and-Fable-review';
+  row.approval = 'Fable-approved; pending-independent-conservation-recheck';
   if (row.disposition === 'superseded-route-only-status')
     row.decisionProvenance = noAliasDecision;
 }
+const cliMarkdown = textPages.get('cli-utilities/index.md');
+const cliBody = body(cliMarkdown);
+const cliConsolidation = cliRouterAccounting(
+  cliBody,
+  parse,
+  cliMarkdown.slice(0, cliMarkdown.length - cliBody.length).split('\n').length -
+    1,
+  sections,
+  links,
+);
+for (const row of cliConsolidation) {
+  let normalized = row.sourceText;
+  for (const link of [...(row.permittedLinkChanges ?? [])].sort(
+    (first, second) =>
+      second.destinationToken.start - first.destinationToken.start,
+  )) {
+    const destinationPage = row.destination.split('#')[0];
+    const suffix = link.href.slice(link.href.split(/[?#]/)[0].length);
+    link.destinationSourcePage = destinationPage;
+    link.destinationHref = `${posix.relative(posix.dirname(destinationPage), moved[link.target] ?? link.target)}${suffix}`;
+    const stable = `oat-docs:${link.target}${suffix}`;
+    normalized =
+      normalized.slice(0, link.destinationToken.start - row.sourceStartOffset) +
+      stable +
+      normalized.slice(link.destinationToken.end - row.sourceStartOffset);
+  }
+  row.normalizedHash = hash(normalized);
+}
+const cliMetadataAccounting = [
+  {
+    sourcePage: 'cli-utilities/index.md',
+    sourceLine: 2,
+    field: 'title',
+    sourceText: 'CLI Utilities',
+    destination: 'reference/index.md#general-cli-adoption-guidance',
+    disposition: 'old-router-label-consolidated-not-inherited-by-new-index',
+    authority: 'Fable R1',
+  },
+  {
+    sourcePage: 'cli-utilities/index.md',
+    sourceLine: 3,
+    field: 'description',
+    sourceText:
+      'Standalone adoption lane for general OAT CLI surfaces outside provider sync, docs tooling, and tracked workflows.',
+    destination: 'reference/index.md#general-cli-adoption-guidance',
+    disposition:
+      'retain-verbatim-as-general-cli-guidance-not-new-getting-started-description',
+    authority: 'Fable R1',
+  },
+];
+for (const section of sections.filter(
+  (unit) => unit.sourcePage === 'cli-utilities/index.md',
+))
+  section.destinationUnits = cliConsolidation
+    .filter((row) => row.sourceSection === section.key)
+    .map((row) => ({
+      sourceLine: row.sourceLine,
+      kind: row.kind,
+      sourceHash: row.sourceHash,
+      destination: row.destination,
+      disposition: row.disposition,
+    }));
+const headingNormalization = approvedH1Changes.map((change) => {
+  const original = pages
+    .find((page) => page.source === change.sourcePage)
+    .headings.find((heading) => heading.depth === 1);
+  if (
+    original.title !== change.sourceHeading ||
+    original.anchor !== change.sourceAnchor
+  )
+    throw new Error('Approved H1 does not match source heading/slugger');
+  if (
+    new Slugger().slug(change.destinationHeading) !== change.destinationAnchor
+  )
+    throw new Error(
+      'Approved destination H1 anchor does not match native slugger',
+    );
+  const authoredIncoming = links.filter(
+    (link) =>
+      link.target === change.sourcePage &&
+      decodeURIComponent(link.href.split('#')[1] ?? '') === change.sourceAnchor,
+  );
+  const trackedAnchorMentions = [];
+  for (const path of tracked.filter(
+    (entry) => !/\.(?:png|jpe?g|gif|ico|woff2?|pdf)$/.test(entry),
+  )) {
+    let text;
+    try {
+      text = source(path);
+    } catch {
+      continue;
+    }
+    text.split('\n').forEach((line, index) => {
+      if (line.includes(`#${change.sourceAnchor}`))
+        trackedAnchorMentions.push({
+          path,
+          line: index + 1,
+          sourceText: line,
+          classification:
+            /^\.oat\/(?:projects|repo)\//.test(path) ||
+            path.includes('/tests/fixtures/')
+              ? 'historical-evidence-not-rewritten'
+              : path.startsWith(docsPrefix)
+                ? 'authored-docs-link-target-verification-required'
+                : 'live-consumer-fragment-verification-required',
+        });
+    });
+  }
+  return {
+    ...change,
+    sourceLine: original.line,
+    sourceHeadingText: `# ${change.sourceHeading}`,
+    destinationHeadingText: `# ${change.destinationHeading}`,
+    normalizeDestinationHeadingTo: `# ${change.sourceHeading}`,
+    authority:
+      'references/fable-p02-map-review.md R2; plan.md Reviewed map amendment',
+    authoredIncomingConsumers: authoredIncoming,
+    trackedAnchorMentions,
+    consumerSweep: {
+      baseline,
+      scope:
+        'All tracked files, exact old-fragment literal scan plus parsed authored URL target/decoded-fragment matching; historical evidence distinguished.',
+      parsedAuthoredCount: authoredIncoming.length,
+      trackedMentionCount: trackedAnchorMentions.length,
+    },
+    approval: 'Fable-approved-exact-H1-exception; pending-independent-recheck',
+  };
+});
+const routerHeadingAccounting = pages
+  .filter((page) => page.action === 'router-consolidation')
+  .flatMap((page) =>
+    page.headings.map((heading) => {
+      const destinations =
+        page.source === 'cli-utilities/index.md'
+          ? [
+              ...new Set(
+                cliConsolidation
+                  .filter(
+                    (row) =>
+                      row.sourceSection ===
+                        `${page.source}::${heading.title}::1` &&
+                      row.kind !== 'separator',
+                  )
+                  .map((row) => row.destination),
+              ),
+            ]
+          : heading.depth === 1
+            ? ['index.md#home']
+            : heading.title === 'Contents'
+              ? ['getting-started/index.md#contents']
+              : ['index.md#canonical-sections'];
+      return {
+        sourcePage: page.source,
+        sourceLine: heading.line,
+        depth: heading.depth,
+        sourceHeading: heading.title,
+        sourceHeadingText: `${'#'.repeat(heading.depth)} ${heading.title}`,
+        sourceAnchor: heading.anchor,
+        disposition:
+          'router-heading-role-consolidated-at-explicit-owner-anchors',
+        destinations,
+        authority:
+          'Fable-approved router consolidation; no old heading aliases/stubs',
+        approval: 'pending-independent-conservation-recheck',
+      };
+    }),
+  );
+const additions = [
+  {
+    destination: 'getting-started/index.md',
+    kind: 'new-section-introduction',
+    title: 'Getting Started',
+    h1: '# Getting Started',
+    description: 'Choose an adoption path and follow the setup guides for OAT.',
+    sourceBasis: [
+      'quickstart.md',
+      'cli-utilities/bootstrap.md',
+      'cli-utilities/tool-packs.md',
+      'guide/concepts.md',
+    ],
+    text: 'Choose your OAT adoption path with [Quickstart](quickstart.md), then use the setup, tool-pack and concepts guides in this section.',
+    boundary:
+      'New introduction only; the old CLI-lane body is redistributed through cliConsolidation. Existing retained bootstrap/tool-pack guidance is separately accounted, not rewritten.',
+  },
+  {
+    destination: 'index.md#contents',
+    kind: 'new-onboarding-entry',
+    label: 'Getting Started',
+    target: 'getting-started/index.md',
+    text: '- [Getting Started](getting-started/index.md) - Choose an OAT adoption path and follow setup, tool-pack and concepts guides.',
+    sourceBasis: [
+      'quickstart.md',
+      'cli-utilities/bootstrap.md',
+      'cli-utilities/tool-packs.md',
+      'guide/concepts.md',
+    ],
+    authority: 'Root-approved adjacent R1 accounting correction',
+    boundary:
+      'New entry/description, not a rewrite of either preserved general-CLI description.',
+  },
+  {
+    destination: 'reference/index.md#general-cli-adoption-guidance',
+    kind: 'additive-context-and-owner-discovery',
+    text: 'For onboarding, use [Getting Started](../getting-started/index.md). For settings and diagnostics, use [Configuration](configuration.md) and [Config and Local State](config-and-local-state.md); workflow gates are owned by [Advanced](../workflows/advanced/index.md).',
+    sourceBasis: [
+      'cli-utilities/index.md',
+      'cli-utilities/configuration.md',
+      'cli-utilities/config-and-local-state.md',
+      'cli-utilities/workflow-gates.md',
+    ],
+    authority:
+      'Root-approved adjacent R1 clarification; existing leaf destinations unchanged',
+    boundary:
+      'New context only; the old CLI router body and two broad-lane descriptions remain verbatim under separate source-unit accounting.',
+  },
+  {
+    destination: 'workflows/projects/index.md#reference-contracts',
+    kind: 'prominent-body-discovery',
+    h2: '## Reference Contracts',
+    text: 'Read [Project Artifacts](../../reference/project-artifacts.md) for project file contracts and [State Machine](../../reference/project-state-machine.md) for lifecycle and review-state transitions.',
+    sourceBasis: [
+      'workflows/projects/artifacts.md',
+      'workflows/projects/state-machine.md',
+    ],
+    authority: 'Fable O3 accepted by root',
+    boundary:
+      'Add immediately after the Projects introduction and before Contents; keep existing body guidance and Contents description accounting intact.',
+  },
+];
 const migration = {
   schemaVersion: 1,
-  status: 'draft-awaiting-independent-and-Fable-review',
+  status:
+    'Fable-approved-subject-to-R1-R2; corrected-draft-awaiting-independent-recheck',
   baseline,
   initialImplementationBase: initial,
   acceptedBookkeepingBase: acceptedBase,
@@ -622,6 +896,33 @@ const migration = {
   newIndexes,
   routerAccounting,
   guideConsolidation,
+  cliConsolidation,
+  cliMetadataAccounting,
+  headingNormalization,
+  routerHeadingAccounting,
+  additions,
+  editorialResidues: [
+    {
+      phase: 'p06',
+      page: 'getting-started/quickstart.md',
+      sourcePage: 'quickstart.md',
+      sourceHeading: 'CLI Utilities',
+      sourceHeadingDepth: 3,
+      sourceLine: 65,
+      issue:
+        'Remaining CLI Utilities path section needs whole-site editorial evaluation; no p02 prose rewrite.',
+      authority: 'Fable O4 mandatory; plan.md p06',
+    },
+    {
+      phase: 'p06',
+      page: 'workflows/choose-workflow.md',
+      sourcePage: 'workflows/index.md',
+      sourceHeading: 'Contents',
+      issue:
+        'Leaf retains the Contents heading; evaluate and correct editorial clarity in p06, not p02.',
+      authority: 'Fable O4 mandatory; plan.md p06',
+    },
+  ],
   routeOnlySupersessions: [
     ...guideConsolidation
       .filter((row) => row.disposition === 'superseded-route-only-status')
@@ -631,11 +932,13 @@ const migration = {
       .filter((item) => item.disposition === 'superseded-route-only-entry'),
   ],
   normalization: {
-    rule: 'Replace only micromark destination-string tokens bound to the exact parsed link/image/definition owner offsets and decoded URL, listed per section, with their stable original page identifier; fail missing/ambiguous/mismatched tokens. Preserve every other body byte, including headings, paragraphs, code, link labels, punctuation and whitespace.',
+    rule: 'Replace only micromark destination-string tokens bound to the exact parsed link/image/definition owner offsets and decoded URL, listed per section, with their stable original page identifier; fail missing/ambiguous/mismatched tokens. The three exact headingNormalization H1 lines additionally normalize new-to-old; preserve every other body byte, including all other headings, paragraphs, code, link labels, punctuation and whitespace.',
     frontmatter:
       'Excluded from section text but exact original frontmatter inventoried per page; only listed title edits allowed. Any additional change needs explicit inventory and review.',
+    headings:
+      'Only headingNormalization exact H1 lines on Home, Projects and Choose a Workflow may normalize from the new line back to the old line; every surrounding byte remains protected. CLI/User Guide router-heading consolidation is separately inventoried. The new Getting Started H1 is an addition, not an old heading rename.',
     routers:
-      'Contents sections and guide/index.md require explicit section/line destination accounting; no general router paragraph removal exemption. guideConsolidation names every nonblank line/sentence and routerAccounting.items names each other Contents list item. routeOnlySupersessions enumerates exactly two Guide compatibility-status sentences and the separate Home index.md:19 compatibility-router entry under the existing explicit no-alias decision, pending independent recheck and Fable review.',
+      'Contents sections, guide/index.md and cli-utilities/index.md require explicit section/line destination accounting; no general router paragraph removal exemption. guideConsolidation names every nonblank Guide line/sentence; cliConsolidation partitions every source body byte into exact guidance, structural heading and separator rows at named owners; cliMetadataAccounting covers frontmatter; routerHeadingAccounting covers all consolidated headings; routerAccounting.items names each other Contents list item. routeOnlySupersessions enumerates exactly two Guide compatibility-status sentences and the separate Home index.md:19 compatibility-router entry under the existing explicit no-alias decision. Fable approved destinations/supersessions subject to R1/R2; independent conservation recheck remains pending.',
     queries:
       'Retain query text in rewrite inventory and normalized hash; unsupported navigation syntax is checked separately.',
     positions:

@@ -1,0 +1,7 @@
+{
+  "control": "copied-exact-H1-guard-neutralized",
+  "childExit": 1,
+  "categoricalOutcome": "unapproved-H1-rejection-control-fails-with-Missing-expected-exception",
+  "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Missing expected exception.\n    at file:///private/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/docs-p02-normalization-negative-18OESc/normalization-controls.mjs:238:8 {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: undefined,\n  expected: /Unapproved H1/,\n  operator: 'throws',\n  diff: 'simple'\n}\n\nNode.js v25.9.0\n",
+  "checkoutMutation": false
+}

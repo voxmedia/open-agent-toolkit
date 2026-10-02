@@ -1,0 +1,7 @@
+{
+  "control": "copied-helper-neutralized-to-pre-fix-first-substring-spans",
+  "childExit": 1,
+  "categoricalOutcome": "literal-repeated-label-assertion-fails",
+  "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ '[`oat-docs:commands.md`](commands.md)'\n- '[`commands.md`](oat-docs:commands.md)'\n     ^\n\n    at file:///private/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/docs-p02-normalization-negative-9wM4d1/normalization-controls.mjs:166:10 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: '[`oat-docs:commands.md`](commands.md)',\n  expected: '[`commands.md`](oat-docs:commands.md)',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v25.9.0\n",
+  "checkoutMutation": false
+}

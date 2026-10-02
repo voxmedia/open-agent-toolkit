@@ -84,34 +84,45 @@ export async function validateSourceRoutes(docsRoot: string): Promise<void> {
     }
   }
   await scan(docsRoot);
-  const errors: string[] = [];
+  const targets: Array<{ source: string; href: string }> = [];
   for (const page of pages) {
     const markdown = await readFile(page, 'utf8');
     for (const match of sourceText(markdown)
       .replace(/(`+)[\s\S]*?\1/g, '')
       .matchAll(/!?\[[^\]\n]*\]\(([^\s)]+)(?:\s+"[^"]*")?\)/g)) {
       const href = match[1]!;
-      if (/^(?:[a-z][a-z\d+.-]*:|\/\/)/i.test(href)) continue;
-      const [path = '', fragment] = href.split('#');
-      if (path.includes('?')) continue;
-      let target = path.startsWith('/')
-        ? resolve(docsRoot, `.${path}`)
-        : resolve(dirname(page), path || '.');
-      if (!path) target = page;
-      else if (!extname(target)) target = join(target, 'index.md');
-      if (!(await stat(target).catch(() => undefined))?.isFile()) {
-        errors.push(`${page}: unresolved source link ${href}`);
-        continue;
-      }
-      if (
-        fragment &&
-        target.endsWith('.md') &&
-        !markdownAnchors(await readFile(target, 'utf8')).has(
-          decodeMarkdownFragment(fragment, href, page),
-        )
-      )
-        errors.push(`${page}: unresolved source fragment ${href}`);
+      targets.push({ source: page, href });
     }
+  }
+  await validateSourceTargets(docsRoot, targets);
+}
+
+export async function validateSourceTargets(
+  docsRoot: string,
+  targets: ReadonlyArray<{ source: string; href: string }>,
+): Promise<void> {
+  const errors: string[] = [];
+  for (const { source: page, href } of targets) {
+    if (/^(?:[a-z][a-z\d+.-]*:|\/\/)/i.test(href)) continue;
+    const [path = '', fragment] = href.split('#');
+    if (path.includes('?')) continue;
+    let target = path.startsWith('/')
+      ? resolve(docsRoot, `.${path}`)
+      : resolve(dirname(page), path || '.');
+    if (!path) target = page;
+    else if (!extname(target)) target = join(target, 'index.md');
+    if (!(await stat(target).catch(() => undefined))?.isFile()) {
+      errors.push(`${page}: unresolved source link ${href}`);
+      continue;
+    }
+    if (
+      fragment &&
+      target.endsWith('.md') &&
+      !markdownAnchors(await readFile(target, 'utf8')).has(
+        decodeMarkdownFragment(fragment, href, page),
+      )
+    )
+      errors.push(`${page}: unresolved source fragment ${href}`);
   }
   if (errors.length) throw new Error(errors.join('\n'));
 }
