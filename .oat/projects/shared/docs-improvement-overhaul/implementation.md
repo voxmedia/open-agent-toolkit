@@ -613,7 +613,15 @@ Phase implementation return: DONE_WITH_CONCERNS, three planned task commits in o
   "child_outcome": null,
   "runtime_confirmation": "not-reported",
   "diagnostics": [],
-  "continuation_events": [],
+  "continuation_events": [
+    {
+      "request_id": "cont-docs-overhaul-p02-draft-correction-1",
+      "agent_handle": "/root/phase02",
+      "status": "accepted-holding",
+      "authority": "pre-commit M1/M2 baseline correction only; no moves, commit, tracking or analysis edits",
+      "child_outcome": null
+    }
+  ],
   "payload": {
     "task_name": "phase02",
     "agent_type": "oat-phase-implementer-gpt-6-1-sol-high",
@@ -752,7 +760,7 @@ Structured return accepted from /root/p02_analysis_review; no reviewer artifact 
   "deadline_seconds": 3600,
   "retry_limit": 2,
   "launch_status": "accepted",
-  "child_outcome": null,
+  "child_outcome": "completed-two-medium-findings",
   "runtime_confirmation": "not-reported",
   "diagnostics": [],
   "continuation_events": [],
@@ -778,6 +786,8 @@ Structured return accepted from /root/p02_analysis_review; no reviewer artifact 
 ```
 
 Dispatch: scope=p02-map action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high
+
+Artifact-mode confirmation contains exactly one Reconnaissance: not-attempted; artifact has no Review Orchestration section. Validated draft SHA256 bindings, no reviewed commit inferred (Reviewed Head remains -). Outcome 0 Critical / 0 High / 2 Medium / 0 Low. Root independently confirmed first-match href span bug and Home index.md:19 obsolete route-only entry. Both are required pre-move corrections; no content/capability removal authorized. Same accepted /root/phase02 receives bounded pre-commit draft correction, no new phase/recovery event. Source app tests 9/9 and focused 3/3 executed; pristine receipts inspected, not rerun. Fable map approval remains pending, queued not consumed.
 
 ## Implementation Log
 
