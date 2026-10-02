@@ -5,9 +5,84 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 ASSETS="${OAT_ASSETS_DIR:-${REPO_ROOT}/packages/cli/assets}"
 INVENTORY="${SCRIPT_DIR}/bundle-inputs.mjs"
-DOCS_SOURCE="${REPO_ROOT}/$(node "${INVENTORY}" --get docsRoot)"
-MIGRATION_PROMPT_SOURCE="${REPO_ROOT}/$(node "${INVENTORY}" --get migrationPrompt)"
-DISPATCH_MATRIX_RECOMMENDATION_SOURCE="${REPO_ROOT}/$(node "${INVENTORY}" --get dispatchMatrix)"
+
+# Every guard below runs before the first mkdir, cp, mv, or rm. An inventory
+# lookup that prints nothing collapses "${REPO_ROOT}/<value>" to the repository
+# root, and the docs copy then copies the whole repository into its own staging
+# directory until the disk fills (Wave 3, 2026-10-01). Fail closed instead.
+fail_bundle() {
+  echo "bundle-assets: $*" >&2
+  exit 1
+}
+
+# Print the physical absolute form of a path that may not exist yet: resolve
+# the nearest existing ancestor with `pwd -P`, so a symlink alias cannot hide a
+# destination inside a copied source, and append the missing components.
+physical_path() {
+  local path="$1" suffix="" name resolved
+  case "${path}" in
+    /*) ;;
+    *) path="${PWD}/${path}" ;;
+  esac
+  while [ ! -d "${path}" ]; do
+    name="$(basename "${path}")"
+    case "${name}" in
+      .) ;;
+      ..)
+        echo "bundle-assets: cannot resolve '..' below a missing directory in ${1}" >&2
+        return 1
+        ;;
+      *) suffix="/${name}${suffix}" ;;
+    esac
+    path="$(dirname "${path}")"
+  done
+  resolved="$(cd "${path}" && pwd -P)" || return 1
+  resolved="${resolved%/}${suffix}"
+  printf '%s\n' "${resolved:-/}"
+}
+
+# True when $1 is $2 or lies below it. Both arguments are physical paths.
+path_is_within() {
+  [ "$2" = "/" ] && return 0
+  [ "$1" = "$2" ] && return 0
+  case "$1" in
+    "$2"/*) return 0 ;;
+  esac
+  return 1
+}
+
+# Print "${REPO_ROOT}/<value>" for an inventory path lookup, or exit when the
+# value is empty, absolute, climbs with '..', or names the repository root.
+require_inventory_path() {
+  local key="$1" value normalized
+  value="$(node "${INVENTORY}" --get "${key}")" ||
+    fail_bundle "inventory lookup '${key}' failed."
+  [ -n "${value}" ] ||
+    fail_bundle "inventory lookup '${key}' printed nothing; refusing to build from the repository root."
+  case "${value}" in
+    /*) fail_bundle "inventory lookup '${key}' returned an absolute path (${value}); expected a repository-relative path." ;;
+  esac
+  case "/${value}/" in
+    */../*) fail_bundle "inventory lookup '${key}' contains a '..' segment (${value}); expected a path inside the repository." ;;
+  esac
+  normalized="/${value}/"
+  while :; do
+    case "${normalized}" in
+      *//*) normalized="${normalized//\/\//\/}" ;;
+      */./*) normalized="${normalized//\/.\//\/}" ;;
+      *) break ;;
+    esac
+  done
+  if [ "${normalized}" = "/" ] ||
+    [ "$(physical_path "${REPO_ROOT}/${value}")" = "$(physical_path "${REPO_ROOT}")" ]; then
+    fail_bundle "inventory lookup '${key}' resolves to the repository root (${value}); refusing to copy the repository into its own bundle."
+  fi
+  printf '%s\n' "${REPO_ROOT}/${value}"
+}
+
+DOCS_SOURCE="$(require_inventory_path docsRoot)" || exit 1
+MIGRATION_PROMPT_SOURCE="$(require_inventory_path migrationPrompt)" || exit 1
+DISPATCH_MATRIX_RECOMMENDATION_SOURCE="$(require_inventory_path dispatchMatrix)" || exit 1
 
 # The bundle is published into ASSETS by rename rather than rebuilt in place.
 # `resolveAssetsRoot` in the CLI honours a non-empty OAT_ASSETS_DIR, but every
@@ -20,6 +95,30 @@ DISPATCH_MATRIX_RECOMMENDATION_SOURCE="${REPO_ROOT}/$(node "${INVENTORY}" --get 
 # leaves the previous bundle intact if the build fails.
 STAGING="${ASSETS}.staging.$$"
 PREVIOUS="${ASSETS}.previous.$$"
+
+# No destination may sit inside a recursively copied source root, and no such
+# root may sit inside the assets destination: either arrangement copies a tree
+# into itself or replaces a canonical source with the bundle. Checked on
+# physical paths before the trap is installed, so a refusal touches nothing.
+COPIED_SOURCE_ROOTS=(
+  "skills root|${REPO_ROOT}/.agents/skills"
+  "templates root|${REPO_ROOT}/.oat/templates"
+  "docs source|${DOCS_SOURCE}"
+)
+for destination_entry in "assets destination|${ASSETS}" "staging directory|${STAGING}" "previous-bundle directory|${PREVIOUS}"; do
+  destination_label="${destination_entry%%|*}"
+  destination_path="$(physical_path "${destination_entry#*|}")" || exit 1
+  for source_entry in "${COPIED_SOURCE_ROOTS[@]}"; do
+    source_label="${source_entry%%|*}"
+    source_path="$(physical_path "${source_entry#*|}")" || exit 1
+    if path_is_within "${destination_path}" "${source_path}"; then
+      fail_bundle "refusing to build: the ${destination_label} (${destination_path}) is inside the copied ${source_label} (${source_path})."
+    fi
+    if path_is_within "${source_path}" "${destination_path}"; then
+      fail_bundle "refusing to build: the copied ${source_label} (${source_path}) is inside the ${destination_label} (${destination_path})."
+    fi
+  done
+done
 
 # The trap must not destroy the only surviving copy. If the first rename below
 # succeeded and the second then failed, ASSETS does not exist while PREVIOUS

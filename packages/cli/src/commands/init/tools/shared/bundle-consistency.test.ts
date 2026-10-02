@@ -1,13 +1,18 @@
 import { execFileSync } from 'node:child_process';
 import {
+  copyFileSync,
   existsSync,
+  mkdirSync,
   mkdtempSync,
   readFileSync,
   readdirSync,
+  realpathSync,
   rmSync,
+  symlinkSync,
+  writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 
 import {
   DECISION_INDEX_END,
@@ -789,6 +794,391 @@ describe('bundle asset inventory consistency', () => {
       // omits `Legacy` would drop migrated `legacy_id` values.
       expect(promptContent).toContain(getCanonicalDecisionIndexHeader());
       expect(promptContent).not.toContain('| ID | Date | Status | Decision |');
+    });
+  });
+});
+
+type StubInventory = {
+  skills: string[];
+  agents: string[];
+  templateFiles: string[];
+  templateDirectories: string[];
+  oatScripts: string[];
+  publicVersionPackages: string[];
+  docsRoot: string;
+  migrationPrompt: string;
+  dispatchMatrix: string;
+};
+
+const VALID_STUB_INVENTORY: StubInventory = {
+  skills: ['demo-skill'],
+  agents: ['demo-agent.md'],
+  templateFiles: ['state.md'],
+  templateDirectories: ['ideas'],
+  oatScripts: ['demo.sh'],
+  publicVersionPackages: ['cli'],
+  docsRoot: 'apps/demo-docs/docs',
+  migrationPrompt: 'packages/cli/config/migration.md',
+  dispatchMatrix: 'packages/cli/config/matrix.json',
+};
+
+// Every command that can create, copy, move, or delete a tree. In `refuse`
+// mode the shims record the call and exit without touching the filesystem, so
+// a configuration that would recurse can never grow: the log is a trap-proof
+// marker (the script's EXIT trap cannot erase it) that a rejection happened
+// before staging was ever created.
+const GUARDED_COMMANDS = ['cp', 'mkdir', 'mv', 'rm'];
+
+type StubBundleTree = {
+  scratch: string;
+  repoRoot: string;
+  scriptPath: string;
+  logPath: string;
+  binDir: string;
+};
+
+function writeTreeFile(path: string, content: string, mode?: number): void {
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, content, mode === undefined ? undefined : { mode });
+}
+
+function stubInventorySource(inventory: StubInventory): string {
+  return [
+    `export const BUNDLE_INPUTS = ${JSON.stringify(inventory)};`,
+    'const [command, name] = process.argv.slice(2);',
+    "if (command === '--get') {",
+    "  process.stdout.write(String(BUNDLE_INPUTS[name]) + '\\n');",
+    "} else if (command === '--list') {",
+    "  process.stdout.write(BUNDLE_INPUTS[name].join('\\n') + '\\n');",
+    '}',
+    '',
+  ].join('\n');
+}
+
+/**
+ * Build a tiny isolated repository whose `packages/cli/scripts/` holds a copy
+ * of the real `bundle-assets.sh` next to a stub inventory, so the temporary
+ * directory is the script's REPO_ROOT. The tree holds one file per inventory
+ * category and nothing else, keeping any accidental copy bounded.
+ */
+function createStubBundleTree(inventory: StubInventory): StubBundleTree {
+  const scratch = realpathSync(
+    mkdtempSync(join(tmpdir(), 'oat-bundle-guard-')),
+  );
+  const repoRoot = join(scratch, 'repo');
+  const scriptsDir = join(repoRoot, 'packages/cli/scripts');
+  const binDir = join(scratch, 'bin');
+  const logPath = join(scratch, 'guarded-commands.log');
+
+  writeTreeFile(join(repoRoot, 'NOTICES.md'), '# Notices\n');
+  writeTreeFile(
+    join(repoRoot, '.agents/skills/demo-skill/SKILL.md'),
+    '# demo\n',
+  );
+  writeTreeFile(
+    join(repoRoot, '.agents/skills/demo-skill/tests/demo.test.mjs'),
+    '\n',
+  );
+  writeTreeFile(join(repoRoot, '.agents/agents/demo-agent.md'), '# agent\n');
+  writeTreeFile(join(repoRoot, '.oat/templates/state.md'), '# state\n');
+  writeTreeFile(join(repoRoot, '.oat/templates/ideas/idea.md'), '# idea\n');
+  writeTreeFile(join(repoRoot, '.oat/scripts/demo.sh'), '#!/bin/sh\n');
+  writeTreeFile(join(repoRoot, 'apps/demo-docs/docs/index.md'), '# docs\n');
+  writeTreeFile(
+    join(repoRoot, 'packages/cli/config/migration.md'),
+    '# migration\n',
+  );
+  writeTreeFile(join(repoRoot, 'packages/cli/config/matrix.json'), '{}\n');
+  writeTreeFile(
+    join(repoRoot, 'packages/cli/package.json'),
+    `${JSON.stringify({ name: 'demo-cli', version: '9.9.9' })}\n`,
+  );
+  writeTreeFile(
+    join(scriptsDir, 'bundle-inputs.mjs'),
+    stubInventorySource(inventory),
+  );
+  mkdirSync(scriptsDir, { recursive: true });
+  copyFileSync(getBundleScriptPath(), join(scriptsDir, 'bundle-assets.sh'));
+
+  for (const command of GUARDED_COMMANDS) {
+    writeTreeFile(
+      join(binDir, command),
+      [
+        '#!/bin/sh',
+        `printf '%s %s\\n' '${command}' "$*" >> "$OAT_BUNDLE_GUARD_LOG"`,
+        'if [ "$OAT_BUNDLE_GUARD_MODE" = refuse ]; then',
+        '  exit 97',
+        'fi',
+        'PATH="$OAT_BUNDLE_GUARD_REAL_PATH"',
+        'export PATH',
+        `exec ${command} "$@"`,
+        '',
+      ].join('\n'),
+      0o755,
+    );
+  }
+  writeFileSync(logPath, '');
+
+  return {
+    scratch,
+    repoRoot,
+    scriptPath: join(scriptsDir, 'bundle-assets.sh'),
+    logPath,
+    binDir,
+  };
+}
+
+type BundleRun = { status: number | null; stderr: string };
+
+function runStubBundle(
+  tree: StubBundleTree,
+  options: { assetsDir?: string; mode: 'refuse' | 'allow' },
+): BundleRun {
+  const env: NodeJS.ProcessEnv = {
+    ...process.env,
+    PATH: `${tree.binDir}:${process.env.PATH ?? ''}`,
+    OAT_BUNDLE_GUARD_LOG: tree.logPath,
+    OAT_BUNDLE_GUARD_MODE: options.mode,
+    OAT_BUNDLE_GUARD_REAL_PATH: process.env.PATH ?? '',
+  };
+  delete env.OAT_ASSETS_DIR;
+  if (options.assetsDir !== undefined) {
+    env.OAT_ASSETS_DIR = options.assetsDir;
+  }
+
+  try {
+    execFileSync('bash', [tree.scriptPath], {
+      env,
+      stdio: 'pipe',
+      encoding: 'utf8',
+      timeout: 10_000,
+    });
+    return { status: 0, stderr: '' };
+  } catch (error) {
+    const failure = error as { status: number | null; stderr?: string };
+    return { status: failure.status, stderr: failure.stderr ?? '' };
+  }
+}
+
+function readGuardedCommandLog(tree: StubBundleTree): string {
+  return readFileSync(tree.logPath, 'utf8');
+}
+
+function expectRejectedBeforeAnyCopy(
+  tree: StubBundleTree,
+  run: BundleRun,
+  message: RegExp,
+): void {
+  expect(run.status).toBe(1);
+  expect(run.stderr).toMatch(message);
+  expect(readGuardedCommandLog(tree)).toBe('');
+}
+
+describe('bundle-assets fail-closed guards', () => {
+  it.each(['docsRoot', 'migrationPrompt', 'dispatchMatrix'] as const)(
+    'rejects an empty %s lookup before staging is created',
+    (key) => {
+      const tree = createStubBundleTree({ ...VALID_STUB_INVENTORY, [key]: '' });
+      try {
+        const run = runStubBundle(tree, {
+          assetsDir: join(tree.scratch, 'out'),
+          mode: 'refuse',
+        });
+
+        expectRejectedBeforeAnyCopy(
+          tree,
+          run,
+          new RegExp(`inventory lookup '${key}' printed nothing`),
+        );
+        expect(existsSync(join(tree.scratch, 'out'))).toBe(false);
+      } finally {
+        rmSync(tree.scratch, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
+
+  it.each([
+    ['.', /inventory lookup 'docsRoot' resolves to the repository root/],
+    ['./', /inventory lookup 'docsRoot' resolves to the repository root/],
+    ['/etc', /inventory lookup 'docsRoot' returned an absolute path/],
+    ['apps/../..', /inventory lookup 'docsRoot' contains a '\.\.' segment/],
+  ])(
+    'rejects a docsRoot lookup of %j that escapes or equals the repository root',
+    (value, message) => {
+      const tree = createStubBundleTree({
+        ...VALID_STUB_INVENTORY,
+        docsRoot: value,
+      });
+      try {
+        const run = runStubBundle(tree, {
+          assetsDir: join(tree.scratch, 'out'),
+          mode: 'refuse',
+        });
+
+        expectRejectedBeforeAnyCopy(tree, run, message);
+      } finally {
+        rmSync(tree.scratch, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
+
+  it.each([
+    ['a bundled skill directory', 'repo/.agents/skills/demo-skill/bundle'],
+    ['a copied template directory', 'repo/.oat/templates/ideas/bundle'],
+    ['the docs source', 'repo/apps/demo-docs/docs/bundle'],
+    ['the skills root itself', 'repo/.agents/skills'],
+    ['a parent of the skills root', 'repo/.agents'],
+    ['the repository root', 'repo'],
+  ])(
+    'rejects an assets destination inside or around %s before any copy',
+    (_label, relativeDestination) => {
+      const tree = createStubBundleTree(VALID_STUB_INVENTORY);
+      try {
+        const run = runStubBundle(tree, {
+          assetsDir: join(tree.scratch, relativeDestination),
+          mode: 'refuse',
+        });
+
+        expectRejectedBeforeAnyCopy(tree, run, /refusing to build/);
+      } finally {
+        rmSync(tree.scratch, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    'rejects an assets destination reached through a symlink alias of a copied source',
+    () => {
+      const tree = createStubBundleTree(VALID_STUB_INVENTORY);
+      try {
+        const alias = join(tree.scratch, 'alias');
+        symlinkSync(join(tree.repoRoot, '.agents/skills/demo-skill'), alias);
+
+        const run = runStubBundle(tree, {
+          assetsDir: join(alias, 'bundle'),
+          mode: 'refuse',
+        });
+
+        expectRejectedBeforeAnyCopy(tree, run, /refusing to build/);
+        expect(
+          existsSync(join(tree.repoRoot, '.agents/skills/demo-skill/bundle')),
+        ).toBe(false);
+      } finally {
+        rmSync(tree.scratch, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    'still builds into a disjoint destination',
+    () => {
+      const tree = createStubBundleTree(VALID_STUB_INVENTORY);
+      try {
+        const assetsDir = join(tree.scratch, 'out/assets');
+        const run = runStubBundle(tree, { assetsDir, mode: 'allow' });
+
+        expect(run).toEqual({ status: 0, stderr: '' });
+        expect(
+          readFileSync(join(assetsDir, 'skills/demo-skill/SKILL.md'), 'utf8'),
+        ).toBe('# demo\n');
+        expect(existsSync(join(assetsDir, 'skills/demo-skill/tests'))).toBe(
+          false,
+        );
+        expect(readFileSync(join(assetsDir, 'docs/index.md'), 'utf8')).toBe(
+          '# docs\n',
+        );
+        expect(existsSync(join(assetsDir, 'templates/ideas/idea.md'))).toBe(
+          true,
+        );
+        expect(readGuardedCommandLog(tree)).toMatch(/^cp /m);
+      } finally {
+        rmSync(tree.scratch, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    'still builds into the default destination',
+    () => {
+      const tree = createStubBundleTree(VALID_STUB_INVENTORY);
+      try {
+        const run = runStubBundle(tree, { mode: 'allow' });
+
+        expect(run).toEqual({ status: 0, stderr: '' });
+        const assetsDir = join(tree.repoRoot, 'packages/cli/assets');
+        expect(
+          JSON.parse(
+            readFileSync(join(assetsDir, 'bundle-metadata.json'), 'utf8'),
+          ),
+        ).toEqual({ schemaVersion: 1, oatVersion: '9.9.9' });
+        expect(existsSync(join(assetsDir, 'docs/index.md'))).toBe(true);
+      } finally {
+        rmSync(tree.scratch, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
+
+  describe('bundle-inputs.mjs path lookups', () => {
+    const realDocsRootEntry = "docsRoot: 'apps/oat-docs/docs',";
+
+    function runInventoryCopyWithDocsRoot(value: string): BundleRun {
+      const scratch = realpathSync(
+        mkdtempSync(join(tmpdir(), 'oat-bundle-inputs-')),
+      );
+      try {
+        const source = readFileSync(getBundleInventoryPath(), 'utf8');
+        expect(source).toContain(realDocsRootEntry);
+        const inventoryCopy = join(scratch, 'bundle-inputs.mjs');
+        writeFileSync(
+          inventoryCopy,
+          source.replace(
+            realDocsRootEntry,
+            `docsRoot: ${JSON.stringify(value)},`,
+          ),
+        );
+        try {
+          execFileSync(process.execPath, [inventoryCopy, '--get', 'docsRoot'], {
+            stdio: 'pipe',
+            encoding: 'utf8',
+          });
+          return { status: 0, stderr: '' };
+        } catch (error) {
+          const failure = error as { status: number | null; stderr?: string };
+          return { status: failure.status, stderr: failure.stderr ?? '' };
+        }
+      } finally {
+        rmSync(scratch, { recursive: true, force: true });
+      }
+    }
+
+    it.each([
+      ['', /docsRoot.*is empty/],
+      ['/abs/docs', /docsRoot.*is an absolute path/],
+      ['apps/../docs', /docsRoot.*contains a '\.\.' segment/],
+    ])(
+      'rejects a docsRoot value of %j with a non-zero exit',
+      (value, message) => {
+        const run = runInventoryCopyWithDocsRoot(value);
+
+        expect(run.status).not.toBe(0);
+        expect(run.stderr).toMatch(message);
+      },
+    );
+
+    it('prints the real repository-relative docs root', () => {
+      expect(
+        execFileSync(
+          process.execPath,
+          [getBundleInventoryPath(), '--get', 'docsRoot'],
+          { encoding: 'utf8' },
+        ),
+      ).toBe('apps/oat-docs/docs\n');
     });
   });
 });
