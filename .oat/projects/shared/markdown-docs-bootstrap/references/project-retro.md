@@ -23,7 +23,7 @@ oat_retro_evidence_sources:
   - source: oat-execution-learnings
     status: unavailable
 oat_retro_promotions: none
-oat_retro_filing: proposed
+oat_retro_filing: complete
 oat_generated: true
 oat_template: false
 ---
@@ -60,8 +60,8 @@ Retro artifact checks passed: formatting, Markdown lint, complete frontmatter/re
 ## Current State
 
 - **Promotions:** none; no RP apply-items.
-- **Filing:** proposed; RP-01, RP-02 and RP-03 are proposed file-items without destination receipts.
-- **Unsettled items:** RP-01, RP-02 and RP-03. Next action: approve filing evidence into the named existing backlog items through `oat-project-retro-file`.
+- **Filing:** complete; RP-01, RP-02 and RP-03 strengthened their existing repository backlog destinations, with verified commit receipts and unpushed visibility.
+- **Unsettled items:** none. Next action: none for retro filing; destination changes are durable locally.
 
 ## What Went Well
 
@@ -136,12 +136,12 @@ Filesystem discovery also has distinct boundaries: required entrypoints must be 
 
 - **Type:** code-follow-up
 - **Disposition:** file
-- **Status:** proposed
-- **Destination:** —
-- **Destination-receipt:** —
-- **Remote-visibility:** —
+- **Status:** filed
+- **Destination:** .oat/repo/pjm/backlog/items/BL-260927-derive-current-lifecycle-state.md
+- **Destination-receipt:** 8bf407e4cbfd548fd11f4a6ded2ad5ad1f4f63de
+- **Remote-visibility:** unpushed
 - **Sanitized:** no
-- **Disposition-note:** —
+- **Disposition-note:** Strengthened the approved existing backlog item with project evidence; separate destination commit verified, local only.
 
 Extend existing [BL-260927-derive-current-lifecycle-state](../../../../repo/pjm/backlog/items/BL-260927-derive-current-lifecycle-state.md), rather than opening a duplicate. This run adds concrete examples of joined YAML, fragmented review tables and stale task/status views. Its structured transition helper should validate complete frontmatter, keep review rows contiguous, preserve unknown columns and historical cells, and retain immutable completed sequence state before recording a transition. A failed edit or validation must leave the prior state and completion record unchanged.
 
@@ -149,12 +149,12 @@ Extend existing [BL-260927-derive-current-lifecycle-state](../../../../repo/pjm/
 
 - **Type:** code-follow-up
 - **Disposition:** file
-- **Status:** proposed
-- **Destination:** —
-- **Destination-receipt:** —
-- **Remote-visibility:** —
+- **Status:** filed
+- **Destination:** .oat/repo/pjm/backlog/items/BL-260820-bind-each-gate-review.md
+- **Destination-receipt:** 8bf407e4cbfd548fd11f4a6ded2ad5ad1f4f63de
+- **Remote-visibility:** unpushed
 - **Sanitized:** no
-- **Disposition-note:** —
+- **Disposition-note:** Strengthened the approved existing backlog item with project evidence; separate destination commit verified, local only.
 
 Extend existing [BL-260820-bind-each-gate-review](../../../../repo/pjm/backlog/items/BL-260820-bind-each-gate-review.md). Add this run's exact scope/type/artifact/event correlation, terminal marker cleanup and failed-prerequisite receive-intent incident as controls. Terminal receive should consume retained acceptance proof without relying on a live marker, while mismatched or incomplete proof must refuse mutation. An `ok` threshold with address-now findings must preserve raw counts and consume no failed remediation attempt; a later source change retires routing freshness without rewriting the received event's identity or reviewed head.
 
@@ -162,12 +162,12 @@ Extend existing [BL-260820-bind-each-gate-review](../../../../repo/pjm/backlog/i
 
 - **Type:** code-follow-up
 - **Disposition:** file
-- **Status:** proposed
-- **Destination:** —
-- **Destination-receipt:** —
-- **Remote-visibility:** —
+- **Status:** filed
+- **Destination:** .oat/repo/pjm/backlog/items/BL-260820-track-pr-closeout-evidence.md
+- **Destination-receipt:** 8bf407e4cbfd548fd11f4a6ded2ad5ad1f4f63de
+- **Remote-visibility:** unpushed
 - **Sanitized:** no
-- **Disposition-note:** —
+- **Disposition-note:** Strengthened the approved existing backlog item with project evidence; separate destination commit verified, local only.
 
 Extend existing [BL-260820-track-pr-closeout-evidence](../../../../repo/pjm/backlog/items/BL-260820-track-pr-closeout-evidence.md). Use the accepted gate followed by `420bceded` as a real late-docs control. A resume must classify changed completed-step outputs, identify which exact receipts became stale, refresh the affected evidence before approval, and preserve the completed summary/document/PR sequence rather than resetting or reordering it. Public bundled docs must not inherit the exemption for project/reference bookkeeping. This proposal strengthens an existing freshness contract; it does not establish that the current resume implementation incorrectly approves stale work.
 
