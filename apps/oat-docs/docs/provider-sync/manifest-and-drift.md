@@ -13,6 +13,67 @@ This page explains how OAT remembers what it manages and how it distinguishes cl
 - When to use it: when `oat status` shows drift or strays and you need to understand why OAT thinks a file is managed, missing, or adoptable.
 - Primary commands: `oat status`, `oat init`, `oat sync`
 
+Diagram: canonical assets produce provider views and a manifest; status reports what changed and how to resolve it.
+
+```mermaid
+flowchart TD
+  CANON["Canonical assets\nEdit .agents/"]
+  SYNC["oat sync\nGenerate views"]
+  VIEWS["Provider views"]
+  MANIFEST["Sync manifest"]
+  STATUS["oat status\nInspect before resolving"]
+  TRACKED["Tracked views\nin_sync / drifted / missing"]
+  STRAY["Unmanaged files\nstray"]
+  CANON --> SYNC
+  SYNC --> VIEWS
+  SYNC --> MANIFEST
+  MANIFEST --> STATUS
+  VIEWS --> STATUS
+  STATUS --> TRACKED
+  STATUS --> STRAY
+```
+
+- **What you edit.** Only the canonical files under `.agents/` (skills, agents,
+  rules). `oat sync` reads them and writes provider views as symlinks or copies
+  under `.claude/`, `.cursor/`, `.github/` and `.codex/`. It records each
+  per-entry view in `.oat/sync/manifest.json`, one entry per canonical path and
+  provider. Codex roles and config are generated too, but are tracked by the
+  Codex extension, not as manifest entries.
+- **What `oat status` reports.** A view is `in_sync` when it still matches what
+  the last sync recorded, `drifted` (`modified`, `broken` or `replaced`) when
+  its content or link changed or its target is gone, and `missing` when no view
+  exists or it was never tracked. A provider file OAT does not manage is a
+  `stray`.
+- **What re-running `oat sync` does.** It writes unless you pass `--dry-run`.
+  It recreates missing views and rewrites drifted ones from canonical, so an
+  edit made in a provider copy is lost, not merged. A file you placed at a
+  view's path without OAT is replaced too. When a skill or rule is deleted
+  from `.agents/`, sync removes its views. When an agent is deleted or
+  renamed, it does not; see the warning below.
+- **What to do with a stray.** In an interactive `oat status` or `oat init` you
+  can adopt it, which moves or converts it into `.agents/`. For a Cursor or
+  Copilot skill you can keep it in place; OAT records the path under
+  `knownStrays` in `.oat/sync/config.json` and leaves it out of later reports.
+  You can also list a path there by hand.
+
+> [!WARNING]
+> Sync does not clean up after a deleted or renamed agent. With Cursor enabled,
+> once `.agents/agents/<name>.md` is gone, `oat sync`, `oat sync --dry-run` and
+> `oat status` exit 1 with
+> `Cursor agent definition is a symbolic link at .cursor/agents/<name>.md whose target escapes the sync scope.`
+> With Codex enabled, the agent's generated files stay behind. After deleting
+> or renaming an agent, clean up by hand:
+>
+> 1. Delete the link `.cursor/agents/<name>.md`.
+> 2. Delete the link `.claude/agents/<name>.md`; until it is gone, the same
+>    error names that path instead.
+> 3. Delete `.codex/agents/<name>.toml`.
+> 4. In `.codex/config.toml`, delete the `[agents.<name>]` table.
+> 5. Run `oat sync --scope project`; it should now succeed.
+>
+> Skills and rules are not affected: sync removes their views when the
+> canonical file is deleted.
+
 ## Manifest locations
 
 - Project: `.oat/sync/manifest.json`
@@ -271,3 +332,27 @@ reasoning effort, and OAT writes a role such as
 - `.oat/projects/<scope>/<project>/design.md`
 - `packages/cli/src/manifest/**`
 - `packages/cli/src/drift/**`
+
+## Choosing a stray disposition
+
+A stray is a file in a provider folder (such as `.cursor/skills/`) that OAT
+does not manage. Interactive `oat init` and `oat status` ask what to do with
+each one.
+
+| Choice                 | Choose it when                                        | What you give up                                                                                 |
+| ---------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Adopt                  | Every agent tool should get it                        | Keeping it in one tool only: OAT moves it into `.agents/` and leaves a link at the original path |
+| Keep tool-only         | A Cursor or Copilot skill is meant for that tool only | Other tools never see it. Its exact path is saved in `knownStrays` and no longer reported        |
+| Decide later (default) | You are not sure who should own it yet                | It is reported again on every run                                                                |
+
+Keep is offered only for Cursor and Copilot skills, and OAT refuses it when a
+canonical skill with the same name exists; resolve that clash instead. Keeping a
+skill only stops OAT from reporting that path. It does not check that the
+skill is correct or up to date with anything else.
+
+- If a skill should work in every agent tool, adopt it.
+- If a Cursor- or Copilot-only skill is personal, keep it at user scope; if the
+  team needs it, keep it at project scope.
+- For any other stray you want to keep, add its exact path to `knownStrays` by
+  hand, or gitignore it.
+- If you are not sure yet, choose Decide later so it stays visible.

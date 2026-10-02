@@ -7,6 +7,15 @@ description: 'Tool-pack lifecycle commands (oat tools) for installing, updating,
 
 This page covers CLI commands that manage bundled OAT tool packs and installed OAT skill/agent assets in canonical directories.
 
+> **In short**
+>
+> - A tool pack is a bundle of OAT skills (instructions your coding agent follows), agents, templates and scripts that installs as one unit.
+> - There are eight packs: `core` (setup diagnostics and a local copy of these docs), `workflows` (tracked projects), `docs` (documentation upkeep), `utility` (reviews and maintenance helpers), `research` (evidence gathering and comparison), `ideas` and `brainstorm` (exploring ideas), and `project-management` (backlog and decisions kept in the repository).
+> - Install one pack with an explicit scope: `oat tools install research --scope project` puts it in this repository, and `oat tools install research --scope user` puts it in your home directory. Leave out the pack name, as in `oat tools install --scope project`, to install every pack; in an interactive terminal it first asks which packs to include.
+> - The `core` pack only ever installs under your home directory, whatever `--scope` you pass. [Where packs install](#where-packs-install) shows what that means for each command.
+> - Installing the `project-management` pack is not the same as adopting project management: the repository's planning files are created only when someone runs `oat pjm init`.
+> - Read next: [Choosing packs and their ownership](#choosing-packs-and-their-ownership), [Install vs. initialize](#install-vs-initialize), [Upgrading from an earlier CLI](#upgrading-from-an-earlier-cli), and [What OAT Writes](../reference/what-oat-writes.md) for every file each command creates.
+
 ## Quick Look
 
 - What it does: explains how bundled OAT packs are installed, updated, inspected, and removed.
@@ -29,8 +38,40 @@ This page covers CLI commands that manage bundled OAT tool packs and installed O
 
 Every reusable pack is a complete user-scope capability. On a **fresh** install
 each pack lands at user scope by default, so capabilities follow you across
-repositories. `core` is the one pack that is user-only: passing a conflicting
-explicit `--scope project` is rejected rather than silently ignored.
+repositories. `core` is the one pack that is user-only; see
+[Where packs install](#where-packs-install) for what happens when you ask for
+project scope.
+
+### Where packs install
+
+The `--scope` option of `oat tools install` and `oat tools remove` lists `all`
+as its default in `--help`. For `oat tools install`, that default does not
+mean both scopes:
+
+- With no `--scope`, a pack that is not installed yet is installed under your
+  home directory (user scope: `~/.agents/` and `~/.oat/`). A pack that is
+  already installed keeps the scope it has. An interactive install of several
+  packs asks where each one should go and suggests the same answer.
+- With `--scope project`, the pack is installed in this repository
+  (`.agents/` and `.oat/`). With `--scope user`, it is installed under your
+  home directory.
+- With `--scope all` given explicitly for one pack, as in
+  `oat tools install docs --scope all`, that pack is installed at both scopes.
+
+The `core` pack can only live under your home directory:
+
+- `oat tools install --scope project`, with no pack name, installs the other
+  seven packs in this repository and still installs `core` under your home
+  directory.
+- `oat tools install core --scope project` exits successfully and prints
+  `Installed core tool pack.`, but it writes nothing, neither in the
+  repository nor in your home directory. Run `oat tools install core` (or add
+  `--scope user`) to install it.
+- `oat tools remove --all --scope project` fails with
+  `Pack core does not allow project scope`, and so does
+  `oat tools remove --all` with no `--scope`. Remove the project copies one
+  pack at a time with `oat tools remove --pack <pack> --scope project`, and
+  remove the home-directory copies with `oat tools remove --all --scope user`.
 
 On a **re-install**, existing placement wins. A pack already installed at
 project scope stays at project scope; the fresh-install default never migrates
@@ -449,12 +490,17 @@ adoption**, and the two are tracked independently:
   fresh install, so `~/.agents/skills/` and `~/.oat/templates/` receive the
   managed assets and no repository file is touched.
 - **Initialize (adoption)**: `oat pjm init` instantiates the two-layer working
-  repo-reference surface under `.oat/repo/`, creates repository guidance only
-  when the root `AGENTS.md` is absent, and records explicit adoption in
-  `.oat/config.json` as `pjm.initialized: true` with a `pjm.schemaVersion`.
-  When the root file or a contained symlink already exists, adoption completes
-  independently and OAT prints a manual project-management/decision patch
-  without changing that file.
+  repo-reference surface under `.oat/repo/` and records explicit adoption in
+  `.oat/config.json` as `pjm.initialized: true` with a `pjm.schemaVersion`. It
+  also writes the `OAT project-management` and `OAT decisions` guidance
+  sections to the root `AGENTS.md`. When no root `AGENTS.md` exists, it
+  creates the file with both sections. When the file (or a contained symlink
+  to one) exists, it appends whichever of the two sections is absent and
+  leaves the rest of the file unchanged. It does not rewrite a section that is
+  already there but differs from the managed version, and it does not write to
+  a file with more than one hard link or that it cannot write. In those cases
+  adoption still completes, the existing file is left unchanged, OAT prints a
+  manual patch for you to apply, and the command exits with status 1.
 
 Having the pack installed does **not** mean this repository uses PJM. Adoption
 is a per-repository decision recorded by `oat pjm init`:
@@ -726,7 +772,7 @@ Key behavior:
 - Interactive installs show each pack's current install location in the picker so already-installed packs are visible before you submit
 - Installing is **additive**: choosing a scope for a pack never removes it from another scope. A pack installed at user scope plus a project install ends up at `project + user`, not moved
 - For every pack that allows both scopes (`ideas`, `docs`, `workflows`, `utility`, `project-management`, `research`, `brainstorm`), the interactive flow offers a per-pack end-state selector (`project`, `user`, or `both`) defaulting to the pack's current placement; leaving the default makes no changes for that pack
-- Fresh installs default to **user scope** for every pack; existing installs keep their current placement
+- Fresh installs default to **user scope** for every pack; existing installs keep their current placement. The `--scope` default shown in `--help` is `all`, but with no `--scope` a pack that is not installed yet goes under your home directory; see [Where packs install](#where-packs-install)
 - `oat init --setup` uses this same additive scope resolver. In guided setup, choosing to customize scope reaches the per-pack selector; choosing the recommended defaults, or running non-interactively, applies additive per-pack defaults without removals
 - Every pack's fresh-install default is user scope (`defaultScope` in the release manifest); existing installs keep their current placement on re-install, so a re-install never moves a pack between scopes or creates a second copy at the other one. This applies to the per-pack subcommands too: a bare `oat tools install docs` in a repository where `docs` is already at project scope stays at project scope, and only an explicit `--scope` overrides that
 - Removing a pack from a scope happens only when you explicitly choose a narrower end-state in the interactive flow (e.g. a pack at `both` set to `project` only). All staged removals are shown in a single change summary and applied only after one batch confirmation — declining makes no changes
@@ -785,6 +831,7 @@ Purpose:
 Key behavior:
 
 - Accepts a tool name, `--pack <pack>`, or `--all` (mutually exclusive)
+- `--all` covers every pack, including `core`, so it works only with `--scope user`. `oat tools remove --all --scope project`, and `oat tools remove --all` with no `--scope`, fail with `Pack core does not allow project scope`; remove project-scope packs one at a time with `--pack <pack> --scope project`
 - Removal is planned from the release manifest, so it deletes **only** assets OAT manages for that pack and scope
 - Retained by design: project-scope repository template overrides, mutable seed files (`.oat/ideas/…`, `.oat/projects-root`, project `.gitkeep` files), and shared scripts still owned by another installed pack. Retained owner data is reported rather than silently skipped
 - Already-missing files are not an error
@@ -916,7 +963,7 @@ The `core` pack contains foundational diagnostic and documentation skills:
 
 Key behavior:
 
-- Core pack always installs at **user scope** (`~/.agents/skills/`). It is the only pack whose sole allowed scope is `user`, and passing a conflicting explicit `--scope` (e.g. `oat init tools core --scope project`) is rejected with an error rather than silently ignored; omit `--scope` or pass `--scope user`. This ensures core skills are available in any directory.
+- Core pack always installs at **user scope** (`~/.agents/skills/`). It is the only pack whose sole allowed scope is `user`. A conflicting explicit `--scope project` is not rejected: `oat tools install core --scope project` (and the legacy `oat init tools core --scope project`) exits successfully and prints `Installed core tool pack.` but writes nothing, while `oat tools install --scope project` with no pack name still installs core under your home directory. To install core, omit `--scope` or pass `--scope user`. Keeping core in your home directory makes its skills available in any directory. See [Where packs install](#where-packs-install).
 - `~/.oat/docs/` is a managed directory asset: its completeness and drift are compared as a whole tree, so a partially deleted docs tree is reported as a partial `core` install rather than passing silently.
 - Core is checked by default in the `oat init tools` guided setup.
 - Installation also bundles OAT documentation to `~/.oat/docs/` for the oat-docs skill.
@@ -1041,6 +1088,13 @@ exit codes. Nothing here is data-destructive, and legacy config keeps working �
 grandfathered as `inferred-legacy`, and existing installs remain additive. One
 inert per-pack install flag was removed, and several commands you already run
 behave differently.
+
+OAT is versioned 0.x, and as this section shows, defaults and exit codes can
+change between 0.x releases. Release notes for each version, including the
+list of merged changes, are published on the repository's
+[GitHub Releases page](https://github.com/voxmedia/open-agent-toolkit/releases).
+The repository does not keep a separate `CHANGELOG` file. Read the notes for
+each version you skip before you update a team's installation.
 
 ### Install scope defaults flipped to user
 
@@ -1173,3 +1227,77 @@ Related docs:
 - Bootstrap (`oat init`): `bootstrap.md`
 - Provider sync (`oat status`, `oat sync`, `oat providers ...`): `../provider-sync/index.md`
 - Diagnostics and local-state commands: [Config and Local State](../reference/config-and-local-state.md)
+
+## Choosing packs and their ownership
+
+A tool pack is a bundle of OAT skills, agents, templates, and scripts that
+installs as one unit. You choose which packs to install and, for each one, its
+scope: user scope puts it in your home directory (`~/.agents/`, `~/.oat/`) so
+it works in every repository you open, and project scope puts it in this
+repository so every clone gets it.
+
+| Need                                                       | Choose                                          |
+| ---------------------------------------------------------- | ----------------------------------------------- |
+| Setup diagnostics and bundled documentation                | `core`                                          |
+| Tracked projects and lifecycle execution                   | `workflows`                                     |
+| Documentation and instruction maintenance                  | `docs`                                          |
+| Reviews, orchestration, explainers, repository improvement | `utility`                                       |
+| Evidence gathering and analysis                            | `research` (includes its dispatch dependencies) |
+| Exploratory capture                                        | `ideas` and/or `brainstorm`                     |
+| File-backed backlog, roadmap, decisions, tracker bindings  | `project-management`, then explicitly adopt PJM |
+
+The interactive picker selects every pack except `project-management`; a
+non-interactive install includes all eight. To install only one pack, name it:
+for example, `oat tools install research --scope user` installs just the
+`research` pack (plus the two `utility` dispatch skills it depends on). The
+`brainstorm` pack is labeled "always-on" because, at its default user scope,
+its skill is available in every repository you open. It does not start on its
+own: it enters brainstorm mode only when you run `/oat-brainstorm` or
+explicitly ask to brainstorm, and it does not activate for review, debugging,
+PR, status, or implementation questions. Installing `project-management`
+only makes its commands available. The repository's planning files are not
+created until someone runs `oat pjm init` (see [Install vs. initialize](#install-vs-initialize)).
+
+- If you are trying OAT on your own, accept the picker's selection and add packs
+  later when you need their workflows.
+- If your team will keep its backlog and decisions in the repository, also
+  select `project-management`, then run `oat pjm doctor --json` and
+  `oat pjm init` once.
+- If you mainly need evidence gathering, choose `research`; it installs the two
+  dispatch skills it needs from `utility` for you.
+
+| Scope   | Choose it when                                  | What you give up                                                           |
+| ------- | ----------------------------------------------- | -------------------------------------------------------------------------- |
+| User    | You want the skills in every repository you use | Teammates do not get them from the repository                              |
+| Project | The team needs identical tooling in every clone | Pack updates show up as repository changes                                 |
+| Both    | Rarely, and only deliberately                   | Duplicate copies, and OAT does not decide which copy your agent tool loads |
+
+A fresh install goes to user scope, which lets you reuse packs across
+repositories without update churn in each one; a pack that is already installed
+keeps its scope. **`core` is user-only**: `oat tools install --scope project`
+with no pack name still installs it in your home directory, and
+`oat tools install core --scope project` reports success but installs nothing
+(see [Where packs install](#where-packs-install)). `oat init --scope project --setup` does not choose
+project scope for packs; customize each pack's scope at the prompt, or install
+packs explicitly. Installing a pack at a second scope adds a second copy rather
+than moving it, so use `oat tools migrate` to move a pack between scopes.
+Templates that a project-scope install writes belong to the repository after
+that: later pack updates and `oat tools remove` leave them alone.
+
+- If you are trying OAT alone, or want your skills in all your repositories,
+  use user scope.
+- If you are rolling OAT out to a team, install with `--scope project` and
+  commit the result. If you already have user-scope copies, move them with
+  `oat tools migrate --pack <pack> --from user --to project` instead of
+  installing a second time.
+- If you do end up with both copies, check which one your agent tool actually
+  loads; OAT does not resolve that for you.
+
+Installing any pack never gives OAT permission to publish to an issue tracker.
+
+> [!WARNING]
+> Rerunning `oat pjm init` or `oat pjm migrate --apply` deletes the `pjm.remote`
+> settings from `.oat/config.json`, so every remote setting silently returns to
+> its default. Afterwards, check `git diff .oat/config.json` and restore the
+> settings you need with `oat config set` (shared remote storage is restored
+> with `oat pjm remote storage shared`) before doing more remote work.

@@ -1,4 +1,9 @@
 {
   "title": "Execution",
-  "pages": ["project-log", "implementation-execution", "picking-up-projects"]
+  "pages": [
+    "execution-skills",
+    "project-log",
+    "implementation-execution",
+    "picking-up-projects"
+  ]
 }

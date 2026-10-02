@@ -11,17 +11,52 @@ the work, then `oat gate review` dispatches a normal OAT review to another
 runtime such as Codex or Claude and maps blocking review findings to the gate
 exit status.
 
+**In short:**
+
+- **What this page is for:** setting up a _gate_, an extra review (or other
+  command) that a lifecycle skill runs as its last step, usually by a second
+  agent CLI such as Codex, Claude Code, or Cursor. No gate is configured by
+  default.
+- **Who needs it:** a team lead setting a review policy, or anyone who wants a
+  second model to check plans or code. If you have only one agent CLI
+  installed, you can skip gates.
+- **Know first:** every gate needs an explicit `--on-failure` (`block`,
+  `prompt`, or `warn`). The reviewer prefers a different model family but falls
+  back to the best available reviewer with only a warning, so check
+  `diversity.achieved` in the gate result. A shared gate guides agents; a
+  teammate can still turn it off on their own machine.
+- **Decide:** [Choosing gate posture](#choosing-gate-posture),
+  [When the gate finds blocking problems](#when-the-gate-finds-blocking-problems),
+  and [How independent the reviewer must be](#how-independent-the-reviewer-must-be).
+  The sections between here and there are the detailed contract.
+
+The shortest way to add an independent review to the implement step, shared
+with your team through the committed `.oat/config.json`, is the same command as
+in
+[Approvals and Automation](../approvals-and-automation.md#a-person-approves-the-plan-and-the-final-result-and-an-independent-model-reviews-the-code):
+
+```bash
+oat gate set oat-project-implement \
+  --command 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final "Use oat-project-review-provide code final for the declared project"' \
+  --on-failure block \
+  --layer shared
+```
+
+Type it exactly as shown; `$PROJECT_PATH` stays literal, because the skill sets
+it when the gate runs. Commit `.oat/config.json` afterwards.
+
 `oat gate cross-provider-exec` remains the generic child-status executor. It
 selects an exec target, runs the prompt, and exits with the child process
 status. Use `oat gate review` when the command is specifically an OAT review
 gate that should inspect the produced review artifact.
 
-:::note Release note: default avoidance changed
-Gate dispatch now defaults to `--avoid same-family`, not `same-runtime`.
-For multi-family providers such as Cursor, this prevents a gate from reviewing
-with the same model family that produced the work. Use `--avoid none` only when
-you intentionally allow same-family review.
-:::
+> [!NOTE]
+> **Release note: default avoidance changed.**
+> Gate dispatch now defaults to `--avoid same-family`, not `same-runtime`.
+> For multi-family providers such as Cursor, this prefers a different model
+> family, but falls back to the best available target with a recorded warning
+> when diversity is unavailable. Inspect `diversity.achieved`; use `--avoid none` only when
+> you intentionally allow same-family review.
 
 ## Gate config
 
@@ -1058,3 +1093,122 @@ starts and then fails, OAT does not try another target after dispatch. If no
 different-family target is available, OAT warns, records the degraded achieved
 level, and runs the best available target rather than pretending diversity was
 achieved.
+
+## Choosing gate posture
+
+A gate is an extra review that a lifecycle skill runs as its last step: the
+skill hands the work to a second agent CLI (the reviewer) and turns its findings
+into a pass or a fail. No gate is configured by default. A gate on a planning
+skill reviews the plan before any code is written; a gate on
+`oat-project-implement` reviews the finished code before closeout. Either one
+needs a working reviewer CLI on the machine and adds time to every run.
+
+`oat gate set` writes to your user config unless you pass `--layer`. A gate set
+with `--layer shared` is committed with the repository and wins over a
+user-level gate for the same skill. It does not bind every machine: a
+repo-local setting, stored in the gitignored `.oat/config.local.json`,
+overrides the shared gate on that machine (for example
+`oat gate set <skill> --disable --layer local`), and a project can disable a
+configured gate in its own `state.md` (see
+[Per-project gate overrides](#per-project-gate-overrides)). See
+[Can a teammate weaken a team rule?](../approvals-and-automation.md#can-a-teammate-weaken-a-team-rule).
+
+- If you are a solo developer and want speed, or you have only one agent CLI
+  installed, skip gates.
+- If you want a second model to check every plan before coding, gate the
+  planning skills.
+- If your team is rolling out a review policy, set the gate with
+  `--layer shared` and commit it.
+
+### When the gate finds blocking problems
+
+| `onFailure` | Choose it when                   | What you give up                                                                                               |
+| ----------- | -------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `block`     | Findings must be fixed           | Time: the agent fixes and reruns, then hands over to a person and leaves the skill incomplete if still failing |
+| `prompt`    | A person should decide each case | Unattended runs: with no answer, the gate stays blocked                                                        |
+| `warn`      | The review is advisory only      | Enforcement: the failure is recorded and the skill continues                                                   |
+
+Every gate needs an explicit `onFailure`; there is no default.
+`maxAttempts` defaults to two runs in total: the first run plus one
+fix-and-rerun. A reviewer that fails to start, times out without producing a
+review, or produces an invalid result has not reviewed anything, so treat that
+as a failed gate, never as a pass.
+
+How the skills handle that case differs:
+
+- `oat-project-implement` and `oat-project-lite` keep it blocked whatever
+  `onFailure` says, so even a `warn` gate does not let them continue.
+- `oat-project-plan`, `oat-project-quick-start`, and `oat-project-import-plan`
+  apply your `onFailure` setting to any failed gate run, including one where no
+  review happened. With `block`, they retry and then hand the problem to you,
+  as for findings. With `prompt`, they ask you. With `warn`, they record the
+  failure and finish planning, so the plan can be marked ready although no
+  reviewer looked at it.
+
+So if you put a `warn` gate on a planning skill, check the outcome before you
+run `/oat-project-implement`. The gate's JSON result has a `status` field, and
+each `oat gate review` run that starts a reviewer also adds a line to the
+project's `project-log.md` ending in `status=…` and `run=…` (it skips this only when `workflow.projectLog` is `false` and the
+project has no `project-log.md` yet): `status=ok` means the review ran and passed; `status=review_failed`,
+`artifact_validation_failed`, or `targeting_correlation_failed` means no usable
+review was produced. If you need a planning gate that cannot be skipped this
+way, use `block`.
+
+- If the work is high-risk (production, security, or data-migration code),
+  choose `block`.
+- If a maintainer is available and should decide whether to accept findings,
+  choose `prompt`.
+- If the gate runs in CI or a script, choose `block` to enforce it or `warn` to
+  keep it advisory. Never choose `prompt`, because nobody can answer it.
+
+### How independent the reviewer must be
+
+The `--avoid` option in the gate command controls which reviewers are excluded.
+A model family is the maker or line of model, such as Claude versus GPT; a
+runtime is the agent CLI, such as Claude Code, Codex, or Cursor.
+
+> [!WARNING]
+> The default, `same-family`, falls back to the best available reviewer when no
+> reviewer from a different model family is available, and only records a
+> warning in the result. That fallback can pick the same agent CLI that did
+> the work. Before relying on a gate for an independent review, check
+> `diversity.achieved` in the gate result: `different-family` means the
+> reviewer really was from another family. A reviewer that cannot start, or a
+> review that cannot be validated, is different: that blocks the gate. See
+> [Independence: what blocks and what falls back](../projects/reviews/review-flavors.md#independence-what-blocks-and-what-falls-back).
+
+| `--avoid`               | Choose it when                                     | What you give up                                                                                                                        |
+| ----------------------- | -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `same-family` (default) | You want a different model family when one exists  | A guarantee, because of the fallback above                                                                                              |
+| `same-runtime`          | You need the reviewer to use a different agent CLI | Runs on machines with only one CLI. On a host OAT does not recognize, such as CI, it excludes nothing. It never checks the model family |
+| `none`                  | You knowingly accept a review from the same family | Independence                                                                                                                            |
+
+- For most teams, including mixed Claude Code, Cursor, and Codex teams, keep
+  `same-family`.
+- For a high-risk change, keep `same-family` and check `diversity.achieved` in
+  every gate result. For a hard guarantee in a manual run, pin a known
+  independent reviewer with `--target`. Stored lifecycle gate commands refuse
+  `--target`.
+- Choose `none` only when you deliberately want a same-family review, and do not
+  present it as independent evidence.
+
+### Reviewer setup and time budget
+
+An exec target is a saved command that starts a reviewer CLI, such as
+`claude -p`. The built-in targets deliberately leave out the provider flags that
+skip tool-approval prompts, so an unattended reviewer can stall on such a
+prompt. On a trusted machine that runs gates unattended, add your own target
+with the permissions it needs, for example with `--layer user`.
+
+A code review of a whole phase, a phase range, or the final result may run for
+30 minutes by default; other reviews get 15 minutes. OAT uses the first timeout
+it finds: the command's `--timeout-ms`, then the target's `timeoutMs`, then
+`workflow.gateTimeouts`, then the `OAT_GATE_EXEC_TIMEOUT_MS` environment
+variable, then the built-in default.
+
+- If one reviewer keeps timing out on large final reviews, raise that target's
+  `timeoutMs` rather than slowing every review.
+
+A timeout that leaves no valid review artifact is a failed review, never a pass.
+If the reviewer did write a valid artifact after the timeout, OAT uses it and
+reports it as a late completion.

@@ -1,6 +1,7 @@
 {
   "title": "Reference",
   "pages": [
+    "what-oat-writes",
     "configuration",
     "config-and-local-state",
     "cli-reference",

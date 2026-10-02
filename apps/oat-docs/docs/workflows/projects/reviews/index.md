@@ -134,7 +134,10 @@ This is separate from Tier 1 phase gate reviews. Tier 1 implementation always ru
 
 Auto-triggered reviews use `oat_review_invocation: auto` in the review artifact frontmatter. In auto mode, `oat-project-review-receive` auto-converts all findings to fix tasks without user prompts (Low findings that are clearly out of scope are deferred with a note).
 
-This feature is opt-in and disabled by default. When disabled, the manual `oat-project-review-provide` workflow applies.
+This preference is unset by default: interactive implementation asks with
+"no" suggested. Autonomous non-lite implementation forces it on; lite bypasses
+checkpoints. When disabled, the manual `oat-project-review-provide` workflow
+applies, while required per-phase and final reviews still run.
 
 ## Phase review gate
 
@@ -369,3 +372,41 @@ validation decisions, and output ownership.
 
 - [Review Flavors](review-flavors.md) - The four review flavors and who resolves each one's target.
 - [Reviewing OAT PRs](reviewing-oat-prs.md) - Read synced-project records and SHA-pinned reviewer links in a PR.
+
+## Choosing review controls
+
+These settings tune the reviews described on this page. A **gate** is an extra
+review by a second agent CLI that turns its findings into a pass or a fail; see
+[Workflow Gates](../../advanced/workflow-gates.md). Whatever you choose here,
+the code review after each implementation phase and the final review still run.
+
+| Control                                                        | Default                              | Choose a different value when                                     | What it costs                                                                                           |
+| -------------------------------------------------------------- | ------------------------------------ | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Gate severity (`--exit-nonzero-on`)                            | `high`                               | Set `medium` when Medium findings should also block               | More fix rounds. Findings below the threshold are still received                                        |
+| [Phase review gate](#phase-review-gate)                        | Off                                  | Turn it on when you want a second model to check each phase early | One extra gate run per selected phase. It never pauses for a person                                     |
+| [Artifact review loops](#auto-artifact-review-loops)           | On for plans and analyses            | Turn a loop off only when something else reviews that artifact    | Turning it off records the review as skipped, not verified                                              |
+| [Review at HiLL checkpoints](#auto-review-at-hill-checkpoints) | Unset: the agent asks, suggesting no | Set `true` when nobody will be around at checkpoints              | An extra lifecycle review at each checkpoint                                                            |
+| [Re-review scope narrowing](#re-review-scope-narrowing)        | On                                   | Set `false` when fixes might break code that was already reviewed | Narrowed re-reviews skip unchanged code. If OAT cannot verify the earlier review, it reviews everything |
+| [Final review execution](#phase-and-final-review)              | Unset: the agent asks                | Set `subagent` when your agent tool supports subagents            | `inline` keeps the review in the same conversation; `fresh-session` needs you to start the review       |
+
+An artifact review loop runs in the same agent session that wrote the artifact,
+so it is not an independent review. It retries up to the project's retry limit,
+which defaults to two; a limit of zero still allows the first review. Autonomous
+runs turn on review at HiLL checkpoints for every project except lite projects,
+which have no checkpoints.
+
+- If you are a solo developer, or runs are unattended, and your agent tool
+  supports subagents, set the final review execution to `subagent`.
+- If a plan or analysis will be handed to another workflow, keep its artifact
+  loop on. If you also want a second model family to check it, add a planning
+  gate and check which reviewer it actually used.
+- If the change is high-risk, such as a security fix that could affect code
+  already reviewed, turn off re-review narrowing and set gate severity to
+  `medium`.
+- If your team wants a second model after every phase, turn on the phase review
+  gate. If nobody will be present at checkpoints, set
+  `workflow.autoReviewAtHillCheckpoints` to `true` before the first
+  implementation run, because that run copies the value into `plan.md`.
+- Choose `fresh-session` only when a person will start the review in a new
+  session, and `inline` only when a review in the same conversation is
+  acceptable and the skill allows it.

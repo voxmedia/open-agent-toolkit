@@ -106,3 +106,32 @@ oat config set workflow.designMode draft --local
 Valid values are `collaborative`, `selective`, and `draft`.
 
 Runtime non-interactive signals still win over this preference. If `OAT_NON_INTERACTIVE=1` is set, design runs in draft-and-review mode so automation does not block on prompts.
+
+## Choosing an interaction mode
+
+The design mode decides how the agent reviews the design with you while it
+writes `design.md`.
+
+| Mode          | Choose it when                                                                  | What you give up                                                               |
+| ------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Collaborative | The design is uncertain, or the repository has little documentation to build on | Time: you confirm every section before the file is written                     |
+| Selective     | A spec-driven project in a repository whose architecture is well documented     | Seeing routine sections live; you review them only in the final recap          |
+| Draft         | You want a complete proposal first, or nobody is available to answer prompts    | Live input: the final review of the whole file is your only chance to steer it |
+
+If you have not set `workflow.designMode`, the design skill asks you each time
+and suggests collaborative. When more than one source sets a mode, the skill
+uses the first of these it finds: the `--mode` argument, the `OAT_DESIGN_MODE`
+environment variable, draft for a non-interactive run (so automation never
+waits on a prompt), and finally your configured preference or the prompt. Quick
+projects offer only collaborative and draft; a configured `selective` behaves
+as collaborative there.
+
+- If you are trying OAT on your own and are unsure, leave the preference unset
+  and pick collaborative when asked.
+- If your team is still debating the architecture, choose collaborative so
+  people can steer each section before the design is written.
+- If a spec-driven project follows well-documented repository patterns, choose
+  selective: risky sections such as security and migration are still shown to
+  you live, and routine ones appear in the final recap.
+- If you need a complete proposal before a scheduled review meeting, or the run
+  is scripted, choose draft and set aside time to read the whole result.

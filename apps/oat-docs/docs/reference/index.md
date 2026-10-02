@@ -11,6 +11,7 @@ Contributor how-to material now lives under `contributing/`, and user-facing rou
 
 ## Contents
 
+- [What OAT Writes](what-oat-writes.md) - Every file, link and Git ref OAT creates, what to commit, and how to remove it.
 - [Configuration](configuration.md) - OAT configuration guidance across shared, local, user, and provider-sync surfaces.
 - [Config and Local State](config-and-local-state.md) - Utility command groups for config, local state, diagnostics, and related inspection flows.
 - [CLI Reference](cli-reference.md) - Shallow map of the OAT command surface with links to owning sections.

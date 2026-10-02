@@ -15,6 +15,18 @@ OAT separates lifecycle ownership from implementation ownership:
 This topology keeps model control at the meaningful phase boundary without
 making every task pay another dispatch and context-loading round.
 
+Terms used on this page:
+
+- **Phase:** one numbered section of a project's `plan.md` (for example `p02`)
+  that groups related tasks.
+- **Dispatch:** launching a worker or reviewer subagent on a chosen model and
+  route. The **dispatch policy** is the project's rule for which models those
+  subagents may use; see [Dispatch Policy](dispatch-ceiling.md).
+- **Worktree:** a separate Git checkout of the same repository on its own
+  branch, used so parallel phases do not overwrite each other's files.
+- **HiLL checkpoint:** a human-in-the-loop stop after a phase where an
+  interactive run waits for your approval.
+
 ## Default Topology
 
 ```mermaid
@@ -235,3 +247,50 @@ optional child has explicitly isolated write authority.
 - [Programmatic Execution](programmatic-execution.md)
 - [Evidence Layers](evidence-layers.md)
 - [Workflow Smoke Testing](../../contributing/smoke-testing.md)
+
+## subagent-orchestration
+
+Use this skill to decide what to delegate and which capability class the task
+needs. It supplies model-selection guidance, not a command that launches workers.
+OAT's dispatch skills own capability checks, exact routes, acceptance records,
+and recovery.
+
+**Invocation:** Give the agent a bounded delegation decision. The slash form is
+a skill request, not a terminal command. Providers with `$` syntax use
+`$subagent-orchestration`.
+
+```text
+/subagent-orchestration
+Classify a read-only API-usage audit and a final approval-provenance review. Define their scopes, required evidence, and escalation conditions before selecting models.
+```
+
+**Prerequisites:** Needs an active OAT project: no. The guidance is
+self-contained and needs no OAT project or installation. You need the task's
+objective, authority, verification needs, and active provider context. Read
+exactly that provider's selection reference. Current catalogs and instructions
+outrank dated model examples.
+
+**What it does without asking:** nothing outside the conversation. The skill
+is guidance only: it writes no files, makes no commits, and launches no
+subagents. Any launch happens later, through the dispatch skills, under their
+own checks.
+
+**Example scenario:** A root agent needs an unfamiliar API audit and an
+independent review of approval handling. The audit needs intelligent
+reconnaissance because a missed usage could be silent. Approval provenance
+needs consequential review because a subtle miss could authorize unsafe work.
+The root keeps authorization and cross-scope judgment while defining each
+worker's output and evidence. Choosing a stronger model does not repair an
+over-broad assignment.
+
+**Expected output:** A routing decision states the task class, role, exact model
+selector, provider-native effort, service tier, route, and authority separately.
+It preserves each class's capability floor and names escalation conditions.
+Load-bearing worker claims require verified evidence before the root acts on
+them. File count or duration alone does not justify a higher reasoning class.
+
+**Next step:** Use the appropriate dispatch machinery only after the bounded
+scope and route are justified. Within OAT, follow the project adapter
+(`oat-project-dispatch-subagents`) and the dispatch engine
+(`oat-dispatch-subagents`). Guidance alone is not evidence that a worker launched or that
+its result passed review.

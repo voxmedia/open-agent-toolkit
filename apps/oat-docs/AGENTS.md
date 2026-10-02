@@ -16,6 +16,8 @@ This file tells agents how to work inside `apps/oat-docs`, the documentation app
 
 Use real Markdown links for reader-facing guide pointers. The app checker validates relative inline-code `.md` references beginning with `./` or `../`; bare names such as `project-log.md` may be project artifacts. Run `pnpm docs:validate` for committed navigation freshness plus source route/anchor and live-consumer checks, and `pnpm docs:test` for self-contained fixtures.
 
+The supported-skill catalog is committed source in `docs/skills/index.md` and bundled with the CLI. `skill-docs.json` assigns each shipped user-facing skill its canonical family anchor and verified project applicability; descriptions and visibility come from canonical skill metadata. Each mapped section includes a concrete `**Example scenario:**`. After changing those inputs, run `pnpm docs:skills:generate`, then nav sync and `pnpm docs:validate`. Check/dev/build validate catalog parity without silently rewriting it. Catalog tooling is repository-specific, not a public `oat` command or scaffold requirement.
+
 ## When you need to restructure navigation
 
 1. Make changes in the authored `## Contents` sections of each affected `index.md`. That is the authoritative local map.

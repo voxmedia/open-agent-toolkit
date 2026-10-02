@@ -1,0 +1,623 @@
+{
+  "version": 1,
+  "skills": [
+    {
+      "name": "analyze",
+      "family": "Research and analysis",
+      "page": "skills/research.md",
+      "anchor": "analyze",
+      "applicability": "none",
+      "applicabilityNotes": "Requires the task-specific sources and available tooling described by the skill; no existing active lifecycle project is required."
+    },
+    {
+      "name": "authoring-docs",
+      "family": "Docs workflows",
+      "page": "docs-tooling/workflows.md",
+      "anchor": "authoring-docs",
+      "applicability": "none",
+      "applicabilityNotes": "Requires the relevant documentation/instruction sources or approved analysis for apply steps; no active lifecycle project is required."
+    },
+    {
+      "name": "compare",
+      "family": "Research and analysis",
+      "page": "skills/research.md",
+      "anchor": "compare",
+      "applicability": "none",
+      "applicabilityNotes": "Requires the task-specific sources and available tooling described by the skill; no existing active lifecycle project is required."
+    },
+    {
+      "name": "create-agnostic-skill",
+      "family": "Skill authoring",
+      "page": "contributing/skills.md",
+      "anchor": "create-agnostic-skill",
+      "applicability": "none",
+      "applicabilityNotes": "Requires the task-specific sources and available tooling described by the skill; no existing active lifecycle project is required."
+    },
+    {
+      "name": "deep-research",
+      "family": "Research and analysis",
+      "page": "skills/research.md",
+      "anchor": "deep-research",
+      "applicability": "none",
+      "applicabilityNotes": "Requires the task-specific sources and available tooling described by the skill; no existing active lifecycle project is required."
+    },
+    {
+      "name": "explainer-kit",
+      "family": "Explainer Kit",
+      "page": "skills/explainer-kit.md",
+      "anchor": "explainer-kit",
+      "applicability": "none",
+      "applicabilityNotes": "Requires explicit versioned source inputs and output destination; no OAT project or active pointer is needed."
+    },
+    {
+      "name": "oat-agent-instructions-analyze",
+      "family": "Agent instructions",
+      "page": "docs-tooling/agent-instructions.md",
+      "anchor": "oat-agent-instructions-analyze",
+      "applicability": "none",
+      "applicabilityNotes": "Requires the relevant documentation/instruction sources or approved analysis for apply steps; no active lifecycle project is required."
+    },
+    {
+      "name": "oat-agent-instructions-apply",
+      "family": "Agent instructions",
+      "page": "docs-tooling/agent-instructions.md",
+      "anchor": "oat-agent-instructions-apply",
+      "applicability": "none",
+      "applicabilityNotes": "Requires the relevant documentation/instruction sources or approved analysis for apply steps; no active lifecycle project is required."
+    },
+    {
+      "name": "oat-brainstorm",
+      "family": "Brainstorm",
+      "page": "skills/brainstorm.md",
+      "anchor": "oat-brainstorm",
+      "applicability": "optional",
+      "applicabilityNotes": "Works independently; an active project enables folding confirmed outcomes back into its artifacts."
+    },
+    {
+      "name": "oat-cursor-cloud-projects",
+      "family": "Cursor Cloud",
+      "page": "workflows/advanced/cursor-cloud.md",
+      "anchor": "oat-cursor-cloud-projects",
+      "applicability": "optional",
+      "applicabilityNotes": "Orientates the Cursor Cloud repository before lifecycle work; when an active project exists, resolves its scope and pulls synced project context."
+    },
+    {
+      "name": "oat-docs",
+      "family": "Docs workflows",
+      "page": "docs-tooling/workflows.md",
+      "anchor": "oat-docs",
+      "applicability": "none",
+      "applicabilityNotes": "Requires installed bundled documentation; no active project is needed to answer documentation questions."
+    },
+    {
+      "name": "oat-docs-analyze",
+      "family": "Docs workflows",
+      "page": "docs-tooling/workflows.md",
+      "anchor": "oat-docs-analyze",
+      "applicability": "none",
+      "applicabilityNotes": "Requires the relevant documentation/instruction sources or approved analysis for apply steps; no active lifecycle project is required."
+    },
+    {
+      "name": "oat-docs-apply",
+      "family": "Docs workflows",
+      "page": "docs-tooling/workflows.md",
+      "anchor": "oat-docs-apply",
+      "applicability": "none",
+      "applicabilityNotes": "Requires the relevant documentation/instruction sources or approved analysis for apply steps; no active lifecycle project is required."
+    },
+    {
+      "name": "oat-docs-authoring",
+      "family": "Docs workflows",
+      "page": "docs-tooling/workflows.md",
+      "anchor": "oat-docs-authoring",
+      "applicability": "none",
+      "applicabilityNotes": "Requires the relevant documentation/instruction sources or approved analysis for apply steps; no active lifecycle project is required."
+    },
+    {
+      "name": "oat-docs-bootstrap",
+      "family": "Docs workflows",
+      "page": "docs-tooling/workflows.md",
+      "anchor": "oat-docs-bootstrap",
+      "applicability": "optional",
+      "applicabilityNotes": "Requires initialized repository tooling, not an active project; an existing active project may be linked from the educational walkthrough."
+    },
+    {
+      "name": "oat-doctor",
+      "family": "Setup diagnostics",
+      "page": "skills/diagnostics.md",
+      "anchor": "oat-doctor",
+      "applicability": "none",
+      "applicabilityNotes": "Requires available OAT tooling; reports configuration and project health without requiring an active project."
+    },
+    {
+      "name": "oat-explainer-kit",
+      "family": "Explainer Kit",
+      "page": "skills/explainer-kit.md",
+      "anchor": "oat-explainer-kit",
+      "applicability": "optional",
+      "applicabilityNotes": "Repository and direct invocations work without an active project; project explainer or recap mode requires project sources."
+    },
+    {
+      "name": "oat-idea-ideate",
+      "family": "Ideas",
+      "page": "workflows/ideas/lifecycle.md",
+      "anchor": "oat-idea-ideate",
+      "applicability": "none",
+      "applicabilityNotes": "Requires idea or scratchpad context as appropriate; tracked ideas are independent of an active lifecycle project."
+    },
+    {
+      "name": "oat-idea-new",
+      "family": "Ideas",
+      "page": "workflows/ideas/lifecycle.md",
+      "anchor": "oat-idea-new",
+      "applicability": "none",
+      "applicabilityNotes": "Requires idea or scratchpad context as appropriate; tracked ideas are independent of an active lifecycle project."
+    },
+    {
+      "name": "oat-idea-scratchpad",
+      "family": "Ideas",
+      "page": "workflows/ideas/lifecycle.md",
+      "anchor": "oat-idea-scratchpad",
+      "applicability": "none",
+      "applicabilityNotes": "Requires idea or scratchpad context as appropriate; tracked ideas are independent of an active lifecycle project."
+    },
+    {
+      "name": "oat-idea-summarize",
+      "family": "Ideas",
+      "page": "workflows/ideas/lifecycle.md",
+      "anchor": "oat-idea-summarize",
+      "applicability": "none",
+      "applicabilityNotes": "Requires idea or scratchpad context as appropriate; tracked ideas are independent of an active lifecycle project."
+    },
+    {
+      "name": "oat-pjm-add-backlog-item",
+      "family": "Backlog and planning",
+      "page": "workflows/backlog-and-planning/backlog-lifecycle.md",
+      "anchor": "oat-pjm-add-backlog-item",
+      "applicability": "none",
+      "applicabilityNotes": "Requires repository PJM adoption and the relevant backlog, decision or remote-tracker capability; no active lifecycle project is required."
+    },
+    {
+      "name": "oat-pjm-decision",
+      "family": "Backlog and planning",
+      "page": "workflows/backlog-and-planning/backlog-lifecycle.md",
+      "anchor": "oat-pjm-decision",
+      "applicability": "none",
+      "applicabilityNotes": "Requires repository PJM adoption and the relevant backlog, decision or remote-tracker capability; no active lifecycle project is required."
+    },
+    {
+      "name": "oat-pjm-remote",
+      "family": "Backlog and planning",
+      "page": "workflows/backlog-and-planning/backlog-lifecycle.md",
+      "anchor": "oat-pjm-remote",
+      "applicability": "none",
+      "applicabilityNotes": "Requires repository PJM adoption and the relevant backlog, decision or remote-tracker capability; no active lifecycle project is required."
+    },
+    {
+      "name": "oat-pjm-review-backlog",
+      "family": "Backlog and planning",
+      "page": "workflows/backlog-and-planning/backlog-lifecycle.md",
+      "anchor": "oat-pjm-review-backlog",
+      "applicability": "none",
+      "applicabilityNotes": "Requires repository PJM adoption and the relevant backlog, decision or remote-tracker capability; no active lifecycle project is required."
+    },
+    {
+      "name": "oat-pjm-update-repo-reference",
+      "family": "Backlog and planning",
+      "page": "workflows/backlog-and-planning/backlog-lifecycle.md",
+      "anchor": "oat-pjm-update-repo-reference",
+      "applicability": "optional",
+      "applicabilityNotes": "Requires repository PJM adoption; mines recent or in-progress project artifacts when present, but repository reference maintenance does not require an active pointer."
+    },
+    {
+      "name": "oat-project-autonomous",
+      "family": "Autonomous execution",
+      "page": "workflows/advanced/autonomy.md",
+      "anchor": "oat-project-autonomous",
+      "applicability": "none",
+      "applicabilityNotes": "Entry point: a substantive goal creates a project; an explicit project path, slug or valid active pointer resumes an existing one."
+    },
+    {
+      "name": "oat-project-capture",
+      "family": "Project entry",
+      "page": "workflows/projects/planning/starting-projects.md",
+      "anchor": "oat-project-capture",
+      "applicability": "none",
+      "applicabilityNotes": "Requires completed untracked work and branch commits; creates a retroactive project rather than requiring one."
+    },
+    {
+      "name": "oat-project-clear-active",
+      "family": "Project state and resume",
+      "page": "workflows/projects/execution/picking-up-projects.md",
+      "anchor": "oat-project-clear-active",
+      "applicability": "optional",
+      "applicabilityNotes": "Pauses and clears the active project when set; no active pointer is a successful no-op."
+    },
+    {
+      "name": "oat-project-complete",
+      "family": "Project closeout",
+      "page": "workflows/projects/closeout/closeout-skills.md",
+      "anchor": "oat-project-complete",
+      "applicability": "required",
+      "applicabilityNotes": "Requires an existing project and the lifecycle artifacts/readiness appropriate to this action; resolve the configured active project or the supported explicit project target."
+    },
+    {
+      "name": "oat-project-design",
+      "family": "Project planning",
+      "page": "workflows/projects/planning/planning-skills.md",
+      "anchor": "oat-project-design",
+      "applicability": "required",
+      "applicabilityNotes": "Requires an existing project and the lifecycle artifacts/readiness appropriate to this action; resolve the configured active project or the supported explicit project target."
+    },
+    {
+      "name": "oat-project-discover",
+      "family": "Project planning",
+      "page": "workflows/projects/planning/planning-skills.md",
+      "anchor": "oat-project-discover",
+      "applicability": "required",
+      "applicabilityNotes": "Requires an existing project and the lifecycle artifacts/readiness appropriate to this action; resolve the configured active project or the supported explicit project target."
+    },
+    {
+      "name": "oat-project-document",
+      "family": "Project closeout",
+      "page": "workflows/projects/closeout/closeout-skills.md",
+      "anchor": "oat-project-document",
+      "applicability": "required",
+      "applicabilityNotes": "Requires an existing project and the lifecycle artifacts/readiness appropriate to this action; resolve the configured active project or the supported explicit project target."
+    },
+    {
+      "name": "oat-project-implement",
+      "family": "Project execution",
+      "page": "workflows/projects/execution/execution-skills.md",
+      "anchor": "oat-project-implement",
+      "applicability": "required",
+      "applicabilityNotes": "Requires an existing project and the lifecycle artifacts/readiness appropriate to this action; resolve the configured active project or the supported explicit project target."
+    },
+    {
+      "name": "oat-project-import-plan",
+      "family": "Project entry",
+      "page": "workflows/projects/planning/starting-projects.md",
+      "anchor": "oat-project-import-plan",
+      "applicability": "none",
+      "applicabilityNotes": "Requires an external plan; creates a tracked project without a previously active project."
+    },
+    {
+      "name": "oat-project-lite",
+      "family": "Project entry",
+      "page": "workflows/projects/planning/starting-projects.md",
+      "anchor": "oat-project-lite",
+      "applicability": "none",
+      "applicabilityNotes": "Interviews for and scaffolds a lite project; no existing active project is needed."
+    },
+    {
+      "name": "oat-project-new",
+      "family": "Project entry",
+      "page": "workflows/projects/planning/starting-projects.md",
+      "anchor": "oat-project-new",
+      "applicability": "none",
+      "applicabilityNotes": "Scaffolds and activates a new project; requires repository tooling/templates, not an existing project."
+    },
+    {
+      "name": "oat-project-next",
+      "family": "Project state and resume",
+      "page": "workflows/projects/execution/picking-up-projects.md",
+      "anchor": "oat-project-next",
+      "applicability": "required",
+      "applicabilityNotes": "Requires existing project state; when no active pointer exists, select an existing project from the configured root."
+    },
+    {
+      "name": "oat-project-open",
+      "family": "Project state and resume",
+      "page": "workflows/projects/execution/picking-up-projects.md",
+      "anchor": "oat-project-open",
+      "applicability": "none",
+      "applicabilityNotes": "No previously active project is needed; the selected existing project must be valid before it becomes active."
+    },
+    {
+      "name": "oat-project-plan",
+      "family": "Project planning",
+      "page": "workflows/projects/planning/planning-skills.md",
+      "anchor": "oat-project-plan",
+      "applicability": "required",
+      "applicabilityNotes": "Requires an existing project and the lifecycle artifacts/readiness appropriate to this action; resolve the configured active project or the supported explicit project target."
+    },
+    {
+      "name": "oat-project-pr-final",
+      "family": "Project closeout",
+      "page": "workflows/projects/closeout/closeout-skills.md",
+      "anchor": "oat-project-pr-final",
+      "applicability": "required",
+      "applicabilityNotes": "Requires an existing project and the lifecycle artifacts/readiness appropriate to this action; resolve the configured active project or the supported explicit project target."
+    },
+    {
+      "name": "oat-project-pr-progress",
+      "family": "Project closeout",
+      "page": "workflows/projects/closeout/closeout-skills.md",
+      "anchor": "oat-project-pr-progress",
+      "applicability": "required",
+      "applicabilityNotes": "Requires an existing project and the lifecycle artifacts/readiness appropriate to this action; resolve the configured active project or the supported explicit project target."
+    },
+    {
+      "name": "oat-project-progress",
+      "family": "Project state and resume",
+      "page": "workflows/projects/execution/picking-up-projects.md",
+      "anchor": "oat-project-progress",
+      "applicability": "optional",
+      "applicabilityNotes": "Reports repository knowledge and project status, including no active project; an active project enables phase-specific recommendations."
+    },
+    {
+      "name": "oat-project-promote-spec-driven",
+      "family": "Project planning",
+      "page": "workflows/projects/planning/planning-skills.md",
+      "anchor": "oat-project-promote-spec-driven",
+      "applicability": "required",
+      "applicabilityNotes": "Requires an existing project and the lifecycle artifacts/readiness appropriate to this action; resolve the configured active project or the supported explicit project target."
+    },
+    {
+      "name": "oat-project-quick-start",
+      "family": "Project entry",
+      "page": "workflows/projects/planning/starting-projects.md",
+      "anchor": "oat-project-quick-start",
+      "applicability": "none",
+      "applicabilityNotes": "Creates a quick project; may also resume seeded discovery for an existing child project."
+    },
+    {
+      "name": "oat-project-reconcile",
+      "family": "Project execution",
+      "page": "workflows/projects/execution/execution-skills.md",
+      "anchor": "oat-project-reconcile",
+      "applicability": "required",
+      "applicabilityNotes": "Requires an existing project and the lifecycle artifacts/readiness appropriate to this action; resolve the configured active project or the supported explicit project target."
+    },
+    {
+      "name": "oat-project-retro",
+      "family": "Project closeout",
+      "page": "workflows/projects/closeout/closeout-skills.md",
+      "anchor": "oat-project-retro",
+      "applicability": "required",
+      "applicabilityNotes": "Requires an existing project and the lifecycle artifacts/readiness appropriate to this action; resolve the configured active project or the supported explicit project target."
+    },
+    {
+      "name": "oat-project-retro-file",
+      "family": "Project closeout",
+      "page": "workflows/projects/closeout/closeout-skills.md",
+      "anchor": "oat-project-retro-file",
+      "applicability": "required",
+      "applicabilityNotes": "Requires a project retro artifact resolved explicitly or from the active project; filing also requires destination capability and consent."
+    },
+    {
+      "name": "oat-project-review-provide",
+      "family": "Review",
+      "page": "workflows/projects/reviews/review-flavors.md",
+      "anchor": "oat-project-review-provide",
+      "applicability": "required",
+      "applicabilityNotes": "Requires an initialized project, resolved from the active pointer or an explicit project/review target."
+    },
+    {
+      "name": "oat-project-review-provide-remote",
+      "family": "Review",
+      "page": "workflows/projects/reviews/review-flavors.md",
+      "anchor": "oat-project-review-provide-remote",
+      "applicability": "required",
+      "applicabilityNotes": "Requires an existing project resolved from the PR diff or explicit project target; no local activeProject pointer is required."
+    },
+    {
+      "name": "oat-project-review-receive",
+      "family": "Review",
+      "page": "workflows/projects/reviews/review-flavors.md",
+      "anchor": "oat-project-review-receive",
+      "applicability": "required",
+      "applicabilityNotes": "Requires an actionable project review; ad-hoc discovery routes to oat-review-receive rather than processing non-project findings here."
+    },
+    {
+      "name": "oat-project-review-receive-remote",
+      "family": "Review",
+      "page": "workflows/projects/reviews/review-flavors.md",
+      "anchor": "oat-project-review-receive-remote",
+      "applicability": "required",
+      "applicabilityNotes": "Requires an existing project and the lifecycle artifacts/readiness appropriate to this action; resolve the configured active project or the supported explicit project target."
+    },
+    {
+      "name": "oat-project-revise",
+      "family": "Project closeout",
+      "page": "workflows/projects/closeout/closeout-skills.md",
+      "anchor": "oat-project-revise",
+      "applicability": "required",
+      "applicabilityNotes": "Requires an existing project and the lifecycle artifacts/readiness appropriate to this action; resolve the configured active project or the supported explicit project target."
+    },
+    {
+      "name": "oat-project-spec",
+      "family": "Project planning",
+      "page": "workflows/projects/planning/planning-skills.md",
+      "anchor": "oat-project-spec",
+      "applicability": "required",
+      "applicabilityNotes": "Requires an existing project and the lifecycle artifacts/readiness appropriate to this action; resolve the configured active project or the supported explicit project target."
+    },
+    {
+      "name": "oat-project-split",
+      "family": "Project entry",
+      "page": "workflows/projects/planning/starting-projects.md",
+      "anchor": "oat-project-split",
+      "applicability": "none",
+      "applicabilityNotes": "Requires a persisted SplitPlanDocument and confirmed decomposition; scaffolds the coordination parent and children without requiring a pre-existing active project."
+    },
+    {
+      "name": "oat-project-summary",
+      "family": "Project closeout",
+      "page": "workflows/projects/closeout/closeout-skills.md",
+      "anchor": "oat-project-summary",
+      "applicability": "required",
+      "applicabilityNotes": "Requires an existing project and the lifecycle artifacts/readiness appropriate to this action; resolve the configured active project or the supported explicit project target."
+    },
+    {
+      "name": "oat-repo-improve",
+      "family": "Repository improvement",
+      "page": "skills/repo-improve.md",
+      "anchor": "oat-repo-improve",
+      "applicability": "none",
+      "applicabilityNotes": "Requires the task-specific sources and available tooling described by the skill; no existing active lifecycle project is required."
+    },
+    {
+      "name": "oat-repo-knowledge-index",
+      "family": "Repository improvement",
+      "page": "skills/repo-improve.md",
+      "anchor": "oat-repo-knowledge-index",
+      "applicability": "none",
+      "applicabilityNotes": "Requires the task-specific sources and available tooling described by the skill; no existing active lifecycle project is required."
+    },
+    {
+      "name": "oat-repo-maintainability-review",
+      "family": "Repository improvement",
+      "page": "skills/repo-improve.md",
+      "anchor": "oat-repo-maintainability-review",
+      "applicability": "none",
+      "applicabilityNotes": "Requires the task-specific sources and available tooling described by the skill; no existing active lifecycle project is required."
+    },
+    {
+      "name": "oat-review-provide",
+      "family": "Review",
+      "page": "workflows/projects/reviews/review-flavors.md",
+      "anchor": "oat-review-provide",
+      "applicability": "none",
+      "applicabilityNotes": "Requires the selected changes, review artifact or GitHub PR and any remote credentials; runs on the ad-hoc rail without project lifecycle state."
+    },
+    {
+      "name": "oat-review-provide-remote",
+      "family": "Review",
+      "page": "workflows/projects/reviews/review-flavors.md",
+      "anchor": "oat-review-provide-remote",
+      "applicability": "none",
+      "applicabilityNotes": "Requires the selected changes, review artifact or GitHub PR and any remote credentials; runs on the ad-hoc rail without project lifecycle state."
+    },
+    {
+      "name": "oat-review-receive",
+      "family": "Review",
+      "page": "workflows/projects/reviews/review-flavors.md",
+      "anchor": "oat-review-receive",
+      "applicability": "none",
+      "applicabilityNotes": "Requires the selected changes, review artifact or GitHub PR and any remote credentials; runs on the ad-hoc rail without project lifecycle state."
+    },
+    {
+      "name": "oat-review-receive-remote",
+      "family": "Review",
+      "page": "workflows/projects/reviews/review-flavors.md",
+      "anchor": "oat-review-receive-remote",
+      "applicability": "none",
+      "applicabilityNotes": "Requires the selected changes, review artifact or GitHub PR and any remote credentials; runs on the ad-hoc rail without project lifecycle state."
+    },
+    {
+      "name": "oat-wave-execute",
+      "family": "Waves",
+      "page": "workflows/waves/wave-workflows.md",
+      "anchor": "oat-wave-execute",
+      "applicability": "none",
+      "applicabilityNotes": "Creates the wrapper project for the wave from external plans; no previously active project is needed."
+    },
+    {
+      "name": "oat-wave-program",
+      "family": "Waves",
+      "page": "workflows/waves/wave-workflows.md",
+      "anchor": "oat-wave-program",
+      "applicability": "none",
+      "applicabilityNotes": "Requires external plan indexes and an approved wave map, not an active lifecycle project."
+    },
+    {
+      "name": "oat-worktree-bootstrap",
+      "family": "Worktree bootstrap",
+      "page": "workflows/advanced/worktree-bootstrap.md",
+      "anchor": "oat-worktree-bootstrap",
+      "applicability": "optional",
+      "applicabilityNotes": "Git repository and branch are required; active project context is propagated when present, not a bootstrap prerequisite."
+    },
+    {
+      "name": "oat-wrap-up",
+      "family": "Session closeout",
+      "page": "skills/session-closeout.md",
+      "anchor": "oat-wrap-up",
+      "applicability": "none",
+      "applicabilityNotes": "Requires repository OAT setup, hydrated summaries and GitHub access; reads shipped history without an active project."
+    },
+    {
+      "name": "recon",
+      "family": "Reconnaissance",
+      "page": "skills/recon.md",
+      "anchor": "recon",
+      "applicability": "none",
+      "applicabilityNotes": "Requires the task-specific sources and available tooling described by the skill; no existing active lifecycle project is required."
+    },
+    {
+      "name": "skeptic",
+      "family": "Research and analysis",
+      "page": "skills/research.md",
+      "anchor": "skeptic",
+      "applicability": "none",
+      "applicabilityNotes": "Requires the task-specific sources and available tooling described by the skill; no existing active lifecycle project is required."
+    },
+    {
+      "name": "subagent-orchestration",
+      "family": "Subagent orchestration",
+      "page": "workflows/advanced/orchestration-model.md",
+      "anchor": "subagent-orchestration",
+      "applicability": "none",
+      "applicabilityNotes": "Self-contained routing guidance for a bounded delegation task; no OAT project is required."
+    },
+    {
+      "name": "synthesize",
+      "family": "Research and analysis",
+      "page": "skills/research.md",
+      "anchor": "synthesize",
+      "applicability": "none",
+      "applicabilityNotes": "Requires the task-specific sources and available tooling described by the skill; no existing active lifecycle project is required."
+    }
+  ],
+  "excluded": [
+    {
+      "name": "codex-skill",
+      "reason": "Currently unshipped: no installable pack membership; future distribution intent is not established by this mapping."
+    },
+    {
+      "name": "create-oat-skill",
+      "reason": "Currently unshipped: no installable pack membership; future distribution intent is not established by this mapping."
+    },
+    {
+      "name": "create-pr-description",
+      "reason": "Currently unshipped: no installable pack membership; future distribution intent is not established by this mapping."
+    },
+    {
+      "name": "create-ticket",
+      "reason": "Currently unshipped: no installable pack membership; future distribution intent is not established by this mapping."
+    },
+    {
+      "name": "docs-completed-projects-gap-review",
+      "reason": "Currently unshipped: no installable pack membership; future distribution intent is not established by this mapping."
+    },
+    {
+      "name": "oat-dispatch-subagents",
+      "reason": "Canonical SKILL.md explicitly declares user-invocable: false; an internal calling contract, not a supported direct invocation."
+    },
+    {
+      "name": "oat-project-dispatch-subagents",
+      "reason": "Canonical SKILL.md explicitly declares user-invocable: false; an internal calling contract, not a supported direct invocation."
+    },
+    {
+      "name": "oat-project-plan-writing",
+      "reason": "Canonical SKILL.md explicitly declares user-invocable: false; an internal calling contract, not a supported direct invocation."
+    },
+    {
+      "name": "oat-worktree-bootstrap-auto",
+      "reason": "Canonical SKILL.md explicitly declares user-invocable: false; an internal calling contract, not a supported direct invocation."
+    },
+    {
+      "name": "review-backlog",
+      "reason": "Currently unshipped: no installable pack membership; future distribution intent is not established by this mapping. Retired in canonical SKILL.md description: Retired. Use oat-pjm-review-backlog instead. The active backlog and roadmap moved from .oat/repo/reference/ to the two-layer .oat/repo/pjm/ taxonomy."
+    },
+    {
+      "name": "triage-oat-issues",
+      "reason": "Currently unshipped: no installable pack membership; future distribution intent is not established by this mapping."
+    },
+    {
+      "name": "update-repo-reference",
+      "reason": "Currently unshipped: no installable pack membership; future distribution intent is not established by this mapping. Retired in canonical SKILL.md description: Retired. Use oat-pjm-update-repo-reference instead. The repo reference layer moved from .oat/repo/reference/ to the two-layer .oat/repo/pjm/ + reference/ taxonomy."
+    }
+  ]
+}

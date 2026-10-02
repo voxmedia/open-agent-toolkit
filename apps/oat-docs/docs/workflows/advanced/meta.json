@@ -1,6 +1,7 @@
 {
   "title": "Advanced",
   "pages": [
+    "worktree-bootstrap",
     "workflow-gates",
     "autonomy",
     "cursor-cloud",

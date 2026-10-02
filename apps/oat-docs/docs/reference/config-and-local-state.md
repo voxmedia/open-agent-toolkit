@@ -98,7 +98,7 @@ Pass `--context`, `--decision`, and `--consequences` together when creating a re
 
 The decision index uses managed marker pairs and is deterministic, so an index merge conflict can be resolved by re-running `oat decision regenerate-index` and staging the result. Decision records replace the legacy single `decision-record.md`; repos still on the old layout migrate with `oat decision migrate` (or the broader `oat pjm migrate`).
 
-`oat decision init` is the lightweight standalone setup path. It does not require the `project-management` tool pack and does not create current state, roadmap, or backlog artifacts. It is also not an alternate adoption path for the broader PJM surface: repository PJM mutations still require `oat pjm init`, and `oat decision` mutations fail closed with that recovery when the repository has not adopted PJM. Its AGENTS guidance uses `oat decision` directly while also recognizing `oat-pjm-decision` when that optional skill is installed later.
+`oat decision init` is a lightweight decision-scaffold path after repository PJM adoption. It does not require the `project-management` tool pack and does not itself create current state, roadmap, or backlog artifacts. It is not an alternate adoption path: `oat decision` mutations, including init, fail closed with `oat pjm init` as the recovery when the repository has not adopted PJM. Its AGENTS guidance uses `oat decision` directly while also recognizing `oat-pjm-decision` when that optional skill is installed later.
 
 ## `oat local ...`
 
@@ -123,7 +123,7 @@ Use this when you want archived review history or idea scratchpads to persist lo
 Use `oat config` for repo runtime config inspection and supported key mutation.
 
 - `oat config get <key>` - read one resolved config value
-- `oat config set <key> <value>` - update a supported shared or repo-local key
+- `oat config set <key> <value>` - update a supported shared, repo-local, or user key according to per-key restrictions
 - `oat config unset <key>` - remove a supported key from one surface, with the same `--shared`/`--local`/`--user` flags and per-key restrictions as `set`. Pruning removes any parent object the removal empties, and the resolved value falls back to the next surface or the built-in default. A key the surface does not hold reports an already-unset outcome and exits 0; `--json` adds a `removed` boolean that distinguishes that no-op from a real removal. Five classes are refused with exit 1: unknown keys (including the uncatalogued `documentation.index`), lifecycle state (`activeProject`, `lastPausedProject`, cleared with `oat config set <key> ''`), pack intent (`tools.*`, removed with `oat tools remove --pack <pack> --scope project`), the aggregate read views `workflow.dispatchCeiling` and `workflow.dispatchCeiling.providers`, and environment-shadowed keys with nothing stored on the target surface. See [CLI Reference](cli-reference.md#oat-config-surface-flags) for the full contract
 - `oat config list` - show the resolved command-surface values with source information
 - `oat config dump --json` - emit the full merged config payload with per-key source attribution, suitable for automation and debugging
@@ -291,3 +291,19 @@ For the full state model, repair semantics, and examples, see [Instruction Sync]
 `oat doctor` is the quickest way to confirm that your runtime, directory structure, and installed OAT assets are healthy before deeper debugging. At project scope it also scans bounded repository script and documentation surfaces for known-stale CLI grammar, such as `oat --scope all sync` <!-- oat-doctor: allow-stale-invocation -->, and reports file/line evidence plus the current `oat sync --scope all` form. Generated provider views, OAT lifecycle artifacts, archived content, dependencies, build output, and nested worktrees are excluded.
 
 The `/oat-doctor` skill (installed via the core pack) goes further: it sweeps config, project management (PJM), agent instructions, docs, and installed tools read-only, prints one report grouped by area and severity, and then dives into any area you pick, teaching from the bundled documentation and the `oat config describe` entries and offering the exact fix command or the owning skill. It applies nothing except a single fix command you approve. Unattended (`OAT_NON_INTERACTIVE=1`), the report is the whole output; `--summary` keeps the installed-tools dashboard.
+
+## Choose before writing configuration
+
+Before you set a team default or a personal override, decide which config layer
+should hold it: shared (committed for the team), local (this checkout only), or
+user (you, in every repository). [Choosing a config layer](configuration.md#choosing-a-config-layer)
+explains the tradeoffs. Run `oat config describe <key>` to see where a key lives
+and which command sets it, and `oat config dump --json` to see which file the
+current value actually comes from. The value you see may come from a different
+file than the one you would edit.
+
+- If a personal preference seems to be ignored, check where the effective value
+  comes from before changing it again: a shared value overrides your user value.
+- If you are rolling out a team policy, set a key that shared config supports
+  and review the resulting diff, rather than relying on a value that exists only
+  in your own checkout or home directory.

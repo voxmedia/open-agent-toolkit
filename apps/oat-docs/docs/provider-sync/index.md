@@ -11,13 +11,25 @@ or Codex.
 
 You can adopt this layer on its own. It does not require tracked OAT projects, and it is the right starting point when you mainly want interoperability and drift control.
 
-In practice, you edit the canonical layout in `.agents/` and `.oat/`. OAT
-generates provider-specific views where required, leaves native-read assets in
-their canonical directories, and keeps intentional provider-local adoption
-surfaces visible.
+In practice, you edit the canonical layout in `.agents/`, and choose providers
+in `.oat/sync/config.json`; the rest of `.oat/sync/`, such as the manifest, is
+written by OAT. OAT generates provider-specific views where required, leaves
+native-read assets in their canonical directories, and keeps intentional
+provider-local adoption surfaces visible.
+
+> [!WARNING]
+> `oat sync` and `oat init` default to scope `all`, so they also write under
+> your home directory. Pass `--scope project` when you mean to change only this
+> repository. Re-running `oat sync` also rewrites the files it generates in
+> provider folders such as `.claude/` and `.codex/`, so an edit made to a
+> generated copy there is lost. Make changes in `.agents/` instead.
+
+Piloting with a team? Start with
+[Pilot Provider Sync with One Team](pilot-with-a-team.md).
 
 ## Contents
 
+- [Pilot Provider Sync with One Team](pilot-with-a-team.md) - A week-one plan for trying Provider Sync on one repository.
 - [Provider Interop Commands](commands.md) - `oat status`, `oat sync`, and `oat providers ...` behavior.
 - [Sync Config (`.oat/sync/config.json`)](config.md) - Provider config model, enablement, and scope semantics.
 - [Instruction Sync](instruction-sync.md) - Project-scoped `AGENTS.md` / `CLAUDE.md` validation, repair, and Claude-only adoption.
@@ -27,15 +39,17 @@ surfaces visible.
 
 ## What This Section Is
 
-This section explains how OAT treats `.agents/` and `.oat/` as the source of
-truth, when provider views are derived from those canonical assets, how
+This section explains how OAT treats `.agents/` as the source of truth, with
+provider settings in `.oat/sync/config.json`, when provider views are derived
+from those canonical assets, how
 native-read mappings avoid redundant output, and how provider-local adoption
 surfaces remain discoverable.
 
 ## What OAT Treats As Canonical
 
 - canonical skills, agents, and rules under `.agents/`
-- sync state and related metadata under `.oat/`
+- provider settings in `.oat/sync/config.json`, and sync state that OAT writes
+  to `.oat/sync/manifest.json`
 - provider-specific files as derived views when a mapping requires output
 - native-read assets in canonical directories without mirrored provider files
 - provider-local extension files as adoption candidates until explicitly
@@ -49,12 +63,14 @@ surfaces remain discoverable.
 
 ## Typical Flow
 
-1. Run `oat init` to create the base OAT layout and setup state.
-2. Inspect current sync state with `oat status`.
+1. Run `oat init --scope project` to create the base OAT layout and setup state.
+2. Inspect current sync state with `oat status --scope project`.
 3. Adjust provider enablement with `oat providers ...` if needed.
-4. Run `oat sync` to materialize required provider views and reconcile managed
-   state. Native-read assets do not produce provider-view operations.
-5. Re-run `oat status` after edits to confirm whether anything drifted or needs adoption.
+4. Run `oat sync --scope project` to materialize required provider views and
+   reconcile managed state. Native-read assets do not produce provider-view
+   operations.
+5. Re-run `oat status --scope project` after edits to confirm whether anything
+   drifted or needs adoption.
 
 ## Start Here
 

@@ -44,14 +44,14 @@ oat config list
 oat config get projects.root
 oat config describe
 oat config describe archive.s3Uri
-oat config describe sync.providers.github.enabled
+oat config describe sync.providers.copilot.enabled
 ```
 
 What each command is for:
 
 - `oat config list` shows the currently resolved command-surface values for shared and repo-local keys.
 - `oat config get <key>` reads one supported key value.
-- `oat config set <key> <value>` updates supported shared or repo-local keys. Writes to the shared `.oat/config.json` keep the file's existing key order, and a write that would not change any value leaves the file byte-identical.
+- `oat config set <key> <value>` updates supported shared, repo-local, or user keys according to per-key restrictions. Writes to the shared `.oat/config.json` keep the file's existing key order, and a write that would not change any value leaves the file byte-identical.
 - `oat config unset <key>` removes a supported key from one surface, using the same `--shared`/`--local`/`--user` flags and per-key restrictions as `set`. The resolved value then falls back to the next surface down, or to the built-in default. A key the surface does not hold exits 0 as already-unset (`--json` adds a `removed` boolean to tell the two apart). Unknown keys, lifecycle state, `tools.*` pack intent, aggregate read views, read-only remote-policy structure, and environment-shadowed keys with nothing stored are refused with exit 1 — see [CLI Reference](cli-reference.md#oat-config-surface-flags).
 - `oat config describe` shows the supported config catalog across shared repo, repo-local, user, and sync/provider surfaces.
 - `oat config describe <key>` shows file, scope, default, mutability, owning command, and description for one key. A deprecated key also prints `Deprecated: prefer <successor>`, and `--json` carries the same fact as a `deprecated` object (`supersededBy`, plus `note` and `legacyValues` where they apply).
@@ -72,9 +72,9 @@ For a guided pass instead of individual commands, run the `/oat-doctor` skill (c
 
 These labels match what `oat config dump` emits, so tooling that consumes either command can rely on the same vocabulary.
 
-:::note Upgrade note
-Earlier CLI versions returned `config.json` / `config.local.json` / `env` / `default` as the `source` strings. External scripts that previously matched on `"source":"config.json"` or `"source":"config.local.json"` should update to match the new `shared` / `local` labels. This change was made to align the `oat config get` / `oat config list` output with `oat config dump` and to avoid confusing users about which file was consulted.
-:::
+> [!NOTE]
+> **Upgrade note.**
+> Earlier CLI versions returned `config.json` / `config.local.json` / `env` / `default` as the `source` strings. External scripts that previously matched on `"source":"config.json"` or `"source":"config.local.json"` should update to match the new `shared` / `local` labels. This change was made to align the `oat config get` / `oat config list` output with `oat config dump` and to avoid confusing users about which file was consulted.
 
 ## Shared repo config you will touch most often
 
@@ -106,7 +106,8 @@ Common keys in `.oat/config.json`:
 - `archive.awsRegion` — optional AWS region forwarded as `AWS_REGION` to every `aws` invocation in archive flows
 - `tools.<pack>` — project-scope intent for a bundled tool pack (`true` or absent)
 - `pjm.remote.storage.state` — `local` by default; `shared` requires an
-  explicit preview and fresh approval and is unavailable to local projects
+  explicit preview and fresh approval. The current production store does not
+  enforce the intended local-project exclusion; see the remote storage warning
 - `pjm.remote.policy.description` — `none`, `managed-section`, or `replace`;
   the default is `none`
 - `pjm.remote.policy.authority.*` — repository defaults and operation-specific
@@ -125,6 +126,10 @@ that result. Binding defaults and operation restrictions then clamp authority,
 and purpose field grants intersect to narrow outbound fields. No configured
 layer bypasses hard approval floors or current caller-owned authority evidence;
 missing, stale, or mismatched evidence fails closed.
+
+Current CLI bindings use fixed intake/source or publish/planning purposes and
+empty per-binding restrictions. Those internal narrowing layers are not
+additional user-settable binding policy controls.
 
 The shared `pjm.remote` tree is closed. An unknown key, a non-object where an
 object is expected, or a wrong-typed leaf (for example `authority.default: 5`,
@@ -263,9 +268,8 @@ packaged `assets/` directory next to the installed CLI. Setting a non-empty
   `validateBundleStructure`. That is a narrower promise than the exit-2 list
   above: release validation does not check bundle metadata beyond its presence,
   so a malformed or version-mismatched `bundle-metadata.json` is not covered.
-  The regression evidence is the negative pack control in
-  `packages/cli/src/release/public-package-contract.test.ts`:
-  `fails release validation when a required bundle directory is empty in the tarball`.
+  OAT's own release tests include a check that release validation fails when a
+  required bundle directory is empty in the packed tarball.
 - Produce a matching bundle with `bash packages/cli/scripts/bundle-assets.sh`
   while `OAT_ASSETS_DIR` points at the target directory (the script already
   honors the variable as its destination).
@@ -405,7 +409,7 @@ preference. For the full model, see
 | Key                                                    | Values                                                | Purpose                                                                              |
 | ------------------------------------------------------ | ----------------------------------------------------- | ------------------------------------------------------------------------------------ |
 | `workflow.dispatchPolicy.mode`                         | `managed`, `inherit`                                  | `managed` lets OAT select exact candidates; `inherit` leaves controls to the host    |
-| `workflow.dispatchPolicy.policy`                       | `economy`, `balanced`, `high`, `frontier`, `uncapped` | Default named maximum or explicit managed uncapped state                             |
+| `workflow.dispatchPolicy.policy`                       | `economy`, `balanced`, `high`, `frontier`, `uncapped` | Configured maximum overriding project state, or explicit managed uncapped state      |
 | `workflow.dispatchCeiling.providers.<provider>`        | tier map or legacy bare value                         | Reusable provider candidate column                                                   |
 | `workflow.dispatchCeiling.providers.<provider>.<tier>` | `candidates` cell, route, or legacy bare value        | One named tier in the provider ladder                                                |
 | `workflow.dispatchCeiling.recommendationVersion`       | string                                                | Bundle version last written by adoption; does not prove the effective ladder matches |
@@ -705,7 +709,7 @@ Workflow preferences let power users answer repetitive confirmation prompts once
 Workflow preference keys live under the `workflow.*` namespace:
 
 - `workflow.designMode` — `collaborative`, `selective`, or `draft`. Default design interaction mode. `selective` applies only to full `oat-project-design`; quick-start lightweight design treats it as collaborative because quick-start keeps the smaller collaborative/draft choice.
-- `workflow.hillCheckpointDefault` — `every` or `final`. Default HiLL checkpoint behavior in `oat-project-implement`: pause after every phase or only after the last phase. When unset, the skill prompts.
+- `workflow.hillCheckpointDefault` — `every` or `final`. Default HiLL checkpoint behavior in `oat-project-implement` (a HiLL, or human-in-the-loop, checkpoint is a stop for your review): pause after every phase or only after the last phase. When unset, the skill prompts. See [Choosing a checkpoint default](#choosing-a-checkpoint-default).
 - `workflow.archiveOnComplete` — boolean. Skip the "Archive after completion?" prompt in `oat-project-complete`. When unset, the skill prompts.
 - `workflow.createPrOnComplete` — boolean. Skip the "Open a PR?" prompt in `oat-project-complete`; when true, completion auto-triggers PR creation. When unset, the skill prompts.
 - `workflow.postImplementSequence` — legacy `wait`, `summary`, `pr`, or `docs-pr`, or `{ "preApproval": [...], "postApproval": [...] }`. Legacy values remain strings and keep their existing mappings. Structured arrays contain ordered, globally unique `summary`, `document`, `pr`, and `retro` steps. `retro` is post-approval only: a structured value containing it in `preApproval` is rejected. Pre-approval steps run after final review and before final HiLL approval; post-approval steps run only after that approval. Plain retrieval keeps legacy strings and prints structured values as compact JSON; `--json` returns the raw value.
@@ -734,6 +738,22 @@ configuration counts as consent for the corresponding non-interactive action.
 Without those settings, non-interactive retro generation records proposals but
 does not apply or file them. Interactive runs still present the applicable
 promotion and filing choices before side effects.
+
+What leaves your repository through retro filing: `oat-project-retro-file`
+files the retro's "OAT Upstream Feedback" items (`UP-01`, `UP-02`, and so on;
+each is a title plus a problem, evidence summary, and suggested direction) as
+GitHub issues in the upstream repository. That repository is
+`workflow.retro.upstreamRepo` when set and `voxmedia/open-agent-toolkit` when
+it is not. Nothing is filed by default: the skill runs only when you ask for
+it, an interactive run asks you to confirm each destination and each item, and
+a non-interactive run files nothing for a lane whose filing key is unset or
+`none`. When the source repository is private and the destination is public,
+the skill removes private log excerpts, internal URLs, credential-shaped
+strings, and private identifiers before posting, and does not post an item it
+cannot sanitize safely. To stop non-interactive upstream filing, run
+`oat config set workflow.retro.filing.upstream none`; to send upstream items to
+a different repository, run
+`oat config set workflow.retro.upstreamRepo <owner/name>`.
 
 The two project-log keys use the standard workflow precedence:
 `local > shared > user > default`.
@@ -792,23 +812,20 @@ Workflow preferences resolve through three config surfaces, with `local > shared
 
 ```bash
 # User-level: applies to all repos on this machine
+# Checkpoint default: choose every (pause after each phase) or final (pause once at the end)
 oat config set workflow.hillCheckpointDefault final --user
-oat config set workflow.archiveOnComplete true --user
-oat config set workflow.createPrOnComplete true --user
-oat config set workflow.postImplementSequence pr --user
 oat config set workflow.reviewExecutionModel subagent --user
 oat config set workflow.autoReviewAtHillCheckpoints true --user
 oat config set workflow.designMode selective --user
-oat config set workflow.dispatchCeiling.preset balanced --user
-oat config adopt dispatch-matrix --user
-oat config set workflow.autoArtifactReview.plan true --user
-oat config set workflow.autoArtifactReview.analysis true --user
+oat config set workflow.autoNarrowReReviewScope true --user
+oat config adopt dispatch-matrix --user  # your own model ladder; sets no policy
 
 # Shared repo: team decision for this repo
+oat config set workflow.archiveOnComplete true --shared
+oat config set workflow.postImplementSequence docs-pr --shared
 oat config set workflow.createPrOnComplete false --shared
 oat config set workflow.designMode collaborative --shared
-oat config set workflow.dispatchCeiling.preset balanced --shared
-oat config set workflow.dispatchCeiling.providers.cursor.high composer-2.5 --shared
+oat config set workflow.dispatchCeiling.providers.cursor.high composer-2.5 --shared  # one ladder cell
 oat config set workflow.autoArtifactReview.plan false --shared
 oat config set workflow.projectLog auto --shared
 oat config set workflow.projectLogLedgerPath .oat/repo/reference/project-observations.md --shared
@@ -816,9 +833,39 @@ oat config set workflow.projectLogLedgerPath .oat/repo/reference/project-observa
 # Repo-local: personal override for this repo (default when no flag)
 oat config set workflow.hillCheckpointDefault every
 oat config set workflow.designMode draft
-oat config set workflow.dispatchCeiling.providers.codex medium  # Advanced: per-provider override
 oat config set workflow.autoArtifactReview.analysis false
 ```
+
+The user-level workflow preference lines use only keys that this page lists as
+safe personal defaults in [Choosing the right surface](#choosing-the-right-surface-personal-vs-per-repo).
+The dispatch lines adopt a model ladder and set one ladder cell; neither sets
+a dispatch policy. The examples deliberately leave out the legacy
+`workflow.dispatchCeiling.preset` key and bare per-provider values such as
+`workflow.dispatchCeiling.providers.codex medium`: both still work, but they
+replace that scope's ladder columns with a single legacy ceiling, and a
+dispatch policy set in any config file overrides every project's own choice.
+Read the warning below and [Dispatch Policy](../workflows/advanced/dispatch-ceiling.md)
+before setting either.
+The completion and PR keys (`workflow.archiveOnComplete`,
+`workflow.createPrOnComplete`, and `workflow.postImplementSequence`) appear in
+the shared block instead. A value in `~/.oat/config.json` applies in every
+repository on your machine that does not set the same key in its own
+`.oat/config.json` or `.oat/config.local.json`, because OAT resolves each key
+as local, then shared, then user, then the built-in default. Whether those
+completion keys are safe depends on each repository's archive and
+documentation settings, so set them per repository. The
+`workflow.autoArtifactReview.*` keys already default to `true`; set them only
+in a repository that opts out, as the shared and repo-local examples show.
+
+The legacy preset and bare-provider examples above remain readable compatibility
+syntax, not recommended complete-ladder setup. They can replace candidate
+columns with bare legacy ceilings. Prefer named policy plus explicit ladder
+adoption for new configurations.
+
+> [!WARNING]
+> A dispatch policy set in any config file overrides the policy that every
+> project chose for itself in its `state.md`. Leave the policy keys unset when
+> each project should choose its own policy.
 
 Default (no flag) targets `.oat/config.local.json` for workflow keys. Pass at most one of `--user`, `--shared`, or `--local`. Structural keys (`projects.root`, `worktrees.root`, `git.*`, `documentation.*`, `instructions.*`, `archive.*`, `tools.*`) are still shared-only regardless of flag.
 
@@ -830,7 +877,7 @@ Not every workflow preference belongs at user level, even though "set once, appl
 
 Some preferences are **genuinely personal** — their correct value is the same for you regardless of which repo you're in. These are safe to set at `--user`:
 
-- `workflow.hillCheckpointDefault` — your personal tolerance for mid-implementation interruption
+- `workflow.hillCheckpointDefault` — how often you want implementation to pause for your review. It is a personal preference by default; see [Choosing a checkpoint default](#choosing-a-checkpoint-default) below for when a team should set it instead.
 - `workflow.designMode` — your preferred full-design interaction style. Set `selective` when you usually want low-risk sections drafted silently but high-risk sections reviewed live.
 - `workflow.reviewExecutionModel` — depends on your provider environment (Claude Code, Cursor, Codex), not the repo
 - `workflow.autoReviewAtHillCheckpoints` — your preference for automatic lifecycle review at HiLL checkpoints. Shared/local config can still override this when a repo should behave differently.
@@ -845,10 +892,12 @@ Other preferences **depend on per-repo configuration** to be safe. These should 
 
 **Cross-repo foot-gun example:** If you set `workflow.createPrOnComplete: true --user`, it applies to every repo you work on. In a repo with `documentation.requireForProjectCompletion: true` and `postImplementSequence: pr` (no docs step), running `oat-project-complete` would try to auto-create a PR, then immediately hit the docs gate and block you — leaving you with an open PR and a stuck completion. Your user-level preference silently asserted something that only holds in a specific shared-config shape.
 
-**Recommended split for most users:**
+**Example split between personal and team settings:**
 
 ```bash
 # Personal preferences that differ from built-in defaults (apply everywhere)
+# Optional checkpoint default: every for more control, final for fewer interruptions;
+# leave unset to be asked on each project's first implementation run
 oat config set workflow.hillCheckpointDefault final --user
 oat config set workflow.reviewExecutionModel subagent --user
 oat config set workflow.autoReviewAtHillCheckpoints true --user
@@ -863,6 +912,29 @@ If you want to override a shared team decision for this specific checkout, use `
 ```bash
 oat config set workflow.archiveOnComplete false --local  # "I don't want to archive on this specific branch checkout"
 ```
+
+### Choosing a checkpoint default
+
+`workflow.hillCheckpointDefault` decides where `oat-project-implement` stops
+for your review. These stops are called HiLL checkpoints (HiLL stands for
+"human in the loop"). Neither value is right for everyone:
+
+- `every` pauses after each phase. You get more control over the work, at the
+  cost of more interruptions.
+- `final` pauses once, after the last phase. You are interrupted less, but you
+  see the work only at the end.
+
+When the key is unset, the first implementation run of each project asks you
+which to use. When it is set, that first run uses the configured value without
+asking, and the value replaces any checkpoint value already written in the
+project's `plan.md`. Later runs of the same project keep the value stored in
+`plan.md`.
+
+Treat the key as a personal preference by default, and set it at user level
+(`--user`) or for one checkout (`--local`). Set it at shared level (`--shared`)
+only when your team has agreed on a rule for where agents must pause. A shared
+value overrides each person's user-level value, but anyone can still override
+it for their own checkout with `--local`.
 
 ### Relationship to `autoReviewAtCheckpoints`
 
@@ -914,3 +986,48 @@ When you are unsure where a setting lives:
 3. Use the owning command shown there.
 
 That keeps config discovery centralized without forcing you to remember which settings belong to workflow state versus provider sync.
+
+## Choosing a config layer
+
+`oat config set` can write a setting to one of three files, called layers:
+
+- **shared** (`--shared`): `.oat/config.json`, committed with the repository so
+  it applies to the whole team;
+- **local** (`--local`): `.oat/config.local.json`, which applies only to this
+  checkout and is not committed;
+- **user** (`--user`): `~/.oat/config.json` in your home directory, which
+  applies to you in every repository.
+
+When the same key is set in more than one layer, local wins over shared, and
+shared wins over user. A team's shared value therefore overrides your personal
+user value unless you also set it locally.
+
+| Layer      | Choose it when                                              | What you give up                                                      |
+| ---------- | ----------------------------------------------------------- | --------------------------------------------------------------------- |
+| `--shared` | The team should behave the same way in this repository      | Personal flexibility: changes go through code review like other files |
+| `--local`  | You want to override something for yourself in one checkout | Nobody else, and none of your other checkouts, sees the value         |
+| `--user`   | The value is about how you work, whatever the repository    | Any repository that sets the key in shared or local config wins       |
+
+With no flag, workflow preferences, project state, and explainer defaults are
+written to local config, update notifications to user config, and structural
+settings (repository paths and policy, such as `projects.root` or
+`documentation.*`) to shared config. Some keys can live in only one layer:
+project state is local-only, update notifications are user-only, and remote
+project-management policy is shared-only. `oat tools install` records each pack
+in the scope you installed it to, but `oat config set tools.*` writes only to
+shared config.
+
+- If you are trying OAT on your own, set values with no flag and accept the
+  defaults.
+- If you are rolling OAT out to a team, set policy keys with `--shared` and
+  commit the change so it is reviewed.
+- If you want a preference to follow you into every repository, use `--user`,
+  but only for keys listed as personal in
+  [Choosing the right surface](#choosing-the-right-surface-personal-vs-per-repo).
+- If you need to differ from the team's setting in one checkout, use `--local`
+  rather than changing the policy for everyone.
+
+Environment variables override all three layers, but only for three keys:
+`projects.root`, `projects.defaultScope`, and `worktrees.root`. Some skills read
+their own environment variables, such as `OAT_DESIGN_MODE`; those are separate
+from config resolution.

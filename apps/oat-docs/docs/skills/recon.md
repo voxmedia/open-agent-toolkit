@@ -353,3 +353,52 @@ and cause the exported renderer to fail closed with `PACKET_NOT_PUBLISHABLE`.
 If the manifest, ledger, approval envelope, source identities, or publication
 boundary cannot be validated, the run is `failed`. It may retain safe raw
 diagnostics, but it does not publish a misleading `packet.md`.
+
+## recon
+
+**Invocation:**
+`/recon "Where is provider configuration read and overridden?" --profile standard --scope "configuration readers and their callers"`.
+This is an agent instruction rather than a shell command; Codex uses
+`$recon`. Recon is explicit-invocation only, so use the slash or `$` form.
+Supply a bounded question. Profiles are `quick`, `standard` (the default), and
+`thorough`; `--context` and `--output` arguments can make the evidence
+boundary and destination explicit.
+
+**Prerequisites:** Accessible source evidence and the `utility` tool pack's
+`oat-dispatch-subagents` and `subagent-orchestration` skills, installed at the
+same scope; the `research` pack installs them for you. Recon stops and names
+the missing skill if either is absent. Needs an active OAT project: no. The
+skill establishes scope, available capabilities, and an approval envelope
+(the exact list of worker waves, models, limits, and read/write permissions it
+proposes) before launching any worker wave (a batch of helper agents doing the
+same kind of task). A missing approved capability is not permission to
+silently substitute a different route.
+
+**What it does without asking:** Before approval it creates a new run
+directory under the destination and writes its `manifest.json` skeleton; it
+never overwrites an existing run. It launches no worker until you approve the
+proposal it shows, and any change to that proposal needs fresh approval.
+After approval it starts the approved helper agents, which only read sources
+and each write one file inside the run directory, then validates the results
+and publishes `packet.md`. It does not modify the investigated system,
+commit, or push.
+
+**Example scenario:** Before changing configuration precedence, you need an
+inventory of actual readers and their callers. Ask for that bounded packet
+so the implementation owner can evaluate compatibility across those paths.
+Keep the reconnaissance read-only: finding every reader does not authorize
+changing defaults or choosing a migration strategy.
+
+**Expected output:** A topic/run directory containing `packet.md`,
+`claims.json`, `manifest.json`, and the supporting raw evidence and reviews
+applicable to the run. Claims retain source identities and evidence
+locators. Read the reported run state and assurance level: a quick packet is
+not an independently verified standard packet, and contested, unresolved,
+or partial findings remain qualified rather than being promoted by the
+profile's name alone. Failed or unpublishable runs do not provide a valid
+packet just because raw diagnostics exist.
+
+**Next step:** Use the packet and its evidence to make the caller's planning
+or implementation decision. Reopen the bound sources when freshness matters,
+and resolve disputed or missing evidence before relying on a load-bearing
+claim. Recon supplies evidence, not product approval.

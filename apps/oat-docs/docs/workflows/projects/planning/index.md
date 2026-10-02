@@ -9,6 +9,8 @@ Use these guides to plan a tracked project and choose its collaboration boundari
 
 ## Contents
 
+- [Starting projects](starting-projects.md) - Choose an entry point, import a plan, capture work or split a broad scope.
+- [Planning skills](planning-skills.md) - Discovery, requirements, design, planning and workflow promotion.
 - [Design Modes](design-modes.md) - How full design balances collaborative, selective collaborative, and draft-and-review interaction.
 - [Human-in-the-Loop Lifecycle (HiLL) Checkpoints](hill-checkpoints.md) - Human-in-the-Loop Lifecycle configuration and approval behavior.
 - [Project Splitting](splitting.md) - How broad discoveries or brainstorms become coordination parents and child projects.

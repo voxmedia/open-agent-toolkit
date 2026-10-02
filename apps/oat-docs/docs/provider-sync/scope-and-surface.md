@@ -25,7 +25,7 @@ Rules are currently project-scoped canonical content. Unlike skills and agents, 
 
 - Mutate by default; `--dry-run` to preview
 - Explicit `--dry-run` for safe preview of mutations
-- Scoped destructive actions only for manifest-tracked entries
+- Deletions are limited to manifest-tracked entries: sync removes a skill or rule view only when the manifest records it and its canonical source is gone. Deleted agents are not cleaned up this way: with Cursor enabled, sync and status stop with an `escapes the sync scope` error until you delete the agent's dangling links in `.cursor/agents/` and `.claude/agents/`, and Codex's `.codex/agents/<name>.toml` and `[agents.<name>]` table are never removed (see [Manifest and Drift](manifest-and-drift.md#quick-look)). A provider file with no canonical source and no manifest entry is reported as a stray by `oat status`, not deleted. Writing a view is not limited this way: sync replaces whatever sits at a view's expected path, including an untracked file (see the warning under [Choosing sync scope](#choosing-sync-scope))
 - Cross-provider compatibility via adapters
 - Native-read assets stay canonical while provider-local adoption sources remain discoverable independently
 - Obsolete managed mappings are deleted only when their provider paths are verified clean; changed or unverified paths are preserved and detached from manifest ownership
@@ -131,3 +131,37 @@ runtime mismatch, malformed output, and missing telemetry never authorize it.
 - `.oat/projects/<scope>/<project>/design.md`
 - `.oat/projects/<scope>/<project>/plan.md`
 - `.oat/projects/<scope>/<project>/implementation.md`
+
+## Choosing sync scope
+
+`oat sync` and `oat status` take `--scope project`, `--scope user`, or
+`--scope all`. Project scope works on this repository's canonical assets (the
+files under `.agents/`) and its provider views (the per-tool copies or links
+such as `.claude/skills/<name>`). User scope does the same for `~/.agents/` and
+the tool folders in your home directory. All runs project scope, then user scope.
+
+| Scope           | Choose it when                                      | What you give up                                  |
+| --------------- | --------------------------------------------------- | ------------------------------------------------- |
+| `project`       | CI, scripts, or a team checkout                     | Your personal skills are not refreshed            |
+| `user`          | You keep personal skills that you use in every repo | Rules are not synced; they exist only per project |
+| `all` (default) | You maintain both trees on your own machine         | Every run also writes into your home directory    |
+
+User scope never syncs rules: only project scope distributes the rules in
+`.agents/rules` to provider folders. Edit the files under `.agents/` rather than
+the provider views, because sync overwrites changes made in the views.
+
+> [!WARNING]
+> A bare `oat sync` uses scope `all`, so it also writes under your home
+> directory. Every sync also overwrites edits made directly in provider folders,
+> replaces an untracked file sitting at a view path, and removes the view of a
+> deleted skill or rule. It does not clean up after a deleted or renamed agent;
+> see [Manifest and Drift](manifest-and-drift.md#quick-look) for the manual
+> steps. Pass `--scope` explicitly, and preview with `--dry-run` when you are
+> unsure.
+
+- If the run is in CI or a script, always pass `--scope project`, and preview
+  with `--dry-run` when you change what is synced.
+- If you want personal skills in every repository, put them in
+  `~/.agents/skills` and run `oat sync --scope user`.
+- If you deliberately maintain both trees on your own machine, `--scope all` (or
+  a bare `oat sync`) is fine.

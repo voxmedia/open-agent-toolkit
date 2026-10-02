@@ -26,6 +26,13 @@ oat pjm doctor --json
 Continue only when `adoption.state` is `declared` or `inferred-legacy`. Run
 `oat pjm init` first when adoption is absent or only partially initialized.
 
+> [!WARNING]
+> Running `oat pjm init` again, or running `oat pjm migrate --apply`,
+> currently replaces the `pjm` section of `.oat/config.json` and deletes any
+> `pjm.remote` settings, which hold the remote policy described below. Before
+> you rerun either command, back up `.oat/config.json`. Afterwards, run
+> `git diff .oat/config.json` and restore `pjm.remote` if it was removed.
+
 ## Lifecycle operations
 
 The command family is `oat pjm remote`:
@@ -107,6 +114,11 @@ configuration never bypasses hard approval floors or the requirement for
 current caller-owned authority evidence; missing, stale, or mismatched evidence
 fails closed. Autonomous configuration is not a background grant.
 
+Current CLI bindings have a fixed intake/source or publish/planning purpose
+and empty per-binding restrictions; no command exposes additional binding
+restriction or purpose-grant setters. These remain internal narrowing layers,
+not extra configurable user controls.
+
 ## Live host capability boundary
 
 At operation time, the host agent inspects currently granted MCP or connector
@@ -144,10 +156,20 @@ preview digest binds the target, normalized fields, remote revision,
 capability, safety result, and effective policy. If any load-bearing input
 changes, the approval is stale.
 
-Fresh approval is always required for complete description replacement,
+Fresh approval is required for complete description replacement on create,
 relink, detach, recreate, destructive operations, and promotion to shared
-operational storage. `user-approved` authority also requires applying the exact
-persisted preview. Higher configured authority cannot bypass those floors.
+operational storage.
+
+> [!WARNING]
+> In `replace` description mode, only creating an issue always needs fresh
+> approval; later updates follow your `update-fields` authority, so
+> `user-authorized` or `autonomous` authority can overwrite an issue's
+> description without a person approving it. If someone must review each
+> overwrite, set `pjm.remote.policy.authority.operations.update-fields` to
+> `user-approved`.
+
+`user-approved` authority requires applying the exact persisted preview.
+Higher configured authority cannot bypass floors that the operation enforces.
 
 The host submits a bounded observation with `oat pjm remote operation continue`.
 Only an OAT `ok` envelope after authoritative read-back means success. A
@@ -158,10 +180,14 @@ or reconcile without producing duplicates.
 
 ## Storage and worktrees
 
-Portable binding metadata follows its backlog or project owner. Shared backlog
-metadata lives under `.oat/repo/pjm/remote/bindings`; project metadata lives
-under that project's `remote/bindings` directory. Local projects keep their
-portable metadata in the local operational store.
+> [!WARNING]
+> OAT writes every binding record, including bindings for local projects, under
+> `.oat/repo/pjm/remote/bindings/`, and it does not gitignore that directory, so
+> those records are committed unless you exclude them. Review that directory
+> before committing if tracker links should not appear in the repository.
+
+Bindings are not yet stored with the project or backlog item that owns them;
+the owner-specific routing design is not wired into the current store.
 
 Operational snapshots, journals, batches, and receipts default to a
 repository-fingerprinted directory under the Git common directory:
@@ -171,8 +197,16 @@ clone gets its own store.
 
 Shared operational storage is opt-in and may expose remote planning content to
 everyone with repository access. It requires a persisted preview and fresh
-approval, and it is rejected for local projects. Preview the exact proposed
-paths through `oat pjm remote storage shared --help` before applying them.
+approval.
+
+> [!WARNING]
+> Shared storage is meant to be refused for local projects, but the current CLI
+> does not enforce that, so a local project's remote state is committed with
+> everyone else's. Do not combine shared storage with local projects.
+
+Preview with `oat pjm remote storage shared` without
+`--apply`, then use the returned approval digest for the explicit apply. The
+help command describes flags; it does not preview proposed storage changes.
 
 ## Offline behavior
 
@@ -189,3 +223,81 @@ freshness or success.
 - [CLI Reference](../../reference/cli-reference.md)
 - [File Locations](../../reference/file-locations.md)
 - [Troubleshooting](../../reference/troubleshooting.md)
+
+## Choosing bindings and policy
+
+A **binding** links one local backlog item or project to one GitHub, Linear, or
+Jira issue. You create a binding in one of two ways: **intake** imports an
+existing tracker issue as a local backlog item, and **publish** creates a
+tracker issue from a local item. Both commands need capability evidence from
+the host agent (see [Live host capability boundary](#live-host-capability-boundary)),
+so in practice you ask your agent to run them through the `oat-pjm-remote`
+skill. OAT creates no binding unless you ask, so local work stays complete
+offline.
+
+| Choice     | Choose it when                          | What you give up                                                                                                              |
+| ---------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| No binding | The item matters only in the repository | Visibility in the tracker                                                                                                     |
+| Intake     | The tracker owns the issue              | Title, description, and priority flow only into the repository; local edits never flow back                                   |
+| Publish    | The work starts locally                 | You need write authority (below). Title, priority, and, if the description policy allows, the description then flow both ways |
+
+- If you maintain an open-source project on GitHub, intake reported issues and
+  publish only the work that maintainers start.
+- If your team plans in Linear or Jira, intake the tickets that agents work on.
+
+### How much of the description is sent
+
+| `pjm.remote.policy.description` | Choose it when                            | What you give up                                                                               |
+| ------------------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `none` (default)                | The local description is sensitive        | OAT never sends or compares a description. Intake still copies the issue's description locally |
+| `managed-section`               | People also edit the issue in the tracker | OAT owns only the text between its marker comments; if the markers are broken, the write stops |
+| `replace`                       | OAT is the only author of the description | Edits made in the tracker are overwritten (see the replace-mode warning above)                 |
+
+### Who may write, and with what approval
+
+Authority is set with `pjm.remote.policy.authority.default`, or per operation
+under `pjm.remote.policy.authority.operations.<operation>`, in shared config
+only. Before any write, OAT saves a preview of exactly what it would send,
+identified by a digest (a content hash).
+
+| Authority             | Choose it when                                                  | What you give up                                                                           |
+| --------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `read-only` (default) | You only intake and refresh issues                              | All writes to the tracker                                                                  |
+| `user-approved`       | A person must see each exact change                             | One approval per write: the person approves the preview digest within five minutes         |
+| `user-authorized`     | An explicit request such as "publish BL-12 to Linear" is enough | Reviewing each change before it is sent                                                    |
+| `autonomous`          | An OAT workflow writes as one of its steps                      | Most live oversight. The workflow's evidence must still match the exact operation and item |
+
+Deleting, recreating, relinking, or detaching a binding, and creating an issue
+in `replace` mode, always need `user-approved` approval, whatever you configure.
+
+- Start with `read-only` and intake.
+- When OAT should create and maintain issues, set both `create` and
+  `update-fields` to `user-approved`.
+- Choose `user-authorized` or `autonomous` only when you deliberately accept
+  that a request or a workflow step authorizes the write without a per-change
+  review.
+
+A provider section, `pjm.remote.policy.providers.<github|linear|jira>`, is unset
+by default and then inherits the repository policy. If one policy fits every
+tracker, leave it unset. If trust differs, for example a private Linear
+workspace versus public GitHub, set a provider policy, but review it carefully:
+it replaces the repository value and can grant more than the repository policy
+does. A provider `authority.default` also replaces the repository's
+per-operation settings, so repeat any per-operation limits you still need under
+that provider.
+
+### Where operation state is stored
+
+Snapshots and journals (OAT's copy of each issue as last read, and its log of
+remote operations) are stored locally by default, under the Git directory.
+Every worktree of one clone shares them; other clones do not see them.
+
+- Keep `local` storage unless teammates need each other's operation logs, for
+  example to recover a create whose outcome was unclear.
+- If you do switch to shared storage, review what it exposes first: it puts
+  remote content and operation journals into Git history, and it does not move
+  existing records. Do not use it with local projects (see the warning above).
+
+Local storage does not make binding records private, because bindings are
+always written to the repository as described in
+[Storage and worktrees](#storage-and-worktrees).
