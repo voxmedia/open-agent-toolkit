@@ -107,3 +107,9 @@
 - Fable's actual map review arrived via the user and supplied independent completion evidence. The prior STOP remains historical; communication resumes and R1/R2 corrections proceed without another user checkpoint. This override authorizes peer-review prompts, not clearing text, executing unrelated consequential commands, or changing the execution host.
 
 - A bounded GPT-6.1 Sol/high native helper refined this distinction in the existing separate Orc worktree. Root reviewed its four-file diff, committed and pushed3b7e1c55f89bf6b520969c5092f92519e1076860 to draft [tkstang/orc#47](https://github.com/tkstang/orc/pull/47). Full post-commit worktree validation passed; type/build cache replay is disclosed in implementation.md. Remote branch and GitHub API confirm the head. Not merged or installed; no fresh-provider acceptance claimed. The historical phrase “human draft” above is not a verified authorship finding and is superseded by this qualified evidence.
+
+### Parsed CLI help and FIFO acknowledgment
+
+- On this relay/runtime, `orca orchestration check --help` unexpectedly returned a consuming Delivery rather than help. Use `orca agent-context --json` to inspect parsed command contracts instead of assuming a help flag is read-only. This is a dated observed gotcha, not a general diagnosis of Orca internals.
+- Root had already read all three rows via peek and processed them durably. The supported schema names `orchestration check --ack <delivery_id>`, not an `orchestration ack` command. Root acknowledged exactly `delivery_2f474fdba537` after complete batch processing; the result confirmed that acknowledgment and an empty next batch. No unseen mail was acknowledged.
+- For the new format-boundary question, the queued message and direct inbox nudge were distinct actions. Input acceptance was not promoted to turn-start evidence; Fable's actual inbox reply supplied independent response evidence.

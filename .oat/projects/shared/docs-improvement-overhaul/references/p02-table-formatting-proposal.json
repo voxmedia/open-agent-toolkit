@@ -1,0 +1,367 @@
+{
+  "status": "proposal-evidence-not-approved-normalization",
+  "sourcePage": "reference/cli-reference.md",
+  "sourceSection": "reference/cli-reference.md::Command Groups::1",
+  "baseline": "8b78d9a935b31ef50e65713b03a022a5d022aa59",
+  "mapSha256": "ff02a3ebec2373f88cb47917bd6aeafeb35149b7e9680e768d0a4e0a5674a438",
+  "baselineSha256": "139f2966ced3e580e07a13b74ab18f6069db1f14a7dfb3811e908bac7f551872",
+  "hrefOnlyExpectedSha256": "71af550f395546a1c4d849482ba5d550753947f65289f259c0823236e100ea71",
+  "formattedActualSha256": "ece5cd5d53296943c4aa6838f10062f2a60693ce58987d38f0772ca6b7a56932",
+  "affectedProtectedUnits": 1,
+  "affectedTables": 1,
+  "totalPageTables": 1,
+  "parsedTableAstEqualAfterInventoriedHrefEdits": true,
+  "cellContentEqual": true,
+  "cellPaddingSpans": [
+    {
+      "table": 0,
+      "row": 0,
+      "column": 2,
+      "sourceLine": 42,
+      "actualLine": 42,
+      "payloadSha256": "6bce982b050c617bc1f5f68ea0ceea210a7979331fa96b8de8803cf5cd6861e0",
+      "rawPayloadIdentical": true,
+      "prefix": {
+        "before": "| ",
+        "after": "| ",
+        "onlyAsciiEdgePadding": true
+      },
+      "suffix": {
+        "before": "                                                                          |",
+        "after": "                                                                                   |",
+        "onlyAsciiEdgePadding": true
+      },
+      "expectedSpan": [3479, 3554],
+      "actualSpan": [3479, 3563]
+    },
+    {
+      "table": 0,
+      "row": 1,
+      "column": 2,
+      "sourceLine": 44,
+      "actualLine": 44,
+      "payloadSha256": "e6a0b45385ccd8c23cfa1aa5034db32ef551554d9219d13354b7064c76432ad1",
+      "rawPayloadIdentical": true,
+      "prefix": {
+        "before": "| ",
+        "after": "| ",
+        "onlyAsciiEdgePadding": true
+      },
+      "suffix": {
+        "before": "                                     |",
+        "after": "                                            |",
+        "onlyAsciiEdgePadding": true
+      },
+      "expectedSpan": [4234, 4272],
+      "actualSpan": [4252, 4297]
+    },
+    {
+      "table": 0,
+      "row": 2,
+      "column": 2,
+      "sourceLine": 45,
+      "actualLine": 45,
+      "payloadSha256": "9fce694387ff9ee3867678a4ff692679a13ec7339bc5ac992bb7b7de6502104e",
+      "rawPayloadIdentical": true,
+      "prefix": {
+        "before": "| ",
+        "after": "| ",
+        "onlyAsciiEdgePadding": true
+      },
+      "suffix": {
+        "before": "                                       |",
+        "after": "                                              |",
+        "onlyAsciiEdgePadding": true
+      },
+      "expectedSpan": [4592, 4632],
+      "actualSpan": [4617, 4664]
+    },
+    {
+      "table": 0,
+      "row": 3,
+      "column": 2,
+      "sourceLine": 46,
+      "actualLine": 46,
+      "payloadSha256": "d6d7126843b175064fd7840f72bca2aedca8639a23ec42868077539f8b8b7672",
+      "rawPayloadIdentical": true,
+      "prefix": {
+        "before": "| ",
+        "after": "| ",
+        "onlyAsciiEdgePadding": true
+      },
+      "suffix": {
+        "before": "     |",
+        "after": "            |",
+        "onlyAsciiEdgePadding": true
+      },
+      "expectedSpan": [4986, 4992],
+      "actualSpan": [5018, 5031]
+    },
+    {
+      "table": 0,
+      "row": 4,
+      "column": 2,
+      "sourceLine": 47,
+      "actualLine": 47,
+      "payloadSha256": "25b7b8755b4924b845af7bbb731fd9da0a84c5a25d7592e233d5340201d07c0d",
+      "rawPayloadIdentical": true,
+      "prefix": {
+        "before": "| ",
+        "after": "| ",
+        "onlyAsciiEdgePadding": true
+      },
+      "suffix": {
+        "before": "         |",
+        "after": " |",
+        "onlyAsciiEdgePadding": true
+      },
+      "expectedSpan": [5357, 5367],
+      "actualSpan": [5396, 5398]
+    },
+    {
+      "table": 0,
+      "row": 5,
+      "column": 2,
+      "sourceLine": 48,
+      "actualLine": 48,
+      "payloadSha256": "24f651249bbac036272fe03f9a4ca9438f1870a44d06534e4c82e46482a5243e",
+      "rawPayloadIdentical": true,
+      "prefix": {
+        "before": "| ",
+        "after": "| ",
+        "onlyAsciiEdgePadding": true
+      },
+      "suffix": {
+        "before": " |",
+        "after": "                           |",
+        "onlyAsciiEdgePadding": true
+      },
+      "expectedSpan": [5706, 5708],
+      "actualSpan": [5737, 5765]
+    },
+    {
+      "table": 0,
+      "row": 6,
+      "column": 2,
+      "sourceLine": 49,
+      "actualLine": 49,
+      "payloadSha256": "b127005bee17e7dce99776d74c6b3899a3a7a1c96039d295ee1ee27f1034676d",
+      "rawPayloadIdentical": true,
+      "prefix": {
+        "before": "| ",
+        "after": "| ",
+        "onlyAsciiEdgePadding": true
+      },
+      "suffix": {
+        "before": "               |",
+        "after": "                                         |",
+        "onlyAsciiEdgePadding": true
+      },
+      "expectedSpan": [6033, 6049],
+      "actualSpan": [6090, 6132]
+    },
+    {
+      "table": 0,
+      "row": 7,
+      "column": 2,
+      "sourceLine": 50,
+      "actualLine": 50,
+      "payloadSha256": "b127005bee17e7dce99776d74c6b3899a3a7a1c96039d295ee1ee27f1034676d",
+      "rawPayloadIdentical": true,
+      "prefix": {
+        "before": "| ",
+        "after": "| ",
+        "onlyAsciiEdgePadding": true
+      },
+      "suffix": {
+        "before": "               |",
+        "after": "                                         |",
+        "onlyAsciiEdgePadding": true
+      },
+      "expectedSpan": [6374, 6390],
+      "actualSpan": [6457, 6499]
+    },
+    {
+      "table": 0,
+      "row": 8,
+      "column": 2,
+      "sourceLine": 51,
+      "actualLine": 51,
+      "payloadSha256": "1d476a5e7aec9ec318841b10646d94807786651ce9cea56e0d042143bbbf1219",
+      "rawPayloadIdentical": true,
+      "prefix": {
+        "before": "| ",
+        "after": "| ",
+        "onlyAsciiEdgePadding": true
+      },
+      "suffix": {
+        "before": "                               |",
+        "after": "                                   |",
+        "onlyAsciiEdgePadding": true
+      },
+      "expectedSpan": [6721, 6753],
+      "actualSpan": [6830, 6866]
+    },
+    {
+      "table": 0,
+      "row": 9,
+      "column": 2,
+      "sourceLine": 52,
+      "actualLine": 52,
+      "payloadSha256": "b127005bee17e7dce99776d74c6b3899a3a7a1c96039d295ee1ee27f1034676d",
+      "rawPayloadIdentical": true,
+      "prefix": {
+        "before": "| ",
+        "after": "| ",
+        "onlyAsciiEdgePadding": true
+      },
+      "suffix": {
+        "before": "               |",
+        "after": "                                         |",
+        "onlyAsciiEdgePadding": true
+      },
+      "expectedSpan": [7078, 7094],
+      "actualSpan": [7191, 7233]
+    },
+    {
+      "table": 0,
+      "row": 10,
+      "column": 2,
+      "sourceLine": 53,
+      "actualLine": 53,
+      "payloadSha256": "e4445a20328a32f6d66727bbaeb74f1f6f187376c13047140ded5330dd204bd9",
+      "rawPayloadIdentical": true,
+      "prefix": {
+        "before": "| ",
+        "after": "| ",
+        "onlyAsciiEdgePadding": true
+      },
+      "suffix": {
+        "before": "                               |",
+        "after": "                                        |",
+        "onlyAsciiEdgePadding": true
+      },
+      "expectedSpan": [7420, 7452],
+      "actualSpan": [7559, 7600]
+    },
+    {
+      "table": 0,
+      "row": 11,
+      "column": 2,
+      "sourceLine": 54,
+      "actualLine": 54,
+      "payloadSha256": "1e14f7cc3ecb36dd2ae748bcd39d0481f65f5ee7554b9990fcef55cfa22d8432",
+      "rawPayloadIdentical": true,
+      "prefix": {
+        "before": "| ",
+        "after": "| ",
+        "onlyAsciiEdgePadding": true
+      },
+      "suffix": {
+        "before": "                                         |",
+        "after": "                                                  |",
+        "onlyAsciiEdgePadding": true
+      },
+      "expectedSpan": [7768, 7810],
+      "actualSpan": [7916, 7967]
+    },
+    {
+      "table": 0,
+      "row": 12,
+      "column": 2,
+      "sourceLine": 55,
+      "actualLine": 55,
+      "payloadSha256": "16dcbc528b7e6657c6f5edbcb37a6148d9ca6c833373accf016d7930a4b79f82",
+      "rawPayloadIdentical": true,
+      "prefix": {
+        "before": "| ",
+        "after": "| ",
+        "onlyAsciiEdgePadding": true
+      },
+      "suffix": {
+        "before": "                              |",
+        "after": "                                       |",
+        "onlyAsciiEdgePadding": true
+      },
+      "expectedSpan": [8137, 8168],
+      "actualSpan": [8294, 8334]
+    },
+    {
+      "table": 0,
+      "row": 13,
+      "column": 2,
+      "sourceLine": 56,
+      "actualLine": 56,
+      "payloadSha256": "e7bdd944601752782cf48ac476c470fc60c43f88f9cd9716916ea9f7cd425968",
+      "rawPayloadIdentical": true,
+      "prefix": {
+        "before": "| ",
+        "after": "| ",
+        "onlyAsciiEdgePadding": true
+      },
+      "suffix": {
+        "before": "                                        |",
+        "after": "                                           |",
+        "onlyAsciiEdgePadding": true
+      },
+      "expectedSpan": [8491, 8532],
+      "actualSpan": [8657, 8701]
+    },
+    {
+      "table": 0,
+      "row": 14,
+      "column": 2,
+      "sourceLine": 57,
+      "actualLine": 57,
+      "payloadSha256": "36d2572b4906ea5ea7ca9a9b45dca1d66cf02ced2b47559a10c763876358e6af",
+      "rawPayloadIdentical": true,
+      "prefix": {
+        "before": "| ",
+        "after": "| ",
+        "onlyAsciiEdgePadding": true
+      },
+      "suffix": {
+        "before": "                      |",
+        "after": "                                            |",
+        "onlyAsciiEdgePadding": true
+      },
+      "expectedSpan": [8854, 8877],
+      "actualSpan": [9023, 9068]
+    }
+  ],
+  "nonSpaceChanges": [
+    {
+      "line": 43,
+      "before": "| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |",
+      "after": "| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |",
+      "onlyAsciiSpaceDelta": false
+    }
+  ],
+  "formatter": {
+    "command": "pnpm --filter oat-docs docs:format",
+    "exit": 0,
+    "log": "/tmp/docs-p02-t02-format-02.log"
+  },
+  "conservation": {
+    "command": "node .oat/projects/shared/docs-improvement-overhaul/references/verify-migration.mjs",
+    "exit": 1,
+    "errorLog": "/tmp/docs-p02-t02-conservation-04-error.log",
+    "audit": "One temporary guard-neutralized diagnostic sweep found exactly this protected-unit mismatch; diagnostic output is not a preservation pass."
+  },
+  "boundary": "Only one protected unit/table is affected. Candidate allowance includes exactly inventoried cell-edge ASCII-space spans and the third delimiter dash-run width; pipes/colons, internal raw cell payload, topology/alignment and all remaining source bytes remain protected. Existing normalization is unchanged; this is proposal evidence only.",
+  "delimiterRun": {
+    "line": 43,
+    "column": 2,
+    "before": "----------------------------------------------------------------------------------",
+    "after": "-------------------------------------------------------------------------------------------",
+    "alignmentUnchanged": true,
+    "onlyDashRunWidth": true
+  },
+  "completeSweep": {
+    "diagnosticCommand": "node /tmp/docs-p02-table-audit.mjs",
+    "expectedProtectedUnits": 816,
+    "checkedProtectedUnits": 816,
+    "mismatchingUnits": ["reference/cli-reference.md::Command Groups::1"],
+    "outcome": "audit-only; guard-neutralized diagnostic, not a preservation pass"
+  }
+}
