@@ -132,6 +132,30 @@ describe('lifecycle gate approval record', () => {
     expect(gate).toContain('`not_configured` writes no record');
   });
 
+  it('writes the project-disabled record before the disabled branch jumps to Step 3.7', () => {
+    const skill = readRepoFile(QUICK_START);
+    const gate = skill.slice(
+      skill.indexOf('### Gate Execution'),
+      skill.indexOf(STEP_3_7),
+    );
+    // The disabled branch is one bullet of step 1; it leaves Gate Execution
+    // before the shared persistence paragraph, so it must write first.
+    const branch = normalize(
+      /^ {3}- `configured_disabled_by_project`:.*$/m.exec(gate)?.[0] ?? '',
+    );
+    const write = branch.indexOf(
+      'write `oat_quick_start_gate` as `allowed/project_disabled` with `reviewed_head: null`',
+    );
+    const jump = branch.indexOf(
+      'proceed directly to the completion steps in Step 3.7 below',
+    );
+
+    expect(write, 'disabled branch writes the record').toBeGreaterThan(-1);
+    expect(jump, 'disabled branch still jumps to Step 3.7').toBeGreaterThan(-1);
+    expect(write, 'record is written before the jump').toBeLessThan(jump);
+    expect(branch).toContain('Do not launch any process');
+  });
+
   it('keeps Step 3.7 gated by control flow, not by the record', () => {
     const skill = readRepoFile(QUICK_START);
     const step37 = skill.slice(

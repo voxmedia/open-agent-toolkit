@@ -30,9 +30,15 @@ not trigger the review.
 One exhausted loop gets one review. Before dispatching, look for an existing
 report for the scope and reuse the newest
 `reviews/archived/complexity-<scope>-*.md` when it is newer than every review
-artifact of that scope (compare its filename timestamp with their
-`oat_generated_at`). Dispatch again only when a new review round has landed
-since that report. The rule covers a re-entered review-receive at the cap, the
+artifact of that scope: its filename timestamp is at or after the newest of
+their `oat_generated_at` values, compared at seconds precision. Among reports
+from the same second, the highest collision suffix is the newest. A legacy
+minute-precision name (`YYYY-MM-DDTHHMMZ`) reads as second `00`, which errs
+toward a fresh review. For example, a report saved as
+`complexity-p03-2026-10-02T183045Z.md` is newer than a review generated at
+`2026-10-02T18:30:20Z` and older than one generated at `2026-10-02T18:30:50Z`,
+an order minute precision could not establish. Dispatch again only when a new
+review round has landed since that report. The rule covers a re-entered review-receive at the cap, the
 final review cap reached through review-receive Step 8, and a phase scope that
 reaches both the receive cap and the implement retry limit.
 
@@ -219,8 +225,10 @@ Both paths add these sections to the report:
 The root, never the reviewer:
 
 1. Saves the returned report verbatim at
-   `$PROJECT_PATH/reviews/archived/complexity-<scope>-<YYYY-MM-DDTHHMMZ>.md`,
-   beside the loop's archived review artifacts. It is not a review event: it
+   `$PROJECT_PATH/reviews/archived/complexity-<scope>-<YYYY-MM-DDTHHMMSSZ>.md`,
+   beside the loop's archived review artifacts, with the UTC timestamp from
+   `date -u +%Y-%m-%dT%H%M%SZ`. When that path already exists, append `-2`,
+   then `-3`, and so on before `.md` until the path is free. It is not a review event: it
    carries no `oat_review_*` or `oat_generated_at` frontmatter, has no `plan.md`
    Reviews row, and stays out of the top-level `reviews/` directory, where
    routers would read it as an unprocessed review. Write it only while no

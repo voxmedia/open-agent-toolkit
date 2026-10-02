@@ -235,6 +235,41 @@ describe('complexity review at budget exhaustion', () => {
     );
   });
 
+  it('names complexity reports at UTC seconds precision with collision suffixes', () => {
+    const raw = readRepoFile(SHARED_DOC);
+    const doc = raw.replace(/\s+/g, ' ');
+
+    expect(doc).toContain(
+      '$PROJECT_PATH/reviews/archived/complexity-<scope>-<YYYY-MM-DDTHHMMSSZ>.md',
+    );
+    expect(doc).not.toContain('<YYYY-MM-DDTHHMMZ>');
+    expect(doc).toContain('date -u +%Y-%m-%dT%H%M%SZ');
+    expect(doc).toMatch(/append `-2`, then `-3`/);
+    expect(doc).toMatch(/compared at seconds precision/);
+
+    // The same-minute example must hold under the stated rule: parse the
+    // report name and both review timestamps, then check the claimed order.
+    const example =
+      /saved as `complexity-p03-(\d{4})-(\d{2})-(\d{2})T(\d{2})(\d{2})(\d{2})Z\.md` is newer than a review generated at `([^`]+)` and older than one generated at `([^`]+)`/.exec(
+        doc,
+      );
+    expect(
+      example,
+      'the doc carries a same-minute ordering example',
+    ).not.toBeNull();
+    const [, y, mo, d, h, mi, se, earlier, later] = example!;
+    const report = Date.UTC(+y!, +mo! - 1, +d!, +h!, +mi!, +se!);
+    const earlierReview = Date.parse(earlier!);
+    const laterReview = Date.parse(later!);
+    // Same minute on all three, so minute precision could not order them.
+    expect(Math.floor(report / 60_000)).toBe(
+      Math.floor(earlierReview / 60_000),
+    );
+    expect(Math.floor(report / 60_000)).toBe(Math.floor(laterReview / 60_000));
+    expect(report).toBeGreaterThan(earlierReview);
+    expect(report).toBeLessThan(laterReview);
+  });
+
   it('logs root judgment and keeps logging out of dispatched children', () => {
     const appendPoints = sliceBetween(
       readRepoFile(`.agents/skills/${IMPLEMENT}/SKILL.md`),

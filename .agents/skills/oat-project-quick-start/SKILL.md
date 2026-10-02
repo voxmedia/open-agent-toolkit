@@ -846,7 +846,7 @@ as the last check before plan and project completion:
 
    Handle all three `resolution` values explicitly:
    - `not_configured`: no gate is configured; proceed directly to the completion steps in Step 3.7 below.
-   - `configured_disabled_by_project`: the operator disabled this configured gate for this project. Do not launch any process. Emit `configured but disabled by project override`, including the project path and the `projectOverride` source from the envelope, then proceed directly to the completion steps in Step 3.7 below. A project-disabled gate never enters the passed, missing, or failed branches, and its `configuredGate` is evidence only, never executed.
+   - `configured_disabled_by_project`: the operator disabled this configured gate for this project. Do not launch any process. Emit `configured but disabled by project override`, including the project path and the `projectOverride` source from the envelope, write `oat_quick_start_gate` as `allowed/project_disabled` with `reviewed_head: null` per **Persist the gate outcome** below, then proceed directly to the completion steps in Step 3.7 below. A project-disabled gate never enters the passed, missing, or failed branches, and its `configuredGate` is evidence only, never executed.
    - `configured`: continue with the steps below, executing `effectiveGate` exactly as configured.
 
    A null, missing, malformed, or unrecognized result is an operational failure
