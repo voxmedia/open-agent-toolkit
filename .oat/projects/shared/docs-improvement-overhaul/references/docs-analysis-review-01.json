@@ -1,0 +1,30 @@
+{
+  "requestId": "docs-overhaul-run1-p02-analysis-review01",
+  "agentHandle": "/root/p02_analysis_review",
+  "outputMode": "structured",
+  "analysisArtifact": ".oat/repo/analysis/docs-2026-10-02-0644.md",
+  "reviewedArtifactSha256": "d8603c7f8b8ce03809a1b6c7e1c460052e97f321a9c4b0d8d68ff522d705fa33",
+  "sourceBaseline": "8b78d9a935b31ef50e65713b03a022a5d022aa59",
+  "launchCommittedHead": "fc3515327df51632286f0c9a373e76e7b36b8c30",
+  "reconnaissance": "not-attempted",
+  "summary": "Reviewed exact analysis bytes against cited repository sources and project contracts. Read-only source validation and metadata checking passed. No migration approval is implied.",
+  "findings": [
+    {
+      "id": "L1",
+      "severity": "low",
+      "title": "Distinguish scoped catalog entries from distinct configuration keys",
+      "file": ".oat/repo/analysis/docs-2026-10-02-0644.md",
+      "line": 92,
+      "body": "40 unmentioned scoped CONFIG_CATALOG entries represent 39 distinct key strings. sync.providers.<name>.strategy occurs in project-sync and user-sync scopes. Both scope-specific records are correct; the analysis calls them 40 keys.",
+      "fix_guidance": "Describe the result as 40 scoped catalog entries representing 39 distinct keys. Retain both scope-specific records."
+    }
+  ],
+  "verificationCommands": [
+    "jq '{unmentionedScopedEntries: (.openCoverage.configWithoutLiteralMention | length), unmentionedDistinctKeys: (.openCoverage.configWithoutLiteralMention | unique | length)}' .oat/projects/shared/docs-improvement-overhaul/references/capability-baseline.json",
+    "pnpm docs:validate",
+    "pnpm run cli:source -- docs nav sync --framework fumadocs --check --target-dir apps/oat-docs"
+  ],
+  "rootDisposition": "Reviewed with one non-blocking residual. Root independently confirmed 40 scoped entries and 39 unique keys. Optional analysis-only wording correction is offered, not silently applied. No rewrite or retry consumed; artifact bytes unchanged. Tracking may record reviewed/verified with this residual disclosed, never a clean pass.",
+  "rewriteRetriesUsed": 0,
+  "rewriteRetryLimit": 2
+}

@@ -680,7 +680,7 @@ Accepted native /root/phase02 (Hilbert), holding before commands until clean boo
   "deadline_seconds": 3600,
   "retry_limit": 2,
   "launch_status": "accepted",
-  "child_outcome": null,
+  "child_outcome": "completed-with-one-low-residual",
   "runtime_confirmation": "not-reported",
   "diagnostics": [],
   "continuation_events": [],
@@ -706,6 +706,8 @@ Accepted native /root/phase02 (Hilbert), holding before commands until clean boo
 ```
 
 Dispatch: scope=docs-analysis action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high
+
+Structured return accepted from /root/p02_analysis_review; no reviewer artifact writes or reconnaissance dispatch. Exact reviewed analysis SHA256 d8603c7f8b8ce03809a1b6c7e1c460052e97f321a9c4b0d8d68ff522d705fa33. Root independently confirms 40 scoped unmentioned catalog entries versus 39 unique keys. One optional wording correction is offered and retained as a non-blocking residual; no silent fix, rewrite or retry. Receipt: references/docs-analysis-review-01.json. This is analysis accuracy review, not migration-map approval.
 
 ### p02-map draft review dispatch
 
