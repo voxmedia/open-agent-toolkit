@@ -21,26 +21,27 @@ carrier names where it lives and what it adds.
 - `status`: `allowed` | `blocked`.
 - `disposition`: `passed`, `warned`, `prompt_approved`, or `project_disabled`
   when `status` is `allowed`; `null` when `status` is `blocked`.
-- `config_fingerprint`: a stable hash of the canonically serialized resolved
-  gate declaration (command, description, `onFailure`, `maxAttempts`, and the
-  project override state), computed the same way by the writer and every
-  reader.
+- `config_fingerprint`: the writer's stable hash of the resolved gate
+  declaration it ran (command, description, `onFailure`, `maxAttempts`, and the
+  project override state), recorded as provenance. Implement recomputes its own
+  carrier's fingerprint under its Step 14 rules; quick-start readers do not.
 - `reviewed_head`: the full 40-character SHA of the commit the gate reviewed,
   recorded as provenance. `null` when no gate ran.
-- `decided_at`: the ISO 8601 UTC time the outcome was decided.
+- `decided_at`: the ISO 8601 UTC time the outcome was decided. A record written
+  before `decided_at` existed is not malformed for that reason alone.
 
 ## Write rules
 
-| Gate outcome                                                    | Record                         |
-| --------------------------------------------------------------- | ------------------------------ |
-| Passed its threshold                                            | `allowed` / `passed`           |
-| Failed under `onFailure: warn`                                  | `allowed` / `warned`           |
-| Failed under `onFailure: prompt`, operator explicitly continued | `allowed` / `prompt_approved`  |
-| Failed under `onFailure: prompt`, operator declined or deferred | `blocked` / `null`             |
-| `block` still failing after `maxAttempts`                       | `blocked` / `null`             |
-| Configured but disabled by project override (no launch)         | `allowed` / `project_disabled` |
-| Launch, transport, validation, or receive failure               | `blocked` / `null`             |
-| Not configured                                                  | no record                      |
+| Gate outcome                                                    | Record                                                      |
+| --------------------------------------------------------------- | ----------------------------------------------------------- |
+| Passed its threshold                                            | `allowed` / `passed`                                        |
+| Failed under `onFailure: warn`                                  | `allowed` / `warned`                                        |
+| Failed under `onFailure: prompt`, operator explicitly continued | `allowed` / `prompt_approved`                               |
+| Failed under `onFailure: prompt`, operator declined or deferred | `blocked` / `null`                                          |
+| `block` still failing after `maxAttempts`                       | `blocked` / `null`                                          |
+| Configured but disabled by project override (no launch)         | `allowed` / `project_disabled`                              |
+| Launch, transport, validation, or receive failure               | `blocked` / `null`                                          |
+| Not configured                                                  | no record (quick-start); implement writes `allowed/no_gate` |
 
 Only an explicit operator continuation writes `prompt_approved`. Declining,
 deferring, giving no response, or running under `OAT_AUTONOMOUS=1` writes
@@ -58,20 +59,22 @@ replaces the record.
 - **`oat_quick_start_gate`** (`oat-project-quick-start`, Gate Execution) carries
   exactly the core.
 
-## Validating a quick-start record
+## Reading a quick-start record
 
-Readers report a quick-start record; they do not route on it. A record is
-current when all of the following hold:
+Readers report a quick-start record as recorded and do not recompute
+`config_fingerprint`: no CLI emits a canonical fingerprint for the quick-start
+gate, so a recomputation could not be reproduced across sessions. They do not
+route on the record either.
 
-1. `status` and `disposition` form one of the combinations in the write rules,
-   and `decided_at` is a valid ISO 8601 UTC time.
-2. Its `config_fingerprint` matches the currently resolved quick-start gate
-   declaration: re-resolve the gate with
-   `oat gate resolve oat-project-quick-start --project "$PROJECT_PATH" --json`
-   and recompute the fingerprint from that result.
+- Report `status`, `disposition`, `decided_at`, and `config_fingerprint` (as
+  provenance) exactly as stored.
+- Report the record as malformed when `status` and `disposition` do not form
+  one of the combinations in the write rules, or when a present `decided_at` is
+  not a valid ISO 8601 UTC time.
+- `reviewed_head` is provenance only and is not compared with `HEAD`, because
+  the quick-start completion step commits after the gate.
+- An absent record means none was written: no gate was configured, the gate
+  has not reached an outcome, or the plan predates the record. Readers do not
+  infer which.
 
-`reviewed_head` is provenance only and is not compared with `HEAD`, because the
-quick-start completion step commits after the gate. A record whose fingerprint
-no longer matches describes an earlier gate declaration: report it as
-superseded, not as the current outcome. A malformed record is reported as
-malformed. Readers never write, repair, or infer a record.
+Readers never write, repair, or infer a record.

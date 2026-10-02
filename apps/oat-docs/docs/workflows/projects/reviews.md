@@ -262,6 +262,12 @@ How it runs:
   ceiling reads the reviewed target, the contract sources (backlog items,
   discovery, spec, design, and decision records), and every review artifact of
   the exhausted loop. It writes nothing and returns its report to the root.
+  Outside an implement run (quick-start, or a standalone review-receive), the
+  root loads the project dispatch skills and resolves the reviewer ceiling with
+  `oat project dispatch-ceiling resolve --role reviewer`.
+- **One review per exhausted loop.** A saved report for the scope that is newer
+  than every review artifact of that scope is reused, so re-entering a capped
+  receive does not dispatch a second review.
 - **OAT additions.** The report marks rows only the operator can settle as
   `REQUIRES-OPERATOR`, classifies each open finding as an accepted
   requirement, a regression, or new hardening, lists the findings a

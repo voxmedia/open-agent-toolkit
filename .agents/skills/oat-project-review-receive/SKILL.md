@@ -3,7 +3,7 @@ name: oat-project-review-receive
 description: Use when the user explicitly asks to receive review findings for an OAT project — e.g. "receive review", "process review", "process the project review", or confirms a previously offered review-receive step. Do NOT auto-invoke merely because a review file exists. Resolves the latest review and offers before acting.
 disable-model-invocation: false
 user-invocable: true
-allowed-tools: Read, Write, Bash(git:*), Bash(oat:*), Glob, Grep, AskUserQuestion
+allowed-tools: Read, Write, Bash(git:*), Bash(oat:*), Glob, Grep, AskUserQuestion, Task
 metadata:
   version: 1.6.8
 ---
@@ -623,7 +623,12 @@ exhausted loop, then show its decision message with the menu below; under
 `OAT_AUTONOMOUS=1`, put the same content in the boundary report instead.
 Record the operator's choice with the report path in `implementation.md`.
 Agents never select the disposition. The loop history in the brief includes
-this scope's gate-originated artifacts even though the count excludes them.
+this scope's gate-originated artifacts even though the count excludes them. To
+launch the review, load the current `oat-project-dispatch-subagents/SKILL.md`
+and follow it, resolving the route as that doc's "Routing outside implement"
+section describes; inside an implement run, the implement route applies. A
+receive re-entered at the cap with no new review round since the scope's newest
+complexity report reuses that report instead of dispatching another.
 
 ```
 ⚠️  Review cycle limit reached (3 cycles).

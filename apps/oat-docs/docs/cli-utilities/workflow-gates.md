@@ -239,14 +239,17 @@ carries exactly the core:
   with a `null` disposition;
 - a gate disabled by project override writes `allowed/project_disabled`
   without launching anything; and
-- a gate that is not configured writes no record.
+- a gate that is not configured writes no record (implement writes
+  `allowed/no_gate` instead).
 
 `oat-project-next` and `oat-project-progress` report the quick-start record as
-current when its `config_fingerprint` matches the currently resolved
-quick-start gate declaration, and otherwise as superseded or malformed. They
-never route on it: quick plan readiness remains the only routing rule for quick
-plans, and `reviewed_head` is not compared with `HEAD` because quick-start
-commits after the gate.
+recorded: status, disposition, `decided_at`, and `config_fingerprint` as
+provenance, or `malformed` when the fields do not form a valid record. They do
+not recompute the fingerprint, because no CLI emits a canonical one for the
+quick-start gate, and they never route on the record: quick plan readiness
+remains the only routing rule for quick plans, and `reviewed_head` is not
+compared with `HEAD` because quick-start commits after the gate. A record
+written before `decided_at` existed is still valid.
 
 ## Review gates
 

@@ -189,6 +189,52 @@ describe('complexity review at budget exhaustion', () => {
     }
   });
 
+  it('resolves the reviewer route outside implement', () => {
+    const doc = readRepoFile(SHARED_DOC).replace(/\s+/g, ' ');
+
+    expect(doc).toContain('### Routing outside implement'.replace(/\s+/g, ' '));
+    for (const skill of [
+      'oat-project-dispatch-subagents/SKILL.md',
+      'oat-dispatch-subagents/SKILL.md',
+    ]) {
+      expect(doc).toContain(skill);
+    }
+    expect(doc).toContain(
+      'oat project dispatch-ceiling resolve --provider "$ACTIVE_PROVIDER" --role reviewer --json',
+    );
+
+    for (const row of EXHAUSTION_POINTS.filter(
+      (point) => point.skill !== IMPLEMENT,
+    )) {
+      const skill = readRepoFile(`.agents/skills/${row.skill}/SKILL.md`);
+      const allowedTools = /^allowed-tools:(.*)$/m.exec(skill)?.[1] ?? '';
+      expect(allowedTools, `${row.skill} grants Task`).toMatch(/\bTask\b/);
+      expect(
+        sliceBetween(skill, row.start, row.end).replace(/\s+/g, ' '),
+        `${row.name} loads the project dispatch skill`,
+      ).toContain(
+        'load the current `oat-project-dispatch-subagents/SKILL.md` and follow it',
+      );
+    }
+  });
+
+  it('dispatches one complexity review per exhausted loop', () => {
+    const doc = readRepoFile(SHARED_DOC).replace(/\s+/g, ' ');
+    expect(doc).toMatch(
+      /reuse the newest `reviews\/archived\/complexity-<scope>-\*\.md` when it is newer than every review artifact of that scope/,
+    );
+    expect(doc).not.toContain('that report also serves');
+
+    const step8 = sliceBetween(
+      readRepoFile(`.agents/skills/${RECEIVE}/SKILL.md`),
+      RECEIVE_STEP_8.start,
+      RECEIVE_STEP_8.end,
+    ).replace(/\s+/g, ' ');
+    expect(step8).toMatch(
+      /re-entered at the cap[^.]*reuses that report instead of dispatching another/i,
+    );
+  });
+
   it('logs root judgment and keeps logging out of dispatched children', () => {
     const appendPoints = sliceBetween(
       readRepoFile(`.agents/skills/${IMPLEMENT}/SKILL.md`),

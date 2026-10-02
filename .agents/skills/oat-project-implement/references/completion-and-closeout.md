@@ -300,8 +300,8 @@ dispatch the complexity review that
 then show its decision message; under `OAT_AUTONOMOUS=1`, put the same content
 in the boundary report instead. Record the operator's choice with the report
 path in `implementation.md`. Agents never select the disposition. One exhausted
-loop gets one review: when the receive step's cycle cap already produced the
-report for this final loop, use that report rather than a second dispatch.
+loop gets one review: follow that doc's reuse rule, so a report the receive
+step's cycle cap already produced for this final loop serves here too.
 
 **After final review is marked `passed`:**
 

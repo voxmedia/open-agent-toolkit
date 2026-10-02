@@ -2521,6 +2521,26 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
   {
     file: '.agents/skills/oat-project-review-receive/SKILL.md',
     anchor: 'Step 8: Check Review Cycle Count',
+    match: 'To launch the review, load the current',
+    classification: 'load-required',
+    skills: ['oat-project-dispatch-subagents'],
+    requires: [
+      'load the current `oat-project-dispatch-subagents/SKILL.md` and follow it',
+    ],
+  },
+  {
+    file: '.agents/skills/oat-project-quick-start/SKILL.md',
+    anchor: 'Gate Execution',
+    match: 'To launch it, load the current',
+    classification: 'load-required',
+    skills: ['oat-project-dispatch-subagents'],
+    requires: [
+      'load the current `oat-project-dispatch-subagents/SKILL.md` and follow it',
+    ],
+  },
+  {
+    file: '.agents/skills/oat-project-review-receive/SKILL.md',
+    anchor: 'Step 8: Check Review Cycle Count',
     match: 'phase gate re-runs are governed by the phase review gate flow',
     classification: 'non-executing',
     skills: ['oat-project-implement'],

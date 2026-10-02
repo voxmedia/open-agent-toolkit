@@ -5,7 +5,7 @@ argument-hint: '<project-name> ["project description"]'
 oat_gateable: true
 disable-model-invocation: true
 user-invocable: true
-allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
+allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion, Task
 metadata:
   version: 2.3.18
 ---
@@ -898,7 +898,9 @@ as the last check before plan and project completion:
    feedback; under `OAT_AUTONOMOUS=1`, put the same content in the boundary
    report instead. Record the operator's choice with the report path in
    `implementation.md`. Agents never select the disposition. Only exhausted
-   `block` attempts trigger the review.
+   `block` attempts trigger the review. To launch it, load the current
+   `oat-project-dispatch-subagents/SKILL.md` and follow it, resolving the route
+   as that doc's "Routing outside implement" section describes.
 
 7. Runtime selection note: the review-only declaration carries producer
    identity, not reviewer runtime identity. By default, `oat gate review` and

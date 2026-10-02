@@ -5,6 +5,7 @@ import {
   mkdtemp,
   readdir,
   readFile,
+  realpath,
   rm,
   writeFile,
 } from 'node:fs/promises';
@@ -6099,6 +6100,49 @@ describe('validateOatSkills', () => {
     expect(readDeclaredVersion(next)).toBe('1.1.5');
   });
 
+  it('bumps every skill that ships the autonomy contract', async () => {
+    // check:skill-bumps diffs only paths under .agents/skills, so a change to
+    // the shared contract reaches its vendors through symlinks it never sees.
+    // Pin each vendor's version, and fail when a new vendor goes unlisted.
+    const root = join(process.cwd(), '..', '..');
+    const contract = await realpath(
+      join(root, '.agents/docs/autonomy-contract.md'),
+    );
+    const vendors = new Set<string>();
+    for (const skill of await readdir(join(root, '.agents/skills'))) {
+      const references = join(root, '.agents/skills', skill, 'references');
+      if (!existsSync(references)) continue;
+      const files = await readdir(references, {
+        recursive: true,
+        encoding: 'utf8',
+      });
+      for (const file of files.filter((name) => name.endsWith('.md'))) {
+        const target = await realpath(join(references, file)).catch(() => '');
+        if (target === contract) vendors.add(skill);
+      }
+    }
+    const expectedVersions = [
+      ['oat-project-autonomous', '1.0.18'],
+      ['oat-project-document', '1.8.7'],
+      ['oat-project-implement', '2.3.17'],
+      ['oat-project-lite', '1.1.7'],
+      ['oat-project-pr-final', '1.6.8'],
+      ['oat-project-quick-start', '2.3.18'],
+    ] as const;
+
+    expect([...vendors].sort()).toEqual(
+      expectedVersions.map(([skill]) => skill),
+    );
+    for (const [skill, version] of expectedVersions) {
+      expect(
+        readDeclaredVersion(
+          await readRawRepoFile(`.agents/skills/${skill}/SKILL.md`),
+        ),
+        skill,
+      ).toBe(version);
+    }
+  });
+
   it('reports both lifecycle gate records in next and progress without routing on them', async () => {
     const quickStart = await readRepoFile(
       '.agents/skills/oat-project-quick-start/SKILL.md',
@@ -6134,8 +6178,10 @@ describe('validateOatSkills', () => {
     );
     expect(nextAnnounce).toContain(recordDoc);
     expect(nextAnnounce).toContain(
-      'Quick-start gate: {status}/{disposition} ({current|superseded|malformed})',
+      'Quick-start gate: {status}/{disposition}, decided {decided_at}, fingerprint {config_fingerprint} (as recorded)',
     );
+    expect(nextAnnounce).not.toMatch(/superseded|no gate configured/);
+    expect(nextAnnounce).toContain('(no record written)');
     expect(nextAnnounce).toMatch(/adds no route and no warning/);
     expect(nextAnnounce).toMatch(/quick plan readiness/i);
     const nextExitGate = normalize(
@@ -6156,8 +6202,9 @@ describe('validateOatSkills', () => {
     expect(progressStatus).toContain('`oat_quick_start_gate`');
     expect(progressStatus).toContain(recordDoc);
     expect(progressStatus).toContain(
-      'Quick-Start Gate: {status}/{disposition} ({current|superseded|malformed}), or "None"',
+      'Quick-Start Gate: {status}/{disposition}, decided {decided_at}, fingerprint {config_fingerprint} (as recorded), or "None"',
     );
+    expect(progressStatus).not.toMatch(/superseded|currently resolved/);
     expect(progressStatus).toContain(
       'Exit Gate: {status}/{disposition} as recorded, or "None"',
     );

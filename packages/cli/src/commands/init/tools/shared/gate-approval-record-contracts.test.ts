@@ -68,11 +68,24 @@ describe('lifecycle gate approval record', () => {
 
     expect(doc).toContain('`oat_implement_exit_gate`');
     expect(doc).toContain('`oat_quick_start_gate`');
-    expect(doc).toMatch(
-      /`config_fingerprint` matches the currently resolved quick-start gate declaration/,
-    );
     expect(doc).toMatch(/`reviewed_head` is (?:provenance only|not compared)/);
     expect(doc).toMatch(/never anything that reads as approval/);
+    // Readers report the record as recorded: no CLI emits a canonical
+    // fingerprint, so a recomputation could not be reproduced.
+    expect(doc).toContain(
+      'Readers report a quick-start record as recorded and do not recompute `config_fingerprint`',
+    );
+    expect(doc).not.toMatch(
+      /computed the same way by the writer and every reader/,
+    );
+    expect(doc).not.toMatch(/superseded/);
+    // Implement writes allowed/no_gate; older records without decided_at stay valid.
+    expect(doc).toMatch(
+      /Not configured[^|]*\|[^|]*no record \(quick-start\); implement writes `allowed\/no_gate`/,
+    );
+    expect(doc).toContain(
+      'A record written before `decided_at` existed is not malformed for that reason alone.',
+    );
   });
 
   it.each(VENDORING_SKILLS)('vendors the shared doc into %s', (skill) => {

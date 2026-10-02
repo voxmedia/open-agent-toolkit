@@ -566,17 +566,18 @@ Routing: → {target-skill-name}
 Reason: {one-line explanation}
 ```
 
-**Quick-start gate record:** When `oat_quick_start_gate` exists, validate it
-with the quick-start rule in `references/docs/gate-approval-record.md` and add
-one line after the `Current:` line:
+**Quick-start gate record:** When `oat_quick_start_gate` exists, read it as
+`references/docs/gate-approval-record.md` describes, without recomputing its
+fingerprint, and add one line after the `Current:` line:
 
 ```
-Quick-start gate: {status}/{disposition} ({current|superseded|malformed})
+Quick-start gate: {status}/{disposition}, decided {decided_at}, fingerprint {config_fingerprint} (as recorded)
 ```
 
-The record adds no route and no warning. The quick plan readiness predicate
-stays the single routing rule for quick plans, and an absent record (no gate
-configured) adds no line.
+Write `malformed` in place of the values when the fields do not form a valid
+record. The record adds no route and no warning. The quick plan readiness
+predicate stays the single routing rule for quick plans, and an absent record
+(no record written) adds no line.
 
 **Blocker warning:** If `oat_blockers` is non-empty, add before the routing line:
 

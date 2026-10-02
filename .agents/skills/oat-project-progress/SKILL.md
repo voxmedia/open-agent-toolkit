@@ -193,7 +193,7 @@ Read `{project}/state.md` frontmatter:
    Completed: {oat_hill_completed as checkmarks}
    HiLL Pending: {yes/no for current phase}
    Gate Overrides: {gate-aware skill keys from oat_skill_gate_overrides, or "None"}
-   Quick-Start Gate: {status}/{disposition} ({current|superseded|malformed}), or "None"
+   Quick-Start Gate: {status}/{disposition}, decided {decided_at}, fingerprint {config_fingerprint} (as recorded), or "None"
    Exit Gate: {status}/{disposition} as recorded, or "None"
    Blockers: {oat_blockers or "None"}
    Next: {recommended_skill}
@@ -208,10 +208,10 @@ configured gate from an override alone. This is read-only reporting: never add,
 remove, or repair the map here.
 
 Both gate records share the core defined in
-`references/docs/gate-approval-record.md`. Validate a quick-start record with
-that doc's quick-start rule: `current` when its `config_fingerprint` matches the
-currently resolved quick-start gate declaration, `superseded` when it does not,
-and `malformed` when its fields do not form a valid record. Report the exit-gate
+`references/docs/gate-approval-record.md`. Report a quick-start record as that
+doc describes: its stored fields as recorded, with `config_fingerprint` shown as
+provenance and never recomputed, or `malformed` when its fields do not form a
+valid record. Report the exit-gate
 record's `status` and `disposition` as recorded; its freshness belongs to the
 implementation workflow and is not re-derived here. Either record adds no route
 and no warning: quick plan readiness stays the single routing rule for quick

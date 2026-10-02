@@ -25,10 +25,16 @@ Each owning skill points here at its exhaustion point:
 
 These are budget exhaustions only. A single `prompt` failure, a `warn`
 outcome, and launch, transport, or runtime failures that consume no attempt do
-not trigger the review. One exhausted loop gets one review: when the final
-review cap is reached through `oat-project-review-receive` Step 8, that report
-also serves `oat-project-implement` Step 13, and the root does not dispatch a
-second one for the same loop.
+not trigger the review.
+
+One exhausted loop gets one review. Before dispatching, look for an existing
+report for the scope and reuse the newest
+`reviews/archived/complexity-<scope>-*.md` when it is newer than every review
+artifact of that scope (compare its filename timestamp with their
+`oat_generated_at`). Dispatch again only when a new review round has landed
+since that report. The rule covers a re-entered review-receive at the cap, the
+final review cap reached through review-receive Step 8, and a phase scope that
+reaches both the receive cap and the implement retry limit.
 
 The operator can ask for the same review at any other time. There is no
 automatic early trigger.
@@ -86,6 +92,28 @@ The brief names the scope:
 - **Loop history:** every review artifact of the exhausted loop, active and
   archived, gate artifacts included, plus the dispositions recorded for them
   in `implementation.md` or `plan.md`.
+
+### Routing outside implement
+
+Inside an `oat-project-implement` run, the root already loaded its dispatch
+contract and resolved the reviewer route, and both apply here. When the
+exhausted loop belongs to `oat-project-quick-start` or to a standalone
+`oat-project-review-receive` run, resolve them before the launch:
+
+1. Probe `oat-project-dispatch-subagents/SKILL.md` and
+   `oat-dispatch-subagents/SKILL.md`, each first in `${HOME}/.agents/skills`
+   and then in `<repo-root>/.agents/skills`, and bind each first match; never
+   rely on ambient discovery. On a miss, name the skill and give its recovery
+   command, then continue with
+   `Complexity review unavailable: <skill> not installed`:
+   - `oat-project-dispatch-subagents`:
+     `oat tools install workflows --scope <user|project>`;
+   - `oat-dispatch-subagents`:
+     `oat tools install utility --scope <user|project>`.
+2. Read the project dispatch skill, then the engine, and follow them.
+3. When no reviewer ceiling was resolved for this loop, resolve one with
+   `oat project dispatch-ceiling resolve --provider "$ACTIVE_PROVIDER" --role reviewer --json`
+   and launch at that ceiling.
 
 When no reviewer route is available, the root says so in the decision message
 (`Complexity review unavailable: <reason>`) and presents the decision with the
