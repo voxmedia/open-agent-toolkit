@@ -704,17 +704,29 @@ Expected: exit 0.
 
 **Step 1: Failing pins first**
 
-Pin: quick-start writes `oat_quick_start_gate` per
-`references/docs/gate-approval-record.md` for every configured-gate outcome;
-a `prompt` continuation writes `allowed/prompt_approved`; a decline or deferral
-writes `blocked`; and exhausted `block` attempts dispatch the complexity review
-before escalation.
+Pin each gate-resolver outcome of quick-start's Gate Execution step 1
+(`.agents/skills/oat-project-quick-start/SKILL.md` around 843-847) against
+`references/docs/gate-approval-record.md`:
+
+- `not_configured`: no record is written and Step 3.7 completes as today (no
+  approval-shaped record is invented);
+- `configured_disabled_by_project`: no launch; the record is
+  `allowed/project_disabled` and Step 3.7 completes;
+- `configured` and passed (or `warn`): `allowed/passed` (or `allowed/warned`),
+  then Step 3.7;
+- `configured`, failed, `prompt`, operator continues: `allowed/prompt_approved`,
+  then Step 3.7;
+- `configured`, failed, declined, deferred, or `block` attempts exhausted:
+  `blocked`, Step 3.7 does not run, and exhausted `block` attempts dispatch the
+  complexity review before escalation.
 
 **Step 2: Implement**
 
-Add the record write to the gate steps and Step 3.7 (completion only after an
-`allowed` record), and the complexity-review pointer at `maxAttempts`
-exhaustion only (a single `prompt` failure is not a budget exhaustion). Bump `oat-project-quick-start`.
+Add the record write to the gate steps and make Step 3.7 require an `allowed`
+record only when the gate resolved `configured` or
+`configured_disabled_by_project`; `not_configured` completes without a record.
+Add the complexity-review pointer at `maxAttempts` exhaustion only (a single
+`prompt` failure is not a budget exhaustion). Bump `oat-project-quick-start`.
 
 **Step 3: Verify**
 
@@ -869,6 +881,22 @@ accepts several wave-wrapper projects at program close behind the program-end
 operator checkpoint, preflighting each project individually and stopping that
 project on any failure.
 
+The PR-merge precondition composes with OAT's supported
+complete-before-merge ordering (`oat-project-complete`; `oat-wave-execute`
+Step 8 completes each wave before its merge handoff,
+`.agents/skills/oat-wave-execute/SKILL.md` around 419-450). A merged PR
+passes. An open PR passes only through a recorded exception: the invoking
+workflow names a completion-before-merge step (wave-execute Step 8 passes its
+provenance), the project tracks the PR (`oat_pr_status: open` with
+`oat_pr_url`), and the final review row passed; the companion writes the
+exception (requesting workflow, PR URL, reason) into the project's
+`implementation.md` before any completion write, and its run report repeats
+it. Any other open or untracked PR is refused. Composed controls in the same
+test file: an opted-in, reviewed wave with an open tracked PR invoked from
+wave-execute Step 8 completes with the exception recorded; the same project
+invoked without a naming workflow is refused; a merged program-end batch
+completes with no exception.
+
 **Step 2: Implement**
 
 Write the skill so it resolves archive and PR choices from config
@@ -903,7 +931,8 @@ Expected: exit 0.
 - Modify: a contract pin for the repointed step
 
 **Step 1: Failing pin first** (in `complete-auto-contracts.test.ts` from
-p05-t02) that wave-execute's autonomous closeout step 8
+p05-t02) that wave-execute's autonomous closeout step 8 passes its
+completion-before-merge provenance to the companion and that step 8
 invokes `oat-project-complete-auto` and no longer offers the as-document path.
 
 **Step 2: Implement** the repoint; bump `oat-wave-execute` and
@@ -1253,22 +1282,24 @@ rewrites the four inventory rows last.
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                           | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | -------- | ---------- | -------------------------------------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p02    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p03    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p04    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p05    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p06    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p07    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| final  | code     | pending  | -          | -                                                  | -             | -          | -           |
-| spec   | artifact | pending  | -          | -                                                  | -             | -          | -           |
-| design | artifact | pending  | -          | -                                                  | -             | -          | -           |
-| plan   | artifact | passed   | 2026-10-02 | -                                                  | -             | auto       | -           |
-| plan   | artifact | received | 2026-10-02 | reviews/artifact-plan-review-2026-10-02T144731Z.md | -             | -          | -           |
+| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target       |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ----------------- |
+| p01    | code     | pending         | -          | -                                                           | -             | -          | -                 |
+| p02    | code     | pending         | -          | -                                                           | -             | -          | -                 |
+| p03    | code     | pending         | -          | -                                                           | -             | -          | -                 |
+| p04    | code     | pending         | -          | -                                                           | -             | -          | -                 |
+| p05    | code     | pending         | -          | -                                                           | -             | -          | -                 |
+| p06    | code     | pending         | -          | -                                                           | -             | -          | -                 |
+| p07    | code     | pending         | -          | -                                                           | -             | -          | -                 |
+| final  | code     | pending         | -          | -                                                           | -             | -          | -                 |
+| spec   | artifact | pending         | -          | -                                                           | -             | -          | -                 |
+| design | artifact | pending         | -          | -                                                           | -             | -          | -                 |
+| plan   | artifact | passed          | 2026-10-02 | -                                                           | -             | auto       | -                 |
+| plan   | artifact | fixes_completed | 2026-10-02 | reviews/archived/artifact-plan-review-2026-10-02T144731Z.md | -             | gate       | codex-6-sol-xhigh |
 
 ## Plan artifact review (`QS-11`): structured review by `oat-reviewer-claude-claude-opus-5-5-high` (exact reviewer ceiling; planning-parent effort unknown), three attempts within `oat_orchestration_retry_limit` 2: attempt 1 returned 3 High, 4 Medium, 5 Low; attempt 2 returned 2 Medium, 2 Low; attempt 3 clean. All findings were applied in plan.md and discovery.md (commits 6bae4002b, ff8d23485); no residual findings.
+
+Quick-start plan gate (`QS-12`, attempt 1 of 2, run `cf4607a4`, `codex-6-sol-xhigh` / `gpt-6.1-sol` xhigh, inline route): `blocked`, receive-eligible, 2 High. Received in this session (artifact review, `REVIEWRECEIVE-01`): H1 (quick-start completion with no configured gate) and H2 (complete-auto PR-merge guard versus wave-execute's completion-before-merge step) resolved in p04-t06, p05-t02, and p05-t03; no rejections. Artifact archived to `reviews/archived/artifact-plan-review-2026-10-02T144731Z.md`.
 
 ## Implementation Complete
 
