@@ -22,7 +22,7 @@ The user invoked oat-project-implement after the reviewed plan handoff. Implemen
 | Phase 5 | complete                       | 3     | 3/3       |
 | Phase 6 | final-review corrections       | 8     | 5/8       |
 
-**Total:** 20/23 task implementations recorded; three final-review corrections remain. Earlier phase 6 closure was premature for reconciliation and independent acceptance. The native supplement now covers seven journeys, with GitHub light rendering still unverified. See "Takeover closeout" for historical execution and deviations; no approval waiver is inferred.
+**Total:** 23/23 task implementations recorded. Earlier phase 6 closure was premature for reconciliation and independent acceptance; resumed corrections and current accounting are now committed. The root native supplement covers seven journeys and actual GitHub light/dark README rendering. The fully non-author reviewer is finishing independent native acceptance and narrow correction re-review. Configured exit gate and final p06 HiLL approval remain pending; no approval waiver is inferred.
 
 ## Phase 1: Make the Current Sidebar Enforceable
 
@@ -210,15 +210,21 @@ Dispatch p03 prose and p04-t01 mapping independently now. Fable exclusively supp
 
 ### Task p06-t06: (review) Validate reference-style Markdown routes
 
-**Status:** pending
+**Status:** completed
+**Commit:** bf7c157c953080f12b033b2999e25ce8f5d58c65
+**Verification:** Existing Markdown parser now resolves reference-style links/images and first-match definitions. Twelve pre-fix rejection controls failed as expected; post-fix docs tests 71/71, validation, types, scoped lint/format and diff checks exit 0. Root read the bounded diff; no invented parser or new unrelated scope.
 
 ### Task p06-t07: (review) Correct native-read adoption guidance
 
-**Status:** pending
+**Status:** completed
+**Commit:** 64a48da1e699b587feef4b6a7fcf1fcbd0ee1d86
+**Verification:** Seven existing adoption tests and docs validation pass. Generated-view links versus native-read canonical adoption now match source. Root rebuilt and operated the corrected table in both themes before the worker committed; screenshots 26/27 are in the root native supplement.
 
 ### Task p06-t08: (review) Close final whole-site reconciliation
 
-**Status:** pending
+**Status:** completed
+**Commit:** 75c4467ab; categorical Quickstart correction c916af45c9860c000027d7e0467f6a77149861b8
+**Verification:** Root reproduced the read-only current inventory (exit 0), inspected source/ledger keepers, and accepts the differentiated exact/hash/payload/semantic accounting in references/conservation-closeout.md. All 859 post-main units have named dispositions; 71 skill anchors resolve. Explicit remaining command/flag/config reference gaps are not represented as complete guides. Quickstart's system-error classification is restored, with 13 existing Git/support tests passing. No blanket semantic proof is inferred from names or counts.
 
 ## Final review receive — 2026-10-02
 
@@ -230,9 +236,15 @@ Root read the entire automatic final review at `c0f10a8f8d3a05cd9ac4d1f2265e8bb0
 | M2  | Agree: native-read adoption returns before creating provider links. Correct reader guidance, not product behavior.                                                    | Minor    | p06-t07 |
 | M3  | Agree: evidence exists but aggregate current-tree accounting is absent. Close using existing records and explicitly report gaps; do not invent semantic conservation. | Moderate | p06-t08 |
 
-No newly deferred Medium or Low findings. Prior concerns are dispositioned in the final review's deferred ledger: resolved guidance, explicitly scoped product/backlog work and bounded editorial residuals; they are not quietly reclassified as successful fixes. Final lifecycle status is `fixes_added`, not passed. The configured cross-family implement gate and final p06 approval remain pending. The user's speed amendment forbids another full Medium-only review sweep; use targeted non-author checks and the independently configured final gate.
+No newly deferred Medium or Low findings. Prior concerns are dispositioned in the final review's deferred ledger: resolved guidance, explicitly scoped product/backlog work and bounded editorial residuals; they are not quietly reclassified as successful fixes. The original review is now `fixes_completed`, awaiting its narrow same-reviewer re-review. The configured cross-family implement gate and final p06 approval remain pending. The user's speed amendment forbids another full Medium-only review sweep; the same accepted non-author reviewer checks only these three corrections alongside its native QA.
 
 Independent native evidence: `reviews/final-native-visual-qa-2026-10-02.md`. It supplements the author tour rather than relabelling it as independent.
+
+### Resumed dispatch and validation outcomes
+
+Accepted parent-attached native lanes run on the Mini in this worktree, not separate persisted Orca chats. Runtime model telemetry is unavailable; exact accepted targets are recorded, not claimed as runtime identity. Final reviewer `final_lifecycle_review` uses `oat-reviewer-gpt-6-1-sol-high`; its original source review returned one `not-attempted` reconnaissance signal and no orchestration section. The same non-author handle owns native QA and bounded correction verification. Fix lane `final_bounded_corrections` and accounting lane `final_coverage_reconciliation` use `oat-phase-implementer-gpt-6-1-sol-high`, selected Sol 6.1/high under managed high policy. Both completed their bounded ownership with no nested workers. Root retains receive judgment and publication authority.
+
+All eight ordered gates exit 0 on the correction basis through 64a48da1e: check, type-check, test, build, skill bumps, release versions (after fetch), release validation and docs build. Logs: `/tmp/docs-overhaul-final-gates/`. Check/types executed six of eleven tasks, test executed five of eleven plus direct smoke/skill/script suites; CLI 8027, control-plane 153, smoke 163, skills 690 and scripts 1 pass. Root build and gate docs build replayed caches, not fresh execution. After the bounded c916 Quickstart correction, docs validation and 13 focused tests pass; final forced docs build executes all six tasks with zero cache and exit 0 (`/tmp/docs-conservation-final-build.log`). Full eight-gate evidence is not claimed to have been rerun after that one-line correction. Source changes are finished; only lifecycle outputs remain.
 
 ## Takeover closeout
 
