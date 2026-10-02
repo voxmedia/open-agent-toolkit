@@ -192,3 +192,73 @@ oat tools install workflows
 
 The adapter checks the installed canonical core path and compatible version
 before reading OAT configuration. It never falls back to a source checkout.
+
+## explainer-kit
+
+**Invocation:** Ask, “Use explainer-kit with the engineer-tour recipe,
+`--inputs docs/architecture.md src/api`, and `--out explainers/api-tour`.”
+Replace the paths with sources you own. This is an agent instruction, not a
+shell command; providers may use `/explainer-kit`, and Codex uses
+`$explainer-kit`. The core requires explicit inputs and an output destination:
+choose one source mode, `--project`, `--inputs`, or `--fact-base`, rather than
+relying on an OAT active-project pointer.
+
+**Prerequisites:** The installed canonical core, accessible inputs, a recipe,
+and a writable output destination. An existing OAT project is not required.
+If you supply a fact base, it must contain the evidence the explainer needs;
+the renderer is not a substitute for missing research. Theme selection is
+resolved before the artifact bundle is materialized.
+
+**Example scenario:** A teammate will take over an API module next week. Give
+the skill the architecture document and relevant source directory so it can
+produce an engineer tour with source-backed explanations of the main flows.
+Choose an output folder you can review before sharing; generating an HTML
+file is not permission to publish it.
+
+**Expected output:** A self-contained HTML explainer and its supporting fact
+base, claim ledger, resolved theme, and verification record. Inspect the
+verification outcome, not just whether the file opens. `built` means the
+browser and visual checks passed; `built-needs-review` means
+the usable artifact still needs review. Missing visual capability or a
+failed verification must not be reported as a visual pass.
+
+**Next step:** Review the content and available verification evidence, resolve
+remaining issues, then share the artifact through an explicitly chosen
+channel. For OAT artifact binding and repository defaults, use the adapter
+below rather than making the core infer local configuration.
+
+## oat-explainer-kit
+
+**Invocation:** Ask, “Use oat-explainer-kit to generate a project explainer
+from this project's approved planning artifacts.” Use the skill by name,
+`/oat-explainer-kit`, or Codex's `$oat-explainer-kit`; this request is not a
+terminal command or a promise of a particular CLI flag.
+
+**Prerequisites:** The installed compatible `explainer-kit` core and accessible
+OAT sources. Project-bound recipes require the relevant existing project and
+its artifacts. Repository-bound or explicitly supplied fact-base usage does
+not universally require an active project. The adapter's project
+applicability is therefore conditional, not a blanket prerequisite for all
+of its entry points.
+
+**Example scenario:** A project has approved planning artifacts, and you need
+to explain the chosen scope and approach to a teammate before implementation
+starts. Let the adapter bind those OAT artifacts and repository defaults,
+then use the core to generate the explainer. Do not ask it to present planned
+capabilities as already shipped.
+
+The adapter checks the installed core before resolving OAT configuration.
+It owns source binding, intent, output placement, and defaults; the core owns
+the reusable artifact-generation pipeline. This boundary keeps a project
+explainer grounded in its planning evidence and a recap grounded in its
+actual implementation evidence rather than treating the two as equivalent.
+
+**Expected output:** The core explainer bundle in the OAT-resolved project or
+repository destination, with its verification outcome preserved. A lifecycle
+call can produce it without an interactive prompt, but unattended generation
+does not erase missing evidence or upgrade a needs-review outcome.
+
+**Next step:** Inspect the explainer and verification record, then return to
+the relevant planning, implementation, or closeout workflow. An explainer
+helps communicate a decision or outcome; it does not itself approve a plan,
+complete a project, or publish a recap.

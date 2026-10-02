@@ -353,3 +353,39 @@ and cause the exported renderer to fail closed with `PACKET_NOT_PUBLISHABLE`.
 If the manifest, ledger, approval envelope, source identities, or publication
 boundary cannot be validated, the run is `failed`. It may retain safe raw
 diagnostics, but it does not publish a misleading `packet.md`.
+
+## recon
+
+**Invocation:**
+`/recon "Where is provider configuration read and overridden?" --profile standard --scope "configuration readers and their callers"`.
+This is an agent instruction rather than a shell command; Codex uses
+`$recon`, or you can ask for the skill by name. Supply a bounded question.
+Profiles are `quick`, `standard` (the default), and `thorough`; context and
+output-directory arguments can make the evidence boundary and destination
+explicit.
+
+**Prerequisites:** Accessible source evidence and the dispatch/orchestration
+capabilities required for the selected run. No existing OAT project is
+required. The skill establishes scope, available capabilities, and an
+approval envelope before launching its worker wave. A missing approved
+capability is not permission to silently substitute a different route.
+
+**Example scenario:** Before changing configuration precedence, you need an
+inventory of actual readers and their callers. Ask for that bounded packet
+so the implementation owner can evaluate compatibility across those paths.
+Keep the reconnaissance read-only: finding every reader does not authorize
+changing defaults or choosing a migration strategy.
+
+**Expected output:** A topic/run directory containing `packet.md`,
+`claims.json`, `manifest.json`, and the supporting raw evidence and reviews
+applicable to the run. Claims retain source identities and evidence
+locators. Read the reported run state and assurance level: a quick packet is
+not an independently verified standard packet, and contested, unresolved,
+or partial findings remain qualified rather than being promoted by the
+profile's name alone. Failed or unpublishable runs do not provide a valid
+packet just because raw diagnostics exist.
+
+**Next step:** Use the packet and its evidence to make the caller's planning
+or implementation decision. Reopen the bound sources when freshness matters,
+and resolve disputed or missing evidence before relying on a load-bearing
+claim. Recon supplies evidence, not product approval.

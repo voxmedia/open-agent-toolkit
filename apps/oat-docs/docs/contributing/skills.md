@@ -438,3 +438,54 @@ The JSON output is a stable contract: the field set consumed by migrated skills 
 - `.agents/skills/oat-project-implement/SKILL.md`
 - `.agents/skills/oat-project-complete/SKILL.md`
 - `.agents/skills/oat-project-review-receive/SKILL.md`
+
+## create-agnostic-skill
+
+**Invocation:** `/create-agnostic-skill verify-migration`, or ask the agent to
+use `create-agnostic-skill` to author a reusable migration-review workflow.
+These are agent instructions, not terminal commands; Codex uses
+`$create-agnostic-skill`. Supply a kebab-case skill name, or answer the naming
+question when prompted.
+
+**Prerequisites:** A repeatable workflow with a stable enough trigger,
+sequence, and outcome to be reusable, plus permission to create files in the
+repository's canonical `.agents/skills/` directory. No existing OAT project
+is required. Before creating another skill, check whether composition of
+existing skills would meet the need.
+
+**Example scenario:** Your team repeatedly reviews database migrations for
+rollback assumptions, compatibility with the previous application version,
+and operator handoff. Turn that recurring review into a portable skill that
+asks for the migration and constraints, produces a review, and stops before
+running database commands. The skill is not a place to hide production
+execution behind a convenient trigger.
+
+The authoring conversation establishes when the skill should run, what it
+accepts, what it produces, which tools it needs, and what remains outside its
+authority. The agent presents a bounded file plan and asks for approval
+before creating anything. Expanding the approved file set requires another
+confirmation; approval of a `SKILL.md` does not implicitly authorize an
+unplanned collection of scripts or assets.
+
+Use progressive disclosure to keep the result useful. The frontmatter's
+trigger-oriented description helps an agent choose the skill. The body
+contains the actual ordered workflow and stop conditions. Put detailed
+references, deterministic helpers, and templates in supporting directories
+only when the workflow needs them. Include both a direct invocation and a
+conversational example so users can recognize the intended trigger without
+memorizing provider-specific syntax.
+
+**Expected output:** An approved canonical skill at
+`.agents/skills/verify-migration/SKILL.md`, with its name matching the
+directory, initial `metadata.version`, workflow steps, examples, and any
+approved support files. The authoring workflow synchronizes the project
+scope and checks tool/provider discoverability; it does not install the
+skill into the user's global scope. Canonical content remains the editable
+owner rather than being duplicated into provider views.
+
+**Next step:** Exercise the skill with a representative migration and verify
+that its instructions produce the intended review without crossing the
+execution boundary. Adjust the canonical workflow if the trigger or outcome
+is unclear, then resynchronize project views. Pack distribution, public
+publication, and user-scope installation are separate decisions, not an
+automatic consequence of local authoring.
