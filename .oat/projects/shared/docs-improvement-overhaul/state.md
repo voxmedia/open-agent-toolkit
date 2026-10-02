@@ -2,9 +2,9 @@
 oat_current_task: null
 oat_implement_exit_gate:
   {
-    'status': 'pending',
+    'status': 'allowed',
     'resolution': 'configured',
-    'disposition': null,
+    'disposition': 'passed',
     'config_fingerprint': 'sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324',
     'resolved_command': 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."',
     'resolved_description': 'Semantic cross-family final implementation review before oat-project-implement exits.',
@@ -15,7 +15,7 @@ oat_implement_exit_gate:
     'reviewed_head': 'd744d87ec900f10f5448856c2eff564bcd78e69f',
     'implementation_base_ref': 'origin/main',
     'implementation_fingerprint': 'sha256:effective-delta-v2:7016fbe969917e67507228762db152f49b6411a388c811ea85b30abcf7b8808d',
-    'freshness_head': 'd744d87ec900f10f5448856c2eff564bcd78e69f',
+    'freshness_head': 'eb18aa67749c7e345b9efd8ea9f7e09e6bd10743',
     'freshness_fingerprint': 'sha256:effective-delta-v2:7016fbe969917e67507228762db152f49b6411a388c811ea85b30abcf7b8808d',
     'waivers': [],
     'launch_state': 'result_persisted',
@@ -27,7 +27,7 @@ oat_implement_exit_gate:
     'envelope_status': 'ok',
     'artifact': '.oat/projects/shared/docs-improvement-overhaul/reviews/final-review-2026-10-02T222323Z.md',
     'handoff': 'Gate passed at the high threshold, but the final review still contains non-blocking findings (medium=1, low=2). Run oat-project-review-receive for .oat/projects/shared/docs-improvement-overhaul/reviews/final-review-2026-10-02T222323Z.md to disposition them before marking the final review row passed.',
-    'receive_state': 'intent_persisted',
+    'receive_state': 'completed',
     'receive_correlation':
       {
         'run_id': '45d2802b-263d-447c-904b-5a36d35b1dd9',
@@ -46,11 +46,24 @@ oat_implement_exit_gate:
         'source_filename': 'final-review-2026-10-02T222323Z.md',
       },
     'receive_pre_head': '6988f430ff84e0fb3d59ff9ee40da95cebcac2f6',
-    'receive_commit': null,
+    'receive_commit': 'eb18aa67749c7e345b9efd8ea9f7e09e6bd10743',
     'receive_eligible': true,
-    'receive_completed': false,
+    'receive_completed': true,
     'failure': null,
-    'updated_at': '2026-10-02T22:29:16.873Z',
+    'updated_at': '2026-10-02T22:30:22.574Z',
+  }
+oat_post_implement_sequence:
+  {
+    'status': 'pre_approval',
+    'source': 'configured',
+    'final_phase': 'p06',
+    'pre_approval': ['summary', 'document', 'pr'],
+    'pre_approval_completed': [],
+    'approval': 'pending',
+    'approval_source': null,
+    'post_approval': [],
+    'post_approval_completed': [],
+    'failure': null,
   }
 oat_last_commit: c916af45c9860c000027d7e0467f6a77149861b8
 oat_blockers: []
