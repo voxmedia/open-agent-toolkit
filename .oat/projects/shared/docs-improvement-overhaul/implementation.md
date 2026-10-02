@@ -232,7 +232,6 @@ Recorded by Fable on 2026-10-02. Codex paused for a usage reset part-way through
 
 **Known residuals**
 
-- The README image has not been seen rendered on GitHub; that can only be checked after the branch is pushed.
 - The ideas-lifecycle diagram is hard to read at phone width; its text equivalent sits directly under it.
 - `getting-started/tool-packs.md`, `workflows/advanced/workflow-gates.md` and `dispatch-ceiling.md` still need restructuring (backlogged).
 - A project stability, support and non-goals statement needs the owner's own wording.

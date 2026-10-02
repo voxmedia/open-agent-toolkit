@@ -7,7 +7,8 @@ Recorded by Fable on 2026-10-02. Gates and the scripted tour ran on `e1c6b7d94`,
 - **What ran:** a scripted tour in Playwright Chromium on the Mac Mini against a static export of the built site, served over HTTP under the `/open-agent-toolkit` base path. Seven reader journeys, a crawl of every page reachable from Home, four diagrams in light and dark at 1440px and 390px, and a keyboard-focus pass.
 - **Who ran it:** the same agent that drove the editorial work. It is not an independent review.
 - **Laptop Zen:** confirmed only that the preview was reachable and that Home and Getting Started render in dark mode. The window held the user's own tabs, so the tour was moved to Playwright.
-- **Not checked:** Safari and Firefox; the README image as rendered by GitHub (possible only after push); a screen reader.
+- **Not checked:** Safari and Firefox; a screen reader.
+- **README on GitHub:** checked after push with the same Playwright setup. The adoption image loads and is legible in GitHub's light and dark themes at 1280px.
 
 ## Results
 
