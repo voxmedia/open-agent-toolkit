@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p01-t07
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -26,7 +26,7 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 7     | 6/7       |
+| Phase 1 | in_progress | 7     | 7/7       |
 | Phase 2 | pending     | 2     | 0/2       |
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 7     | 0/7       |
@@ -34,7 +34,7 @@ oat_generated: false
 | Phase 6 | pending     | 3     | 0/3       |
 | Phase 7 | pending     | 3     | 0/3       |
 
-**Total:** 6/29 tasks completed
+**Total:** 7/29 tasks completed
 
 ---
 
@@ -74,8 +74,8 @@ oat_generated: false
 
 ### Task p01-t07: (review) Simplify the bundle destination guard and fix the symlinked-checkout root cause
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** a57968edd
 
 ---
 
@@ -320,6 +320,15 @@ oat_generated: false
   override once the targeted re-review passes). R3 H1 and L1 are dissolved by
   the destination rule; L2 is fixed in `p01-t07`.
 
+- Continuation `cont-backlog-wave-4-p01-fix-5`: `a57968edd` (p01-t07,
+  `DONE_WITH_CONCERNS`): destination denylist replaced by the
+  absent/empty/bundle rule for `OAT_ASSETS_DIR` overrides; recursion guard on
+  `STAGING` vs skills, templates, docs; lexical root check dropped; symlinked
+  checkout fixed (`pwd -P` plus real-path entry check). `bundle-assets.sh`
+  net -36 lines; per-guard neutralization table recorded; uncached CLI tests
+  8058 pass. Root spot-check: bundle-consistency 58/58; tracked default-asset
+  files confirmed (`git ls-files packages/cli/assets`: four files).
+
 <!-- orchestration-runs-end -->
 
 ## Plan Gate Feedback (quick-start, QS-12)
@@ -362,8 +371,9 @@ None yet.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
+| Task / Review | Source Artifact | Planned / Documented                               | Actual / Accepted                                                                    | Reason                                                                                                                                                                                                   | Source of Truth | Follow-up |
+| ------------- | --------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- | --------- |
+| p01-t07       | plan.md p01-t07 | Destination rule applies to the assets destination | Rule applies only to an `OAT_ASSETS_DIR` override; the default destination is exempt | A fresh clone tracks four files under `packages/cli/assets` while `bundle-metadata.json` is gitignored, so the rule would refuse every CI build; the exemption has its own test and neutralization proof | Implementation  | None      |
 
 ## Test Results
 
