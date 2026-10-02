@@ -98,9 +98,11 @@ DISPATCH_MATRIX_RECOMMENDATION_SOURCE="$(require_inventory_path dispatchMatrix)"
 STAGING="${ASSETS}.staging.$$"
 PREVIOUS="${ASSETS}.previous.$$"
 
-# Publishing renames whatever sits at ASSETS to PREVIOUS and deletes it, so an
-# existing destination must be a directory (a previous bundle). A file there is
-# never a bundle, and it may be a canonical source.
+# Publishing renames whatever sits at ASSETS to PREVIOUS and deletes it. This
+# check only requires an existing destination to be a directory, since a file
+# there is never a bundle and may be a canonical source; the containment check
+# below then refuses a destination that is or contains a protected source. It
+# does not verify that an existing directory holds a previous bundle.
 if { [ -e "${ASSETS}" ] || [ -L "${ASSETS}" ]; } && [ ! -d "${ASSETS}" ]; then
   fail_bundle "refusing to build: the assets destination (${ASSETS}) exists and is not a directory."
 fi
