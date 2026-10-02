@@ -246,6 +246,8 @@ Root read the entire automatic final re-review `reviews/archived/final-review-20
 
 ### Resumed dispatch and validation outcomes
 
+Closeout summary continuation request `summary-2026-10-02-final`: accepted on `final_coverage_reconciliation`, the same registered `oat-phase-implementer-gpt-6-1-sol-high` native handle. Objective/ownership is only the named summary skill and its CLI-owned rollup/decision outputs; no source, review receive or sequence-state authority. Selected exact Sol 6.1/high, managed high, default-implementation, notices empty; launcher payload is configuration evidence, runtime identity unavailable. Child waits for root bookkeeping commit before writes; root owns ordered sequence and freshness. Background continuation keeps the completed accounting context, without replacing or restarting an accepted worker.
+
 Accepted parent-attached native lanes run on the Mini in this worktree, not separate persisted Orca chats. Runtime model telemetry is unavailable; exact accepted targets are recorded, not claimed as runtime identity. Final reviewer `final_lifecycle_review` uses `oat-reviewer-gpt-6-1-sol-high`; its original source review returned one `not-attempted` reconnaissance signal and no orchestration section. The same non-author handle owns native QA and bounded correction verification. Fix lane `final_bounded_corrections` and accounting lane `final_coverage_reconciliation` use `oat-phase-implementer-gpt-6-1-sol-high`, selected Sol 6.1/high under managed high policy. Both completed their bounded ownership with no nested workers. Root retains receive judgment and publication authority.
 
 All eight ordered gates exit 0 on the correction basis through 64a48da1e: check, type-check, test, build, skill bumps, release versions (after fetch), release validation and docs build. Logs: `/tmp/docs-overhaul-final-gates/`. Check/types executed six of eleven tasks, test executed five of eleven plus direct smoke/skill/script suites; CLI 8027, control-plane 153, smoke 163, skills 690 and scripts 1 pass. Root build and gate docs build replayed caches, not fresh execution. After the bounded c916 Quickstart correction, docs validation and 13 focused tests pass; final forced docs build executes all six tasks with zero cache and exit 0 (`/tmp/docs-conservation-final-build.log`). Full eight-gate evidence is not claimed to have been rerun after that one-line correction. Source changes are finished; only lifecycle outputs remain.
@@ -254,7 +256,7 @@ All eight ordered gates exit 0 on the correction basis through 64a48da1e: check,
 
 Resolved the configured gate once (user configuration, no project override, block posture, two remediation attempts). Durable state records immutable configuration and effective-delta-v2 basis before launch. Exact configured argv retains legacy `important`, which the installed gate maps to High. The CLI accepted run `45d2802b-263d-447c-904b-5a36d35b1dd9`, target `claude-opus-5-5-high`, runtime Claude, configured model `claude-opus-5-5`, effort high, timeout 2,400,000 ms. Marker and result path are persisted in state. This policy-resolved cross-family gate is independent of the native final reviewer; no runtime identity telemetry or completed verdict is claimed at acceptance. Poll the same accepted process; do not replace it.
 
-## Takeover closeout
+## Final gate closeout
 
 ### Passing final gate received — 2026-10-02
 
@@ -269,6 +271,8 @@ Gate exit 0, status ok, High threshold: 0 Critical, 0 High, 1 Medium, 2 Low. Pas
 | L2 root README absent from local Turbo hash   | Agree; explicit follow-up, not a new build-config change in this docs-closeout sweep. Current CI setup caches the pnpm store, not Turbo output; direct `pnpm docs:validate` always executes this consumer check. Record the local cached-check limitation and add README hashing in a separately scoped tooling change. | Minor      |
 
 Final review row is passed after these ordered dispositions; no Critical/High or undecided Medium remains. This is a High-threshold passing judgment sweep, not a claim of zero residual findings. Receive is archived/committed before allowing the gate or dispatching closeout.
+
+## Takeover closeout
 
 Recorded by Fable on 2026-10-02. Codex paused for a usage reset part-way through phases 3–6 and the user asked Fable to take over execution (`references/fable-takeover-2026-10-02.md`). This section is the honest record for those phases; the per-task entries above only carry status and commits.
 
