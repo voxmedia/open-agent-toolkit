@@ -45,11 +45,11 @@ copying their content here. -->
   retains main's already-shipped navigation compiler rather than a duplicate
   implementation. Source-route validation now resolves reference-style
   Markdown links and images. The configured implementation exit gate passed;
-  summary is complete. Final approval remains pending, and PR #342 is open,
-  not merged. Recorded
-  coverage gaps and product follow-ups remain unresolved; this is not project
-  completion, publication or release. See the
-  [project summary](../../projects/shared/docs-improvement-overhaul/summary.md).
+  summary is complete. The user approved final implementation closeout and
+  the project lifecycle is complete; PR #342 remains open, not merged.
+  Coverage gaps and product follow-ups remain unresolved. Lifecycle completion
+  does not publish packages or authorize release. See the durable
+  [project record](../reference/project-summaries/20261002-docs-improvement-overhaul.md).
 
 - Markdown docs bootstrap (`markdown-docs-bootstrap`, branch
   `t3code/support-markdown-docs-bootstrap`; five public packages prepared at
