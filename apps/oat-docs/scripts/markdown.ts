@@ -6,6 +6,8 @@ import { unified } from 'unified';
 interface MarkdownNode {
   type: string;
   value?: string;
+  url?: string;
+  identifier?: string;
   children?: MarkdownNode[];
 }
 
@@ -64,4 +66,41 @@ export function markdownInlineCode(markdown: string): string[] {
   }
   visit(tree);
   return values;
+}
+
+export function markdownLinkTargets(markdown: string): string[] {
+  const tree = unified()
+    .use(remarkParse)
+    .use(remarkGfm)
+    .parse(markdown.replace(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/, ''));
+  const definitions = new Map<string, string>();
+  function collectDefinitions(node: MarkdownNode): void {
+    if (
+      node.type === 'definition' &&
+      node.identifier !== undefined &&
+      node.url !== undefined &&
+      !definitions.has(node.identifier)
+    )
+      definitions.set(node.identifier, node.url);
+    node.children?.forEach(collectDefinitions);
+  }
+  collectDefinitions(tree);
+  const targets: string[] = [];
+  function visit(node: MarkdownNode): void {
+    if (
+      (node.type === 'link' || node.type === 'image') &&
+      node.url !== undefined
+    )
+      targets.push(node.url);
+    else if (
+      (node.type === 'linkReference' || node.type === 'imageReference') &&
+      node.identifier !== undefined
+    ) {
+      const target = definitions.get(node.identifier);
+      if (target !== undefined) targets.push(target);
+    }
+    node.children?.forEach(visit);
+  }
+  visit(tree);
+  return targets;
 }

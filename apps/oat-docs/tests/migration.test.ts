@@ -185,3 +185,48 @@ test('inline-code route validation ignores fenced examples, placeholders, comman
   );
   await validateSourceRoutes(root);
 });
+
+for (const reference of [
+  '[Guide][destination]',
+  '[destination][]',
+  '[destination]',
+  '![Guide][destination]',
+  '![destination][]',
+  '![destination]',
+]) {
+  for (const { href, error } of [
+    {
+      href: 'skills/absent.md',
+      error: /unresolved source link skills\/absent\.md/,
+    },
+    {
+      href: 'skills/research.md#absent',
+      error: /unresolved source fragment skills\/research\.md#absent/,
+    },
+  ]) {
+    test(`reference-style route ${reference} rejects ${href} and accepts the real heading`, async () => {
+      const root = await fixture();
+      const page = join(root, 'index.md');
+      await writeFile(
+        page,
+        `# Home\n\n${reference}\n\n[destination]: ${href}\n`,
+      );
+      await assert.rejects(validateSourceRoutes(root), error);
+      await writeFile(
+        page,
+        `# Home\n\n${reference}\n\n[destination]: skills/research.md#compare-options\n`,
+      );
+      await validateSourceRoutes(root);
+    });
+  }
+}
+
+test('reference resolution uses the first normalized definition and excludes code examples', async () => {
+  const root = await fixture();
+  await writeFile(
+    join(root, 'index.md'),
+    '# Home\n\n[Guide][DESTINATION]\n![Picture][picture]\n\n[destination]: skills/research.md#compare-options\n[destination]: absent.md\n[picture]: <picture.svg> "Picture"\n\n`[Inline][inline]`\n\n[inline]: absent-inline.md\n\n```md\n[Fenced][fenced]\n[fenced]: absent-fenced.md\n```\n\n~~~md\n![Tilde][tilde]\n[tilde]: absent-tilde.md\n~~~\n\n    [Indented][indented]\n    [indented]: absent-indented.md\n',
+  );
+  await writeFile(join(root, 'picture.svg'), '<svg />');
+  await validateSourceRoutes(root);
+});

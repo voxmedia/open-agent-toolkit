@@ -7,6 +7,7 @@ import {
   decodeMarkdownFragment,
   markdownAnchors,
   markdownInlineCode,
+  markdownLinkTargets,
 } from '@docs-tools/markdown';
 
 export const appRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -93,10 +94,7 @@ export async function validateSourceRoutes(docsRoot: string): Promise<void> {
       )
         targets.push({ source: page, href: value });
     }
-    for (const match of sourceText(markdown)
-      .replace(/(`+)[\s\S]*?\1/g, '')
-      .matchAll(/!?\[[^\]\n]*\]\(([^\s)]+)(?:\s+"[^"]*")?\)/g)) {
-      const href = match[1]!;
+    for (const href of markdownLinkTargets(markdown)) {
       targets.push({ source: page, href });
     }
   }
