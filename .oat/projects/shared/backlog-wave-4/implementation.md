@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p02-t01
+oat_current_task_id: p01-t06
 oat_generated: false
 ---
 
@@ -26,7 +26,7 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 5     | 5/5       |
+| Phase 1 | in_progress | 6     | 5/6       |
 | Phase 2 | pending     | 2     | 0/2       |
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 7     | 0/7       |
@@ -34,7 +34,7 @@ oat_generated: false
 | Phase 6 | pending     | 3     | 0/3       |
 | Phase 7 | pending     | 3     | 0/3       |
 
-**Total:** 5/27 tasks completed
+**Total:** 5/28 tasks completed
 
 ---
 
@@ -66,6 +66,11 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** 062e8bf24
+
+### Task p01-t06: (review) Close p01 gate retry finding H1 (linked notices source)
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -282,6 +287,12 @@ oat_generated: false
   the item, deferred to a follow-up backlog item at the fan-in.
 
 - Continuation `cont-backlog-wave-4-p01-fix-3`: `062e8bf24` comment-only (p01-t05); bundle-consistency 60/60.
+
+- Phase gate retry 1 (run `2546dc45`) at `e1194eea7`:
+  `reviews/archived/p01-review-2026-10-02T180245Z.md` `blocked`, receive-eligible, 1 High
+  (a symlinked `NOTICES.md` leaves its target unprotected; non-default layout).
+  Previous gate H1 confirmed fixed. Converted to `p01-t06` (refuse a linked
+  individually copied source); gate retry 2 of 2 follows.
 
 <!-- orchestration-runs-end -->
 
