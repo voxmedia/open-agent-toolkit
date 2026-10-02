@@ -935,9 +935,11 @@ the budget at the narrowest useful level. The first valid value wins:
 All configured values must be integer milliseconds from `1,000` through
 `14,400,000`. Invalid persisted values are ignored with a warning and
 resolution continues to the next source. Code reviews at `final`, phase
-(`pNN`), or phase-range (`pNN-pMM`) scope default to 1,800,000 ms (30 minutes).
-Task-scoped code reviews (`pNN-tNN`) and artifact reviews default to 900,000 ms
-(15 minutes). Startup output reports both the resolved value and source.
+(`pNN`), or phase-range (`pNN-pMM`) scope and every artifact review (for
+example `plan`, `design`, or `discovery`) default to 1,800,000 ms (30 minutes),
+because they read the full surface. Task-scoped code reviews (`pNN-tNN`)
+default to 900,000 ms (15 minutes). Startup output reports both the resolved
+value and source.
 
 Example migration from the former single environment override:
 

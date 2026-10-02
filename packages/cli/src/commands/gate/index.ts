@@ -997,7 +997,8 @@ function resolveGateExecTimeout(input: {
 
   const scope = input.reviewScope?.trim().toLowerCase() ?? '';
   if (reviewType === 'artifact') {
-    return { timeoutMs: 900_000, source: 'scope-default' };
+    // Artifact and plan reviews read the full surface; they default to 30 minutes.
+    return { timeoutMs: 1_800_000, source: 'scope-default' };
   }
   if (reviewType === 'code') {
     if (/^p\d+-t\d+$/.test(scope)) {
