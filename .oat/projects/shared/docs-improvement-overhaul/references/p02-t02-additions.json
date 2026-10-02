@@ -1,0 +1,156 @@
+{
+  "newRouterFrames": [
+    {
+      "page": "getting-started/index.md",
+      "frame": "---\ntitle: Getting Started\ndescription: 'Choose an adoption path and follow the setup guides for OAT.'\n---\n\n# Getting Started\n\nChoose your OAT adoption path with [Quickstart](quickstart.md), then use the setup, tool-pack and concepts guides in this section.\n\n",
+      "contentsHeading": "## Contents",
+      "pageSha256": "e0a3a32ebaffa6a35c8dfed7ccda39b11f0a405241ef81c9098264d68edad97d",
+      "authority": "Approved new physical index. Redistributed body/Contents descriptions remain old units accounted separately, not new capability prose."
+    },
+    {
+      "page": "workflows/index.md",
+      "frame": "---\ntitle: Workflows\ndescription: 'Choose a workflow and find its planning, execution and closeout guides.'\n---\n\n# Workflows\n\nChoose a workflow, then follow the guides for projects, ideas, backlog planning, waves or advanced execution.\n\n",
+      "contentsHeading": "## Contents",
+      "pageSha256": "58327d769d0fc4b8aa194cccd029a494f553279053872a4222fb77d38c2c62df",
+      "authority": "Approved new physical index. Redistributed body/Contents descriptions remain old units accounted separately, not new capability prose."
+    },
+    {
+      "page": "workflows/projects/planning/index.md",
+      "frame": "---\ntitle: Planning\ndescription: 'Design modes, lifecycle checkpoints and project splitting.'\n---\n\n# Planning\n\nUse these guides to plan a tracked project and choose its collaboration boundaries.\n\n",
+      "contentsHeading": "## Contents",
+      "pageSha256": "288a0c5a5094de4e456e385bb1c28753524ba9dd09789007e4e38c675372c468",
+      "authority": "Approved new physical index. Redistributed body/Contents descriptions remain old units accounted separately, not new capability prose."
+    },
+    {
+      "page": "workflows/projects/execution/index.md",
+      "frame": "---\ntitle: Execution\ndescription: 'Implementation execution, project observations and continuing shared work.'\n---\n\n# Execution\n\nUse these guides while implementing, recording observations or picking up a tracked project.\n\n",
+      "contentsHeading": "## Contents",
+      "pageSha256": "c903de61ad0779bb7c895bf58029da4286ba8d7cd6c5ba67cfc176881d5e2a73",
+      "authority": "Approved new physical index. Redistributed body/Contents descriptions remain old units accounted separately, not new capability prose."
+    },
+    {
+      "page": "workflows/projects/closeout/index.md",
+      "frame": "---\ntitle: Closeout\ndescription: 'Project retrospectives and progress or final PR flow.'\n---\n\n# Closeout\n\nUse these guides to close out tracked work and prepare its PR or retrospective.\n\n",
+      "contentsHeading": "## Contents",
+      "pageSha256": "d2aadf9a43897d740c09fef5aadb8ec91ffa7b10c712607d99f39e86f4d11f91",
+      "authority": "Approved new physical index. Redistributed body/Contents descriptions remain old units accounted separately, not new capability prose."
+    },
+    {
+      "page": "workflows/backlog-and-planning/index.md",
+      "frame": "---\ntitle: Backlog and planning\ndescription: 'Backlog lifecycle and provider-neutral remote project planning.'\n---\n\n# Backlog and planning\n\nUse these guides for file-backed backlog lifecycle and remote project-management bindings.\n\n",
+      "contentsHeading": "## Contents",
+      "pageSha256": "7c97f4981e3bebe56622cfcd2df9e959684344249b3869589b34dd8f4f4c936b",
+      "authority": "Approved new physical index. Redistributed body/Contents descriptions remain old units accounted separately, not new capability prose."
+    },
+    {
+      "page": "workflows/waves/index.md",
+      "frame": "---\ntitle: Waves\ndescription: 'Wave-program planning and execution over a corpus of external plans.'\n---\n\n# Waves\n\nUse the wave guide to coordinate a corpus of external plans.\n\n",
+      "contentsHeading": "## Contents",
+      "pageSha256": "1dbfe1f5c6deeca134d650dffce4a0a9535bc64d58470266ffc196e2d5bb6e6d",
+      "authority": "Approved new physical index. Redistributed body/Contents descriptions remain old units accounted separately, not new capability prose."
+    },
+    {
+      "page": "workflows/advanced/index.md",
+      "frame": "---\ntitle: Advanced\ndescription: 'Dispatch, autonomy, execution surfaces, evidence layers and workflow gates.'\n---\n\n# Advanced\n\nUse these guides for advanced workflow execution and its safety boundaries.\n\n",
+      "contentsHeading": "## Contents",
+      "pageSha256": "6353dc555b60911f053bc4d751b1ace2c53abc8ba5e2d3c013699d8f444befe7",
+      "authority": "Approved new physical index. Redistributed body/Contents descriptions remain old units accounted separately, not new capability prose."
+    }
+  ],
+  "explicitMapAdditions": [
+    {
+      "destination": "getting-started/index.md",
+      "kind": "new-section-introduction",
+      "title": "Getting Started",
+      "h1": "# Getting Started",
+      "description": "Choose an adoption path and follow the setup guides for OAT.",
+      "sourceBasis": [
+        "quickstart.md",
+        "cli-utilities/bootstrap.md",
+        "cli-utilities/tool-packs.md",
+        "guide/concepts.md"
+      ],
+      "text": "Choose your OAT adoption path with [Quickstart](quickstart.md), then use the setup, tool-pack and concepts guides in this section.",
+      "boundary": "New introduction only; the old CLI-lane body is redistributed through cliConsolidation. Existing retained bootstrap/tool-pack guidance is separately accounted, not rewritten."
+    },
+    {
+      "destination": "index.md#contents",
+      "kind": "new-onboarding-entry",
+      "label": "Getting Started",
+      "target": "getting-started/index.md",
+      "text": "- [Getting Started](getting-started/index.md) - Choose an OAT adoption path and follow setup, tool-pack and concepts guides.",
+      "sourceBasis": [
+        "quickstart.md",
+        "cli-utilities/bootstrap.md",
+        "cli-utilities/tool-packs.md",
+        "guide/concepts.md"
+      ],
+      "authority": "Root-approved adjacent R1 accounting correction",
+      "boundary": "New entry/description, not a rewrite of either preserved general-CLI description."
+    },
+    {
+      "destination": "reference/index.md#general-cli-adoption-guidance",
+      "kind": "additive-context-and-owner-discovery",
+      "text": "For onboarding, use [Getting Started](../getting-started/index.md). For settings and diagnostics, use [Configuration](configuration.md) and [Config and Local State](config-and-local-state.md); workflow gates are owned by [Advanced](../workflows/advanced/index.md).",
+      "sourceBasis": [
+        "cli-utilities/index.md",
+        "cli-utilities/configuration.md",
+        "cli-utilities/config-and-local-state.md",
+        "cli-utilities/workflow-gates.md"
+      ],
+      "authority": "Root-approved adjacent R1 clarification; existing leaf destinations unchanged",
+      "boundary": "New context only; the old CLI router body and two broad-lane descriptions remain verbatim under separate source-unit accounting."
+    },
+    {
+      "destination": "workflows/projects/index.md#reference-contracts",
+      "kind": "prominent-body-discovery",
+      "h2": "## Reference Contracts",
+      "text": "Read [Project Artifacts](../../reference/project-artifacts.md) for project file contracts and [State Machine](../../reference/project-state-machine.md) for lifecycle and review-state transitions.",
+      "sourceBasis": [
+        "workflows/projects/artifacts.md",
+        "workflows/projects/state-machine.md"
+      ],
+      "authority": "Fable O3 accepted by root",
+      "boundary": "Add immediately after the Projects introduction and before Contents; keep existing body guidance and Contents description accounting intact."
+    }
+  ],
+  "additiveSeparators": [
+    {
+      "key": "cli-utilities/config-and-local-state.md::Internal helpers and diagnostics::1",
+      "destinationPage": "reference/config-and-local-state.md",
+      "text": "\n",
+      "disposition": "New separating blank line before separately additive owner heading; original section bytes remain an exact prefix."
+    },
+    {
+      "key": "cli-utilities/configuration.md::Recommended workflow::1",
+      "destinationPage": "reference/configuration.md",
+      "text": "\n",
+      "disposition": "New separating blank line before separately additive owner heading; original section bytes remain an exact prefix."
+    },
+    {
+      "key": "index.md::Where To Go Next::1",
+      "destinationPage": "index.md",
+      "text": "\n",
+      "disposition": "New separating blank line before separately additive owner heading; original section bytes remain an exact prefix."
+    },
+    {
+      "key": "reference/index.md::Related Sections::1",
+      "destinationPage": "reference/index.md",
+      "text": "\n",
+      "disposition": "New separating blank line before separately additive owner heading; original section bytes remain an exact prefix."
+    },
+    {
+      "key": "workflows/projects/reviews.md::Reference artifacts::1",
+      "destinationPage": "workflows/projects/reviews/index.md",
+      "text": "\n",
+      "disposition": "New separating blank line before separately additive owner heading; original section bytes remain an exact prefix."
+    },
+    {
+      "key": "workflows/skills/index.md::Discovery Source::1",
+      "destinationPage": "skills/index.md",
+      "text": "\n",
+      "disposition": "New separating blank line before separately additive owner heading; original section bytes remain an exact prefix."
+    }
+  ],
+  "scope": "New frames/Contents, approved discovery headings and explicit context additions only. Existing source unit payloads are conserved by the separate complete proof, including redistributed CLI and Guide descriptions."
+}

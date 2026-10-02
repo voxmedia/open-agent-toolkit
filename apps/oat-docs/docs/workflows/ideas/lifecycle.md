@@ -33,7 +33,7 @@ The always-on `oat-brainstorm` skill (in the `brainstorm` tool pack) can feed in
 - **Extend existing idea** — jumps straight to `oat-idea-ideate` Step 4 (Start New Session) on the chosen idea path and appends the brainstorming transcript as a new session under `Notes & Discussion`.
 - **Summarize directly** — fast path that runs the capture flow silently and then invokes `oat-idea-summarize` end-to-end, producing both the idea record and the summary in one shot. Only offered when the brainstorming conversation produced enough material to summarize directly.
 
-`oat-brainstorm` sets `activeIdea` automatically when its destination lands in this workflow. If the brainstorming conversation converges on a non-ideas destination instead (scoped backlog item, new project, doc-to-path, inline), `oat-brainstorm` does not touch ideas — see [Tool Packs](../../cli-utilities/tool-packs.md) for the full brainstorm pack reference.
+`oat-brainstorm` sets `activeIdea` automatically when its destination lands in this workflow. If the brainstorming conversation converges on a non-ideas destination instead (scoped backlog item, new project, doc-to-path, inline), `oat-brainstorm` does not touch ideas — see [Tool Packs](../../getting-started/tool-packs.md) for the full brainstorm pack reference.
 
 ## Directory structure
 

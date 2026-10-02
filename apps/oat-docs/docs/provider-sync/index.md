@@ -58,7 +58,7 @@ surfaces remain discoverable.
 
 ## Start Here
 
-- Use [CLI Bootstrap](../cli-utilities/bootstrap.md) when you are bootstrapping OAT and want the sync-relevant setup path.
+- Use [CLI Bootstrap](../getting-started/bootstrap.md) when you are bootstrapping OAT and want the sync-relevant setup path.
 - Go to [Commands](commands.md) once you are actively using `oat status`, `oat sync`, and `oat providers`.
 - Read [Scope and Surface](scope-and-surface.md) when you need the canonical/provider-view mental model.
 
@@ -72,7 +72,7 @@ surfaces remain discoverable.
 
 ## Go Deeper
 
-- [CLI Bootstrap](../cli-utilities/bootstrap.md) - Foundational setup before first sync.
+- [CLI Bootstrap](../getting-started/bootstrap.md) - Foundational setup before first sync.
 - [Scope and Surface](scope-and-surface.md) - Canonical assets, provider views, scopes, and the sync surface area.
 - [Commands](commands.md) - `oat status`, `oat sync`, and `oat providers ...` behavior.
 - [Instruction Sync](instruction-sync.md) - Project-scoped `AGENTS.md` / `CLAUDE.md` validation, repair, and Claude-only adoption.

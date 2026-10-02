@@ -1,0 +1,119 @@
+{
+  "baseline": "8b78d9a935b31ef50e65713b03a022a5d022aa59",
+  "sourcePage": "reference/cli-reference.md",
+  "proposalSha256": "eb00351b46b7a7234f9b489877b34d2735016047c53376a094c3ba29516cc4af",
+  "guardedModuleSha256": "2dfd6faa4dc0df342950518cd416c9027970ad97e2837df45a253d6495a44213",
+  "expectedPageSha256": "71af550f395546a1c4d849482ba5d550753947f65289f259c0823236e100ea71",
+  "actualPageSha256": "ece5cd5d53296943c4aa6838f10062f2a60693ce58987d38f0772ca6b7a56932",
+  "realFormattedPositive": {
+    "outcome": "accepted",
+    "spans": 16,
+    "rawPayloads": 45
+  },
+  "hrefOnlyPositive": "accepted",
+  "negativeControls": [
+    {
+      "name": "internal-space",
+      "mutatedPageSha256": "09bcba30a307d1c544e86d3bcc0f83dd9df38b1955674267ced3fa3cc1b31ace",
+      "expectedError": "Table AST|Raw cell payload",
+      "actualError": "Table AST/topology/alignment/payload changed\n+ actual - expected\n... Skipped lines\n\n  {\n    align: [\n      null,\n      null,\n      null\n...\n                type: 'text',\n+               value: 'Command  group'\n-               value: 'Command group'\n              }\n            ],\n            type: 'tableCell'\n          },\n          {\n",
+      "outcome": "rejected"
+    },
+    {
+      "name": "code-payload",
+      "mutatedPageSha256": "17027dc9ea767c9e666252450982c4af8dc34097e77befacd003ccc8cc4aa19b",
+      "expectedError": "Table AST|Raw cell payload",
+      "actualError": "Table AST/topology/alignment/payload changed\n+ actual - expected\n... Skipped lines\n\n  {\n    align: [\n      null,\n      null,\n      null\n...\n                type: 'inlineCode',\n+               value: 'oat broken'\n-               value: 'oat init'\n              }\n            ],\n            type: 'tableCell'\n          },\n          {\n",
+      "outcome": "rejected"
+    },
+    {
+      "name": "equivalent-code-delimiters",
+      "mutatedPageSha256": "d92df25f10c0c54cdf561930cf48f7dd14ece7a614a156f35913734093fb7d78",
+      "expectedError": "Raw cell payload changed",
+      "actualError": "Raw cell payload changed 1:0\n+ actual - expected\n\n+ '``oat init``'\n- '`oat init`'\n",
+      "outcome": "rejected"
+    },
+    {
+      "name": "escaped-pipe",
+      "mutatedPageSha256": "14077880e346560dc2f22d52b27d3eef79621aa84fbce10f626f11d930371167",
+      "expectedError": "Table AST|Raw cell payload",
+      "actualError": "Table AST/topology/alignment/payload changed\n+ actual - expected\n... Skipped lines\n\n  {\n    align: [\n      null,\n      null,\n      null\n...\n                type: 'text',\n+               value: 'Bootstrap canonical | OAT directories, sync config, optional hooks, and guided setup.'\n-               value: 'Bootstrap canonical OAT directories, sync config, optional hooks, and guided setup.'\n              }\n            ],\n            type: 'tableCell'\n          },\n          {\n",
+      "outcome": "rejected"
+    },
+    {
+      "name": "emphasis",
+      "mutatedPageSha256": "315a8f15a08d0239607037fa08819e5f2e60ff93ad18c12ea4869c16da70cdb8",
+      "expectedError": "Table AST|Raw cell payload",
+      "actualError": "Table AST/topology/alignment/payload changed\n+ actual - expected\n... Skipped lines\n\n  {\n    align: [\n      null,\n      null,\n      null\n...\n              {\n+               children: [\n+                 {\n+                   type: 'text',\n+                   value: 'Bootstrap'\n+                 }\n+               ],\n+               type: 'strong'\n+             },\n+             {\n                type: 'text',\n+               value: ' canonical OAT directories, sync config, optional hooks, and guided setup.'\n-               value: 'Bootstrap canonical OAT directories, sync config, optional hooks, and guided setup.'\n              }\n            ],\n            type: 'tableCell'\n          },\n          {\n",
+      "outcome": "rejected"
+    },
+    {
+      "name": "newline",
+      "mutatedPageSha256": "842ad4b6597d4496231b936fb3d96f61687e7d72978ecccd4d599aaee9b59432",
+      "expectedError": "Another\\/missing table|Table AST",
+      "actualError": "Table AST/topology/alignment/payload changed\n+ actual - expected\n... Skipped lines\n\n  {\n    align: [\n      null,\n      null,\n      null\n...\n                type: 'text',\n+               value: 'group'\n-               value: 'Command group'\n              }\n            ],\n            type: 'tableCell'\n          },\n          {\n",
+      "outcome": "rejected"
+    },
+    {
+      "name": "topology",
+      "mutatedPageSha256": "4adb656999161a5949fa31a89c766421380c4f0b9886e317cd281b78aa1ceecf",
+      "expectedError": "Table AST",
+      "actualError": "Table AST/topology/alignment/payload changed\n+ actual - expected\n... Skipped lines\n\n  {\n    align: [\n      null,\n      null,\n      null\n...\n                type: 'inlineCode',\n-               value: 'oat init'\n-             }\n-           ],\n-           type: 'tableCell'\n-         },\n-         {\n-           children: [\n-             {\n-               type: 'text',\n-               value: 'Bootstrap canonical OAT directories, sync config, optional hooks, and guided setup.'\n-             }\n-           ],\n-           type: 'tableCell'\n-         },\n-         {\n-           children: [\n-             {\n-               children: [\n-                 {\n-                   type: 'text',\n-                   value: 'CLI Bootstrap'\n-                 }\n-               ],\n-               title: null,\n-               type: 'link',\n-               url: '../getting-started/bootstrap.md'\n-             }\n-           ],\n-           type: 'tableCell'\n-         }\n-       ],\n-       type: 'tableRow'\n-     },\n-     {\n-       children: [\n-         {\n-           children: [\n-             {\n-               type: 'inlineCode',\n                value: 'oat tools ...'\n              }\n            ],\n            type: 'tableCell'\n          },\n",
+      "outcome": "rejected"
+    },
+    {
+      "name": "alignment-colon",
+      "mutatedPageSha256": "d51bac40ac6b8c181b68e94056d17e2b5e25a2b53b9f73b38147566d13d4f224",
+      "expectedError": "Table AST",
+      "actualError": "Table AST/topology/alignment/payload changed\n+ actual - expected\n\n  {\n    align: [\n+     'left',\n      null,\n      null,\n-     null\n    ],\n    children: [\n      {\n        children: [\n          {\n",
+      "outcome": "rejected"
+    },
+    {
+      "name": "pipe",
+      "mutatedPageSha256": "75882f02850a02b536e0a1a6df9ccb61b41009e141e5a283a72d115c529081a4",
+      "expectedError": "Another\\/missing table|Table AST",
+      "actualError": "Another/missing table is not allowed\n\n0 !== 1\n",
+      "outcome": "rejected"
+    },
+    {
+      "name": "delimiter-syntax",
+      "mutatedPageSha256": "bac779dca4ade979291971d1e69e477a783577747761240ec8cd303f9fcc1f9c",
+      "expectedError": "Another\\/missing table|Table AST|Delimiter",
+      "actualError": "Another/missing table is not allowed\n\n0 !== 1\n",
+      "outcome": "rejected"
+    },
+    {
+      "name": "unlisted-edge",
+      "mutatedPageSha256": "08c7028624ff8a2cb448d992b1047e6b6d520756468490e9edb25a61c02d9013",
+      "expectedError": "Unlisted formatting span cell:0:0:suffix",
+      "actualError": "Unlisted formatting span cell:0:0:suffix",
+      "outcome": "rejected"
+    },
+    {
+      "name": "outside-table-byte",
+      "mutatedPageSha256": "2e3e24c6a3c3f2a47cbcca7bc13892efd79dd663ce6ba9a12646c27f63887086",
+      "expectedError": "Bytes outside inventoried",
+      "actualError": "Bytes outside inventoried table formatting spans changed\n+ actual - expected\n... Skipped lines\n\n  '---\\n' +\n    'title: CLI Reference\\n' +\n    'description: Scannable reference for the current OAT CLI surface, with links to the deeper owning sections for each command family.\\n' +\n    '---\\n' +\n    '\\n' +\n...\n    '\\n' +\n+   '## Changed Command Groups\\n' +\n-   '## Command Groups\\n' +\n    '\\n' +\n    '| Command group                                   | What it covers                                                                                                                                                                                                             | Go deeper                                                                          |\\n' +\n    '| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |\\n' +\n    '| `oat init`                                      | Bootstrap canonical OAT directories, sync config, optional hooks, and guided setup.                                                                                                                                        | [CLI Bootstrap](../getting-started/bootstrap.md)                                     |\\n' +\n    '| `oat tools ...`                                 | Install, inspect, update, remove, and migrate bundled OAT tool packs and assets across project and user scope.                                                                                                             | [Tool Packs](../getting-started/tool-packs.md)                                       |\\n' +\n...\n    '  storage scope without inspecting its path manually.\\n' +\n+   '-'... 25198 more characters\n-   '- `oat pr'... 25190 more characters\n",
+      "outcome": "rejected"
+    },
+    {
+      "name": "another-table",
+      "mutatedPageSha256": "6a99cc1203307eac57b049eedd39445158cee1b6ff4524249d04e5497df48248",
+      "expectedError": "Another\\/missing table",
+      "actualError": "Another/missing table is not allowed\n\n2 !== 1\n",
+      "outcome": "rejected"
+    }
+  ],
+  "guardNeutralization": {
+    "disabledOnly": "assertExactFormattingSpan",
+    "mutation": "unlisted-edge",
+    "neutralizedOutcome": "accepted",
+    "guardedOutcome": "rejected",
+    "independentRawPayloadGuard": "rejects equivalent-code-delimiter mutation while span restriction is neutralized",
+    "independentAstGuard": "rejects topology mutation while span restriction is neutralized",
+    "restoredValidOutcome": "accepted",
+    "neutralizedModuleSha256": "40ed163de3261be8c16e2f7f2b3c408c464d8d90ec93a597775df41b22aaa3e4"
+  },
+  "proposalReviewLowDisposition": "Clarified focused bad-edge control targets the exact-span restriction, not payload; independent payload/AST guards remain active.",
+  "outcome": "pass"
+}

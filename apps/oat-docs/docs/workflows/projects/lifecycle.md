@@ -23,7 +23,7 @@ OAT lifecycle order:
 
 **Shortcut:** `oat-project-next` reads project state and invokes the correct next skill automatically — use it instead of remembering which skill comes next. Complements `oat-project-progress` (which is read-only diagnostic).
 
-Full spec-driven design supports three interaction modes: collaborative, selective collaborative, and draft-and-review. Selective collaborative drafts routine sections silently and presents high-risk or uncertain sections for live review. Quick-start lightweight design stays simpler and offers only collaborative or draft-and-review. See [Design Modes](design-modes.md) for details.
+Full spec-driven design supports three interaction modes: collaborative, selective collaborative, and draft-and-review. Selective collaborative drafts routine sections silently and presents high-risk or uncertain sections for live review. Quick-start lightweight design stays simpler and offers only collaborative or draft-and-review. See [Design Modes](planning/design-modes.md) for details.
 
 ## Quick Look
 
@@ -120,7 +120,7 @@ On completion, OAT treats archive handling as an explicit closeout choice:
   pointer immediately, as does any completion that declines archive. An archive
   failure therefore leaves the pointer intact and the completion directly
   resumable. See
-  [Picking Up a Project](picking-up-projects.md#archive-contents) for the
+  [Picking Up a Project](execution/picking-up-projects.md#archive-contents) for the
   post-archive resume and its manual recovery path.
 - When archiving is disabled or declined, durable projects remain at their
   active path. Synced completion still finalizes and pushes the project ref,
@@ -138,7 +138,7 @@ On completion, OAT treats archive handling as an explicit closeout choice:
   valid terminal shapes. The active alias is inert: list omits it and pull/open
   reject it. Differing SHAs are a hard mismatch with recovery guidance.
 - If `.oat/config.json` enables `archive.s3SyncOnComplete` and sets `archive.s3Uri`, completion requires the S3 upload of a dated snapshot such as `<archive.s3Uri>/<repo-slug>/projects/20260401-<project>/` to succeed before terminal record/ref cleanup. A failed configured upload leaves retry identity intact and does not claim closeout.
-- If `.oat/config.json` sets `archive.awsProfile` and/or `archive.awsRegion`, those values are forwarded to every `aws` invocation triggered by completion (preflight checks + `aws s3 sync`) and override any ambient shell `AWS_PROFILE` / `AWS_DEFAULT_PROFILE` / `AWS_REGION` / `AWS_DEFAULT_REGION` values. The repo's archive-scoped credentials are treated as deliberate intent so users don't have to unset shell env vars before running completion. See [`config-and-local-state.md`](../../cli-utilities/config-and-local-state.md) for the full precedence chain.
+- If `.oat/config.json` sets `archive.awsProfile` and/or `archive.awsRegion`, those values are forwarded to every `aws` invocation triggered by completion (preflight checks + `aws s3 sync`) and override any ambient shell `AWS_PROFILE` / `AWS_DEFAULT_PROFILE` / `AWS_REGION` / `AWS_DEFAULT_REGION` values. The repo's archive-scoped credentials are treated as deliberate intent so users don't have to unset shell env vars before running completion. See [`config-and-local-state.md`](../../reference/config-and-local-state.md) for the full precedence chain.
 - If `.oat/config.json` sets `archive.summaryExportPath`, completion copies `summary.md` to `<archive.summaryExportPath>/20260401-<project>.md`.
 - Missing or unusable AWS CLI configuration blocks synced terminal cleanup when S3 durability is configured; when S3 sync is not configured, it is not part of the durability requirement.
 - `oat repo archive sync` can later sync all archived projects, or one named archived project, back down from S3; it selects the latest dated remote snapshot and materializes it into the local bare archive tree.
@@ -296,7 +296,7 @@ Within either tier, parallelism is expressed as plan metadata:
 - **Sequential (default):** plans with no `oat_plan_parallel_groups` field, or with an empty array. Phases run in plan order on the orchestration branch.
 - **Parallel groups:** phases listed together in `oat_plan_parallel_groups` run concurrently in worktrees (Tier 1 only) and merge back to the orchestration branch in plan order. Groups themselves execute sequentially.
 
-See [Implementation Execution](implementation-execution.md) for the full execution model — tier detection, bounded fix loop, fan-in, merge-conflict handling, dry-run, and resumption.
+See [Implementation Execution](execution/implementation-execution.md) for the full execution model — tier detection, bounded fix loop, fan-in, merge-conflict handling, dry-run, and resumption.
 
 ## Review receive behavior
 
@@ -507,7 +507,7 @@ Capture lane progression:
 
 The lifecycle has several interactive prompts that power users often answer the same way every time — HiLL checkpoint behavior, archive on complete, auto-create PR, post-implementation chaining, final review execution model, and re-review scope narrowing. These can be configured once via `workflow.*` preference keys and respected automatically by skills.
 
-See the [Workflow preferences section in the Configuration guide](../../cli-utilities/configuration.md#workflow-preferences-workflow) for the full list of keys and how to set them. Preferences resolve through a three-layer chain (`env > repo-local > repo-shared > user > default`), so you can set personal defaults at user scope once and override per-repo only when needed.
+See the [Workflow preferences section in the Configuration guide](../../reference/configuration.md#workflow-preferences-workflow) for the full list of keys and how to set them. Preferences resolve through a three-layer chain (`env > repo-local > repo-shared > user > default`), so you can set personal defaults at user scope once and override per-repo only when needed.
 
 ## Active project resolution
 
@@ -532,7 +532,7 @@ separate checks, and both must hold before any PJM write:
 Pack presence is never treated as evidence of repository adoption. A skill that
 finds the capability available but the repository unadopted reports the
 actionable `oat pjm init` stop instead of scaffolding implicitly. See
-[Install vs. initialize](../../cli-utilities/tool-packs.md#install-vs-initialize).
+[Install vs. initialize](../../getting-started/tool-packs.md#install-vs-initialize).
 
 ## Brainstorming integration with the project lifecycle
 

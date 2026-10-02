@@ -363,7 +363,7 @@ The Gate Execution step should:
 
    A null, missing, malformed, or unrecognized result is an operational failure
    that fails closed as unresolved. Never treat it as "no gate configured." See
-   [Per-project gate overrides](../cli-utilities/workflow-gates.md#per-project-gate-overrides).
+   [Per-project gate overrides](../workflows/advanced/workflow-gates.md#per-project-gate-overrides).
 
 3. Export the resolved path with `export PROJECT_PATH` before launching the
    command shell.
@@ -387,7 +387,7 @@ that should report only the child process status, not review findings.
 Reusable lifecycle gate commands must omit `--target <id>` so the
 dispatcher can avoid the current runtime; reserve explicit targets for
 manual/debug commands or deliberate local/user-specific overrides. See
-[Workflow Gates](../cli-utilities/workflow-gates.md) for the config and command
+[Workflow Gates](../workflows/advanced/workflow-gates.md) for the config and command
 surface.
 
 ## Reading project state

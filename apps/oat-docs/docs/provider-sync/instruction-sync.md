@@ -452,5 +452,5 @@ oat instructions sync --force --strategy copy
 
 - [Provider Interop Commands](commands.md)
 - [Provider Interop CLI Scope and Surface](scope-and-surface.md)
-- [Config and Local State](../cli-utilities/config-and-local-state.md)
+- [Config and Local State](../reference/config-and-local-state.md)
 - [Troubleshooting](../reference/troubleshooting.md)

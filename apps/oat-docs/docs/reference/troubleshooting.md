@@ -191,7 +191,7 @@ Both commands report managed pack state with a scoped recovery command:
   contract and does not clear this finding. `oat tools update` cannot fix it.
   Enable a provider with `oat providers set --scope user --enabled <provider>`
   and run `oat sync --scope user`; reinstalling at project scope is not
-  required. See [Tool packs](../cli-utilities/tool-packs.md) for how
+  required. See [Tool packs](../getting-started/tool-packs.md) for how
   user-scope agents reach each provider.
 
 ## `status` or `doctor` reports `packs:inventory`
