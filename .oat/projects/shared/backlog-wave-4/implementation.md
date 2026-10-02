@@ -753,7 +753,59 @@ at 0.3.13).
 
 ## Final Summary (for PR/docs)
 
-Pending.
+**What shipped (behavior):**
+
+- `bundle-assets.sh` fails closed: an empty, absolute, escaping, or
+  repository-root inventory lookup stops the build before any copy; staging can
+  never sit inside the skills, templates, or docs source; an
+  `OAT_ASSETS_DIR` override is accepted only when it is absent, an empty
+  directory, or an existing bundle. A checkout reached through a symlinked
+  path now resolves inventory lookups (the likely trigger of the Wave 3 disk
+  fill). Asset-root read failures report their errno.
+- Artifact gate reviews default to 30 minutes. A second gate for the same
+  project, review type, and scope is rejected through an atomic claim
+  (`recursion` in the JSON envelope); nested gates receive the claim directory
+  explicitly.
+- `oat sync` restamps stale copy-strategy hashes (visible in dry-run and JSON,
+  only when the manifest row tracks the checked path), bridges legacy digests
+  when retiring obsolete copies, and reports a marker-less skill or agent
+  directory as an `error` entry instead of rewriting it forever.
+  `oat:validate-skills` reports a missing `SKILL.md` in any skill directory.
+- When a review cycle or gate attempt budget runs out, implement, quick-start,
+  and review-receive run a read-only complexity review (the installed
+  `complexity-review` skill, or OAT's condensed fallback) and present it with
+  the stop reasons and a **simplify** option; agents never pick the
+  disposition, including under `OAT_AUTONOMOUS=1`.
+- Quick-start persists its gate outcome as `oat_quick_start_gate`, defined
+  once in a shared gate-record doc; next and progress report it. Root agents
+  log judgment entries to the project log.
+- New `workflow.autonomousComplete` opt-in and the `oat-project-complete-auto`
+  companion skill (three-layer guard, recorded pre-merge exception for
+  wave-execute, batch mode, never creates a PR); wave-execute and
+  wave-program point at it.
+- Recon reconciliation downgrades claims a thorough-profile review leaves
+  undisposed; `oat-wrap-up` resolves its summary template through
+  `oat template resolve`; the dashboard routes quick plans exactly as the
+  router does; pr-final's ledger scan prose is precise.
+
+**Key files:** `packages/cli/scripts/bundle-{assets.sh,inputs.mjs}`,
+`packages/cli/src/fs/assets.ts`, `packages/cli/src/commands/gate/index.ts`,
+`packages/cli/src/engine/{compute,execute}-plan.ts`,
+`packages/cli/src/commands/sync/*`, `packages/cli/src/validation/skills.ts`,
+`packages/cli/src/config/*`, `packages/cli/src/commands/state/generate.ts`,
+`packages/control-plane/src/{index.ts,recommender/router.ts}`,
+`.agents/docs/{complexity-review-fallback,gate-approval-record}.md`,
+`.agents/skills/oat-project-{implement,quick-start,review-receive,next,progress,complete-auto,pr-final}/`,
+`.agents/skills/{oat-wave-execute,oat-wave-program,recon,oat-wrap-up}/`.
+
+**Verification:** full Definition of Done exit 0 (see Test Results); every
+phase passed a root review and a Codex GPT-6.1 Sol phase gate (p01's gate
+closed by operator override after simplification).
+
+**Design deltas:** p01 replaced its per-path destination denylist with one
+destination rule at the review cap (operator decision); the idle kill and
+early complexity trigger left the wave at the plan-gate escalation; see
+Deviations and Deferred Findings.
 
 ## References
 
