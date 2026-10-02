@@ -11,20 +11,28 @@ import { Command, Option } from 'commander';
 import YAML from 'yaml';
 
 import { buildDocsNavTree, type DocsNavTree } from './contents';
+import { syncFumadocsNavigation } from './fumadocs';
 
 interface DocsNavSyncCommandOptions {
   targetDir?: string;
+  framework?: 'mkdocs' | 'fumadocs';
+  check?: boolean;
+  validateOnly?: boolean;
 }
 
 interface SyncDocsNavigationOptions {
   appRoot: string;
+  framework?: 'mkdocs' | 'fumadocs';
+  check?: boolean;
+  validateOnly?: boolean;
 }
 
 interface SyncDocsNavigationResult {
   appRoot: string;
   docsRoot: string;
-  mkdocsPath: string;
-  nav: DocsNavTree;
+  mkdocsPath?: string;
+  nav?: DocsNavTree;
+  metadata?: string[];
 }
 
 interface DocsNavSyncDependencies {
@@ -70,6 +78,16 @@ function replaceTopLevelYamlSection(
 export async function syncDocsNavigation(
   options: SyncDocsNavigationOptions,
 ): Promise<SyncDocsNavigationResult> {
+  if (options.check && options.validateOnly)
+    throw new Error('--check and --validate-only are mutually exclusive');
+  if (options.framework === 'fumadocs') {
+    return {
+      appRoot: options.appRoot,
+      ...(await syncFumadocsNavigation(options)),
+    };
+  }
+  if (options.validateOnly)
+    throw new Error('--validate-only requires --framework fumadocs');
   const mkdocsPath = join(options.appRoot, 'mkdocs.yml');
   const docsRoot = join(options.appRoot, 'docs');
   const nav = await buildDocsNavTree({ docsRoot });
@@ -80,7 +98,13 @@ export async function syncDocsNavigation(
     'nav',
     navSection,
   );
-  await writeFile(mkdocsPath, `${updatedMkdocsSource.trimEnd()}\n`, 'utf8');
+  const output = `${updatedMkdocsSource.trimEnd()}\n`;
+  if (options.check) {
+    if (mkdocsSource !== output)
+      throw new Error('MkDocs navigation differs; run oat docs nav sync');
+  } else {
+    await writeFile(mkdocsPath, output, 'utf8');
+  }
 
   return {
     appRoot: options.appRoot,
@@ -99,19 +123,23 @@ async function runDocsNavSyncCommand(
     const targetDir = options.targetDir ?? '.';
     const result = await dependencies.syncDocsNavigation({
       appRoot: resolve(context.cwd, targetDir),
+      framework: options.framework,
+      check: options.check,
+      validateOnly: options.validateOnly,
     });
 
     if (context.json) {
-      context.logger.json({
-        status: 'ok',
-        appRoot: result.appRoot,
-        docsRoot: result.docsRoot,
-        mkdocsPath: result.mkdocsPath,
-        nav: result.nav,
-      });
+      context.logger.json({ status: 'ok', ...result });
     } else {
-      context.logger.info(`Synced docs navigation in ${targetDir}`);
-      context.logger.info(`  MkDocs config: ${result.mkdocsPath}`);
+      context.logger.info(
+        `${options.check || options.validateOnly ? 'Validated' : 'Synced'} docs navigation in ${targetDir}`,
+      );
+      if (result.mkdocsPath)
+        context.logger.info(`  MkDocs config: ${result.mkdocsPath}`);
+      if (result.metadata)
+        context.logger.info(
+          `  Fumadocs metadata: ${result.metadata.length} files`,
+        );
       context.logger.info(`  Docs root: ${result.docsRoot}`);
     }
 
@@ -138,10 +166,17 @@ export function createDocsNavSyncCommand(
   return new Command('sync')
     .description('Regenerate docs navigation from index.md contents')
     .addOption(
-      new Option(
-        '--target-dir <path>',
-        'Docs app directory containing mkdocs.yml',
-      ),
+      new Option('--target-dir <path>', 'Docs app directory containing docs/'),
+    )
+    .addOption(
+      new Option('--framework <name>', 'Navigation framework')
+        .choices(['mkdocs', 'fumadocs'])
+        .default('mkdocs'),
+    )
+    .option('--check', 'Compare generated navigation without writing')
+    .option(
+      '--validate-only',
+      'Validate Fumadocs sources without reading or writing output',
     )
     .action(async (options: DocsNavSyncCommandOptions, command: Command) => {
       const context = dependencies.buildCommandContext(

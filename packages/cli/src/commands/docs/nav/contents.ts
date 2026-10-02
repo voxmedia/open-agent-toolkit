@@ -8,11 +8,36 @@ export interface DocsContentsEntry {
   href: string;
 }
 
+export function withoutFencedExamples(markdown: string): string {
+  let fence: { character: string; length: number } | undefined;
+  return markdown
+    .split(/\r?\n/)
+    .map((line) => {
+      const marker = /^ {0,3}(`{3,}|~{3,})(.*)$/.exec(line);
+      if (fence) {
+        if (
+          marker &&
+          marker[1]![0] === fence.character &&
+          marker[1]!.length >= fence.length &&
+          !marker[2]!.trim()
+        )
+          fence = undefined;
+        return '';
+      }
+      if (marker) {
+        fence = { character: marker[1]![0]!, length: marker[1]!.length };
+        return '';
+      }
+      return line;
+    })
+    .join('\n');
+}
+
 export function parseIndexContents(
   markdown: string,
   sourcePath = 'index.md',
 ): DocsContentsEntry[] {
-  const lines = markdown.split(/\r?\n/);
+  const lines = withoutFencedExamples(markdown).split(/\r?\n/);
   const contentsHeadingIndex = lines.findIndex((line) =>
     /^##\s+Contents\s*$/.test(line.trim()),
   );

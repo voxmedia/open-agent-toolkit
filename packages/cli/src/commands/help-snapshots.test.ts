@@ -1002,7 +1002,12 @@ describe('help output snapshots', () => {
       Regenerate docs navigation from index.md contents
 
       Options:
-        --target-dir <path>  Docs app directory containing mkdocs.yml
+        --target-dir <path>  Docs app directory containing docs/
+        --framework <name>   Navigation framework (choices: "mkdocs", "fumadocs",
+                             default: "mkdocs")
+        --check              Compare generated navigation without writing
+        --validate-only      Validate Fumadocs sources without reading or writing
+                             output
         -h, --help           display help for command
 
       Global Options:
