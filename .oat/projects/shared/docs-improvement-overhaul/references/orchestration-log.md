@@ -125,6 +125,11 @@ The owning relay now lists `term_`-prefixed terminal handles. Reusing the bare h
 
 - A bounded GPT-6.1 Sol/high native helper refined this distinction in the existing separate Orc worktree. Root reviewed its four-file diff, committed and pushed3b7e1c55f89bf6b520969c5092f92519e1076860 to draft [tkstang/orc#47](https://github.com/tkstang/orc/pull/47). Full post-commit worktree validation passed; type/build cache replay is disclosed in implementation.md. Remote branch and GitHub API confirm the head. Not merged or installed; no fresh-provider acceptance claimed. The historical phrase “human draft” above is not a verified authorship finding and is superseded by this qualified evidence.
 
+### Native Zen tab isolation during final QA
+
+- A new native Zen window does not establish an isolated tab/workspace inventory. Keyboard previous-tab cycling unexpectedly selected an existing login tab; no login was submitted or credentials entered. The unrelated screenshot was replaced before staging, and the tab was left alone. Prefer explicit QA navigation in a known QA-created tab, inspect the resulting page before any action or saved evidence, and never infer isolation from `Cmd+N` alone.
+- GitHub's logged-out appearance control offered contrast, not light/dark selection. The visible Zen Website appearance preference enabled both-theme README QA; its original Dark preference was restored and verified. No OS appearance or GitHub account setting was changed.
+
 ### Parsed CLI help and FIFO acknowledgment
 
 ### Refresh integration base before dispatch
