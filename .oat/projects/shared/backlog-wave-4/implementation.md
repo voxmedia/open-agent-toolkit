@@ -24,15 +24,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 8     | 8/8       |
-| Phase 2 | in_progress | 3     | 3/3       |
-| Phase 3 | pending     | 3     | 0/3       |
-| Phase 4 | pending     | 7     | 0/7       |
-| Phase 5 | pending     | 4     | 0/4       |
-| Phase 6 | pending     | 3     | 0/3       |
-| Phase 7 | pending     | 3     | 0/3       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 8     | 8/8       |
+| Phase 2 | complete | 3     | 3/3       |
+| Phase 3 | pending  | 3     | 0/3       |
+| Phase 4 | pending  | 7     | 0/7       |
+| Phase 5 | pending  | 4     | 0/4       |
+| Phase 6 | pending  | 3     | 0/3       |
+| Phase 7 | pending  | 3     | 0/3       |
 
 **Total:** 11/31 tasks completed
 
@@ -86,7 +86,7 @@ oat_generated: false
 
 ## Phase 2: Gate timeouts
 
-**Status:** in_progress
+**Status:** complete
 
 ### Task p02-t01: Give full-surface artifact reviews a 30-minute default
 
@@ -390,6 +390,13 @@ oat_generated: false
   simultaneous launch, differing `TMPDIR`). Gate suites 285/285; root
   spot-check gate-hardening integration passes.
 
+- Phase gate (`codex-6-sol-xhigh`, run `75d9dbb7`) at `6a67d877d`:
+  `reviews/archived/p02-review-2026-10-02T192954Z.md` status `ok`, receive-eligible,
+  0 Critical/High, 1 Medium. Judgment sweep: M1 (stale-recovery race) deferred
+  to final (Deferred Findings (Medium)).
+- Phase p02 outcome: complete; 3/3 tasks (2 planned, 1 review-fix); one root
+  review round, one passing gate.
+
 <!-- orchestration-runs-end -->
 
 ## Plan Gate Feedback (quick-start, QS-12)
@@ -426,7 +433,11 @@ Chronological execution is recorded per phase under Orchestration Runs above.
 
 ## Deferred Findings (Medium)
 
-None yet.
+- p02 gate M1 (`reviews/archived/p02-review-2026-10-02T192954Z.md`): competing stale-claim
+  recovery can remove a live claim and admit a duplicate run. Needs an
+  orphaned claim plus concurrent recovery; ordinary nested and simultaneous
+  launches are protected. The fix serializes recovery with acquisition, which
+  is not a small contained change; deferred to final with this rationale.
 
 ## Deviations from Plan / Design
 
