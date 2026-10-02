@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p04-t10
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -29,12 +29,12 @@ oat_generated: false
 | Phase 1 | complete    | 8     | 8/8       |
 | Phase 2 | complete    | 3     | 3/3       |
 | Phase 3 | complete    | 5     | 5/5       |
-| Phase 4 | in_progress | 9     | 8/9       |
+| Phase 4 | in_progress | 9     | 9/9       |
 | Phase 5 | pending     | 4     | 0/4       |
 | Phase 6 | pending     | 3     | 0/3       |
 | Phase 7 | pending     | 3     | 0/3       |
 
-**Total:** 24/35 tasks completed
+**Total:** 25/35 tasks completed
 
 ---
 
@@ -182,8 +182,8 @@ oat_generated: false
 
 ### Task p04-t10: (review) Address findings from the interrupted p04 gate run
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 4873e85e5
 
 ---
 
@@ -513,6 +513,12 @@ oat_generated: false
   verified both findings (M1: quick-start's project-disabled branch skips the
   record write; L1: minute-precision complexity report timestamps break the
   reuse rule) and added `p04-t10`; the p04 gate runs again afterward.
+
+- Continuation `cont-backlog-wave-4-p04-fix-2`: `4873e85e5` (p04-t10): the
+  project-disabled branch writes `allowed/project_disabled` before its jump
+  (branch-specific pin); complexity reports use UTC seconds timestamps with a
+  collision suffix. Validation and shared contracts 975; root spot-check of
+  both contract files passes.
 
 <!-- orchestration-runs-end -->
 
