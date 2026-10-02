@@ -11,22 +11,22 @@ sections another branch may also touch.
 Decisions live in reference/decisions/ (one file per record); link them rather than
 copying their content here. -->
 
-- [Workflow Gates](../../../apps/oat-docs/docs/cli-utilities/workflow-gates.md)
+- [Workflow Gates](../../../apps/oat-docs/docs/workflows/advanced/workflow-gates.md)
   defines gate invocation provenance, declared-project corroboration, and the
   mandatory configured implementation exit-gate closeout boundary.
-- [Project Reviews](../../../apps/oat-docs/docs/workflows/projects/reviews.md)
+- [Project Reviews](../../../apps/oat-docs/docs/workflows/projects/reviews/index.md)
   defines phase review gates and producer aggregation behavior.
-- [Implementation Execution](../../../apps/oat-docs/docs/workflows/projects/implementation-execution.md)
+- [Implementation Execution](../../../apps/oat-docs/docs/workflows/projects/execution/implementation-execution.md)
   defines tiered pre-commit prevention, bounded same-target append-only
   recovery, numeric attempt accounting, and direction-required boundaries.
-- [Dispatch Policy](../../../apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md)
+- [Dispatch Policy](../../../apps/oat-docs/docs/workflows/advanced/dispatch-ceiling.md)
   defines candidate ladders, named ceilings, and exact task dispatch.
-- [Orchestration Model](../../../apps/oat-docs/docs/workflows/projects/orchestration-model.md)
+- [Orchestration Model](../../../apps/oat-docs/docs/workflows/advanced/orchestration-model.md)
   defines root-owned phase implementation, independent review, and optional
   isolated nesting.
 - [Smoke Testing](../../../apps/oat-docs/docs/contributing/smoke-testing.md)
   defines deterministic verification and opt-in live-provider operator runs.
-- [Project Log](../../../apps/oat-docs/docs/cli-utilities/project-log.md)
+- [Project Log](../../../apps/oat-docs/docs/workflows/projects/execution/project-log.md)
   defines append-only project observations, validated CLI mutations, and
   roll-up-before-archive behavior.
 - [Tool-pack lifecycle/config cleanup summary](../reference/project-summaries/20260830-tool-pack-lifecycle-config-cleanup.md)
