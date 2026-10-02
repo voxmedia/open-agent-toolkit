@@ -3,7 +3,10 @@ set -euo pipefail
 
 # Physical paths: run through a symlinked checkout, a logical path made node
 # resolve the inventory module to a different path than argv[1], so every
-# lookup printed nothing (the likely trigger of the Wave 3 disk fill).
+# lookup printed nothing (the likely trigger of the Wave 3 disk fill). This is
+# one layer of that fix, alongside the real-path entry check in
+# bundle-inputs.mjs; neither is redundant, and keeping REPO_ROOT physical keeps
+# every path the guards below print and compare in one form.
 SCRIPT_DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 REPO_ROOT="$(cd -P "${SCRIPT_DIR}/../../.." && pwd -P)"
 ASSETS="${OAT_ASSETS_DIR:-${REPO_ROOT}/packages/cli/assets}"
@@ -71,7 +74,9 @@ require_inventory_path() {
   case "/${value}/" in
     */../*) fail_bundle "inventory lookup '${key}' contains a '..' segment (${value}); expected a path inside the repository." ;;
   esac
-  if [ "$(physical_path "${REPO_ROOT}/${value}")" = "${REPO_ROOT}" ]; then
+  # Both sides are normalized, so the check does not depend on REPO_ROOT
+  # already being physical.
+  if [ "$(physical_path "${REPO_ROOT}/${value}")" = "$(physical_path "${REPO_ROOT}")" ]; then
     fail_bundle "inventory lookup '${key}' resolves to the repository root (${value}); refusing to copy the repository into its own bundle."
   fi
   printf '%s\n' "${REPO_ROOT}/${value}"
@@ -96,13 +101,20 @@ PREVIOUS="${ASSETS}.previous.$$"
 # Destination rule. Publishing renames whatever sits at ASSETS to PREVIOUS and
 # deletes it, so an OAT_ASSETS_DIR override is published only when it is
 # absent, an empty directory, or a directory holding bundle-metadata.json (a
-# previous bundle); anything else is refused. The default destination,
+# previous bundle); anything else is refused, including a directory that
+# cannot be listed, which is not known to be empty. The default destination,
 # packages/cli/assets, is exempt: a fresh checkout holds its tracked files
 # without bundle-metadata.json.
 if [ -n "${OAT_ASSETS_DIR:-}" ] && { [ -e "${ASSETS}" ] || [ -L "${ASSETS}" ]; }; then
-  if [ ! -d "${ASSETS}" ] ||
-    { [ ! -f "${ASSETS}/bundle-metadata.json" ] && [ -n "$(ls -A "${ASSETS}")" ]; }; then
-    fail_bundle "refusing to build: the assets destination (${ASSETS}) is neither an empty directory nor a previous bundle (no bundle-metadata.json); remove it or choose an empty directory."
+  if [ ! -d "${ASSETS}" ]; then
+    fail_bundle "refusing to build: the assets destination (${ASSETS}) is not a directory; remove it or choose an empty directory."
+  fi
+  if [ ! -f "${ASSETS}/bundle-metadata.json" ]; then
+    assets_entries="$(ls -A "${ASSETS}")" ||
+      fail_bundle "refusing to build: the assets destination (${ASSETS}) cannot be listed; remove it or choose an empty directory."
+    if [ -n "${assets_entries}" ]; then
+      fail_bundle "refusing to build: the assets destination (${ASSETS}) is neither an empty directory nor a previous bundle (no bundle-metadata.json); remove it or choose an empty directory."
+    fi
   fi
 fi
 

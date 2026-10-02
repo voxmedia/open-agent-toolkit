@@ -1,5 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import {
+  chmodSync,
   copyFileSync,
   existsSync,
   lstatSync,
@@ -1185,6 +1186,34 @@ describe('bundle-assets fail-closed guards', () => {
     BUNDLE_ASSETS_TEST_TIMEOUT_MS,
   );
 
+  // A directory that cannot be listed is not known to be empty, so it is
+  // refused rather than renamed away. Root can list any directory, so the
+  // case only discriminates for an unprivileged user.
+  it.skipIf(process.getuid?.() === 0)(
+    'rejects an unreadable OAT_ASSETS_DIR instead of treating it as empty',
+    () => {
+      const tree = createStubBundleTree(VALID_STUB_INVENTORY);
+      const locked = join(tree.scratch, 'locked');
+      try {
+        writeTreeFile(join(locked, 'user-data.txt'), 'keep\n');
+        chmodSync(locked, 0o000);
+
+        const run = runStubBundle(tree, { assetsDir: locked, mode: 'refuse' });
+
+        expectRejectedBeforeAnyCopy(tree, run, /cannot be listed/);
+        chmodSync(locked, 0o755);
+        expect(snapshotPath(locked)).toEqual({
+          '.': '<dir>',
+          './user-data.txt': 'keep\n',
+        });
+      } finally {
+        chmodSync(locked, 0o755);
+        rmSync(tree.scratch, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
+
   it.each([
     ['an existing bundle', true],
     ['an empty directory', false],
@@ -1271,6 +1300,41 @@ describe('bundle-assets fail-closed guards', () => {
 
   // The repository-root check compares physical paths, so a symlink that names
   // the repository root is caught as well as `.` and `./`.
+  // Invoked through a symlinked checkout, REPO_ROOT is only physical because of
+  // `pwd -P`; the root check normalizes both sides so it holds on its own. The
+  // destination sits outside the tree, so no recursion rule can stand in.
+  it(
+    'rejects a root-valued lookup run through a symlinked checkout path',
+    () => {
+      const tree = createStubBundleTree({
+        ...VALID_STUB_INVENTORY,
+        docsRoot: '.',
+      });
+      try {
+        const checkoutLink = join(tree.scratch, 'checkout-link');
+        symlinkSync(tree.repoRoot, checkoutLink);
+
+        const run = runStubBundle(tree, {
+          assetsDir: join(tree.scratch, 'out'),
+          mode: 'refuse',
+          scriptPath: join(
+            checkoutLink,
+            'packages/cli/scripts/bundle-assets.sh',
+          ),
+        });
+
+        expectRejectedBeforeAnyCopy(
+          tree,
+          run,
+          /inventory lookup 'docsRoot' resolves to the repository root/,
+        );
+      } finally {
+        rmSync(tree.scratch, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
+
   it(
     'rejects an inventory lookup that is a symlink to the repository root',
     () => {
