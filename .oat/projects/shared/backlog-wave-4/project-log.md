@@ -72,6 +72,10 @@ Phase p02 complete (3/3 tasks): 30-minute artifact gate default and atomic dupli
 
 target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:1,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-4/reviews/p03-review-2026-10-02T200622Z.md run=b2f32273-4392-4f7b-a573-b7be724d9ad6
 
+### 2026-10-02 · structural · oat-project-implement · p03
+
+Phase p03 complete (5/5 tasks): sync restamps stale copy hashes, legacy retirement bridge, missing SKILL.md for every skill dir, marker-less directories report an error. One root review round (1 Medium, 2 Low fixed), Codex gate passed with 1 Medium addressed now.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

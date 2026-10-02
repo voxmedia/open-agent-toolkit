@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p03-t05
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 8     | 8/8       |
-| Phase 2 | complete    | 3     | 3/3       |
-| Phase 3 | in_progress | 5     | 4/5       |
-| Phase 4 | pending     | 7     | 0/7       |
-| Phase 5 | pending     | 4     | 0/4       |
-| Phase 6 | pending     | 3     | 0/3       |
-| Phase 7 | pending     | 3     | 0/3       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 8     | 8/8       |
+| Phase 2 | complete | 3     | 3/3       |
+| Phase 3 | complete | 5     | 5/5       |
+| Phase 4 | pending  | 7     | 0/7       |
+| Phase 5 | pending  | 4     | 0/4       |
+| Phase 6 | pending  | 3     | 0/3       |
+| Phase 7 | pending  | 3     | 0/3       |
 
-**Total:** 15/33 tasks completed
+**Total:** 16/33 tasks completed
 
 ---
 
@@ -107,7 +107,7 @@ oat_generated: false
 
 ## Phase 3: Sync correctness
 
-**Status:** in_progress
+**Status:** complete
 
 ### Task p03-t01: Restamp stale copy hashes and bridge legacy retirement
 
@@ -131,8 +131,8 @@ oat_generated: false
 
 ### Task p03-t05: (review) Address p03 gate finding M1 (normalized executor path guard)
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 078a140cc
 
 ---
 
@@ -447,6 +447,13 @@ oat_generated: false
   0 Critical/High, 1 Medium. Judgment sweep: M1 (executor path guard compares
   raw text while the planner normalizes) addressed now as `p03-t05` (small,
   contained); no re-review or re-gate for an address-now fix.
+
+- Continuation `cont-backlog-wave-4-p03-fix-2`: `078a140cc` (p03-t05)
+  normalizes the executor path guard like the planner; failing-first through
+  the real manifest schema; engine and sync 326 pass; root spot-check engine
+  passes.
+- Phase p03 outcome: complete; 5/5 tasks (3 planned, 2 review-fix); one root
+  review round, one passing gate (Medium addressed now).
 
 <!-- orchestration-runs-end -->
 
