@@ -24,12 +24,12 @@ follow-ups that Wave 3 surfaced. It leads with the operator's workflow change
 from Wave 3: when a review or gate budget runs out, run a complexity review
 and present it with the reasons the loop stopped.
 
-Approved batch (13 backlog items):
+Approved batch (13 backlog items; 12 after the plan-gate escalation, see Question 5):
 
 - `BL-261001-fail-closed-when-bundle-assets` — bundle-assets fails closed on an empty lookup
 - `BL-260906-report-errno-for-asset-root` — asset-root errors report their errno
 - `BL-260718-harden-full-surface-gate` — longer full-surface gate budget, nested-gate rejection
-- `BL-260711-add-activity-aware-gate` — idle-kill slice only
+- `BL-260711-add-activity-aware-gate` — idle-kill slice only (dropped, Question 5)
 - `BL-260909-restamp-a-stale-copy-strategy` — restamp on skip and related sync fixes (no bridge retirement)
 - `BL-260927-persist-quick-start-prompt` — persist quick-start prompt approvals
 - `BL-261001-run-a-complexity-review-when` — complexity review at budget exhaustion
@@ -84,6 +84,25 @@ reviewer through the configured gate target (which already invokes
 `gpt-6.1-sol`); gates on the quick-start plan, every phase, and the final and
 exit gates; dispatch policy managed/high. The global CLI stays at 0.3.10.
 
+### Question 5: Plan-gate escalation (QS-12 exhausted)
+
+**Q:** The Codex plan gate blocked on both attempts (2 High, then 1 High, all
+resolved in the plan, the last one not re-gated). A complexity review rated
+the plan partially compliant and recommended simplifying the quick-start
+record conditionals. Proceed how, and settle its five operator questions?
+**A:** Simplify, then implement. Next and progress report the quick-start
+record only. Keep the recorded pre-merge exception for autonomous wave
+completion. For the optional slices the operator asked for the agent's
+recommendation; the agent kept batch completion mode and dropped the idle
+kill and the early-trigger config key.
+**Decision:** Step 3.7 stays gated by control flow and does not read the
+record back; the shared record doc defines only the five-field core;
+`BL-260711-add-activity-aware-gate` leaves the wave (an idle kill cannot serve
+the operator's Codex gates, whose activity is not attributable to the gate
+child); there is no `workflow.complexityReviewEarlyTrigger` key (the operator
+can request the review at any time). Complexity report:
+`reviews/archived/complexity-plan-2026-10-02T1520Z.md`.
+
 ## Solution Space
 
 The approach is fixed by the approved batch: implement each item against its
@@ -99,13 +118,12 @@ phase grouping and the two partial-scope items, covered under Key Decisions.
 2. **Versions:** Each skill gets one `metadata.version` bump in the final PR
    diff, made by the first phase that changes it. The fan-in owns the
    five-package lockstep bump from 0.3.13 to 0.3.14.
-3. **Partial-scope items:** `BL-260711-add-activity-aware-gate` ships only the
-   idle kill and distinct outcomes; the early-artifact-template step conflicts
-   with ReviewPlan's incomplete-artifact rule (`BL-260729-implement-reviewplan-first`)
-   and stays open. `BL-260909-restamp-a-stale-copy-strategy` ships everything
-   except retiring the compatibility bridge, which needs field installs
-   restamped first. Both items are rewritten to their remaining scope and stay
-   open.
+3. **Partial-scope item:** `BL-260909-restamp-a-stale-copy-strategy` ships
+   everything except retiring the compatibility bridge, which needs field
+   installs restamped first; the item is rewritten to that remaining scope and
+   stays open. `BL-260711-add-activity-aware-gate` left the wave at the
+   plan-gate escalation (Question 5) and gains a note about Codex activity
+   attribution.
 4. **Narrowed item:** `BL-261001-route-quick-mode-plan` is narrowed to the
    dashboard map; the router and the progress and next skills already gate on
    quick plan readiness.
@@ -115,7 +133,7 @@ phase grouping and the two partial-scope items, covered under Key Decisions.
    it writes nothing and launches nothing. The operator still chooses the
    disposition, including **simplify**; agents never self-select it, also
    under `OAT_AUTONOMOUS=1`, where it is a boundary report. The optional early
-   trigger stays opt-in.
+   trigger is not shipped (Question 5).
 6. **Autonomous completion:** A new model-invocable, non-user-invocable
    companion skill that hard-fails unless `workflow.autonomousComplete` is
    enabled, runs the existing closeout check in autonomous mode plus the
@@ -127,17 +145,9 @@ phase grouping and the two partial-scope items, covered under Key Decisions.
    criteria or a recorded decision, reconnaissance mapped the code, and no
    open architecture or component-boundary question remains.
 8. **Planning calls (QS-03, from reconnaissance evidence):**
-   - The idle kill counts stdout, stderr, and project-directory transcript
-     activity that advanced since the previous observation, with a 10-minute
-     default window below the hard budget. Codex transcript evidence is
-     ambient and cannot be attributed to the gate child, and a silent outer
-     Codex process with a working nested reviewer is the incident behind the
-     item, so Codex runs keep the hard cap only.
    - The quick-start approval record and the condensed complexity-review
      guidance are each defined once in a shared doc that the consuming skills
      vendor by symlink, following the existing autonomy-contract pattern.
-   - The opt-in early complexity trigger is a `workflow.*` boolean that
-     defaults to off.
    - Next and progress report the persisted quick-start gate record without
      routing on it: quick plan readiness stays the single routing rule for
      quick plans (defined once in quick-start and mirrored by the router and
@@ -162,26 +172,27 @@ phase grouping and the two partial-scope items, covered under Key Decisions.
 
 ## Success Criteria
 
-- Every in-scope acceptance criterion of the 13 items passes, with
+- Every in-scope acceptance criterion of the 12 items passes, with
   failing-first evidence for behavior changes and neutralize-and-restore
   proofs for guards.
 - An empty bundle-inputs lookup makes `bundle-assets.sh` exit non-zero without
   copying.
-- A full-surface gate review gets a 30-minute default, a duplicate live gate
-  is rejected, and an idle child is killed with a distinct outcome.
+- A full-surface gate review gets a 30-minute default, and a duplicate live
+  gate is rejected.
 - A second `oat sync` after a skipped stale entry is a no-op.
 - Every exhaustion point dispatches the complexity review before the decision
   message, with a contract pin per point.
 - `oat-project-complete-auto` refuses to run unless opted in.
 - The full Definition of Done passes, and the PR opens at lockstep 0.3.14 with
-  completed items archived and partial items rewritten.
+  completed items archived and the partial item rewritten.
 
 ## Out of Scope
 
 - `BL-260818-distinguish-operator-directed` (consolidated budget-exhausted
   decision point; needs this wave's complexity slice and
   `BL-260927-mark-gate-findings-as-new-or` first).
-- `BL-260711-skip-re-review-for-bookkeeping`, `BL-260927-export-only-the-recap-page`.
+- `BL-260711-skip-re-review-for-bookkeeping`, `BL-260927-export-only-the-recap-page`,
+  `BL-260711-add-activity-aware-gate` (dropped at the plan-gate escalation).
 - Decision-gated: `BL-260907-recognize-phase-level`,
   `BL-260908-date-decision-record-ids`, `BL-260908-remove-the-top-level-skill`,
   `BL-260904-make-quick-the-default-oat`.
@@ -192,7 +203,8 @@ phase grouping and the two partial-scope items, covered under Key Decisions.
 
 ## Deferred Ideas
 
-- The early-artifact-template write for gate reviews, after ReviewPlan-first.
+- An idle kill for gate children, once Codex activity can be attributed.
+- An automatic early complexity-review trigger.
 - Retiring the copy-strategy compatibility bridge once field installs restamp.
 
 ## Open Questions

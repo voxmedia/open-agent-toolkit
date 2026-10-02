@@ -1,16 +1,16 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-10-02
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_parallel_groups: []
 oat_plan_source: quick
 oat_import_reference: null
 oat_import_source_path: null
 oat_import_provider: null
-oat_template: true
+oat_template: false
 oat_generated: false
 oat_phase_review_gate:
   enabled: true
@@ -24,9 +24,9 @@ oat_phase_review_gate:
 > Execute this plan using `oat-project-implement`. The seven phases run
 > sequentially on branch `wave/2026-10-02-backlog-wave-4`.
 
-**Goal:** Ship Wave 4 of the backlog as one PR: close or advance thirteen
+**Goal:** Ship Wave 4 of the backlog as one PR: close or advance twelve
 backlog items with evidence (bundle and asset-root hardening, gate budgets,
-nested-gate rejection and idle kill, sync restamping, a complexity review at
+nested-gate rejection, sync restamping, a complexity review at
 every review and gate budget exhaustion, persisted quick-start approvals,
 root judgment logging, an opt-in autonomous completion skill, and four small
 fixes) and bump the lockstep packages to 0.3.14 (`main` reached 0.3.13
@@ -275,66 +275,6 @@ restore.
 
 ---
 
-### Task p02-t03: Kill an idle gate child and report distinct timeout outcomes
-
-**Files:**
-
-- Modify: `packages/cli/src/commands/gate/child-process.ts` (`ProcessRunOptions`
-  13-24, `ProcessRunResult` 26-33, `runChildProcess` from 55; activity tracking
-  85-107; hard timer 200-212; probe activity 124-135; idle diagnostic 172)
-- Modify: `packages/cli/src/commands/gate/index.ts` (resolve the idle window
-  next to the hard budget; pass it for `purpose: 'execute'` runs with piped
-  stdio only; thread `timeoutKind` into the failure envelope)
-- Modify: `packages/cli/src/commands/gate/child-process.test.ts`,
-  `packages/cli/src/commands/gate/index.test.ts`
-- Modify: `apps/oat-docs/docs/cli-utilities/workflow-gates.md`
-
-**Step 1: Failing tests first**
-
-In `child-process.test.ts`, with real `node -e` children and small budgets (the
-existing pattern; no fake timers): a child that prints every 30 ms with
-`idleTimeoutMs` 100 and a longer hard cap is not killed by the idle mechanism
-and outlives the idle window; a silent child is killed within the idle window
-with `timeoutKind: 'idle'`; a chatty child is stopped by the hard cap with
-`timeoutKind: 'hard'`. Add a case where `project-dir` probe evidence advances
-(`lastChangeAt` or `totalSizeBytes` changes between consecutive liveness
-observations) and resets the idle clock; a case where that evidence changes
-once and then stays static, and the child is still killed with
-`timeoutKind: 'idle'` (the probe's `changedSinceBaseline` flag is cumulative,
-`activity-probes.ts` around 193-197, so it must not be used); and a case
-where `ambient-runtime` evidence never resets the clock. In `index.test.ts`, assert
-the envelope distinguishes idle kill, hard-cap kill, and the existing
-recovered-after-timeout path (`lateCompletion`).
-
-**Step 2: Implement**
-
-Add `idleTimeoutMs` to the run options and an idle checker that reuses the
-hard-timer kill path and samples probe evidence on the existing liveness tick
-(`child-process.ts` around 155-191). Stdout, stderr, and `project-dir`
-evidence that advanced since the previous observation count as activity;
-`ambient-runtime` evidence does not. Resolve the idle window as 600_000 ms by
-default, disabled when it is not below the hard budget, never applied to
-`stdio: 'inherit'` runs, and disabled for runtimes whose transcript evidence
-is only `ambient-runtime` (no override in this wave; do not add a config key) (Codex, `activity-probes.ts` around 169):
-an outer Codex process can stay silent on stdout while a nested reviewer
-works, which is the incident behind this item, so Codex runs keep the hard
-cap only. Document this in `workflow-gates.md` and the PR callout. Report `timeoutKind` (`idle` or
-`hard`) in the structured envelope and diagnostics. The early-template write
-(item criterion 4) and the provider preflight and unavailable-target envelope
-(criteria 8-9) stay out of scope.
-
-**Step 3: Verify**
-
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/child-process.test.ts src/commands/gate/index.test.ts src/commands/gate/gate-hardening.integration.test.ts`
-Expected: exit 0. Neutralize the idle kill, show the silent-child test fails,
-restore.
-
-**Step 4: Commit**
-
-`feat(p02-t03): kill an idle gate child and report distinct timeout outcomes`
-
----
-
 ## Phase 3: Sync correctness
 
 ### Task p03-t01: Restamp stale copy hashes and bridge legacy retirement
@@ -475,9 +415,8 @@ Expected: exit 0.
 One doc, read by the root and by the reviewer subagent:
 
 - **When:** every budget-exhaustion point (listed with the owning skill and
-  step), and the opt-in early trigger (two consecutive High findings in the
-  same family within one loop, when `workflow.complexityReviewEarlyTrigger` is
-  true).
+  step). The operator can also ask for the same review at any time; there is
+  no automatic early trigger in this wave.
 - **Probe:** look for an installed `complexity-review/SKILL.md` in
   `~/.agents/skills`, `~/.claude/skills`, then `<repo>/.agents/skills`. When
   found, the subagent reads and follows it as a document (it is not
@@ -528,41 +467,6 @@ Expected: exit 0; the bundled copies resolve.
 
 ---
 
-### Task p04-t02: Add the opt-in early complexity trigger config key
-
-**Files:**
-
-- Modify: `packages/cli/src/config/oat-config.ts` (type around 281-282, parse
-  around 730-735), `packages/cli/src/config/resolve.ts`
-  (`DEFAULT_WORKFLOW_CONFIG` around 117-118),
-  `packages/cli/src/commands/config/index.ts` (key union around 165-170, key
-  list around 346-347, describe entries around 870-890,
-  `WORKFLOW_BOOLEAN_KEYS` around 1463-1464)
-- Modify: `packages/cli/src/config/oat-config.test.ts`,
-  `packages/cli/src/config/resolve.test.ts`,
-  `packages/cli/src/commands/config/index.test.ts`
-- Modify: `apps/oat-docs/docs/cli-utilities/configuration.md`,
-  `apps/oat-docs/docs/reference/cli-reference.md`
-
-**Step 1: Failing test first**
-
-`workflow.complexityReviewEarlyTrigger` parses as a boolean, defaults to
-`false`, and is accepted by `oat config get`, `set`, and `describe`, following
-the `workflow.archiveOnComplete` tests.
-
-**Step 2: Implement** the key and its docs.
-
-**Step 3: Verify**
-
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config src/commands/config`
-Expected: exit 0.
-
-**Step 4: Commit**
-
-`feat(p04-t02): add the opt-in early complexity trigger config key`
-
----
-
 ### Task p04-t03: Run the complexity review at implement's exhaustion points and log root judgment
 
 **Files:**
@@ -594,8 +498,7 @@ disposition. Add a pin for the root-judgment logging guidance.
 At each implement exhaustion point add the one-paragraph pointer: dispatch the
 complexity review per the shared doc, then present the decision message (or,
 under `OAT_AUTONOMOUS=1`, include it in the boundary report), and record the
-operator's choice with the report path in `implementation.md`. Mention the
-opt-in early trigger at the root review loop. In "Project Log Append Points",
+operator's choice with the report path in `implementation.md`. In "Project Log Append Points",
 add root-judgment entries through `oat project log append` when breaks,
 surprises, workarounds, or notable successes surface, including observations
 relayed from subagent reports (queued and appended at the next bookkeeping
@@ -669,11 +572,10 @@ Define the shared lifecycle-gate record carried in project `state.md`. The
 common core, used by both carriers: `status` (`allowed` | `blocked`),
 `disposition` (`passed` | `warned` | `prompt_approved` | `project_disabled`,
 or `null` when blocked), `config_fingerprint`, `reviewed_head` (the commit the
-gate reviewed, recorded as provenance), and `decided_at` (ISO 8601 UTC). In
-the same doc, define implement's `oat_implement_exit_gate` as a documented
-superset of that core (its additional `status` values `pending` and `stale`,
-disposition `no_gate`, `resolution`, and its effective-delta fields), so the
-shape is written down once and both enums are pinned. An
+gate reviewed, recorded as provenance), and `decided_at` (ISO 8601 UTC). The
+doc defines only this core; implement's `oat_implement_exit_gate` keeps its
+additional values and fields in `completion-and-closeout.md` and points to the
+doc for the core. An
 explicit operator continuation after a `prompt` failure writes
 `allowed/prompt_approved`; declining or deferring writes `blocked`, never
 anything that reads as approval. Name the two carriers:
@@ -716,28 +618,19 @@ Expected: exit 0.
 
 **Step 1: Failing pins first**
 
-Pin each gate-resolver outcome of quick-start's Gate Execution step 1
-(`.agents/skills/oat-project-quick-start/SKILL.md` around 843-847) against
-`references/docs/gate-approval-record.md`:
-
-- `not_configured`: no record is written and Step 3.7 completes as today (no
-  approval-shaped record is invented);
-- `configured_disabled_by_project`: no launch; the record is
-  `allowed/project_disabled` and Step 3.7 completes;
-- `configured` and passed (or `warn`): `allowed/passed` (or `allowed/warned`),
-  then Step 3.7;
-- `configured`, failed, `prompt`, operator continues: `allowed/prompt_approved`,
-  then Step 3.7;
-- `configured`, failed, declined, deferred, or `block` attempts exhausted:
-  `blocked`, Step 3.7 does not run, and exhausted `block` attempts dispatch the
-  complexity review before escalation.
+Pin that quick-start writes `oat_quick_start_gate` per
+`references/docs/gate-approval-record.md` for configured gate outcomes:
+passed or `warn` writes `allowed/passed` or `allowed/warned`; a `prompt`
+continuation writes `allowed/prompt_approved`; a decline, deferral, or
+exhausted `block` writes `blocked`; a project-disabled gate writes
+`allowed/project_disabled` without a launch; and `not_configured` writes no
+record. Step 3.7 stays gated by the existing control flow and does not read
+the record back. Exhausted `block` attempts dispatch the complexity review
+before escalation.
 
 **Step 2: Implement**
 
-Add the record write to the gate steps and make Step 3.7 require an `allowed`
-record only when the gate resolved `configured` or
-`configured_disabled_by_project`; `not_configured` completes without a record.
-Add the complexity-review pointer at `maxAttempts` exhaustion only (a single
+Add the record write to the gate steps and the complexity-review pointer at `maxAttempts` exhaustion only (a single
 `prompt` failure is not a budget exhaustion). Bump `oat-project-quick-start`.
 
 **Step 3: Verify**
@@ -766,13 +659,10 @@ Next and progress read `oat_quick_start_gate` through the shared doc's
 validation rule, alongside the implement record they already handle. The
 quick plan readiness predicate stays the single routing rule for quick plans
 (it is defined once in quick-start and mirrored by the control-plane router
-and, after p06-t03, the dashboard), so the record adds no route: after
-readiness passes, next reports a missing, `blocked`, or fingerprint-stale
-quick-start record as a warning in its recommendation, but only when the
-resolved quick-start gate declaration exists and is not project-disabled (a
-ready quick plan with no configured gate and no record produces no warning;
-pin that negative case), and progress reports
-both records' status and disposition. A pin fails when quick-start's
+and, after p06-t03, the dashboard), so the record adds no route and no
+conditional warning: next and progress report the quick-start record's
+status, disposition, and fingerprint match when a record exists, as progress
+does for implement's. A pin fails when quick-start's
 approval write (p04-t06) is removed, because the readers' documented record
 no longer has a writer.
 
@@ -809,7 +699,7 @@ Expected: exit 0.
 
 Update the four inventory rows and add every coverage key the drift test
 prints. Document the complexity review at budget exhaustion (probe, condensed
-fallback, decision message, early trigger), the persisted quick-start
+fallback, decision message), the persisted quick-start
 approval, and root judgment logging. Apply any version bumps
 `check:skill-bumps` requires for skills that vendor the changed contract.
 
@@ -832,8 +722,14 @@ Expected: exit 0.
 
 **Files:**
 
-- Modify: the same config files as p04-t02 (`oat-config.ts`, `resolve.ts`,
-  `commands/config/index.ts`) and their tests
+- Modify: `packages/cli/src/config/oat-config.ts` (type around 281-282, parse
+  around 730-735), `packages/cli/src/config/resolve.ts`
+  (`DEFAULT_WORKFLOW_CONFIG` around 117-118),
+  `packages/cli/src/commands/config/index.ts` (key union around 165-170, key
+  list around 346-347, describe entries around 870-890,
+  `WORKFLOW_BOOLEAN_KEYS` around 1463-1464), following the
+  `workflow.archiveOnComplete` pattern, and their tests
+  (`oat-config.test.ts`, `resolve.test.ts`, `commands/config/index.test.ts`)
 - Modify: `apps/oat-docs/docs/cli-utilities/configuration.md` (including the
   cross-repository note for a `--user` opt-in around 842-846) and
   `apps/oat-docs/docs/reference/cli-reference.md`
@@ -1129,7 +1025,9 @@ any PJM write. After `pnpm build`, run `node packages/cli/dist/index.js backlog 
 `BL-260906-report-errno-for-asset-root`, `BL-260718-harden-full-surface-gate`,
 `BL-260927-persist-quick-start-prompt` (its archive summary states that next
 and progress report the quick-start record without routing on it, per
-discovery decision 8), `BL-261001-run-a-complexity-review-when`,
+discovery decision 8), `BL-261001-run-a-complexity-review-when` (its
+summary states that the optional early trigger was not shipped: the operator
+can request the review at any time),
 `BL-260713-root-agent-judgment-logging`, `BL-260720-add-oat-project-complete-auto`
 (strip its `{Outcome}` placeholders first), `BL-260908-tighten-the-pr-final-ledger`,
 `BL-261001-downgrade-claims-that-thorough`,
@@ -1140,12 +1038,10 @@ summary saying it is superseded by `BL-260908-remove-the-top-level-skill`.
 
 **Step 2: Rewrite partial items in place**
 
-- `BL-260711-add-activity-aware-gate`: record the shipped idle kill and
-  distinct outcomes; keep criteria 4 (early template write, after
-  `BL-260729-implement-reviewplan-first`), 8, and 9 open, plus criterion 7's
-  live smoke-fixture verification, and add an open note that Codex runs get no
-  idle kill because their transcript evidence cannot be attributed to the
-  gate child.
+- `BL-260711-add-activity-aware-gate` (not implemented this wave): add a
+  note that an idle kill cannot serve Codex gates until Codex transcript
+  activity can be attributed to the gate child (`activity-probes.ts` labels
+  it `ambient-runtime`), which is the precondition for the idle slice.
 - `BL-260909-restamp-a-stale-copy-strategy`: record the shipped parts; keep
   only the bridge and legacy-encoder retirement open.
 - Add the Wave 4 complexity-review slice to
@@ -1200,8 +1096,6 @@ The plan is fully sequential (`oat_plan_parallel_groups: []`).
   p05, and p06 extend `skills.test.ts` with version pins and change the
   branch's skill-bump state that `check:skill-bumps` evaluates at each phase
   head.
-- p04 and p05 both edit the config files (`oat-config.ts`, `resolve.ts`,
-  `commands/config/index.ts`) and their tests.
 - p06-t03 needs a control-plane build that later CLI test runs consume.
 - p07 is the fan-in: the lockstep bump and backlog close-out need every
   earlier phase.
@@ -1225,10 +1119,6 @@ rewrites the four inventory rows last.
 |                                            | Matching in-flight run rejected, not relaunched                              | p02-t02                   |
 |                                            | Tests: precedence, long envelope, nested invocation                          | p02-t01, p02-t02          |
 |                                            | Markers and JSON show budget and recursion decision                          | p02-t01, p02-t02          |
-| `BL-260711-add-activity-aware-gate`        | Active child not idle-killed; silent child killed in window (non-Codex); cap | p02-t03                   |
-|                                            | Timeout checks for a recovered artifact (existing `lateCompletion`)          | p02-t03 (asserted)        |
-|                                            | Distinct idle, hard-cap, and recovered outcomes; tests                       | p02-t03                   |
-|                                            | Early template write, provider preflight, unavailable-target envelope        | open (p07-t02 rewrite)    |
 | `BL-260909-restamp-a-stale-copy-strategy`  | Stale hash restamped; second run no-op                                       | p03-t01                   |
 |                                            | Legacy obsolete mapping: `remove` when matching, `detach` otherwise          | p03-t01                   |
 |                                            | Missing `SKILL.md` reported for every canonical skill directory              | p03-t02                   |
@@ -1238,7 +1128,7 @@ rewrites the four inventory rows last.
 |                                            | Decision message content including **simplify**                              | p04-t01, p04-t03-t04      |
 |                                            | Choice recorded with report path; never self-selected (autonomy too)         | p04-t01, p04-t08          |
 |                                            | Dependency resolved (probe plus condensed fallback); subagent writes nothing | p04-t01                   |
-|                                            | Opt-in early trigger                                                         | p04-t02, p04-t03          |
+|                                            | Optional early trigger: not shipped (operator can request any time)          | p07-t02                   |
 |                                            | Version bumps and docs                                                       | p04-t03-t08               |
 | `BL-260927-persist-quick-start-prompt`     | Continuation persists `allowed/prompt_approved` in state                     | p04-t05, p04-t06          |
 |                                            | Decline or deferral persists nothing that reads as approval                  | p04-t05, p04-t06          |
@@ -1263,13 +1153,11 @@ rewrites the four inventory rows last.
 
 ## PR Requirements
 
-- Title: `feat: gate budgets and idle kill, complexity review at review caps, autonomous completion skill (wave 4, lockstep 0.3.14)`.
+- Title: `feat: gate budgets and duplicate-gate rejection, complexity review at review caps, autonomous completion skill (wave 4, lockstep 0.3.14)`.
 - The body opens with a **Behavior changes** callout:
   - artifact gate reviews default to 30 minutes (was 15);
   - a second gate for the same project, review type, and scope is rejected
     while one is running;
-  - a gate child with no output or project-directory activity for 10 minutes
-    is stopped, reported as an idle kill;
   - `bundle-assets.sh` and `bundle-inputs.mjs` fail on empty, absolute, or
     escaping inventory paths;
   - `oat sync` restamps stale copy hashes and reports a marker-less skill or
@@ -1278,15 +1166,12 @@ rewrites the four inventory rows last.
   - lifecycle skills run a complexity review when a review or gate budget is
     exhausted and offer **simplify**; quick-start persists its gate outcome as
     `oat_quick_start_gate`;
-  - new `workflow.autonomousComplete` and
-    `workflow.complexityReviewEarlyTrigger` config keys (both default off) and
-    the `oat-project-complete-auto` skill;
-  - Codex gate runs keep the hard cap only (no idle kill), because Codex
-    activity evidence cannot be attributed to the gate child;
+  - a new `workflow.autonomousComplete` config key (default off) and the
+    `oat-project-complete-auto` skill;
   - the updated skills need `oat` 0.3.14 or later for the new config keys.
 - After the behavior callout, a shipped summary: one plain-language problem
-  statement per closed backlog item, plus the two partial items and what
-  stays open.
+  statement per closed backlog item, plus the partial item and what stays
+  open.
 - Verification evidence: Definition of Done exit codes and the review and gate
   outcomes.
 
@@ -1314,21 +1199,21 @@ rewrites the four inventory rows last.
 
 Quick-start plan gate (`QS-12`, attempt 1 of 2, run `cf4607a4`, `codex-6-sol-xhigh` / `gpt-6.1-sol` xhigh, inline route): `blocked`, receive-eligible, 2 High. Received in this session (artifact review, `REVIEWRECEIVE-01`): H1 (quick-start completion with no configured gate) and H2 (complete-auto PR-merge guard versus wave-execute's completion-before-merge step) resolved in p04-t06, p05-t02, and p05-t03; no rejections. Artifact archived to `reviews/archived/artifact-plan-review-2026-10-02T144731Z.md`.
 
-Quick-start plan gate attempt 2 of 2 (run `fe6bbe0a`): `blocked`, receive-eligible, 1 High (p01-t01 guarded only the docs tree; staging must stay outside every recursively copied source). Resolved in p01-t01 and the Acceptance Mapping. `maxAttempts` is exhausted, so the configured `block` policy escalates to the operator (`QS-12` boundary); see `implementation.md`, Quick-start Gate Escalation. Artifact archived to `reviews/archived/artifact-plan-review-2026-10-02T145801Z.md`.
+Quick-start plan gate attempt 2 of 2 (run `fe6bbe0a`): `blocked`, receive-eligible, 1 High (p01-t01 guarded only the docs tree; staging must stay outside every recursively copied source). Resolved in p01-t01 and the Acceptance Mapping. `maxAttempts` is exhausted, so the configured `block` policy escalates to the operator (`QS-12` boundary); see `implementation.md`, Quick-start Gate Escalation. Operator disposition at that boundary: simplify, then implement without another gate cycle (complexity report `reviews/archived/complexity-plan-2026-10-02T1520Z.md`); the plan was simplified to 24 tasks. Artifact archived to `reviews/archived/artifact-plan-review-2026-10-02T145801Z.md`.
 
 ## Implementation Complete
 
 **Summary:**
 
 - Phase 1: 2 tasks - Build assets
-- Phase 2: 3 tasks - Gate timeouts
+- Phase 2: 2 tasks - Gate timeouts
 - Phase 3: 3 tasks - Sync correctness
-- Phase 4: 8 tasks - Review-loop skills
+- Phase 4: 7 tasks - Review-loop skills
 - Phase 5: 4 tasks - Completion
 - Phase 6: 3 tasks - Small fixes
 - Phase 7: 3 tasks - Release fan-in
 
-**Total: 26 tasks**
+**Total: 24 tasks**
 
 Ready for code review and merge.
 

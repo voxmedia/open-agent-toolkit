@@ -228,3 +228,13 @@ Attempts are exhausted, so this is a `QS-12` repository-policy boundary under
 `OAT_AUTONOMOUS=1`: the operator decides how to proceed. Each round found a
 real but narrower contract gap (round 1: two composition gaps; round 2: one
 scoped safety invariant), and no finding was rejected.
+
+**Operator disposition (2026-10-02, `QS-12` boundary):** After the
+complexity review (`reviews/archived/complexity-plan-2026-10-02T1520Z.md`,
+verdict partially compliant, recommended disposition **simplify**), the
+operator chose **simplify, then implement** without another plan-gate cycle;
+next and progress report the quick-start record only; the recorded pre-merge
+exception stays. On the operator's request for a recommendation, the agent
+kept batch completion mode and dropped the idle kill
+(`BL-260711-add-activity-aware-gate`) and the early-trigger config key. The
+plan was revised accordingly (24 tasks); every phase remains gated.
