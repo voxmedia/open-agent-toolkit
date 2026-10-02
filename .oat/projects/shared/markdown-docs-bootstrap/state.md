@@ -94,10 +94,16 @@ oat_implement_exit_gate:
   launch_result_receipt: .oat/projects/shared/markdown-docs-bootstrap/reviews/gate-receipts/completion-2026-10-02T025929Z.json
   gate_run_marker: /var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/ef3220d1-1ba8-4d1a-9f96-82bdacd8ea5c.json
   gate_run_id: ef3220d1-1ba8-4d1a-9f96-82bdacd8ea5c
-  envelope_status: null
-  artifact: null
-  handoff: null
-  receive_correlation: null
+  envelope_status: ok
+  artifact: .oat/projects/shared/markdown-docs-bootstrap/reviews/final-review-2026-10-02T030210Z.md
+  handoff: Gate passed at the high threshold, but the final review still contains non-blocking findings (low=2). Run oat-project-review-receive for .oat/projects/shared/markdown-docs-bootstrap/reviews/final-review-2026-10-02T030210Z.md to disposition them before marking the final review row passed.
+  receive_correlation:
+    run_id: ef3220d1-1ba8-4d1a-9f96-82bdacd8ea5c
+    handoff: Gate passed at the high threshold, but the final review still contains non-blocking findings (low=2). Run oat-project-review-receive for .oat/projects/shared/markdown-docs-bootstrap/reviews/final-review-2026-10-02T030210Z.md to disposition them before marking the final review row passed.
+    source_artifact: .oat/projects/shared/markdown-docs-bootstrap/reviews/final-review-2026-10-02T030210Z.md
+    scope: final
+    type: code
+    source_filename: final-review-2026-10-02T030210Z.md
   receive_source_artifact: null
   receive_archived_artifact: null
   receive_event_identity: null
@@ -117,11 +123,11 @@ oat_implement_exit_gate:
   implementation_fingerprint: sha256:effective-delta-v2:5ee2ff6fe19135b2d5a1b33605d02a6d1f1a56dec291083e7ca0f9dd942c01ff
   freshness_head: f76820de4d43d899a047ca5ef340393f78d59859
   freshness_fingerprint: sha256:effective-delta-v2:5ee2ff6fe19135b2d5a1b33605d02a6d1f1a56dec291083e7ca0f9dd942c01ff
-  launch_state: accepted
+  launch_state: result_persisted
   receive_state: not_started
-  receive_eligible: false
+  receive_eligible: true
   receive_completed: false
-  updated_at: '2026-10-02T03:00:05Z'
+  updated_at: '2026-10-02T03:03:20Z'
   config_fingerprint: sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324
 oat_project_recap:
   decision: skip
