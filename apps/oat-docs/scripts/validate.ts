@@ -7,14 +7,14 @@ import {
   decodeMarkdownFragment,
   markdownAnchors,
   markdownInlineCode,
-} from '@oat-repo/nav-markdown';
+} from '@docs-tools/markdown';
 
 export const appRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 export const repoRoot = resolve(appRoot, '..', '..');
 
 export function runNavigation(
   app: string,
-  mode: '--validate-only' | '--check' | null = '--validate-only',
+  mode: '--check' | null = '--check',
 ): void {
   const args = [
     '--import',
@@ -24,8 +24,6 @@ export function runNavigation(
     'docs',
     'nav',
     'sync',
-    '--framework',
-    'fumadocs',
     '--target-dir',
     app,
   ];
@@ -248,6 +246,6 @@ if (
   await validateSourceRoutes(join(appRoot, 'docs'));
   await validateLiveConsumers(repoRoot);
   process.stdout.write(
-    'Source navigation, routes and anchors validated (no generated output required).\n',
+    'Committed navigation freshness and source routes/anchors validated.\n',
   );
 }

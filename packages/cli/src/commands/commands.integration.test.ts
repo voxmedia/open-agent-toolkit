@@ -1578,12 +1578,9 @@ describe('CLI command integration', () => {
     }
   });
 
-  it('project dispatch record persists an observation without launching a provider', async () => {
+  it('project dispatch record validates an observation without launching a provider', async () => {
     const root = await createWorkspace();
     tempDirs.push(root);
-    const projectPath = join(root, '.oat', 'projects', 'shared', 'demo');
-    await mkdir(projectPath, { recursive: true });
-    await writeFile(join(projectPath, 'state.md'), '# state\n', 'utf8');
 
     const dispatchRecord = dispatchRecordFixture();
     const eventFile = join(root, 'observation.json');
@@ -1620,22 +1617,14 @@ describe('CLI command integration', () => {
 
     const result = await runCli(
       root,
-      [
-        'project',
-        'dispatch',
-        'record',
-        '--project',
-        '.oat/projects/shared/demo',
-        '--event-file',
-        eventFile,
-      ],
+      ['project', 'dispatch', 'record', '--event-file', eventFile],
       ['--json'],
     );
 
     expect(result.exitCode).toBe(0);
     const payload = JSON.parse(result.stdout);
-    expect(payload.status).toBe('persisted');
-    expect(payload.path).toBe('dispatch/dispatch-native-1.json');
+    expect(payload.status).toBe('validated-only');
+    expect(payload).not.toHaveProperty('path');
     expect(payload.runtimeIdentity).toMatchObject({
       status: 'reported',
       match: 'mismatching',
@@ -1647,14 +1636,7 @@ describe('CLI command integration', () => {
     expect(payload.record.model_selector).toBe('gpt-5.6-sol');
     expect(payload.record.launch_status).toBe('accepted');
     expect(result.stdout).not.toContain(root);
-
-    const persisted = JSON.parse(
-      await readFile(
-        join(projectPath, 'dispatch', 'dispatch-native-1.json'),
-        'utf8',
-      ),
-    );
-    expect(persisted.oat.runtimeObservation).toMatchObject({
+    expect(payload.record.oat.runtimeObservation).toMatchObject({
       status: 'reported',
       match: 'mismatching',
       source: 'codex-rollout-metadata',
@@ -1664,9 +1646,6 @@ describe('CLI command integration', () => {
   it('project dispatch record drops content from a raw observation envelope', async () => {
     const root = await createWorkspace();
     tempDirs.push(root);
-    const projectPath = join(root, '.oat', 'projects', 'shared', 'demo');
-    await mkdir(projectPath, { recursive: true });
-    await writeFile(join(projectPath, 'state.md'), '# state\n', 'utf8');
 
     const eventFile = join(root, 'content.json');
     await writeFile(
@@ -1695,31 +1674,18 @@ describe('CLI command integration', () => {
 
     const result = await runCli(
       root,
-      [
-        'project',
-        'dispatch',
-        'record',
-        '--project',
-        '.oat/projects/shared/demo',
-        '--event-file',
-        eventFile,
-      ],
+      ['project', 'dispatch', 'record', '--event-file', eventFile],
       ['--json'],
     );
 
     // The observation channel is metadata-only, enforced by the allowlist
     // projection rather than by caller discipline: a raw envelope is accepted
-    // and its conversation content never reaches the journal or stdout.
+    // and its conversation content never reaches the validate-only output.
     expect(result.exitCode).toBe(0);
     const payload = JSON.parse(result.stdout);
-    expect(payload.status).toBe('persisted');
+    expect(payload.status).toBe('validated-only');
     expect(result.stdout).not.toContain('SECRET-USER-MESSAGE');
+    expect(result.stdout).not.toContain('entries');
     expect(result.stdout).not.toContain(root);
-    const journal = await readFile(
-      join(projectPath, 'dispatch', 'dispatch-native-1.json'),
-      'utf8',
-    );
-    expect(journal).not.toContain('SECRET-USER-MESSAGE');
-    expect(journal).not.toContain('entries');
   });
 });

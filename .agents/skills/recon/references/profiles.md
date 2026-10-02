@@ -79,5 +79,8 @@ reopening and verification.
 5. Reduce lanes when scope is small; never invent work to fill a profile cap.
 6. If runtime limits prevent the requested topology, prepare a different
    profile for approval or publish an honest partial after an accepted failure.
+   A launch rejected before acceptance is a `provider/dispatch` failure with a
+   `PASS_OMITTED` lane gap, retried at most once and only within `retryLimit`
+   (SKILL.md Step 5).
 7. Never add a lane, retry, replacement, or target change beyond the approved
    envelope.

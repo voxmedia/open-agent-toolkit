@@ -129,6 +129,7 @@ test('packet rendering is deterministic and contains the complete consumer view'
     '## Synthesis',
     '## Key Claims',
     '## Contradictions and Qualifications',
+    '## Review Downgrades',
     '## Unresolved Questions',
     '## Coverage Gaps',
     '## Failed or Omitted Passes',

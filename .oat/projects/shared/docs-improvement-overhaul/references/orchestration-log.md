@@ -1,5 +1,11 @@
 # Orchestration log
 
+## 2026-10-02 — Approved speed and split ownership
+
+- User approved dependency-ready parallel tasks, one native/Fable phase review round, Critical/High-only re-review, targeted fix checks and one full closing gate run. Docs-only edits use conservation diffs instead of new receipt/control artifacts. Twelve deep guides are written fully in the first family-authoring pass; catalog follows the mapping schema concurrently. First personas follow the progress PR; final rerun and coverage close remain.
+- Fable owns scratchpad-only diagrams, SVG, config drafts and blind applicability audit. Codex owns integration, README prose, mapping/catalog and family authors. No duplicate audit/config workers. Two Orca-managed Mini worktrees were created at verified f337faa1759d0f7453da846ea5e90372734d5a67; native helpers are parent-attached, not standalone Orca agent panes. Worktree registration is verified; standalone chat visibility is not claimed.
+- Send authorized peer instructions despite benign draft signals, without clearing/overwriting the draft. Enqueued/input-accepted is not turn-start or completed-review evidence. The correction review arrived as an actual Fable reply and accepted ad71d9cd with no findings; the closing version gate then exposed main-branch skill capability/version drift, not a new docs review defect.
+
 ## 2026-10-02 — Follow-up publication and throughput
 
 - PR47 merged at14:14:03Z while the helper held. Root preserved its checkout and created a new Orca-managed Mini worktree `/Users/tstang/orca/workspaces/orc/parsed-cli-help-guidance`, branch `parsed-cli-help-guidance`, base15d1e0513bb3266cb2710eb74cdeb0b11477619d. Display/app host remains laptop; execution host is Mini. Registration is verified, not a standalone helper chat.
@@ -116,6 +122,12 @@
 - A bounded GPT-6.1 Sol/high native helper refined this distinction in the existing separate Orc worktree. Root reviewed its four-file diff, committed and pushed3b7e1c55f89bf6b520969c5092f92519e1076860 to draft [tkstang/orc#47](https://github.com/tkstang/orc/pull/47). Full post-commit worktree validation passed; type/build cache replay is disclosed in implementation.md. Remote branch and GitHub API confirm the head. Not merged or installed; no fresh-provider acceptance claimed. The historical phrase “human draft” above is not a verified authorship finding and is superseded by this qualified evidence.
 
 ### Parsed CLI help and FIFO acknowledgment
+
+### Refresh integration base before dispatch
+
+- Main shipped Fumadocs navigation while this project's older base was being implemented. Failing to refresh and diff main before p01 led to duplicated work. Root and Fable selected main's foundation wholesale, not a hybrid; merge084053c3525344a0ab7c808a722715d574fae7bd retires the duplicate while preserving migrated routes and all main documentation changes. Fetch/diff main at phase start and before each PR is now the execution rule.
+- The user directed merge-first. Root held mapping/catalog family lanes, retained their worktrees and handles, and gave the original phase02 implementer sole root source ownership. Its DONE/HOLD report returned ownership before root bookkeeping resumed. Isolated README visual work did not mutate the merge worktree.
+- The scoped SVG handoff now uses explicit project/user scopes. Local830px light and375px dark renders were actually viewed without clipping; this is not GitHub theme acceptance. Pack scope is independent of init scope, and the core pack is user-only when installed, so prose must not promise all project-scoped setup stays inside a repository.
 
 - On this relay/runtime, `orca orchestration check --help` unexpectedly returned a consuming Delivery rather than help. Use `orca agent-context --json` to inspect parsed command contracts instead of assuming a help flag is read-only. This is a dated observed gotcha, not a general diagnosis of Orca internals.
 - Root had already read all three rows via peek and processed them durably. The supported schema names `orchestration check --ack <delivery_id>`, not an `orchestration ack` command. Root acknowledged exactly `delivery_2f474fdba537` after complete batch processing; the result confirmed that acknowledgment and an empty next batch. No unseen mail was acknowledged.

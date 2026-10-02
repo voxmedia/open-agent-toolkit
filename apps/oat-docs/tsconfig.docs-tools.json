@@ -10,9 +10,6 @@
     "types": ["node"],
     "paths": {
       "@docs-tools/*": ["./scripts/*"],
-      "@oat-repo/nav-markdown": [
-        "../../packages/cli/src/commands/docs/nav/markdown.ts"
-      ],
       "@oat-repo/pack-manifest": [
         "../../packages/cli/src/commands/tools/shared/pack-manifest.ts"
       ],
@@ -22,7 +19,6 @@
   "include": [
     "scripts/**/*.ts",
     "tests/**/*.ts",
-    "../../packages/cli/src/commands/docs/nav/markdown.ts",
     "../../packages/cli/src/commands/tools/shared/pack-manifest.ts"
   ],
   "exclude": ["node_modules", ".next", ".source", "out"]

@@ -428,7 +428,10 @@ export function createRoutingPreview(manifest) {
       maxConcurrency: execution.maxConcurrency,
       deadlineSeconds: execution.deadlineSeconds,
       retryLimit: execution.retryLimit,
-      worstCaseLaneAttempts: laneCount * (execution.retryLimit + 1),
+      // retryLimit counts pre-acceptance admission retries per lane, and the
+      // controller makes at most one, so a lane has at most two attempts.
+      worstCaseLaneAttempts:
+        laneCount * (Math.min(execution.retryLimit, 1) + 1),
     },
   });
 }
@@ -512,7 +515,7 @@ export function renderRoutingPreview(preview, format = 'markdown') {
     `- Conditions: ${encodeMarkdownValue(preview.limits.conditionCount)}`,
     `- Concurrency: ${encodeMarkdownValue(preview.limits.maxConcurrency)}`,
     `- Deadline seconds: ${encodeMarkdownValue(preview.limits.deadlineSeconds)}`,
-    `- Retry limit: ${encodeMarkdownValue(preview.limits.retryLimit)}`,
+    `- Pre-acceptance admission retries per lane (at most one used): ${encodeMarkdownValue(preview.limits.retryLimit)}`,
     `- Lane attempts: ${encodeMarkdownValue(preview.limits.worstCaseLaneAttempts)}`,
   );
   if (preview.profileCaps) {

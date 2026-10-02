@@ -1,0 +1,15 @@
+{
+  "title": "Contributing",
+  "pages": [
+    "code",
+    "documentation",
+    "markdown-features",
+    "skills",
+    "design-principles",
+    "commit-conventions",
+    "hooks-and-safety",
+    "smoke-testing",
+    "updating-model-guidance",
+    "verifying-cursor-pins"
+  ]
+}

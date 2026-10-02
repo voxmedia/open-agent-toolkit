@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(oat:*), Bash(pnpm:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 2.2.7
+  version: 2.2.8
 ---
 
 # Discovery Phase
@@ -198,7 +198,7 @@ CURRENT_MERGE_BASE=$(git merge-base HEAD origin/main 2>/dev/null || git rev-pars
 
 ### Step 4: Initialize State
 
-Copy template: `.oat/templates/state.md` → `"$PROJECT_PATH/state.md"`
+Copy template: `oat template resolve state --output "$PROJECT_PATH/state.md"`
 
 Update frontmatter:
 
@@ -218,7 +218,7 @@ Update content:
 
 ### Step 5: Initialize Discovery Document
 
-Copy template: `.oat/templates/discovery.md` → `"$PROJECT_PATH/discovery.md"`
+Copy template: `oat template resolve discovery --output "$PROJECT_PATH/discovery.md"`
 
 Update with user's initial request.
 

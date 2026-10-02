@@ -61,9 +61,9 @@ const FUMA_TEMPLATE_FILES: Record<string, string> = {
     "docs:install": "{{INSTALL_CMD}}",
     "docs:dev": "{{DEV_CMD}}",
     "docs:build": "{{BUILD_CMD}}",
-    "predev": "{{GENERATE_NAV_CMD}} && fumadocs-mdx && {{GENERATE_INDEX_CMD}}",
+    "predev": "fumadocs-mdx && {{GENERATE_INDEX_CMD}}",
     "dev": "next dev",
-    "prebuild": "{{GENERATE_NAV_CMD}} && fumadocs-mdx && {{GENERATE_INDEX_CMD}}",
+    "prebuild": "fumadocs-mdx && {{GENERATE_INDEX_CMD}}",
     "build": "next build",
     "docs:lint": "{{DOCS_LINT_SCRIPT}}",
     "docs:format": "{{DOCS_FORMAT_SCRIPT}}",
@@ -650,10 +650,10 @@ describe('scaffoldDocsApp', () => {
 
     // Should use oat CLI directly with paths relative to docs app — no || true suppression
     expect(packageJson.scripts['predev']).toBe(
-      'oat docs nav sync --framework fumadocs --target-dir . && fumadocs-mdx && oat docs generate-index --docs-dir docs --output index.md',
+      'fumadocs-mdx && oat docs generate-index --docs-dir docs --output index.md',
     );
     expect(packageJson.scripts['prebuild']).toBe(
-      'oat docs nav sync --framework fumadocs --target-dir . && fumadocs-mdx && oat docs generate-index --docs-dir docs --output index.md',
+      'fumadocs-mdx && oat docs generate-index --docs-dir docs --output index.md',
     );
   });
 
@@ -828,10 +828,10 @@ describe('scaffoldDocsApp', () => {
 
     // Should use the source CLI with full paths from workspace root
     expect(packageJson.scripts['predev']).toBe(
-      'pnpm -w run cli:source -- docs nav sync --framework fumadocs --target-dir apps/oat-docs && fumadocs-mdx && pnpm -w run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md',
+      'fumadocs-mdx && pnpm -w run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md',
     );
     expect(packageJson.scripts['prebuild']).toBe(
-      'pnpm -w run cli:source -- docs nav sync --framework fumadocs --target-dir apps/oat-docs && fumadocs-mdx && pnpm -w run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md',
+      'fumadocs-mdx && pnpm -w run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md',
     );
   });
 });

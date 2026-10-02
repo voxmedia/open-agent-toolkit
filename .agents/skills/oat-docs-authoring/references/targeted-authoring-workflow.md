@@ -6,7 +6,7 @@ description: Focused edit loop for small OAT/Fumadocs documentation authoring an
 # Targeted OAT Docs Authoring Workflow
 
 Use this workflow when the user asks for a focused docs addition, repair, move,
-or review inside an existing OAT/Fumadocs docs app.
+or review inside an existing OAT Markdown surface or OAT/Fumadocs docs app.
 
 ## 1. Bound the Change
 
@@ -37,15 +37,16 @@ For page moves and renames:
 
 - update both the old parent and new parent `## Contents` sections;
 - search for links to the old path before finishing;
-- preserve authored local metadata; in owned-compiler apps regenerate ignored `meta.json` through explicit Fumadocs nav sync before MDX, never hand-edit metadata or sidecar hashes;
-- regenerate or freshness-check the generated root index after authored maps
-  change;
+- preserve optional local sidebar metadata, such as `meta.json`, when present;
+- regenerate or freshness-check declared derived output after authored maps
+  change; Markdown manifests are optional and external to the full content tree;
 - do not treat a generated-root entry as proof that the nearest parent map is
   correct.
 
 ## 4. Validate Locally
 
-- Read package scripts before choosing validation commands.
+- Read existing local scripts/instructions before choosing validation commands;
+  Markdown needs file/link checks, not an app package or site build.
 - Run generation or validation scripts that are relevant to the touched files.
 - For render-sensitive Markdown, inspect the rendered result when practical.
 

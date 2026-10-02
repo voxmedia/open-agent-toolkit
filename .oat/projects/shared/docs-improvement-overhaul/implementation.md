@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p02-t03
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -13,14 +13,14 @@ The user invoked oat-project-implement after the reviewed plan handoff. Implemen
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | complete  | 3     | 3/3       |
-| Phase 2 | in_review | 3     | 3/3       |
-| Phase 3 | pending   | 2     | 0/2       |
-| Phase 4 | pending   | 4     | 0/4       |
-| Phase 5 | pending   | 3     | 0/3       |
-| Phase 6 | pending   | 5     | 0/5       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 3     | 3/3       |
+| Phase 2 | complete | 3     | 3/3       |
+| Phase 3 | pending  | 2     | 0/2       |
+| Phase 4 | pending  | 4     | 0/4       |
+| Phase 5 | pending  | 3     | 0/3       |
+| Phase 6 | pending  | 5     | 0/5       |
 
 **Total:** 6/20 tasks completed.
 
@@ -49,7 +49,13 @@ The user invoked oat-project-implement after the reviewed plan handoff. Implemen
 
 ## Phase 2: Migrate Information Without Rewriting It
 
-**Status:** in_review; all three task commits accepted, ordered gates and independent reviews pending
+### Integration correction authority — main-only nav foundation
+
+Main merged at 084053c3525344a0ab7c808a722715d574fae7bd, with parents a080dfbef6bb3a22b03f8e32a7b5f91d49dd618e and 1fd10d9ce703b901e1f5615d0a81be28e1698c0d. Main already shipped nav compilation (#336/#338) and Markdown bootstrap (#335) after project base98d1d5246. Its nav foundation remains byte-identical: no duplicate compiler, sidecar or branch-only flags. p01 is superseded foundation work, not an additional shipped feature. All 24 main-edited Markdown pages are accounted at their mapped destinations; 17 current metadata files are committed and obsolete metadata is absent. references/post-main-docs-audit.json records the path accounting. references/post-main-content-baseline.json binds the merged SHA to 76 pages and 859 heading sections; historical migration evidence is unchanged.
+
+The original phase02 implementer returned DONE/HOLD. It reports 593 targeted tests, postcommit app13/13 and nav/Markdown34/34, CLI/app lint/types, skill validation and a forced six-task zero-cache docs build passing. Root verified commit parents, clean tracked tree and exact main nav equality. Public versions are0.3.14 above main0.3.13; four changed docs skills exceed main. Earlier check/types/test/build passes atad71d9cd are historical, not acceptance of this integration. New ordered closure gates run at the integrated SHA, with one focused read-only Fable integration review requested. Mapping/catalog family lanes were held during the merge as the user directed; separate README visual integration remained isolated. No push, PR, merge-to-main or release is authorized by this merge.
+
+**Status:** complete; correction reviews, main integration review and ordered closure gates accepted
 **Started:** 2026-10-02
 
 ### Task p02-t01: Review the complete migration map
@@ -71,6 +77,20 @@ The user invoked oat-project-implement after the reviewed plan handoff. Implemen
 **Verification:** Root verified clean exact parent2588944d and25 scoped files; hook changed zero bytes. All17 hosted README occurrences and14 topic paths resolve; three canonical skills bumped. Direct12 docs and386 CLI consumer tests execute/pass; postcommit controls, conservation, export, source checks and types exit0. Pristine source validation needs no project/generated inputs; isolated guards prove intended rejections can fail. Local crawl76 pages/867 links/zero broken; app build executed with five cached dependencies. Mini author smoke is in reviews/p02-browser-smoke.md, not final independent QA. No recovery events; root phase gates/reviews remain pending.
 
 ## Phase 3: Improve the Evaluator README
+
+### p02 integrated acceptance — 2026-10-02
+
+All eight ordered gates exit0 at084053c3525344a0ab7c808a722715d574fae7bd: check, type-check, isolated-HOME test, build, check:skill-bumps, release:check-versions after fetch0, release:validate and build:docs. Logs/explicit codes: /tmp/docs-overhaul-p02-integrated-gates/. Check executed11/11; types executed6/11, tests executed6/11 (8027 CLI tests and13 app tests), with five dependency-build cache replays. Root build5/5 and final docs6/6 are cache replay, not fresh execution; implementer separately forced six-task docs build with zero cache at the integrated SHA. Native phase review and bounded correction evidence remain unchanged; Fable correction review accepted. Fable's focused integration review msg_3aaae64005ad ACCEPTS after independently running nav --check, docs:validate,13 docs tests and checking all24 main-edited pages,17 committed metadata, retired-path absence and exact main compiler/template equality. Its Low stale authoring pointer was fixed at85df822da931a8b2ca3eeca5f4cccc1fbf304a2c with target existence and diff checks; no shipped code/docs content changes. No Critical/High finding remains. Recovery usage stays1/10, pending null.
+
+Root-inline phase: p02 Low pointer correction only, avoiding another child/review round for one line; root runtime model identity not reported. Speed policy retains targeted verification, not another full gate run for this authoring-only pointer. Root owns p03 SVG/prose integration in isolated Mini worktree docs-overhaul-readme-visual based4198712f; local PNGs actually viewed, GitHub/theme acceptance pending. p04 mapping/catalog continuations RELEASED only after the merge; same Sol/high handles and policy, bounded alias propagation permitted. Shared indexes, catalog enrollment, versions and core tracking stay root-owned.
+
+Phase2 is locally complete, not published. Root requested first-push authorization while local work continues. No PR, push, merge-to-main or release is claimed.
+
+### Concurrent dispatch acceptance
+
+- `docs-overhaul-run1-p03-prose` accepted as `/root/phase03_readme` (Hooke), exact native target `oat-phase-implementer-gpt-6-1-sol-high`, selected GPT-6.1 Sol/high, High policy/ceiling, hard-reasoning, no resolver notices. Worktree `/Users/tstang/orca/workspaces/open-agent-toolkit/docs-overhaul-readme`, branch `docs-overhaul-readme`, verified base f337faa1759d0f7453da846ea5e90372734d5a67. Bounded p03-t01 prose; SVG supplied separately by Fable, root owns integration. Runtime identity not reported; native parent-attached session, not a standalone pane.
+- `docs-overhaul-run1-p04-mapping` accepted as `/root/phase04_mapping` (Euclid), same exact target/model/effort/policy/class with no notices, worktree `/Users/tstang/orca/workspaces/open-agent-toolkit/docs-overhaul-skill-mapping`, branch `docs-overhaul-skill-mapping`, exact verified same base. Owns mapping/validator/scripts/tests only; no blind-audit duplication, source prose or release/core writes. Root retains integration. Initial schema reported; durable map/validation completion pending.
+- Root release reconciliation helper `/root/main_skill_reconciliation` (Wegener), GPT-6.1 Sol/high, is read-only in the repo and writes scratch only. It compares four docs-skill families against current main to preserve newly shipped Markdown support before root applies narrow merged changes and fixes versions. Not a new whole-phase reviewer or ownership transfer.
 
 ### User-approved concurrent execution amendment — 2026-10-02
 

@@ -8,13 +8,22 @@ description: Local validation, generated-index checks, and render spot-check gui
 Validation is local to the docs app. Read scripts and instructions before
 choosing commands.
 
-## Script Discovery
+## Markdown File Checks
+
+For configured Markdown, use the literal content root, honor excludes and local
+instructions, and verify context, title/description metadata, Contents and actual
+relative `.md` destinations. Discover existing repository lint/link/format checks;
+no package creation, install, site build, or site nav generation is required.
+An external generated manifest is optional; regenerate only when local guidance
+declares one, with explicit output outside the full content tree. Keep authored
+indexes and `documentation.index` intact.
+
+## Script Discovery (Framework Apps)
 
 Inspect the docs app `package.json` and local instructions for:
 
 - `predev` or `prebuild` generation steps;
 - `fumadocs-mdx`;
-- `oat docs nav sync --framework fumadocs` before MDX generation;
 - `oat docs generate-index`;
 - docs lint, format, type-check, test, or build scripts;
 - intentionally disabled or no-op scripts.
@@ -25,12 +34,6 @@ repo. Do not invent universal docs commands.
 ## Generated Index Checks
 
 When navigation, file placement, or `## Contents` changes:
-
-- use Fumadocs `--validate-only` for source validation without reading/writing metadata, sidecar, `.source` or export;
-- use output-comparing `--check` only after generation; it is read-only, detects missing/different/stale output and is mutually exclusive with validate-only;
-- exercise the installed MDX/loader with temporary inputs when tests exist; do not require app-level generated output just to validate sources;
-- verify canonical breadcrumbs/previous-next and body-only cross-links, not merely expected metadata objects;
-- format only authored Markdown; formatting generated JSON changes last-written hashes and correctly triggers ownership refusal;
 
 - regenerate the generated root index through the local command when available;
 - if generation is tied to `predev` or `prebuild`, run the smallest local

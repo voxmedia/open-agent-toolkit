@@ -95,9 +95,14 @@ dispatch records, prompts, logs, or the VM image.
 ## User-scope asset precedence
 
 In provisioned cloud environments, the user-scope installation is the execution
-source for every OAT asset class: skills, templates, and scripts. The user tier
-is refreshed from the published package during environment setup; repository
-copies are compatibility context, not an override.
+source for skills and scripts. The user tier is refreshed from the published
+package during environment setup; repository copies of skills and scripts are
+compatibility context, not an override.
+
+Templates are the exception. They resolve repository, then user, then bundled,
+the same order as everywhere else, because a repository template is an owner
+override. Agents resolve and copy them with `oat template resolve <name>
+--output <destination>` rather than reading `~/.oat/templates/` directly.
 
 For skills, compare frontmatter versions as a freshness check:
 

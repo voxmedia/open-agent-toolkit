@@ -1,11 +1,11 @@
 ---
-title: Add Docs to a New Repo
-description: 'Step-by-step guide for adding an OAT-managed docs app to a repository.'
+title: Add or Adopt Docs in a Repo
+description: 'Step-by-step guide for adding or adopting OAT-managed documentation to a repository.'
 ---
 
-# Add Docs to a New Repo
+# Add or Adopt Docs in a Repo
 
-Use this path when you want to add an OAT-managed docs app and the docs
+Use this path when you want to add or adopt documentation and the docs
 analyze/apply workflow to a repository.
 
 If you are developing inside the OAT repo itself, replace `oat ...` with
@@ -13,7 +13,7 @@ If you are developing inside the OAT repo itself, replace `oat ...` with
 
 ## What this gives you
 
-- a docs app scaffolded with OAT defaults (Fumadocs or MkDocs)
+- plain Markdown files or a docs app scaffolded with OAT defaults (Fumadocs or MkDocs)
 - `index.md`-driven navigation
 - docs analysis and apply skills installed via the docs pack
 - a repeatable workflow for finding gaps, verifying claims, and applying docs changes
@@ -51,9 +51,9 @@ The docs pack installs `authoring-docs`, `oat-docs-authoring`,
 `oat-agent-instructions-apply`. For this quickstart, the authoring and docs
 analysis/apply skills are the parts you need immediately.
 
-## 3. Scaffold the docs app
+## 3. Set up the documentation surface
 
-Two paths — pick one:
+Choose Markdown files or a framework app, using the guided skill or direct CLI.
 
 ### 3a. Preferred: the `oat-docs-bootstrap` skill (guided)
 
@@ -61,9 +61,11 @@ Two paths — pick one:
 /oat-docs-bootstrap
 ```
 
-The docs-bootstrap skill wraps `oat docs init` with a seven-step guided flow: preflight detection (repo shape + existing-setup conflict surfacing), richer input gathering (including a site name distinct from the package name), the CLI invocation itself, labeled post-patches for open CLI gaps, install + build verification, post-scaffold config inspection, and a chunked educational walkthrough.
+The docs-bootstrap skill offers Markdown, Fumadocs, and MkDocs. Configured tooling is authoritative; framework evidence is checked before plain-directory evidence. A root README alone does not trigger adoption, and an empty selected target stays fresh setup. Markdown uses file checks and an adopt/audit handoff, with no app questions, dependencies, framework patches, docs-root AGENTS, or site build.
 
-What the skill adds over the raw CLI:
+For framework apps, it wraps `oat docs init` with a seven-step guided flow: preflight detection (repo shape + existing-setup conflict surfacing), richer input gathering (including a site name distinct from the package name), the CLI invocation itself, labeled post-patches for open CLI gaps, install + build verification, post-scaffold config inspection, and a chunked educational walkthrough.
+
+What the framework path adds over the raw CLI:
 
 - **Preflight + conflict resolution.** Detects existing `documentation` config / docs app dir / root `AGENTS.md` section and walks a deliberate resolution choice (replace, abort, repair, or deferred second-app) before any mutation.
 - **Richer inputs.** Asks for a **site name** separate from the package name, so `createDocsConfig()` / layout branding / page metadata all converge on the same display title.
@@ -90,10 +92,11 @@ oat docs init --app-name my-docs
 
 In interactive mode, you'll be prompted to choose a framework:
 
+- **Markdown** — authored files, context indexes, and Contents maps without a site framework
 - **Fumadocs** — Next.js-based static site with FlexSearch, Mermaid diagrams, dark/light mode, and code copy buttons
 - **MkDocs** — MkDocs Material with the OAT contributor contract
 
-Default placement:
+Framework default placement:
 
 - monorepo: `apps/my-docs`
 - single-package repo: `my-docs/` at repo root
@@ -113,8 +116,68 @@ Use 3b when you want a fully headless scaffold (CI, automation) and can accept t
 For compatible Turbo monorepos, the CLI also patches the repo-root
 `package.json` by default so root `pnpm build` excludes the new docs app and a
 root `build:docs` script is available for docs-only builds. Use
-`--no-root-patch` to opt out, or `--dry-run` to preview the diff without
-writing it.
+`--no-root-patch` to opt out. `--dry-run` is available only for Markdown
+files/config/guidance; it does not preview framework package patches.
+
+### Plain Markdown: fresh setup or additive adoption
+
+```bash
+# Fresh default root: docs/ in every repository shape
+oat docs init --framework markdown --site-name "Project Docs" --yes
+
+# Existing content: preview, then explicitly adopt without overwriting files
+oat docs init --framework markdown --target-dir handbook --adopt --dry-run --yes
+oat docs init --framework markdown --target-dir handbook --adopt --yes
+```
+
+Markdown creates missing `index.md` and `contributing.md` baseline pages and
+records `documentation.tooling: "markdown"`, the literal root, and its authored
+`<root>/index.md`. A nested `<root>/docs` remains a subsection. Root managed
+Documentation guidance names these paths; bootstrap creates no docs-root
+`AGENTS.md` and preserves one already present. It creates no app package,
+framework config, dependencies, or install/dev/build commands. Lint/format
+choices default to `none` and never install tools.
+
+A default setup records:
+
+```json
+{
+  "documentation": {
+    "tooling": "markdown",
+    "root": "docs",
+    "index": "docs/index.md"
+  }
+}
+```
+
+A populated target is refused without `--adopt`, including with `--yes`.
+Adoption preserves existing page/index/local-instruction bytes and adds only
+missing baseline files. Missing child indexes, metadata, context, or Contents
+remain audit gaps: run `oat-docs-analyze`, then `oat-docs-apply` for approved
+repairs. Successful config/guidance setup does not prove full content conformity.
+See [Markdown setup details](commands.md#oat-docs-init) for initial Contents
+discovery and repair advice for optional child indexes and unreadable directories.
+
+Incompatible declared tooling/root/index or unsafe paths are refused before
+writes. Selecting a framework explicitly retains its existing replacement
+prompt/`--yes` behavior, including over configured Markdown: config may change
+while old Markdown files remain. This is not an automatic content migration.
+
+Dry-run writes nothing. Manual-required or blocked guidance returns `partial`
+and exit `1`; files/config are planned, not completed. A real partial run may
+already have created baseline files and config: follow its reported state and
+preserve those files when retrying. Converged repeated adoption returns `ok`,
+exit `0`, and no changes.
+
+Markdown indexes are authored. Optional inventories require external output:
+
+```bash
+oat docs generate-index --docs-dir handbook --output .oat/docs-manifest.md
+```
+
+Default generation is refused for configured Markdown. External output cannot
+be inside the full configured content root or overwrite its authored index,
+even with a narrowed `--docs-dir`. It never repoints `documentation.index`.
 
 ### 3c. Existing MkDocs content
 
@@ -132,27 +195,39 @@ refactor, use the assigned migration handoff guide or project plan; do not make
 
 ## 4. Start authoring docs with the OAT contract
 
-Use `oat-docs-authoring` for targeted OAT/Fumadocs content edits or local
+Use `oat-docs-authoring` for targeted OAT Markdown/Fumadocs content edits or local
 restructuring. It uses `authoring-docs` for the portable documentation baseline
 and adds the OAT-specific navigation, generated-index, and validation contract.
 
 Core rules:
 
-- every docs directory should have an `index.md`
+- every non-excluded Markdown-bearing docs directory should have an authored `index.md`
+- preserve useful audience/scope context and nonempty title/description metadata
+- honor asset-only exceptions, configured excludes, and existing local instructions
 - every `index.md` should include a `## Contents` section
 - the `## Contents` section should map sibling pages and immediate child directories
 - `## Contents` links should use `.md`-suffixed relative targets, including `subdir/index.md` for child directories
 
-For **MkDocs** apps, regenerate navigation after adding or moving pages:
+Regenerate navigation after adding or moving pages. In **MkDocs** apps this
+rewrites the `nav:` block in `mkdocs.yml`; in **Fumadocs** apps it writes the
+committed `meta.json` files and reports any page no `## Contents` map lists:
 
 ```bash
 oat docs nav sync --target-dir apps/my-docs
 ```
 
-For **Fumadocs** apps, `predev` / `prebuild` first compile owned sidebar metadata, then run MDX generation and the separate agent-inventory generator. From the consumer app directory:
+Generated Fumadocs `meta.json` is strict: a page no `## Contents` map lists
+stays out of the sidebar. The `prebuild` script that `oat docs init` scaffolds
+for Fumadocs does not run the read-only check. To make builds fail on stale
+navigation or an unlisted page, as `apps/oat-docs` does, append
+`&& oat docs nav sync --check` to it; the script runs from the app directory,
+which `--target-dir` defaults to.
+
+**Fumadocs** apps also have an app-root docs index manifest, generated from
+the Markdown file tree automatically via `predev`/`prebuild` hooks. You can
+also run it manually:
 
 ```bash
-oat docs nav sync --framework fumadocs --target-dir .
 oat docs generate-index --docs-dir docs
 ```
 
@@ -204,7 +279,7 @@ Important:
 3. `oat docs init --app-name my-docs`
 4. (optional) handle MkDocs migration as a separate workstream; use `oat docs migrate --docs-dir docs --config mkdocs.yml --apply` only for the syntax/frontmatter helper
 5. Author docs with `index.md` + `## Contents`
-6. `oat docs nav sync --framework mkdocs --target-dir apps/my-docs` (MkDocs) or `oat docs nav sync --framework fumadocs --target-dir apps/my-docs` before MDX and separate `oat docs generate-index` (Fumadocs)
+6. Check Markdown files/links, or refresh declared artifacts with `oat docs nav sync --target-dir apps/my-docs` (both frameworks), plus `oat docs generate-index` (Fumadocs)
 7. `/oat-docs-analyze`
 8. `/oat-docs-apply`
 9. Repeat as the codebase changes

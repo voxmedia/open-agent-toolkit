@@ -402,11 +402,9 @@ All project-aware launch paths record the launch in the project's run record.
 Construct and redact the complete generic record plus OAT role event before the
 native host call; when the call returns `accepted` or `blocked-before-start`,
 write the request ID, the `Dispatch:` stamp, the launch status, and later the
-terminal outcome into the run record in `implementation.md`. Writing a
-per-dispatch file with `oat project dispatch record` is optional and off by
-default: no lifecycle skill or command consumes those files, so do not persist
-one unless the host has explicitly opted in. The managed Claude validation-only
-call below is mandatory and does not persist a file. A rejected
+terminal outcome into the run record in `implementation.md`; that run record
+is the only launch record. The managed Claude validation-only
+`oat project dispatch record` call below is mandatory and writes nothing. A rejected
 launch must attest `provesNoChildStarted: true`; only it permits one
 exact-target approximation with a fresh request ID. Preserve exact model,
 effort, reasoning, service tier, route, authority, and provider controls.
@@ -531,15 +529,15 @@ Claude rules:
   Assemble the input with a JSON-aware tool such as `jq --slurpfile` and
   `--rawfile`. Set the pre-launch record base to `launch_status: planned` and
   `child_outcome: null`, then run
-  `oat project dispatch record --event-file <input> --json` without
-  `--project`. Require `status: validated-only`. Launch only
+  `oat project dispatch record --event-file <input> --json`. Require
+  `status: validated-only`. Launch only
   `record.payload.variant` (and `record.payload.model` when present) from that
   result. The producer rejects a missing or stale variant, an absent or drifted
   generated definition, and a conflicting per-call model. It reports every
   violation it finds in one run, one `stage path: message` line each, so fix
   them together and rerun. After the terminal child outcome, rebuild through
-  the same managed input with the terminal status; persistence remains subject
-  to the opt-in rule above. Never copy model, effort, selector, candidate, or
+  the same managed input with the terminal status; the command still writes
+  nothing. Never copy model, effort, selector, candidate, or
   payload fields into the record base: the accepted envelope owns and derives
   them.
 

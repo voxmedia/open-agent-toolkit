@@ -1,4 +1,4 @@
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 
@@ -25,6 +25,10 @@ import {
   syncedRecordPath,
   type ProjectScope,
 } from '@commands/shared/project-scope';
+import {
+  resolveTemplate,
+  type ResolvedTemplate,
+} from '@commands/shared/template-source';
 import { generateStateDashboard } from '@commands/state/generate';
 import { setActiveProject } from '@config/oat-config';
 import { resolveEffectiveConfig } from '@config/resolve';
@@ -378,7 +382,7 @@ async function commitScaffold(
 }
 
 async function scaffoldModeTemplates(
-  userOatRoot: string,
+  home: string,
   repoRoot: string,
   absoluteProjectPath: string,
   projectName: string,
@@ -391,7 +395,6 @@ async function scaffoldModeTemplates(
 
   for (const entry of TEMPLATES_BY_MODE[mode]) {
     const { source, target } = normalizeTemplateEntry(entry);
-    const src = await resolveTemplateSource(userOatRoot, repoRoot, source);
     const dest = join(absoluteProjectPath, target);
 
     if (await fileExists(dest)) {
@@ -399,7 +402,11 @@ async function scaffoldModeTemplates(
       continue;
     }
 
-    const template = await readFile(src, 'utf8');
+    const { content: template } = await resolveProjectTemplate(
+      home,
+      repoRoot,
+      source,
+    );
     let rendered = applyTemplateReplacements(
       template,
       projectName,
@@ -422,7 +429,7 @@ async function scaffoldModeTemplates(
 }
 
 async function scaffoldProjectLog(
-  userOatRoot: string,
+  home: string,
   repoRoot: string,
   absoluteProjectPath: string,
   projectName: string,
@@ -434,8 +441,11 @@ async function scaffoldProjectLog(
     return 'skipped';
   }
 
-  const src = await resolveTemplateSource(userOatRoot, repoRoot, templateFile);
-  const template = await readFile(src, 'utf8');
+  const { content: template } = await resolveProjectTemplate(
+    home,
+    repoRoot,
+    templateFile,
+  );
   await writeFile(
     dest,
     instantiateProjectLogTemplate(template, projectName, today),
@@ -444,23 +454,21 @@ async function scaffoldProjectLog(
   return 'created';
 }
 
-export async function resolveTemplateSource(
-  userOatRoot: string,
+/**
+ * Resolve a project lifecycle template in repository, user, then bundle order
+ * through the shared resolver.
+ */
+function resolveProjectTemplate(
+  home: string,
   repoRoot: string,
   templateFile: string,
-): Promise<string> {
-  const userSource = join(userOatRoot, 'templates', templateFile);
-  if (await fileExists(userSource)) {
-    return userSource;
-  }
-
-  const repoSource = join(repoRoot, '.oat', 'templates', templateFile);
-  if (await fileExists(repoSource)) {
-    return repoSource;
-  }
-
-  const assetsRoot = await resolveAssetsRoot();
-  return join(assetsRoot, 'templates', templateFile);
+): Promise<ResolvedTemplate> {
+  return resolveTemplate({
+    name: templateFile,
+    templatesRoot: join(repoRoot, '.oat', 'templates'),
+    home,
+    assetsRoot: () => resolveAssetsRoot(),
+  });
 }
 
 async function ensureStructure(
@@ -707,7 +715,7 @@ export async function scaffoldProject(
 
     await ensureStructure(absoluteProjectPath, mode);
     ({ createdFiles, skippedFiles } = await scaffoldModeTemplates(
-      userOatRoot,
+      home,
       options.repoRoot,
       absoluteProjectPath,
       options.projectName,
@@ -721,7 +729,7 @@ export async function scaffoldProject(
         .resolved['workflow.projectLog']?.value === true;
     if (effectiveProjectLog) {
       const projectLogResult = await scaffoldProjectLog(
-        userOatRoot,
+        home,
         options.repoRoot,
         absoluteProjectPath,
         options.projectName,

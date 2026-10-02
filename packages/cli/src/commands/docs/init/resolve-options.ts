@@ -8,7 +8,7 @@ import { dirExists, fileExists } from '@fs/io';
 
 export type DocsRepoShape = 'monorepo' | 'single-package' | 'nested-standalone';
 export type DocsDetectedRepoShape = Exclude<DocsRepoShape, 'nested-standalone'>;
-export type DocsFramework = 'fumadocs' | 'mkdocs';
+export type DocsFramework = 'fumadocs' | 'mkdocs' | 'markdown';
 export type DocsLintMode = 'none' | 'markdownlint-cli2';
 export type DocsFormatMode = 'oxfmt' | 'none';
 
@@ -23,6 +23,7 @@ export interface DocsInitResolvedOptions {
   lint: DocsLintMode;
   format: DocsFormatMode;
   rootPatch: boolean;
+  adopt?: boolean;
 }
 
 export interface ResolveDocsInitOptionsInput {
@@ -31,6 +32,7 @@ export interface ResolveDocsInitOptionsInput {
   interactive: boolean;
   acceptDefaults: boolean;
   providedFramework?: DocsFramework;
+  providedAdopt?: boolean;
   providedAppName?: string;
   providedSiteName?: string;
   providedTargetDir?: string;
@@ -59,6 +61,7 @@ export interface DocsRepoShapeDependencies {
 const FRAMEWORK_CHOICES: SelectChoice<DocsFramework>[] = [
   { label: 'Fumadocs (Next.js + MDX, static export)', value: 'fumadocs' },
   { label: 'MkDocs (Python, Material theme)', value: 'mkdocs' },
+  { label: 'Plain Markdown (authored pages, no site app)', value: 'markdown' },
 ];
 
 const LINT_CHOICES: SelectChoice<DocsLintMode>[] = [
@@ -146,6 +149,7 @@ export async function detectDocsRepoShape(
 }
 
 export function getTemplateDir(framework: DocsFramework): string {
+  if (framework === 'markdown') return 'docs-markdown';
   return framework === 'fumadocs' ? 'docs-app-fuma' : 'docs-app-mkdocs';
 }
 
@@ -191,6 +195,45 @@ export async function resolveDocsInitOptions(
 
   if (!framework) {
     return null;
+  }
+
+  if (framework === 'markdown') {
+    const defaultSiteName =
+      humanizeAppName(basename(input.repoRoot)).trim() || 'Documentation';
+    const requestedSiteName =
+      input.providedSiteName ??
+      (input.interactive && !input.acceptDefaults
+        ? await input.inputWithDefault(
+            'Documentation title',
+            defaultSiteName,
+            ctx,
+          )
+        : defaultSiteName);
+    if (requestedSiteName === null) return null;
+    const siteName = requestedSiteName.trim()
+      ? requestedSiteName
+      : defaultSiteName;
+    const targetDir =
+      input.providedTargetDir?.trim() ||
+      (input.interactive && !input.acceptDefaults
+        ? await input.inputWithDefault('Documentation directory', 'docs', ctx)
+        : 'docs');
+    if (!targetDir) return null;
+    return {
+      repoRoot: input.repoRoot,
+      repoShape: input.repoShape,
+      framework,
+      appName: 'docs',
+      siteName,
+      targetDir,
+      siteDescription: input.providedSiteDescription?.trim()
+        ? input.providedSiteDescription
+        : `Documentation for ${basename(input.repoRoot).trim() || 'this repository'}.`,
+      lint: input.providedLint ?? 'none',
+      format: input.providedFormat ?? 'none',
+      rootPatch: false,
+      adopt: input.providedAdopt ?? false,
+    };
   }
 
   const defaultAppName = getDefaultDocsAppName(input.repoRoot, input.repoShape);

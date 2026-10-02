@@ -7,6 +7,16 @@ import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
+import {
+  buildState,
+  contextFactory,
+  createProjectFixture,
+  PROJECT_REL,
+  runProjectSubcommand,
+  snapshotYaml,
+  type ProjectFixture,
+} from '@commands/project/closeout-check/__tests__/fixtures';
+import { createProjectCloseoutCheckCommand } from '@commands/project/closeout-check/index';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -73,6 +83,7 @@ function createHarness(cwd: string): {
     }),
     resolveProjectRoot: vi.fn(async () => cwd),
     now: () => new Date('2026-04-13T22:00:00.000Z'),
+    env: {},
   } as never);
 
   return { capture, command };
@@ -225,5 +236,156 @@ describe('oat project complete-state', () => {
 
     expect(capture.error[0]).toContain('Project state.md not found');
     expect(process.exitCode).toBe(1);
+  });
+
+  describe('closeout invariant', () => {
+    const CONFIGURED = {
+      preApproval: ['summary', 'document', 'pr'],
+      postApproval: [],
+    };
+
+    async function completeState(
+      fixture: ProjectFixture,
+      options: { args?: string[]; env?: NodeJS.ProcessEnv } = {},
+    ): Promise<{ capture: LoggerCapture; exitCode: number | undefined }> {
+      const capture = createLoggerCapture();
+      const command = createProjectCompleteStateCommand({
+        buildCommandContext: contextFactory(fixture, capture),
+        resolveProjectRoot: async () => fixture.root,
+        now: () => new Date('2026-10-01T12:00:00.000Z'),
+        env: options.env ?? {},
+      } as never);
+      process.exitCode = undefined;
+      await runProjectSubcommand(command, 'complete-state', [
+        PROJECT_REL,
+        ...(options.args ?? []),
+      ]);
+      return { capture, exitCode: process.exitCode as number | undefined };
+    }
+
+    async function closeoutMessage(
+      fixture: ProjectFixture,
+      options: { args?: string[]; env?: NodeJS.ProcessEnv } = {},
+    ): Promise<string> {
+      const capture = createLoggerCapture();
+      const command = createProjectCloseoutCheckCommand({
+        buildCommandContext: contextFactory(fixture, capture),
+        resolveProjectRoot: async () => fixture.root,
+        env: options.env ?? {},
+      });
+      process.exitCode = undefined;
+      await runProjectSubcommand(command, 'closeout-check', [
+        PROJECT_REL,
+        ...(options.args ?? []),
+      ]);
+      return capture.info[0] ?? '';
+    }
+
+    const refused: Array<
+      [
+        string,
+        {
+          configured?: unknown;
+          state: string;
+          args?: string[];
+          env?: NodeJS.ProcessEnv;
+        },
+      ]
+    > = [
+      ['case 1 configured', { configured: CONFIGURED, state: buildState() }],
+      [
+        'case 1 autonomous flag',
+        { state: buildState(), args: ['--autonomous'] },
+      ],
+      ['case 1 lite', { state: buildState({ workflowMode: 'lite' }) }],
+      [
+        'case 2 steps pending',
+        {
+          state: buildState({
+            snapshotLines: snapshotYaml({ preApprovalCompleted: ['summary'] }),
+          }),
+        },
+      ],
+      [
+        'case 3 approval pending',
+        {
+          state: buildState({
+            snapshotLines: snapshotYaml({
+              status: 'awaiting_approval',
+              preApprovalCompleted: ['summary', 'document', 'pr'],
+            }),
+          }),
+        },
+      ],
+      [
+        'case 6 malformed',
+        {
+          state: buildState({
+            snapshotLines: snapshotYaml({ status: 'pending' }),
+          }),
+        },
+      ],
+      [
+        'case 7 OAT_AUTONOMOUS=1 only',
+        { state: buildState(), env: { OAT_AUTONOMOUS: '1' } },
+      ],
+    ];
+
+    for (const [label, setup] of refused) {
+      it(`refuses ${label} with the closeout-check message`, async () => {
+        const fixture = await createProjectFixture(tempDirs, {
+          configured: setup.configured,
+          state: setup.state,
+        });
+        const before = await readFile(fixture.statePath, 'utf8');
+        const { capture, exitCode } = await completeState(fixture, setup);
+        const expected = await closeoutMessage(fixture, setup);
+
+        expect(expected).toContain('Closeout invariant not satisfied');
+        expect(capture.error[0]).toBe(expected);
+        expect(exitCode).toBe(1);
+        expect(await readFile(fixture.statePath, 'utf8')).toBe(before);
+      });
+    }
+
+    it('completes case 4: every step and approval recorded', async () => {
+      const fixture = await createProjectFixture(tempDirs, {
+        configured: CONFIGURED,
+        state: buildState({
+          snapshotLines: snapshotYaml({
+            status: 'complete',
+            preApprovalCompleted: ['summary', 'document', 'pr'],
+            approval: 'approved',
+            approvalSource: 'user',
+          }),
+        }),
+      });
+      const { exitCode } = await completeState(fixture);
+      const state = await readFile(fixture.statePath, 'utf8');
+      expect(exitCode).toBe(0);
+      expect(state).toContain('oat_lifecycle: complete');
+      // The completed snapshot survives completion untouched.
+      expect(state).toContain(
+        'pre_approval_completed: [summary, document, pr]',
+      );
+    });
+
+    it('completes case 5 (control): unconfigured, interactive, no snapshot', async () => {
+      const fixture = await createProjectFixture(tempDirs, {
+        state: buildState(),
+      });
+      const { exitCode } = await completeState(fixture);
+      expect(exitCode).toBe(0);
+      expect(await readFile(fixture.statePath, 'utf8')).toContain(
+        'oat_lifecycle: complete',
+      );
+    });
+
+    it('takes --autonomous and documents it', () => {
+      const command = createProjectCompleteStateCommand();
+      expect(command.options.map((option) => option.long)).toContain(
+        '--autonomous',
+      );
+    });
   });
 });

@@ -4,9 +4,9 @@
   "description": "An open-source toolkit for portable, provider-agnostic agent tooling and workflows.",
   "type": "module",
   "scripts": {
-    "predev": "pnpm -w run cli:source -- docs nav sync --framework fumadocs --target-dir apps/oat-docs && fumadocs-mdx && pnpm -w run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md",
+    "predev": "fumadocs-mdx && pnpm -w run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md",
     "dev": "next dev",
-    "prebuild": "pnpm -w run cli:source -- docs nav sync --framework fumadocs --target-dir apps/oat-docs && fumadocs-mdx && pnpm -w run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md",
+    "prebuild": "fumadocs-mdx && pnpm -w run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md && pnpm -w run cli:source -- docs nav sync --target-dir apps/oat-docs --check",
     "build": "next build",
     "start": "next start",
     "check": "oxlint scripts tests && oxfmt --check scripts tests && oxfmt --check 'docs/**/*.md' && markdownlint-cli2 'docs/**/*.md' && pnpm docs:validate",
@@ -35,12 +35,16 @@
     "@types/node": "^22.10.0",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
+    "github-slugger": "^2.0.0",
     "markdownlint-cli2": "^0.13.0",
     "oxfmt": "^0.36.0",
     "oxlint": "^1.51.0",
+    "remark-gfm": "^4.0.1",
+    "remark-parse": "^11.0.0",
     "tailwindcss": "^4.2.1",
     "tsx": "^4.21.0",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
-    "typescript-7": "npm:typescript@^7.0.2"
+    "typescript-7": "npm:typescript@^7.0.2",
+    "unified": "^11.0.5"
   }
 }

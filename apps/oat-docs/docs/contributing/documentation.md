@@ -14,7 +14,6 @@ Documentation should ship with the code it explains. This page covers the core d
 - The `## Contents` section is the machine-readable local map for sibling pages and child directories.
 - Use `.md`-suffixed relative links in `## Contents`: `[Page](page.md)` for leaf pages and `[Section](subdir/index.md)` for child directories.
 - Fumadocs and MkDocs share this authored contract, but they regenerate different artifacts.
-- Contents controls sidebar membership/order; frontmatter titles control leaf and section labels. Each page and child section needs exactly one physical-parent ownership entry. Cross-links remain in page bodies, preserving canonical breadcrumbs and previous/next.
 
 ## Local workflow
 
@@ -57,17 +56,19 @@ Documentation should ship with the code it explains. This page covers the core d
 - Use `oat-docs-authoring` for targeted OAT/Fumadocs docs edits; it delegates
   universal page-quality guidance to `authoring-docs` and keeps local
   navigation, generated-index, and validation expectations in scope.
-- After navigation edits, validate authored sources and exercise the real loader before building. These commands do not require app-level generated output:
+- When you add, remove, or rename docs pages in this Fumadocs app, refresh the generated Fumadocs root index. It is a generated file-tree manifest that should be checked against authored `docs/**/index.md` maps, not hand-edited:
 
   ```bash
-  pnpm docs:validate
-  pnpm docs:test
+  pnpm -w run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md
   ```
 
-- `predev` / `prebuild` run branch `cli:source` nav sync with `--framework fumadocs`, then `fumadocs-mdx`, then the separate app-root agent-index generator. Consumer scaffolds use the installed `oat` binary. MkDocs remains the default framework and refreshes `mkdocs.yml`.
-- Do not hand-edit ignored metadata or its app-root ownership sidecar. Generation may acknowledge existing bytes exactly equal to current computed output for the same path without rewriting them to heal partial generation/lost sidecars; semantic JSON equality is insufficient. Different unowned/edited bytes, malformed sidecars and symlinked paths still fail closed. Preserve bytes and back up proven disposable files with their sidecar before removing only those files and regenerating. Never edit hashes to bypass refusal.
-- After Contents changes during a running dev server, rerun generation and restart the server; predev/prebuild hooks are not a Contents watcher.
-- Format `docs/**/*.md`, never the whole docs directory: reformatting generated JSON correctly breaks last-written ownership hashes. `--validate-only` is source-only; output-comparing `--check` is read-only but requires generation first.
+- Then refresh the sidebar navigation. `oat docs nav sync` rewrites the committed `meta.json` files from the `## Contents` maps and reports any page no map lists; list the page in its directory's `## Contents` rather than editing `meta.json`. The build runs the read-only `--check` form and fails while the navigation is stale or a page is unlisted:
+
+  ```bash
+  pnpm -w run cli:source -- docs nav sync --target-dir apps/oat-docs
+  ```
+
+- In MkDocs apps, the same `oat docs nav sync` command refreshes the `nav:` block in `mkdocs.yml` instead.
 - Use [Markdown Features](markdown-features.md) for supported syntax and examples.
 
 ## Agent guidance

@@ -1,0 +1,15 @@
+{
+  "title": "Reference",
+  "pages": [
+    "configuration",
+    "config-and-local-state",
+    "cli-reference",
+    "file-locations",
+    "docs-index-contract",
+    "oat-directory-structure",
+    "troubleshooting",
+    "project-artifacts",
+    "project-state-machine",
+    "repository-pr-comments"
+  ]
+}

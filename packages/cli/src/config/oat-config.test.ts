@@ -549,6 +549,19 @@ describe('oat-config', () => {
   });
 
   describe('resolveDocumentationContentRoot', () => {
+    it.each(['docs', 'handbook'])(
+      'keeps the literal Markdown root %s with a nested docs child',
+      async (root) => {
+        const repoRoot = await createRepoRoot();
+        await mkdir(join(repoRoot, root, 'docs'), { recursive: true });
+        await expect(
+          resolveDocumentationContentRoot(repoRoot, {
+            version: 1,
+            documentation: { tooling: 'markdown', root },
+          }),
+        ).resolves.toBe(root);
+      },
+    );
     it('prefers the docs child when it is a directory', async () => {
       const repoRoot = await createRepoRoot();
       await mkdir(join(repoRoot, 'apps', 'oat-docs', 'docs'), {
@@ -636,8 +649,12 @@ describe('oat-config', () => {
         recursive: true,
       });
       await mkdir(join(repoRoot, 'apps', 'bare-root'), { recursive: true });
+      await mkdir(join(repoRoot, 'docs', 'docs'), { recursive: true });
 
-      async function generatorDocsDir(root: string): Promise<string> {
+      async function generatorDocsDir(
+        root: string,
+        tooling?: string,
+      ): Promise<string> {
         let observedDocsDir = '';
         const errors: string[] = [];
         const command = createDocsGenerateIndexCommand({
@@ -669,7 +686,7 @@ describe('oat-config', () => {
             writeFile: async () => undefined,
             readOatConfig: async () => ({
               version: 1,
-              documentation: { root },
+              documentation: { root, tooling },
             }),
             writeOatConfig: async () => undefined,
             resolveRepoRoot: async () => repoRoot,
@@ -717,6 +734,13 @@ describe('oat-config', () => {
       await expect(generatorDocsDir('apps/bare-root')).resolves.toBe(
         'apps/bare-root',
       );
+      await expect(generatorDocsDir('docs', 'markdown')).resolves.toBe('docs');
+      await expect(
+        resolveDocumentationContentRoot(repoRoot, {
+          version: 1,
+          documentation: { root: 'docs', tooling: 'markdown' },
+        }),
+      ).resolves.toBe(await generatorDocsDir('docs', 'markdown'));
     });
   });
 

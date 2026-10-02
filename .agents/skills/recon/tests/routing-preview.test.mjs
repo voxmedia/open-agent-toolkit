@@ -242,6 +242,32 @@ test('preview covers all nine worker defaults and preserves independent targets'
   );
 });
 
+test('preview counts at most one pre-acceptance admission retry per lane', () => {
+  for (const [retryLimit, attemptsPerLane] of [
+    [0, 1],
+    [1, 2],
+    [3, 2],
+  ]) {
+    const manifest = draftManifest();
+    manifest.execution.retryLimit = retryLimit;
+    const preview = createRoutingPreview(manifest);
+    assert.equal(preview.limits.retryLimit, retryLimit);
+    assert.equal(
+      preview.limits.worstCaseLaneAttempts,
+      preview.limits.laneCount * attemptsPerLane,
+      `retryLimit ${retryLimit}`,
+    );
+    const markdown = renderRoutingPreview(preview);
+    assert.match(
+      markdown,
+      new RegExp(
+        `- Pre-acceptance admission retries per lane \\(at most one used\\): ${retryLimit}\\n`,
+      ),
+    );
+    assert.doesNotMatch(markdown, /- Retry limit:/);
+  }
+});
+
 test('preview validates and displays the complete approval-bound topology', () => {
   const manifest = conditionalDraft();
   const preview = createRoutingPreview(manifest);

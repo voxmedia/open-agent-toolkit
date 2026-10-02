@@ -12,7 +12,12 @@ import { dirname, resolve } from 'node:path';
 
 import { canonicalJson, hashFile } from './lib/canonical-json.mjs';
 import { isDirectExecution } from './lib/cli-entry.mjs';
-import { validateArtifactShape } from './lib/contracts.mjs';
+import {
+  affirmingDispositionByReviewKind,
+  requiredReviewKinds,
+  unresolvedIssuesBlockClaim,
+  validateArtifactShape,
+} from './lib/contracts.mjs';
 import {
   assertCanonicalRoot,
   assertSafeExistingPath,
@@ -20,11 +25,12 @@ import {
   assertUnchangedRoot,
 } from './lib/safe-path.mjs';
 
-const requiredDispositions = new Map([
-  ['semantic', 'affirmed'],
-  ['adversarial', 'unchallenged'],
-  ['coverage', 'covered'],
-]);
+const requiredDispositions = new Map(
+  requiredReviewKinds.map((kind) => [
+    kind,
+    affirmingDispositionByReviewKind[kind],
+  ]),
+);
 
 const permittedDispositions = new Map([
   ['semantic', new Set(['affirmed', 'rejected', 'uncertain'])],
@@ -233,6 +239,11 @@ export function reconcileLedger({
         (item) => item.claimId === claim.id && item.disposition === 'uncertain',
       ),
     );
+    // A covering review's global issue, or an issue scoped to this claim,
+    // keeps the claim below verified. Publication applies the same rule.
+    const issueBlocked = supporting.some((review) =>
+      unresolvedIssuesBlockClaim(review, claim.id),
+    );
     const incomplete = [...requiredDispositions.keys()].some(
       (kind) =>
         !reviewResults.some(
@@ -291,7 +302,7 @@ export function reconcileLedger({
       }
       continue;
     }
-    if (uncertain || incomplete) {
+    if (uncertain || issueBlocked || incomplete) {
       const from = claim.status;
       const to = 'unresolved';
       if (legalReconciliationTransitions.has(`${from}:${to}`)) {

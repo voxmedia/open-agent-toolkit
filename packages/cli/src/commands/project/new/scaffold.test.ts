@@ -1102,7 +1102,7 @@ describe('scaffoldProject', () => {
     ).rejects.toMatchObject({ code: 'ENOENT' });
   });
 
-  it('uses a user template before a differing repo template', async () => {
+  it('uses a repo template before a differing user template', async () => {
     const repoRoot = await createRepoRoot();
     const home = await mkdtemp(join(tmpdir(), 'oat-scaffold-home-'));
     tempDirs.push(repoRoot, home);
@@ -1119,7 +1119,7 @@ describe('scaffoldProject', () => {
 
     await scaffoldProject({
       repoRoot,
-      projectName: 'user-first',
+      projectName: 'repo-first',
       mode: 'quick',
       home,
       refreshDashboard: false,
@@ -1128,11 +1128,11 @@ describe('scaffoldProject', () => {
     });
 
     const plan = await readFile(
-      join(repoRoot, '.oat', 'projects', 'shared', 'user-first', 'plan.md'),
+      join(repoRoot, '.oat', 'projects', 'shared', 'repo-first', 'plan.md'),
       'utf8',
     );
-    expect(plan).toContain('USER-TEMPLATE');
-    expect(plan).not.toContain('REPO-TEMPLATE');
+    expect(plan).toContain('REPO-TEMPLATE');
+    expect(plan).not.toContain('USER-TEMPLATE');
   });
 
   it('uses the repo template when no user template is installed', async () => {
@@ -1227,13 +1227,11 @@ describe('scaffoldProject', () => {
     const home = await mkdtemp(join(tmpdir(), 'oat-scaffold-home-'));
     tempDirs.push(repoRoot, home);
     const repoTemplates = join(repoRoot, '.oat', 'templates');
+    const userTemplates = join(home, '.oat', 'templates');
     await writeMarkerTemplate(repoTemplates, 'plan.md', 'REPO-PLAN');
-    await writeMarkerTemplate(repoTemplates, 'discovery.md', 'REPO-DISCOVERY');
-    await writeMarkerTemplate(
-      join(home, '.oat', 'templates'),
-      'plan.md',
-      'USER-PLAN',
-    );
+    await writeMarkerTemplate(userTemplates, 'plan.md', 'USER-PLAN');
+    await writeMarkerTemplate(userTemplates, 'discovery.md', 'USER-DISCOVERY');
+    await rm(join(repoTemplates, 'discovery.md'), { force: true });
     await rm(join(repoTemplates, 'state.md'), { force: true });
     await rm(join(repoTemplates, 'implementation.md'), { force: true });
 
@@ -1250,10 +1248,10 @@ describe('scaffoldProject', () => {
 
     await expect(
       readFile(join(projectRoot, 'plan.md'), 'utf8'),
-    ).resolves.toContain('USER-PLAN');
+    ).resolves.toContain('REPO-PLAN');
     await expect(
       readFile(join(projectRoot, 'discovery.md'), 'utf8'),
-    ).resolves.toContain('REPO-DISCOVERY');
+    ).resolves.toContain('USER-DISCOVERY');
     await expect(
       readFile(join(projectRoot, 'state.md'), 'utf8'),
     ).resolves.toContain('# Project State: partial-tiers');

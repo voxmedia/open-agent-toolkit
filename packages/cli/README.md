@@ -62,7 +62,8 @@ Use these commands when you want structured runtime/project state out of the CLI
 - `oat config dump --json` - emit merged OAT config with per-key source attribution
 - `oat project status --json` - emit the active project's full parsed control-plane state
 - `oat project list --json` - emit summary state for tracked projects under the configured projects root
-- `oat project complete-state <project-path>` - emit the canonical completed lifecycle shape into a tracked project's `state.md`
+- `oat project closeout-check <project-path> --json` - report whether a configured, autonomous, or lite closeout's `oat_post_implement_sequence` snapshot permits terminal completion, and which step or approval owns it next (read-only)
+- `oat project complete-state <project-path>` - emit the canonical completed lifecycle shape into a tracked project's `state.md`; refuses the same incomplete closeout `closeout-check` reports
 
 ## Requirements
 

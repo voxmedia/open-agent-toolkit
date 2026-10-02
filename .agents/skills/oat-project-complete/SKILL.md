@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, AskUserQuestion
 metadata:
-  version: 1.7.13
+  version: 1.7.14
 ---
 
 # Complete Project
@@ -201,6 +201,34 @@ second time. The executor result and the archived project status have already
 initialized every resume-safe downstream receipt and choice. A resume never
 opens a new PR from an unpersisted prior answer; `SHOULD_OPEN_PR="false"`, while
 an already-tracked open PR is updated by Step 11.5.
+
+### Step 1.5: Closeout Invariant Gate
+
+Before the upfront questions and before any completion write (a recap answer,
+summary refresh, retro, project-log seal, review move, or `complete-state`),
+run the read-only closeout check:
+
+```bash
+CLOSEOUT_CHECK_ARGS=("$PROJECT_PATH" --json)
+if [[ "${OAT_AUTONOMOUS:-}" == "1" ]]; then
+  CLOSEOUT_CHECK_ARGS+=(--autonomous)
+fi
+CLOSEOUT_CHECK_EXIT=0
+CLOSEOUT_CHECK_JSON=$(oat project closeout-check "${CLOSEOUT_CHECK_ARGS[@]}") || CLOSEOUT_CHECK_EXIT=$?
+```
+
+Continue only when `status` is `complete` or `not_required`. When it reports
+`status: incomplete`, or the command fails, stop without writing anything and
+route to `oat-project-implement`, reporting the `invariant` and `nextOwner`. A
+configured, autonomous, or lite closeout cannot complete until its
+`oat_post_implement_sequence` snapshot exists and every stored step and the
+final sign-off are recorded. A project whose implementation finished before
+closeout snapshots existed recovers the same way; there is no override.
+`oat project complete-state` refuses the same state in Step 5.
+
+The shared and synced archive resume branches above continue at Step 12 or
+Step 8.5 and skip this gate, because `complete-state` already succeeded on
+those paths.
 
 ### Step 2: Upfront User Questions (Batched)
 
@@ -426,7 +454,7 @@ Read `oat_phase_status` from `state.md` frontmatter and handle permissively:
 - **`complete`:** Proceed normally. Implementation is done.
 - **`in_progress`:** Note: "Project is still in progress. Completing anyway." — proceed without additional confirmation.
 
-All three are valid starting states for completion. Do not block on any phase status value.
+All three are valid starting states for completion. Do not block on any phase status value. The Step 1.5 closeout invariant gate still applies to every phase status.
 
 #### 3.1: Final Review Status
 
@@ -943,13 +971,30 @@ Rules:
 Delegate the canonical `state.md` completion mutation to the CLI:
 
 ```bash
+CLOSEOUT_CHECK_ARGS=("$PROJECT_PATH" --json)
+if [[ "${OAT_AUTONOMOUS:-}" == "1" ]]; then
+  CLOSEOUT_CHECK_ARGS+=(--autonomous)
+fi
+oat project closeout-check "${CLOSEOUT_CHECK_ARGS[@]}" > /dev/null || {
+  echo "Closeout incomplete: resume with oat-project-implement before completing." >&2
+  exit 1
+}
+
 COMPLETE_STATE_ARGS=("$PROJECT_PATH")
 if [[ "$SHOULD_ARCHIVE" == "true" && "$IS_DURABLE_PROJECT" == "true" ]]; then
   COMPLETE_STATE_ARGS+=("--archived")
 fi
+if [[ "${OAT_AUTONOMOUS:-}" == "1" ]]; then
+  COMPLETE_STATE_ARGS+=("--autonomous")
+fi
 
 oat project complete-state "${COMPLETE_STATE_ARGS[@]}"
 ```
+
+Re-run the closeout check immediately before `complete-state`, because the
+Step 3 gates ran children that can change `state.md`. `complete-state`
+evaluates the same invariant and refuses an incomplete closeout without
+writing.
 
 For `synced`, keep this finalized lifecycle state in the project checkout until
 Step 7.5 publishes it together with every later pre-archive artifact write. Do

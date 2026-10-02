@@ -5,6 +5,7 @@ import {
   findVersionsBehindCurrentMainErrors,
   runVersionBumpCheck,
 } from '../../../../tools/release/check-version-bumps';
+import { findChangedWorkspaceDirsFromPaths } from '../../../../tools/release/release-utils';
 import {
   findLockstepVersionBumpErrors,
   type PublicPackageVersionState,
@@ -82,6 +83,45 @@ describe('runVersionBumpCheck', () => {
     });
     expect(currentMainRefResolutions).toBe(0);
     expect(currentMainReads).toBe(0);
+  });
+
+  it('passes a CLI change limited to test files without a lockstep bump', async () => {
+    const result = await runVersionBumpCheck({
+      contracts: getPublicPackageContracts(),
+      resolveMergeBaseFn: async () => 'origin/main',
+      findChangedWorkspaceDirsFn: async (_base, _head, contracts) =>
+        findChangedWorkspaceDirsFromPaths(
+          ['packages/cli/src/release/check-version-bumps.test.ts'],
+          contracts,
+        ),
+      readCurrentPackageJsonFn: async () => ({ version: '0.0.4' }),
+      readBasePackageJsonFn: async () => ({ version: '0.0.4' }),
+      resolveCurrentMainRefFn: async () => 'origin/main',
+      readMainPackageJsonFn: async () => ({ version: '0.0.4' }),
+    });
+
+    expect(result.status).toBe('passed');
+  });
+
+  it('still requires a lockstep bump for a non-test CLI source change', async () => {
+    const result = await runVersionBumpCheck({
+      contracts: getPublicPackageContracts(),
+      resolveMergeBaseFn: async () => 'origin/main',
+      findChangedWorkspaceDirsFn: async (_base, _head, contracts) =>
+        findChangedWorkspaceDirsFromPaths(
+          ['packages/cli/src/release/public-package-contract.ts'],
+          contracts,
+        ),
+      readCurrentPackageJsonFn: async () => ({ version: '0.0.4' }),
+      readBasePackageJsonFn: async () => ({ version: '0.0.4' }),
+      resolveCurrentMainRefFn: async () => 'origin/main',
+      readMainPackageJsonFn: async () => ({ version: '0.0.4' }),
+    });
+
+    expect(result.status).toBe('failed');
+    expect(result.errors.join('\n')).toContain(
+      'Changed packages: @open-agent-toolkit/cli.',
+    );
   });
 
   it('fails when changed public packages keep their base versions', async () => {

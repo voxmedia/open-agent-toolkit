@@ -1,6 +1,6 @@
 ---
-oat_current_task: p02-t03
-oat_last_commit: 3f0c0b0bff06667a2745b492873f9ff69546aa92
+oat_current_task: p03-t01
+oat_last_commit: 85df822da931a8b2ca3eeca5f4cccc1fbf304a2c
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -95,7 +95,7 @@ oat_generated: false
 
 # Project State: docs-improvement-overhaul
 
-**Status:** Phase 1 accepted; all phase 2 task commits complete, phase review underway
+**Status:** Phase 2 locally complete; README and skill families executing concurrently
 **Started:** 2026-10-01
 **Last Updated:** 2026-10-02
 
@@ -109,7 +109,7 @@ The user invoked oat-project-implement after the reviewed handoff. Execute depen
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; independently reviewed)
 - **Plan:** `plan.md` (20 tasks across 6 phases; added scope requires amendment review before p06)
-- **Implementation:** `implementation.md` (p01 accepted; all p02 tasks complete, 6/20 tasks)
+- **Implementation:** `implementation.md` (p01 superseded by main; p02 accepted, 6/20 tasks)
 - **Review receipt:** `reviews/plan-review-round-03.md` (gate provenance, fixes, independent verification and Fable final confirmation)
 - **References:** [Evidence index](references/index.md), including initial evaluations, the proposed IA, Fable's skill inventory advisory, and orchestration observations.
 

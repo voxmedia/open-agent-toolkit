@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep
 metadata:
-  version: 1.1.2
+  version: 1.1.3
 ---
 
 # OAT in Cursor Cloud
@@ -183,7 +183,7 @@ commands from the target repository or pass their supported project path.
 
 ### Step 3: Resolve Assets with User Scope First
 
-Apply one source order independently to every asset file:
+Apply one source order independently to every skill and script file:
 
 1. user scope;
 2. target-repository scope when the user asset is absent;
@@ -191,18 +191,30 @@ Apply one source order independently to every asset file:
 
 User locations:
 
-| Asset    | User source                 |
-| -------- | --------------------------- |
-| Skill    | `~/.agents/skills/<skill>/` |
-| Template | `~/.oat/templates/<file>`   |
-| Script   | `~/.oat/scripts/<file>`     |
+| Asset  | User source                 |
+| ------ | --------------------------- |
+| Skill  | `~/.agents/skills/<skill>/` |
+| Script | `~/.oat/scripts/<file>`     |
 
-Repository locations are `.agents/skills/`, `.oat/templates/`, and
-`.oat/scripts/` within the target repository.
+Repository locations are `.agents/skills/` and `.oat/scripts/` within the
+target repository.
 
-The user tier is provisioned from `@latest` at environment boot and is the
-canonical execution tier. Repository copies in this fleet are not customized;
-a difference indicates staleness, not a local override.
+For skills and scripts, the user tier is provisioned from `@latest` at
+environment boot and is the canonical execution tier. Repository copies of
+skills and scripts in this fleet are not customized; a difference indicates
+staleness, not a local override.
+
+Templates are the exception. They resolve repository, then user, then bundled,
+the same order every lifecycle skill uses, because a repository template is an
+owner override. Resolve them only through the CLI, run from the target
+repository:
+
+```bash
+oat template resolve <name> --json                      # report the tier
+oat template resolve <name> --output "<destination>"    # copy the template
+```
+
+Do not read `~/.oat/templates/` directly or choose a template tier by hand.
 
 #### Absolute-path loading contract
 
@@ -213,7 +225,6 @@ Therefore, resolve and read the selected user asset by absolute path as the
 
 ```bash
 USER_SKILLS_ROOT="${HOME}/.agents/skills"
-USER_TEMPLATES_ROOT="${HOME}/.oat/templates"
 USER_SCRIPTS_ROOT="${HOME}/.oat/scripts"
 ```
 
@@ -238,8 +249,9 @@ It never chooses the source:
 - if freshness is safety-critical, refresh and re-verify before continuing;
   stop if the user tier cannot be refreshed safely.
 
-Never silently switch to the repo copy. Apply per-file precedence to templates
-and scripts without using skill semver as their arbitration mechanism.
+Never silently switch to the repo copy. Apply per-file precedence to scripts
+without using skill semver as their arbitration mechanism; templates follow
+`oat template resolve`.
 
 ### Step 4: Load Cursor Dispatch Context When Needed
 
@@ -328,7 +340,9 @@ separate dispatch surface and snapshot its current catalog. See
 - ✅ `oat` was verified before project artifact work.
 - ✅ The project home is anchored inside the target repository in both single-
   and multi-repo environments.
-- ✅ Existing user assets won independently for skills, templates, and scripts.
+- ✅ Existing user assets won independently for skills and scripts.
+- ✅ Templates were resolved through `oat template resolve` (repository, user,
+  then bundled).
 - ✅ Skill version comparison verified freshness without changing source.
 - ✅ User assets were read by absolute path as the primary mechanism.
 - ✅ Cursor dispatch mechanics remained delegated to the canonical provider

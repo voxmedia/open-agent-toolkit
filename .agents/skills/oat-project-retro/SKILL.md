@@ -3,9 +3,9 @@ name: oat-project-retro
 description: Use when the user requests or confirms a project retrospective — e.g. "run the project retro", "write project-retro.md", "retrospective this project", or confirms a previously offered retro. Do NOT auto-invoke merely because implementation or summary completed. Produces references/project-retro.md from project logs, execution learnings, and session/transcript evidence, with repo improvements and OAT upstream feedback.
 disable-model-invocation: false
 user-invocable: true
-allowed-tools: Read, Write, Bash(git:*), Bash(jq:*), Bash(pnpm:*), Bash(oat config:*), Bash(oat decision:*), Bash(oat project log:*), Bash(oat project push:*), Bash(oat project scope:*), Bash(oat tools:*), Glob, Grep, AskUserQuestion
+allowed-tools: Read, Write, Bash(git:*), Bash(jq:*), Bash(mkdir:*), Bash(pnpm:*), Bash(oat config:*), Bash(oat decision:*), Bash(oat project log:*), Bash(oat project push:*), Bash(oat project scope:*), Bash(oat template:*), Bash(oat tools:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.0.7
+  version: 1.0.8
 ---
 
 # Project Retrospective
@@ -104,7 +104,10 @@ justifies them. Root synthesis remains with the invoking agent.
 
 ### Step 3: Render the Artifact
 
-Copy `.oat/templates/project-retro.md` to the output path and render it against
+Create `"$PROJECT_PATH/references"` if it is missing (`--output` creates no
+directories), copy the template to the output path with
+`oat template resolve project-retro --output "$PROJECT_PATH/references/project-retro.md"`
+(repository, user, then bundled tier), and render it against
 [references/retro-quality-bar.md](references/retro-quality-bar.md).
 
 Keep output concise by default. Every section must add distinct information.

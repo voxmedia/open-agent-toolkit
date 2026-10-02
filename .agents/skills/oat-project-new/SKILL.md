@@ -6,12 +6,12 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.4.1
+  version: 1.4.2
 ---
 
 # New OAT Project
 
-Create a new OAT project directory, scaffold standard artifacts from `.oat/templates/`, and set `activeProject` in local config. New projects default to `synced`; pass `--scope shared|local|synced` to override the resolved `projects.defaultScope` setting.
+Create a new OAT project directory, scaffold standard artifacts from the resolved templates (repository `.oat/templates/`, then user `~/.oat/templates/`, then bundled), and set `activeProject` in local config. New projects default to `synced`; pass `--scope shared|local|synced` to override the resolved `projects.defaultScope` setting.
 
 ## Progress Indicators (User-Facing)
 
@@ -92,6 +92,6 @@ Then explicitly instruct the user to run discovery next:
 ## Success Criteria
 
 - ✅ `{PROJECTS_ROOT}/{project-name}/` exists
-- ✅ Standard artifacts exist in the project dir (copied from `.oat/templates/*.md`)
+- ✅ Standard artifacts exist in the project dir (copied from the resolved templates; `oat template resolve <name>` reports each one's tier)
 - ✅ `activeProject` in `.oat/config.local.json` points at the project path
 - ✅ `.oat/state.md` is refreshed locally unless disabled; it is not staged or committed.

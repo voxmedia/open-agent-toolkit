@@ -12,7 +12,7 @@ labels:
   - state
 assignee: null
 created: 2026-09-27T03:35:36.887Z
-updated: 2026-09-27T03:35:36.887Z
+updated: 2026-10-02T03:10:18Z
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/305
@@ -33,3 +33,17 @@ Review, phase, and routing status are duplicated across the `## Reviews` table, 
 - Adding a review-fix phase, or publishing, rebasing, or merging a tracked PR, invalidates or updates the affected summary fields.
 - Secondary fields and counters are synchronized with the authority or documented as intentionally different.
 - Regression tests cover stale-state retention and reintroduction after an otherwise valid correction.
+
+## Markdown docs bootstrap retrospective evidence
+
+[RP-01: structural preservation](../../../reference/project-summaries/20261002-markdown-docs-bootstrap.md#rp-01-add-structural-preservation-cases-to-the-lifecycle-authority-work)
+adds concrete cases for the existing lifecycle authority: joined YAML,
+fragmented review rows and stale task/status views required corrective commits.
+See the retrospective's tracking-repair incident and the implementation's
+p03 root evidence correction and retired gate-generation records.
+
+Exercise the transition helper against these cases: validate complete
+frontmatter, keep review rows contiguous, preserve unknown columns and historical
+cells, and retain immutable completed sequence state. A failed edit or validation
+must preserve prior state and must not record a successful transition. This
+strengthens the existing atomic-transition and provenance criteria.

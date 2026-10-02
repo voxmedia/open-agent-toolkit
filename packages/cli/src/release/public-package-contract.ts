@@ -130,7 +130,15 @@ const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
       '.oat/scripts',
       'apps/oat-docs/docs',
     ],
-    versionPolicyIgnorePatterns: ['assets/**'],
+    // Generated bundled assets, plus exactly the test paths this package's
+    // tsconfig leaves out of `dist` (DR-260927-test-only-paths-skip). Never
+    // broader than the compile exclusion: a test helper that compiles into
+    // `dist` still counts.
+    versionPolicyIgnorePatterns: [
+      'assets/**',
+      'src/**/*.test.ts',
+      'src/**/__tests__/**',
+    ],
   },
   {
     workspaceDir: 'packages/control-plane',
@@ -141,7 +149,7 @@ const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
     requiredPackedTextFiles: [],
     forbiddenPathPatterns: [...COMMON_FORBIDDEN_PATH_PATTERNS],
     versionPolicyAdditionalRoots: [],
-    versionPolicyIgnorePatterns: [],
+    versionPolicyIgnorePatterns: ['**/*.test.ts', '**/*.spec.ts'],
   },
   {
     workspaceDir: 'packages/docs-config',
@@ -152,7 +160,7 @@ const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
     requiredPackedTextFiles: [],
     forbiddenPathPatterns: [...COMMON_FORBIDDEN_PATH_PATTERNS],
     versionPolicyAdditionalRoots: [],
-    versionPolicyIgnorePatterns: [],
+    versionPolicyIgnorePatterns: ['src/**/*.test.ts'],
   },
   {
     workspaceDir: 'packages/docs-theme',
@@ -174,7 +182,7 @@ const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
     requiredPackedTextFiles: [],
     forbiddenPathPatterns: [...COMMON_FORBIDDEN_PATH_PATTERNS],
     versionPolicyAdditionalRoots: [],
-    versionPolicyIgnorePatterns: [],
+    versionPolicyIgnorePatterns: ['src/**/*.test.ts'],
   },
 ];
 

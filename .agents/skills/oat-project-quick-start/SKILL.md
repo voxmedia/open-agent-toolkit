@@ -7,7 +7,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 2.3.16
+  version: 2.3.17
 ---
 
 # Quick Start Project
@@ -139,8 +139,9 @@ Step 3.7 — against `"$PROJECT_PATH/plan.md"`:
   plan reaches a durable review disposition. This is the in-place resume branch
   that the lifecycle routers send a not-ready quick project to; nothing is
   re-scaffolded and no artifact is overwritten from a template. On this path
-  Step 3 updates the existing `plan.md` in place: it reads `.oat/templates/plan.md`
-  only when `plan.md` is missing, re-asserts the Step 3 pre-review frontmatter
+  Step 3 updates the existing `plan.md` in place: it copies the plan template
+  (`oat template resolve plan --output "$PROJECT_PATH/plan.md"`) only when
+  `plan.md` is missing, re-asserts the Step 3 pre-review frontmatter
   values, and never replaces phases, tasks, or `## Reviews` rows that the
   earlier run already wrote.
 - Ready → there is nothing left to author here; load
@@ -192,7 +193,8 @@ fi
 
 This guarantees:
 
-- standard artifact scaffolding from `.oat/templates/`
+- standard artifact scaffolding from the resolved templates (repository, user,
+  then bundled tier)
 - `activeProject` update in `.oat/config.local.json`
 - repo dashboard refresh (`.oat/state.md`) via existing scaffolder behavior
 - a `PROJECT_PATH` that names the project this run just created, validated
@@ -232,7 +234,7 @@ validated for a new one:
 
 ### Step 2: Capture Discovery (Adaptive Depth)
 
-If `"$PROJECT_PATH/discovery.md"` is missing, create it from `.oat/templates/discovery.md` first.
+If `"$PROJECT_PATH/discovery.md"` is missing, create it first with `oat template resolve discovery --output "$PROJECT_PATH/discovery.md"`.
 
 **Adapt discovery depth to the ambiguity of the request.** Do not rush past exploration to get to planning.
 
@@ -466,7 +468,7 @@ echo "Running in ${DESIGN_MODE} mode."
 
 Produce a focused `design.md` covering only what's needed for a quality plan. This is NOT the full spec-driven design — it's a quick architectural sketch.
 
-Copy template: `.oat/templates/design.md` → `"$PROJECT_PATH/design.md"`
+Copy template: `oat template resolve design --output "$PROJECT_PATH/design.md"`
 
 **Required sections (always fill these):**
 
@@ -592,9 +594,11 @@ preserved value is `null` or malformed for the phase-review contract.
 
 ### Step 3: Generate Plan Directly
 
-Create/update `"$PROJECT_PATH/plan.md"` from `.oat/templates/plan.md`.
+Create/update `"$PROJECT_PATH/plan.md"` from the plan template.
 
-`.oat/templates/plan.md` is read only when `"$PROJECT_PATH/plan.md"` is missing.
+The template is copied, with
+`oat template resolve plan --output "$PROJECT_PATH/plan.md"`, only when
+`"$PROJECT_PATH/plan.md"` is missing.
 On the Step 0.5 resume path the file already exists, so this step updates it in
 place: it re-asserts the frontmatter values below and continues authoring the
 plan body, and it never replaces phases, tasks, or `## Reviews` rows an earlier

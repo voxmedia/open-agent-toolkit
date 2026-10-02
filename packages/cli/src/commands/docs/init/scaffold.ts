@@ -13,6 +13,7 @@ import { dirExists, ensureDir, fileExists } from '@fs/io';
 import { OAT_VERSION } from '@shared/oat-version';
 
 import { buildDocsCommands } from './docs-commands';
+import { applyMarkdownDocsPlan, planMarkdownDocs } from './markdown';
 import type {
   DocsFormatMode,
   DocsFramework,
@@ -90,7 +91,10 @@ interface FrameworkConfig {
   sentinelFile: string;
 }
 
-const FRAMEWORK_CONFIGS: Record<DocsFramework, FrameworkConfig> = {
+const FRAMEWORK_CONFIGS: Record<
+  Exclude<DocsFramework, 'markdown'>,
+  FrameworkConfig
+> = {
   mkdocs: {
     templateFiles: MKDOCS_TEMPLATE_FILES,
     sentinelFile: 'mkdocs.yml',
@@ -255,12 +259,6 @@ function buildGenerateIndexCmd(isOatRepo: boolean, targetDir: string): string {
   return 'oat docs generate-index --docs-dir docs --output index.md';
 }
 
-function buildGenerateNavCmd(isOatRepo: boolean, targetDir: string): string {
-  return isOatRepo
-    ? `pnpm -w run cli:source -- docs nav sync --framework fumadocs --target-dir ${targetDir}`
-    : 'oat docs nav sync --framework fumadocs --target-dir .';
-}
-
 function oatDepVersion(depContext: OatDepContext, packageName: string): string {
   if (depContext.localPackages.has(packageName)) {
     return 'workspace:*';
@@ -395,10 +393,6 @@ function renderTemplate(
       depContext.isOatRepo,
       options.targetDir,
     ),
-    '{{GENERATE_NAV_CMD}}': buildGenerateNavCmd(
-      depContext.isOatRepo,
-      options.targetDir,
-    ),
     '{{OAT_DOCS_CONFIG_DEP}}': oatDepVersion(depContext, 'docs-config'),
     '{{OAT_DOCS_THEME_DEP}}': oatDepVersion(depContext, 'docs-theme'),
     '{{OAT_DOCS_TRANSFORMS_DEP}}': oatDepVersion(depContext, 'docs-transforms'),
@@ -424,6 +418,13 @@ export function buildDocumentationConfig(
   framework: DocsFramework,
   targetDir: string,
 ): OatDocumentationConfig {
+  if (framework === 'markdown') {
+    return {
+      root: targetDir,
+      tooling: 'markdown',
+      index: join(targetDir, 'index.md'),
+    };
+  }
   if (framework === 'fumadocs') {
     return {
       root: targetDir,
@@ -455,6 +456,9 @@ export async function scaffoldDocsApp(
   options: ScaffoldDocsAppOptions,
   overrides: Partial<ScaffoldDocsAppDependencies> = {},
 ): Promise<ScaffoldDocsAppResult> {
+  if (options.framework === 'markdown') {
+    return applyMarkdownDocsPlan(await planMarkdownDocs(options));
+  }
   const appRoot = join(options.repoRoot, options.targetDir);
   const templateDir = getTemplateDir(options.framework);
   const templateRoot = join(options.assetsRoot, 'templates', templateDir);
