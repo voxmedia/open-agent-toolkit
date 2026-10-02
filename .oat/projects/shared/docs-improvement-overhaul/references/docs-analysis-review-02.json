@@ -1,0 +1,31 @@
+{
+  "requestId": "docs-overhaul-run1-p02-analysis-review02",
+  "agentHandle": "/root/p02_analysis_review",
+  "outputMode": "structured",
+  "analysisArtifact": ".oat/repo/analysis/docs-2026-10-02-0644.md",
+  "reviewedArtifactSha256": "ad3fba4a6ad5f24b19df55a5fb9a434ee69d30442ebab1ea462edb4908320b3f",
+  "sourceBaseline": "8b78d9a935b31ef50e65713b03a022a5d022aa59",
+  "launchCommittedHead": "adf82ca334cf662887182b3579b58f4e5afb1c12",
+  "reconnaissance": "not-attempted",
+  "summary": "Exact refreshed artifact and snapshot match. Updated map counts, H1 transitions, supersessions and conditional Fable approval match cited sources. Source docs unchanged; no new findings. Full-map conservation and migration approval are separate.",
+  "findings": [
+    {
+      "id": "L1",
+      "severity": "low",
+      "title": "Distinguish scoped catalog entries from distinct configuration keys",
+      "file": ".oat/repo/analysis/docs-2026-10-02-0644.md",
+      "line": 94,
+      "body": "40 scoped catalog entries represent 39 distinct key strings; sync.providers.<name>.strategy occurs in project-sync and user-sync. Both records remain valid. Previously offered wording residual retained, not a new blocker.",
+      "fix_guidance": "Optional analysis-only wording correction; do not silently apply or remove scoped records."
+    }
+  ],
+  "verificationCommands": [
+    "shasum -a 256 .oat/repo/analysis/docs-2026-10-02-0644.md .oat/projects/shared/docs-improvement-overhaul/references/docs-analysis-reviewed-snapshot-round02.md",
+    "jq amended page/section actions, new indexes, heading normalizations and supersessions from route-migration.json",
+    "jq scoped entries and distinct keys from capability-baseline.json",
+    "git diff --exit-code 8b78d9a935b31ef50e65713b03a022a5d022aa59 -- apps/oat-docs/docs"
+  ],
+  "rootDisposition": "Accepted as reviewed with one disclosed non-blocking residual, not a clean pass. Actual Fable conditional approval recorded separately. Original review and snapshot immutable. Canonical tracking write may now run; no downstream apply outcome is inferred.",
+  "rewriteRetriesUsed": 1,
+  "rewriteRetryLimit": 2
+}
