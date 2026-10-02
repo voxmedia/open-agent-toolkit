@@ -310,23 +310,30 @@ describe('Fumadocs navigation compiler', () => {
     expect(await readdir(join(root, 'docs'))).not.toContain('meta.json');
   });
 
-  it('diagnoses unsupported separators only for Fumadocs while preserving prose and fenced examples', async () => {
-    const root = await fixture();
-    const body =
-      '## Contents\nHelpful introductory prose.\n- [Skills](skills/index.md) - ordinary --- description\n- [Workflows](workflows/index.md)\n\n```md\n- --- Example Group ---\n```\n';
-    await page(root, 'index.md', 'Home', body);
-    await expect(sync(root, { validateOnly: true })).resolves.toBeDefined();
-    const separated = `${body}- --- Extra Group ---\n`;
-    expect(parseIndexContents(separated).map((entry) => entry.href)).toEqual([
-      'skills/index.md',
-      'workflows/index.md',
-    ]);
-    await page(root, 'index.md', 'Home', separated);
-    await expect(sync(root)).rejects.toThrow(
-      /Unsupported Contents separator.*index\.md/,
-    );
-    expect(await readdir(root)).toEqual(['docs']);
-  });
+  it.each([
+    '- --- Extra Group ---',
+    '- ---Extra Group---',
+    '---Extra Group---',
+  ])(
+    'diagnoses unsupported separator %s only for Fumadocs while preserving prose and fenced examples',
+    async (separator) => {
+      const root = await fixture();
+      const body =
+        '## Contents\nHelpful introductory prose with ---markers---.\n- [Skills](skills/index.md) - ordinary --- description\n- [Workflows](workflows/index.md)\n\n```md\n- --- Example Group ---\n- ---Example Group---\n---Example Group---\n```\n';
+      await page(root, 'index.md', 'Home', body);
+      await expect(sync(root, { validateOnly: true })).resolves.toBeDefined();
+      const separated = `${body}${separator}\n`;
+      expect(parseIndexContents(separated).map((entry) => entry.href)).toEqual([
+        'skills/index.md',
+        'workflows/index.md',
+      ]);
+      await page(root, 'index.md', 'Home', separated);
+      await expect(sync(root)).rejects.toThrow(
+        /Unsupported Contents separator.*index\.md/,
+      );
+      expect(await readdir(root)).toEqual(['docs']);
+    },
+  );
 
   it('validates sources with absent or unsafe output without reading or writing it', async () => {
     const root = await fixture();

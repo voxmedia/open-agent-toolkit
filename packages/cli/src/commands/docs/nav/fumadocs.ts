@@ -101,7 +101,7 @@ export async function syncFumadocsNavigation(
     );
     for (const line of lines.slice(start + 1)) {
       if (/^##\s+/.test(line.trim())) break;
-      if (/^\s*(?:[-*+]\s+)?---(?:\s|$)/.test(line))
+      if (/^\s*(?:[-*+]\s+)?---(?:\s|$|.*---\s*$)/.test(line))
         throw new Error(
           `Unsupported Contents separator in ${indexPath}: ${line.trim()}; use ordinary Markdown links`,
         );
