@@ -343,7 +343,8 @@ function missingRootError(flag: '--docs-dir' | '--output'): CliError {
  * options stay CWD-relative for backward compatibility. `documentation.root`
  * canonically names the docs **app root** written by `oat docs init`. The
  * `<root>/docs` preference is compatibility behavior for legacy configs whose
- * `root` names a docs *source* directory; `--docs-dir` overrides it.
+ * `root` names a docs *source* directory. Explicit Markdown uses the literal
+ * configured content root; `--docs-dir` overrides source selection in all modes.
  */
 async function resolveIndexGeneratePaths(
   context: CommandContext,
@@ -356,6 +357,15 @@ async function resolveIndexGeneratePaths(
   const configuredRoot = configuredRootValue
     ? resolve(repoRoot, configuredRootValue)
     : null;
+  const isMarkdown =
+    trimmed(config.documentation?.tooling)?.toLowerCase() === 'markdown';
+
+  if (isMarkdown && options.output === undefined) {
+    throw new CliError(
+      'Markdown documentation uses an authored index. Pass --output with a path outside the full configured Markdown content root to generate a separate manifest.',
+      REFUSAL_EXIT_CODE,
+    );
+  }
 
   // Either omitted option needs a usable configured root, so validate it once
   // up front rather than only on the path that happens to be derived first.
@@ -382,7 +392,10 @@ async function resolveIndexGeneratePaths(
   if (options.docsDir !== undefined) {
     docsDir = resolve(context.cwd, options.docsDir);
     docsDirSource = 'flag';
-  } else if (await deps.dirExists(join(configuredRoot!, 'docs'))) {
+  } else if (
+    !isMarkdown &&
+    (await deps.dirExists(join(configuredRoot!, 'docs')))
+  ) {
     docsDir = join(configuredRoot!, 'docs');
     docsDirSource = 'config-docs-subdirectory';
   } else {
@@ -418,6 +431,8 @@ interface CanonicalIndexGeneratePaths {
   configuredRoot: string | null;
   documentationConfig: string | null;
   lexicalDocumentationConfig: string | null;
+  authoredIndex: string | null;
+  lexicalAuthoredIndex: string | null;
 }
 
 /** `canonicalize`, but an unresolvable path yields null instead of throwing. */
@@ -444,6 +459,12 @@ async function canonicalizeIndexGeneratePaths(
   const lexicalDocumentationConfig = documentationConfigValue
     ? resolve(resolved.repoRoot, documentationConfigValue)
     : null;
+  const isMarkdown =
+    trimmed(resolved.config.documentation?.tooling)?.toLowerCase() ===
+    'markdown';
+  const indexValue = trimmed(resolved.config.documentation?.index);
+  const lexicalAuthoredIndex =
+    isMarkdown && indexValue ? resolve(resolved.repoRoot, indexValue) : null;
 
   // Resolution order is load-bearing: the docs directory is canonicalized
   // first, and the safety checks below compare against its canonical form.
@@ -459,11 +480,24 @@ async function canonicalizeIndexGeneratePaths(
       role: { kind: 'output' },
       origin: resolved.outputPath,
     }),
-    // An unusable configured root only makes the config write ineligible; it
-    // must not fail a run whose paths were both supplied explicitly.
+    // Markdown's configured tree is protected independently of --docs-dir.
+    // Its canonicalization must fail closed; other modes retain the existing
+    // tolerance for unusable config when both paths are explicit.
     configuredRoot: resolved.configuredRoot
-      ? await canonicalizeOrNull(resolved.configuredRoot, deps, {
-          kind: 'other',
+      ? isMarkdown
+        ? await canonicalize(resolved.configuredRoot, deps, {
+            role: { kind: 'docs-dir', derived: true },
+            origin: resolved.configuredRoot,
+          })
+        : await canonicalizeOrNull(resolved.configuredRoot, deps, {
+            kind: 'other',
+          })
+      : null,
+    lexicalAuthoredIndex,
+    authoredIndex: lexicalAuthoredIndex
+      ? await canonicalize(lexicalAuthoredIndex, deps, {
+          role: { kind: 'other' },
+          origin: lexicalAuthoredIndex,
         })
       : null,
     lexicalDocumentationConfig,
@@ -488,6 +522,22 @@ async function assertOutputIsSafe(
   deps: IndexGenerateFileDependencies,
 ): Promise<void> {
   const { docsDir, outputPath, outputIsExplicit } = resolved;
+
+  if (
+    trimmed(resolved.config.documentation?.tooling)?.toLowerCase() ===
+      'markdown' &&
+    ((canonical.configuredRoot !== null &&
+      isAtOrInside(canonical.configuredRoot, canonical.outputPath)) ||
+      (resolved.configuredRoot !== null &&
+        isAtOrInside(resolved.configuredRoot, outputPath)) ||
+      canonical.outputPath === canonical.authoredIndex ||
+      outputPath === canonical.lexicalAuthoredIndex)
+  ) {
+    throw new CliError(
+      `Refusing to write the generated index to protected Markdown documentation at ${outputPath}: the full configured content root and authored documentation.index must be preserved. Pass --output with a different path outside the Markdown content root.`,
+      REFUSAL_EXIT_CODE,
+    );
+  }
 
   if (isAtOrInside(canonical.docsDir, canonical.outputPath)) {
     throw new CliError(
@@ -699,13 +749,13 @@ export function createDocsGenerateIndexCommand(
     .addOption(
       new Option(
         '--docs-dir <path>',
-        'Documentation source directory, resolved from the CWD (default: `<documentation.root>/docs` when that directory exists, otherwise `<documentation.root>`)',
+        'Documentation source directory, resolved from the CWD (default: literal `<documentation.root>` for Markdown; otherwise `<documentation.root>/docs` when that directory exists, or `<documentation.root>`)',
       ),
     )
     .addOption(
       new Option(
         '--output <path>',
-        'Output file path, resolved from the CWD (default: `<documentation.root>/index.md`)',
+        'Output file path, resolved from the CWD (required outside the content root for Markdown; otherwise default: `<documentation.root>/index.md`)',
       ),
     )
     .addOption(

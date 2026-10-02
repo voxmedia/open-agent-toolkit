@@ -1,17 +1,17 @@
 ---
 name: oat-docs-bootstrap
-description: Use when bootstrapping a new OAT docs app in a repo. Guides the user through preflight detection, richer input gathering than the raw CLI, `oat docs init` invocation with gated post-patches for open CLI gaps, build verification, post-scaffold config inspection, and an educational walkthrough. Supports Fumadocs (full path) and MkDocs (lean path with defined minimum contract).
+description: Use when bootstrapping or adopting an OAT documentation surface in a repo. Guides the user through preflight detection, richer input gathering than the raw CLI, `oat docs init` invocation with gated post-patches for open CLI gaps, build verification, post-scaffold config inspection, and an educational walkthrough. Supports plain Markdown (file-level path), Fumadocs (full path), and MkDocs (lean path with defined minimum contract).
 argument-hint: '<optional-target-dir>'
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.2.2
+  version: 1.3.1
 ---
 
 # Docs Bootstrap
 
-Bootstrap a docs app in this repo and guide the user through understanding how it works. Wraps `oat docs init` with preflight detection, richer input gathering, gated post-patches for open CLI gaps (FP-11 Turbopack root, FP-12 site-title coherence, FP-13 template content, FP-15 docs-app AGENTS.md, FP-16 `## Contents` link extensions, FP-17 `contributing.md` three-surfaces cleanup), build verification, post-scaffold config inspection, and an educational walkthrough covering the `index.md` + `## Contents` navigation contract, scaffolded agent-instruction surfaces, and the OAT docs ecosystem (`oat-project-document`, `oat-docs-analyze`, `oat-docs-apply`).
+Bootstrap or adopt documentation in this repo and guide the user through understanding how it works. Wraps `oat docs init` with preflight detection, richer input gathering, gated post-patches for open CLI gaps (FP-11 Turbopack root, FP-12 site-title coherence, FP-13 template content, FP-15 docs-app AGENTS.md, FP-16 `## Contents` link extensions, FP-17 `contributing.md` three-surfaces cleanup), build verification, post-scaffold config inspection, and an educational walkthrough covering the `index.md` + `## Contents` navigation contract, scaffolded agent-instruction surfaces, and the OAT docs ecosystem (`oat-project-document`, `oat-docs-analyze`, `oat-docs-apply`).
 
 ## Prerequisites
 
@@ -23,7 +23,7 @@ Bootstrap a docs app in this repo and guide the user through understanding how i
 
 **OAT MODE: Docs Bootstrap**
 
-**Purpose:** Turn `oat docs init` scaffolding into a support-rich onboarding experience — preflight, inputs, CLI invocation with gated post-patches, build verification, config inspection, educational walkthrough, and optional content kickoff. Two framework paths: Fumadocs (full) and MkDocs (lean with defined minimum contract).
+**Purpose:** Turn `oat docs init` scaffolding into a support-rich onboarding experience — preflight, inputs, CLI invocation with gated post-patches, build verification, config inspection, educational walkthrough, and optional content kickoff. Three paths: Markdown (authored content without an app), Fumadocs (full), and MkDocs (lean with defined minimum contract).
 
 **BLOCKED Activities:**
 
@@ -110,6 +110,18 @@ OAT ▸ DOCS BOOTSTRAP
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
+### Markdown path through the seven steps
+
+The detailed framework procedures below apply to Fumadocs/MkDocs. When the selected tooling is `markdown`, use this path for Steps 2–7 instead; never run framework post-patches, the FP-15 AGENTS bridge, dependency discovery/install, package/Turbo patches, or a site build. Step 1 remains the shared read-only detector.
+
+1. **Preflight and routing:** Read `documentation.tooling` as either its string form or its legacy object `framework` field. Declared tooling is authoritative: configured Markdown uses `documentation.root` literally, including when it contains a child named `docs`; declared frameworks or unknown stacks are not plain-doc adoption candidates. With no declared tooling, check framework evidence first (`mkdocs.yml`, Fumadocs/Next config and docs-app package scripts/dependencies), then inspect the chosen dedicated content directory for authored `.md`/`.mdx` pages. A repository-root README alone is insufficient; an empty selected directory is fresh setup. For a populated plain tree, lead with **adopt and audit**, **audit only**, or **abort**. Audit only delegates read-only to `oat-docs-analyze` and exits. Adoption requires the explicit user choice and CLI `--adopt`; `--yes` alone never authorizes it. An incompatible declared root/index/tooling requires a user decision, with no silent clearing or retagging. Keep the existing explicitly authorized framework replacement path when a framework is selected.
+2. **Gather inputs:** Offer “Markdown (plain files), Fumadocs, or MkDocs?” Collect documentation title (`--site-name`), dedicated relative target directory (default `docs` in every repo shape), and optional description. Reuse an existing compatible configured Markdown root. Ask no app/package name, package-manager, site-runtime, or dependency questions. Lint and format default to `none`; describe selected existing repository tools only, without installing them. Validate a nonempty title and a dedicated in-repository target, excluding the repository root and escaping symlinks. Confirm fresh setup or additive adoption, title, root, and audit handoff. `appName` is absent and `conflictResolution` is `adopt`, `audit`, `abort`, or null for this path.
+3. **Invoke CLI:** Probe `$CLI_CMD docs init --help` and require advertised Markdown/`--adopt` support before invocation; if missing, report the needed CLI update rather than fabricating scaffold files. Run `$CLI_CMD docs init --framework markdown --target-dir <root> --site-name <title> --description <description> --lint none --format none --yes`, adding `--adopt` only for explicit adoption. Pass the selected lint/format values when using existing tools. Never pass app-only flags. An optional `--dry-run` previews file/config/guidance changes without writes; it does not count as a completed bootstrap. Capture terminal/JSON results, exact exit, created/preserved files, config changes, guidance action, and audit advice. `partial`/exit 1 with manual-required or blocked guidance means unresolved guidance; real runs may have created files, whereas dry-runs have only planned files. Report actual state and stop before claiming completion. Other refusals also stop without post-patches. For success, read config back to resolve the actual content root and authored index.
+4. **Verify files:** Print `[4/7] Verifying files…`. Check config root/index, baseline file existence, nonempty `title`/`description`, useful audience/scope context and populated `## Contents` links resolving to actual sibling pages or child `index.md`s. Honor excludes and asset-only exceptions; preserve local AGENTS instructions. Fresh setup creates only authored `index.md` and `contributing.md` in the target; verify no docs-root AGENTS, app package, framework config, dependencies, or root build changes. Run already documented lint/link/format checks when applicable; otherwise inspect files/links directly. Adoption preserves existing bytes and may leave missing child indexes, metadata, context, or links: record these as audit gaps for analyze/apply rather than repairing them or calling the tree fully conformant. Distinguish successful setup verification from content-conformance findings.
+5. **Inspect config:** `documentation.tooling` is the string `markdown`; `root` is the literal content directory; `index` is its authored entrypoint, normally `<root>/index.md`. Markdown introduces no `documentation.config`. Preserve unrelated config/excludes/completion settings. Verify deterministic managed root Documentation guidance names that root, Markdown tooling, authored index, and `<root>/contributing.md`; preserve manual/local guidance and surface unresolved disposition. The Step 5e completion opt-in remains available using the docs root rather than an app name, without silently changing an existing value. No nested app-config reconciliation or framework patch inspection applies.
+6. **Walkthrough:** In short chunks, show actual config and `<root>/index.md`: useful context plus the Contents map, title/description metadata, sibling `page.md` and child `section/index.md` links, exclusions and asset-only exceptions. Explain adding a page/section and updating the nearest authored map without overwriting existing context. Root AGENTS Documentation guidance and `<root>/contributing.md` establish agent/human conventions; a preexisting local AGENTS file remains authoritative, but bootstrap creates none. Authored indexes are edited directly. Optional generated inventories require explicit external output, e.g. `$CLI_CMD docs generate-index --docs-dir <root> --output .oat/docs-manifest.md`; output must stay outside the full configured content root and cannot overwrite the configured authored index even with a narrowed `--docs-dir`. Generation does not repoint `documentation.index`. Markdown bootstrap never generates a manifest automatically. Skip framework deep dives and preview-server/build commands.
+7. **Audit handoff and summary:** Offer `oat-docs-analyze` against the literal configured root, followed by `oat-docs-apply` only for approved repairs. An adopted incomplete tree needs that audit; config/guidance alone prove no full conformance. Explain `oat-project-document` for source-backed project deltas. Summarize tooling, actual root/authored index, created/preserved files, guidance/config disposition, file-check outcomes, unresolved audit gaps, optional manifest ownership, and exact skill handoff. For dry-run/partial/refusal, label the outcome accordingly rather than printing BOOTSTRAP COMPLETE. No app, install, build, patch, or dev-command fields apply.
+
 ### Step 1: Preflight Detector
 
 Inspect the working tree before any mutation. Determine the repo shape, detect existing docs setup, and surface conflicts that require user decisions later. This step is strictly read-only; any fix or prompt flows through the Input Gatherer (Step 2).
@@ -130,6 +142,8 @@ Once `single-package` is identified, apply the nested-standalone heuristic: if t
 In practice: for Fumadocs, any single-package repo with a target subdirectory is `nested-standalone`. For MkDocs, the shape stays `single-package` because MkDocs doesn't have the Turbopack concern.
 
 **1b. Detect existing docs setup.**
+
+Apply the Markdown-path evidence and precedence rules above before classifying a directory. Record selected tooling and whether the chosen target is absent/empty, authored Markdown, or a framework app. An existing empty target is not an existing-app conflict. The same shared detector supports the Markdown route; it does not change general `oat init` detection.
 
 Read (do not modify):
 
@@ -202,7 +216,7 @@ If `conflicts[]` is empty, skip conflict handling and go to 2b.
 
 Each question includes plain-language context explaining what the value affects. Defaults come from the Preflight Result. Ask sequentially — each answer can inform the next default.
 
-- **Framework.** `"Which docs framework? Fumadocs (Next.js, primary path) or MkDocs (Python, lean path)?"` Default: `fumadocs`.
+- **Framework.** `"Which documentation tooling? Markdown (plain files), Fumadocs (Next.js), or MkDocs (Python)?"` Default: `fumadocs`. Selecting Markdown switches to the Markdown path above before app/site questions.
 - **Site name.** `"What's the name of the product or project these docs are for?"` Default: `defaults.siteName` (humanized repo name). Explain: "This becomes the display title — what shows up in the site header, browser tab, and page headings. It is **not** the package name." This is the FP-12 workaround — distinct from `appName`.
 - **Package / app name.** `"What should the docs package be called?"` Default: `defaults.appName`. Explain: "This becomes the `package.json` `name`, the directory name, and the pnpm filter (e.g., `pnpm --filter {appName} dev`). It does **not** show up in the UI."
 - **Target directory.** `"Where should the docs app live?"` Default: `defaults.targetDir`. Explain: "Relative to repo root. Monorepos typically use `apps/{appName}`; single-package repos use `{appName}` as a subdirectory."
@@ -245,7 +259,7 @@ Record internally for the Scaffold Runner:
 
 ```
 Input Result:
-  framework: 'fumadocs' | 'mkdocs'
+  framework: 'markdown' | 'fumadocs' | 'mkdocs'
   siteName: string            // FP-12 workaround: display title distinct from appName
   appName: string
   targetDir: string
@@ -545,7 +559,9 @@ Per-file edits (Fumadocs only — MkDocs has no `layout.tsx`; its title handling
 
 Failure handling: if Capability Detection (3b) classified any of these files as `drift`, the patch is already recorded as `refused` in `Scaffold Result.patchesApplied` — skip and move on. Do not re-check drift here.
 
-**FP-15: AGENTS.md write-if-missing.**
+**FP-15: AGENTS.md write-if-missing (Fumadocs/MkDocs only).**
+
+Never apply this bridge to Markdown: its root is the content directory and bootstrap must not create a docs-root AGENTS file.
 
 Gate: run **only if** `capabilities.agentsMdScaffoldFlag === false` AND `<appRoot>/AGENTS.md` does not exist on disk.
 
@@ -1128,7 +1144,14 @@ End the skill with the summary. Do not prompt for more input — the user knows 
 
 A successful `oat-docs-bootstrap` run satisfies every invariant below. Any failure of an invariant either blocks progression (critical) or is surfaced to the user in the Exit summary with a `suggestedFix` (warning) so the user knows what to address.
 
-**Pipeline invariants:**
+**Markdown invariants:**
+
+- Configured tooling controls routing; framework evidence precedes unconfigured plain-tree evidence; README-only and empty directories do not imply adoption.
+- Fresh/adopt operations use the CLI with literal roots; populated targets require explicit `--adopt`, preserved content remains authoritative, and audit gaps are handed to analyze/apply.
+- No app questions, installs, site builds, framework patches, automatic manifest, or docs-root AGENTS creation. Authored index/context/Contents/metadata/links and local instructions remain applicable.
+- Dry-run/partial outcomes report planned or actual state accurately; successful adoption is not a claim of full content conformity.
+
+**Framework pipeline invariants (Fumadocs/MkDocs):**
 
 - Preflight ran read-only — no files mutated, no config written, no scaffold invoked.
 - Input Gatherer collected the full Input Result (framework, siteName, appName, targetDir, siteDescription, lint, format) plus any `conflictResolution` required by Preflight conflicts; all inputs validated before scaffold.

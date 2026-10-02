@@ -981,6 +981,118 @@ describe('createDocsGenerateIndexCommand', () => {
       expect(config.documentation?.index).toBe('apps/docs/index.md');
     });
 
+    it('requires explicit Markdown output and indexes the full literal root', async () => {
+      const repo = await createRealRepo({
+        root: 'apps/docs',
+        tooling: 'markdown',
+        index: 'apps/docs/index.md',
+      });
+      const authored =
+        '# Handbook\n\nAudience: maintainers.\n\n## Contents\n\n- [Guide](docs/guide.md)\n';
+      const beforeConfig = await readFile(
+        join(repo.repoRoot, '.oat', 'config.json'),
+        'utf8',
+      );
+      await runCommand(repo.command);
+      expect(process.exitCode).toBe(1);
+      expect(repo.capture.error.join('\n')).toContain(
+        'Markdown documentation uses an authored index',
+      );
+      await expect(
+        readFile(join(repo.appRoot, 'index.md'), 'utf8'),
+      ).rejects.toThrow();
+
+      await writeFile(join(repo.appRoot, 'index.md'), authored);
+
+      await runCommand(repo.command, ['--output', 'manifest.md']);
+      expect(process.exitCode).toBe(0);
+      const manifest = await readFile(
+        join(repo.repoRoot, 'manifest.md'),
+        'utf8',
+      );
+      expect(manifest).toContain('[Handbook](index.md)');
+      expect(manifest).toContain('[Guide](docs/guide.md)');
+      await expect(
+        readFile(join(repo.repoRoot, '.oat', 'config.json'), 'utf8'),
+      ).resolves.toBe(beforeConfig);
+      await expect(
+        readFile(join(repo.appRoot, 'index.md'), 'utf8'),
+      ).resolves.toBe(authored);
+    });
+
+    it.each([
+      'index.md',
+      'other.md',
+      'alias.md',
+      'outside-index.md',
+      'outside-alias.md',
+    ])(
+      'protects configured Markdown content and authored index with narrowed source: %s',
+      async (target) => {
+        const repo = await createRealRepo({
+          root: 'apps/docs',
+          tooling: 'markdown',
+          index: target.startsWith('outside')
+            ? 'authored.md'
+            : 'apps/docs/index.md',
+        });
+        const authored =
+          '# Handbook\n\nAudience: maintainers. Ownership: docs team.\n';
+        const indexPath = target.startsWith('outside')
+          ? join(repo.repoRoot, 'authored.md')
+          : join(repo.appRoot, 'index.md');
+        await writeFile(indexPath, authored);
+        const beforeConfig = await readFile(
+          join(repo.repoRoot, '.oat', 'config.json'),
+          'utf8',
+        );
+        let output = join(repo.appRoot, target);
+        if (target === 'alias.md' || target === 'outside-alias.md') {
+          output = join(repo.repoRoot, target);
+          await symlink(indexPath, output);
+        } else if (target === 'outside-index.md') {
+          output = indexPath;
+        }
+        await runCommand(repo.command, [
+          '--docs-dir',
+          'apps/docs/docs',
+          '--output',
+          output,
+        ]);
+        expect(process.exitCode).toBe(1);
+        expect(repo.capture.error.join('\n')).toContain(
+          'protected Markdown documentation',
+        );
+        await expect(readFile(indexPath, 'utf8')).resolves.toBe(authored);
+        await expect(
+          readFile(join(repo.repoRoot, '.oat', 'config.json'), 'utf8'),
+        ).resolves.toBe(beforeConfig);
+      },
+    );
+
+    it('allows explicit Fumadocs output at its configured index and retains manifest transition', async () => {
+      const repo = await createRealRepo({
+        root: 'apps/docs',
+        tooling: 'fumadocs',
+        index: 'apps/docs/index.md',
+      });
+      await writeFile(
+        join(repo.appRoot, 'index.md'),
+        '# Previous manifest destination\n',
+      );
+      await runCommand(repo.command, ['--output', 'apps/docs/index.md']);
+      expect(process.exitCode).toBe(0);
+      expect(await readFile(join(repo.appRoot, 'index.md'), 'utf8')).toContain(
+        GENERATED_INDEX_WARNING,
+      );
+      expect((await repo.readConfig()).documentation?.index).toBe(
+        'apps/docs/index.md',
+      );
+      await expect(
+        readFile(join(repo.appRoot, 'docs', 'index.md'), 'utf8'),
+      ).resolves.toBe(repo.authored);
+    });
+
     it('records documentation.index as the only config change (GitHub #311)', async () => {
       const repo = await createRealRepo({
         root: 'apps/docs',

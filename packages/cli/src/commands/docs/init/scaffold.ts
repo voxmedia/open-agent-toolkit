@@ -13,6 +13,7 @@ import { dirExists, ensureDir, fileExists } from '@fs/io';
 import { OAT_VERSION } from '@shared/oat-version';
 
 import { buildDocsCommands } from './docs-commands';
+import { applyMarkdownDocsPlan, planMarkdownDocs } from './markdown';
 import type {
   DocsFormatMode,
   DocsFramework,
@@ -90,7 +91,10 @@ interface FrameworkConfig {
   sentinelFile: string;
 }
 
-const FRAMEWORK_CONFIGS: Record<DocsFramework, FrameworkConfig> = {
+const FRAMEWORK_CONFIGS: Record<
+  Exclude<DocsFramework, 'markdown'>,
+  FrameworkConfig
+> = {
   mkdocs: {
     templateFiles: MKDOCS_TEMPLATE_FILES,
     sentinelFile: 'mkdocs.yml',
@@ -414,6 +418,13 @@ export function buildDocumentationConfig(
   framework: DocsFramework,
   targetDir: string,
 ): OatDocumentationConfig {
+  if (framework === 'markdown') {
+    return {
+      root: targetDir,
+      tooling: 'markdown',
+      index: join(targetDir, 'index.md'),
+    };
+  }
   if (framework === 'fumadocs') {
     return {
       root: targetDir,
@@ -445,6 +456,9 @@ export async function scaffoldDocsApp(
   options: ScaffoldDocsAppOptions,
   overrides: Partial<ScaffoldDocsAppDependencies> = {},
 ): Promise<ScaffoldDocsAppResult> {
+  if (options.framework === 'markdown') {
+    return applyMarkdownDocsPlan(await planMarkdownDocs(options));
+  }
   const appRoot = join(options.repoRoot, options.targetDir);
   const templateDir = getTemplateDir(options.framework);
   const templateRoot = join(options.assetsRoot, 'templates', templateDir);

@@ -1,11 +1,11 @@
 ---
 name: oat-docs-analyze
-description: Run when you need to evaluate documentation structure, navigation, and coverage against the OAT docs app contract. Produces a severity-rated analysis artifact for oat-docs-apply.
+description: Run when you need to evaluate documentation structure, navigation, and coverage against the OAT documentation contract. Produces a severity-rated analysis artifact for oat-docs-apply.
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(oat docs nav sync --check:*), Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: 1.6.0
+  version: 1.6.1
 ---
 
 # Docs Analysis
@@ -93,7 +93,11 @@ repo fallbacks:
 1. `.oat/config.json` `documentation.root` / `documentation.tooling`.
    - When `documentation.tooling` is `fumadocs`, record the surface type as
      `oat-fumadocs-app`.
-   - Treat `documentation.root` as the docs app root. Resolve the authored docs
+   - When tooling is `markdown`, record `docs-tree`; `documentation.root` is
+     the literal authored content root, even with a child named `docs`. The
+     configured `documentation.index` is authored, not a generated manifest.
+     Honor configured excludes and existing local instructions.
+   - For framework tooling, treat `documentation.root` as the docs app root. Resolve the authored docs
      source root and generated index path from `documentation.index`, app config,
      package scripts, generator scripts, or local guidance.
 2. OAT/Fumadocs app candidates under `apps/*`, before root `docs/` fallback:
@@ -120,6 +124,12 @@ TRACKING=$(bash "$TRACKING_SCRIPT" read docs 2>/dev/null || true)
 
 - If the stored commit exists, run in `delta` mode and scope drift checks to changed docs directories.
 - Otherwise run in `full` mode.
+
+Configured tooling/root take precedence over discovery. Markdown needs no app
+package, site config, docs-root AGENTS, site build, or generated manifest. Read
+managed root guidance, contributing pages, and any existing local AGENTS files;
+do not mark their absence as a missing app shell. A successful adoption only
+establishes config/baseline/guidance; audit incomplete authored content normally.
 
 ### Step 1: Inventory the Docs Surface
 
@@ -155,7 +165,7 @@ Capture the evidence sources that will justify later findings and recommendation
 Do **not** infer docs structure conventions from a tiny sample of pages when the broader
 tree or config disagrees.
 
-For OAT/Fumadocs docs apps, check whether local guidance covers:
+For configured Markdown and OAT/Fumadocs docs apps, check whether local guidance covers:
 
 - authored docs source location
 - generated root indexes or manifests and their no-hand-edit boundary
@@ -174,7 +184,7 @@ the current analyze/apply flow.
 
 Use `references/quality-checklist.md` and `references/directory-assessment-criteria.md`.
 
-For every documentation directory:
+For every non-excluded Markdown-bearing documentation directory:
 
 1. Verify `index.md` exists.
 2. Verify `index.md` includes a `## Contents` section.
@@ -189,6 +199,13 @@ For every documentation directory:
    or local section map.
 9. Exempt asset-only directories that contain no Markdown content and are not
    linked as navigable docs sections.
+
+For Markdown, assess useful audience/scope context, nonempty title/description
+metadata, populated Contents, and relative `.md` links. Do not overwrite or
+recommend replacing existing context just to satisfy structure. Optional external
+manifests are separate derived artifacts: assess them only when local guidance
+actually declares one. Never require default generation or repoint an authored
+`documentation.index` to a manifest.
 
 For OAT/Fumadocs docs apps, also distinguish authored source maps from generated
 root indexes:
@@ -240,7 +257,7 @@ For each evaluated page or directory:
 
 1. Read the docs file plus the local evidence needed to validate its claims.
 2. Resolve every local relative Markdown link from the page where it appears.
-   Flag broken targets. In OAT/Fumadocs docs apps, flag extensionless local
+   Flag broken targets. In configured Markdown and OAT/Fumadocs docs apps, flag extensionless local
    Markdown links and prefer `.md`-suffixed targets, including
    `subdir/index.md`.
 3. Accept anchors on `.md` links, such as `page.md#section`, and do not flag
@@ -419,7 +436,10 @@ If `mkdocs.yml` exists:
 4. Flag directories whose `index.md` `## Contents` section appears inconsistent with nav structure.
 5. Flag docs guidance that claims structure, plugin support, or workflow rules not backed by current repo evidence.
 
-If neither `mkdocs.yml` nor a Fumadocs app exists, record whether the repo should be migrated to an OAT docs app.
+For Markdown, verify the authored Contents graph and file/link contract without
+site nav generation or builds. Lack of `mkdocs.yml`, a generated manifest, or an
+app package is expected, not a migration finding. For other unconfigured surfaces,
+record whether app migration is relevant only when evidence or user intent supports it.
 
 ### Step 7: Severity-Rate Findings
 

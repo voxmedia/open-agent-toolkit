@@ -1,0 +1,122 @@
+{
+  "reviewedBase": "7ba2dda0c672e0830e81980b23d62d011266b9dc",
+  "sourceHashes": {
+    "packages/cli/src/commands/docs/init/markdown.ts": "7dc629f3ddf9234a5e6a8577ee43353e7c76de7daea232fd4891ed8e807afe9a",
+    "packages/cli/src/commands/docs/init/index.ts": "978f474732eeb11e24d4ef643e51bc5f911f8091f1aa03210c3f92cd88e3c0b9",
+    "packages/cli/src/commands/docs/init/markdown.test.ts": "7d73d8a84a2640de27677ffedc1948a9eb5b6e07b3d8f2c2a7189bdccd6f72e4",
+    "packages/cli/src/commands/docs/init/index.test.ts": "e6b8f8ea1b794e13b3f9df0d8c7ee37d2a29c38f5dc2ced4f23abd5c01224331"
+  },
+  "sourceComment": "https://github.com/voxmedia/open-agent-toolkit/pull/335#discussion_r4162610788",
+  "causalEvidence": {
+    "storagePreFix": {
+      "failed": 5,
+      "reason": "partial files remain or failed files reported created"
+    },
+    "storagePostFix": {
+      "passed": 5
+    },
+    "reportingPreFix": {
+      "failed": 1,
+      "passed": 1,
+      "reason": "human output omits retained incomplete path"
+    },
+    "reportingPostFix": {
+      "passed": 2
+    },
+    "ownershipGuardNeutralized": {
+      "exit": 1,
+      "reason": "replacement file deleted; ENOENT"
+    },
+    "ownershipGuardRestored": {
+      "exit": 0
+    }
+  },
+  "independentReview": {
+    "role": "bounded native review",
+    "critical": 0,
+    "high": 0,
+    "medium": 0,
+    "low": 0,
+    "actualFocusedTests": 25
+  },
+  "gates": [
+    {
+      "gate": "check",
+      "argv": ["pnpm", "check"],
+      "exit": 0,
+      "seconds": 9.52,
+      "cacheSummary": [
+        "Tasks:    11 successful, 11 total",
+        "Cached:    4 cached, 11 total"
+      ]
+    },
+    {
+      "gate": "type-check",
+      "argv": ["pnpm", "type-check"],
+      "exit": 0,
+      "seconds": 1.59,
+      "cacheSummary": [
+        "Tasks:    10 successful, 10 total",
+        "Cached:    9 cached, 10 total"
+      ]
+    },
+    {
+      "gate": "test",
+      "argv": ["pnpm", "test"],
+      "exit": 0,
+      "seconds": 146.48,
+      "cacheSummary": [
+        "Tasks:    10 successful, 10 total",
+        "Cached:    5 cached, 10 total"
+      ]
+    },
+    {
+      "gate": "build",
+      "argv": ["pnpm", "build"],
+      "exit": 0,
+      "seconds": 1.36,
+      "cacheSummary": [
+        "Tasks:    5 successful, 5 total",
+        "Cached:    5 cached, 5 total"
+      ]
+    },
+    {
+      "gate": "skill-bumps",
+      "argv": ["pnpm", "run", "check:skill-bumps"],
+      "exit": 0,
+      "seconds": 2.16,
+      "cacheSummary": []
+    },
+    {
+      "gate": "fetch-origin-main",
+      "argv": ["git", "fetch", "origin", "main"],
+      "exit": 0,
+      "seconds": 0.29,
+      "cacheSummary": []
+    },
+    {
+      "gate": "release-versions",
+      "argv": ["pnpm", "release:check-versions"],
+      "exit": 0,
+      "seconds": 0.69,
+      "cacheSummary": []
+    },
+    {
+      "gate": "release-validation",
+      "argv": ["pnpm", "release:validate"],
+      "exit": 0,
+      "seconds": 3.05,
+      "cacheSummary": []
+    },
+    {
+      "gate": "docs-build",
+      "argv": ["pnpm", "build:docs"],
+      "exit": 0,
+      "seconds": 1.46,
+      "cacheSummary": [
+        "Tasks:    6 successful, 6 total",
+        "Cached:    6 cached, 6 total"
+      ]
+    }
+  ]
+}

@@ -2031,7 +2031,8 @@ export async function readOatConfigForDefaultScopeRepair(
 
 /**
  * The documentation *content* root: `<documentation.root>/docs` when that path
- * is a directory, otherwise `documentation.root` itself.
+ * is a directory, otherwise `documentation.root` itself. Explicit Markdown
+ * tooling always uses the configured root itself, including nested `docs`.
  *
  * `documentation.root` canonically names the docs **app root** written by
  * `oat docs init`; the `<root>/docs` preference is compatibility behavior for
@@ -2066,7 +2067,10 @@ export async function resolveDocumentationContentRoot(
   // `stat`) pass their own directory probe so the `<root>/docs` rule sees the
   // same filesystem the rest of the scan does; the default is the real one.
   const probe = dependencies.dirExists ?? dirExists;
-  const contentRoot = (await probe(docsChild)) ? docsChild : absoluteRoot;
+  const isMarkdown =
+    config.documentation?.tooling?.trim().toLowerCase() === 'markdown';
+  const contentRoot =
+    !isMarkdown && (await probe(docsChild)) ? docsChild : absoluteRoot;
   const relativeContentRoot = normalizeToPosixPath(
     relative(repoRoot, contentRoot),
   );

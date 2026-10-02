@@ -5,13 +5,15 @@ description: Authored source, navigation, link, file-type, generated-index, and 
 
 # OAT Fumadocs Authoring Contract
 
-The OAT/Fumadocs contract is tooling-critical. It is not just style.
+The authored-source rules below also apply to configured plain Markdown.
+Framework-specific generated output and metadata controls remain conditional.
 
 ## Authored Source of Truth
 
 - Author content under the authored docs root, usually `docs/` inside the docs
-  app.
-- Every Markdown-bearing content directory has an authored `index.md`.
+  app; configured Markdown uses `documentation.root` literally.
+- Every non-excluded Markdown-bearing content directory has an authored `index.md`.
+- Preserve useful audience/scope context, ownership notes, and local instructions.
 - Every authored `index.md` that represents a content directory has a
   `## Contents` section.
 - `## Contents` lists sibling pages and immediate child directories for that
@@ -41,6 +43,14 @@ the task scope or an approved recommendation covers that change.
   `## Contents`.
 - Add or preserve at least `title` and `description` frontmatter on touched
   pages unless local guidance defines a stricter schema.
+
+## Markdown Authored Index Ownership
+
+With `documentation.tooling: markdown`, `documentation.index` is authored.
+Edit its context and Contents directly within approved scope. No manifest is
+required. Optional generation needs explicit output outside the full configured
+content tree and cannot overwrite the authored index, even with narrowed source
+flags. Never repoint the config index to generated output.
 
 ## Generated Root Indexes
 

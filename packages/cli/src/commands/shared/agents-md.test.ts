@@ -24,6 +24,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   type AgentsMdFileSystem,
+  previewAgentsMdSection,
+  previewAgentsMdSections,
   removeAgentsMdSection,
   upsertAgentsMdSection,
   upsertAgentsMdSections,
@@ -75,6 +77,193 @@ describe('append-only AGENTS.md guidance', () => {
       ]),
     );
   }
+
+  describe('read-only guidance preview', () => {
+    it.each([
+      { content: undefined, action: 'created' },
+      { content: '# Private repository context\n', action: 'appended' },
+      { content: `${TOOLS_BLOCK}\n`, action: 'no-change' },
+      { content: STALE_TOOLS_BLOCK, action: 'manual-required' },
+      { content: '<!-- OAT tools -->\nUnclosed section\n', action: 'blocked' },
+    ])(
+      'predicts $action from observed content without writes',
+      async ({ content, action }) => {
+        await setup(content);
+        const beforeEntries = await readdir(root);
+        const openSpy = vi.fn(realFileSystem.open);
+        const writeSpy = vi.fn(realFileSystem.writeFile);
+        const result = await previewAgentsMdSection(
+          root,
+          'tools',
+          '## Tool Packs\n- workflows',
+          {
+            fileSystem: withFileSystem({ open: openSpy, writeFile: writeSpy }),
+          },
+        );
+        expect(result.action).toBe(action);
+        expect(openSpy).not.toHaveBeenCalled();
+        expect(writeSpy).not.toHaveBeenCalled();
+        expect(await readdir(root)).toEqual(beforeEntries);
+        if (content !== undefined)
+          await expect(readAgentsMd()).resolves.toBe(content);
+        else
+          await expect(lstat(join(root, 'AGENTS.md'))).rejects.toMatchObject({
+            code: 'ENOENT',
+          });
+        expect(JSON.stringify(result)).not.toContain(
+          'Private repository context',
+        );
+      },
+    );
+
+    it('predicts a mixed append/manual/no-change request and composes with actual upsert', async () => {
+      const original = `# Team context\n${TOOLS_BLOCK}\n<!-- OAT docs -->\nOld docs guidance\n<!-- END OAT docs -->\n`;
+      await setup(original);
+      const sections = [
+        { key: 'tools', body: '## Tool Packs\n- workflows' },
+        { key: 'docs', body: 'New docs guidance' },
+        { key: 'testing', body: 'Testing guidance' },
+      ];
+      const preview = await previewAgentsMdSections(root, sections);
+      expect(preview.tools?.action).toBe('no-change');
+      expect(preview.docs?.action).toBe('manual-required');
+      expect(preview.testing?.action).toBe('appended');
+      await expect(readAgentsMd()).resolves.toBe(original);
+      expect(await upsertAgentsMdSections(root, sections)).toEqual(preview);
+      await expect(readAgentsMd()).resolves.toBe(
+        `${original}\n<!-- OAT testing -->\nTesting guidance\n<!-- END OAT testing -->\n`,
+      );
+    });
+
+    it('predicts legacy removal as manual-required and preserves every byte', async () => {
+      const original =
+        '# Context\n<!-- OAT workflows -->\nLegacy guidance\n<!-- END OAT workflows -->\n';
+      await setup(original);
+      const result = await previewAgentsMdSection(
+        root,
+        'tools',
+        'Tool guidance',
+        { removeSectionKeys: ['workflows'] },
+      );
+      expect(result).toMatchObject({
+        action: 'manual-required',
+        manualPatch: { legacyBlockAction: 'remove-manually' },
+      });
+      await expect(readAgentsMd()).resolves.toBe(original);
+      expect(
+        await upsertAgentsMdSection(root, 'tools', 'Tool guidance', {
+          removeSectionKeys: ['workflows'],
+        }),
+      ).toEqual(result);
+      await expect(readAgentsMd()).resolves.toBe(original);
+    });
+
+    it('previews a contained symlink using the shared target validation', async () => {
+      await setup();
+      const original = '# Shared local instructions\n';
+      const target = join(root, 'guidance.md');
+      await writeFile(target, original);
+      await symlink('guidance.md', join(root, 'AGENTS.md'));
+      const result = await previewAgentsMdSection(
+        root,
+        'docs',
+        'Documentation guidance',
+      );
+      expect(result.action).toBe('appended');
+      await expect(readFile(target, 'utf8')).resolves.toBe(original);
+      await expect(readlink(join(root, 'AGENTS.md'))).resolves.toBe(
+        'guidance.md',
+      );
+      expect(
+        await upsertAgentsMdSection(root, 'docs', 'Documentation guidance'),
+      ).toEqual(result);
+    });
+
+    it('predicts hard-link append refusal without opening a write handle', async () => {
+      const original = '# Shared inode context\n';
+      await setup(original);
+      await link(join(root, 'AGENTS.md'), join(root, 'other.md'));
+      const openSpy = vi.fn(realFileSystem.open);
+      const result = await previewAgentsMdSection(
+        root,
+        'docs',
+        'Documentation guidance',
+        { fileSystem: withFileSystem({ open: openSpy }) },
+      );
+      expect(result).toMatchObject({
+        action: 'manual-required',
+        manualPatch: {
+          appendRefusal: expect.stringContaining('more than one hard link'),
+        },
+      });
+      expect(openSpy).not.toHaveBeenCalled();
+      await expect(readAgentsMd()).resolves.toBe(original);
+      await expect(readFile(join(root, 'other.md'), 'utf8')).resolves.toBe(
+        original,
+      );
+    });
+
+    it.each(['directory', 'broken-symlink', 'escaping-symlink'] as const)(
+      'blocks an unsafe %s without changing targets',
+      async (kind) => {
+        await setup();
+        const agents = join(root, 'AGENTS.md');
+        if (kind === 'directory') await mkdir(agents);
+        else
+          await symlink(
+            kind === 'broken-symlink' ? 'missing.md' : '..',
+            agents,
+          );
+        const before = await lstat(agents);
+        const openSpy = vi.fn(realFileSystem.open);
+        const writeSpy = vi.fn(realFileSystem.writeFile);
+        const result = await previewAgentsMdSection(
+          root,
+          'docs',
+          'Documentation guidance',
+          {
+            fileSystem: withFileSystem({ open: openSpy, writeFile: writeSpy }),
+          },
+        );
+        expect(result.action).toBe('blocked');
+        expect(openSpy).not.toHaveBeenCalled();
+        expect(writeSpy).not.toHaveBeenCalled();
+        expect((await lstat(agents)).ino).toBe(before.ino);
+        if (kind !== 'directory')
+          await expect(readlink(agents)).resolves.toBe(
+            kind === 'broken-symlink' ? 'missing.md' : '..',
+          );
+      },
+    );
+
+    it('blocks an unreadable target without exposing errors or invoking writes', async () => {
+      const original = '# Restricted local context\n';
+      await setup(original);
+      const openSpy = vi.fn(realFileSystem.open);
+      const writeSpy = vi.fn(realFileSystem.writeFile);
+      const result = await previewAgentsMdSection(
+        root,
+        'docs',
+        'Documentation guidance',
+        {
+          fileSystem: withFileSystem({
+            readFile: vi.fn(async () => {
+              throw Object.assign(new Error('Private path details'), {
+                code: 'EACCES',
+              });
+            }) as AgentsMdFileSystem['readFile'],
+            open: openSpy,
+            writeFile: writeSpy,
+          }),
+        },
+      );
+      expect(result.action).toBe('blocked');
+      expect(JSON.stringify(result)).not.toContain('Private path details');
+      expect(openSpy).not.toHaveBeenCalled();
+      expect(writeSpy).not.toHaveBeenCalled();
+      await expect(readAgentsMd()).resolves.toBe(original);
+    });
+  });
 
   it('creates a missing root file once with one exclusive write', async () => {
     await setup();

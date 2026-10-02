@@ -9,10 +9,25 @@ import { buildDocsSectionBody, createDocsInitCommand } from './index';
 import type { DocsInitResolvedOptions } from './resolve-options';
 import { buildDocumentationConfig } from './scaffold';
 
-function createHarness(options: { interactive?: boolean } = {}) {
+function createHarness(
+  options: {
+    interactive?: boolean;
+    partial?: { incompleteFiles: string[] };
+  } = {},
+) {
   const capture = createLoggerCapture();
 
-  const runDocsInit = vi.fn(async () => {});
+  const runDocsInit = vi.fn(async () =>
+    options.partial
+      ? {
+          appRoot: '/tmp/workspace/docs',
+          createdFiles: ['index.md'],
+          incompleteFiles: options.partial.incompleteFiles,
+          configStatus: 'not-attempted' as const,
+          failure: { stage: 'scaffold' as const, message: 'disk full' },
+        }
+      : undefined,
+  );
   const upsertAgentsMdSection = vi.fn(async () => ({
     action: 'created' as const,
   }));
@@ -75,6 +90,45 @@ describe('createDocsInitCommand', () => {
   afterEach(() => {
     process.exitCode = originalExitCode;
   });
+
+  it.each([false, true])(
+    'reports retained incomplete output separately in json=%s mode',
+    async (json) => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-docs-write-guidance-'));
+      try {
+        const { command, capture, upsertAgentsMdSection } = createHarness({
+          interactive: false,
+          partial: { incompleteFiles: ['contributing.md'] },
+        });
+        await runCommand(
+          command,
+          ['--framework', 'markdown', '--target-dir', 'docs', '--yes'],
+          ['--cwd', root, ...(json ? ['--json'] : [])],
+        );
+        expect(process.exitCode).toBe(1);
+        expect(upsertAgentsMdSection).not.toHaveBeenCalled();
+        if (json) {
+          expect(capture.jsonPayloads[0]).toMatchObject({
+            status: 'partial',
+            createdFiles: ['index.md'],
+            incompleteFiles: ['contributing.md'],
+            configStatus: 'not-attempted',
+          });
+        } else {
+          expect(capture.warn.join('\n')).toContain('contributing.md');
+          expect(capture.warn.join('\n')).toContain('inspect or repair');
+          expect(capture.warn.join('\n')).toContain(
+            'Adoption preserves existing files',
+          );
+          expect(capture.info.join('\n')).toContain(
+            'Created baseline files: index.md',
+          );
+        }
+      } finally {
+        await rm(root, { recursive: true, force: true });
+      }
+    },
+  );
 
   it('calls upsertAgentsMdSection with docs key after scaffolding', async () => {
     const { command, upsertAgentsMdSection } = createHarness({
@@ -600,3 +654,6 @@ describe('buildDocsSectionBody', () => {
     );
   });
 });
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
