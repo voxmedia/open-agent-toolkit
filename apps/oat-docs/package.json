@@ -12,6 +12,8 @@
     "check": "oxlint scripts tests && oxfmt --check scripts tests && oxfmt --check 'docs/**/*.md' && markdownlint-cli2 'docs/**/*.md' && pnpm docs:validate",
     "docs:validate": "tsx --tsconfig tsconfig.docs-tools.json scripts/validate.ts",
     "docs:skills:validate": "tsx --tsconfig tsconfig.docs-tools.json scripts/skill-mapping.ts",
+    "docs:skills:generate": "tsx --tsconfig tsconfig.docs-tools.json scripts/skill-catalog.ts --write",
+    "docs:skills:check": "tsx --tsconfig tsconfig.docs-tools.json scripts/skill-catalog.ts --check",
     "test": "tsx --tsconfig tsconfig.docs-tools.json --test tests/*.test.ts",
     "type-check": "tsc --noEmit -p tsconfig.docs-tools.json",
     "docs:lint": "markdownlint-cli2 'docs/**/*.md'",
