@@ -15,7 +15,7 @@ oat_implement_exit_gate:
     'reviewed_head': 'd744d87ec900f10f5448856c2eff564bcd78e69f',
     'implementation_base_ref': 'origin/main',
     'implementation_fingerprint': 'sha256:effective-delta-v2:7016fbe969917e67507228762db152f49b6411a388c811ea85b30abcf7b8808d',
-    'freshness_head': 'eb18aa67749c7e345b9efd8ea9f7e09e6bd10743',
+    'freshness_head': '132bd5468bcd2232dd353b60461421f505e50bf7',
     'freshness_fingerprint': 'sha256:effective-delta-v2:7016fbe969917e67507228762db152f49b6411a388c811ea85b30abcf7b8808d',
     'waivers': [],
     'launch_state': 'result_persisted',
