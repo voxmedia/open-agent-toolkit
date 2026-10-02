@@ -15,6 +15,7 @@ import { isDirectExecution } from './lib/cli-entry.mjs';
 import {
   affirmingDispositionByReviewKind,
   requiredReviewKinds,
+  requiredReviewKindsForProfile,
   unresolvedIssuesBlockClaim,
   validateArtifactShape,
 } from './lib/contracts.mjs';
@@ -24,13 +25,6 @@ import {
   assertSafeOutputPath,
   assertUnchangedRoot,
 } from './lib/safe-path.mjs';
-
-const requiredDispositions = new Map(
-  requiredReviewKinds.map((kind) => [
-    kind,
-    affirmingDispositionByReviewKind[kind],
-  ]),
-);
 
 const permittedDispositions = new Map([
   ['semantic', new Set(['affirmed', 'rejected', 'uncertain'])],
@@ -99,7 +93,7 @@ export function reconcileLedger({
   const reviews = new Map(
     reviewResults.map((review) => [review.reviewKind, review]),
   );
-  for (const [kind] of requiredDispositions) {
+  for (const kind of requiredReviewKinds) {
     const review = reviews.get(kind);
     if (!review || review.runId !== runId || review.status !== 'complete') {
       throw new Error(`Reconciliation requires a complete ${kind} result`);
@@ -109,6 +103,22 @@ export function reconcileLedger({
       throw new Error(`Reconciliation received an invalid ${kind} disposition`);
     }
   }
+  // A claim needs a disposition from every review kind publication requires
+  // for the achieved profile. The thorough profile is achieved only with a
+  // complete redundant-verification pass, so an incorporated complete result
+  // of that kind makes it required here too. Missing it keeps the claim
+  // `unresolved`, exactly like an `uncertain` disposition.
+  const achievesThorough = reviewResults.some(
+    (review) =>
+      review.reviewKind === 'redundant-verification' &&
+      review.runId === runId &&
+      review.status === 'complete',
+  );
+  const verifyingDispositions = new Map(
+    requiredReviewKindsForProfile(
+      achievesThorough ? 'thorough' : 'standard',
+    ).map((kind) => [kind, affirmingDispositionByReviewKind[kind]]),
+  );
   const ledger = exactClone(priorLedger);
   ledger.revision = priorLedger.revision + 1;
   ledger.inputArtifacts = [
@@ -244,7 +254,7 @@ export function reconcileLedger({
     const issueBlocked = supporting.some((review) =>
       unresolvedIssuesBlockClaim(review, claim.id),
     );
-    const incomplete = [...requiredDispositions.keys()].some(
+    const incomplete = [...verifyingDispositions.keys()].some(
       (kind) =>
         !reviewResults.some(
           (review) =>
@@ -267,7 +277,7 @@ export function reconcileLedger({
             finding.material === true && finding.claimIds.includes(claim.id),
         ),
     );
-    const coreComplete = [...requiredDispositions].every(
+    const coreComplete = [...verifyingDispositions].every(
       ([kind, disposition]) =>
         supporting.some(
           (review) =>

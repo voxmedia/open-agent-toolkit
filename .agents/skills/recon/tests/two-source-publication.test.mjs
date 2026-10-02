@@ -240,11 +240,91 @@ test('a thorough review that left a briefed claim without a disposition lists it
     /claim-epsilon\*\* \(unresolved\)[^\n]*semantic review: not reviewed \(no disposition\)[^\n]*redundant-verification review: not reviewed \(no disposition\)/,
   );
   // Delta is outside the redundant-verification brief: it is downgraded by
-  // its uncertain semantic disposition, never as a redundant omission.
+  // its uncertain semantic disposition and by the missing required review,
+  // never as a redundant omission.
   const delta = downgrades
     .split('\n')
     .find((line) => line.includes(`${twoSourceClaimIds.uncertain}**`));
   assert.ok(delta, downgrades);
   assert.match(delta, /semantic review: uncertain/);
+  assert.match(
+    delta,
+    /redundant-verification review: outside its brief \(no disposition\)/,
+  );
   assert.doesNotMatch(delta, /not reviewed/);
+});
+
+test('a briefed claim a thorough review leaves without a disposition stays unresolved and the packet publishes as an honest partial', async () => {
+  // Every core review affirms alpha; only the redundant-verification review
+  // omits it. Publication requires that review at the thorough profile, so
+  // reconciliation must not verify alpha either.
+  const packet = await createTwoSourcePacket({
+    profile: 'thorough',
+    omitDispositions: [
+      {
+        reviewKind: 'redundant-verification',
+        claimId: twoSourceClaimIds.firstSource,
+      },
+    ],
+  });
+  tempRoots.push(packet.tempRoot);
+  const status = Object.fromEntries(
+    packet.ledger.claims.map((claim) => [claim.id, claim.status]),
+  );
+  assert.equal(status[twoSourceClaimIds.firstSource], 'unresolved');
+  assert.equal(status[twoSourceClaimIds.secondSource], 'verified');
+
+  const validation = await validatePacket(packet.packetRoot);
+  assert.equal(validation.valid, true, JSON.stringify(validation, null, 2));
+  assert.equal(validation.publishable, true);
+  assert.equal(validation.status, 'partial');
+  assert.equal(validation.achievedProfile, 'thorough');
+
+  const rendered = await renderPacket(packet.packetRoot);
+  assert.equal(rendered.status, 'partial');
+  assert.match(
+    reviewDowngrades(
+      await readFile(join(packet.packetRoot, 'packet.md'), 'utf8'),
+    ),
+    /claim-alpha\*\* \(unresolved\)[^\n]*redundant-verification review: not reviewed \(no disposition\)/,
+  );
+});
+
+test('a claim outside a thorough review brief stays unresolved in reconciliation and publication alike, with a rendered reason', async () => {
+  // The redundant-verification brief omits gamma, which every core review
+  // affirms. Publication requires a redundant-verification affirmation for a
+  // verified thorough claim, so reconciliation keeps gamma unresolved and the
+  // renderer says why.
+  const packet = await createTwoSourcePacket({
+    profile: 'thorough',
+    redundantClaimIds: [
+      twoSourceClaimIds.firstSource,
+      twoSourceClaimIds.uncertain,
+      twoSourceClaimIds.coverageGap,
+    ],
+  });
+  tempRoots.push(packet.tempRoot);
+  const status = Object.fromEntries(
+    packet.ledger.claims.map((claim) => [claim.id, claim.status]),
+  );
+  assert.equal(status[twoSourceClaimIds.secondSource], 'unresolved');
+  assert.equal(status[twoSourceClaimIds.firstSource], 'verified');
+
+  const validation = await validatePacket(packet.packetRoot);
+  assert.equal(validation.valid, true, JSON.stringify(validation, null, 2));
+  assert.equal(validation.status, 'partial');
+  assert.equal(validation.achievedProfile, 'thorough');
+
+  await renderPacket(packet.packetRoot);
+  const gamma = reviewDowngrades(
+    await readFile(join(packet.packetRoot, 'packet.md'), 'utf8'),
+  )
+    .split('\n')
+    .find((line) => line.includes(`${twoSourceClaimIds.secondSource}**`));
+  assert.ok(gamma, 'gamma is listed under Review Downgrades');
+  assert.match(
+    gamma,
+    /claim-gamma\*\* \(unresolved\)[^\n]*redundant-verification review: outside its brief \(no disposition\)/,
+  );
+  assert.doesNotMatch(gamma, /not reviewed/);
 });

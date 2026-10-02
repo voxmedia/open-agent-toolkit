@@ -393,9 +393,24 @@ canonical JSON. Any edited, injected, duplicated, or unprojected field differs
 (`REVIEW_BRIEF_MISMATCH`), so a brief cannot carry an injected claim, note, or
 source. Each review's dispositions must be unique and name claims its brief
 lists. The brief `id` is a lowercase slug of at most 64 characters and
-`createdAt` a UTC ISO-8601 instant. A reviewer may leave a briefed claim without
-a disposition; like an `uncertain` one, the claim stays `unresolved`, and
-`packet.md` lists it under Review Downgrades as not reviewed.
+`createdAt` a UTC ISO-8601 instant. A `verified` claim needs the affirming
+disposition of every review kind the achieved profile requires, and
+reconciliation and publication read the one rule
+(`requiredReviewKindsForProfile` in `scripts/lib/contracts.mjs`):
+
+- `semantic` (`affirmed`), `adversarial` (`unchallenged`), and `coverage`
+  (`covered`) are required at `standard` and `thorough`.
+- `redundant-verification` (`affirmed`) is also required at `thorough`. The
+  reconciler requires it whenever a complete same-run result is incorporated,
+  because only a complete redundant-verification pass achieves `thorough`.
+- `contradiction-resolution` is conditional and never required; a `rejected`
+  disposition still makes a claim `unsupported`.
+
+A claim any required review leaves without a disposition stays `unresolved`,
+like an `uncertain` one, so the packet publishes as an honest `complete` or
+`partial` instead of failing with `MISSING_INDEPENDENT_REVIEW`. `packet.md`
+lists it under Review Downgrades: as not reviewed when the review's brief
+listed the claim, and as outside its brief when it did not.
 All reject dossier paths, compiler reasoning, synthesis prose, provenance
 references, and prior review IDs.
 

@@ -12,7 +12,7 @@ import {
   isObject,
   issue,
   profiles,
-  requiredReviewKinds,
+  requiredReviewKindsForProfile,
   unresolvedIssuesBlockClaim,
   validateArtifactShape,
 } from './lib/contracts.mjs';
@@ -2082,10 +2082,10 @@ function validateAssurance(validatedRun, errors, checkBrief) {
         );
       }
       const required = new Map(
-        [
-          ...requiredReviewKinds,
-          ...(achievedProfile === 'thorough' ? ['redundant-verification'] : []),
-        ].map((kind) => [kind, affirmingDispositionByReviewKind[kind]]),
+        requiredReviewKindsForProfile(achievedProfile).map((kind) => [
+          kind,
+          affirmingDispositionByReviewKind[kind],
+        ]),
       );
       const satisfied = new Set();
       const reviewerLanes = new Set();
