@@ -95,6 +95,14 @@ accepted, the post-fix implementation rejects that same state, and a valid
 accepted control still passes. Preserve the exact probe or fixture and its
 expected categorical outcome so independent review can repeat it.
 
+That rule does not extend to docs-only moves and edits. They take a
+conservation diff (no section, link, or claim lost) and one review round; skip
+receipts and negative controls. Keep large machine-generated baselines out of
+tracked files: an `analysis/` folder anywhere under `.oat/` is gitignored, and
+the tracked reference keeps a short summary. A docs page move in the docs
+overhaul carried receipts, 13 negative controls for one re-padded table, and
+2.7 MB of tracked baselines before the user stopped it.
+
 A passing test is not proof the code works; it proves the code matches its
 fixtures, and an invented fixture can encode the same wrong model as the code
 that reads it. Parsers of external formats — provider transcripts, rollout
