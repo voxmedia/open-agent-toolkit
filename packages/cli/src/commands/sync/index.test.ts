@@ -1334,7 +1334,9 @@ describe('createSyncCommand', () => {
       });
 
       expect(capture.jsonPayloads[0]).toMatchObject({
-        summary: { plannedOperations: 1 },
+        // `failed` counts the configuration errors a summary-only consumer
+        // would otherwise miss; dry-run still exits 0.
+        summary: { plannedOperations: 1, failed: 1 },
         operationResults: [
           { asset: 'skill-one', action: 'create_copy', status: 'planned' },
           {
@@ -1407,6 +1409,39 @@ describe('createSyncCommand', () => {
       expect(capture.warn).toContain('\nSync completed with partial failures.');
       expect(process.exitCode).toBe(1);
     });
+  });
+
+  it('apply: keeps the content-hash restamp count beside a partial failure', async () => {
+    const plan = createPlan('skip');
+    plan.entries[0] = {
+      ...plan.entries[0]!,
+      strategy: 'copy',
+      reason: 'already in sync; restamp stale manifest content hash',
+      restampContentHash: 'd'.repeat(64),
+    };
+    plan.entries.push({
+      canonical: createCanonicalEntry('custom-skill'),
+      provider: 'claude',
+      providerPath: '/tmp/workspace/.claude/skills/custom-skill',
+      operation: 'error',
+      strategy: 'copy',
+      reason:
+        'canonical skill directory .agents/skills/custom-skill has no SKILL.md; add SKILL.md or remove the directory, then re-run oat sync',
+    });
+    const { capture, command } = createHarness({
+      plans: [plan],
+      executeResults: [{ applied: 0, failed: 1, skipped: 1 }],
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'project'],
+    });
+
+    expect(capture.warn).toContain('\nSync completed with partial failures.');
+    expect(capture.info).toContain(
+      '\nManifest content hash restamped for 1 entry.',
+    );
+    expect(process.exitCode).toBe(1);
   });
 
   describe('content-hash restamp visibility', () => {

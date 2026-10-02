@@ -1,4 +1,5 @@
 import {
+  cp,
   lstat,
   mkdir,
   mkdtemp,
@@ -16,6 +17,7 @@ import {
   DEFAULT_SYNC_CONFIG as AUTO_SYNC_CONFIG,
   type SyncConfig,
 } from '@config/sync-config';
+import { detectDrift } from '@drift/detector';
 import { createSymlink, createSymlinkNoClobber } from '@fs/io';
 import { computeDirectoryDigests } from '@manifest/hash';
 import {
@@ -1463,6 +1465,75 @@ describe('sync engine integration', () => {
       );
     },
   );
+
+  it('copy mode: never restamps a row whose provider path differs from the checked path', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
+    tempDirs.push(root);
+    const adapter = createTestAdapter({ defaultStrategy: 'copy' });
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    const skill = join(root, '.agents', 'skills', 'skill-one');
+    await mkdir(skill, { recursive: true });
+    await writeFile(join(skill, 'SKILL.md'), '# skill v1\n', 'utf8');
+
+    async function sync() {
+      const manifest = await loadManifest(manifestPath);
+      const plan = await computeSyncPlan({
+        canonical: await scanCanonical(root, 'project'),
+        adapters: [adapter],
+        manifest,
+        scope: 'project',
+        config: COPY_SYNC_CONFIG,
+        scopeRoot: root,
+      });
+      await executeSyncPlan(plan, manifest, manifestPath);
+      return plan;
+    }
+
+    // An older layout: snapshot the v1 copy at a path the adapter no longer
+    // maps, then let the expected path move on to v2.
+    await sync();
+    const v1 = (await loadManifest(manifestPath)).entries.find(
+      (entry) => entry.canonicalPath === '.agents/skills/skill-one',
+    )!;
+    await cp(
+      join(root, '.claude', 'skills', 'skill-one'),
+      join(root, '.claude', 'old-skills', 'skill-one'),
+      { recursive: true },
+    );
+    await writeFile(join(skill, 'SKILL.md'), '# skill v2\n', 'utf8');
+    await sync();
+    const v2 = await loadManifest(manifestPath);
+    await saveManifest(manifestPath, {
+      ...v2,
+      entries: v2.entries.map((entry) =>
+        entry.canonicalPath === v1.canonicalPath
+          ? {
+              ...entry,
+              providerPath: '.claude/old-skills/skill-one',
+              contentHash: v1.contentHash,
+            }
+          : entry,
+      ),
+    });
+    const trackedDrift = async () =>
+      (
+        await detectDrift(
+          (
+            await loadManifest(manifestPath)
+          ).entries.find((entry) => entry.canonicalPath === v1.canonicalPath)!,
+          root,
+        )
+      ).state;
+    expect(await trackedDrift()).toEqual({ status: 'in_sync' });
+
+    const plan = await sync();
+
+    expect(plan.entries).toEqual([
+      expect.objectContaining({ operation: 'skip' }),
+    ]);
+    expect(plan.entries[0]).not.toHaveProperty('restampContentHash');
+    expect(await trackedDrift()).toEqual({ status: 'in_sync' });
+  });
 
   it('copy mode: a marker-less skill or agent directory reports the same error on every run instead of looping', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));

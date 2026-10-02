@@ -386,7 +386,7 @@ async function ensureSkipEntryManaged(
   planEntry: SyncPlanEntry,
   manifest: ManifestV2,
 ): Promise<ManifestV2> {
-  const { canonicalPath } = resolveManifestPaths(planEntry);
+  const { canonicalPath, providerPath } = resolveManifestPaths(planEntry);
   const existing = manifest.entries.find(
     (entry) =>
       entry.canonicalPath === canonicalPath &&
@@ -395,12 +395,14 @@ async function ensureSkipEntryManaged(
   if (existing) {
     // An owned entry is rewritten only when the planner verified the provider
     // content and found the recorded digest stale; it then writes exactly the
-    // digest it verified. Every other owned skip leaves the manifest as is, so
-    // a settled sync stays a no-op.
+    // digest it verified. The row must track that same provider path, or the
+    // digest would describe a tree the row does not point at. Every other
+    // owned skip leaves the manifest as is, so a settled sync stays a no-op.
     const restampContentHash = planEntry.restampContentHash;
     if (
       restampContentHash === undefined ||
       existing.strategy === 'collection' ||
+      existing.providerPath !== providerPath ||
       existing.contentHash === restampContentHash
     ) {
       return manifest;

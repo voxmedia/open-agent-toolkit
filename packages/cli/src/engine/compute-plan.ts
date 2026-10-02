@@ -1010,11 +1010,17 @@ export async function computeSyncPlan({
         // digest (a pre-framing legacy value or a tampered one) is restamped on
         // skip. Without this `ensureSkipEntryManaged` kept the stale value
         // forever: `oat status` reported drift that no `oat sync` repaired.
+        // The row must track the path that was verified: a row keyed by
+        // `(canonicalPath, provider)` can still name an older provider path
+        // (after a `providerDir` change), and stamping it with the digest of a
+        // different tree would turn its `in_sync` into permanent drift.
         const { verifiedContentHash } = operation;
         const restampContentHash =
           operation.operation === 'skip' &&
           verifiedContentHash !== undefined &&
           manifestEntry?.strategy === 'copy' &&
+          normalize(manifestEntry.providerPath).replaceAll('\\', '/') ===
+            relativeManifestPath(entryScopeRoot, providerPath) &&
           manifestEntry.contentHash !== verifiedContentHash
             ? verifiedContentHash
             : undefined;

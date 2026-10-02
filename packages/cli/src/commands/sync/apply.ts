@@ -636,6 +636,14 @@ export async function runSyncApply(
     );
     if (summary.failed > 0) {
       context.logger.warn('\nSync completed with partial failures.');
+      if (contentRestamps > 0) {
+        // The restamped skips still succeeded; name them beside the failure.
+        context.logger.info(
+          `\nManifest content hash restamped for ${contentRestamps} ${
+            contentRestamps === 1 ? 'entry' : 'entries'
+          }.`,
+        );
+      }
     } else if (summary.plannedOperations === 0) {
       context.logger.info(
         `\n${formatNoOperationMessage(restampOnly, contentRestamps)}`,

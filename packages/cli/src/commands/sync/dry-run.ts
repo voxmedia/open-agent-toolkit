@@ -19,7 +19,9 @@ function summarize(scopePlans: ScopeSyncPlan[]): SyncSummary {
   return {
     plannedOperations: countPlannedOperations(scopePlans),
     applied: 0,
-    failed: 0,
+    // Configuration errors are known failures before anything runs; count them
+    // so a summary-only consumer sees them. Dry-run still exits 0.
+    failed: countConfigurationErrors(scopePlans),
     skipped: scopePlans.reduce((total, scopePlan) => {
       const extensionSkipped = scopePlan.materializationExtensions.reduce(
         (count, extension) =>

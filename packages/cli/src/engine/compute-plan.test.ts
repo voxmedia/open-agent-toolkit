@@ -1346,6 +1346,32 @@ describe('computeSyncPlan', () => {
       expect(plan.entries[0]).not.toHaveProperty('restampContentHash');
     });
 
+    it('does not restamp a row that tracks a different provider path', async () => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+      tempDirs.push(root);
+      await seedManagedSkillCopy(root);
+
+      const plan = await computeSyncPlan({
+        canonical: [createCanonicalEntry(root, 'skill', 'skill-one')],
+        adapters: [createTestAdapter({ defaultStrategy: 'copy' })],
+        manifest: manifestWithEntry({
+          ...copyManifestEntry('a'.repeat(64)),
+          providerPath: '.claude/old-skills/skill-one',
+        }),
+        scope: 'project',
+        config: AUTO_SYNC_CONFIG,
+        scopeRoot: root,
+      });
+
+      // The faithful copy was verified at `.claude/skills/skill-one`; its digest
+      // says nothing about the tree the row actually tracks.
+      expect(plan.entries[0]).toMatchObject({
+        operation: 'skip',
+        reason: 'already in sync',
+      });
+      expect(plan.entries[0]).not.toHaveProperty('restampContentHash');
+    });
+
     it('does not restamp an entry the manifest does not own yet', async () => {
       const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
       tempDirs.push(root);

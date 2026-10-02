@@ -1388,6 +1388,37 @@ description: React components
       expect(manifest.lastUpdated).not.toBe('2026-01-01T00:00:00.000Z');
     });
 
+    it('does not restamp an owned row that tracks a different provider path', async () => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-execute-plan-'));
+      tempDirs.push(root);
+      const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+      await seedCanonical(root, 'skill-one');
+      const owned = manifestOwningCopy(staleHash);
+      owned.entries[0] = {
+        ...owned.entries[0]!,
+        providerPath: '.claude/old-skills/skill-one',
+      };
+
+      await executeSyncPlan(
+        createPlan([
+          {
+            ...createEntry(root, 'skill-one', 'skip', 'copy'),
+            restampContentHash: framedHash,
+          },
+        ]),
+        owned,
+        manifestPath,
+      );
+
+      const manifest = await loadManifest(manifestPath);
+      expect(manifest.entries[0]).toMatchObject({
+        providerPath: '.claude/old-skills/skill-one',
+        contentHash: staleHash,
+        lastSynced: '2026-01-01T00:00:00.000Z',
+      });
+      expect(manifest.lastUpdated).toBe('2026-01-01T00:00:00.000Z');
+    });
+
     it('leaves an owned skip entry untouched without a restamp (control)', async () => {
       const root = await mkdtemp(join(tmpdir(), 'oat-execute-plan-'));
       tempDirs.push(root);
