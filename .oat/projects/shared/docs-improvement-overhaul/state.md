@@ -54,7 +54,7 @@ oat_implement_exit_gate:
   }
 oat_post_implement_sequence:
   {
-    'status': 'post_approval',
+    'status': 'complete',
     'source': 'configured',
     'final_phase': 'p06',
     'pre_approval': ['summary', 'document', 'pr'],
