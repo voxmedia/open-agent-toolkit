@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p02-t03
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -27,14 +27,14 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 8     | 8/8       |
-| Phase 2 | in_progress | 3     | 2/3       |
+| Phase 2 | in_progress | 3     | 3/3       |
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 7     | 0/7       |
 | Phase 5 | pending     | 4     | 0/4       |
 | Phase 6 | pending     | 3     | 0/3       |
 | Phase 7 | pending     | 3     | 0/3       |
 
-**Total:** 10/31 tasks completed
+**Total:** 11/31 tasks completed
 
 ---
 
@@ -100,8 +100,8 @@ oat_generated: false
 
 ### Task p02-t03: (review) Close p02 review findings M1, L1, L2, L3
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 4fa3c6e13
 
 ---
 
@@ -381,6 +381,14 @@ oat_generated: false
   both run (check before claim); L1 docs examples restore 900000; L2 nested
   detection depends on an inherited `TMPDIR`; L3 no real-first-gate test.
   `Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
+
+- Continuation `cont-backlog-wave-4-p02-fix-1`: `4fa3c6e13` (p02-t03): the
+  directory scan was replaced by an atomic claim (private `wx` file hard-linked
+  to a per project/type/scope claim path; dead holder replaced once; released
+  in `finally`); `OAT_GATE_RUN_MARKER_DIR` passed to children; docs examples
+  and duplicate-run docs updated; integration cases 8-10 (real first gate,
+  simultaneous launch, differing `TMPDIR`). Gate suites 285/285; root
+  spot-check gate-hardening integration passes.
 
 <!-- orchestration-runs-end -->
 
