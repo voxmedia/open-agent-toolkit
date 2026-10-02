@@ -16,8 +16,10 @@ fail_bundle() {
 }
 
 # Print the physical absolute form of a path that may not exist yet: resolve
-# the nearest existing ancestor with `pwd -P`, so a symlink alias cannot hide a
-# destination inside a copied source, and append the missing components.
+# the nearest existing ancestor with `cd -P` and `pwd -P`, so neither a symlink
+# alias nor a `<symlink>/..` spelling can hide a destination inside a copied
+# source, and append the missing components. A logical `cd` would trim
+# `<symlink>/..` as text while the kernel follows the symlink first.
 physical_path() {
   local path="$1" suffix="" name resolved
   case "${path}" in
@@ -36,7 +38,7 @@ physical_path() {
     esac
     path="$(dirname "${path}")"
   done
-  resolved="$(cd "${path}" && pwd -P)" || return 1
+  resolved="$(cd -P "${path}" && pwd -P)" || return 1
   resolved="${resolved%/}${suffix}"
   printf '%s\n' "${resolved:-/}"
 }
@@ -68,8 +70,8 @@ require_inventory_path() {
   normalized="/${value}/"
   while :; do
     case "${normalized}" in
-      *//*) normalized="${normalized//\/\//\/}" ;;
-      */./*) normalized="${normalized//\/.\//\/}" ;;
+      *//*) normalized="${normalized//\/\///}" ;;
+      */./*) normalized="${normalized//\/.\///}" ;;
       *) break ;;
     esac
   done
@@ -96,14 +98,24 @@ DISPATCH_MATRIX_RECOMMENDATION_SOURCE="$(require_inventory_path dispatchMatrix)"
 STAGING="${ASSETS}.staging.$$"
 PREVIOUS="${ASSETS}.previous.$$"
 
-# No destination may sit inside a recursively copied source root, and no such
-# root may sit inside the assets destination: either arrangement copies a tree
-# into itself or replaces a canonical source with the bundle. Checked on
-# physical paths before the trap is installed, so a refusal touches nothing.
+# No destination may be, sit inside, or contain any directory the bundle copies
+# from: the recursively copied skills, templates, and docs roots, and the
+# directories whose files are copied one by one (agents, OAT scripts, and the
+# migration-prompt and dispatch-matrix config). A destination inside a
+# recursively copied root copies that tree into itself; publishing onto a
+# destination that is or contains a source directory renames the canonical
+# source away and deletes it. NOTICES.md comes from the repository root, which
+# contains every root below, so a destination at or above it is refused too.
+# Checked on physical paths before the trap is installed, so a refusal touches
+# nothing.
 COPIED_SOURCE_ROOTS=(
   "skills root|${REPO_ROOT}/.agents/skills"
+  "agents directory|${REPO_ROOT}/.agents/agents"
   "templates root|${REPO_ROOT}/.oat/templates"
+  "OAT scripts directory|${REPO_ROOT}/.oat/scripts"
   "docs source|${DOCS_SOURCE}"
+  "migration prompt directory|$(dirname "${MIGRATION_PROMPT_SOURCE}")"
+  "dispatch matrix directory|$(dirname "${DISPATCH_MATRIX_RECOMMENDATION_SOURCE}")"
 )
 for destination_entry in "assets destination|${ASSETS}" "staging directory|${STAGING}" "previous-bundle directory|${PREVIOUS}"; do
   destination_label="${destination_entry%%|*}"

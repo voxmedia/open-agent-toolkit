@@ -1031,6 +1031,14 @@ describe('bundle-assets fail-closed guards', () => {
     ['the skills root itself', 'repo/.agents/skills'],
     ['a parent of the skills root', 'repo/.agents'],
     ['the repository root', 'repo'],
+    ['the agents directory itself', 'repo/.agents/agents'],
+    ['the agents directory', 'repo/.agents/agents/bundle'],
+    ['the oat scripts directory itself', 'repo/.oat/scripts'],
+    ['the oat scripts directory', 'repo/.oat/scripts/bundle'],
+    [
+      'the migration and dispatch-matrix config directory',
+      'repo/packages/cli/config',
+    ],
   ])(
     'rejects an assets destination inside or around %s before any copy',
     (_label, relativeDestination) => {
@@ -1066,6 +1074,64 @@ describe('bundle-assets fail-closed guards', () => {
         expect(
           existsSync(join(tree.repoRoot, '.agents/skills/demo-skill/bundle')),
         ).toBe(false);
+      } finally {
+        rmSync(tree.scratch, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
+
+  // The kernel resolves `<symlink>/..` to the parent of the symlink's target,
+  // while a logical `cd` trims the text instead. The guard must check the
+  // directory mkdir, cp, and mv will actually write to.
+  it.each([
+    ['the docs source', 'repo/apps/demo-docs/docs/sub'],
+    ['a bundled skill directory', 'repo/.agents/skills/demo-skill/sub'],
+  ])(
+    'rejects an assets destination written as <symlink>/.. that lands inside %s',
+    (_label, aliasTarget) => {
+      const tree = createStubBundleTree(VALID_STUB_INVENTORY);
+      try {
+        mkdirSync(join(tree.scratch, aliasTarget), { recursive: true });
+        const alias = join(tree.scratch, 'alias');
+        symlinkSync(join(tree.scratch, aliasTarget), alias);
+
+        // Built by hand: `join` would collapse `alias/..` lexically.
+        const run = runStubBundle(tree, {
+          assetsDir: `${alias}/../bundle`,
+          mode: 'refuse',
+        });
+
+        expectRejectedBeforeAnyCopy(tree, run, /refusing to build/);
+      } finally {
+        rmSync(tree.scratch, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
+
+  // Only the physical comparison can see that a symlink names the repository
+  // root; the lexical check accepts `apps/root-link` as an ordinary path.
+  it(
+    'rejects an inventory lookup that is a symlink to the repository root',
+    () => {
+      const tree = createStubBundleTree({
+        ...VALID_STUB_INVENTORY,
+        docsRoot: 'apps/root-link',
+      });
+      try {
+        symlinkSync('..', join(tree.repoRoot, 'apps/root-link'));
+
+        const run = runStubBundle(tree, {
+          assetsDir: join(tree.scratch, 'out'),
+          mode: 'refuse',
+        });
+
+        expectRejectedBeforeAnyCopy(
+          tree,
+          run,
+          /inventory lookup 'docsRoot' resolves to the repository root/,
+        );
       } finally {
         rmSync(tree.scratch, { recursive: true, force: true });
       }
