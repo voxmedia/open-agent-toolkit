@@ -122,3 +122,157 @@ then clear the pointer with `oat config set activeProject ""`.
 - [Reviewing OAT PRs](../reviews/reviewing-oat-prs.md)
 - [Project Artifacts](../../../reference/project-artifacts.md)
 - [Implementation Execution](implementation-execution.md#synced-projects-in-worktrees)
+
+## Choosing a Resume Skill
+
+Project selection, status inspection and lifecycle execution are different
+actions. Use open to choose the project, progress to inspect it, and next when
+you want the agent to invoke the next lifecycle skill. Clearing the active
+project pauses the current context; it does not delete or complete the project.
+
+The examples below are agent skill invocations, not terminal `oat`
+subcommands. Use your host's supported skill-invocation syntax.
+
+## oat-project-open
+
+Choose an existing project before continuing its lifecycle. This is useful
+both when returning to a paused project and when switching from one project to
+another. It activates the selected project; it does not start implementation.
+
+**Invocation:**
+
+```text
+/oat-project-open checkout-hardening
+```
+
+With no project name, the skill asks which project to open. It delegates
+selection validation and activation to `oat project open` rather than manually
+editing the active pointer.
+
+**Prerequisites:** No previously active project is required. The selected
+existing project must resolve and have valid project state. For a synced
+project, the CLI handles the project checkout and sync-related validation;
+remote access may be needed. A completed project is not reopened as active work.
+
+**Example scenario:** You paused checkout-hardening yesterday to investigate
+an unrelated issue. Today, open checkout-hardening by name. The CLI validates
+the project, resumes it if paused and makes it active in this checkout without
+re-scaffolding the plan or marking any task finished.
+
+**Expected output:** Confirmation of the active project and a refreshed state
+dashboard. A paused project's pause metadata is cleared when it is resumed.
+If validation fails, address the diagnosis instead of manually pointing at an
+invalid or completed project.
+
+**Next step:** Use progress if you want to inspect the current state before
+acting, or next if you want to continue. Opening does not prove that a plan is
+implementation-ready or that earlier review feedback has been processed.
+
+## oat-project-next
+
+Invoke the next appropriate lifecycle skill using current project state. This
+is the action-oriented counterpart to progress, not merely another status
+report.
+
+**Invocation:**
+
+```text
+/oat-project-next
+```
+
+**Prerequisites:** An existing project must be available. With no valid active
+pointer, the router lists projects across supported scopes and routes to open
+for selection, then stops; invoke next again after selection. With no projects
+at all, it reports that condition and suggests a project-creation workflow
+instead of inventing a resume target.
+
+**Example scenario:** Checkout-hardening has a completed implementation phase,
+but a new review artifact is still waiting in its active `reviews/` directory.
+You invoke next expecting to move forward. The router detects the unprocessed
+review and selects project review-receive first rather than advancing past the
+feedback. When that workflow finishes, invoke next again to continue from the
+updated state.
+
+**Expected output:** The selected project, current phase, target skill and
+routing reason, followed by invocation of that skill. Pending human
+checkpoints, quick-plan readiness and unprocessed reviews affect the route.
+An unresolved or stale implementation exit gate routes back to implementation
+before post-implementation closeout.
+
+**Next step:** Follow the invoked workflow. The router itself does not
+implement tasks or write lifecycle artifacts, but its selected skill can do
+so. If you only wanted a recommendation, use progress instead. Read reported
+blocker warnings: they are not, by themselves, a promise that the router will
+refuse to invoke another skill.
+
+## oat-project-progress
+
+Inspect repository knowledge and project status before deciding what to do.
+Unlike next, progress offers the recommended route rather than automatically
+starting it.
+
+**Invocation:**
+
+```text
+/oat-project-progress
+```
+
+You can also explicitly ask the agent to “check project progress.” Finishing
+another workflow step does not automatically authorize this check.
+
+**Prerequisites:** An active project is optional. The skill can report that
+none is active and inspect available projects. It checks the repository
+knowledge base first; if that is missing, it asks you to run the knowledge-index
+skill and stops before the later project report. Synced-project arrival may
+pull current artifacts, and the skill refreshes the generated dashboard; a
+diagnostic invocation is not a guarantee of zero filesystem or network activity.
+
+**Example scenario:** You return after several days away and do not remember
+whether checkout-hardening needs more implementation or a review. Progress
+checks knowledge freshness and, when that prerequisite is available, reports
+the project mode, phase, blockers, checkpoints and next recommended skill. If
+manual commits appear ahead of the task ledger, it can suggest reconciliation
+instead of presenting the ledger as unquestionable evidence.
+
+**Expected output:** A knowledge-base status report and, when the check can
+continue, project summaries with the active project highlighted. Configured
+project gate overrides are reported explicitly. Recommendations do not pass
+the gates or approve the next action for you.
+
+**Next step:** Choose whether to run the recommendation. For manually committed
+work missing from tracking, use
+[reconciliation](execution-skills.md#oat-project-reconcile). When you are ready
+for automatic lifecycle routing, invoke next. Progress and next can differ
+because next also inspects execution boundaries and outstanding review events.
+
+## oat-project-clear-active
+
+Pause the current project and leave the checkout without an active OAT project.
+This is a context switch, not an archive, deletion or completion action.
+
+**Invocation:**
+
+```text
+/oat-project-clear-active
+```
+
+**Prerequisites:** An active project is optional. With an active pointer, the
+skill delegates to `oat project pause`, which must be able to read the project
+state. With no pointer, the skill reports that no project is active and exits
+successfully without trying to pause a nonexistent target.
+
+**Example scenario:** Checkout-hardening is still unfinished, but you want to
+work on an untracked investigation without accidentally routing its changes
+into that project. Clear the active project: OAT pauses checkout-hardening and
+clears the pointer. Running the skill again with nothing active is a safe no-op,
+not an error or a request to create a replacement project.
+
+**Expected output:** Confirmation that the active project was cleared through
+pause, or the no-active-project message. The project's artifacts and
+implementation history remain available for later resumption. For synced
+projects, pause publication can fail; a reported publication failure is not a
+successful context switch, and the active pointer is retained for recovery.
+
+**Next step:** Open a named project when you want to resume tracked work. Do
+not use clear-active to stop a running agent or revoke work already in flight;
+pausing project state is different from interrupting an execution process.
