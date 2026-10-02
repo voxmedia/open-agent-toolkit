@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p01-t01
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -26,7 +26,7 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 2     | 0/2       |
+| Phase 1 | in_progress | 2     | 2/2       |
 | Phase 2 | pending     | 2     | 0/2       |
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 7     | 0/7       |
@@ -34,7 +34,7 @@ oat_generated: false
 | Phase 6 | pending     | 3     | 0/3       |
 | Phase 7 | pending     | 3     | 0/3       |
 
-**Total:** 0/24 tasks completed
+**Total:** 2/24 tasks completed
 
 ---
 
@@ -44,13 +44,13 @@ oat_generated: false
 
 ### Task p01-t01: Fail closed on empty bundle-inputs lookups
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 01993f36e
 
 ### Task p01-t02: Report the errno when the assets root cannot be read
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 0cf8c6492
 
 ---
 
@@ -212,6 +212,20 @@ oat_generated: false
 - Gate `IMPLEMENT-08`: not needed; Claude Code Task-tool dispatch of the generated `oat-phase-implementer` and `oat-reviewer` variants is available without extra authorization.
 - Phase review gate: `oat_phase_review_gate` enabled for every phase (`review_type: code`, `exit_nonzero_on: high`); the configured target resolves to `codex-6-sol-xhigh` (`gpt-6.1-sol` xhigh) through cross-family exclusion with `OAT_GATE_PRODUCER_IDENTITY=claude-opus-5-5:declared`.
 - Dispatch policy: managed `high` from project state; implementer and reviewer launches use the resolver-returned Claude variants after a validation-only `oat project dispatch record` with the branch CLI.
+
+### Phase p01 dispatch
+
+- Request `bw4-p01-impl-1`: accepted and returned `DONE`; target
+  `oat-phase-implementer-claude-claude-opus-5-5-high`; commits
+  `01993f36e..0cf8c6492` (p01-t01..t02); phase verification pass (scoped vitest
+  128 tests; CLI build with real HOME; isolated-HOME `turbo run test --force`
+  for the CLI, cache bypass, 8049 tests); recovery 0/10; no skills changed.
+  Failing-first and neutralize-and-restore recorded in both commit bodies.
+  Root spot-check: `src/fs/assets.test.ts` 50/50 at `0cf8c6492`.
+  `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
+- Implementer concern (non-blocking, outside the item): an `OAT_ASSETS_DIR`
+  inside a directory copied file by file (`.agents/agents`, `.oat/scripts`) is
+  not rejected; candidate follow-up at the fan-in.
 
 <!-- orchestration-runs-end -->
 
