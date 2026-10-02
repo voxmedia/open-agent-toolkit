@@ -65,6 +65,10 @@ oat_post_implement_sequence:
     'post_approval_completed': [],
     'failure': null,
   }
+oat_project_recap:
+  decision: skip
+  source: interactive
+  decided_at: '2026-10-02T23:06:08Z'
 oat_last_commit: c916af45c9860c000027d7e0467f6a77149861b8
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]

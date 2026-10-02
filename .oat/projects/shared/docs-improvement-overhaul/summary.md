@@ -72,6 +72,10 @@ Current nav flags follow main: old `docs nav sync --framework` and `--validate-o
 - **Product scope:** roughly 46 discovered product defects/gaps were grouped into 25 `BL-261002-*` items, documented in [product-defects-found.md](references/product-defects-found.md). This project did not fix that product backlog. Its validator correction is real tooling work, not proof those product defects were resolved.
 - **Closeout boundary:** summary, document and PR refresh are complete; final p06 approval is pending. Recap preference remains unanswered; no run or skip was inferred. Local README cache hashing is a separate follow-up. No merge, release, installation or live-provider acceptance is implied by this summary.
 
+## Explainer Outcome
+
+Skipped at the user's explicit request, persisted as `skip/interactive`. No recap run was selected, attempted or generated.
+
 ## Workflow Observations
 
 ### 2026-10-02 · structural · oat gate review · plan
