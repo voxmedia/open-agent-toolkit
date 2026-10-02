@@ -80,6 +80,10 @@ Phase p03 complete (5/5 tasks): sync restamps stale copy hashes, legacy retireme
 
 target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-4/reviews/p04-review-2026-10-02T213839Z.md run=e9d83e79-99bf-4c5f-9ade-babb2cc0a746
 
+### 2026-10-02 · structural · oat-project-implement · p04
+
+Phase p04 complete (9/9 tasks): complexity review at review and gate budget exhaustion (probe plus condensed fallback), persisted quick-start gate record read by next and progress, root judgment logging. One root review round (3 Medium, 3 Low fixed), interrupted gate run (findings fixed), clean Codex gate.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

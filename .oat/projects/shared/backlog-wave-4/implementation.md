@@ -24,15 +24,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 8     | 8/8       |
-| Phase 2 | complete    | 3     | 3/3       |
-| Phase 3 | complete    | 5     | 5/5       |
-| Phase 4 | in_progress | 9     | 9/9       |
-| Phase 5 | pending     | 4     | 0/4       |
-| Phase 6 | pending     | 3     | 0/3       |
-| Phase 7 | pending     | 3     | 0/3       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 8     | 8/8       |
+| Phase 2 | complete | 3     | 3/3       |
+| Phase 3 | complete | 5     | 5/5       |
+| Phase 4 | complete | 9     | 9/9       |
+| Phase 5 | pending  | 4     | 0/4       |
+| Phase 6 | pending  | 3     | 0/3       |
+| Phase 7 | pending  | 3     | 0/3       |
 
 **Total:** 25/35 tasks completed
 
@@ -138,7 +138,7 @@ oat_generated: false
 
 ## Phase 4: Review-loop skills
 
-**Status:** in_progress
+**Status:** complete
 
 ### Task p04-t01: Add the condensed complexity-review guidance
 
@@ -519,6 +519,11 @@ oat_generated: false
   (branch-specific pin); complexity reports use UTC seconds timestamps with a
   collision suffix. Validation and shared contracts 975; root spot-check of
   both contract files passes.
+
+- Phase gate (`codex-6-sol-xhigh`, run `e9d83e79`) at `f5e4289f5`:
+  `reviews/archived/p04-review-2026-10-02T213839Z.md` status `ok`, 0 findings.
+- Phase p04 outcome: complete; 9/9 tasks (7 planned, 2 review-fix); one root
+  review round, one interrupted gate run (findings addressed), one clean gate.
 
 <!-- orchestration-runs-end -->
 
