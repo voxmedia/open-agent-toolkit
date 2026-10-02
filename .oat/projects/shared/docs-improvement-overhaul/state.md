@@ -1,5 +1,44 @@
 ---
 oat_current_task: null
+oat_implement_exit_gate:
+  {
+    'status': 'pending',
+    'resolution': 'configured',
+    'disposition': null,
+    'config_fingerprint': 'sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324',
+    'resolved_command': 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."',
+    'resolved_description': 'Semantic cross-family final implementation review before oat-project-implement exits.',
+    'project_override': null,
+    'on_failure': 'block',
+    'max_attempts': 2,
+    'attempts_completed': 0,
+    'reviewed_head': 'd744d87ec900f10f5448856c2eff564bcd78e69f',
+    'implementation_base_ref': 'origin/main',
+    'implementation_fingerprint': 'sha256:effective-delta-v2:7016fbe969917e67507228762db152f49b6411a388c811ea85b30abcf7b8808d',
+    'freshness_head': 'd744d87ec900f10f5448856c2eff564bcd78e69f',
+    'freshness_fingerprint': 'sha256:effective-delta-v2:7016fbe969917e67507228762db152f49b6411a388c811ea85b30abcf7b8808d',
+    'waivers': [],
+    'launch_state': 'intent_persisted',
+    'launch_attempt_id': '50f79801-4551-4e78-a737-f2be12c67391',
+    'launch_started_at': '2026-10-02T22:15:11.263Z',
+    'launch_result_receipt': 'references/final-exit-gate-1.json',
+    'gate_run_marker': null,
+    'gate_run_id': null,
+    'envelope_status': null,
+    'artifact': null,
+    'handoff': null,
+    'receive_state': 'not_started',
+    'receive_correlation': null,
+    'receive_source_artifact': null,
+    'receive_archived_artifact': null,
+    'receive_event_identity': null,
+    'receive_pre_head': null,
+    'receive_commit': null,
+    'receive_eligible': false,
+    'receive_completed': false,
+    'failure': null,
+    'updated_at': '2026-10-02T22:15:11.263Z',
+  }
 oat_last_commit: c916af45c9860c000027d7e0467f6a77149861b8
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
