@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p06-t01
+oat_current_task_id: p05-t05
 oat_generated: false
 ---
 
@@ -30,11 +30,11 @@ oat_generated: false
 | Phase 2 | complete    | 3     | 3/3       |
 | Phase 3 | complete    | 5     | 5/5       |
 | Phase 4 | complete    | 9     | 9/9       |
-| Phase 5 | in_progress | 4     | 4/4       |
+| Phase 5 | in_progress | 5     | 4/5       |
 | Phase 6 | pending     | 3     | 0/3       |
 | Phase 7 | pending     | 3     | 0/3       |
 
-**Total:** 29/35 tasks completed
+**Total:** 29/36 tasks completed
 
 ---
 
@@ -210,6 +210,11 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** 6edfc11b9
+
+### Task p05-t05: (review) Close p05 review findings M1, M2, L2, L3
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -538,6 +543,18 @@ oat_generated: false
   manifest `oatVersion` (committed with p05-t02). Root spot-check:
   complete-auto contracts pass.
   `Dispatch: scope=p05 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
+
+- Step 7a ledger commit `31b6ce71d` before the review.
+- Request `bw4-p05-review-1`: accepted; reconnaissance not-attempted;
+  `reviews/archived/p05-review-2026-10-02T220250Z.md`: 0 Critical, 0 High, 2 Medium,
+  3 Low (passes). Converted to `p05-t05`: M1 wave-execute step 8 fallback runs
+  `complete-state` after objective refusals; M2 the autonomous-lifecycle
+  activation route admits any skill name; L2 Step 5.3 `SKILL_DIR` misuse; L3
+  an opt-in control that cannot fail. L1 (`DR-260720` is stale versus the
+  shipped standing opt-in and per-wave firing) needs an amending decision
+  record, which repository policy reserves for an operator request or
+  confirmation; carried to the PR as an operator question.
+  `Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
 
 <!-- orchestration-runs-end -->
 
