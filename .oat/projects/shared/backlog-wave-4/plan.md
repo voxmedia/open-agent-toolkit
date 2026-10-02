@@ -1325,6 +1325,35 @@ Expected: exit 0; neutralize each guard and show its control fails, restore.
 
 ---
 
+### Task p05-t06: (review) Address p05 gate finding M2 (never create a PR from the companion)
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-complete-auto/SKILL.md` (answer table
+  around line 232; Step 5 delegation around 271)
+- Modify: `packages/cli/src/commands/init/tools/shared/complete-auto-contracts.test.ts`
+
+**Step 1: Failing test first**
+
+A composed control: a merged project with `workflow.createPrOnComplete: true`
+run through the companion never reaches a PR-create step; the tracked-open
+path still updates the existing PR.
+
+**Step 2: Implement** an explicit override in the companion: `SHOULD_OPEN_PR`
+stays `false` regardless of config or tracked status, while updates to an
+existing tracked PR proceed as the interactive flow requires.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/complete-auto-contracts.test.ts`
+Expected: exit 0. Address-now judgment-sweep fix: no re-review or re-gate.
+
+**Step 4: Commit**
+
+`fix(p05-t06): never create a PR from the autonomous completion companion`
+
+---
+
 ## Phase 6: Small fixes
 
 ### Task p06-t01: Downgrade claims that thorough-profile reviews leave undisposed
@@ -1640,7 +1669,7 @@ rewrites the four inventory rows last.
 | p02    | code     | passed          | 2026-10-02 | reviews/archived/p02-review-2026-10-02T192954Z.md           | 6a67d877deb4a37ea8d74151d2256cdde278f6ae | gate       | codex-6-sol-xhigh |
 | p03    | code     | passed          | 2026-10-02 | reviews/archived/p03-review-2026-10-02T200622Z.md           | 2fae69e039f3516a326ad77bd6a325cd5d8fafb4 | gate       | codex-6-sol-xhigh |
 | p04    | code     | passed          | 2026-10-02 | reviews/archived/p04-review-2026-10-02T213839Z.md           | f5e4289f5cb2eeb1cff025d9d55bed18ac48cfcc | gate       | codex-6-sol-xhigh |
-| p05    | code     | received        | 2026-10-02 | reviews/p05-review-2026-10-02T221406Z.md                    | fad16c3018699bb9e623fea611fe05d97fe97d2e | gate       | codex-6-sol-xhigh |
+| p05    | code     | fixes_added     | 2026-10-02 | reviews/archived/p05-review-2026-10-02T221406Z.md           | fad16c3018699bb9e623fea611fe05d97fe97d2e | gate       | codex-6-sol-xhigh |
 
 ## Plan artifact review (`QS-11`): structured review by `oat-reviewer-claude-claude-opus-5-5-high` (exact reviewer ceiling; planning-parent effort unknown), three attempts within `oat_orchestration_retry_limit` 2: attempt 1 returned 3 High, 4 Medium, 5 Low; attempt 2 returned 2 Medium, 2 Low; attempt 3 clean. All findings were applied in plan.md and discovery.md (commits 6bae4002b, ff8d23485); no residual findings.
 
@@ -1656,11 +1685,11 @@ Quick-start plan gate attempt 2 of 2 (run `fe6bbe0a`): `blocked`, receive-eligib
 - Phase 2: 3 tasks - Gate timeouts
 - Phase 3: 5 tasks - Sync correctness
 - Phase 4: 9 tasks - Review-loop skills
-- Phase 5: 5 tasks - Completion
+- Phase 5: 6 tasks - Completion
 - Phase 6: 3 tasks - Small fixes
 - Phase 7: 3 tasks - Release fan-in
 
-**Total: 36 tasks**
+**Total: 37 tasks**
 
 Ready for code review and merge.
 

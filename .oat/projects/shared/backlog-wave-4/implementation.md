@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p06-t01
+oat_current_task_id: p05-t06
 oat_generated: false
 ---
 
@@ -30,11 +30,11 @@ oat_generated: false
 | Phase 2 | complete    | 3     | 3/3       |
 | Phase 3 | complete    | 5     | 5/5       |
 | Phase 4 | complete    | 9     | 9/9       |
-| Phase 5 | in_progress | 5     | 5/5       |
+| Phase 5 | in_progress | 6     | 5/6       |
 | Phase 6 | pending     | 3     | 0/3       |
 | Phase 7 | pending     | 3     | 0/3       |
 
-**Total:** 30/36 tasks completed
+**Total:** 30/37 tasks completed
 
 ---
 
@@ -215,6 +215,11 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** cc5d5da8b
+
+### Task p05-t06: (review) Address p05 gate finding M2 (never create a PR from the companion)
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -565,6 +570,14 @@ oat_generated: false
   validation 1000; build, validate-skills, check:skill-bumps, format:root,
   root oxlint, type-check exit 0. Root spot-check: complete-auto contracts pass.
 
+- Phase gate (`codex-6-sol-xhigh`, run `cda6fb19`) at `fad16c301`:
+  `reviews/archived/p05-review-2026-10-02T221406Z.md` status `ok`, receive-eligible,
+  0 Critical/High, 2 Medium, 1 Low. Judgment sweep: M2 (interactive
+  `createPrOnComplete` branch could create a PR the companion promises never to
+  create) addressed now as `p05-t06`; M1 (archive-resume recovery blocked by
+  preflight) deferred to final; L1 is the stale `DR-260720` already held for
+  the operator.
+
 <!-- orchestration-runs-end -->
 
 ## Plan Gate Feedback (quick-start, QS-12)
@@ -601,6 +614,13 @@ Chronological execution is recorded per phase under Orchestration Runs above.
 
 ## Deferred Findings (Medium)
 
+- p05 gate M1 (`reviews/archived/p05-review-2026-10-02T221406Z.md`): the companion's
+  active-directory preflight refuses before the interactive archive-resume
+  recovery can run, so autonomous closeout cannot finish after a synced
+  archive succeeds and a later push or PR update fails. Fixing it means routing
+  validated archive receipts to the interactive resume tail before preflight,
+  which is not a small contained change; deferred to final with this
+  rationale.
 - p02 gate M1 (`reviews/archived/p02-review-2026-10-02T192954Z.md`): competing stale-claim
   recovery can remove a live claim and admit a duplicate run. Needs an
   orphaned claim plus concurrent recovery; ordinary nested and simultaneous
