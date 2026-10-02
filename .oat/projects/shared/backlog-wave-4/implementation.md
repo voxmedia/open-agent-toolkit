@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p01-t03
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -26,7 +26,7 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 3     | 2/3       |
+| Phase 1 | in_progress | 3     | 3/3       |
 | Phase 2 | pending     | 2     | 0/2       |
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 7     | 0/7       |
@@ -34,7 +34,7 @@ oat_generated: false
 | Phase 6 | pending     | 3     | 0/3       |
 | Phase 7 | pending     | 3     | 0/3       |
 
-**Total:** 2/25 tasks completed
+**Total:** 3/25 tasks completed
 
 ---
 
@@ -54,8 +54,8 @@ oat_generated: false
 
 ### Task p01-t03: (review) Close p01 review findings M1, L1, L2
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 1a1732d77
 
 ---
 
@@ -240,6 +240,14 @@ oat_generated: false
   `p01-t03` (symlink-plus-`..` containment bypass; untested physical
   repository-root branch; destination equal to a file-copied source directory).
   `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
+
+- Continuation `cont-backlog-wave-4-p01-fix-1` (same handle, fix mode):
+  `1a1732d77` closed M1 (`cd -P`), L1 (repository-root symlink case), and L2
+  (containment over every copied source directory, including agents, scripts,
+  and the config folder); also fixed the lexical repository-root comparison,
+  which never matched under macOS bash 3.2. Neutralize-and-restore per guard;
+  28/28 guard cases; uncached CLI tests 8057 pass. Root spot-check:
+  `bundle-consistency.test.ts` 57/57.
 
 <!-- orchestration-runs-end -->
 
