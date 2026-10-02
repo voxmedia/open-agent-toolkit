@@ -138,10 +138,10 @@ Filesystem discovery also has distinct boundaries: required entrypoints must be 
 - **Disposition:** file
 - **Status:** filed
 - **Destination:** .oat/repo/pjm/backlog/items/BL-260927-derive-current-lifecycle-state.md
-- **Destination-receipt:** 8bf407e4cbfd548fd11f4a6ded2ad5ad1f4f63de
+- **Destination-receipt:** 322cf60baab648a313760a1ec416f899ed13e2d7
 - **Remote-visibility:** unpushed
 - **Sanitized:** no
-- **Disposition-note:** Strengthened the approved existing backlog item with project evidence; separate destination commit verified, local only.
+- **Disposition-note:** Strengthened the approved existing backlog item; verified later exact-path receipt updates its archive-safe evidence link. Original strengthening: 8bf407e4cbfd548fd11f4a6ded2ad5ad1f4f63de. Local only at writeback.
 
 Extend existing [BL-260927-derive-current-lifecycle-state](../../../../repo/pjm/backlog/items/BL-260927-derive-current-lifecycle-state.md), rather than opening a duplicate. This run adds concrete examples of joined YAML, fragmented review tables and stale task/status views. Its structured transition helper should validate complete frontmatter, keep review rows contiguous, preserve unknown columns and historical cells, and retain immutable completed sequence state before recording a transition. A failed edit or validation must leave the prior state and completion record unchanged.
 
@@ -151,10 +151,10 @@ Extend existing [BL-260927-derive-current-lifecycle-state](../../../../repo/pjm/
 - **Disposition:** file
 - **Status:** filed
 - **Destination:** .oat/repo/pjm/backlog/items/BL-260820-bind-each-gate-review.md
-- **Destination-receipt:** 8bf407e4cbfd548fd11f4a6ded2ad5ad1f4f63de
+- **Destination-receipt:** 322cf60baab648a313760a1ec416f899ed13e2d7
 - **Remote-visibility:** unpushed
 - **Sanitized:** no
-- **Disposition-note:** Strengthened the approved existing backlog item with project evidence; separate destination commit verified, local only.
+- **Disposition-note:** Strengthened the approved existing backlog item; verified later exact-path receipt updates its archive-safe evidence link. Original strengthening: 8bf407e4cbfd548fd11f4a6ded2ad5ad1f4f63de. Local only at writeback.
 
 Extend existing [BL-260820-bind-each-gate-review](../../../../repo/pjm/backlog/items/BL-260820-bind-each-gate-review.md). Add this run's exact scope/type/artifact/event correlation, terminal marker cleanup and failed-prerequisite receive-intent incident as controls. Terminal receive should consume retained acceptance proof without relying on a live marker, while mismatched or incomplete proof must refuse mutation. An `ok` threshold with address-now findings must preserve raw counts and consume no failed remediation attempt; a later source change retires routing freshness without rewriting the received event's identity or reviewed head.
 
@@ -164,10 +164,10 @@ Extend existing [BL-260820-bind-each-gate-review](../../../../repo/pjm/backlog/i
 - **Disposition:** file
 - **Status:** filed
 - **Destination:** .oat/repo/pjm/backlog/items/BL-260820-track-pr-closeout-evidence.md
-- **Destination-receipt:** 8bf407e4cbfd548fd11f4a6ded2ad5ad1f4f63de
+- **Destination-receipt:** 322cf60baab648a313760a1ec416f899ed13e2d7
 - **Remote-visibility:** unpushed
 - **Sanitized:** no
-- **Disposition-note:** Strengthened the approved existing backlog item with project evidence; separate destination commit verified, local only.
+- **Disposition-note:** Strengthened the approved existing backlog item; verified later exact-path receipt updates its archive-safe evidence link. Original strengthening: 8bf407e4cbfd548fd11f4a6ded2ad5ad1f4f63de. Local only at writeback.
 
 Extend existing [BL-260820-track-pr-closeout-evidence](../../../../repo/pjm/backlog/items/BL-260820-track-pr-closeout-evidence.md). Use the accepted gate followed by `420bceded` as a real late-docs control. A resume must classify changed completed-step outputs, identify which exact receipts became stale, refresh the affected evidence before approval, and preserve the completed summary/document/PR sequence rather than resetting or reordering it. Public bundled docs must not inherit the exemption for project/reference bookkeeping. This proposal strengthens an existing freshness contract; it does not establish that the current resume implementation incorrectly approves stale work.
 

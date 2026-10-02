@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-10-01
+oat_last_updated: 2026-10-02
 oat_generated: true
 oat_summary_last_task: p04-t06
 oat_summary_revision_count: 0
@@ -13,7 +13,7 @@ oat_summary_includes_revisions: []
 
 ## Overview
 
-Plain Markdown is now an explicit documentation bootstrap option for repositories that need useful documentation without a site application. This quick project implements the Markdown portion of `BL-260911-make-docs-bootstrap-a-front`, including safe adoption of populated directories and the applicable OAT context, navigation, metadata, and authoring contracts. All fourteen planned and review-fix tasks and their dispositions are complete. Configured written-summary, documentation and PR steps are complete; requested completion follows renewed integration review and exit-gate evidence.
+Plain Markdown is now an explicit documentation bootstrap option for repositories that need useful documentation without a site application. This quick project implements the Markdown portion of `BL-260911-make-docs-bootstrap-a-front`, including safe adoption of populated directories and the applicable OAT context, navigation, metadata, and authoring contracts. All fourteen planned and review-fix tasks and their dispositions are complete. Configured written-summary, documentation and PR steps are complete; final user approval and the configured closeout snapshot are complete.
 
 ## What Was Implemented
 
@@ -32,7 +32,7 @@ Plain Markdown is now an explicit documentation bootstrap option for repositorie
 - **Markdown file verification:** Retain applicable context, Contents, metadata, relative-link, contributor, and ownership checks, using file/link verification without install or site-build steps. Agent guidance belongs in the managed repository-root section; preserve existing docs-local instructions without scaffolding a docs-root `AGENTS.md`.
 - **Bootstrap detection boundary:** Keep Markdown evidence selection in docs bootstrap, with declared tooling authoritative and framework evidence preceding plain-tree candidates. General `oat init` detection/config remains unchanged; a repository README alone does not establish an adoptable docs surface.
 
-These decisions are grounded in the confirmed [discovery](discovery.md), [design](design.md), and accepted [implementation outcomes](implementation.md).
+These decisions are grounded in the confirmed discovery (`discovery.md`), design (`design.md`), and accepted implementation outcomes (`implementation.md`).
 
 ## Design Deltas
 
@@ -52,20 +52,36 @@ Adoption preserves malformed authored content rather than rewriting it; repair r
 
 ## Latest Integration
 
-Main #338 was merged at `5a38d447c0843e6abc47468808924693fbf7930d`. Nineteen conflict resolutions preserve both Markdown ownership/adoption behavior and Fumadocs strict navigation/template resolution. All eight repository gates plus lint/format passed after disk-space recovery, with exact receipts and cache distinctions retained. The independent native final review returned zero findings and 575 actual focused tests. Renewed retained-gate evidence precedes requested completion; the existing closeout sequence and recap skip remain intact.
+Main #338 was merged at `5a38d447c0843e6abc47468808924693fbf7930d`. Nineteen conflict resolutions preserve both Markdown ownership/adoption behavior and Fumadocs strict navigation/template resolution. All eight repository gates plus lint/format passed after disk-space recovery, with exact receipts and cache distinctions retained. The independent native final review returned zero findings and 575 actual focused tests. The renewed Opus gate passed with 0C/0H/0M/2L; the misplaced ledger row and transient reference prose were corrected. Final user approval and the existing closeout sequence are complete; recap skip remains intact.
 
-## Integration Notes
+## Earlier Integration Evidence
 
-- Main #334 (`98d1d524624e17f55ccfce33d18b3d5535dc91ca`) was integrated through a normal merge. All seven conflict resolutions preserve lockstep 0.3.11 packages, the canonical generated four-package inventory, and main's genuine 0.3.10 sync producer stamp. Both automatic merges preserve their Markdown and dispatch contracts. All 21 retained Markdown command/template/skill paths matched the pre-integration source bytes before the subsequent two remote review fixes. See [integration controls](reviews/final-integration-controls.md).
-- All eight CI gates passed in order after both remote corrections and the unreadable-directory sweep, with actual exits retained. Latest actual execution: CLI 7,970 tests across 398 files, root smoke 163, skills 660, scripts 1, and 73 docs pages. Unchanged control-plane 151/docs-config 10/docs-transforms 31 tests replayed cache; the preceding main-integration run executed all four workspace test tasks (8,159 total), retained as inherited consumer evidence. Check/types were mixed actual/cache; later build/docs gates replayed valid cache. See [remote correction controls](reviews/final-remote-controls.md) and [unreadable-directory controls](reviews/final-unreadable-controls.md).
-- Integrated focused verification passed 1,132 tests across 28 files; bundle parity passed 66 byte comparisons and four isolated user/project docs-pack install/update controls. Seven blank metadata and six literal-value CLI controls passed. Earlier causal old/fixed evidence remains pinned in [metadata controls](reviews/final-metadata-controls.md) and [literal-rendering controls](reviews/final-dollar-controls.md).
-- Independent main-integration review passed 1,309 focused tests with zero findings. The remote-fix final review independently executed 165 tests and 24 real CLI controls, also with zero findings; its two new public regressions demonstrably fail against their pre-fix production owners and pass fixed. A further passing-gate sweep preserves unreadable optional directories with accurate repair advice; its real-permission regression and valid safety controls pass. The final source review passed 166 tests and 14 real CLI controls with zero findings. The refreshed Opus 5.5 High exit gate passed; its final three Low findings were dispositioned (one advice-consistency suggestion rejected with bounded-scope rationale; two artifact/prose corrections applied) in [implementation history](implementation.md). Prior whole-project coverage is explicitly inherited where narrowed; original review counts and prevention failures remain preserved.
+- Main #334 (`98d1d524624e17f55ccfce33d18b3d5535dc91ca`) was integrated through a normal merge. All seven conflict resolutions preserve lockstep 0.3.11 packages, the canonical generated four-package inventory, and main's genuine 0.3.10 sync producer stamp. Both automatic merges preserve their Markdown and dispatch contracts. All 21 retained Markdown command/template/skill paths matched the pre-integration source bytes before the subsequent two remote review fixes. See integration controls (`reviews/final-integration-controls.md`).
+- All eight CI gates passed in order after both remote corrections and the unreadable-directory sweep, with actual exits retained. Latest actual execution: CLI 7,970 tests across 398 files, root smoke 163, skills 660, scripts 1, and 73 docs pages. Unchanged control-plane 151/docs-config 10/docs-transforms 31 tests replayed cache; the preceding main-integration run executed all four workspace test tasks (8,159 total), retained as inherited consumer evidence. Check/types were mixed actual/cache; later build/docs gates replayed valid cache. See remote correction controls (`reviews/final-remote-controls.md`) and unreadable-directory controls (`reviews/final-unreadable-controls.md`).
+- Integrated focused verification passed 1,132 tests across 28 files; bundle parity passed 66 byte comparisons and four isolated user/project docs-pack install/update controls. Seven blank metadata and six literal-value CLI controls passed. Earlier causal old/fixed evidence remains pinned in metadata controls (`reviews/final-metadata-controls.md`) and literal-rendering controls (`reviews/final-dollar-controls.md`).
+- Independent main-integration review passed 1,309 focused tests with zero findings. The remote-fix final review independently executed 165 tests and 24 real CLI controls, also with zero findings; its two new public regressions demonstrably fail against their pre-fix production owners and pass fixed. A further passing-gate sweep preserves unreadable optional directories with accurate repair advice; its real-permission regression and valid safety controls pass. The final source review passed 166 tests and 14 real CLI controls with zero findings. The refreshed Opus 5.5 High exit gate passed; its final three Low findings were dispositioned (one advice-consistency suggestion rejected with bounded-scope rationale; two artifact/prose corrections applied) in implementation history (`implementation.md`). Prior whole-project coverage is explicitly inherited where narrowed; original review counts and prevention failures remain preserved.
 - Native exact-role selectors were rejected before child start; accepted canonical-role approximations retained configured model/effort and original request linkage. Configured invocation is distinct from independent runtime identity, which was not reported. No post-commit recovery attempt was consumed.
 
 ## Follow-up Items
 
 - [BL-260911-make-docs-bootstrap-a-front](../../../repo/pjm/backlog/items/BL-260911-make-docs-bootstrap-a-front.md) remains **open** for its broader approval classes, package/version drift, and other-repository acceptance. This project supplies only the Markdown portion and has no unresolved Medium/Low review debt.
-- Configured closeout steps are complete and [PR #335](https://github.com/voxmedia/open-agent-toolkit/pull/335) is open; final p04 HiLL approval is pending. Release assets are validated; no publication, normal user-scope installation, GitHub PR merge, or deployment is claimed.
+- Configured closeout steps are complete and [PR #335](https://github.com/voxmedia/open-agent-toolkit/pull/335) is open; final p04 approval is recorded and the lifecycle is ready for configured archival. Release assets are validated; no publication, normal user-scope installation, GitHub PR merge, or deployment is claimed.
+
+## Retrospective Follow-ups
+
+All three proposals strengthened existing backlog records; no upstream item or immediate apply item was proposed. Destination receipts remain in the archived retrospective.
+
+### RP-01: Add structural preservation cases to the lifecycle authority work
+
+[Lifecycle authority](../../../repo/pjm/backlog/items/BL-260927-derive-current-lifecycle-state.md) gains this run's joined YAML, fragmented review rows and stale-state cases. Transition helpers must validate complete frontmatter, keep rows contiguous, preserve unknown/history cells and completed sequence state, and leave prior state unchanged when edits fail.
+
+### RP-02: Add terminal-receipt and passing-sweep cases to exact gate binding
+
+[Exact gate binding](../../../repo/pjm/backlog/items/BL-260820-bind-each-gate-review.md) gains retained terminal acceptance proof after live-marker cleanup, fail-closed prerequisite/receive mutation, and passing-sweep controls. Preserve event identity, reviewed heads and raw counts; a passing sweep consumes no failed remediation attempt, while later source changes retire routing freshness.
+
+### RP-03: Add a late documentation case to closeout freshness tracking
+
+[Closeout freshness](../../../repo/pjm/backlog/items/BL-260820-track-pr-closeout-evidence.md) gains the accepted gate followed by public-docs commit `420bceded`. Resume must classify changed outputs, renew stale evidence before approval and preserve the completed sequence. Public docs cannot inherit the bookkeeping exemption; this evidence does not establish that current resume incorrectly approves stale work.
 
 ## Explainer Outcome
 
