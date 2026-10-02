@@ -1464,6 +1464,85 @@ describe('sync engine integration', () => {
     },
   );
 
+  it('copy mode: a marker-less skill or agent directory reports the same error on every run instead of looping', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
+    tempDirs.push(root);
+    const adapter = createTestAdapter({ defaultStrategy: 'copy' });
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    await seedCanonical(root);
+    await mkdir(join(root, '.agents', 'skills', 'custom-skill'), {
+      recursive: true,
+    });
+    await writeFile(
+      join(root, '.agents', 'skills', 'custom-skill', 'notes.md'),
+      '# notes\n',
+      'utf8',
+    );
+    await mkdir(join(root, '.agents', 'agents', 'custom-agent'), {
+      recursive: true,
+    });
+    await writeFile(
+      join(root, '.agents', 'agents', 'custom-agent', 'notes.md'),
+      '# notes\n',
+      'utf8',
+    );
+
+    async function sync() {
+      const manifest = await loadManifest(manifestPath);
+      const plan = await computeSyncPlan({
+        canonical: await scanCanonical(root, 'project'),
+        adapters: [adapter],
+        manifest,
+        scope: 'project',
+        config: COPY_SYNC_CONFIG,
+        scopeRoot: root,
+      });
+      const result = await executeSyncPlan(plan, manifest, manifestPath);
+      return { plan, result };
+    }
+
+    const first = await sync();
+    const second = await sync();
+
+    for (const { plan, result } of [first, second]) {
+      expect(
+        plan.entries.filter((entry) => entry.operation === 'error'),
+      ).toEqual([
+        expect.objectContaining({
+          canonical: expect.objectContaining({ name: 'custom-skill' }),
+          reason:
+            'canonical skill directory .agents/skills/custom-skill has no SKILL.md; add SKILL.md or remove the directory, then re-run oat sync',
+        }),
+        expect.objectContaining({
+          canonical: expect.objectContaining({ name: 'custom-agent' }),
+          reason:
+            'canonical agent directory .agents/agents/custom-agent has no AGENT.md; add AGENT.md or remove the directory, then re-run oat sync',
+        }),
+      ]);
+      expect(
+        plan.entries.some((entry) => entry.operation === 'update_copy'),
+      ).toBe(false);
+      expect(result.failed).toBe(2);
+    }
+    expect(
+      first.plan.entries
+        .filter((entry) => entry.operation !== 'error')
+        .map((entry) => entry.operation),
+    ).toEqual(['create_copy', 'create_copy']);
+    expect(
+      second.plan.entries
+        .filter((entry) => entry.operation !== 'error')
+        .map((entry) => entry.operation),
+    ).toEqual(['skip', 'skip']);
+    await expect(
+      lstat(join(root, '.claude', 'skills', 'custom-skill')),
+    ).rejects.toThrow();
+    const manifest = await loadManifest(manifestPath);
+    expect(manifest.entries.map((entry) => entry.canonicalPath).sort()).toEqual(
+      ['.agents/agents/agent-one', '.agents/skills/skill-one'],
+    );
+  });
+
   it('file-based agent: syncs via symlink', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
     tempDirs.push(root);

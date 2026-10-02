@@ -67,7 +67,11 @@ export type CollectionSyncResult = SyncResult & {
 };
 
 function mutatesProviderPath(entry: SyncPlanEntry): boolean {
-  return entry.operation !== 'skip' && entry.operation !== 'detach';
+  return (
+    entry.operation !== 'skip' &&
+    entry.operation !== 'detach' &&
+    entry.operation !== 'error'
+  );
 }
 
 function operationEvidence(
@@ -224,7 +228,9 @@ async function applyCopyMarker(entry: SyncPlanEntry): Promise<void> {
       'code' in error &&
       error.code === 'ENOENT'
     ) {
-      // Marker insertion is best-effort for non-standard directory layouts.
+      // Marker insertion stays best-effort here. The planner already reports a
+      // canonical directory without its marker as an `error` entry, so this
+      // path is reached only if the marker disappears between plan and apply.
       return;
     }
     throw error;
@@ -938,6 +944,13 @@ export async function executeSyncPlan(
           ) ??
             'Collection alias could not be safely cleared; resolve the reported collection conflict and retry.',
         ),
+      );
+      continue;
+    }
+    if (operation.operation === 'error') {
+      // A planning-time configuration error: report it, change nothing.
+      operationResults.push(
+        operationEvidence(plan.scope, operation, 'failed', operation.reason),
       );
       continue;
     }

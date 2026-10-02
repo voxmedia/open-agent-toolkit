@@ -132,7 +132,7 @@ function colorSyncOperation(operation: string): string {
     return chalk.yellow(operation);
   }
 
-  if (operation === 'remove') {
+  if (operation === 'remove' || operation === 'error') {
     return chalk.red(operation);
   }
 

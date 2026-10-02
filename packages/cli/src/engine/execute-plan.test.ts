@@ -1293,6 +1293,51 @@ description: React components
     });
   });
 
+  it('reports an error entry as a failure without touching its provider path or manifest row', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-execute-plan-'));
+    tempDirs.push(root);
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    await seedCanonical(root, 'skill-one');
+    await mkdir(join(root, '.agents', 'skills', 'custom-skill'), {
+      recursive: true,
+    });
+    const reason =
+      'canonical skill directory .agents/skills/custom-skill has no SKILL.md; add SKILL.md or remove the directory, then re-run oat sync';
+    const beforeFirstMutation = vi.fn(async () => {});
+
+    const result = await executeSyncPlan(
+      createPlan([
+        { ...createEntry(root, 'custom-skill', 'error', 'copy'), reason },
+        createEntry(root, 'skill-one', 'create_copy', 'copy'),
+      ]),
+      createEmptyManifest(),
+      manifestPath,
+      { beforeFirstMutation },
+    );
+
+    expect(result).toMatchObject({ applied: 1, failed: 1, skipped: 0 });
+    expect(result.operations).toEqual([
+      expect.objectContaining({
+        asset: 'custom-skill',
+        action: 'error',
+        status: 'failed',
+        failure: reason,
+      }),
+      expect.objectContaining({
+        asset: 'skill-one',
+        action: 'create_copy',
+        status: 'changed',
+      }),
+    ]);
+    await expect(
+      lstat(join(root, '.claude', 'skills', 'custom-skill')),
+    ).rejects.toThrow();
+    const manifest = await loadManifest(manifestPath);
+    expect(manifest.entries.map((entry) => entry.canonicalPath)).toEqual([
+      '.agents/skills/skill-one',
+    ]);
+  });
+
   describe('restamping a skip entry the manifest already owns', () => {
     const staleHash = 'a'.repeat(64);
     const framedHash = 'b'.repeat(64);

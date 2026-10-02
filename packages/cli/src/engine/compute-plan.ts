@@ -542,6 +542,42 @@ async function classifyOperation(
   };
 }
 
+/**
+ * The marker file a copy-strategy directory needs and lacks, or `null`.
+ *
+ * `applyCopyMarker` prepends the banner to `SKILL.md` / `AGENT.md`, and the
+ * managed-copy digest requires that banner. A canonical skill or agent
+ * directory without its marker therefore produced a copy that never verified:
+ * `computeManagedDirectoryCopyHash` returned `null`, so every `oat sync`
+ * planned another `update_copy` while the manifest hash never moved.
+ */
+async function missingCopyMarker(
+  canonicalEntry: CanonicalEntry,
+): Promise<string | null> {
+  if (canonicalEntry.isFile || canonicalEntry.type === 'rule') {
+    return null;
+  }
+
+  const markerFileName =
+    canonicalEntry.type === 'agent' ? 'AGENT.md' : 'SKILL.md';
+  try {
+    const markerStat = await stat(
+      join(canonicalEntry.canonicalPath, markerFileName),
+    );
+    return markerStat.isFile() ? null : markerFileName;
+  } catch (error) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      (error.code === 'ENOENT' || error.code === 'ENOTDIR')
+    ) {
+      return markerFileName;
+    }
+    throw error;
+  }
+}
+
 function resolveScopeRoot(
   canonical: CanonicalEntry[],
   explicitScopeRoot?: string,
@@ -925,6 +961,28 @@ export async function computeSyncPlan({
               manifestEntry?.strategy === 'copy'
             ? manifestEntry.strategy
             : mappingStrategy;
+
+        const missingMarker =
+          entryStrategy === 'copy'
+            ? await missingCopyMarker(canonicalEntry)
+            : null;
+        if (missingMarker !== null) {
+          const displayPath = relativeCanonicalPath.replaceAll('\\', '/');
+          entries.push({
+            canonical: canonicalEntry,
+            provider: adapter.name,
+            providerPath,
+            operation: 'error',
+            strategy: entryStrategy,
+            reason: `canonical ${canonicalEntry.type} directory ${displayPath} has no ${missingMarker}; add ${missingMarker} or remove the directory, then re-run oat sync`,
+          });
+          // Seen, so an owned row is neither removed nor detached: the entry
+          // still exists canonically and only its configuration is wrong.
+          seenCanonicalKeys.add(
+            `${normalize(relativeCanonicalPath)}::${adapter.name}`,
+          );
+          continue;
+        }
 
         const operation: ClassifiedOperation = deferredCollectionTransition
           ? {

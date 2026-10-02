@@ -128,7 +128,7 @@ export function countPlannedOperations(scopePlans: ScopeSyncPlan[]): number {
     return (
       total +
       [...scopePlan.plan.entries, ...scopePlan.plan.removals].filter(
-        (entry) => entry.operation !== 'skip',
+        (entry) => entry.operation !== 'skip' && entry.operation !== 'error',
       ).length +
       (scopePlan.plan.collections ?? []).filter((collection) =>
         MUTATING_COLLECTION_ACTIONS.has(collection.action),
@@ -151,6 +151,21 @@ export function countContentRestamps(scopePlans: ScopeSyncPlan[]): number {
       scopePlan.plan.entries.filter(
         (entry) => entry.restampContentHash !== undefined,
       ).length,
+    0,
+  );
+}
+
+/**
+ * Counts planning-time configuration errors (`operation: 'error'`). They are
+ * not planned operations: apply reports each as a failed result and changes
+ * nothing for it, so every run names the same error instead of looping.
+ */
+export function countConfigurationErrors(scopePlans: ScopeSyncPlan[]): number {
+  return scopePlans.reduce(
+    (total, scopePlan) =>
+      total +
+      scopePlan.plan.entries.filter((entry) => entry.operation === 'error')
+        .length,
     0,
   );
 }

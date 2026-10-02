@@ -1285,6 +1285,130 @@ describe('createSyncCommand', () => {
     );
   });
 
+  describe('marker-less directory configuration errors', () => {
+    const reason =
+      'canonical skill directory .agents/skills/custom-skill has no SKILL.md; add SKILL.md or remove the directory, then re-run oat sync';
+
+    function createErrorPlan(): SyncPlan {
+      const plan = createPlan('create_copy');
+      const canonical = createCanonicalEntry('custom-skill');
+      plan.entries.push({
+        canonical,
+        provider: 'claude',
+        providerPath: '/tmp/workspace/.claude/skills/custom-skill',
+        operation: 'error',
+        strategy: 'copy',
+        reason,
+      });
+      return plan;
+    }
+
+    it('dry-run: renders the error, warns, and does not count it as planned', async () => {
+      const { capture, command } = createHarness({
+        plans: [createErrorPlan()],
+        useRealSyncPlanFormatter: true,
+      });
+
+      await runSyncCommand(command, {
+        globalArgs: ['--scope', 'project'],
+        commandArgs: ['--dry-run'],
+      });
+
+      expect(capture.info.join('\n')).toContain(
+        `claude/custom-skill (${reason})`,
+      );
+      expect(capture.warn).toContain(
+        '\n1 entry cannot sync until its configuration error is fixed.',
+      );
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('dry-run --json: reports the error as a failed operation result', async () => {
+      const { capture, command } = createHarness({
+        plans: [createErrorPlan()],
+      });
+
+      await runSyncCommand(command, {
+        globalArgs: ['--scope', 'project', '--json'],
+        commandArgs: ['--dry-run'],
+      });
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        summary: { plannedOperations: 1 },
+        operationResults: [
+          { asset: 'skill-one', action: 'create_copy', status: 'planned' },
+          {
+            asset: 'custom-skill',
+            action: 'error',
+            status: 'failed',
+            failure: reason,
+          },
+        ],
+      });
+    });
+
+    it('dry-run: an error-only plan does not claim there is nothing to apply', async () => {
+      const plan = createErrorPlan();
+      plan.entries.shift();
+      const { capture, command } = createHarness({ plans: [plan] });
+
+      await runSyncCommand(command, {
+        globalArgs: ['--scope', 'project'],
+        commandArgs: ['--dry-run'],
+      });
+
+      expect(capture.info).not.toContain('No changes to apply.');
+      expect(capture.warn).toContain(
+        '\n1 entry cannot sync until its configuration error is fixed.',
+      );
+    });
+
+    it('apply: renders the failed error entry and exits 1', async () => {
+      const { capture, command } = createHarness({
+        plans: [createErrorPlan()],
+        executeResults: [
+          {
+            applied: 1,
+            failed: 1,
+            skipped: 0,
+            operations: [
+              {
+                scope: 'project',
+                provider: 'claude',
+                contentKind: 'skill',
+                asset: 'skill-one',
+                action: 'create_copy',
+                status: 'changed',
+              },
+              {
+                scope: 'project',
+                provider: 'claude',
+                contentKind: 'skill',
+                asset: 'custom-skill',
+                action: 'error',
+                status: 'failed',
+                failure: reason,
+              },
+            ],
+          },
+        ],
+      });
+
+      await runSyncCommand(command, {
+        globalArgs: ['--scope', 'project'],
+      });
+
+      const output = capture.info.join('\n');
+      expect(output).toContain(
+        `- project:claude:skill:error custom-skill\n  reason: ${reason}\n  result: failed`,
+      );
+      // The failure repeats the reason verbatim, so it is not echoed twice.
+      expect(output).not.toContain(`result: failed — ${reason}`);
+      expect(capture.warn).toContain('\nSync completed with partial failures.');
+      expect(process.exitCode).toBe(1);
+    });
+  });
+
   describe('content-hash restamp visibility', () => {
     const restampHash = 'd'.repeat(64);
 

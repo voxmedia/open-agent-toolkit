@@ -1062,12 +1062,128 @@ describe('computeSyncPlan', () => {
     expect(plan.entries).toEqual([]);
   });
 
+  describe('marker-less copy-strategy directories', () => {
+    it.each([
+      { type: 'skill' as const, name: 'custom-skill', marker: 'SKILL.md' },
+      { type: 'agent' as const, name: 'custom-agent', marker: 'AGENT.md' },
+    ])(
+      'plans a configuration error naming $marker instead of a copy',
+      async ({ type, name, marker }) => {
+        const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+        tempDirs.push(root);
+        const directory = type === 'skill' ? 'skills' : 'agents';
+        await mkdir(join(root, '.agents', directory, name, 'references'), {
+          recursive: true,
+        });
+        await writeFile(
+          join(root, '.agents', directory, name, 'references', 'notes.md'),
+          '# notes\n',
+          'utf8',
+        );
+        await mkdir(join(root, '.agents', 'skills', 'skill-one'), {
+          recursive: true,
+        });
+        await writeFile(
+          join(root, '.agents', 'skills', 'skill-one', 'SKILL.md'),
+          '# skill\n',
+          'utf8',
+        );
+
+        const plan = await computeSyncPlan({
+          canonical: [
+            createCanonicalEntry(root, type, name),
+            createCanonicalEntry(root, 'skill', 'skill-one'),
+          ],
+          adapters: [createTestAdapter({ defaultStrategy: 'copy' })],
+          manifest: createEmptyManifest(),
+          scope: 'project',
+          config: AUTO_SYNC_CONFIG,
+          scopeRoot: root,
+        });
+
+        // Mapping order (skills before agents) decides entry order.
+        expect(plan.entries).toHaveLength(2);
+        expect(plan.entries).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              canonical: expect.objectContaining({ name }),
+              operation: 'error',
+              strategy: 'copy',
+              reason: `canonical ${type} directory .agents/${directory}/${name} has no ${marker}; add ${marker} or remove the directory, then re-run oat sync`,
+            }),
+            expect.objectContaining({
+              canonical: expect.objectContaining({ name: 'skill-one' }),
+              operation: 'create_copy',
+            }),
+          ]),
+        );
+      },
+    );
+
+    it('keeps an owned marker-less entry instead of planning its removal', async () => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+      tempDirs.push(root);
+      await mkdir(join(root, '.agents', 'skills', 'custom-skill'), {
+        recursive: true,
+      });
+
+      const plan = await computeSyncPlan({
+        canonical: [createCanonicalEntry(root, 'skill', 'custom-skill')],
+        adapters: [createTestAdapter({ defaultStrategy: 'copy' })],
+        manifest: manifestWithEntry({
+          canonicalPath: '.agents/skills/custom-skill',
+          providerPath: '.claude/skills/custom-skill',
+          provider: 'claude',
+          contentType: 'skill',
+          strategy: 'copy',
+          contentHash: 'e'.repeat(64),
+          isFile: false,
+          lastSynced: '2026-01-01T00:00:00.000Z',
+        }),
+        scope: 'project',
+        config: AUTO_SYNC_CONFIG,
+        scopeRoot: root,
+      });
+
+      expect(plan.entries).toEqual([
+        expect.objectContaining({ operation: 'error' }),
+      ]);
+      expect(plan.removals).toEqual([]);
+    });
+
+    it('still symlinks a marker-less directory under symlink strategy (control)', async () => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+      tempDirs.push(root);
+      await mkdir(join(root, '.agents', 'skills', 'custom-skill'), {
+        recursive: true,
+      });
+
+      const plan = await computeSyncPlan({
+        canonical: [createCanonicalEntry(root, 'skill', 'custom-skill')],
+        adapters: [createTestAdapter()],
+        manifest: createEmptyManifest(),
+        scope: 'project',
+        config: DEFAULT_SYNC_CONFIG,
+        scopeRoot: root,
+      });
+
+      expect(plan.entries).toEqual([
+        expect.objectContaining({ operation: 'create_symlink' }),
+      ]);
+    });
+  });
+
   it('uses copy strategy when adapter specifies copy', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
     tempDirs.push(root);
     await mkdir(join(root, '.agents', 'skills', 'skill-one'), {
       recursive: true,
     });
+    await writeFile(
+      join(root, '.agents', 'skills', 'skill-one', 'SKILL.md'),
+      '# skill\n',
+      'utf8',
+    );
 
     const canonical = [createCanonicalEntry(root, 'skill', 'skill-one')];
 

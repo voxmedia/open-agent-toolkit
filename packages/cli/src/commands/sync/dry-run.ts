@@ -8,6 +8,7 @@ import type {
 } from './sync.types';
 import {
   buildCollectionLifecycle,
+  countConfigurationErrors,
   countContentRestamps,
   countPlannedOperations,
   formatCollectionLifecycle,
@@ -46,14 +47,21 @@ function buildOperationResults(
 ): SyncOperationResult[] {
   return scopePlans.flatMap((scopePlan) =>
     [...scopePlan.plan.entries, ...scopePlan.plan.removals].map(
-      (operation) => ({
-        scope: scopePlan.scope,
-        provider: operation.provider,
-        contentKind: operation.canonical.type,
-        asset: operation.canonical.name,
-        action: operation.operation,
-        status: operation.operation === 'skip' ? 'current' : 'planned',
-      }),
+      (operation): SyncOperationResult => {
+        const result: SyncOperationResult = {
+          scope: scopePlan.scope,
+          provider: operation.provider,
+          contentKind: operation.canonical.type,
+          asset: operation.canonical.name,
+          action: operation.operation,
+          status: operation.operation === 'skip' ? 'current' : 'planned',
+        };
+        // A configuration error is already known to fail; say so rather than
+        // presenting it as a planned operation.
+        return operation.operation === 'error'
+          ? { ...result, status: 'failed', failure: operation.reason }
+          : result;
+      },
     ),
   );
 }
@@ -157,6 +165,16 @@ export function runSyncDryRun(
   } else {
     context.logger.info(formatDryRunOutput(scopePlans, dependencies));
     context.logger.warn('\nDry-run only: no filesystem changes were made.');
+    const configurationErrors = countConfigurationErrors(scopePlans);
+    if (configurationErrors > 0) {
+      context.logger.warn(
+        `\n${configurationErrors} ${
+          configurationErrors === 1 ? 'entry cannot' : 'entries cannot'
+        } sync until ${
+          configurationErrors === 1 ? 'its' : 'their'
+        } configuration error is fixed.`,
+      );
+    }
     const contentRestamps = countContentRestamps(scopePlans);
     if (summary.plannedOperations > 0) {
       context.logger.info('Run without --dry-run to apply changes.');
@@ -166,7 +184,7 @@ export function runSyncDryRun(
           contentRestamps === 1 ? 'hash' : 'hashes'
         }.`,
       );
-    } else {
+    } else if (configurationErrors === 0) {
       context.logger.info('No changes to apply.');
     }
   }

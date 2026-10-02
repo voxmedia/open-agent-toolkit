@@ -352,7 +352,11 @@ function formatCoreResults(
       }),
     );
     const status = coreHumanStatus(result?.status);
-    const failure = result?.failure ? ` — ${result.failure}` : '';
+    // A configuration error's failure repeats its reason verbatim; print it once.
+    const failure =
+      result?.failure && result.failure !== operation.reason
+        ? ` — ${result.failure}`
+        : '';
     return `- ${plan.scope}:${operation.provider}:${operation.canonical.type}:${operation.operation} ${operation.canonical.name}\n  reason: ${operation.reason}\n  result: ${status}${failure}`;
   });
   const aggregate = evidence?.aggregateOnly
