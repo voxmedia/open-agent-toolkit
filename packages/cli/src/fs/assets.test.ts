@@ -5,7 +5,7 @@ import { join, relative, resolve } from 'node:path';
 
 import { CliError } from '@errors/index';
 import { OAT_VERSION } from '@shared/oat-version';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { resolveAssetsRoot, validateAssetsBundle } from './assets';
 
@@ -30,6 +30,12 @@ vi.mock('node:fs/promises', async (importOriginal) => {
     stat: (path: PathLike): Promise<Stats> =>
       actual.stat(statRedirects.get(String(path)) ?? path),
   };
+});
+
+// The seam is file-global, so a test that throws before its own cleanup must
+// not leak a redirect into every later `stat` of the same path.
+afterEach(() => {
+  statRedirects.clear();
 });
 
 const PACKAGED_ASSETS_PATTERN = /packages\/cli\/assets$/;
@@ -198,6 +204,54 @@ describe('resolveAssetsRoot', () => {
         resolveAssetsRoot({ OAT_ASSETS_DIR: filePath }),
       ).rejects.toThrow(`Assets path is not a directory: ${filePath}`);
     } finally {
+      await rm(parent, { recursive: true, force: true });
+    }
+  });
+
+  // A root that exists but cannot be read is not missing. A self-referential
+  // symlink raises ELOOP for every user, including root, so it stands in for
+  // the EACCES and EIO failures that used to be reported as "not found".
+  it('names the errno when an explicit override root cannot be read', async () => {
+    const parent = await mkdtemp(join(tmpdir(), 'oat-assets-override-loop-'));
+    const loopRoot = join(parent, 'assets');
+
+    try {
+      await symlink(loopRoot, loopRoot);
+
+      const error = await captureRejection(
+        resolveAssetsRoot({ OAT_ASSETS_DIR: loopRoot }),
+      );
+
+      expect(error.message).toContain(
+        `Assets directory could not be read (ELOOP): ${loopRoot}.`,
+      );
+      expect(error.message).not.toContain('not found');
+      expectOverrideRemedy(error);
+      expect(error.exitCode).toBe(2);
+    } finally {
+      await rm(parent, { recursive: true, force: true });
+    }
+  });
+
+  it('names the errno when the packaged root cannot be read', async () => {
+    const packagedRoot = await resolveAssetsRoot({});
+    const parent = await mkdtemp(join(tmpdir(), 'oat-assets-packaged-loop-'));
+    const loopRoot = join(parent, 'assets');
+
+    try {
+      await symlink(loopRoot, loopRoot);
+      statRedirects.set(packagedRoot, loopRoot);
+
+      const error = await captureRejection(resolveAssetsRoot({}));
+
+      expect(error.message).toContain(
+        `Assets directory could not be read (ELOOP): ${packagedRoot}.`,
+      );
+      expect(error.message).not.toContain('not found');
+      expectPackagedRemedy(error, PACKAGED_ROOT_REMEDY);
+      expect(error.exitCode).toBe(2);
+    } finally {
+      statRedirects.delete(packagedRoot);
       await rm(parent, { recursive: true, force: true });
     }
   });

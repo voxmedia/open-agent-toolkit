@@ -264,8 +264,18 @@ export async function resolveAssetsRoot(
       throw error;
     }
 
+    // Only an absent root is "not found". EACCES, ELOOP, and EIO on a root
+    // that exists need a different response, so name the errno, as
+    // `validateBundleStructure` does for the directories inside it.
+    if (isMissingPathError(error)) {
+      throw new CliError(
+        `Assets directory not found: ${assetsRoot}. ${assetsRemedy(source, PACKAGED_ROOT_REMEDY)}`,
+        2,
+      );
+    }
+
     throw new CliError(
-      `Assets directory not found: ${assetsRoot}. ${assetsRemedy(source, PACKAGED_ROOT_REMEDY)}`,
+      `Assets directory could not be read (${errorCode(error)}): ${assetsRoot}. ${assetsRemedy(source, PACKAGED_ROOT_REMEDY)}`,
       2,
     );
   }
