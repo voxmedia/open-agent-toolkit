@@ -117,7 +117,13 @@ directory. Assert a non-zero exit and a stderr message naming the empty key;
 that message is the discriminating assertion (the current script also exits
 non-zero on the stub, and its EXIT trap removes staging), so also assert the
 guard fires before the `mkdir -p` at line 42 (for example, no staging
-directory is ever created, checked with a trap-proof marker). Add a second case
+directory is ever created, checked with a trap-proof marker). Add bounded
+destination controls in the same tiny tree, with valid inventory values:
+`OAT_ASSETS_DIR` inside a bundled skill directory, inside a copied template
+directory, inside the docs source, and through a symlink alias to one of those
+are each rejected before any copy (use a copy-invocation marker or stub so the
+test never runs an unbounded self-copy); a disjoint destination and the
+default destination still build. Add a second case
 for a lookup that resolves to the repository root (for example `.`). Reuse the
 existing `getBundleScriptPath`, `execFileSync('bash', ...)`, and
 `BUNDLE_ASSETS_TEST_TIMEOUT_MS` patterns. Confirm both fail against the
@@ -129,8 +135,14 @@ test must assert before any recursion can grow).
 Add a `require_inventory_path <key>` helper to `bundle-assets.sh`, used for all
 three lookups before any `mkdir` or `cp`. It exits 1 with a clear message when
 the lookup prints nothing, is absolute, contains a `..` segment, or resolves to
-`REPO_ROOT`. Then assert that `STAGING` and `PREVIOUS` are not inside the docs
-source tree and that the docs source is not an ancestor of `ASSETS`. In
+`REPO_ROOT`. Then, before the `rm -rf` and `mkdir -p` at lines 40-42, resolve
+physical paths (`pwd -P` of the nearest existing ancestor, so a symlink alias
+cannot bypass the check) and refuse when the assets destination, `STAGING`, or
+`PREVIOUS` is inside any recursively copied source root: the canonical skills
+root `.agents/skills` (copied with `cp -RL` at line 48), the templates root
+`.oat/templates` (template directories copied with `cp -R` at line 64), and
+the docs source (line 107); refuse also when any of those roots is inside the
+assets destination. In
 `bundle-inputs.mjs`, make `printValue` reject an empty string, an absolute
 path, and a `..` segment with a non-zero exit.
 
@@ -1205,7 +1217,7 @@ rewrites the four inventory rows last.
 | Item                                       | Criterion                                                                    | Task                      |
 | ------------------------------------------ | ---------------------------------------------------------------------------- | ------------------------- |
 | `BL-261001-fail-closed-when-bundle-assets` | Clear error on an empty or repository-root lookup, no copy                   | p01-t01                   |
-|                                            | Staging never inside a copied source tree                                    | p01-t01                   |
+|                                            | Staging never inside any recursively copied source (skills, templates, docs) | p01-t01                   |
 |                                            | Test reproduces the empty lookup and fails closed                            | p01-t01                   |
 | `BL-260906-report-errno-for-asset-root`    | Errno reported for non-ENOENT failures, with a failing-if-dropped test       | p01-t02                   |
 |                                            | `statRedirects` reset in `afterEach`                                         | p01-t02                   |
@@ -1296,11 +1308,13 @@ rewrites the four inventory rows last.
 | design | artifact | pending         | -          | -                                                           | -             | -          | -                 |
 | plan   | artifact | passed          | 2026-10-02 | -                                                           | -             | auto       | -                 |
 | plan   | artifact | fixes_completed | 2026-10-02 | reviews/archived/artifact-plan-review-2026-10-02T144731Z.md | -             | gate       | codex-6-sol-xhigh |
-| plan   | artifact | received        | 2026-10-02 | reviews/artifact-plan-review-2026-10-02T145801Z.md          | -             | -          | -                 |
+| plan   | artifact | fixes_completed | 2026-10-02 | reviews/archived/artifact-plan-review-2026-10-02T145801Z.md | -             | gate       | codex-6-sol-xhigh |
 
 ## Plan artifact review (`QS-11`): structured review by `oat-reviewer-claude-claude-opus-5-5-high` (exact reviewer ceiling; planning-parent effort unknown), three attempts within `oat_orchestration_retry_limit` 2: attempt 1 returned 3 High, 4 Medium, 5 Low; attempt 2 returned 2 Medium, 2 Low; attempt 3 clean. All findings were applied in plan.md and discovery.md (commits 6bae4002b, ff8d23485); no residual findings.
 
 Quick-start plan gate (`QS-12`, attempt 1 of 2, run `cf4607a4`, `codex-6-sol-xhigh` / `gpt-6.1-sol` xhigh, inline route): `blocked`, receive-eligible, 2 High. Received in this session (artifact review, `REVIEWRECEIVE-01`): H1 (quick-start completion with no configured gate) and H2 (complete-auto PR-merge guard versus wave-execute's completion-before-merge step) resolved in p04-t06, p05-t02, and p05-t03; no rejections. Artifact archived to `reviews/archived/artifact-plan-review-2026-10-02T144731Z.md`.
+
+Quick-start plan gate attempt 2 of 2 (run `fe6bbe0a`): `blocked`, receive-eligible, 1 High (p01-t01 guarded only the docs tree; staging must stay outside every recursively copied source). Resolved in p01-t01 and the Acceptance Mapping. `maxAttempts` is exhausted, so the configured `block` policy escalates to the operator (`QS-12` boundary); see `implementation.md`, Quick-start Gate Escalation. Artifact archived to `reviews/archived/artifact-plan-review-2026-10-02T145801Z.md`.
 
 ## Implementation Complete
 

@@ -208,3 +208,23 @@ Track test execution during implementation.
 - Plan: `plan.md`
 - Design: `design.md`
 - Spec: `spec.md`
+
+---
+
+## Quick-start Gate Escalation
+
+The configured quick-start gate (`onFailure: block`, `maxAttempts: 2`,
+target `codex-6-sol-xhigh`, `gpt-6.1-sol` xhigh) blocked on both attempts:
+
+- Attempt 1 (run `cf4607a4`): 2 High. H1, quick-start completion with no
+  configured gate; H2, the complete-auto PR-merge guard against
+  wave-execute's completion-before-merge step. Both were resolved in the plan
+  (p04-t06, p05-t02, p05-t03).
+- Attempt 2 (run `fe6bbe0a`): 1 High. p01-t01 guarded only the docs tree,
+  while staging must stay outside every recursively copied source (skills,
+  templates, docs). Resolved in p01-t01 after the attempt; not re-gated.
+
+Attempts are exhausted, so this is a `QS-12` repository-policy boundary under
+`OAT_AUTONOMOUS=1`: the operator decides how to proceed. Each round found a
+real but narrower contract gap (round 1: two composition gaps; round 2: one
+scoped safety invariant), and no finding was rejected.
