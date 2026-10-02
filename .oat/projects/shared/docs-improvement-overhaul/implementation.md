@@ -567,8 +567,6 @@ Phase implementation return: DONE_WITH_CONCERNS, three planned task commits in o
 }
 ```
 
-### p02 implementation dispatch
-
 ### p02 independent code review dispatch
 
 ```json
@@ -612,9 +610,12 @@ Phase implementation return: DONE_WITH_CONCERNS, three planned task commits in o
   },
   "runtime_confirmation": "not-reported",
   "dispatch_stamp": "Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high",
-  "child_outcome": null
+  "child_outcome": null,
+  "artifact_write_hold": "Root gate caught missed mechanical test consumers; review continues immutable source while same-target recovery owns edits"
 }
 ```
+
+### p02 implementation dispatch
 
 ```json
 {
@@ -864,6 +865,14 @@ Required peer-review boundary: Fable map approval has not arrived. Verified owni
 ## Implementation Log
 
 ### p02-t02 accepted and consumer continuation: 2026-10-02
+
+### p02 root gates and accepted recovery continuation
+
+At task-ledger head2173d81d, ordered root check/type-check exit0; isolated-HOME test exits1 with642/660 skill tests passing and18 failing. Remaining ordered gates were not run. Two existing skill-test consumers still assume retired paths: recon's real docs file and oat-doctor's citation extraction/read roots. This is an unambiguous mechanically derived p02 consumer defect, not an unrelated test or assurance waiver.
+
+Same phase02 target accepted `cont-docs-overhaul-p02-recovery-1`, linked to original docs-overhaul-run1-p02-implementation, original p02-t03 commit3f0c0b0b. Authority is the two named test files plus its narrow state recovery ledger; unchanged Sol/high target, default10 attempts, prior durable usage0. It holds until release, reserves attempt1 before edit and preserves original history. Root will settle the committed terminal marker only after authoritative postcommit checks. Reviewer continues read-only immutable2173d81d with artifact writes held, avoiding dirty-tree contention. No review-fix budget consumed yet.
+
+Fable phase-diff request sent directly under user override: request871a0067-5137-4d21-b68a-52b9ff1b8f5f returned input_accepted only, no turn-start observation. No resend or review-completion claim; final gate codes will follow.
 
 Root verified the single planned task commit7f824c2276fe53d8e544842cddb6d2c268cc2aa0 follows a7d3171a,79 changed-file records within sanctioned source/app/generated/evidence bounds, and clean worktree. Read actual build/cache/control/export receipts and Mini action provenance; viewed the cropped Home image. Root evidence review is not an independent browser pass. Pre-commit assembler failure and formatter-boundary failure remain disclosed; no recovery event or suppressed content change. Frozen original records unchanged. Local author export server127.0.0.1:54824 remains available.
 
