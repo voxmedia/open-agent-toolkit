@@ -1,4 +1,12 @@
 {
   "title": "Skills",
-  "pages": ["explainer-kit", "repo-improve", "recon"]
+  "pages": [
+    "research",
+    "brainstorm",
+    "diagnostics",
+    "session-closeout",
+    "explainer-kit",
+    "repo-improve",
+    "recon"
+  ]
 }

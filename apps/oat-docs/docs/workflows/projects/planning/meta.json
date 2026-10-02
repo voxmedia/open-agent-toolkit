@@ -1,4 +1,10 @@
 {
   "title": "Planning",
-  "pages": ["design-modes", "hill-checkpoints", "splitting"]
+  "pages": [
+    "starting-projects",
+    "planning-skills",
+    "design-modes",
+    "hill-checkpoints",
+    "splitting"
+  ]
 }
