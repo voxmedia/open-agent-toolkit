@@ -72,6 +72,12 @@ The user invoked oat-project-implement after the reviewed plan handoff. Implemen
 
 ## Phase 3: Improve the Evaluator README
 
+### Concurrent dispatch acceptance
+
+- `docs-overhaul-run1-p03-prose` accepted as `/root/phase03_readme` (Hooke), exact native target `oat-phase-implementer-gpt-6-1-sol-high`, selected GPT-6.1 Sol/high, High policy/ceiling, hard-reasoning, no resolver notices. Worktree `/Users/tstang/orca/workspaces/open-agent-toolkit/docs-overhaul-readme`, branch `docs-overhaul-readme`, verified base f337faa1759d0f7453da846ea5e90372734d5a67. Bounded p03-t01 prose; SVG supplied separately by Fable, root owns integration. Runtime identity not reported; native parent-attached session, not a standalone pane.
+- `docs-overhaul-run1-p04-mapping` accepted as `/root/phase04_mapping` (Euclid), same exact target/model/effort/policy/class with no notices, worktree `/Users/tstang/orca/workspaces/open-agent-toolkit/docs-overhaul-skill-mapping`, branch `docs-overhaul-skill-mapping`, exact verified same base. Owns mapping/validator/scripts/tests only; no blind-audit duplication, source prose or release/core writes. Root retains integration. Initial schema reported; durable map/validation completion pending.
+- Root release reconciliation helper `/root/main_skill_reconciliation` (Wegener), GPT-6.1 Sol/high, is read-only in the repo and writes scratch only. It compares four docs-skill families against current main to preserve newly shipped Markdown support before root applies narrow merged changes and fixes versions. Not a new whole-phase reviewer or ownership transfer.
+
 ### User-approved concurrent execution amendment — 2026-10-02
 
 Speed and parallelization directions supersede sequential scheduling, not task scope or conservation. One native/Fable review round per phase; repeat review only for Critical/High corrections. Full eight gates once at phase close; targeted checks between fixes. No new docs-only receipts/negative-control artifacts; preserve existing baseline evidence. Root integrates independently owned Mini worktrees and release units, without concurrent core-artifact writers.
