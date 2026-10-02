@@ -378,6 +378,7 @@
 | BL-260820-bind-each-gate-review          | Bind each gate review disposition to its exact received ledger event                                  | open   | high     | task       | M        |
 | BL-260820-emit-source-qualified          | Emit source-qualified provenance envelopes for review and gate receipts                               | open   | high     | feature    | M        |
 | BL-261001-fail-closed-when-bundle-assets | Fail closed when bundle-assets lookups come back empty                                                | open   | high     | task       | S        |
+| BL-261002-gitignore-project-review       | Gitignore project review artifacts instead of committing them                                         | open   | high     | task       | M        |
 | BL-260906-harden-dispatch-launch         | Harden dispatch launch baselines and terminal reconciliation                                          | open   | high     | feature    | M        |
 | BL-260718-harden-full-surface-gate       | Harden full-surface gate reviews against budget and recursive dispatch                                | open   | high     | feature    | M        |
 | BL-260729-implement-reviewplan-first     | Implement ReviewPlan-first reviewer workflow                                                          | open   | high     | feature    | L        |
