@@ -78,3 +78,9 @@
 - Dry runs found one stale skill on the Mini and four on the laptop. Ran the standard skills installer on each host without force or pruning. Final dry runs reported all seven current; independent recursive comparisons verified all seven installed skill trees match source on both machines. `orca-orchestration` is version `1.3.3`.
 - Laptop SSH installation copied the skills successfully but its provider-sync subprocess failed with `spawn oat ENOENT`. A login-shell lookup located the existing `oat` under the host's user pnpm directory. Retried the installer with only that invocation's PATH adjusted; installation and provider sync then exited zero. No global shell configuration changed.
 - Mini provider sync required no changes. Laptop sync updated managed Codex configuration and reported restart-required visibility. Installed files and sync are verified; fresh provider-session catalog acceptance is not claimed. Both primary Orc checkouts remained clean.
+
+### Preserving a peer's unsent input
+
+- Before requesting design review, relay `terminal read` reported a nonempty draft in Fable's pane even though the visible tail showed an empty prompt. Treat the draft field conservatively; do not assume the screen tail proves there is no human input.
+- Root asked the user to submit or clear that draft and withheld the peer send. No control-key clearing, extra Enter, or duplicate prompt was sent. The draft's substance was separately confirmed by the user in root's conversation; that confirms the design choice, not permission to manipulate the peer's input buffer.
+- Existing draft-protection behavior is working as a safety boundary. This observation alone does not establish a new Orc bug or justify another PR.

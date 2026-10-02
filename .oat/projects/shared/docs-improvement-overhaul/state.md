@@ -79,7 +79,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-01T22:42:17.072Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-01T22:43:07Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-10-02T00:30:35Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -91,7 +91,7 @@ oat_generated: false
 
 ## Current Phase
 
-The user authorized continuation through lightweight design and plan readiness with Fable reviewing throughout. The draft incorporates README/visual scope and final-phase reviewer computer-use QA. Route compatibility and planning dispatch/gate setup remain to resolve. No implementation is authorized.
+The user authorized continuation through lightweight design and plan readiness with Fable reviewing throughout. The draft incorporates README/visual scope and final-phase reviewer computer-use QA. The user explicitly allowed moved URLs to break; no aliases will be built. Fable draft review and planning dispatch/gate setup remain to resolve. No implementation is authorized.
 
 ## Artifacts
 
@@ -111,8 +111,8 @@ The user authorized continuation through lightweight design and plan readiness w
 
 ## Blockers
 
-None
+Review delivery is paused because Fable's pane reports an unsent human draft; root requested submission/clearance and did not overwrite it. The project dispatch-policy question is also pending. Neither is a product-design blocker.
 
 ## Next Milestone
 
-Resolve route compatibility, receive Fable design review, complete discovery, and produce the reviewed execution plan. Stop before implementation.
+Receive Fable design review, complete discovery, and produce the reviewed execution plan. Resolve the project dispatch policy and independent gate-posture choices before readiness. Stop before implementation.
