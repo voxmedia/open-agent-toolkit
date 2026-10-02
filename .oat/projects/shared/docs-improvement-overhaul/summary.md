@@ -53,7 +53,7 @@ Eight ordered gates exited zero on the correction basis through `64a48da1e`: `pn
 The final source-review correction recheck returned zero findings. The configured gate, a fresh non-author Claude instance independent of the native reviewer, passed its High threshold with **0 Critical / 0 High / 1 Medium / 2 Low**, not zero residual findings. Its different-family report covers only four p01/p02 OpenAI stamps; Fable-authored p03–p06 have no such stamps, so diversity against every project author is not established. Root accepted these ordered dispositions in [the final gate closeout](implementation.md#final-gate-closeout):
 
 1. **M1 stale PJM/backlog pointers:** fixed at `5e3bed75b`; canonical destinations verified, no capability/prose change.
-2. **L1 two pre-existing `.agents/README.md` links:** queued for the already-configured document step; final approval waits for it.
+2. **L1 two pre-existing `.agents/README.md` links:** repaired at `3c1fa029b` in the configured document step; both canonical destinations and all 20 links in that README validated.
 3. **L2 root README missing from local Turbo hash:** explicitly deferred to separately scoped tooling work. Direct `pnpm docs:validate` executes the consumer check; current CI caches the pnpm store, not Turbo outputs.
 
 ## Conservation and Integration Notes
@@ -70,7 +70,7 @@ Current nav flags follow main: old `docs nav sync --framework` and `--validate-o
 - **Configuration completeness:** 39 scoped exact-key/pattern gaps remain (36 remote-policy operation/provider fields, legacy `workflow.dispatchCeiling.providers.claude`, and project/user `sync.providers.<name>.strategy`). Family policy guidance exists but is not a complete per-key reference.
 - **Reader limits:** ideas-lifecycle phone-width labels remain difficult; the adjacent text equivalent is the supported recovery. Tool Packs, Workflow Gates and Dispatch Ceiling have backlogged restructuring needs; stability/support/non-goals wording requires the owner's own statement.
 - **Product scope:** roughly 46 discovered product defects/gaps were grouped into 25 `BL-261002-*` items, documented in [product-defects-found.md](references/product-defects-found.md). This project did not fix that product backlog. Its validator correction is real tooling work, not proof those product defects were resolved.
-- **Closeout boundary:** document and PR steps, queued README pointer repair and final approval remain root-owned. Local README cache hashing is a separate follow-up. No merge, release, installation or live-provider acceptance is implied by this summary.
+- **Closeout boundary:** summary and document steps are complete; PR refresh and final approval remain root-owned. Local README cache hashing is a separate follow-up. No merge, release, installation or live-provider acceptance is implied by this summary.
 
 ## Workflow Observations
 
@@ -109,3 +109,7 @@ retro artifact=.oat/projects/shared/docs-improvement-overhaul/references/project
 ### 2026-10-02 · structural · oat gate review · final
 
 target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:1,low:2 exit=0 status=ok artifact=.oat/projects/shared/docs-improvement-overhaul/reviews/final-review-2026-10-02T222323Z.md run=45d2802b-263d-447c-904b-5a36d35b1dd9
+
+### 2026-10-02 · structural · oat-project-implement · p06
+
+docs-final-p06-accepted-2026-10-02: 23/23 task implementations accepted, non-author native final QA and final source review complete; configured gate passed/received with dispositions in implementation.md#final-gate-closeout; stored summary and document steps complete, PR refresh and p06 human approval pending.
