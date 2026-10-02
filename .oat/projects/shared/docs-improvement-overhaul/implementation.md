@@ -186,25 +186,25 @@ Dispatch p03 prose and p04-t01 mapping independently now. Fable exclusively supp
 
 ### Task p06-t02: Run two fresh reader-persona reviews
 
-**Status:** complete
+**Status:** completed
 **Commit:** d9177ea2c, e48268de8 (records)
 **Verification:** See Takeover closeout.
 
 ### Task p06-t03: Converge on a bounded editorial list
 
-**Status:** complete
+**Status:** completed
 **Commit:** e48268de8
 **Verification:** See Takeover closeout.
 
 ### Task p06-t04: Apply evidence-backed editorial improvements
 
-**Status:** complete
+**Status:** completed
 **Commit:** f2ffaa20c, 0062ba850
 **Verification:** See Takeover closeout.
 
 ### Task p06-t05: Re-evaluate readers and execute independent final acceptance
 
-**Status:** complete
+**Status:** completed
 **Commit:** a554e9e46, 7f508e58a, e1c6b7d94
 **Verification:** See Takeover closeout.
 
