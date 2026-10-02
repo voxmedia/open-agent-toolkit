@@ -36,28 +36,6 @@ Contributor how-to material now lives under `contributing/`, and user-facing rou
 
 ## General CLI Adoption Guidance
 
-Canonical section for general OAT CLI surfaces outside provider sync, docs tooling, and tracked workflows.
+Use OAT's general CLI for repository setup, tool-pack management, configuration and diagnostics independently of provider sync, docs tooling or tracked workflows.
 
-Bootstrap, tool packs, configuration, and general CLI surfaces.
-
-CLI Utilities is the OAT lane for the useful command surface that does not primarily belong to Provider Sync, Docs Tooling, or tracked workflow lifecycle execution.
-
-Use this section when you want bootstrap guidance, tool-pack lifecycle details, configuration help, and general-purpose command references. It covers general-purpose setup, configuration, pack-management, and diagnostic utilities that support the rest of the toolkit without being specific to provider sync, docs tooling, or tracked workflow execution.
-
-This section collects the command groups that help you initialize OAT, manage installed packs, inspect local or config state, and use the wider CLI without implying that you are adopting provider sync or tracked workflows.
-
-Examples include:
-
-- Teams managing installed tool packs and local config
-
-- People who need a general command map without diving into workflow lifecycle docs
-
-Use CLI Utilities when:
-
-- you need the general CLI surface without committing to one of the deeper lanes yet
-
-- Read [Configuration](configuration.md) for config semantics, or [Config and Local State](config-and-local-state.md) for inspection and diagnostic command groups.
-
-Standalone adoption lane for general OAT CLI surfaces outside provider sync, docs tooling, and tracked workflows.
-
-For onboarding, use [Getting Started](../getting-started/index.md). For settings and diagnostics, use [Configuration](configuration.md) and [Config and Local State](config-and-local-state.md); workflow gates are owned by [Advanced](../workflows/advanced/index.md).
+Start with [Getting Started](../getting-started/index.md) for bootstrap and tool packs. See [Configuration](configuration.md) for settings, [Config and Local State](config-and-local-state.md) for diagnostics, and [Advanced](../workflows/advanced/index.md) for workflow gates.

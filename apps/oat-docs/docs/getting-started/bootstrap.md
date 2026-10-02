@@ -79,5 +79,5 @@ Related commands:
 
 - `oat tools ...` (tool-pack install, update, remove, migrate, list, info): `tool-packs.md`
 - `oat pjm init` (adopt project management for this repository): `tool-packs.md#install-vs-initialize`
-- `oat local ...`, `oat doctor`, and other utility commands: `config-and-local-state.md`
+- `oat local ...`, `oat doctor`, and other utility commands: [Config and Local State](../reference/config-and-local-state.md)
 - `oat status` / `oat sync` (provider sync): `../provider-sync/index.md`

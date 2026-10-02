@@ -6,6 +6,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
   decodeMarkdownFragment,
   markdownAnchors,
+  markdownInlineCode,
 } from '@oat-repo/nav-markdown';
 
 export const appRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -87,6 +88,13 @@ export async function validateSourceRoutes(docsRoot: string): Promise<void> {
   const targets: Array<{ source: string; href: string }> = [];
   for (const page of pages) {
     const markdown = await readFile(page, 'utf8');
+    for (const value of markdownInlineCode(markdown)) {
+      if (
+        /^(?:\.\/|\.\.\/)[^\s?#]+\.md(?:#[^\s]+)?$/.test(value) &&
+        !/[<{*]/.test(value)
+      )
+        targets.push({ source: page, href: value });
+    }
     for (const match of sourceText(markdown)
       .replace(/(`+)[\s\S]*?\1/g, '')
       .matchAll(/!?\[[^\]\n]*\]\(([^\s)]+)(?:\s+"[^"]*")?\)/g)) {

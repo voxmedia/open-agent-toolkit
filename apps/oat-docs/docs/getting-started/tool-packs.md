@@ -1163,4 +1163,4 @@ Related docs:
 - Diagnosing pack drift (`oat status`, `oat doctor`): `../reference/troubleshooting.md`
 - Bootstrap (`oat init`): `bootstrap.md`
 - Provider sync (`oat status`, `oat sync`, `oat providers ...`): `../provider-sync/index.md`
-- Diagnostics and local-state commands: `config-and-local-state.md`
+- Diagnostics and local-state commands: [Config and Local State](../reference/config-and-local-state.md)

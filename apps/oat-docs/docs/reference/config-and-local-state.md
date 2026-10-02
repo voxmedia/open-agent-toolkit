@@ -291,15 +291,3 @@ For the full state model, repair semantics, and examples, see [Instruction Sync]
 `oat doctor` is the quickest way to confirm that your runtime, directory structure, and installed OAT assets are healthy before deeper debugging. At project scope it also scans bounded repository script and documentation surfaces for known-stale CLI grammar, such as `oat --scope all sync` <!-- oat-doctor: allow-stale-invocation -->, and reports file/line evidence plus the current `oat sync --scope all` form. Generated provider views, OAT lifecycle artifacts, archived content, dependencies, build output, and nested worktrees are excluded.
 
 The `/oat-doctor` skill (installed via the core pack) goes further: it sweeps config, project management (PJM), agent instructions, docs, and installed tools read-only, prints one report grouped by area and severity, and then dives into any area you pick, teaching from the bundled documentation and the `oat config describe` entries and offering the exact fix command or the owning skill. It applies nothing except a single fix command you approve. Unattended (`OAT_NON_INTERACTIVE=1`), the report is the whole output; `--summary` keeps the installed-tools dashboard.
-
-## CLI Adoption Guidance
-
-- utility command groups for config, local state, diagnostics, and related inspection flows
-
-- a guided health check, the `/oat-doctor` skill, that sweeps config, project management, agent instructions, docs, and installed tools, then explains and offers fixes for what it finds (described in [Config and Local State](config-and-local-state.md))
-
-- you are looking for configuration or local-state inspection help
-
-- Use [Config and Local State](config-and-local-state.md) for the utility command groups that support inspection and diagnostics.
-
-- [Config and Local State](config-and-local-state.md) - Utility command groups for config, local state, diagnostics, and related inspection flows.

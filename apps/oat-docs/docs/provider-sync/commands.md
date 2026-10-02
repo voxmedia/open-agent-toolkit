@@ -13,8 +13,8 @@ These command definitions inherit the cross-cutting CLI conventions in:
 
 ## Adjacent command docs (outside provider interop scope)
 
-- `oat init` (bootstrap): `../cli-utilities/bootstrap.md`
-- `oat tools ...` (tool-pack lifecycle — install, update, remove, list, info): `../cli-utilities/tool-packs.md`
+- `oat init` (bootstrap): [CLI Bootstrap](../getting-started/bootstrap.md)
+- `oat tools ...` (tool-pack lifecycle — install, update, remove, list, info): [Tool Packs and Installed Assets](../getting-started/tool-packs.md)
 - `oat doctor` (cross-cutting diagnostics): `../reference/cli-reference.md`
 
 ## Quick Look

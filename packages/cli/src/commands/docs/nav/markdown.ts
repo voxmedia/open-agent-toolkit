@@ -51,3 +51,17 @@ export function decodeMarkdownFragment(
     );
   }
 }
+
+export function markdownInlineCode(markdown: string): string[] {
+  const tree = unified()
+    .use(remarkParse)
+    .use(remarkGfm)
+    .parse(markdown.replace(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/, ''));
+  const values: string[] = [];
+  function visit(node: MarkdownNode): void {
+    if (node.type === 'inlineCode') values.push(node.value ?? '');
+    node.children?.forEach(visit);
+  }
+  visit(tree);
+  return values;
+}

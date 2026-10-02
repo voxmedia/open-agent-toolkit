@@ -50,8 +50,8 @@ Rules are currently project-scoped canonical content. Unlike skills and agents, 
 
 ## Adjacent CLI commands (commonly used with provider interop)
 
-- `oat init` (bootstrap canonical structure and sync config) — see `../cli-utilities/bootstrap.md`
-- `oat tools ...` (install/update/remove/migrate/list/inspect tools) — see `../cli-utilities/tool-packs.md`
+- `oat init` (bootstrap canonical structure and sync config) — see [CLI Bootstrap](../getting-started/bootstrap.md)
+- `oat tools ...` (install/update/remove/migrate/list/inspect tools) — see [Tool Packs and Installed Assets](../getting-started/tool-packs.md)
 - `oat doctor` (environment + skill-version diagnostics) — see `../reference/cli-reference.md`
 
 ## Provider enablement model

@@ -914,11 +914,3 @@ When you are unsure where a setting lives:
 3. Use the owning command shown there.
 
 That keeps config discovery centralized without forcing you to remember which settings belong to workflow state versus provider sync.
-
-## CLI Adoption Guidance
-
-- general configuration guidance
-
-- Adjust settings in [Configuration](configuration.md).
-
-- [Configuration](configuration.md) - OAT configuration guidance.

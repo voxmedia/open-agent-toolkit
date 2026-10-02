@@ -144,3 +144,44 @@ test('hosted README stale routes and fragments reject while canonical links pass
   );
   assert.equal((await validateHostedReadmes(root, [readme])).length, 1);
 });
+
+test('relative inline-code guide citations reject retired owners and accept the real target', async () => {
+  const root = await fixture();
+  const page = join(root, 'index.md');
+  await writeFile(page, '# Home\n\nSee `./workflows/skills/research.md`.\n');
+  await assert.rejects(
+    validateSourceRoutes(root),
+    /unresolved source link \.\/workflows\/skills\/research\.md/,
+  );
+  await writeFile(page, '# Home\n\nSee `` ./skills/research.md ``.\n');
+  await validateSourceRoutes(root);
+  await writeFile(
+    join(root, 'skills/research.md'),
+    '# Research\n\nSee `../index.md#home`.\n',
+  );
+  await validateSourceRoutes(root);
+});
+
+test('relative inline-code fragments are checked against the actual source heading', async () => {
+  const root = await fixture();
+  const page = join(root, 'index.md');
+  await writeFile(page, '# Home\n\nSee `./skills/research.md#absent`.\n');
+  await assert.rejects(
+    validateSourceRoutes(root),
+    /unresolved source fragment \.\/skills\/research\.md#absent/,
+  );
+  await writeFile(
+    page,
+    '# Home\n\nSee `./skills/research.md#compare-options`.\n',
+  );
+  await validateSourceRoutes(root);
+});
+
+test('inline-code route validation ignores fenced examples, placeholders, command prose and bare artifacts', async () => {
+  const root = await fixture();
+  await writeFile(
+    join(root, 'index.md'),
+    '# Home\n\n`project-log.md` and `node ./absent.md` are not guide pointers.\n`./<page>.md`, `../{owner}.md` and `./*.md` are templates.\n```md\nSee `./absent.md`.\n```\n~~~md\nSee `../absent.md`.\n~~~\n',
+  );
+  await validateSourceRoutes(root);
+});
