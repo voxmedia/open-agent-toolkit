@@ -220,7 +220,7 @@ Recorded by Fable on 2026-10-02. Codex paused for a usage reset part-way through
 - Phase 5: "Choosing…" guidance on 18 configuration pages; four Mermaid diagrams with text equivalents; new pages `workflows/approvals-and-automation.md`, `reference/what-oat-writes.md`, `provider-sync/pilot-with-a-team.md`; quickstart rewritten.
 - Phase 6: two persona reviews (onboarding developer, adoption evaluator), one editorial round, one rerun each. Developer rerun: all six earlier problems fixed. Evaluator rerun: 11 of 14 fixed, 2 partly, 1 still present and then addressed in `a554e9e46`. Reports are in `reviews/p06-persona-*.md`; the agreed list is `references/editorial-consensus.md`.
 - Every new factual claim was drafted by one Opus lane and checked by a separate Opus lane against source or a scratch-repository run (`references/fable-lanes/`). The checks found errors in the first fact sheet, recorded in `references/fact-sheet-errata.md` and corrected on the pages.
-- 25 product defects found along the way are filed as `BL-261002-*` backlog items (`references/product-defects-found.md`). No product behavior was changed in this project.
+- About 46 product defects and gaps found along the way (A1–G4 plus C7) are grouped into 25 `BL-261002-*` backlog items (`references/product-defects-found.md`). No product behavior was changed in this project.
 
 **Deviations from the plan**
 

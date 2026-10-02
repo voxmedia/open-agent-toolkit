@@ -13,6 +13,7 @@ Use this section when you want explicit project artifacts, stable task IDs, revi
 
 ## Where to go from here
 
+- [Brainstorm Before Choosing a Workflow](../skills/brainstorm.md) - Not sure what the work is yet? Talk it through with `/oat-brainstorm` first; it ends with an answer, a document, or a handoff to an idea, a backlog item, or a project.
 - [Ideas Workflow](ideas/index.md) - Lightweight idea capture, brainstorming, and promotion into tracked projects when the work becomes concrete.
 - [Projects](projects/index.md) - Lifecycle, artifacts, reviews, PR flow, and repository analysis.
 - [Wave Workflows](waves/wave-workflows.md) - Program-level coordination for executing a corpus of external plans as ordered wrapper projects.
