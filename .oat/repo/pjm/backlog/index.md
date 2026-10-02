@@ -396,7 +396,9 @@
 | BL-261002-align-implement-complete       | Align implement, complete, and pr-final skill contracts with their actual behavior                       | open   | medium   | task       | S        |
 | BL-260902-append-only-lifecycle-history  | Append-only lifecycle history after completion                                                           | open   | medium   | feature    | M        |
 | BL-260830-cli-flag-help-p2-p3-cleanup    | CLI flag/help P2-P3 cleanup                                                                              | open   | medium   | task       | M        |
+| BL-261002-catch-hardcoded-docs-paths     | Catch hardcoded docs paths in skill tests when docs pages move                                           | open   | medium   | task       | S        |
 | BL-260819-classify-canonical-skills-by   | Classify canonical skills by distribution, lifecycle, and tenant scope                                   | open   | medium   | feature    | M        |
+| BL-261002-commit-a-headless-rendered     | Commit a headless rendered-site QA tour for the docs app                                                 | open   | medium   | task       | M        |
 | BL-260830-complete-control-plane-backed  | Complete control-plane-backed lifecycle reads                                                            | open   | medium   | initiative | M        |
 | BL-260928-settle-codex-read-authority    | Confirm /recon launches Codex worker lanes as contract-enforced on the released CLI                      | open   | medium   | task       | S        |
 | BL-261002-correct-docs-bootstrap-docs    | Correct docs-bootstrap, docs-apply, and docs-analyze skill contracts                                     | open   | medium   | task       | S        |
@@ -434,6 +436,7 @@
 | BL-260907-recognize-phase-level          | Recognize phase-level completion records so bullet-list revision phases do not read as incomplete        | open   | medium   | task       | S        |
 | BL-260827-refresh-provider-codex-md      | Refresh provider-codex.md for the ultra effort tier, the GPT-5.4 retirement, and per-subcommand flags    | open   | medium   | task       | S        |
 | BL-260908-remove-the-top-level-skill     | Remove the top-level skill version read after the alias error has been quiet                             | open   | medium   | task       | S        |
+| BL-261002-require-exactly-one-h1-per     | Require exactly one H1 per docs page in docs:validate                                                    | open   | medium   | task       | S        |
 | BL-260909-restamp-a-stale-copy-strategy  | Restamp a stale copy-strategy contentHash on skip and retire the pre-framing digest bridge               | open   | medium   | task       | M        |
 | BL-260908-retire-the-top-level-skill     | Retire the top-level skill version alias on the recorded schedule                                        | open   | medium   | task       | S        |
 | BL-260718-rewrite-worktree-bootstrap     | Rewrite worktree bootstrap-group as tested TypeScript command                                            | open   | medium   | feature    | M        |
@@ -486,6 +489,7 @@
 | BL-260928-serialize-concurrent-agents-md | Serialize concurrent AGENTS.md guidance appends                                                          | open   | low      | task       | S        |
 | BL-260909-show-the-brainstorm-pack       | Show the brainstorm pack in the oat-doctor dashboard example and pack enumeration                        | open   | low      | task       | XS       |
 | BL-261002-split-the-tool-packs-page      | Split the Tool Packs page and restructure the Workflow Gates and Dispatch Policy pages                   | open   | low      | task       | M        |
+| BL-261002-theme-mermaid-diagrams         | Theme Mermaid diagrams and keep them readable on phones                                                  | open   | low      | task       | M        |
 | BL-260908-tighten-the-pr-final-ledger    | Tighten the pr-final ledger guard's prose and escaped-pipe boundary                                      | open   | low      | task       | XS       |
 | BL-260909-use-handle-bound-traversal     | Use handle-bound traversal in the managed-copy and manifest filesystem readers                           | open   | low      | task       | M        |
 | BL-260909-wave-7-review-polish-leftovers | Wave-7 review polish leftovers                                                                           | open   | low      | task       | S        |
