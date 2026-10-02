@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p02-t01
+oat_current_task_id: p02-t02
 oat_generated: false
 ---
 
@@ -16,13 +16,13 @@ The user invoked oat-project-implement after the reviewed plan handoff. Implemen
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 3     | 3/3       |
-| Phase 2 | in_progress | 3     | 0/3       |
+| Phase 2 | in_progress | 3     | 1/3       |
 | Phase 3 | pending     | 2     | 0/2       |
 | Phase 4 | pending     | 4     | 0/4       |
 | Phase 5 | pending     | 3     | 0/3       |
 | Phase 6 | pending     | 5     | 0/5       |
 
-**Total:** 3/20 tasks completed.
+**Total:** 4/20 tasks completed.
 
 ## Phase 1: Make the Current Sidebar Enforceable
 
@@ -49,18 +49,18 @@ The user invoked oat-project-implement after the reviewed plan handoff. Implemen
 
 ## Phase 2: Migrate Information Without Rewriting It
 
-**Status:** in_progress; t01 inventory draft only, review required before moves
+**Status:** in_progress; reviewed t01 complete, preservation-only move authorized
 **Started:** 2026-10-02
 
 ### Task p02-t01: Review the complete migration map
 
-**Status:** pending
-**Commit:** -
-**Verification:** Not run.
+**Status:** completed
+**Commit:** e790323680d35085f7b724862bb507c36e163d46
+**Verification:** Actual Fable conditional approval fulfilled, three native conservation rounds and two intrinsic analysis rounds complete. Round03's stale count corrected without changing map data; original Low analysis wording retained/disclosed. Direct controls, app check/types, nine executed tests, formatting/lint/diff check exit0 before/after commit; hook changes zero bytes across14 bounded files. Source docs and analysis unchanged. Canonical analysis tracking exit0; t01-completion-proof.json preserves exact count/status-only correction and immutable prior receipts. Pristine/no-project CI evidence remains separate. No pages moved or phase acceptance claimed.
 
 ### Task p02-t02: Apply the preservation-only move
 
-**Status:** pending
+**Status:** in_progress
 **Commit:** -
 **Verification:** Not run.
 
@@ -815,6 +815,14 @@ Round02 artifact accepted: exactly one not-attempted confirmation and no Review 
 Required peer-review boundary: Fable map approval has not arrived. Verified owning laptop relay/runtime and Mini execution worktree; Fable pane still has unsent text "what's the question codex is waiting on?". Do not overwrite, clear or submit it. Queued msg_abd20b8047be contains exact corrected map, specific review request and direct return instructions; delivered_at null and no response, so enqueue is not consumption. No page moved, p02-t01 not complete, no phase 2 acceptance claimed. Same phase handle remains available; resume after actual peer response, not by replacing its session. Two app source drafts remain intentionally uncommitted and owned by phase02. Reviewed project evidence is preserved separately as draft bookkeeping.
 
 ## Implementation Log
+
+### p02-t01 accepted and apply continuation: 2026-10-02
+
+Root verified e790323680d35085f7b724862bb507c36e163d46 is the single planned t01 commit with parentb0e6d239,14 declared files and clean tree. Shared release preparation is root-owned438b6ecd4d54dc4f97918e307cf5cb3cc0cbc549, five public manifests0.3.14 above freshly fetched main0.3.13; release manifest/bundles remain t03 closeout. These versions do not claim publication.
+
+Same phase02 continuation cont-docs-overhaul-p02-t02-apply accepted at the unchanged gpt-6.1-sol/high materialized target, holding before commands until this separate bookkeeping release. Scope is approved preservation-only docs/app recovery/evidence, no core writes, tracking, publication or additional review dispatch. Canonical analyze/apply are loaded explicitly from this branch. User-approved project adaptation reuses amphipod rather than generic apply branch creation; branch cli:source owns nav/index generation. Application covers p02 approved structural/consumer recommendations only; later coverage/persona findings are not silently applied now. Root keeps shared versions/lifecycle tracking. Commit per plan, then hold for task bookkeeping before t03.
+
+Authorized peer update requestc716ec80-cf50-4796-a3ed-b0bf410007ee returned input_accepted only (no observed turn start); no duplicate send. Actual Fable prior review supplies approval, not this receipt. Orc draft PR47 follow-up comment records new head/validation; merge/install remain separate.
 
 ### Stable draft handoff and parallel review acceptance: 2026-10-02
 

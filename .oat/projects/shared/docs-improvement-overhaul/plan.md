@@ -130,6 +130,8 @@ The two prebuild command strings intentionally differ: this repository invokes t
 
 ### Task p02-t01: Review the complete migration map
 
+**Execution:** Complete at `e790323680d35085f7b724862bb507c36e163d46`; actual peer approval, non-author conservation proof and intrinsic analysis review accepted. Implementation ledger remains progress authority.
+
 **Files:** project `references/route-migration.json`, `references/migration-review.md`, `references/capability-baseline.json`, `references/content-baseline.md`; analysis artifact resolved by `oat-docs-analyze`; reusable path checks in `apps/oat-docs/scripts/validate.ts` and `apps/oat-docs/tests/migration.test.ts`.
 
 **Work:** Run bounded docs analysis on the actual app and tie approved recommendations to this plan; do not claim earlier recon was a formal analyze run. Use the repository-canonical `.agents/skills/oat-docs-analyze/SKILL.md` and later apply skill changed in p01, loaded explicitly; do not rely on a stale installed user-scope copy. At an exact baseline SHA, inventory every page, heading, asset, source/hosted link and live consumer. Account for the initial 70 pages or explain baseline drift. Declare exact destinations and section-level accounting for consolidated router indexes. Fable reviews the map before moves. Normalization permits only identified link/frontmatter/router changes, not arbitrary paragraph stripping.

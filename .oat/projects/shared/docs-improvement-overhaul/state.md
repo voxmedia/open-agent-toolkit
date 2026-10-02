@@ -1,6 +1,6 @@
 ---
-oat_current_task: p02-t01
-oat_last_commit: 727c40abb5be32885d37d28b21887ac7c986ea42
+oat_current_task: p02-t02
+oat_last_commit: 438b6ecd4d54dc4f97918e307cf5cb3cc0cbc549
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -83,13 +83,13 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-01T22:42:17.072Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-02T11:51:01Z'
+oat_project_state_updated: '2026-10-02T13:07:50Z'
 oat_generated: false
 ---
 
 # Project State: docs-improvement-overhaul
 
-**Status:** Phase 1 accepted; Fable map review received, phase 2 R1/R2 corrections in progress before moves
+**Status:** Phase 1 accepted; phase 2 inventory/map approved and committed, preservation-only move underway
 **Started:** 2026-10-01
 **Last Updated:** 2026-10-02
 
@@ -103,7 +103,7 @@ The user invoked oat-project-implement after the reviewed handoff. Execute six s
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; independently reviewed)
 - **Plan:** `plan.md` (20 tasks across 6 phases; added scope requires amendment review before p06)
-- **Implementation:** `implementation.md` (p01 tasks verified; phase gates/review pending)
+- **Implementation:** `implementation.md` (p01 accepted; p02-t01 complete, 4/20 tasks)
 - **Review receipt:** `reviews/plan-review-round-03.md` (gate provenance, fixes, independent verification and Fable final confirmation)
 - **References:** [Evidence index](references/index.md), including initial evaluations, the proposed IA, Fable's skill inventory advisory, and orchestration observations.
 
@@ -117,8 +117,8 @@ The user invoked oat-project-implement after the reviewed handoff. Execute six s
 
 ## Blockers
 
-None currently. Fable's actual map review arrived via the user, approves destinations and route-only supersessions conditional on R1/R2. User explicitly directs root to send authorized peer prompts despite future draft signals rather than stopping. Receipt and override are durable; R1/R2 non-author conservation verification and later browser proof remain mandatory.
+None currently. Actual Fable approval and non-author R1/R2 conservation proof are accepted; reviewed map committed. User explicitly directs root to send authorized peer prompts despite draft signals rather than stopping. Later preservation/export/browser checks remain mandatory, not inferred from map approval.
 
 ## Next Milestone
 
-Complete bounded R1/R2 corrections on the existing phase02 handle, independently verify conservation, finish p02-t01, then apply the preservation-only migration. Fable does not require another map review unless R1 changes other destinations. Continue through p06 final QA and the configured implementation gate without another routine user checkpoint.
+Apply p02-t02 preservation-only migration on the existing phase02 handle, repair consumers in p02-t03, then close phase gates and independent reviews. Continue through p06 final QA and configured implementation gate without routine user checkpoints; publication/removal authority remains separate.
