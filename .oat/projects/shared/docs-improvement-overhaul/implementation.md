@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p01-t01
+oat_current_task_id: p01-t02
 oat_generated: false
 ---
 
@@ -13,26 +13,26 @@ The user invoked oat-project-implement after the reviewed plan handoff. Implemen
 
 ## Progress Overview
 
-| Phase   | Status  | Tasks | Completed |
-| ------- | ------- | ----- | --------- |
-| Phase 1 | pending | 3     | 0/3       |
-| Phase 2 | pending | 3     | 0/3       |
-| Phase 3 | pending | 2     | 0/2       |
-| Phase 4 | pending | 4     | 0/4       |
-| Phase 5 | pending | 3     | 0/3       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | in_progress | 3     | 1/3       |
+| Phase 2 | pending     | 3     | 0/3       |
+| Phase 3 | pending     | 2     | 0/2       |
+| Phase 4 | pending     | 4     | 0/4       |
+| Phase 5 | pending     | 3     | 0/3       |
 
-**Total:** 0/15 tasks completed.
+**Total:** 1/15 tasks completed.
 
 ## Phase 1: Make the Current Sidebar Enforceable
 
-**Status:** pending
+**Status:** in_progress
 **Started:** Not started
 
 ### Task p01-t01: Compile safe Fumadocs metadata
 
-**Status:** pending
-**Commit:** -
-**Verification:** Not run.
+**Status:** completed
+**Commit:** a0f2e8785f56ccf0024397286c86bafa8f3736e9
+**Verification:** Format, scoped oxlint, CLI type-check/build and diff check exit 0. Declared nav tests: 24 executed, exit 0. Combined help/nav: 84 executed, exit 0. Ownership-guard neutralization made the authored-metadata protection test fail (exit 1); restored valid generation, drift and refusal controls pass. Root verified immutable commit bounds and actual test logs; no recovery used. Mechanical help-snapshot update is the only derived addition to the declared nav boundary.
 
 ### Task p01-t02: Integrate the real loader and first build
 
@@ -225,7 +225,7 @@ Acceptance: /root/phase01 (Ptolemy); holding before work until root supplies cle
 
 ## Implementation Log
 
-No implementation performed. Planning-only artifact changes do not count toward the task completion total.
+Task p01-t01 implemented and independently reconciled against HEAD; root task bookkeeping committed before the same phase handle continues. Phase review and release closure remain pending.
 
 ### Plan artifact review received: 2026-10-02
 

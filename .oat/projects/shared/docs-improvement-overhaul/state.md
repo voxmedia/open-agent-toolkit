@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t01
-oat_last_commit: null
+oat_current_task: p01-t02
+oat_last_commit: a0f2e8785f56ccf0024397286c86bafa8f3736e9
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -89,7 +89,7 @@ oat_generated: false
 
 # Project State: docs-improvement-overhaul
 
-**Status:** Implementation authorized; p01 dispatch preflight complete
+**Status:** Implementation p01 in progress; p01-t01 complete
 **Started:** 2026-10-01
 **Last Updated:** 2026-10-02
 
