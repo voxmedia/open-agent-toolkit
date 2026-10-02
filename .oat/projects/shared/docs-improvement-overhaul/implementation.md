@@ -251,6 +251,19 @@ Generic dispatch record (launcher-owned; runtime identity not reported):
       "child_outcome": "completed",
       "dispatch_stamp": "Dispatch: scope=p01 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high",
       "head_sha": "686b2663fd8eaf51b7e736cdc01d71df187d930b"
+    },
+    {
+      "event_id": "cont-docs-overhaul-p01-fix-2",
+      "original_request_id": "docs-overhaul-run1-p01-implementation",
+      "action": "fix",
+      "round": 2,
+      "agent_handle": "/root/phase01",
+      "target": "oat-phase-implementer-gpt-6-1-sol-high",
+      "launch_status": "accepted",
+      "base_head": "68a7a043b187f6cfab94308b185a2e34b75ccb23",
+      "artifact": "reviews/p01-code-review-round02-2026-10-02T055341Z.md",
+      "authority": "root accepted only compact and bare separator variants of L1; two nav files",
+      "child_outcome": null
     }
   ],
   "payload": {
@@ -389,7 +402,7 @@ Phase implementation return: DONE_WITH_CONCERNS, three planned task commits in o
   "deadline_seconds": 3600,
   "retry_limit": 2,
   "launch_status": "accepted",
-  "child_outcome": null,
+  "child_outcome": "completed",
   "runtime_confirmation": "not-reported",
   "diagnostics": [],
   "continuation_events": [],
@@ -532,6 +545,12 @@ Root first phase-gate sequence at committed head6145054067bef937d74cf7e952a0c56d
 ### Phase 6 amendment review disposition
 
 Artifact reviews/phase06-plan-amendment-2026-10-02T045216Z.md returned exactly `**Reconnaissance:** not-attempted`, with no Review Orchestration, and reviewed the exact authored614505406 head. Zero critical/high, one medium and one low. Root accepted M1: p04-t03 now explicitly owns existing validator/test files, durable skill-scenario-audit.md and scoped tooling/audit formatting with docs:test. Root accepted L1: current design/plan summaries now reflect six phases and separate implementation authorization, with implementation.md as progress authority. Artifact fixes were formatted and diff-checked; Fable amendment review remains pending. No automatic review-receive workflow was invoked and no implementation fix tasks created for artifact-only findings.
+
+### Root eight gates and p01 re-review round 2
+
+At reviewed snapshot ee1675e6be034f64a644d7fdc04aee3862cf4436 (source686b2663), all eight ordered gates exit0: check, type-check, isolated-HOME test, build, skill-bumps, release:check-versions after fetch0, release:validate, build:docs. Receipts/logs /tmp/docs-overhaul-p01-fix1-gates/. Check/types each six executed/five cached; tests five executed/six cached, CLI7937 passed plus smoke163/skills660/scripts1. Root build five cached and docs six cached are replay, not new execution proof; implementer post-commit forced docs build executed all six at686b. Additional applicable lint/format passed in implementer evidence. No publication.
+
+Re-review artifact reviews/p01-code-review-round02-2026-10-02T055341Z.md returned exactly not-attempted and no Review Orchestration, scope p01/code/auto, reviewed head ee1675e6be034f64a644d7fdc04aee3862cf4436 validated. Zero Critical/High/Medium, one Low: compact or bare separator spellings remain silently ignored. Root accepts this bounded L1 completion for fix round2/2; two review cycles used, third terminal review permitted by the independent three-cycle cap. Artifact phrase “round2 of configured limit2” refers to the review iteration, not exhaustion of the separate two-fix budget. No endless additional polish or other source scope. Phase stays in_review until final verification/re-review.
 
 ## Final Summary (for PR/docs)
 
