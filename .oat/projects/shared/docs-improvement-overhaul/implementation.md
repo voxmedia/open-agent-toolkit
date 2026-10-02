@@ -263,7 +263,8 @@ Generic dispatch record (launcher-owned; runtime identity not reported):
       "base_head": "68a7a043b187f6cfab94308b185a2e34b75ccb23",
       "artifact": "reviews/p01-code-review-round02-2026-10-02T055341Z.md",
       "authority": "root accepted only compact and bare separator variants of L1; two nav files",
-      "child_outcome": null
+      "child_outcome": "completed",
+      "head_sha": "727c40abb5be32885d37d28b21887ac7c986ea42"
     }
   ],
   "payload": {
@@ -537,6 +538,10 @@ Same original phase handle completed cont-docs-overhaul-p01-fix-1 at 686b2663fd8
 Implementer reports post-commit 33 executed CLI navigation tests, six real app tests, source validation, output check of 11 files, skill bumps, forced docs build (six executed/zero cached), and diff check all exit zero. Logs /tmp/docs-p01-fix-post-\*.log. Pre-fix regression and guard/anchor neutralization failed as intended; root full ordered gates and fresh independent review remain pending. Original tasks/commits and zero recovery usage are unchanged. No phase acceptance is claimed.
 
 ## Test Results
+
+### p01 bounded fix round 2
+
+Same accepted phase handle completed cont-docs-overhaul-p01-fix-2 at 727c40abb5be32885d37d28b21887ac7c986ea42, exactly one append-only commit after328cd1058. Root verified only fumadocs.ts and fumadocs.test.ts changed and the tree is clean. Compact list/bare separator controls fail pre-fix (exit1) and reject after correction; spaced, fenced, ordinary prose and MkDocs controls remain. Direct35 nav/MkDocs tests and six real app tests, CLI types/check/build, source/output checks, formatting and post-commit reruns all exit0. Logs /tmp/docs-p01-fix02-\*.log. No recovery usage or additional scope. Final root gates and third independent review remain pending; two bounded fix rounds exhausted, no phase acceptance yet.
 
 Planning-only checks remain historical evidence. p01 focused tests, real-loader/pristine/installed-consumer/cache controls and Mini browser smoke are recorded per task above. Root full CI gate results will be recorded separately with actual exits/cache evidence before phase acceptance.
 
