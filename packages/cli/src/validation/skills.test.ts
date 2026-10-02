@@ -2821,10 +2821,11 @@ describe('validateOatSkills', () => {
     // never loads the dispatch reference. Raised again from 234 for the
     // synced-arrival materialization guard. Raised again from 245 for the
     // `metadata.version` migration, which moves the frontmatter version under a
-    // `metadata:` key and so costs every bundled skill exactly one line. The
-    // structural assertions below still enforce that step bodies stay out of
-    // the entry.
-    expect(entry.split('\n').length).toBeLessThanOrEqual(246);
+    // `metadata:` key and so costs every bundled skill exactly one line.
+    // Raised again from 246 for root-judgment logging, which joins the
+    // append points the entry lists for the same reason. The structural
+    // assertions below still enforce that step bodies stay out of the entry.
+    expect(entry.split('\n').length).toBeLessThanOrEqual(251);
     for (const path of implementReferencePaths) {
       expect(entry).toContain(`references/${path}`);
     }

@@ -74,6 +74,11 @@ to be clean; each append is committed by the bookkeeping that owns it.
   entry with the verdict and fix-loop count.
 - After every parallel-group merge attempt, invoke `oat project log append` for
   a structural entry with the merge result.
+- Append root-judgment entries through `oat project log append` for breaks,
+  surprises, workarounds, or notable successes, including observations relayed
+  from subagent reports; queue one that surfaces while a child owns the worktree
+  until the next bookkeeping boundary. Phase implementers and dispatched
+  subagents have no logging duties.
 
 ## Autonomy Policy
 

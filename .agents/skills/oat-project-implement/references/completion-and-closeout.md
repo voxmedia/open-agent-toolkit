@@ -294,6 +294,15 @@ To run in a separate session use: oat-project-review-provide code final
 - If Critical/High findings: Fix tasks added, re-run the `oat-project-implement` skill
 - Loop until final review passes (max 3 cycles per oat-project-review-receive)
 
+**Final review cap.** When the final review reaches the three-cycle cap,
+dispatch the complexity review that
+`references/docs/complexity-review-fallback.md` defines for the final loop,
+then show its decision message; under `OAT_AUTONOMOUS=1`, put the same content
+in the boundary report instead. Record the operator's choice with the report
+path in `implementation.md`. Agents never select the disposition. One exhausted
+loop gets one review: when the receive step's cycle cap already produced the
+report for this final loop, use that report rather than a second dispatch.
+
 **After final review is marked `passed`:**
 
 - Record the passed final review and keep the project in implementation closeout.
@@ -789,6 +798,16 @@ completion, or success output, run the configured gate:
    missing CLIs, unavailable runtimes, transport failures, validation or
    correlation failures, and receive failures cannot continue to sequencing,
    final HiLL, completion, or success output regardless of `on_failure`.
+
+   **Complexity review at `maxAttempts`.** When the gate ends in `block` after
+   attempts are exhausted, dispatch the complexity review that
+   `references/docs/complexity-review-fallback.md` defines for this exhausted
+   gate loop before escalating, then show its decision message with the
+   accumulated feedback; under `OAT_AUTONOMOUS=1`, put the same content in the
+   boundary report instead. Record the operator's choice with the report path
+   in `implementation.md`. Agents never select the disposition. A single
+   unresolved policy boundary that consumed no remediation attempt is not a
+   budget exhaustion and does not trigger the review.
 
    When the gate ends in `block` after attempts are exhausted or remains at an
    unresolved `prompt` boundary, the completion steps below MUST NOT run. The
