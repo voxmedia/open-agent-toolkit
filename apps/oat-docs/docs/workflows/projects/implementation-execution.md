@@ -67,8 +67,12 @@ The root:
   cleanliness;
 - selects and launches the phase reviewer;
 - owns retry limits, review disposition, worktree fan-in, HiLL checkpoints, and
-  tracking-artifact commits; and
-- runs external phase gates and final closeout.
+  tracking-artifact commits;
+- runs external phase gates and final closeout; and
+- logs root judgment: breaks, surprises, workarounds, or notable successes,
+  including observations relayed from subagent reports, appended through
+  `oat project log append` at the next bookkeeping boundary rather than while
+  a child owns the worktree.
 
 The root does not implement phase tasks while an accepted phase launch owns
 that scope.
@@ -101,7 +105,9 @@ once, and directly executes each task in plan order. For every task it:
 6. verifies the commit, file boundary, tests, and clean worktree.
 
 After all tasks, it runs phase-wide verification and returns a compact report.
-It does not dispatch the phase reviewer or mutate general project bookkeeping.
+It does not dispatch the phase reviewer, mutate general project bookkeeping,
+or write the project log; phase implementers and other dispatched subagents
+have no logging duties.
 While it owns the worktree, it may atomically update only the active phase's
 authoritative `oat_phase_recovery_policy.phase_attempt_usage.<pNN>` entry. The
 phase returns with a matching committed `completed` or `failed` terminal marker
@@ -458,6 +464,20 @@ sequenceDiagram
   Root->>Review: New independent review round
   Review-->>Root: Pass
 ```
+
+### Budget exhaustion
+
+The bounded loops end at fixed budgets: fix and re-review rounds at
+`oat_orchestration_retry_limit`, phase review gate rounds at the same limit,
+the final review at its three-cycle cap, and the configured exit gate at
+`maxAttempts`. At each of these points the root dispatches one read-only
+[complexity review](reviews.md#complexity-review-at-budget-exhaustion) before
+escalating, saves its report under `reviews/archived/`, and shows a decision
+message with the stop reasons, the verdict, and the recommended disposition.
+The operator chooses: extra cycles, proceed with override, corrective revision,
+or **simplify**. The choice and the report path are recorded in
+`implementation.md`. Agents never select the disposition; under
+`OAT_AUTONOMOUS=1` the run stops with the same content in its boundary report.
 
 ## Parallel Phase Groups
 

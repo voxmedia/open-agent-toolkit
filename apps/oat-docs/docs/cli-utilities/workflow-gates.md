@@ -212,6 +212,42 @@ Only an artifact with `oat_review_invocation: gate` and the matching
 review, phase review, or manually produced independent review cannot substitute
 for it.
 
+### Gate approval records
+
+Two lifecycle gates persist their outcome in project `state.md` with a shared
+five-field core:
+
+| Field                | Meaning                                                                                        |
+| -------------------- | ---------------------------------------------------------------------------------------------- |
+| `status`             | `allowed` or `blocked`                                                                         |
+| `disposition`        | `passed`, `warned`, `prompt_approved`, or `project_disabled` when allowed; `null` when blocked |
+| `config_fingerprint` | Stable hash of the resolved gate declaration                                                   |
+| `reviewed_head`      | The commit the gate reviewed, recorded as provenance                                           |
+| `decided_at`         | ISO 8601 UTC time of the decision                                                              |
+
+`oat_implement_exit_gate` keeps its additional closeout fields and writes
+`decided_at` with every allowed or blocked outcome. `oat_quick_start_gate`,
+written by `oat-project-quick-start` for every configured plan-gate outcome,
+carries exactly the core:
+
+- a passing gate writes `allowed/passed`, and a `warn` failure writes
+  `allowed/warned`;
+- a `prompt` failure the operator explicitly continues past writes
+  `allowed/prompt_approved`;
+- a declined or deferred `prompt` (always under `OAT_AUTONOMOUS=1`), a `block`
+  still failing at `maxAttempts`, or an operational failure writes `blocked`
+  with a `null` disposition;
+- a gate disabled by project override writes `allowed/project_disabled`
+  without launching anything; and
+- a gate that is not configured writes no record.
+
+`oat-project-next` and `oat-project-progress` report the quick-start record as
+current when its `config_fingerprint` matches the currently resolved
+quick-start gate declaration, and otherwise as superseded or malformed. They
+never route on it: quick plan readiness remains the only routing rule for quick
+plans, and `reviewed_head` is not compared with `HEAD` because quick-start
+commits after the gate.
+
 ## Review gates
 
 `oat gate review` is intentionally stateful. It is equivalent to running
@@ -917,6 +953,12 @@ eligible receive completes durably:
 failures, and receive failures are operational failures rather than validated
 blocking findings. They remain blocked regardless of `onFailure`; even `warn`
 cannot turn them into an allowed disposition.
+
+When `block` still fails after `maxAttempts`, the implementation exit gate and
+the quick-start plan gate run a
+[complexity review](../workflows/projects/reviews.md#complexity-review-at-budget-exhaustion)
+before escalating, and show it with the accumulated feedback. The operator
+chooses how to proceed, including **simplify**; agents never choose for them.
 
 `cross-provider-exec` does fallback only before dispatch, while selecting an
 available target. Once a target actually runs, its exit code is the gate result;

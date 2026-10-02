@@ -61,6 +61,15 @@ A boundary is a successful fail-closed outcome, not permission to continue with
 a guessed answer. The run reports what stopped, the evidence, and the operator
 action needed to resume.
 
+When a review or gate budget runs out (a review-cycle cap, the orchestration
+retry limit, or a gate's `maxAttempts`), the run first dispatches the
+[complexity review](reviews.md#complexity-review-at-budget-exhaustion) and
+includes its decision-message content in the boundary report. The run never
+selects the disposition, including **simplify**: the operator chooses when
+resuming. A quick-start plan gate outcome is persisted as
+`oat_quick_start_gate`; a failed `prompt` gate is recorded as `blocked`, never
+as approved.
+
 The canonical autonomy contract and exhaustive gate inventory
 (`.agents/docs/autonomy-contract.md`, vendored into each consuming skill at
 `references/docs/autonomy-contract.md`) map each prompt to its autonomous
