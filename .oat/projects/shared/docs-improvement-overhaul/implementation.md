@@ -20,7 +20,7 @@ The user invoked oat-project-implement after the reviewed plan handoff. Implemen
 | Phase 3 | complete                       | 2     | 2/2       |
 | Phase 4 | complete                       | 4     | 4/4       |
 | Phase 5 | complete                       | 3     | 3/3       |
-| Phase 6 | final-review corrections       | 8     | 5/8       |
+| Phase 6 | final review and exit gate     | 8     | 8/8       |
 
 **Total:** 23/23 task implementations recorded. Earlier phase 6 closure was premature for reconciliation and independent acceptance; resumed corrections and current accounting are now committed. The root native supplement covers seven journeys and actual GitHub light/dark README rendering. The fully non-author reviewer is finishing independent native acceptance and narrow correction re-review. Configured exit gate and final p06 HiLL approval remain pending; no approval waiver is inferred.
 
@@ -106,81 +106,81 @@ p02 review fix ad71d9cd99f181a7fcd804fe2d9bc9a8d36c8e88 is accepted as a scoped 
 
 Dispatch p03 prose and p04-t01 mapping independently now. Fable exclusively supplies source-verified SVG/Mermaid/config drafts and blind applicability audit; no duplicate Codex audit/config author. Catalog tooling follows the mapping schema in parallel with family authoring. p05-t01's twelve deep guides are authored in p04-t03 once. First personas follow the p01+p02 progress PR on the restructured site; editorial work may overlap disjoint skill pages. Final rerun, coverage-ledger close and independent visual acceptance remain required. First progress PR is p01+p02, README must not delay it; ask one-line push confirmation at readiness, no merge/release authority.
 
-**Status:** complete
+**Status:** completed
 **Started:** 2026-10-02
 
 ### Task p03-t01: Write a concise adoption story and original visual
 
-**Status:** complete
+**Status:** completed
 **Commit:** 4198712f9, 273aed8bd
 **Verification:** See Takeover closeout.
 
 ### Task p03-t02: Review actual README consumption
 
-**Status:** complete
+**Status:** completed
 **Commit:** 273aed8bd (review in closeout)
 **Verification:** See Takeover closeout.
 
 ## Phase 4: Build Complete Supported-Skill Discovery
 
-**Status:** complete
+**Status:** completed
 **Started:** 2026-10-02
 
 ### Task p04-t01: Define and review the guide mapping
 
-**Status:** complete
+**Status:** completed
 **Commit:** ec2034bdb
 **Verification:** See Takeover closeout.
 
 ### Task p04-t02: Independently audit every applicability claim
 
-**Status:** complete
+**Status:** completed
 **Commit:** a080dfbef
 **Verification:** See Takeover closeout.
 
 ### Task p04-t03: Author minimum useful family coverage
 
-**Status:** complete
+**Status:** completed
 **Commit:** ec321b21d..0118089dc, cc656ae65, 7537595f5
 **Verification:** See Takeover closeout.
 
 ### Task p04-t04: Generate and enforce the committed catalog
 
-**Status:** complete
+**Status:** completed
 **Commit:** 33daefefe, bcd5b08c6
 **Verification:** See Takeover closeout.
 
 ## Phase 5: Fill Named Gaps and Accept the Rendered Site
 
-**Status:** complete
+**Status:** completed
 **Started:** 2026-10-02
 
 ### Task p05-t01: Deepen the named thin and missing guides
 
-**Status:** complete
+**Status:** completed
 **Commit:** f2ffaa20c, 7537595f5
 **Verification:** See Takeover closeout.
 
 ### Task p05-t02: Add four purposeful docs visual treatments
 
-**Status:** complete
+**Status:** completed
 **Commit:** ab4918343, e1c6b7d94
 **Verification:** See Takeover closeout.
 
 ### Task p05-t03: Verify phase visuals and release readiness
 
-**Status:** complete
+**Status:** completed
 **Commit:** see Takeover closeout
 **Verification:** See Takeover closeout.
 
 ## Phase 6: Evaluate and Improve the Whole Reader Experience
 
-**Status:** complete
+**Status:** completed
 **Started:** 2026-10-02
 
 ### Task p06-t01: Reconcile whole-site coverage and capabilities
 
-**Status:** complete
+**Status:** completed
 **Commit:** d9177ea2c (records)
 **Verification:** See Takeover closeout.
 
