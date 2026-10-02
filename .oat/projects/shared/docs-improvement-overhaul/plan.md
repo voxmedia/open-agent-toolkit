@@ -398,7 +398,7 @@ Complete seven journeys using sidebar/search/links/anchors: provider-sync-only i
 | p02            | code     | passed          | 2026-10-02 | reviews/p02-review-2026-10-02T145912Z.md                    | 2173d81d1659bf2124826244a869ca54b14b49ad | auto       | -                    |
 | p02-map        | artifact | fixes_completed | 2026-10-02 | reviews/p02-migration-draft-review.md                       | -                                        | auto       | -                    |
 | p02-map        | artifact | passed          | 2026-10-02 | reviews/p02-migration-draft-review-round02.md               | -                                        | auto       | -                    |
-| final          | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
+| final          | code     | received        | 2026-10-02 | reviews/final-review-2026-10-02T213720Z.md                  | c0f10a8f8d3a05cd9ac4d1f2265e8bb0f7e7c697 | auto       | -                    |
 | spec           | artifact | pending         | -          | -                                                           | -                                        | -          | -                    |
 | design         | artifact | fixes_completed | 2026-10-01 | reviews/fable-design-01.md                                  | -                                        | manual     | -                    |
 | p03            | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
