@@ -1,6 +1,6 @@
 ---
 oat_current_task: p01-t03
-oat_last_commit: 52190849b5dfbb023e8c0dc93cb10e27d62ad3b4
+oat_last_commit: 686b2663fd8eaf51b7e736cdc01d71df187d930b
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -83,13 +83,13 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-01T22:42:17.072Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-02T04:45:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-10-02T05:47:19.574Z'
 oat_generated: false
 ---
 
 # Project State: docs-improvement-overhaul
 
-**Status:** Implementation p01 complete; full gates and independent review pending
+**Status:** Implementation p01 fix round 1 complete; full gates and re-review pending
 **Started:** 2026-10-01
 **Last Updated:** 2026-10-02
 

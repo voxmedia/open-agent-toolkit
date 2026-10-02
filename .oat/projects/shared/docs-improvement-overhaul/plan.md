@@ -360,7 +360,7 @@ Complete seven journeys using sidebar/search/links/anchors: provider-sync-only i
 
 | Scope          | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target          |
 | -------------- | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | -------------------- |
-| p01            | code     | fixes_pending   | 2026-10-02 | reviews/p01-code-review-2026-10-02T045526Z.md               | 6145054067bef937d74cf7e952a0c56da67f4264 | auto       | -                    |
+| p01            | code     | fixes_completed | 2026-10-02 | reviews/p01-code-review-2026-10-02T045526Z.md               | 6145054067bef937d74cf7e952a0c56da67f4264 | auto       | -                    |
 | p02            | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
 | final          | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
 | spec           | artifact | pending         | -          | -                                                           | -                                        | -          | -                    |
