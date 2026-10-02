@@ -3515,11 +3515,12 @@ describe('named-skill execution contract', () => {
     // The symlinked half of the live inventory, named rather than counted. Each
     // of these is reached only through a `*.md` link under `.agents/skills`;
     // without symlink following the live walk reaches 241 files and none of
-    // these six, which is below `CORPUS_MINIMUMS.fenceScanFiles`.
+    // these, which is below `CORPUS_MINIMUMS.fenceScanFiles`.
     expect(live).toEqual(
       expect.arrayContaining([
         '.agents/docs/agent-instruction.md',
         '.agents/docs/autonomy-contract.md',
+        '.agents/docs/complexity-review-fallback.md',
         '.agents/docs/cursor-rules-files.md',
         '.agents/docs/provider-reference.md',
         '.agents/docs/rules-files.md',
@@ -3527,11 +3528,12 @@ describe('named-skill execution contract', () => {
       ]),
     );
 
-    // Six entries, not eleven: six of the eleven links resolve onto
-    // `autonomy-contract.md`, and the realpath key collapses them.
+    // One entry per shared doc, not per link: six links resolve onto
+    // `autonomy-contract.md` and three onto `complexity-review-fallback.md`,
+    // and the realpath key collapses them.
     expect(
       live.filter((file) => file.startsWith('.agents/docs/')),
-    ).toHaveLength(6);
+    ).toHaveLength(7);
 
     // Deduplication is a property of the whole inventory, not just the links.
     expect(new Set(live).size).toBe(live.length);
