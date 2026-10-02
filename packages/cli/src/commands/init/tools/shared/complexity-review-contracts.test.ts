@@ -45,6 +45,12 @@ const IMPLEMENT = 'oat-project-implement';
 const PHASE_EXECUTION = `.agents/skills/${IMPLEMENT}/references/phase-execution.md`;
 const COMPLETION = `.agents/skills/${IMPLEMENT}/references/completion-and-closeout.md`;
 
+const RECEIVE = 'oat-project-review-receive';
+const RECEIVE_STEP_8 = {
+  start: '### Step 8: Check Review Cycle Count',
+  end: '### Step 8.5: Final Scope Deferred-Medium Resurfacing',
+};
+
 const EXHAUSTION_POINTS: readonly ExhaustionPoint[] = [
   {
     name: 'implement root review cap',
@@ -73,6 +79,12 @@ const EXHAUSTION_POINTS: readonly ExhaustionPoint[] = [
     file: COMPLETION,
     start: '5. Do not route policy from a generic nonzero exit.',
     end: '6. Runtime selection note',
+  },
+  {
+    name: 'review-receive cycle cap',
+    skill: RECEIVE,
+    file: `.agents/skills/${RECEIVE}/SKILL.md`,
+    ...RECEIVE_STEP_8,
   },
 ];
 
@@ -145,6 +157,30 @@ describe('complexity review at budget exhaustion', () => {
       );
     },
   );
+
+  it('offers simplify at the receive cycle cap and keeps its count', () => {
+    const step8 = sliceBetween(
+      readRepoFile(`.agents/skills/${RECEIVE}/SKILL.md`),
+      RECEIVE_STEP_8.start,
+      RECEIVE_STEP_8.end,
+    );
+    const menu = step8.slice(step8.indexOf('Review cycle limit reached'));
+
+    // The three-cycle cap and the gate-artifact exclusion are unchanged.
+    expect(step8).toContain('**If 3 or more cycles:**');
+    expect(step8).toContain('grep -q "oat_review_invocation: gate"');
+    // A saved complexity report names the scope but is not a review cycle.
+    expect(step8).toMatch(/complexity-\*\) continue ;;/);
+    // Simplify joins the existing dispositions in the menu.
+    expect(menu).toMatch(/\d\. Simplify/);
+    for (const option of [
+      'Review findings manually and decide which to address',
+      'Proceed to PR with current state',
+      'Request explicit user override to continue',
+    ]) {
+      expect(menu).toContain(option);
+    }
+  });
 
   it('logs root judgment and keeps logging out of dispatched children', () => {
     const appendPoints = sliceBetween(

@@ -603,28 +603,41 @@ If the project itself is still untracked because earlier lifecycle steps never c
 
 **Bounded loop protection:**
 
-Count how many review cycles have occurred for this scope. Exclude gate-originated artifacts (`oat_review_invocation: gate`): the cap measures failed fix cycles of the standard review loop, not artifact volume, and phase gate re-runs are governed by the phase review gate flow in `oat-project-implement`, not by this cap.
+Count how many review cycles have occurred for this scope. Exclude gate-originated artifacts (`oat_review_invocation: gate`): the cap measures failed fix cycles of the standard review loop, not artifact volume, and phase gate re-runs are governed by the phase review gate flow in `oat-project-implement`, not by this cap. Saved complexity reports (`complexity-<scope>-*.md` under `reviews/archived/`) name the scope but are not review cycles, so the count skips them too.
 
 ```bash
 {
   find "$PROJECT_PATH/reviews" -maxdepth 1 -type f -name "*$SCOPE_TOKEN*.md" 2>/dev/null
   find "$PROJECT_PATH/reviews/archived" -maxdepth 1 -type f -name "*$SCOPE_TOKEN*.md" 2>/dev/null
 } | while IFS= read -r artifact; do
+  case "$(basename "$artifact")" in complexity-*) continue ;; esac
   grep -q "oat_review_invocation: gate" "$artifact" || echo "$artifact"
 done | wc -l
 ```
 
 **If 3 or more cycles:**
 
+Before showing the menu, dispatch the complexity review that
+`references/docs/complexity-review-fallback.md` defines for this scope's
+exhausted loop, then show its decision message with the menu below; under
+`OAT_AUTONOMOUS=1`, put the same content in the boundary report instead.
+Record the operator's choice with the report path in `implementation.md`.
+Agents never select the disposition. The loop history in the brief includes
+this scope's gate-originated artifacts even though the count excludes them.
+
 ```
 ⚠️  Review cycle limit reached (3 cycles).
 
 This scope has been reviewed {N} times. Further automated review cycles are blocked.
 
+Complexity review: {verdict}; recommended disposition: {recommended disposition}
+Report: {report path}
+
 Options:
 1. Review findings manually and decide which to address
 2. Proceed to PR with current state
 3. Request explicit user override to continue
+4. Simplify: apply the complexity review's accepted simplifications, then review again
 
 Choose an option:
 ```
