@@ -235,3 +235,44 @@ optional child has explicitly isolated write authority.
 - [Programmatic Execution](programmatic-execution.md)
 - [Evidence Layers](evidence-layers.md)
 - [Workflow Smoke Testing](../../contributing/smoke-testing.md)
+
+## subagent-orchestration
+
+Use this skill to decide what to delegate and which capability class the task
+needs. It supplies model-selection guidance, not a command that launches workers.
+OAT's dispatch skills own capability checks, exact routes, acceptance records,
+and recovery.
+
+**Invocation:** Give the agent a bounded delegation decision. The slash form is
+a skill request, not a terminal command. Providers with `$` syntax use
+`$subagent-orchestration`.
+
+```text
+/subagent-orchestration
+Classify a read-only API-usage audit and a final approval-provenance review. Define their scopes, required evidence, and escalation conditions before selecting models.
+```
+
+**Prerequisites:** Project applicability is `none`. The guidance is
+self-contained and needs no OAT project or installation. You need the task's
+objective, authority, verification needs, and active provider context. Read
+exactly that provider's selection reference. Current catalogs and instructions
+outrank dated model examples.
+
+**Example scenario:** A root agent needs an unfamiliar API audit and an
+independent review of approval handling. The audit needs intelligent
+reconnaissance because a missed usage could be silent. Approval provenance
+needs consequential review because a subtle miss could authorize unsafe work.
+The root keeps authorization and cross-scope judgment while defining each
+worker's output and evidence. Choosing a stronger model does not repair an
+over-broad assignment.
+
+**Expected output:** A routing decision states the task class, role, exact model
+selector, provider-native effort, service tier, route, and authority separately.
+It preserves each class's capability floor and names escalation conditions.
+Load-bearing worker claims require verified evidence before the root acts on
+them. File count or duration alone does not justify a higher reasoning class.
+
+**Next step:** Use the appropriate dispatch machinery only after the bounded
+scope and route are justified. Within OAT, follow the project adapter and
+dispatch engine. Guidance alone is not evidence that a worker launched or that
+its result passed review.

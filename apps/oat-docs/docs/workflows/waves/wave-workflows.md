@@ -75,3 +75,96 @@ Until that grouped work ships, consumers should follow the bundled skill and tem
 - [Project lifecycle](../projects/lifecycle.md)
 - [Implementation execution](../projects/execution/implementation-execution.md)
 - [Project artifacts](../../reference/project-artifacts.md)
+
+## oat-wave-program
+
+Use program to record which external plans belong in each wave. The
+orchestrator composes the waves and retains dependency, risk, and concurrency
+judgment. The skill maintains the inventory and approved result.
+
+**Invocation:** Select `new`, `refresh`, or `wave-close <wave-id>` as the
+situation requires. These are agent-skill requests, not `oat` CLI commands.
+Providers with `$` syntax use `$oat-wave-program` instead of the slash name.
+
+```text
+/oat-wave-program new
+```
+
+```text
+/oat-wave-program refresh
+```
+
+```text
+/oat-wave-program wave-close wave-2
+```
+
+**Prerequisites:** Project applicability is `none`. New mode needs the external
+plan indexes and their actual plan files, not an active lifecycle project.
+Refresh needs the live execution-program artifact and current indexes.
+Wave-close needs the completed wave's merge and completion evidence. Missing
+indexed files stop the flow rather than being guessed from names.
+
+**Example scenario:** Twelve reviewed external plans include a shared API
+foundation, client changes, and independent documentation work. Use `new` to
+inventory every indexed plan and record an operator-approved sequence. When
+three more plans arrive, use `refresh` to recompose only unstarted waves. After
+wave two merges, use `wave-close wave-2` to record that boundary instead of
+inventing another execution program.
+
+**Expected output:** A dated execution-program artifact under
+`.oat/repo/reference/external-plans/`, with exactly one row per indexed plan,
+explicit deferral reasons, ordered waves, dependencies, and a current status
+ledger. Started waves cannot be reshuffled, and merged membership is frozen
+history. Plan rows can become `done`; wave-ledger states are `composed`,
+`in-progress`, and `merged`.
+
+At final program close, recap and deferred wrapper completion receive explicit
+dispositions. The completion-tail checkpoint remains human-gated, including
+autonomous runs. Program bookkeeping is not an executable project plan or an
+import target.
+
+**Next step:** Invoke `oat-wave-execute` for an approved wave. Record each merge
+through wave-close, and resolve any program-end completion deferral with its
+named owner.
+
+## oat-wave-execute
+
+Use execute for one wave, not for composing the whole corpus. It prepares and
+coordinates a quick wrapper project while the normal project lifecycle owns
+phase implementation and review.
+
+**Invocation:** Name the wave. Its lanes normally resolve from the live program
+artifact, with plan-index hints used only when no program exists.
+
+```text
+/oat-wave-execute wave-2
+```
+
+**Prerequisites:** Project applicability is `none`. A pre-existing active
+project is unnecessary because execute scaffolds the wrapper. The named source
+plans must exist, the repository baseline must be usable, and source-plan drift
+checks must permit the lanes to proceed. You also need the authorized concurrency
+ceiling, worktree tooling, review capabilities, and permissions for the planned
+operations. The default ceiling is three worktrees, subject to operator choice.
+
+**Example scenario:** The approved second wave contains client changes after
+its API foundation merged. Execute refreshes drift against the current base,
+intersects every plan's write set, and records safe groups in the wrapper plan.
+Overlapping files force separate groups even when the plans looked independent
+when authored. Choose execute rather than program because wave membership is
+already approved and now needs verified delivery.
+
+**Expected output:** A `wave-N-execution` wrapper with source-plan pointers,
+drift evidence, a plan, discovery, and an orchestration log. Passing lanes produce
+verified task commits and review dispositions in isolated worktrees. Serialized
+fan-in is followed by integration gates, so individual lane passes are not
+presented as proof the integrated tree passes.
+
+Closeout writes end-of-run synthesis before archive work. Autonomous execution
+can defer a wrapper's archive tail to program close only with an explicit
+ledger disposition. That deferral does not satisfy the full completion tail.
+Source-plan requirements remain intact even when live drift changes a mechanism.
+
+**Next step:** Follow the wave's reported review and merge boundary. After the
+operator merges, reconcile the result and invoke program wave-close. Do not mark
+an unmerged wave `merged` or treat a deferred archive as completed.

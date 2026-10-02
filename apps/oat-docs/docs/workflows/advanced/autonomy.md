@@ -194,3 +194,51 @@ normally because autonomy itself was never persisted.
   review, fixes, and closeout.
 - [Cursor Cloud](cursor-cloud.md) — project-home and environment-readiness
   guidance for cloud runs.
+
+## oat-project-autonomous
+
+Use this entry only after an explicit request for end-to-end autonomous project
+execution. It chains the existing lifecycle owners rather than replacing their
+gates or creating another implementation coordinator.
+
+**Invocation:** Provide a substantive goal for new work, or an existing project
+slug or path to resume. These are agent requests, not terminal commands.
+Providers with `$` syntax use `$oat-project-autonomous`.
+
+```text
+/oat-project-autonomous "Add resumable exports and open the final PR."
+```
+
+```text
+/oat-project-autonomous export-filter
+```
+
+**Prerequisites:** Project applicability is `none`. A new goal can create a
+project through the selected entry skill. An explicit existing project or a
+valid active pointer supports resume. Empty input requires a valid active
+project. An explicit project resolves first, then a valid active pointer, then
+a new goal. Use the first example when no existing project resolves.
+`oat` must be on `PATH`, repository policy must permit the work, and
+required worker and review capabilities must resolve before side effects.
+
+**Example scenario:** You authorize the bounded resumable-export goal through a
+final PR without ordinary mid-run approval pauses. Autonomous entry chooses
+lite, quick, or spec-driven review density from the actual uncertainty and
+invokes its owning creation skill. If an export-filter project is already
+active, the second example explicitly resumes its earliest incomplete step
+instead of replaying finished phases.
+
+**Expected output:** Session-only autonomy signals, persisted lifecycle
+progress, reviewed task commits, and project-local execution learnings. Existing
+projects retain their mode. A successful run reports the actual final PR and
+review evidence. A blocked run names the boundary, durable completed work,
+operator action, and resumable project.
+
+The default topology is one working branch and one final PR. The skill does not
+merge or force-push. Missing credentials, protected operations, destructive work,
+unresolved blocking review, and material product ambiguity are boundaries.
+Autonomy does not let an ordinary review impersonate a configured exit gate.
+
+**Next step:** Inspect the final report and PR, or resolve the named boundary.
+After a restart, deliberately invoke the skill again. Persisted project state
+supports resume, but does not silently reactivate autonomy.

@@ -154,3 +154,46 @@ See [Autonomous Project Execution](autonomy.md).
   selection.
 - [Configuration](../../reference/configuration.md) — user, shared, and
   repository-local config ownership.
+
+## oat-cursor-cloud-projects
+
+Use this skill for cloud orientation before choosing a lifecycle action. It
+checks the environment, repository ownership, CLI, and assets. It does not run
+the project or activate autonomy on its own.
+
+**Invocation:** Request orientation explicitly, or ask the agent how this cloud
+workspace should resolve OAT context. The slash form is an agent request, not a
+terminal command. Providers with `$` syntax use `$oat-cursor-cloud-projects`.
+
+```text
+/oat-cursor-cloud-projects
+Identify the repository that owns this change and verify the OAT assets before continuing.
+```
+
+**Prerequisites:** Project applicability is `optional`. A shell and Node/npm
+must be available. No active project is needed to detect cloud context or choose
+the target repository. When an active project exists, orientation resolves its
+scope and pulls synced context before reading artifacts. Missing CLI capability
+must be restored before project artifact work proceeds.
+
+**Example scenario:** A cloud workspace contains both an application and a
+shared-library checkout. You want to resume application work without putting
+its project under the workspace parent. Orientation verifies cloud signals,
+selects the repository that owns the branch and eventual PR, resolves user-first
+skill assets, and then returns control to the correct lifecycle skill.
+
+**Expected output:** An orientation summary reports detected context and its
+signal, target repository, projects root, active project or none, CLI readiness,
+asset tier, freshness, and any required dispatch context. Each skill and script
+resolves user, repository, then bundled scope. Templates use their separate
+repository-first CLI resolution. A higher repository skill version signals a
+stale user tier, not permission to switch sources silently.
+
+Missing run metadata is disclosed. It does not justify inventing model identity.
+Without a cloud signal, the skill returns control without imposing cloud rules.
+Unavailable required capabilities and ambiguous repository ownership remain
+explicit boundaries.
+
+**Next step:** Continue the owning project skill from the verified repository.
+For deliberately autonomous execution, invoke `oat-project-autonomous`
+separately. Orientation alone is not that authorization.
