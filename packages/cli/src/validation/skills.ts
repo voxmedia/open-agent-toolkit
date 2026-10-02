@@ -1565,6 +1565,20 @@ export async function validateOatSkills(
     .sort();
   const oatSkillDirs = allSkillDirs.filter((name) => name.startsWith('oat-'));
 
+  // Every canonical skill directory needs its marker, not only oat-* ones: a
+  // copy-strategy sync of a directory without SKILL.md has no banner to anchor
+  // its managed-copy digest. The oat-* loop below reports its own missing
+  // marker, so this pass covers the remaining directories only.
+  for (const dir of allSkillDirs) {
+    if (dir.startsWith('oat-')) {
+      continue;
+    }
+    const skillPath = join(skillsRoot, dir, 'SKILL.md');
+    if (!(await isFile(skillPath))) {
+      findings.push({ file: skillPath, message: 'Missing SKILL.md' });
+    }
+  }
+
   for (const dir of oatSkillDirs) {
     const skillPath = join(skillsRoot, dir, 'SKILL.md');
     let content: string;

@@ -287,6 +287,43 @@ describe('validateOatSkills', () => {
     ]);
   });
 
+  it('reports missing SKILL.md for a non-oat canonical skill directory', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+    tempDirs.push(root);
+    await mkdir(join(root, '.agents', 'skills', 'custom-skill'), {
+      recursive: true,
+    });
+    // Control: a non-oat skill that carries its marker (and the version every
+    // skill must declare) raises nothing; the oat-* contract checks stay
+    // limited to oat-* directories.
+    await mkdir(join(root, '.agents', 'skills', 'custom-with-marker'), {
+      recursive: true,
+    });
+    await writeFile(
+      join(root, '.agents', 'skills', 'custom-with-marker', 'SKILL.md'),
+      [
+        '---',
+        'name: custom-with-marker',
+        'metadata:',
+        '  version: 1.0.0',
+        '---',
+        '',
+        '# custom',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const result = await validateOatSkills(root);
+    expect(result.validatedSkillCount).toBe(0);
+    expect(result.findings).toEqual([
+      expect.objectContaining({
+        file: join(root, '.agents', 'skills', 'custom-skill', 'SKILL.md'),
+        message: 'Missing SKILL.md',
+      }),
+    ]);
+  });
+
   it('reports missing frontmatter block', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
     tempDirs.push(root);
