@@ -272,19 +272,20 @@ In p04-t01, root `docs:skills:validate` forwards to `pnpm --filter oat-docs docs
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                        | Reviewed Head                            | Invocation | Gate Target |
-| ------ | -------- | --------------- | ---------- | ------------------------------- | ---------------------------------------- | ---------- | ----------- |
-| p01    | code     | pending         | -          | -                               | -                                        | -          | -           |
-| p02    | code     | pending         | -          | -                               | -                                        | -          | -           |
-| final  | code     | pending         | -          | -                               | -                                        | -          | -           |
-| spec   | artifact | pending         | -          | -                               | -                                        | -          | -           |
-| design | artifact | fixes_completed | 2026-10-01 | reviews/fable-design-01.md      | -                                        | manual     | -           |
-| p03    | code     | pending         | -          | -                               | -                                        | -          | -           |
-| p04    | code     | pending         | -          | -                               | -                                        | -          | -           |
-| p05    | code     | pending         | -          | -                               | -                                        | -          | -           |
-| plan   | artifact | fixes_completed | 2026-10-01 | reviews/plan-review-round-01.md | 86aa78523952ec8e324d44dc4b61dfa961414e5e | auto       | -           |
-| plan   | artifact | passed          | 2026-10-01 | reviews/plan-review-round-02.md | 884b56d80769cb4d94fa289f34e027973137e410 | auto       | -           |
-| design | artifact | passed          | 2026-10-01 | reviews/plan-review-round-02.md | 884b56d80769cb4d94fa289f34e027973137e410 | manual     | -           |
+| Scope  | Type     | Status          | Date       | Artifact                                           | Reviewed Head                            | Invocation | Gate Target |
+| ------ | -------- | --------------- | ---------- | -------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
+| p01    | code     | pending         | -          | -                                                  | -                                        | -          | -           |
+| p02    | code     | pending         | -          | -                                                  | -                                        | -          | -           |
+| final  | code     | pending         | -          | -                                                  | -                                        | -          | -           |
+| spec   | artifact | pending         | -          | -                                                  | -                                        | -          | -           |
+| design | artifact | fixes_completed | 2026-10-01 | reviews/fable-design-01.md                         | -                                        | manual     | -           |
+| p03    | code     | pending         | -          | -                                                  | -                                        | -          | -           |
+| p04    | code     | pending         | -          | -                                                  | -                                        | -          | -           |
+| p05    | code     | pending         | -          | -                                                  | -                                        | -          | -           |
+| plan   | artifact | fixes_completed | 2026-10-01 | reviews/plan-review-round-01.md                    | 86aa78523952ec8e324d44dc4b61dfa961414e5e | auto       | -           |
+| plan   | artifact | passed          | 2026-10-01 | reviews/plan-review-round-02.md                    | 884b56d80769cb4d94fa289f34e027973137e410 | auto       | -           |
+| design | artifact | passed          | 2026-10-01 | reviews/plan-review-round-02.md                    | 884b56d80769cb4d94fa289f34e027973137e410 | manual     | -           |
+| plan   | artifact | received        | 2026-10-02 | reviews/artifact-plan-review-2026-10-02T031625Z.md | -                                        | -          | -           |
 
 Preserved spec row is not applicable in quick mode; no spec.md required. Events are append-ordered and bound to artifact filenames; never overwrite a bound event with a different review. No code/browser review is claimed in planning.
 
