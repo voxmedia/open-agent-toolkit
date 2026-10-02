@@ -60,6 +60,10 @@ target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:0,low:
 
 Phase p01 complete (8/8 tasks): bundle-assets fail-closed and asset-root errno. Root review rounds 4, Codex gate attempts 2 (blocked on the destructive-publish family), complexity review at the cap; operator chose simplify plus the symlinked-checkout root-cause fix and closed the p01 gate by override.
 
+### 2026-10-02 · structural · oat gate review · p02
+
+target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:1,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-4/reviews/p02-review-2026-10-02T192954Z.md run=75d9dbb7-8438-4c6b-8893-a7e95ea44cdf
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
