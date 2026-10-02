@@ -179,6 +179,8 @@ Read `{project}/state.md` frontmatter:
 - `oat_hill_completed` - Completed HiLL checkpoints
 - `oat_skill_gate_overrides` - Configured lifecycle gates this project
   deliberately disabled, keyed by gate-aware skill name
+- `oat_implement_exit_gate` - The implementation exit gate record
+- `oat_quick_start_gate` - The quick-start plan gate record
 
 **Display format:**
 
@@ -191,6 +193,8 @@ Read `{project}/state.md` frontmatter:
    Completed: {oat_hill_completed as checkmarks}
    HiLL Pending: {yes/no for current phase}
    Gate Overrides: {gate-aware skill keys from oat_skill_gate_overrides, or "None"}
+   Quick-Start Gate: {status}/{disposition} ({current|superseded|malformed}), or "None"
+   Exit Gate: {status}/{disposition} as recorded, or "None"
    Blockers: {oat_blockers or "None"}
    Next: {recommended_skill}
 ```
@@ -202,6 +206,16 @@ local, or user configuration, and it is not a gate outcome. Show an override
 even when no gate is currently configured for that skill, and never infer a
 configured gate from an override alone. This is read-only reporting: never add,
 remove, or repair the map here.
+
+Both gate records share the core defined in
+`references/docs/gate-approval-record.md`. Validate a quick-start record with
+that doc's quick-start rule: `current` when its `config_fingerprint` matches the
+currently resolved quick-start gate declaration, `superseded` when it does not,
+and `malformed` when its fields do not form a valid record. Report the exit-gate
+record's `status` and `disposition` as recorded; its freshness belongs to the
+implementation workflow and is not re-derived here. Either record adds no route
+and no warning: quick plan readiness stays the single routing rule for quick
+plans. Show "None" for an absent record, and never write or repair one here.
 
 ### Step 5: Determine Next Skill
 

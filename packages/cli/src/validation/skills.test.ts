@@ -6099,6 +6099,71 @@ describe('validateOatSkills', () => {
     expect(readDeclaredVersion(next)).toBe('1.1.5');
   });
 
+  it('reports both lifecycle gate records in next and progress without routing on them', async () => {
+    const quickStart = await readRepoFile(
+      '.agents/skills/oat-project-quick-start/SKILL.md',
+    );
+    const next = await readRepoFile('.agents/skills/oat-project-next/SKILL.md');
+    const progress = await readRepoFile(
+      '.agents/skills/oat-project-progress/SKILL.md',
+    );
+    const normalize = (value: string) => value.replace(/\s+/g, ' ');
+    const recordDoc = 'references/docs/gate-approval-record.md';
+
+    // The readers document a record only quick-start writes; removing the
+    // writer leaves them describing a record nothing produces.
+    expect(
+      normalize(
+        quickStart.slice(
+          quickStart.indexOf('### Gate Execution'),
+          quickStart.indexOf('### Step 3.7:'),
+        ),
+      ),
+    ).toMatch(/write `oat_quick_start_gate` to `\$PROJECT_PATH\/state\.md`/);
+
+    const nextState = next.slice(
+      next.indexOf('### Step 1: Read Project State'),
+      next.indexOf('### Step 2:'),
+    );
+    expect(nextState).toMatch(/\| `oat_quick_start_gate`\s+\| Reported only/);
+    const nextAnnounce = normalize(
+      next.slice(
+        next.indexOf('### Step 6: Announce and Invoke'),
+        next.indexOf('## Success Criteria'),
+      ),
+    );
+    expect(nextAnnounce).toContain(recordDoc);
+    expect(nextAnnounce).toContain(
+      'Quick-start gate: {status}/{disposition} ({current|superseded|malformed})',
+    );
+    expect(nextAnnounce).toMatch(/adds no route and no warning/);
+    expect(nextAnnounce).toMatch(/quick plan readiness/i);
+    const nextExitGate = normalize(
+      next.slice(
+        next.indexOf('**5.0: Unresolved implementation exit gate**'),
+        next.indexOf('**5.1'),
+      ),
+    );
+    expect(nextExitGate).toContain(recordDoc);
+
+    const progressStatus = normalize(
+      progress.slice(
+        progress.indexOf('### Step 4: For Each Project, Show Status'),
+        progress.indexOf('### Step 5: Determine Next Skill'),
+      ),
+    );
+    expect(progressStatus).toContain('`oat_implement_exit_gate`');
+    expect(progressStatus).toContain('`oat_quick_start_gate`');
+    expect(progressStatus).toContain(recordDoc);
+    expect(progressStatus).toContain(
+      'Quick-Start Gate: {status}/{disposition} ({current|superseded|malformed}), or "None"',
+    );
+    expect(progressStatus).toContain(
+      'Exit Gate: {status}/{disposition} as recorded, or "None"',
+    );
+    expect(progressStatus).toMatch(/adds no route and no warning/);
+  });
+
   it('supports project completion before or after PR merge in every mode', async () => {
     const progress = await readRepoFile(
       '.agents/skills/oat-project-progress/SKILL.md',
