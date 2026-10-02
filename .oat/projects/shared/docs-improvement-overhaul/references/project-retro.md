@@ -25,7 +25,7 @@ oat_retro_evidence_sources:
   - source: claude-subagent-transcripts
     status: used
 oat_retro_promotions: complete
-oat_retro_filing: proposed
+oat_retro_filing: partial
 oat_generated: true
 oat_template: false
 ---
@@ -91,10 +91,11 @@ Times below are UTC. Claims are confirmed by durable evidence unless marked
 ## Current State
 
 - **Promotions:** `complete`. RP-01 and RP-02 are applied (`AGENTS.md`).
-- **Filing:** `proposed`. RP-03 to RP-06 and UP-01 to UP-06 are at
-  `proposed` with no destination.
-- **Unsettled items:** RP-03 to RP-06 (file to the repository backlog), UP-01
-  to UP-06 (file upstream).
+- **Filing:** `partial`. RP-03 to RP-06 are filed as local backlog items
+  (`BL-261002-require-exactly-one-h1-per`, `BL-261002-commit-a-headless-rendered`,
+  `BL-261002-catch-hardcoded-docs-paths`, `BL-261002-theme-mermaid-diagrams`),
+  pushed. UP-01 to UP-06 are at `proposed` with no destination.
+- **Unsettled items:** UP-01 to UP-06 (file upstream when wanted).
 
 ## What Went Well
 
@@ -331,12 +332,12 @@ in gitignored analysis paths, with a summary in the tracked reference.
 
 - **Type:** code-follow-up
 - **Disposition:** file
-- **Status:** proposed
-- **Destination:** —
-- **Destination-receipt:** —
-- **Remote-visibility:** —
+- **Status:** filed
+- **Destination:** `.oat/repo/pjm/backlog/items/BL-261002-require-exactly-one-h1-per.md`
+- **Destination-receipt:** af8550e01fe8378b4264f55228f3753ad5114e74
+- **Remote-visibility:** pushed
 - **Sanitized:** no
-- **Disposition-note:** —
+- **Disposition-note:** Filed as a new local backlog item; no duplicate found.
 
 Four skill guides shipped without an H1. markdownlint disables MD025 and
 frontmatter hides MD041, and `apps/oat-docs/scripts/validate.ts` has no
@@ -347,12 +348,12 @@ one-H1-per-page check to `docs:validate` with a fixture test.
 
 - **Type:** code-follow-up
 - **Disposition:** file
-- **Status:** proposed
-- **Destination:** —
-- **Destination-receipt:** —
-- **Remote-visibility:** —
+- **Status:** filed
+- **Destination:** `.oat/repo/pjm/backlog/items/BL-261002-commit-a-headless-rendered.md`
+- **Destination-receipt:** af8550e01fe8378b4264f55228f3753ad5114e74
+- **Remote-visibility:** pushed
 - **Sanitized:** no
-- **Disposition-note:** —
+- **Disposition-note:** Filed as a new local backlog item; no duplicate found.
 
 Final QA used an ad hoc Playwright script against a static export. It found
 problems no static check found: missing H1s, 5.8px diagram text at 390px.
@@ -365,12 +366,12 @@ navigation before asserting content.
 
 - **Type:** code-follow-up
 - **Disposition:** file
-- **Status:** proposed
-- **Destination:** —
-- **Destination-receipt:** —
-- **Remote-visibility:** —
+- **Status:** filed
+- **Destination:** `.oat/repo/pjm/backlog/items/BL-261002-catch-hardcoded-docs-paths.md`
+- **Destination-receipt:** af8550e01fe8378b4264f55228f3753ad5114e74
+- **Remote-visibility:** pushed
 - **Sanitized:** no
-- **Disposition-note:** —
+- **Disposition-note:** Filed as a new local backlog item; no duplicate found.
 
 Moving pages failed 18 skill tests in `.agents/skills/{recon,oat-doctor}/tests`
 that hardcode docs paths; only the isolated-HOME test gate caught it. Either
@@ -381,12 +382,12 @@ tests resolve paths from the docs tree.
 
 - **Type:** code-follow-up
 - **Disposition:** file
-- **Status:** proposed
-- **Destination:** —
-- **Destination-receipt:** —
-- **Remote-visibility:** —
+- **Status:** filed
+- **Destination:** `.oat/repo/pjm/backlog/items/BL-261002-theme-mermaid-diagrams.md`
+- **Destination-receipt:** af8550e01fe8378b4264f55228f3753ad5114e74
+- **Remote-visibility:** pushed
 - **Sanitized:** no
-- **Disposition-note:** —
+- **Disposition-note:** Filed as a new local backlog item; no duplicate found.
 
 `@open-agent-toolkit/docs-theme` initializes Mermaid with the stock theme,
 so diagrams ignore the new palette. The ideas-lifecycle diagram renders at
