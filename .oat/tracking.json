@@ -1,16 +1,16 @@
 {
   "version": 1,
   "docs": {
-    "lastRunAt": "2026-03-06T01:48:38Z",
-    "commitHash": "f837089fc2b9227892a721908c4512345513c33a",
+    "lastRunAt": "2026-10-02T12:44:33Z",
+    "commitHash": "1fd10d9ce703b901e1f5615d0a81be28e1698c0d",
     "baseBranch": "main",
     "mode": "full",
     "formats": [],
-    "artifactPath": ".oat/repo/analysis/docs-2026-03-06-0147.md"
+    "artifactPath": ".oat/repo/analysis/docs-2026-10-02-0644.md"
   },
   "docsApply": {
-    "lastRunAt": "2026-03-06T01:48:38Z",
-    "commitHash": "f837089fc2b9227892a721908c4512345513c33a",
+    "lastRunAt": "2026-10-02T14:42:58Z",
+    "commitHash": "1fd10d9ce703b901e1f5615d0a81be28e1698c0d",
     "baseBranch": "main",
     "mode": "apply",
     "formats": []

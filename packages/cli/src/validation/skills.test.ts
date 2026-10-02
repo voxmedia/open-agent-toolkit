@@ -2275,7 +2275,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-lite/SKILL.md',
     );
     const artifacts = await readRepoFile(
-      'apps/oat-docs/docs/workflows/projects/artifacts.md',
+      'apps/oat-docs/docs/reference/project-artifacts.md',
     );
     const liteArtifactRow = artifacts
       .split('\n')
@@ -2440,13 +2440,13 @@ describe('validateOatSkills', () => {
 
   it('documents the complete gate result union and receive-eligibility contract', async () => {
     const workflowGates = await readRepoFile(
-      'apps/oat-docs/docs/cli-utilities/workflow-gates.md',
+      'apps/oat-docs/docs/workflows/advanced/workflow-gates.md',
     );
     const cliReference = await readRepoFile(
       'apps/oat-docs/docs/reference/cli-reference.md',
     );
     const projectReviews = await readRepoFile(
-      'apps/oat-docs/docs/workflows/projects/reviews.md',
+      'apps/oat-docs/docs/workflows/projects/reviews/index.md',
     );
 
     for (const [name, content] of [
@@ -2595,7 +2595,7 @@ describe('validateOatSkills', () => {
     }
 
     const workflowGates = await readRepoFile(
-      'apps/oat-docs/docs/cli-utilities/workflow-gates.md',
+      'apps/oat-docs/docs/workflows/advanced/workflow-gates.md',
     );
     expect(workflowGates).toContain('OAT_GATE_PRODUCER_IDENTITY');
     expect(workflowGates).toMatch(
@@ -2644,7 +2644,7 @@ describe('validateOatSkills', () => {
 
   it('documents lifecycle review-project migration without provider target pins', async () => {
     const workflowGates = await readRepoFile(
-      'apps/oat-docs/docs/cli-utilities/workflow-gates.md',
+      'apps/oat-docs/docs/workflows/advanced/workflow-gates.md',
     );
     const contributingSkills = await readRepoFile(
       'apps/oat-docs/docs/contributing/skills.md',
@@ -2702,10 +2702,10 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/references/phase-execution.md',
     );
     const workflowDocs = await readRepoFile(
-      'apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md',
+      'apps/oat-docs/docs/workflows/advanced/dispatch-ceiling.md',
     );
     const configurationDocs = await readRepoFile(
-      'apps/oat-docs/docs/cli-utilities/configuration.md',
+      'apps/oat-docs/docs/reference/configuration.md',
     );
 
     expect(skill).toMatch(
@@ -3200,7 +3200,7 @@ describe('validateOatSkills', () => {
 
   it('documents accepted reviewer BLOCKED outcomes as fail-closed', async () => {
     const reviews = await readRepoFile(
-      'apps/oat-docs/docs/workflows/projects/reviews.md',
+      'apps/oat-docs/docs/workflows/projects/reviews/index.md',
     );
 
     expect(reviews).toMatch(
@@ -4533,16 +4533,16 @@ describe('validateOatSkills', () => {
 
   it('documents adaptive named ceilings and exact task-worker dispatch', async () => {
     const configuration = await readRepoFile(
-      'apps/oat-docs/docs/cli-utilities/configuration.md',
+      'apps/oat-docs/docs/reference/configuration.md',
     );
     const dispatch = await readRepoFile(
-      'apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md',
+      'apps/oat-docs/docs/workflows/advanced/dispatch-ceiling.md',
     );
     const providers = await readRepoFile(
       'apps/oat-docs/docs/provider-sync/providers.md',
     );
     const execution = await readRepoFile(
-      'apps/oat-docs/docs/workflows/projects/implementation-execution.md',
+      'apps/oat-docs/docs/workflows/projects/execution/implementation-execution.md',
     );
 
     for (const [name, content] of [
@@ -4627,19 +4627,19 @@ describe('validateOatSkills', () => {
       'apps/oat-docs/docs/provider-sync/providers.md',
     );
     const dispatch = await readRepoFile(
-      'apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md',
+      'apps/oat-docs/docs/workflows/advanced/dispatch-ceiling.md',
     );
     const execution = await readRepoFile(
-      'apps/oat-docs/docs/workflows/projects/implementation-execution.md',
+      'apps/oat-docs/docs/workflows/projects/execution/implementation-execution.md',
     );
     const lifecycle = await readRepoFile(
       'apps/oat-docs/docs/workflows/projects/lifecycle.md',
     );
     const artifacts = await readRepoFile(
-      'apps/oat-docs/docs/workflows/projects/artifacts.md',
+      'apps/oat-docs/docs/reference/project-artifacts.md',
     );
     const configuration = await readRepoFile(
-      'apps/oat-docs/docs/cli-utilities/configuration.md',
+      'apps/oat-docs/docs/reference/configuration.md',
     );
 
     for (const [name, content] of [
@@ -4823,10 +4823,10 @@ describe('validateOatSkills', () => {
       'apps/oat-docs/docs/workflows/projects/lifecycle.md',
     );
     const implementation = await readRepoFile(
-      'apps/oat-docs/docs/workflows/projects/implementation-execution.md',
+      'apps/oat-docs/docs/workflows/projects/execution/implementation-execution.md',
     );
     const artifacts = await readRepoFile(
-      'apps/oat-docs/docs/workflows/projects/artifacts.md',
+      'apps/oat-docs/docs/reference/project-artifacts.md',
     );
 
     const consumers = [
@@ -5749,7 +5749,7 @@ describe('validateOatSkills', () => {
     }
 
     const configuration = await readRepoFile(
-      'apps/oat-docs/docs/cli-utilities/configuration.md',
+      'apps/oat-docs/docs/reference/configuration.md',
     );
     for (const model of [
       'gpt-5.6-luna-high',
@@ -5769,7 +5769,7 @@ describe('validateOatSkills', () => {
       'apps/oat-docs/docs/workflows/projects/lifecycle.md',
     );
     const artifacts = await readRepoFile(
-      'apps/oat-docs/docs/workflows/projects/artifacts.md',
+      'apps/oat-docs/docs/reference/project-artifacts.md',
     );
     for (const [name, content] of [
       ['lifecycle', lifecycle],
@@ -6286,10 +6286,10 @@ describe('validateOatSkills', () => {
 
   it('documents phase-review setup across project workflow references', async () => {
     const artifacts = await readRepoFile(
-      'apps/oat-docs/docs/workflows/projects/artifacts.md',
+      'apps/oat-docs/docs/reference/project-artifacts.md',
     );
     const reviews = await readRepoFile(
-      'apps/oat-docs/docs/workflows/projects/reviews.md',
+      'apps/oat-docs/docs/workflows/projects/reviews/index.md',
     );
     const lifecycle = await readRepoFile(
       'apps/oat-docs/docs/workflows/projects/lifecycle.md',
@@ -6322,10 +6322,10 @@ describe('validateOatSkills', () => {
       'apps/oat-docs/docs/workflows/projects/lifecycle.md',
     );
     const dispatchPolicy = await readRepoFile(
-      'apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md',
+      'apps/oat-docs/docs/workflows/advanced/dispatch-ceiling.md',
     );
     const execution = await readRepoFile(
-      'apps/oat-docs/docs/workflows/projects/implementation-execution.md',
+      'apps/oat-docs/docs/workflows/projects/execution/implementation-execution.md',
     );
     const scope = await readRepoFile(
       'apps/oat-docs/docs/provider-sync/scope-and-surface.md',
@@ -6395,7 +6395,7 @@ describe('validateOatSkills', () => {
 
   it('documents shipped user Codex materialization ownership in the review guide', async () => {
     const reviews = await readRepoFile(
-      'apps/oat-docs/docs/workflows/projects/reviews.md',
+      'apps/oat-docs/docs/workflows/projects/reviews/index.md',
     );
 
     expect(reviews).toMatch(

@@ -10,6 +10,9 @@
 
 | ID                                       | Date       | Status     | Title                                                                                                  | Legacy  |
 | ---------------------------------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------ | ------- |
+| DR-261002-canonical-supported-skill      | 2026-10-02 | accepted   | Canonical supported-skill guides                                                                       | -       |
+| DR-261002-reader-first-documentation     | 2026-10-02 | accepted   | Reader-first documentation ownership                                                                   | -       |
+| DR-261002-retire-moved-documentation     | 2026-10-02 | accepted   | Retire moved documentation URLs                                                                        | -       |
 | DR-261001-additive-markdown-adoption     | 2026-10-01 | accepted   | Additive Markdown adoption                                                                             | -       |
 | DR-261001-authored-markdown-indexes      | 2026-10-01 | accepted   | Authored Markdown indexes                                                                              | -       |
 | DR-261001-bootstrap-detection-boundary   | 2026-10-01 | accepted   | Bootstrap detection boundary                                                                           | -       |

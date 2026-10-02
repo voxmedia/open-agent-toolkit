@@ -1,25 +1,4 @@
 {
-  "title": "Workflow & Projects",
-  "pages": [
-    "lifecycle",
-    "retro",
-    "autonomy",
-    "cursor-cloud",
-    "design-modes",
-    "hill-checkpoints",
-    "dispatch-ceiling",
-    "orchestration-model",
-    "review-flavors",
-    "evidence-layers",
-    "programmatic-execution",
-    "artifacts",
-    "implementation-execution",
-    "reviewing-oat-prs",
-    "picking-up-projects",
-    "splitting",
-    "state-machine",
-    "reviews",
-    "pr-flow",
-    "repo-analysis"
-  ]
+  "title": "Projects",
+  "pages": ["lifecycle", "reviews", "planning", "execution", "closeout"]
 }

@@ -1,6 +1,6 @@
 # AGENTS — OAT Documentation
 
-This file tells agents how to work inside `apps/oat-docs`, the documentation app for `open-agent-toolkit`. It is not bootstrap documentation. If you're looking for how this app was scaffolded, see `docs/quickstart.md` or the root-level `AGENTS.md`.
+This file tells agents how to work inside `apps/oat-docs`, the documentation app for `open-agent-toolkit`. It is not bootstrap documentation. If you're looking for how this app was scaffolded, see `docs/getting-started/quickstart.md` or the root-level `AGENTS.md`.
 
 ## Purpose and scope
 
@@ -12,7 +12,11 @@ This file tells agents how to work inside `apps/oat-docs`, the documentation app
 2. Add frontmatter with at minimum `title:` and `description:`. The title drives nav display and page `<title>`; the description drives search previews, social cards, and sibling summaries. Empty descriptions hurt all three.
 3. Update the nearest `index.md`'s `## Contents` section to include a link to the new page. Use `.md`-suffixed relative links: `[Title](page.md)` for leaf pages, `[Section](subdir/index.md)` for subdirectories. The `@open-agent-toolkit/docs-transforms` remark-links plugin normalizes these for Fumadocs routing at build time (strips `.md`, collapses `dir/index.md` → `dir`), so the suffixed form renders correctly **and** lets agents follow links to the target file without path inference. The `## Contents` section is the machine-readable local map — anything not listed there is effectively invisible to the navigation tooling.
 4. If the new page introduces a new subdirectory, create an `index.md` in that subdirectory with its own `## Contents` section. Every content directory must have an `index.md`.
-5. Run `oat docs nav sync` (or equivalent for this framework) to regenerate any derived navigation artifacts. Derived artifacts never replace the authored `## Contents`; they're generated from it.
+5. Run `pnpm -w run cli:source -- docs nav sync --target-dir apps/oat-docs` to regenerate any derived navigation artifacts. Derived artifacts never replace the authored `## Contents`; they're generated from it.
+
+Use real Markdown links for reader-facing guide pointers. The app checker validates relative inline-code `.md` references beginning with `./` or `../`; bare names such as `project-log.md` may be project artifacts. Run `pnpm docs:validate` for committed navigation freshness plus source route/anchor and live-consumer checks, and `pnpm docs:test` for self-contained fixtures.
+
+The supported-skill catalog is committed source in `docs/skills/index.md` and bundled with the CLI. `skill-docs.json` assigns each shipped user-facing skill its canonical family anchor and verified project applicability; descriptions and visibility come from canonical skill metadata. Each mapped section includes a concrete `**Example scenario:**`. After changing those inputs, run `pnpm docs:skills:generate`, then nav sync and `pnpm docs:validate`. Check/dev/build validate catalog parity without silently rewriting it. Catalog tooling is repository-specific, not a public `oat` command or scaffold requirement.
 
 ## When you need to restructure navigation
 
@@ -54,7 +58,7 @@ This file tells agents how to work inside `apps/oat-docs`, the documentation app
 
 ## Reference
 
-- `docs/quickstart.md` — first-run setup instructions for contributors joining this docs app.
+- `docs/getting-started/quickstart.md` — first-run setup instructions for contributors joining this docs app.
 - `docs/contributing/` — authoring conventions, Markdown features (code blocks, mermaid, GFM alerts), skill conventions. The `index.md` in this directory is the entry point; its `## Contents` lists the per-topic pages.
 - Root `AGENTS.md` in `open-agent-toolkit` — repo-wide pointer and shared conventions. For scaffolded docs apps, this file typically includes a `## Documentation` section listing docs root, framework, and index file; add one if it's missing.
 - `oat-docs-analyze` — read-only audit command.

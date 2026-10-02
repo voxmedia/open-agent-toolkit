@@ -111,7 +111,7 @@ When shared state is explicitly previewed and approved,
 `.oat/repo/pjm/remote/state/` or `<project>/remote/state/` replaces the local
 operational root. Shared state can contain remote planning content and is not
 available for local projects. See
-[Remote Project Management](../cli-utilities/remote-project-management.md).
+[Remote Project Management](../workflows/backlog-and-planning/remote-project-management.md).
 
 ## Project artifact trees
 
@@ -167,6 +167,9 @@ Archive sync surfaces:
 - Active idea: `activeIdea` in `~/.oat/config.json`
 
 ## CLI code
+
+These paths are in the OAT source repository, not in a repository that uses
+OAT. They matter only if you are working on OAT itself.
 
 - `packages/control-plane/` - read-only control-plane library for project-state parsing and recommendation
 - `packages/cli/src/commands/`

@@ -5,16 +5,99 @@ description: 'Common issues and fixes for skills visibility, worktrees, sync, an
 
 # Troubleshooting
 
+The commands on this page use the installed `oat` command. A few entries also
+give a `pnpm run ...` form; those work only inside a checkout of the OAT source
+repository and are labelled that way.
+
 ## Skills not visible in host UI
 
-- Run: `pnpm run cli -- sync --scope all`
-- Reload/restart host app session
-- Verify `AGENTS.md` skills table matches `.agents/skills/*/SKILL.md`
+A skill shows up in your coding tool only when two things are true: the skill
+is installed (a folder with a `SKILL.md` under `.agents/skills/` in this
+repository, or under `~/.agents/skills/` in your home directory), and the
+tool can read it. Some tools, such as Claude Code, read a provider view: a
+link or copy that OAT creates in the tool's own folder, such as
+`.claude/skills`. Others, such as Cursor, read `.agents/skills` directly.
+
+**Diagnose first.** These commands only read; they change nothing.
+
+1. Check whether the skill is installed, and where:
+
+   ```bash
+   oat tools info <skill-name>
+   ```
+
+   It prints the skill's pack, its scope (`project` for this repository,
+   `user` for your home directory) and its status, then a "Provider views"
+   block for each scope with one row per coding tool.
+   - `Tool '<skill-name>' not found.` means the skill is not installed at
+     either scope. Install the pack that contains it (see the fixes below), or
+     create the skill at `.agents/skills/<skill-name>/SKILL.md`. To see every
+     installed skill with its pack and scope, run `oat tools list`.
+   - `in-sync` on your tool's row means its view of the skill is in place, so
+     go to the last fix step and start a new session.
+   - `missing-additive`, `removed` or `modified` means your tool's view is
+     absent or out of date. The block ends with a `Repair:` line that gives
+     the exact `oat sync --scope ...` command to run.
+   - `inactive` means that tool is not active at that scope, so OAT creates
+     no view for it. Enable it, as shown in the fixes below.
+
+2. Check whether the repository's provider views are in sync:
+
+   ```bash
+   oat status --scope project
+   ```
+
+   Each row names a tool and a skill. `✓ in_sync` means the view is in place.
+   `✗ missing  provider entry missing` means the view has not been created
+   yet; `oat sync` creates it. `No managed entries found.` means OAT manages
+   no provider views in this repository, which usually means no tool that
+   needs views is enabled. Run `oat providers list --scope project` to see
+   which tools are enabled or detected.
+
+**Then fix**, always with an explicit scope:
+
+- Enable the tool if step 1 or 2 showed it is not active, for example
+  `oat providers set --scope project --enabled claude`.
+- For skills in this repository (`.agents/skills`), preview and then
+  regenerate the provider views:
+
+  ```bash
+  oat sync --scope project --dry-run
+  oat sync --scope project
+  ```
+
+- For skills installed at user scope (`~/.agents/skills`, where a tool pack
+  installs when you give no `--scope`), run `oat sync --scope user`. This
+  writes provider views in your home directory, such as `~/.claude/skills`.
+- If the skill comes from a pack that is not installed, install that pack with
+  an explicit scope, for example `oat tools install research --scope project`
+  (this repository) or `oat tools install research --scope user` (your home
+  directory). If you installed a pack with `--no-sync`, running the install
+  again does not create the views; run `oat sync` for that scope instead.
+- Reload the tool or start a new session: most tools read their skill list
+  when a session starts.
+- If your repository's `AGENTS.md` names skills or packs, check that it
+  matches what `oat tools list` reports. The `<!-- OAT tools -->` block that
+  `--project-guidance` writes lists the installed packs and the folders
+  agents should scan for skills; it does not list each skill.
+- If you are working in the OAT source repository: run
+  `pnpm run cli -- sync --scope all`, which runs the CLI from source and syncs
+  both project and user scope.
 
 ## Worktree checkout missing provider links
 
-- Run: `pnpm run worktree:init`
-- This command installs dependencies, builds the workspace, and runs `oat sync --scope project`.
+- In the new worktree, run `oat sync --scope project` to recreate the
+  project's provider views. Add `--dry-run` first to preview.
+- To prepare the whole worktree, including local-only files and the
+  repository's setup and readiness checks, invoke
+  `/oat-worktree-bootstrap --existing` in your coding agent. See
+  [Worktree bootstrap](../workflows/advanced/worktree-bootstrap.md).
+- If you are working in the OAT source repository: run
+  `pnpm run worktree:init`. This command copies local-only files from the main
+  worktree, installs dependencies, configures Git hooks, builds the workspace,
+  and runs `oat sync` with no scope flag. A bare `oat sync` uses
+  `--scope all`, so it refreshes user-scope provider views in your home
+  directory as well as the project's.
 
 ## Codex appears detected but no skill sync actions are listed
 
@@ -85,12 +168,18 @@ Use [Instruction Sync](../provider-sync/instruction-sync.md) for the full strate
 
 ## `doctor` warns about canonical directories
 
-- Run `oat init` for the relevant scope.
+- Run `oat init` for the relevant scope. The check's name says which scope is
+  missing directories: for `project:canonical_directories` run
+  `oat init --scope project`, and for `user:canonical_directories` run
+  `oat init --scope user`. A bare `oat init` initializes both.
 - Re-run `oat doctor` after initialization.
 
 ## `doctor` warns about outdated installed OAT skills
 
-- Run `oat init tools` to install/update bundled OAT tool packs.
+- Run `oat tools update --pack <pack> --scope <project|user>` to update an
+  installed pack, or `oat tools install <pack> --scope <project|user>` to
+  install one. The older form `oat init tools` is a legacy command that still
+  installs or updates the bundled tool packs.
 - In TTY mode, select which outdated skills to update when prompted.
 - In non-interactive mode, run the scoped command doctor prints:
   `oat tools update --pack <pack> --scope <scope>`.
@@ -212,7 +301,7 @@ Both commands report managed pack state with a scoped recovery command:
   contract and does not clear this finding. `oat tools update` cannot fix it.
   Enable a provider with `oat providers set --scope user --enabled <provider>`
   and run `oat sync --scope user`; reinstalling at project scope is not
-  required. See [Tool packs](../cli-utilities/tool-packs.md) for how
+  required. See [Tool packs](../getting-started/tool-packs.md) for how
   user-scope agents reach each provider.
 
 ## `status` or `doctor` reports `packs:inventory`
@@ -229,7 +318,21 @@ and the home root becomes `~` when user scope is checked. Redaction is a literal
 replacement of those exact root paths, so a path outside them, such as a global
 bundle path in an assets error, stays absolute in the message.
 
-Rebuild the CLI workspace, then rerun the command named in the diagnostic:
+With an installed CLI, reinstall it so its bundled assets are complete and
+match the CLI version, then rerun the command named in the diagnostic. If you
+set `OAT_ASSETS_DIR`, point it at a complete asset bundle built for this CLI
+version, or unset it to use the bundled copy.
+
+```bash
+npm install --global @open-agent-toolkit/cli
+oat status # or: oat doctor
+```
+
+The diagnostic's own recovery line says to run `pnpm build`. That applies only
+when you run the CLI from a checkout of the OAT source repository.
+
+If you are working in the OAT source repository: rebuild the CLI workspace,
+then rerun the command named in the diagnostic:
 
 ```bash
 pnpm build
@@ -373,7 +476,11 @@ failure, which is intentional — you asked for a scope that does not exist here
 
 ## Manifest not found or invalid
 
-- Missing manifest: run `sync` or `init`
+- Missing manifest: run `sync` or `init`. For the repository's manifest
+  (`.oat/sync/manifest.json`), use `oat sync --scope project` or
+  `oat init --scope project`; without `--scope`, both commands also write to
+  your home directory. For the user manifest (`~/.oat/sync/manifest.json`),
+  use `--scope user`.
 - Invalid manifest: repair/remove file and rerun
 
 ## Status/output mismatches with lifecycle expectations
@@ -405,10 +512,18 @@ package.
 
 ## Reference artifacts
 
+In your own repository, these project files hold the evidence most entries on
+this page refer to:
+
 - `.oat/projects/<scope>/<project>/implementation.md`
 - `.oat/projects/<scope>/<project>/reviews/`
 - `.oat/projects/<scope>/<project>/explainers/<slug>/manifest.json`
 - `.oat/projects/<scope>/<project>/explainers/<slug>/qa/result.json`
+
+If you are working on OAT itself, in a checkout of the OAT source repository,
+the checks behind `oat doctor`, `oat status` and `oat instructions` live in
+these source files:
+
 - `packages/cli/src/commands/doctor/index.ts`
 - `packages/cli/src/commands/status/index.ts`
 - `packages/cli/src/commands/tools/shared/pack-inventory.ts`

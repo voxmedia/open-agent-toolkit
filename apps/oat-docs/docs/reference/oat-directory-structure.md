@@ -148,7 +148,7 @@ Current schema keys:
 Most `documentation.*` keys are managed via `oat config get/set` and are set automatically by `oat docs init`. One has no `oat config set` entry and is edited directly in `.oat/config.json`: `documentation.index`, which `oat docs init` still seeds for you.
 The `git.defaultBranch` key is auto-detected during `oat init` and can be overridden via `oat config set git.defaultBranch <branch>`.
 Archive settings are managed via `oat config get/set`, and `oat config describe archive.s3Uri` (or the other archive keys) shows the lifecycle and ownership details from the CLI.
-Workflow gate objects are structured config and are managed with `oat gate`, not the scalar `oat config set` surface. See [Workflow Gates](../cli-utilities/workflow-gates.md).
+Workflow gate objects are structured config and are managed with `oat gate`, not the scalar `oat config set` surface. See [Workflow Gates](../workflows/advanced/workflow-gates.md).
 
 Example:
 

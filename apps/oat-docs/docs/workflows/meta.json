@@ -1,4 +1,12 @@
 {
-  "title": "Agentic Workflows",
-  "pages": ["ideas", "projects", "wave-workflows", "skills"]
+  "title": "Workflows",
+  "pages": [
+    "choose-workflow",
+    "approvals-and-automation",
+    "projects",
+    "ideas",
+    "backlog-and-planning",
+    "waves",
+    "advanced"
+  ]
 }

@@ -1,30 +1,45 @@
 ---
-title: OAT Documentation
+title: Home
 description: 'An open-source toolkit for portable, provider-agnostic agent tooling and workflows.'
 ---
 
 # OAT Documentation
 
-Open Agent Toolkit (OAT) is an open-source toolkit for portable, provider-agnostic agent tooling and workflows. It lets teams define canonical agent capabilities once, sync them across providers, and optionally run tracked human-in-the-loop workflows on top.
+Open Agent Toolkit (OAT) is an open-source command-line tool and skill library
+for teams that work with AI coding agents such as Claude Code, Cursor, Codex,
+GitHub Copilot and Gemini CLI. You define skills, agents and rules once in your
+repository and OAT keeps every tool's copy in step, and when you want more
+structure it adds optional tracked workflows with plans, reviews and human
+approval points.
 
-OAT is organized as three distinct capabilities that can be used together or independently:
+## What you can do with it
 
-1. Provider interoperability CLI (canonical skills/agents + provider sync/drift tooling)
-2. Reusable skills, CLI commands, and tooling for provider-agnostic development workflows
-3. Optional workflow system (discovery/spec/design/plan/implement/review/PR lifecycle)
+- **Keep your coding tools aligned.** Edit each skill, agent and rule once in
+  `.agents/`, let `oat sync` create the files each tool reads, and check them
+  for drift with `oat status`. Start with
+  [Provider Sync](provider-sync/index.md).
+- **Get help with a single task.** Use ready-made skills, instructions your
+  agent follows on request, to research a decision, compare options or review
+  a change, without setting up a tracked project. Start with
+  [Skills](skills/index.md).
+- **Make longer work resumable.** Track work as a project that moves through
+  discovery, specification, design, planning, implementation, review and pull
+  request, with points where a person approves before the agent continues.
+  Start with [Choose a Workflow](workflows/choose-workflow.md).
+- **Keep documentation maintained.** Set up plain Markdown or a docs site,
+  then have your agent analyze it and apply the improvements you approve.
+  Start with [Docs Tooling](docs-tooling/index.md).
 
-## Contents
+Each of these works on its own, so you can start with one and add others
+later.
 
-- [Quickstart](quickstart.md) - Canonical Start Here page for choosing the right OAT adoption path.
-- [User Guide](guide/index.md) - Legacy compatibility router for old guide links while content continues moving into the canonical sections below.
-- [Provider Sync](provider-sync/index.md) - Canonical section for provider interoperability, drift management, and canonical-to-provider sync.
-- [Agentic Workflows](workflows/index.md) - Canonical section for tracked project workflows, ideas, lifecycle execution, and workflow-oriented skills.
-- [Docs Tooling](docs-tooling/index.md) - Canonical section for docs app setup, docs commands, and docs maintenance workflows.
-- [CLI Utilities](cli-utilities/index.md) - Canonical section for general OAT CLI surfaces outside provider sync, docs tooling, and tracked workflows.
-- [Contributing](contributing/index.md) - Contributor-facing guide for code, docs, markdown features, and skill authoring.
-- [Reference](reference/index.md) - Durable reference material for operating and maintaining OAT.
+## Start here
 
-## Why OAT Exists
+New to OAT? [Quickstart](getting-started/quickstart.md) installs the CLI, gives
+you a first result in an existing repository that changes files only inside
+that repository, and helps you choose what to add next.
+
+## Why OAT exists
 
 Teams often need some combination of:
 
@@ -32,32 +47,16 @@ Teams often need some combination of:
 - reusable skills and helper tooling that do not depend on one provider
 - a more structured workflow for longer-running implementation work
 
-OAT exists to make those layers work together without forcing teams to adopt all of them at once.
+OAT exists to make those layers work together without forcing teams to adopt
+all of them at once. It is not another agent runtime: it works through the
+coding agents you already use.
 
-## Start Here
+## Contents
 
-If you are new to OAT, start with [Quickstart](quickstart.md).
-
-That page is the canonical path-selection guide. Use it to choose whether you need:
-
-- provider sync
-- agentic workflows
-- docs tooling
-- general CLI utilities
-
-## Source-of-truth hierarchy
-
-1. Runtime behavior: `packages/cli/src/**`
-2. Skill behavior contracts: `.agents/skills/*/SKILL.md`
-3. OAT templates and runtime state: `.oat/templates/**`, `.oat/sync/**`, `.oat/config.json`, `.oat/config.local.json`
-4. Repo reference records: `.oat/repo/**`
-
-## Where To Go Next
-
-- New to OAT: [Quickstart](quickstart.md)
-- Following an older guide link: [User Guide](guide/index.md)
-- Need canonical-to-provider sync: [Provider Sync](provider-sync/index.md)
-- Need tracked project execution: [Agentic Workflows](workflows/index.md)
-- Need docs app or docs maintenance tooling: [Docs Tooling](docs-tooling/index.md)
-- Need general command-line help: [CLI Utilities](cli-utilities/index.md)
-- Need stable contracts and reference material: [Reference](reference/index.md)
+- [Getting Started](getting-started/index.md) - How to install OAT, get a first result, and learn the core ideas, plus project status and known limits.
+- [Skills](skills/index.md) - Which skill to use for a task, and how to run it.
+- [Workflows](workflows/index.md) - Tracked projects from plan to pull request, plus ideas, backlog planning and running a batch of existing plans as a wave.
+- [Provider Sync](provider-sync/index.md) - How to keep one set of skills, agents and rules in step across coding tools.
+- [Docs Tooling](docs-tooling/index.md) - How to set up and maintain Markdown docs or a docs site.
+- [Reference](reference/index.md) - Configuration, commands, file locations and troubleshooting.
+- [Contributing](contributing/index.md) - How to change OAT itself: code, docs and skills.

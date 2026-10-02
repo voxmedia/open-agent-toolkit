@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 776" width="920" height="776" role="img" aria-labelledby="oat-adopt-title oat-adopt-desc">
+  <title id="oat-adopt-title">Adopt any part of OAT on its own</title>
+  <desc id="oat-adopt-desc">Four equal cards in a two-by-two grid, with no arrows between them, under the heading: Start with any one. Each works on its own. Dark boxes hold terminal commands for the installed oat CLI; light boxes labeled skill hold agent skills, which you invoke in your coding agent with a leading slash, not in a shell. Provider Sync: define skills and rules once and sync them across providers; run oat init --scope project, pick providers, then oat sync --scope project. Reusable Skills: research, review and idea skills for all your repos; run oat tools install --scope user. Workflows: tracked, resumable projects with plans, reviews and PRs; run oat init --scope project, then oat tools install workflows --scope project, then the skill /oat-project-quick-start. Docs Tooling: bootstrap and maintain a docs site for your repo; run oat init --scope project, then oat tools install docs --scope project, then the skill /oat-docs-bootstrap. A plus sign between the cards and a footer note say you can use one alone or add others any time.</desc>
+
+  <rect x="1" y="1" width="918" height="774" rx="22" fill="#f7f5f0" stroke="#6e7781" stroke-width="2"/>
+
+  <g font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+    <text x="26" y="58" font-size="30" font-weight="700" fill="#1f2328">Start with any one. Each works on its own.</text>
+
+    <g>
+      <rect x="24" y="88" width="426" height="302" rx="14" fill="#ffffff" stroke="#d0d7de" stroke-width="1.5"/>
+      <path d="M24 102 A14 14 0 0 1 38 88 H436 A14 14 0 0 1 450 102 Z" fill="#0f766e"/>
+      <text x="48" y="142" font-size="30" font-weight="700" fill="#1f2328">Provider Sync</text>
+      <text x="48" y="178" font-size="22" fill="#4b535d">Define skills and rules once,</text>
+      <text x="48" y="206" font-size="22" fill="#4b535d">sync them across providers</text>
+      <rect x="40" y="224" width="394" height="96" rx="10" fill="#1f2328"/>
+      <g font-size="20" font-family="Menlo, Consolas, 'Liberation Mono', monospace" fill="#f6f8fa">
+        <text x="54" y="254">oat init --scope project</text>
+        <text x="54" y="280" fill="#b6bec8"># pick providers</text>
+        <text x="54" y="306">oat sync --scope project</text>
+      </g>
+    </g>
+
+    <g>
+      <rect x="470" y="88" width="426" height="302" rx="14" fill="#ffffff" stroke="#d0d7de" stroke-width="1.5"/>
+      <path d="M470 102 A14 14 0 0 1 484 88 H882 A14 14 0 0 1 896 102 Z" fill="#1f5fbf"/>
+      <text x="494" y="142" font-size="30" font-weight="700" fill="#1f2328">Reusable Skills</text>
+      <text x="494" y="178" font-size="22" fill="#4b535d">Research, review and idea</text>
+      <text x="494" y="206" font-size="22" fill="#4b535d">skills for all your repos</text>
+      <rect x="486" y="224" width="394" height="46" rx="10" fill="#1f2328"/>
+      <text x="500" y="254" font-size="20" font-family="Menlo, Consolas, 'Liberation Mono', monospace" fill="#f6f8fa">oat tools install --scope user</text>
+    </g>
+
+    <g>
+      <rect x="24" y="410" width="426" height="302" rx="14" fill="#ffffff" stroke="#d0d7de" stroke-width="1.5"/>
+      <path d="M24 424 A14 14 0 0 1 38 410 H436 A14 14 0 0 1 450 424 Z" fill="#6f42c1"/>
+      <text x="48" y="464" font-size="30" font-weight="700" fill="#1f2328">Workflows</text>
+      <text x="48" y="500" font-size="22" fill="#4b535d">Tracked, resumable projects</text>
+      <text x="48" y="528" font-size="22" fill="#4b535d">with plans, reviews and PRs</text>
+      <rect x="40" y="546" width="394" height="96" rx="10" fill="#1f2328"/>
+      <g font-size="20" font-family="Menlo, Consolas, 'Liberation Mono', monospace" fill="#f6f8fa">
+        <text x="54" y="576">oat init --scope project</text>
+        <text x="54" y="602">oat tools install workflows \</text>
+        <text x="54" y="628" xml:space="preserve">  --scope project</text>
+      </g>
+      <rect x="40" y="654" width="394" height="44" rx="10" fill="#eef1f5" stroke="#8c959f" stroke-width="1.5"/>
+      <text x="54" y="683" font-size="20" font-family="Menlo, Consolas, 'Liberation Mono', monospace" fill="#1f2328">/oat-project-quick-start</text>
+      <text x="420" y="682" font-size="20" text-anchor="end" fill="#4b535d">skill</text>
+    </g>
+
+    <g>
+      <rect x="470" y="410" width="426" height="302" rx="14" fill="#ffffff" stroke="#d0d7de" stroke-width="1.5"/>
+      <path d="M470 424 A14 14 0 0 1 484 410 H882 A14 14 0 0 1 896 424 Z" fill="#a35200"/>
+      <text x="494" y="464" font-size="30" font-weight="700" fill="#1f2328">Docs Tooling</text>
+      <text x="494" y="500" font-size="22" fill="#4b535d">Bootstrap and maintain</text>
+      <text x="494" y="528" font-size="22" fill="#4b535d">a docs site for your repo</text>
+      <rect x="486" y="546" width="394" height="96" rx="10" fill="#1f2328"/>
+      <g font-size="20" font-family="Menlo, Consolas, 'Liberation Mono', monospace" fill="#f6f8fa">
+        <text x="500" y="576">oat init --scope project</text>
+        <text x="500" y="602">oat tools install docs \</text>
+        <text x="500" y="628" xml:space="preserve">  --scope project</text>
+      </g>
+      <rect x="486" y="654" width="394" height="44" rx="10" fill="#eef1f5" stroke="#8c959f" stroke-width="1.5"/>
+      <text x="500" y="683" font-size="20" font-family="Menlo, Consolas, 'Liberation Mono', monospace" fill="#1f2328">/oat-docs-bootstrap</text>
+      <text x="866" y="682" font-size="20" text-anchor="end" fill="#4b535d">skill</text>
+    </g>
+
+    <circle cx="460" cy="400" r="19" fill="#ffffff" stroke="#6e7781" stroke-width="2"/>
+    <path d="M460 390 V410 M450 400 H470" stroke="#1f2328" stroke-width="3" stroke-linecap="round"/>
+
+    <text x="460" y="750" font-size="22" text-anchor="middle" fill="#4b535d">Use one alone, or add others any time.</text>
+  </g>
+</svg>

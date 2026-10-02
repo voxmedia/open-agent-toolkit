@@ -81,7 +81,7 @@ or GPT-6.1 Cursor targets until that runtime lists and verifies them.
 A 2026-09-25 desktop 3.21.18 probe added Grok 4.6 and Fable 5.1 mappings
 and moved the bundled Cursor ladder to them. The same probe showed Grok 4.7
 resolves only bare flat IDs, never bracket selectors. It still needs its own
-approved registry entry and complete per-pin evidence before admission; see [Verifying Cursor Pins](verifying-cursor-pins.md). See [Dispatch Policy](../workflows/projects/dispatch-ceiling.md#cursor-evidence-authority)
+approved registry entry and complete per-pin evidence before admission; see [Verifying Cursor Pins](verifying-cursor-pins.md). See [Dispatch Policy](../workflows/advanced/dispatch-ceiling.md#cursor-evidence-authority)
 for the distinction between catalog, configured mapping, and runtime identity.
 
 The October 1 refresh migrates Codex Sol defaults and examples to
@@ -142,5 +142,5 @@ bundled cells in the chosen scope, with a warning and a `--dry-run` preview;
 extra custom cells remain. Add `--keep-existing` to fill only missing cells.
 The active project's named ceiling is a separate policy in its `state.md`;
 a model update must not silently change it.
-See [Dispatch Policy](../workflows/projects/dispatch-ceiling.md#ownership-and-adoption)
+See [Dispatch Policy](../workflows/advanced/dispatch-ceiling.md#ownership-and-adoption)
 for config precedence and examples.

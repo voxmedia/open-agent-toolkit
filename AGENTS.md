@@ -95,6 +95,14 @@ accepted, the post-fix implementation rejects that same state, and a valid
 accepted control still passes. Preserve the exact probe or fixture and its
 expected categorical outcome so independent review can repeat it.
 
+That rule does not extend to docs-only moves and edits. They take a
+conservation diff (no section, link, or claim lost) and one review round; skip
+receipts and negative controls. Keep large machine-generated baselines out of
+tracked files: an `analysis/` folder anywhere under `.oat/` is gitignored, and
+the tracked reference keeps a short summary. A docs page move in the docs
+overhaul carried receipts, 13 negative controls for one re-padded table, and
+2.7 MB of tracked baselines before the user stopped it.
+
 A passing test is not proof the code works; it proves the code matches its
 fixtures, and an invented fixture can encode the same wrong model as the code
 that reads it. Parsers of external formats — provider transcripts, rollout
@@ -140,6 +148,14 @@ does not turn it red). That is why the root pass stays ungated.
 - `pnpm run cli -- help` - Run the OAT CLI help from repo root
 - `pnpm run cli -- <command> [options]` - Execute specific OAT CLI commands during local testing
 - After creating or switching to a worktree, run `pnpm run worktree:init` before using the CLI workflow.
+- Before approving a plan, at each phase start, and before dispatching
+  parallel lanes, run `git fetch origin main` and list what main changed in
+  the planned paths since the branch base:
+  `git log --oneline "$(git merge-base HEAD origin/main)..origin/main" -- <paths>`.
+  If main touched them, reconcile before continuing. Finish any open merge
+  before fanning out lanes that run the CLI in that worktree. The docs
+  overhaul rebuilt Fumadocs navigation sync in its phase 1 because main had
+  merged it (#336) hours earlier and nobody checked.
 - The pre-commit hook (lint-staged) runs `oxfmt --write` on staged Markdown,
   JSON, and JS/TS files, so a committed file can differ from the text you last
   wrote: Markdown tables are re-padded and YAML scalars may be re-quoted. After

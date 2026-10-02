@@ -224,7 +224,7 @@ Reading the output:
 The evidence is organized as three layers — launcher-owned production records,
 independent durable corroboration from Git and the fixture, and the normalized
 bundle and assertion report. See
-[Evidence Layers](../workflows/projects/evidence-layers.md) for the model.
+[Evidence Layers](../workflows/advanced/evidence-layers.md) for the model.
 
 ## Cleanup and recovery
 
@@ -324,5 +324,5 @@ fixture does not pass, the workflow change is not accepted.
 ## Related
 
 - [Contributing Code](code.md)
-- [Implementation Execution](../workflows/projects/implementation-execution.md)
-- [Dispatch Ceiling](../workflows/projects/dispatch-ceiling.md)
+- [Implementation Execution](../workflows/projects/execution/implementation-execution.md)
+- [Dispatch Ceiling](../workflows/advanced/dispatch-ceiling.md)

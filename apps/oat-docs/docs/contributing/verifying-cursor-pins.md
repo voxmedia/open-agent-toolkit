@@ -339,5 +339,5 @@ oat sync --scope project
 ## Related
 
 - [Smoke Testing](smoke-testing.md) - Runbook for the live workflow smoke runner.
-- [Dispatch Policy](../workflows/projects/dispatch-ceiling.md) - How pins reach the recommendation and role files.
+- [Dispatch Policy](../workflows/advanced/dispatch-ceiling.md) - How pins reach the recommendation and role files.
 - [Provider Sync](../provider-sync/providers.md) - Provider-specific sync behavior.
