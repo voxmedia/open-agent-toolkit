@@ -339,11 +339,11 @@ A stray is a file in a provider folder (such as `.cursor/skills/`) that OAT
 does not manage. Interactive `oat init` and `oat status` ask what to do with
 each one.
 
-| Choice                 | Choose it when                                        | What you give up                                                                                 |
-| ---------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| Adopt                  | Every agent tool should get it                        | Keeping it in one tool only: OAT moves it into `.agents/` and leaves a link at the original path |
-| Keep tool-only         | A Cursor or Copilot skill is meant for that tool only | Other tools never see it. Its exact path is saved in `knownStrays` and no longer reported        |
-| Decide later (default) | You are not sure who should own it yet                | It is reported again on every run                                                                |
+| Choice                 | Choose it when                                        | What you give up                                                                                                                                                                                                                      |
+| ---------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Adopt                  | Every agent tool should get it                        | Keeping it in one tool only: OAT moves it into `.agents/`. Generated provider views receive a link; Cursor and Copilot skills are read canonically, without recreating the provider-local path or adding a managed-view manifest row. |
+| Keep tool-only         | A Cursor or Copilot skill is meant for that tool only | Other tools never see it. Its exact path is saved in `knownStrays` and no longer reported                                                                                                                                             |
+| Decide later (default) | You are not sure who should own it yet                | It is reported again on every run                                                                                                                                                                                                     |
 
 Keep is offered only for Cursor and Copilot skills, and OAT refuses it when a
 canonical skill with the same name exists; resolve that clash instead. Keeping a
