@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p04-t09
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -29,12 +29,12 @@ oat_generated: false
 | Phase 1 | complete    | 8     | 8/8       |
 | Phase 2 | complete    | 3     | 3/3       |
 | Phase 3 | complete    | 5     | 5/5       |
-| Phase 4 | in_progress | 8     | 7/8       |
+| Phase 4 | in_progress | 8     | 8/8       |
 | Phase 5 | pending     | 4     | 0/4       |
 | Phase 6 | pending     | 3     | 0/3       |
 | Phase 7 | pending     | 3     | 0/3       |
 
-**Total:** 23/34 tasks completed
+**Total:** 24/34 tasks completed
 
 ---
 
@@ -177,8 +177,8 @@ oat_generated: false
 
 ### Task p04-t09: (review) Close p04 review findings M1, M2, M3, L1, L2
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** ac01c3144
 
 ---
 
@@ -491,6 +491,15 @@ oat_generated: false
   legacy-record wording. L3 (plan text still named top-level `reviews/`)
   fixed by the root in plan.md.
   `Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
+
+- Continuation `cont-backlog-wave-4-p04-fix-1`: `ac01c3144` (p04-t09):
+  records reported as recorded (fingerprint as provenance); quick-start and
+  review-receive load the dispatch skill and grant `Task`, with routing
+  outside implement; `oat-project-autonomous` 1.0.18 plus a vendor pin that
+  finds every skill vendoring the autonomy contract; complexity report reuse
+  rule; absent-record and legacy-record wording. Validation and shared
+  contracts 973; validate-skills, check:skill-bumps (9), format:root exit 0.
+  Root spot-check: complexity, gate-record, and inventory pins pass.
 
 <!-- orchestration-runs-end -->
 
