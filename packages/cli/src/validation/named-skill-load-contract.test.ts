@@ -2701,6 +2701,49 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     skills: ['oat-project-summary'],
     reason: 'Frontmatter description listing example user phrasings.',
   },
+  {
+    file: '.agents/skills/oat-project-complete-auto/SKILL.md',
+    anchor: 'Autonomous Project Completion',
+    match: 'A person completing a project uses',
+    classification: 'non-executing',
+    skills: ['oat-project-complete'],
+    reason: 'Names the interactive skill a person uses; not a directive.',
+  },
+  {
+    file: '.agents/skills/oat-project-complete-auto/SKILL.md',
+    anchor: 'Relationship to oat-project-complete',
+    match: 'One batched prompt, gate confirmations',
+    classification: 'non-executing',
+    skills: ['oat-project-complete', 'oat-project-complete-auto'],
+    reason: 'Comparison table of the two skills.',
+  },
+  {
+    file: '.agents/skills/oat-project-complete-auto/SKILL.md',
+    anchor: 'Answer table',
+    match: 'Every question or confirmation in',
+    classification: 'non-executing',
+    skills: ['oat-project-complete'],
+    reason: 'Introduces the answer table; Step 5 loads and follows the skill.',
+  },
+  {
+    file: '.agents/skills/oat-project-complete-auto/SKILL.md',
+    anchor: 'Answer table',
+    match: 'question or gate | Resolution',
+    classification: 'non-executing',
+    skills: ['oat-project-complete'],
+    reason: 'Answer table rows; Step 5 loads and follows the skill.',
+  },
+  {
+    file: '.agents/skills/oat-project-complete-auto/SKILL.md',
+    anchor: 'Step 5: Complete the Project',
+    match: 'Load the current `oat-project-complete/SKILL.md`',
+    classification: 'load-required',
+    skills: ['oat-project-complete'],
+    requires: [
+      'Load the current `oat-project-complete/SKILL.md` and follow its Steps 1 through 12',
+      'Never complete from a remembered version of that skill',
+    ],
+  },
 ];
 
 /**

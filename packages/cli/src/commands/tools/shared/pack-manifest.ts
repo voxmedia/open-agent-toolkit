@@ -129,6 +129,7 @@ const WORKFLOW_SKILL_NAMES = [
   'oat-project-capture',
   'oat-project-clear-active',
   'oat-project-complete',
+  'oat-project-complete-auto',
   'oat-project-design',
   'oat-project-dispatch-subagents',
   'oat-project-discover',

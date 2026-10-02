@@ -20,6 +20,10 @@ Use this section when you want to choose the right OAT skill for a task. If you 
 - Start a new tracked project: `oat-project-new`, `oat-project-quick-start`, or `oat-project-lite` for a single-sitting change with one batched interview and one approval (quick start accepts a project name plus optional description; if you omit the description it should ask before discovery begins)
 - Resume an existing project: `oat-project-open` and `oat-project-progress`
 - Execute a ready plan: `oat-project-implement`
+- Close a finished project: `oat-project-complete`. Workflow steps such as
+  `oat-wave-execute` closeout step 8 instead name `oat-project-complete-auto`,
+  the non-interactive companion that runs only with
+  `workflow.autonomousComplete: true`
 - Import an existing plan: `oat-project-import-plan`
 - Split a broad discovery or brainstorm into child projects: `oat-project-split`
 - Retroactively capture existing work: `oat-project-capture`
@@ -117,6 +121,7 @@ for policy, storage, approval, and recovery details.
     - `oat-explainer-kit`
     - `oat-wrap-up`
     - `oat-project-complete`
+    - `oat-project-complete-auto`
     - `oat-wave-program`
     - `oat-wave-execute`
 
