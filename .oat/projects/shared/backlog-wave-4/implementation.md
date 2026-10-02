@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p03-t01
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 8     | 8/8       |
-| Phase 2 | complete | 3     | 3/3       |
-| Phase 3 | pending  | 3     | 0/3       |
-| Phase 4 | pending  | 7     | 0/7       |
-| Phase 5 | pending  | 4     | 0/4       |
-| Phase 6 | pending  | 3     | 0/3       |
-| Phase 7 | pending  | 3     | 0/3       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 8     | 8/8       |
+| Phase 2 | complete    | 3     | 3/3       |
+| Phase 3 | in_progress | 3     | 3/3       |
+| Phase 4 | pending     | 7     | 0/7       |
+| Phase 5 | pending     | 4     | 0/4       |
+| Phase 6 | pending     | 3     | 0/3       |
+| Phase 7 | pending     | 3     | 0/3       |
 
-**Total:** 11/31 tasks completed
+**Total:** 14/31 tasks completed
 
 ---
 
@@ -107,22 +107,22 @@ oat_generated: false
 
 ## Phase 3: Sync correctness
 
-**Status:** pending
+**Status:** in_progress
 
 ### Task p03-t01: Restamp stale copy hashes and bridge legacy retirement
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 5d0fe8865
 
 ### Task p03-t02: Report a missing SKILL.md for every canonical skill directory
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** c1b01ccaa
 
 ### Task p03-t03: Stop marker-less skill and agent directories from looping
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** d53936682
 
 ---
 
@@ -396,6 +396,24 @@ oat_generated: false
   to final (Deferred Findings (Medium)).
 - Phase p02 outcome: complete; 3/3 tasks (2 planned, 1 review-fix); one root
   review round, one passing gate.
+
+### Phase p03 dispatch
+
+- Request `bw4-p03-impl-1`: accepted and returned `DONE_WITH_CONCERNS`
+  (validated success: concerns are mechanical file widening and a new
+  operation value); target `oat-phase-implementer-claude-claude-opus-5-5-high`;
+  commits `5d0fe8865..d53936682` (p03-t01..t03); phase verification pass
+  (engine/drift/sync/validation 645; isolated-HOME CLI vitest 8104; check,
+  type-check, lint, validate-skills, build exit 0; real-CLI probe of the
+  marker-less loop and restamp); recovery 0/10. Restamp is a
+  `restampContentHash` flag on `skip`; marker-less directories plan a new
+  `error` operation (now in `oat sync --json`; PR behavior change). Mechanical
+  widening accepted: `sync.utils.ts`, `ui/output.ts`, `engine.types.test.ts`,
+  comment-only corrections in `drift/detector.ts`, `manifest/hash.ts`,
+  `drift/detector.test.ts`, `managed-copy-hash.ts` (root verified no
+  non-comment change in detector and hash). Root spot-check: drift and sync
+  165/165.
+  `Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
 
 <!-- orchestration-runs-end -->
 
