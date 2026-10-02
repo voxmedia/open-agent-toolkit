@@ -29,6 +29,10 @@ const VENDORING_SKILLS = [
   'oat-project-progress',
 ] as const;
 
+const QUICK_START = '.agents/skills/oat-project-quick-start/SKILL.md';
+const STEP_3_7 =
+  '### Step 3.7: Record Review Disposition and Mark Plan Complete';
+
 function readRepoFile(relativePath: string): string {
   return readFileSync(join(REPO_ROOT, relativePath), 'utf8');
 }
@@ -89,5 +93,42 @@ describe('lifecycle gate approval record', () => {
     expect(block.map((line) => /^# {3}([a-z_]+):/.exec(line)?.[1])).toEqual([
       ...CORE_FIELDS,
     ]);
+  });
+
+  it('persists every configured quick-start gate outcome', () => {
+    const skill = readRepoFile(QUICK_START);
+    const gate = normalize(
+      skill.slice(skill.indexOf('### Gate Execution'), skill.indexOf(STEP_3_7)),
+    );
+
+    expect(gate).toContain(VENDORED_DOC);
+    expect(gate).toMatch(
+      /write `oat_quick_start_gate` to `\$PROJECT_PATH\/state\.md`/,
+    );
+    expect(gate).toMatch(/passed: `allowed\/passed`/);
+    expect(gate).toMatch(/`warn` failure: `allowed\/warned`/);
+    expect(gate).toMatch(
+      /operator explicitly continues past: `allowed\/prompt_approved`/,
+    );
+    expect(gate).toMatch(
+      /declined or deferred[\s\S]*?`block` exhausted after `maxAttempts`[\s\S]*?: `blocked` with `disposition: null`/,
+    );
+    expect(gate).toMatch(
+      /`configured_disabled_by_project`: `allowed\/project_disabled` with `reviewed_head: null` and no launch/,
+    );
+    expect(gate).toContain('`not_configured` writes no record');
+  });
+
+  it('keeps Step 3.7 gated by control flow, not by the record', () => {
+    const skill = readRepoFile(QUICK_START);
+    const step37 = skill.slice(
+      skill.indexOf(STEP_3_7),
+      skill.indexOf('### Quick Plan Readiness (Named Predicate)'),
+    );
+
+    expect(step37).not.toContain('oat_quick_start_gate');
+    expect(normalize(skill)).toContain(
+      'Step 3.7 stays gated by the control flow above and does not read this record back.',
+    );
   });
 });

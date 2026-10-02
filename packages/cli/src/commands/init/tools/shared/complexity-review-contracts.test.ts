@@ -81,6 +81,13 @@ const EXHAUSTION_POINTS: readonly ExhaustionPoint[] = [
     end: '6. Runtime selection note',
   },
   {
+    name: 'quick-start plan gate maxAttempts (QS-12)',
+    skill: 'oat-project-quick-start',
+    file: '.agents/skills/oat-project-quick-start/SKILL.md',
+    start: '6. If the command exits nonzero',
+    end: '7. Runtime selection note',
+  },
+  {
     name: 'review-receive cycle cap',
     skill: RECEIVE,
     file: `.agents/skills/${RECEIVE}/SKILL.md`,
