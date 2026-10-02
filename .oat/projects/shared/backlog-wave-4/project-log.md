@@ -76,6 +76,10 @@ target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:1,low:
 
 Phase p03 complete (5/5 tasks): sync restamps stale copy hashes, legacy retirement bridge, missing SKILL.md for every skill dir, marker-less directories report an error. One root review round (1 Medium, 2 Low fixed), Codex gate passed with 1 Medium addressed now.
 
+### 2026-10-02 · structural · oat gate review · p04
+
+target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-4/reviews/p04-review-2026-10-02T213839Z.md run=e9d83e79-99bf-4c5f-9ade-babb2cc0a746
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
