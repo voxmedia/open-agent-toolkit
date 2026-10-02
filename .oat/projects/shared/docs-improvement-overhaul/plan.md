@@ -12,6 +12,8 @@ oat_import_source_path: null
 oat_import_provider: null
 oat_generated: false
 oat_template: false
+oat_plan_hill_phases: ['p05']
+oat_auto_review_at_hill_checkpoints: true
 ---
 
 # Implementation Plan: docs-improvement-overhaul
@@ -22,7 +24,7 @@ oat_template: false
 
 **Stack:** Existing TypeScript CLI, Fumadocs/Next static export, Markdown, Mermaid and one original theme-neutral SVG. No framework replacement or new visual pipeline.
 
-**Authority:** Planning only. User authorized autonomous collaboration through plan readiness with High dispatch, not implementation, publication or merge. Five separately mergeable phases do not imply automatic PR creation.
+**Authority:** The user invoked oat-project-implement after the reviewed planning handoff, authorizing execution of this plan with High dispatch and continuing autonomous collaboration. Publication and merge remain separate actions. Five separately mergeable phases do not imply automatic PR creation.
 
 ## Planning Checklist
 

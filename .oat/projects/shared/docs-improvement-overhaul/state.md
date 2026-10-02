@@ -15,8 +15,8 @@ oat_dispatch_policy:
   mode: managed
   policy: high
   source: project-state
-oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -89,13 +89,13 @@ oat_generated: false
 
 # Project State: docs-improvement-overhaul
 
-**Status:** Plan ready; implementation not started or authorized
+**Status:** Implementation authorized; p01 dispatch preflight complete
 **Started:** 2026-10-01
 **Last Updated:** 2026-10-02
 
 ## Current Phase
 
-The authorized lightweight design and plan are complete. Native Sol and Fable reviews are clean; configured quick-start gate attempt 2 passed, and its medium/low findings were resolved and received with durable evidence. The plan includes README/visual scope and final-phase independent reviewer computer-use QA. Moved URLs may break; no aliases. No implementation is authorized.
+The user invoked oat-project-implement after the reviewed handoff. Execute the five sequential phases using High dispatch, independent phase reviews and Fable collaboration. Autonomous first-run checkpoint resolution selects p05 with auto-review enabled. Moved URLs may break; no aliases. Publication and merge remain separate boundaries.
 
 ## Artifacts
 
@@ -117,8 +117,8 @@ The authorized lightweight design and plan are complete. Native Sol and Fable re
 
 ## Blockers
 
-No planning blockers. Implementation awaits separate user authorization and HiLL selection, not more planning review.
+None. Implementation authorized; final checkpoint configured under IMPLEMENT-03. Required browser proof remains mandatory.
 
 ## Next Milestone
 
-Planning handoff complete. Stop here. On an authorized implementation start, confirm HiLL and begin p01-t01; retain focused p01/p02 browser smoke and full independent final visual QA.
+Execute p01-t01 through p01-t03, then independent phase review. Continue in plan order through final QA and configured implementation gate, unless a real blocker is reached.

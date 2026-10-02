@@ -9,7 +9,7 @@ oat_generated: false
 
 # Implementation: docs-improvement-overhaul
 
-Implementation has not started and is not authorized by the current planning request. This tracker records the next task, not completed work. Plan reviews and configured gate disposition live in plan.md.
+The user invoked oat-project-implement after the reviewed plan handoff. Implementation is authorized; no task is complete yet. Root owns lifecycle bookkeeping and independent reviews; each phase implementer owns its bounded task commits.
 
 ## Progress Overview
 
@@ -142,7 +142,13 @@ Implementation has not started and is not authorized by the current planning req
 
 <!-- orchestration-runs-start -->
 
-No implementation runs. Planning dispatch and review evidence is retained under reviews/ and references/.
+### Run 1: five-phase implementation
+
+Authorization: user invoked oat-project-implement; prior autonomous collaboration and High dispatch direction retained. IMPLEMENT-08 covers phase implementer and phase reviewer across this bounded plan. IMPLEMENT-03 selects p05 as the absent first-run checkpoint default; IMPLEMENT-04 enables checkpoint auto-review. No active autonomy environment signal is persisted. Optional extra phase gates remain absent; configured lifecycle gates remain enabled. Tier 1, exact native phase roles, fresh context. Host tstang-mini.local; shared worktree /Users/tstang/orca/workspaces/open-agent-toolkit/amphipod, branch amphipod. All five phases sequential; no parallel worktrees.
+
+Phase recovery limit: default 10, no prior usage or pending attempt. Phase implementers may execute narrowly authorized recovery without changing target. No nested workers are required by default. Required computer-use proof must be performed before its task is committed.
+
+Phase outcomes: p01 pending; p02 pending; p03 pending; p04 pending; p05 pending.
 
 <!-- orchestration-runs-end -->
 
