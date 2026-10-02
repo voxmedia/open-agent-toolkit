@@ -66,9 +66,9 @@ In p01-t02, add these exact script values:
 | app      | type-check    | `tsc --noEmit -p tsconfig.docs-tools.json`                                                                                                      |
 | app      | check         | `oxlint scripts tests && oxfmt --check scripts tests && oxfmt --check 'docs/**/*.md' && markdownlint-cli2 'docs/**/*.md' && pnpm docs:validate` |
 
-The app's new `test`, `type-check` and extended `check` enroll automatically through existing root `turbo run test/type-check/check`; preserve those root strings and root `lint`/`lint:fix` verbatim. Turbo tests depend on each package's build, so document the added docs-build cost rather than claiming tests remain build-free.
+The app's new `test`, `type-check` and extended `check` enroll automatically through existing root `turbo run test/type-check/check`; preserve those root strings and root `lint`/`lint:fix` verbatim. Turbo tests depend on each package's build, so root tests also run docs prebuild; stale committed catalog output can correctly fail both root check and root test. Preserve the existing `@open-agent-toolkit/cli: workspace:*` devDependency in the docs app (already present at package.json:28) and verify its transitive build/hash edge covers CLI nav and pack-manifest source changes. Do not add a redundant dependency or assume the edge works without a cache probe. If the actual graph omits a read input, add its narrowly scoped source/import closure to Turbo task inputs or globalDependencies and document why.
 
-`tsconfig.docs-tools.json` explicitly includes scripts/tests, excludes generated Next output/node_modules, uses Node types and aliases for app-local helpers and the repository pack-manifest source. Add exact `@oat-repo/pack-manifest` and `@shared/types` source aliases for the manifest's type-only dependency, not a broad parent-relative/catch-all import. Exclude scripts/tests from the main Next tsconfig so the two programs do not apply incompatible aliases. Unit tests use package-local Fumadocs; CLI integration invokes the branch CLI through a subprocess. No Fumadocs dependency is added at root.
+`tsconfig.docs-tools.json` explicitly includes scripts/tests, excludes generated Next output/node_modules, uses Node types and aliases for app-local helpers and the repository pack-manifest source. Add exact `@oat-repo/pack-manifest` and `@shared/types` source aliases, not broad parent-relative/catch-all imports. Verify the full closure: pack-manifest's local `./types` also imports `@shared/types`, whose own `zod` import resolves from the CLI package. Type-check the actual closure rather than asserting two aliases alone prove correctness. Exclude scripts/tests from the main Next tsconfig so the two programs do not apply incompatible aliases. Unit tests use package-local Fumadocs; CLI integration invokes the branch CLI through a subprocess. No Fumadocs dependency is added at root.
 
 In p04-t01, root `docs:skills:validate` forwards to `pnpm --filter oat-docs docs:skills:validate`; app value is `tsx --tsconfig tsconfig.docs-tools.json scripts/skill-mapping.ts`. In p04-t04, root generate/check wrappers forward to the same app names; app values are `tsx --tsconfig tsconfig.docs-tools.json scripts/skill-catalog.ts --write` and `tsx --tsconfig tsconfig.docs-tools.json scripts/skill-catalog.ts --check`. Final docs:validate invokes strict mapping validation (no pending flag) and catalog check. Prebuild order remains catalog check, nav generation, fumadocs-mdx, agent index. Tests cover Markdown escaping in generated catalog cells.
 
@@ -97,6 +97,8 @@ In p04-t01, root `docs:skills:validate` forwards to `pnpm --filter oat-docs docs
 **Format:** `pnpm exec oxfmt --write apps/oat-docs/package.json package.json apps/oat-docs/scripts apps/oat-docs/tests apps/oat-docs/tsconfig.docs-tools.json apps/oat-docs/tsconfig.json apps/oat-docs/docs packages/cli/src/commands/docs/init packages/cli/scripts/bundle-inputs.mjs`; format modified JSON templates using the supported formatter and use `git diff --check` for shell/ignore files.
 
 **Commit:** `feat(p01-t02): enforce navigation at real consumer boundaries`.
+
+**Cache acceptance:** In a disposable validation worktree, warm app check/test caches; change the CLI nav compiler input and verify the app task hashes change/cache-miss before restoring it. Record Turbo graph/hash evidence and actual execution, not cached green logs. Include `turbo.json` in this task's file scope only if the existing workspace dependency edge proves insufficient.
 
 ### Task p01-t03: Align authoring instructions and verify foundation
 
@@ -190,6 +192,8 @@ In p04-t01, root `docs:skills:validate` forwards to `pnpm --filter oat-docs docs
 
 **Commit:** `docs(p04-t01): define canonical skill guide ownership`.
 
+**Cache acceptance:** After warming app checks/tests, change a real pack-manifest eligibility entry in a disposable validation worktree. Confirm app cache invalidation and the mapping check rejects the stale inventory; restore the input and show valid pass. Capture the actual import closure and hash evidence. If needed, narrowly update Turbo inputs; do not rely solely on existing globalDependencies. Format new scripts/tests and changed package/Turbo configs with `pnpm exec oxfmt --write apps/oat-docs/scripts apps/oat-docs/tests apps/oat-docs/package.json package.json turbo.json`.
+
 ### Task p04-t02: Independently audit every applicability claim
 
 **Files:** project `references/skill-applicability-audit.md`; corrections to `apps/oat-docs/skill-docs.json`.
@@ -268,17 +272,19 @@ In p04-t01, root `docs:skills:validate` forwards to `pnpm --filter oat-docs docs
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                   | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | -------- | ---------- | -------------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending  | -          | -                          | -             | -          | -           |
-| p02    | code     | pending  | -          | -                          | -             | -          | -           |
-| final  | code     | pending  | -          | -                          | -             | -          | -           |
-| spec   | artifact | pending  | -          | -                          | -             | -          | -           |
-| design | artifact | received | 2026-10-01 | reviews/fable-design-01.md | -             | manual     | -           |
-| p03    | code     | pending  | -          | -                          | -             | -          | -           |
-| p04    | code     | pending  | -          | -                          | -             | -          | -           |
-| p05    | code     | pending  | -          | -                          | -             | -          | -           |
-| plan   | artifact | pending  | -          | -                          | -             | -          | -           |
+| Scope  | Type     | Status          | Date       | Artifact                        | Reviewed Head                            | Invocation | Gate Target |
+| ------ | -------- | --------------- | ---------- | ------------------------------- | ---------------------------------------- | ---------- | ----------- |
+| p01    | code     | pending         | -          | -                               | -                                        | -          | -           |
+| p02    | code     | pending         | -          | -                               | -                                        | -          | -           |
+| final  | code     | pending         | -          | -                               | -                                        | -          | -           |
+| spec   | artifact | pending         | -          | -                               | -                                        | -          | -           |
+| design | artifact | fixes_completed | 2026-10-01 | reviews/fable-design-01.md      | -                                        | manual     | -           |
+| p03    | code     | pending         | -          | -                               | -                                        | -          | -           |
+| p04    | code     | pending         | -          | -                               | -                                        | -          | -           |
+| p05    | code     | pending         | -          | -                               | -                                        | -          | -           |
+| plan   | artifact | fixes_completed | 2026-10-01 | reviews/plan-review-round-01.md | 86aa78523952ec8e324d44dc4b61dfa961414e5e | auto       | -           |
+| plan   | artifact | passed          | 2026-10-01 | reviews/plan-review-round-02.md | 884b56d80769cb4d94fa289f34e027973137e410 | auto       | -           |
+| design | artifact | passed          | 2026-10-01 | reviews/plan-review-round-02.md | 884b56d80769cb4d94fa289f34e027973137e410 | manual     | -           |
 
 Preserved spec row is not applicable in quick mode; no spec.md required. Events are append-ordered and bound to artifact filenames; never overwrite a bound event with a different review. No code/browser review is claimed in planning.
 
