@@ -67,3 +67,429 @@
     --callout-color: #ef4444;
   }
 }
+
+/* ==========================================================================
+   "Terminal Serif" type system and OAT palette
+   --------------------------------------------------------------------------
+   Unlayered on purpose. `@import 'tailwindcss'` declares
+   `@layer theme, base, components, utilities`, and everything the Fumadocs
+   presets ship lives in one of those layers, so the plain selectors below win
+   without !important. They also beat Tailwind utility classes on the same
+   properties, which is intended: this is theming, not a one-off patch.
+
+   Letters in the comments name the Fumadocs source each selector was read
+   from (paths under node_modules):
+     A  fumadocs-ui/css/lib/default-colors.css
+     B  fumadocs-ui/css/black.css
+     C  fumadocs-ui/css/lib/base.css
+     D  fumadocs-ui/css/lib/shiki.css
+     E  @fumadocs/tailwind/dist/typography/index.mjs  (`.prose`)
+     F  fumadocs-ui/dist/layouts/docs/slots/sidebar.js
+     G  fumadocs-ui/dist/components/sidebar/base.js
+     H  fumadocs-ui/dist/layouts/docs/page/slots/toc.js
+     I  fumadocs-ui/dist/components/codeblock.js
+     J  fumadocs-ui/dist/components/heading.js
+     K  fumadocs-ui/dist/components/ui/scroll-area.js
+     L  @radix-ui/react-collapsible (trigger attrs)
+     M  the `.markdown-alert` block above
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1a. Private palette + font stacks.
+   `--rt-*` prefix so nothing here can collide with `--color-fd-*` (A/B),
+   `--tw-prose-*` (E) or `--fd-*` layout vars (C).
+   Type system shared with the skills docs site and the explainer house
+   style. Light mode is the explainer "executive light" palette (cool grey
+   page, white cards, navy accent); muted text is darkened from #8a94a3 so
+   small mono labels clear WCAG AA. Dark mode is derived from it: navy-slate
+   surfaces and a lifted blue accent.
+   -------------------------------------------------------------------------- */
+:root {
+  --rt-serif: ui-serif, 'Source Serif Pro', 'Iowan Old Style', Georgia, serif;
+  --rt-sans:
+    -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+  --rt-mono: 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace;
+
+  /* light mode surfaces — executive light */
+  --rt-bg: #f4f6f9;
+  --rt-bg-elev: #ffffff;
+  --rt-bg-elev-2: #eef1f5;
+  --rt-border: #dde2ea;
+  --rt-border-soft: #e9edf2;
+  --rt-text: #16202e;
+  --rt-text-dim: #4b5563;
+  --rt-text-muted: #5d6a7c;
+  --rt-accent: #1b4f8a;
+  --rt-accent-bright: #143c6b;
+  --rt-accent-dim: rgba(27, 79, 138, 0.08);
+  --rt-accent-edge: rgba(27, 79, 138, 0.35);
+  --rt-on-accent: #ffffff;
+  --rt-warn: #a14a08;
+  --rt-warn-bg: rgba(180, 83, 9, 0.06);
+  --rt-code-bg: #f1f4f8;
+
+  /* callout hues (light) */
+  --rt-note: #1e5f9e;
+  --rt-note-bg: rgba(30, 95, 158, 0.07);
+  --rt-tip: #2f6b32;
+  --rt-tip-bg: rgba(47, 107, 50, 0.07);
+  --rt-important: #6b3fa8;
+  --rt-important-bg: rgba(107, 63, 168, 0.07);
+  --rt-caution: #a3282f;
+  --rt-caution-bg: rgba(163, 40, 47, 0.07);
+}
+
+/* next-themes runs with attribute="class", so the dark scope is `.dark` on
+   <html> — the same hook black.css (B) and default-colors.css (A) use.
+   `:root` above and `.dark` here have equal specificity and both match <html>
+   in dark mode, so `.dark` MUST stay second in source order. */
+.dark {
+  --rt-bg: #0f141b;
+  --rt-bg-elev: #161d27;
+  --rt-bg-elev-2: #1d2633;
+  --rt-border: #2b3646;
+  --rt-border-soft: #202a37;
+  --rt-text: #dde4ee;
+  --rt-text-dim: #9ba7b8;
+  --rt-text-muted: #8693a5;
+  --rt-accent: #8fb6ee;
+  --rt-accent-bright: #b6d0f6;
+  --rt-accent-dim: rgba(143, 182, 238, 0.14);
+  --rt-accent-edge: rgba(143, 182, 238, 0.5);
+  --rt-on-accent: #0b1d36;
+  --rt-warn: #f0a868;
+  --rt-warn-bg: rgba(240, 168, 104, 0.07);
+  --rt-code-bg: #0b1016;
+
+  --rt-note: #7dc4f0;
+  --rt-note-bg: rgba(125, 196, 240, 0.07);
+  --rt-tip: #9fd67f;
+  --rt-tip-bg: rgba(159, 214, 127, 0.07);
+  --rt-important: #c4a4f0;
+  --rt-important-bg: rgba(196, 164, 240, 0.07);
+  --rt-caution: #ff9aa2;
+  --rt-caution-bg: rgba(255, 154, 162, 0.07);
+}
+
+/* --------------------------------------------------------------------------
+   1b. Every --color-fd-* token the presets define, remapped.
+   Complete list, taken from `@theme` in A + B (17 themeable tokens) and
+   `@theme static` in A (9 status/diff tokens). Nothing else in the presets
+   declares a --color-fd-* value.
+   Semantic note: in Fumadocs, `--color-fd-accent` is the *hover surface*, not
+   the brand hue; the brand hue is `--color-fd-primary` (used by
+   `data-[active=true]:text-fd-primary` in F and by the prose link underline
+   in E). So the teal goes on `primary`, and `accent` becomes a quiet wash.
+   -------------------------------------------------------------------------- */
+:root {
+  /* A + B: surfaces */
+  --color-fd-background: var(--rt-bg);
+  --color-fd-foreground: var(--rt-text);
+  --color-fd-muted: var(--rt-bg-elev);
+  --color-fd-muted-foreground: var(--rt-text-dim);
+  --color-fd-popover: var(--rt-bg-elev);
+  --color-fd-popover-foreground: var(--rt-text);
+  --color-fd-card: var(--rt-bg-elev);
+  --color-fd-card-foreground: var(--rt-text);
+  --color-fd-border: var(--rt-border);
+  --color-fd-primary: var(--rt-accent);
+  --color-fd-primary-foreground: var(--rt-on-accent);
+  --color-fd-secondary: var(--rt-bg-elev-2);
+  --color-fd-secondary-foreground: var(--rt-text);
+  --color-fd-accent: var(--rt-bg-elev-2);
+  --color-fd-accent-foreground: var(--rt-text);
+  --color-fd-ring: var(--rt-accent-edge);
+  /* A only (not redeclared by black.css) */
+  --color-fd-overlay: rgba(15, 20, 27, 0.35);
+
+  /* A `@theme static`: status + diff tokens. Restated as plain custom
+     properties so they follow the palette; `@theme static` emits them on
+     :root in @layer theme, which this unlayered block outranks. */
+  --color-fd-info: var(--rt-note);
+  --color-fd-warning: var(--rt-warn);
+  --color-fd-error: var(--rt-caution);
+  --color-fd-success: var(--rt-tip);
+  --color-fd-idea: var(--rt-important);
+  --color-fd-diff-remove: rgba(163, 40, 47, 0.1);
+  --color-fd-diff-remove-symbol: var(--rt-caution);
+  --color-fd-diff-add: rgba(47, 107, 50, 0.1);
+  --color-fd-diff-add-symbol: var(--rt-tip);
+}
+
+.dark {
+  --color-fd-background: var(--rt-bg);
+  --color-fd-foreground: var(--rt-text);
+  --color-fd-muted: var(--rt-bg-elev);
+  --color-fd-muted-foreground: var(--rt-text-dim);
+  --color-fd-popover: var(--rt-bg-elev);
+  --color-fd-popover-foreground: var(--rt-text);
+  --color-fd-card: var(--rt-bg-elev);
+  --color-fd-card-foreground: var(--rt-text);
+  --color-fd-border: var(--rt-border);
+  --color-fd-primary: var(--rt-accent);
+  --color-fd-primary-foreground: var(--rt-on-accent);
+  --color-fd-secondary: var(--rt-bg-elev-2);
+  --color-fd-secondary-foreground: var(--rt-text);
+  --color-fd-accent: var(--rt-bg-elev-2);
+  --color-fd-accent-foreground: var(--rt-text);
+  --color-fd-ring: var(--rt-accent-edge);
+  --color-fd-overlay: rgba(0, 0, 0, 0.55);
+
+  --color-fd-info: var(--rt-note);
+  --color-fd-warning: var(--rt-warn);
+  --color-fd-error: var(--rt-caution);
+  --color-fd-success: var(--rt-tip);
+  --color-fd-idea: var(--rt-important);
+  --color-fd-diff-remove: rgba(255, 154, 162, 0.12);
+  --color-fd-diff-remove-symbol: var(--rt-caution);
+  --color-fd-diff-add: rgba(159, 214, 127, 0.1);
+  --color-fd-diff-add-symbol: var(--rt-tip);
+}
+
+/* --------------------------------------------------------------------------
+   2. Typography
+   -------------------------------------------------------------------------- */
+
+/* C sets `body { background-color; color }` in @layer base but no font stack
+   (the font comes from Tailwind preflight's --default-font-family). */
+body {
+  font-family: var(--rt-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* E: the `.prose` utility styles h1/h2 with --tw-prose-headings and
+   fontWeight 800/700. Serif + 600 + tight tracking for h1/h2 only; h3+ stay
+   in the sans stack so the hierarchy reads as two families, not four. */
+.prose h1,
+.prose h2 {
+  font-family: var(--rt-serif);
+  font-weight: 600;
+  letter-spacing: -0.018em;
+}
+
+.prose h1 {
+  letter-spacing: -0.022em;
+}
+
+/* E: h2 gets a hairline rule above it so `## Contents` and other section
+   heads separate cleanly. `border-color` falls back to --color-fd-border via
+   the universal rule in C, so only the soft variant needs stating. */
+.prose h2 {
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--rt-border-soft);
+}
+
+/* J: a heading with an id renders `<a data-card href="#id">` around its text,
+   plus a `.not-prose` copy button. E already excludes `a[data-card]` from the
+   prose link style; this keeps the anchor inheriting the serif heading. */
+.prose :is(h1, h2, h3, h4) > a[data-card] {
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-decoration: none;
+}
+
+/* Mono uppercase "eyebrow" — the signature label treatment. Applied below to
+   sidebar group/folder labels and the TOC heading. */
+/* F/G: SidebarSeparator renders a bare <p> (G, `jsx("p", ...)`) inside the
+   sidebar viewport; F gives it `mt-6 px-2` and no colour of its own.
+   K: the Radix ScrollArea viewport carries `data-radix-scroll-area-viewport`,
+   which scopes this to the page-tree area and away from the sidebar header
+   (which also contains <p> elements, in SidebarTabsDropdown in F). */
+#nd-sidebar [data-radix-scroll-area-viewport] p {
+  font-family: var(--rt-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--rt-text-muted);
+}
+
+/* FOLDER labels are deliberately NOT eyebrowed. F/G/L: a sidebar folder is a
+   Radix Collapsible.Root (a div carrying data-state) whose first child is the
+   label — an <a> when the folder has an index page (SidebarFolderLink in G),
+   a <button> when it does not (SidebarFolderTrigger -> Collapsible.Trigger).
+   The selector that would reach a top-level one is
+     #nd-sidebar [data-radix-scroll-area-viewport] > div > div[data-state] > a:first-child
+   (the extra `> div` is the wrapper Radix's ScrollArea Viewport renders inside
+   itself, per K). It is left unstyled because in THIS page tree every
+   top-level folder is preceded by a separator carrying the same text — the
+   rendered sidebar emits `<p>User Guide</p>` immediately followed by
+   `<a href="/user-guide/">User Guide</a>` — so eyebrowing both would print the
+   same uppercase label twice in a row. Restore the rule above if the tree ever
+   drops the separators.
+   Note also that a folder's index link and an ordinary leaf item are
+   indistinguishable by tag or attribute (both are `<a data-active>`); telling
+   them apart needs `:has(+ div[data-state])` or the child-combinator path
+   above, not an attribute selector. */
+
+/* F: itemVariants gives every sidebar row `text-fd-muted-foreground` and
+   `data-[active=true]:text-fd-primary`; keep the active/hover accent stronger
+   than the eyebrow rest state. */
+#nd-sidebar [data-radix-scroll-area-viewport] a[data-active='true'] {
+  color: var(--rt-accent);
+  font-weight: 500;
+}
+
+#nd-sidebar [data-radix-scroll-area-viewport] a:hover,
+#nd-sidebar [data-radix-scroll-area-viewport] button:hover {
+  color: var(--rt-text);
+}
+
+/* H: the desktop TOC heading is `<h3 id="toc-title">` with
+   `text-sm text-fd-muted-foreground`. Same eyebrow treatment. */
+#toc-title {
+  font-family: var(--rt-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--rt-text-muted);
+}
+
+/* E: `code` inside .prose gets `background: var(--color-fd-muted)`,
+   `border: solid 1px var(--color-fd-border)`, `color: var(--tw-prose-code)`.
+   Accent-on-elevated with a soft border instead. The :where() exclusions have
+   zero specificity and keep this off Shiki spans inside code BLOCKS (I marks
+   the figure `not-prose`; D styles `code span` from --shiki-*). */
+.prose
+  code:not(:where(.not-prose, .not-prose *, pre, pre *, .shiki, .shiki *)) {
+  font-family: var(--rt-mono);
+  font-size: 0.8125em;
+  color: var(--rt-accent);
+  background: var(--rt-bg-elev-2);
+  border: 1px solid var(--rt-border-soft);
+  border-radius: 4px;
+  padding: 0.1em 0.34em;
+}
+
+/* E: `a code`, `h1 code` … set `color: inherit`; preserve that. */
+.prose a code,
+.prose :is(h1, h2, h3, h4) code {
+  color: inherit;
+  background: transparent;
+  border-color: transparent;
+}
+
+/* I: CodeBlock renders `<figure class="... my-4 bg-fd-card rounded-xl shiki
+   relative border shadow-sm not-prose overflow-hidden text-sm">` with the
+   <pre> inside it (keepBackground is false here, so the figure's bg-fd-card
+   is what paints). Two classes + an element outrank the single `bg-fd-card`
+   utility class, so the deep code background lands without !important. */
+.prose figure.shiki {
+  background: var(--rt-code-bg);
+  border-color: var(--rt-border);
+  border-radius: 8px;
+}
+
+/* I: the <pre> itself (components/codeblock.js `Pre`) — keep it transparent so
+   the figure's colour shows through, and pin the mono stack. */
+.prose figure.shiki pre {
+  background: transparent;
+  font-family: var(--rt-mono);
+}
+
+/* I: the code-block title bar is `bg-fd-secondary` inside the figure. */
+.prose figure.shiki > figcaption {
+  font-family: var(--rt-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--rt-text-muted);
+  background: var(--rt-bg-elev);
+  border-bottom: 1px solid var(--rt-border-soft);
+}
+
+/* E: `roundedTable` puts `background: var(--color-fd-muted)` on th and
+   `color: var(--tw-prose-headings); font-weight: 600` on `thead th`.
+   Uppercase mono-ish header row. */
+.prose thead th {
+  font-family: var(--rt-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--rt-text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   3. Links
+   E ships `a:not([data-card])` with `color: var(--tw-prose-links)` (=
+   --color-fd-foreground) and a solid 1.5px underline in --color-fd-primary.
+   Target look: accent text, dotted accent underline. `[data-card]` is excluded
+   for the same reason E excludes it — it is the heading anchor (J) and the
+   Card component wrapper (dist/components/card.js uses data-card).
+   -------------------------------------------------------------------------- */
+.prose a:not([data-card]) {
+  color: var(--rt-accent);
+  font-weight: 400;
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: var(--rt-accent-edge);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.prose a:not([data-card]):hover {
+  opacity: 1; /* E sets `opacity: 80%` on hover; brighten instead of fade */
+  color: var(--rt-accent-bright);
+  text-decoration-style: solid;
+  text-decoration-color: var(--rt-accent-edge);
+}
+
+/* --------------------------------------------------------------------------
+   4. Callouts — remark-github-blockquote-alert
+   Structure is unchanged from M (`.markdown-alert` +
+   `.markdown-alert-title` + `--callout-color`); this only recolours and adds
+   `--callout-bg`. M lives in `@layer base`, so these unlayered rules win on
+   cascade layer alone.
+   -------------------------------------------------------------------------- */
+.markdown-alert {
+  background: var(--callout-bg, var(--rt-bg-elev));
+  border: 1px solid var(--rt-border-soft);
+  border-left: 3px solid var(--callout-color, var(--rt-border));
+  border-radius: 0 6px 6px 0;
+  box-shadow: none;
+  color: var(--rt-text);
+}
+
+.markdown-alert .markdown-alert-title {
+  font-family: var(--rt-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 0.4rem;
+  color: var(--callout-color, var(--rt-text-muted));
+}
+
+.markdown-alert p:not(.markdown-alert-title) {
+  color: var(--rt-text);
+}
+
+/* M: the five GFM alert variants. Each sets --callout-color (used by the 3px
+   rule and the label) plus the new --callout-bg tint. */
+.markdown-alert-note {
+  --callout-color: var(--rt-note);
+  --callout-bg: var(--rt-note-bg);
+}
+
+.markdown-alert-tip {
+  --callout-color: var(--rt-tip);
+  --callout-bg: var(--rt-tip-bg);
+}
+
+.markdown-alert-important {
+  --callout-color: var(--rt-important);
+  --callout-bg: var(--rt-important-bg);
+}
+
+.markdown-alert-warning {
+  --callout-color: var(--rt-warn);
+  --callout-bg: var(--rt-warn-bg);
+}
+
+.markdown-alert-caution {
+  --callout-color: var(--rt-caution);
+  --callout-bg: var(--rt-caution-bg);
+}
