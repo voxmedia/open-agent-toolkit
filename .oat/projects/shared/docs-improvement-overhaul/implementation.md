@@ -617,9 +617,9 @@ Phase implementation return: DONE_WITH_CONCERNS, three planned task commits in o
     {
       "request_id": "cont-docs-overhaul-p02-draft-correction-1",
       "agent_handle": "/root/phase02",
-      "status": "accepted-holding",
+      "status": "completed-draft-correction",
       "authority": "pre-commit M1/M2 baseline correction only; no moves, commit, tracking or analysis edits",
-      "child_outcome": null
+      "child_outcome": "stable-corrected-draft-no-moves"
     }
   ],
   "payload": {
@@ -644,6 +644,8 @@ Phase implementation return: DONE_WITH_CONCERNS, three planned task commits in o
 Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high
 
 Accepted native /root/phase02 (Hilbert), holding before commands until clean bookkeeping SHA. Ownership initially t01 draft/evidence only; Fable map and non-author normalization review required before moves. No project-log append while child owns the worktree.
+
+Correction report accepted: all 477 destination spans, 17 real collisions, 70 raw page hashes, 840 section hashes and eight literal controls pass; copied-helper pre-fix control fails its intended assertion. Direct nine app tests pass. Exactly 69 retained router entries plus one root compatibility item and two Guide sentences are individually accounted. Receipts: references/draft-correction-receipts.json (SHA256 c4769cda4624a80393d6f24640b99593410dd674198a93b9078c731cd080210a). Same non-author reviewer recheck and Fable approval remain required.
 
 ### docs-analysis draft review dispatch
 
@@ -763,7 +765,15 @@ Structured return accepted from /root/p02_analysis_review; no reviewer artifact 
   "child_outcome": "completed-two-medium-findings",
   "runtime_confirmation": "not-reported",
   "diagnostics": [],
-  "continuation_events": [],
+  "continuation_events": [
+    {
+      "request_id": "docs-overhaul-run1-p02-map-review02",
+      "agent_handle": "/root/p02_map_review",
+      "status": "accepted-holding",
+      "authority": "M1/M2 corrected draft recheck; new round02 review artifact only",
+      "child_outcome": null
+    }
+  ],
   "payload": {
     "task_name": "p02_map_review",
     "agent_type": "oat-reviewer-gpt-6-1-sol-high",
@@ -788,6 +798,8 @@ Structured return accepted from /root/p02_analysis_review; no reviewer artifact 
 Dispatch: scope=p02-map action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high
 
 Artifact-mode confirmation contains exactly one Reconnaissance: not-attempted; artifact has no Review Orchestration section. Validated draft SHA256 bindings, no reviewed commit inferred (Reviewed Head remains -). Outcome 0 Critical / 0 High / 2 Medium / 0 Low. Root independently confirmed first-match href span bug and Home index.md:19 obsolete route-only entry. Both are required pre-move corrections; no content/capability removal authorized. Same accepted /root/phase02 receives bounded pre-commit draft correction, no new phase/recovery event. Source app tests 9/9 and focused 3/3 executed; pristine receipts inspected, not rerun. Fable map approval remains pending, queued not consumed.
+
+Round02 request accepted on same reviewer handle after completed exact resolver (notices empty). Corrected map SHA256 e58c6780fae9eb1f01698018358941355e0de3f26d39caecc278f5453307436b; receipt binds other files. Source baseline unchanged; uncommitted draft is not reviewed at bookkeeping HEAD. Reviewer holds until release. Original ignored analysis copied byte-for-byte to references/docs-analysis-reviewed-snapshot.md for durable provenance; snapshot retains original historical draft status, with current verified-with-Low-residual disposition separately in docs-analysis-review-01.json. No new analysis finding fix/rewrite or reviewed-byte change.
 
 ## Implementation Log
 
