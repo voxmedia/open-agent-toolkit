@@ -14,7 +14,7 @@ const workerContractPath = new URL(
 );
 const workerPath = new URL('../../../agents/recon-worker.md', import.meta.url);
 const publicDocsPath = new URL(
-  '../../../../apps/oat-docs/docs/workflows/skills/recon.md',
+  '../../../../apps/oat-docs/docs/skills/recon.md',
   import.meta.url,
 );
 
