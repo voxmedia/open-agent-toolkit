@@ -26,7 +26,7 @@ The user invoked oat-project-implement after the reviewed plan handoff. Implemen
 
 ## Phase 1: Make the Current Sidebar Enforceable
 
-**Status:** complete; source, ordered gates and native terminal review accepted; Fable advisory request queued
+**Status:** complete; source, ordered gates, native terminal review and Fable fixed-diff advisory accepted
 **Started:** 2026-10-02
 
 ### Task p01-t01: Compile safe Fumadocs metadata
@@ -815,6 +815,24 @@ Round02 artifact accepted: exactly one not-attempted confirmation and no Review 
 Required peer-review boundary: Fable map approval has not arrived. Verified owning laptop relay/runtime and Mini execution worktree; Fable pane still has unsent text "what's the question codex is waiting on?". Do not overwrite, clear or submit it. Queued msg_abd20b8047be contains exact corrected map, specific review request and direct return instructions; delivered_at null and no response, so enqueue is not consumption. No page moved, p02-t01 not complete, no phase 2 acceptance claimed. Same phase handle remains available; resume after actual peer response, not by replacing its session. Two app source drafts remain intentionally uncommitted and owned by phase02. Reviewed project evidence is preserved separately as draft bookkeeping.
 
 ## Implementation Log
+
+### Stable draft handoff and parallel review acceptance: 2026-10-02
+
+Same accepted phase02 completed cont-docs-overhaul-p02-fable-map-corrections and holds all writes. Exact revised map SHA256 a277764b339bea9d4f7f7884aa6f250dfde23c730ad3c82b373cab70bad08417; correction receipt SHA256 221c8d6d6bd86671926a87781fe175e1ce789b86991471a4f5a3854389df47a4. 816 protected units plus 24 router units, all 42 CLI guidance units, three exact H1 exceptions, unchanged 70 source/destination pairs. No moves or task commit.
+
+Accepted continuations on existing native handles, holding before commands until this bookkeeping commit:
+
+| Request                                  | Handle                               | Target / authority                                                                                    | Outcome           |
+| ---------------------------------------- | ------------------------------------ | ----------------------------------------------------------------------------------------------------- | ----------------- |
+| docs-overhaul-run1-p02-map-review03      | /root/p02_map_review                 | oat-reviewer-gpt-6-1-sol-high; gpt-6.1-sol/high; only reviews/p02-migration-draft-review-round03.md   | accepted, holding |
+| docs-overhaul-run1-p02-analysis-review02 | /root/p02_analysis_review            | oat-reviewer-gpt-6-1-sol-high; gpt-6.1-sol/high; structured in-memory only                            | accepted, holding |
+| orca-draft-override-refinement           | /root/orca_draft_override_refinement | worker; explicitly gpt-6.1-sol/high; separate Orc worktree and five existing documentation files only | accepted, holding |
+
+Review resolver notices are empty; /tmp/docs-p02-map-review03-dispatch.json and /tmp/docs-p02-analysis-review02-dispatch.json select the exact configured reviewer ceiling. Analysis-only rewrite one of two refreshes stale map/status claims; reviewed bytes ad3fba4a6ad5f24b19df55a5fb9a434ee69d30442ebab1ea462edb4908320b3f are preserved at references/docs-analysis-reviewed-snapshot-round02.md. Original snapshot/receipt remain immutable; offered Low wording residual remains disclosed. No source validation or tracking outcome is inferred from this refresh.
+
+The Orc helper is a parent-attached native lane, not a standalone persisted chat. Execution stays on the Mini at /Users/tstang/orca/workspaces/orc/docs-qa-orchestration-guidance, branch docs-qa-orchestration-guidance, existing draft PR47. Consequential authority-boundary wording uses fresh provider-codex guidance2026-10-01 and explicit native selectors; configured acceptance is recorded, runtime model identity not reported. Five-file ownership is skills/orca-orchestration/SKILL.md, references/cross-runtime-coordination.md and references/runtime-identity.md beneath that skill, docs/adapters/orca.md and playbooks/orca-cross-host-coordination.md. No commit/push/install/UI/terminal-send authority is delegated. Root reviews and owns authorized PR update; no extra skill bump beyond the existing PR-scoped1.3.4.
+
+Actual Fable p01 fixed-diff review received via inbox msg_dd17ac7d97b5 (subject Fable-p01-fixed-diff-review), independently corroborated by the user's relay. Fable read257517ab..24d1bddf and confirmed fixes; did not run suites or gates. Its isolated temp-fixture probe verified a new non-blocking Low: index.md without Contents diagnoses frontmatter as an unsupported separator because findIndex returns-1. Carry to the next bounded nav touch or explicit residual; phase1 acceptance is unchanged. No clean-zero peer finding claim. Direct send42f84701-ed46-4987-87ea-c60c8ca0f5eb had input_accepted only; actual review is completion evidence. Historical draft-related STOP remains history, superseded by the user's explicit direct-send override already recorded in orchestration-log.md.
 
 Task p01-t01 implemented and independently reconciled against HEAD; root task bookkeeping committed before the same phase handle continues. Phase review and release closure remain pending.
 
